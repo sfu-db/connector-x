@@ -47,6 +47,26 @@ where
             }
         }
     }
+
+    #[throws(ConnectorAgentError)]
+    pub fn run_safe(mut self) {
+        self.source.run_query(&self.query)?;
+
+        let funcs: Vec<_> = self
+            .schema
+            .iter()
+            .map(|ty| match ty {
+                DataType::F64 => pipe_safe::<S, P, f64>,
+                DataType::U64 => pipe_safe::<S, P, u64>,
+            })
+            .collect();
+
+        for row in 0..self.partition_writer.nrows() {
+            for col in 0..self.partition_writer.ncols() {
+                funcs[col](&mut self.source, &mut self.partition_writer, row, col)?;
+            }
+        }
+    }
 }
 
 #[throws(ConnectorAgentError)]
@@ -57,4 +77,14 @@ where
     T: TypeInfo,
 {
     unsafe { writer.write(row, col, source.produce::<T>()?) }
+}
+
+#[throws(ConnectorAgentError)]
+fn pipe_safe<'a, S, W, T>(source: &mut S, writer: &mut W, row: usize, col: usize)
+where
+    S: DataSource,
+    W: PartitionWriter<'a>,
+    T: TypeInfo,
+{
+    writer.write_safe(row, col, source.produce::<T>()?)?
 }

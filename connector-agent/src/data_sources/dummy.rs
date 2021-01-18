@@ -1,6 +1,8 @@
 use super::DataSource;
+use crate::errors::ConnectorAgentError;
 use crate::errors::Result;
 use crate::types::TypeInfo;
+
 pub struct DummySource {
     counter: u64,
 }
@@ -17,33 +19,27 @@ impl DataSource for DummySource {
     }
 
     fn produce<T: TypeInfo>(&mut self) -> Result<T> {
-        let ret = Producer::produce(self.counter);
+        let ret = Producer::produce(self.counter)?;
         self.counter += 1;
         Ok(ret)
     }
 }
 
-trait Producer {
-    fn produce(counter: u64) -> Self;
+trait Producer: Sized {
+    fn produce(counter: u64) -> Result<Self>;
 }
 
 impl<T> Producer for T
 where
     T: TypeInfo,
 {
-    default fn produce(counter: u64) -> Self {
-        unimplemented!()
+    default fn produce(_: u64) -> Result<Self> {
+        Err(ConnectorAgentError::WrongTypeForField)
     }
 }
 
 impl Producer for u64 {
-    fn produce(counter: u64) -> Self {
-        counter
-    }
-}
-
-impl Producer for f64 {
-    fn produce(counter: u64) -> Self {
-        counter as f64
+    fn produce(counter: u64) -> Result<Self> {
+        Ok(counter)
     }
 }
