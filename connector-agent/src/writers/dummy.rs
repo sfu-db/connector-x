@@ -1,28 +1,41 @@
 use super::{PartitionWriter, Writer};
-use crate::errors::{ConnectorAgentError, Result};
-use crate::types::{DataType, DataTypeCheck};
+use crate::errors::Result;
+use crate::types::{DataType, TypeInfo};
+use anyhow::anyhow;
 use fehler::throw;
-use ndarray::{Array2, ArrayViewMut2, Axis};
-use std::mem::{size_of, transmute};
+use ndarray::{Array2, ArrayView2, ArrayViewMut2, Axis};
+use std::mem::transmute;
 use std::ptr::copy_nonoverlapping;
 
 #[derive(Clone)]
-pub struct DummyWriter {
+pub struct U64Writer {
     nrows: usize,
-    schema_: Vec<DataType>,
-    pub buffer: Array2<u64>,
+    schema: Vec<DataType>,
+    buffer: Array2<u64>,
 }
 
-impl Writer for DummyWriter {
-    type PartitionWriter<'a> = DummyPartitionWriter<'a>;
+impl U64Writer {
+    pub fn buffer(&self) -> ArrayView2<u64> {
+        self.buffer.view()
+    }
+}
 
-    fn allocate(nrows: usize, schema: Vec<DataType>) -> Self {
+impl Writer for U64Writer {
+    type PartitionWriter<'a> = U64PartitionWriter<'a>;
+
+    fn allocate(nrows: usize, schema: Vec<DataType>) -> Result<Self> {
         let ncols = schema.len();
-        DummyWriter {
-            nrows,
-            schema_: schema,
-            buffer: Array2::zeros((nrows, ncols)),
+        for field in &schema {
+            if !matches!(field, DataType::U64) {
+                throw!(anyhow!("U64Writer only accepts U64 only schema"));
+            }
         }
+
+        Ok(U64Writer {
+            nrows,
+            schema,
+            buffer: Array2::zeros((nrows, ncols)),
+        })
     }
 
     fn partition_writer<'a>(&'a mut self, counts: &[usize]) -> Vec<Self::PartitionWriter<'a>> {
@@ -34,35 +47,32 @@ impl Writer for DummyWriter {
         for &c in counts {
             let (splitted, rest) = mut_view.split_at(Axis(0), c);
             mut_view = rest;
-            ret.push(DummyPartitionWriter::new(splitted, schema.clone()));
+            ret.push(U64PartitionWriter::new(splitted, schema.clone()));
         }
         ret
     }
 
     fn schema(&self) -> &[DataType] {
-        self.schema_.as_slice()
+        self.schema.as_slice()
     }
 }
 
-pub struct DummyPartitionWriter<'a> {
+pub struct U64PartitionWriter<'a> {
     buffer: ArrayViewMut2<'a, u64>,
     schema: Vec<DataType>,
 }
 
-impl<'a> PartitionWriter<'a> for DummyPartitionWriter<'a> {
+impl<'a> PartitionWriter<'a> for U64PartitionWriter<'a> {
     unsafe fn write<T>(&mut self, row: usize, col: usize, value: T) {
         let target: *mut T = transmute(self.buffer.uget_mut((row, col)));
         copy_nonoverlapping(&value, target, 1);
     }
 
-    fn write_safe<T>(&mut self, row: usize, col: usize, value: T) -> Result<()>
+    fn write_checked<T>(&mut self, row: usize, col: usize, value: T) -> Result<()>
     where
-        DataType: DataTypeCheck<T>,
+        T: TypeInfo,
     {
-        assert_eq!(size_of::<T>(), size_of::<u64>());
-        if !self.schema[col].verify() {
-            throw!(ConnectorAgentError::DataTypeCheckFailed(self.schema[col], DataType::found()));
-        }
+        T::check(self.schema[col])?;
         unsafe { self.write(row, col, value) };
         Ok(())
     }
@@ -76,7 +86,7 @@ impl<'a> PartitionWriter<'a> for DummyPartitionWriter<'a> {
     }
 }
 
-impl<'a> DummyPartitionWriter<'a> {
+impl<'a> U64PartitionWriter<'a> {
     fn new(buffer: ArrayViewMut2<'a, u64>, schema: Vec<DataType>) -> Self {
         Self { buffer, schema }
     }

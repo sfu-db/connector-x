@@ -1,53 +1,43 @@
+//! Each variant in DataType represents a type that connector-agent currently
+//! supports to read from a data source and write into a writer.
+//! When adding a variant into DataType, please also impl TypeInfo to
+//! the native type.
+
+use crate::errors::{ConnectorAgentError, Result};
+use fehler::throw;
+use std::any::type_name;
+
 #[derive(Debug, Clone, Copy)]
 pub enum DataType {
     F64,
     U64,
 }
 
-pub trait TypeInfo {}
-
-impl TypeInfo for f64 {}
-impl TypeInfo for u64 {}
-
-pub trait DataTypeCheck<T> {
-    fn verify(self) -> bool;
-    fn found() -> String;
-}
-
-impl DataTypeCheck<f64> for DataType {
-    fn verify(self) -> bool {
-        match self {
-            DataType::F64 => true,
-            _ => false,
-        }
+pub trait TypeInfo {
+    fn check(dt: DataType) -> Result<()> {
+        unimplemented!("TypeInfo not implemented for {:?}, this is a bug.", dt)
     }
-
-    fn found() -> String {
-        "f64".to_string()
+    fn name() -> &'static str {
+        type_name::<Self>()
     }
 }
 
-impl DataTypeCheck<u64> for DataType {
-    fn verify(self) -> bool {
-        match self {
-            DataType::U64 => true,
-            _ => false,
+impl TypeInfo for f64 {
+    fn check(dt: DataType) -> Result<()> {
+        if !matches!(dt, DataType::F64) {
+            throw!(ConnectorAgentError::UnexpectedType(dt, Self::name()))
+        } else {
+            Ok(())
         }
-    }
-
-    fn found() -> String {
-        "u64".to_string()
     }
 }
 
-impl<T> DataTypeCheck<T> for DataType {
-    default fn verify(self) -> bool {
-        match self {
-            _ => false,
+impl TypeInfo for u64 {
+    fn check(dt: DataType) -> Result<()> {
+        if !matches!(dt, DataType::U64) {
+            throw!(ConnectorAgentError::UnexpectedType(dt, Self::name()))
+        } else {
+            Ok(())
         }
-    }
-
-    default fn found() -> String {
-        "T".to_string()
     }
 }

@@ -1,7 +1,6 @@
 use crate::data_sources::DataSource;
 use crate::errors::ConnectorAgentError;
-use crate::types::DataType;
-use crate::types::TypeInfo;
+use crate::types::{DataType, TypeInfo};
 use crate::writers::PartitionWriter;
 use fehler::throws;
 
@@ -86,5 +85,5 @@ where
     W: PartitionWriter<'a>,
     T: TypeInfo,
 {
-    writer.write_safe(row, col, source.produce::<T>()?)?
+    writer.write_checked(row, col, source.produce::<T>()?)?
 }
