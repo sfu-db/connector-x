@@ -1,14 +1,16 @@
-use connector_agent::connections::DummyConnection;
+use connector_agent::data_sources::dummy::DummySource;
 use connector_agent::writers::{dummy::DummyWriter, Writer};
-use connector_agent::{Type, Worker};
+use connector_agent::{DataType, Worker};
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
 fn main() {
-    let mut dw = DummyWriter::allocate(10, vec![Type; 10]);
+    let mut dw = DummyWriter::allocate(11, vec![DataType::U64; 10]);
 
-    let writers = dw.partition_writer(&[4, 6]);
+    let writers = dw.partition_writer(&[4, 7]);
 
-    writers.into_par_iter().for_each(|writer| Worker::new(writer, DummyConnection).run());
+    writers
+        .into_par_iter()
+        .for_each(|writer| Worker::new(DummySource::new(), writer, vec![DataType::U64; 10]).run().unwrap());
 
     println!("{:?}", dw.buffer);
 }

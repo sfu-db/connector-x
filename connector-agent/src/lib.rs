@@ -1,4 +1,6 @@
-pub mod connections;
+#![feature(specialization)]
+
+pub mod data_sources;
 mod errors;
 pub mod pg;
 pub mod s3;
@@ -8,7 +10,7 @@ pub mod writers;
 
 pub use errors::ConnectorAgentError;
 use fehler::throws;
-pub use types::Type;
+pub use types::DataType;
 pub use worker::Worker;
 
 pub struct Partition {

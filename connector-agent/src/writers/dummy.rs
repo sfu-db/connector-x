@@ -1,5 +1,5 @@
 use super::{PartitionWriter, Writer};
-use crate::types::Type;
+use crate::types::DataType;
 use ndarray::{Array2, ArrayViewMut2, Axis};
 use std::mem::{size_of, transmute};
 use std::ptr::copy_nonoverlapping;
@@ -7,18 +7,18 @@ use std::ptr::copy_nonoverlapping;
 #[derive(Clone)]
 pub struct DummyWriter {
     nrows: usize,
-    type_info: Vec<Type>,
+    schema: Vec<DataType>,
     pub buffer: Array2<u64>,
 }
 
 impl<'a> Writer<'a> for DummyWriter {
     type PartitionWriter = DummyPartitionWriter<'a>;
 
-    fn allocate(nrows: usize, type_info: Vec<Type>) -> Self {
+    fn allocate(nrows: usize, type_info: Vec<DataType>) -> Self {
         let ncols = type_info.len();
         DummyWriter {
             nrows,
-            type_info,
+            schema: type_info,
             buffer: Array2::zeros((nrows, ncols)),
         }
     }
@@ -34,6 +34,10 @@ impl<'a> Writer<'a> for DummyWriter {
             ret.push(DummyPartitionWriter::new(splitted));
         }
         ret
+    }
+
+    fn schema(&self) -> &[DataType] {
+        self.schema.as_slice()
     }
 }
 
