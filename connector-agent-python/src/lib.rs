@@ -1,12 +1,10 @@
+use connector_agent::{pg, s3};
 use failure::Fallible;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::{IntoPyDict, PyTuple};
 use pyo3::wrap_pyfunction;
 use tokio::runtime;
-
-pub mod s3;
-pub mod pg;
 
 #[pymodule]
 fn connector_agent(_: Python, m: &PyModule) -> PyResult<()> {
@@ -18,10 +16,10 @@ fn connector_agent(_: Python, m: &PyModule) -> PyResult<()> {
 
 #[pyfunction]
 fn test() -> PyResult<()> {
-    use std::fs::File;
     use arrow::csv;
+    use arrow::datatypes::{DataType, DateUnit, Field, Schema};
+    use std::fs::File;
     use std::sync::Arc;
-    use arrow::datatypes::{Schema, Field, DataType, DateUnit};
 
     let schema = Schema::new(vec![
         Field::new("l_orderkey", DataType::UInt64, false),
@@ -47,7 +45,6 @@ fn test() -> PyResult<()> {
     // let mut csv = csv::Reader::new(file, schema.clone(), false, None, 1024, None, None);
     // let batch = csv.next().unwrap().unwrap();
     // println!("{} {}", batch.num_columns(), batch.num_rows());
- 
 
     let file = File::open("tmp.csv").unwrap();
     let mut csv = csv::Reader::new(file, Arc::new(schema), true, Some(b','), 1024, None, None);

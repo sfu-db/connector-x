@@ -1,0 +1,34 @@
+[package]
+name = "connector-agent"
+version = "0.1.0"
+authors = ["Weiyuan Wu <youngw@sfu.ca>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+arrow = { git = "https://github.com/apache/arrow" }
+rusoto_core = "0.46"
+rusoto_s3 = "0.46"
+serde = { version = "1", features = [ "derive" ] }
+serde_json = "1"
+log = "0.4"
+env_logger = "0.8"
+tokio = { version = "1", features = [ "rt-multi-thread", "io-util" ] }
+futures = "0.3"
+fehler = "1"
+failure = "0.1"
+flate2 = "1"
+strum = { version = "0.20", features = [ "derive" ] }
+postgres = "0.19.0"
+thiserror = "1"
+bb8 = "0.7"
+bb8-postgres = "0.7"
+tokio-postgres = "0.7"
+ndarray = "0.14"
+rayon = "1"
+async-trait = "0.1"
+
+[lib]
+name = "connector_agent"
+crate-type = ["cdylib", "rlib"]
