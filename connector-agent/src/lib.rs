@@ -1,4 +1,5 @@
 #![feature(min_specialization, generic_associated_types)]
+#![allow(incomplete_features)]
 
 pub mod data_sources;
 mod errors;

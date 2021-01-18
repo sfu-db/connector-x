@@ -17,7 +17,7 @@ jobs:
             toolchain: nightly-2021-01-17
             override: true
 
-      - name: Run cargo check
+      - name: Run tests
         uses: actions-rs/cargo@v1
         with:
           command: test
