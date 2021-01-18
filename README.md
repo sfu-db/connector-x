@@ -1,4 +1,4 @@
-# connector-exp
+# connector-agent ![CI](https://github.com/dovahcrow/treerite/workflows/CI/badge.svg)
 
 ## Environment Setup
 * Install Rust: `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`
