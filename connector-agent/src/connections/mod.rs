@@ -1,7 +1,5 @@
 mod postgres;
 
-use async_trait::async_trait;
-
 pub trait Connection {
     fn query(&self, query: &str) -> Vec<u8>;
 }

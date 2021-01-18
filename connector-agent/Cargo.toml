@@ -20,14 +20,12 @@ fehler = "1"
 failure = "0.1"
 flate2 = "1"
 strum = { version = "0.20", features = [ "derive" ] }
-postgres = "0.19.0"
+postgres = "0.19"
 thiserror = "1"
-bb8 = "0.7"
-bb8-postgres = "0.7"
-tokio-postgres = "0.7"
+r2d2 = "0.8"
+r2d2_postgres = "0.18"
 ndarray = "0.14"
 rayon = "1"
-async-trait = "0.1"
 
 [lib]
 name = "connector_agent"

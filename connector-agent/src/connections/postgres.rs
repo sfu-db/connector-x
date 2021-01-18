@@ -1,10 +1,8 @@
 use super::Connection;
-use async_trait::async_trait;
-use bb8::PooledConnection;
-use bb8_postgres::PostgresConnectionManager;
-use tokio_postgres::tls::NoTls;
+use r2d2::PooledConnection;
+use r2d2_postgres::{postgres::NoTls, PostgresConnectionManager};
 
-impl<'a> Connection for PooledConnection<'a, PostgresConnectionManager<NoTls>> {
+impl Connection for PooledConnection<PostgresConnectionManager<NoTls>> {
     fn query(&self, query: &str) -> Vec<u8> {
         unimplemented!()
     }
