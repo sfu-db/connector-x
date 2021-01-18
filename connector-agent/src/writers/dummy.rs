@@ -11,8 +11,8 @@ pub struct DummyWriter {
     pub buffer: Array2<u64>,
 }
 
-impl<'a> Writer<'a> for DummyWriter {
-    type PartitionWriter = DummyPartitionWriter<'a>;
+impl Writer for DummyWriter {
+    type PartitionWriter<'a> = DummyPartitionWriter<'a>;
 
     fn allocate(nrows: usize, type_info: Vec<DataType>) -> Self {
         let ncols = type_info.len();
@@ -23,7 +23,7 @@ impl<'a> Writer<'a> for DummyWriter {
         }
     }
 
-    fn partition_writer(&'a mut self, counts: &[usize]) -> Vec<Self::PartitionWriter> {
+    fn partition_writer<'a>(&'a mut self, counts: &[usize]) -> Vec<Self::PartitionWriter<'a>> {
         assert_eq!(counts.iter().sum::<usize>(), self.nrows);
 
         let mut mut_view = self.buffer.view_mut();
