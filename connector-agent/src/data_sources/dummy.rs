@@ -12,11 +12,11 @@ impl DummySource {
 }
 
 impl DataSource for DummySource {
-    fn query(&mut self, query: &str) -> Result<()> {
+    fn run_query(&mut self, query: &str) -> Result<()> {
         Ok(())
     }
 
-    fn produce<T>(&mut self) -> Result<T> {
+    fn produce<T: TypeInfo>(&mut self) -> Result<T> {
         let ret = Producer::produce(self.counter);
         self.counter += 1;
         Ok(ret)
@@ -27,7 +27,10 @@ trait Producer {
     fn produce(counter: u64) -> Self;
 }
 
-impl<T> Producer for T {
+impl<T> Producer for T
+where
+    T: TypeInfo,
+{
     default fn produce(counter: u64) -> Self {
         unimplemented!()
     }

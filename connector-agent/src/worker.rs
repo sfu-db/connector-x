@@ -9,16 +9,16 @@ pub struct Worker<S, P> {
     partition_writer: P,
     query: String,
     source: S,
-    type_info: Vec<DataType>,
+    schema: Vec<DataType>,
 }
 
 impl<S, P> Worker<S, P> {
-    pub fn new(source: S, writer: P, type_info: Vec<DataType>) -> Self {
+    pub fn new(source: S, writer: P, schema: Vec<DataType>) -> Self {
         Worker {
             partition_writer: writer,
             query: "".to_string(),
             source,
-            type_info,
+            schema,
         }
     }
 }
@@ -30,10 +30,10 @@ where
 {
     #[throws(ConnectorAgentError)]
     pub fn run(mut self) {
-        self.source.query(&self.query)?;
+        self.source.run_query(&self.query)?;
 
         let funcs: Vec<_> = self
-            .type_info
+            .schema
             .iter()
             .map(|ty| match ty {
                 DataType::F64 => pipe::<S, P, f64>,

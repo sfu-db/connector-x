@@ -5,7 +5,7 @@ use crate::types::DataType;
 pub trait Writer {
     type PartitionWriter<'a>: PartitionWriter<'a>;
 
-    fn allocate(nrow: usize, type_info: Vec<DataType>) -> Self;
+    fn allocate(nrow: usize, schema: Vec<DataType>) -> Self;
     fn partition_writer<'a>(&'a mut self, counts: &[usize]) -> Vec<Self::PartitionWriter<'a>>;
     fn schema(&self) -> &[DataType];
 }

@@ -1,4 +1,4 @@
-#![feature(specialization, generic_associated_types)]
+#![feature(min_specialization, generic_associated_types)]
 
 pub mod data_sources;
 mod errors;

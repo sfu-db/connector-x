@@ -4,13 +4,13 @@ use connector_agent::{DataType, Worker};
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
 fn main() {
-    let mut dw = DummyWriter::allocate(11, vec![DataType::U64; 10]);
-
+    let mut dw = DummyWriter::allocate(11, vec![DataType::U64, DataType::U64, DataType::U64, DataType::F64, DataType::U64]);
+    let schema = dw.schema().to_vec();
     let writers = dw.partition_writer(&[4, 7]);
 
     writers
         .into_par_iter()
-        .for_each(|writer| Worker::new(DummySource::new(), writer, vec![DataType::U64; 10]).run().unwrap());
+        .for_each(|writer| Worker::new(DummySource::new(), writer, schema.clone()).run().unwrap());
 
     println!("{:?}", dw.buffer);
 }

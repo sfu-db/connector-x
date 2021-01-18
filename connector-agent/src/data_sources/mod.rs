@@ -5,6 +5,6 @@ use crate::errors::Result;
 use crate::types::TypeInfo;
 
 pub trait DataSource {
-    fn query(&mut self, query: &str) -> Result<()>;
-    fn produce<T>(&mut self) -> Result<T>;
+    fn run_query(&mut self, query: &str) -> Result<()>;
+    fn produce<T: TypeInfo>(&mut self) -> Result<T>;
 }
