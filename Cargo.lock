@@ -200,6 +200,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "arrow",
+ "csv",
  "env_logger",
  "failure",
  "fehler",
