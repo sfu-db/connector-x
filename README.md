@@ -1,11 +1,8 @@
 # connector-agent ![CI](https://github.com/dovahcrow/treerite/workflows/CI/badge.svg)
 
 ## Environment Setup
-
-* Install rustup: `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`.
-* Install Just: `cargo install just`.
-* Install nightly rust: `rustup toolchain install nightly-2021-01-01`.
-* Set nightly rust as the project compiler, run this in the project root: `rustup override set nightly-2021-01-01`.
+* Install rustup: `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`
+* Install Just: `cargo install just`
 
 ## Commands (refer to Justfile)
 * Build rust: `just build-rust`
