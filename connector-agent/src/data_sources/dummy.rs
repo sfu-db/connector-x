@@ -21,11 +21,11 @@ impl Queryable for U64CounterSource {
 
 impl<T> Producer<T> for U64CounterSource
 where
-    T: FromPrimitive + TypeInfo,
+    T: FromPrimitive + TypeInfo + Default,
 {
     fn produce(&mut self) -> Result<T> {
         let ret = self.counter;
         self.counter += 1;
-        Ok(FromPrimitive::from_u64(ret).unwrap())
+        Ok(FromPrimitive::from_u64(ret).unwrap_or_default())
     }
 }
