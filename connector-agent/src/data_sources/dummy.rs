@@ -1,6 +1,6 @@
-use super::{Producer, Queryable};
+use super::{DataSource, Producer};
 use crate::errors::Result;
-use crate::types::TypeInfo;
+use crate::types::{DataType, TypeSystem};
 use num_traits::cast::FromPrimitive;
 
 pub struct U64CounterSource {
@@ -13,7 +13,7 @@ impl U64CounterSource {
     }
 }
 
-impl Queryable for U64CounterSource {
+impl DataSource for U64CounterSource {
     fn run_query(&mut self, query: &str) -> Result<()> {
         Ok(())
     }
@@ -21,8 +21,11 @@ impl Queryable for U64CounterSource {
 
 impl<T> Producer<T> for U64CounterSource
 where
-    T: FromPrimitive + TypeInfo + Default,
+    T: FromPrimitive + Default,
+    DataType: TypeSystem<T>,
 {
+    type TypeSystem = DataType;
+
     fn produce(&mut self) -> Result<T> {
         let ret = self.counter;
         self.counter += 1;

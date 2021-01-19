@@ -1,7 +1,7 @@
 pub mod dummy;
 
 use crate::errors::Result;
-use crate::types::{DataType, TypeInfo};
+use crate::types::{DataType, TypeSystem};
 
 pub trait Writer<'a>: Sized {
     type PartitionWriter: PartitionWriter<'a>;
@@ -15,7 +15,7 @@ pub trait PartitionWriter<'a> {
     unsafe fn write<T>(&mut self, row: usize, col: usize, value: T);
     fn write_checked<T>(&mut self, row: usize, col: usize, value: T) -> Result<()>
     where
-        T: TypeInfo;
+        DataType: TypeSystem<T>;
     fn nrows(&self) -> usize;
     fn ncols(&self) -> usize;
 }

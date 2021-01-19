@@ -13,31 +13,24 @@ pub enum DataType {
     U64,
 }
 
-pub trait TypeInfo {
-    fn check(dt: DataType) -> Result<()> {
-        unimplemented!("TypeInfo not implemented for {:?}, this is a bug.", dt)
-    }
-    fn name() -> &'static str {
-        type_name::<Self>()
-    }
+pub trait TypeSystem<T> {
+    fn check(&self) -> Result<()>;
 }
 
-impl TypeInfo for f64 {
-    fn check(dt: DataType) -> Result<()> {
-        if !matches!(dt, DataType::F64) {
-            throw!(ConnectorAgentError::UnexpectedType(dt, Self::name()))
-        } else {
-            Ok(())
+// Macro to implement type system and saves repetitive code.
+macro_rules! impl_typesystem {
+    ($ts:ty, $variant:pat, $native_type:ty) => {
+        impl TypeSystem<$native_type> for $ts {
+            fn check(&self) -> Result<()> {
+                if !matches!(self, $variant) {
+                    throw!(ConnectorAgentError::UnexpectedType(*self, type_name::<$native_type>()))
+                } else {
+                    Ok(())
+                }
+            }
         }
-    }
+    };
 }
 
-impl TypeInfo for u64 {
-    fn check(dt: DataType) -> Result<()> {
-        if !matches!(dt, DataType::U64) {
-            throw!(ConnectorAgentError::UnexpectedType(dt, Self::name()))
-        } else {
-            Ok(())
-        }
-    }
-}
+impl_typesystem!(DataType, DataType::F64, f64);
+impl_typesystem!(DataType, DataType::U64, u64);

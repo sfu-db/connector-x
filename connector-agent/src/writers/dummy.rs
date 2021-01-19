@@ -1,6 +1,6 @@
 use super::{PartitionWriter, Writer};
 use crate::errors::Result;
-use crate::types::{DataType, TypeInfo};
+use crate::types::{DataType, TypeSystem};
 use anyhow::anyhow;
 use fehler::throw;
 use ndarray::{Array2, ArrayView2, ArrayViewMut2, Axis};
@@ -70,9 +70,9 @@ impl<'a> PartitionWriter<'a> for U64PartitionWriter<'a> {
 
     fn write_checked<T>(&mut self, row: usize, col: usize, value: T) -> Result<()>
     where
-        T: TypeInfo,
+        DataType: TypeSystem<T>,
     {
-        T::check(self.schema[col])?;
+        self.schema[col].check()?;
         unsafe { self.write(row, col, value) };
         Ok(())
     }

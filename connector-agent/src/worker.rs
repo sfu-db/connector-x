@@ -1,6 +1,6 @@
 use crate::data_sources::{DataSource, Producer};
 use crate::errors::{ConnectorAgentError, Result};
-use crate::types::{DataType, TypeInfo};
+use crate::types::{DataType, TypeSystem};
 use crate::writers::PartitionWriter;
 use fehler::throws;
 
@@ -75,7 +75,7 @@ fn pipe<'a, S, W, T>(source: &mut S, writer: &mut W, row: usize, col: usize)
 where
     S: Producer<T>,
     W: PartitionWriter<'a>,
-    T: TypeInfo,
+    DataType: TypeSystem<T>,
 {
     unsafe { writer.write::<T>(row, col, source.produce()?) }
 }
@@ -85,7 +85,7 @@ fn pipe_safe<'a, S, W, T>(source: &mut S, writer: &mut W, row: usize, col: usize
 where
     S: Producer<T>,
     W: PartitionWriter<'a>,
-    T: TypeInfo,
+    DataType: TypeSystem<T>,
 {
     writer.write_checked::<T>(row, col, source.produce()?)?
 }

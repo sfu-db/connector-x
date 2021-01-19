@@ -5,16 +5,13 @@ pub mod dummy;
 pub mod postgres;
 
 use crate::errors::Result;
-use crate::types::TypeInfo;
+use crate::types::TypeSystem;
 
-pub trait Queryable {
-    fn run_query(&mut self, query: &str) -> Result<()>;
-}
-
-pub trait Producer<T: TypeInfo> {
+pub trait Producer<T> {
+    type TypeSystem: TypeSystem<T>;
     fn produce(&mut self) -> Result<T>;
 }
 
-pub trait DataSource: Queryable + Producer<f64> + Producer<u64> {}
-
-impl<T> DataSource for T where T: Queryable + Producer<f64> + Producer<u64> {}
+pub trait DataSource: Producer<f64> + Producer<u64> {
+    fn run_query(&mut self, query: &str) -> Result<()>;
+}
