@@ -20,8 +20,8 @@ impl U64Writer {
     }
 }
 
-impl Writer for U64Writer {
-    type PartitionWriter<'a> = U64PartitionWriter<'a>;
+impl<'a> Writer<'a> for U64Writer {
+    type PartitionWriter = U64PartitionWriter<'a>;
 
     fn allocate(nrows: usize, schema: Vec<DataType>) -> Result<Self> {
         let ncols = schema.len();
@@ -38,7 +38,7 @@ impl Writer for U64Writer {
         })
     }
 
-    fn partition_writer<'a>(&'a mut self, counts: &[usize]) -> Vec<Self::PartitionWriter<'a>> {
+    fn partition_writer(&'a mut self, counts: &[usize]) -> Vec<Self::PartitionWriter> {
         assert_eq!(counts.iter().sum::<usize>(), self.nrows);
         let schema = self.schema().to_vec();
 

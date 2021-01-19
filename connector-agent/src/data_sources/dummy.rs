@@ -1,9 +1,7 @@
-use super::DataSource;
+use super::{Producer, Queryable};
+use crate::errors::Result;
 use crate::types::TypeInfo;
-use crate::{
-    errors::{ConnectorAgentError, Result},
-    DataType,
-};
+use num_traits::cast::FromPrimitive;
 
 pub struct U64CounterSource {
     counter: u64,
@@ -15,33 +13,19 @@ impl U64CounterSource {
     }
 }
 
-impl DataSource for U64CounterSource {
+impl Queryable for U64CounterSource {
     fn run_query(&mut self, query: &str) -> Result<()> {
         Ok(())
     }
-
-    fn produce<T: TypeInfo>(&mut self) -> Result<T> {
-        let ret = Producer::produce(self.counter)?;
-        self.counter += 1;
-        Ok(ret)
-    }
 }
 
-trait Producer: Sized {
-    fn produce(counter: u64) -> Result<Self>;
-}
-
-impl Producer for u64 {
-    fn produce(counter: u64) -> Result<Self> {
-        Ok(counter)
-    }
-}
-
-impl<T> Producer for T
+impl<T> Producer<T> for U64CounterSource
 where
-    T: TypeInfo,
+    T: FromPrimitive + TypeInfo,
 {
-    default fn produce(_: u64) -> Result<Self> {
-        Err(ConnectorAgentError::UnexpectedType(DataType::U64, T::name()))
+    fn produce(&mut self) -> Result<T> {
+        let ret = self.counter;
+        self.counter += 1;
+        Ok(FromPrimitive::from_u64(ret).unwrap())
     }
 }

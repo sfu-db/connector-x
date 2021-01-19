@@ -1,7 +1,7 @@
 //! Each variant in DataType represents a type that connector-agent currently
 //! supports to read from a data source and write into a writer.
 //! When adding a variant into DataType, please also impl TypeInfo to
-//! the native type.
+//! the native type. Additionally, add that to the producer requirement for DataSource.
 
 use crate::errors::{ConnectorAgentError, Result};
 use fehler::throw;

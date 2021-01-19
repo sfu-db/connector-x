@@ -7,7 +7,7 @@ use rayon::iter::{IntoParallelIterator, ParallelIterator};
 #[test]
 #[should_panic]
 fn wrong_data_type() {
-    let mut dw = U64Writer::allocate(11, vec![DataType::U64, DataType::U64, DataType::U64, DataType::F64, DataType::U64]);
+    let mut dw = U64Writer::allocate(11, vec![DataType::U64, DataType::U64, DataType::U64, DataType::F64, DataType::U64]).unwrap();
     let schema = dw.schema().to_vec();
     let writers = dw.partition_writer(&[4, 7]);
 
@@ -18,7 +18,7 @@ fn wrong_data_type() {
 
 #[test]
 fn write_array() {
-    let mut dw = U64Writer::allocate(11, vec![DataType::U64; 5]);
+    let mut dw = U64Writer::allocate(11, vec![DataType::U64; 5]).unwrap();
     let schema = dw.schema().to_vec();
     let writers = dw.partition_writer(&[4, 7]);
 
@@ -40,6 +40,6 @@ fn write_array() {
             [25, 26, 27, 28, 29],
             [30, 31, 32, 33, 34]
         ],
-        dw.buffer
+        dw.buffer()
     );
 }

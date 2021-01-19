@@ -1,5 +1,5 @@
-use crate::data_sources::DataSource;
-use crate::errors::ConnectorAgentError;
+use crate::data_sources::{DataSource, Producer};
+use crate::errors::{ConnectorAgentError, Result};
 use crate::types::{DataType, TypeInfo};
 use crate::writers::PartitionWriter;
 use fehler::throws;
@@ -27,8 +27,7 @@ where
     P: PartitionWriter<'a>,
     S: DataSource,
 {
-    #[throws(ConnectorAgentError)]
-    pub fn run(mut self) {
+    pub fn run(mut self) -> Result<()> {
         self.source.run_query(&self.query)?;
 
         let funcs: Vec<_> = self
@@ -45,10 +44,11 @@ where
                 funcs[col](&mut self.source, &mut self.partition_writer, row, col)?;
             }
         }
+
+        Ok(())
     }
 
-    #[throws(ConnectorAgentError)]
-    pub fn run_safe(mut self) {
+    pub fn run_safe(mut self) -> Result<()> {
         self.source.run_query(&self.query)?;
 
         let funcs: Vec<_> = self
@@ -65,25 +65,27 @@ where
                 funcs[col](&mut self.source, &mut self.partition_writer, row, col)?;
             }
         }
+
+        Ok(())
     }
 }
 
 #[throws(ConnectorAgentError)]
 fn pipe<'a, S, W, T>(source: &mut S, writer: &mut W, row: usize, col: usize)
 where
-    S: DataSource,
+    S: Producer<T>,
     W: PartitionWriter<'a>,
     T: TypeInfo,
 {
-    unsafe { writer.write(row, col, source.produce::<T>()?) }
+    unsafe { writer.write::<T>(row, col, source.produce()?) }
 }
 
 #[throws(ConnectorAgentError)]
 fn pipe_safe<'a, S, W, T>(source: &mut S, writer: &mut W, row: usize, col: usize)
 where
-    S: DataSource,
+    S: Producer<T>,
     W: PartitionWriter<'a>,
     T: TypeInfo,
 {
-    writer.write_checked(row, col, source.produce::<T>()?)?
+    writer.write_checked::<T>(row, col, source.produce()?)?
 }
