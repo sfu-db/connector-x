@@ -1,5 +1,3 @@
-use csv::StringRecord;
-
 use super::{Producer, Queryable};
 use crate::errors::Result;
 use crate::types::TypeInfo;
