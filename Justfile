@@ -5,10 +5,10 @@ build-release:
     cargo build --release
 
 build-rust: build-release
-    cp target/release/libconnector_agent.so python/connector_agent.so
+    cp target/release/libconnector_agent_python.so python/connector_agent.so
 
 build-rust-debug: build
-    cp target/debug/libconnector_agent.so python/connector_agent.so
+    cp target/debug/libconnector_agent_python.so python/connector_agent.so
 
 dask:
     python python/multiprocessing_dask.py
