@@ -5,9 +5,9 @@ use std::fs::File;
 use std::str::FromStr;
 
 pub struct CSVSource {
-    reader: csv::Reader<File>,
-    counter: usize,
+    filename: String,
     records: Vec<csv::StringRecord>,
+    counter: usize,
     pub nrows: usize,
     pub ncols: usize,
 }
@@ -15,11 +15,9 @@ pub struct CSVSource {
 impl CSVSource {
     pub fn new(fname: &str) -> Self {
         Self {
-            reader: csv::ReaderBuilder::new()
-                .has_headers(false)
-                .from_reader(File::open(fname).unwrap()),
-            counter: 0,
+            filename: String::from(fname),
             records: Vec::new(),
+            counter: 0,
             nrows: 0,
             ncols: 0,
         }
@@ -29,7 +27,11 @@ impl CSVSource {
 impl DataSource for CSVSource {
     type TypeSystem = DataType;
     fn run_query(&mut self, query: &str) -> Result<()> {
-        self.records = self.reader.records().map(|v| v.expect("csv record")).collect();
+        let mut reader = csv::ReaderBuilder::new()
+                .has_headers(false)
+                .from_reader(File::open(self.filename.as_str()).expect("open file"));
+
+        self.records = reader.records().map(|v| v.expect("csv record")).collect();
         self.nrows = self.records.len();
         if self.nrows > 0 {
             self.ncols = self.records[0].len();

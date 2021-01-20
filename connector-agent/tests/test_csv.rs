@@ -7,18 +7,19 @@ use rayon::prelude::*;
 #[test]
 #[should_panic]
 fn no_file() {
-    CSVSource::new("./a_fake_file.csv");
+    let mut source = CSVSource::new("./a_fake_file.csv");
+    source.run_query("").expect("run query");
 }
 
 #[test]
 #[should_panic]
 fn empty_file() {
     let mut source = CSVSource::new("./tests/data/empty.csv");
+    source.run_query("").expect("run query");
 
     assert_eq!(0, source.nrows);
     assert_eq!(0, source.ncols);
-
-    let v: u64 = source.parse().expect("panic here");
+    let v: u64 = source.parse().expect("produce from emtpy");
 }
 
 #[test]
