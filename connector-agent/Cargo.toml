@@ -28,7 +28,7 @@ ndarray = "0.14"
 rayon = "1"
 anyhow = "1"
 num-traits = "0.2"
-csv = "1.1"
+csv = "1"
 
 [lib]
 name = "connector_agent"
