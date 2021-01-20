@@ -1,6 +1,6 @@
 use super::{DataSource, Parse};
 use crate::errors::Result;
-use crate::types::{DataType, TypeSystem};
+use crate::types::DataType;
 use num_traits::cast::FromPrimitive;
 
 pub struct U64CounterSource {
@@ -18,14 +18,6 @@ impl DataSource for U64CounterSource {
 
     fn run_query(&mut self, query: &str) -> Result<()> {
         Ok(())
-    }
-
-    fn produce<T>(&mut self) -> Result<T>
-    where
-        Self::TypeSystem: TypeSystem<T>,
-        Self: Parse<T>,
-    {
-        self.parse()
     }
 }
 

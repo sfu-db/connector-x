@@ -1,15 +1,15 @@
 pub mod dummy;
 
 use crate::errors::Result;
-use crate::types::{DataType, TypeSystem};
+use crate::typesystem::TypeSystem;
 
 pub trait Writer<'a>: Sized {
-    type PartitionWriter: PartitionWriter<'a, TypeSystem = Self::TypeSystem>;
     type TypeSystem;
+    type PartitionWriter: PartitionWriter<'a, TypeSystem = Self::TypeSystem>;
 
-    fn allocate(nrow: usize, schema: Vec<DataType>) -> Result<Self>;
+    fn allocate(nrow: usize, schema: Vec<Self::TypeSystem>) -> Result<Self>;
     fn partition_writer(&'a mut self, counts: &[usize]) -> Vec<Self::PartitionWriter>;
-    fn schema(&self) -> &[DataType];
+    fn schema(&self) -> &[Self::TypeSystem];
 }
 
 pub trait PartitionWriter<'a> {

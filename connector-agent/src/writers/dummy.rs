@@ -1,6 +1,7 @@
 use super::{PartitionWriter, Writer};
 use crate::errors::Result;
-use crate::types::{DataType, TypeSystem};
+use crate::types::DataType;
+use crate::typesystem::TypeSystem;
 use anyhow::anyhow;
 use fehler::throw;
 use ndarray::{Array2, ArrayView2, ArrayViewMut2, Axis};

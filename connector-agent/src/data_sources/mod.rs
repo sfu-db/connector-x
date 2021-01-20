@@ -5,10 +5,10 @@ pub mod dummy;
 pub mod postgres;
 
 use crate::errors::Result;
-use crate::types::TypeSystem;
+use crate::typesystem::TypeSystem;
 
-pub trait DataSource: Parse<u64> + Parse<f64> {
-    type TypeSystem: TypeSystem<u64> + TypeSystem<f64>;
+pub trait DataSource {
+    type TypeSystem;
 
     fn run_query(&mut self, query: &str) -> Result<()>;
 
