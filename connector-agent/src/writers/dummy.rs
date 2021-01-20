@@ -8,6 +8,7 @@ use ndarray::{Array2, ArrayView2, ArrayViewMut2, Axis};
 use std::mem::transmute;
 use std::ptr::copy_nonoverlapping;
 
+/// This `Writer` can only write u64 into it.
 #[derive(Clone)]
 pub struct U64Writer {
     nrows: usize,
@@ -40,7 +41,7 @@ impl<'a> Writer<'a> for U64Writer {
         })
     }
 
-    fn partition_writer(&'a mut self, counts: &[usize]) -> Vec<Self::PartitionWriter> {
+    fn partition_writers(&'a mut self, counts: &[usize]) -> Vec<Self::PartitionWriter> {
         assert_eq!(counts.iter().sum::<usize>(), self.nrows);
         let schema = self.schema().to_vec();
 
@@ -59,6 +60,7 @@ impl<'a> Writer<'a> for U64Writer {
     }
 }
 
+/// The `PartitionedWriter` of `U64Writer`.
 pub struct U64PartitionWriter<'a> {
     buffer: ArrayViewMut2<'a, u64>,
     schema: Vec<DataType>,

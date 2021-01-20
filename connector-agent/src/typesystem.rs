@@ -8,11 +8,16 @@ use crate::{
 };
 use fehler::throws;
 
+/// `TypeSystem<T>` maps every type in Self to a concrete native type T.
+/// Usually multiple `TypeSystem<T>` will be implemented for a same Self type.
 pub trait TypeSystem<T> {
+    /// Check whether T is the type contained by self.
     fn check(&self) -> Result<()>;
 }
 
-// Macro to implement type system and saves repetitive code.
+/// A macro to implement type system which saves repetitive code.
+/// # Example Usage
+/// `impl_typesystem!(DataType, DataType::F64 => f64, DataType::U64 => u64);`
 macro_rules! impl_typesystem {
     ($ts:ty, $($variant:pat => $native_type:ty),+) => {
         $(
@@ -29,6 +34,7 @@ macro_rules! impl_typesystem {
     };
 }
 
+/// Transmit defines Self that can pull data from a data source S and push the data to the writer W.
 pub trait Transmit<S, W> {
     fn transmit(&self) -> fn(&mut S, &mut W, usize, usize) -> Result<()>;
     fn transmit_checked(&self) -> fn(&mut S, &mut W, usize, usize) -> Result<()>;

@@ -10,7 +10,7 @@ fn main() {
 
     writers
         .into_par_iter()
-        .for_each(|writer| Worker::new(U64CounterSource::new(), writer, schema.clone()).run_checked().expect("Worker failed"));
+        .for_each(|writer| Worker::new(U64CounterSource::new(), writer, schema.clone(), "").run_checked().expect("Worker failed"));
 
     println!("{:?}", dw.buffer());
 }

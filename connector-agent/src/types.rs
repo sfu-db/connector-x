@@ -8,6 +8,9 @@
 
 use crate::{errors::Result, typesystem::TypeSystem, writers::PartitionWriter};
 
+/// This is our intermediate type system used in this library.
+/// For all the sources, their output values must be one of the types defined by DataType.
+/// For all the writers, they must support writing any value whose type is defined by DataType.
 #[derive(Debug, Clone, Copy)]
 pub enum DataType {
     F64,

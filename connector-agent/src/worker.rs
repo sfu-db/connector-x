@@ -3,6 +3,8 @@ use crate::errors::Result;
 use crate::typesystem::Transmit;
 use crate::writers::PartitionWriter;
 
+/// A worker owns a `DataSource` `S` and a `PartitionWriter` `W`. It is also parameterized on a
+/// `TypeSystem` TS.
 pub struct Worker<S, P, TS> {
     partition_writer: P,
     query: String,
@@ -11,10 +13,12 @@ pub struct Worker<S, P, TS> {
 }
 
 impl<S, P, TS> Worker<S, P, TS> {
-    pub fn new(source: S, writer: P, schema: Vec<TS>) -> Self {
+    /// Create a new worker by providing the data source, partitioned writer, a schema and the query
+    /// to be issued to the data source.
+    pub fn new(source: S, writer: P, schema: Vec<TS>, query: &str) -> Self {
         Worker {
             partition_writer: writer,
-            query: "".to_string(),
+            query: query.to_string(),
             source,
             schema,
         }
@@ -27,10 +31,12 @@ where
     S: DataSource<TypeSystem = TS>,
     TS: Transmit<S, P>,
 {
+    /// Run the worker, this pulls the data from the data source `S` and pump that into the writer `W`.
     pub fn run(self) -> Result<()> {
         self.entry(false)
     }
 
+    /// Same as `Worker::run`, but with additional schema check.
     pub fn run_checked(self) -> Result<()> {
         self.entry(true)
     }

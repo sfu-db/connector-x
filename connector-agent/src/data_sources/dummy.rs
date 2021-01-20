@@ -3,6 +3,7 @@ use crate::errors::Result;
 use crate::types::DataType;
 use num_traits::cast::FromPrimitive;
 
+/// This `DataSource` only produces T which can be derived from u64.
 pub struct U64CounterSource {
     counter: u64,
 }
@@ -16,7 +17,7 @@ impl U64CounterSource {
 impl DataSource for U64CounterSource {
     type TypeSystem = DataType;
 
-    fn run_query(&mut self, query: &str) -> Result<()> {
+    fn run_query(&mut self, _: &str) -> Result<()> {
         Ok(())
     }
 }

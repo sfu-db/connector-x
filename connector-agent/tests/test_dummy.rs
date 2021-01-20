@@ -14,11 +14,11 @@ fn wrong_data_type() {
 fn write_array() {
     let mut dw = U64Writer::allocate(11, vec![DataType::U64; 5]).unwrap();
     let schema = dw.schema().to_vec();
-    let writers = dw.partition_writer(&[4, 7]);
+    let writers = dw.partition_writers(&[4, 7]);
 
     writers
         .into_par_iter()
-        .for_each(|writer| Worker::new(U64CounterSource::new(), writer, schema.clone()).run_checked().expect("Worker failed"));
+        .for_each(|writer| Worker::new(U64CounterSource::new(), writer, schema.clone(), "").run_checked().expect("Worker failed"));
 
     assert_eq!(
         array![
