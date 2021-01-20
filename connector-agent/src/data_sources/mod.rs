@@ -2,6 +2,7 @@
 // Producer for all supported types in crate::types::DataType.
 
 pub mod dummy;
+pub mod csv;
 pub mod postgres;
 
 use crate::errors::Result;
