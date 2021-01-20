@@ -63,12 +63,12 @@ fn load_and_write_uint() {
     let files = vec!["./tests/data/uint_0.csv", "./tests/data/uint_1.csv"];
     let mut dw = U64Writer::allocate(11, vec![DataType::U64; 5]).unwrap();
     let schema = dw.schema().to_vec();
-    let writers = dw.partition_writer(&[4, 7]);
+    let writers = dw.partition_writers(&[4, 7]);
 
     writers
         .into_par_iter()
         .zip_eq(files)
-        .for_each(|(writer, file)| Worker::new(CSVSource::new(file), writer, schema.clone())
+        .for_each(|(writer, file)| Worker::new(CSVSource::new(file), writer, schema.clone(), "")
             .run_checked()
             .expect("Worker failed"));
 
