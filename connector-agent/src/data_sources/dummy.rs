@@ -1,4 +1,4 @@
-use super::{DataSource, Producer};
+use super::{DataSource, Parse};
 use crate::errors::Result;
 use crate::types::{DataType, TypeSystem};
 use num_traits::cast::FromPrimitive;
@@ -14,19 +14,31 @@ impl U64CounterSource {
 }
 
 impl DataSource for U64CounterSource {
+    type TypeSystem = DataType;
+
     fn run_query(&mut self, query: &str) -> Result<()> {
         Ok(())
     }
+
+    fn produce<T>(&mut self) -> Result<T>
+    where
+        Self::TypeSystem: TypeSystem<T>,
+        Self: Parse<T>,
+    {
+        self.parse()
+    }
 }
 
-impl<T> Producer<T> for U64CounterSource
-where
-    T: FromPrimitive + Default,
-    DataType: TypeSystem<T>,
-{
-    type TypeSystem = DataType;
+impl Parse<u64> for U64CounterSource {
+    fn parse(&mut self) -> Result<u64> {
+        let ret = self.counter;
+        self.counter += 1;
+        Ok(FromPrimitive::from_u64(ret).unwrap_or_default())
+    }
+}
 
-    fn produce(&mut self) -> Result<T> {
+impl Parse<f64> for U64CounterSource {
+    fn parse(&mut self) -> Result<f64> {
         let ret = self.counter;
         self.counter += 1;
         Ok(FromPrimitive::from_u64(ret).unwrap_or_default())

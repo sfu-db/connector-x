@@ -1,18 +1,17 @@
-use crate::data_sources::{DataSource, Producer};
-use crate::errors::{ConnectorAgentError, Result};
-use crate::types::{DataType, TypeSystem};
+use crate::data_sources::DataSource;
+use crate::errors::Result;
+use crate::types::Transmit;
 use crate::writers::PartitionWriter;
-use fehler::throws;
 
-pub struct Worker<S, P> {
+pub struct Worker<S, P, TS> {
     partition_writer: P,
     query: String,
     source: S,
-    schema: Vec<DataType>,
+    schema: Vec<TS>,
 }
 
-impl<S, P> Worker<S, P> {
-    pub fn new(source: S, writer: P, schema: Vec<DataType>) -> Self {
+impl<S, P, TS> Worker<S, P, TS> {
+    pub fn new(source: S, writer: P, schema: Vec<TS>) -> Self {
         Worker {
             partition_writer: writer,
             query: "".to_string(),
@@ -22,22 +21,16 @@ impl<S, P> Worker<S, P> {
     }
 }
 
-impl<'a, S, P> Worker<S, P>
+impl<'a, S, P, TS> Worker<S, P, TS>
 where
-    P: PartitionWriter<'a>,
-    S: DataSource,
+    P: PartitionWriter<'a, TypeSystem = TS>,
+    S: DataSource<TypeSystem = TS>,
+    TS: Transmit<S, P>,
 {
     pub fn run(mut self) -> Result<()> {
         self.source.run_query(&self.query)?;
 
-        let funcs: Vec<_> = self
-            .schema
-            .iter()
-            .map(|ty| match ty {
-                DataType::F64 => pipe::<S, P, f64>,
-                DataType::U64 => pipe::<S, P, u64>,
-            })
-            .collect();
+        let funcs: Vec<_> = self.schema.iter().map(|ty| ty.transmit()).collect();
 
         for row in 0..self.partition_writer.nrows() {
             for col in 0..self.partition_writer.ncols() {
@@ -48,17 +41,10 @@ where
         Ok(())
     }
 
-    pub fn run_safe(mut self) -> Result<()> {
+    pub fn run_checked(mut self) -> Result<()> {
         self.source.run_query(&self.query)?;
 
-        let funcs: Vec<_> = self
-            .schema
-            .iter()
-            .map(|ty| match ty {
-                DataType::F64 => pipe_safe::<S, P, f64>,
-                DataType::U64 => pipe_safe::<S, P, u64>,
-            })
-            .collect();
+        let funcs: Vec<_> = self.schema.iter().map(|ty| ty.transmit_checked()).collect();
 
         for row in 0..self.partition_writer.nrows() {
             for col in 0..self.partition_writer.ncols() {
@@ -68,24 +54,4 @@ where
 
         Ok(())
     }
-}
-
-#[throws(ConnectorAgentError)]
-fn pipe<'a, S, W, T>(source: &mut S, writer: &mut W, row: usize, col: usize)
-where
-    S: Producer<T>,
-    W: PartitionWriter<'a>,
-    DataType: TypeSystem<T>,
-{
-    unsafe { writer.write::<T>(row, col, source.produce()?) }
-}
-
-#[throws(ConnectorAgentError)]
-fn pipe_safe<'a, S, W, T>(source: &mut S, writer: &mut W, row: usize, col: usize)
-where
-    S: Producer<T>,
-    W: PartitionWriter<'a>,
-    DataType: TypeSystem<T>,
-{
-    writer.write_checked::<T>(row, col, source.produce()?)?
 }
