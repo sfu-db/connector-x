@@ -19,7 +19,7 @@ fn empty_file() {
 
     assert_eq!(0, source.nrows);
     assert_eq!(0, source.ncols);
-    let v: u64 = source.parse().expect("produce from emtpy");
+    let _v: u64 = source.parse().expect("produce from emtpy");
 }
 
 #[test]

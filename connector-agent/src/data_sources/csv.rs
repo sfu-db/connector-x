@@ -26,7 +26,7 @@ impl CSVSource {
 
 impl DataSource for CSVSource {
     type TypeSystem = DataType;
-    fn run_query(&mut self, query: &str) -> Result<()> {
+    fn run_query(&mut self, _query: &str) -> Result<()> {
         let mut reader = csv::ReaderBuilder::new()
                 .has_headers(false)
                 .from_reader(File::open(self.filename.as_str()).expect("open file"));
