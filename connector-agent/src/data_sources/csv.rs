@@ -8,8 +8,8 @@ pub struct CSVSource {
     reader: csv::Reader<File>,
     counter: usize,
     records: Vec<csv::StringRecord>,
-    nrows: usize,
-    ncols: usize,
+    pub nrows: usize,
+    pub ncols: usize,
 }
 
 impl CSVSource {
@@ -28,10 +28,11 @@ impl CSVSource {
 
 impl Queryable for CSVSource {
     fn run_query(&mut self, query: &str) -> Result<()> {
-        // TODO: filter by query
         self.records = self.reader.records().map(|v| v.expect("csv record")).collect();
         self.nrows = self.records.len();
-        self.ncols = self.records[0].len();
+        if self.nrows > 0 {
+            self.ncols = self.records[0].len();
+        }
         Ok(())
     }
 }
