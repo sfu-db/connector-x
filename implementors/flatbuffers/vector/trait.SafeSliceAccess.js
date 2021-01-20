@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["arrow"] = [{"text":"impl SafeSliceAccess for Block","synthetic":false,"types":[]},{"text":"impl SafeSliceAccess for FieldNode","synthetic":false,"types":[]},{"text":"impl SafeSliceAccess for Buffer","synthetic":false,"types":[]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

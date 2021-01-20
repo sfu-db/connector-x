@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["r2d2_postgres"] = [{"text":"impl&lt;T&gt; ManageConnection for PostgresConnectionManager&lt;T&gt; <span class=\"where fmt-newline\">where<br>&nbsp;&nbsp;&nbsp;&nbsp;T: MakeTlsConnect&lt;Socket&gt; + Clone + 'static + Sync + Send,<br>&nbsp;&nbsp;&nbsp;&nbsp;T::TlsConnect: Send,<br>&nbsp;&nbsp;&nbsp;&nbsp;T::Stream: Send,<br>&nbsp;&nbsp;&nbsp;&nbsp;&lt;T::TlsConnect as TlsConnect&lt;Socket&gt;&gt;::Future: Send,&nbsp;</span>","synthetic":false,"types":[]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

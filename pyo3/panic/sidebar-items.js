@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["PanicException","The exception raised when Rust code called from Python panics."]]});

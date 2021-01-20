@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Domain","Specification of the communication domain for a socket."],["Protocol","Protocol specification used for creating sockets via `Socket::new`."],["SockAddr","The address of a socket."],["Socket","Newtype, owned, wrapper around a system socket."],["Type","Specification of communication semantics on a socket."]]});

@@ -1,0 +1,60 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="API documentation for the Rust `tokio_stream` crate."><meta name="keywords" content="rust, rustlang, rust-lang, tokio_stream"><title>tokio_stream - Rust</title><link rel="stylesheet" type="text/css" href="../normalize.css"><link rel="stylesheet" type="text/css" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../ayu.css" disabled ><script id="default-settings"></script><script src="../storage.js"></script><noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="alternate icon" type="image/png" href="../favicon-16x16.png">
+<link rel="alternate icon" type="image/png" href="../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../tokio_stream/index.html'><div class='logo-container rust-logo'><img src='../rust-logo.png' alt='logo'></div></a><p class="location">Crate tokio_stream</p><div class="block version"><p>Version 0.1.2</p></div><div class="sidebar-elems"><a id="all-types" href="all.html"><p>See all tokio_stream's items</p></a><div class="block items"><ul><li><a href="#reexports">Re-exports</a></li><li><a href="#modules">Modules</a></li><li><a href="#structs">Structs</a></li><li><a href="#traits">Traits</a></li><li><a href="#functions">Functions</a></li></ul></div><p class="location"></p><script>window.sidebarCurrent = {name: "tokio_stream", ty: "mod", relpath: "../"};</script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
+                <a id="settings-menu" href="../settings.html"><img src="../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="out-of-band"><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="../src/tokio_stream/lib.rs.html#1-105" title="goto source code">[src]</a></span><span class="in-band">Crate <a class="mod" href="">tokio_stream</a></span></h1><div class="docblock"><p>Stream utilities for Tokio.</p>
+<p>A <code>Stream</code> is an asynchronous sequence of values. It can be thought of as
+an asynchronous version of the standard library's <code>Iterator</code> trait.</p>
+<p>This crate provides helpers to work with them. For examples of usage and a more in-depth
+description of streams you can also refer to the <a href="https://tokio.rs/tokio/tutorial/streams">streams
+tutorial</a> on the tokio website.</p>
+<h1 id="iterating-over-a-stream" class="section-header"><a href="#iterating-over-a-stream">Iterating over a Stream</a></h1>
+<p>Due to similarities with the standard library's <code>Iterator</code> trait, some new
+users may assume that they can use <code>for in</code> syntax to iterate over a
+<code>Stream</code>, but this is unfortunately not possible. Instead, you can use a
+<code>while let</code> loop as follows:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">tokio_stream</span>::{<span class="self">self</span> <span class="kw">as</span> <span class="ident">stream</span>, <span class="ident">StreamExt</span>};
+
+<span class="attribute">#[<span class="ident">tokio</span>::<span class="ident">main</span>]</span>
+<span class="ident">async</span> <span class="kw">fn</span> <span class="ident">main</span>() {
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">stream</span> <span class="op">=</span> <span class="ident">stream</span>::<span class="ident">iter</span>(<span class="macro">vec</span><span class="macro">!</span>[<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>]);
+
+    <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">value</span>) <span class="op">=</span> <span class="ident">stream</span>.<span class="ident">next</span>().<span class="ident">await</span> {
+        <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;Got {}&quot;</span>, <span class="ident">value</span>);
+    }
+}</pre></div>
+<h1 id="returning-a-stream-from-a-function" class="section-header"><a href="#returning-a-stream-from-a-function">Returning a Stream from a function</a></h1>
+<p>A common way to stream values from a function is to pass in the sender
+half of a channel and use the receiver as the stream. This requires awaiting
+both futures to ensure progress is made. Another alternative is the
+<a href="https://docs.rs/async-stream">async-stream</a> crate, which contains macros that provide a <code>yield</code> keyword
+and allow you to return an <code>impl Stream</code>.</p>
+<h1 id="conversion-to-and-from-asyncreadasyncwrite" class="section-header"><a href="#conversion-to-and-from-asyncreadasyncwrite">Conversion to and from AsyncRead/AsyncWrite</a></h1>
+<p>It is often desirable to convert a <code>Stream</code> into an <a href="https://docs.rs/tokio/1.0/tokio/io/trait.AsyncRead.html"><code>AsyncRead</code></a>,
+especially when dealing with plaintext formats streamed over the network.
+The opposite conversion from an <a href="https://docs.rs/tokio/1.0/tokio/io/trait.AsyncRead.html"><code>AsyncRead</code></a> into a <code>Stream</code> is also
+another commonly required feature. To enable these conversions,
+<a href="https://docs.rs/tokio-util/0.4/tokio_util/codec/index.html"><code>tokio-util</code></a> provides the <a href="https://docs.rs/tokio-util/0.4/tokio_util/io/struct.StreamReader.html"><code>StreamReader</code></a> and <a href="https://docs.rs/tokio-util/0.4/tokio_util/io/struct.ReaderStream.html"><code>ReaderStream</code></a>
+types when the io feature is enabled.</p>
+</div><h2 id="reexports" class="section-header"><a href="#reexports">Re-exports</a></h2>
+<table><tr><td><code>pub use futures_core::<a class="trait" href="../futures_core/stream/trait.Stream.html" title="trait futures_core::stream::Stream">Stream</a>;</code></td></tr></table><h2 id="modules" class="section-header"><a href="#modules">Modules</a></h2>
+<table><tr class="module-item"><td><a class="mod" href="wrappers/index.html" title="tokio_stream::wrappers mod">wrappers</a></td><td class="docblock-short"><p>Wrappers for Tokio types that implement <code>Stream</code>.</p>
+</td></tr></table><h2 id="structs" class="section-header"><a href="#structs">Structs</a></h2>
+<table><tr class="module-item"><td><a class="struct" href="struct.Empty.html" title="tokio_stream::Empty struct">Empty</a></td><td class="docblock-short"><p>Stream for the <a href="../tokio_stream/fn.empty.html"><code>empty</code></a> function.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.Iter.html" title="tokio_stream::Iter struct">Iter</a></td><td class="docblock-short"><p>Stream for the <a href="../tokio_stream/fn.iter.html"><code>iter</code></a> function.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.Once.html" title="tokio_stream::Once struct">Once</a></td><td class="docblock-short"><p>Stream for the <a href="../tokio_stream/fn.once.html"><code>once</code></a> function.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.Pending.html" title="tokio_stream::Pending struct">Pending</a></td><td class="docblock-short"><p>Stream for the <a href="../tokio_stream/fn.pending.html"><code>pending</code></a> function.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.StreamMap.html" title="tokio_stream::StreamMap struct">StreamMap</a></td><td class="docblock-short"><p>Combine many streams into one, indexing each source stream with a unique
+key.</p>
+</td></tr></table><h2 id="traits" class="section-header"><a href="#traits">Traits</a></h2>
+<table><tr class="module-item"><td><a class="trait" href="trait.FromStream.html" title="tokio_stream::FromStream trait">FromStream</a></td><td class="docblock-short"><p>Convert from a <a href="../futures_core/stream/trait.Stream.html"><code>Stream</code></a>.</p>
+</td></tr><tr class="module-item"><td><a class="trait" href="trait.StreamExt.html" title="tokio_stream::StreamExt trait">StreamExt</a></td><td class="docblock-short"><p>An extension trait for the <a href="../futures_core/stream/trait.Stream.html"><code>Stream</code></a> trait that provides a variety of
+convenient combinator functions.</p>
+</td></tr></table><h2 id="functions" class="section-header"><a href="#functions">Functions</a></h2>
+<table><tr class="module-item"><td><a class="fn" href="fn.empty.html" title="tokio_stream::empty fn">empty</a></td><td class="docblock-short"><p>Creates a stream that yields nothing.</p>
+</td></tr><tr class="module-item"><td><a class="fn" href="fn.iter.html" title="tokio_stream::iter fn">iter</a></td><td class="docblock-short"><p>Converts an <code>Iterator</code> into a <code>Stream</code> which is always ready
+to yield the next value.</p>
+</td></tr><tr class="module-item"><td><a class="fn" href="fn.once.html" title="tokio_stream::once fn">once</a></td><td class="docblock-short"><p>Creates a stream that emits an element exactly once.</p>
+</td></tr><tr class="module-item"><td><a class="fn" href="fn.pending.html" title="tokio_stream::pending fn">pending</a></td><td class="docblock-short"><p>Creates a stream that is never ready</p>
+</td></tr></table></section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../";window.currentCrate = "tokio_stream";</script><script src="../main.js"></script><script defer src="../search-index.js"></script></body></html>

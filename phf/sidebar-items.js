@@ -1,0 +1,1 @@
+initSidebarItems({"mod":[["map","An immutable map constructed at compile time."],["set","An immutable set constructed at compile time."]],"struct":[["Map","An immutable map constructed at compile time."],["Set","An immutable set constructed at compile time."]],"trait":[["PhfHash","A trait implemented by types which can be used in PHF data structures."]]});

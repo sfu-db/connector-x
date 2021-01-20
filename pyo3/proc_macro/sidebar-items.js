@@ -1,0 +1,1 @@
+initSidebarItems({"attr":[["pyclass","The proc macro attributes"],["pyfunction","The proc macro attributes"],["pymethods","The proc macro attributes"],["pymodule","Internally, this proc macro create a new c function called `PyInit_{my_module}` that then calls the init function you provided"],["pyproto","The proc macro attributes"]]});

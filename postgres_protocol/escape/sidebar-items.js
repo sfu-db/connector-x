@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["escape_identifier","Escape an identifier and surround result with double quotes."],["escape_literal","Escape a literal and surround result with single quotes. Not recommended in most cases."]]});

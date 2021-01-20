@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["hash","Computes the hash of the `data` with the non-XOF hasher `t`."],["hash_xof","Computes the hash of the `data` with the XOF hasher `t` and stores it in `buf`."]],"struct":[["DigestBytes","The resulting bytes of a digest."],["Hasher","Provides message digest (hash) computation."],["MessageDigest",""]]});

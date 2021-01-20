@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Row","A row of data returned from the database by a query."],["SimpleQueryRow","A row of data returned from the database by a simple query."]],"trait":[["RowIndex","A trait implemented by types that can index into columns of a row."]]});

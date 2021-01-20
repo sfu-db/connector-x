@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["infer_schema_from_files","Infer schema from a list of CSV files by reading through first n records with `max_read_records` controlling the maximum number of records to read."]],"struct":[["Reader","CSV file reader"],["ReaderBuilder","CSV file reader builder"]]});

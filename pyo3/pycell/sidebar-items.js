@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["PyBorrowError","An error returned by `PyCell::try_borrow`."],["PyBorrowMutError","An error returned by `PyCell::try_borrow_mut`."],["PyCell","`PyCell` is the container type for `PyClass`."],["PyRef","Wraps a borrowed reference to a value in a `PyCell<T>`."],["PyRefMut","Wraps a mutable borrowed reference to a value in a `PyCell<T>`."]]});

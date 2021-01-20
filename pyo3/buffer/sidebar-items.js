@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["ElementType",""]],"struct":[["PyBuffer","Allows access to the underlying buffer used by a python object such as `bytes`, `bytearray` or `array.array`."],["ReadOnlyCell","Like `std::mem::cell`, but only provides read-only access to the data."]],"trait":[["Element","Trait implemented for possible element types of `PyBuffer`."]]});

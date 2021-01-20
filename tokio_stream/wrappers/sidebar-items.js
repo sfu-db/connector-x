@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["IntervalStream","A wrapper around `Interval` that implements `Stream`."],["ReceiverStream","A wrapper around `tokio::sync::mpsc::Receiver` that implements `Stream`."],["UnboundedReceiverStream","A wrapper around `tokio::sync::mpsc::UnboundedReceiver` that implements `Stream`."]]});

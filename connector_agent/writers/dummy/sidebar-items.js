@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["U64PartitionWriter","The `PartitionedWriter` of `U64Writer`."],["U64Writer","This `Writer` can only write u64 into it."]]});

@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Decrypter","A type which decrypts data."],["Encrypter","A type which encrypts data."]]});

@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["quote","Given a single word, return a string suitable to encode it as a shell argument."],["split","Convenience function that consumes the whole string at once.  Returns None if the input was erroneous."]],"struct":[["Shlex","An iterator that takes an input string and splits it into the words using the same syntax as the POSIX shell."]]});

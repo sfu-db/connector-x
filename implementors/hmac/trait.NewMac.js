@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["hmac"] = [{"text":"impl&lt;D&gt; NewMac for Hmac&lt;D&gt; <span class=\"where fmt-newline\">where<br>&nbsp;&nbsp;&nbsp;&nbsp;D: Update + BlockInput + FixedOutput + Reset + Default + Clone,<br>&nbsp;&nbsp;&nbsp;&nbsp;D::BlockSize: ArrayLength&lt;u8&gt;,<br>&nbsp;&nbsp;&nbsp;&nbsp;D::OutputSize: ArrayLength&lt;u8&gt;,&nbsp;</span>","synthetic":false,"types":[]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["RecvError","Error produced when receiving a change notification."],["SendError","Error produced when sending a value fails."]]});

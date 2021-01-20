@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["take","Replaces `dest` with the default value of `T`, returning the previous `dest` value."]],"union":[["MaybeUninit","A wrapper type to construct uninitialized instances of `T`."]]});

@@ -1,0 +1,1 @@
+initSidebarItems({"constant":[["LOG10_2","log10(2)"],["LOG2_10","log2(10)"],["TAU","The full circle constant (τ)"]]});

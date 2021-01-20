@@ -1,0 +1,1 @@
+initSidebarItems({"trait":[["PyMappingDelItemProtocol",""],["PyMappingGetItemProtocol",""],["PyMappingLenProtocol",""],["PyMappingProtocol","Mapping interface"],["PyMappingReversedProtocol",""],["PyMappingSetItemProtocol",""]]});

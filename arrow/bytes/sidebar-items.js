@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["Deallocation","Mode of deallocating memory regions"]],"struct":[["Bytes","A continuous, fixed-size, immutable memory region that knows how to de-allocate itself. This structs' API is inspired by the `bytes::Bytes`, but it is not limited to using rust's global allocator nor u8 aligmnent."]]});

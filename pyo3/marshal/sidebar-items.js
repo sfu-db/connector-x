@@ -1,0 +1,1 @@
+initSidebarItems({"constant":[["VERSION","The current version of the marshal binary format."]],"fn":[["dumps","Serialize an object to bytes using the Python built-in marshal module."],["loads","Deserialize an object from bytes using the Python built-in marshal module."]]});

@@ -1,0 +1,72 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="API documentation for the Rust `throws` attr in crate `fehler`."><meta name="keywords" content="rust, rustlang, rust-lang, throws"><title>fehler::throws - Rust</title><link rel="stylesheet" type="text/css" href="../normalize.css"><link rel="stylesheet" type="text/css" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../ayu.css" disabled ><script id="default-settings"></script><script src="../storage.js"></script><noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="alternate icon" type="image/png" href="../favicon-16x16.png">
+<link rel="alternate icon" type="image/png" href="../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../down-arrow.svg");}</style></head><body class="rustdoc attr"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../fehler/index.html'><div class='logo-container rust-logo'><img src='../rust-logo.png' alt='logo'></div></a><div class="sidebar-elems"><p class="location"><a href="index.html">fehler</a></p><script>window.sidebarCurrent = {name: "throws", ty: "attr", relpath: ""};</script><script defer src="sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
+                <a id="settings-menu" href="../settings.html"><img src="../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="out-of-band"><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="../src/fehler_macros/lib.rs.html#12" title="goto source code">[src]</a></span><span class="in-band">Attribute Macro <a href="index.html">fehler</a>::<wbr><a class="attr" href="">throws</a></span></h1><pre class="rust attr">#[throws]</pre><div class="docblock"><p>Annotations a function that &quot;throws&quot; a Result.</p>
+<p>Inside functions tagged with <code>throws</code>, you can use <code>?</code> and the <code>throw!</code> macro to return errors,
+but you don't need to wrap the successful return values in <code>Ok</code>.</p>
+<p>Using this syntax, you can write fallible functions almost as if they were nonfallible. Every
+time a function call would return a <code>Result</code>, you &quot;re-raise&quot; the error using <code>?</code>, and if you
+wish to raise your own error, you can return it with the <code>throw!</code> macro.</p>
+<h2 id="example" class="section-header"><a href="#example">Example</a></h2>
+<div class='information'><div class='tooltip should_panic'>ⓘ<span class='tooltiptext'>This example panics</span></div></div><div class="example-wrap"><pre class="rust rust-example-rendered should_panic">
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">io</span>::{<span class="self">self</span>, <span class="ident">Read</span>};
+
+<span class="kw">use</span> <span class="ident">fehler</span>::{<span class="ident">throw</span>, <span class="ident">throws</span>};
+
+<span class="attribute">#[<span class="ident">throws</span>(<span class="ident">io</span>::<span class="ident">Error</span>)]</span>
+<span class="kw">fn</span> <span class="ident">main</span>() {
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">fs</span>::<span class="ident">File</span>::<span class="ident">open</span>(<span class="string">&quot;The_House_of_the_Spirits.txt&quot;</span>)<span class="question-mark">?</span>;
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">text</span> <span class="op">=</span> <span class="ident">String</span>::<span class="ident">new</span>();
+    <span class="ident">file</span>.<span class="ident">read_to_string</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">text</span>)<span class="question-mark">?</span>;
+
+    <span class="kw">if</span> <span class="op">!</span><span class="ident">text</span>.<span class="ident">starts_with</span>(<span class="string">&quot;Barrabas came to us by sea, the child Clara wrote&quot;</span>) {
+        <span class="macro">throw</span><span class="macro">!</span>(<span class="ident">io</span>::<span class="ident">Error</span>::<span class="ident">from_raw_os_error</span>(<span class="number">22</span>));
+    }
+
+    <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;Okay!&quot;</span>);
+}</pre></div>
+<h1 id="default-error-type" class="section-header"><a href="#default-error-type">Default Error Type</a></h1>
+<p>This macro supports a &quot;default error type&quot; - if you do not pass a type to the macro, it will
+use the type named <code>Error</code> in this scope. So if you have defined an error type in this
+module, that will be the error thrown by this function.</p>
+<p>You can access this feature by omitting the arguments entirely or by passing <code>_</code> as the type.</p>
+<h2 id="example-1" class="section-header"><a href="#example-1">Example</a></h2>
+<div class='information'><div class='tooltip should_panic'>ⓘ<span class='tooltiptext'>This example panics</span></div></div><div class="example-wrap"><pre class="rust rust-example-rendered should_panic">
+<span class="kw">use</span> <span class="ident">fehler</span>::<span class="ident">throws</span>;
+
+<span class="comment">// Set the default error type for this module:</span>
+<span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">io</span>::<span class="ident">Error</span>;
+
+<span class="attribute">#[<span class="ident">throws</span>]</span>
+<span class="kw">fn</span> <span class="ident">main</span>() {
+   <span class="kw">let</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">fs</span>::<span class="ident">read_to_string</span>(<span class="string">&quot;my_file.txt&quot;</span>)<span class="question-mark">?</span>;
+   <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">file</span>);
+}</pre></div>
+<h1 id="throwing-as-an-option" class="section-header"><a href="#throwing-as-an-option">Throwing as an Option</a></h1>
+<p>This syntax can also support functions which return an <code>Option</code> instead of a <code>Result</code>. The
+way to access this is to pass <code>as Option</code> as the argument to <code>throw</code>.</p>
+<p>In functions that return <code>Option</code>, you can use the <code>throw!()</code> macro without any argument to
+return <code>None</code>.</p>
+<h2 id="example-2" class="section-header"><a href="#example-2">Example</a></h2>
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">fehler</span>::{<span class="ident">throw</span>, <span class="ident">throws</span>};
+
+<span class="attribute">#[<span class="ident">throws</span>(<span class="kw">as</span> <span class="prelude-ty">Option</span>)]</span>
+<span class="kw">fn</span> <span class="ident">example</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Ord</span><span class="op">&gt;</span>(<span class="ident">slice</span>: <span class="kw-2">&amp;</span>[<span class="ident">T</span>], <span class="ident">needle</span>: <span class="kw-2">&amp;</span><span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
+    <span class="kw">if</span> <span class="op">!</span><span class="ident">slice</span>.<span class="ident">contains</span>(<span class="ident">needle</span>) {
+        <span class="macro">throw</span><span class="macro">!</span>();
+    }
+    <span class="ident">slice</span>.<span class="ident">binary_search</span>(<span class="ident">needle</span>).<span class="ident">ok</span>()<span class="question-mark">?</span>
+}</pre></div>
+<h1 id="other-try-types" class="section-header"><a href="#other-try-types">Other <code>Try</code> types</a></h1>
+<p>The <code>?</code> syntax in Rust is controlled by a trait called <code>Try</code>, which is currently unstable.
+Because this feature is unstable and I don't want to maintain compatibility if its interface
+changes, this crate currently only works with two stable <code>Try</code> types: Result and Option.
+However, its designed so that it will hopefully support other <code>Try</code> types as well in the
+future.</p>
+<p>It's worth noting that <code>Try</code> also has some other stable implementations: specifically <code>Poll</code>.
+Because of the somewhat unusual implementation of <code>Try</code> for those types, this crate does not
+support <code>throws</code> syntax on functions that return <code>Poll</code> (so you can't use this syntax when
+implementing a Future by hand, for example). I hope to come up with a way to support Poll in
+the future.</p>
+</div></section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../";window.currentCrate = "fehler";</script><script src="../main.js"></script><script defer src="../search-index.js"></script></body></html>

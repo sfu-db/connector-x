@@ -1,0 +1,1 @@
+initSidebarItems({"macro":[["date","Construct a `Date` with a statically known value."],["offset","Construct a `UtcOffset` with a statically known value."],["time","Construct a `Time` with a statically known value."]]});
