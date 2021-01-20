@@ -1,4 +1,4 @@
-use connector_agent::data_sources::{csv::CSVSource, Queryable, Producer};
+use connector_agent::data_sources::{csv::CSVSource, DataSource, Parse};
 use connector_agent::writers::{dummy::U64Writer, Writer};
 use connector_agent::{DataType, Worker};
 use ndarray::array;
@@ -7,8 +7,18 @@ use rayon::prelude::*;
 #[test]
 #[should_panic]
 fn no_file() {
-    let filename = "./a_fake_file.csv";
-    CSVSource::new(filename);
+    CSVSource::new("./a_fake_file.csv");
+}
+
+#[test]
+#[should_panic]
+fn empty_file() {
+    let mut source = CSVSource::new("./tests/data/empty.csv");
+
+    assert_eq!(0, source.nrows);
+    assert_eq!(0, source.ncols);
+
+    let v: u64 = source.parse().expect("panic here");
 }
 
 #[test]
@@ -22,20 +32,19 @@ fn load_and_parse() {
         Latitude(f64),
     }
 
-    let filename = "./tests/data/uspop_0.csv";
-    let mut source = CSVSource::new(filename);
+    let mut source = CSVSource::new("./tests/data/uspop_0.csv");
     source.run_query("").expect("run query");
     
     assert_eq!(3, source.nrows);
     assert_eq!(5, source.ncols);
 
     let mut results: Vec<Value> = Vec::new();
-    for i in 0..source.nrows {
-        results.push(Value::City(source.produce().expect("parse city")));
-        results.push(Value::State(source.produce().expect("parse state")));
-        results.push(Value::Population(source.produce().expect("parse population")));
-        results.push(Value::Longitude(source.produce().expect("parse longitude")));
-        results.push(Value::Latitude(source.produce().expect("parse latitude")));
+    for _i in 0..source.nrows {
+        results.push(Value::City(source.parse().expect("parse city")));
+        results.push(Value::State(source.parse().expect("parse state")));
+        results.push(Value::Population(source.parse().expect("parse population")));
+        results.push(Value::Longitude(source.parse().expect("parse longitude")));
+        results.push(Value::Latitude(source.parse().expect("parse latitude")));
     }
 
     assert_eq!(
@@ -59,7 +68,7 @@ fn load_and_write_uint() {
         .into_par_iter()
         .zip_eq(files)
         .for_each(|(writer, file)| Worker::new(CSVSource::new(file), writer, schema.clone())
-            .run_safe()
+            .run_checked()
             .expect("Worker failed"));
 
     assert_eq!(

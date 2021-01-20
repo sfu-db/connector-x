@@ -1,6 +1,6 @@
-use super::{Producer, Queryable};
+use super::{DataSource, Parse};
 use crate::errors::Result;
-use crate::types::TypeInfo;
+use crate::types::DataType;
 use std::fs::File;
 use std::str::FromStr;
 
@@ -26,7 +26,8 @@ impl CSVSource {
     }
 }
 
-impl Queryable for CSVSource {
+impl DataSource for CSVSource {
+    type TypeSystem = DataType;
     fn run_query(&mut self, query: &str) -> Result<()> {
         self.records = self.reader.records().map(|v| v.expect("csv record")).collect();
         self.nrows = self.records.len();
@@ -37,11 +38,11 @@ impl Queryable for CSVSource {
     }
 }
 
-impl<T> Producer<T> for CSVSource
+impl<T> Parse<T> for CSVSource
 where
-    T: TypeInfo + FromStr + Default
+    T: FromStr + Default
 {
-    fn produce(&mut self) -> Result<T> {
+    fn parse(&mut self) -> Result<T> {
         let v: &str = self.records[self.counter / self.ncols][self.counter % self.ncols].as_ref();
         self.counter += 1;
         Ok(v.parse().unwrap_or_default())
