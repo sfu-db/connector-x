@@ -1,6 +1,7 @@
 use super::{PartitionWriter, Writer};
 use crate::errors::Result;
-use crate::types::{DataType, TypeInfo};
+use crate::types::DataType;
+use crate::typesystem::TypeSystem;
 use anyhow::anyhow;
 use fehler::throw;
 use ndarray::{Array2, ArrayView2, ArrayViewMut2, Axis};
@@ -22,6 +23,7 @@ impl U64Writer {
 
 impl<'a> Writer<'a> for U64Writer {
     type PartitionWriter = U64PartitionWriter<'a>;
+    type TypeSystem = DataType;
 
     fn allocate(nrows: usize, schema: Vec<DataType>) -> Result<Self> {
         let ncols = schema.len();
@@ -63,6 +65,8 @@ pub struct U64PartitionWriter<'a> {
 }
 
 impl<'a> PartitionWriter<'a> for U64PartitionWriter<'a> {
+    type TypeSystem = DataType;
+
     unsafe fn write<T>(&mut self, row: usize, col: usize, value: T) {
         let target: *mut T = transmute(self.buffer.uget_mut((row, col)));
         copy_nonoverlapping(&value, target, 1);
@@ -70,9 +74,9 @@ impl<'a> PartitionWriter<'a> for U64PartitionWriter<'a> {
 
     fn write_checked<T>(&mut self, row: usize, col: usize, value: T) -> Result<()>
     where
-        T: TypeInfo,
+        Self::TypeSystem: TypeSystem<T>,
     {
-        T::check(self.schema[col])?;
+        self.schema[col].check()?;
         unsafe { self.write(row, col, value) };
         Ok(())
     }

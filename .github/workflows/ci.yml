@@ -8,8 +8,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+      - uses: mstachniuk/ci-skip@v1
         with:
-          submodules: recursive
+          fail-fast: true
 
       - name: Install Rust
         uses: actions-rs/toolchain@v1

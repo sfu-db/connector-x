@@ -6,16 +6,22 @@ pub mod csv;
 pub mod postgres;
 
 use crate::errors::Result;
-use crate::types::TypeInfo;
+use crate::typesystem::TypeSystem;
 
-pub trait Queryable {
+pub trait DataSource {
+    type TypeSystem;
+
     fn run_query(&mut self, query: &str) -> Result<()>;
+
+    fn produce<T>(&mut self) -> Result<T>
+    where
+        Self::TypeSystem: TypeSystem<T>,
+        Self: Parse<T>,
+    {
+        self.parse()
+    }
 }
 
-pub trait Producer<T: TypeInfo> {
-    fn produce(&mut self) -> Result<T>;
+pub trait Parse<T> {
+    fn parse(&mut self) -> Result<T>;
 }
-
-pub trait DataSource: Queryable + Producer<f64> + Producer<u64> {}
-
-impl<T> DataSource for T where T: Queryable + Producer<f64> + Producer<u64> {}

@@ -2,6 +2,8 @@ pub mod data_sources;
 mod errors;
 pub mod pg;
 pub mod s3;
+#[macro_use]
+mod typesystem;
 mod types;
 mod worker;
 pub mod writers;
