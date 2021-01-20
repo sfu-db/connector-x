@@ -1,14 +1,14 @@
-mod data_sources;
-mod errors;
 #[doc(hidden)]
 pub mod pg;
 #[doc(hidden)]
 pub mod s3;
 #[macro_use]
 mod typesystem;
+pub mod data_sources;
+mod errors;
 mod types;
 mod worker;
-mod writers;
+pub mod writers;
 
 pub use crate::data_sources::dummy::U64CounterSource;
 pub use crate::errors::ConnectorAgentError;
