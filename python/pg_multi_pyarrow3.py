@@ -32,7 +32,9 @@ if __name__ == '__main__':
             sqls,
         )
     print("concatenating", time.time() - then)
+    print("blocks before:", dfs[0]._data)
     df = pd.concat(dfs)
+    print("blocks after:", df._data)
     print("to pandas", time.time() - then)
     print(df)
     print(time.time() - then)
