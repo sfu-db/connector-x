@@ -6,7 +6,6 @@ use anyhow::anyhow;
 use fehler::throw;
 use ndarray::{Array2, ArrayView2, ArrayViewMut2, Axis};
 use std::mem::transmute;
-use std::ptr::copy_nonoverlapping;
 
 /// This `Writer` can only write u64 into it.
 #[derive(Clone)]
@@ -71,7 +70,7 @@ impl<'a> PartitionWriter<'a> for U64PartitionWriter<'a> {
 
     unsafe fn write<T>(&mut self, row: usize, col: usize, value: T) {
         let target: *mut T = transmute(self.buffer.uget_mut((row, col)));
-        copy_nonoverlapping(&value, target, 1);
+        *target = value;
     }
 
     fn write_checked<T>(&mut self, row: usize, col: usize, value: T) -> Result<()>
