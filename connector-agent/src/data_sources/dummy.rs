@@ -37,3 +37,34 @@ impl Parse<f64> for U64CounterSource {
         Ok(FromPrimitive::from_u64(ret).unwrap_or_default())
     }
 }
+
+// String
+pub struct StringSource {
+    rand_string: String,
+}
+
+impl StringSource {
+    pub fn new() -> Self {
+        Self { rand_string: "a".to_string() }
+    }
+}
+
+impl DataSource for StringSource {
+    type TypeSystem = DataType;
+
+    fn run_query(&mut self, _: &str) -> Result<()> {
+        Ok(())
+    }
+}
+
+impl Parse<String> for StringSource {
+    fn parse(&mut self) -> Result<String> {
+        let ret = self.rand_string.clone();
+
+        let mut ascii_value = ret.as_bytes();
+        let mut new_char = (ascii_value[0] + 1) as char;
+        self.rand_string = new_char.to_string();
+
+        Ok(ret)
+    }
+}
