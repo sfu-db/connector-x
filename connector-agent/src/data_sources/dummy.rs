@@ -37,3 +37,59 @@ impl Parse<f64> for U64CounterSource {
         Ok(FromPrimitive::from_u64(ret).unwrap_or_default())
     }
 }
+
+impl Parse<String> for U64CounterSource {
+    fn parse(&mut self) -> Result<String> {
+        let ret = self.counter.to_string();
+        self.counter += 1;
+        Ok(ret)
+    }
+}
+
+pub struct StringSource {
+    rand_string: String,
+}
+
+impl StringSource {
+    pub fn new() -> Self {
+        Self { rand_string: "0".to_string() }
+    }
+}
+
+impl DataSource for StringSource {
+    type TypeSystem = DataType;
+
+    fn run_query(&mut self, _: &str) -> Result<()> {
+        Ok(())
+    }
+}
+
+impl Parse<String> for StringSource {
+    fn parse(&mut self) -> Result<String> {
+        let ret = self.rand_string.clone();
+        let new_val = ret.clone().parse::<u64>().unwrap() + 1;
+        self.rand_string = new_val.to_string();
+
+        Ok(ret)
+    }
+}
+
+impl Parse<u64> for StringSource {
+    fn parse(&mut self) -> Result<u64> {
+        let ret = self.rand_string.clone().parse::<u64>().unwrap();
+        let new_string = ret.clone() + 1;
+        self.rand_string = new_string.to_string();
+
+        Ok(FromPrimitive::from_u64(ret).unwrap_or_default())
+    }
+}
+
+impl Parse<f64> for StringSource {
+    fn parse(&mut self) -> Result<f64> {
+        let ret = self.rand_string.clone().parse::<u64>().unwrap();
+        let new_string = ret.clone() + 1;
+        self.rand_string = new_string.to_string();
+
+        Ok(FromPrimitive::from_u64(ret).unwrap_or_default())
+    }
+}
