@@ -22,6 +22,7 @@
 <span id="19">19</span>
 <span id="20">20</span>
 <span id="21">21</span>
+<span id="22">22</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Each variant in DataType represents a type that connector-agent currently</span>
 <span class="comment">// supports to read from a data source and write into a writer.</span>
@@ -40,9 +41,10 @@
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">DataType</span> {
     <span class="ident">F64</span>,
     <span class="ident">U64</span>,
+    <span class="ident">OptU64</span>,
 }
 
-<span class="macro">impl_typesystem</span><span class="macro">!</span>(<span class="ident">DataType</span>, <span class="ident">DataType</span>::<span class="ident">F64</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f64</span>, <span class="ident">DataType</span>::<span class="ident">U64</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">u64</span>);
-<span class="macro">impl_transmit</span><span class="macro">!</span>(<span class="ident">DataType</span>, <span class="ident">DataType</span>::<span class="ident">F64</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f64</span>, <span class="ident">DataType</span>::<span class="ident">U64</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">u64</span>);
+<span class="macro">impl_typesystem</span><span class="macro">!</span>(<span class="ident">DataType</span>, <span class="ident">DataType</span>::<span class="ident">F64</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f64</span>, <span class="ident">DataType</span>::<span class="ident">U64</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">u64</span>, <span class="ident">DataType</span>::<span class="ident">OptU64</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>);
+<span class="macro">impl_transmit</span><span class="macro">!</span>(<span class="ident">DataType</span>, <span class="ident">DataType</span>::<span class="ident">F64</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f64</span>, <span class="ident">DataType</span>::<span class="ident">U64</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">u64</span>, <span class="ident">DataType</span>::<span class="ident">OptU64</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>);
 </pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../";window.currentCrate = "connector_agent";</script><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>
