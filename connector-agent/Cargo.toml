@@ -34,3 +34,17 @@ rand = "0.8"
 [lib]
 name = "connector_agent"
 crate-type = ["cdylib", "rlib"]
+
+[dev-dependencies]
+criterion = "0.3"
+iai = "0.1"
+
+[[bench]]
+name = "bench_option"
+path = "benches/bench_option.rs"
+harness = false
+
+[[bench]]
+name = "perf_option"
+path = "benches/perf_option.rs"
+harness = false
