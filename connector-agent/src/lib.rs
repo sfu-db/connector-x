@@ -11,7 +11,7 @@ mod worker;
 pub mod writers;
 
 pub use crate::data_sources::{dummy::U64CounterSource, csv::CSVSource};
-pub use crate::errors::ConnectorAgentError;
+pub use crate::errors::{ConnectorAgentError, Result};
 pub use crate::types::DataType;
 pub use crate::typesystem::{Transmit, TypeSystem};
 pub use crate::worker::Worker;

@@ -37,3 +37,11 @@ impl Parse<f64> for U64CounterSource {
         Ok(FromPrimitive::from_u64(ret).unwrap_or_default())
     }
 }
+
+impl Parse<Option<u64>> for U64CounterSource {
+    fn parse(&mut self) -> Result<Option<u64>> {
+        let ret = self.counter;
+        self.counter += 1;
+        Ok(Some(FromPrimitive::from_u64(ret).unwrap_or_default()))
+    }
+}

@@ -15,7 +15,8 @@ use crate::{errors::Result, typesystem::TypeSystem, writers::PartitionWriter};
 pub enum DataType {
     F64,
     U64,
+    OptU64,
 }
 
-impl_typesystem!(DataType, DataType::F64 => f64, DataType::U64 => u64);
-impl_transmit!(DataType, DataType::F64 => f64, DataType::U64 => u64);
+impl_typesystem!(DataType, DataType::F64 => f64, DataType::U64 => u64, DataType::OptU64 => Option<u64>);
+impl_transmit!(DataType, DataType::F64 => f64, DataType::U64 => u64, DataType::OptU64 => Option<u64>);

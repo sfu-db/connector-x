@@ -212,6 +212,7 @@ dependencies = [
  "postgres",
  "r2d2",
  "r2d2_postgres",
+ "rand 0.8.2",
  "rayon",
  "rusoto_core",
  "rusoto_s3",

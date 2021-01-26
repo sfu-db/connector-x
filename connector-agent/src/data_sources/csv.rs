@@ -2,7 +2,6 @@ use super::{DataSource, Parse};
 use crate::errors::Result;
 use crate::types::DataType;
 use std::fs::File;
-use std::str::FromStr;
 
 pub struct CSVSource {
     filename: String,
@@ -40,13 +39,37 @@ impl DataSource for CSVSource {
     }
 }
 
-impl<T> Parse<T> for CSVSource
-where
-    T: FromStr + Default
-{
-    fn parse(&mut self) -> Result<T> {
+impl Parse<u64> for CSVSource {
+    fn parse(&mut self) -> Result<u64> {
         let v: &str = self.records[self.counter / self.ncols][self.counter % self.ncols].as_ref();
         self.counter += 1;
         Ok(v.parse().unwrap_or_default())
+    }
+}
+
+impl Parse<f64> for CSVSource {
+    fn parse(&mut self) -> Result<f64> {
+        let v: &str = self.records[self.counter / self.ncols][self.counter % self.ncols].as_ref();
+        self.counter += 1;
+        Ok(v.parse().unwrap_or_default())
+    }
+}
+
+impl Parse<Option<u64>> for CSVSource {
+    fn parse(&mut self) -> Result<Option<u64>> {
+        let v: &str = self.records[self.counter / self.ncols][self.counter % self.ncols].as_ref();
+        self.counter += 1;
+        if v.is_empty() {
+            return Ok(None);
+        }
+        Ok(Some(v.parse().unwrap_or_default()))
+    }
+}
+
+impl Parse<String> for CSVSource {
+    fn parse(&mut self) -> Result<String> {
+        let v: &str = self.records[self.counter / self.ncols][self.counter % self.ncols].as_ref();
+        self.counter += 1;
+        Ok(String::from(v))
     }
 }
