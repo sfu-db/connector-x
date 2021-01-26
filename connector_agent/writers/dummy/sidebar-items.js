@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["BoolPartitionWriter","The `PartitionedWriter` of `BoolWriter`."],["BoolWriter","This `Writer` can only write bool into it."],["U64PartitionWriter","The `PartitionedWriter` of `U64Writer`."],["U64Writer","This `Writer` can only write u64 into it."]]});
+initSidebarItems({"struct":[["StringPartitionWriter","The `PartitionedWriter` of `StringWriter`."],["StringWriter",""],["U64PartitionWriter","The `PartitionedWriter` of `U64Writer`."],["U64Writer","This `Writer` can only write u64 into it."]]});
