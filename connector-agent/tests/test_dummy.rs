@@ -1,6 +1,6 @@
 use connector_agent::data_sources::dummy::U64CounterSource;
-use connector_agent::data_sources::dummy::StringSource;
-use connector_agent::writers::{dummy::U64Writer, Writer, dummy::StringWriter};
+use connector_agent::data_sources::dummy::{StringSource, BoolCounterSource};
+use connector_agent::writers::{dummy::{U64Writer, StringWriter, BoolWriter}, Writer};
 use connector_agent::{DataType, Worker};
 use ndarray::array;
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
@@ -73,4 +73,33 @@ fn write_string_array() {
         ],
         dw.buffer()
     );
+}
+
+#[test]
+fn write_array_bool() {
+    let mut dw = BoolWriter::allocate(11, vec![DataType::Bool; 5]).unwrap();
+    let schema = dw.schema().to_vec();
+    let writers = dw.partition_writers(&[4, 7]);
+
+    writers
+        .into_par_iter()
+        .for_each(|writer| Worker::new(BoolCounterSource::new(), writer, schema.clone(), "").run_checked().expect("Worker failed"));
+
+    assert_eq!(
+        array![
+            [false, true, false, true, false],
+            [true, false, true, false, true],
+            [false, true, false, true, false],
+            [true, false, true, false, true],
+            [false, true, false, true, false],
+            [true, false, true, false, true],
+            [false, true, false, true, false],
+            [true, false, true, false, true],
+            [false, true, false, true, false],
+            [true, false, true, false, true],
+            [false, true, false, true, false],
+        ],
+        dw.buffer()
+    );
+
 }
