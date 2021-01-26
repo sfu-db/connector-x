@@ -2,6 +2,8 @@ use super::{DataSource, Parse};
 use crate::errors::Result;
 use crate::types::DataType;
 use num_traits::cast::FromPrimitive;
+use anyhow::anyhow;
+use fehler::throw;
 
 /// This `DataSource` only produces T which can be derived from u64.
 pub struct U64CounterSource {
@@ -41,6 +43,14 @@ impl Parse<f64> for U64CounterSource {
 impl Parse<String> for U64CounterSource {
     fn parse(&mut self) -> Result<String> {
         let ret = self.counter.to_string();
+        self.counter += 1;
+        Ok(ret)
+    }
+}
+
+impl Parse<bool> for U64CounterSource {
+    fn parse(&mut self) -> Result<bool> {
+        let ret = self.counter%2==0;
         self.counter += 1;
         Ok(ret)
     }
@@ -91,5 +101,58 @@ impl Parse<f64> for StringSource {
         self.rand_string = new_string.to_string();
 
         Ok(FromPrimitive::from_u64(ret).unwrap_or_default())
+    }
+}
+
+impl Parse<bool> for StringSource {
+    fn parse(&mut self) -> Result<bool> {
+        throw!(anyhow!("StringSource only support string!"))
+    }
+}
+
+
+/// This `DataSource` only produces T which can be derived from bool.
+pub struct BoolCounterSource {
+    counter: bool,
+}
+
+impl BoolCounterSource {
+    pub fn new() -> Self {
+        Self { counter: false }
+    }
+}
+
+impl DataSource for BoolCounterSource {
+    type TypeSystem = DataType;
+    fn run_query(&mut self, _: &str) -> Result<()> {
+        Ok(())
+    }
+}
+
+impl Parse<u64> for BoolCounterSource {
+    fn parse(&mut self) -> Result<u64> {
+        let ret = 1;
+        self.counter = !self.counter;
+        Ok(ret)
+    }
+}
+impl Parse<f64> for BoolCounterSource {
+    fn parse(&mut self) -> Result<f64> {
+        let ret = 1.0;
+        self.counter = !self.counter;
+        Ok(ret)
+    }
+}
+impl Parse<bool> for BoolCounterSource {
+    fn parse(&mut self) -> Result<bool> {
+        let ret = self.counter;
+        self.counter = !self.counter;
+        Ok(ret)
+    }
+}
+
+impl Parse<String> for BoolCounterSource {
+    fn parse(&mut self) -> Result<String> {
+        throw!(anyhow!("StringSource only support string!"))
     }
 }
