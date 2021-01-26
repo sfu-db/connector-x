@@ -134,7 +134,11 @@ fn bench_option_v2(c: &mut Criterion) {
     });
 }
 
-criterion_group!(benches, bench_option, bench_non_option, bench_option_v2);
+criterion_group!(
+    name=benches;
+    config = Criterion::default().measurement_time(std::time::Duration::from_secs(60)).sample_size(10);
+    targets = bench_option, bench_non_option, bench_option_v2
+);
 criterion_main!(benches);
 
 struct OptU64TestSource {
