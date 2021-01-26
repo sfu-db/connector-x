@@ -45,12 +45,12 @@
 <span class="kw">mod</span> <span class="ident">worker</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">writers</span>;
 
-<span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">data_sources</span>::{<span class="ident">dummy</span>::<span class="ident">U64CounterSource</span>, <span class="ident">csv</span>::<span class="ident">CSVSource</span>};
+<span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">data_sources</span>::{<span class="ident">dummy</span>::{<span class="ident">U64CounterSource</span>, <span class="ident">BoolCounterSource</span>, <span class="ident">StringSource</span>}, <span class="ident">csv</span>::<span class="ident">CSVSource</span>};
 <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">errors</span>::<span class="ident">ConnectorAgentError</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::<span class="ident">DataType</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">typesystem</span>::{<span class="ident">Transmit</span>, <span class="ident">TypeSystem</span>};
 <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">worker</span>::<span class="ident">Worker</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">writers</span>::<span class="ident">dummy</span>::{<span class="ident">U64PartitionWriter</span>, <span class="ident">U64Writer</span>};
+<span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">writers</span>::<span class="ident">dummy</span>::{<span class="ident">U64PartitionWriter</span>, <span class="ident">U64Writer</span>, <span class="ident">BoolWriter</span>, <span class="ident">BoolPartitionWriter</span>, <span class="ident">StringWriter</span>, <span class="ident">StringPartitionWriter</span>};
 <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">writers</span>::{<span class="ident">PartitionWriter</span>, <span class="ident">Writer</span>};
 
 <span class="comment">// pub struct Partition {</span>

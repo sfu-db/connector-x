@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["StringSource",""],["U64CounterSource","This `DataSource` only produces T which can be derived from u64."]]});
+initSidebarItems({"struct":[["BoolCounterSource","This `DataSource` only produces T which can be derived from bool."],["StringSource",""],["U64CounterSource","This `DataSource` only produces T which can be derived from u64."]]});
