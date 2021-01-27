@@ -29,6 +29,7 @@ rayon = "1"
 anyhow = "1"
 num-traits = "0.2"
 csv = "1"
+itertools = "0.10"
 
 [lib]
 name = "connector_agent"
