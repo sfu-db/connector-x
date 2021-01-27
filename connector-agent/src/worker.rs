@@ -44,7 +44,17 @@ where
     fn entry(mut self, checked: bool) -> Result<()> {
         self.source.run_query(&self.query)?;
 
-        let funcs: Vec<_> = self.schema.iter().map(|ty| if checked { ty.transmit_checked() } else { ty.transmit() }).collect();
+        let funcs: Vec<_> = self
+            .schema
+            .iter()
+            .map(|ty| {
+                if checked {
+                    ty.transmit_checked()
+                } else {
+                    ty.transmit()
+                }
+            })
+            .collect();
 
         for row in 0..self.partition_writer.nrows() {
             for col in 0..self.partition_writer.ncols() {

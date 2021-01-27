@@ -35,7 +35,7 @@ fn load_and_parse() {
 
     let mut source = CSVSource::new("./tests/data/uspop_0.csv");
     source.run_query("").expect("run query");
-    
+
     assert_eq!(3, source.nrows);
     assert_eq!(5, source.ncols);
 
@@ -50,9 +50,21 @@ fn load_and_parse() {
 
     assert_eq!(
         vec![
-            Value::City(String::from("Kenai")), Value::State(String::from("AK")), Value::Population(7610), Value::Longitude(60.5544444), Value::Latitude(-151.2583333),
-            Value::City(String::from("Selma")), Value::State(String::from("AL")), Value::Population(18980), Value::Longitude(32.4072222), Value::Latitude(-87.0211111),
-            Value::City(String::from("El Mirage")), Value::State(String::from("AZ")), Value::Population(32308), Value::Longitude(33.6130556), Value::Latitude(-112.3238889)
+            Value::City(String::from("Kenai")),
+            Value::State(String::from("AK")),
+            Value::Population(7610),
+            Value::Longitude(60.5544444),
+            Value::Latitude(-151.2583333),
+            Value::City(String::from("Selma")),
+            Value::State(String::from("AL")),
+            Value::Population(18980),
+            Value::Longitude(32.4072222),
+            Value::Latitude(-87.0211111),
+            Value::City(String::from("El Mirage")),
+            Value::State(String::from("AZ")),
+            Value::Population(32308),
+            Value::Longitude(33.6130556),
+            Value::Latitude(-112.3238889)
         ],
         results
     );
@@ -68,9 +80,11 @@ fn load_and_write_uint() {
     writers
         .into_par_iter()
         .zip_eq(files)
-        .for_each(|(writer, file)| Worker::new(CSVSource::new(file), writer, schema.clone(), "")
-            .run_checked()
-            .expect("Worker failed"));
+        .for_each(|(writer, file)| {
+            Worker::new(CSVSource::new(file), writer, schema.clone(), "")
+                .run_checked()
+                .expect("Worker failed")
+        });
 
     assert_eq!(
         array![

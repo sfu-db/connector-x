@@ -1,5 +1,4 @@
-use connector_agent::data_sources::dummy::U64CounterSource;
-use connector_agent::data_sources::dummy::{StringSource, BoolCounterSource, F64CounterSource};
+use connector_agent::data_sources::dummy::{U64CounterSource, StringSource, BoolCounterSource, F64CounterSource};
 use connector_agent::writers::{dummy::{U64Writer, StringWriter, BoolWriter, F64Writer}, Writer};
 use connector_agent::{DataType, Worker};
 use ndarray::array;
@@ -8,13 +7,33 @@ use rayon::iter::{IntoParallelIterator, ParallelIterator};
 #[test]
 #[should_panic]
 fn wrong_data_type() {
-    let _ = U64Writer::allocate(11, vec![DataType::U64, DataType::U64, DataType::U64, DataType::F64, DataType::U64]).unwrap();
+    let _ = U64Writer::allocate(
+        11,
+        vec![
+            DataType::U64,
+            DataType::U64,
+            DataType::U64,
+            DataType::F64,
+            DataType::U64,
+        ],
+    )
+    .unwrap();
 }
 
 #[test]
 #[should_panic]
 fn wrong_string_data_type() {
-    let _ = StringWriter::allocate(11, vec![DataType::String, DataType::String, DataType::U64, DataType::String, DataType::String]).unwrap();
+    let _ = StringWriter::allocate(
+        11,
+        vec![
+            DataType::String,
+            DataType::String,
+            DataType::U64,
+            DataType::String,
+            DataType::String,
+        ],
+    )
+    .unwrap();
 }
 
 #[test]
@@ -23,9 +42,11 @@ fn write_array() {
     let schema = dw.schema().to_vec();
     let writers = dw.partition_writers(&[4, 7]);
 
-    writers
-        .into_par_iter()
-        .for_each(|writer| Worker::new(U64CounterSource::new(), writer, schema.clone(), "").run_checked().expect("Worker failed"));
+    writers.into_par_iter().for_each(|writer| {
+        Worker::new(U64CounterSource::new(), writer, schema.clone(), "")
+            .run_checked()
+            .expect("Worker failed")
+    });
 
     assert_eq!(
         array![
@@ -45,7 +66,6 @@ fn write_array() {
     );
 }
 
-
 #[test]
 fn write_string_array() {
     let mut dw = StringWriter::allocate(11, vec![DataType::String; 5]).unwrap();
@@ -53,9 +73,11 @@ fn write_string_array() {
 
     let writers = dw.partition_writers(&[4, 7]);
 
-    writers
-        .into_par_iter()
-        .for_each(|writer| Worker::new(StringSource::new(), writer, schema.clone(), "").run_checked().expect("Worker failed"));
+    writers.into_par_iter().for_each(|writer| {
+        Worker::new(StringSource::new(), writer, schema.clone(), "")
+            .run_checked()
+            .expect("Worker failed")
+    });
 
     assert_eq!(
         array![
@@ -81,9 +103,11 @@ fn write_array_bool() {
     let schema = dw.schema().to_vec();
     let writers = dw.partition_writers(&[4, 7]);
 
-    writers
-        .into_par_iter()
-        .for_each(|writer| Worker::new(BoolCounterSource::new(), writer, schema.clone(), "").run_checked().expect("Worker failed"));
+    writers.into_par_iter().for_each(|writer| {
+        Worker::new(BoolCounterSource::new(), writer, schema.clone(), "")
+            .run_checked()
+            .expect("Worker failed")
+    });
 
     assert_eq!(
         array![
@@ -112,6 +136,7 @@ fn write_array_f64() {
     writers
         .into_par_iter()
         .for_each(|writer| Worker::new(F64CounterSource::new(), writer, schema.clone(), "").run_checked().expect("Worker failed"));
+
 
     assert_eq!(
         array![[0.0, 0.5, 1.0, 1.5, 2.0],

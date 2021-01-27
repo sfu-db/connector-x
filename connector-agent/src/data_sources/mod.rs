@@ -1,8 +1,8 @@
 // When implementing a data source, be make sure to implement Queryable and
 // Producer for all supported types in crate::types::DataType.
 
-pub mod dummy;
 pub mod csv;
+pub mod dummy;
 pub mod postgres;
 
 use crate::errors::Result;

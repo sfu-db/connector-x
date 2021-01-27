@@ -24,7 +24,12 @@ pub enum JsonFormat {
 }
 
 #[throws(Error)]
-pub async fn read_s3<S>(bucket: &str, objects: &[S], schema: &str, json_format: JsonFormat) -> HashMap<String, Vec<(*const FFI_ArrowArray, *const FFI_ArrowSchema)>>
+pub async fn read_s3<S>(
+    bucket: &str,
+    objects: &[S],
+    schema: &str,
+    json_format: JsonFormat,
+) -> HashMap<String, Vec<(*const FFI_ArrowArray, *const FFI_ArrowSchema)>>
 where
     S: AsRef<str>,
 {
@@ -53,12 +58,16 @@ where
                 for (i, f) in batch.schema().fields().iter().enumerate() {
                     use arrow::datatypes::DataType::*;
                     match f.data_type() {
-                        Null | Boolean | Int8 | Int16 | Int32 | Int64 | UInt8 | UInt16 | UInt32 | UInt64 | Float16 | Float32 | Float64 | Utf8 | LargeUtf8 | Binary
+                        Null | Boolean | Int8 | Int16 | Int32 | Int64 | UInt8 | UInt16 | UInt32
+                        | UInt64 | Float16 | Float32 | Float64 | Utf8 | LargeUtf8 | Binary
                         | LargeBinary => {}
                         _ => continue,
                     }
 
-                    table.entry(f.name().clone()).or_insert_with(|| vec![]).push(batch.column(i).to_raw()?)
+                    table
+                        .entry(f.name().clone())
+                        .or_insert_with(|| vec![])
+                        .push(batch.column(i).to_raw()?)
                 }
             }
         }
@@ -68,13 +77,22 @@ where
 }
 
 #[throws(Error)]
-async fn read_as_record_batch(payload: GetObjectOutput, schema: SchemaRef, json_format: JsonFormat) -> Option<Vec<RecordBatch>> {
+async fn read_as_record_batch(
+    payload: GetObjectOutput,
+    schema: SchemaRef,
+    json_format: JsonFormat,
+) -> Option<Vec<RecordBatch>> {
     if let None = payload.body.as_ref() {
         return None;
     }
 
     let mut buf = vec![];
-    payload.body.unwrap().into_async_read().read_to_end(&mut buf).await?;
+    payload
+        .body
+        .unwrap()
+        .into_async_read()
+        .read_to_end(&mut buf)
+        .await?;
 
     let batches = spawn_blocking(move || -> Result<_, Error> {
         let mut rawjson = vec![];
@@ -83,9 +101,13 @@ async fn read_as_record_batch(payload: GetObjectOutput, schema: SchemaRef, json_
         let mut reader = match json_format {
             JsonFormat::Array => {
                 array_to_jsonl(rawjson.as_mut());
-                ReaderBuilder::new().with_schema(schema.clone()).build(Cursor::new(&rawjson[1..rawjson.len() - 1]))?
+                ReaderBuilder::new()
+                    .with_schema(schema.clone())
+                    .build(Cursor::new(&rawjson[1..rawjson.len() - 1]))?
             }
-            JsonFormat::JsonL => ReaderBuilder::new().with_schema(schema.clone()).build(Cursor::new(&rawjson[..]))?,
+            JsonFormat::JsonL => ReaderBuilder::new()
+                .with_schema(schema.clone())
+                .build(Cursor::new(&rawjson[..]))?,
         };
 
         let mut batches = vec![];

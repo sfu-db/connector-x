@@ -4,18 +4,25 @@ pub mod pg;
 pub mod s3;
 #[macro_use]
 mod typesystem;
+mod any_array;
 pub mod data_sources;
 mod errors;
 mod types;
 mod worker;
 pub mod writers;
 
-pub use crate::data_sources::{dummy::{U64CounterSource, BoolCounterSource, StringSource}, csv::CSVSource};
+pub use crate::data_sources::{
+    csv::CSVSource,
+    dummy::{BoolCounterSource, StringSource, U64CounterSource},
+};
 pub use crate::errors::ConnectorAgentError;
 pub use crate::types::DataType;
 pub use crate::typesystem::{Transmit, TypeSystem};
 pub use crate::worker::Worker;
-pub use crate::writers::dummy::{U64PartitionWriter, U64Writer, BoolWriter, BoolPartitionWriter, StringWriter, StringPartitionWriter};
+pub use crate::writers::dummy::{
+    BoolPartitionWriter, BoolWriter, StringPartitionWriter, StringWriter, U64PartitionWriter,
+    U64Writer,
+};
 pub use crate::writers::{PartitionWriter, Writer};
 
 // pub struct Partition {

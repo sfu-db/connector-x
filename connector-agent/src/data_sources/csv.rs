@@ -28,8 +28,8 @@ impl DataSource for CSVSource {
     type TypeSystem = DataType;
     fn run_query(&mut self, _query: &str) -> Result<()> {
         let mut reader = csv::ReaderBuilder::new()
-                .has_headers(false)
-                .from_reader(File::open(self.filename.as_str()).expect("open file"));
+            .has_headers(false)
+            .from_reader(File::open(self.filename.as_str()).expect("open file"));
 
         self.records = reader.records().map(|v| v.expect("csv record")).collect();
         self.nrows = self.records.len();
@@ -42,7 +42,7 @@ impl DataSource for CSVSource {
 
 impl<T> Parse<T> for CSVSource
 where
-    T: FromStr + Default
+    T: FromStr + Default,
 {
     fn parse(&mut self) -> Result<T> {
         let v: &str = self.records[self.counter / self.ncols][self.counter % self.ncols].as_ref();

@@ -6,7 +6,6 @@ use anyhow::anyhow;
 use fehler::throw;
 use ndarray::{Array2, ArrayView2, ArrayViewMut2, Axis};
 use std::mem::transmute;
-// use std::ptr::copy_nonoverlapping;
 
 /// This `Writer` can only write u64 into it.
 #[derive(Clone)]
@@ -223,8 +222,8 @@ impl<'a> PartitionWriter<'a> for StringPartitionWriter<'a> {
     }
 
     fn write_checked<T>(&mut self, row: usize, col: usize, value: T) -> Result<()>
-        where
-            Self::TypeSystem: TypeSystem<T>,
+    where
+        Self::TypeSystem: TypeSystem<T>,
     {
         self.schema[col].check()?;
         unsafe { self.write(row, col, value) };

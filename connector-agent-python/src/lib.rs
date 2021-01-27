@@ -54,12 +54,28 @@ fn test() -> PyResult<()> {
 }
 
 #[pyfunction]
-fn read_s3(bucket: &str, objects: Vec<String>, schema: &str, json_format: &str, py: Python) -> PyResult<PyObject> {
+fn read_s3(
+    bucket: &str,
+    objects: Vec<String>,
+    schema: &str,
+    json_format: &str,
+    py: Python,
+) -> PyResult<PyObject> {
     let ret: Fallible<Vec<(String, Vec<(isize, isize)>)>> = py.allow_threads(|| {
         let r = runtime::Runtime::new()?;
 
         let ret = r.block_on(s3::read_s3(bucket, &objects, schema, json_format.parse()?))?;
-        Ok(ret.into_iter().map(|(k, v)| (k, v.into_iter().map(|(a, b)| (a as isize, b as isize)).collect())).collect())
+        Ok(ret
+            .into_iter()
+            .map(|(k, v)| {
+                (
+                    k,
+                    v.into_iter()
+                        .map(|(a, b)| (a as isize, b as isize))
+                        .collect(),
+                )
+            })
+            .collect())
     });
 
     let ret: Vec<_> = ret
@@ -75,7 +91,17 @@ fn read_pg(sqls: Vec<String>, schema: &str, py: Python) -> PyResult<PyObject> {
     let ret: Fallible<Vec<(String, Vec<(isize, isize)>)>> = py.allow_threads(|| {
         let r = runtime::Runtime::new()?;
         let ret = r.block_on(pg::read_pg(&sqls, schema))?;
-        Ok(ret.into_iter().map(|(k, v)| (k, v.into_iter().map(|(a, b)| (a as isize, b as isize)).collect())).collect())
+        Ok(ret
+            .into_iter()
+            .map(|(k, v)| {
+                (
+                    k,
+                    v.into_iter()
+                        .map(|(a, b)| (a as isize, b as isize))
+                        .collect(),
+                )
+            })
+            .collect())
     });
 
     let ret: Vec<_> = ret

@@ -1,9 +1,9 @@
 use super::{DataSource, Parse};
 use crate::errors::Result;
 use crate::types::DataType;
-use num_traits::cast::FromPrimitive;
 use anyhow::anyhow;
 use fehler::throw;
+use num_traits::cast::FromPrimitive;
 
 /// This `DataSource` only produces T which can be derived from u64.
 pub struct U64CounterSource {
@@ -50,7 +50,7 @@ impl Parse<String> for U64CounterSource {
 
 impl Parse<bool> for U64CounterSource {
     fn parse(&mut self) -> Result<bool> {
-        let ret = self.counter%2==0;
+        let ret = self.counter % 2 == 0;
         self.counter += 1;
         Ok(ret)
     }
@@ -64,7 +64,9 @@ pub struct StringSource {
 
 impl StringSource {
     pub fn new() -> Self {
-        Self { rand_string: "0".to_string() }
+        Self {
+            rand_string: "0".to_string(),
+        }
     }
 }
 
@@ -111,7 +113,6 @@ impl Parse<bool> for StringSource {
         throw!(anyhow!("StringSource only support string!"))
     }
 }
-
 
 /// This `DataSource` only produces T which can be derived from bool.
 pub struct BoolCounterSource {
