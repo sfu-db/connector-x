@@ -29,14 +29,27 @@ impl<'a> Writer<'a> for MemoryWriter {
 
         let mut block_indices = HashMap::new();
         let mut buffers = vec![];
-        for (bid, (dt, grp)) in sorted_schema.iter().group_by(|&&v| v).into_iter().enumerate() {
+        for (bid, (dt, grp)) in sorted_schema
+            .iter()
+            .group_by(|&&v| v)
+            .into_iter()
+            .enumerate()
+        {
             block_indices.insert(dt, bid);
             let count = grp.count();
             let buffer = match dt {
-                DataType::F64 => Box::new(Array2::<f64>::zeros((nrows, count))) as Box<dyn AnyArray<Ix2>>,
-                DataType::U64 => Box::new(Array2::<u64>::zeros((nrows, count))) as Box<dyn AnyArray<Ix2>>,
-                DataType::Bool => Box::new(Array2::<bool>::from_elem((nrows, count), false)) as Box<dyn AnyArray<Ix2>>,
-                DataType::String => Box::new(Array2::<String>::from_elem((nrows, count), "".to_string())) as Box<dyn AnyArray<Ix2>>,
+                DataType::F64 => {
+                    Box::new(Array2::<f64>::zeros((nrows, count))) as Box<dyn AnyArray<Ix2>>
+                }
+                DataType::U64 => {
+                    Box::new(Array2::<u64>::zeros((nrows, count))) as Box<dyn AnyArray<Ix2>>
+                }
+                DataType::Bool => Box::new(Array2::<bool>::from_elem((nrows, count), false))
+                    as Box<dyn AnyArray<Ix2>>,
+                DataType::String => {
+                    Box::new(Array2::<String>::from_elem((nrows, count), "".to_string()))
+                        as Box<dyn AnyArray<Ix2>>
+                }
             };
             buffers.push(buffer);
         }
@@ -62,7 +75,11 @@ impl<'a> Writer<'a> for MemoryWriter {
         assert_eq!(counts.iter().sum::<usize>(), self.nrows);
 
         let nbuffers = self.buffers.len();
-        let mut views: Vec<_> = self.buffers.iter_mut().map(|buf| Some(buf.view_mut())).collect();
+        let mut views: Vec<_> = self
+            .buffers
+            .iter_mut()
+            .map(|buf| Some(buf.view_mut()))
+            .collect();
         let mut ret = vec![];
         for &c in counts {
             let mut sub_buffers = vec![];
@@ -73,7 +90,12 @@ impl<'a> Writer<'a> for MemoryWriter {
                 views[bid] = Some(rest);
                 sub_buffers.push(splitted);
             }
-            ret.push(MemoryPartitionWriter::new(c, sub_buffers, self.schema.clone(), self.column_buffer_index.clone()));
+            ret.push(MemoryPartitionWriter::new(
+                c,
+                sub_buffers,
+                self.schema.clone(),
+                self.column_buffer_index.clone(),
+            ));
         }
         ret
     }
@@ -85,13 +107,19 @@ impl<'a> Writer<'a> for MemoryWriter {
 
 impl MemoryWriter {
     pub fn buffer_view<'a, T: 'static>(&'a self, bid: usize) -> Option<ArrayView2<T>> {
-        self.buffers[bid].as_any().downcast_ref::<Array2<T>>().map(|arr| arr.view())
+        self.buffers[bid]
+            .as_any()
+            .downcast_ref::<Array2<T>>()
+            .map(|arr| arr.view())
     }
 
     pub fn column_view<'a, T: 'static>(&'a self, col: usize) -> Option<ArrayView1<T>> {
         let (bid, sid) = self.column_buffer_index(col);
 
-        self.buffers[bid].as_any().downcast_ref::<Array2<T>>().map(|arr| arr.column(sid))
+        self.buffers[bid]
+            .as_any()
+            .downcast_ref::<Array2<T>>()
+            .map(|arr| arr.column(sid))
     }
 
     pub fn column_buffer_index(&self, col: usize) -> (usize, usize) {
@@ -112,7 +140,8 @@ impl<'a> PartitionWriter<'a> for MemoryPartitionWriter<'a> {
     unsafe fn write<T>(&mut self, row: usize, col: usize, value: T) {
         let buffer_index = &self.col_buffer_index[col];
 
-        let target: &mut T = transmute(self.buffers[buffer_index.0].uget_mut((row, buffer_index.1)));
+        let target: &mut T =
+            transmute(self.buffers[buffer_index.0].uget_mut((row, buffer_index.1)));
         *target = value;
     }
 
@@ -135,7 +164,12 @@ impl<'a> PartitionWriter<'a> for MemoryPartitionWriter<'a> {
 }
 
 impl<'a> MemoryPartitionWriter<'a> {
-    fn new(nrows: usize, buffers: Vec<Box<dyn AnyArrayViewMut<'a, Ix2> + 'a>>, schema: Vec<DataType>, col_buffer_index: Vec<(usize, usize)>) -> Self {
+    fn new(
+        nrows: usize,
+        buffers: Vec<Box<dyn AnyArrayViewMut<'a, Ix2> + 'a>>,
+        schema: Vec<DataType>,
+        col_buffer_index: Vec<(usize, usize)>,
+    ) -> Self {
         Self {
             nrows,
             buffers,
