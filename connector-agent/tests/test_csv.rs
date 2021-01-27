@@ -80,7 +80,11 @@ fn load_and_write_uint() {
     writers
         .into_par_iter()
         .zip_eq(files)
-        .for_each(|(writer, file)| Worker::new(CSVSource::new(file), writer, schema.clone(), "").run_checked().expect("Worker failed"));
+        .for_each(|(writer, file)| {
+            Worker::new(CSVSource::new(file), writer, schema.clone(), "")
+                .run_checked()
+                .expect("Worker failed")
+        });
 
     assert_eq!(
         array![

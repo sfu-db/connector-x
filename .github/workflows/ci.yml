@@ -16,11 +16,13 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
             toolchain: stable
+            components: rustfmt
 
       - name: Is the code formatted?
         uses: actions-rs/cargo@v1
         with:
-          command: fmt --all -- --check -q
+          command: fmt
+          args: --all -- --check -q
 
       - name: Run tests
         uses: actions-rs/cargo@v1

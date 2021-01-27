@@ -62,7 +62,9 @@ pub struct StringSource {
 
 impl StringSource {
     pub fn new() -> Self {
-        Self { rand_string: "0".to_string() }
+        Self {
+            rand_string: "0".to_string(),
+        }
     }
 }
 

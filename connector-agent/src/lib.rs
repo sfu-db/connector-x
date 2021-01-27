@@ -18,7 +18,10 @@ pub use crate::errors::ConnectorAgentError;
 pub use crate::types::DataType;
 pub use crate::typesystem::{Transmit, TypeSystem};
 pub use crate::worker::Worker;
-pub use crate::writers::dummy::{BoolPartitionWriter, BoolWriter, StringPartitionWriter, StringWriter, U64PartitionWriter, U64Writer};
+pub use crate::writers::dummy::{
+    BoolPartitionWriter, BoolWriter, StringPartitionWriter, StringWriter, U64PartitionWriter,
+    U64Writer,
+};
 pub use crate::writers::{PartitionWriter, Writer};
 
 // pub struct Partition {

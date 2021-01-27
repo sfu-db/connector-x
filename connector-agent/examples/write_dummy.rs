@@ -8,9 +8,11 @@ fn main() {
     let schema = dw.schema().to_vec();
     let writers = dw.partition_writers(&[4, 7]);
 
-    writers
-        .into_par_iter()
-        .for_each(|writer| Worker::new(U64CounterSource::new(), writer, schema.clone(), "").run_checked().expect("Worker failed"));
+    writers.into_par_iter().for_each(|writer| {
+        Worker::new(U64CounterSource::new(), writer, schema.clone(), "")
+            .run_checked()
+            .expect("Worker failed")
+    });
 
     println!("{:?}", dw.buffer());
 }
