@@ -56,6 +56,8 @@ impl Parse<bool> for U64CounterSource {
     }
 }
 
+/// This `DataSource` only produces T which can be derived from String
+
 pub struct StringSource {
     rand_string: String,
 }
@@ -155,4 +157,49 @@ impl Parse<String> for BoolCounterSource {
     fn parse(&mut self) -> Result<String> {
         throw!(anyhow!("StringSource only support string!"))
     }
+}
+
+
+/// This `DataSource` only produces T which can be derived from f64.
+pub struct F64CounterSource {
+    counter: f64,
+}
+
+impl F64CounterSource {
+    pub fn new() -> Self {
+        println!("haha");
+        Self { counter: 0.0 }
+    }
+}
+
+impl DataSource for F64CounterSource {
+    type TypeSystem = DataType;
+
+    fn run_query(&mut self, _: &str) -> Result<()> {
+        Ok(())
+    }
+}
+
+impl Parse<u64> for F64CounterSource {
+    fn parse(&mut self) -> Result<u64> {
+        let ret = self.counter;
+        self.counter += 0.5;
+        Ok(FromPrimitive::from_f64(ret).unwrap_or_default())
+    }
+}
+
+impl Parse<f64> for F64CounterSource {
+    fn parse(&mut self) -> Result<f64> {
+        let ret = self.counter;
+        self.counter += 0.5;
+        Ok(FromPrimitive::from_f64(ret).unwrap_or_default())
+    }
+}
+
+impl Parse<bool> for F64CounterSource {
+    fn parse(&mut self) -> Result<bool> {throw!(anyhow!("F64CounterSource only support f64!")) }
+}
+
+impl Parse<String> for F64CounterSource {
+    fn parse(&mut self) -> Result<String> {throw!(anyhow!("F64CounterSource only support f64!")) }
 }
