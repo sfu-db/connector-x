@@ -5,6 +5,7 @@ implementors["bstr"] = [{"text":"impl Ord for BString","synthetic":false,"types"
 implementors["byteorder"] = [{"text":"impl Ord for BigEndian","synthetic":false,"types":[]},{"text":"impl Ord for LittleEndian","synthetic":false,"types":[]}];
 implementors["bytes"] = [{"text":"impl Ord for Bytes","synthetic":false,"types":[]},{"text":"impl Ord for BytesMut","synthetic":false,"types":[]}];
 implementors["chrono"] = [{"text":"impl Ord for NaiveDate","synthetic":false,"types":[]},{"text":"impl Ord for NaiveDateTime","synthetic":false,"types":[]},{"text":"impl Ord for IsoWeek","synthetic":false,"types":[]},{"text":"impl Ord for NaiveTime","synthetic":false,"types":[]},{"text":"impl&lt;Tz:&nbsp;TimeZone&gt; Ord for Date&lt;Tz&gt;","synthetic":false,"types":[]},{"text":"impl&lt;Tz:&nbsp;TimeZone&gt; Ord for DateTime&lt;Tz&gt;","synthetic":false,"types":[]}];
+implementors["connector_agent"] = [{"text":"impl Ord for DataType","synthetic":false,"types":[]}];
 implementors["crossbeam_epoch"] = [{"text":"impl&lt;T:&nbsp;?Sized + Pointable, '_&gt; Ord for Shared&lt;'_, T&gt;","synthetic":false,"types":[]}];
 implementors["either"] = [{"text":"impl&lt;L:&nbsp;Ord, R:&nbsp;Ord&gt; Ord for Either&lt;L, R&gt;","synthetic":false,"types":[]}];
 implementors["futures_util"] = [{"text":"impl&lt;T:&nbsp;Ord&gt; Ord for AllowStdIo&lt;T&gt;","synthetic":false,"types":[]}];
