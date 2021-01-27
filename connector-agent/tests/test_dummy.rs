@@ -137,6 +137,7 @@ fn write_array_f64() {
         .into_par_iter()
         .for_each(|writer| Worker::new(F64CounterSource::new(), writer, schema.clone(), "").run_checked().expect("Worker failed"));
 
+
     assert_eq!(
         array![[0.0, 0.5, 1.0, 1.5, 2.0],
                [2.5, 3.0, 3.5, 4.0, 4.5],
