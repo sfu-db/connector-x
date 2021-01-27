@@ -38,7 +38,7 @@
 <span class="doccomment">/// This is our intermediate type system used in this library.</span>
 <span class="doccomment">/// For all the sources, their output values must be one of the types defined by DataType.</span>
 <span class="doccomment">/// For all the writers, they must support writing any value whose type is defined by DataType.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>, <span class="ident">PartialOrd</span>, <span class="ident">Ord</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">DataType</span> {
     <span class="ident">F64</span>,
     <span class="ident">U64</span>,

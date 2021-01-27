@@ -23,7 +23,6 @@ implementors["httparse"] = [{"text":"impl Error for Error","synthetic":false,"ty
 implementors["httpdate"] = [{"text":"impl Error for Error","synthetic":false,"types":[]}];
 implementors["humantime"] = [{"text":"impl Error for Error","synthetic":false,"types":[]},{"text":"impl Error for Error","synthetic":false,"types":[]}];
 implementors["hyper"] = [{"text":"impl Error for Error","synthetic":false,"types":[]},{"text":"impl Error for InvalidNameError","synthetic":false,"types":[]}];
-implementors["itertools"] = [{"text":"impl&lt;I&gt; Error for ExactlyOneError&lt;I&gt; <span class=\"where fmt-newline\">where<br>&nbsp;&nbsp;&nbsp;&nbsp;I: Iterator + Debug,<br>&nbsp;&nbsp;&nbsp;&nbsp;I::Item: Debug,&nbsp;</span>","synthetic":false,"types":[]}];
 implementors["log"] = [{"text":"impl Error for SetLoggerError","synthetic":false,"types":[]},{"text":"impl Error for ParseLevelError","synthetic":false,"types":[]}];
 implementors["native_tls"] = [{"text":"impl Error for Error","synthetic":false,"types":[]},{"text":"impl&lt;S&gt; Error for HandshakeError&lt;S&gt; <span class=\"where fmt-newline\">where<br>&nbsp;&nbsp;&nbsp;&nbsp;S: Any + Debug,&nbsp;</span>","synthetic":false,"types":[]}];
 implementors["ndarray"] = [{"text":"impl Error for ShapeError","synthetic":false,"types":[]}];

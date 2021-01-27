@@ -159,13 +159,14 @@
 <span id="156">156</span>
 <span id="157">157</span>
 <span id="158">158</span>
+<span id="159">159</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">DataSource</span>, <span class="ident">Parse</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">errors</span>::<span class="prelude-ty">Result</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::<span class="ident">DataType</span>;
-<span class="kw">use</span> <span class="ident">num_traits</span>::<span class="ident">cast</span>::<span class="ident">FromPrimitive</span>;
 <span class="kw">use</span> <span class="ident">anyhow</span>::<span class="ident">anyhow</span>;
 <span class="kw">use</span> <span class="ident">fehler</span>::<span class="ident">throw</span>;
+<span class="kw">use</span> <span class="ident">num_traits</span>::<span class="ident">cast</span>::<span class="ident">FromPrimitive</span>;
 
 <span class="doccomment">/// This `DataSource` only produces T which can be derived from u64.</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">U64CounterSource</span> {
@@ -212,7 +213,7 @@
 
 <span class="kw">impl</span> <span class="ident">Parse</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">U64CounterSource</span> {
     <span class="kw">fn</span> <span class="ident">parse</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">ret</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">counter</span><span class="op">%</span><span class="number">2</span><span class="op">=</span><span class="op">=</span><span class="number">0</span>;
+        <span class="kw">let</span> <span class="ident">ret</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">counter</span> <span class="op">%</span> <span class="number">2</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span>;
         <span class="self">self</span>.<span class="ident">counter</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
         <span class="prelude-val">Ok</span>(<span class="ident">ret</span>)
     }
@@ -224,7 +225,9 @@
 
 <span class="kw">impl</span> <span class="ident">StringSource</span> {
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="self">Self</span> { <span class="ident">rand_string</span>: <span class="string">&quot;0&quot;</span>.<span class="ident">to_string</span>() }
+        <span class="self">Self</span> {
+            <span class="ident">rand_string</span>: <span class="string">&quot;0&quot;</span>.<span class="ident">to_string</span>(),
+        }
     }
 }
 
@@ -271,7 +274,6 @@
         <span class="macro">throw</span><span class="macro">!</span>(<span class="macro">anyhow</span><span class="macro">!</span>(<span class="string">&quot;StringSource only support string!&quot;</span>))
     }
 }
-
 
 <span class="doccomment">/// This `DataSource` only produces T which can be derived from bool.</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BoolCounterSource</span> {

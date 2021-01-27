@@ -2,7 +2,6 @@
 implementors["bytes"] = [{"text":"impl LowerHex for Bytes","synthetic":false,"types":[]},{"text":"impl LowerHex for BytesMut","synthetic":false,"types":[]}];
 implementors["env_logger"] = [{"text":"impl&lt;'a, T:&nbsp;LowerHex&gt; LowerHex for StyledValue&lt;'a, T&gt;","synthetic":false,"types":[]}];
 implementors["generic_array"] = [{"text":"impl&lt;T:&nbsp;ArrayLength&lt;u8&gt;&gt; LowerHex for GenericArray&lt;u8, T&gt; <span class=\"where fmt-newline\">where<br>&nbsp;&nbsp;&nbsp;&nbsp;T: Add&lt;T&gt;,<br>&nbsp;&nbsp;&nbsp;&nbsp;&lt;T as Add&lt;T&gt;&gt;::Output: ArrayLength&lt;u8&gt;,&nbsp;</span>","synthetic":false,"types":[]}];
-implementors["itertools"] = [{"text":"impl&lt;'a, I&gt; LowerHex for Format&lt;'a, I&gt; <span class=\"where fmt-newline\">where<br>&nbsp;&nbsp;&nbsp;&nbsp;I: Iterator,<br>&nbsp;&nbsp;&nbsp;&nbsp;I::Item: LowerHex,&nbsp;</span>","synthetic":false,"types":[]}];
 implementors["md5"] = [{"text":"impl LowerHex for Digest","synthetic":false,"types":[]}];
 implementors["ndarray"] = [{"text":"impl&lt;'a, A:&nbsp;LowerHex, S, D:&nbsp;Dimension&gt; LowerHex for ArrayBase&lt;S, D&gt; <span class=\"where fmt-newline\">where<br>&nbsp;&nbsp;&nbsp;&nbsp;S: Data&lt;Elem = A&gt;,&nbsp;</span>","synthetic":false,"types":[]}];
 implementors["num_bigint"] = [{"text":"impl LowerHex for BigInt","synthetic":false,"types":[]},{"text":"impl LowerHex for BigUint","synthetic":false,"types":[]}];
