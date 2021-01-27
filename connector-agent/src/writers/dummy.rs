@@ -223,8 +223,8 @@ impl<'a> PartitionWriter<'a> for StringPartitionWriter<'a> {
     }
 
     fn write_checked<T>(&mut self, row: usize, col: usize, value: T) -> Result<()>
-        where
-            Self::TypeSystem: TypeSystem<T>,
+    where
+        Self::TypeSystem: TypeSystem<T>,
     {
         self.schema[col].check()?;
         unsafe { self.write(row, col, value) };

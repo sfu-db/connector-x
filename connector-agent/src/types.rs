@@ -16,7 +16,7 @@ pub enum DataType {
     F64,
     U64,
     Bool,
-    String
+    String,
 }
 
 impl_typesystem!(DataType, DataType::F64 => f64, DataType::U64 => u64, DataType::Bool => bool, DataType::String => String);

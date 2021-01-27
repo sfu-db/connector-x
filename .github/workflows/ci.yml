@@ -17,6 +17,11 @@ jobs:
         with:
             toolchain: stable
 
+      - name: Is the code formatted?
+        uses: actions-rs/cargo@v1
+        with:
+          command: fmt --all -- --check -q
+
       - name: Run tests
         uses: actions-rs/cargo@v1
         with:

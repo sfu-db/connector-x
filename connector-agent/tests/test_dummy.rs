@@ -1,6 +1,9 @@
 use connector_agent::data_sources::dummy::U64CounterSource;
-use connector_agent::data_sources::dummy::{StringSource, BoolCounterSource};
-use connector_agent::writers::{dummy::{U64Writer, StringWriter, BoolWriter}, Writer};
+use connector_agent::data_sources::dummy::{BoolCounterSource, StringSource};
+use connector_agent::writers::{
+    dummy::{BoolWriter, StringWriter, U64Writer},
+    Writer,
+};
 use connector_agent::{DataType, Worker};
 use ndarray::array;
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
@@ -44,7 +47,6 @@ fn write_array() {
         dw.buffer()
     );
 }
-
 
 #[test]
 fn write_string_array() {
@@ -101,5 +103,4 @@ fn write_array_bool() {
         ],
         dw.buffer()
     );
-
 }
