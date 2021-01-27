@@ -22,7 +22,7 @@ pub trait Writer<'a>: Sized {
 /// `PartitionWriter` writes values to its own region. `PartitionWriter` is parameterized
 /// on lifetime `'a`, which is the lifetime of the parent `Writer`. This indicates
 /// the `PartitionWriter` can never live longer than the parent.
-pub trait PartitionWriter<'a> {
+pub trait PartitionWriter<'a>: Send {
     type TypeSystem;
 
     /// Write a value of type T to the location (row, col). The value is unchecked against the schema.

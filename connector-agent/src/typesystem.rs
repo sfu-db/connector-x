@@ -35,7 +35,7 @@ macro_rules! impl_typesystem {
 }
 
 /// Transmit defines Self that can pull data from a data source S and push the data to the writer W.
-pub trait Transmit<S, W> {
+pub trait Transmit<S, W>: Clone {
     fn transmit(&self) -> fn(&mut S, &mut W, usize, usize) -> Result<()>;
     fn transmit_checked(&self) -> fn(&mut S, &mut W, usize, usize) -> Result<()>;
 }

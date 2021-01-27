@@ -1,13 +1,12 @@
 use connector_agent::data_sources::dummy::{
-    BoolCounterSource, F64CounterSource, StringSource, U64CounterSource,
+    BoolSourceBuilder, F64SourceBuilder, StringSourceBuilder, U64SourceBuilder,
 };
 use connector_agent::writers::{
     dummy::{BoolWriter, F64Writer, StringWriter, U64Writer},
     Writer,
 };
-use connector_agent::{DataType, Worker};
+use connector_agent::{DataType, Dispatcher};
 use ndarray::array;
-use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
 #[test]
 #[should_panic]
@@ -43,15 +42,13 @@ fn wrong_string_data_type() {
 
 #[test]
 fn write_array() {
-    let mut dw = U64Writer::allocate(11, vec![DataType::U64; 5]).unwrap();
-    let schema = dw.schema().to_vec();
-    let writers = dw.partition_writers(&[4, 7]);
+    let schema = vec![DataType::U64; 5];
+    let queries = vec!["4".to_string(), "7".to_string()];
 
-    writers.into_par_iter().for_each(|writer| {
-        Worker::new(U64CounterSource::new(), writer, schema.clone(), "")
-            .run_checked()
-            .expect("Worker failed")
-    });
+    let mut dispatcher = Dispatcher::new(U64SourceBuilder {}, schema, queries);
+    let dw = dispatcher
+        .run_checked::<U64Writer>()
+        .expect("run dispatcher");
 
     assert_eq!(
         array![
@@ -73,16 +70,13 @@ fn write_array() {
 
 #[test]
 fn write_string_array() {
-    let mut dw = StringWriter::allocate(11, vec![DataType::String; 5]).unwrap();
-    let schema = dw.schema().to_vec();
+    let schema = vec![DataType::String; 5];
+    let queries = vec!["4".to_string(), "7".to_string()];
 
-    let writers = dw.partition_writers(&[4, 7]);
-
-    writers.into_par_iter().for_each(|writer| {
-        Worker::new(StringSource::new(), writer, schema.clone(), "")
-            .run_checked()
-            .expect("Worker failed")
-    });
+    let mut dispatcher = Dispatcher::new(StringSourceBuilder {}, schema, queries);
+    let dw = dispatcher
+        .run_checked::<StringWriter>()
+        .expect("run dispatcher");
 
     assert_eq!(
         array![
@@ -104,16 +98,13 @@ fn write_string_array() {
 
 #[test]
 fn write_array_bool() {
-    let mut dw = BoolWriter::allocate(11, vec![DataType::Bool; 5]).unwrap();
-    let schema = dw.schema().to_vec();
-    let writers = dw.partition_writers(&[4, 7]);
+    let schema = vec![DataType::Bool; 5];
+    let queries = vec!["4".to_string(), "7".to_string()];
 
-    writers.into_par_iter().for_each(|writer| {
-        Worker::new(BoolCounterSource::new(), writer, schema.clone(), "")
-            .run_checked()
-            .expect("Worker failed")
-    });
-
+    let mut dispatcher = Dispatcher::new(BoolSourceBuilder {}, schema, queries);
+    let dw = dispatcher
+        .run_checked::<BoolWriter>()
+        .expect("run dispatcher");
     assert_eq!(
         array![
             [false, true, false, true, false],
@@ -134,15 +125,13 @@ fn write_array_bool() {
 
 #[test]
 fn write_array_f64() {
-    let mut dw = F64Writer::allocate(11, vec![DataType::F64; 5]).unwrap();
-    let schema = dw.schema().to_vec();
-    let writers = dw.partition_writers(&[4, 7]);
+    let schema = vec![DataType::F64; 5];
+    let queries = vec!["4".to_string(), "7".to_string()];
 
-    writers.into_par_iter().for_each(|writer| {
-        Worker::new(F64CounterSource::new(), writer, schema.clone(), "")
-            .run_checked()
-            .expect("Worker failed")
-    });
+    let mut dispatcher = Dispatcher::new(F64SourceBuilder {}, schema, queries);
+    let dw = dispatcher
+        .run_checked::<F64Writer>()
+        .expect("run dispatcher");
 
     assert_eq!(
         array![

@@ -1,11 +1,26 @@
-use super::{DataSource, Parse};
+use super::{DataSource, Parse, SourceBuilder};
 use crate::errors::Result;
 use crate::types::DataType;
 use std::fs::File;
 use std::str::FromStr;
 
+pub struct CSVSourceBuilder {}
+
+impl CSVSourceBuilder {
+    pub fn new() -> Self {
+        CSVSourceBuilder {}
+    }
+}
+
+impl SourceBuilder for CSVSourceBuilder {
+    type DataSource = CSVSource;
+
+    fn build(&mut self) -> Self::DataSource {
+        CSVSource::new()
+    }
+}
+
 pub struct CSVSource {
-    filename: String,
     records: Vec<csv::StringRecord>,
     counter: usize,
     pub nrows: usize,
@@ -13,9 +28,8 @@ pub struct CSVSource {
 }
 
 impl CSVSource {
-    pub fn new(fname: &str) -> Self {
+    pub fn new() -> Self {
         Self {
-            filename: String::from(fname),
             records: Vec::new(),
             counter: 0,
             nrows: 0,
@@ -26,10 +40,12 @@ impl CSVSource {
 
 impl DataSource for CSVSource {
     type TypeSystem = DataType;
-    fn run_query(&mut self, _query: &str) -> Result<()> {
+
+    /// The parameter `query` is the path of the csv file
+    fn run_query(&mut self, query: &str) -> Result<()> {
         let mut reader = csv::ReaderBuilder::new()
             .has_headers(false)
-            .from_reader(File::open(self.filename.as_str()).expect("open file"));
+            .from_reader(File::open(query).expect("open file"));
 
         self.records = reader.records().map(|v| v.expect("csv record")).collect();
         self.nrows = self.records.len();
@@ -37,6 +53,10 @@ impl DataSource for CSVSource {
             self.ncols = self.records[0].len();
         }
         Ok(())
+    }
+
+    fn nrows(&self) -> usize {
+        self.nrows
     }
 }
 
