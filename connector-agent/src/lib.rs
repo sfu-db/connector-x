@@ -11,6 +11,7 @@ mod types;
 mod worker;
 pub mod writers;
 
+pub use crate::any_array::{AnyArray, AnyArrayView, AnyArrayViewMut};
 pub use crate::data_sources::{
     csv::CSVSource,
     dummy::{BoolCounterSource, StringSource, U64CounterSource},

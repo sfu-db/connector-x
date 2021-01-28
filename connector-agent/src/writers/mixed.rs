@@ -1,19 +1,18 @@
 use super::{PartitionWriter, Writer};
 use crate::any_array::{AnyArray, AnyArrayViewMut};
-use crate::errors::Result;
+use crate::errors::{ConnectorAgentError, Result};
 use crate::types::DataType;
 use crate::typesystem::TypeSystem;
 use itertools::Itertools;
 use ndarray::{Array2, ArrayView1, ArrayView2, Axis, Ix2};
+use std::any::type_name;
 use std::collections::HashMap;
-use std::mem::transmute;
 
-fn test<T: Send>() {}
 /// This `Writer` can only write u64 into it.
 pub struct MemoryWriter {
     nrows: usize,
     schema: Vec<DataType>,
-    buffers: Vec<Box<dyn AnyArray<Ix2>>>,
+    buffers: Vec<AnyArray<Ix2>>,
     column_buffer_index: Vec<(usize, usize)>,
 }
 
@@ -22,7 +21,6 @@ impl<'a> Writer<'a> for MemoryWriter {
     type PartitionWriter = MemoryPartitionWriter<'a>;
 
     fn allocate(nrows: usize, schema: Vec<DataType>) -> Result<Self> {
-        test::<MemoryWriter>();
         // The schema needs to be sorted due to the group by only works on consecutive identity keys.
         let mut sorted_schema = schema.clone();
         sorted_schema.sort();
@@ -38,28 +36,20 @@ impl<'a> Writer<'a> for MemoryWriter {
             block_indices.insert(dt, bid);
             let count = grp.count();
             let buffer = match dt {
-                DataType::F64 => {
-                    Box::new(Array2::<f64>::zeros((nrows, count))) as Box<dyn AnyArray<Ix2>>
-                }
-                DataType::U64 => {
-                    Box::new(Array2::<u64>::zeros((nrows, count))) as Box<dyn AnyArray<Ix2>>
-                }
-                DataType::Bool => Box::new(Array2::<bool>::from_elem((nrows, count), false))
-                    as Box<dyn AnyArray<Ix2>>,
-                DataType::String => {
-                    Box::new(Array2::<String>::from_elem((nrows, count), "".to_string()))
-                        as Box<dyn AnyArray<Ix2>>
-                }
+                DataType::F64 => Array2::<f64>::default((nrows, count)).into(),
+                DataType::U64 => Array2::<u64>::default((nrows, count)).into(),
+                DataType::Bool => Array2::<bool>::default((nrows, count)).into(),
+                DataType::String => Array2::<String>::default((nrows, count)).into(),
             };
             buffers.push(buffer);
         }
 
         let mut per_buffer_counter = HashMap::new();
 
-        let mut col_buffer_index = vec![];
+        let mut column_buffer_index = vec![];
         for dt in &schema {
             let count = per_buffer_counter.entry(*dt).or_insert(0);
-            col_buffer_index.push((block_indices[dt], *count));
+            column_buffer_index.push((block_indices[dt], *count));
             *count += 1;
         }
 
@@ -67,7 +57,7 @@ impl<'a> Writer<'a> for MemoryWriter {
             nrows,
             schema,
             buffers,
-            column_buffer_index: col_buffer_index,
+            column_buffer_index,
         })
     }
 
@@ -106,19 +96,21 @@ impl<'a> Writer<'a> for MemoryWriter {
 }
 
 impl MemoryWriter {
-    pub fn buffer_view<'a, T: 'static>(&'a self, bid: usize) -> Option<ArrayView2<T>> {
-        self.buffers[bid]
-            .as_any()
-            .downcast_ref::<Array2<T>>()
-            .map(|arr| arr.view())
+    pub fn buffer_view<'a, T>(&'a self, bid: usize) -> Option<ArrayView2<T>>
+    where
+        T: 'static + Send,
+    {
+        self.buffers[bid].downcast_ref::<T>().map(|arr| arr.view())
     }
 
-    pub fn column_view<'a, T: 'static>(&'a self, col: usize) -> Option<ArrayView1<T>> {
+    pub fn column_view<'a, T>(&'a self, col: usize) -> Option<ArrayView1<T>>
+    where
+        T: 'static + Send,
+    {
         let (bid, sid) = self.column_buffer_index(col);
 
         self.buffers[bid]
-            .as_any()
-            .downcast_ref::<Array2<T>>()
+            .downcast_ref::<T>()
             .map(|arr| arr.column(sid))
     }
 
@@ -129,28 +121,37 @@ impl MemoryWriter {
 /// The `PartitionedWriter` of `MemoryWriter`.
 pub struct MemoryPartitionWriter<'a> {
     nrows: usize,
-    buffers: Vec<Box<dyn AnyArrayViewMut<'a, Ix2> + 'a>>,
+    buffers: Vec<AnyArrayViewMut<'a, Ix2>>,
     schema: Vec<DataType>,
-    col_buffer_index: Vec<(usize, usize)>,
+    column_buffer_index: Vec<(usize, usize)>,
 }
 
 impl<'a> PartitionWriter<'a> for MemoryPartitionWriter<'a> {
     type TypeSystem = DataType;
 
-    unsafe fn write<T>(&mut self, row: usize, col: usize, value: T) {
-        let buffer_index = &self.col_buffer_index[col];
-
-        let target: &mut T =
-            transmute(self.buffers[buffer_index.0].uget_mut((row, buffer_index.1)));
-        *target = value;
+    unsafe fn write<T: 'static>(&mut self, row: usize, col: usize, value: T) {
+        let &(bid, col) = &self.column_buffer_index[col];
+        let mut_view = self.buffers[bid].udowncast::<T>();
+        *mut_view.get_mut((row, col)).unwrap() = value;
     }
 
-    fn write_checked<T>(&mut self, row: usize, col: usize, value: T) -> Result<()>
+    fn write_checked<T: 'static>(&mut self, row: usize, col: usize, value: T) -> Result<()>
     where
         Self::TypeSystem: TypeSystem<T>,
     {
         self.schema[col].check()?;
-        unsafe { self.write(row, col, value) };
+        let &(bid, col) = &self.column_buffer_index[col];
+
+        let mut_view =
+            self.buffers[bid]
+                .downcast::<T>()
+                .ok_or(ConnectorAgentError::UnexpectedType(
+                    self.schema[col],
+                    type_name::<T>(),
+                ))?;
+        *mut_view
+            .get_mut((row, col))
+            .ok_or(ConnectorAgentError::OutOfBound)? = value;
         Ok(())
     }
 
@@ -166,15 +167,15 @@ impl<'a> PartitionWriter<'a> for MemoryPartitionWriter<'a> {
 impl<'a> MemoryPartitionWriter<'a> {
     fn new(
         nrows: usize,
-        buffers: Vec<Box<dyn AnyArrayViewMut<'a, Ix2> + 'a>>,
+        buffers: Vec<AnyArrayViewMut<'a, Ix2>>,
         schema: Vec<DataType>,
-        col_buffer_index: Vec<(usize, usize)>,
+        column_buffer_index: Vec<(usize, usize)>,
     ) -> Self {
         Self {
             nrows,
             buffers,
             schema,
-            col_buffer_index,
+            column_buffer_index,
         }
     }
 }

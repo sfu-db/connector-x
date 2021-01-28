@@ -68,12 +68,12 @@ pub struct U64PartitionWriter<'a> {
 impl<'a> PartitionWriter<'a> for U64PartitionWriter<'a> {
     type TypeSystem = DataType;
 
-    unsafe fn write<T>(&mut self, row: usize, col: usize, value: T) {
+    unsafe fn write<T: 'static>(&mut self, row: usize, col: usize, value: T) {
         let target: *mut T = transmute(self.buffer.uget_mut((row, col)));
         *target = value;
     }
 
-    fn write_checked<T>(&mut self, row: usize, col: usize, value: T) -> Result<()>
+    fn write_checked<T: 'static>(&mut self, row: usize, col: usize, value: T) -> Result<()>
     where
         Self::TypeSystem: TypeSystem<T>,
     {
@@ -216,12 +216,12 @@ pub struct StringPartitionWriter<'a> {
 impl<'a> PartitionWriter<'a> for StringPartitionWriter<'a> {
     type TypeSystem = DataType;
 
-    unsafe fn write<T>(&mut self, row: usize, col: usize, value: T) {
+    unsafe fn write<T: 'static>(&mut self, row: usize, col: usize, value: T) {
         let target: *mut T = transmute(self.buffer.uget_mut((row, col)));
         *target = value;
     }
 
-    fn write_checked<T>(&mut self, row: usize, col: usize, value: T) -> Result<()>
+    fn write_checked<T: 'static>(&mut self, row: usize, col: usize, value: T) -> Result<()>
     where
         Self::TypeSystem: TypeSystem<T>,
     {
@@ -248,12 +248,12 @@ pub struct BoolPartitionWriter<'a> {
 impl<'a> PartitionWriter<'a> for BoolPartitionWriter<'a> {
     type TypeSystem = DataType;
 
-    unsafe fn write<T>(&mut self, row: usize, col: usize, value: T) {
+    unsafe fn write<T: 'static>(&mut self, row: usize, col: usize, value: T) {
         let target: *mut T = transmute(self.buffer.uget_mut((row, col)));
         *target = value;
     }
 
-    fn write_checked<T>(&mut self, row: usize, col: usize, value: T) -> Result<()>
+    fn write_checked<T: 'static>(&mut self, row: usize, col: usize, value: T) -> Result<()>
     where
         Self::TypeSystem: TypeSystem<T>,
     {
@@ -344,14 +344,14 @@ pub struct F64PartitionWriter<'a> {
 impl<'a> PartitionWriter<'a> for F64PartitionWriter<'a> {
     type TypeSystem = DataType;
 
-    unsafe fn write<T>(&mut self, row: usize, col: usize, value: T) {
+    unsafe fn write<T: 'static>(&mut self, row: usize, col: usize, value: T) {
         let target: *mut T = transmute(self.buffer.uget_mut((row, col)));
         *target = value;
     }
 
-    fn write_checked<T>(&mut self, row: usize, col: usize, value: T) -> Result<()>
-        where
-            Self::TypeSystem: TypeSystem<T>,
+    fn write_checked<T: 'static>(&mut self, row: usize, col: usize, value: T) -> Result<()>
+    where
+        Self::TypeSystem: TypeSystem<T>,
     {
         self.schema[col].check()?;
         unsafe { self.write(row, col, value) };

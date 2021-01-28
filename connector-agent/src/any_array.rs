@@ -1,130 +1,246 @@
-use ndarray::{Array, ArrayView, ArrayViewMut, Axis, Dimension, Ix, NdIndex};
+use ndarray::{Array, ArrayView, ArrayViewMut, Axis, Dimension, Ix};
 use std::any::{Any, TypeId};
 use std::mem::transmute;
 
-pub trait AnyArray<D>: Send {
-    fn view_mut<'a>(&'a mut self) -> Box<dyn AnyArrayViewMut<'a, D> + 'a>;
-    fn view<'a>(&'a self) -> Box<dyn AnyArrayView<'a, D> + 'a>;
+trait AnyArrayObject<D> {
+    fn view_mut<'a>(&'a mut self) -> Box<dyn ArrayViewMutObject<'a, D> + 'a>;
+    fn view<'a>(&'a self) -> Box<dyn ArrayViewObject<'a, D> + 'a>;
     fn as_any(&self) -> &dyn Any;
+    fn as_mut_any(&mut self) -> &mut dyn Any;
 }
 
-pub trait AnyArrayView<'a, D>: Send {
-    // fn as_any(&self) -> &dyn Any;
-    fn split_at(
-        self: Box<Self>,
-        axis: Axis,
-        index: Ix,
-    ) -> (
-        Box<dyn AnyArrayView<'a, D> + 'a>,
-        Box<dyn AnyArrayView<'a, D> + 'a>,
-    );
-    unsafe fn uget(&self, index: (usize, usize)) -> &();
-    fn type_id(&self) -> TypeId;
-}
-
-impl<'a, D> dyn AnyArrayView<'a, D> {
-    pub fn uget_checked<A: 'static>(&self, index: (usize, usize)) -> Option<&'a A> {
-        if self.type_id() == TypeId::of::<A>() {
-            Some(unsafe { transmute(self.uget(index)) })
-        } else {
-            None
-        }
-    }
-}
-
-pub trait AnyArrayViewMut<'a, D>: Send {
-    // fn as_any(&self) -> &dyn Any;
-    fn split_at(
-        self: Box<Self>,
-        axis: Axis,
-        index: Ix,
-    ) -> (
-        Box<dyn AnyArrayViewMut<'a, D> + 'a>,
-        Box<dyn AnyArrayViewMut<'a, D> + 'a>,
-    );
-    unsafe fn uget_mut(&mut self, index: (usize, usize)) -> &mut ();
-    fn type_id(&self) -> TypeId;
-}
-
-impl<'a, D> dyn AnyArrayViewMut<'a, D> + 'a {
-    pub fn uget_mut_checked<A: 'static>(&mut self, index: (usize, usize)) -> Option<&'a mut A> {
-        if AnyArrayViewMut::<'a, D>::type_id(self) == TypeId::of::<A>() {
-            Some(unsafe { transmute(self.uget_mut(index)) })
-        } else {
-            None
-        }
-    }
-}
-
-impl<A, D> AnyArray<D> for Array<A, D>
+impl<A, D> AnyArrayObject<D> for Array<A, D>
 where
-    A: 'static + Send + Sync,
+    A: 'static + Send,
     D: 'static + Dimension,
-    (usize, usize): NdIndex<D>,
 {
-    fn view<'a>(&'a self) -> Box<dyn AnyArrayView<'a, D> + 'a> {
+    fn view<'a>(&'a self) -> Box<dyn ArrayViewObject<'a, D> + 'a> {
         Box::new(Array::<A, D>::view(self))
     }
 
-    fn view_mut<'a>(&'a mut self) -> Box<dyn AnyArrayViewMut<'a, D> + 'a> {
+    fn view_mut<'a>(&'a mut self) -> Box<dyn ArrayViewMutObject<'a, D> + 'a> {
         Box::new(Array::<A, D>::view_mut(self))
     }
 
     fn as_any(&self) -> &dyn Any {
         self
     }
+
+    fn as_mut_any(&mut self) -> &mut dyn Any {
+        self
+    }
 }
 
-impl<'a, A, D> AnyArrayView<'a, D> for ArrayView<'a, A, D>
+pub struct AnyArray<D> {
+    inner: Box<dyn AnyArrayObject<D>>,
+    elem_type: TypeId,
+}
+
+impl<D> AnyArray<D>
 where
-    A: Send + Sync + 'static,
+    D: 'static + Dimension,
+{
+    pub fn new<A>(array: Array<A, D>) -> Self
+    where
+        A: 'static + Send,
+    {
+        Self {
+            inner: Box::new(array),
+            elem_type: TypeId::of::<A>(),
+        }
+    }
+
+    pub fn view<'a>(&'a self) -> AnyArrayView<'a, D> {
+        AnyArrayView {
+            inner: self.inner.view(),
+            elem_type: self.elem_type,
+        }
+    }
+
+    pub fn view_mut<'a>(&'a mut self) -> AnyArrayViewMut<'a, D> {
+        AnyArrayViewMut {
+            inner: self.inner.view_mut(),
+            elem_type: self.elem_type,
+        }
+    }
+
+    pub fn downcast_ref<A>(&self) -> Option<&Array<A, D>>
+    where
+        A: 'static,
+    {
+        self.inner.as_any().downcast_ref()
+    }
+
+    pub fn downcast_mut<A>(&mut self) -> Option<&mut Array<A, D>>
+    where
+        A: 'static,
+    {
+        self.inner.as_mut_any().downcast_mut()
+    }
+}
+
+impl<A, D> From<Array<A, D>> for AnyArray<D>
+where
+    A: 'static + Send,
+    D: 'static + Dimension,
+{
+    fn from(value: Array<A, D>) -> Self {
+        Self::new(value)
+    }
+}
+
+trait ArrayViewObject<'a, D> {
+    fn split_at(
+        self: Box<Self>,
+        axis: Axis,
+        index: Ix,
+    ) -> (
+        Box<dyn ArrayViewObject<'a, D> + 'a>,
+        Box<dyn ArrayViewObject<'a, D> + 'a>,
+    );
+}
+
+impl<'a, A, D> ArrayViewObject<'a, D> for ArrayView<'a, A, D>
+where
+    A: 'static,
     D: Dimension + 'static,
-    (usize, usize): NdIndex<D>,
 {
     fn split_at(
         self: Box<Self>,
         axis: Axis,
         index: Ix,
     ) -> (
-        Box<dyn AnyArrayView<'a, D> + 'a>,
-        Box<dyn AnyArrayView<'a, D> + 'a>,
+        Box<dyn ArrayViewObject<'a, D> + 'a>,
+        Box<dyn ArrayViewObject<'a, D> + 'a>,
     ) {
         let (l, r) = ArrayView::<A, D>::split_at(*self, axis, index);
         (Box::new(l), Box::new(r))
     }
+}
 
-    unsafe fn uget(&self, index: (usize, usize)) -> &() {
-        transmute(self.uget(index))
+pub struct AnyArrayView<'a, D> {
+    inner: Box<dyn ArrayViewObject<'a, D> + 'a>,
+    elem_type: TypeId,
+}
+
+impl<'a, D> AnyArrayView<'a, D>
+where
+    D: 'static + Dimension,
+{
+    pub fn new<A>(view: ArrayView<'a, A, D>) -> Self
+    where
+        A: 'static,
+    {
+        Self {
+            inner: Box::new(view),
+            elem_type: TypeId::of::<A>(),
+        }
     }
 
-    fn type_id(&self) -> TypeId {
-        TypeId::of::<A>()
+    pub fn downcast<A: 'static>(&self) -> Option<&ArrayView<'a, A, D>> {
+        if self.elem_type == TypeId::of::<A>() {
+            Some(unsafe { self.udowncast() })
+        } else {
+            None
+        }
+    }
+
+    pub unsafe fn udowncast<A: 'static>(&self) -> &ArrayView<'a, A, D> {
+        let (data, _vtable): (&ArrayView<A, D>, usize) = transmute(&*self.inner);
+        data
+    }
+
+    pub fn split_at(self, axis: Axis, index: Ix) -> (AnyArrayView<'a, D>, AnyArrayView<'a, D>) {
+        let (l, r) = self.inner.split_at(axis, index);
+        (
+            AnyArrayView {
+                inner: l,
+                elem_type: self.elem_type,
+            },
+            AnyArrayView {
+                inner: r,
+                elem_type: self.elem_type,
+            },
+        )
     }
 }
 
-impl<'a, A, D> AnyArrayViewMut<'a, D> for ArrayViewMut<'a, A, D>
+trait ArrayViewMutObject<'a, D>: Send {
+    fn split_at(
+        self: Box<Self>,
+        axis: Axis,
+        index: Ix,
+    ) -> (
+        Box<dyn ArrayViewMutObject<'a, D> + 'a>,
+        Box<dyn ArrayViewMutObject<'a, D> + 'a>,
+    );
+}
+
+impl<'a, A, D> ArrayViewMutObject<'a, D> for ArrayViewMut<'a, A, D>
 where
-    A: Send + 'static,
-    D: Dimension + 'static,
-    (usize, usize): NdIndex<D>,
+    A: 'static + Send,
+    D: 'static + Dimension,
 {
     fn split_at(
         self: Box<Self>,
         axis: Axis,
         index: Ix,
     ) -> (
-        Box<dyn AnyArrayViewMut<'a, D> + 'a>,
-        Box<dyn AnyArrayViewMut<'a, D> + 'a>,
+        Box<dyn ArrayViewMutObject<'a, D> + 'a>,
+        Box<dyn ArrayViewMutObject<'a, D> + 'a>,
     ) {
         let (l, r) = ArrayViewMut::<A, D>::split_at(*self, axis, index);
         (Box::new(l), Box::new(r))
     }
+}
 
-    unsafe fn uget_mut(&mut self, index: (usize, usize)) -> &mut () {
-        transmute(self.uget_mut(index))
+pub struct AnyArrayViewMut<'a, D> {
+    inner: Box<dyn ArrayViewMutObject<'a, D> + 'a>,
+    elem_type: TypeId,
+}
+
+impl<'a, D> AnyArrayViewMut<'a, D>
+where
+    D: 'static + Dimension,
+{
+    pub fn new<A>(view: ArrayViewMut<'a, A, D>) -> Self
+    where
+        A: 'static + Send,
+    {
+        Self {
+            inner: Box::new(view),
+            elem_type: TypeId::of::<A>(),
+        }
     }
 
-    fn type_id(&self) -> TypeId {
-        TypeId::of::<A>()
+    pub fn downcast<A: 'static>(&mut self) -> Option<&mut ArrayViewMut<'a, A, D>> {
+        if self.elem_type == TypeId::of::<A>() {
+            Some(unsafe { self.udowncast() })
+        } else {
+            None
+        }
+    }
+
+    pub unsafe fn udowncast<A: 'static>(&mut self) -> &mut ArrayViewMut<'a, A, D> {
+        let (data, _): (&mut ArrayViewMut<A, D>, usize) = transmute(&mut *self.inner);
+        data
+    }
+
+    pub fn split_at(
+        self,
+        axis: Axis,
+        index: Ix,
+    ) -> (AnyArrayViewMut<'a, D>, AnyArrayViewMut<'a, D>) {
+        let (l, r) = self.inner.split_at(axis, index);
+        (
+            AnyArrayViewMut {
+                inner: l,
+                elem_type: self.elem_type,
+            },
+            AnyArrayViewMut {
+                inner: r,
+                elem_type: self.elem_type,
+            },
+        )
     }
 }

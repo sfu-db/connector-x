@@ -47,6 +47,7 @@ where
     S::TypeSystem: TypeSystem<T>,
     W: PartitionWriter<'a>,
     W::TypeSystem: TypeSystem<T>,
+    T: 'static,
 {
     unsafe { writer.write::<T>(row, col, source.produce()?) }
 }
@@ -58,6 +59,7 @@ where
     S::TypeSystem: TypeSystem<T>,
     W: PartitionWriter<'a>,
     W::TypeSystem: TypeSystem<T>,
+    T: 'static,
 {
     writer.write_checked::<T>(row, col, source.produce()?)?
 }

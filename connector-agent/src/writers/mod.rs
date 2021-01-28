@@ -27,10 +27,10 @@ pub trait PartitionWriter<'a> {
 
     /// Write a value of type T to the location (row, col). The value is unchecked against the schema.
     /// This function is unsafe due to unchecked.
-    unsafe fn write<T>(&mut self, row: usize, col: usize, value: T);
+    unsafe fn write<T: 'static>(&mut self, row: usize, col: usize, value: T);
     /// Write a value of type T to the location (row, col), checked version. If T mismatch with the
     /// schema, `ConnectorAgentError::UnexpectedType` will return.
-    fn write_checked<T>(&mut self, row: usize, col: usize, value: T) -> Result<()>
+    fn write_checked<T: 'static>(&mut self, row: usize, col: usize, value: T) -> Result<()>
     where
         Self::TypeSystem: TypeSystem<T>;
     /// Number of rows this `PartitionWriter` controls.

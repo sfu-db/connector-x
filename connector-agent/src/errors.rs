@@ -10,6 +10,9 @@ pub enum ConnectorAgentError {
     #[error("Data type unexpected: {0:?} expected, {1} found.")]
     UnexpectedType(DataType, &'static str),
 
+    #[error("Index operation out of bound")]
+    OutOfBound,
+
     /// Any other errors that are too trivial to be put here explicitly.
     #[error(transparent)]
     Other(#[from] anyhow::Error),
