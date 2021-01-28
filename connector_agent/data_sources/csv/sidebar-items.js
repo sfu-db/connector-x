@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["CSVSource",""],["CSVSourceFactor",""]]});
+initSidebarItems({"struct":[["CSVSource",""]]});
