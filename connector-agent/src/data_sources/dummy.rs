@@ -160,7 +160,6 @@ impl Parse<String> for BoolCounterSource {
     }
 }
 
-
 /// This `DataSource` only produces T which can be derived from f64.
 pub struct F64CounterSource {
     counter: f64,
@@ -198,9 +197,13 @@ impl Parse<f64> for F64CounterSource {
 }
 
 impl Parse<bool> for F64CounterSource {
-    fn parse(&mut self) -> Result<bool> {throw!(anyhow!("F64CounterSource only support f64!")) }
+    fn parse(&mut self) -> Result<bool> {
+        throw!(anyhow!("F64CounterSource only support f64!"))
+    }
 }
 
 impl Parse<String> for F64CounterSource {
-    fn parse(&mut self) -> Result<String> {throw!(anyhow!("F64CounterSource only support f64!")) }
+    fn parse(&mut self) -> Result<String> {
+        throw!(anyhow!("F64CounterSource only support f64!"))
+    }
 }

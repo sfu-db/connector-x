@@ -1,5 +1,10 @@
-use connector_agent::data_sources::dummy::{U64CounterSource, StringSource, BoolCounterSource, F64CounterSource};
-use connector_agent::writers::{dummy::{U64Writer, StringWriter, BoolWriter, F64Writer}, Writer};
+use connector_agent::data_sources::dummy::{
+    BoolCounterSource, F64CounterSource, StringSource, U64CounterSource,
+};
+use connector_agent::writers::{
+    dummy::{BoolWriter, F64Writer, StringWriter, U64Writer},
+    Writer,
+};
 use connector_agent::{DataType, Worker};
 use ndarray::array;
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
@@ -133,26 +138,26 @@ fn write_array_f64() {
     let schema = dw.schema().to_vec();
     let writers = dw.partition_writers(&[4, 7]);
 
-    writers
-        .into_par_iter()
-        .for_each(|writer| Worker::new(F64CounterSource::new(), writer, schema.clone(), "").run_checked().expect("Worker failed"));
-
+    writers.into_par_iter().for_each(|writer| {
+        Worker::new(F64CounterSource::new(), writer, schema.clone(), "")
+            .run_checked()
+            .expect("Worker failed")
+    });
 
     assert_eq!(
-        array![[0.0, 0.5, 1.0, 1.5, 2.0],
-               [2.5, 3.0, 3.5, 4.0, 4.5],
-               [5.0, 5.5, 6.0, 6.5, 7.0],
-               [7.5, 8.0, 8.5, 9.0, 9.5],
-               [0.0, 0.5, 1.0, 1.5, 2.0],
-               [2.5, 3.0, 3.5, 4.0, 4.5],
-               [5.0, 5.5, 6.0, 6.5, 7.0],
-               [7.5, 8.0, 8.5, 9.0, 9.5],
-               [10.0, 10.5, 11.0, 11.5, 12.0],
-               [12.5, 13.0, 13.5, 14.0, 14.5],
-               [15.0, 15.5, 16.0, 16.5, 17.0]
-            ],
+        array![
+            [0.0, 0.5, 1.0, 1.5, 2.0],
+            [2.5, 3.0, 3.5, 4.0, 4.5],
+            [5.0, 5.5, 6.0, 6.5, 7.0],
+            [7.5, 8.0, 8.5, 9.0, 9.5],
+            [0.0, 0.5, 1.0, 1.5, 2.0],
+            [2.5, 3.0, 3.5, 4.0, 4.5],
+            [5.0, 5.5, 6.0, 6.5, 7.0],
+            [7.5, 8.0, 8.5, 9.0, 9.5],
+            [10.0, 10.5, 11.0, 11.5, 12.0],
+            [12.5, 13.0, 13.5, 14.0, 14.5],
+            [15.0, 15.5, 16.0, 16.5, 17.0]
+        ],
         dw.buffer()
     );
 }
-
-
