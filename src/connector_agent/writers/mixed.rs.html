@@ -179,8 +179,6 @@
 <span id="176">176</span>
 <span id="177">177</span>
 <span id="178">178</span>
-<span id="179">179</span>
-<span id="180">180</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">PartitionWriter</span>, <span class="ident">Writer</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">any_array</span>::{<span class="ident">AnyArray</span>, <span class="ident">AnyArrayViewMut</span>};
@@ -192,7 +190,6 @@
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">collections</span>::<span class="ident">HashMap</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">mem</span>::<span class="ident">transmute</span>;
 
-<span class="kw">fn</span> <span class="ident">test</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Send</span><span class="op">&gt;</span>() {}
 <span class="doccomment">/// This `Writer` can only write u64 into it.</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MemoryWriter</span> {
     <span class="ident">nrows</span>: <span class="ident">usize</span>,
@@ -206,7 +203,6 @@
     <span class="kw">type</span> <span class="ident">PartitionWriter</span> <span class="op">=</span> <span class="ident">MemoryPartitionWriter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>;
 
     <span class="kw">fn</span> <span class="ident">allocate</span>(<span class="ident">nrows</span>: <span class="ident">usize</span>, <span class="ident">schema</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">DataType</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="ident">test</span>::<span class="op">&lt;</span><span class="ident">MemoryWriter</span><span class="op">&gt;</span>();
         <span class="comment">// The schema needs to be sorted due to the group by only works on consecutive identity keys.</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">sorted_schema</span> <span class="op">=</span> <span class="ident">schema</span>.<span class="ident">clone</span>();
         <span class="ident">sorted_schema</span>.<span class="ident">sort</span>();
