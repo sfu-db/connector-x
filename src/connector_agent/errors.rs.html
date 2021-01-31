@@ -17,6 +17,9 @@
 <span id="14">14</span>
 <span id="15">15</span>
 <span id="16">16</span>
+<span id="17">17</span>
+<span id="18">18</span>
+<span id="19">19</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::<span class="ident">DataType</span>;
 <span class="kw">use</span> <span class="ident">thiserror</span>::<span class="ident">Error</span>;
@@ -29,6 +32,9 @@
     <span class="doccomment">/// The required type does not same as the schema defined.</span>
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Data type unexpected: {0:?} expected, {1} found.&quot;</span>)]</span>
     <span class="ident">UnexpectedType</span>(<span class="ident">DataType</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>),
+
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Index operation out of bound&quot;</span>)]</span>
+    <span class="ident">OutOfBound</span>,
 
     <span class="doccomment">/// Any other errors that are too trivial to be put here explicitly.</span>
     <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
