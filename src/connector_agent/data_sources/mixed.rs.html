@@ -79,6 +79,12 @@
 <span id="76">76</span>
 <span id="77">77</span>
 <span id="78">78</span>
+<span id="79">79</span>
+<span id="80">80</span>
+<span id="81">81</span>
+<span id="82">82</span>
+<span id="83">83</span>
+<span id="84">84</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">DataSource</span>, <span class="ident">Parse</span>, <span class="ident">SourceBuilder</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">errors</span>::<span class="prelude-ty">Result</span>;
@@ -86,6 +92,12 @@
 <span class="kw">use</span> <span class="ident">num_traits</span>::<span class="ident">cast</span>::<span class="ident">FromPrimitive</span>;
 
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MixedSourceBuilder</span> {}
+
+<span class="kw">impl</span> <span class="ident">MixedSourceBuilder</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="ident">MixedSourceBuilder</span> {}
+    }
+}
 
 <span class="kw">impl</span> <span class="ident">SourceBuilder</span> <span class="kw">for</span> <span class="ident">MixedSourceBuilder</span> {
     <span class="kw">type</span> <span class="ident">DataSource</span> <span class="op">=</span> <span class="ident">MixedSource</span>;

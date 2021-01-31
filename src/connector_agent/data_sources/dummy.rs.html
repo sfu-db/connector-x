@@ -239,6 +239,50 @@
 <span id="236">236</span>
 <span id="237">237</span>
 <span id="238">238</span>
+<span id="239">239</span>
+<span id="240">240</span>
+<span id="241">241</span>
+<span id="242">242</span>
+<span id="243">243</span>
+<span id="244">244</span>
+<span id="245">245</span>
+<span id="246">246</span>
+<span id="247">247</span>
+<span id="248">248</span>
+<span id="249">249</span>
+<span id="250">250</span>
+<span id="251">251</span>
+<span id="252">252</span>
+<span id="253">253</span>
+<span id="254">254</span>
+<span id="255">255</span>
+<span id="256">256</span>
+<span id="257">257</span>
+<span id="258">258</span>
+<span id="259">259</span>
+<span id="260">260</span>
+<span id="261">261</span>
+<span id="262">262</span>
+<span id="263">263</span>
+<span id="264">264</span>
+<span id="265">265</span>
+<span id="266">266</span>
+<span id="267">267</span>
+<span id="268">268</span>
+<span id="269">269</span>
+<span id="270">270</span>
+<span id="271">271</span>
+<span id="272">272</span>
+<span id="273">273</span>
+<span id="274">274</span>
+<span id="275">275</span>
+<span id="276">276</span>
+<span id="277">277</span>
+<span id="278">278</span>
+<span id="279">279</span>
+<span id="280">280</span>
+<span id="281">281</span>
+<span id="282">282</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">DataSource</span>, <span class="ident">Parse</span>, <span class="ident">SourceBuilder</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">errors</span>::<span class="prelude-ty">Result</span>;
@@ -247,6 +291,15 @@
 <span class="kw">use</span> <span class="ident">fehler</span>::<span class="ident">throw</span>;
 <span class="kw">use</span> <span class="ident">num_traits</span>::<span class="ident">cast</span>::<span class="ident">FromPrimitive</span>;
 
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">U64SourceBuilder</span> {}
+
+<span class="kw">impl</span> <span class="ident">SourceBuilder</span> <span class="kw">for</span> <span class="ident">U64SourceBuilder</span> {
+    <span class="kw">type</span> <span class="ident">DataSource</span> <span class="op">=</span> <span class="ident">U64CounterSource</span>;
+
+    <span class="kw">fn</span> <span class="ident">build</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">DataSource</span> {
+        <span class="ident">U64CounterSource</span>::<span class="ident">new</span>()
+    }
+}
 <span class="doccomment">/// This `DataSource` only produces T which can be derived from u64.</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">U64CounterSource</span> {
     <span class="ident">counter</span>: <span class="ident">u64</span>,
@@ -254,10 +307,10 @@
 }
 
 <span class="kw">impl</span> <span class="ident">U64CounterSource</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">nrows</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">counter</span>: <span class="number">0</span>,
-            <span class="ident">nrows</span>: <span class="ident">nrows</span>,
+            <span class="ident">nrows</span>: <span class="number">0</span>,
         }
     }
 }
@@ -265,7 +318,9 @@
 <span class="kw">impl</span> <span class="ident">DataSource</span> <span class="kw">for</span> <span class="ident">U64CounterSource</span> {
     <span class="kw">type</span> <span class="ident">TypeSystem</span> <span class="op">=</span> <span class="ident">DataType</span>;
 
-    <span class="kw">fn</span> <span class="ident">run_query</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="kw">_</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="comment">// query: nrows</span>
+    <span class="kw">fn</span> <span class="ident">run_query</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">query</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="self">self</span>.<span class="ident">nrows</span> <span class="op">=</span> <span class="ident">query</span>.<span class="ident">parse</span>().<span class="ident">unwrap</span>();
         <span class="prelude-val">Ok</span>(())
     }
 
@@ -306,6 +361,15 @@
     }
 }
 
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">StringSourceBuilder</span> {}
+
+<span class="kw">impl</span> <span class="ident">SourceBuilder</span> <span class="kw">for</span> <span class="ident">StringSourceBuilder</span> {
+    <span class="kw">type</span> <span class="ident">DataSource</span> <span class="op">=</span> <span class="ident">StringSource</span>;
+
+    <span class="kw">fn</span> <span class="ident">build</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">DataSource</span> {
+        <span class="ident">StringSource</span>::<span class="ident">new</span>()
+    }
+}
 <span class="doccomment">/// This `DataSource` only produces T which can be derived from String</span>
 
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">StringSource</span> {
@@ -314,10 +378,10 @@
 }
 
 <span class="kw">impl</span> <span class="ident">StringSource</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">nrows</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">rand_string</span>: <span class="string">&quot;0&quot;</span>.<span class="ident">to_string</span>(),
-            <span class="ident">nrows</span>: <span class="ident">nrows</span>,
+            <span class="ident">nrows</span>: <span class="number">0</span>,
         }
     }
 }
@@ -325,7 +389,9 @@
 <span class="kw">impl</span> <span class="ident">DataSource</span> <span class="kw">for</span> <span class="ident">StringSource</span> {
     <span class="kw">type</span> <span class="ident">TypeSystem</span> <span class="op">=</span> <span class="ident">DataType</span>;
 
-    <span class="kw">fn</span> <span class="ident">run_query</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="kw">_</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="comment">// query: nrows</span>
+    <span class="kw">fn</span> <span class="ident">run_query</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">query</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="self">self</span>.<span class="ident">nrows</span> <span class="op">=</span> <span class="ident">query</span>.<span class="ident">parse</span>().<span class="ident">unwrap</span>();
         <span class="prelude-val">Ok</span>(())
     }
 
@@ -370,6 +436,15 @@
     }
 }
 
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BoolSourceBuilder</span> {}
+
+<span class="kw">impl</span> <span class="ident">SourceBuilder</span> <span class="kw">for</span> <span class="ident">BoolSourceBuilder</span> {
+    <span class="kw">type</span> <span class="ident">DataSource</span> <span class="op">=</span> <span class="ident">BoolCounterSource</span>;
+
+    <span class="kw">fn</span> <span class="ident">build</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">DataSource</span> {
+        <span class="ident">BoolCounterSource</span>::<span class="ident">new</span>()
+    }
+}
 <span class="doccomment">/// This `DataSource` only produces T which can be derived from bool.</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BoolCounterSource</span> {
     <span class="ident">counter</span>: <span class="ident">bool</span>,
@@ -377,17 +452,20 @@
 }
 
 <span class="kw">impl</span> <span class="ident">BoolCounterSource</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">nrows</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">counter</span>: <span class="bool-val">false</span>,
-            <span class="ident">nrows</span>: <span class="ident">nrows</span>,
+            <span class="ident">nrows</span>: <span class="number">0</span>,
         }
     }
 }
 
 <span class="kw">impl</span> <span class="ident">DataSource</span> <span class="kw">for</span> <span class="ident">BoolCounterSource</span> {
     <span class="kw">type</span> <span class="ident">TypeSystem</span> <span class="op">=</span> <span class="ident">DataType</span>;
-    <span class="kw">fn</span> <span class="ident">run_query</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="kw">_</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+
+    <span class="comment">// query: nrows</span>
+    <span class="kw">fn</span> <span class="ident">run_query</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">query</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="self">self</span>.<span class="ident">nrows</span> <span class="op">=</span> <span class="ident">query</span>.<span class="ident">parse</span>().<span class="ident">unwrap</span>();
         <span class="prelude-val">Ok</span>(())
     }
 
@@ -423,6 +501,15 @@
         <span class="macro">throw</span><span class="macro">!</span>(<span class="macro">anyhow</span><span class="macro">!</span>(<span class="string">&quot;StringSource only support string!&quot;</span>))
     }
 }
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">F64SourceBuilder</span> {}
+
+<span class="kw">impl</span> <span class="ident">SourceBuilder</span> <span class="kw">for</span> <span class="ident">F64SourceBuilder</span> {
+    <span class="kw">type</span> <span class="ident">DataSource</span> <span class="op">=</span> <span class="ident">F64CounterSource</span>;
+
+    <span class="kw">fn</span> <span class="ident">build</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">DataSource</span> {
+        <span class="ident">F64CounterSource</span>::<span class="ident">new</span>()
+    }
+}
 
 <span class="doccomment">/// This `DataSource` only produces T which can be derived from f64.</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">F64CounterSource</span> {
@@ -431,10 +518,10 @@
 }
 
 <span class="kw">impl</span> <span class="ident">F64CounterSource</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">nrows</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">counter</span>: <span class="number">0.0</span>,
-            <span class="ident">nrows</span>: <span class="ident">nrows</span>,
+            <span class="ident">nrows</span>: <span class="number">0</span>,
         }
     }
 }
@@ -442,7 +529,8 @@
 <span class="kw">impl</span> <span class="ident">DataSource</span> <span class="kw">for</span> <span class="ident">F64CounterSource</span> {
     <span class="kw">type</span> <span class="ident">TypeSystem</span> <span class="op">=</span> <span class="ident">DataType</span>;
 
-    <span class="kw">fn</span> <span class="ident">run_query</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="kw">_</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">run_query</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">query</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="self">self</span>.<span class="ident">nrows</span> <span class="op">=</span> <span class="ident">query</span>.<span class="ident">parse</span>().<span class="ident">unwrap</span>();
         <span class="prelude-val">Ok</span>(())
     }
 
