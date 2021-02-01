@@ -1,10 +1,35 @@
-use super::{DataSource, Parse};
-use crate::errors::Result;
+use super::{DataSource, Parse, SourceBuilder};
+use crate::data_order::DataOrder;
+use crate::errors::{ConnectorAgentError, Result};
 use crate::types::DataType;
+use fehler::{throw, throws};
 use std::fs::File;
 
+pub struct CSVSourceBuilder {}
+
+impl CSVSourceBuilder {
+    pub fn new() -> Self {
+        CSVSourceBuilder {}
+    }
+}
+
+impl SourceBuilder for CSVSourceBuilder {
+    const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
+    type DataSource = CSVSource;
+
+    #[throws(ConnectorAgentError)]
+    fn set_data_order(&mut self, data_order: DataOrder) {
+        if !matches!(data_order, DataOrder::RowMajor) {
+            throw!(ConnectorAgentError::UnsupportedDataOrder(data_order))
+        }
+    }
+
+    fn build(&mut self) -> Self::DataSource {
+        CSVSource::new()
+    }
+}
+
 pub struct CSVSource {
-    filename: String,
     records: Vec<csv::StringRecord>,
     counter: usize,
     pub nrows: usize,
@@ -12,9 +37,8 @@ pub struct CSVSource {
 }
 
 impl CSVSource {
-    pub fn new(fname: &str) -> Self {
+    pub fn new() -> Self {
         Self {
-            filename: String::from(fname),
             records: Vec::new(),
             counter: 0,
             nrows: 0,
@@ -25,10 +49,12 @@ impl CSVSource {
 
 impl DataSource for CSVSource {
     type TypeSystem = DataType;
-    fn run_query(&mut self, _query: &str) -> Result<()> {
+
+    /// The parameter `query` is the path of the csv file
+    fn run_query(&mut self, query: &str) -> Result<()> {
         let mut reader = csv::ReaderBuilder::new()
-                .has_headers(false)
-                .from_reader(File::open(self.filename.as_str()).expect("open file"));
+            .has_headers(false)
+            .from_reader(File::open(query).expect("open file"));
 
         self.records = reader.records().map(|v| v.expect("csv record")).collect();
         self.nrows = self.records.len();
@@ -36,6 +62,10 @@ impl DataSource for CSVSource {
             self.ncols = self.records[0].len();
         }
         Ok(())
+    }
+
+    fn nrows(&self) -> usize {
+        self.nrows
     }
 }
 
@@ -55,14 +85,11 @@ impl Parse<f64> for CSVSource {
     }
 }
 
-impl Parse<Option<u64>> for CSVSource {
-    fn parse(&mut self) -> Result<Option<u64>> {
+impl Parse<bool> for CSVSource {
+    fn parse(&mut self) -> Result<bool> {
         let v: &str = self.records[self.counter / self.ncols][self.counter % self.ncols].as_ref();
         self.counter += 1;
-        if v.is_empty() {
-            return Ok(None);
-        }
-        Ok(Some(v.parse().unwrap_or_default()))
+        Ok(v.parse().unwrap_or_default())
     }
 }
 
@@ -71,5 +98,16 @@ impl Parse<String> for CSVSource {
         let v: &str = self.records[self.counter / self.ncols][self.counter % self.ncols].as_ref();
         self.counter += 1;
         Ok(String::from(v))
+    }
+}
+
+impl Parse<Option<u64>> for CSVSource {
+    fn parse(&mut self) -> Result<Option<u64>> {
+        let v: &str = self.records[self.counter / self.ncols][self.counter % self.ncols].as_ref();
+        self.counter += 1;
+        if v.is_empty() {
+            return Ok(None);
+        }
+        Ok(Some(v.parse().unwrap_or_default()))
     }
 }

@@ -4,3 +4,4 @@ connector_agent.so
 __pycache__
 .python-version
 arrow
+.idea/
