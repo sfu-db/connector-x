@@ -26,8 +26,9 @@ impl<SB, TS> Dispatcher<SB, TS> {
     pub fn run_checked<W>(&mut self) -> Result<W>
     where
         SB: SourceBuilder,
+        SB::DataSource: Send + Sync,
         W: for<'a> Writer<'a, TypeSystem = TS>,
-        TS: for<'a> Transmit<SB::DataSource, <W as Writer<'a>>::PartitionWriter>,
+        TS: for<'a> Transmit<SB::DataSource, <W as Writer<'a>>::PartitionWriter> + Clone,
     {
         self.entry::<W>(true)
     }
@@ -35,8 +36,9 @@ impl<SB, TS> Dispatcher<SB, TS> {
     pub fn run<W>(&mut self) -> Result<W>
     where
         SB: SourceBuilder,
+        SB::DataSource: Send + Sync,
         W: for<'a> Writer<'a, TypeSystem = TS>,
-        TS: for<'a> Transmit<SB::DataSource, <W as Writer<'a>>::PartitionWriter>,
+        TS: for<'a> Transmit<SB::DataSource, <W as Writer<'a>>::PartitionWriter> + Clone,
     {
         self.entry::<W>(false)
     }
@@ -46,8 +48,9 @@ impl<SB, TS> Dispatcher<SB, TS> {
     fn entry<W>(&mut self, checked: bool) -> Result<W>
     where
         SB: SourceBuilder,
+        SB::DataSource: Send + Sync,
         W: for<'a> Writer<'a, TypeSystem = TS>,
-        TS: for<'a> Transmit<SB::DataSource, <W as Writer<'a>>::PartitionWriter>,
+        TS: for<'a> Transmit<SB::DataSource, <W as Writer<'a>>::PartitionWriter> + Clone,
     {
         // generate sources
         let mut sources: Vec<SB::DataSource> = (0..self.queries.len())
@@ -75,7 +78,6 @@ impl<SB, TS> Dispatcher<SB, TS> {
 
         // allocate memory and create one partition writer for each source
         let num_rows: Vec<usize> = sources.iter().map(|source| source.nrows()).collect();
-        assert_eq!(vec![4, 7], num_rows);
         let mut dw = W::allocate(num_rows.iter().sum(), self.schema.clone())?;
         let writers = dw.partition_writers(num_rows.as_slice());
 

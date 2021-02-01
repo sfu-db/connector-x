@@ -18,7 +18,7 @@ pub trait SourceBuilder {
 /// A DataSource should be able to `run_query` and store the query result in its own buffer.
 /// A DataSource should also be able to produce any type T, which is defined by its associated TypeSystem,
 /// by calling the function `DataSource::produce`.
-pub trait DataSource: Sized + Send + Sync {
+pub trait DataSource: Sized {
     /// The type system this `DataSource` associated with.
     type TypeSystem;
 
