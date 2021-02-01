@@ -99,11 +99,10 @@
 <span id="96">96</span>
 <span id="97">97</span>
 <span id="98">98</span>
-<span id="99">99</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">data_sources</span>::{<span class="ident">DataSource</span>, <span class="ident">SourceBuilder</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">errors</span>::<span class="prelude-ty">Result</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">typesystem</span>::<span class="ident">Transmit</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">typesystem</span>::{<span class="ident">Transmit</span>, <span class="ident">TypeSystem</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">writers</span>::{<span class="ident">PartitionWriter</span>, <span class="ident">Writer</span>};
 <span class="kw">use</span> <span class="ident">rayon</span>::<span class="ident">prelude</span>::<span class="kw-2">*</span>;
 
@@ -115,7 +114,12 @@
     <span class="ident">queries</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">SB</span>, <span class="ident">TS</span><span class="op">&gt;</span> <span class="ident">Dispatcher</span><span class="op">&lt;</span><span class="ident">SB</span>, <span class="ident">TS</span><span class="op">&gt;</span> {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">SB</span>, <span class="ident">TS</span><span class="op">&gt;</span> <span class="ident">Dispatcher</span><span class="op">&lt;</span><span class="ident">SB</span>, <span class="ident">TS</span><span class="op">&gt;</span>
+<span class="kw">where</span>
+    <span class="ident">SB</span>: <span class="ident">SourceBuilder</span>,
+    <span class="ident">SB</span>::<span class="ident">DataSource</span>: <span class="ident">Send</span>,
+    <span class="ident">TS</span>: <span class="ident">TypeSystem</span>,
+{
     <span class="doccomment">/// Create a new dispatcher by providing a source builder, schema (temporary) and the queries</span>
     <span class="doccomment">/// to be issued to the data source.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">source_builder</span>: <span class="ident">SB</span>, <span class="ident">schema</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">TS</span><span class="op">&gt;</span>, <span class="ident">queries</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
@@ -128,20 +132,16 @@
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">run_checked</span><span class="op">&lt;</span><span class="ident">W</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">W</span><span class="op">&gt;</span>
     <span class="kw">where</span>
-        <span class="ident">SB</span>: <span class="ident">SourceBuilder</span>,
-        <span class="ident">SB</span>::<span class="ident">DataSource</span>: <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
         <span class="ident">W</span>: <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Writer</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">TypeSystem</span> <span class="op">=</span> <span class="ident">TS</span><span class="op">&gt;</span>,
-        <span class="ident">TS</span>: <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Transmit</span><span class="op">&lt;</span><span class="ident">SB</span>::<span class="ident">DataSource</span>, <span class="op">&lt;</span><span class="ident">W</span> <span class="kw">as</span> <span class="ident">Writer</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span>::<span class="ident">PartitionWriter</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
+        <span class="ident">TS</span>: <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Transmit</span><span class="op">&lt;</span><span class="ident">SB</span>::<span class="ident">DataSource</span>, <span class="op">&lt;</span><span class="ident">W</span> <span class="kw">as</span> <span class="ident">Writer</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span>::<span class="ident">PartitionWriter</span><span class="op">&gt;</span>,
     {
         <span class="self">self</span>.<span class="ident">entry</span>::<span class="op">&lt;</span><span class="ident">W</span><span class="op">&gt;</span>(<span class="bool-val">true</span>)
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">run</span><span class="op">&lt;</span><span class="ident">W</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">W</span><span class="op">&gt;</span>
     <span class="kw">where</span>
-        <span class="ident">SB</span>: <span class="ident">SourceBuilder</span>,
-        <span class="ident">SB</span>::<span class="ident">DataSource</span>: <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
         <span class="ident">W</span>: <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Writer</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">TypeSystem</span> <span class="op">=</span> <span class="ident">TS</span><span class="op">&gt;</span>,
-        <span class="ident">TS</span>: <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Transmit</span><span class="op">&lt;</span><span class="ident">SB</span>::<span class="ident">DataSource</span>, <span class="op">&lt;</span><span class="ident">W</span> <span class="kw">as</span> <span class="ident">Writer</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span>::<span class="ident">PartitionWriter</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
+        <span class="ident">TS</span>: <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Transmit</span><span class="op">&lt;</span><span class="ident">SB</span>::<span class="ident">DataSource</span>, <span class="op">&lt;</span><span class="ident">W</span> <span class="kw">as</span> <span class="ident">Writer</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span>::<span class="ident">PartitionWriter</span><span class="op">&gt;</span>,
     {
         <span class="self">self</span>.<span class="ident">entry</span>::<span class="op">&lt;</span><span class="ident">W</span><span class="op">&gt;</span>(<span class="bool-val">false</span>)
     }
@@ -150,10 +150,8 @@
     <span class="doccomment">/// and return a writer with parsed result</span>
     <span class="kw">fn</span> <span class="ident">entry</span><span class="op">&lt;</span><span class="ident">W</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">checked</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">W</span><span class="op">&gt;</span>
     <span class="kw">where</span>
-        <span class="ident">SB</span>: <span class="ident">SourceBuilder</span>,
-        <span class="ident">SB</span>::<span class="ident">DataSource</span>: <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
         <span class="ident">W</span>: <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Writer</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">TypeSystem</span> <span class="op">=</span> <span class="ident">TS</span><span class="op">&gt;</span>,
-        <span class="ident">TS</span>: <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Transmit</span><span class="op">&lt;</span><span class="ident">SB</span>::<span class="ident">DataSource</span>, <span class="op">&lt;</span><span class="ident">W</span> <span class="kw">as</span> <span class="ident">Writer</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span>::<span class="ident">PartitionWriter</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
+        <span class="ident">TS</span>: <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Transmit</span><span class="op">&lt;</span><span class="ident">SB</span>::<span class="ident">DataSource</span>, <span class="op">&lt;</span><span class="ident">W</span> <span class="kw">as</span> <span class="ident">Writer</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span>::<span class="ident">PartitionWriter</span><span class="op">&gt;</span>,
     {
         <span class="comment">// generate sources</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">sources</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">SB</span>::<span class="ident">DataSource</span><span class="op">&gt;</span> <span class="op">=</span> (<span class="number">0</span>..<span class="self">self</span>.<span class="ident">queries</span>.<span class="ident">len</span>())

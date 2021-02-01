@@ -13,6 +13,6 @@ For all the sources, their output values must be one of the types defined by Dat
 For all the writers, they must support writing any value whose type is defined by DataType.</p>
 </td></tr></table><h2 id="traits" class="section-header"><a href="#traits">Traits</a></h2>
 <table><tr class="module-item"><td><a class="trait" href="trait.Transmit.html" title="connector_agent::Transmit trait">Transmit</a></td><td class="docblock-short"><p>Transmit defines Self that can pull data from a data source S and push the data to the writer W.</p>
-</td></tr><tr class="module-item"><td><a class="trait" href="trait.TypeSystem.html" title="connector_agent::TypeSystem trait">TypeSystem</a></td><td class="docblock-short"><p><code>TypeSystem&lt;T&gt;</code> maps every type in Self to a concrete native type T.
-Usually multiple <code>TypeSystem&lt;T&gt;</code> will be implemented for a same Self type.</p>
+</td></tr><tr class="module-item"><td><a class="trait" href="trait.TypeSystem.html" title="connector_agent::TypeSystem trait">TypeSystem</a></td><td class="docblock-short"><p><code>TypeSystem</code> describes a type system in a value type (e.g. enum variants),
+which can be used to type check with a static type <code>T</code> through the <code>check</code> method.</p>
 </td></tr></table></section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../";window.currentCrate = "connector_agent";</script><script src="../main.js"></script><script defer src="../search-index.js"></script></body></html>

@@ -24,6 +24,12 @@
 <span id="21">21</span>
 <span id="22">22</span>
 <span id="23">23</span>
+<span id="24">24</span>
+<span id="25">25</span>
+<span id="26">26</span>
+<span id="27">27</span>
+<span id="28">28</span>
+<span id="29">29</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Each variant in DataType represents a type that connector-agent currently</span>
 <span class="comment">// supports to read from a data source and write into a writer.</span>
@@ -33,7 +39,11 @@
 <span class="comment">// 3. Add `DataType::T =&gt; N` to the macro impl_transmit!.</span>
 <span class="comment">//</span>
 
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">errors</span>::<span class="prelude-ty">Result</span>, <span class="ident">typesystem</span>::<span class="ident">TypeSystem</span>, <span class="ident">writers</span>::<span class="ident">PartitionWriter</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::{
+    <span class="ident">errors</span>::<span class="prelude-ty">Result</span>,
+    <span class="ident">typesystem</span>::{<span class="ident">TypeAssoc</span>, <span class="ident">TypeSystem</span>},
+    <span class="ident">writers</span>::<span class="ident">PartitionWriter</span>,
+};
 
 <span class="doccomment">/// This is our intermediate type system used in this library.</span>
 <span class="doccomment">/// For all the sources, their output values must be one of the types defined by DataType.</span>
@@ -46,7 +56,9 @@
     <span class="ident">String</span>,
 }
 
-<span class="macro">impl_typesystem</span><span class="macro">!</span>(<span class="ident">DataType</span>, <span class="ident">DataType</span>::<span class="ident">F64</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f64</span>, <span class="ident">DataType</span>::<span class="ident">U64</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">u64</span>, <span class="ident">DataType</span>::<span class="ident">Bool</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">bool</span>, <span class="ident">DataType</span>::<span class="ident">String</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">String</span>);
+<span class="kw">impl</span> <span class="ident">TypeSystem</span> <span class="kw">for</span> <span class="ident">DataType</span> {}
+
+<span class="macro">impl_type_assoc</span><span class="macro">!</span>(<span class="ident">DataType</span>, <span class="ident">DataType</span>::<span class="ident">F64</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f64</span>, <span class="ident">DataType</span>::<span class="ident">U64</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">u64</span>, <span class="ident">DataType</span>::<span class="ident">Bool</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">bool</span>, <span class="ident">DataType</span>::<span class="ident">String</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">String</span>);
 <span class="macro">impl_transmit</span><span class="macro">!</span>(<span class="ident">DataType</span>, <span class="ident">DataType</span>::<span class="ident">F64</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f64</span>, <span class="ident">DataType</span>::<span class="ident">U64</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">u64</span>, <span class="ident">DataType</span>::<span class="ident">Bool</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">bool</span>, <span class="ident">DataType</span>::<span class="ident">String</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">String</span>);
 </pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../";window.currentCrate = "connector_agent";</script><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>
