@@ -2,7 +2,7 @@ use super::{PartitionWriter, Writer};
 use crate::any_array::{AnyArray, AnyArrayViewMut};
 use crate::errors::{ConnectorAgentError, Result};
 use crate::types::DataType;
-use crate::typesystem::TypeSystem;
+use crate::typesystem::{TypeAssoc, TypeSystem};
 use itertools::Itertools;
 use ndarray::{Array2, ArrayView1, ArrayView2, Axis, Ix2};
 use std::any::type_name;
@@ -137,9 +137,9 @@ impl<'a> PartitionWriter<'a> for MemoryPartitionWriter<'a> {
 
     fn write_checked<T: 'static>(&mut self, row: usize, col: usize, value: T) -> Result<()>
     where
-        Self::TypeSystem: TypeSystem<T>,
+        T: TypeAssoc<Self::TypeSystem>,
     {
-        self.schema[col].check()?;
+        self.schema[col].check::<T>()?;
         let &(bid, col) = &self.column_buffer_index[col];
 
         let mut_view =

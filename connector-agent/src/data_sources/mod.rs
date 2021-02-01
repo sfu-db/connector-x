@@ -7,7 +7,7 @@ pub mod mixed;
 pub mod postgres;
 
 use crate::errors::Result;
-use crate::typesystem::TypeSystem;
+use crate::typesystem::{TypeAssoc, TypeSystem};
 
 pub trait SourceBuilder {
     type DataSource: DataSource;
@@ -20,7 +20,7 @@ pub trait SourceBuilder {
 /// by calling the function `DataSource::produce`.
 pub trait DataSource: Sized {
     /// The type system this `DataSource` associated with.
-    type TypeSystem;
+    type TypeSystem: TypeSystem;
 
     /// Run the query and put the result into Self.
     fn run_query(&mut self, query: &str) -> Result<()>;
@@ -29,7 +29,7 @@ pub trait DataSource: Sized {
     /// implemented.
     fn produce<T>(&mut self) -> Result<T>
     where
-        Self::TypeSystem: TypeSystem<T>,
+        T: TypeAssoc<Self::TypeSystem>,
         Self: Parse<T>,
     {
         self.parse()

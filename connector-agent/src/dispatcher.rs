@@ -1,6 +1,6 @@
 use crate::data_sources::{DataSource, SourceBuilder};
 use crate::errors::Result;
-use crate::typesystem::Transmit;
+use crate::typesystem::{Transmit, TypeSystem};
 use crate::writers::{PartitionWriter, Writer};
 use rayon::prelude::*;
 
@@ -12,7 +12,12 @@ pub struct Dispatcher<SB, TS> {
     queries: Vec<String>,
 }
 
-impl<SB, TS> Dispatcher<SB, TS> {
+impl<SB, TS> Dispatcher<SB, TS>
+where
+    SB: SourceBuilder,
+    SB::DataSource: Send,
+    TS: TypeSystem,
+{
     /// Create a new dispatcher by providing a source builder, schema (temporary) and the queries
     /// to be issued to the data source.
     pub fn new(source_builder: SB, schema: Vec<TS>, queries: Vec<String>) -> Self {
@@ -25,20 +30,16 @@ impl<SB, TS> Dispatcher<SB, TS> {
 
     pub fn run_checked<W>(&mut self) -> Result<W>
     where
-        SB: SourceBuilder,
-        SB::DataSource: Send + Sync,
         W: for<'a> Writer<'a, TypeSystem = TS>,
-        TS: for<'a> Transmit<SB::DataSource, <W as Writer<'a>>::PartitionWriter> + Clone,
+        TS: for<'a> Transmit<SB::DataSource, <W as Writer<'a>>::PartitionWriter>,
     {
         self.entry::<W>(true)
     }
 
     pub fn run<W>(&mut self) -> Result<W>
     where
-        SB: SourceBuilder,
-        SB::DataSource: Send + Sync,
         W: for<'a> Writer<'a, TypeSystem = TS>,
-        TS: for<'a> Transmit<SB::DataSource, <W as Writer<'a>>::PartitionWriter> + Clone,
+        TS: for<'a> Transmit<SB::DataSource, <W as Writer<'a>>::PartitionWriter>,
     {
         self.entry::<W>(false)
     }
@@ -47,10 +48,8 @@ impl<SB, TS> Dispatcher<SB, TS> {
     /// and return a writer with parsed result
     fn entry<W>(&mut self, checked: bool) -> Result<W>
     where
-        SB: SourceBuilder,
-        SB::DataSource: Send + Sync,
         W: for<'a> Writer<'a, TypeSystem = TS>,
-        TS: for<'a> Transmit<SB::DataSource, <W as Writer<'a>>::PartitionWriter> + Clone,
+        TS: for<'a> Transmit<SB::DataSource, <W as Writer<'a>>::PartitionWriter>,
     {
         // generate sources
         let mut sources: Vec<SB::DataSource> = (0..self.queries.len())
