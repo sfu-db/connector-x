@@ -1,5 +1,7 @@
-use connector_agent::writers::mixed::MemoryWriter;
-use connector_agent::{DataType, PartitionWriter, Writer};
+use connector_agent::{
+    data_sources::mixed::MixedSourceBuilder, writers::mixed::MemoryWriter, DataType, Dispatcher,
+    PartitionWriter, Writer,
+};
 use ndarray::array;
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
@@ -94,6 +96,99 @@ fn write_mixed_array() {
                         "1005".to_string(),
                         "1006".to_string()
                     ]
+                )
+            }
+            _ => unreachable!(),
+        }
+    }
+}
+
+#[test]
+fn test_mixed() {
+    let schema = vec![
+        DataType::U64,
+        DataType::F64,
+        DataType::String,
+        DataType::F64,
+        DataType::Bool,
+        DataType::String,
+        DataType::F64,
+    ];
+    let nrows = vec![4, 7];
+    let ncols = schema.len();
+    let queries: Vec<String> = nrows.iter().map(|v| format!("{},{}", v, ncols)).collect();
+
+    let mut dispatcher = Dispatcher::new(MixedSourceBuilder::new(), schema, queries);
+    let dw = dispatcher
+        .run_checked::<MemoryWriter>()
+        .expect("run dispatcher");
+
+    for (col, _) in dw.schema().into_iter().enumerate() {
+        match col {
+            0 => {
+                assert_eq!(
+                    dw.column_view::<u64>(col).unwrap(),
+                    array![0, 1, 2, 3, 0, 1, 2, 3, 4, 5, 6]
+                )
+            }
+            1 => {
+                assert_eq!(
+                    dw.column_view::<f64>(col).unwrap(),
+                    array![0.0, 1.0, 2.0, 3.0, 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
+                )
+            }
+            2 => {
+                assert_eq!(
+                    dw.column_view::<String>(col).unwrap(),
+                    array![
+                        "0".to_string(),
+                        "1".to_string(),
+                        "2".to_string(),
+                        "3".to_string(),
+                        "0".to_string(),
+                        "1".to_string(),
+                        "2".to_string(),
+                        "3".to_string(),
+                        "4".to_string(),
+                        "5".to_string(),
+                        "6".to_string()
+                    ]
+                )
+            }
+            3 => {
+                assert_eq!(
+                    dw.column_view::<f64>(col).unwrap(),
+                    array![0.0, 1.0, 2.0, 3.0, 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
+                )
+            }
+            4 => {
+                assert_eq!(
+                    dw.column_view::<bool>(col).unwrap(),
+                    array![true, false, true, false, true, false, true, false, true, false, true]
+                )
+            }
+            5 => {
+                assert_eq!(
+                    dw.column_view::<String>(col).unwrap(),
+                    array![
+                        "0".to_string(),
+                        "1".to_string(),
+                        "2".to_string(),
+                        "3".to_string(),
+                        "0".to_string(),
+                        "1".to_string(),
+                        "2".to_string(),
+                        "3".to_string(),
+                        "4".to_string(),
+                        "5".to_string(),
+                        "6".to_string()
+                    ]
+                )
+            }
+            6 => {
+                assert_eq!(
+                    dw.column_view::<f64>(col).unwrap(),
+                    array![0.0, 1.0, 2.0, 3.0, 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
                 )
             }
             _ => unreachable!(),

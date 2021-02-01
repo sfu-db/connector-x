@@ -6,24 +6,21 @@ pub mod s3;
 mod typesystem;
 mod any_array;
 pub mod data_sources;
+mod dispatcher;
 mod errors;
 mod types;
-mod worker;
 pub mod writers;
 
 pub use crate::any_array::{AnyArray, AnyArrayView, AnyArrayViewMut};
 pub use crate::data_sources::{
-    csv::CSVSource,
-    dummy::{BoolCounterSource, StringSource, U64CounterSource},
+    csv::{CSVSource, CSVSourceBuilder},
+    mixed::{MixedSource, MixedSourceBuilder},
+    {DataSource, SourceBuilder},
 };
+pub use crate::dispatcher::Dispatcher;
 pub use crate::errors::ConnectorAgentError;
 pub use crate::types::DataType;
 pub use crate::typesystem::{Transmit, TypeSystem};
-pub use crate::worker::Worker;
-pub use crate::writers::dummy::{
-    BoolPartitionWriter, BoolWriter, StringPartitionWriter, StringWriter, U64PartitionWriter,
-    U64Writer,
-};
 pub use crate::writers::{PartitionWriter, Writer};
 
 // pub struct Partition {

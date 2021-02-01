@@ -2,12 +2,12 @@ pub mod dummy;
 pub mod mixed;
 
 use crate::errors::Result;
-use crate::typesystem::TypeSystem;
+use crate::typesystem::{TypeAssoc, TypeSystem};
 
 /// A `Writer` is associated with a `TypeSystem` and a `PartitionWriter`.
 /// `PartitionWriter` allows multiple threads write data into the buffer owned by `Writer`.
 pub trait Writer<'a>: Sized {
-    type TypeSystem;
+    type TypeSystem: TypeSystem;
     type PartitionWriter: PartitionWriter<'a, TypeSystem = Self::TypeSystem>;
 
     /// Construct the `Writer`. This allocates the memory based on the types of each columns
@@ -22,8 +22,8 @@ pub trait Writer<'a>: Sized {
 /// `PartitionWriter` writes values to its own region. `PartitionWriter` is parameterized
 /// on lifetime `'a`, which is the lifetime of the parent `Writer`. This indicates
 /// the `PartitionWriter` can never live longer than the parent.
-pub trait PartitionWriter<'a> {
-    type TypeSystem;
+pub trait PartitionWriter<'a>: Send {
+    type TypeSystem: TypeSystem;
 
     /// Write a value of type T to the location (row, col). The value is unchecked against the schema.
     /// This function is unsafe due to unchecked.
@@ -32,7 +32,7 @@ pub trait PartitionWriter<'a> {
     /// schema, `ConnectorAgentError::UnexpectedType` will return.
     fn write_checked<T: 'static>(&mut self, row: usize, col: usize, value: T) -> Result<()>
     where
-        Self::TypeSystem: TypeSystem<T>;
+        T: TypeAssoc<Self::TypeSystem>;
     /// Number of rows this `PartitionWriter` controls.
     fn nrows(&self) -> usize;
     /// Number of rows this `PartitionWriter` controls.

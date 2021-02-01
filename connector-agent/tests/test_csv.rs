@@ -1,21 +1,25 @@
-use connector_agent::data_sources::{csv::CSVSource, DataSource, Parse};
-use connector_agent::writers::{dummy::U64Writer, Writer};
-use connector_agent::{DataType, Worker};
+use connector_agent::data_sources::{
+    csv::{CSVSource, CSVSourceBuilder},
+    DataSource, Parse,
+};
+use connector_agent::writers::dummy::U64Writer;
+use connector_agent::{DataType, Dispatcher};
 use ndarray::array;
-use rayon::prelude::*;
 
 #[test]
 #[should_panic]
 fn no_file() {
-    let mut source = CSVSource::new("./a_fake_file.csv");
-    source.run_query("").expect("run query");
+    let mut source = CSVSource::new();
+    source.run_query("./a_fake_file.csv").expect("run query");
 }
 
 #[test]
 #[should_panic]
 fn empty_file() {
-    let mut source = CSVSource::new("./tests/data/empty.csv");
-    source.run_query("").expect("run query");
+    let mut source = CSVSource::new();
+    source
+        .run_query("./tests/data/empty.csv")
+        .expect("run query");
 
     assert_eq!(0, source.nrows);
     assert_eq!(0, source.ncols);
@@ -33,8 +37,10 @@ fn load_and_parse() {
         Latitude(f64),
     }
 
-    let mut source = CSVSource::new("./tests/data/uspop_0.csv");
-    source.run_query("").expect("run query");
+    let mut source = CSVSource::new();
+    source
+        .run_query("./tests/data/uspop_0.csv")
+        .expect("run query");
 
     assert_eq!(3, source.nrows);
     assert_eq!(5, source.ncols);
@@ -71,20 +77,17 @@ fn load_and_parse() {
 }
 
 #[test]
-fn load_and_write_uint() {
-    let files = vec!["./tests/data/uint_0.csv", "./tests/data/uint_1.csv"];
-    let mut dw = U64Writer::allocate(11, vec![DataType::U64; 5]).unwrap();
-    let schema = dw.schema().to_vec();
-    let writers = dw.partition_writers(&[4, 7]);
+fn test_csv() {
+    let schema = vec![DataType::U64; 5];
+    let files = vec![
+        "./tests/data/uint_0.csv".to_string(),
+        "./tests/data/uint_1.csv".to_string(),
+    ];
+    let mut dispatcher = Dispatcher::new(CSVSourceBuilder::new(), schema, files);
 
-    writers
-        .into_par_iter()
-        .zip_eq(files)
-        .for_each(|(writer, file)| {
-            Worker::new(CSVSource::new(file), writer, schema.clone(), "")
-                .run_checked()
-                .expect("Worker failed")
-        });
+    let dw = dispatcher
+        .run_checked::<U64Writer>()
+        .expect("run dispatcher");
 
     assert_eq!(
         array![
