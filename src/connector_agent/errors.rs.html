@@ -20,8 +20,14 @@
 <span id="17">17</span>
 <span id="18">18</span>
 <span id="19">19</span>
+<span id="20">20</span>
+<span id="21">21</span>
+<span id="22">22</span>
+<span id="23">23</span>
+<span id="24">24</span>
+<span id="25">25</span>
 </pre><div class="example-wrap"><pre class="rust ">
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::<span class="ident">DataType</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">data_order</span>::<span class="ident">DataOrder</span>, <span class="ident">types</span>::<span class="ident">DataType</span>};
 <span class="kw">use</span> <span class="ident">thiserror</span>::<span class="ident">Error</span>;
 
 <span class="kw">pub</span> <span class="kw">type</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">result</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">ConnectorAgentError</span><span class="op">&gt;</span>;
@@ -33,8 +39,14 @@
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Data type unexpected: {0:?} expected, {1} found.&quot;</span>)]</span>
     <span class="ident">UnexpectedType</span>(<span class="ident">DataType</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>),
 
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Index operation out of bound&quot;</span>)]</span>
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Index operation out of bound.&quot;</span>)]</span>
     <span class="ident">OutOfBound</span>,
+
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Data order not supported {0:?}.&quot;</span>)]</span>
+    <span class="ident">UnsupportedDataOrder</span>(<span class="ident">DataOrder</span>),
+
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Cannot resolve data order: got {0:?} from source, {1:?} from destination.&quot;</span>)]</span>
+    <span class="ident">CannotResolveDataOrder</span>(<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">DataOrder</span><span class="op">&gt;</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">DataOrder</span><span class="op">&gt;</span>),
 
     <span class="doccomment">/// Any other errors that are too trivial to be put here explicitly.</span>
     <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
