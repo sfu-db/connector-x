@@ -1,6 +1,8 @@
 use super::{DataSource, Parse, SourceBuilder};
-use crate::errors::Result;
+use crate::data_order::DataOrder;
+use crate::errors::{ConnectorAgentError, Result};
 use crate::types::DataType;
+use fehler::{throw, throws};
 use num_traits::cast::FromPrimitive;
 
 pub struct MixedSourceBuilder {}
@@ -12,7 +14,15 @@ impl MixedSourceBuilder {
 }
 
 impl SourceBuilder for MixedSourceBuilder {
+    const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
     type DataSource = MixedSource;
+
+    #[throws(ConnectorAgentError)]
+    fn set_data_order(&mut self, data_order: DataOrder) {
+        if !matches!(data_order, DataOrder::RowMajor) {
+            throw!(ConnectorAgentError::UnsupportedDataOrder(data_order))
+        }
+    }
 
     fn build(&mut self) -> Self::DataSource {
         MixedSource::new()

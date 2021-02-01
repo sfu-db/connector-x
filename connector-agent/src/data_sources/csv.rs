@@ -1,6 +1,8 @@
 use super::{DataSource, Parse, SourceBuilder};
-use crate::errors::Result;
+use crate::data_order::DataOrder;
+use crate::errors::{ConnectorAgentError, Result};
 use crate::types::DataType;
+use fehler::{throw, throws};
 use std::fs::File;
 use std::str::FromStr;
 
@@ -13,7 +15,15 @@ impl CSVSourceBuilder {
 }
 
 impl SourceBuilder for CSVSourceBuilder {
+    const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
     type DataSource = CSVSource;
+
+    #[throws(ConnectorAgentError)]
+    fn set_data_order(&mut self, data_order: DataOrder) {
+        if !matches!(data_order, DataOrder::RowMajor) {
+            throw!(ConnectorAgentError::UnsupportedDataOrder(data_order))
+        }
+    }
 
     fn build(&mut self) -> Self::DataSource {
         CSVSource::new()

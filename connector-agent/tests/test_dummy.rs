@@ -5,7 +5,7 @@ use connector_agent::writers::{
     dummy::{BoolWriter, F64Writer, StringWriter, U64Writer},
     Writer,
 };
-use connector_agent::{DataType, Dispatcher};
+use connector_agent::{DataOrder, DataType, Dispatcher};
 use ndarray::array;
 
 #[test]
@@ -20,6 +20,7 @@ fn wrong_data_type() {
             DataType::F64,
             DataType::U64,
         ],
+        DataOrder::RowMajor,
     )
     .unwrap();
 }
@@ -36,6 +37,7 @@ fn wrong_string_data_type() {
             DataType::String,
             DataType::String,
         ],
+        DataOrder::RowMajor,
     )
     .unwrap();
 }
@@ -45,7 +47,7 @@ fn write_array() {
     let schema = vec![DataType::U64; 5];
     let queries = vec!["4".to_string(), "7".to_string()];
 
-    let mut dispatcher = Dispatcher::new(U64SourceBuilder {}, schema, queries);
+    let dispatcher = Dispatcher::new(U64SourceBuilder {}, schema, queries);
     let dw = dispatcher
         .run_checked::<U64Writer>()
         .expect("run dispatcher");
@@ -73,7 +75,7 @@ fn write_string_array() {
     let schema = vec![DataType::String; 5];
     let queries = vec!["4".to_string(), "7".to_string()];
 
-    let mut dispatcher = Dispatcher::new(StringSourceBuilder {}, schema, queries);
+    let dispatcher = Dispatcher::new(StringSourceBuilder {}, schema, queries);
     let dw = dispatcher
         .run_checked::<StringWriter>()
         .expect("run dispatcher");
@@ -101,7 +103,7 @@ fn write_array_bool() {
     let schema = vec![DataType::Bool; 5];
     let queries = vec!["4".to_string(), "7".to_string()];
 
-    let mut dispatcher = Dispatcher::new(BoolSourceBuilder {}, schema, queries);
+    let dispatcher = Dispatcher::new(BoolSourceBuilder {}, schema, queries);
     let dw = dispatcher
         .run_checked::<BoolWriter>()
         .expect("run dispatcher");
@@ -128,7 +130,7 @@ fn write_array_f64() {
     let schema = vec![DataType::F64; 5];
     let queries = vec!["4".to_string(), "7".to_string()];
 
-    let mut dispatcher = Dispatcher::new(F64SourceBuilder {}, schema, queries);
+    let dispatcher = Dispatcher::new(F64SourceBuilder {}, schema, queries);
     let dw = dispatcher
         .run_checked::<F64Writer>()
         .expect("run dispatcher");

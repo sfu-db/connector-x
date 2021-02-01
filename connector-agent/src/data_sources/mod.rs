@@ -6,18 +6,21 @@ pub mod dummy;
 pub mod mixed;
 pub mod postgres;
 
+use crate::data_order::DataOrder;
 use crate::errors::Result;
 use crate::typesystem::{TypeAssoc, TypeSystem};
 
 pub trait SourceBuilder {
+    /// Supported data orders, ordering by preference.
+    const DATA_ORDERS: &'static [DataOrder];
     type DataSource: DataSource;
 
+    fn set_data_order(&mut self, data_order: DataOrder) -> Result<()>;
     fn build(&mut self) -> Self::DataSource;
 }
 
-/// A DataSource should be able to `run_query` and store the query result in its own buffer.
-/// A DataSource should also be able to produce any type T, which is defined by its associated TypeSystem,
-/// by calling the function `DataSource::produce`.
+/// In general, a `DataSource` abstracts the data source as a stream, which can produce
+/// a sequence of values of variate types by repetitively calling the function `produce`.
 pub trait DataSource: Sized {
     /// The type system this `DataSource` associated with.
     type TypeSystem: TypeSystem;

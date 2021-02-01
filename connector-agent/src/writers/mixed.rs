@@ -1,8 +1,10 @@
 use super::{PartitionWriter, Writer};
 use crate::any_array::{AnyArray, AnyArrayViewMut};
+use crate::data_order::DataOrder;
 use crate::errors::{ConnectorAgentError, Result};
 use crate::types::DataType;
 use crate::typesystem::{TypeAssoc, TypeSystem};
+use fehler::{throw, throws};
 use itertools::Itertools;
 use ndarray::{Array2, ArrayView1, ArrayView2, Axis, Ix2};
 use std::any::type_name;
@@ -17,10 +19,16 @@ pub struct MemoryWriter {
 }
 
 impl<'a> Writer<'a> for MemoryWriter {
+    const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
     type TypeSystem = DataType;
     type PartitionWriter = MemoryPartitionWriter<'a>;
 
-    fn allocate(nrows: usize, schema: Vec<DataType>) -> Result<Self> {
+    #[throws(ConnectorAgentError)]
+    fn allocate(nrows: usize, schema: Vec<DataType>, data_order: DataOrder) -> Self {
+        if !matches!(data_order, DataOrder::RowMajor) {
+            throw!(ConnectorAgentError::UnsupportedDataOrder(data_order))
+        }
+
         // The schema needs to be sorted due to the group by only works on consecutive identity keys.
         let mut sorted_schema = schema.clone();
         sorted_schema.sort();
@@ -53,12 +61,12 @@ impl<'a> Writer<'a> for MemoryWriter {
             *count += 1;
         }
 
-        Ok(MemoryWriter {
+        MemoryWriter {
             nrows,
             schema,
             buffers,
             column_buffer_index,
-        })
+        }
     }
 
     fn partition_writers(&'a mut self, counts: &[usize]) -> Vec<Self::PartitionWriter> {

@@ -1,14 +1,23 @@
 use super::{DataSource, Parse, SourceBuilder};
-use crate::errors::Result;
+use crate::data_order::DataOrder;
+use crate::errors::{ConnectorAgentError, Result};
 use crate::types::DataType;
 use anyhow::anyhow;
-use fehler::throw;
+use fehler::{throw, throws};
 use num_traits::cast::FromPrimitive;
 
 pub struct U64SourceBuilder {}
 
 impl SourceBuilder for U64SourceBuilder {
+    const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
     type DataSource = U64CounterSource;
+
+    #[throws(ConnectorAgentError)]
+    fn set_data_order(&mut self, data_order: DataOrder) {
+        if !matches!(data_order, DataOrder::RowMajor) {
+            throw!(ConnectorAgentError::UnsupportedDataOrder(data_order))
+        }
+    }
 
     fn build(&mut self) -> Self::DataSource {
         U64CounterSource::new()
@@ -78,7 +87,15 @@ impl Parse<bool> for U64CounterSource {
 pub struct StringSourceBuilder {}
 
 impl SourceBuilder for StringSourceBuilder {
+    const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
     type DataSource = StringSource;
+
+    #[throws(ConnectorAgentError)]
+    fn set_data_order(&mut self, data_order: DataOrder) {
+        if !matches!(data_order, DataOrder::RowMajor) {
+            throw!(ConnectorAgentError::UnsupportedDataOrder(data_order))
+        }
+    }
 
     fn build(&mut self) -> Self::DataSource {
         StringSource::new()
@@ -153,7 +170,15 @@ impl Parse<bool> for StringSource {
 pub struct BoolSourceBuilder {}
 
 impl SourceBuilder for BoolSourceBuilder {
+    const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
     type DataSource = BoolCounterSource;
+
+    #[throws(ConnectorAgentError)]
+    fn set_data_order(&mut self, data_order: DataOrder) {
+        if !matches!(data_order, DataOrder::RowMajor) {
+            throw!(ConnectorAgentError::UnsupportedDataOrder(data_order))
+        }
+    }
 
     fn build(&mut self) -> Self::DataSource {
         BoolCounterSource::new()
@@ -218,7 +243,15 @@ impl Parse<String> for BoolCounterSource {
 pub struct F64SourceBuilder {}
 
 impl SourceBuilder for F64SourceBuilder {
+    const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
     type DataSource = F64CounterSource;
+
+    #[throws(ConnectorAgentError)]
+    fn set_data_order(&mut self, data_order: DataOrder) {
+        if !matches!(data_order, DataOrder::RowMajor) {
+            throw!(ConnectorAgentError::UnsupportedDataOrder(data_order))
+        }
+    }
 
     fn build(&mut self) -> Self::DataSource {
         F64CounterSource::new()

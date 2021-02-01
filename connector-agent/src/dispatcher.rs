@@ -1,3 +1,4 @@
+use crate::data_order::{coordinate, DataOrder};
 use crate::data_sources::{DataSource, SourceBuilder};
 use crate::errors::Result;
 use crate::typesystem::{Transmit, TypeSystem};
@@ -28,7 +29,7 @@ where
         }
     }
 
-    pub fn run_checked<W>(&mut self) -> Result<W>
+    pub fn run_checked<W>(self) -> Result<W>
     where
         W: for<'a> Writer<'a, TypeSystem = TS>,
         TS: for<'a> Transmit<SB::DataSource, <W as Writer<'a>>::PartitionWriter>,
@@ -36,7 +37,7 @@ where
         self.entry::<W>(true)
     }
 
-    pub fn run<W>(&mut self) -> Result<W>
+    pub fn run<W>(self) -> Result<W>
     where
         W: for<'a> Writer<'a, TypeSystem = TS>,
         TS: for<'a> Transmit<SB::DataSource, <W as Writer<'a>>::PartitionWriter>,
@@ -46,11 +47,14 @@ where
 
     /// Run the dispatcher by specifying the writer, the dispatcher will fetch, parse the data
     /// and return a writer with parsed result
-    fn entry<W>(&mut self, checked: bool) -> Result<W>
+    fn entry<W>(mut self, checked: bool) -> Result<W>
     where
         W: for<'a> Writer<'a, TypeSystem = TS>,
         TS: for<'a> Transmit<SB::DataSource, <W as Writer<'a>>::PartitionWriter>,
     {
+        let dorder = coordinate(SB::DATA_ORDERS, W::DATA_ORDERS)?;
+        self.source_builder.set_data_order(dorder)?;
+
         // generate sources
         let mut sources: Vec<SB::DataSource> = (0..self.queries.len())
             .map(|_i| self.source_builder.build())
@@ -77,7 +81,7 @@ where
 
         // allocate memory and create one partition writer for each source
         let num_rows: Vec<usize> = sources.iter().map(|source| source.nrows()).collect();
-        let mut dw = W::allocate(num_rows.iter().sum(), self.schema.clone())?;
+        let mut dw = W::allocate(num_rows.iter().sum(), self.schema.clone(), dorder)?;
         let writers = dw.partition_writers(num_rows.as_slice());
 
         // parse and write
@@ -86,9 +90,20 @@ where
             .zip_eq(sources)
             .for_each(|(mut writer, mut source)| {
                 let f = funcs.clone();
-                for row in 0..writer.nrows() {
-                    for col in 0..writer.ncols() {
-                        f[col](&mut source, &mut writer, row, col).expect("write record");
+                match dorder {
+                    DataOrder::RowMajor => {
+                        for row in 0..writer.nrows() {
+                            for col in 0..writer.ncols() {
+                                f[col](&mut source, &mut writer, row, col).expect("write record");
+                            }
+                        }
+                    }
+                    DataOrder::ColumnMajor => {
+                        for col in 0..writer.ncols() {
+                            for row in 0..writer.nrows() {
+                                f[col](&mut source, &mut writer, row, col).expect("write record");
+                            }
+                        }
                     }
                 }
             });

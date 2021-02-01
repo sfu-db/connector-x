@@ -1,18 +1,21 @@
 pub mod dummy;
 pub mod mixed;
 
+use crate::data_order::DataOrder;
 use crate::errors::Result;
 use crate::typesystem::{TypeAssoc, TypeSystem};
 
 /// A `Writer` is associated with a `TypeSystem` and a `PartitionWriter`.
 /// `PartitionWriter` allows multiple threads write data into the buffer owned by `Writer`.
 pub trait Writer<'a>: Sized {
+    const DATA_ORDERS: &'static [DataOrder];
     type TypeSystem: TypeSystem;
     type PartitionWriter: PartitionWriter<'a, TypeSystem = Self::TypeSystem>;
 
-    /// Construct the `Writer`. This allocates the memory based on the types of each columns
+    /// Construct the `Writer`.
+    /// This allocates the memory based on the types of each columns
     /// and the number of rows.
-    fn allocate(nrow: usize, schema: Vec<Self::TypeSystem>) -> Result<Self>;
+    fn allocate(nrow: usize, schema: Vec<Self::TypeSystem>, data_order: DataOrder) -> Result<Self>;
     /// Create a bunch of partition writers, with each write `count` number of rows.
     fn partition_writers(&'a mut self, counts: &[usize]) -> Vec<Self::PartitionWriter>;
     /// Return the schema of the writer.

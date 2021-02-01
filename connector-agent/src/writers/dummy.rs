@@ -1,9 +1,10 @@
 use super::{PartitionWriter, Writer};
-use crate::errors::Result;
+use crate::data_order::DataOrder;
+use crate::errors::{ConnectorAgentError, Result};
 use crate::types::DataType;
 use crate::typesystem::{TypeAssoc, TypeSystem};
 use anyhow::anyhow;
-use fehler::throw;
+use fehler::{throw, throws};
 use ndarray::{Array2, ArrayView2, ArrayViewMut2, Axis};
 use std::mem::transmute;
 
@@ -22,22 +23,27 @@ impl U64Writer {
 }
 
 impl<'a> Writer<'a> for U64Writer {
+    const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
     type TypeSystem = DataType;
     type PartitionWriter = U64PartitionWriter<'a>;
 
-    fn allocate(nrows: usize, schema: Vec<DataType>) -> Result<Self> {
+    #[throws(ConnectorAgentError)]
+    fn allocate(nrows: usize, schema: Vec<DataType>, data_order: DataOrder) -> Self {
         let ncols = schema.len();
         for field in &schema {
             if !matches!(field, DataType::U64) {
                 throw!(anyhow!("U64Writer only accepts U64 only schema"));
             }
         }
+        if !matches!(data_order, DataOrder::RowMajor) {
+            throw!(ConnectorAgentError::UnsupportedDataOrder(data_order))
+        }
 
-        Ok(U64Writer {
+        U64Writer {
             nrows,
             schema,
             buffer: Array2::zeros((nrows, ncols)),
-        })
+        }
     }
 
     fn partition_writers(&'a mut self, counts: &[usize]) -> Vec<Self::PartitionWriter> {
@@ -127,24 +133,27 @@ impl BoolWriter {
 }
 
 impl<'a> Writer<'a> for StringWriter {
-    // ?
+    const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
     type PartitionWriter = StringPartitionWriter<'a>;
     type TypeSystem = DataType;
 
-    fn allocate(nrows: usize, schema: Vec<DataType>) -> Result<Self> {
+    #[throws(ConnectorAgentError)]
+    fn allocate(nrows: usize, schema: Vec<DataType>, data_order: DataOrder) -> Self {
         let ncols = schema.len();
         for field in &schema {
             if !matches!(field, DataType::String) {
                 throw!(anyhow!("StringWriter only accepts String only schema"));
             }
         }
+        if !matches!(data_order, DataOrder::RowMajor) {
+            throw!(ConnectorAgentError::UnsupportedDataOrder(data_order))
+        }
 
-        // ?
-        Ok(StringWriter {
+        StringWriter {
             nrows,
             schema,
             buffer: Array2::default((nrows, ncols)),
-        })
+        }
     }
 
     fn partition_writers(&'a mut self, counts: &[usize]) -> Vec<Self::PartitionWriter> {
@@ -170,22 +179,27 @@ impl<'a> Writer<'a> for StringWriter {
 }
 
 impl<'a> Writer<'a> for BoolWriter {
+    const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
     type TypeSystem = DataType;
     type PartitionWriter = BoolPartitionWriter<'a>;
 
-    fn allocate(nrows: usize, schema: Vec<DataType>) -> Result<Self> {
+    #[throws(ConnectorAgentError)]
+    fn allocate(nrows: usize, schema: Vec<DataType>, data_order: DataOrder) -> Self {
         let ncols = schema.len();
         for field in &schema {
             if !matches!(field, DataType::Bool) {
                 throw!(anyhow!("BoolWriter only accepts Bool only schema"));
             }
         }
+        if !matches!(data_order, DataOrder::RowMajor) {
+            throw!(ConnectorAgentError::UnsupportedDataOrder(data_order))
+        }
 
-        Ok(BoolWriter {
+        BoolWriter {
             nrows,
             schema,
             buffer: Array2::from_elem((nrows, ncols), false),
-        })
+        }
     }
 
     fn partition_writers(&'a mut self, counts: &[usize]) -> Vec<Self::PartitionWriter> {
@@ -298,15 +312,19 @@ impl F64Writer {
 }
 
 impl<'a> Writer<'a> for F64Writer {
+    const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
     type PartitionWriter = F64PartitionWriter<'a>;
     type TypeSystem = DataType;
 
-    fn allocate(nrows: usize, schema: Vec<DataType>) -> Result<Self> {
+    fn allocate(nrows: usize, schema: Vec<DataType>, data_order: DataOrder) -> Result<Self> {
         let ncols = schema.len();
         for field in &schema {
             if !matches!(field, DataType::F64) {
                 throw!(anyhow!("F64Writer only accepts F64 only schema"));
             }
+        }
+        if !matches!(data_order, DataOrder::RowMajor) {
+            throw!(ConnectorAgentError::UnsupportedDataOrder(data_order))
         }
 
         Ok(F64Writer {

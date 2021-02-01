@@ -5,6 +5,7 @@ pub mod s3;
 #[macro_use]
 mod typesystem;
 mod any_array;
+mod data_order;
 pub mod data_sources;
 mod dispatcher;
 mod errors;
@@ -12,6 +13,7 @@ mod types;
 pub mod writers;
 
 pub use crate::any_array::{AnyArray, AnyArrayView, AnyArrayViewMut};
+pub use crate::data_order::DataOrder;
 pub use crate::data_sources::{
     csv::{CSVSource, CSVSourceBuilder},
     mixed::{MixedSource, MixedSourceBuilder},

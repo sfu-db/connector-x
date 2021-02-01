@@ -1,9 +1,27 @@
 use connector_agent::{
-    data_sources::mixed::MixedSourceBuilder, writers::mixed::MemoryWriter, DataType, Dispatcher,
-    PartitionWriter, Writer,
+    data_sources::mixed::MixedSourceBuilder, writers::mixed::MemoryWriter, DataOrder, DataType,
+    Dispatcher, PartitionWriter, SourceBuilder, Writer,
 };
 use ndarray::array;
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
+
+#[test]
+#[should_panic]
+fn mixed_writer_col_major() {
+    let _ = MemoryWriter::allocate(
+        11,
+        vec![DataType::U64, DataType::F64, DataType::String],
+        DataOrder::ColumnMajor,
+    )
+    .unwrap();
+}
+
+#[test]
+#[should_panic]
+fn mixed_source_col_major() {
+    let mut source = MixedSourceBuilder::new();
+    source.set_data_order(DataOrder::ColumnMajor).unwrap();
+}
 
 #[test]
 fn write_mixed_array() {
@@ -17,6 +35,7 @@ fn write_mixed_array() {
             DataType::F64,
             DataType::String,
         ],
+        DataOrder::RowMajor,
     )
     .unwrap();
     let writers = dw.partition_writers(&[4, 7]);
@@ -118,7 +137,7 @@ fn test_mixed() {
     let ncols = schema.len();
     let queries: Vec<String> = nrows.iter().map(|v| format!("{},{}", v, ncols)).collect();
 
-    let mut dispatcher = Dispatcher::new(MixedSourceBuilder::new(), schema, queries);
+    let dispatcher = Dispatcher::new(MixedSourceBuilder::new(), schema, queries);
     let dw = dispatcher
         .run_checked::<MemoryWriter>()
         .expect("run dispatcher");
