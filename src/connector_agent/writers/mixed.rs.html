@@ -192,13 +192,29 @@
 <span id="189">189</span>
 <span id="190">190</span>
 <span id="191">191</span>
+<span id="192">192</span>
+<span id="193">193</span>
+<span id="194">194</span>
+<span id="195">195</span>
+<span id="196">196</span>
+<span id="197">197</span>
+<span id="198">198</span>
+<span id="199">199</span>
+<span id="200">200</span>
+<span id="201">201</span>
+<span id="202">202</span>
+<span id="203">203</span>
+<span id="204">204</span>
+<span id="205">205</span>
+<span id="206">206</span>
+<span id="207">207</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">Consume</span>, <span class="ident">PartitionWriter</span>, <span class="ident">Writer</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">any_array</span>::{<span class="ident">AnyArray</span>, <span class="ident">AnyArrayViewMut</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">data_order</span>::<span class="ident">DataOrder</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">errors</span>::{<span class="ident">ConnectorAgentError</span>, <span class="prelude-ty">Result</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::<span class="ident">DataType</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">typesystem</span>::{<span class="ident">TypeAssoc</span>, <span class="ident">TypeSystem</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">typesystem</span>::{<span class="ident">ParameterizedFunc</span>, <span class="ident">ParameterizedOn</span>, <span class="ident">Realize</span>, <span class="ident">TypeAssoc</span>, <span class="ident">TypeSystem</span>};
 <span class="kw">use</span> <span class="ident">fehler</span>::{<span class="ident">throw</span>, <span class="ident">throws</span>};
 <span class="kw">use</span> <span class="ident">itertools</span>::<span class="ident">Itertools</span>;
 <span class="kw">use</span> <span class="ident">ndarray</span>::{<span class="ident">Array2</span>, <span class="ident">ArrayView1</span>, <span class="ident">ArrayView2</span>, <span class="ident">Axis</span>, <span class="ident">Ix2</span>};
@@ -238,12 +254,7 @@
         {
             <span class="ident">block_indices</span>.<span class="ident">insert</span>(<span class="ident">dt</span>, <span class="ident">bid</span>);
             <span class="kw">let</span> <span class="ident">count</span> <span class="op">=</span> <span class="ident">grp</span>.<span class="ident">count</span>();
-            <span class="kw">let</span> <span class="ident">buffer</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">dt</span> {
-                <span class="ident">DataType</span>::<span class="ident">F64</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Array2</span>::<span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span>::<span class="ident">default</span>((<span class="ident">nrows</span>, <span class="ident">count</span>)).<span class="ident">into</span>(),
-                <span class="ident">DataType</span>::<span class="ident">U64</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Array2</span>::<span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>::<span class="ident">default</span>((<span class="ident">nrows</span>, <span class="ident">count</span>)).<span class="ident">into</span>(),
-                <span class="ident">DataType</span>::<span class="ident">Bool</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Array2</span>::<span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>::<span class="ident">default</span>((<span class="ident">nrows</span>, <span class="ident">count</span>)).<span class="ident">into</span>(),
-                <span class="ident">DataType</span>::<span class="ident">String</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Array2</span>::<span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>::<span class="ident">default</span>((<span class="ident">nrows</span>, <span class="ident">count</span>)).<span class="ident">into</span>(),
-            };
+            <span class="kw">let</span> <span class="ident">buffer</span> <span class="op">=</span> <span class="ident">Realize</span>::<span class="op">&lt;</span><span class="ident">FArray2</span><span class="op">&gt;</span>::<span class="ident">realize</span>(<span class="ident">dt</span>)(<span class="ident">nrows</span>, <span class="ident">count</span>);
             <span class="ident">buffers</span>.<span class="ident">push</span>(<span class="ident">buffer</span>);
         }
 
@@ -382,6 +393,27 @@
             .<span class="ident">get_mut</span>((<span class="ident">row</span>, <span class="ident">col</span>))
             .<span class="ident">ok_or</span>(<span class="ident">ConnectorAgentError</span>::<span class="ident">OutOfBound</span>)<span class="question-mark">?</span> <span class="op">=</span> <span class="ident">value</span>;
         <span class="prelude-val">Ok</span>(())
+    }
+}
+
+<span class="kw">struct</span> <span class="ident">FArray2</span>;
+
+<span class="kw">impl</span> <span class="ident">ParameterizedFunc</span> <span class="kw">for</span> <span class="ident">FArray2</span> {
+    <span class="kw">type</span> <span class="ident">Function</span> <span class="op">=</span> <span class="kw">fn</span>(<span class="ident">nrows</span>: <span class="ident">usize</span>, <span class="ident">ncols</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">AnyArray</span><span class="op">&lt;</span><span class="ident">Ix2</span><span class="op">&gt;</span>;
+}
+
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">ParameterizedOn</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">FArray2</span>
+<span class="kw">where</span>
+    <span class="ident">T</span>: <span class="ident">Default</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
+{
+    <span class="kw">fn</span> <span class="ident">parameterize</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Function</span> {
+        <span class="kw">fn</span> <span class="ident">create_any_array</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">nrows</span>: <span class="ident">usize</span>, <span class="ident">ncols</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">AnyArray</span><span class="op">&lt;</span><span class="ident">Ix2</span><span class="op">&gt;</span>
+        <span class="kw">where</span>
+            <span class="ident">T</span>: <span class="ident">Default</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
+        {
+            <span class="ident">Array2</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>::<span class="ident">default</span>((<span class="ident">nrows</span>, <span class="ident">ncols</span>)).<span class="ident">into</span>()
+        }
+        <span class="ident">create_any_array</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
     }
 }
 </pre></div>
