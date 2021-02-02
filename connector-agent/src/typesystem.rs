@@ -58,9 +58,9 @@ where
 }
 
 /// A ParameterizedFunc refers to a function that is parameterized on a type T,
-/// where type T is determined by the variant of a TypeSystem.
-/// An example is the `transmit<S,W,T>` function since its type `T`
-/// is determined by the schema.
+/// where type T will be dynaically determined by the variant of a TypeSystem.
+/// An example is the `transmit<S,W,T>` function. When piping values from a source
+/// to the writer, its type `T` is determined by the schema at the runtime.
 pub trait ParameterizedFunc {
     type Function;
     fn realize<T>() -> Self::Function
