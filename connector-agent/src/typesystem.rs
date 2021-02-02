@@ -2,9 +2,9 @@
 // functions to it's native type N based on our defined type T. Remember, T is value and N is a type.
 
 use crate::{
-    data_sources::{DataSource, Parse},
+    data_sources::{DataSource, Produce},
     errors::{ConnectorAgentError, Result},
-    writers::PartitionWriter,
+    writers::{Consume, PartitionWriter},
 };
 use fehler::throws;
 
@@ -51,21 +51,21 @@ pub trait Transmit<S, W> {
 #[throws(ConnectorAgentError)]
 pub fn transmit<'a, S, W, T>(source: &mut S, writer: &mut W, row: usize, col: usize)
 where
-    S: DataSource + Parse<T>,
-    W: PartitionWriter<'a, TypeSystem = S::TypeSystem>,
+    S: DataSource + Produce<T>,
+    W: PartitionWriter<'a, TypeSystem = S::TypeSystem> + Consume<T>,
     T: TypeAssoc<S::TypeSystem> + 'static,
 {
-    unsafe { writer.write::<T>(row, col, source.produce()?) }
+    unsafe { writer.write::<T>(row, col, source.read()?) }
 }
 
 #[throws(ConnectorAgentError)]
 pub fn transmit_checked<'a, S, W, T>(source: &mut S, writer: &mut W, row: usize, col: usize)
 where
-    S: DataSource + Parse<T>,
-    W: PartitionWriter<'a, TypeSystem = S::TypeSystem>,
+    S: DataSource + Produce<T>,
+    W: PartitionWriter<'a, TypeSystem = S::TypeSystem> + Consume<T>,
     T: TypeAssoc<S::TypeSystem> + 'static,
 {
-    writer.write_checked::<T>(row, col, source.produce()?)?
+    writer.write_checked::<T>(row, col, source.read()?)?
 }
 
 macro_rules! impl_transmit {
@@ -74,7 +74,8 @@ macro_rules! impl_transmit {
         where
             S: $crate::data_sources::DataSource,
             W: PartitionWriter<'a, TypeSystem=S::TypeSystem>,
-            $(S: $crate::data_sources::Parse<$native_type>,)+
+            $(S: $crate::data_sources::Produce<$native_type>,)+
+            $(W: $crate::writers::Consume<$native_type>,)+
             $($native_type: $crate::typesystem::TypeAssoc<S::TypeSystem>,)+
         {
             fn transmit(&self) -> fn(&mut S, &mut W, usize, usize) -> Result<()> {

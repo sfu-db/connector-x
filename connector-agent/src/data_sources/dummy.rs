@@ -1,4 +1,4 @@
-use super::{DataSource, Parse, SourceBuilder};
+use super::{DataSource, Produce, SourceBuilder};
 use crate::data_order::DataOrder;
 use crate::errors::{ConnectorAgentError, Result};
 use crate::types::DataType;
@@ -52,32 +52,32 @@ impl DataSource for U64CounterSource {
     }
 }
 
-impl Parse<u64> for U64CounterSource {
-    fn parse(&mut self) -> Result<u64> {
+impl Produce<u64> for U64CounterSource {
+    fn produce(&mut self) -> Result<u64> {
         let ret = self.counter;
         self.counter += 1;
         Ok(FromPrimitive::from_u64(ret).unwrap_or_default())
     }
 }
 
-impl Parse<f64> for U64CounterSource {
-    fn parse(&mut self) -> Result<f64> {
+impl Produce<f64> for U64CounterSource {
+    fn produce(&mut self) -> Result<f64> {
         let ret = self.counter;
         self.counter += 1;
         Ok(FromPrimitive::from_u64(ret).unwrap_or_default())
     }
 }
 
-impl Parse<String> for U64CounterSource {
-    fn parse(&mut self) -> Result<String> {
+impl Produce<String> for U64CounterSource {
+    fn produce(&mut self) -> Result<String> {
         let ret = self.counter.to_string();
         self.counter += 1;
         Ok(ret)
     }
 }
 
-impl Parse<bool> for U64CounterSource {
-    fn parse(&mut self) -> Result<bool> {
+impl Produce<bool> for U64CounterSource {
+    fn produce(&mut self) -> Result<bool> {
         let ret = self.counter % 2 == 0;
         self.counter += 1;
         Ok(ret)
@@ -131,8 +131,8 @@ impl DataSource for StringSource {
     }
 }
 
-impl Parse<String> for StringSource {
-    fn parse(&mut self) -> Result<String> {
+impl Produce<String> for StringSource {
+    fn produce(&mut self) -> Result<String> {
         let ret = self.rand_string.clone();
         let new_val = ret.clone().parse::<u64>().unwrap() + 1;
         self.rand_string = new_val.to_string();
@@ -141,8 +141,8 @@ impl Parse<String> for StringSource {
     }
 }
 
-impl Parse<u64> for StringSource {
-    fn parse(&mut self) -> Result<u64> {
+impl Produce<u64> for StringSource {
+    fn produce(&mut self) -> Result<u64> {
         let ret = self.rand_string.clone().parse::<u64>().unwrap();
         let new_string = ret.clone() + 1;
         self.rand_string = new_string.to_string();
@@ -151,8 +151,8 @@ impl Parse<u64> for StringSource {
     }
 }
 
-impl Parse<f64> for StringSource {
-    fn parse(&mut self) -> Result<f64> {
+impl Produce<f64> for StringSource {
+    fn produce(&mut self) -> Result<f64> {
         let ret = self.rand_string.clone().parse::<u64>().unwrap();
         let new_string = ret.clone() + 1;
         self.rand_string = new_string.to_string();
@@ -161,8 +161,8 @@ impl Parse<f64> for StringSource {
     }
 }
 
-impl Parse<bool> for StringSource {
-    fn parse(&mut self) -> Result<bool> {
+impl Produce<bool> for StringSource {
+    fn produce(&mut self) -> Result<bool> {
         throw!(anyhow!("StringSource only support string!"))
     }
 }
@@ -213,30 +213,30 @@ impl DataSource for BoolCounterSource {
     }
 }
 
-impl Parse<u64> for BoolCounterSource {
-    fn parse(&mut self) -> Result<u64> {
+impl Produce<u64> for BoolCounterSource {
+    fn produce(&mut self) -> Result<u64> {
         let ret = 1;
         self.counter = !self.counter;
         Ok(ret)
     }
 }
-impl Parse<f64> for BoolCounterSource {
-    fn parse(&mut self) -> Result<f64> {
+impl Produce<f64> for BoolCounterSource {
+    fn produce(&mut self) -> Result<f64> {
         let ret = 1.0;
         self.counter = !self.counter;
         Ok(ret)
     }
 }
-impl Parse<bool> for BoolCounterSource {
-    fn parse(&mut self) -> Result<bool> {
+impl Produce<bool> for BoolCounterSource {
+    fn produce(&mut self) -> Result<bool> {
         let ret = self.counter;
         self.counter = !self.counter;
         Ok(ret)
     }
 }
 
-impl Parse<String> for BoolCounterSource {
-    fn parse(&mut self) -> Result<String> {
+impl Produce<String> for BoolCounterSource {
+    fn produce(&mut self) -> Result<String> {
         throw!(anyhow!("StringSource only support string!"))
     }
 }
@@ -286,30 +286,30 @@ impl DataSource for F64CounterSource {
     }
 }
 
-impl Parse<u64> for F64CounterSource {
-    fn parse(&mut self) -> Result<u64> {
+impl Produce<u64> for F64CounterSource {
+    fn produce(&mut self) -> Result<u64> {
         let ret = self.counter;
         self.counter += 0.5;
         Ok(FromPrimitive::from_f64(ret).unwrap_or_default())
     }
 }
 
-impl Parse<f64> for F64CounterSource {
-    fn parse(&mut self) -> Result<f64> {
+impl Produce<f64> for F64CounterSource {
+    fn produce(&mut self) -> Result<f64> {
         let ret = self.counter;
         self.counter += 0.5;
         Ok(FromPrimitive::from_f64(ret).unwrap_or_default())
     }
 }
 
-impl Parse<bool> for F64CounterSource {
-    fn parse(&mut self) -> Result<bool> {
+impl Produce<bool> for F64CounterSource {
+    fn produce(&mut self) -> Result<bool> {
         throw!(anyhow!("F64CounterSource only support f64!"))
     }
 }
 
-impl Parse<String> for F64CounterSource {
-    fn parse(&mut self) -> Result<String> {
+impl Produce<String> for F64CounterSource {
+    fn produce(&mut self) -> Result<String> {
         throw!(anyhow!("F64CounterSource only support f64!"))
     }
 }

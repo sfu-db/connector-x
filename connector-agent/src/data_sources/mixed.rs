@@ -1,4 +1,4 @@
-use super::{DataSource, Parse, SourceBuilder};
+use super::{DataSource, Produce, SourceBuilder};
 use crate::data_order::DataOrder;
 use crate::errors::{ConnectorAgentError, Result};
 use crate::types::DataType;
@@ -61,32 +61,32 @@ impl DataSource for MixedSource {
     }
 }
 
-impl Parse<u64> for MixedSource {
-    fn parse(&mut self) -> Result<u64> {
+impl Produce<u64> for MixedSource {
+    fn produce(&mut self) -> Result<u64> {
         let ret = self.counter / self.ncols;
         self.counter += 1;
         Ok(FromPrimitive::from_usize(ret).unwrap_or_default())
     }
 }
 
-impl Parse<f64> for MixedSource {
-    fn parse(&mut self) -> Result<f64> {
+impl Produce<f64> for MixedSource {
+    fn produce(&mut self) -> Result<f64> {
         let ret = self.counter / self.ncols;
         self.counter += 1;
         Ok(FromPrimitive::from_usize(ret).unwrap_or_default())
     }
 }
 
-impl Parse<String> for MixedSource {
-    fn parse(&mut self) -> Result<String> {
+impl Produce<String> for MixedSource {
+    fn produce(&mut self) -> Result<String> {
         let ret = ((self.counter / self.ncols) as u64).to_string();
         self.counter += 1;
         Ok(ret)
     }
 }
 
-impl Parse<bool> for MixedSource {
-    fn parse(&mut self) -> Result<bool> {
+impl Produce<bool> for MixedSource {
+    fn produce(&mut self) -> Result<bool> {
         let ret = (self.counter / self.ncols) % 2 == 0;
         self.counter += 1;
         Ok(ret)

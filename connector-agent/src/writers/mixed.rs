@@ -1,4 +1,4 @@
-use super::{PartitionWriter, Writer};
+use super::{Consume, PartitionWriter, Writer};
 use crate::any_array::{AnyArray, AnyArrayViewMut};
 use crate::data_order::DataOrder;
 use crate::errors::{ConnectorAgentError, Result};
@@ -134,19 +134,45 @@ pub struct MemoryPartitionWriter<'a> {
     column_buffer_index: Vec<(usize, usize)>,
 }
 
+impl<'a> MemoryPartitionWriter<'a> {
+    fn new(
+        nrows: usize,
+        buffers: Vec<AnyArrayViewMut<'a, Ix2>>,
+        schema: Vec<DataType>,
+        column_buffer_index: Vec<(usize, usize)>,
+    ) -> Self {
+        Self {
+            nrows,
+            buffers,
+            schema,
+            column_buffer_index,
+        }
+    }
+}
+
 impl<'a> PartitionWriter<'a> for MemoryPartitionWriter<'a> {
     type TypeSystem = DataType;
 
-    unsafe fn write<T: 'static>(&mut self, row: usize, col: usize, value: T) {
+    fn nrows(&self) -> usize {
+        self.nrows
+    }
+
+    fn ncols(&self) -> usize {
+        self.schema.len()
+    }
+}
+
+impl<'a, T> Consume<T> for MemoryPartitionWriter<'a>
+where
+    T: TypeAssoc<<Self as PartitionWriter<'a>>::TypeSystem> + 'static,
+{
+    unsafe fn consume(&mut self, row: usize, col: usize, value: T) {
         let &(bid, col) = &self.column_buffer_index[col];
         let mut_view = self.buffers[bid].udowncast::<T>();
         *mut_view.get_mut((row, col)).unwrap() = value;
     }
 
-    fn write_checked<T: 'static>(&mut self, row: usize, col: usize, value: T) -> Result<()>
-    where
-        T: TypeAssoc<Self::TypeSystem>,
-    {
+    fn consume_checked(&mut self, row: usize, col: usize, value: T) -> Result<()> {
         self.schema[col].check::<T>()?;
         let &(bid, col) = &self.column_buffer_index[col];
 
@@ -161,29 +187,5 @@ impl<'a> PartitionWriter<'a> for MemoryPartitionWriter<'a> {
             .get_mut((row, col))
             .ok_or(ConnectorAgentError::OutOfBound)? = value;
         Ok(())
-    }
-
-    fn nrows(&self) -> usize {
-        self.nrows
-    }
-
-    fn ncols(&self) -> usize {
-        self.schema.len()
-    }
-}
-
-impl<'a> MemoryPartitionWriter<'a> {
-    fn new(
-        nrows: usize,
-        buffers: Vec<AnyArrayViewMut<'a, Ix2>>,
-        schema: Vec<DataType>,
-        column_buffer_index: Vec<(usize, usize)>,
-    ) -> Self {
-        Self {
-            nrows,
-            buffers,
-            schema,
-            column_buffer_index,
-        }
     }
 }

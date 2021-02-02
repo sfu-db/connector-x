@@ -28,21 +28,21 @@ pub trait DataSource: Sized {
     /// Run the query and put the result into Self.
     fn run_query(&mut self, query: &str) -> Result<()>;
 
-    /// Produce a value `T` by calling `Parse<T>::parse`. Usually this function does not need to be
+    /// Read a value `T` by calling `Produce<T>::produce`. Usually this function does not need to be
     /// implemented.
-    fn produce<T>(&mut self) -> Result<T>
+    fn read<T>(&mut self) -> Result<T>
     where
         T: TypeAssoc<Self::TypeSystem>,
-        Self: Parse<T>,
+        Self: Produce<T>,
     {
-        self.parse()
+        self.produce()
     }
 
     /// Number of rows this `DataSource` get.
     fn nrows(&self) -> usize;
 }
 
-/// A type implemented `Parse<T>` means that it can produce a value `T` by consuming part of it's raw data buffer.
-pub trait Parse<T> {
-    fn parse(&mut self) -> Result<T>;
+/// A type implemented `Produce<T>` means that it can produce a value `T` by consuming part of it's raw data buffer.
+pub trait Produce<T> {
+    fn produce(&mut self) -> Result<T>;
 }

@@ -1,4 +1,4 @@
-use super::{DataSource, Parse, SourceBuilder};
+use super::{DataSource, Produce, SourceBuilder};
 use crate::data_order::DataOrder;
 use crate::errors::{ConnectorAgentError, Result};
 use crate::types::DataType;
@@ -70,11 +70,11 @@ impl DataSource for CSVSource {
     }
 }
 
-impl<T> Parse<T> for CSVSource
+impl<T> Produce<T> for CSVSource
 where
     T: FromStr + Default,
 {
-    fn parse(&mut self) -> Result<T> {
+    fn produce(&mut self) -> Result<T> {
         let v: &str = self.records[self.counter / self.ncols][self.counter % self.ncols].as_ref();
         self.counter += 1;
         Ok(v.parse().unwrap_or_default())
