@@ -30,14 +30,30 @@ pub trait PartitionWriter<'a>: Send {
 
     /// Write a value of type T to the location (row, col). The value is unchecked against the schema.
     /// This function is unsafe due to unchecked.
-    unsafe fn write<T: 'static>(&mut self, row: usize, col: usize, value: T);
+    unsafe fn write<T: 'static>(&mut self, row: usize, col: usize, value: T)
+    where
+        T: TypeAssoc<Self::TypeSystem>,
+        Self: Consume<T>,
+    {
+        self.consume(row, col, value)
+    }
     /// Write a value of type T to the location (row, col), checked version. If T mismatch with the
     /// schema, `ConnectorAgentError::UnexpectedType` will return.
     fn write_checked<T: 'static>(&mut self, row: usize, col: usize, value: T) -> Result<()>
     where
-        T: TypeAssoc<Self::TypeSystem>;
+        T: TypeAssoc<Self::TypeSystem>,
+        Self: Consume<T>,
+    {
+        self.consume_checked(row, col, value)
+    }
     /// Number of rows this `PartitionWriter` controls.
     fn nrows(&self) -> usize;
     /// Number of rows this `PartitionWriter` controls.
     fn ncols(&self) -> usize;
+}
+
+/// A type implemented `Consume<T>` means that it can consume a value `T` by adding it to it's own buffer.
+pub trait Consume<T> {
+    unsafe fn consume(&mut self, row: usize, col: usize, value: T);
+    fn consume_checked(&mut self, row: usize, col: usize, value: T) -> Result<()>;
 }

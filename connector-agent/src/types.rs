@@ -7,11 +7,13 @@
 //
 
 use crate::{
-    errors::Result,
-    typesystem::{TypeAssoc, TypeSystem},
-    writers::PartitionWriter,
+    data_sources::{DataSource, Produce},
+    errors::{ConnectorAgentError, Result},
+    typesystem::{ParameterizedFunc, ParameterizedOn, TypeAssoc, TypeSystem},
+    writers::{Consume, PartitionWriter},
 };
-
+use fehler::throws;
+use std::marker::PhantomData;
 /// This is our intermediate type system used in this library.
 /// For all the sources, their output values must be one of the types defined by DataType.
 /// For all the writers, they must support writing any value whose type is defined by DataType.
@@ -26,5 +28,57 @@ pub enum DataType {
 
 impl TypeSystem for DataType {}
 
-impl_type_assoc!(DataType, DataType::F64 => f64, DataType::U64 => u64, DataType::Bool => bool, DataType::String => String, DataType::OptU64 => Option<u64>);
-impl_transmit!(DataType, DataType::F64 => f64, DataType::U64 => u64, DataType::Bool => bool, DataType::String => String, DataType::OptU64 => Option<u64>);
+associate_typesystem!(DataType, DataType::F64 => f64, DataType::U64 => u64, DataType::Bool => bool, DataType::String => String, DataType::OptU64 => Option<u64>);
+
+pub struct Transmit<'a, S, W>(PhantomData<(&'a S, W)>);
+
+impl<'a, S, W> ParameterizedFunc for Transmit<'a, S, W> {
+    type Function = fn(source: &mut S, writer: &mut W, row: usize, col: usize) -> Result<()>;
+}
+
+impl<'a, S, W, T> ParameterizedOn<T> for Transmit<'a, S, W>
+where
+    S: DataSource + Produce<T>,
+    W: PartitionWriter<'a, TypeSystem = S::TypeSystem> + Consume<T>,
+    T: TypeAssoc<S::TypeSystem> + 'static,
+{
+    fn parameterize() -> Self::Function {
+        #[throws(ConnectorAgentError)]
+        pub fn transmit<'a, S, W, T>(source: &mut S, writer: &mut W, row: usize, col: usize)
+        where
+            S: DataSource + Produce<T>,
+            W: PartitionWriter<'a, TypeSystem = S::TypeSystem> + Consume<T>,
+            T: TypeAssoc<S::TypeSystem> + 'static,
+        {
+            unsafe { writer.write::<T>(row, col, source.read()?) }
+        }
+
+        transmit::<S, W, T>
+    }
+}
+
+pub struct TransmitChecked<'a, S, W>(PhantomData<(&'a S, W)>);
+
+impl<'a, S, W> ParameterizedFunc for TransmitChecked<'a, S, W> {
+    type Function = fn(source: &mut S, writer: &mut W, row: usize, col: usize) -> Result<()>;
+}
+
+impl<'a, S, W, T> ParameterizedOn<T> for TransmitChecked<'a, S, W>
+where
+    S: DataSource + Produce<T>,
+    W: PartitionWriter<'a, TypeSystem = S::TypeSystem> + Consume<T>,
+    T: TypeAssoc<S::TypeSystem> + 'static,
+{
+    fn parameterize() -> Self::Function {
+        #[throws(ConnectorAgentError)]
+        pub fn transmit_checked<'a, S, W, T>(source: &mut S, writer: &mut W, row: usize, col: usize)
+        where
+            S: DataSource + Produce<T>,
+            W: PartitionWriter<'a, TypeSystem = S::TypeSystem> + Consume<T>,
+            T: TypeAssoc<S::TypeSystem> + 'static,
+        {
+            writer.write_checked::<T>(row, col, source.read()?)?
+        }
+        transmit_checked::<S, W, T>
+    }
+}

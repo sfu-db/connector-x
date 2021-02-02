@@ -1,4 +1,4 @@
-use super::{DataSource, Parse, SourceBuilder};
+use super::{DataSource, Produce, SourceBuilder};
 use crate::data_order::DataOrder;
 use crate::errors::{ConnectorAgentError, Result};
 use crate::types::DataType;
@@ -69,40 +69,40 @@ impl DataSource for CSVSource {
     }
 }
 
-impl Parse<u64> for CSVSource {
-    fn parse(&mut self) -> Result<u64> {
+impl Produce<u64> for CSVSource {
+    fn produce(&mut self) -> Result<u64> {
         let v: &str = self.records[self.counter / self.ncols][self.counter % self.ncols].as_ref();
         self.counter += 1;
         Ok(v.parse().unwrap_or_default())
     }
 }
 
-impl Parse<f64> for CSVSource {
-    fn parse(&mut self) -> Result<f64> {
+impl Produce<f64> for CSVSource {
+    fn produce(&mut self) -> Result<f64> {
         let v: &str = self.records[self.counter / self.ncols][self.counter % self.ncols].as_ref();
         self.counter += 1;
         Ok(v.parse().unwrap_or_default())
     }
 }
 
-impl Parse<bool> for CSVSource {
-    fn parse(&mut self) -> Result<bool> {
+impl Produce<bool> for CSVSource {
+    fn produce(&mut self) -> Result<bool> {
         let v: &str = self.records[self.counter / self.ncols][self.counter % self.ncols].as_ref();
         self.counter += 1;
         Ok(v.parse().unwrap_or_default())
     }
 }
 
-impl Parse<String> for CSVSource {
-    fn parse(&mut self) -> Result<String> {
+impl Produce<String> for CSVSource {
+    fn produce(&mut self) -> Result<String> {
         let v: &str = self.records[self.counter / self.ncols][self.counter % self.ncols].as_ref();
         self.counter += 1;
         Ok(String::from(v))
     }
 }
 
-impl Parse<Option<u64>> for CSVSource {
-    fn parse(&mut self) -> Result<Option<u64>> {
+impl Produce<Option<u64>> for CSVSource {
+    fn produce(&mut self) -> Result<Option<u64>> {
         let v: &str = self.records[self.counter / self.ncols][self.counter % self.ncols].as_ref();
         self.counter += 1;
         if v.is_empty() {

@@ -1,6 +1,6 @@
 use connector_agent::data_sources::{
     csv::{CSVSource, CSVSourceBuilder},
-    DataSource, Parse,
+    DataSource, Produce,
 };
 use connector_agent::writers::dummy::U64Writer;
 use connector_agent::{DataType, Dispatcher};
@@ -23,7 +23,7 @@ fn empty_file() {
 
     assert_eq!(0, source.nrows);
     assert_eq!(0, source.ncols);
-    let _v: u64 = source.parse().expect("produce from emtpy");
+    let _v: u64 = source.produce().expect("produce from emtpy");
 }
 
 #[test]
@@ -47,11 +47,13 @@ fn load_and_parse() {
 
     let mut results: Vec<Value> = Vec::new();
     for _i in 0..source.nrows {
-        results.push(Value::City(source.parse().expect("parse city")));
-        results.push(Value::State(source.parse().expect("parse state")));
-        results.push(Value::Population(source.parse().expect("parse population")));
-        results.push(Value::Longitude(source.parse().expect("parse longitude")));
-        results.push(Value::Latitude(source.parse().expect("parse latitude")));
+        results.push(Value::City(source.produce().expect("parse city")));
+        results.push(Value::State(source.produce().expect("parse state")));
+        results.push(Value::Population(
+            source.produce().expect("parse population"),
+        ));
+        results.push(Value::Longitude(source.produce().expect("parse longitude")));
+        results.push(Value::Latitude(source.produce().expect("parse latitude")));
     }
 
     assert_eq!(

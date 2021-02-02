@@ -1,9 +1,9 @@
-use super::{PartitionWriter, Writer};
+use super::{Consume, PartitionWriter, Writer};
 use crate::any_array::{AnyArray, AnyArrayViewMut};
 use crate::data_order::DataOrder;
 use crate::errors::{ConnectorAgentError, Result};
 use crate::types::DataType;
-use crate::typesystem::{TypeAssoc, TypeSystem};
+use crate::typesystem::{ParameterizedFunc, ParameterizedOn, Realize, TypeAssoc, TypeSystem};
 use fehler::{throw, throws};
 use itertools::Itertools;
 use ndarray::{Array2, ArrayView1, ArrayView2, Axis, Ix2};
@@ -43,13 +43,7 @@ impl<'a> Writer<'a> for MemoryWriter {
         {
             block_indices.insert(dt, bid);
             let count = grp.count();
-            let buffer = match dt {
-                DataType::F64 => Array2::<f64>::default((nrows, count)).into(),
-                DataType::U64 => Array2::<u64>::default((nrows, count)).into(),
-                DataType::Bool => Array2::<bool>::default((nrows, count)).into(),
-                DataType::String => Array2::<String>::default((nrows, count)).into(),
-                DataType::OptU64 => Array2::<Option<u64>>::default((nrows, count)).into(),
-            };
+            let buffer = Realize::<FArray2>::realize(dt)(nrows, count);
             buffers.push(buffer);
         }
 
@@ -135,19 +129,45 @@ pub struct MemoryPartitionWriter<'a> {
     column_buffer_index: Vec<(usize, usize)>,
 }
 
+impl<'a> MemoryPartitionWriter<'a> {
+    fn new(
+        nrows: usize,
+        buffers: Vec<AnyArrayViewMut<'a, Ix2>>,
+        schema: Vec<DataType>,
+        column_buffer_index: Vec<(usize, usize)>,
+    ) -> Self {
+        Self {
+            nrows,
+            buffers,
+            schema,
+            column_buffer_index,
+        }
+    }
+}
+
 impl<'a> PartitionWriter<'a> for MemoryPartitionWriter<'a> {
     type TypeSystem = DataType;
 
-    unsafe fn write<T: 'static>(&mut self, row: usize, col: usize, value: T) {
+    fn nrows(&self) -> usize {
+        self.nrows
+    }
+
+    fn ncols(&self) -> usize {
+        self.schema.len()
+    }
+}
+
+impl<'a, T> Consume<T> for MemoryPartitionWriter<'a>
+where
+    T: TypeAssoc<<Self as PartitionWriter<'a>>::TypeSystem> + 'static,
+{
+    unsafe fn consume(&mut self, row: usize, col: usize, value: T) {
         let &(bid, col) = &self.column_buffer_index[col];
         let mut_view = self.buffers[bid].udowncast::<T>();
         *mut_view.get_mut((row, col)).unwrap() = value;
     }
 
-    fn write_checked<T: 'static>(&mut self, row: usize, col: usize, value: T) -> Result<()>
-    where
-        T: TypeAssoc<Self::TypeSystem>,
-    {
+    fn consume_checked(&mut self, row: usize, col: usize, value: T) -> Result<()> {
         self.schema[col].check::<T>()?;
         let &(bid, col) = &self.column_buffer_index[col];
 
@@ -163,28 +183,25 @@ impl<'a> PartitionWriter<'a> for MemoryPartitionWriter<'a> {
             .ok_or(ConnectorAgentError::OutOfBound)? = value;
         Ok(())
     }
-
-    fn nrows(&self) -> usize {
-        self.nrows
-    }
-
-    fn ncols(&self) -> usize {
-        self.schema.len()
-    }
 }
 
-impl<'a> MemoryPartitionWriter<'a> {
-    fn new(
-        nrows: usize,
-        buffers: Vec<AnyArrayViewMut<'a, Ix2>>,
-        schema: Vec<DataType>,
-        column_buffer_index: Vec<(usize, usize)>,
-    ) -> Self {
-        Self {
-            nrows,
-            buffers,
-            schema,
-            column_buffer_index,
+struct FArray2;
+
+impl ParameterizedFunc for FArray2 {
+    type Function = fn(nrows: usize, ncols: usize) -> AnyArray<Ix2>;
+}
+
+impl<T> ParameterizedOn<T> for FArray2
+where
+    T: Default + Send + 'static,
+{
+    fn parameterize() -> Self::Function {
+        fn create_any_array<T>(nrows: usize, ncols: usize) -> AnyArray<Ix2>
+        where
+            T: Default + Send + 'static,
+        {
+            Array2::<T>::default((nrows, ncols)).into()
         }
+        create_any_array::<T>
     }
 }
