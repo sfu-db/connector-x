@@ -140,9 +140,9 @@
 }
 
 <span class="doccomment">/// A ParameterizedFunc refers to a function that is parameterized on a type T,</span>
-<span class="doccomment">/// where type T is determined by the variant of a TypeSystem.</span>
-<span class="doccomment">/// An example is the `transmit&lt;S,W,T&gt;` function since its type `T`</span>
-<span class="doccomment">/// is determined by the schema.</span>
+<span class="doccomment">/// where type T will be dynaically determined by the variant of a TypeSystem.</span>
+<span class="doccomment">/// An example is the `transmit&lt;S,W,T&gt;` function. When piping values from a source</span>
+<span class="doccomment">/// to the writer, its type `T` is determined by the schema at the runtime.</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">ParameterizedFunc</span> {
     <span class="kw">type</span> <span class="ident">Function</span>;
     <span class="kw">fn</span> <span class="ident">realize</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Function</span>

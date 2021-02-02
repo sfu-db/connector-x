@@ -13,9 +13,9 @@ For all the sources, their output values must be one of the types defined by Dat
 For all the writers, they must support writing any value whose type is defined by DataType.</p>
 </td></tr></table><h2 id="traits" class="section-header"><a href="#traits">Traits</a></h2>
 <table><tr class="module-item"><td><a class="trait" href="trait.ParameterizedFunc.html" title="connector_agent::ParameterizedFunc trait">ParameterizedFunc</a></td><td class="docblock-short"><p>A ParameterizedFunc refers to a function that is parameterized on a type T,
-where type T is determined by the variant of a TypeSystem.
-An example is the <code>transmit&lt;S,W,T&gt;</code> function since its type <code>T</code>
-is determined by the schema.</p>
+where type T will be dynaically determined by the variant of a TypeSystem.
+An example is the <code>transmit&lt;S,W,T&gt;</code> function. When piping values from a source
+to the writer, its type <code>T</code> is determined by the schema at the runtime.</p>
 </td></tr><tr class="module-item"><td><a class="trait" href="trait.ParameterizedOn.html" title="connector_agent::ParameterizedOn trait">ParameterizedOn</a></td><td class="docblock-short"><p><code>ParameterizedOn</code> indicates a parameterized function <code>Self</code>
 is parameterized on type <code>T</code></p>
 </td></tr><tr class="module-item"><td><a class="trait" href="trait.Realize.html" title="connector_agent::Realize trait">Realize</a></td><td class="docblock-short"><p>Realize means that a TypeSystem can realize a parameterized func F, based on its current variants.</p>

@@ -84,7 +84,6 @@
 <span id="81">81</span>
 <span id="82">82</span>
 <span id="83">83</span>
-<span id="84">84</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Each variant in DataType represents a type that connector-agent currently</span>
 <span class="comment">// supports to read from a data source and write into a writer.</span>
@@ -117,16 +116,6 @@
 
 <span class="macro">associate_typesystem</span><span class="macro">!</span>(<span class="ident">DataType</span>, <span class="ident">DataType</span>::<span class="ident">F64</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f64</span>, <span class="ident">DataType</span>::<span class="ident">U64</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">u64</span>, <span class="ident">DataType</span>::<span class="ident">Bool</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">bool</span>, <span class="ident">DataType</span>::<span class="ident">String</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">String</span>);
 
-<span class="attribute">#[<span class="ident">throws</span>(<span class="ident">ConnectorAgentError</span>)]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">transmit</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">S</span>, <span class="ident">W</span>, <span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">source</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">S</span>, <span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>, <span class="ident">row</span>: <span class="ident">usize</span>, <span class="ident">col</span>: <span class="ident">usize</span>)
-<span class="kw">where</span>
-    <span class="ident">S</span>: <span class="ident">DataSource</span> <span class="op">+</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
-    <span class="ident">W</span>: <span class="ident">PartitionWriter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">TypeSystem</span> <span class="op">=</span> <span class="ident">S</span>::<span class="ident">TypeSystem</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Consume</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
-    <span class="ident">T</span>: <span class="ident">TypeAssoc</span><span class="op">&lt;</span><span class="ident">S</span>::<span class="ident">TypeSystem</span><span class="op">&gt;</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
-{
-    <span class="kw">unsafe</span> { <span class="ident">writer</span>.<span class="ident">write</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">row</span>, <span class="ident">col</span>, <span class="ident">source</span>.<span class="ident">read</span>()<span class="question-mark">?</span>) }
-}
-
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Transmit</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">S</span>, <span class="ident">W</span><span class="op">&gt;</span>(<span class="ident">PhantomData</span><span class="op">&lt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">S</span>, <span class="ident">W</span>)<span class="op">&gt;</span>);
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">S</span>, <span class="ident">W</span><span class="op">&gt;</span> <span class="ident">ParameterizedFunc</span> <span class="kw">for</span> <span class="ident">Transmit</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">S</span>, <span class="ident">W</span><span class="op">&gt;</span> {
@@ -140,18 +129,18 @@
     <span class="ident">T</span>: <span class="ident">TypeAssoc</span><span class="op">&lt;</span><span class="ident">S</span>::<span class="ident">TypeSystem</span><span class="op">&gt;</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
 {
     <span class="kw">fn</span> <span class="ident">parameterize</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Function</span> {
+        <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">ConnectorAgentError</span>)]</span>
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">transmit</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">S</span>, <span class="ident">W</span>, <span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">source</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">S</span>, <span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>, <span class="ident">row</span>: <span class="ident">usize</span>, <span class="ident">col</span>: <span class="ident">usize</span>)
+        <span class="kw">where</span>
+            <span class="ident">S</span>: <span class="ident">DataSource</span> <span class="op">+</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
+            <span class="ident">W</span>: <span class="ident">PartitionWriter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">TypeSystem</span> <span class="op">=</span> <span class="ident">S</span>::<span class="ident">TypeSystem</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Consume</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
+            <span class="ident">T</span>: <span class="ident">TypeAssoc</span><span class="op">&lt;</span><span class="ident">S</span>::<span class="ident">TypeSystem</span><span class="op">&gt;</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
+        {
+            <span class="kw">unsafe</span> { <span class="ident">writer</span>.<span class="ident">write</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">row</span>, <span class="ident">col</span>, <span class="ident">source</span>.<span class="ident">read</span>()<span class="question-mark">?</span>) }
+        }
+
         <span class="ident">transmit</span>::<span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">W</span>, <span class="ident">T</span><span class="op">&gt;</span>
     }
-}
-
-<span class="attribute">#[<span class="ident">throws</span>(<span class="ident">ConnectorAgentError</span>)]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">transmit_checked</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">S</span>, <span class="ident">W</span>, <span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">source</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">S</span>, <span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>, <span class="ident">row</span>: <span class="ident">usize</span>, <span class="ident">col</span>: <span class="ident">usize</span>)
-<span class="kw">where</span>
-    <span class="ident">S</span>: <span class="ident">DataSource</span> <span class="op">+</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
-    <span class="ident">W</span>: <span class="ident">PartitionWriter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">TypeSystem</span> <span class="op">=</span> <span class="ident">S</span>::<span class="ident">TypeSystem</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Consume</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
-    <span class="ident">T</span>: <span class="ident">TypeAssoc</span><span class="op">&lt;</span><span class="ident">S</span>::<span class="ident">TypeSystem</span><span class="op">&gt;</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
-{
-    <span class="ident">writer</span>.<span class="ident">write_checked</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">row</span>, <span class="ident">col</span>, <span class="ident">source</span>.<span class="ident">read</span>()<span class="question-mark">?</span>)<span class="question-mark">?</span>
 }
 
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TransmitChecked</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">S</span>, <span class="ident">W</span><span class="op">&gt;</span>(<span class="ident">PhantomData</span><span class="op">&lt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">S</span>, <span class="ident">W</span>)<span class="op">&gt;</span>);
@@ -167,6 +156,15 @@
     <span class="ident">T</span>: <span class="ident">TypeAssoc</span><span class="op">&lt;</span><span class="ident">S</span>::<span class="ident">TypeSystem</span><span class="op">&gt;</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
 {
     <span class="kw">fn</span> <span class="ident">parameterize</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Function</span> {
+        <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">ConnectorAgentError</span>)]</span>
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">transmit_checked</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">S</span>, <span class="ident">W</span>, <span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">source</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">S</span>, <span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>, <span class="ident">row</span>: <span class="ident">usize</span>, <span class="ident">col</span>: <span class="ident">usize</span>)
+        <span class="kw">where</span>
+            <span class="ident">S</span>: <span class="ident">DataSource</span> <span class="op">+</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
+            <span class="ident">W</span>: <span class="ident">PartitionWriter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">TypeSystem</span> <span class="op">=</span> <span class="ident">S</span>::<span class="ident">TypeSystem</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Consume</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
+            <span class="ident">T</span>: <span class="ident">TypeAssoc</span><span class="op">&lt;</span><span class="ident">S</span>::<span class="ident">TypeSystem</span><span class="op">&gt;</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
+        {
+            <span class="ident">writer</span>.<span class="ident">write_checked</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">row</span>, <span class="ident">col</span>, <span class="ident">source</span>.<span class="ident">read</span>()<span class="question-mark">?</span>)<span class="question-mark">?</span>
+        }
         <span class="ident">transmit_checked</span>::<span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">W</span>, <span class="ident">T</span><span class="op">&gt;</span>
     }
 }
