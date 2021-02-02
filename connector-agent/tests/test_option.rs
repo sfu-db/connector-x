@@ -1,4 +1,5 @@
 use anyhow::anyhow;
+use arrow::array::{UInt64Array, UInt64Builder};
 use connector_agent::{
     data_sources::{DataSource, Parse, SourceBuilder},
     ConnectorAgentError, DataOrder, DataType, Dispatcher, PartitionWriter, Result, TypeAssoc,
@@ -8,15 +9,17 @@ use fehler::{throw, throws};
 use ndarray::{Array, Array2, ArrayView2, ArrayViewMut2, Axis};
 use rand::Rng;
 use std::mem::transmute;
+use std::sync::{Arc, Mutex};
 // use std::time::Instant;
 
 struct OptU64SourceBuilder {
     fake_values: Vec<Vec<Option<u64>>>,
+    ncols: usize,
 }
 
 impl OptU64SourceBuilder {
-    fn new(fake_values: Vec<Vec<Option<u64>>>) -> Self {
-        OptU64SourceBuilder { fake_values }
+    fn new(fake_values: Vec<Vec<Option<u64>>>, ncols: usize) -> Self {
+        OptU64SourceBuilder { fake_values, ncols }
     }
 }
 
@@ -32,7 +35,7 @@ impl SourceBuilder for OptU64SourceBuilder {
     }
 
     fn build(&mut self) -> Self::DataSource {
-        let ret = OptU64TestSource::new(self.fake_values.swap_remove(0));
+        let ret = OptU64TestSource::new(self.fake_values.swap_remove(0), self.ncols);
         ret
     }
 }
@@ -40,13 +43,15 @@ impl SourceBuilder for OptU64SourceBuilder {
 struct OptU64TestSource {
     counter: usize,
     vals: Vec<Option<u64>>,
+    ncols: usize,
 }
 
 impl OptU64TestSource {
-    pub fn new(vals: Vec<Option<u64>>) -> Self {
+    pub fn new(vals: Vec<Option<u64>>, ncols: usize) -> Self {
         OptU64TestSource {
             counter: 0,
             vals: vals,
+            ncols,
         }
     }
 }
@@ -58,7 +63,7 @@ impl DataSource for OptU64TestSource {
     }
 
     fn nrows(&self) -> usize {
-        self.vals.len()
+        self.vals.len() / self.ncols
     }
 }
 
@@ -94,7 +99,6 @@ impl Parse<String> for OptU64TestSource {
     }
 }
 
-#[derive(Clone)]
 pub struct OptU64Writer {
     nrows: usize,
     schema: Vec<DataType>,
@@ -187,6 +191,101 @@ impl<'a> PartitionWriter<'a> for OptU64PartitionWriter<'a> {
     }
 }
 
+pub struct ArrowU64Writer {
+    nrows: usize,
+    schema: Vec<DataType>,
+    array_builders: Vec<UInt64Array>,
+}
+
+pub struct ArrowU64PartitionWriter {
+    nrows: usize,
+    schema: Vec<DataType>,
+    builders: Vec<UInt64Builder>,
+}
+
+// impl<'a> Writer<'a> for ArrowU64Writer {
+//     const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
+//     type TypeSystem = DataType;
+//     type PartitionWriter = ArrowU64PartitionWriter;
+
+//     #[throws(ConnectorAgentError)]
+//     fn allocate(nrows: usize, schema: Vec<DataType>, data_order: DataOrder) -> Self {
+//         for field in &schema {
+//             if !(matches!(field, DataType::U64) && matches!(field, DataType::OptU64)) {
+//                 throw!(anyhow!("U64Writer only accepts U64/OptU64 only schema"));
+//             }
+//         }
+//         if !matches!(data_order, DataOrder::RowMajor) {
+//             throw!(ConnectorAgentError::UnsupportedDataOrder(data_order))
+//         }
+
+//         ArrowU64Writer {
+//             nrows,
+//             schema,
+//             array_builders: vec![], // cannot really allocate memory since do not know each partition size here
+//         }
+//     }
+
+//     // fn partition_writers(&'a mut self, counts: &[usize]) -> Vec<Self::PartitionWriter> {
+//     //     assert_eq!(counts.iter().sum::<usize>(), self.nrows);
+//     //     let ncols = self.schema.len();
+
+//     //     let mut ret = vec![];
+//     //     for &c in counts {
+
+//     //         ret.push();
+//     //     }
+//     //     ret
+//     // }
+
+//     fn schema(&self) -> &[DataType] {
+//         self.schema.as_slice()
+//     }
+// }
+
+impl ArrowU64PartitionWriter {
+    fn new(schema: Vec<DataType>, nrows: usize) -> Self {
+        let ncols = schema.len();
+        let mut builders = vec![];
+        for _i in 0..ncols {
+            builders.push(UInt64Array::builder(nrows));
+        }
+        ArrowU64PartitionWriter {
+            nrows,
+            schema,
+            builders,
+        }
+    }
+}
+
+impl<'a> PartitionWriter<'a> for ArrowU64PartitionWriter {
+    type TypeSystem = DataType;
+
+    unsafe fn write<T>(&mut self, _row: usize, col: usize, value: T) {
+        // let v = Box::new(value) as Box<dyn std::any::Any>;
+        // let (data, _vtable): (&Option<u64>, usize) =
+        //     transmute(Box::new(value) as Box<dyn std::any::Any>);
+        // self.builders[col].append_option(*data);
+    }
+
+    fn write_checked<T: 'static>(&mut self, row: usize, col: usize, value: T) -> Result<()>
+    where
+        T: TypeAssoc<Self::TypeSystem>,
+    {
+        self.schema[col].check::<T>()?;
+        unsafe { self.write(row, col, value) };
+        Ok(())
+    }
+
+    fn nrows(&self) -> usize {
+        self.nrows
+    }
+
+    fn ncols(&self) -> usize {
+        self.builders.len()
+    }
+}
+
 #[test]
 fn test_option() {
     let ncols = 3;
@@ -209,10 +308,10 @@ fn test_option() {
         data.push(val);
     });
 
-    println!("{:?}", data);
+    // println!("{:?}", data);
 
     let dispatcher = Dispatcher::new(
-        OptU64SourceBuilder::new(data.clone()),
+        OptU64SourceBuilder::new(data.clone(), ncols),
         schema,
         nrows.iter().map(|_n| String::new()).collect(),
     );
@@ -224,7 +323,7 @@ fn test_option() {
     let mut fake_data = vec![];
     data.iter_mut().for_each(|d| fake_data.append(d));
 
-    println!("{:?}", dw.buffer());
+    // println!("{:?}", dw.buffer());
     assert_eq!(
         Array::from_shape_vec((dw.nrows, dw.schema.len()), fake_data).unwrap(),
         dw.buffer()
