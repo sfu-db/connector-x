@@ -1,8 +1,11 @@
-use crate::data_order::{coordinate, DataOrder};
-use crate::data_sources::{DataSource, SourceBuilder};
-use crate::errors::Result;
-use crate::typesystem::{Transmit, TypeSystem};
-use crate::writers::{PartitionWriter, Writer};
+use crate::{
+    data_order::{coordinate, DataOrder},
+    data_sources::{DataSource, SourceBuilder},
+    errors::Result,
+    types::{Transmit, TransmitChecked},
+    typesystem::{Realize, TypeSystem},
+    writers::{PartitionWriter, Writer},
+};
 use rayon::prelude::*;
 
 /// A dispatcher owns a `SourceBuilder` `SB` and a vector of `queries`
@@ -32,7 +35,8 @@ where
     pub fn run_checked<W>(self) -> Result<W>
     where
         W: for<'a> Writer<'a, TypeSystem = TS>,
-        TS: for<'a> Transmit<SB::DataSource, <W as Writer<'a>>::PartitionWriter>,
+        TS: for<'a> Realize<Transmit<'a, SB::DataSource, <W as Writer<'a>>::PartitionWriter>>
+            + for<'a> Realize<TransmitChecked<'a, SB::DataSource, <W as Writer<'a>>::PartitionWriter>>,
     {
         self.entry::<W>(true)
     }
@@ -40,7 +44,8 @@ where
     pub fn run<W>(self) -> Result<W>
     where
         W: for<'a> Writer<'a, TypeSystem = TS>,
-        TS: for<'a> Transmit<SB::DataSource, <W as Writer<'a>>::PartitionWriter>,
+        TS: for<'a> Realize<Transmit<'a, SB::DataSource, <W as Writer<'a>>::PartitionWriter>>
+            + for<'a> Realize<TransmitChecked<'a, SB::DataSource, <W as Writer<'a>>::PartitionWriter>>,
     {
         self.entry::<W>(false)
     }
@@ -50,7 +55,8 @@ where
     fn entry<W>(mut self, checked: bool) -> Result<W>
     where
         W: for<'a> Writer<'a, TypeSystem = TS>,
-        TS: for<'a> Transmit<SB::DataSource, <W as Writer<'a>>::PartitionWriter>,
+        TS: for<'a> Realize<Transmit<'a, SB::DataSource, <W as Writer<'a>>::PartitionWriter>>
+            + for<'a> Realize<TransmitChecked<'a, SB::DataSource, <W as Writer<'a>>::PartitionWriter>>,
     {
         let dorder = coordinate(SB::DATA_ORDERS, W::DATA_ORDERS)?;
         self.source_builder.set_data_order(dorder)?;
@@ -70,11 +76,11 @@ where
         let funcs: Vec<_> = self
             .schema
             .iter()
-            .map(|ty| {
+            .map(|&ty| {
                 if checked {
-                    ty.transmit_checked()
+                    Realize::<TransmitChecked<_, _>>::realize(ty)
                 } else {
-                    ty.transmit()
+                    Realize::<Transmit<_, _>>::realize(ty)
                 }
             })
             .collect();

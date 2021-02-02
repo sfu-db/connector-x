@@ -1,13 +1,7 @@
 // Why we need to implement Transmit for TypeSystem? This is because only TypeSystem knows how to dispatch
 // functions to it's native type N based on our defined type T. Remember, T is value and N is a type.
 
-use crate::{
-    data_sources::{DataSource, Produce},
-    errors::{ConnectorAgentError, Result},
-    writers::{Consume, PartitionWriter},
-};
-use fehler::throws;
-
+use crate::errors::Result;
 /// `TypeSystem` describes a type system in a value type (e.g. enum variants),
 /// which can be used to type check with a static type `T` through the `check` method.
 pub trait TypeSystem: Copy + Clone {
@@ -22,14 +16,14 @@ pub trait TypeAssoc<TS: TypeSystem> {
     fn check(ts: TS) -> Result<()>;
 }
 
-/// A macro to implement `TypeAssoc` which saves repetitive code.
+/// A macro to implement `TypeAssoc` and `Realize` which saves repetitive code.
 ///
 /// # Example Usage
-/// `impl_type_assoc!(DataType, DataType::F64 => f64, DataType::U64 => u64);`
-macro_rules! impl_type_assoc {
+/// `associate_typesystem!(DataType, DataType::F64 => f64, DataType::U64 => u64);`
+macro_rules! associate_typesystem {
     ($ts:ty, $($variant:pat => $native_type:ty),+) => {
         $(
-            impl TypeAssoc<$ts> for $native_type {
+            impl $crate::typesystem::TypeAssoc<$ts> for $native_type {
                 fn check(ts: $ts) -> $crate::errors::Result<()> {
                     if !matches!(ts, $variant) {
                         fehler::throw!($crate::errors::ConnectorAgentError::UnexpectedType(ts, std::any::type_name::<$native_type>()))
@@ -39,56 +33,46 @@ macro_rules! impl_type_assoc {
                 }
             }
         )+
-    };
-}
 
-/// Transmit defines Self that can pull data from a data source S and push the data to the writer W.
-pub trait Transmit<S, W> {
-    fn transmit(&self) -> fn(&mut S, &mut W, usize, usize) -> Result<()>;
-    fn transmit_checked(&self) -> fn(&mut S, &mut W, usize, usize) -> Result<()>;
-}
-
-#[throws(ConnectorAgentError)]
-pub fn transmit<'a, S, W, T>(source: &mut S, writer: &mut W, row: usize, col: usize)
-where
-    S: DataSource + Produce<T>,
-    W: PartitionWriter<'a, TypeSystem = S::TypeSystem> + Consume<T>,
-    T: TypeAssoc<S::TypeSystem> + 'static,
-{
-    unsafe { writer.write::<T>(row, col, source.read()?) }
-}
-
-#[throws(ConnectorAgentError)]
-pub fn transmit_checked<'a, S, W, T>(source: &mut S, writer: &mut W, row: usize, col: usize)
-where
-    S: DataSource + Produce<T>,
-    W: PartitionWriter<'a, TypeSystem = S::TypeSystem> + Consume<T>,
-    T: TypeAssoc<S::TypeSystem> + 'static,
-{
-    writer.write_checked::<T>(row, col, source.read()?)?
-}
-
-macro_rules! impl_transmit {
-    ($ts:ty, $($variant:pat => $native_type:ty),+) => {
-        impl<'a, S, W> $crate::typesystem::Transmit<S, W> for $ts
+        impl<F> $crate::typesystem::Realize<F> for $ts
         where
-            S: $crate::data_sources::DataSource,
-            W: PartitionWriter<'a, TypeSystem=S::TypeSystem>,
-            $(S: $crate::data_sources::Produce<$native_type>,)+
-            $(W: $crate::writers::Consume<$native_type>,)+
-            $($native_type: $crate::typesystem::TypeAssoc<S::TypeSystem>,)+
+            F: $crate::typesystem::ParameterizedFunc,
+            $(F: $crate::typesystem::ParameterizedOn<$native_type>),+
         {
-            fn transmit(&self) -> fn(&mut S, &mut W, usize, usize) -> Result<()> {
+            fn realize(self) -> F::Function {
                 match self {
-                    $($variant => $crate::typesystem::transmit::<S, W, $native_type>),+
-                }
-            }
-
-            fn transmit_checked(&self) -> fn(&mut S, &mut W, usize, usize) -> Result<()> {
-                match self {
-                    $($variant => $crate::typesystem::transmit_checked::<S, W, $native_type>),+
+                    $($variant => F::realize::<$native_type>()),+
                 }
             }
         }
     };
+}
+
+/// Realize means that a TypeSystem can realize a parameterized func F, based on its current variants.
+pub trait Realize<F>
+where
+    F: ParameterizedFunc,
+{
+    /// realize a parameterized function with the type that self currently is.
+    fn realize(self) -> F::Function;
+}
+
+/// A ParameterizedFunc refers to a function that is parameterized on a type T,
+/// where type T is determined by the variant of a TypeSystem.
+/// An example is the `transmit<S,W,T>` function since its type `T`
+/// is determined by the schema.
+pub trait ParameterizedFunc {
+    type Function;
+    fn realize<T>() -> Self::Function
+    where
+        Self: ParameterizedOn<T>,
+    {
+        Self::parameterize()
+    }
+}
+
+/// `ParameterizedOn` indicates a parameterized function `Self`
+/// is parameterized on type `T`
+pub trait ParameterizedOn<T>: ParameterizedFunc {
+    fn parameterize() -> Self::Function;
 }

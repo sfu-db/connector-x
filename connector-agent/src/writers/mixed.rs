@@ -3,7 +3,7 @@ use crate::any_array::{AnyArray, AnyArrayViewMut};
 use crate::data_order::DataOrder;
 use crate::errors::{ConnectorAgentError, Result};
 use crate::types::DataType;
-use crate::typesystem::{TypeAssoc, TypeSystem};
+use crate::typesystem::{ParameterizedFunc, ParameterizedOn, Realize, TypeAssoc, TypeSystem};
 use fehler::{throw, throws};
 use itertools::Itertools;
 use ndarray::{Array2, ArrayView1, ArrayView2, Axis, Ix2};
@@ -43,12 +43,7 @@ impl<'a> Writer<'a> for MemoryWriter {
         {
             block_indices.insert(dt, bid);
             let count = grp.count();
-            let buffer = match dt {
-                DataType::F64 => Array2::<f64>::default((nrows, count)).into(),
-                DataType::U64 => Array2::<u64>::default((nrows, count)).into(),
-                DataType::Bool => Array2::<bool>::default((nrows, count)).into(),
-                DataType::String => Array2::<String>::default((nrows, count)).into(),
-            };
+            let buffer = Realize::<FArray2>::realize(dt)(nrows, count);
             buffers.push(buffer);
         }
 
@@ -187,5 +182,26 @@ where
             .get_mut((row, col))
             .ok_or(ConnectorAgentError::OutOfBound)? = value;
         Ok(())
+    }
+}
+
+struct FArray2;
+
+impl ParameterizedFunc for FArray2 {
+    type Function = fn(nrows: usize, ncols: usize) -> AnyArray<Ix2>;
+}
+
+impl<T> ParameterizedOn<T> for FArray2
+where
+    T: Default + Send + 'static,
+{
+    fn parameterize() -> Self::Function {
+        fn create_any_array<T>(nrows: usize, ncols: usize) -> AnyArray<Ix2>
+        where
+            T: Default + Send + 'static,
+        {
+            Array2::<T>::default((nrows, ncols)).into()
+        }
+        create_any_array::<T>
     }
 }
