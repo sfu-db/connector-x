@@ -19,6 +19,12 @@ pub enum ConnectorAgentError {
     #[error("Cannot resolve data order: got {0:?} from source, {1:?} from destination.")]
     CannotResolveDataOrder(Vec<DataOrder>, Vec<DataOrder>),
 
+    #[error(transparent)]
+    IOError(#[from] std::io::Error),
+
+    #[error(transparent)]
+    PostgresError(#[from] postgres::Error),
+
     /// Any other errors that are too trivial to be put here explicitly.
     #[error(transparent)]
     Other(#[from] anyhow::Error),
