@@ -317,7 +317,7 @@
 <span id="314">314</span>
 <span id="315">315</span>
 </pre><div class="example-wrap"><pre class="rust ">
-<span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">DataSource</span>, <span class="ident">Parse</span>, <span class="ident">SourceBuilder</span>};
+<span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">DataSource</span>, <span class="ident">Produce</span>, <span class="ident">SourceBuilder</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">data_order</span>::<span class="ident">DataOrder</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">errors</span>::{<span class="ident">ConnectorAgentError</span>, <span class="prelude-ty">Result</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::<span class="ident">DataType</span>;
@@ -371,32 +371,32 @@
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Parse</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">U64CounterSource</span> {
-    <span class="kw">fn</span> <span class="ident">parse</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> {
+<span class="kw">impl</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">U64CounterSource</span> {
+    <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">ret</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">counter</span>;
         <span class="self">self</span>.<span class="ident">counter</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
         <span class="prelude-val">Ok</span>(<span class="ident">FromPrimitive</span>::<span class="ident">from_u64</span>(<span class="ident">ret</span>).<span class="ident">unwrap_or_default</span>())
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Parse</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">U64CounterSource</span> {
-    <span class="kw">fn</span> <span class="ident">parse</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span> {
+<span class="kw">impl</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">U64CounterSource</span> {
+    <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">ret</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">counter</span>;
         <span class="self">self</span>.<span class="ident">counter</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
         <span class="prelude-val">Ok</span>(<span class="ident">FromPrimitive</span>::<span class="ident">from_u64</span>(<span class="ident">ret</span>).<span class="ident">unwrap_or_default</span>())
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Parse</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">U64CounterSource</span> {
-    <span class="kw">fn</span> <span class="ident">parse</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
+<span class="kw">impl</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">U64CounterSource</span> {
+    <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">ret</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">counter</span>.<span class="ident">to_string</span>();
         <span class="self">self</span>.<span class="ident">counter</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
         <span class="prelude-val">Ok</span>(<span class="ident">ret</span>)
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Parse</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">U64CounterSource</span> {
-    <span class="kw">fn</span> <span class="ident">parse</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
+<span class="kw">impl</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">U64CounterSource</span> {
+    <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">ret</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">counter</span> <span class="op">%</span> <span class="number">2</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span>;
         <span class="self">self</span>.<span class="ident">counter</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
         <span class="prelude-val">Ok</span>(<span class="ident">ret</span>)
@@ -450,8 +450,8 @@
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Parse</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">StringSource</span> {
-    <span class="kw">fn</span> <span class="ident">parse</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
+<span class="kw">impl</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">StringSource</span> {
+    <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">ret</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">rand_string</span>.<span class="ident">clone</span>();
         <span class="kw">let</span> <span class="ident">new_val</span> <span class="op">=</span> <span class="ident">ret</span>.<span class="ident">clone</span>().<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>().<span class="ident">unwrap</span>() <span class="op">+</span> <span class="number">1</span>;
         <span class="self">self</span>.<span class="ident">rand_string</span> <span class="op">=</span> <span class="ident">new_val</span>.<span class="ident">to_string</span>();
@@ -460,8 +460,8 @@
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Parse</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">StringSource</span> {
-    <span class="kw">fn</span> <span class="ident">parse</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> {
+<span class="kw">impl</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">StringSource</span> {
+    <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">ret</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">rand_string</span>.<span class="ident">clone</span>().<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>().<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">new_string</span> <span class="op">=</span> <span class="ident">ret</span>.<span class="ident">clone</span>() <span class="op">+</span> <span class="number">1</span>;
         <span class="self">self</span>.<span class="ident">rand_string</span> <span class="op">=</span> <span class="ident">new_string</span>.<span class="ident">to_string</span>();
@@ -470,8 +470,8 @@
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Parse</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">StringSource</span> {
-    <span class="kw">fn</span> <span class="ident">parse</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span> {
+<span class="kw">impl</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">StringSource</span> {
+    <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">ret</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">rand_string</span>.<span class="ident">clone</span>().<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>().<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">new_string</span> <span class="op">=</span> <span class="ident">ret</span>.<span class="ident">clone</span>() <span class="op">+</span> <span class="number">1</span>;
         <span class="self">self</span>.<span class="ident">rand_string</span> <span class="op">=</span> <span class="ident">new_string</span>.<span class="ident">to_string</span>();
@@ -480,8 +480,8 @@
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Parse</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">StringSource</span> {
-    <span class="kw">fn</span> <span class="ident">parse</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
+<span class="kw">impl</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">StringSource</span> {
+    <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
         <span class="macro">throw</span><span class="macro">!</span>(<span class="macro">anyhow</span><span class="macro">!</span>(<span class="string">&quot;StringSource only support string!&quot;</span>))
     }
 }
@@ -532,30 +532,30 @@
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Parse</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">BoolCounterSource</span> {
-    <span class="kw">fn</span> <span class="ident">parse</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> {
+<span class="kw">impl</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">BoolCounterSource</span> {
+    <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">ret</span> <span class="op">=</span> <span class="number">1</span>;
         <span class="self">self</span>.<span class="ident">counter</span> <span class="op">=</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">counter</span>;
         <span class="prelude-val">Ok</span>(<span class="ident">ret</span>)
     }
 }
-<span class="kw">impl</span> <span class="ident">Parse</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">BoolCounterSource</span> {
-    <span class="kw">fn</span> <span class="ident">parse</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span> {
+<span class="kw">impl</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">BoolCounterSource</span> {
+    <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">ret</span> <span class="op">=</span> <span class="number">1.0</span>;
         <span class="self">self</span>.<span class="ident">counter</span> <span class="op">=</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">counter</span>;
         <span class="prelude-val">Ok</span>(<span class="ident">ret</span>)
     }
 }
-<span class="kw">impl</span> <span class="ident">Parse</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">BoolCounterSource</span> {
-    <span class="kw">fn</span> <span class="ident">parse</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
+<span class="kw">impl</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">BoolCounterSource</span> {
+    <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">ret</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">counter</span>;
         <span class="self">self</span>.<span class="ident">counter</span> <span class="op">=</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">counter</span>;
         <span class="prelude-val">Ok</span>(<span class="ident">ret</span>)
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Parse</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">BoolCounterSource</span> {
-    <span class="kw">fn</span> <span class="ident">parse</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
+<span class="kw">impl</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">BoolCounterSource</span> {
+    <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
         <span class="macro">throw</span><span class="macro">!</span>(<span class="macro">anyhow</span><span class="macro">!</span>(<span class="string">&quot;StringSource only support string!&quot;</span>))
     }
 }
@@ -605,30 +605,30 @@
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Parse</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">F64CounterSource</span> {
-    <span class="kw">fn</span> <span class="ident">parse</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> {
+<span class="kw">impl</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">F64CounterSource</span> {
+    <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">ret</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">counter</span>;
         <span class="self">self</span>.<span class="ident">counter</span> <span class="op">+</span><span class="op">=</span> <span class="number">0.5</span>;
         <span class="prelude-val">Ok</span>(<span class="ident">FromPrimitive</span>::<span class="ident">from_f64</span>(<span class="ident">ret</span>).<span class="ident">unwrap_or_default</span>())
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Parse</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">F64CounterSource</span> {
-    <span class="kw">fn</span> <span class="ident">parse</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span> {
+<span class="kw">impl</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">F64CounterSource</span> {
+    <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">ret</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">counter</span>;
         <span class="self">self</span>.<span class="ident">counter</span> <span class="op">+</span><span class="op">=</span> <span class="number">0.5</span>;
         <span class="prelude-val">Ok</span>(<span class="ident">FromPrimitive</span>::<span class="ident">from_f64</span>(<span class="ident">ret</span>).<span class="ident">unwrap_or_default</span>())
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Parse</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">F64CounterSource</span> {
-    <span class="kw">fn</span> <span class="ident">parse</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
+<span class="kw">impl</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">F64CounterSource</span> {
+    <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
         <span class="macro">throw</span><span class="macro">!</span>(<span class="macro">anyhow</span><span class="macro">!</span>(<span class="string">&quot;F64CounterSource only support f64!&quot;</span>))
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Parse</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">F64CounterSource</span> {
-    <span class="kw">fn</span> <span class="ident">parse</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
+<span class="kw">impl</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">F64CounterSource</span> {
+    <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
         <span class="macro">throw</span><span class="macro">!</span>(<span class="macro">anyhow</span><span class="macro">!</span>(<span class="string">&quot;F64CounterSource only support f64!&quot;</span>))
     }
 }

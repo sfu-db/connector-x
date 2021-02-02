@@ -80,23 +80,23 @@
     <span class="doccomment">/// Run the query and put the result into Self.</span>
     <span class="kw">fn</span> <span class="ident">run_query</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">query</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>;
 
-    <span class="doccomment">/// Produce a value `T` by calling `Parse&lt;T&gt;::parse`. Usually this function does not need to be</span>
+    <span class="doccomment">/// Read a value `T` by calling `Produce&lt;T&gt;::produce`. Usually this function does not need to be</span>
     <span class="doccomment">/// implemented.</span>
-    <span class="kw">fn</span> <span class="ident">produce</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">read</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">T</span>: <span class="ident">TypeAssoc</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">TypeSystem</span><span class="op">&gt;</span>,
-        <span class="self">Self</span>: <span class="ident">Parse</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
+        <span class="self">Self</span>: <span class="ident">Produce</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
     {
-        <span class="self">self</span>.<span class="ident">parse</span>()
+        <span class="self">self</span>.<span class="ident">produce</span>()
     }
 
     <span class="doccomment">/// Number of rows this `DataSource` get.</span>
     <span class="kw">fn</span> <span class="ident">nrows</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span>;
 }
 
-<span class="doccomment">/// A type implemented `Parse&lt;T&gt;` means that it can produce a value `T` by consuming part of it&#39;s raw data buffer.</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Parse</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">parse</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>;
+<span class="doccomment">/// A type implemented `Produce&lt;T&gt;` means that it can produce a value `T` by consuming part of it&#39;s raw data buffer.</span>
+<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>;
 }
 </pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../../";window.currentCrate = "connector_agent";</script><script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script><script defer src="../../../search-index.js"></script></body></html>

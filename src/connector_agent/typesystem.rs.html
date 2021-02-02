@@ -94,14 +94,15 @@
 <span id="91">91</span>
 <span id="92">92</span>
 <span id="93">93</span>
+<span id="94">94</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Why we need to implement Transmit for TypeSystem? This is because only TypeSystem knows how to dispatch</span>
 <span class="comment">// functions to it&#39;s native type N based on our defined type T. Remember, T is value and N is a type.</span>
 
 <span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">data_sources</span>::{<span class="ident">DataSource</span>, <span class="ident">Parse</span>},
+    <span class="ident">data_sources</span>::{<span class="ident">DataSource</span>, <span class="ident">Produce</span>},
     <span class="ident">errors</span>::{<span class="ident">ConnectorAgentError</span>, <span class="prelude-ty">Result</span>},
-    <span class="ident">writers</span>::<span class="ident">PartitionWriter</span>,
+    <span class="ident">writers</span>::{<span class="ident">Consume</span>, <span class="ident">PartitionWriter</span>},
 };
 <span class="kw">use</span> <span class="ident">fehler</span>::<span class="ident">throws</span>;
 
@@ -148,21 +149,21 @@
 <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">ConnectorAgentError</span>)]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">transmit</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">S</span>, <span class="ident">W</span>, <span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">source</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">S</span>, <span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>, <span class="ident">row</span>: <span class="ident">usize</span>, <span class="ident">col</span>: <span class="ident">usize</span>)
 <span class="kw">where</span>
-    <span class="ident">S</span>: <span class="ident">DataSource</span> <span class="op">+</span> <span class="ident">Parse</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
-    <span class="ident">W</span>: <span class="ident">PartitionWriter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">TypeSystem</span> <span class="op">=</span> <span class="ident">S</span>::<span class="ident">TypeSystem</span><span class="op">&gt;</span>,
+    <span class="ident">S</span>: <span class="ident">DataSource</span> <span class="op">+</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
+    <span class="ident">W</span>: <span class="ident">PartitionWriter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">TypeSystem</span> <span class="op">=</span> <span class="ident">S</span>::<span class="ident">TypeSystem</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Consume</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
     <span class="ident">T</span>: <span class="ident">TypeAssoc</span><span class="op">&lt;</span><span class="ident">S</span>::<span class="ident">TypeSystem</span><span class="op">&gt;</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
 {
-    <span class="kw">unsafe</span> { <span class="ident">writer</span>.<span class="ident">write</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">row</span>, <span class="ident">col</span>, <span class="ident">source</span>.<span class="ident">produce</span>()<span class="question-mark">?</span>) }
+    <span class="kw">unsafe</span> { <span class="ident">writer</span>.<span class="ident">write</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">row</span>, <span class="ident">col</span>, <span class="ident">source</span>.<span class="ident">read</span>()<span class="question-mark">?</span>) }
 }
 
 <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">ConnectorAgentError</span>)]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">transmit_checked</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">S</span>, <span class="ident">W</span>, <span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">source</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">S</span>, <span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>, <span class="ident">row</span>: <span class="ident">usize</span>, <span class="ident">col</span>: <span class="ident">usize</span>)
 <span class="kw">where</span>
-    <span class="ident">S</span>: <span class="ident">DataSource</span> <span class="op">+</span> <span class="ident">Parse</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
-    <span class="ident">W</span>: <span class="ident">PartitionWriter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">TypeSystem</span> <span class="op">=</span> <span class="ident">S</span>::<span class="ident">TypeSystem</span><span class="op">&gt;</span>,
+    <span class="ident">S</span>: <span class="ident">DataSource</span> <span class="op">+</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
+    <span class="ident">W</span>: <span class="ident">PartitionWriter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">TypeSystem</span> <span class="op">=</span> <span class="ident">S</span>::<span class="ident">TypeSystem</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Consume</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
     <span class="ident">T</span>: <span class="ident">TypeAssoc</span><span class="op">&lt;</span><span class="ident">S</span>::<span class="ident">TypeSystem</span><span class="op">&gt;</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
 {
-    <span class="ident">writer</span>.<span class="ident">write_checked</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">row</span>, <span class="ident">col</span>, <span class="ident">source</span>.<span class="ident">produce</span>()<span class="question-mark">?</span>)<span class="question-mark">?</span>
+    <span class="ident">writer</span>.<span class="ident">write_checked</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">row</span>, <span class="ident">col</span>, <span class="ident">source</span>.<span class="ident">read</span>()<span class="question-mark">?</span>)<span class="question-mark">?</span>
 }
 
 <span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">impl_transmit</span> {
@@ -171,7 +172,8 @@
         <span class="kw">where</span>
             <span class="ident">S</span>: <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">data_sources</span>::<span class="ident">DataSource</span>,
             <span class="ident">W</span>: <span class="ident">PartitionWriter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">TypeSystem</span><span class="op">=</span><span class="ident">S</span>::<span class="ident">TypeSystem</span><span class="op">&gt;</span>,
-            $(<span class="ident">S</span>: <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">data_sources</span>::<span class="ident">Parse</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">native_type</span><span class="op">&gt;</span>,)<span class="op">+</span>
+            $(<span class="ident">S</span>: <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">data_sources</span>::<span class="ident">Produce</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">native_type</span><span class="op">&gt;</span>,)<span class="op">+</span>
+            $(<span class="ident">W</span>: <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">writers</span>::<span class="ident">Consume</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">native_type</span><span class="op">&gt;</span>,)<span class="op">+</span>
             $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">native_type</span>: <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">typesystem</span>::<span class="ident">TypeAssoc</span><span class="op">&lt;</span><span class="ident">S</span>::<span class="ident">TypeSystem</span><span class="op">&gt;</span>,)<span class="op">+</span>
         {
             <span class="kw">fn</span> <span class="ident">transmit</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">fn</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">S</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>, <span class="ident">usize</span>, <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
