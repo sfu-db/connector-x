@@ -1,7 +1,7 @@
 use anyhow::anyhow;
-use arrow::array::{UInt64Array, UInt64Builder};
 use connector_agent::{
-    data_sources::{DataSource, Parse, SourceBuilder},
+    data_sources::{DataSource, Produce, SourceBuilder},
+    writers::Consume,
     ConnectorAgentError, DataOrder, DataType, Dispatcher, PartitionWriter, Result, TypeAssoc,
     TypeSystem, Writer,
 };
@@ -9,7 +9,6 @@ use fehler::{throw, throws};
 use ndarray::{Array, Array2, ArrayView2, ArrayViewMut2, Axis};
 use rand::Rng;
 use std::mem::transmute;
-use std::sync::{Arc, Mutex};
 // use std::time::Instant;
 
 struct OptU64SourceBuilder {
@@ -67,34 +66,34 @@ impl DataSource for OptU64TestSource {
     }
 }
 
-impl Parse<u64> for OptU64TestSource {
-    fn parse(&mut self) -> Result<u64> {
+impl Produce<u64> for OptU64TestSource {
+    fn produce(&mut self) -> Result<u64> {
         throw!(anyhow!("Only Option<u64> is supported"));
     }
 }
 
-impl Parse<Option<u64>> for OptU64TestSource {
-    fn parse(&mut self) -> Result<Option<u64>> {
+impl Produce<Option<u64>> for OptU64TestSource {
+    fn produce(&mut self) -> Result<Option<u64>> {
         let v = self.vals[self.counter];
         self.counter += 1;
         Ok(v)
     }
 }
 
-impl Parse<f64> for OptU64TestSource {
-    fn parse(&mut self) -> Result<f64> {
+impl Produce<f64> for OptU64TestSource {
+    fn produce(&mut self) -> Result<f64> {
         throw!(anyhow!("Only Option<u64> is supported"));
     }
 }
 
-impl Parse<bool> for OptU64TestSource {
-    fn parse(&mut self) -> Result<bool> {
+impl Produce<bool> for OptU64TestSource {
+    fn produce(&mut self) -> Result<bool> {
         throw!(anyhow!("Only Option<u64> is supported"));
     }
 }
 
-impl Parse<String> for OptU64TestSource {
-    fn parse(&mut self) -> Result<String> {
+impl Produce<String> for OptU64TestSource {
+    fn produce(&mut self) -> Result<String> {
         throw!(anyhow!("Only Option<u64> is supported"));
     }
 }
@@ -168,20 +167,6 @@ impl<'a> OptU64PartitionWriter<'a> {
 impl<'a> PartitionWriter<'a> for OptU64PartitionWriter<'a> {
     type TypeSystem = DataType;
 
-    unsafe fn write<T: 'static>(&mut self, row: usize, col: usize, value: T) {
-        let target: *mut T = transmute(self.buffer.uget_mut((row, col)));
-        *target = value;
-    }
-
-    fn write_checked<T: 'static>(&mut self, row: usize, col: usize, value: T) -> Result<()>
-    where
-        T: TypeAssoc<Self::TypeSystem>,
-    {
-        self.schema[col].check::<T>()?;
-        unsafe { self.write(row, col, value) };
-        Ok(())
-    }
-
     fn nrows(&self) -> usize {
         self.buffer.nrows()
     }
@@ -191,98 +176,19 @@ impl<'a> PartitionWriter<'a> for OptU64PartitionWriter<'a> {
     }
 }
 
-pub struct ArrowU64Writer {
-    nrows: usize,
-    schema: Vec<DataType>,
-    array_builders: Vec<UInt64Array>,
-}
-
-pub struct ArrowU64PartitionWriter {
-    nrows: usize,
-    schema: Vec<DataType>,
-    builders: Vec<UInt64Builder>,
-}
-
-// impl<'a> Writer<'a> for ArrowU64Writer {
-//     const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
-//     type TypeSystem = DataType;
-//     type PartitionWriter = ArrowU64PartitionWriter;
-
-//     #[throws(ConnectorAgentError)]
-//     fn allocate(nrows: usize, schema: Vec<DataType>, data_order: DataOrder) -> Self {
-//         for field in &schema {
-//             if !(matches!(field, DataType::U64) && matches!(field, DataType::OptU64)) {
-//                 throw!(anyhow!("U64Writer only accepts U64/OptU64 only schema"));
-//             }
-//         }
-//         if !matches!(data_order, DataOrder::RowMajor) {
-//             throw!(ConnectorAgentError::UnsupportedDataOrder(data_order))
-//         }
-
-//         ArrowU64Writer {
-//             nrows,
-//             schema,
-//             array_builders: vec![], // cannot really allocate memory since do not know each partition size here
-//         }
-//     }
-
-//     // fn partition_writers(&'a mut self, counts: &[usize]) -> Vec<Self::PartitionWriter> {
-//     //     assert_eq!(counts.iter().sum::<usize>(), self.nrows);
-//     //     let ncols = self.schema.len();
-
-//     //     let mut ret = vec![];
-//     //     for &c in counts {
-
-//     //         ret.push();
-//     //     }
-//     //     ret
-//     // }
-
-//     fn schema(&self) -> &[DataType] {
-//         self.schema.as_slice()
-//     }
-// }
-
-impl ArrowU64PartitionWriter {
-    fn new(schema: Vec<DataType>, nrows: usize) -> Self {
-        let ncols = schema.len();
-        let mut builders = vec![];
-        for _i in 0..ncols {
-            builders.push(UInt64Array::builder(nrows));
-        }
-        ArrowU64PartitionWriter {
-            nrows,
-            schema,
-            builders,
-        }
-    }
-}
-
-impl<'a> PartitionWriter<'a> for ArrowU64PartitionWriter {
-    type TypeSystem = DataType;
-
-    unsafe fn write<T>(&mut self, _row: usize, col: usize, value: T) {
-        // let v = Box::new(value) as Box<dyn std::any::Any>;
-        // let (data, _vtable): (&Option<u64>, usize) =
-        //     transmute(Box::new(value) as Box<dyn std::any::Any>);
-        // self.builders[col].append_option(*data);
+impl<'a, T> Consume<T> for OptU64PartitionWriter<'a>
+where
+    T: TypeAssoc<<Self as PartitionWriter<'a>>::TypeSystem> + 'static,
+{
+    unsafe fn consume(&mut self, row: usize, col: usize, value: T) {
+        let target: &mut T = transmute(self.buffer.uget_mut((row, col)));
+        *target = value;
     }
 
-    fn write_checked<T: 'static>(&mut self, row: usize, col: usize, value: T) -> Result<()>
-    where
-        T: TypeAssoc<Self::TypeSystem>,
-    {
+    fn consume_checked(&mut self, row: usize, col: usize, value: T) -> Result<()> {
         self.schema[col].check::<T>()?;
         unsafe { self.write(row, col, value) };
         Ok(())
-    }
-
-    fn nrows(&self) -> usize {
-        self.nrows
-    }
-
-    fn ncols(&self) -> usize {
-        self.builders.len()
     }
 }
 

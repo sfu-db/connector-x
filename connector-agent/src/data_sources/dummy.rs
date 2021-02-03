@@ -346,3 +346,90 @@ impl Produce<String> for F64CounterSource {
         throw!(anyhow!("F64CounterSource only support f64!"))
     }
 }
+
+pub struct OptU64SourceBuilder {
+    fake_values: Vec<Vec<Option<u64>>>,
+    ncols: usize,
+}
+
+impl OptU64SourceBuilder {
+    pub fn new(fake_values: Vec<Vec<Option<u64>>>, ncols: usize) -> Self {
+        OptU64SourceBuilder { fake_values, ncols }
+    }
+}
+
+impl SourceBuilder for OptU64SourceBuilder {
+    const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
+    type DataSource = OptU64TestSource;
+
+    #[throws(ConnectorAgentError)]
+    fn set_data_order(&mut self, data_order: DataOrder) {
+        if !matches!(data_order, DataOrder::RowMajor) {
+            throw!(ConnectorAgentError::UnsupportedDataOrder(data_order))
+        }
+    }
+
+    fn build(&mut self) -> Self::DataSource {
+        let ret = OptU64TestSource::new(self.fake_values.swap_remove(0), self.ncols);
+        ret
+    }
+}
+
+pub struct OptU64TestSource {
+    counter: usize,
+    vals: Vec<Option<u64>>,
+    ncols: usize,
+}
+
+impl OptU64TestSource {
+    pub fn new(vals: Vec<Option<u64>>, ncols: usize) -> Self {
+        OptU64TestSource {
+            counter: 0,
+            vals: vals,
+            ncols,
+        }
+    }
+}
+
+impl DataSource for OptU64TestSource {
+    type TypeSystem = DataType;
+    fn run_query(&mut self, _: &str) -> Result<()> {
+        Ok(())
+    }
+
+    fn nrows(&self) -> usize {
+        self.vals.len() / self.ncols
+    }
+}
+
+impl Produce<u64> for OptU64TestSource {
+    fn produce(&mut self) -> Result<u64> {
+        throw!(anyhow!("Only Option<u64> is supported"));
+    }
+}
+
+impl Produce<Option<u64>> for OptU64TestSource {
+    fn produce(&mut self) -> Result<Option<u64>> {
+        let v = self.vals[self.counter];
+        self.counter += 1;
+        Ok(v)
+    }
+}
+
+impl Produce<f64> for OptU64TestSource {
+    fn produce(&mut self) -> Result<f64> {
+        throw!(anyhow!("Only Option<u64> is supported"));
+    }
+}
+
+impl Produce<bool> for OptU64TestSource {
+    fn produce(&mut self) -> Result<bool> {
+        throw!(anyhow!("Only Option<u64> is supported"));
+    }
+}
+
+impl Produce<String> for OptU64TestSource {
+    fn produce(&mut self) -> Result<String> {
+        throw!(anyhow!("Only Option<u64> is supported"));
+    }
+}
