@@ -24,7 +24,8 @@ fn bench_both_option(c: &mut Criterion) {
             if v % 2 == 0 {
                 val.push(Some(v));
             } else {
-                val.push(None);
+                // val.push(None);
+                val.push(Some(0));
             }
         }
         data.push(val);
@@ -59,7 +60,8 @@ fn bench_source_option(c: &mut Criterion) {
             if v % 2 == 0 {
                 val.push(Some(v));
             } else {
-                val.push(None);
+                // val.push(None);
+                val.push(Some(0));
             }
         }
         data.push(val);
