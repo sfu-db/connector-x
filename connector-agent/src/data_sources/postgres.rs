@@ -6,6 +6,7 @@ use fehler::throw;
 use r2d2::{Pool, PooledConnection};
 use r2d2_postgres::{postgres::NoTls, PostgresConnectionManager};
 use std::io::Read;
+use std::str::FromStr;
 
 type PgManager = PostgresConnectionManager<NoTls>;
 type PgConn = PooledConnection<PgManager>;
@@ -39,7 +40,6 @@ impl SourceBuilder for PostgresDataSourceBuilder {
         self.data_order = Some(data_order);
         Ok(())
     }
-
     fn build(&mut self) -> Self::DataSource {
         PostgresDataSource::new(self.pool.get().unwrap())
     }
@@ -48,11 +48,20 @@ impl SourceBuilder for PostgresDataSourceBuilder {
 pub struct PostgresDataSource {
     conn: PgConn,
     buf: Vec<u8>,
+    counter: usize,
+    pub nrows: usize,
+    pub ncols: usize,
 }
 
 impl PostgresDataSource {
     pub fn new(conn: PgConn) -> Self {
-        Self { conn, buf: vec![] }
+        Self {
+            conn,
+            buf: vec![],
+            counter: 0,
+            nrows: 0,
+            ncols: 0,
+        }
     }
 }
 
@@ -67,32 +76,43 @@ impl DataSource for PostgresDataSource {
         self.conn.copy_out(&*query)?.read_to_end(&mut self.buf)?;
         Ok(())
     }
-
     fn nrows(&self) -> usize {
-        unimplemented!()
+        self.nrows
     }
 }
 
-impl Produce<u64> for PostgresDataSource {
-    fn produce(&mut self) -> Result<u64> {
-        unimplemented!()
+// impl Produce<u64> for PostgresDataSource {
+//     fn produce(&mut self) -> Result<u64> {
+//         unimplemented!()
+//     }
+// }
+//
+// impl Produce<f64> for PostgresDataSource {
+//     fn produce(&mut self) -> Result<f64> {
+//         unimplemented!()
+//     }
+// }
+//
+// impl Produce<String> for PostgresDataSource {
+//     fn produce(&mut self) -> Result<String> {
+//         unimplemented!()
+//     }
+// }
+//
+// impl Produce<bool> for PostgresDataSource {
+//     fn produce(&mut self) -> Result<bool> {
+//         unimplemented!()
+//     }
+// }
+
+impl<T> Produce<T> for PostgresDataSource
+where
+    T: FromStr + Default,
+{
+    fn produce(&mut self) -> Result<T> {
+        let v: &str = self.buf[self.counter / self.ncols][self.counter % self.ncols].as_ref();
+        self.counter += 1;
+        Ok(v.parse().unwrap_or_default())
     }
 }
 
-impl Produce<f64> for PostgresDataSource {
-    fn produce(&mut self) -> Result<f64> {
-        unimplemented!()
-    }
-}
-
-impl Produce<String> for PostgresDataSource {
-    fn produce(&mut self) -> Result<String> {
-        unimplemented!()
-    }
-}
-
-impl Produce<bool> for PostgresDataSource {
-    fn produce(&mut self) -> Result<bool> {
-        unimplemented!()
-    }
-}
