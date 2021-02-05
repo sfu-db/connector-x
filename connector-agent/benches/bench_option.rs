@@ -8,6 +8,8 @@ use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use fehler::{throw, throws};
 use rand::Rng;
 
+mod profiler;
+
 const NROWS: [usize; 2] = [100000, 100000];
 const NCOLS: usize = 100;
 
@@ -41,9 +43,7 @@ fn bench_both_option(c: &mut Criterion) {
                 schema,
                 NROWS.iter().map(|_n| String::new()).collect(),
             );
-            let _dw = dispatcher
-                .run_checked::<ArrowWriter>()
-                .expect("run dispatcher");
+            let _dw = dispatcher.run::<ArrowWriter>().expect("run dispatcher");
         })
     });
 }
@@ -78,9 +78,7 @@ fn bench_source_option(c: &mut Criterion) {
                 schema,
                 NROWS.iter().map(|_n| String::new()).collect(),
             );
-            let _dw = dispatcher
-                .run_checked::<ArrowWriter>()
-                .expect("run dispatcher");
+            let _dw = dispatcher.run::<ArrowWriter>().expect("run dispatcher");
         })
     });
 }
@@ -115,9 +113,7 @@ fn bench_writer_option(c: &mut Criterion) {
                 schema,
                 NROWS.iter().map(|_n| String::new()).collect(),
             );
-            let _dw = dispatcher
-                .run_checked::<ArrowWriter>()
-                .expect("run dispatcher");
+            let _dw = dispatcher.run::<ArrowWriter>().expect("run dispatcher");
         })
     });
 }
@@ -152,16 +148,14 @@ fn bench_non_option(c: &mut Criterion) {
                 schema,
                 NROWS.iter().map(|_n| String::new()).collect(),
             );
-            let _dw = dispatcher
-                .run_checked::<ArrowWriter>()
-                .expect("run dispatcher");
+            let _dw = dispatcher.run::<ArrowWriter>().expect("run dispatcher");
         })
     });
 }
 
 criterion_group!(
     name=benches;
-    config = Criterion::default().measurement_time(std::time::Duration::from_secs(60)).sample_size(10);
+    config = Criterion::default().measurement_time(std::time::Duration::from_secs(120)).sample_size(30);//.with_profiler(profiler::FlamegraphProfiler::new(100));
     targets = bench_both_option, bench_source_option, bench_writer_option, bench_non_option
 );
 criterion_main!(benches);
