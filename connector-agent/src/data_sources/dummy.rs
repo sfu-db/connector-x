@@ -404,7 +404,12 @@ impl DataSource for OptU64TestSource {
 
 impl Produce<u64> for OptU64TestSource {
     fn produce(&mut self) -> Result<u64> {
-        throw!(anyhow!("Only Option<u64> is supported"));
+        let v = match self.vals[self.counter] {
+            Some(v) => v,
+            None => 0,
+        };
+        self.counter += 1;
+        Ok(v)
     }
 }
 
