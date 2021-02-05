@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["ArrowPartitionWriter",""],["ArrowWriter",""],["FakeBuilder","For unsupported datatypes"]],"trait":[["ArrowAssoc","Associate arrow with native type"]]});
