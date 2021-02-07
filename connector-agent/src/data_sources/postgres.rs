@@ -74,6 +74,15 @@ impl DataSource for PostgresDataSource {
         }
         let query = format!("COPY ({}) TO STDOUT WITH CSV", query);
         self.conn.copy_out(&*query)?.read_to_end(&mut self.buf)?;
+
+        let mut reader = csv::ReaderBuilder::new()
+            .has_headers(false)
+            .from_reader(&mut self.buf);
+        self.records = reader.records().map(|v| v.expect("csv record")).collect();
+        self.nrows = self.records.len();
+        if self.nrows > 0 {
+            self.ncols = self.records[0].len();
+        }
         Ok(())
     }
     fn nrows(&self) -> usize {
@@ -110,7 +119,7 @@ where
     T: FromStr + Default,
 {
     fn produce(&mut self) -> Result<T> {
-        let v: &str = self.buf[self.counter / self.ncols][self.counter % self.ncols].as_ref();
+        let v: &str = self.records[self.counter / self.ncols][self.counter % self.ncols].as_ref();
         self.counter += 1;
         Ok(v.parse().unwrap_or_default())
     }
