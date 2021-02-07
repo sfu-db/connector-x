@@ -21,7 +21,6 @@ impl PostgresDataSourceBuilder {
         // "host=localhost user=postgres dbname=tpch port=6666 password=postgres"
         let manager = PostgresConnectionManager::new(conn.parse().unwrap(), NoTls);
         let pool = Pool::new(manager).unwrap();
-
         Self {
             pool,
             data_order: None,
@@ -72,12 +71,16 @@ impl DataSource for PostgresDataSource {
         if self.buf.len() != 0 {
             unimplemented!()
         }
+        let csv = "year,make,model,description
+        1948,Porsche,356,Luxury sports car
+        1967,Ford,Mustang fastback 1967,American car";
+        let a = csv.as_bytes()
         let query = format!("COPY ({}) TO STDOUT WITH CSV", query);
         self.conn.copy_out(&*query)?.read_to_end(&mut self.buf)?;
 
         let mut reader = csv::ReaderBuilder::new()
             .has_headers(false)
-            .from_reader(&mut self.buf);
+            .from_reader( &self.buf);
         self.records = reader.records().map(|v| v.expect("csv record")).collect();
         self.nrows = self.records.len();
         if self.nrows > 0 {
