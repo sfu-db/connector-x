@@ -18,9 +18,15 @@ pub struct PostgresDataSourceBuilder {
 
 impl PostgresDataSourceBuilder {
     pub fn new(conn: &str) -> Self {
-        // "host=localhost user=postgres dbname=tpch port=6666 password=postgres"
+        // "host=localhost user=postgres dbname=Person port=5432 password=postgres"
         let manager = PostgresConnectionManager::new(conn.parse().unwrap(), NoTls);
         let pool = Pool::new(manager).unwrap();
+<<<<<<< HEAD
+=======
+
+        let client = pool.get().unwrap();
+
+>>>>>>> feat: add Postgres data source
         Self {
             pool,
             data_order: None,
@@ -50,6 +56,7 @@ pub struct PostgresDataSource {
     counter: usize,
     pub nrows: usize,
     pub ncols: usize,
+    records: Vec<csv::StringRecord>
 }
 
 impl PostgresDataSource {
@@ -60,6 +67,7 @@ impl PostgresDataSource {
             counter: 0,
             nrows: 0,
             ncols: 0,
+            records: Vec::new()
         }
     }
 }
@@ -78,9 +86,11 @@ impl DataSource for PostgresDataSource {
         let query = format!("COPY ({}) TO STDOUT WITH CSV", query);
         self.conn.copy_out(&*query)?.read_to_end(&mut self.buf)?;
 
+        let mut buf = self.buf.as_slice();
+
         let mut reader = csv::ReaderBuilder::new()
             .has_headers(false)
-            .from_reader( &self.buf);
+            .from_reader(&self.buf);
         self.records = reader.records().map(|v| v.expect("csv record")).collect();
         self.nrows = self.records.len();
         if self.nrows > 0 {

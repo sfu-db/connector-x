@@ -6,31 +6,52 @@ use connector_agent::writers::dummy::U64Writer;
 use connector_agent::{DataType, Dispatcher};
 use ndarray::array;
 #[test]
-fn test_postgres() {
-    let schema = vec![DataType::U64; 5];
-    let dispatcher = Dispatcher::new(
-        PostgresDataSourceBuilder::new("host=localhost user=postgres dbname=test_table_1 port=5432 password=wjz283200"),
-        schema,
-        vec!["select * from test_table_1".to_string()]);
+fn load_and_parse() {
+    #[derive(Debug, PartialEq)]
+    enum Value {
+        Id(u64),
+        Name(String),
+        Email(String),
+        Age(u64)
+    }
 
-    let dw = dispatcher
-        .run_checked::<U64Writer>()
-        .expect("run dispatcher");
+    // maybe change pg record to byterecord
+    let source_builder = PostgresDataSourceBuilder::new("host=localhost user=postgres dbname=Person port=5432 password=postgres");
+
+    let mut source = PostgresDataSource::new();
+    source
+        .run_query("select * from Person")
+        .expect("run query");
+
+    assert_eq!(3, source.nrows);
+    assert_eq!(4, source.ncols);
+
+    let mut results: Vec<Value> = Vec::new();
+    for _i in 0..source.nrows {
+        results.push(Value::Id(source.produce().expect("parse id")));
+        results.push(Value::Name(source.produce().expect("parse name")));
+        results.push(Value::Email(
+            source.produce().expect("parse email"),
+        ));
+        results.push(Value::Age(source.produce().expect("parse age")));
+    }
 
     assert_eq!(
-        array![
-            [0, 1, 2, 3, 4],
-            [5, 6, 7, 8, 9],
-            [10, 11, 12, 13, 14],
-            [15, 16, 17, 18, 19],
-            [20, 21, 22, 23, 24],
-            [25, 26, 27, 28, 29],
-            [30, 31, 32, 33, 34],
-            [35, 36, 37, 38, 39],
-            [40, 41, 42, 43, 44],
-            [45, 46, 47, 48, 49],
-            [50, 51, 52, 53, 54],
+        vec![
+            Value::Id(1),
+            Value::Name(String::from("Raj")),
+            Value::Email(String::from("raj@gmail.com")),
+            Value::Age(22),
+            Value::Id(2),
+            Value::Name(String::from("Abishek")),
+            Value::Email(String::from("ab@gmail.com")),
+            Value::Age(32),
+            Value::Id(3),
+            Value::Name(String::from("Ashish")),
+            Value::Email(String::from("ashish@gmail.com")),
+            Value::Age(25),
         ],
-        dw.buffer()
+        results
     );
 }
+
