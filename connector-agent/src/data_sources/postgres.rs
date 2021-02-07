@@ -18,15 +18,8 @@ pub struct PostgresDataSourceBuilder {
 
 impl PostgresDataSourceBuilder {
     pub fn new(conn: &str) -> Self {
-        // "host=localhost user=postgres dbname=Person port=5432 password=postgres"
         let manager = PostgresConnectionManager::new(conn.parse().unwrap(), NoTls);
         let pool = Pool::new(manager).unwrap();
-<<<<<<< HEAD
-=======
-
-        let client = pool.get().unwrap();
-
->>>>>>> feat: add Postgres data source
         Self {
             pool,
             data_order: None,

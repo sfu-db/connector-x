@@ -2,9 +2,8 @@ use connector_agent::data_sources::{
     postgres::{PostgresDataSource, PostgresDataSourceBuilder},
     DataSource, Produce,
 };
-use connector_agent::writers::dummy::U64Writer;
-use connector_agent::{DataType, Dispatcher};
-use ndarray::array;
+use connector_agent::{SourceBuilder};
+
 #[test]
 fn load_and_parse() {
     #[derive(Debug, PartialEq)]
@@ -16,11 +15,10 @@ fn load_and_parse() {
     }
 
     // maybe change pg record to byterecord
-    let source_builder = PostgresDataSourceBuilder::new("host=localhost user=postgres dbname=Person port=5432 password=postgres");
-
-    let mut source = PostgresDataSource::new();
+    let mut source_builder = PostgresDataSourceBuilder::new("host=localhost user=postgres dbname=dataprep port=5432 password=postgres");
+    let mut source: PostgresDataSource = source_builder.build();
     source
-        .run_query("select * from Person")
+        .run_query("select * from person")
         .expect("run query");
 
     assert_eq!(3, source.nrows);
@@ -43,7 +41,7 @@ fn load_and_parse() {
             Value::Email(String::from("raj@gmail.com")),
             Value::Age(22),
             Value::Id(2),
-            Value::Name(String::from("Abishek")),
+            Value::Name(String::from("Abhishek")),
             Value::Email(String::from("ab@gmail.com")),
             Value::Age(32),
             Value::Id(3),
