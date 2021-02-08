@@ -26,11 +26,11 @@ fn test_arrow() {
     let queries: Vec<String> = nrows.iter().map(|v| format!("{},{}", v, ncols)).collect();
 
     let dispatcher = Dispatcher::new(MixedSourceBuilder::new(), schema, queries);
-    let mut dw = dispatcher
+    let dw = dispatcher
         .run_checked::<ArrowWriter>()
         .expect("run dispatcher");
 
-    let records: Vec<RecordBatch> = dw.record_batches(headers);
+    let records: Vec<RecordBatch> = dw.finish(headers);
     assert_eq!(2, records.len());
 
     for col in 0..ncols {
@@ -146,11 +146,11 @@ fn test_option_arrow() {
         nrows.iter().map(|_n| String::new()).collect(),
     );
 
-    let mut dw = dispatcher
+    let dw = dispatcher
         .run_checked::<ArrowWriter>()
         .expect("run dispatcher");
 
-    let records: Vec<RecordBatch> = dw.record_batches(headers);
+    let records: Vec<RecordBatch> = dw.finish(headers);
     for (i, (rb, odata)) in records.iter().zip_eq(data).enumerate() {
         // println!("{:?}", rb);
         assert_eq!(ncols, rb.num_columns());
