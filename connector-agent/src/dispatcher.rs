@@ -72,6 +72,9 @@ where
             .zip_eq(self.queries.as_slice())
             .for_each(|(source, query)| source.run_query(query.as_str()).expect("run query"));
 
+        // infer schema if not given
+        // let self.schema = sources[0].infer_schema();
+
         // collect transmit functions for schema
         let funcs: Vec<_> = self
             .schema
