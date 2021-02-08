@@ -157,7 +157,7 @@ fn bench_non_option(c: &mut Criterion) {
 
 criterion_group!(
     name=benches;
-    config = Criterion::default().measurement_time(std::time::Duration::from_secs(120)).sample_size(30);//.with_profiler(profiler::FlamegraphProfiler::new(100));
+    config = Criterion::default().measurement_time(std::time::Duration::from_secs(120)).sample_size(30).with_profiler(profiler::FlamegraphProfiler::new(100));
     targets = bench_both_option, bench_source_option, bench_writer_option, bench_non_option
 );
 criterion_main!(benches);
