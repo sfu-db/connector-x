@@ -114,6 +114,10 @@
 <span id="111">111</span>
 <span id="112">112</span>
 <span id="113">113</span>
+<span id="114">114</span>
+<span id="115">115</span>
+<span id="116">116</span>
+<span id="117">117</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">DataSource</span>, <span class="ident">Produce</span>, <span class="ident">SourceBuilder</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">data_order</span>::<span class="ident">DataOrder</span>;
@@ -161,6 +165,10 @@
             <span class="ident">nrows</span>: <span class="number">0</span>,
             <span class="ident">ncols</span>: <span class="number">0</span>,
         }
+    }
+
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">infer_schema</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">DataType</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+        <span class="macro">unimplemented</span><span class="macro">!</span>(<span class="string">&quot;infer schema using self.records!&quot;</span>);
     }
 }
 

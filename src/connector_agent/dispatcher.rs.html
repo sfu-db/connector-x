@@ -120,6 +120,9 @@
 <span id="117">117</span>
 <span id="118">118</span>
 <span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
+<span id="122">122</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">data_order</span>::{<span class="ident">coordinate</span>, <span class="ident">DataOrder</span>},
@@ -194,6 +197,9 @@
             .<span class="ident">par_iter_mut</span>()
             .<span class="ident">zip_eq</span>(<span class="self">self</span>.<span class="ident">queries</span>.<span class="ident">as_slice</span>())
             .<span class="ident">for_each</span>(<span class="op">|</span>(<span class="ident">source</span>, <span class="ident">query</span>)<span class="op">|</span> <span class="ident">source</span>.<span class="ident">run_query</span>(<span class="ident">query</span>.<span class="ident">as_str</span>()).<span class="ident">expect</span>(<span class="string">&quot;run query&quot;</span>));
+
+        <span class="comment">// infer schema if not given</span>
+        <span class="comment">// let self.schema = sources[0].infer_schema();</span>
 
         <span class="comment">// collect transmit functions for schema</span>
         <span class="kw">let</span> <span class="ident">funcs</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="self">self</span>
