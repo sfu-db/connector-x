@@ -4,3 +4,5 @@ connector_agent.so
 __pycache__
 .python-version
 .idea/
+flamegraph.svg
+perf.data
