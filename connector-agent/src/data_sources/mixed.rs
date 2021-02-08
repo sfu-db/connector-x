@@ -69,6 +69,14 @@ impl Produce<u64> for MixedSource {
     }
 }
 
+impl Produce<Option<u64>> for MixedSource {
+    fn produce(&mut self) -> Result<Option<u64>> {
+        let ret = self.counter / self.ncols;
+        self.counter += 1;
+        Ok(Some(FromPrimitive::from_usize(ret).unwrap_or_default()))
+    }
+}
+
 impl Produce<f64> for MixedSource {
     fn produce(&mut self) -> Result<f64> {
         let ret = self.counter / self.ncols;

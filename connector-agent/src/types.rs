@@ -23,11 +23,12 @@ pub enum DataType {
     U64,
     Bool,
     String,
+    OptU64,
 }
 
 impl TypeSystem for DataType {}
 
-associate_typesystem!(DataType, DataType::F64 => f64, DataType::U64 => u64, DataType::Bool => bool, DataType::String => String);
+associate_typesystem!(DataType, DataType::F64 => f64, DataType::U64 => u64, DataType::Bool => bool, DataType::String => String, DataType::OptU64 => Option<u64>);
 
 pub struct Transmit<'a, S, W>(PhantomData<(&'a S, W)>);
 

@@ -4,7 +4,6 @@ use crate::errors::{ConnectorAgentError, Result};
 use crate::types::DataType;
 use fehler::{throw, throws};
 use std::fs::File;
-use std::str::FromStr;
 
 pub struct CSVSourceBuilder {}
 
@@ -70,13 +69,45 @@ impl DataSource for CSVSource {
     }
 }
 
-impl<T> Produce<T> for CSVSource
-where
-    T: FromStr + Default,
-{
-    fn produce(&mut self) -> Result<T> {
+impl Produce<u64> for CSVSource {
+    fn produce(&mut self) -> Result<u64> {
         let v: &str = self.records[self.counter / self.ncols][self.counter % self.ncols].as_ref();
         self.counter += 1;
         Ok(v.parse().unwrap_or_default())
+    }
+}
+
+impl Produce<f64> for CSVSource {
+    fn produce(&mut self) -> Result<f64> {
+        let v: &str = self.records[self.counter / self.ncols][self.counter % self.ncols].as_ref();
+        self.counter += 1;
+        Ok(v.parse().unwrap_or_default())
+    }
+}
+
+impl Produce<bool> for CSVSource {
+    fn produce(&mut self) -> Result<bool> {
+        let v: &str = self.records[self.counter / self.ncols][self.counter % self.ncols].as_ref();
+        self.counter += 1;
+        Ok(v.parse().unwrap_or_default())
+    }
+}
+
+impl Produce<String> for CSVSource {
+    fn produce(&mut self) -> Result<String> {
+        let v: &str = self.records[self.counter / self.ncols][self.counter % self.ncols].as_ref();
+        self.counter += 1;
+        Ok(String::from(v))
+    }
+}
+
+impl Produce<Option<u64>> for CSVSource {
+    fn produce(&mut self) -> Result<Option<u64>> {
+        let v: &str = self.records[self.counter / self.ncols][self.counter % self.ncols].as_ref();
+        self.counter += 1;
+        if v.is_empty() {
+            return Ok(None);
+        }
+        Ok(Some(v.parse().unwrap_or_default()))
     }
 }
