@@ -22,6 +22,9 @@ where
     SB: SourceBuilder,
     SB::DataSource: Send,
     TS: TypeSystem,
+    WT: for<'a> Writer<'a, TypeSystem = TS>,
+    TS: for<'a> Realize<Transmit<'a, SB::DataSource, <WT as Writer<'a>>::PartitionWriter>>
+        + for<'a> Realize<TransmitChecked<'a, SB::DataSource, <WT as Writer<'a>>::PartitionWriter>>,
 {
     /// Create a new dispatcher by providing a source builder, schema (temporary) and the queries
     /// to be issued to the data source.
@@ -34,38 +37,17 @@ where
         }
     }
 
-    pub fn run_checked(self) -> Result<WT>
-    where
-        WT: for<'a> Writer<'a, TypeSystem = TS>,
-        TS: for<'a> Realize<Transmit<'a, SB::DataSource, <WT as Writer<'a>>::PartitionWriter>>
-            + for<'a> Realize<
-                TransmitChecked<'a, SB::DataSource, <WT as Writer<'a>>::PartitionWriter>,
-            >,
-    {
+    pub fn run_checked(self) -> Result<WT> {
         self.entry(true)
     }
 
-    pub fn run(self) -> Result<WT>
-    where
-        WT: for<'a> Writer<'a, TypeSystem = TS>,
-        TS: for<'a> Realize<Transmit<'a, SB::DataSource, <WT as Writer<'a>>::PartitionWriter>>
-            + for<'a> Realize<
-                TransmitChecked<'a, SB::DataSource, <WT as Writer<'a>>::PartitionWriter>,
-            >,
-    {
+    pub fn run(self) -> Result<WT> {
         self.entry(false)
     }
 
     /// Run the dispatcher by specifying the writer, the dispatcher will fetch, parse the data
     /// and return a writer with parsed result
-    fn entry(mut self, checked: bool) -> Result<WT>
-    where
-        WT: for<'a> Writer<'a, TypeSystem = TS>,
-        TS: for<'a> Realize<Transmit<'a, SB::DataSource, <WT as Writer<'a>>::PartitionWriter>>
-            + for<'a> Realize<
-                TransmitChecked<'a, SB::DataSource, <WT as Writer<'a>>::PartitionWriter>,
-            >,
-    {
+    fn entry(mut self, checked: bool) -> Result<WT> {
         let dorder = coordinate(SB::DATA_ORDERS, WT::DATA_ORDERS)?;
         self.source_builder.set_data_order(dorder)?;
 
