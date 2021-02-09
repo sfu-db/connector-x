@@ -41,10 +41,11 @@ fn bench_both_option(c: &mut Criterion) {
             let schema = vec![DataType::OptU64; NCOLS];
             let dispatcher = Dispatcher::new(
                 OptU64SourceBuilder::new(data.to_vec(), NCOLS),
+                ArrowWriter::new(),
                 schema,
                 NROWS.iter().map(|_n| String::new()).collect(),
             );
-            let _dw = dispatcher.run::<ArrowWriter>().expect("run dispatcher");
+            let _dw = dispatcher.run().expect("run dispatcher");
         })
     });
 }
@@ -77,10 +78,11 @@ fn bench_source_option(c: &mut Criterion) {
             let schema = vec![DataType::U64; NCOLS];
             let dispatcher = Dispatcher::new(
                 OptU64SourceBuilder::new(data.to_vec(), NCOLS),
+                ArrowWriter::new(),
                 schema,
                 NROWS.iter().map(|_n| String::new()).collect(),
             );
-            let _dw = dispatcher.run::<ArrowWriter>().expect("run dispatcher");
+            let _dw = dispatcher.run().expect("run dispatcher");
         })
     });
 }
@@ -112,10 +114,11 @@ fn bench_writer_option(c: &mut Criterion) {
             let schema = vec![DataType::OptU64; NCOLS];
             let dispatcher = Dispatcher::new(
                 U64SourceBuilder::new(data.to_vec(), NCOLS),
+                ArrowWriter::new(),
                 schema,
                 NROWS.iter().map(|_n| String::new()).collect(),
             );
-            let _dw = dispatcher.run::<ArrowWriter>().expect("run dispatcher");
+            let _dw = dispatcher.run().expect("run dispatcher");
         })
     });
 }
@@ -147,10 +150,11 @@ fn bench_non_option(c: &mut Criterion) {
             let schema = vec![DataType::U64; NCOLS];
             let dispatcher = Dispatcher::new(
                 U64SourceBuilder::new(data.to_vec(), NCOLS),
+                ArrowWriter::new(),
                 schema,
                 NROWS.iter().map(|_n| String::new()).collect(),
             );
-            let _dw = dispatcher.run::<ArrowWriter>().expect("run dispatcher");
+            let _dw = dispatcher.run().expect("run dispatcher");
         })
     });
 }

@@ -18,23 +18,36 @@ pub struct MemoryWriter {
     column_buffer_index: Vec<(usize, usize)>,
 }
 
+impl MemoryWriter {
+    pub fn new() -> Self {
+        MemoryWriter {
+            nrows: 0,
+            schema: vec![],
+            buffers: vec![],
+            column_buffer_index: vec![],
+        }
+    }
+}
+
 impl<'a> Writer<'a> for MemoryWriter {
     const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
     type TypeSystem = DataType;
     type PartitionWriter = MemoryPartitionWriter<'a>;
 
     #[throws(ConnectorAgentError)]
-    fn allocate(nrows: usize, schema: Vec<DataType>, data_order: DataOrder) -> Self {
+    fn allocate(&mut self, nrows: usize, schema: Vec<DataType>, data_order: DataOrder) {
         if !matches!(data_order, DataOrder::RowMajor) {
             throw!(ConnectorAgentError::UnsupportedDataOrder(data_order))
         }
 
+        self.nrows = nrows;
+        self.schema = schema;
+
         // The schema needs to be sorted due to the group by only works on consecutive identity keys.
-        let mut sorted_schema = schema.clone();
+        let mut sorted_schema = self.schema.clone();
         sorted_schema.sort();
 
         let mut block_indices = HashMap::new();
-        let mut buffers = vec![];
         for (bid, (dt, grp)) in sorted_schema
             .iter()
             .group_by(|&&v| v)
@@ -44,23 +57,15 @@ impl<'a> Writer<'a> for MemoryWriter {
             block_indices.insert(dt, bid);
             let count = grp.count();
             let buffer = Realize::<FArray2>::realize(dt)(nrows, count);
-            buffers.push(buffer);
+            self.buffers.push(buffer);
         }
 
         let mut per_buffer_counter = HashMap::new();
 
-        let mut column_buffer_index = vec![];
-        for dt in &schema {
+        for dt in &self.schema {
             let count = per_buffer_counter.entry(*dt).or_insert(0);
-            column_buffer_index.push((block_indices[dt], *count));
+            self.column_buffer_index.push((block_indices[dt], *count));
             *count += 1;
-        }
-
-        MemoryWriter {
-            nrows,
-            schema,
-            buffers,
-            column_buffer_index,
         }
     }
 

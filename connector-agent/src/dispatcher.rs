@@ -10,55 +10,45 @@ use rayon::prelude::*;
 
 /// A dispatcher owns a `SourceBuilder` `SB` and a vector of `queries`
 /// `schema` is a temporary input before we implement infer schema or get schema from DB.
-pub struct Dispatcher<SB, TS> {
+pub struct Dispatcher<SB, WT, TS> {
     source_builder: SB,
+    writer: WT,
     schema: Vec<TS>,
     queries: Vec<String>,
 }
 
-impl<SB, TS> Dispatcher<SB, TS>
+impl<SB, WT, TS> Dispatcher<SB, WT, TS>
 where
     SB: SourceBuilder,
     SB::DataSource: Send,
     TS: TypeSystem,
+    WT: for<'a> Writer<'a, TypeSystem = TS>,
+    TS: for<'a> Realize<Transmit<'a, SB::DataSource, <WT as Writer<'a>>::PartitionWriter>>
+        + for<'a> Realize<TransmitChecked<'a, SB::DataSource, <WT as Writer<'a>>::PartitionWriter>>,
 {
     /// Create a new dispatcher by providing a source builder, schema (temporary) and the queries
     /// to be issued to the data source.
-    pub fn new(source_builder: SB, schema: Vec<TS>, queries: Vec<String>) -> Self {
+    pub fn new(source_builder: SB, writer: WT, schema: Vec<TS>, queries: Vec<String>) -> Self {
         Dispatcher {
             source_builder,
+            writer,
             schema,
             queries,
         }
     }
 
-    pub fn run_checked<W>(self) -> Result<W>
-    where
-        W: for<'a> Writer<'a, TypeSystem = TS>,
-        TS: for<'a> Realize<Transmit<'a, SB::DataSource, <W as Writer<'a>>::PartitionWriter>>
-            + for<'a> Realize<TransmitChecked<'a, SB::DataSource, <W as Writer<'a>>::PartitionWriter>>,
-    {
-        self.entry::<W>(true)
+    pub fn run_checked(self) -> Result<WT> {
+        self.entry(true)
     }
 
-    pub fn run<W>(self) -> Result<W>
-    where
-        W: for<'a> Writer<'a, TypeSystem = TS>,
-        TS: for<'a> Realize<Transmit<'a, SB::DataSource, <W as Writer<'a>>::PartitionWriter>>
-            + for<'a> Realize<TransmitChecked<'a, SB::DataSource, <W as Writer<'a>>::PartitionWriter>>,
-    {
-        self.entry::<W>(false)
+    pub fn run(self) -> Result<WT> {
+        self.entry(false)
     }
 
     /// Run the dispatcher by specifying the writer, the dispatcher will fetch, parse the data
     /// and return a writer with parsed result
-    fn entry<W>(mut self, checked: bool) -> Result<W>
-    where
-        W: for<'a> Writer<'a, TypeSystem = TS>,
-        TS: for<'a> Realize<Transmit<'a, SB::DataSource, <W as Writer<'a>>::PartitionWriter>>
-            + for<'a> Realize<TransmitChecked<'a, SB::DataSource, <W as Writer<'a>>::PartitionWriter>>,
-    {
-        let dorder = coordinate(SB::DATA_ORDERS, W::DATA_ORDERS)?;
+    fn entry(mut self, checked: bool) -> Result<WT> {
+        let dorder = coordinate(SB::DATA_ORDERS, WT::DATA_ORDERS)?;
         self.source_builder.set_data_order(dorder)?;
 
         // generate sources
@@ -90,11 +80,12 @@ where
 
         // allocate memory and create one partition writer for each source
         let num_rows: Vec<usize> = sources.iter().map(|source| source.nrows()).collect();
-        let mut dw = W::allocate(num_rows.iter().sum(), self.schema.clone(), dorder)?;
-        let writers = dw.partition_writers(num_rows.as_slice());
+        self.writer
+            .allocate(num_rows.iter().sum(), self.schema.clone(), dorder)?;
 
         // parse and write
-        writers
+        self.writer
+            .partition_writers(num_rows.as_slice())
             .into_par_iter()
             .zip_eq(sources)
             .for_each(|(mut writer, mut source)| {
@@ -117,6 +108,6 @@ where
                 }
             });
 
-        Ok(dw)
+        Ok(self.writer)
     }
 }

@@ -17,6 +17,13 @@ pub struct BoolWriter {
 }
 
 impl BoolWriter {
+    pub fn new() -> Self {
+        BoolWriter {
+            nrows: 0,
+            schema: vec![],
+            buffer: Array2::default((0, 0)),
+        }
+    }
     pub fn buffer(&self) -> ArrayView2<bool> {
         self.buffer.view()
     }
@@ -28,9 +35,11 @@ impl<'a> Writer<'a> for BoolWriter {
     type PartitionWriter = BoolPartitionWriter<'a>;
 
     #[throws(ConnectorAgentError)]
-    fn allocate(nrows: usize, schema: Vec<DataType>, data_order: DataOrder) -> Self {
-        let ncols = schema.len();
-        for field in &schema {
+    fn allocate(&mut self, nrows: usize, schema: Vec<DataType>, data_order: DataOrder) {
+        self.nrows = nrows;
+        self.schema = schema;
+        let ncols = self.schema.len();
+        for field in &self.schema {
             if !matches!(field, DataType::Bool) {
                 throw!(anyhow!("BoolWriter only accepts Bool only schema"));
             }
@@ -38,12 +47,7 @@ impl<'a> Writer<'a> for BoolWriter {
         if !matches!(data_order, DataOrder::RowMajor) {
             throw!(ConnectorAgentError::UnsupportedDataOrder(data_order))
         }
-
-        BoolWriter {
-            nrows,
-            schema,
-            buffer: Array2::from_elem((nrows, ncols), false),
-        }
+        self.buffer = Array2::from_elem((nrows, ncols), false);
     }
 
     fn partition_writers(&'a mut self, counts: &[usize]) -> Vec<Self::PartitionWriter> {

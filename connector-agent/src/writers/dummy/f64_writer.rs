@@ -17,6 +17,13 @@ pub struct F64Writer {
 }
 
 impl F64Writer {
+    pub fn new() -> Self {
+        F64Writer {
+            nrows: 0,
+            schema: vec![],
+            buffer: Array2::default((0, 0)),
+        }
+    }
     pub fn buffer(&self) -> ArrayView2<f64> {
         self.buffer.view()
     }
@@ -28,9 +35,11 @@ impl<'a> Writer<'a> for F64Writer {
     type TypeSystem = DataType;
 
     #[throws(ConnectorAgentError)]
-    fn allocate(nrows: usize, schema: Vec<DataType>, data_order: DataOrder) -> Self {
-        let ncols = schema.len();
-        for field in &schema {
+    fn allocate(&mut self, nrows: usize, schema: Vec<DataType>, data_order: DataOrder) {
+        self.nrows = nrows;
+        self.schema = schema;
+        let ncols = self.schema.len();
+        for field in &self.schema {
             if !matches!(field, DataType::F64) {
                 throw!(anyhow!("F64Writer only accepts F64 only schema"));
             }
@@ -39,11 +48,7 @@ impl<'a> Writer<'a> for F64Writer {
             throw!(ConnectorAgentError::UnsupportedDataOrder(data_order))
         }
 
-        F64Writer {
-            nrows,
-            schema,
-            buffer: Array2::zeros((nrows, ncols)),
-        }
+        self.buffer = Array2::zeros((nrows, ncols));
     }
 
     fn partition_writers(&'a mut self, counts: &[usize]) -> Vec<Self::PartitionWriter> {
