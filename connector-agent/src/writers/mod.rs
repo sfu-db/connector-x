@@ -16,7 +16,13 @@ pub trait Writer<'a>: Sized {
     /// Construct the `Writer`.
     /// This allocates the memory based on the types of each columns
     /// and the number of rows.
-    fn allocate(nrow: usize, schema: Vec<Self::TypeSystem>, data_order: DataOrder) -> Result<Self>;
+    fn allocate(
+        &mut self,
+        nrow: usize,
+        schema: Vec<Self::TypeSystem>,
+        data_order: DataOrder,
+    ) -> Result<()>;
+
     /// Create a bunch of partition writers, with each write `count` number of rows.
     fn partition_writers(&'a mut self, counts: &[usize]) -> Vec<Self::PartitionWriter>;
     /// Return the schema of the writer.

@@ -16,6 +16,13 @@ pub struct StringWriter {
 }
 
 impl StringWriter {
+    pub fn new() -> Self {
+        StringWriter {
+            nrows: 0,
+            schema: vec![],
+            buffer: Array2::default((0, 0)),
+        }
+    }
     pub fn buffer(&self) -> ArrayView2<String> {
         self.buffer.view()
     }
@@ -33,9 +40,11 @@ impl<'a> Writer<'a> for StringWriter {
     type TypeSystem = DataType;
 
     #[throws(ConnectorAgentError)]
-    fn allocate(nrows: usize, schema: Vec<DataType>, data_order: DataOrder) -> Self {
-        let ncols = schema.len();
-        for field in &schema {
+    fn allocate(&mut self, nrows: usize, schema: Vec<DataType>, data_order: DataOrder) {
+        self.nrows = nrows;
+        self.schema = schema;
+        let ncols = self.schema.len();
+        for field in &self.schema {
             if !matches!(field, DataType::String) {
                 throw!(anyhow!("StringWriter only accepts String only schema"));
             }
@@ -44,11 +53,7 @@ impl<'a> Writer<'a> for StringWriter {
             throw!(ConnectorAgentError::UnsupportedDataOrder(data_order))
         }
 
-        StringWriter {
-            nrows,
-            schema,
-            buffer: Array2::default((nrows, ncols)),
-        }
+        self.buffer = Array2::default((nrows, ncols));
     }
 
     fn partition_writers(&'a mut self, counts: &[usize]) -> Vec<Self::PartitionWriter> {

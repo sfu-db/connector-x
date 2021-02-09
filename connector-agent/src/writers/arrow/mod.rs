@@ -24,19 +24,26 @@ pub struct ArrowWriter {
     builders: Vec<Builders>,
 }
 
+impl ArrowWriter {
+    pub fn new() -> Self {
+        ArrowWriter {
+            nrows: 0,
+            schema: vec![],
+            builders: vec![],
+        }
+    }
+}
+
 impl<'a> Writer<'a> for ArrowWriter {
     const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::ColumnMajor, DataOrder::RowMajor];
     type TypeSystem = DataType;
     type PartitionWriter = ArrowPartitionWriter<'a>;
 
     #[throws(ConnectorAgentError)]
-    fn allocate(nrows: usize, schema: Vec<DataType>, _data_order: DataOrder) -> Self {
+    fn allocate(&mut self, nrows: usize, schema: Vec<DataType>, _data_order: DataOrder) {
         // cannot really create builders since do not know each partition size here
-        ArrowWriter {
-            nrows,
-            schema,
-            builders: vec![],
-        }
+        self.nrows = nrows;
+        self.schema = schema;
     }
 
     fn partition_writers(&'a mut self, counts: &[usize]) -> Vec<Self::PartitionWriter> {

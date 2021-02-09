@@ -37,12 +37,11 @@ fn bench_both_option() {
     let schema = vec![DataType::OptU64; NCOLS];
     let dispatcher = Dispatcher::new(
         OptU64SourceBuilder::new(data.to_vec(), NCOLS),
+        ArrowWriter::new(),
         schema,
         NROWS.iter().map(|_n| String::new()).collect(),
     );
-    let _dw = dispatcher
-        .run_checked::<ArrowWriter>()
-        .expect("run dispatcher");
+    let _dw = dispatcher.run_checked().expect("run dispatcher");
 }
 
 fn bench_source_option() {
@@ -71,12 +70,11 @@ fn bench_source_option() {
     let schema = vec![DataType::U64; NCOLS];
     let dispatcher = Dispatcher::new(
         OptU64SourceBuilder::new(data.to_vec(), NCOLS),
+        ArrowWriter::new(),
         schema,
         NROWS.iter().map(|_n| String::new()).collect(),
     );
-    let _dw = dispatcher
-        .run_checked::<ArrowWriter>()
-        .expect("run dispatcher");
+    let _dw = dispatcher.run_checked().expect("run dispatcher");
 }
 
 fn bench_writer_option() {
@@ -104,12 +102,11 @@ fn bench_writer_option() {
     let schema = vec![DataType::OptU64; NCOLS];
     let dispatcher = Dispatcher::new(
         U64SourceBuilder::new(data.to_vec(), NCOLS),
+        ArrowWriter::new(),
         schema,
         NROWS.iter().map(|_n| String::new()).collect(),
     );
-    let _dw = dispatcher
-        .run_checked::<ArrowWriter>()
-        .expect("run dispatcher");
+    let _dw = dispatcher.run_checked().expect("run dispatcher");
 }
 
 fn bench_non_option() {
@@ -137,12 +134,11 @@ fn bench_non_option() {
     let schema = vec![DataType::U64; NCOLS];
     let dispatcher = Dispatcher::new(
         U64SourceBuilder::new(data.to_vec(), NCOLS),
+        ArrowWriter::new(),
         schema,
         NROWS.iter().map(|_n| String::new()).collect(),
     );
-    let _dw = dispatcher
-        .run_checked::<ArrowWriter>()
-        .expect("run dispatcher");
+    let _dw = dispatcher.run_checked().expect("run dispatcher");
 }
 
 iai::main!(

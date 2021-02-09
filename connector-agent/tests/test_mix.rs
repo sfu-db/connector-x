@@ -8,12 +8,14 @@ use rayon::iter::{IntoParallelIterator, ParallelIterator};
 #[test]
 #[should_panic]
 fn mixed_writer_col_major() {
-    let _ = MemoryWriter::allocate(
-        11,
-        vec![DataType::U64, DataType::F64, DataType::String],
-        DataOrder::ColumnMajor,
-    )
-    .unwrap();
+    let mut dw = MemoryWriter::new();
+    let _ = dw
+        .allocate(
+            11,
+            vec![DataType::U64, DataType::F64, DataType::String],
+            DataOrder::ColumnMajor,
+        )
+        .unwrap();
 }
 
 #[test]
@@ -25,7 +27,8 @@ fn mixed_source_col_major() {
 
 #[test]
 fn write_mixed_array() {
-    let mut dw = MemoryWriter::allocate(
+    let mut dw = MemoryWriter::new();
+    dw.allocate(
         11,
         vec![
             DataType::U64,
@@ -137,10 +140,13 @@ fn test_mixed() {
     let ncols = schema.len();
     let queries: Vec<String> = nrows.iter().map(|v| format!("{},{}", v, ncols)).collect();
 
-    let dispatcher = Dispatcher::new(MixedSourceBuilder::new(), schema, queries);
-    let dw = dispatcher
-        .run_checked::<MemoryWriter>()
-        .expect("run dispatcher");
+    let dispatcher = Dispatcher::new(
+        MixedSourceBuilder::new(),
+        MemoryWriter::new(),
+        schema,
+        queries,
+    );
+    let dw = dispatcher.run_checked().expect("run dispatcher");
 
     for (col, _) in dw.schema().into_iter().enumerate() {
         match col {
