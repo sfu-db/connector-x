@@ -23,7 +23,7 @@ pub use crate::dispatcher::Dispatcher;
 pub use crate::errors::{ConnectorAgentError, Result};
 pub use crate::types::DataType;
 pub use crate::typesystem::{ParameterizedFunc, ParameterizedOn, Realize, TypeAssoc, TypeSystem};
-pub use crate::writers::{PartitionWriter, Writer};
+pub use crate::writers::{Consume, PartitionWriter, Writer};
 
 // pub struct Partition {
 //     col: String,

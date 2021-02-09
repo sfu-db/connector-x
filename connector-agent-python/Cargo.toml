@@ -17,6 +17,9 @@ futures = "0.3"
 fehler = "1"
 failure = "0.1"
 flate2 = "1"
+ndarray = "0.14"
+numpy = "0.13"
+phf = { version = "0.8", features = ["macros"] }
 
 [lib]
 name = "connector_agent_python"

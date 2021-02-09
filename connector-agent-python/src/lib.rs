@@ -1,56 +1,91 @@
-use connector_agent::{pg, s3};
+use crate::writers::pandas::{funcs::FSeriesStr, PandasWriter};
+use connector_agent::{pg, s3, AnyArrayViewMut, DataType, Dispatcher, MixedSourceBuilder, Realize};
 use failure::Fallible;
+use ndarray::Ix2;
+use numpy::array::PyArray;
+use phf::phf_map;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
-use pyo3::types::{IntoPyDict, PyTuple};
+use pyo3::types::{IntoPyDict, PyDict, PyList, PyTuple};
 use pyo3::wrap_pyfunction;
 use tokio::runtime;
+
+mod writers;
+
+// use crate::writers::pandas::*;
 
 #[pymodule]
 fn connector_agent(_: Python, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(read_s3))?;
     m.add_wrapped(wrap_pyfunction!(read_pg))?;
-    m.add_wrapped(wrap_pyfunction!(test))?;
+    m.add_wrapped(wrap_pyfunction!(test_pandas))?;
     Ok(())
 }
 
+static TYPE_MAPPING: phf::Map<&'static str, DataType> = phf_map! {
+    "uint64" => DataType::U64,
+    "float64" => DataType::F64,
+    "bool" => DataType::Bool,
+    "object" => DataType::String,
+    "UInt64" => DataType::OptU64,
+};
+
 #[pyfunction]
-fn test() -> PyResult<()> {
-    use arrow::csv;
-    use arrow::datatypes::{DataType, DateUnit, Field, Schema};
-    use std::fs::File;
-    use std::sync::Arc;
+fn test_pandas(nrows: Vec<usize>, schema: Vec<String>, py: Python) -> PyResult<PyObject> {
+    let schema: Vec<DataType> = schema
+        .into_iter()
+        .map(|s| TYPE_MAPPING[s.as_str()])
+        .collect();
+    let total_rows: usize = nrows.iter().sum();
 
-    let schema = Schema::new(vec![
-        Field::new("l_orderkey", DataType::UInt64, false),
-        Field::new("l_partkey", DataType::UInt64, false),
-        Field::new("l_suppkey", DataType::UInt64, false),
-        Field::new("l_linenumber", DataType::UInt64, false),
-        Field::new("l_quantity", DataType::Float64, false),
-        Field::new("l_extendedprice", DataType::Float64, false),
-        Field::new("l_discount", DataType::Float64, false),
-        Field::new("l_tax", DataType::Float64, false),
-        Field::new("l_returnflag", DataType::Utf8, false),
-        Field::new("l_linestatus", DataType::Utf8, false),
-        Field::new("l_shipdate", DataType::Date32(DateUnit::Day), false),
-        Field::new("l_commitdate", DataType::Date32(DateUnit::Day), false),
-        Field::new("l_receiptdate", DataType::Date32(DateUnit::Day), false),
-        Field::new("l_shipinstruct", DataType::Utf8, false),
-        Field::new("l_shipmode", DataType::Utf8, false),
-        Field::new("l_comment", DataType::Utf8, false),
-    ]);
-    // use std::fs::File;
-    // use arrow::csv;
-    // let file = File::open("tmp.csv")?;
-    // let mut csv = csv::Reader::new(file, schema.clone(), false, None, 1024, None, None);
-    // let batch = csv.next().unwrap().unwrap();
-    // println!("{} {}", batch.num_columns(), batch.num_rows());
+    let series: Vec<String> = schema
+        .iter()
+        .enumerate()
+        .map(|(i, &dt)| Realize::<FSeriesStr>::realize(dt)(i, total_rows))
+        .collect();
+    let code = format!(
+        r#"
+        import pandas as pd
+        df = pd.DataFrame({{{}}})
+        blocks = [b.values for b in df._mgr.blocks]
+        index = [(i, j) for i, j in zip(df._mgr.blknos, df._mgr.blklocs)]
+        "#,
+        series.join(",")
+    );
 
-    let file = File::open("tmp.csv").unwrap();
-    let mut csv = csv::Reader::new(file, Arc::new(schema), true, Some(b','), 1024, None, None);
-    let batch = csv.next().unwrap().unwrap();
-    println!("{} {}", batch.num_columns(), batch.num_rows());
-    Ok(())
+    let locals = PyDict::new(py);
+    py.run(code.as_str(), None, Some(locals)).unwrap();
+
+    let buffers: Vec<AnyArrayViewMut<Ix2>> = locals
+        .get_item("blocks")
+        .expect("get blocks!")
+        .downcast::<PyList>()
+        .unwrap()
+        .iter()
+        .map(|array| {
+            let pyarray = array.downcast::<PyArray<u64, Ix2>>().unwrap();
+            let mut_view = unsafe { pyarray.as_array_mut() };
+            AnyArrayViewMut::<Ix2>::new(mut_view)
+        })
+        .collect();
+
+    let column_buffer_index: Vec<(usize, usize)> = locals
+        .get_item("index")
+        .expect("get index!")
+        .downcast::<PyList>()
+        .unwrap()
+        .iter()
+        .map(|tuple| tuple.extract().unwrap())
+        .collect();
+
+    let ncols = schema.len();
+    let queries: Vec<String> = nrows.iter().map(|v| format!("{},{}", v, ncols)).collect();
+    let dw = PandasWriter::new(total_rows, schema, buffers, column_buffer_index);
+    let dispatcher = Dispatcher::new(MixedSourceBuilder {}, dw, schema, queries);
+    let dw = dispatcher.run_checked().expect("run dispatcher");
+
+    let df = locals.get_item("df").expect("get df!");
+    PyResult::Ok(df.to_object(py))
 }
 
 #[pyfunction]
