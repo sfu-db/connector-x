@@ -34,10 +34,10 @@ impl ArrowWriter {
     }
 }
 
-impl<'a> Writer<'a> for ArrowWriter {
+impl Writer for ArrowWriter {
     const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::ColumnMajor, DataOrder::RowMajor];
     type TypeSystem = DataType;
-    type PartitionWriter = ArrowPartitionWriter<'a>;
+    type PartitionWriter<'a> = ArrowPartitionWriter<'a>;
 
     #[throws(ConnectorAgentError)]
     fn allocate(&mut self, nrows: usize, schema: Vec<DataType>, _data_order: DataOrder) {
@@ -46,7 +46,7 @@ impl<'a> Writer<'a> for ArrowWriter {
         self.schema = schema;
     }
 
-    fn partition_writers(&'a mut self, counts: &[usize]) -> Vec<Self::PartitionWriter> {
+    fn partition_writers(&mut self, counts: &[usize]) -> Vec<Self::PartitionWriter<'_>> {
         assert_eq!(counts.iter().sum::<usize>(), self.nrows);
         assert_eq!(self.builders.len(), 0);
 

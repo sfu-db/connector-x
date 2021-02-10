@@ -8,10 +8,10 @@ use crate::typesystem::{TypeAssoc, TypeSystem};
 
 /// A `Writer` is associated with a `TypeSystem` and a `PartitionWriter`.
 /// `PartitionWriter` allows multiple threads write data into the buffer owned by `Writer`.
-pub trait Writer<'a>: Sized {
+pub trait Writer: Sized {
     const DATA_ORDERS: &'static [DataOrder];
     type TypeSystem: TypeSystem;
-    type PartitionWriter: PartitionWriter<'a, TypeSystem = Self::TypeSystem>;
+    type PartitionWriter<'a>: PartitionWriter<'a, TypeSystem = Self::TypeSystem>;
 
     /// Construct the `Writer`.
     /// This allocates the memory based on the types of each columns
@@ -24,7 +24,7 @@ pub trait Writer<'a>: Sized {
     ) -> Result<()>;
 
     /// Create a bunch of partition writers, with each write `count` number of rows.
-    fn partition_writers(&'a mut self, counts: &[usize]) -> Vec<Self::PartitionWriter>;
+    fn partition_writers(&mut self, counts: &[usize]) -> Vec<Self::PartitionWriter<'_>>;
     /// Return the schema of the writer.
     fn schema(&self) -> &[Self::TypeSystem];
 }

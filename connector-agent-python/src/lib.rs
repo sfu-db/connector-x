@@ -1,3 +1,6 @@
+#![feature(generic_associated_types)]
+#![allow(incomplete_features)]
+
 use crate::writers::pandas::{funcs::FSeriesStr, PandasWriter};
 use connector_agent::{pg, s3, AnyArrayViewMut, DataType, Dispatcher, MixedSourceBuilder, Realize};
 use failure::Fallible;

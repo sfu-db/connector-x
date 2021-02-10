@@ -29,10 +29,10 @@ impl BoolWriter {
     }
 }
 
-impl<'a> Writer<'a> for BoolWriter {
+impl Writer for BoolWriter {
     const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
     type TypeSystem = DataType;
-    type PartitionWriter = BoolPartitionWriter<'a>;
+    type PartitionWriter<'a> = BoolPartitionWriter<'a>;
 
     #[throws(ConnectorAgentError)]
     fn allocate(&mut self, nrows: usize, schema: Vec<DataType>, data_order: DataOrder) {
@@ -50,7 +50,7 @@ impl<'a> Writer<'a> for BoolWriter {
         self.buffer = Array2::from_elem((nrows, ncols), false);
     }
 
-    fn partition_writers(&'a mut self, counts: &[usize]) -> Vec<Self::PartitionWriter> {
+    fn partition_writers(&mut self, counts: &[usize]) -> Vec<Self::PartitionWriter<'_>> {
         assert_eq!(counts.iter().sum::<usize>(), self.nrows);
         let schema = self.schema().to_vec();
 

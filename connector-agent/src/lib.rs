@@ -1,3 +1,6 @@
+#![feature(generic_associated_types)]
+#![allow(incomplete_features)]
+
 #[doc(hidden)]
 pub mod pg;
 #[doc(hidden)]

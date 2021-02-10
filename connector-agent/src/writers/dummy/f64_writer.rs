@@ -29,9 +29,9 @@ impl F64Writer {
     }
 }
 
-impl<'a> Writer<'a> for F64Writer {
+impl Writer for F64Writer {
     const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
-    type PartitionWriter = F64PartitionWriter<'a>;
+    type PartitionWriter<'a> = F64PartitionWriter<'a>;
     type TypeSystem = DataType;
 
     #[throws(ConnectorAgentError)]
@@ -51,7 +51,7 @@ impl<'a> Writer<'a> for F64Writer {
         self.buffer = Array2::zeros((nrows, ncols));
     }
 
-    fn partition_writers(&'a mut self, counts: &[usize]) -> Vec<Self::PartitionWriter> {
+    fn partition_writers(&mut self, counts: &[usize]) -> Vec<Self::PartitionWriter<'_>> {
         assert_eq!(counts.iter().sum::<usize>(), self.nrows);
         let schema = self.schema().to_vec();
 

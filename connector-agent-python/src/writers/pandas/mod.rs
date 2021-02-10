@@ -5,6 +5,7 @@ use connector_agent::{
 use fehler::{throw, throws};
 use ndarray::{Axis, Ix2};
 use std::any::type_name;
+use std::mem::transmute;
 
 pub mod funcs;
 pub mod pandas_assoc;
@@ -32,10 +33,10 @@ impl<'a> PandasWriter<'a> {
     }
 }
 
-impl<'a> Writer<'a> for PandasWriter<'a> {
+impl<'a> Writer for PandasWriter<'a> {
     const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
     type TypeSystem = DataType;
-    type PartitionWriter = PandasPartitionWriter<'a>;
+    type PartitionWriter<'b> = PandasPartitionWriter<'b>;
 
     #[throws(ConnectorAgentError)]
     fn allocate(&mut self, _nrows: usize, _schema: Vec<DataType>, data_order: DataOrder) {
@@ -45,16 +46,12 @@ impl<'a> Writer<'a> for PandasWriter<'a> {
         // real memory allocation happened before construction
     }
 
-    fn partition_writers(&'a mut self, counts: &[usize]) -> Vec<Self::PartitionWriter> {
+    fn partition_writers(&mut self, counts: &[usize]) -> Vec<Self::PartitionWriter<'_>> {
         assert_eq!(counts.iter().sum::<usize>(), self.nrows);
-        let mut views: Vec<_> = self
-            .buffers
-            .take()
-            .unwrap()
-            .into_iter()
-            .map(|v| Some(v))
-            .collect();
-        let nbuffers = views.len();
+        let buffers = self.buffers.take().unwrap();
+        let nbuffers = buffers.len();
+
+        let mut views: Vec<_> = buffers.into_iter().map(|v| Some(v)).collect();
         let mut ret = vec![];
         for &c in counts {
             let mut sub_buffers = vec![];
@@ -63,7 +60,7 @@ impl<'a> Writer<'a> for PandasWriter<'a> {
                 let view = views[bid].take();
                 let (splitted, rest) = view.unwrap().split_at(Axis(0), c);
                 views[bid] = Some(rest);
-                sub_buffers.push(splitted);
+                sub_buffers.push(unsafe { transmute(splitted) });
             }
             ret.push(PandasPartitionWriter::new(
                 c,
