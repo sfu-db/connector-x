@@ -10,7 +10,7 @@ use ndarray::{Array2, ArrayView1, ArrayView2, Axis, Ix2};
 use std::any::type_name;
 use std::collections::HashMap;
 
-/// This `Writer` can only write u64 into it.
+/// This `Writer` can support mixed data type.
 pub struct MemoryWriter {
     nrows: usize,
     schema: Vec<DataType>,

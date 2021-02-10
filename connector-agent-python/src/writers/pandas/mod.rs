@@ -1,17 +1,10 @@
 use connector_agent::{
-    AnyArray, AnyArrayViewMut, ConnectorAgentError, Consume, DataOrder, DataType, PartitionWriter,
-    Realize, Result, TypeAssoc, TypeSystem, Writer,
+    AnyArrayViewMut, ConnectorAgentError, Consume, DataOrder, DataType, PartitionWriter, Result,
+    TypeAssoc, TypeSystem, Writer,
 };
 use fehler::{throw, throws};
-use funcs::FSeriesStr;
-use ndarray::Ix2;
-use numpy::array::PyArray;
-use pyo3::{
-    prelude::*,
-    types::{PyDict, PyList},
-};
+use ndarray::{Axis, Ix2};
 use std::any::type_name;
-// use std::borrow::Borrow;
 
 pub mod funcs;
 pub mod pandas_assoc;
@@ -19,7 +12,7 @@ pub mod pandas_assoc;
 pub struct PandasWriter<'a> {
     nrows: usize,
     schema: Vec<DataType>,
-    buffers: Vec<AnyArrayViewMut<'a, Ix2>>,
+    buffers: Option<Vec<AnyArrayViewMut<'a, Ix2>>>,
     column_buffer_index: Vec<(usize, usize)>,
 }
 
@@ -33,7 +26,7 @@ impl<'a> PandasWriter<'a> {
         PandasWriter {
             nrows,
             schema,
-            buffers,
+            buffers: Some(buffers),
             column_buffer_index,
         }
     }
@@ -49,10 +42,37 @@ impl<'a> Writer<'a> for PandasWriter<'a> {
         if !matches!(data_order, DataOrder::RowMajor) {
             throw!(ConnectorAgentError::UnsupportedDataOrder(data_order))
         }
+        // real memory allocation happened before construction
     }
 
     fn partition_writers(&'a mut self, counts: &[usize]) -> Vec<Self::PartitionWriter> {
-        unimplemented!("");
+        assert_eq!(counts.iter().sum::<usize>(), self.nrows);
+        let mut views: Vec<_> = self
+            .buffers
+            .take()
+            .unwrap()
+            .into_iter()
+            .map(|v| Some(v))
+            .collect();
+        let nbuffers = views.len();
+        let mut ret = vec![];
+        for &c in counts {
+            let mut sub_buffers = vec![];
+
+            for bid in 0..nbuffers {
+                let view = views[bid].take();
+                let (splitted, rest) = view.unwrap().split_at(Axis(0), c);
+                views[bid] = Some(rest);
+                sub_buffers.push(splitted);
+            }
+            ret.push(PandasPartitionWriter::new(
+                c,
+                sub_buffers,
+                self.schema.clone(),
+                self.column_buffer_index.clone(),
+            ));
+        }
+        ret
     }
 
     fn schema(&self) -> &[DataType] {

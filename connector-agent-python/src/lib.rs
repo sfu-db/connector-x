@@ -80,8 +80,12 @@ fn test_pandas(nrows: Vec<usize>, schema: Vec<String>, py: Python) -> PyResult<P
 
     let ncols = schema.len();
     let queries: Vec<String> = nrows.iter().map(|v| format!("{},{}", v, ncols)).collect();
-    let dw = PandasWriter::new(total_rows, schema, buffers, column_buffer_index);
-    let dispatcher = Dispatcher::new(MixedSourceBuilder {}, dw, schema, queries);
+    let dispatcher = Dispatcher::new(
+        MixedSourceBuilder {},
+        PandasWriter::new(total_rows, schema.clone(), buffers, column_buffer_index),
+        schema.clone(),
+        queries,
+    );
     let dw = dispatcher.run_checked().expect("run dispatcher");
 
     let df = locals.get_item("df").expect("get df!");
