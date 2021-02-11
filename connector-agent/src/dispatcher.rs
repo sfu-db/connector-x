@@ -17,12 +17,12 @@ pub struct Dispatcher<SB, WT, TS> {
     queries: Vec<String>,
 }
 
-impl<'a, SB, WT, TS> Dispatcher<SB, WT, TS>
+impl<SB, WT, TS> Dispatcher<SB, WT, TS>
 where
     SB: SourceBuilder,
-    SB::DataSource: Send + 'a,
+    SB::DataSource: Send,
     TS: TypeSystem,
-    WT: Writer<TypeSystem = TS> + 'a,
+    WT: Writer<TypeSystem = TS>,
     TS: for<'r> Realize<Transmit<'r, SB::DataSource, WT::PartitionWriter<'r>>>
         + for<'r> Realize<TransmitChecked<'r, SB::DataSource, WT::PartitionWriter<'r>>>,
 {

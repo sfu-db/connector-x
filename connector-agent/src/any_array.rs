@@ -174,6 +174,10 @@ trait ArrayViewMutObject<'a, D>: Send {
         Box<dyn ArrayViewMutObject<'a, D> + 'a>,
         Box<dyn ArrayViewMutObject<'a, D> + 'a>,
     );
+
+    fn reborrow<'b>(self: Box<Self>) -> Box<dyn ArrayViewMutObject<'b, D> + 'b>
+    where
+        'a: 'b;
 }
 
 impl<'a, A, D> ArrayViewMutObject<'a, D> for ArrayViewMut<'a, A, D>
@@ -191,6 +195,13 @@ where
     ) {
         let (l, r) = ArrayViewMut::<A, D>::split_at(*self, axis, index);
         (Box::new(l), Box::new(r))
+    }
+
+    fn reborrow<'b>(self: Box<Self>) -> Box<dyn ArrayViewMutObject<'b, D> + 'b>
+    where
+        'a: 'b,
+    {
+        Box::new(ArrayViewMut::reborrow(*self))
     }
 }
 
@@ -226,21 +237,35 @@ where
         data
     }
 
-    pub fn split_at(
+    pub fn split_at<'s1, 's2>(
         self,
         axis: Axis,
         index: Ix,
-    ) -> (AnyArrayViewMut<'a, D>, AnyArrayViewMut<'a, D>) {
+    ) -> (AnyArrayViewMut<'s1, D>, AnyArrayViewMut<'s2, D>)
+    where
+        'a: 's1,
+        'a: 's2,
+    {
         let (l, r) = self.inner.split_at(axis, index);
         (
             AnyArrayViewMut {
-                inner: l,
+                inner: l.reborrow(),
                 elem_type: self.elem_type,
             },
             AnyArrayViewMut {
-                inner: r,
+                inner: r.reborrow(),
                 elem_type: self.elem_type,
             },
         )
+    }
+
+    pub fn reborrow<'b>(self) -> Self
+    where
+        'a: 'b,
+    {
+        AnyArrayViewMut {
+            inner: self.inner.reborrow(),
+            elem_type: self.elem_type,
+        }
     }
 }

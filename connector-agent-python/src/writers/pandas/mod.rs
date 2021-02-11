@@ -5,7 +5,6 @@ use connector_agent::{
 use fehler::{throw, throws};
 use ndarray::{Axis, Ix2};
 use std::any::type_name;
-use std::mem::transmute;
 
 pub mod funcs;
 pub mod pandas_assoc;
@@ -60,8 +59,9 @@ impl<'a> Writer for PandasWriter<'a> {
                 let view = views[bid].take();
                 let (splitted, rest) = view.unwrap().split_at(Axis(0), c);
                 views[bid] = Some(rest);
-                sub_buffers.push(unsafe { transmute(splitted) });
+                sub_buffers.push(splitted);
             }
+
             ret.push(PandasPartitionWriter::new(
                 c,
                 sub_buffers,
