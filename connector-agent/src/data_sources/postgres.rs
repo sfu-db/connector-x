@@ -6,6 +6,7 @@ use fehler::throw;
 use r2d2::{Pool, PooledConnection};
 use r2d2_postgres::{postgres::NoTls, PostgresConnectionManager};
 use std::io::Read;
+use std::str::FromStr;
 
 type PgManager = PostgresConnectionManager<NoTls>;
 type PgConn = PooledConnection<PgManager>;
@@ -19,6 +20,7 @@ impl PostgresDataSourceBuilder {
     pub fn new(conn: &str) -> Self {
         let manager = PostgresConnectionManager::new(conn.parse().unwrap(), NoTls);
         let pool = Pool::new(manager).unwrap();
+
         Self {
             pool,
             data_order: None,
@@ -69,7 +71,7 @@ impl DataSource for PostgresDataSource {
 
     fn run_query(&mut self, query: &str) -> Result<()> {
         if self.buf.len() != 0 {
-            unimplemented!()
+            panic!("Buffer not empty");
         }
         let query = format!("COPY ({}) TO STDOUT WITH CSV", query);
         self.conn.copy_out(&*query)?.read_to_end(&mut self.buf)?;
@@ -94,25 +96,17 @@ impl DataSource for PostgresDataSource {
 
 impl Produce<u64> for PostgresDataSource {
     fn produce(&mut self) -> Result<u64> {
-        let v: &str = self.records[self.counter / self.ncols][self.counter % self.ncols].as_ref();
+        let ret:u64 = self.records[self.counter / self.ncols][self.counter % self.ncols].parse::<u64>().unwrap_or_default();
         self.counter += 1;
-        Ok(v.parse().unwrap_or_default())
+        Ok(ret)
     }
 }
 
 impl Produce<f64> for PostgresDataSource {
     fn produce(&mut self) -> Result<f64> {
-        let v: &str = self.records[self.counter / self.ncols][self.counter % self.ncols].as_ref();
+        let ret:f64 = self.records[self.counter / self.ncols][self.counter % self.ncols].parse::<f64>().unwrap_or_default();
         self.counter += 1;
-        Ok(v.parse().unwrap_or_default())
-    }
-}
-
-impl Produce<bool> for PostgresDataSource {
-    fn produce(&mut self) -> Result<bool> {
-        let v: &str = self.records[self.counter / self.ncols][self.counter % self.ncols].as_ref();
-        self.counter += 1;
-        Ok(v.parse().unwrap_or_default())
+        Ok(ret)
     }
 }
 
@@ -120,6 +114,34 @@ impl Produce<String> for PostgresDataSource {
     fn produce(&mut self) -> Result<String> {
         let v: &str = self.records[self.counter / self.ncols][self.counter % self.ncols].as_ref();
         self.counter += 1;
-        Ok(String::from(v))
+        Ok(v.to_string())
     }
 }
+
+impl Produce<bool> for PostgresDataSource {
+    fn produce(&mut self) -> Result<bool> {
+        let v: bool = self.records[self.counter / self.ncols][self.counter % self.ncols].parse::<bool>().unwrap_or_default();
+        self.counter += 1;
+        Ok(v)
+    }
+}
+
+impl Produce<Option<u64>> for PostgresDataSource {
+    fn produce(&mut self) -> Result<Option<u64>> {
+        let ret:u64 = self.records[self.counter / self.ncols][self.counter % self.ncols].parse::<u64>().unwrap_or_default();
+        self.counter += 1;
+        Ok(Some(ret))
+    }
+}
+
+// impl<T> Produce<T> for PostgresDataSource
+// where
+//     T: FromStr + Default,
+// {
+//     fn produce(&mut self) -> Result<T> {
+//         let v: &str = self.records[self.counter / self.ncols][self.counter % self.ncols].as_ref();
+//         self.counter += 1;
+//         Ok(v.parse().unwrap_or_default())
+//     }
+// }
+
