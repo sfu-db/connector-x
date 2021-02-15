@@ -35,7 +35,7 @@ fn load_and_parse() {
         Sex(bool)
     }
 
-    let mut source_builder = PostgresDataSourceBuilder::new("host=localhost user=postgres dbname=TestDataprep port=5432 password=wjz283200");
+    let mut source_builder = PostgresDataSourceBuilder::new("host=localhost user=postgres dbname=TestDataprep port=5432 password=111");
     let mut source: PostgresDataSource = source_builder.build();
     source
         .run_query("select * from test_table_1")
@@ -66,7 +66,6 @@ fn load_and_parse() {
         results
     );
 }
-
 
 #[test]
 fn test_postgres() {
