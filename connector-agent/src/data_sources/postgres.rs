@@ -6,7 +6,6 @@ use fehler::throw;
 use r2d2::{Pool, PooledConnection};
 use r2d2_postgres::{postgres::NoTls, PostgresConnectionManager};
 use std::io::Read;
-use std::str::FromStr;
 
 type PgManager = PostgresConnectionManager<NoTls>;
 type PgConn = PooledConnection<PgManager>;
@@ -136,15 +135,3 @@ impl Produce<Option<u64>> for PostgresDataSource {
         Ok(Some(v.parse().unwrap_or_default()))
     }
 }
-
-// impl<T> Produce<T> for PostgresDataSource
-// where
-//     T: FromStr + Default,
-// {
-//     fn produce(&mut self) -> Result<T> {
-//         let v: &str = self.records[self.counter / self.ncols][self.counter % self.ncols].as_ref();
-//         self.counter += 1;
-//         Ok(v.parse().unwrap_or_default())
-//     }
-// }
-
