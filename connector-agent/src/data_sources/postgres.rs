@@ -78,7 +78,8 @@ impl DataSource for PostgresDataSource {
 
         let mut reader = csv::ReaderBuilder::new()
             .has_headers(false)
-            .from_reader(&self.buf);
+            .from_reader(&mut buf);
+
         self.records = reader.records().map(|v| v.expect("csv record")).collect();
         self.nrows = self.records.len();
         if self.nrows > 0 {
@@ -93,33 +94,32 @@ impl DataSource for PostgresDataSource {
 
 impl Produce<u64> for PostgresDataSource {
     fn produce(&mut self) -> Result<u64> {
-        let ret:u64 = self.records[self.counter / self.ncols][self.counter % self.ncols].parse::<u64>().unwrap_or_default();
+        let v: &str = self.records[self.counter / self.ncols][self.counter % self.ncols].as_ref();
         self.counter += 1;
-        Ok(ret)
+        Ok(v.parse().unwrap_or_default())
     }
 }
 
 impl Produce<f64> for PostgresDataSource {
     fn produce(&mut self) -> Result<f64> {
-        let ret:f64 = self.records[self.counter / self.ncols][self.counter % self.ncols].parse::<f64>().unwrap_or_default();
+        let v: &str = self.records[self.counter / self.ncols][self.counter % self.ncols].as_ref();
         self.counter += 1;
-        Ok(ret)
-    }
-}
-
-impl Produce<String> for PostgresDataSource {
-    fn produce(&mut self) -> Result<String> {
-        let v: String = self.records[self.counter / self.ncols][self.counter % self.ncols].parse::<String>().unwrap_or_default();
-        self.counter += 1;
-        Ok(v)
+        Ok(v.parse().unwrap_or_default())
     }
 }
 
 impl Produce<bool> for PostgresDataSource {
     fn produce(&mut self) -> Result<bool> {
-        let v: bool = self.records[self.counter / self.ncols][self.counter % self.ncols].parse::<bool>().unwrap_or_default();
+        let v: &str = self.records[self.counter / self.ncols][self.counter % self.ncols].as_ref();
         self.counter += 1;
-        Ok(v)
+        Ok(v.parse().unwrap_or_default())
     }
 }
 
+impl Produce<String> for PostgresDataSource {
+    fn produce(&mut self) -> Result<String> {
+        let v: &str = self.records[self.counter / self.ncols][self.counter % self.ncols].as_ref();
+        self.counter += 1;
+        Ok(String::from(v))
+    }
+}
