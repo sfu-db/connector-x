@@ -6,6 +6,7 @@ use connector_agent::writers::mixed::MemoryWriter;
 use connector_agent::SourceBuilder;
 use connector_agent::{DataType, Dispatcher};
 use ndarray::array;
+use std::env;
 
 #[test]
 #[should_panic]
@@ -29,6 +30,8 @@ fn wrong_table_name() {
 
 #[test]
 fn load_and_parse() {
+    let dburl = env::var("POSTGRES_URL").unwrap();
+
     #[derive(Debug, PartialEq)]
     enum Value {
         Id(u64),
@@ -37,9 +40,7 @@ fn load_and_parse() {
         Age(u64),
     }
 
-    let mut source_builder = PostgresDataSourceBuilder::new(
-        "host=localhost user=postgres dbname=dataprep port=5432 password=postgres",
-    );
+    let mut source_builder = PostgresDataSourceBuilder::new(&dburl);
     let mut source: PostgresDataSource = source_builder.build();
     source.run_query("select * from person").expect("run query");
 
@@ -75,6 +76,7 @@ fn load_and_parse() {
 
 #[test]
 fn test_postgres() {
+    let dburl = env::var("POSTGRES_URL").unwrap();
     let schema = vec![
         DataType::U64,
         DataType::String,
@@ -85,10 +87,8 @@ fn test_postgres() {
         "select * from person where id < 2".to_string(),
         "select * from person where id >= 2".to_string(),
     ];
-    let builder = PostgresDataSourceBuilder::new(
-        "host=localhost user=postgres dbname=dataprep port=5432 password=postgres",
-    );
-    let dispatcher = Dispatcher::new(builder, MemoryWriter::new(), schema, queries);
+    let builder = PostgresDataSourceBuilder::new(&dburl);
+    let dispatcher = Dispatcher::new(builder, MemoryWriter::new(), &schema, queries);
 
     let dw = dispatcher.run_checked().expect("run dispatcher");
     assert_eq!(array![1, 2, 3], dw.column_view::<u64>(0).unwrap());

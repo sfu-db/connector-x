@@ -6,6 +6,20 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    services:
+      # Label used to access the service container
+      postgres:
+        # Docker Hub image
+        image: postgres
+        env:
+          POSTGRES_PASSWORD: postgres
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - uses: actions/checkout@v2
       - uses: mstachniuk/ci-skip@v1
@@ -29,6 +43,8 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: test
+        env:
+          POSTGRES_URL: "postgresql://postgres:postgres@postgres:5432/dataprep",
 
       - name: Build docs
         uses: actions-rs/cargo@v1
