@@ -145,11 +145,11 @@
 {
     <span class="doccomment">/// Create a new dispatcher by providing a source builder, schema (temporary) and the queries</span>
     <span class="doccomment">/// to be issued to the data source.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">source_builder</span>: <span class="ident">SB</span>, <span class="ident">writer</span>: <span class="ident">WT</span>, <span class="ident">schema</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">TS</span><span class="op">&gt;</span>, <span class="ident">queries</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">source_builder</span>: <span class="ident">SB</span>, <span class="ident">writer</span>: <span class="ident">WT</span>, <span class="ident">schema</span>: <span class="kw-2">&amp;</span>[<span class="ident">TS</span>], <span class="ident">queries</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="ident">Dispatcher</span> {
             <span class="ident">source_builder</span>,
             <span class="ident">writer</span>,
-            <span class="ident">schema</span>,
+            <span class="ident">schema</span>: <span class="ident">schema</span>.<span class="ident">to_vec</span>(),
             <span class="ident">queries</span>,
         }
     }
