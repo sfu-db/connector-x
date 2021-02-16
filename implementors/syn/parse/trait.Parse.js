@@ -1,4 +1,4 @@
 (function() {var implementors = {};
-implementors["pyo3_macros_backend"] = [{"text":"impl Parse for PyClassArgs","synthetic":false,"types":[]},{"text":"impl Parse for PyFunctionAttr","synthetic":false,"types":[]}];
+implementors["pyo3_macros_backend"] = [{"text":"impl <a class=\"trait\" href=\"syn/parse/trait.Parse.html\" title=\"trait syn::parse::Parse\">Parse</a> for <a class=\"struct\" href=\"pyo3_macros_backend/struct.PyClassArgs.html\" title=\"struct pyo3_macros_backend::PyClassArgs\">PyClassArgs</a>","synthetic":false,"types":["pyo3_macros_backend::pyclass::PyClassArgs"]},{"text":"impl <a class=\"trait\" href=\"syn/parse/trait.Parse.html\" title=\"trait syn::parse::Parse\">Parse</a> for <a class=\"struct\" href=\"pyo3_macros_backend/struct.PyFunctionAttr.html\" title=\"struct pyo3_macros_backend::PyFunctionAttr\">PyFunctionAttr</a>","synthetic":false,"types":["pyo3_macros_backend::pyfunction::PyFunctionAttr"]}];
 implementors["syn"] = [];
 if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

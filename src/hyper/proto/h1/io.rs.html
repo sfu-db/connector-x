@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/hyper-0.14.2/src/proto/h1/io.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>io.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png">
-<link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../../hyper/index.html'><div class='logo-container rust-logo'><img src='../../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
+<link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../../hyper/index.html'><div class='logo-container rust-logo'><img src='../../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
                 <a id="settings-menu" href="../../../../settings.html"><img src="../../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
@@ -1457,7 +1457,7 @@
 
     <span class="attribute">#[<span class="ident">tokio</span>::<span class="ident">test</span>]</span>
     <span class="attribute">#[<span class="ident">ignore</span>]</span>
-    <span class="ident">async</span> <span class="kw">fn</span> <span class="ident">iobuf_write_empty_slice</span>() {
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">iobuf_write_empty_slice</span>() {
         <span class="comment">// TODO(eliza): can i have writev back pls T_T</span>
         <span class="comment">// // First, let&#39;s just check that the Mock would normally return an</span>
         <span class="comment">// // error on an unexpected write, even if the buffer is empty...</span>
@@ -1477,7 +1477,7 @@
     }
 
     <span class="attribute">#[<span class="ident">tokio</span>::<span class="ident">test</span>]</span>
-    <span class="ident">async</span> <span class="kw">fn</span> <span class="ident">parse_reads_until_blocked</span>() {
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">parse_reads_until_blocked</span>() {
         <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">proto</span>::<span class="ident">h1</span>::<span class="ident">ClientTransaction</span>;
 
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">pretty_env_logger</span>::<span class="ident">try_init</span>();
@@ -1503,7 +1503,7 @@
                 .<span class="ident">is_pending</span>());
             <span class="ident">Poll</span>::<span class="ident">Ready</span>(())
         })
-        .<span class="ident">await</span>;
+        .<span class="kw">await</span>;
 
         <span class="macro">assert_eq</span><span class="macro">!</span>(
             <span class="ident">buffered</span>.<span class="ident">read_buf</span>,
@@ -1652,7 +1652,7 @@
     */</span>
 
     <span class="attribute">#[<span class="ident">tokio</span>::<span class="ident">test</span>]</span>
-    <span class="ident">async</span> <span class="kw">fn</span> <span class="ident">write_buf_flatten</span>() {
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">write_buf_flatten</span>() {
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">pretty_env_logger</span>::<span class="ident">try_init</span>();
 
         <span class="kw">let</span> <span class="ident">mock</span> <span class="op">=</span> <span class="ident">Mock</span>::<span class="ident">new</span>()
@@ -1669,11 +1669,11 @@
         <span class="ident">buffered</span>.<span class="ident">buffer</span>(<span class="ident">Cursor</span>::<span class="ident">new</span>(<span class="string">b&quot;hyper!&quot;</span>.<span class="ident">to_vec</span>()));
         <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">buffered</span>.<span class="ident">write_buf</span>.<span class="ident">queue</span>.<span class="ident">bufs_cnt</span>(), <span class="number">0</span>);
 
-        <span class="ident">buffered</span>.<span class="ident">flush</span>().<span class="ident">await</span>.<span class="ident">expect</span>(<span class="string">&quot;flush&quot;</span>);
+        <span class="ident">buffered</span>.<span class="ident">flush</span>().<span class="kw">await</span>.<span class="ident">expect</span>(<span class="string">&quot;flush&quot;</span>);
     }
 
     <span class="attribute">#[<span class="ident">tokio</span>::<span class="ident">test</span>]</span>
-    <span class="ident">async</span> <span class="kw">fn</span> <span class="ident">write_buf_queue_disable_auto</span>() {
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">write_buf_queue_disable_auto</span>() {
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">pretty_env_logger</span>::<span class="ident">try_init</span>();
 
         <span class="kw">let</span> <span class="ident">mock</span> <span class="op">=</span> <span class="ident">Mock</span>::<span class="ident">new</span>()
@@ -1695,7 +1695,7 @@
         <span class="ident">buffered</span>.<span class="ident">buffer</span>(<span class="ident">Cursor</span>::<span class="ident">new</span>(<span class="string">b&quot;hyper!&quot;</span>.<span class="ident">to_vec</span>()));
         <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">buffered</span>.<span class="ident">write_buf</span>.<span class="ident">queue</span>.<span class="ident">bufs_cnt</span>(), <span class="number">3</span>);
 
-        <span class="ident">buffered</span>.<span class="ident">flush</span>().<span class="ident">await</span>.<span class="ident">expect</span>(<span class="string">&quot;flush&quot;</span>);
+        <span class="ident">buffered</span>.<span class="ident">flush</span>().<span class="kw">await</span>.<span class="ident">expect</span>(<span class="string">&quot;flush&quot;</span>);
 
         <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">buffered</span>.<span class="ident">write_buf</span>.<span class="ident">queue</span>.<span class="ident">bufs_cnt</span>(), <span class="number">0</span>);
     }
@@ -1717,4 +1717,5 @@
     <span class="comment">// }</span>
 }
 </pre></div>
-</section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../../../";window.currentCrate = "hyper";</script><script src="../../../../main.js"></script><script src="../../../../source-script.js"></script><script src="../../../../source-files.js"></script><script defer src="../../../../search-index.js"></script></body></html>
+</section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="hyper"></div>
+    <script src="../../../../main.js"></script><script src="../../../../source-script.js"></script><script src="../../../../source-files.js"></script><script defer src="../../../../search-index.js"></script></body></html>

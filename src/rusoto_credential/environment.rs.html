@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/rusoto_credential-0.46.0/src/environment.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>environment.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
-<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../rusoto_credential/index.html'><div class='logo-container'><img src='https://raw.githubusercontent.com/rusoto/rusoto/master/assets/logo-square.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
+<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../rusoto_credential/index.html'><div class='logo-container'><img src='https://raw.githubusercontent.com/rusoto/rusoto/master/assets/logo-square.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
                 <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
@@ -471,7 +471,7 @@
 
 <span class="attribute">#[<span class="ident">async_trait</span>]</span>
 <span class="kw">impl</span> <span class="ident">ProvideAwsCredentials</span> <span class="kw">for</span> <span class="ident">EnvironmentProvider</span> {
-    <span class="ident">async</span> <span class="kw">fn</span> <span class="ident">credentials</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">AwsCredentials</span>, <span class="ident">CredentialsError</span><span class="op">&gt;</span> {
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">credentials</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">AwsCredentials</span>, <span class="ident">CredentialsError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">env_key</span> <span class="op">=</span> <span class="ident">get_critical_variable</span>(<span class="self">self</span>.<span class="ident">access_key_id_var</span>())<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">env_secret</span> <span class="op">=</span> <span class="ident">get_critical_variable</span>(<span class="self">self</span>.<span class="ident">secret_access_key_var</span>())<span class="question-mark">?</span>;
         <span class="comment">// Present when using temporary credentials, e.g. on Lambda with IAM roles</span>
@@ -518,12 +518,12 @@
     <span class="kw">static</span> <span class="ident">E_INVALID_EXPIRATION</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;Invalid AWS_CREDENTIAL_EXPIRATION in environment&quot;</span>;
 
     <span class="attribute">#[<span class="ident">tokio</span>::<span class="ident">test</span>]</span>
-    <span class="ident">async</span> <span class="kw">fn</span> <span class="ident">get_temporary_credentials_from_env</span>() {
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_temporary_credentials_from_env</span>() {
         <span class="kw">let</span> <span class="ident">_guard</span> <span class="op">=</span> <span class="ident">lock_env</span>();
         <span class="ident">env</span>::<span class="ident">set_var</span>(<span class="ident">AWS_ACCESS_KEY_ID</span>, <span class="string">&quot;id&quot;</span>);
         <span class="ident">env</span>::<span class="ident">set_var</span>(<span class="ident">AWS_SECRET_ACCESS_KEY</span>, <span class="string">&quot;secret&quot;</span>);
         <span class="ident">env</span>::<span class="ident">set_var</span>(<span class="ident">AWS_SESSION_TOKEN</span>, <span class="string">&quot;token&quot;</span>);
-        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">EnvironmentProvider</span>::<span class="ident">default</span>().<span class="ident">credentials</span>().<span class="ident">await</span>;
+        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">EnvironmentProvider</span>::<span class="ident">default</span>().<span class="ident">credentials</span>().<span class="kw">await</span>;
         <span class="ident">env</span>::<span class="ident">remove_var</span>(<span class="ident">AWS_ACCESS_KEY_ID</span>);
         <span class="ident">env</span>::<span class="ident">remove_var</span>(<span class="ident">AWS_SECRET_ACCESS_KEY</span>);
         <span class="ident">env</span>::<span class="ident">remove_var</span>(<span class="ident">AWS_SESSION_TOKEN</span>);
@@ -535,12 +535,12 @@
     }
 
     <span class="attribute">#[<span class="ident">tokio</span>::<span class="ident">test</span>]</span>
-    <span class="ident">async</span> <span class="kw">fn</span> <span class="ident">get_non_temporary_credentials_from_env</span>() {
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_non_temporary_credentials_from_env</span>() {
         <span class="kw">let</span> <span class="ident">_guard</span> <span class="op">=</span> <span class="ident">lock_env</span>();
         <span class="ident">env</span>::<span class="ident">set_var</span>(<span class="ident">AWS_ACCESS_KEY_ID</span>, <span class="string">&quot;id&quot;</span>);
         <span class="ident">env</span>::<span class="ident">set_var</span>(<span class="ident">AWS_SECRET_ACCESS_KEY</span>, <span class="string">&quot;secret&quot;</span>);
         <span class="ident">env</span>::<span class="ident">remove_var</span>(<span class="ident">AWS_SESSION_TOKEN</span>);
-        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">EnvironmentProvider</span>::<span class="ident">default</span>().<span class="ident">credentials</span>().<span class="ident">await</span>;
+        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">EnvironmentProvider</span>::<span class="ident">default</span>().<span class="ident">credentials</span>().<span class="kw">await</span>;
         <span class="ident">env</span>::<span class="ident">remove_var</span>(<span class="ident">AWS_ACCESS_KEY_ID</span>);
         <span class="ident">env</span>::<span class="ident">remove_var</span>(<span class="ident">AWS_SECRET_ACCESS_KEY</span>);
         <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">result</span>.<span class="ident">is_ok</span>());
@@ -551,12 +551,12 @@
     }
 
     <span class="attribute">#[<span class="ident">tokio</span>::<span class="ident">test</span>]</span>
-    <span class="ident">async</span> <span class="kw">fn</span> <span class="ident">environment_provider_missing_key_id</span>() {
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">environment_provider_missing_key_id</span>() {
         <span class="kw">let</span> <span class="ident">_guard</span> <span class="op">=</span> <span class="ident">lock_env</span>();
         <span class="ident">env</span>::<span class="ident">remove_var</span>(<span class="ident">AWS_ACCESS_KEY_ID</span>);
         <span class="ident">env</span>::<span class="ident">set_var</span>(<span class="ident">AWS_SECRET_ACCESS_KEY</span>, <span class="string">&quot;secret&quot;</span>);
         <span class="ident">env</span>::<span class="ident">remove_var</span>(<span class="ident">AWS_SESSION_TOKEN</span>);
-        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">EnvironmentProvider</span>::<span class="ident">default</span>().<span class="ident">credentials</span>().<span class="ident">await</span>;
+        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">EnvironmentProvider</span>::<span class="ident">default</span>().<span class="ident">credentials</span>().<span class="kw">await</span>;
         <span class="ident">env</span>::<span class="ident">remove_var</span>(<span class="ident">AWS_SECRET_ACCESS_KEY</span>);
         <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">result</span>.<span class="ident">is_err</span>());
         <span class="macro">assert_eq</span><span class="macro">!</span>(
@@ -566,12 +566,12 @@
     }
 
     <span class="attribute">#[<span class="ident">tokio</span>::<span class="ident">test</span>]</span>
-    <span class="ident">async</span> <span class="kw">fn</span> <span class="ident">environment_provider_missing_secret</span>() {
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">environment_provider_missing_secret</span>() {
         <span class="kw">let</span> <span class="ident">_guard</span> <span class="op">=</span> <span class="ident">lock_env</span>();
         <span class="ident">env</span>::<span class="ident">remove_var</span>(<span class="ident">AWS_SECRET_ACCESS_KEY</span>);
         <span class="ident">env</span>::<span class="ident">set_var</span>(<span class="ident">AWS_ACCESS_KEY_ID</span>, <span class="string">&quot;id&quot;</span>);
         <span class="ident">env</span>::<span class="ident">remove_var</span>(<span class="ident">AWS_SESSION_TOKEN</span>);
-        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">EnvironmentProvider</span>::<span class="ident">default</span>().<span class="ident">credentials</span>().<span class="ident">await</span>;
+        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">EnvironmentProvider</span>::<span class="ident">default</span>().<span class="ident">credentials</span>().<span class="kw">await</span>;
         <span class="ident">env</span>::<span class="ident">remove_var</span>(<span class="ident">AWS_ACCESS_KEY_ID</span>);
         <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">result</span>.<span class="ident">is_err</span>());
         <span class="macro">assert_eq</span><span class="macro">!</span>(
@@ -581,12 +581,12 @@
     }
 
     <span class="attribute">#[<span class="ident">tokio</span>::<span class="ident">test</span>]</span>
-    <span class="ident">async</span> <span class="kw">fn</span> <span class="ident">environment_provider_missing_credentials</span>() {
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">environment_provider_missing_credentials</span>() {
         <span class="kw">let</span> <span class="ident">_guard</span> <span class="op">=</span> <span class="ident">lock_env</span>();
         <span class="ident">env</span>::<span class="ident">remove_var</span>(<span class="ident">AWS_SECRET_ACCESS_KEY</span>);
         <span class="ident">env</span>::<span class="ident">remove_var</span>(<span class="ident">AWS_ACCESS_KEY_ID</span>);
         <span class="ident">env</span>::<span class="ident">remove_var</span>(<span class="ident">AWS_SESSION_TOKEN</span>);
-        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">EnvironmentProvider</span>::<span class="ident">default</span>().<span class="ident">credentials</span>().<span class="ident">await</span>;
+        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">EnvironmentProvider</span>::<span class="ident">default</span>().<span class="ident">credentials</span>().<span class="kw">await</span>;
         <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">result</span>.<span class="ident">is_err</span>());
         <span class="macro">assert_eq</span><span class="macro">!</span>(
             <span class="ident">result</span>.<span class="ident">err</span>(),
@@ -595,13 +595,13 @@
     }
 
     <span class="attribute">#[<span class="ident">tokio</span>::<span class="ident">test</span>]</span>
-    <span class="ident">async</span> <span class="kw">fn</span> <span class="ident">environment_provider_bad_expiration</span>() {
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">environment_provider_bad_expiration</span>() {
         <span class="kw">let</span> <span class="ident">_guard</span> <span class="op">=</span> <span class="ident">lock_env</span>();
         <span class="ident">env</span>::<span class="ident">set_var</span>(<span class="ident">AWS_ACCESS_KEY_ID</span>, <span class="string">&quot;id&quot;</span>);
         <span class="ident">env</span>::<span class="ident">set_var</span>(<span class="ident">AWS_SECRET_ACCESS_KEY</span>, <span class="string">&quot;secret&quot;</span>);
         <span class="ident">env</span>::<span class="ident">set_var</span>(<span class="ident">AWS_SESSION_TOKEN</span>, <span class="string">&quot;token&quot;</span>);
         <span class="ident">env</span>::<span class="ident">set_var</span>(<span class="ident">AWS_CREDENTIAL_EXPIRATION</span>, <span class="string">&quot;lore ipsum&quot;</span>);
-        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">EnvironmentProvider</span>::<span class="ident">default</span>().<span class="ident">credentials</span>().<span class="ident">await</span>;
+        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">EnvironmentProvider</span>::<span class="ident">default</span>().<span class="ident">credentials</span>().<span class="kw">await</span>;
         <span class="ident">env</span>::<span class="ident">remove_var</span>(<span class="ident">AWS_ACCESS_KEY_ID</span>);
         <span class="ident">env</span>::<span class="ident">remove_var</span>(<span class="ident">AWS_SECRET_ACCESS_KEY</span>);
         <span class="ident">env</span>::<span class="ident">remove_var</span>(<span class="ident">AWS_SESSION_TOKEN</span>);
@@ -614,7 +614,7 @@
     }
 
     <span class="attribute">#[<span class="ident">tokio</span>::<span class="ident">test</span>]</span>
-    <span class="ident">async</span> <span class="kw">fn</span> <span class="ident">get_temporary_credentials_with_expiration_from_env</span>() {
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_temporary_credentials_with_expiration_from_env</span>() {
         <span class="kw">let</span> <span class="ident">_guard</span> <span class="op">=</span> <span class="ident">lock_env</span>();
         <span class="kw">let</span> <span class="ident">now</span> <span class="op">=</span> <span class="ident">Utc</span>::<span class="ident">now</span>();
         <span class="kw">let</span> <span class="ident">now_str</span> <span class="op">=</span> <span class="ident">now</span>.<span class="ident">to_rfc3339</span>();
@@ -622,7 +622,7 @@
         <span class="ident">env</span>::<span class="ident">set_var</span>(<span class="ident">AWS_SECRET_ACCESS_KEY</span>, <span class="string">&quot;secret&quot;</span>);
         <span class="ident">env</span>::<span class="ident">set_var</span>(<span class="ident">AWS_SESSION_TOKEN</span>, <span class="string">&quot;token&quot;</span>);
         <span class="ident">env</span>::<span class="ident">set_var</span>(<span class="ident">AWS_CREDENTIAL_EXPIRATION</span>, <span class="ident">now_str</span>);
-        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">EnvironmentProvider</span>::<span class="ident">default</span>().<span class="ident">credentials</span>().<span class="ident">await</span>;
+        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">EnvironmentProvider</span>::<span class="ident">default</span>().<span class="ident">credentials</span>().<span class="kw">await</span>;
         <span class="ident">env</span>::<span class="ident">remove_var</span>(<span class="ident">AWS_ACCESS_KEY_ID</span>);
         <span class="ident">env</span>::<span class="ident">remove_var</span>(<span class="ident">AWS_SECRET_ACCESS_KEY</span>);
         <span class="ident">env</span>::<span class="ident">remove_var</span>(<span class="ident">AWS_SESSION_TOKEN</span>);
@@ -636,14 +636,14 @@
     }
 
     <span class="attribute">#[<span class="ident">tokio</span>::<span class="ident">test</span>]</span>
-    <span class="ident">async</span> <span class="kw">fn</span> <span class="ident">regression_test_rfc_3339_compat</span>() {
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">regression_test_rfc_3339_compat</span>() {
         <span class="kw">let</span> <span class="ident">_guard</span> <span class="op">=</span> <span class="ident">lock_env</span>();
         <span class="comment">// RFC 3339 expiration times with lower case &#39;t&#39; could not be parsed by earlier</span>
         <span class="comment">// implementations.</span>
         <span class="ident">env</span>::<span class="ident">set_var</span>(<span class="ident">AWS_CREDENTIAL_EXPIRATION</span>, <span class="string">&quot;1996-12-19t16:39:57-08:00&quot;</span>);
         <span class="ident">env</span>::<span class="ident">set_var</span>(<span class="ident">AWS_ACCESS_KEY_ID</span>, <span class="string">&quot;id&quot;</span>);
         <span class="ident">env</span>::<span class="ident">set_var</span>(<span class="ident">AWS_SECRET_ACCESS_KEY</span>, <span class="string">&quot;secret&quot;</span>);
-        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">EnvironmentProvider</span>::<span class="ident">default</span>().<span class="ident">credentials</span>().<span class="ident">await</span>;
+        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">EnvironmentProvider</span>::<span class="ident">default</span>().<span class="ident">credentials</span>().<span class="kw">await</span>;
         <span class="ident">env</span>::<span class="ident">remove_var</span>(<span class="ident">AWS_CREDENTIAL_EXPIRATION</span>);
         <span class="ident">env</span>::<span class="ident">remove_var</span>(<span class="ident">AWS_ACCESS_KEY_ID</span>);
         <span class="ident">env</span>::<span class="ident">remove_var</span>(<span class="ident">AWS_SECRET_ACCESS_KEY</span>);
@@ -655,7 +655,7 @@
     }
 
     <span class="attribute">#[<span class="ident">tokio</span>::<span class="ident">test</span>]</span>
-    <span class="ident">async</span> <span class="kw">fn</span> <span class="ident">alternative_prefix</span>() {
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">alternative_prefix</span>() {
         <span class="comment">// NOTE: not strictly neccessary here, since we are using a non-standard</span>
         <span class="comment">// prefix, so we shouldn&#39;t collide with the other env interactions in</span>
         <span class="comment">// the other tests.</span>
@@ -669,7 +669,7 @@
         <span class="ident">env</span>::<span class="ident">set_var</span>(<span class="string">&quot;MYAPP_CREDENTIAL_EXPIRATION&quot;</span>, <span class="ident">now_str</span>);
         <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">EnvironmentProvider</span>::<span class="ident">with_prefix</span>(<span class="string">&quot;MYAPP&quot;</span>)
             .<span class="ident">credentials</span>()
-            .<span class="ident">await</span>;
+            .<span class="kw">await</span>;
         <span class="ident">env</span>::<span class="ident">remove_var</span>(<span class="string">&quot;MYAPP_ACCESS_KEY_ID&quot;</span>);
         <span class="ident">env</span>::<span class="ident">remove_var</span>(<span class="string">&quot;MYAPP_SECRET_ACCESS_KEY&quot;</span>);
         <span class="ident">env</span>::<span class="ident">remove_var</span>(<span class="string">&quot;MYAPP_SESSION_TOKEN&quot;</span>);
@@ -683,4 +683,5 @@
     }
 }
 </pre></div>
-</section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../";window.currentCrate = "rusoto_credential";</script><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>
+</section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="rusoto_credential"></div>
+    <script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>

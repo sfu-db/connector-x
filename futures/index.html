@@ -1,16 +1,16 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="API documentation for the Rust `futures` crate."><meta name="keywords" content="rust, rustlang, rust-lang, futures"><title>futures - Rust</title><link rel="stylesheet" type="text/css" href="../normalize.css"><link rel="stylesheet" type="text/css" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../ayu.css" disabled ><script id="default-settings"></script><script src="../storage.js"></script><noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../favicon-16x16.png">
-<link rel="alternate icon" type="image/png" href="../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../futures/index.html'><div class='logo-container rust-logo'><img src='../rust-logo.png' alt='logo'></div></a><p class="location">Crate futures</p><div class="block version"><p>Version 0.3.12</p></div><div class="sidebar-elems"><a id="all-types" href="all.html"><p>See all futures's items</p></a><div class="block items"><ul><li><a href="#modules">Modules</a></li><li><a href="#macros">Macros</a></li></ul></div><p class="location"></p><script>window.sidebarCurrent = {name: "futures", ty: "mod", relpath: "../"};</script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
-                <a id="settings-menu" href="../settings.html"><img src="../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="out-of-band"><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="../src/futures/lib.rs.html#1-192" title="goto source code">[src]</a></span><span class="in-band">Crate <a class="mod" href="">futures</a></span></h1><div class="docblock"><p>Abstractions for asynchronous programming.</p>
+<link rel="alternate icon" type="image/png" href="../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../futures/index.html'><div class='logo-container rust-logo'><img src='../rust-logo.png' alt='logo'></div></a><p class="location">Crate futures</p><div class="block version"><p>Version 0.3.12</p></div><div class="sidebar-elems"><a id="all-types" href="all.html"><p>See all futures's items</p></a><div class="block items"><ul><li><a href="#modules">Modules</a></li><li><a href="#macros">Macros</a></li></ul></div><p class="location"></p><div id="sidebar-vars" data-name="futures" data-ty="mod" data-relpath="../"></div></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
+                <a id="settings-menu" href="../settings.html"><img src="../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="in-band">Crate <a class="mod" href="">futures</a></span><span class="out-of-band"><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="../src/futures/lib.rs.html#1-192" title="goto source code">[src]</a></span></h1><div class="docblock"><p>Abstractions for asynchronous programming.</p>
 <p>This crate provides a number of core abstractions for writing asynchronous
 code:</p>
 <ul>
-<li><a href="../futures/prelude/trait.Future.html">Futures</a> are single eventual values produced by
+<li><a href="../futures/future/trait.Future.html">Futures</a> are single eventual values produced by
 asynchronous computations. Some programming languages (e.g. JavaScript)
 call this concept &quot;promise&quot;.</li>
-<li><a href="../futures/prelude/trait.Stream.html">Streams</a> represent a series of values
+<li><a href="../futures/stream/trait.Stream.html">Streams</a> represent a series of values
 produced asynchronously.</li>
-<li><a href="../futures/prelude/trait.Sink.html">Sinks</a> provide support for asynchronous writing of
+<li><a href="../futures/sink/trait.Sink.html">Sinks</a> provide support for asynchronous writing of
 data.</li>
 <li><a href="../futures/executor/index.html">Executors</a> are responsible for running asynchronous
 tasks.</li>
@@ -33,7 +33,7 @@ within macros and keywords such as async and await!.</p>
     <span class="comment">// Create a future by an async block, where async is responsible for an</span>
     <span class="comment">// implementation of Future. At this point no executor has been provided</span>
     <span class="comment">// to this future, so it will not be running.</span>
-    <span class="kw">let</span> <span class="ident">fut_values</span> <span class="op">=</span> <span class="ident">async</span> {
+    <span class="kw">let</span> <span class="ident">fut_values</span> <span class="op">=</span> <span class="kw">async</span> {
         <span class="comment">// Create another async block, again where the Future implementation</span>
         <span class="comment">// is generated by async. Since this is inside of a parent async block,</span>
         <span class="comment">// it will be provided with the executor of the parent block when the parent</span>
@@ -43,7 +43,7 @@ within macros and keywords such as async and await!.</p>
         <span class="comment">// is a std::task::Context. This represents our executor, and the Future</span>
         <span class="comment">// implemented by this async block can be polled using the parent async</span>
         <span class="comment">// block&#39;s executor.</span>
-        <span class="kw">let</span> <span class="ident">fut_tx_result</span> <span class="op">=</span> <span class="ident">async</span> <span class="kw">move</span> {
+        <span class="kw">let</span> <span class="ident">fut_tx_result</span> <span class="op">=</span> <span class="kw">async</span> <span class="kw">move</span> {
             (<span class="number">0</span>..<span class="number">100</span>).<span class="ident">for_each</span>(<span class="op">|</span><span class="ident">v</span><span class="op">|</span> {
                 <span class="ident">tx</span>.<span class="ident">unbounded_send</span>(<span class="ident">v</span>).<span class="ident">expect</span>(<span class="string">&quot;Failed to send&quot;</span>);
             })
@@ -59,7 +59,7 @@ within macros and keywords such as async and await!.</p>
 
         <span class="comment">// Use the executor provided to this async block to wait for the</span>
         <span class="comment">// future to complete.</span>
-        <span class="ident">fut_values</span>.<span class="ident">await</span>
+        <span class="ident">fut_values</span>.<span class="kw">await</span>
     };
 
     <span class="comment">// Actually execute the above future, which will invoke Future::poll and</span>
@@ -100,4 +100,5 @@ one will be selected in order of declaration. Futures directly
 passed to <code>select_biased!</code> must be <code>Unpin</code> and implement <code>FusedFuture</code>.</p>
 </td></tr><tr class="module-item"><td><a class="macro" href="macro.try_join.html" title="futures::try_join macro">try_join</a></td><td class="docblock-short"><p>Polls multiple futures simultaneously, resolving to a <a href="https://doc.rust-lang.org/nightly/core/result/enum.Result.html" title="Result"><code>Result</code></a> containing
 either a tuple of the successful outputs or an error.</p>
-</td></tr></table></section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../";window.currentCrate = "futures";</script><script src="../main.js"></script><script defer src="../search-index.js"></script></body></html>
+</td></tr></table></section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../" data-current-crate="futures"></div>
+    <script src="../main.js"></script><script defer src="../search-index.js"></script></body></html>

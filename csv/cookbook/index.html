@@ -1,7 +1,7 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="API documentation for the Rust `cookbook` mod in crate `csv`."><meta name="keywords" content="rust, rustlang, rust-lang, cookbook"><title>csv::cookbook - Rust</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
-<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../csv/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a><p class="location">Module cookbook</p><div class="sidebar-elems"><p class="location"><a href="../index.html">csv</a></p><script>window.sidebarCurrent = {name: "cookbook", ty: "mod", relpath: "../"};</script><script defer src="../sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
-                <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="out-of-band"><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="../../src/csv/cookbook.rs.html#1-294" title="goto source code">[src]</a></span><span class="in-band">Module <a href="../index.html">csv</a>::<wbr><a class="mod" href="">cookbook</a></span></h1><div class="docblock"><p>A cookbook of examples for CSV reading and writing.</p>
+<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../csv/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a><p class="location">Module cookbook</p><div class="sidebar-elems"><p class="location"><a href="../index.html">csv</a></p><div id="sidebar-vars" data-name="cookbook" data-ty="mod" data-relpath="../"></div><script defer src="../sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
+                <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="in-band">Module <a href="../index.html">csv</a>::<wbr><a class="mod" href="">cookbook</a></span><span class="out-of-band"><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="../../src/csv/cookbook.rs.html#1-294" title="goto source code">[src]</a></span></h1><div class="docblock"><p>A cookbook of examples for CSV reading and writing.</p>
 <h1 id="list-of-examples" class="section-header"><a href="#list-of-examples">List of examples</a></h1>
 <p>This is a list of examples that follow. Each of them can be found in the
 <code>examples</code> directory of the
@@ -31,7 +31,7 @@ stdout.</p>
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">io</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">process</span>;
 
-<span class="kw">fn</span> <span class="ident">example</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">dyn</span> <span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+<span class="kw">fn</span> <span class="ident">example</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span> {
     <span class="comment">// Build the CSV reader and iterate over each record.</span>
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rdr</span> <span class="op">=</span> <span class="ident">csv</span>::<span class="ident">Reader</span>::<span class="ident">from_reader</span>(<span class="ident">io</span>::<span class="ident">stdin</span>());
     <span class="kw">for</span> <span class="ident">result</span> <span class="kw">in</span> <span class="ident">rdr</span>.<span class="ident">records</span>() {
@@ -51,7 +51,7 @@ stdout.</p>
 }</pre></div>
 <p>The above example can be run like so:</p>
 
-<div class='information'><div class='tooltip ignore'>ⓘ<span class='tooltiptext'>This example is not tested</span></div></div><div class="example-wrap"><pre class="rust rust-example-rendered ignore">
+<div class='information'><div class='tooltip ignore'>ⓘ</div></div><div class="example-wrap"><pre class="rust rust-example-rendered ignore">
 $ <span class="ident">git</span> <span class="ident">clone</span> <span class="ident">git</span>:<span class="comment">//github.com/BurntSushi/rust-csv</span>
 $ <span class="ident">cd</span> <span class="ident">rust</span><span class="op">-</span><span class="ident">csv</span>
 $ <span class="ident">cargo</span> <span class="ident">run</span> <span class="op">-</span><span class="op">-</span><span class="ident">example</span> <span class="ident">cookbook</span><span class="op">-</span><span class="ident">read</span><span class="op">-</span><span class="ident">basic</span> <span class="op">&lt;</span> <span class="ident">examples</span><span class="op">/</span><span class="ident">data</span><span class="op">/</span><span class="ident">smallpop</span>.<span class="ident">csv</span></pre></div>
@@ -79,7 +79,7 @@ method.</p>
     <span class="ident">population</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>,
 }
 
-<span class="kw">fn</span> <span class="ident">example</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">dyn</span> <span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+<span class="kw">fn</span> <span class="ident">example</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rdr</span> <span class="op">=</span> <span class="ident">csv</span>::<span class="ident">Reader</span>::<span class="ident">from_reader</span>(<span class="ident">io</span>::<span class="ident">stdin</span>());
     <span class="kw">for</span> <span class="ident">result</span> <span class="kw">in</span> <span class="ident">rdr</span>.<span class="ident">deserialize</span>() {
         <span class="comment">// Notice that we need to provide a type hint for automatic</span>
@@ -98,7 +98,7 @@ method.</p>
 }</pre></div>
 <p>The above example can be run like so:</p>
 
-<div class='information'><div class='tooltip ignore'>ⓘ<span class='tooltiptext'>This example is not tested</span></div></div><div class="example-wrap"><pre class="rust rust-example-rendered ignore">
+<div class='information'><div class='tooltip ignore'>ⓘ</div></div><div class="example-wrap"><pre class="rust rust-example-rendered ignore">
 $ <span class="ident">git</span> <span class="ident">clone</span> <span class="ident">git</span>:<span class="comment">//github.com/BurntSushi/rust-csv</span>
 $ <span class="ident">cd</span> <span class="ident">rust</span><span class="op">-</span><span class="ident">csv</span>
 $ <span class="ident">cargo</span> <span class="ident">run</span> <span class="op">-</span><span class="op">-</span><span class="ident">example</span> <span class="ident">cookbook</span><span class="op">-</span><span class="ident">read</span><span class="op">-</span><span class="ident">serde</span> <span class="op">&lt;</span> <span class="ident">examples</span><span class="op">/</span><span class="ident">data</span><span class="op">/</span><span class="ident">smallpop</span>.<span class="ident">csv</span></pre></div>
@@ -111,7 +111,7 @@ by <code>:</code> instead of <code>,</code>.</p>
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">io</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">process</span>;
 
-<span class="kw">fn</span> <span class="ident">example</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">dyn</span> <span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+<span class="kw">fn</span> <span class="ident">example</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rdr</span> <span class="op">=</span> <span class="ident">csv</span>::<span class="ident">ReaderBuilder</span>::<span class="ident">new</span>()
         .<span class="ident">delimiter</span>(<span class="string">b&#39;:&#39;</span>)
         .<span class="ident">from_reader</span>(<span class="ident">io</span>::<span class="ident">stdin</span>());
@@ -130,7 +130,7 @@ by <code>:</code> instead of <code>,</code>.</p>
 }</pre></div>
 <p>The above example can be run like so:</p>
 
-<div class='information'><div class='tooltip ignore'>ⓘ<span class='tooltiptext'>This example is not tested</span></div></div><div class="example-wrap"><pre class="rust rust-example-rendered ignore">
+<div class='information'><div class='tooltip ignore'>ⓘ</div></div><div class="example-wrap"><pre class="rust rust-example-rendered ignore">
 $ <span class="ident">git</span> <span class="ident">clone</span> <span class="ident">git</span>:<span class="comment">//github.com/BurntSushi/rust-csv</span>
 $ <span class="ident">cd</span> <span class="ident">rust</span><span class="op">-</span><span class="ident">csv</span>
 $ <span class="ident">cargo</span> <span class="ident">run</span> <span class="op">-</span><span class="op">-</span><span class="ident">example</span> <span class="ident">cookbook</span><span class="op">-</span><span class="ident">read</span><span class="op">-</span><span class="ident">colon</span> <span class="op">&lt;</span> <span class="ident">examples</span><span class="op">/</span><span class="ident">data</span><span class="op">/</span><span class="ident">smallpop</span><span class="op">-</span><span class="ident">colon</span>.<span class="ident">csv</span></pre></div>
@@ -145,7 +145,7 @@ first record is not skipped. This example shows how to disable that setting.</p>
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">io</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">process</span>;
 
-<span class="kw">fn</span> <span class="ident">example</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">dyn</span> <span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+<span class="kw">fn</span> <span class="ident">example</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rdr</span> <span class="op">=</span> <span class="ident">csv</span>::<span class="ident">ReaderBuilder</span>::<span class="ident">new</span>()
         .<span class="ident">has_headers</span>(<span class="bool-val">false</span>)
         .<span class="ident">from_reader</span>(<span class="ident">io</span>::<span class="ident">stdin</span>());
@@ -164,7 +164,7 @@ first record is not skipped. This example shows how to disable that setting.</p>
 }</pre></div>
 <p>The above example can be run like so:</p>
 
-<div class='information'><div class='tooltip ignore'>ⓘ<span class='tooltiptext'>This example is not tested</span></div></div><div class="example-wrap"><pre class="rust rust-example-rendered ignore">
+<div class='information'><div class='tooltip ignore'>ⓘ</div></div><div class="example-wrap"><pre class="rust rust-example-rendered ignore">
 $ <span class="ident">git</span> <span class="ident">clone</span> <span class="ident">git</span>:<span class="comment">//github.com/BurntSushi/rust-csv</span>
 $ <span class="ident">cd</span> <span class="ident">rust</span><span class="op">-</span><span class="ident">csv</span>
 $ <span class="ident">cargo</span> <span class="ident">run</span> <span class="op">-</span><span class="op">-</span><span class="ident">example</span> <span class="ident">cookbook</span><span class="op">-</span><span class="ident">read</span><span class="op">-</span><span class="ident">no</span><span class="op">-</span><span class="ident">headers</span> <span class="op">&lt;</span> <span class="ident">examples</span><span class="op">/</span><span class="ident">data</span><span class="op">/</span><span class="ident">smallpop</span><span class="op">-</span><span class="ident">no</span><span class="op">-</span><span class="ident">headers</span>.<span class="ident">csv</span></pre></div>
@@ -176,7 +176,7 @@ $ <span class="ident">cargo</span> <span class="ident">run</span> <span class="o
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">io</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">process</span>;
 
-<span class="kw">fn</span> <span class="ident">example</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">dyn</span> <span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+<span class="kw">fn</span> <span class="ident">example</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">wtr</span> <span class="op">=</span> <span class="ident">csv</span>::<span class="ident">Writer</span>::<span class="ident">from_writer</span>(<span class="ident">io</span>::<span class="ident">stdout</span>());
 
     <span class="comment">// When writing records without Serde, the header record is written just</span>
@@ -196,7 +196,7 @@ $ <span class="ident">cargo</span> <span class="ident">run</span> <span class="o
 }</pre></div>
 <p>The above example can be run like so:</p>
 
-<div class='information'><div class='tooltip ignore'>ⓘ<span class='tooltiptext'>This example is not tested</span></div></div><div class="example-wrap"><pre class="rust rust-example-rendered ignore">
+<div class='information'><div class='tooltip ignore'>ⓘ</div></div><div class="example-wrap"><pre class="rust rust-example-rendered ignore">
 $ <span class="ident">git</span> <span class="ident">clone</span> <span class="ident">git</span>:<span class="comment">//github.com/BurntSushi/rust-csv</span>
 $ <span class="ident">cd</span> <span class="ident">rust</span><span class="op">-</span><span class="ident">csv</span>
 $ <span class="ident">cargo</span> <span class="ident">run</span> <span class="op">-</span><span class="op">-</span><span class="ident">example</span> <span class="ident">cookbook</span><span class="op">-</span><span class="ident">write</span><span class="op">-</span><span class="ident">basic</span> <span class="op">&gt;</span> <span class="op">/</span><span class="ident">tmp</span><span class="op">/</span><span class="ident">simplepop</span>.<span class="ident">csv</span></pre></div>
@@ -220,7 +220,7 @@ headers are written automatically.</p>
     <span class="ident">population</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>,
 }
 
-<span class="kw">fn</span> <span class="ident">example</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">dyn</span> <span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+<span class="kw">fn</span> <span class="ident">example</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">wtr</span> <span class="op">=</span> <span class="ident">csv</span>::<span class="ident">Writer</span>::<span class="ident">from_writer</span>(<span class="ident">io</span>::<span class="ident">stdout</span>());
 
     <span class="comment">// When writing records with Serde using structs, the header row is written</span>
@@ -249,8 +249,9 @@ headers are written automatically.</p>
 }</pre></div>
 <p>The above example can be run like so:</p>
 
-<div class='information'><div class='tooltip ignore'>ⓘ<span class='tooltiptext'>This example is not tested</span></div></div><div class="example-wrap"><pre class="rust rust-example-rendered ignore">
+<div class='information'><div class='tooltip ignore'>ⓘ</div></div><div class="example-wrap"><pre class="rust rust-example-rendered ignore">
 $ <span class="ident">git</span> <span class="ident">clone</span> <span class="ident">git</span>:<span class="comment">//github.com/BurntSushi/rust-csv</span>
 $ <span class="ident">cd</span> <span class="ident">rust</span><span class="op">-</span><span class="ident">csv</span>
 $ <span class="ident">cargo</span> <span class="ident">run</span> <span class="op">-</span><span class="op">-</span><span class="ident">example</span> <span class="ident">cookbook</span><span class="op">-</span><span class="ident">write</span><span class="op">-</span><span class="ident">serde</span> <span class="op">&gt;</span> <span class="op">/</span><span class="ident">tmp</span><span class="op">/</span><span class="ident">simplepop</span>.<span class="ident">csv</span></pre></div>
-</div></section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../";window.currentCrate = "csv";</script><script src="../../main.js"></script><script defer src="../../search-index.js"></script></body></html>
+</div></section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="csv"></div>
+    <script src="../../main.js"></script><script defer src="../../search-index.js"></script></body></html>
