@@ -12,7 +12,6 @@ type PgConn = PooledConnection<PgManager>;
 
 pub struct PostgresDataSourceBuilder {
     pool: Pool<PgManager>,
-    data_order: Option<DataOrder>,
 }
 
 impl PostgresDataSourceBuilder {
@@ -20,10 +19,7 @@ impl PostgresDataSourceBuilder {
         let manager = PostgresConnectionManager::new(conn.parse().unwrap(), NoTls);
         let pool = Pool::new(manager).unwrap();
 
-        Self {
-            pool,
-            data_order: None,
-        }
+        Self { pool }
     }
 }
 
@@ -35,9 +31,9 @@ impl SourceBuilder for PostgresDataSourceBuilder {
         if !matches!(data_order, DataOrder::RowMajor) {
             throw!(ConnectorAgentError::UnsupportedDataOrder(data_order));
         }
-        self.data_order = Some(data_order);
         Ok(())
     }
+
     fn build(&mut self) -> Self::DataSource {
         PostgresDataSource::new(self.pool.get().unwrap())
     }
@@ -84,6 +80,7 @@ impl DataSource for PostgresDataSource {
         }
         Ok(())
     }
+
     fn nrows(&self) -> usize {
         self.nrows
     }
