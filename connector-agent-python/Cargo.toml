@@ -20,6 +20,7 @@ flate2 = "1"
 ndarray = "0.14"
 numpy = "0.13"
 phf = { version = "0.8", features = ["macros"] }
+itertools = "0.10"
 
 [lib]
 name = "connector_agent_python"

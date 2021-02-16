@@ -49,19 +49,17 @@ impl<'a> Writer for PandasWriter<'a> {
         assert_eq!(counts.iter().sum::<usize>(), self.nrows);
         let buffers = self.buffers.take().unwrap();
         let nbuffers = buffers.len();
+        let mut ret = vec![];
 
         let mut views: Vec<_> = buffers.into_iter().map(|v| Some(v)).collect();
-        let mut ret = vec![];
         for &c in counts {
             let mut sub_buffers = vec![];
-
             for bid in 0..nbuffers {
                 let view = views[bid].take();
-                let (splitted, rest) = view.unwrap().split_at(Axis(0), c);
+                let (splitted, rest) = view.unwrap().split_at(Axis(1), c);
                 views[bid] = Some(rest);
                 sub_buffers.push(splitted);
             }
-
             ret.push(PandasPartitionWriter::new(
                 c,
                 sub_buffers,
@@ -119,7 +117,8 @@ where
     unsafe fn consume(&mut self, row: usize, col: usize, value: T) {
         let &(bid, col) = &self.column_buffer_index[col];
         let mut_view = self.buffers[bid].udowncast::<T>();
-        *mut_view.get_mut((row, col)).unwrap() = value;
+        // row and column in numpy and dataframe are inverse
+        *mut_view.get_mut((col, row)).unwrap() = value;
     }
 
     fn consume_checked(&mut self, row: usize, col: usize, value: T) -> Result<()> {
@@ -133,8 +132,9 @@ where
                     self.schema[col],
                     type_name::<T>(),
                 ))?;
+        // row and column in numpy and dataframe are inverse
         *mut_view
-            .get_mut((row, col))
+            .get_mut((col, row))
             .ok_or(ConnectorAgentError::OutOfBound)? = value;
         Ok(())
     }
