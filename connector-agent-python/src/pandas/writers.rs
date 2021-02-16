@@ -6,9 +6,6 @@ use fehler::{throw, throws};
 use ndarray::{Axis, Ix2};
 use std::any::type_name;
 
-pub mod funcs;
-pub mod pandas_assoc;
-
 pub struct PandasWriter<'a> {
     nrows: usize,
     schema: Vec<DataType>,
