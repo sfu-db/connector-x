@@ -1,27 +1,28 @@
 [package]
-name = "connector-agent-python"
-version = "0.1.0"
 authors = ["Weiyuan Wu <youngw@sfu.ca>"]
 edition = "2018"
+name = "connector-agent-python"
+version = "0.1.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-arrow = { git = "https://github.com/apache/arrow" }
-connector-agent = { path = "../connector-agent" }
-pyo3 = { version = "0.13.0", features = ["extension-module"] }
-log = "0.4"
+anyhow = "1"
+arrow = "3"
+connector-agent = {path = "../connector-agent"}
 env_logger = "0.8"
-tokio = { version = "1", features = [ "rt-multi-thread", "io-util" ] }
-futures = "0.3"
-fehler = "1"
 failure = "0.1"
+fehler = "1"
 flate2 = "1"
+futures = "0.3"
+itertools = "0.10"
+log = "0.4"
 ndarray = "0.14"
 numpy = "0.13"
-phf = { version = "0.8", features = ["macros"] }
-itertools = "0.10"
+pyo3 = {version = "0.13.0", features = ["extension-module"]}
+thiserror = "1"
+tokio = {version = "1", features = ["rt-multi-thread", "io-util"]}
 
 [lib]
-name = "connector_agent_python"
 crate-type = ["cdylib"]
+name = "connector_agent_python"

@@ -1,6 +1,12 @@
 #![feature(generic_associated_types)]
 #![allow(incomplete_features)]
 
+mod errors;
+mod types;
+mod writers;
+
+use crate::errors::Result;
+use crate::types::FromPandasType;
 use crate::writers::pandas::{
     // funcs::{FArrayViewMut2, FSeriesStr},
     funcs::FSeriesStr,
@@ -11,14 +17,11 @@ use failure::Fallible;
 use itertools::Itertools;
 use ndarray::Ix2;
 use numpy::array::PyArray;
-use phf::phf_map;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::{IntoPyDict, PyDict, PyList, PyTuple};
 use pyo3::wrap_pyfunction;
 use tokio::runtime;
-
-mod writers;
 
 #[pymodule]
 fn connector_agent(_: Python, m: &PyModule) -> PyResult<()> {
@@ -28,22 +31,12 @@ fn connector_agent(_: Python, m: &PyModule) -> PyResult<()> {
     Ok(())
 }
 
-// mapping pandas datatype to connector agent datatype
-static TYPE_MAPPING: phf::Map<&'static str, DataType> = phf_map! {
-    "uint64" => DataType::U64,
-    "float64" => DataType::F64,
-    "bool" => DataType::Bool,
-    "object" => DataType::String,
-    "UInt64" => DataType::OptU64,
-};
-
 #[pyfunction]
-fn write_pandas(nrows: Vec<usize>, schema: Vec<String>, py: Python) -> PyResult<PyObject> {
+fn write_pandas(nrows: Vec<usize>, schema: Vec<&str>, py: Python) -> PyResult<PyObject> {
     // convert schema
-    let schema: Vec<DataType> = schema
-        .into_iter()
-        .map(|s| TYPE_MAPPING[s.as_str()])
-        .collect();
+    let maybe_schema: Result<Vec<DataType>> =
+        schema.into_iter().map(FromPandasType::from).collect();
+    let schema = maybe_schema?;
 
     // prepare python code to construct dataframe
     let total_rows: usize = nrows.iter().sum();
