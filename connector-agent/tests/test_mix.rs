@@ -143,7 +143,7 @@ fn test_mixed() {
     let dispatcher = Dispatcher::new(
         MixedSourceBuilder::new(),
         MemoryWriter::new(),
-        schema,
+        &schema,
         queries,
     );
     let dw = dispatcher.run_checked().expect("run dispatcher");

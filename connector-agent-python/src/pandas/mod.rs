@@ -4,12 +4,9 @@ mod writers;
 
 use crate::errors::{ConnectorAgentPythonError, Result};
 use crate::types::FromPandasType;
-use connector_agent::{AnyArrayViewMut, DataType, Dispatcher, MixedSourceBuilder, Realize};
+use connector_agent::{DataType, Dispatcher, MixedSourceBuilder, Realize};
 use fehler::throws;
 use funcs::FSeriesStr;
-use itertools::Itertools;
-use ndarray::Ix2;
-use numpy::array::PyArray;
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyList};
 use writers::PandasWriter;
@@ -23,12 +20,36 @@ pub fn write_pandas<'a>(nrows: &[usize], schema: &[&str], py: Python<'a>) -> PyO
         .collect();
     let schema = maybe_schema?;
 
-    // prepare python code to construct dataframe
     let total_rows: usize = nrows.iter().sum();
+
+    let (df, buffers, index) = create_dataframe(py, &schema, total_rows);
+
+    let writer = PandasWriter::new(total_rows, &schema, buffers, index);
+    let sb = MixedSourceBuilder {};
+
+    // unblock python threads when copying the data
+    py.allow_threads(|| -> Result<()> {
+        let ncols = schema.len();
+        let queries: Vec<String> = nrows.iter().map(|v| format!("{},{}", v, ncols)).collect();
+        let dispatcher = Dispatcher::new(sb, writer, &schema, queries);
+        dispatcher.run_checked()?;
+        Ok(())
+    })?;
+
+    // return the dataframe
+    df.to_object(py)
+}
+
+/// call python code to construct the dataframe and expose its buffers
+fn create_dataframe<'a>(
+    py: Python<'a>,
+    schema: &[DataType],
+    nrows: usize,
+) -> (&'a PyAny, &'a PyList, &'a PyList) {
     let series: Vec<String> = schema
         .iter()
         .enumerate()
-        .map(|(i, &dt)| Realize::<FSeriesStr>::realize(dt)(i, total_rows))
+        .map(|(i, &dt)| Realize::<FSeriesStr>::realize(dt)(i, nrows))
         .collect();
     let code = format!(
         r#"import pandas as pd
@@ -37,7 +58,6 @@ blocks = [b.values for b in df._mgr.blocks]
 index = [(i, j) for i, j in zip(df._mgr.blknos, df._mgr.blklocs)]"#,
         series.join(",")
     );
-    // println!("# python code:\n{}", code);
 
     // run python code
     let locals = PyDict::new(py);
@@ -46,55 +66,17 @@ index = [(i, j) for i, j in zip(df._mgr.blknos, df._mgr.blklocs)]"#,
     // get # of blocks in dataframe
     let buffers: &PyList = locals
         .get_item("blocks")
-        .expect("get blocks!")
+        .expect("cannot get `blocks` from locals")
         .downcast::<PyList>()
-        .unwrap();
-    let nbuffers = buffers.len();
+        .expect("cannot downcast `blocks` to PyList");
 
-    // get index for each column: (index of block, index of column within the block)
-    let column_buffer_index: Vec<(usize, usize)> = locals
+    let index = locals
         .get_item("index")
-        .expect("get index!")
+        .expect("cannot get `index` from locals")
         .downcast::<PyList>()
-        .unwrap()
-        .iter()
-        .map(|tuple| tuple.extract().unwrap())
-        .collect();
+        .expect("cannot downcast `index` to PyList");
 
-    // get schema for each block, init by U64
-    let mut block_schema_index = vec![DataType::U64; nbuffers];
-    column_buffer_index
-        .iter()
-        .zip_eq(&schema)
-        .for_each(|((b, _), s)| block_schema_index[*b] = *s);
+    let df = locals.get_item("df").expect("cannot get `df` from locals");
 
-    // get array view of each block so we can write data into using rust
-    // TODO: cannot support multi-type using FArrayViewMut2 since PyArray does not support String and Option type
-    let buffers = buffers
-        .iter()
-        .enumerate()
-        // .map(|(i, array)| Realize::<FArrayViewMut2>::realize(block_schema_index[i])(array))
-        .map(|(_i, array)| {
-            let pyarray = array.downcast::<PyArray<u64, Ix2>>().unwrap();
-            let mut_view = unsafe { pyarray.as_array_mut() };
-            AnyArrayViewMut::<Ix2>::new(mut_view)
-        })
-        .collect();
-
-    py.allow_threads(|| {
-        // start dispatcher
-        let ncols = schema.len();
-        let queries: Vec<String> = nrows.iter().map(|v| format!("{},{}", v, ncols)).collect();
-        let dispatcher = Dispatcher::new(
-            MixedSourceBuilder {},
-            PandasWriter::new(total_rows, schema.clone(), buffers, column_buffer_index),
-            schema.clone(),
-            queries,
-        );
-        dispatcher.run_checked().expect("run dispatcher");
-    });
-
-    // return dataframe
-    let df = locals.get_item("df").expect("get df!");
-    df.to_object(py)
+    (df, buffers, index)
 }

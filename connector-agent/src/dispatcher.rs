@@ -28,11 +28,11 @@ where
 {
     /// Create a new dispatcher by providing a source builder, schema (temporary) and the queries
     /// to be issued to the data source.
-    pub fn new(source_builder: SB, writer: WT, schema: Vec<TS>, queries: Vec<String>) -> Self {
+    pub fn new(source_builder: SB, writer: WT, schema: &[TS], queries: Vec<String>) -> Self {
         Dispatcher {
             source_builder,
             writer,
-            schema,
+            schema: schema.to_vec(),
             queries,
         }
     }
