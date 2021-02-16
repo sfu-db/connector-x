@@ -1,14 +1,17 @@
-build:
-    cargo build
-
 build-release:
     cargo build --release
+
+build-debug:
+    cargo build
 
 build-rust: build-release
     cp target/release/libconnector_agent_python.so python/connector_agent.so
 
-build-rust-debug: build
+build-rust-debug: build-debug
     cp target/debug/libconnector_agent_python.so python/connector_agent.so
+
+test-pandas:
+    python python/test_pandas.py
 
 dask:
     python python/multiprocessing_dask.py

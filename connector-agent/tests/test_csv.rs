@@ -85,7 +85,7 @@ fn test_csv() {
         "./tests/data/uint_0.csv".to_string(),
         "./tests/data/uint_1.csv".to_string(),
     ];
-    let dispatcher = Dispatcher::new(CSVSourceBuilder::new(), U64Writer::new(), schema, files);
+    let dispatcher = Dispatcher::new(CSVSourceBuilder::new(), U64Writer::new(), &schema, files);
 
     let dw = dispatcher.run_checked().expect("run dispatcher");
 

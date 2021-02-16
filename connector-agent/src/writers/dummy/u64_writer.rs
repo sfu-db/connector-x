@@ -29,10 +29,10 @@ impl U64Writer {
     }
 }
 
-impl<'a> Writer<'a> for U64Writer {
+impl Writer for U64Writer {
     const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
     type TypeSystem = DataType;
-    type PartitionWriter = U64PartitionWriter<'a>;
+    type PartitionWriter<'a> = U64PartitionWriter<'a>;
 
     #[throws(ConnectorAgentError)]
     fn allocate(&mut self, nrows: usize, schema: Vec<DataType>, data_order: DataOrder) {
@@ -51,7 +51,7 @@ impl<'a> Writer<'a> for U64Writer {
         self.buffer = Array2::zeros((nrows, ncols));
     }
 
-    fn partition_writers(&'a mut self, counts: &[usize]) -> Vec<Self::PartitionWriter> {
+    fn partition_writers(&mut self, counts: &[usize]) -> Vec<Self::PartitionWriter<'_>> {
         assert_eq!(counts.iter().sum::<usize>(), self.nrows);
         let schema = self.schema().to_vec();
 

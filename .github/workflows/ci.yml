@@ -15,8 +15,9 @@ jobs:
       - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
-            toolchain: stable
+            toolchain: nightly-2021-02-15
             components: rustfmt
+            default: true
 
       - name: Is the code formatted?
         uses: actions-rs/cargo@v1
