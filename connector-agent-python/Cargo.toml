@@ -19,7 +19,7 @@ itertools = "0.10"
 log = "0.4"
 ndarray = "0.14"
 numpy = "0.13"
-pyo3 = {version = "0.13.0", features = ["extension-module"]}
+pyo3 = {version = "0.13", features = ["extension-module"]}
 thiserror = "1"
 tokio = {version = "1", features = ["rt-multi-thread", "io-util"]}
 

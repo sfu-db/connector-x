@@ -12,7 +12,7 @@ use pyo3::types::{PyDict, PyList};
 use writers::PandasWriter;
 
 #[throws(ConnectorAgentPythonError)]
-pub fn write_pandas<'a>(nrows: &[usize], schema: &[&str], py: Python<'a>) -> PyObject {
+pub fn write_pandas<'a>(nrows: &[usize], schema: &[&str], py: Python<'a>) -> &'a PyAny {
     // convert schema
     let maybe_schema: Result<Vec<DataType>> = schema
         .into_iter()
@@ -37,7 +37,7 @@ pub fn write_pandas<'a>(nrows: &[usize], schema: &[&str], py: Python<'a>) -> PyO
     })?;
 
     // return the dataframe
-    df.to_object(py)
+    df
 }
 
 /// call python code to construct the dataframe and expose its buffers

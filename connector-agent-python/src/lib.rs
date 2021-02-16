@@ -15,6 +15,6 @@ fn connector_agent(_: Python, m: &PyModule) -> PyResult<()> {
 }
 
 #[pyfunction]
-fn write_pandas(nrows: Vec<usize>, schema: Vec<&str>, py: Python) -> PyResult<PyObject> {
+fn write_pandas<'a>(nrows: Vec<usize>, schema: Vec<&str>, py: Python<'a>) -> PyResult<&'a PyAny> {
     Ok(crate::pandas::write_pandas(&nrows, &schema, py)?)
 }
