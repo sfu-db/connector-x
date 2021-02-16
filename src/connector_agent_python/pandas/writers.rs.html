@@ -139,13 +139,40 @@
 <span id="136">136</span>
 <span id="137">137</span>
 <span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">connector_agent</span>::{
     <span class="ident">AnyArrayViewMut</span>, <span class="ident">ConnectorAgentError</span>, <span class="ident">Consume</span>, <span class="ident">DataOrder</span>, <span class="ident">DataType</span>, <span class="ident">PartitionWriter</span>, <span class="prelude-ty">Result</span>,
     <span class="ident">TypeAssoc</span>, <span class="ident">TypeSystem</span>, <span class="ident">Writer</span>,
 };
 <span class="kw">use</span> <span class="ident">fehler</span>::{<span class="ident">throw</span>, <span class="ident">throws</span>};
+<span class="kw">use</span> <span class="ident">itertools</span>::<span class="ident">Itertools</span>;
 <span class="kw">use</span> <span class="ident">ndarray</span>::{<span class="ident">Axis</span>, <span class="ident">Ix2</span>};
+<span class="kw">use</span> <span class="ident">numpy</span>::<span class="ident">PyArray</span>;
+<span class="kw">use</span> <span class="ident">pyo3</span>::<span class="ident">types</span>::<span class="ident">PyList</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">any</span>::<span class="ident">type_name</span>;
 
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PandasWriter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
@@ -156,15 +183,36 @@
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">PandasWriter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(
-        <span class="ident">nrows</span>: <span class="ident">usize</span>,
-        <span class="ident">schema</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">DataType</span><span class="op">&gt;</span>,
-        <span class="ident">buffers</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">AnyArrayViewMut</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">Ix2</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-        <span class="ident">column_buffer_index</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">usize</span>, <span class="ident">usize</span>)<span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">nrows</span>: <span class="ident">usize</span>, <span class="ident">schema</span>: <span class="kw-2">&amp;</span>[<span class="ident">DataType</span>], <span class="ident">buffers</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">PyList</span>, <span class="ident">index</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">PyList</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="ident">nbuffers</span> <span class="op">=</span> <span class="ident">buffers</span>.<span class="ident">len</span>();
+
+        <span class="comment">// get index for each column: (index of block, index of column within the block)</span>
+        <span class="kw">let</span> <span class="ident">column_buffer_index</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">usize</span>, <span class="ident">usize</span>)<span class="op">&gt;</span> <span class="op">=</span>
+            <span class="ident">index</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">tuple</span><span class="op">|</span> <span class="ident">tuple</span>.<span class="ident">extract</span>().<span class="ident">unwrap</span>()).<span class="ident">collect</span>();
+
+        <span class="comment">// get schema for each block, init by U64</span>
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">block_schema_index</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[<span class="ident">DataType</span>::<span class="ident">U64</span>; <span class="ident">nbuffers</span>];
+        <span class="ident">column_buffer_index</span>
+            .<span class="ident">iter</span>()
+            .<span class="ident">zip_eq</span>(<span class="ident">schema</span>)
+            .<span class="ident">for_each</span>(<span class="op">|</span>((<span class="ident">b</span>, <span class="kw">_</span>), <span class="kw-2">&amp;</span><span class="ident">s</span>)<span class="op">|</span> <span class="ident">block_schema_index</span>[<span class="kw-2">*</span><span class="ident">b</span>] <span class="op">=</span> <span class="ident">s</span>);
+
+        <span class="comment">// get array view of each block so we can write data into using rust</span>
+        <span class="comment">// TODO: cannot support multi-type using FArrayViewMut2 since PyArray does not support String and Option type</span>
+        <span class="kw">let</span> <span class="ident">buffers</span> <span class="op">=</span> <span class="ident">buffers</span>
+            .<span class="ident">iter</span>()
+            .<span class="ident">enumerate</span>()
+            <span class="comment">// .map(|(i, array)| Realize::&lt;FArrayViewMut2&gt;::realize(block_schema_index[i])(array))</span>
+            .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">_i</span>, <span class="ident">array</span>)<span class="op">|</span> {
+                <span class="kw">let</span> <span class="ident">pyarray</span> <span class="op">=</span> <span class="ident">array</span>.<span class="ident">downcast</span>::<span class="op">&lt;</span><span class="ident">PyArray</span><span class="op">&lt;</span><span class="ident">u64</span>, <span class="ident">Ix2</span><span class="op">&gt;</span><span class="op">&gt;</span>().<span class="ident">unwrap</span>();
+                <span class="kw">let</span> <span class="ident">mut_view</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">pyarray</span>.<span class="ident">as_array_mut</span>() };
+                <span class="ident">AnyArrayViewMut</span>::<span class="op">&lt;</span><span class="ident">Ix2</span><span class="op">&gt;</span>::<span class="ident">new</span>(<span class="ident">mut_view</span>)
+            })
+            .<span class="ident">collect</span>();
+
         <span class="ident">PandasWriter</span> {
             <span class="ident">nrows</span>,
-            <span class="ident">schema</span>,
+            <span class="ident">schema</span>: <span class="ident">schema</span>.<span class="ident">to_vec</span>(),
             <span class="ident">buffers</span>: <span class="prelude-val">Some</span>(<span class="ident">buffers</span>),
             <span class="ident">column_buffer_index</span>,
         }
