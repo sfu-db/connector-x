@@ -81,16 +81,18 @@ index = [(i, j) for i, j in zip(df._mgr.blknos, df._mgr.blklocs)]"#,
         })
         .collect();
 
-    // start dispatcher
-    let ncols = schema.len();
-    let queries: Vec<String> = nrows.iter().map(|v| format!("{},{}", v, ncols)).collect();
-    let dispatcher = Dispatcher::new(
-        MixedSourceBuilder {},
-        PandasWriter::new(total_rows, schema.clone(), buffers, column_buffer_index),
-        schema.clone(),
-        queries,
-    );
-    let _dw = dispatcher.run_checked().expect("run dispatcher");
+    py.allow_threads(|| {
+        // start dispatcher
+        let ncols = schema.len();
+        let queries: Vec<String> = nrows.iter().map(|v| format!("{},{}", v, ncols)).collect();
+        let dispatcher = Dispatcher::new(
+            MixedSourceBuilder {},
+            PandasWriter::new(total_rows, schema.clone(), buffers, column_buffer_index),
+            schema.clone(),
+            queries,
+        );
+        dispatcher.run_checked().expect("run dispatcher");
+    });
 
     // return dataframe
     let df = locals.get_item("df").expect("get df!");
