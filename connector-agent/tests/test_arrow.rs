@@ -28,7 +28,7 @@ fn test_arrow() {
     let dispatcher = Dispatcher::new(
         MixedSourceBuilder::new(),
         ArrowWriter::new(),
-        schema,
+        &schema,
         queries,
     );
     let dw = dispatcher.run_checked().expect("run dispatcher");
@@ -146,7 +146,7 @@ fn test_option_arrow() {
     let dispatcher = Dispatcher::new(
         OptU64SourceBuilder::new(data.clone(), ncols),
         ArrowWriter::new(),
-        schema,
+        &schema,
         nrows.iter().map(|_n| String::new()).collect(),
     );
 

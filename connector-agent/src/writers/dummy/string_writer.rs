@@ -34,9 +34,9 @@ impl<'a> StringPartitionWriter<'a> {
     }
 }
 
-impl<'a> Writer<'a> for StringWriter {
+impl Writer for StringWriter {
     const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
-    type PartitionWriter = StringPartitionWriter<'a>;
+    type PartitionWriter<'a> = StringPartitionWriter<'a>;
     type TypeSystem = DataType;
 
     #[throws(ConnectorAgentError)]
@@ -56,7 +56,7 @@ impl<'a> Writer<'a> for StringWriter {
         self.buffer = Array2::default((nrows, ncols));
     }
 
-    fn partition_writers(&'a mut self, counts: &[usize]) -> Vec<Self::PartitionWriter> {
+    fn partition_writers(&mut self, counts: &[usize]) -> Vec<Self::PartitionWriter<'_>> {
         assert_eq!(counts.iter().sum::<usize>(), self.nrows);
         let schema = self.schema().to_vec();
 

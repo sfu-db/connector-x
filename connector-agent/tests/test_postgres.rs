@@ -2,10 +2,11 @@ use connector_agent::data_sources::{
     postgres::{PostgresDataSource, PostgresDataSourceBuilder},
     DataSource, Produce,
 };
-use connector_agent::{SourceBuilder};
-use connector_agent::{DataType, Dispatcher};
 use connector_agent::writers::mixed::MemoryWriter;
+use connector_agent::SourceBuilder;
+use connector_agent::{DataType, Dispatcher};
 use ndarray::array;
+use std::env;
 
 #[test]
 #[should_panic]
@@ -29,19 +30,19 @@ fn wrong_table_name() {
 
 #[test]
 fn load_and_parse() {
+    let dburl = env::var("POSTGRES_URL").unwrap();
+
     #[derive(Debug, PartialEq)]
     enum Value {
         Id(u64),
         Name(String),
         Email(String),
-        Age(u64)
+        Age(u64),
     }
 
-    let mut source_builder = PostgresDataSourceBuilder::new("host=localhost user=postgres dbname=dataprep port=5432 password=postgres");
+    let mut source_builder = PostgresDataSourceBuilder::new(&dburl);
     let mut source: PostgresDataSource = source_builder.build();
-    source
-        .run_query("select * from person")
-        .expect("run query");
+    source.run_query("select * from person").expect("run query");
 
     assert_eq!(3, source.nrows);
     assert_eq!(4, source.ncols);
@@ -50,9 +51,7 @@ fn load_and_parse() {
     for _i in 0..source.nrows {
         results.push(Value::Id(source.produce().expect("parse id")));
         results.push(Value::Name(source.produce().expect("parse name")));
-        results.push(Value::Email(
-            source.produce().expect("parse email"),
-        ));
+        results.push(Value::Email(source.produce().expect("parse email")));
         results.push(Value::Age(source.produce().expect("parse age")));
     }
 
@@ -77,19 +76,22 @@ fn load_and_parse() {
 
 #[test]
 fn test_postgres() {
-    let schema = vec![DataType::U64, DataType::String, DataType::String, DataType::U64];
+    let dburl = env::var("POSTGRES_URL").unwrap();
+    let schema = vec![
+        DataType::U64,
+        DataType::String,
+        DataType::String,
+        DataType::U64,
+    ];
     let queries = vec![
         "select * from person where id < 2".to_string(),
         "select * from person where id >= 2".to_string(),
     ];
-    let builder = PostgresDataSourceBuilder::new("host=localhost user=postgres dbname=dataprep port=5432 password=postgres");
-    let dispatcher = Dispatcher::new(builder, MemoryWriter::new(), schema, queries);
+    let builder = PostgresDataSourceBuilder::new(&dburl);
+    let dispatcher = Dispatcher::new(builder, MemoryWriter::new(), &schema, queries);
 
     let dw = dispatcher.run_checked().expect("run dispatcher");
-    assert_eq!(
-        array![1, 2, 3],
-        dw.column_view::<u64>(0).unwrap()
-    );
+    assert_eq!(array![1, 2, 3], dw.column_view::<u64>(0).unwrap());
     assert_eq!(
         array!["Raj", "Abhishek", "Ashish"],
         dw.column_view::<String>(1).unwrap()
@@ -98,8 +100,5 @@ fn test_postgres() {
         array!["raj@gmail.com", "ab@gmail.com", "ashish@gmail.com"],
         dw.column_view::<String>(2).unwrap()
     );
-    assert_eq!(
-        array![22, 32, 25],
-        dw.column_view::<u64>(3).unwrap()
-    );
+    assert_eq!(array![22, 32, 25], dw.column_view::<u64>(3).unwrap());
 }

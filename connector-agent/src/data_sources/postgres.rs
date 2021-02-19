@@ -12,7 +12,6 @@ type PgConn = PooledConnection<PgManager>;
 
 pub struct PostgresDataSourceBuilder {
     pool: Pool<PgManager>,
-    data_order: Option<DataOrder>,
 }
 
 impl PostgresDataSourceBuilder {
@@ -20,10 +19,7 @@ impl PostgresDataSourceBuilder {
         let manager = PostgresConnectionManager::new(conn.parse().unwrap(), NoTls);
         let pool = Pool::new(manager).unwrap();
 
-        Self {
-            pool,
-            data_order: None,
-        }
+        Self { pool }
     }
 }
 
@@ -35,9 +31,9 @@ impl SourceBuilder for PostgresDataSourceBuilder {
         if !matches!(data_order, DataOrder::RowMajor) {
             throw!(ConnectorAgentError::UnsupportedDataOrder(data_order));
         }
-        self.data_order = Some(data_order);
         Ok(())
     }
+
     fn build(&mut self) -> Self::DataSource {
         PostgresDataSource::new(self.pool.get().unwrap())
     }
@@ -45,22 +41,20 @@ impl SourceBuilder for PostgresDataSourceBuilder {
 
 pub struct PostgresDataSource {
     conn: PgConn,
-    buf: Vec<u8>,
     counter: usize,
     pub nrows: usize,
     pub ncols: usize,
-    records: Vec<csv::StringRecord>
+    records: Vec<csv::StringRecord>,
 }
 
 impl PostgresDataSource {
     pub fn new(conn: PgConn) -> Self {
         Self {
             conn,
-            buf: vec![],
             counter: 0,
             nrows: 0,
             ncols: 0,
-            records: Vec::new()
+            records: Vec::new(),
         }
     }
 }
@@ -69,13 +63,11 @@ impl DataSource for PostgresDataSource {
     type TypeSystem = DataType;
 
     fn run_query(&mut self, query: &str) -> Result<()> {
-        if self.buf.len() != 0 {
-            panic!("Buffer not empty");
-        }
+        let mut buf = vec![];
         let query = format!("COPY ({}) TO STDOUT WITH CSV", query);
-        self.conn.copy_out(&*query)?.read_to_end(&mut self.buf)?;
+        self.conn.copy_out(&*query)?.read_to_end(&mut buf)?;
 
-        let mut buf = self.buf.as_slice();
+        let mut buf = buf.as_slice();
 
         let mut reader = csv::ReaderBuilder::new()
             .has_headers(false)
@@ -88,6 +80,7 @@ impl DataSource for PostgresDataSource {
         }
         Ok(())
     }
+
     fn nrows(&self) -> usize {
         self.nrows
     }

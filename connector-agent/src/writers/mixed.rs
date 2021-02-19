@@ -10,7 +10,7 @@ use ndarray::{Array2, ArrayView1, ArrayView2, Axis, Ix2};
 use std::any::type_name;
 use std::collections::HashMap;
 
-/// This `Writer` can only write u64 into it.
+/// This `Writer` can support mixed data type.
 pub struct MemoryWriter {
     nrows: usize,
     schema: Vec<DataType>,
@@ -29,10 +29,10 @@ impl MemoryWriter {
     }
 }
 
-impl<'a> Writer<'a> for MemoryWriter {
+impl Writer for MemoryWriter {
     const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
     type TypeSystem = DataType;
-    type PartitionWriter = MemoryPartitionWriter<'a>;
+    type PartitionWriter<'a> = MemoryPartitionWriter<'a>;
 
     #[throws(ConnectorAgentError)]
     fn allocate(&mut self, nrows: usize, schema: Vec<DataType>, data_order: DataOrder) {
@@ -69,7 +69,7 @@ impl<'a> Writer<'a> for MemoryWriter {
         }
     }
 
-    fn partition_writers(&'a mut self, counts: &[usize]) -> Vec<Self::PartitionWriter> {
+    fn partition_writers(&mut self, counts: &[usize]) -> Vec<Self::PartitionWriter<'_>> {
         assert_eq!(counts.iter().sum::<usize>(), self.nrows);
 
         let nbuffers = self.buffers.len();
