@@ -3,7 +3,6 @@ use crate::data_sources::{DataSource, Produce, SourceBuilder};
 use crate::errors::{ConnectorAgentError, Result};
 use crate::types::DataType;
 use fehler::throw;
-use anyhow::anyhow;
 use r2d2::{Pool, PooledConnection};
 use r2d2_postgres::{postgres::NoTls, PostgresConnectionManager};
 use std::io::Read;
@@ -86,46 +85,46 @@ impl DataSource for PostgresDataSource {
     }
 }
 
+impl PostgresDataSource {
+    fn next_value(&mut self) -> &str {
+        let v = &self.records[self.counter / self.ncols][self.counter % self.ncols];
+        self.counter += 1;
+        v
+    }
+}
+
 impl Produce<u64> for PostgresDataSource {
     fn produce(&mut self) -> Result<u64> {
-        let v: &str = self.records[self.counter / self.ncols][self.counter % self.ncols].as_ref();
-        self.counter += 1;
-        Ok(v.parse().unwrap_or_default())
+        Ok(self.next_value().parse().unwrap_or_default())
     }
 }
 
 impl Produce<f64> for PostgresDataSource {
     fn produce(&mut self) -> Result<f64> {
-        let v: &str = self.records[self.counter / self.ncols][self.counter % self.ncols].as_ref();
-        self.counter += 1;
-        Ok(v.parse().unwrap_or_default())
+        Ok(self.next_value().parse().unwrap_or_default())
     }
 }
 
 impl Produce<bool> for PostgresDataSource {
     fn produce(&mut self) -> Result<bool> {
-        let bool_str:&str = self.records[self.counter / self.ncols][self.counter % self.ncols].as_ref();
-        let v = match bool_str {
+        let v = self.next_value();
+        let v = match v {
             "t" => true,
             "f" => false,
-            _ => {throw!(anyhow!(format!("Unexpected value, expect t or f, found {}", bool_str)));}
+            _ => throw!(ConnectorAgentError::CannotParsePostgresBool(v.to_string())),
         };
-        self.counter += 1;
         Ok(v)
     }
 }
 impl Produce<String> for PostgresDataSource {
     fn produce(&mut self) -> Result<String> {
-        let v: &str = self.records[self.counter / self.ncols][self.counter % self.ncols].as_ref();
-        self.counter += 1;
-        Ok(String::from(v))
+        Ok(String::from(self.next_value()))
     }
 }
 
 impl Produce<Option<u64>> for PostgresDataSource {
     fn produce(&mut self) -> Result<Option<u64>> {
-        let v: &str = self.records[self.counter / self.ncols][self.counter % self.ncols].as_ref();
-        self.counter += 1;
+        let v = self.next_value();
         if v.is_empty() {
             return Ok(None);
         }

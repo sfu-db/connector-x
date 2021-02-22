@@ -1,5 +1,10 @@
-# connector-agent ![CI](https://github.com/dovahcrow/treerite/workflows/CI/badge.svg)
+# connector-agent [![status][ci_badge]][ci_page] [![docs][docs_badge]][docs_page]
 
+[ci_badge]: https://github.com/dovahcrow/treerite/workflows/ci/badge.svg
+[ci_page]: https://github.com/sfu-db/connector-agent/actions
+
+[docs_badge]: https://github.com/dovahcrow/treerite/workflows/docs/badge.svg
+[docs_page]: https://sfu-db.github.io/connector-agent/connector_agent/
 ## Environment Setup
 * Install rustup: `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`
 * Install Just: `cargo install just`
