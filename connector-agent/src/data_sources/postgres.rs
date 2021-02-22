@@ -3,6 +3,7 @@ use crate::data_sources::{DataSource, Produce, SourceBuilder};
 use crate::errors::{ConnectorAgentError, Result};
 use crate::types::DataType;
 use fehler::throw;
+use anyhow::anyhow;
 use r2d2::{Pool, PooledConnection};
 use r2d2_postgres::{postgres::NoTls, PostgresConnectionManager};
 use std::io::Read;
@@ -66,7 +67,6 @@ impl DataSource for PostgresDataSource {
         let mut buf = vec![];
         let query = format!("COPY ({}) TO STDOUT WITH CSV", query);
         self.conn.copy_out(&*query)?.read_to_end(&mut buf)?;
-
         let mut buf = buf.as_slice();
 
         let mut reader = csv::ReaderBuilder::new()
@@ -104,12 +104,16 @@ impl Produce<f64> for PostgresDataSource {
 
 impl Produce<bool> for PostgresDataSource {
     fn produce(&mut self) -> Result<bool> {
-        let v: &str = self.records[self.counter / self.ncols][self.counter % self.ncols].as_ref();
+        let bool_str:&str = self.records[self.counter / self.ncols][self.counter % self.ncols].as_ref();
+        let v = match bool_str {
+            "t" => true,
+            "f" => false,
+            _ => {throw!(anyhow!(format!("Unexpected value, expect t or f, found {}", bool_str)));}
+        };
         self.counter += 1;
-        Ok(v.parse().unwrap_or_default())
+        Ok(v)
     }
 }
-
 impl Produce<String> for PostgresDataSource {
     fn produce(&mut self) -> Result<String> {
         let v: &str = self.records[self.counter / self.ncols][self.counter % self.ncols].as_ref();

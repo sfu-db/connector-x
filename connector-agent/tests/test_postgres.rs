@@ -7,11 +7,31 @@ use connector_agent::SourceBuilder;
 use connector_agent::{DataType, Dispatcher};
 use ndarray::array;
 use std::env;
+use r2d2::{Pool};
+use r2d2_postgres::{postgres::NoTls, PostgresConnectionManager};
+
+fn create_table() {
+    let dburl = env::var("POSTGRES_URL").unwrap();
+    let manager = PostgresConnectionManager::new(dburl.parse().unwrap(), NoTls);
+    let pool = Pool::new(manager).unwrap();
+    let mut conn = pool.get().unwrap();
+    conn.batch_execute("
+        DROP TABLE IF EXISTS test_postgres_conn;
+        CREATE TABLE test_postgres_conn(
+            test_int integer,
+            test_str text,
+            test_float real,
+            test_bool boolean
+        );
+        INSERT INTO test_postgres_conn VALUES (1, 'str1', 1.1, true);
+        INSERT INTO test_postgres_conn VALUES (2, 'str2', 2.2, false);
+    ");
+}
 
 #[test]
 #[should_panic]
 fn wrong_connection() {
-    let mut source_builder = PostgresDataSourceBuilder::new("connection_code");
+    let mut source_builder = PostgresDataSourceBuilder::new("wrong_connection_code");
     let mut source: PostgresDataSource = source_builder.build();
     source
         .run_query("select * from test_table_1")
@@ -21,7 +41,8 @@ fn wrong_connection() {
 #[test]
 #[should_panic]
 fn wrong_table_name() {
-    let mut source_builder = PostgresDataSourceBuilder::new("connection_code");
+    let dburl = env::var("POSTGRES_URL").unwrap();
+    let mut source_builder = PostgresDataSourceBuilder::new(&dburl);
     let mut source: PostgresDataSource = source_builder.build();
     source
         .run_query("select * from test_table_wrong")
@@ -30,45 +51,41 @@ fn wrong_table_name() {
 
 #[test]
 fn load_and_parse() {
+    create_table();
     let dburl = env::var("POSTGRES_URL").unwrap();
-
     #[derive(Debug, PartialEq)]
     enum Value {
-        Id(u64),
-        Name(String),
-        Email(String),
-        Age(u64),
+        TestInt(u64),
+        TestStr(String),
+        TestFloat(f64),
+        TestBool(bool),
     }
 
     let mut source_builder = PostgresDataSourceBuilder::new(&dburl);
     let mut source: PostgresDataSource = source_builder.build();
-    source.run_query("select * from person").expect("run query");
+    source.run_query("select * from test_postgres_conn").expect("run query");
 
-    assert_eq!(3, source.nrows);
+    assert_eq!(2, source.nrows);
     assert_eq!(4, source.ncols);
 
     let mut results: Vec<Value> = Vec::new();
     for _i in 0..source.nrows {
-        results.push(Value::Id(source.produce().expect("parse id")));
-        results.push(Value::Name(source.produce().expect("parse name")));
-        results.push(Value::Email(source.produce().expect("parse email")));
-        results.push(Value::Age(source.produce().expect("parse age")));
+        results.push(Value::TestInt(source.produce().expect("parse test_int")));
+        results.push(Value::TestStr(source.produce().expect("parse test_str")));
+        results.push(Value::TestFloat(source.produce().expect("parse test_float")));
+        results.push(Value::TestBool(source.produce().expect("parse test_bool")));
     }
 
     assert_eq!(
         vec![
-            Value::Id(1),
-            Value::Name(String::from("Raj")),
-            Value::Email(String::from("raj@gmail.com")),
-            Value::Age(22),
-            Value::Id(2),
-            Value::Name(String::from("Abhishek")),
-            Value::Email(String::from("ab@gmail.com")),
-            Value::Age(32),
-            Value::Id(3),
-            Value::Name(String::from("Ashish")),
-            Value::Email(String::from("ashish@gmail.com")),
-            Value::Age(25),
+            Value::TestInt(1),
+            Value::TestStr(String::from("str1")),
+            Value::TestFloat(1.1),
+            Value::TestBool(true),
+            Value::TestInt(2),
+            Value::TestStr(String::from("str2")),
+            Value::TestFloat(2.2),
+            Value::TestBool(false),
         ],
         results
     );
@@ -76,29 +93,24 @@ fn load_and_parse() {
 
 #[test]
 fn test_postgres() {
+    create_table();
     let dburl = env::var("POSTGRES_URL").unwrap();
     let schema = vec![
         DataType::U64,
         DataType::String,
-        DataType::String,
-        DataType::U64,
+        DataType::F64,
+        DataType::Bool,
     ];
     let queries = vec![
-        "select * from person where id < 2".to_string(),
-        "select * from person where id >= 2".to_string(),
+        "select * from test_postgres_conn where test_int < 2".to_string(),
+        "select * from test_postgres_conn where test_int >= 2".to_string(),
     ];
     let builder = PostgresDataSourceBuilder::new(&dburl);
     let dispatcher = Dispatcher::new(builder, MemoryWriter::new(), &schema, queries);
 
     let dw = dispatcher.run_checked().expect("run dispatcher");
-    assert_eq!(array![1, 2, 3], dw.column_view::<u64>(0).unwrap());
-    assert_eq!(
-        array!["Raj", "Abhishek", "Ashish"],
-        dw.column_view::<String>(1).unwrap()
-    );
-    assert_eq!(
-        array!["raj@gmail.com", "ab@gmail.com", "ashish@gmail.com"],
-        dw.column_view::<String>(2).unwrap()
-    );
-    assert_eq!(array![22, 32, 25], dw.column_view::<u64>(3).unwrap());
+    assert_eq!(array![1, 2], dw.column_view::<u64>(0).unwrap());
+    assert_eq!(array!["str1", "str2"], dw.column_view::<String>(1).unwrap());
+    assert_eq!(array![1.1, 2.2],  dw.column_view::<f64>(2).unwrap());
+    assert_eq!(array![true, false], dw.column_view::<bool>(3).unwrap());
 }
