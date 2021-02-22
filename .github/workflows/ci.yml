@@ -1,10 +1,27 @@
-name: CI
+name: ci
 
-on: [push]
+on: 
+  pull_request:
+    branches:
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    container: ubuntu
+    services:
+      # Label used to access the service container
+      postgres:
+        # Docker Hub image
+        image: postgres
+        env:
+          POSTGRES_PASSWORD: postgres
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
       - uses: actions/checkout@v2
@@ -12,33 +29,38 @@ jobs:
         with:
           fail-fast: true
 
+      - name: Install tools
+        run: |
+          apt-get update
+          apt-get install -y curl postgresql-client build-essential python3-dev pkg-config libssl-dev git
+        env:
+          DEBIAN_FRONTEND: noninteractive
+
       - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
-            toolchain: nightly-2021-02-15
-            components: rustfmt
-            default: true
+          toolchain: nightly-2021-02-15
+          components: rustfmt
+          default: true
 
       - name: Is the code formatted?
         uses: actions-rs/cargo@v1
         with:
           command: fmt
           args: --all -- --check -q
+      
+      - name: Seed the database
+        run: "psql postgresql://postgres:postgres@postgres:5432/postgres -f scripts/postgres.sql"
 
       - name: Run tests
         uses: actions-rs/cargo@v1
         with:
           command: test
-
-      - name: Build docs
+        env:
+          POSTGRES_URL: "postgresql://postgres:postgres@postgres:5432/postgres"
+      
+      - name: Test build docs
         uses: actions-rs/cargo@v1
         with:
           command: doc
-          
-      - name: Deploy Docs 🚀
-        uses: JamesIves/github-pages-deploy-action@3.7.1
-        with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          BRANCH: gh-pages # The branch the action should deploy to.
-          FOLDER: target/doc # The folder the action should deploy.
-          CLEAN: true # Automatically remove deleted files from the deploy branch
+          args: --no-deps

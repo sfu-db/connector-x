@@ -20,6 +20,7 @@ pub use crate::data_order::DataOrder;
 pub use crate::data_sources::{
     csv::{CSVSource, CSVSourceBuilder},
     mixed::{MixedSource, MixedSourceBuilder},
+    postgres::{PostgresDataSource, PostgresDataSourceBuilder},
     {DataSource, SourceBuilder},
 };
 pub use crate::dispatcher::Dispatcher;

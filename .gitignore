@@ -6,3 +6,4 @@ __pycache__
 .idea/
 flamegraph.svg
 perf.data
+.env
