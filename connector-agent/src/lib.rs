@@ -19,8 +19,8 @@ pub use crate::any_array::{AnyArray, AnyArrayView, AnyArrayViewMut};
 pub use crate::data_order::DataOrder;
 pub use crate::data_sources::{
     csv::{CSVSource, CSVSourceBuilder},
-    postgres::{PostgresDataSource, PostgresDataSourceBuilder},
     mixed::{MixedSource, MixedSourceBuilder},
+    postgres::{PostgresDataSource, PostgresDataSourceBuilder},
     {DataSource, SourceBuilder},
 };
 pub use crate::dispatcher::Dispatcher;

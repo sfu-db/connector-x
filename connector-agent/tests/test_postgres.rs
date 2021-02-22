@@ -7,26 +7,6 @@ use connector_agent::SourceBuilder;
 use connector_agent::{DataType, Dispatcher};
 use ndarray::array;
 use std::env;
-use r2d2::{Pool};
-use r2d2_postgres::{postgres::NoTls, PostgresConnectionManager};
-
-fn create_table() {
-    let dburl = env::var("POSTGRES_URL").unwrap();
-    let manager = PostgresConnectionManager::new(dburl.parse().unwrap(), NoTls);
-    let pool = Pool::new(manager).unwrap();
-    let mut conn = pool.get().unwrap();
-    conn.batch_execute("
-        DROP TABLE IF EXISTS test_postgres_conn;
-        CREATE TABLE test_postgres_conn(
-            test_int integer,
-            test_str text,
-            test_float real,
-            test_bool boolean
-        );
-        INSERT INTO test_postgres_conn VALUES (1, 'str1', 1.1, true);
-        INSERT INTO test_postgres_conn VALUES (2, 'str2', 2.2, false);
-    ");
-}
 
 #[test]
 #[should_panic]
@@ -51,7 +31,6 @@ fn wrong_table_name() {
 
 #[test]
 fn load_and_parse() {
-    create_table();
     let dburl = env::var("POSTGRES_URL").unwrap();
     #[derive(Debug, PartialEq)]
     enum Value {
@@ -63,7 +42,9 @@ fn load_and_parse() {
 
     let mut source_builder = PostgresDataSourceBuilder::new(&dburl);
     let mut source: PostgresDataSource = source_builder.build();
-    source.run_query("select * from test_postgres_conn").expect("run query");
+    source
+        .run_query("select * from test_postgres_conn")
+        .expect("run query");
 
     assert_eq!(2, source.nrows);
     assert_eq!(4, source.ncols);
@@ -72,7 +53,9 @@ fn load_and_parse() {
     for _i in 0..source.nrows {
         results.push(Value::TestInt(source.produce().expect("parse test_int")));
         results.push(Value::TestStr(source.produce().expect("parse test_str")));
-        results.push(Value::TestFloat(source.produce().expect("parse test_float")));
+        results.push(Value::TestFloat(
+            source.produce().expect("parse test_float"),
+        ));
         results.push(Value::TestBool(source.produce().expect("parse test_bool")));
     }
 
@@ -93,7 +76,6 @@ fn load_and_parse() {
 
 #[test]
 fn test_postgres() {
-    create_table();
     let dburl = env::var("POSTGRES_URL").unwrap();
     let schema = vec![
         DataType::U64,
@@ -111,6 +93,6 @@ fn test_postgres() {
     let dw = dispatcher.run_checked().expect("run dispatcher");
     assert_eq!(array![1, 2], dw.column_view::<u64>(0).unwrap());
     assert_eq!(array!["str1", "str2"], dw.column_view::<String>(1).unwrap());
-    assert_eq!(array![1.1, 2.2],  dw.column_view::<f64>(2).unwrap());
+    assert_eq!(array![1.1, 2.2], dw.column_view::<f64>(2).unwrap());
     assert_eq!(array![true, false], dw.column_view::<bool>(3).unwrap());
 }

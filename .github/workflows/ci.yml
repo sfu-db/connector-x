@@ -38,13 +38,16 @@ jobs:
         with:
           command: fmt
           args: --all -- --check -q
+      
+      - name: Seed the database
+        run: psql postgresql://postgres:postgres@postgres:5432/dataprep -f scripts/postgres.sql 
 
       - name: Run tests
         uses: actions-rs/cargo@v1
         with:
           command: test
         env:
-          POSTGRES_URL: "postgresql://postgres:postgres@postgres:5432/dataprep",
+          POSTGRES_URL: "postgresql://postgres:postgres@postgres:5432/dataprep"
 
       - name: Build docs
         uses: actions-rs/cargo@v1
