@@ -26,7 +26,7 @@ pub trait DataSource: Sized {
     type TypeSystem: TypeSystem;
 
     /// Run the query and put the result into Self.
-    fn run_query(&mut self, query: &str) -> Result<()>;
+    fn prepare(&mut self, query: &str) -> Result<()>;
 
     /// Read a value `T` by calling `Produce<T>::produce`. Usually this function does not need to be
     /// implemented.

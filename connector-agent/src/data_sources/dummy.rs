@@ -42,7 +42,7 @@ impl DataSource for U64CounterSource {
     type TypeSystem = DataType;
 
     // query: nrows
-    fn run_query(&mut self, query: &str) -> Result<()> {
+    fn prepare(&mut self, query: &str) -> Result<()> {
         self.nrows = query.parse().unwrap();
         Ok(())
     }
@@ -129,7 +129,7 @@ impl DataSource for StringSource {
     type TypeSystem = DataType;
 
     // query: nrows
-    fn run_query(&mut self, query: &str) -> Result<()> {
+    fn prepare(&mut self, query: &str) -> Result<()> {
         self.nrows = query.parse().unwrap();
         Ok(())
     }
@@ -221,7 +221,7 @@ impl DataSource for BoolCounterSource {
     type TypeSystem = DataType;
 
     // query: nrows
-    fn run_query(&mut self, query: &str) -> Result<()> {
+    fn prepare(&mut self, query: &str) -> Result<()> {
         self.nrows = query.parse().unwrap();
         Ok(())
     }
@@ -301,7 +301,7 @@ impl F64CounterSource {
 impl DataSource for F64CounterSource {
     type TypeSystem = DataType;
 
-    fn run_query(&mut self, query: &str) -> Result<()> {
+    fn prepare(&mut self, query: &str) -> Result<()> {
         self.nrows = query.parse().unwrap();
         Ok(())
     }
@@ -393,7 +393,7 @@ impl OptU64TestSource {
 
 impl DataSource for OptU64TestSource {
     type TypeSystem = DataType;
-    fn run_query(&mut self, _: &str) -> Result<()> {
+    fn prepare(&mut self, _: &str) -> Result<()> {
         Ok(())
     }
 

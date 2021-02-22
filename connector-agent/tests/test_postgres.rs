@@ -14,7 +14,7 @@ fn wrong_connection() {
     let mut source_builder = PostgresDataSourceBuilder::new("wrong_connection_code");
     let mut source: PostgresDataSource = source_builder.build();
     source
-        .run_query("select * from test_table_1")
+        .prepare("select * from test_table_1")
         .expect("run query");
 }
 
@@ -25,7 +25,7 @@ fn wrong_table_name() {
     let mut source_builder = PostgresDataSourceBuilder::new(&dburl);
     let mut source: PostgresDataSource = source_builder.build();
     source
-        .run_query("select * from test_table_wrong")
+        .prepare("select * from test_table_wrong")
         .expect("run query");
 }
 
@@ -43,7 +43,7 @@ fn load_and_parse() {
     let mut source_builder = PostgresDataSourceBuilder::new(&dburl);
     let mut source: PostgresDataSource = source_builder.build();
     source
-        .run_query("select * from test_postgres_conn")
+        .prepare("select * from test_postgres_conn")
         .expect("run query");
 
     assert_eq!(2, source.nrows);

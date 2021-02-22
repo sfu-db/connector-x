@@ -49,7 +49,7 @@ impl DataSource for MixedSource {
     type TypeSystem = DataType;
 
     // query: nrows,ncols
-    fn run_query(&mut self, query: &str) -> Result<()> {
+    fn prepare(&mut self, query: &str) -> Result<()> {
         let v: Vec<usize> = query.split(',').map(|s| s.parse().unwrap()).collect();
         self.nrows = v[0];
         self.ncols = v[1];

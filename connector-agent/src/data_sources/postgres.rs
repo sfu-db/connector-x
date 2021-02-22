@@ -62,7 +62,7 @@ impl PostgresDataSource {
 impl DataSource for PostgresDataSource {
     type TypeSystem = DataType;
 
-    fn run_query(&mut self, query: &str) -> Result<()> {
+    fn prepare(&mut self, query: &str) -> Result<()> {
         let mut buf = vec![];
         let query = format!("COPY ({}) TO STDOUT WITH CSV", query);
         self.conn.copy_out(&*query)?.read_to_end(&mut buf)?;

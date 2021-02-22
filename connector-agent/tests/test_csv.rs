@@ -10,16 +10,14 @@ use ndarray::array;
 #[should_panic]
 fn no_file() {
     let mut source = CSVSource::new();
-    source.run_query("./a_fake_file.csv").expect("run query");
+    source.prepare("./a_fake_file.csv").expect("run query");
 }
 
 #[test]
 #[should_panic]
 fn empty_file() {
     let mut source = CSVSource::new();
-    source
-        .run_query("./tests/data/empty.csv")
-        .expect("run query");
+    source.prepare("./tests/data/empty.csv").expect("run query");
 
     assert_eq!(0, source.nrows);
     assert_eq!(0, source.ncols);
@@ -39,7 +37,7 @@ fn load_and_parse() {
 
     let mut source = CSVSource::new();
     source
-        .run_query("./tests/data/uspop_0.csv")
+        .prepare("./tests/data/uspop_0.csv")
         .expect("run query");
 
     assert_eq!(3, source.nrows);

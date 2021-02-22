@@ -55,7 +55,7 @@ impl DataSource for CSVSource {
     type TypeSystem = DataType;
 
     /// The parameter `query` is the path of the csv file
-    fn run_query(&mut self, query: &str) -> Result<()> {
+    fn prepare(&mut self, query: &str) -> Result<()> {
         let mut reader = csv::ReaderBuilder::new()
             .has_headers(false)
             .from_reader(File::open(query).expect("open file"));
