@@ -1,1 +1,0 @@
-initSidebarItems({"fn":[["take","Take elements by index from [Array], creating a new [Array] from those indexes."]],"struct":[["TakeOptions","Options that define how `take` should behave"]]});

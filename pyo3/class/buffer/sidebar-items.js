@@ -1,1 +1,0 @@
-initSidebarItems({"trait":[["PyBufferGetBufferProtocol",""],["PyBufferProtocol","Buffer protocol interface"],["PyBufferReleaseBufferProtocol",""]]});

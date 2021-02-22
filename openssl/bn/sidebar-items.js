@@ -1,1 +1,0 @@
-initSidebarItems({"struct":[["BigNum","Dynamically sized large number implementation"],["BigNumContext","Temporary storage for BigNums on the secure heap"],["BigNumContextRef","Reference to `BigNumContext`"],["BigNumRef","Reference to a `BigNum`"],["MsbOption","Options for the most significant bits of a randomly generated `BigNum`."]]});

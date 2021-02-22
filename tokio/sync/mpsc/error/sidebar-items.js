@@ -1,1 +1,0 @@
-initSidebarItems({"enum":[["SendTimeoutError","Error returned by `Sender::send_timeout`]."],["TrySendError","This enumeration is the list of the possible error outcomes for the try_send method."]],"struct":[["RecvError","Error returned by `Receiver`."],["SendError","Error returned by the `Sender`."]]});

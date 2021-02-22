@@ -1,1 +1,0 @@
-initSidebarItems({"struct":[["BinaryCopyInWriter","A type which serializes rows into the PostgreSQL binary copy format."],["BinaryCopyOutIter","An iterator of rows deserialized from the PostgreSQL binary copy format."],["BinaryCopyOutRow","A row of data parsed from a binary copy out stream."]]});

@@ -1,1 +1,0 @@
-initSidebarItems({"enum":[["Region","An AWS region."]],"struct":[["ParseRegionError","An error produced when attempting to convert a `str` into a `Region` fails."]]});

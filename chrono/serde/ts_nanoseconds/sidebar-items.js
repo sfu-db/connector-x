@@ -1,1 +1,0 @@
-initSidebarItems({"fn":[["deserialize","Deserialize a `DateTime` from a nanosecond timestamp"],["serialize","Serialize a UTC datetime into an integer number of nanoseconds since the epoch"]]});

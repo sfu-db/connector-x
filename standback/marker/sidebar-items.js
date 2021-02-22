@@ -1,1 +1,0 @@
-initSidebarItems({"trait":[["Unpin","Types that can be safely moved after being pinned."]]});

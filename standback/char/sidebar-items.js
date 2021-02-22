@@ -1,1 +1,0 @@
-initSidebarItems({"constant":[["UNICODE_VERSION","The version of Unicode that the Unicode parts of `char` and `str` methods are based on."]]});

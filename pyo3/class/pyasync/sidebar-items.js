@@ -1,1 +1,0 @@
-initSidebarItems({"enum":[["IterANextOutput","Output of `__anext__`."]],"trait":[["PyAsyncAenterProtocol",""],["PyAsyncAexitProtocol",""],["PyAsyncAiterProtocol",""],["PyAsyncAnextProtocol",""],["PyAsyncAwaitProtocol",""],["PyAsyncProtocol","Python Async/Await support interface."]],"type":[["PyIterANextOutput",""]]});

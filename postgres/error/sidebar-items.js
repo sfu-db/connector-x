@@ -1,1 +1,0 @@
-initSidebarItems({"enum":[["ErrorPosition","Represents the position of an error in a query."],["Severity","The severity of a Postgres error or notice."]],"struct":[["DbError","A Postgres error or notice."],["Error","An error communicating with the Postgres server."],["SqlState","A SQLSTATE error code"]]});

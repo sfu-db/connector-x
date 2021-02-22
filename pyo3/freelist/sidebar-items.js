@@ -1,1 +1,0 @@
-initSidebarItems({"enum":[["Slot",""]],"struct":[["FreeList",""]],"trait":[["PyClassWithFreeList","Implementing this trait for custom class adds free allocation list to class. The performance improvement applies to types that are often created and deleted in a row, so that they can benefit from a freelist."]]});

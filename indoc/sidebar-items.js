@@ -1,1 +1,0 @@
-initSidebarItems({"macro":[["eprintdoc","Unindent and call `eprint!`."],["formatdoc","Unindent and call `format!`."],["indoc","Unindent and produce `&'static str`."],["printdoc","Unindent and call `print!`."],["writedoc","Unindent and call `write!`."]]});

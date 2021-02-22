@@ -1,1 +1,0 @@
-initSidebarItems({"enum":[["ChannelBinding","Channel binding configuration."],["Host","A host specification."],["SslMode","TLS configuration."],["TargetSessionAttrs","Properties required of a session."]],"struct":[["Config","Connection configuration."]]});

@@ -26,6 +26,15 @@
 <span id="23">23</span>
 <span id="24">24</span>
 <span id="25">25</span>
+<span id="26">26</span>
+<span id="27">27</span>
+<span id="28">28</span>
+<span id="29">29</span>
+<span id="30">30</span>
+<span id="31">31</span>
+<span id="32">32</span>
+<span id="33">33</span>
+<span id="34">34</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">data_order</span>::<span class="ident">DataOrder</span>, <span class="ident">types</span>::<span class="ident">DataType</span>};
 <span class="kw">use</span> <span class="ident">thiserror</span>::<span class="ident">Error</span>;
@@ -47,6 +56,15 @@
 
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Cannot resolve data order: got {0:?} from source, {1:?} from destination.&quot;</span>)]</span>
     <span class="ident">CannotResolveDataOrder</span>(<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">DataOrder</span><span class="op">&gt;</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">DataOrder</span><span class="op">&gt;</span>),
+
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Unexpected value, expect t or f, found {0}&quot;</span>)]</span>
+    <span class="ident">CannotParsePostgresBool</span>(<span class="ident">String</span>),
+
+    <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
+    <span class="ident">IOError</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">std</span>::<span class="ident">io</span>::<span class="ident">Error</span>),
+
+    <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
+    <span class="ident">PostgresError</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">postgres</span>::<span class="ident">Error</span>),
 
     <span class="doccomment">/// Any other errors that are too trivial to be put here explicitly.</span>
     <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>

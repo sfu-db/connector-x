@@ -1,1 +1,0 @@
-initSidebarItems({"struct":[["CMSOptions",""],["CmsContentInfo","High level CMS wrapper"],["CmsContentInfoRef","Reference to `CMSContentInfo`"]]});

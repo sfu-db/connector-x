@@ -1,1 +1,0 @@
-initSidebarItems({"fn":[["hour","Extracts the hours of a given temporal array as an array of integers"]]});

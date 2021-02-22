@@ -1,1 +1,0 @@
-initSidebarItems({"mod":[["reader","CSV Reader"],["writer","CSV Writer"]]});

@@ -1,1 +1,0 @@
-initSidebarItems({"constant":[["MAGIC","File identification bytes stored at the beginning of the file."],["TERMINATOR","The terminator for each archive member header."],["THIN_MAGIC","File identification bytes stored at the beginning of a thin archive."]],"struct":[["Header","The header at the start of an archive member."]]});

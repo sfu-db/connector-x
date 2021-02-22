@@ -1,1 +1,0 @@
-initSidebarItems({"mod":[["reader","JSON Reader"]]});

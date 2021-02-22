@@ -1,1 +1,0 @@
-initSidebarItems({"struct":[["InvalidMethod","A possible error value when converting `Method` from bytes."],["Method","The Request Method (VERB)"]]});

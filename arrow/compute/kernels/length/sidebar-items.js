@@ -1,1 +1,0 @@
-initSidebarItems({"fn":[["length","Returns an array of Int32/Int64 denoting the number of characters in each string in the array."]]});

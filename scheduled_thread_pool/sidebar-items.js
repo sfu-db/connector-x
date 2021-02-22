@@ -1,1 +1,0 @@
-initSidebarItems({"struct":[["JobHandle","A handle to a scheduled job."],["ScheduledThreadPool","A pool of threads which can run tasks at specific time intervals."]]});

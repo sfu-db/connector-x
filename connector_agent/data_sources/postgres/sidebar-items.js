@@ -1,1 +1,1 @@
-initSidebarItems({});
+initSidebarItems({"struct":[["PostgresDataSource",""],["PostgresDataSourceBuilder",""]]});

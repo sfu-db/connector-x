@@ -1,1 +1,0 @@
-initSidebarItems({"struct":[["Connect","Creates a connection via `SendRequest`."]]});
