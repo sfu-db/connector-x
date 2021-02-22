@@ -177,7 +177,7 @@
         <span class="ident">sources</span>
             .<span class="ident">par_iter_mut</span>()
             .<span class="ident">zip_eq</span>(<span class="self">self</span>.<span class="ident">queries</span>.<span class="ident">as_slice</span>())
-            .<span class="ident">for_each</span>(<span class="op">|</span>(<span class="ident">source</span>, <span class="ident">query</span>)<span class="op">|</span> <span class="ident">source</span>.<span class="ident">run_query</span>(<span class="ident">query</span>.<span class="ident">as_str</span>()).<span class="ident">expect</span>(<span class="string">&quot;run query&quot;</span>));
+            .<span class="ident">for_each</span>(<span class="op">|</span>(<span class="ident">source</span>, <span class="ident">query</span>)<span class="op">|</span> <span class="ident">source</span>.<span class="ident">prepare</span>(<span class="ident">query</span>.<span class="ident">as_str</span>()).<span class="ident">expect</span>(<span class="string">&quot;run query&quot;</span>));
 
         <span class="comment">// infer schema if not given</span>
         <span class="comment">// let self.schema = sources[0].infer_schema();</span>
