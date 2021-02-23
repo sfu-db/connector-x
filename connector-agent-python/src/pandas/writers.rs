@@ -49,6 +49,10 @@ impl<'a> Writer for PandasWriter<'a> {
             throw!(ConnectorAgentError::UnsupportedDataOrder(data_order))
         }
 
+        if matches!(self.nrows, Some(_)) {
+            throw!(ConnectorAgentError::DuplicatedAllocation);
+        }
+
         let (df, buffers, index) = create_dataframe(self.py, &schema, nrows);
 
         // get index for each column: (index of block, index of column within the block)
@@ -63,6 +67,10 @@ impl<'a> Writer for PandasWriter<'a> {
     }
 
     fn partition_writers(&mut self, counts: &[usize]) -> Vec<Self::PartitionWriter<'_>> {
+        if matches!(self.nrows, None) {
+            panic!("{}", ConnectorAgentError::WriterNotAllocated);
+        }
+
         assert_eq!(counts.iter().sum::<usize>(), self.nrows.unwrap());
 
         // get schema for each block, init by U64
@@ -77,7 +85,8 @@ impl<'a> Writer for PandasWriter<'a> {
         let buffers = self
             .buffers
             .take()
-            .expect("buffer is empty, partition writer cannot be called twice");
+            .ok_or(ConnectorAgentError::WriterNotAllocated)
+            .unwrap();
 
         let buffer_views: Vec<AnyArrayViewMut<'a, Ix2>> = buffers
             .iter()
@@ -86,7 +95,7 @@ impl<'a> Writer for PandasWriter<'a> {
             .map(|(_i, array)| {
                 let pyarray = array
                     .downcast::<PyArray<u64, Ix2>>()
-                    .expect("other types do not supported yet."); // TODO: add support for other dtypes.
+                    .expect("other types are not supported yet."); // TODO: add support for other dtypes.
                 let mut_view = unsafe { pyarray.as_array_mut() };
                 AnyArrayViewMut::<Ix2>::new(mut_view)
             })
@@ -195,6 +204,13 @@ fn create_dataframe<'a>(
         .enumerate()
         .map(|(i, &dt)| Realize::<FSeriesStr>::realize(dt)(i, nrows))
         .collect();
+
+    // https://github.com/pandas-dev/pandas/blob/master/pandas/core/internals/managers.py
+    // Suppose we want to find the array corresponding to our i'th column.
+    // blknos[i] identifies the block from self.blocks that contains this column.
+    // blklocs[i] identifies the column of interest within
+    // self.blocks[self.blknos[i]]
+
     let code = format!(
         r#"import pandas as pd
 df = pd.DataFrame({{{}}})

@@ -10,5 +10,5 @@ setup-python: build-release
 test:
     cargo test
 
-run-python-agent:
+run-python-agent: setup-python
     python python/python-agent.py
