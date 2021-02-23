@@ -19,16 +19,25 @@ use std::marker::PhantomData;
 /// For all the writers, they must support writing any value whose type is defined by DataType.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum DataType {
-    F64,
-    U64,
-    Bool,
-    String,
-    OptU64,
+    F64(bool), // nullable
+    U64(bool),
+    Bool(bool),
+    String(bool),
 }
 
 impl TypeSystem for DataType {}
 
-associate_typesystem!(DataType, DataType::F64 => f64, DataType::U64 => u64, DataType::Bool => bool, DataType::String => String, DataType::OptU64 => Option<u64>);
+associate_typesystem! {
+    DataType,
+    DataType::F64(false) => f64,
+    DataType::U64(false) => u64,
+    DataType::Bool(false) => bool,
+    DataType::String(false) => String,
+    DataType::F64(true) => Option<f64>,
+    DataType::U64(true) => Option<u64>,
+    DataType::Bool(true) => Option<bool>,
+    DataType::String(true) => Option<String>
+}
 
 pub struct Transmit<'a, S, W>(PhantomData<(&'a S, W)>);
 

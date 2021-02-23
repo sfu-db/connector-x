@@ -40,7 +40,7 @@ impl Writer for U64Writer {
         self.schema = schema;
         let ncols = self.schema.len();
         for field in &self.schema {
-            if !matches!(field, DataType::U64) {
+            if !matches!(field, DataType::U64(false)) {
                 throw!(anyhow!("U64Writer only accepts U64 only schema"));
             }
         }

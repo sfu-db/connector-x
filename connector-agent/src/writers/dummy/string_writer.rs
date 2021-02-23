@@ -45,7 +45,7 @@ impl Writer for StringWriter {
         self.schema = schema;
         let ncols = self.schema.len();
         for field in &self.schema {
-            if !matches!(field, DataType::String) {
+            if !matches!(field, DataType::String(false)) {
                 throw!(anyhow!("StringWriter only accepts String only schema"));
             }
         }

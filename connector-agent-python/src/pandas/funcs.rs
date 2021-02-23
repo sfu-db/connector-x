@@ -1,29 +1,7 @@
-use super::pandas_assoc::PandasAssoc;
 use connector_agent::{AnyArrayViewMut, ParameterizedFunc, ParameterizedOn};
 use ndarray::Ix2;
 use numpy::{Element, PyArray};
 use pyo3::types::PyAny;
-
-pub struct FSeriesStr;
-
-impl ParameterizedFunc for FSeriesStr {
-    type Function = fn(cid: usize, nrows: usize) -> String;
-}
-
-impl<T> ParameterizedOn<T> for FSeriesStr
-where
-    T: PandasAssoc,
-{
-    fn parameterize() -> Self::Function {
-        fn imp<T>(cid: usize, nrows: usize) -> String
-        where
-            T: PandasAssoc,
-        {
-            T::new_series_str(cid, nrows)
-        }
-        imp::<T>
-    }
-}
 
 pub struct FArrayViewMut2;
 

@@ -59,6 +59,22 @@ impl ArrowAssoc for f64 {
     }
 }
 
+impl ArrowAssoc for Option<f64> {
+    type Builder = Float64Builder;
+
+    fn builder(nrows: usize) -> Float64Builder {
+        Float64Builder::new(nrows)
+    }
+
+    fn append(builder: &mut Self::Builder, value: Option<f64>) {
+        builder.append_option(value).unwrap();
+    }
+
+    fn field(header: &str) -> Field {
+        Field::new(header, ArrowDataType::Float64, true)
+    }
+}
+
 impl ArrowAssoc for bool {
     type Builder = BooleanBuilder;
 
@@ -75,6 +91,22 @@ impl ArrowAssoc for bool {
     }
 }
 
+impl ArrowAssoc for Option<bool> {
+    type Builder = BooleanBuilder;
+
+    fn builder(nrows: usize) -> BooleanBuilder {
+        BooleanBuilder::new(nrows)
+    }
+
+    fn append(builder: &mut Self::Builder, value: Self) {
+        builder.append_option(value).unwrap();
+    }
+
+    fn field(header: &str) -> Field {
+        Field::new(header, ArrowDataType::Boolean, true)
+    }
+}
+
 impl ArrowAssoc for String {
     type Builder = StringBuilder;
 
@@ -88,5 +120,24 @@ impl ArrowAssoc for String {
 
     fn field(header: &str) -> Field {
         Field::new(header, ArrowDataType::Utf8, false)
+    }
+}
+
+impl ArrowAssoc for Option<String> {
+    type Builder = StringBuilder;
+
+    fn builder(nrows: usize) -> StringBuilder {
+        StringBuilder::new(nrows)
+    }
+
+    fn append(builder: &mut Self::Builder, value: Self) {
+        match value {
+            Some(s) => builder.append_value(s.as_str()).unwrap(),
+            None => builder.append_null().unwrap(),
+        }
+    }
+
+    fn field(header: &str) -> Field {
+        Field::new(header, ArrowDataType::Utf8, true)
     }
 }

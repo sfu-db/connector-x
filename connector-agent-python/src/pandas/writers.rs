@@ -1,4 +1,4 @@
-use super::funcs::FSeriesStr;
+use super::PandasDType;
 use connector_agent::{
     AnyArrayViewMut, ConnectorAgentError, Consume, DataOrder, DataType, PartitionWriter, Realize,
     Result, TypeAssoc, TypeSystem, Writer,
@@ -12,13 +12,13 @@ use pyo3::{
 };
 use std::any::type_name;
 
-pub struct PandasWriter<'a> {
-    py: Python<'a>,
+pub struct PandasWriter<'py> {
+    py: Python<'py>,
     nrows: Option<usize>,
     schema: Option<Vec<DataType>>,
-    buffers: Option<&'a PyList>,
+    buffers: Option<&'py PyList>,
     column_buffer_index: Option<Vec<(usize, usize)>>,
-    dataframe: Option<&'a PyAny>, // Using this field other than the return purpose should be careful: this refers to the same data as buffers
+    dataframe: Option<&'py PyAny>, // Using this field other than the return purpose should be careful: this refers to the same data as buffers
 }
 
 impl<'a> PandasWriter<'a> {
@@ -202,7 +202,7 @@ fn create_dataframe<'a>(
     let series: Vec<String> = schema
         .iter()
         .enumerate()
-        .map(|(i, &dt)| Realize::<FSeriesStr>::realize(dt)(i, nrows))
+        .map(|(i, &dt)| format!("'{}': pd.Series(dtype='{}')", i, dt.dtype()))
         .collect();
 
     // https://github.com/pandas-dev/pandas/blob/master/pandas/core/internals/managers.py
@@ -213,9 +213,10 @@ fn create_dataframe<'a>(
 
     let code = format!(
         r#"import pandas as pd
-df = pd.DataFrame({{{}}})
+df = pd.DataFrame(index=range({}), {{{}}})
 blocks = [b.values for b in df._mgr.blocks]
 index = [(i, j) for i, j in zip(df._mgr.blknos, df._mgr.blklocs)]"#,
+        nrows,
         series.join(",")
     );
 

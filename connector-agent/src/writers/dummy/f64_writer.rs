@@ -40,7 +40,7 @@ impl Writer for F64Writer {
         self.schema = schema;
         let ncols = self.schema.len();
         for field in &self.schema {
-            if !matches!(field, DataType::F64) {
+            if !matches!(field, DataType::F64(false)) {
                 throw!(anyhow!("F64Writer only accepts F64 only schema"));
             }
         }

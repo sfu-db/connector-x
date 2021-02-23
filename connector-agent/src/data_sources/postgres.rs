@@ -99,9 +99,21 @@ impl Produce<u64> for PostgresDataSource {
     }
 }
 
+impl Produce<Option<u64>> for PostgresDataSource {
+    fn produce(&mut self) -> Result<Option<u64>> {
+        Ok(self.next_value().parse().ok())
+    }
+}
+
 impl Produce<f64> for PostgresDataSource {
     fn produce(&mut self) -> Result<f64> {
         Ok(self.next_value().parse().unwrap_or_default())
+    }
+}
+
+impl Produce<Option<f64>> for PostgresDataSource {
+    fn produce(&mut self) -> Result<Option<f64>> {
+        Ok(self.next_value().parse().ok())
     }
 }
 
@@ -116,18 +128,27 @@ impl Produce<bool> for PostgresDataSource {
         Ok(v)
     }
 }
+
+impl Produce<Option<bool>> for PostgresDataSource {
+    fn produce(&mut self) -> Result<Option<bool>> {
+        let v = self.next_value();
+        let v = match v {
+            "t" => true,
+            "f" => false,
+            _ => return Ok(None),
+        };
+        Ok(Some(v))
+    }
+}
+
 impl Produce<String> for PostgresDataSource {
     fn produce(&mut self) -> Result<String> {
         Ok(String::from(self.next_value()))
     }
 }
 
-impl Produce<Option<u64>> for PostgresDataSource {
-    fn produce(&mut self) -> Result<Option<u64>> {
-        let v = self.next_value();
-        if v.is_empty() {
-            return Ok(None);
-        }
-        Ok(Some(v.parse().unwrap_or_default()))
+impl Produce<Option<String>> for PostgresDataSource {
+    fn produce(&mut self) -> Result<Option<String>> {
+        Ok(Some(String::from(self.next_value())))
     }
 }

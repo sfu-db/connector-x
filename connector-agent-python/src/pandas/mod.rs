@@ -1,5 +1,5 @@
 mod funcs;
-mod pandas_assoc;
+mod pandas_column;
 mod writers;
 
 use crate::errors::{ConnectorAgentPythonError, Result};
@@ -31,4 +31,21 @@ pub fn write_pandas<'a>(
     dispatcher.run_checked()?;
 
     writer.result()
+}
+
+pub trait PandasDType {
+    fn dtype(&self) -> &'static str;
+}
+
+impl PandasDType for DataType {
+    fn dtype(&self) -> &'static str {
+        match *self {
+            DataType::U64(false) => "uint64",
+            DataType::U64(true) => "Uint64",
+            DataType::F64(_) => "float64",
+            DataType::Bool(false) => "bool",
+            DataType::Bool(true) => "boolean",
+            DataType::String(_) => "string",
+        }
+    }
 }

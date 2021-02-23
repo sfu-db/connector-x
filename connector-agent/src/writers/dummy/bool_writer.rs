@@ -40,7 +40,7 @@ impl Writer for BoolWriter {
         self.schema = schema;
         let ncols = self.schema.len();
         for field in &self.schema {
-            if !matches!(field, DataType::Bool) {
+            if !matches!(field, DataType::Bool(false)) {
                 throw!(anyhow!("BoolWriter only accepts Bool only schema"));
             }
         }

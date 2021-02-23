@@ -10,11 +10,12 @@ impl FromPandasType for DataType {
     #[throws(ConnectorAgentPythonError)]
     fn from(ty: &str) -> DataType {
         match ty {
-            "uint64" => DataType::U64,
-            "float64" => DataType::F64,
-            "bool" => DataType::Bool,
-            "object" => DataType::String,
-            "UInt64" => DataType::OptU64,
+            "uint64" => DataType::U64(false),
+            "UInt64" => DataType::U64(true),
+            "float64" => DataType::F64(true),
+            "bool" => DataType::Bool(false),
+            "boolean" => DataType::Bool(true),
+            "string" => DataType::String(true),
             ty => throw!(ConnectorAgentPythonError::UnknownPandasType(ty.to_string())),
         }
     }
