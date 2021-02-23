@@ -10,7 +10,7 @@ if __name__ == "__main__":
         "select * from example where id >= 1",
     ]
 
-    schema = ["int64", "uint64"]
+    schema = ["uint64", "UInt64", "float64"]
     df = write_pandas(conn, queries, schema)
 
     print(df)

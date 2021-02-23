@@ -1,6 +1,5 @@
-use super::pandas_column::{
-    Float64Block, Float64Column, HasPandasColumn, PandasColumn, PandasColumnObject, UInt64Block,
-    UInt64Column,
+use super::pandas_columns::{
+    BooleanBlock, Float64Block, HasPandasColumn, PandasColumn, PandasColumnObject, UInt64Block,
 };
 use super::PandasDType;
 use connector_agent::{
@@ -21,7 +20,6 @@ pub struct PandasWriter<'py> {
     nrows: Option<usize>,
     schema: Option<Vec<DataType>>,
     buffers: Option<&'py PyList>,
-    buffer_types: Option<Vec<DataType>>,
     buffer_column_index: Option<Vec<Vec<usize>>>,
     dataframe: Option<&'py PyAny>, // Using this field other than the return purpose should be careful: this refers to the same data as buffers
 }
@@ -33,7 +31,6 @@ impl<'a> PandasWriter<'a> {
             nrows: None,
             schema: None,
             buffers: None,
-            buffer_types: None,
             buffer_column_index: None,
             dataframe: None,
         }
@@ -75,13 +72,9 @@ impl<'a> Writer for PandasWriter<'a> {
             buffer_column_index[blkno].push(cid);
         }
 
-        // get types for each block
-        let mut buffer_types = buffer_column_index.iter().map(|v| schema[v[0]]).collect();
-
         self.nrows = Some(nrows);
         self.schema = Some(schema);
         self.buffers = Some(buffers);
-        self.buffer_types = Some(buffer_types);
         self.buffer_column_index = Some(buffer_column_index);
         self.dataframe = Some(df)
     }
@@ -105,10 +98,11 @@ impl<'a> Writer for PandasWriter<'a> {
         let mut partitioned_columns: Vec<Vec<Box<dyn PandasColumnObject>>> =
             (0..schema.len()).map(|_| vec![]).collect();
 
-        for ((buf, cids), &dtype) in buffers.iter().zip_eq(buffer_column_index).zip_eq(schema) {
+        for (buf, cids) in buffers.iter().zip_eq(buffer_column_index) {
+            let dtype = schema[cids[0]];
             match dtype {
                 DataType::F64(_) => {
-                    let fblock = Float64Block::extract(self.py, buf).unwrap();
+                    let fblock = Float64Block::extract(buf).unwrap();
                     let fcols = fblock.split();
                     for (&cid, fcol) in cids.iter().zip_eq(fcols) {
                         partitioned_columns[cid] = fcol
@@ -119,10 +113,21 @@ impl<'a> Writer for PandasWriter<'a> {
                     }
                 }
                 DataType::U64(_) => {
-                    let ublock = UInt64Block::extract(self.py, buf).unwrap();
+                    let ublock = UInt64Block::extract(buf).unwrap();
                     let ucols = ublock.split();
-                    for (&cid, fcol) in cids.iter().zip_eq(ucols) {
-                        partitioned_columns[cid] = fcol
+                    for (&cid, ucol) in cids.iter().zip_eq(ucols) {
+                        partitioned_columns[cid] = ucol
+                            .partition(&counts)
+                            .into_iter()
+                            .map(|c| Box::new(c) as _)
+                            .collect()
+                    }
+                }
+                DataType::Bool(_) => {
+                    let bblock = BooleanBlock::extract(self.py, buf).unwrap();
+                    let bcols = bblock.split();
+                    for (&cid, bcol) in cids.iter().zip_eq(bcols) {
+                        partitioned_columns[cid] = bcol
                             .partition(&counts)
                             .into_iter()
                             .map(|c| Box::new(c) as _)
@@ -188,7 +193,7 @@ impl<'a> PartitionWriter<'a> for PandasPartitionWriter<'a> {
 
 impl<'a, T> Consume<T> for PandasPartitionWriter<'a>
 where
-    T: HasPandasColumn + TypeAssoc<DataType>,
+    T: HasPandasColumn + TypeAssoc<DataType> + std::fmt::Debug + 'static,
 {
     unsafe fn consume(&mut self, row: usize, col: usize, value: T) {
         let (column, _): (&mut T::PandasColumn<'a>, *const ()) = transmute(&*self.columns[col]);
@@ -197,146 +202,13 @@ where
 
     fn consume_checked(&mut self, row: usize, col: usize, value: T) -> Result<()> {
         self.schema[col].check::<T>()?;
-        assert_eq!(self.columns[col].elem_type_id(), TypeId::of::<f64>());
-
+        assert!(self.columns[col].typecheck(TypeId::of::<T>()));
+        println!("Wrtting into {} {} {:?}", row, col, value);
         unsafe { self.consume(row, col, value) };
 
         Ok(())
     }
 }
-
-// impl<'a> Consume<f64> for PandasPartitionWriter<'a> {
-//     unsafe fn consume(&mut self, row: usize, col: usize, value: f64) {
-//         let (column, _): (&mut Float64Column, *const ()) = transmute(&*self.columns[col]);
-//         column.write(row, value);
-//     }
-
-//     fn consume_checked(&mut self, row: usize, col: usize, value: f64) -> Result<()> {
-//         self.schema[col].check::<f64>()?;
-//         assert_eq!(self.columns[col].elem_type_id(), TypeId::of::<f64>());
-
-//         unsafe { self.consume(row, col, value) };
-
-//         Ok(())
-//     }
-// }
-
-// impl<'a> Consume<Option<f64>> for PandasPartitionWriter<'a> {
-//     unsafe fn consume(&mut self, row: usize, col: usize, value: Option<f64>) {
-//         let (column, _): (&mut Float64Column, *const ()) = transmute(&*self.columns[col]);
-//         column.write(row, value);
-//     }
-
-//     fn consume_checked(&mut self, row: usize, col: usize, value: Option<f64>) -> Result<()> {
-//         self.schema[col].check::<f64>()?;
-//         assert_eq!(self.columns[col].elem_type_id(), TypeId::of::<f64>());
-
-//         unsafe { self.consume(row, col, value) };
-
-//         Ok(())
-//     }
-// }
-
-// impl<'a> Consume<u64> for PandasPartitionWriter<'a> {
-//     unsafe fn consume(&mut self, row: usize, col: usize, value: u64) {
-//         let (column, _): (UInt64Column, *const ()) = transmute(self.columns[col]);
-//         column.write(row, value);
-//     }
-
-//     fn consume_checked(&mut self, row: usize, col: usize, value: u64) -> Result<()> {
-//         self.schema[col].check::<u64>()?;
-//         assert_eq!(self.columns[col].elem_type_id(), TypeId::of::<u64>());
-
-//         unsafe { self.consume(row, col, value) };
-
-//         Ok(())
-//     }
-// }
-
-// impl<'a> Consume<Option<u64>> for PandasPartitionWriter<'a> {
-//     unsafe fn consume(&mut self, row: usize, col: usize, value: Option<u64>) {
-//         let (column, _): (UInt64Column, *const ()) = transmute(self.columns[col]);
-//         column.write(row, value);
-//     }
-
-//     fn consume_checked(&mut self, row: usize, col: usize, value: Option<u64>) -> Result<()> {
-//         self.schema[col].check::<u64>()?;
-//         assert_eq!(self.columns[col].elem_type_id(), TypeId::of::<u64>());
-
-//         unsafe { self.consume(row, col, value) };
-
-//         Ok(())
-//     }
-// }
-
-// impl<'a> Consume<String> for PandasPartitionWriter<'a> {
-//     unsafe fn consume(&mut self, row: usize, col: usize, value: String) {
-//         todo!()
-//     }
-
-//     fn consume_checked(&mut self, row: usize, col: usize, value: String) -> Result<()> {
-//         todo!()
-//     }
-// }
-
-// impl<'a> Consume<Option<String>> for PandasPartitionWriter<'a> {
-//     unsafe fn consume(&mut self, row: usize, col: usize, value: Option<String>) {
-//         todo!()
-//     }
-
-//     fn consume_checked(&mut self, row: usize, col: usize, value: Option<String>) -> Result<()> {
-//         todo!()
-//     }
-// }
-
-// impl<'a> Consume<bool> for PandasPartitionWriter<'a> {
-//     unsafe fn consume(&mut self, row: usize, col: usize, value: bool) {
-//         todo!()
-//     }
-
-//     fn consume_checked(&mut self, row: usize, col: usize, value: bool) -> Result<()> {
-//         todo!()
-//     }
-// }
-
-// impl<'a> Consume<Option<bool>> for PandasPartitionWriter<'a> {
-//     unsafe fn consume(&mut self, row: usize, col: usize, value: Option<bool>) {
-//         todo!()
-//     }
-
-//     fn consume_checked(&mut self, row: usize, col: usize, value: Option<bool>) -> Result<()> {
-//         todo!()
-//     }
-// }
-// impl<'a, T> Consume<T> for PandasPartitionWriter<'a>
-// where
-//     T: TypeAssoc<<Self as PartitionWriter<'a>>::TypeSystem> + 'static,
-// {
-//     unsafe fn consume(&mut self, row: usize, col: usize, value: T) {
-//         let &(bid, col) = &self.column_buffer_index[col];
-//         let mut_view = self.buffers[bid].udowncast::<T>();
-//         // row and column in numpy and dataframe are inverse
-//         *mut_view.get_mut((col, row)).unwrap() = value;
-//     }
-
-//     fn consume_checked(&mut self, row: usize, col: usize, value: T) -> Result<()> {
-//         self.schema[col].check::<T>()?;
-//         let &(bid, col) = &self.column_buffer_index[col];
-
-//         let mut_view =
-//             self.buffers[bid]
-//                 .downcast::<T>()
-//                 .ok_or(ConnectorAgentError::UnexpectedType(
-//                     self.schema[col],
-//                     type_name::<T>(),
-//                 ))?;
-//         // row and column in numpy and dataframe are inverse
-//         *mut_view
-//             .get_mut((col, row))
-//             .ok_or(ConnectorAgentError::OutOfBound)? = value;
-//         Ok(())
-//     }
-// }
 
 /// call python code to construct the dataframe and expose its buffers
 fn create_dataframe<'a>(
@@ -358,12 +230,14 @@ fn create_dataframe<'a>(
 
     let code = format!(
         r#"import pandas as pd
-df = pd.DataFrame(index=range({}), {{{}}})
+df = pd.DataFrame(index=range({}), data={{{}}})
 blocks = [b.values for b in df._mgr.blocks]
 index = [(i, j) for i, j in zip(df._mgr.blknos, df._mgr.blklocs)]"#,
         nrows,
         series.join(",")
     );
+
+    println!("code: {}", code);
 
     // run python code
     let locals = PyDict::new(py);

@@ -1,7 +1,7 @@
 create table IF NOT EXISTS example(
     id SERIAL PRIMARY KEY, 
-    val integer
+    ii INTEGER,
+    ff DOUBLE PRECISION
 );
 
-INSERT INTO example(val) VALUES (0);
-INSERT INTO example(val) VALUES (1);
+INSERT INTO example(ii, ff) VALUES (0, 3.1),(null, 3),(4, 'NaN');

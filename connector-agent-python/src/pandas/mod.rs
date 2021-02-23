@@ -1,5 +1,5 @@
 mod funcs;
-mod pandas_column;
+mod pandas_columns;
 mod writers;
 
 use crate::errors::{ConnectorAgentPythonError, Result};
@@ -42,7 +42,7 @@ impl PandasDType for DataType {
     fn dtype(&self) -> &'static str {
         match *self {
             DataType::U64(false) => "uint64",
-            DataType::U64(true) => "Uint64",
+            DataType::U64(true) => "UInt64",
             DataType::F64(_) => "float64",
             DataType::Bool(false) => "bool",
             DataType::Bool(true) => "boolean",
