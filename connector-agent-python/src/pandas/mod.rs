@@ -4,6 +4,7 @@ mod writers;
 
 use crate::errors::{ConnectorAgentPythonError, Result};
 use crate::types::FromPandasType;
+use anyhow::anyhow;
 use connector_agent::{DataType, Dispatcher, PostgresDataSourceBuilder};
 use fehler::throws;
 use pyo3::{PyAny, Python};
@@ -30,7 +31,7 @@ pub fn write_pandas<'a>(
     let dispatcher = Dispatcher::new(sb, &mut writer, queries, &schema);
     dispatcher.run_checked()?;
 
-    writer.result()
+    writer.result().ok_or(anyhow!("writer not run"))?
 }
 
 pub trait PandasDType {
