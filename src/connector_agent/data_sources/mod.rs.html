@@ -49,6 +49,11 @@
 <span id="46">46</span>
 <span id="47">47</span>
 <span id="48">48</span>
+<span id="49">49</span>
+<span id="50">50</span>
+<span id="51">51</span>
+<span id="52">52</span>
+<span id="53">53</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// When implementing a data source, be make sure to implement Queryable and</span>
 <span class="comment">// Producer for all supported types in crate::types::DataType.</span>
@@ -92,6 +97,11 @@
 
     <span class="doccomment">/// Number of rows this `DataSource` get.</span>
     <span class="kw">fn</span> <span class="ident">nrows</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span>;
+
+    <span class="doccomment">/// Infer schema from return data</span>
+    <span class="kw">fn</span> <span class="ident">infer_schema</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">TypeSystem</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+        <span class="macro">unimplemented</span><span class="macro">!</span>(<span class="string">&quot;infer schema using self.records!&quot;</span>);
+    }
 }
 
 <span class="doccomment">/// A type implemented `Produce&lt;T&gt;` means that it can produce a value `T` by consuming part of it&#39;s raw data buffer.</span>

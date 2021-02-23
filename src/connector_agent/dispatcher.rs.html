@@ -139,7 +139,7 @@
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">SB</span>, <span class="ident">WT</span>, <span class="ident">TS</span><span class="op">&gt;</span> <span class="ident">Dispatcher</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">SB</span>, <span class="ident">WT</span>, <span class="ident">TS</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">SB</span>: <span class="ident">SourceBuilder</span>,
-    <span class="ident">SB</span>::<span class="ident">DataSource</span>: <span class="ident">Send</span>,
+    <span class="ident">SB</span>::<span class="ident">DataSource</span>: <span class="ident">Send</span> <span class="op">+</span> <span class="ident">DataSource</span><span class="op">&lt;</span><span class="ident">TypeSystem</span> <span class="op">=</span> <span class="ident">TS</span><span class="op">&gt;</span>,
     <span class="ident">TS</span>: <span class="ident">TypeSystem</span>,
     <span class="ident">WT</span>: <span class="ident">Writer</span><span class="op">&lt;</span><span class="ident">TypeSystem</span> <span class="op">=</span> <span class="ident">TS</span><span class="op">&gt;</span>,
     <span class="ident">TS</span>: <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span><span class="op">&gt;</span> <span class="ident">Realize</span><span class="op">&lt;</span><span class="ident">Transmit</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="ident">SB</span>::<span class="ident">DataSource</span>, <span class="ident">WT</span>::<span class="ident">PartitionWriter</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>
@@ -185,7 +185,7 @@
             .<span class="ident">for_each</span>(<span class="op">|</span>(<span class="ident">source</span>, <span class="ident">query</span>)<span class="op">|</span> <span class="ident">source</span>.<span class="ident">prepare</span>(<span class="ident">query</span>.<span class="ident">as_str</span>()).<span class="ident">expect</span>(<span class="string">&quot;run query&quot;</span>));
 
         <span class="comment">// infer schema if not given</span>
-        <span class="comment">// let self.schema = sources[0].infer_schema();</span>
+        <span class="comment">// self.schema = sources[0].infer_schema()?;</span>
 
         <span class="comment">// collect transmit functions for schema</span>
         <span class="kw">let</span> <span class="ident">funcs</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="self">self</span>
