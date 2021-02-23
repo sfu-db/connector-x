@@ -10,14 +10,14 @@ use rayon::prelude::*;
 
 /// A dispatcher owns a `SourceBuilder` `SB` and a vector of `queries`
 /// `schema` is a temporary input before we implement infer schema or get schema from DB.
-pub struct Dispatcher<SB, WT, TS> {
+pub struct Dispatcher<'a, SB, WT, TS> {
     source_builder: SB,
-    writer: WT,
+    writer: &'a mut WT,
     schema: Vec<TS>,
     queries: Vec<String>,
 }
 
-impl<SB, WT, TS> Dispatcher<SB, WT, TS>
+impl<'a, SB, WT, TS> Dispatcher<'a, SB, WT, TS>
 where
     SB: SourceBuilder,
     SB::DataSource: Send,
@@ -28,26 +28,29 @@ where
 {
     /// Create a new dispatcher by providing a source builder, schema (temporary) and the queries
     /// to be issued to the data source.
-    pub fn new(source_builder: SB, writer: WT, schema: &[TS], queries: Vec<String>) -> Self {
+    pub fn new<S>(source_builder: SB, writer: &'a mut WT, queries: &[S], schema: &[TS]) -> Self
+    where
+        S: ToString,
+    {
         Dispatcher {
             source_builder,
             writer,
             schema: schema.to_vec(),
-            queries,
+            queries: queries.into_iter().map(ToString::to_string).collect(),
         }
     }
 
-    pub fn run_checked(self) -> Result<WT> {
+    pub fn run_checked(self) -> Result<()> {
         self.entry(true)
     }
 
-    pub fn run(self) -> Result<WT> {
+    pub fn run(self) -> Result<()> {
         self.entry(false)
     }
 
     /// Run the dispatcher by specifying the writer, the dispatcher will fetch, parse the data
     /// and return a writer with parsed result
-    fn entry(mut self, checked: bool) -> Result<WT> {
+    fn entry(mut self, checked: bool) -> Result<()> {
         let dorder = coordinate(SB::DATA_ORDERS, WT::DATA_ORDERS)?;
         self.source_builder.set_data_order(dorder)?;
 
@@ -107,7 +110,6 @@ where
                     }
                 }
             });
-
-        Ok(self.writer)
+        Ok(())
     }
 }

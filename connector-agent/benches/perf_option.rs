@@ -35,11 +35,12 @@ fn bench_both_option() {
 
     // schema for writer
     let schema = vec![DataType::OptU64; NCOLS];
+    let mut writer = ArrowWriter::new();
     let dispatcher = Dispatcher::new(
         OptU64SourceBuilder::new(data.to_vec(), NCOLS),
-        ArrowWriter::new(),
-        schema,
-        NROWS.iter().map(|_n| String::new()).collect(),
+        &mut writer,
+        &NROWS.iter().map(|_| "").collect::<Vec<_>>(),
+        &schema,
     );
     let _dw = dispatcher.run_checked().expect("run dispatcher");
 }
@@ -68,11 +69,12 @@ fn bench_source_option() {
 
     // schema for writer
     let schema = vec![DataType::U64; NCOLS];
+    let mut writer = ArrowWriter::new();
     let dispatcher = Dispatcher::new(
         OptU64SourceBuilder::new(data.to_vec(), NCOLS),
-        ArrowWriter::new(),
-        schema,
-        NROWS.iter().map(|_n| String::new()).collect(),
+        &mut writer,
+        &NROWS.iter().map(|_| "").collect::<Vec<_>>(),
+        &schema,
     );
     let _dw = dispatcher.run_checked().expect("run dispatcher");
 }
@@ -100,11 +102,12 @@ fn bench_writer_option() {
 
     // schema for writer
     let schema = vec![DataType::OptU64; NCOLS];
+    let mut writer = ArrowWriter::new();
     let dispatcher = Dispatcher::new(
         U64SourceBuilder::new(data.to_vec(), NCOLS),
-        ArrowWriter::new(),
-        schema,
-        NROWS.iter().map(|_n| String::new()).collect(),
+        &mut writer,
+        &NROWS.iter().map(|_| "").collect::<Vec<_>>(),
+        &schema,
     );
     let _dw = dispatcher.run_checked().expect("run dispatcher");
 }
@@ -132,11 +135,12 @@ fn bench_non_option() {
 
     // schema for writer
     let schema = vec![DataType::U64; NCOLS];
+    let mut writer = ArrowWriter::new();
     let dispatcher = Dispatcher::new(
         U64SourceBuilder::new(data.to_vec(), NCOLS),
-        ArrowWriter::new(),
-        schema,
-        NROWS.iter().map(|_n| String::new()).collect(),
+        &mut writer,
+        &NROWS.iter().map(|_| "").collect::<Vec<_>>(),
+        &schema,
     );
     let _dw = dispatcher.run_checked().expect("run dispatcher");
 }
@@ -194,7 +198,7 @@ impl U64TestSource {
 
 impl DataSource for U64TestSource {
     type TypeSystem = DataType;
-    fn run_query(&mut self, _: &str) -> Result<()> {
+    fn prepare(&mut self, _: &str) -> Result<()> {
         Ok(())
     }
 

@@ -48,11 +48,12 @@ fn wrong_string_data_type() {
 
 #[test]
 fn write_array() {
-    let schema = vec![DataType::U64; 5];
-    let queries = vec!["4".to_string(), "7".to_string()];
+    let schema = [DataType::U64; 5];
+    let queries = ["4", "7"];
 
-    let dispatcher = Dispatcher::new(U64SourceBuilder {}, U64Writer::new(), &schema, queries);
-    let dw = dispatcher.run_checked().expect("run dispatcher");
+    let mut writer = U64Writer::new();
+    let dispatcher = Dispatcher::new(U64SourceBuilder {}, &mut writer, &queries, &schema);
+    dispatcher.run_checked().expect("run dispatcher");
 
     assert_eq!(
         array![
@@ -68,22 +69,18 @@ fn write_array() {
             [25, 26, 27, 28, 29],
             [30, 31, 32, 33, 34]
         ],
-        dw.buffer()
+        writer.buffer()
     );
 }
 
 #[test]
 fn write_string_array() {
-    let schema = vec![DataType::String; 5];
-    let queries = vec!["4".to_string(), "7".to_string()];
+    let schema = [DataType::String; 5];
+    let queries = ["4", "7"];
 
-    let dispatcher = Dispatcher::new(
-        StringSourceBuilder {},
-        StringWriter::new(),
-        &schema,
-        queries,
-    );
-    let dw = dispatcher.run_checked().expect("run dispatcher");
+    let mut writer = StringWriter::new();
+    let dispatcher = Dispatcher::new(StringSourceBuilder {}, &mut writer, &queries, &schema);
+    dispatcher.run_checked().expect("run dispatcher");
 
     assert_eq!(
         array![
@@ -99,17 +96,18 @@ fn write_string_array() {
             ["25", "26", "27", "28", "29"],
             ["30", "31", "32", "33", "34"]
         ],
-        dw.buffer()
+        writer.buffer()
     );
 }
 
 #[test]
 fn write_array_bool() {
-    let schema = vec![DataType::Bool; 5];
-    let queries = vec!["4".to_string(), "7".to_string()];
+    let schema = [DataType::Bool; 5];
+    let queries = ["4", "7"];
 
-    let dispatcher = Dispatcher::new(BoolSourceBuilder {}, BoolWriter::new(), &schema, queries);
-    let dw = dispatcher.run_checked().expect("run dispatcher");
+    let mut writer = BoolWriter::new();
+    let dispatcher = Dispatcher::new(BoolSourceBuilder {}, &mut writer, &queries, &schema);
+    dispatcher.run_checked().expect("run dispatcher");
     assert_eq!(
         array![
             [false, true, false, true, false],
@@ -124,17 +122,18 @@ fn write_array_bool() {
             [true, false, true, false, true],
             [false, true, false, true, false],
         ],
-        dw.buffer()
+        writer.buffer()
     );
 }
 
 #[test]
 fn write_array_f64() {
-    let schema = vec![DataType::F64; 5];
-    let queries = vec!["4".to_string(), "7".to_string()];
+    let schema = [DataType::F64; 5];
+    let queries = ["4", "7"];
 
-    let dispatcher = Dispatcher::new(F64SourceBuilder {}, F64Writer::new(), &schema, queries);
-    let dw = dispatcher.run_checked().expect("run dispatcher");
+    let mut writer = F64Writer::new();
+    let dispatcher = Dispatcher::new(F64SourceBuilder {}, &mut writer, &queries, &schema);
+    dispatcher.run_checked().expect("run dispatcher");
 
     assert_eq!(
         array![
@@ -150,6 +149,6 @@ fn write_array_f64() {
             [12.5, 13.0, 13.5, 14.0, 14.5],
             [15.0, 15.5, 16.0, 16.5, 17.0]
         ],
-        dw.buffer()
+        writer.buffer()
     );
 }

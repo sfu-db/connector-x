@@ -140,31 +140,27 @@ fn test_mixed() {
     let ncols = schema.len();
     let queries: Vec<String> = nrows.iter().map(|v| format!("{},{}", v, ncols)).collect();
 
-    let dispatcher = Dispatcher::new(
-        MixedSourceBuilder::new(),
-        MemoryWriter::new(),
-        &schema,
-        queries,
-    );
-    let dw = dispatcher.run_checked().expect("run dispatcher");
+    let mut writer = MemoryWriter::new();
+    let dispatcher = Dispatcher::new(MixedSourceBuilder::new(), &mut writer, &queries, &schema);
+    dispatcher.run_checked().expect("run dispatcher");
 
-    for (col, _) in dw.schema().into_iter().enumerate() {
+    for (col, _) in writer.schema().into_iter().enumerate() {
         match col {
             0 => {
                 assert_eq!(
-                    dw.column_view::<u64>(col).unwrap(),
+                    writer.column_view::<u64>(col).unwrap(),
                     array![0, 1, 2, 3, 0, 1, 2, 3, 4, 5, 6]
                 )
             }
             1 => {
                 assert_eq!(
-                    dw.column_view::<f64>(col).unwrap(),
+                    writer.column_view::<f64>(col).unwrap(),
                     array![0.0, 1.0, 2.0, 3.0, 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
                 )
             }
             2 => {
                 assert_eq!(
-                    dw.column_view::<String>(col).unwrap(),
+                    writer.column_view::<String>(col).unwrap(),
                     array![
                         "0".to_string(),
                         "1".to_string(),
@@ -182,19 +178,19 @@ fn test_mixed() {
             }
             3 => {
                 assert_eq!(
-                    dw.column_view::<f64>(col).unwrap(),
+                    writer.column_view::<f64>(col).unwrap(),
                     array![0.0, 1.0, 2.0, 3.0, 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
                 )
             }
             4 => {
                 assert_eq!(
-                    dw.column_view::<bool>(col).unwrap(),
+                    writer.column_view::<bool>(col).unwrap(),
                     array![true, false, true, false, true, false, true, false, true, false, true]
                 )
             }
             5 => {
                 assert_eq!(
-                    dw.column_view::<String>(col).unwrap(),
+                    writer.column_view::<String>(col).unwrap(),
                     array![
                         "0".to_string(),
                         "1".to_string(),
@@ -212,7 +208,7 @@ fn test_mixed() {
             }
             6 => {
                 assert_eq!(
-                    dw.column_view::<f64>(col).unwrap(),
+                    writer.column_view::<f64>(col).unwrap(),
                     array![0.0, 1.0, 2.0, 3.0, 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
                 )
             }

@@ -1,39 +1,85 @@
+use super::funcs::FSeriesStr;
 use connector_agent::{
-    AnyArrayViewMut, ConnectorAgentError, Consume, DataOrder, DataType, PartitionWriter, Result,
-    TypeAssoc, TypeSystem, Writer,
+    AnyArrayViewMut, ConnectorAgentError, Consume, DataOrder, DataType, PartitionWriter, Realize,
+    Result, TypeAssoc, TypeSystem, Writer,
 };
 use fehler::{throw, throws};
-use itertools::Itertools;
 use ndarray::{Axis, Ix2};
 use numpy::PyArray;
-use pyo3::types::PyList;
+use pyo3::{
+    types::{PyDict, PyList},
+    PyAny, Python,
+};
 use std::any::type_name;
 
 pub struct PandasWriter<'a> {
-    nrows: usize,
-    schema: Vec<DataType>,
-    buffers: Option<Vec<AnyArrayViewMut<'a, Ix2>>>,
-    column_buffer_index: Vec<(usize, usize)>,
+    py: Python<'a>,
+    nrows: Option<usize>,
+    schema: Option<Vec<DataType>>,
+    buffers: Option<&'a PyList>,
+    column_buffer_index: Option<Vec<(usize, usize)>>,
+    dataframe: Option<&'a PyAny>, // Using this field other than the return purpose should be careful: this refers to the same data as buffers
 }
 
 impl<'a> PandasWriter<'a> {
-    pub fn new(nrows: usize, schema: &[DataType], buffers: &'a PyList, index: &'a PyList) -> Self {
-        let nbuffers = buffers.len();
+    pub fn new(py: Python<'a>) -> Self {
+        PandasWriter {
+            py,
+            nrows: None,
+            schema: None,
+            buffers: None,
+            column_buffer_index: None,
+            dataframe: None,
+        }
+    }
+
+    pub fn result(self) -> &'a PyAny {
+        self.dataframe.unwrap()
+    }
+}
+
+impl<'a> Writer for PandasWriter<'a> {
+    const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
+    type TypeSystem = DataType;
+    type PartitionWriter<'b> = PandasPartitionWriter<'b>;
+
+    #[throws(ConnectorAgentError)]
+    fn allocate(&mut self, nrows: usize, schema: Vec<DataType>, data_order: DataOrder) {
+        if !matches!(data_order, DataOrder::RowMajor) {
+            throw!(ConnectorAgentError::UnsupportedDataOrder(data_order))
+        }
+
+        let (df, buffers, index) = create_dataframe(self.py, &schema, nrows);
 
         // get index for each column: (index of block, index of column within the block)
         let column_buffer_index: Vec<(usize, usize)> =
             index.iter().map(|tuple| tuple.extract().unwrap()).collect();
 
+        self.nrows = Some(nrows);
+        self.schema = Some(schema);
+        self.buffers = Some(buffers);
+        self.column_buffer_index = Some(column_buffer_index);
+        self.dataframe = Some(df)
+    }
+
+    fn partition_writers(&mut self, counts: &[usize]) -> Vec<Self::PartitionWriter<'_>> {
+        assert_eq!(counts.iter().sum::<usize>(), self.nrows.unwrap());
+
         // get schema for each block, init by U64
-        let mut block_schema_index = vec![DataType::U64; nbuffers];
-        column_buffer_index
-            .iter()
-            .zip_eq(schema)
-            .for_each(|((b, _), &s)| block_schema_index[*b] = s);
+        // let mut block_schema_index = vec![DataType::U64; nbuffers];
+        // column_buffer_index
+        //     .iter()
+        //     .zip_eq(schema)
+        //     .for_each(|((b, _), &s)| block_schema_index[*b] = s);
 
         // get array view of each block so we can write data into using rust
         // TODO: cannot support multi-type using FArrayViewMut2 since PyArray does not support String and Option type
-        let buffers = buffers
+        let buffers = self
+            .buffers
+            .take()
+            .expect("buffer is empty, partition writer cannot be called twice");
+
+        let buffer_views: Vec<AnyArrayViewMut<'a, Ix2>> = buffers
             .iter()
             .enumerate()
             // .map(|(i, array)| Realize::<FArrayViewMut2>::realize(block_schema_index[i])(array))
@@ -46,40 +92,10 @@ impl<'a> PandasWriter<'a> {
             })
             .collect();
 
-        PandasWriter {
-            nrows,
-            schema: schema.to_vec(),
-            buffers: Some(buffers),
-            column_buffer_index,
-        }
-    }
-}
+        let nbuffers = buffer_views.len();
+        let mut par_writers = vec![];
 
-impl<'a> Writer for PandasWriter<'a> {
-    const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
-    type TypeSystem = DataType;
-    type PartitionWriter<'b> = PandasPartitionWriter<'b>;
-
-    #[throws(ConnectorAgentError)]
-    fn allocate(&mut self, _nrows: usize, _schema: Vec<DataType>, data_order: DataOrder) {
-        if !matches!(data_order, DataOrder::RowMajor) {
-            throw!(ConnectorAgentError::UnsupportedDataOrder(data_order))
-        }
-        // PandasWriter does not own the data buffers, they are allocated by python.
-        // Nothing we can do with nrows and schema.
-    }
-
-    fn partition_writers(&mut self, counts: &[usize]) -> Vec<Self::PartitionWriter<'_>> {
-        assert_eq!(counts.iter().sum::<usize>(), self.nrows);
-
-        let buffers = self
-            .buffers
-            .take()
-            .expect("buffer is empty, partition writer must be called twice");
-        let nbuffers = buffers.len();
-        let mut ret = vec![];
-
-        let mut views: Vec<_> = buffers.into_iter().map(|v| Some(v)).collect();
+        let mut views: Vec<_> = buffer_views.into_iter().map(|v| Some(v)).collect();
         for &c in counts {
             let mut sub_buffers = vec![];
             for bid in 0..nbuffers {
@@ -88,18 +104,18 @@ impl<'a> Writer for PandasWriter<'a> {
                 views[bid] = Some(rest);
                 sub_buffers.push(splitted);
             }
-            ret.push(PandasPartitionWriter::new(
+            par_writers.push(PandasPartitionWriter::new(
                 c,
                 sub_buffers,
-                &self.schema,
-                &self.column_buffer_index,
+                self.schema.as_ref().unwrap(),
+                self.column_buffer_index.as_ref().unwrap(),
             ));
         }
-        ret
+        par_writers
     }
 
     fn schema(&self) -> &[DataType] {
-        self.schema.as_slice()
+        self.schema.as_ref().unwrap()
     }
 }
 
@@ -166,4 +182,45 @@ where
             .ok_or(ConnectorAgentError::OutOfBound)? = value;
         Ok(())
     }
+}
+
+/// call python code to construct the dataframe and expose its buffers
+fn create_dataframe<'a>(
+    py: Python<'a>,
+    schema: &[DataType],
+    nrows: usize,
+) -> (&'a PyAny, &'a PyList, &'a PyList) {
+    let series: Vec<String> = schema
+        .iter()
+        .enumerate()
+        .map(|(i, &dt)| Realize::<FSeriesStr>::realize(dt)(i, nrows))
+        .collect();
+    let code = format!(
+        r#"import pandas as pd
+df = pd.DataFrame({{{}}})
+blocks = [b.values for b in df._mgr.blocks]
+index = [(i, j) for i, j in zip(df._mgr.blknos, df._mgr.blklocs)]"#,
+        series.join(",")
+    );
+
+    // run python code
+    let locals = PyDict::new(py);
+    py.run(code.as_str(), None, Some(locals)).unwrap();
+
+    // get # of blocks in dataframe
+    let buffers: &PyList = locals
+        .get_item("blocks")
+        .expect("cannot get `blocks` from locals")
+        .downcast::<PyList>()
+        .expect("cannot downcast `blocks` to PyList");
+
+    let index = locals
+        .get_item("index")
+        .expect("cannot get `index` from locals")
+        .downcast::<PyList>()
+        .expect("cannot downcast `index` to PyList");
+
+    let df = locals.get_item("df").expect("cannot get `df` from locals");
+
+    (df, buffers, index)
 }

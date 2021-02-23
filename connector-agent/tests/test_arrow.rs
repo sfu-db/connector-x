@@ -24,16 +24,11 @@ fn test_arrow() {
         headers.push(format!("c{}", c));
     }
     let queries: Vec<String> = nrows.iter().map(|v| format!("{},{}", v, ncols)).collect();
+    let mut writer = ArrowWriter::new();
+    let dispatcher = Dispatcher::new(MixedSourceBuilder::new(), &mut writer, &queries, &schema);
+    dispatcher.run_checked().expect("run dispatcher");
 
-    let dispatcher = Dispatcher::new(
-        MixedSourceBuilder::new(),
-        ArrowWriter::new(),
-        &schema,
-        queries,
-    );
-    let dw = dispatcher.run_checked().expect("run dispatcher");
-
-    let records: Vec<RecordBatch> = dw.finish(headers);
+    let records: Vec<RecordBatch> = writer.finish(headers);
     assert_eq!(2, records.len());
 
     for col in 0..ncols {
@@ -142,17 +137,17 @@ fn test_option_arrow() {
     });
 
     // println!("{:?}", data);
-
+    let mut writer = ArrowWriter::new();
     let dispatcher = Dispatcher::new(
         OptU64SourceBuilder::new(data.clone(), ncols),
-        ArrowWriter::new(),
+        &mut writer,
+        &nrows.iter().map(|_| "").collect::<Vec<_>>(),
         &schema,
-        nrows.iter().map(|_n| String::new()).collect(),
     );
 
-    let dw = dispatcher.run_checked().expect("run dispatcher");
+    dispatcher.run_checked().expect("run dispatcher");
 
-    let records: Vec<RecordBatch> = dw.finish(headers);
+    let records: Vec<RecordBatch> = writer.finish(headers);
     for (i, (rb, odata)) in records.iter().zip_eq(data).enumerate() {
         // println!("{:?}", rb);
         assert_eq!(ncols, rb.num_columns());

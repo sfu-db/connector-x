@@ -77,22 +77,26 @@ fn load_and_parse() {
 #[test]
 fn test_postgres() {
     let dburl = env::var("POSTGRES_URL").unwrap();
-    let schema = vec![
+    let schema = [
         DataType::U64,
         DataType::String,
         DataType::F64,
         DataType::Bool,
     ];
-    let queries = vec![
-        "select * from test_postgres_conn where test_int < 2".to_string(),
-        "select * from test_postgres_conn where test_int >= 2".to_string(),
+    let queries = [
+        "select * from test_postgres_conn where test_int < 2",
+        "select * from test_postgres_conn where test_int >= 2",
     ];
     let builder = PostgresDataSourceBuilder::new(&dburl);
-    let dispatcher = Dispatcher::new(builder, MemoryWriter::new(), &schema, queries);
+    let mut writer = MemoryWriter::new();
+    let dispatcher = Dispatcher::new(builder, &mut writer, &queries, &schema);
 
-    let dw = dispatcher.run_checked().expect("run dispatcher");
-    assert_eq!(array![1, 2], dw.column_view::<u64>(0).unwrap());
-    assert_eq!(array!["str1", "str2"], dw.column_view::<String>(1).unwrap());
-    assert_eq!(array![1.1, 2.2], dw.column_view::<f64>(2).unwrap());
-    assert_eq!(array![true, false], dw.column_view::<bool>(3).unwrap());
+    dispatcher.run_checked().expect("run dispatcher");
+    assert_eq!(array![1, 2], writer.column_view::<u64>(0).unwrap());
+    assert_eq!(
+        array!["str1", "str2"],
+        writer.column_view::<String>(1).unwrap()
+    );
+    assert_eq!(array![1.1, 2.2], writer.column_view::<f64>(2).unwrap());
+    assert_eq!(array![true, false], writer.column_view::<bool>(3).unwrap());
 }

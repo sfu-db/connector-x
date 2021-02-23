@@ -79,13 +79,11 @@ fn load_and_parse() {
 #[test]
 fn test_csv() {
     let schema = vec![DataType::U64; 5];
-    let files = vec![
-        "./tests/data/uint_0.csv".to_string(),
-        "./tests/data/uint_1.csv".to_string(),
-    ];
-    let dispatcher = Dispatcher::new(CSVSourceBuilder::new(), U64Writer::new(), &schema, files);
+    let files = ["./tests/data/uint_0.csv", "./tests/data/uint_1.csv"];
+    let mut writer = U64Writer::new();
+    let dispatcher = Dispatcher::new(CSVSourceBuilder::new(), &mut writer, &files, &schema);
 
-    let dw = dispatcher.run_checked().expect("run dispatcher");
+    dispatcher.run_checked().expect("run dispatcher");
 
     assert_eq!(
         array![
@@ -101,6 +99,6 @@ fn test_csv() {
             [45, 46, 47, 48, 49],
             [50, 51, 52, 53, 54],
         ],
-        dw.buffer()
+        writer.buffer()
     );
 }

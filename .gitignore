@@ -1,6 +1,6 @@
 **/target
 /.vscode
-connector_agent.so
+python/connector_agent_python.so
 __pycache__
 .python-version
 .idea/
