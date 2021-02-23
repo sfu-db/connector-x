@@ -46,9 +46,6 @@ impl CSVSource {
         }
     }
 
-    pub fn infer_schema(&mut self) -> Result<Vec<DataType>> {
-        unimplemented!("infer schema using self.records!");
-    }
 }
 
 impl DataSource for CSVSource {
@@ -70,6 +67,10 @@ impl DataSource for CSVSource {
 
     fn nrows(&self) -> usize {
         self.nrows
+    }
+
+    fn infer_schema(&mut self) -> Result<Vec<DataType>> {
+        unimplemented!("infer schema using self.records!");
     }
 }
 

@@ -40,6 +40,11 @@ pub trait DataSource: Sized {
 
     /// Number of rows this `DataSource` get.
     fn nrows(&self) -> usize;
+
+    /// Infer schema from return data
+    fn infer_schema(&mut self) -> Result<Vec<Self::TypeSystem>> {
+        unimplemented!("infer schema using self.records!");
+    }
 }
 
 /// A type implemented `Produce<T>` means that it can produce a value `T` by consuming part of it's raw data buffer.

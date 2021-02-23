@@ -20,7 +20,7 @@ pub struct Dispatcher<'a, SB, WT, TS> {
 impl<'a, SB, WT, TS> Dispatcher<'a, SB, WT, TS>
 where
     SB: SourceBuilder,
-    SB::DataSource: Send,
+    SB::DataSource: Send + DataSource<TypeSystem = TS>,
     TS: TypeSystem,
     WT: Writer<TypeSystem = TS>,
     TS: for<'r> Realize<Transmit<'r, SB::DataSource, WT::PartitionWriter<'r>>>
@@ -66,7 +66,7 @@ where
             .for_each(|(source, query)| source.prepare(query.as_str()).expect("run query"));
 
         // infer schema if not given
-        // let self.schema = sources[0].infer_schema();
+        // self.schema = sources[0].infer_schema()?;
 
         // collect transmit functions for schema
         let funcs: Vec<_> = self
