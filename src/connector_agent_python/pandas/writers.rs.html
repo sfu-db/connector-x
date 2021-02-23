@@ -243,8 +243,9 @@
 <span id="240">240</span>
 <span id="241">241</span>
 <span id="242">242</span>
+<span id="243">243</span>
 </pre><div class="example-wrap"><pre class="rust ">
-<span class="kw">use</span> <span class="kw">super</span>::<span class="ident">funcs</span>::<span class="ident">FSeriesStr</span>;
+<span class="kw">use</span> <span class="kw">super</span>::<span class="ident">PandasDType</span>;
 <span class="kw">use</span> <span class="ident">connector_agent</span>::{
     <span class="ident">AnyArrayViewMut</span>, <span class="ident">ConnectorAgentError</span>, <span class="ident">Consume</span>, <span class="ident">DataOrder</span>, <span class="ident">DataType</span>, <span class="ident">PartitionWriter</span>, <span class="ident">Realize</span>,
     <span class="prelude-ty">Result</span>, <span class="ident">TypeAssoc</span>, <span class="ident">TypeSystem</span>, <span class="ident">Writer</span>,
@@ -258,13 +259,13 @@
 };
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">any</span>::<span class="ident">type_name</span>;
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PandasWriter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="ident">py</span>: <span class="ident">Python</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PandasWriter</span><span class="op">&lt;</span><span class="lifetime">&#39;py</span><span class="op">&gt;</span> {
+    <span class="ident">py</span>: <span class="ident">Python</span><span class="op">&lt;</span><span class="lifetime">&#39;py</span><span class="op">&gt;</span>,
     <span class="ident">nrows</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>,
     <span class="ident">schema</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">DataType</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">buffers</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">PyList</span><span class="op">&gt;</span>,
+    <span class="ident">buffers</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;py</span> <span class="ident">PyList</span><span class="op">&gt;</span>,
     <span class="ident">column_buffer_index</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">usize</span>, <span class="ident">usize</span>)<span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">dataframe</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">PyAny</span><span class="op">&gt;</span>, <span class="comment">// Using this field other than the return purpose should be careful: this refers to the same data as buffers</span>
+    <span class="ident">dataframe</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;py</span> <span class="ident">PyAny</span><span class="op">&gt;</span>, <span class="comment">// Using this field other than the return purpose should be careful: this refers to the same data as buffers</span>
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">PandasWriter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
@@ -448,7 +449,7 @@
     <span class="kw">let</span> <span class="ident">series</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">schema</span>
         .<span class="ident">iter</span>()
         .<span class="ident">enumerate</span>()
-        .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">i</span>, <span class="kw-2">&amp;</span><span class="ident">dt</span>)<span class="op">|</span> <span class="ident">Realize</span>::<span class="op">&lt;</span><span class="ident">FSeriesStr</span><span class="op">&gt;</span>::<span class="ident">realize</span>(<span class="ident">dt</span>)(<span class="ident">i</span>, <span class="ident">nrows</span>))
+        .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">i</span>, <span class="kw-2">&amp;</span><span class="ident">dt</span>)<span class="op">|</span> <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;&#39;{}&#39;: pd.Series(dtype=&#39;{}&#39;)&quot;</span>, <span class="ident">i</span>, <span class="ident">dt</span>.<span class="ident">dtype</span>()))
         .<span class="ident">collect</span>();
 
     <span class="comment">// https://github.com/pandas-dev/pandas/blob/master/pandas/core/internals/managers.py</span>
@@ -459,9 +460,10 @@
 
     <span class="kw">let</span> <span class="ident">code</span> <span class="op">=</span> <span class="macro">format</span><span class="macro">!</span>(
         <span class="string">r#&quot;import pandas as pd
-df = pd.DataFrame({{{}}})
+df = pd.DataFrame(index=range({}), {{{}}})
 blocks = [b.values for b in df._mgr.blocks]
 index = [(i, j) for i, j in zip(df._mgr.blknos, df._mgr.blklocs)]&quot;#</span>,
+        <span class="ident">nrows</span>,
         <span class="ident">series</span>.<span class="ident">join</span>(<span class="string">&quot;,&quot;</span>)
     );
 

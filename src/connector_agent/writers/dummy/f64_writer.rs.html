@@ -155,7 +155,7 @@
         <span class="self">self</span>.<span class="ident">schema</span> <span class="op">=</span> <span class="ident">schema</span>;
         <span class="kw">let</span> <span class="ident">ncols</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">schema</span>.<span class="ident">len</span>();
         <span class="kw">for</span> <span class="ident">field</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">schema</span> {
-            <span class="kw">if</span> <span class="op">!</span><span class="macro">matches</span><span class="macro">!</span>(<span class="ident">field</span>, <span class="ident">DataType</span>::<span class="ident">F64</span>) {
+            <span class="kw">if</span> <span class="op">!</span><span class="macro">matches</span><span class="macro">!</span>(<span class="ident">field</span>, <span class="ident">DataType</span>::<span class="ident">F64</span>(<span class="bool-val">false</span>)) {
                 <span class="macro">throw</span><span class="macro">!</span>(<span class="macro">anyhow</span><span class="macro">!</span>(<span class="string">&quot;F64Writer only accepts F64 only schema&quot;</span>));
             }
         }
