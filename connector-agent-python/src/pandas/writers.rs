@@ -1,7 +1,9 @@
 use super::pandas_columns::{
-    BooleanBlock, Float64Block, HasPandasColumn, PandasColumn, PandasColumnObject, UInt64Block,
+    BooleanBlock, Float64Block, HasPandasColumn, PandasColumn, PandasColumnObject, StringColumn,
+    UInt64Block,
 };
 use super::PandasDType;
+use anyhow::anyhow;
 use connector_agent::{
     ConnectorAgentError, Consume, DataOrder, DataType, PartitionWriter, Result, TypeAssoc,
     TypeSystem, Writer,
@@ -10,7 +12,7 @@ use fehler::{throw, throws};
 use itertools::Itertools;
 use pyo3::{
     types::{PyDict, PyList},
-    PyAny, Python,
+    FromPyObject, PyAny, Python,
 };
 use std::any::TypeId;
 use std::mem::transmute;
@@ -63,6 +65,7 @@ impl<'a> Writer for PandasWriter<'a> {
             index.iter().map(|tuple| tuple.extract().unwrap()).collect();
 
         let nbuffers = buffers.len();
+
         // buffer_column_index[i][j] = the column id of the j-th row (pandas buffer stores columns row-wise) in the i-th buffer.
         let mut buffer_column_index = vec![vec![]; nbuffers];
         let mut column_buffer_index_cid: Vec<_> = column_buffer_index.iter().enumerate().collect();
@@ -79,6 +82,7 @@ impl<'a> Writer for PandasWriter<'a> {
         self.dataframe = Some(df)
     }
 
+    #[throws(ConnectorAgentError)]
     fn partition_writers(&mut self, counts: &[usize]) -> Vec<Self::PartitionWriter<'_>> {
         if matches!(self.nrows, None) {
             panic!("{}", ConnectorAgentError::WriterNotAllocated);
@@ -99,51 +103,62 @@ impl<'a> Writer for PandasWriter<'a> {
             (0..schema.len()).map(|_| vec![]).collect();
 
         for (buf, cids) in buffers.iter().zip_eq(buffer_column_index) {
-            let dtype = schema[cids[0]];
-            match dtype {
-                DataType::F64(_) => {
-                    let fblock = Float64Block::extract(buf).unwrap();
-                    let fcols = fblock.split();
-                    for (&cid, fcol) in cids.iter().zip_eq(fcols) {
-                        partitioned_columns[cid] = fcol
+            for &cid in cids {
+                match schema[cid] {
+                    DataType::F64(_) => {
+                        let fblock = Float64Block::extract(buf).map_err(|e| anyhow!(e))?;
+                        let fcols = fblock.split();
+                        for (&cid, fcol) in cids.iter().zip_eq(fcols) {
+                            partitioned_columns[cid] = fcol
+                                .partition(&counts)
+                                .into_iter()
+                                .map(|c| Box::new(c) as _)
+                                .collect()
+                        }
+                    }
+                    DataType::U64(_) => {
+                        let ublock = UInt64Block::extract(buf).map_err(|e| anyhow!(e))?;
+                        let ucols = ublock.split();
+                        for (&cid, ucol) in cids.iter().zip_eq(ucols) {
+                            partitioned_columns[cid] = ucol
+                                .partition(&counts)
+                                .into_iter()
+                                .map(|c| Box::new(c) as _)
+                                .collect()
+                        }
+                    }
+                    DataType::Bool(_) => {
+                        let bblock = BooleanBlock::extract(buf).map_err(|e| anyhow!(e))?;
+                        let bcols = bblock.split();
+                        for (&cid, bcol) in cids.iter().zip_eq(bcols) {
+                            partitioned_columns[cid] = bcol
+                                .partition(&counts)
+                                .into_iter()
+                                .map(|c| Box::new(c) as _)
+                                .collect()
+                        }
+                    }
+                    DataType::String(_) => {
+                        let scol = StringColumn::extract(buf).map_err(|e| anyhow!(e))?;
+                        assert_eq!(cids.len(), 1, "string buffer has multiple columns");
+
+                        partitioned_columns[cids[0]] = scol
                             .partition(&counts)
                             .into_iter()
                             .map(|c| Box::new(c) as _)
                             .collect()
                     }
                 }
-                DataType::U64(_) => {
-                    let ublock = UInt64Block::extract(buf).unwrap();
-                    let ucols = ublock.split();
-                    for (&cid, ucol) in cids.iter().zip_eq(ucols) {
-                        partitioned_columns[cid] = ucol
-                            .partition(&counts)
-                            .into_iter()
-                            .map(|c| Box::new(c) as _)
-                            .collect()
-                    }
-                }
-                DataType::Bool(_) => {
-                    let bblock = BooleanBlock::extract(self.py, buf).unwrap();
-                    let bcols = bblock.split();
-                    for (&cid, bcol) in cids.iter().zip_eq(bcols) {
-                        partitioned_columns[cid] = bcol
-                            .partition(&counts)
-                            .into_iter()
-                            .map(|c| Box::new(c) as _)
-                            .collect()
-                    }
-                }
-                _ => unimplemented!(),
             }
         }
 
         let mut par_writers = vec![];
-        for &c in counts {
-            let columns = partitioned_columns
+        for &c in counts.into_iter().rev() {
+            let columns: Vec<_> = partitioned_columns
                 .iter_mut()
                 .map(|partitions| partitions.pop().unwrap())
                 .collect();
+
             par_writers.push(PandasPartitionWriter::new(
                 c,
                 columns,
@@ -151,7 +166,8 @@ impl<'a> Writer for PandasWriter<'a> {
             ));
         }
 
-        par_writers
+        // We need to revers the par_writers because partitions are poped reversely
+        par_writers.into_iter().rev().collect()
     }
 
     fn schema(&self) -> &[DataType] {
@@ -203,7 +219,6 @@ where
     fn consume_checked(&mut self, row: usize, col: usize, value: T) -> Result<()> {
         self.schema[col].check::<T>()?;
         assert!(self.columns[col].typecheck(TypeId::of::<T>()));
-        println!("Wrtting into {} {} {:?}", row, col, value);
         unsafe { self.consume(row, col, value) };
 
         Ok(())
@@ -219,7 +234,14 @@ fn create_dataframe<'a>(
     let series: Vec<String> = schema
         .iter()
         .enumerate()
-        .map(|(i, &dt)| format!("'{}': pd.Series(dtype='{}')", i, dt.dtype()))
+        .map(|(i, &dt)| {
+            format!(
+                "'{}': pd.Series(index=range({}), dtype='{}')",
+                i,
+                nrows,
+                dt.dtype()
+            )
+        })
         .collect();
 
     // https://github.com/pandas-dev/pandas/blob/master/pandas/core/internals/managers.py
@@ -236,8 +258,6 @@ index = [(i, j) for i, j in zip(df._mgr.blknos, df._mgr.blklocs)]"#,
         nrows,
         series.join(",")
     );
-
-    println!("code: {}", code);
 
     // run python code
     let locals = PyDict::new(py);

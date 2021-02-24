@@ -2,7 +2,7 @@ use connector_agent::data_sources::{
     postgres::{PostgresDataSource, PostgresDataSourceBuilder},
     DataSource, Produce,
 };
-use connector_agent::writers::mixed::MemoryWriter;
+use connector_agent::writers::memory::MemoryWriter;
 use connector_agent::SourceBuilder;
 use connector_agent::{DataType, Dispatcher};
 use ndarray::array;

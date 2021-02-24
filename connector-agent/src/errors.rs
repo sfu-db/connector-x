@@ -27,7 +27,7 @@ pub enum ConnectorAgentError {
 
     #[error("Writer has not been allocated yet.")]
     WriterNotAllocated,
-    
+
     #[error(transparent)]
     IOError(#[from] std::io::Error),
 

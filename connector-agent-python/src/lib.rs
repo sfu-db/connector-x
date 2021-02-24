@@ -2,7 +2,7 @@
 #![allow(incomplete_features)]
 
 mod errors;
-pub mod pandas;
+mod pandas;
 mod types;
 
 use pyo3::prelude::*;

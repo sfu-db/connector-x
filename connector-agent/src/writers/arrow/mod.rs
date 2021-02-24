@@ -46,6 +46,7 @@ impl Writer for ArrowWriter {
         self.schema = schema;
     }
 
+    #[throws(ConnectorAgentError)]
     fn partition_writers(&mut self, counts: &[usize]) -> Vec<Self::PartitionWriter<'_>> {
         assert_eq!(counts.iter().sum::<usize>(), self.nrows);
         assert_eq!(self.builders.len(), 0);

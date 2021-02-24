@@ -1,5 +1,5 @@
 use connector_agent::{
-    data_sources::mixed::MixedSourceBuilder, writers::mixed::MemoryWriter, DataOrder, DataType,
+    data_sources::dummy::MixedSourceBuilder, writers::memory::MemoryWriter, DataOrder, DataType,
     Dispatcher, PartitionWriter, SourceBuilder, Writer,
 };
 use ndarray::array;

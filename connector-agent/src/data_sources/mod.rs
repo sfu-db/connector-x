@@ -3,7 +3,6 @@
 
 pub mod csv;
 pub mod dummy;
-pub mod mixed;
 pub mod postgres;
 
 use crate::data_order::DataOrder;

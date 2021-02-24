@@ -1,7 +1,7 @@
-use super::{HasPandasColumn, PandasColumn, PandasColumnObject};
+use super::{check_numpy_dtype, HasPandasColumn, PandasColumn, PandasColumnObject};
 use ndarray::{ArrayViewMut1, ArrayViewMut2, Axis, Ix2};
 use numpy::PyArray;
-use pyo3::{PyAny, PyResult};
+use pyo3::{FromPyObject, PyAny, PyResult};
 use std::any::TypeId;
 
 // Float
@@ -9,13 +9,16 @@ pub struct Float64Block<'a> {
     data: ArrayViewMut2<'a, f64>,
 }
 
-impl<'a> Float64Block<'a> {
-    pub fn extract(ob: &'a PyAny) -> PyResult<Self> {
+impl<'a> FromPyObject<'a> for Float64Block<'a> {
+    fn extract(ob: &'a PyAny) -> PyResult<Self> {
+        check_numpy_dtype(ob, "float64")?;
         let array = ob.downcast::<PyArray<f64, Ix2>>()?;
         let data = unsafe { array.as_array_mut() };
         Ok(Float64Block { data })
     }
+}
 
+impl<'a> Float64Block<'a> {
     pub fn split(self) -> Vec<Float64Column<'a>> {
         let mut ret = vec![];
         let mut view = self.data;
@@ -39,6 +42,12 @@ pub struct Float64Column<'a> {
 impl<'a> PandasColumnObject for Float64Column<'a> {
     fn typecheck(&self, id: TypeId) -> bool {
         id == TypeId::of::<f64>() || id == TypeId::of::<Option<f64>>()
+    }
+    fn len(&self) -> usize {
+        self.data.len()
+    }
+    fn typename(&self) -> &'static str {
+        std::any::type_name::<f64>()
     }
 }
 

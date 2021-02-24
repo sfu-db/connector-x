@@ -18,7 +18,7 @@ futures = "0.3"
 itertools = "0.10"
 log = "0.4"
 ndarray = "0.14"
-numpy = "0.13"
+numpy = {git = "https://github.com/dovahcrow/rust-numpy"}
 pyo3 = {version = "0.13", features = ["extension-module"]}
 pyo3-built = "0.4"
 thiserror = "1"

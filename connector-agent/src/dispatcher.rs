@@ -63,7 +63,9 @@ where
         sources
             .par_iter_mut()
             .zip_eq(self.queries.as_slice())
-            .for_each(|(source, query)| source.prepare(query.as_str()).expect("run query"));
+            .for_each(|(source, query)| {
+                source.prepare(query.as_str()).expect("run query");
+            });
 
         // infer schema if not given
         // self.schema = sources[0].infer_schema()?;
@@ -88,11 +90,12 @@ where
 
         // parse and write
         self.writer
-            .partition_writers(num_rows.as_slice())
+            .partition_writers(num_rows.as_slice())?
             .into_par_iter()
             .zip_eq(sources)
             .for_each(|(mut writer, mut source)| {
                 let f = funcs.clone();
+
                 match dorder {
                     DataOrder::RowMajor => {
                         for row in 0..writer.nrows() {

@@ -77,6 +77,7 @@ impl DataSource for PostgresDataSource {
         if self.nrows > 0 {
             self.ncols = self.records[0].len();
         }
+
         Ok(())
     }
 

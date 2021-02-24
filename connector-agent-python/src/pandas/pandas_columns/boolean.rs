@@ -1,7 +1,7 @@
-use super::{HasPandasColumn, PandasColumn, PandasColumnObject};
+use super::{check_numpy_dtype, HasPandasColumn, PandasColumn, PandasColumnObject};
 use ndarray::{ArrayViewMut1, ArrayViewMut2, Axis, Ix2};
 use numpy::{PyArray, PyArray1};
-use pyo3::{types::IntoPyDict, PyAny, PyResult, Python};
+use pyo3::{FromPyObject, PyAny, PyResult};
 use std::any::TypeId;
 
 // Boolean
@@ -9,19 +9,15 @@ pub enum BooleanBlock<'a> {
     NumPy(ArrayViewMut2<'a, bool>),
     Extention(ArrayViewMut1<'a, bool>, ArrayViewMut1<'a, bool>),
 }
-
-impl<'a> BooleanBlock<'a> {
-    pub fn extract(py: Python<'a>, ob: &'a PyAny) -> PyResult<Self> {
+impl<'a> FromPyObject<'a> for BooleanBlock<'a> {
+    fn extract(ob: &'a PyAny) -> PyResult<Self> {
         if let Ok(array) = ob.downcast::<PyArray<bool, Ix2>>() {
+            check_numpy_dtype(ob, "bool")?;
             let data = unsafe { array.as_array_mut() };
             Ok(BooleanBlock::NumPy(data))
         } else {
-            // run python code
-            let locals = [("array", ob)].into_py_dict(py);
-            py.run("pair = (array._data, array._mask)", None, Some(locals))?;
-
-            let (data, mask): (&PyAny, &PyAny) =
-                locals.get_item("pair").unwrap().extract::<(_, _)>()?;
+            let data = ob.getattr("_data")?;
+            let mask = ob.getattr("_mask")?;
 
             Ok(BooleanBlock::Extention(
                 unsafe { data.downcast::<PyArray1<bool>>().unwrap().as_array_mut() },
@@ -29,7 +25,9 @@ impl<'a> BooleanBlock<'a> {
             ))
         }
     }
+}
 
+impl<'a> BooleanBlock<'a> {
     pub fn split(self) -> Vec<BooleanColumn<'a>> {
         let mut ret = vec![];
         match self {
@@ -61,6 +59,12 @@ pub struct BooleanColumn<'a> {
 impl<'a> PandasColumnObject for BooleanColumn<'a> {
     fn typecheck(&self, id: TypeId) -> bool {
         id == TypeId::of::<bool>() || id == TypeId::of::<Option<bool>>()
+    }
+    fn len(&self) -> usize {
+        self.data.len()
+    }
+    fn typename(&self) -> &'static str {
+        std::any::type_name::<bool>()
     }
 }
 

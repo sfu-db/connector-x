@@ -1,7 +1,7 @@
 use arrow::array::{BooleanArray, Float64Array, StringArray, UInt64Array};
 use arrow::record_batch::RecordBatch;
 use connector_agent::{
-    data_sources::{dummy::OptU64SourceBuilder, mixed::MixedSourceBuilder},
+    data_sources::{dummy::MixedSourceBuilder, dummy::OptU64SourceBuilder},
     writers::arrow::ArrowWriter,
     DataType, Dispatcher,
 };

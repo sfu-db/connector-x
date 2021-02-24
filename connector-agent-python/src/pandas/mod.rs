@@ -1,4 +1,3 @@
-mod funcs;
 mod pandas_columns;
 mod writers;
 
@@ -27,7 +26,8 @@ pub fn write_pandas<'a>(
     let mut writer = PandasWriter::new(py);
     let sb = PostgresDataSourceBuilder::new(conn);
 
-    // TODO: unblock python threads when copying the data
+    // ! Do not unlock GIL. Object columns might need to allocate a python object while writing.
+    // ! They carried the assumption that GIL is already acquired and use unsafe Python::assume_gil_acquired.
     let dispatcher = Dispatcher::new(sb, &mut writer, queries, &schema);
     dispatcher.run_checked()?;
 

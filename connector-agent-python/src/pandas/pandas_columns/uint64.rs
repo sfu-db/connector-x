@@ -1,7 +1,7 @@
-use super::{HasPandasColumn, PandasColumn, PandasColumnObject};
+use super::{check_numpy_dtype, HasPandasColumn, PandasColumn, PandasColumnObject};
 use ndarray::{ArrayViewMut1, ArrayViewMut2, Axis, Ix2};
 use numpy::{PyArray, PyArray1};
-use pyo3::{PyAny, PyResult};
+use pyo3::{FromPyObject, PyAny, PyResult};
 use std::any::TypeId;
 
 // uint64
@@ -9,14 +9,13 @@ pub enum UInt64Block<'a> {
     NumPy(ArrayViewMut2<'a, u64>),
     Extention(ArrayViewMut1<'a, u64>, ArrayViewMut1<'a, bool>),
 }
-
-impl<'a> UInt64Block<'a> {
-    pub fn extract(ob: &'a PyAny) -> PyResult<Self> {
+impl<'a> FromPyObject<'a> for UInt64Block<'a> {
+    fn extract(ob: &'a PyAny) -> PyResult<Self> {
         if let Ok(array) = ob.downcast::<PyArray<u64, Ix2>>() {
+            check_numpy_dtype(ob, "uint64")?;
             let data = unsafe { array.as_array_mut() };
             Ok(UInt64Block::NumPy(data))
         } else {
-            // run python code
             let data = ob.getattr("_data")?;
             let mask = ob.getattr("_mask")?;
 
@@ -26,7 +25,9 @@ impl<'a> UInt64Block<'a> {
             ))
         }
     }
+}
 
+impl<'a> UInt64Block<'a> {
     pub fn split(self) -> Vec<UInt64Column<'a>> {
         let mut ret = vec![];
         match self {
@@ -60,6 +61,12 @@ impl<'a> PandasColumnObject for UInt64Column<'a> {
     fn typecheck(&self, id: TypeId) -> bool {
         id == TypeId::of::<u64>() || id == TypeId::of::<Option<u64>>()
     }
+    fn len(&self) -> usize {
+        self.data.len()
+    }
+    fn typename(&self) -> &'static str {
+        std::any::type_name::<u64>()
+    }
 }
 
 impl<'a> PandasColumn<u64> for UInt64Column<'a> {
@@ -75,7 +82,6 @@ impl<'a> PandasColumn<Option<u64>> for UInt64Column<'a> {
     fn write(&mut self, i: usize, val: Option<u64>) {
         match val {
             Some(val) => {
-                println!("i: {} , len: {}, val: {:?}", i, self.data.len(), val);
                 self.data[i] = val;
                 if let Some(mask) = self.mask.as_mut() {
                     mask[i] = false;
