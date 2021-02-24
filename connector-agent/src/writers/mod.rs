@@ -18,7 +18,7 @@ pub trait Writer: Sized {
     fn allocate(
         &mut self,
         nrow: usize,
-        schema: Vec<Self::TypeSystem>,
+        schema: &[Self::TypeSystem],
         data_order: DataOrder,
     ) -> Result<()>;
 

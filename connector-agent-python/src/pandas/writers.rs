@@ -49,7 +49,7 @@ impl<'a> Writer for PandasWriter<'a> {
     type PartitionWriter<'b> = PandasPartitionWriter<'b>;
 
     #[throws(ConnectorAgentError)]
-    fn allocate(&mut self, nrows: usize, schema: Vec<DataType>, data_order: DataOrder) {
+    fn allocate(&mut self, nrows: usize, schema: &[DataType], data_order: DataOrder) {
         if !matches!(data_order, DataOrder::RowMajor) {
             throw!(ConnectorAgentError::UnsupportedDataOrder(data_order))
         }
@@ -76,7 +76,7 @@ impl<'a> Writer for PandasWriter<'a> {
         }
 
         self.nrows = Some(nrows);
-        self.schema = Some(schema);
+        self.schema = Some(schema.to_vec());
         self.buffers = Some(buffers);
         self.buffer_column_index = Some(buffer_column_index);
         self.dataframe = Some(df)

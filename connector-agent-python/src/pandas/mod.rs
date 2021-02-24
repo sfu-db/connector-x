@@ -2,10 +2,9 @@ mod pandas_columns;
 mod writers;
 
 use crate::errors::{ConnectorAgentPythonError, Result};
-use crate::types::FromPandasType;
 use anyhow::anyhow;
 use connector_agent::{DataType, Dispatcher, PostgresDataSourceBuilder};
-use fehler::throws;
+use fehler::{throw, throws};
 use pyo3::{PyAny, Python};
 use writers::PandasWriter;
 
@@ -17,10 +16,8 @@ pub fn write_pandas<'a>(
     schema: &[&str],
 ) -> &'a PyAny {
     // convert schema
-    let maybe_schema: Result<Vec<DataType>> = schema
-        .into_iter()
-        .map(|&s| FromPandasType::from(s))
-        .collect();
+    let maybe_schema: Result<Vec<DataType>> =
+        schema.into_iter().map(|&s| PandasDType::parse(s)).collect();
     let schema = maybe_schema?;
 
     let mut writer = PandasWriter::new(py);
@@ -34,8 +31,9 @@ pub fn write_pandas<'a>(
     writer.result().ok_or(anyhow!("writer not run"))?
 }
 
-pub trait PandasDType {
+pub trait PandasDType: Sized {
     fn dtype(&self) -> &'static str;
+    fn parse(ty: &str) -> Result<Self>;
 }
 
 impl PandasDType for DataType {
@@ -47,6 +45,19 @@ impl PandasDType for DataType {
             DataType::Bool(false) => "bool",
             DataType::Bool(true) => "boolean",
             DataType::String(_) => "string",
+        }
+    }
+
+    #[throws(ConnectorAgentPythonError)]
+    fn parse(ty: &str) -> DataType {
+        match ty {
+            "uint64" => DataType::U64(false),
+            "UInt64" => DataType::U64(true),
+            "float64" => DataType::F64(true),
+            "bool" => DataType::Bool(false),
+            "boolean" => DataType::Bool(true),
+            "string" => DataType::String(true),
+            ty => throw!(ConnectorAgentPythonError::UnknownPandasType(ty.to_string())),
         }
     }
 }

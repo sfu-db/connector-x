@@ -35,13 +35,13 @@ impl Writer for MemoryWriter {
     type PartitionWriter<'a> = MemoryPartitionWriter<'a>;
 
     #[throws(ConnectorAgentError)]
-    fn allocate(&mut self, nrows: usize, schema: Vec<DataType>, data_order: DataOrder) {
+    fn allocate(&mut self, nrows: usize, schema: &[DataType], data_order: DataOrder) {
         if !matches!(data_order, DataOrder::RowMajor) {
             throw!(ConnectorAgentError::UnsupportedDataOrder(data_order))
         }
 
         self.nrows = nrows;
-        self.schema = schema;
+        self.schema = schema.to_vec();
 
         // The schema needs to be sorted due to the group by only works on consecutive identity keys.
         let mut sorted_schema = self.schema.clone();

@@ -85,6 +85,14 @@ impl Produce<f64> for MixedSource {
     }
 }
 
+impl Produce<Option<f64>> for MixedSource {
+    fn produce(&mut self) -> Result<Option<f64>> {
+        let ret = self.counter / self.ncols;
+        self.counter += 1;
+        Ok(FromPrimitive::from_usize(ret))
+    }
+}
+
 impl Produce<String> for MixedSource {
     fn produce(&mut self) -> Result<String> {
         let ret = ((self.counter / self.ncols) as u64).to_string();
@@ -93,9 +101,31 @@ impl Produce<String> for MixedSource {
     }
 }
 
+impl Produce<Option<String>> for MixedSource {
+    fn produce(&mut self) -> Result<Option<String>> {
+        let ret = ((self.counter / self.ncols) as u64).to_string();
+        self.counter += 1;
+        Ok(Some(ret))
+    }
+}
+
 impl Produce<bool> for MixedSource {
     fn produce(&mut self) -> Result<bool> {
         let ret = (self.counter / self.ncols) % 2 == 0;
+        self.counter += 1;
+        Ok(ret)
+    }
+}
+
+impl Produce<Option<bool>> for MixedSource {
+    fn produce(&mut self) -> Result<Option<bool>> {
+        let ret = match (self.counter / self.ncols) % 3 {
+            0 => Some(true),
+            1 => Some(false),
+            2 => None,
+            _ => unreachable!(),
+        };
+
         self.counter += 1;
         Ok(ret)
     }

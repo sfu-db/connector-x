@@ -86,7 +86,7 @@ where
         // allocate memory and create one partition writer for each source
         let num_rows: Vec<usize> = sources.iter().map(|source| source.nrows()).collect();
         self.writer
-            .allocate(num_rows.iter().sum(), self.schema.clone(), dorder)?;
+            .allocate(num_rows.iter().sum(), &self.schema, dorder)?;
 
         // parse and write
         self.writer

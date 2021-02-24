@@ -78,10 +78,10 @@ fn load_and_parse() {
 fn test_postgres() {
     let dburl = env::var("POSTGRES_URL").unwrap();
     let schema = [
-        DataType::U64,
-        DataType::String,
-        DataType::F64,
-        DataType::Bool,
+        DataType::U64(false),
+        DataType::String(false),
+        DataType::F64(false),
+        DataType::Bool(false),
     ];
     let queries = [
         "select * from test_postgres_conn where test_int < 2",

@@ -81,11 +81,30 @@ impl Produce<u64> for CSVSource {
     }
 }
 
+impl Produce<Option<u64>> for CSVSource {
+    fn produce(&mut self) -> Result<Option<u64>> {
+        let v: &str = self.records[self.counter / self.ncols][self.counter % self.ncols].as_ref();
+        self.counter += 1;
+        if v.is_empty() {
+            return Ok(None);
+        }
+        Ok(Some(v.parse().unwrap_or_default()))
+    }
+}
+
 impl Produce<f64> for CSVSource {
     fn produce(&mut self) -> Result<f64> {
         let v: &str = self.records[self.counter / self.ncols][self.counter % self.ncols].as_ref();
         self.counter += 1;
         Ok(v.parse().unwrap_or_default())
+    }
+}
+
+impl Produce<Option<f64>> for CSVSource {
+    fn produce(&mut self) -> Result<Option<f64>> {
+        let v: &str = self.records[self.counter / self.ncols][self.counter % self.ncols].as_ref();
+        self.counter += 1;
+        Ok(v.parse().ok())
     }
 }
 
@@ -97,6 +116,14 @@ impl Produce<bool> for CSVSource {
     }
 }
 
+impl Produce<Option<bool>> for CSVSource {
+    fn produce(&mut self) -> Result<Option<bool>> {
+        let v: &str = self.records[self.counter / self.ncols][self.counter % self.ncols].as_ref();
+        self.counter += 1;
+        Ok(v.parse().ok())
+    }
+}
+
 impl Produce<String> for CSVSource {
     fn produce(&mut self) -> Result<String> {
         let v: &str = self.records[self.counter / self.ncols][self.counter % self.ncols].as_ref();
@@ -105,13 +132,10 @@ impl Produce<String> for CSVSource {
     }
 }
 
-impl Produce<Option<u64>> for CSVSource {
-    fn produce(&mut self) -> Result<Option<u64>> {
+impl Produce<Option<String>> for CSVSource {
+    fn produce(&mut self) -> Result<Option<String>> {
         let v: &str = self.records[self.counter / self.ncols][self.counter % self.ncols].as_ref();
         self.counter += 1;
-        if v.is_empty() {
-            return Ok(None);
-        }
-        Ok(Some(v.parse().unwrap_or_default()))
+        Ok(Some(String::from(v)))
     }
 }
