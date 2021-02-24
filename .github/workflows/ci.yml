@@ -118,3 +118,5 @@ jobs:
 
       - name: Test python
         run: just test-python
+        env:
+          POSTGRES_URL: "postgresql://postgres:postgres@postgres:5432/postgres"
