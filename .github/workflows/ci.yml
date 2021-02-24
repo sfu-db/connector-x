@@ -35,7 +35,7 @@ jobs:
       - name: Install tools
         run: |
           apt-get update
-          apt-get install -y curl postgresql-client build-essential python3-dev pkg-config libssl-dev git
+          apt-get install -y curl postgresql-client build-essential python3-dev python3-pip pkg-config libssl-dev git
         env:
           DEBIAN_FRONTEND: noninteractive
 
@@ -45,6 +45,14 @@ jobs:
           toolchain: nightly-2021-02-15
           components: rustfmt
           default: true
+
+      - name: Install other dependent tools
+        run: |
+          pip3 install poetry
+          cargo install just
+
+      - name: Install python dependencies
+        run: just bootstrap-python
 
       - name: Is the code formatted?
         uses: actions-rs/cargo@v1
@@ -67,3 +75,6 @@ jobs:
         with:
           command: doc
           args: --no-deps
+
+      - name: Test python
+        run: just test-python

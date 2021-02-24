@@ -45,7 +45,6 @@ impl CSVSource {
             ncols: 0,
         }
     }
-
 }
 
 impl DataSource for CSVSource {
