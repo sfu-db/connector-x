@@ -7,3 +7,5 @@ __pycache__
 flamegraph.svg
 perf.data
 .env
+.venv
+.pytest_cache

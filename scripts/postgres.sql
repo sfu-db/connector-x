@@ -1,8 +1,15 @@
-CREATE TABLE IF NOT EXISTS test_postgres_conn(
-    test_int integer,
-    test_str text,
-    test_float real,
-    test_bool boolean
+CREATE TABLE IF NOT EXISTS test_table(
+    test_int INTEGER NOT NULL,
+    test_nullint INTEGER,
+    test_str TEXT,
+    test_float REAL,
+    test_bool BOOLEAN
 );
-INSERT INTO test_postgres_conn VALUES (1, 'str1', 1.1, true);
-INSERT INTO test_postgres_conn VALUES (2, 'str2', 2.2, false);
+
+
+INSERT INTO test_table VALUES (1, 3, 'str1', NULL, TRUE);
+INSERT INTO test_table VALUES (2, NULL, 'str2', 2.2, FALSE);
+INSERT INTO test_table VALUES (0, 5, 'a', 3.1, NULL);
+INSERT INTO test_table VALUES (3, 7, 'b', 3, FALSE);
+INSERT INTO test_table VALUES (4, 9, 'c', 'NaN', NULL);
+INSERT INTO test_table VALUES (1314, 2, NULL, -10, TRUE);

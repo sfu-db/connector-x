@@ -43,7 +43,7 @@ fn load_and_parse() {
     let mut source_builder = PostgresDataSourceBuilder::new(&dburl);
     let mut source: PostgresDataSource = source_builder.build();
     source
-        .prepare("select * from test_postgres_conn")
+        .prepare("select * from test_table")
         .expect("run query");
 
     assert_eq!(2, source.nrows);
@@ -84,8 +84,8 @@ fn test_postgres() {
         DataType::Bool(false),
     ];
     let queries = [
-        "select * from test_postgres_conn where test_int < 2",
-        "select * from test_postgres_conn where test_int >= 2",
+        "select * from test_table where test_int < 2",
+        "select * from test_table where test_int >= 2",
     ];
     let builder = PostgresDataSourceBuilder::new(&dburl);
     let mut writer = MemoryWriter::new();

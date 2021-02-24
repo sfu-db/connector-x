@@ -9,7 +9,66 @@ on:
       - main
 
 jobs:
-  build:
+  rust:
+    runs-on: ubuntu-latest
+    container: ubuntu
+    services:
+      # Label used to access the service container
+      postgres:
+        # Docker Hub image
+        image: postgres
+        env:
+          POSTGRES_PASSWORD: postgres
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: mstachniuk/ci-skip@v1
+        with:
+          fail-fast: true
+
+      - name: Install tools
+        run: |
+          apt-get update
+          apt-get install -y curl postgresql-client build-essential pkg-config libssl-dev git
+        env:
+          DEBIAN_FRONTEND: noninteractive
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly-2021-02-15
+          components: rustfmt
+          default: true
+
+      - name: Is the code formatted?
+        uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: --all -- --check -q
+      
+      - name: Seed the database
+        run: "psql postgresql://postgres:postgres@postgres:5432/postgres -f scripts/postgres.sql"
+
+      - name: Run tests
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+        env:
+          POSTGRES_URL: "postgresql://postgres:postgres@postgres:5432/postgres"
+      
+      - name: Test build docs
+        uses: actions-rs/cargo@v1
+        with:
+          command: doc
+          args: --no-deps
+
+  python:
     runs-on: ubuntu-latest
     container: ubuntu
     services:
@@ -54,27 +113,8 @@ jobs:
       - name: Install python dependencies
         run: just bootstrap-python
 
-      - name: Is the code formatted?
-        uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: --all -- --check -q
-      
       - name: Seed the database
         run: "psql postgresql://postgres:postgres@postgres:5432/postgres -f scripts/postgres.sql"
-
-      - name: Run tests
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-        env:
-          POSTGRES_URL: "postgresql://postgres:postgres@postgres:5432/postgres"
-      
-      - name: Test build docs
-        uses: actions-rs/cargo@v1
-        with:
-          command: doc
-          args: --no-deps
 
       - name: Test python
         run: just test-python
