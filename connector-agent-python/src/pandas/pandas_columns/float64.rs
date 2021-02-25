@@ -1,4 +1,4 @@
-use super::{check_numpy_dtype, HasPandasColumn, PandasColumn, PandasColumnObject};
+use super::{check_dtype, HasPandasColumn, PandasColumn, PandasColumnObject};
 use ndarray::{ArrayViewMut1, ArrayViewMut2, Axis, Ix2};
 use numpy::PyArray;
 use pyo3::{FromPyObject, PyAny, PyResult};
@@ -11,7 +11,7 @@ pub struct Float64Block<'a> {
 
 impl<'a> FromPyObject<'a> for Float64Block<'a> {
     fn extract(ob: &'a PyAny) -> PyResult<Self> {
-        check_numpy_dtype(ob, "float64")?;
+        check_dtype(ob, "float64")?;
         let array = ob.downcast::<PyArray<f64, Ix2>>()?;
         let data = unsafe { array.as_array_mut() };
         Ok(Float64Block { data })

@@ -1,4 +1,4 @@
-use super::{check_numpy_dtype, HasPandasColumn, PandasColumn, PandasColumnObject};
+use super::{check_dtype, HasPandasColumn, PandasColumn, PandasColumnObject};
 use ndarray::{ArrayViewMut1, ArrayViewMut2, Axis, Ix2};
 use numpy::{PyArray, PyArray1};
 use pyo3::{FromPyObject, PyAny, PyResult};
@@ -12,7 +12,7 @@ pub enum BooleanBlock<'a> {
 impl<'a> FromPyObject<'a> for BooleanBlock<'a> {
     fn extract(ob: &'a PyAny) -> PyResult<Self> {
         if let Ok(array) = ob.downcast::<PyArray<bool, Ix2>>() {
-            check_numpy_dtype(ob, "bool")?;
+            check_dtype(ob, "bool")?;
             let data = unsafe { array.as_array_mut() };
             Ok(BooleanBlock::NumPy(data))
         } else {

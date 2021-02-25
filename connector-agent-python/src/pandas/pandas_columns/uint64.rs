@@ -1,4 +1,4 @@
-use super::{check_numpy_dtype, HasPandasColumn, PandasColumn, PandasColumnObject};
+use super::{check_dtype, HasPandasColumn, PandasColumn, PandasColumnObject};
 use ndarray::{ArrayViewMut1, ArrayViewMut2, Axis, Ix2};
 use numpy::{PyArray, PyArray1};
 use pyo3::{FromPyObject, PyAny, PyResult};
@@ -12,7 +12,7 @@ pub enum UInt64Block<'a> {
 impl<'a> FromPyObject<'a> for UInt64Block<'a> {
     fn extract(ob: &'a PyAny) -> PyResult<Self> {
         if let Ok(array) = ob.downcast::<PyArray<u64, Ix2>>() {
-            check_numpy_dtype(ob, "uint64")?;
+            check_dtype(ob, "uint64")?;
             let data = unsafe { array.as_array_mut() };
             Ok(UInt64Block::NumPy(data))
         } else {

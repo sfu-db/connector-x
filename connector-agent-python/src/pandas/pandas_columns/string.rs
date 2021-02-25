@@ -1,27 +1,18 @@
-use super::{check_numpy_dtype, HasPandasColumn, PandasColumn, PandasColumnObject};
+use super::{HasPandasColumn, PandasColumn, PandasColumnObject};
 use ndarray::{ArrayViewMut1, Axis};
-use numpy::PyArray1;
-use pyo3::{types::PyString, FromPyObject, PyAny, PyObject, PyResult, Python};
 use std::any::TypeId;
 
-// Pandas squeezes na and string object into a single array
+// Defer string writing to the end: We are not able to allocate string objects
+// in this stage because python requires a GIL to be hold.
 pub struct StringColumn<'a> {
-    data: ArrayViewMut1<'a, PyObject>,
+    data: ArrayViewMut1<'a, Option<String>>,
 }
 
-impl<'a> FromPyObject<'a> for StringColumn<'a> {
-    fn extract(ob: &'a PyAny) -> PyResult<Self> {
-        check_numpy_dtype(ob, "string")?;
-        let data = ob.getattr("_ndarray")?;
-        check_numpy_dtype(data, "object")?;
-
-        Ok(StringColumn {
-            data: unsafe {
-                data.downcast::<PyArray1<PyObject>>()
-                    .unwrap()
-                    .as_array_mut()
-            },
-        })
+impl<'a> StringColumn<'a> {
+    pub fn new(buf: &'a mut [Option<String>]) -> Self {
+        StringColumn {
+            data: ArrayViewMut1::from(buf),
+        }
     }
 }
 
@@ -39,23 +30,13 @@ impl<'a> PandasColumnObject for StringColumn<'a> {
 
 impl<'a> PandasColumn<String> for StringColumn<'a> {
     fn write(&mut self, i: usize, val: String) {
-        let py = unsafe { Python::assume_gil_acquired() };
-        let val = PyString::new(py, &val).into();
-
-        self.data[i] = val;
+        self.data[i] = Some(val);
     }
 }
 
 impl<'a> PandasColumn<Option<String>> for StringColumn<'a> {
     fn write(&mut self, i: usize, val: Option<String>) {
-        match val {
-            Some(s) => {
-                let py = unsafe { Python::assume_gil_acquired() };
-                let val = PyString::new(py, &s).into();
-                self.data[i] = val;
-            }
-            None => {}
-        }
+        self.data[i] = val;
     }
 }
 

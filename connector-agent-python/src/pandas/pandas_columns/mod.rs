@@ -26,7 +26,7 @@ pub trait HasPandasColumn: Sized {
     type PandasColumn<'a>: PandasColumn<Self>;
 }
 
-fn check_numpy_dtype(ob: &PyAny, expected_dtype: &str) -> PyResult<()> {
+pub fn check_dtype(ob: &PyAny, expected_dtype: &str) -> PyResult<()> {
     let dtype = ob.getattr("dtype")?.str()?;
     let dtype = dtype.to_str()?;
     if dtype != expected_dtype {

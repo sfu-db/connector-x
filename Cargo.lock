@@ -306,6 +306,8 @@ dependencies = [
  "arrow",
  "built",
  "connector-agent",
+ "criterion",
+ "criterion-macro",
  "env_logger",
  "failure",
  "fehler",
@@ -317,6 +319,7 @@ dependencies = [
  "numpy",
  "pyo3",
  "pyo3-built",
+ "rayon",
  "thiserror",
  "tokio",
 ]
@@ -392,6 +395,16 @@ dependencies = [
  "serde_json",
  "tinytemplate",
  "walkdir",
+]
+
+[[package]]
+name = "criterion-macro"
+version = "0.3.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8421c08c2e60050bb24ebfb7232bdd2fcf44fa74c5777b00a71daa7d332a8164"
+dependencies = [
+ "proc-macro2",
+ "quote",
 ]
 
 [[package]]
@@ -1327,7 +1340,8 @@ dependencies = [
 [[package]]
 name = "numpy"
 version = "0.13.0"
-source = "git+https://github.com/dovahcrow/rust-numpy#9983ff7e97b9c4b955f58f305094514dbe03073a"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7f65308af05bc6952d28e2d51c730dedf6e16d48699795cb7c33d6a9db59f850"
 dependencies = [
  "cfg-if 0.1.10",
  "libc",

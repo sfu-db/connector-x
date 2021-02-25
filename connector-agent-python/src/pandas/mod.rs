@@ -1,4 +1,5 @@
 mod pandas_columns;
+mod pystring;
 mod writers;
 
 use crate::errors::{ConnectorAgentPythonError, Result};
@@ -23,10 +24,11 @@ pub fn write_pandas<'a>(
     let mut writer = PandasWriter::new(py);
     let sb = PostgresDataSourceBuilder::new(conn);
 
-    // ! Do not unlock GIL. Object columns might need to allocate a python object while writing.
-    // ! They carried the assumption that GIL is already acquired and use unsafe Python::assume_gil_acquired.
+    // TODO: unlock gil for these two line
     let dispatcher = Dispatcher::new(sb, &mut writer, queries, &schema);
     dispatcher.run_checked()?;
+
+    writer.write_string_columns()?;
 
     writer.result().ok_or(anyhow!("writer not run"))?
 }

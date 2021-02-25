@@ -9,3 +9,4 @@ perf.data
 .env
 .venv
 .pytest_cache
+data.txt
