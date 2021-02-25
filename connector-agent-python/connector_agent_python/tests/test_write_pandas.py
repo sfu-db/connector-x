@@ -20,7 +20,7 @@ def test_write_pandas(postgres_url: str) -> None:
         "select * from test_table where test_int >= 2",
     ]
 
-    schema = ["uint64", "UInt64", "string", "float64"]
+    schema = ["uint64", "UInt64", "string", "float64", "boolean"]
     df = write_pandas(postgres_url, queries, schema)
 
     expected = pd.DataFrame(
@@ -34,3 +34,15 @@ def test_write_pandas(postgres_url: str) -> None:
         },
     )
     assert_frame_equal(df, expected, check_names=True)
+
+
+@pytest.mark.xfail
+def test_wrong_dimension(postgres_url: str) -> None:
+
+    queries = [
+        "select * from test_table where test_int < 2",
+        "select * from test_table where test_int >= 2",
+    ]
+
+    schema = ["uint64", "UInt64", "string", "float64"]
+    write_pandas(postgres_url, queries, schema)
