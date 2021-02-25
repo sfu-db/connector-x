@@ -59,6 +59,10 @@ impl DataSource for MixedSource {
     fn nrows(&self) -> usize {
         self.nrows
     }
+
+    fn ncols(&self) -> usize {
+        self.ncols
+    }
 }
 
 impl Produce<u64> for MixedSource {

@@ -20,11 +20,9 @@ def test_write_pandas(postgres_url: str) -> None:
         "select * from test_table where test_int >= 2",
     ]
 
-    schema = ["uint64", "UInt64", "string", "float64", "boolean"]
+    schema = ["uint64", "UInt64", "string", "float64"]
     df = write_pandas(postgres_url, queries, schema)
-    print(df)
-    print(df["2"].dtype)
-    print(type(df["2"][0]))
+
     expected = pd.DataFrame(
         index=range(6),
         data={
@@ -35,9 +33,4 @@ def test_write_pandas(postgres_url: str) -> None:
             "4": pd.Series([True, None, False, False, None, True], dtype="boolean"),
         },
     )
-
-    for i in range(6):
-        print(df["2"][i], df["2"][i] == expected["2"][i])
-
-    print(hash(df["2"][0]), hash(expected["2"][0]))
     assert_frame_equal(df, expected, check_names=True)

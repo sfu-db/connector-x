@@ -1,11 +1,13 @@
 use crate::{
     data_order::{coordinate, DataOrder},
     data_sources::{DataSource, SourceBuilder},
-    errors::Result,
+    errors::{ConnectorAgentError, Result},
     types::{Transmit, TransmitChecked},
     typesystem::{Realize, TypeSystem},
     writers::{PartitionWriter, Writer},
 };
+use fehler::throw;
+use itertools::Itertools;
 use rayon::prelude::*;
 
 /// A dispatcher owns a `SourceBuilder` `SB` and a vector of `queries`
@@ -87,10 +89,26 @@ where
         let num_rows: Vec<usize> = sources.iter().map(|source| source.nrows()).collect();
         self.writer
             .allocate(num_rows.iter().sum(), &self.schema, dorder)?;
+        let partition_writers = self.writer.partition_writers(num_rows.as_slice())?;
+
+        let dims_are_same = sources
+            .iter()
+            .zip_eq(&partition_writers)
+            .all(|(src, dst)| src.nrows() == dst.nrows() && src.ncols() == dst.ncols());
+        if !dims_are_same {
+            let snrows = sources.iter().map(|src| src.nrows()).sum();
+            let wnrows = partition_writers.iter().map(|dst| dst.nrows()).sum();
+
+            throw!(ConnectorAgentError::DimensionMismatch(
+                snrows,
+                sources[0].ncols(),
+                wnrows,
+                partition_writers[0].ncols()
+            ))
+        }
 
         // parse and write
-        self.writer
-            .partition_writers(num_rows.as_slice())?
+        partition_writers
             .into_par_iter()
             .zip_eq(sources)
             .for_each(|(mut writer, mut source)| {

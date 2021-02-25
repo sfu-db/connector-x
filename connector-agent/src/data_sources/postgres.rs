@@ -84,6 +84,10 @@ impl DataSource for PostgresDataSource {
     fn nrows(&self) -> usize {
         self.nrows
     }
+
+    fn ncols(&self) -> usize {
+        self.ncols
+    }
 }
 
 impl PostgresDataSource {
