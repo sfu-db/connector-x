@@ -1,9 +1,12 @@
 **/target
 /.vscode
-python/connector_agent_python.so
+connector-agent-python/connector_agent_python/*.so
 __pycache__
 .python-version
 .idea/
 flamegraph.svg
 perf.data
 .env
+.venv
+.pytest_cache
+data.txt

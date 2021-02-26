@@ -1,0 +1,18 @@
+[tool.poetry]
+authors = ["Weiyuan Wu <youngw@sfu.ca>"]
+description = ""
+name = "connector_agent_python"
+version = "0.1.0"
+
+[tool.poetry.dependencies]
+numpy = "^1"
+pandas = "^1"
+python = "^3.6.1"
+
+[tool.poetry.dev-dependencies]
+maturin = "^0.9.4"
+pytest = "^6.2"
+
+[build-system]
+build-backend = "maturin"
+requires = ["maturin>=0.10,<0.11"]

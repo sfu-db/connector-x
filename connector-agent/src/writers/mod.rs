@@ -1,6 +1,5 @@
 pub mod arrow;
-pub mod dummy;
-pub mod mixed;
+pub mod memory;
 
 use crate::data_order::DataOrder;
 use crate::errors::Result;
@@ -19,12 +18,12 @@ pub trait Writer: Sized {
     fn allocate(
         &mut self,
         nrow: usize,
-        schema: Vec<Self::TypeSystem>,
+        schema: &[Self::TypeSystem],
         data_order: DataOrder,
     ) -> Result<()>;
 
     /// Create a bunch of partition writers, with each write `count` number of rows.
-    fn partition_writers(&mut self, counts: &[usize]) -> Vec<Self::PartitionWriter<'_>>;
+    fn partition_writers(&mut self, counts: &[usize]) -> Result<Vec<Self::PartitionWriter<'_>>>;
     /// Return the schema of the writer.
     fn schema(&self) -> &[Self::TypeSystem];
 }

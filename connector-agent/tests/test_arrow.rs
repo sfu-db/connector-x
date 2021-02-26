@@ -1,21 +1,17 @@
 use arrow::array::{BooleanArray, Float64Array, StringArray, UInt64Array};
 use arrow::record_batch::RecordBatch;
 use connector_agent::{
-    data_sources::{dummy::OptU64SourceBuilder, mixed::MixedSourceBuilder},
-    writers::arrow::ArrowWriter,
-    DataType, Dispatcher,
+    data_sources::dummy::MixedSourceBuilder, writers::arrow::ArrowWriter, DataType, Dispatcher,
 };
-use itertools::Itertools;
-use rand::Rng;
 
 #[test]
 fn test_arrow() {
-    let schema = vec![
-        DataType::U64,
-        DataType::F64,
-        DataType::Bool,
-        DataType::String,
-        DataType::F64,
+    let schema = [
+        DataType::U64(true),
+        DataType::F64(true),
+        DataType::Bool(false),
+        DataType::String(true),
+        DataType::F64(false),
     ];
     let nrows = vec![4, 7];
     let ncols = schema.len();
@@ -106,65 +102,6 @@ fn test_arrow() {
                     .eq(&Float64Array::from(vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0])));
             }
             _ => unreachable!(),
-        }
-    }
-}
-
-#[test]
-fn test_option_arrow() {
-    let ncols = 3;
-    let mut headers = vec![];
-    for c in 0..ncols {
-        headers.push(format!("c{}", c));
-    }
-    let schema = vec![DataType::OptU64; ncols];
-    let nrows = vec![12, 8];
-
-    let mut rng = rand::thread_rng();
-    let mut data = vec![];
-
-    nrows.iter().for_each(|n| {
-        let mut val = vec![];
-        for _i in 0..(n * ncols) {
-            let v: u64 = rng.gen();
-            if v % 2 == 0 {
-                val.push(Some(v));
-            } else {
-                val.push(None);
-            }
-        }
-        data.push(val);
-    });
-
-    // println!("{:?}", data);
-    let mut writer = ArrowWriter::new();
-    let dispatcher = Dispatcher::new(
-        OptU64SourceBuilder::new(data.clone(), ncols),
-        &mut writer,
-        &nrows.iter().map(|_| "").collect::<Vec<_>>(),
-        &schema,
-    );
-
-    dispatcher.run_checked().expect("run dispatcher");
-
-    let records: Vec<RecordBatch> = writer.finish(headers);
-    for (i, (rb, odata)) in records.iter().zip_eq(data).enumerate() {
-        // println!("{:?}", rb);
-        assert_eq!(ncols, rb.num_columns());
-        assert_eq!(nrows[i], rb.num_rows());
-
-        let mut cdata = vec![vec![]; ncols];
-        for (j, &d) in odata.iter().enumerate() {
-            cdata[j % ncols].push(d);
-        }
-        for c in 0..ncols {
-            let a: &UInt64Array = rb
-                .column(ncols - c - 1)
-                .as_any()
-                .downcast_ref::<UInt64Array>()
-                .unwrap();
-            let b = UInt64Array::from(cdata.pop().unwrap());
-            assert!(b.eq(a));
         }
     }
 }

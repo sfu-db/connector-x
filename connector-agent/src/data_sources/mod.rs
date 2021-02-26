@@ -3,7 +3,6 @@
 
 pub mod csv;
 pub mod dummy;
-pub mod mixed;
 pub mod postgres;
 
 use crate::data_order::DataOrder;
@@ -38,8 +37,11 @@ pub trait DataSource: Sized {
         self.produce()
     }
 
-    /// Number of rows this `DataSource` get.
+    /// Number of rows this `DataSource` got.
     fn nrows(&self) -> usize;
+
+    /// Number of cols this `DataSource` got.
+    fn ncols(&self) -> usize;
 
     /// Infer schema from return data
     fn infer_schema(&mut self) -> Result<Vec<Self::TypeSystem>> {

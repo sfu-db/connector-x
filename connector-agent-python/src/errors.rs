@@ -11,6 +11,9 @@ pub enum ConnectorAgentPythonError {
     #[error("Unknown pandas data type: {0}.")]
     UnknownPandasType(String),
 
+    #[error("Python: {0}.")]
+    PythonError(String),
+
     #[error(transparent)]
     ConnectorAgentError(#[from] connector_agent::ConnectorAgentError),
 
@@ -22,5 +25,11 @@ pub enum ConnectorAgentPythonError {
 impl From<ConnectorAgentPythonError> for PyErr {
     fn from(e: ConnectorAgentPythonError) -> PyErr {
         PyRuntimeError::new_err(format!("{}", e))
+    }
+}
+
+impl From<PyErr> for ConnectorAgentPythonError {
+    fn from(e: PyErr) -> ConnectorAgentPythonError {
+        ConnectorAgentPythonError::PythonError(format!("{}", e))
     }
 }

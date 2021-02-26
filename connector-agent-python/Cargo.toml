@@ -19,7 +19,7 @@ itertools = "0.10"
 log = "0.4"
 ndarray = "0.14"
 numpy = "0.13"
-pyo3 = {version = "0.13", features = ["extension-module"]}
+pyo3 = {version = "0.13", default-features = false, features = ["macros"]}
 pyo3-built = "0.4"
 thiserror = "1"
 tokio = {version = "1", features = ["rt-multi-thread", "io-util"]}
@@ -27,6 +27,16 @@ tokio = {version = "1", features = ["rt-multi-thread", "io-util"]}
 [build-dependencies]
 built = {version = "0.4", features = ["chrono"]}
 
+[dev-dependencies]
+criterion = "0.3"
+criterion-macro = "0.3"
+rayon = "1"
+
 [lib]
 crate-type = ["cdylib"]
 name = "connector_agent_python"
+
+[features]
+default = ["extension"]
+extension = ["pyo3/extension-module"]
+tests = ["pyo3/auto-initialize"]

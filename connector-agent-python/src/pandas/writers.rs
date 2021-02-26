@@ -1,24 +1,34 @@
-use super::PandasDType;
+use super::pandas_columns::{
+    check_dtype, BooleanBlock, Float64Block, HasPandasColumn, PandasColumn, PandasColumnObject,
+    StringColumn, UInt64Block,
+};
+use super::{pystring::PyString, PandasDType};
+use crate::errors::ConnectorAgentPythonError;
+use anyhow::anyhow;
 use connector_agent::{
-    AnyArrayViewMut, ConnectorAgentError, Consume, DataOrder, DataType, PartitionWriter, Realize,
-    Result, TypeAssoc, TypeSystem, Writer,
+    ConnectorAgentError, Consume, DataOrder, DataType, PartitionWriter, Result, TypeAssoc,
+    TypeSystem, Writer,
 };
 use fehler::{throw, throws};
-use ndarray::{Axis, Ix2};
-use numpy::PyArray;
+use itertools::Itertools;
+use numpy::PyArray1;
 use pyo3::{
     types::{PyDict, PyList},
-    PyAny, Python,
+    FromPyObject, PyAny, Python,
 };
-use std::any::type_name;
+use std::any::TypeId;
+use std::collections::HashMap;
+use std::mem::transmute;
 
 pub struct PandasWriter<'py> {
     py: Python<'py>,
     nrows: Option<usize>,
     schema: Option<Vec<DataType>>,
     buffers: Option<&'py PyList>,
+    buffer_column_index: Option<Vec<Vec<usize>>>,
     column_buffer_index: Option<Vec<(usize, usize)>>,
     dataframe: Option<&'py PyAny>, // Using this field other than the return purpose should be careful: this refers to the same data as buffers
+    string_columns: HashMap<usize, Vec<Option<String>>>, // We cannot create python string objects in parallel, so instead, we write string to memory first and write it to python later.
 }
 
 impl<'a> PandasWriter<'a> {
@@ -28,13 +38,46 @@ impl<'a> PandasWriter<'a> {
             nrows: None,
             schema: None,
             buffers: None,
+            buffer_column_index: None,
             column_buffer_index: None,
             dataframe: None,
+            string_columns: HashMap::new(),
         }
     }
 
-    pub fn result(self) -> &'a PyAny {
-        self.dataframe.unwrap()
+    #[throws(ConnectorAgentPythonError)]
+    pub fn write_string_columns(&mut self) {
+        let buffers = self.buffers.as_mut().unwrap();
+        let buffers: Vec<_> = buffers.iter().collect();
+
+        let column_buffer_index = self.column_buffer_index.as_ref().unwrap();
+
+        for (cid, col_data) in self.string_columns.drain() {
+            let (blkno, blkloc) = column_buffer_index[cid];
+            assert_eq!(
+                blkloc, 0,
+                "not possible that string buffer contains multiple columns"
+            );
+
+            check_dtype(buffers[blkno], "string")?;
+            let data = buffers[blkno].getattr("_ndarray")?;
+            check_dtype(data, "object")?;
+            let mut view = unsafe {
+                data.downcast::<PyArray1<PyString>>()
+                    .unwrap()
+                    .as_array_mut()
+            };
+            for (i, s) in col_data.into_iter().enumerate() {
+                if let Some(s) = s {
+                    view[i] = PyString::new(self.py, &s);
+                }
+                // We don't need to write if s is None: already set NA for that in the df.
+            }
+        }
+    }
+
+    pub fn result(self) -> Option<&'a PyAny> {
+        self.dataframe
     }
 }
 
@@ -44,7 +87,7 @@ impl<'a> Writer for PandasWriter<'a> {
     type PartitionWriter<'b> = PandasPartitionWriter<'b>;
 
     #[throws(ConnectorAgentError)]
-    fn allocate(&mut self, nrows: usize, schema: Vec<DataType>, data_order: DataOrder) {
+    fn allocate(&mut self, nrows: usize, schema: &[DataType], data_order: DataOrder) {
         if !matches!(data_order, DataOrder::RowMajor) {
             throw!(ConnectorAgentError::UnsupportedDataOrder(data_order))
         }
@@ -53,19 +96,41 @@ impl<'a> Writer for PandasWriter<'a> {
             throw!(ConnectorAgentError::DuplicatedAllocation);
         }
 
-        let (df, buffers, index) = create_dataframe(self.py, &schema, nrows);
+        let (df, buffers, index) = create_dataframe(self.py, schema, nrows);
 
         // get index for each column: (index of block, index of column within the block)
         let column_buffer_index: Vec<(usize, usize)> =
             index.iter().map(|tuple| tuple.extract().unwrap()).collect();
 
+        let nbuffers = buffers.len();
+
+        // buffer_column_index[i][j] = the column id of the j-th row (pandas buffer stores columns row-wise) in the i-th buffer.
+        let mut buffer_column_index = vec![vec![]; nbuffers];
+        let mut column_buffer_index_cid: Vec<_> = column_buffer_index.iter().enumerate().collect();
+        column_buffer_index_cid.sort_by_key(|(_, blk)| *blk);
+
+        for (cid, &(blkno, _)) in column_buffer_index_cid {
+            buffer_column_index[blkno].push(cid);
+        }
+
         self.nrows = Some(nrows);
-        self.schema = Some(schema);
+        self.schema = Some(schema.to_vec());
         self.buffers = Some(buffers);
+        self.buffer_column_index = Some(buffer_column_index);
         self.column_buffer_index = Some(column_buffer_index);
-        self.dataframe = Some(df)
+        self.dataframe = Some(df);
+        for (i, &dt) in schema.iter().enumerate() {
+            match dt {
+                DataType::String(..) => {
+                    self.string_columns
+                        .insert(i, vec![Some(String::new()); nrows]);
+                }
+                _ => {}
+            }
+        }
     }
 
+    #[throws(ConnectorAgentError)]
     fn partition_writers(&mut self, counts: &[usize]) -> Vec<Self::PartitionWriter<'_>> {
         if matches!(self.nrows, None) {
             panic!("{}", ConnectorAgentError::WriterNotAllocated);
@@ -73,54 +138,90 @@ impl<'a> Writer for PandasWriter<'a> {
 
         assert_eq!(counts.iter().sum::<usize>(), self.nrows.unwrap());
 
-        // get schema for each block, init by U64
-        // let mut block_schema_index = vec![DataType::U64; nbuffers];
-        // column_buffer_index
-        //     .iter()
-        //     .zip_eq(schema)
-        //     .for_each(|((b, _), &s)| block_schema_index[*b] = s);
-
-        // get array view of each block so we can write data into using rust
-        // TODO: cannot support multi-type using FArrayViewMut2 since PyArray does not support String and Option type
         let buffers = self
             .buffers
-            .take()
             .ok_or(ConnectorAgentError::WriterNotAllocated)
             .unwrap();
 
-        let buffer_views: Vec<AnyArrayViewMut<'a, Ix2>> = buffers
-            .iter()
-            .enumerate()
-            // .map(|(i, array)| Realize::<FArrayViewMut2>::realize(block_schema_index[i])(array))
-            .map(|(_i, array)| {
-                let pyarray = array
-                    .downcast::<PyArray<u64, Ix2>>()
-                    .expect("other types are not supported yet."); // TODO: add support for other dtypes.
-                let mut_view = unsafe { pyarray.as_array_mut() };
-                AnyArrayViewMut::<Ix2>::new(mut_view)
-            })
+        let schema = self.schema.as_ref().unwrap();
+        let buffer_column_index = self.buffer_column_index.as_ref().unwrap();
+
+        let mut partitioned_columns: Vec<Vec<Box<dyn PandasColumnObject>>> =
+            (0..schema.len()).map(|_| vec![]).collect();
+
+        let mut h: HashMap<_, _> = self
+            .string_columns
+            .iter_mut()
+            .map(|(&key, value)| (key, value))
             .collect();
 
-        let nbuffers = buffer_views.len();
-        let mut par_writers = vec![];
+        for (buf, cids) in buffers.iter().zip_eq(buffer_column_index) {
+            for &cid in cids {
+                match schema[cid] {
+                    DataType::F64(_) => {
+                        let fblock = Float64Block::extract(buf).map_err(|e| anyhow!(e))?;
+                        let fcols = fblock.split();
+                        for (&cid, fcol) in cids.iter().zip_eq(fcols) {
+                            partitioned_columns[cid] = fcol
+                                .partition(&counts)
+                                .into_iter()
+                                .map(|c| Box::new(c) as _)
+                                .collect()
+                        }
+                    }
+                    DataType::U64(_) => {
+                        let ublock = UInt64Block::extract(buf).map_err(|e| anyhow!(e))?;
+                        let ucols = ublock.split();
+                        for (&cid, ucol) in cids.iter().zip_eq(ucols) {
+                            partitioned_columns[cid] = ucol
+                                .partition(&counts)
+                                .into_iter()
+                                .map(|c| Box::new(c) as _)
+                                .collect()
+                        }
+                    }
+                    DataType::Bool(_) => {
+                        let bblock = BooleanBlock::extract(buf).map_err(|e| anyhow!(e))?;
+                        let bcols = bblock.split();
+                        for (&cid, bcol) in cids.iter().zip_eq(bcols) {
+                            partitioned_columns[cid] = bcol
+                                .partition(&counts)
+                                .into_iter()
+                                .map(|c| Box::new(c) as _)
+                                .collect()
+                        }
+                    }
+                    DataType::String(_) => {
+                        assert_eq!(cids.len(), 1, "string buffer has multiple columns");
 
-        let mut views: Vec<_> = buffer_views.into_iter().map(|v| Some(v)).collect();
-        for &c in counts {
-            let mut sub_buffers = vec![];
-            for bid in 0..nbuffers {
-                let view = views[bid].take();
-                let (splitted, rest) = view.unwrap().split_at(Axis(1), c);
-                views[bid] = Some(rest);
-                sub_buffers.push(splitted);
+                        let scol = StringColumn::new(h.remove(&cids[0]).unwrap());
+
+                        partitioned_columns[cids[0]] = scol
+                            .partition(&counts)
+                            .into_iter()
+                            .map(|c| Box::new(c) as _)
+                            .collect()
+                    }
+                }
             }
+        }
+
+        let mut par_writers = vec![];
+        for &c in counts.into_iter().rev() {
+            let columns: Vec<_> = partitioned_columns
+                .iter_mut()
+                .map(|partitions| partitions.pop().unwrap())
+                .collect();
+
             par_writers.push(PandasPartitionWriter::new(
                 c,
-                sub_buffers,
+                columns,
                 self.schema.as_ref().unwrap(),
-                self.column_buffer_index.as_ref().unwrap(),
             ));
         }
-        par_writers
+
+        // We need to reverse the par_writers because partitions are poped reversely
+        par_writers.into_iter().rev().collect()
     }
 
     fn schema(&self) -> &[DataType] {
@@ -130,23 +231,20 @@ impl<'a> Writer for PandasWriter<'a> {
 
 pub struct PandasPartitionWriter<'a> {
     nrows: usize,
-    buffers: Vec<AnyArrayViewMut<'a, Ix2>>,
+    columns: Vec<Box<dyn PandasColumnObject + 'a>>,
     schema: &'a [DataType],
-    column_buffer_index: &'a [(usize, usize)],
 }
 
 impl<'a> PandasPartitionWriter<'a> {
     fn new(
         nrows: usize,
-        buffers: Vec<AnyArrayViewMut<'a, Ix2>>,
+        columns: Vec<Box<dyn PandasColumnObject + 'a>>,
         schema: &'a [DataType],
-        column_buffer_index: &'a [(usize, usize)],
     ) -> Self {
         Self {
             nrows,
-            buffers,
+            columns,
             schema,
-            column_buffer_index,
         }
     }
 }
@@ -165,30 +263,18 @@ impl<'a> PartitionWriter<'a> for PandasPartitionWriter<'a> {
 
 impl<'a, T> Consume<T> for PandasPartitionWriter<'a>
 where
-    T: TypeAssoc<<Self as PartitionWriter<'a>>::TypeSystem> + 'static,
+    T: HasPandasColumn + TypeAssoc<DataType> + std::fmt::Debug + 'static,
 {
     unsafe fn consume(&mut self, row: usize, col: usize, value: T) {
-        let &(bid, col) = &self.column_buffer_index[col];
-        let mut_view = self.buffers[bid].udowncast::<T>();
-        // row and column in numpy and dataframe are inverse
-        *mut_view.get_mut((col, row)).unwrap() = value;
+        let (column, _): (&mut T::PandasColumn<'a>, *const ()) = transmute(&*self.columns[col]);
+        column.write(row, value);
     }
 
     fn consume_checked(&mut self, row: usize, col: usize, value: T) -> Result<()> {
         self.schema[col].check::<T>()?;
-        let &(bid, col) = &self.column_buffer_index[col];
+        assert!(self.columns[col].typecheck(TypeId::of::<T>()));
+        unsafe { self.consume(row, col, value) };
 
-        let mut_view =
-            self.buffers[bid]
-                .downcast::<T>()
-                .ok_or(ConnectorAgentError::UnexpectedType(
-                    self.schema[col],
-                    type_name::<T>(),
-                ))?;
-        // row and column in numpy and dataframe are inverse
-        *mut_view
-            .get_mut((col, row))
-            .ok_or(ConnectorAgentError::OutOfBound)? = value;
         Ok(())
     }
 }
@@ -202,7 +288,14 @@ fn create_dataframe<'a>(
     let series: Vec<String> = schema
         .iter()
         .enumerate()
-        .map(|(i, &dt)| format!("'{}': pd.Series(dtype='{}')", i, dt.dtype()))
+        .map(|(i, &dt)| {
+            format!(
+                "'{}': pd.Series(index=range({}), dtype='{}')",
+                i,
+                nrows,
+                dt.dtype()
+            )
+        })
         .collect();
 
     // https://github.com/pandas-dev/pandas/blob/master/pandas/core/internals/managers.py
@@ -213,7 +306,7 @@ fn create_dataframe<'a>(
 
     let code = format!(
         r#"import pandas as pd
-df = pd.DataFrame(index=range({}), {{{}}})
+df = pd.DataFrame(index=range({}), data={{{}}})
 blocks = [b.values for b in df._mgr.blocks]
 index = [(i, j) for i, j in zip(df._mgr.blknos, df._mgr.blklocs)]"#,
         nrows,

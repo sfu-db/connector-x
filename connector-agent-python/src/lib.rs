@@ -2,8 +2,7 @@
 #![allow(incomplete_features)]
 
 mod errors;
-pub mod pandas;
-mod types;
+mod pandas;
 
 use pyo3::prelude::*;
 use pyo3::wrap_pyfunction;

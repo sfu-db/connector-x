@@ -1,6 +1,6 @@
 use connector_agent::{
-    data_sources::mixed::MixedSourceBuilder, writers::mixed::MemoryWriter, DataOrder, DataType,
-    Dispatcher, PartitionWriter, SourceBuilder, Writer,
+    data_sources::dummy::MixedSourceBuilder, writers::memory::MemoryWriter, DataOrder, DataType,
+    Dispatcher, PartitionWriter, Result, SourceBuilder, Writer,
 };
 use ndarray::array;
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
@@ -12,7 +12,11 @@ fn mixed_writer_col_major() {
     let _ = dw
         .allocate(
             11,
-            vec![DataType::U64, DataType::F64, DataType::String],
+            &[
+                DataType::U64(false),
+                DataType::F64(true),
+                DataType::String(true),
+            ],
             DataOrder::ColumnMajor,
         )
         .unwrap();
@@ -26,22 +30,22 @@ fn mixed_source_col_major() {
 }
 
 #[test]
-fn write_mixed_array() {
+fn write_mixed_array() -> Result<()> {
     let mut dw = MemoryWriter::new();
     dw.allocate(
         11,
-        vec![
-            DataType::U64,
-            DataType::F64,
-            DataType::U64,
-            DataType::String,
-            DataType::F64,
-            DataType::String,
+        &[
+            DataType::U64(false),
+            DataType::F64(false),
+            DataType::U64(false),
+            DataType::String(false),
+            DataType::F64(false),
+            DataType::String(false),
         ],
         DataOrder::RowMajor,
     )
     .unwrap();
-    let writers = dw.partition_writers(&[4, 7]);
+    let writers = dw.partition_writers(&[4, 7])?;
 
     writers.into_par_iter().for_each(|mut writer| {
         for row in 0..writer.nrows() {
@@ -123,18 +127,19 @@ fn write_mixed_array() {
             _ => unreachable!(),
         }
     }
+    Ok(())
 }
 
 #[test]
 fn test_mixed() {
-    let schema = vec![
-        DataType::U64,
-        DataType::F64,
-        DataType::String,
-        DataType::F64,
-        DataType::Bool,
-        DataType::String,
-        DataType::F64,
+    let schema = [
+        DataType::U64(false),
+        DataType::F64(false),
+        DataType::String(false),
+        DataType::F64(false),
+        DataType::Bool(false),
+        DataType::String(false),
+        DataType::F64(false),
     ];
     let nrows = vec![4, 7];
     let ncols = schema.len();
