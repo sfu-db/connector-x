@@ -19,8 +19,8 @@ pub enum ConnectorAgentError {
     #[error("Cannot resolve data order: got {0:?} from source, {1:?} from destination.")]
     CannotResolveDataOrder(Vec<DataOrder>, Vec<DataOrder>),
 
-    #[error("Unexpected value, expect t or f, found {0}.")]
-    CannotParsePostgresBool(String),
+    #[error("Cannot parse {0} from {1}.")]
+    CannotParse(&'static str, String),
 
     #[error("Allocate is already called.")]
     DuplicatedAllocation,

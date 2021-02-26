@@ -2,7 +2,9 @@ use super::{DataSource, Produce, SourceBuilder};
 use crate::data_order::DataOrder;
 use crate::errors::{ConnectorAgentError, Result};
 use crate::types::DataType;
+use chrono::{DateTime, Utc};
 use fehler::{throw, throws};
+use std::any::type_name;
 use std::fs::File;
 
 pub struct CSVSourceBuilder {}
@@ -138,8 +140,27 @@ impl Produce<String> for CSVSource {
 
 impl Produce<Option<String>> for CSVSource {
     fn produce(&mut self) -> Result<Option<String>> {
-        let v: &str = self.records[self.counter / self.ncols][self.counter % self.ncols].as_ref();
+        let v: &str = &self.records[self.counter / self.ncols][self.counter % self.ncols];
         self.counter += 1;
         Ok(Some(String::from(v)))
+    }
+}
+
+impl Produce<DateTime<Utc>> for CSVSource {
+    fn produce(&mut self) -> Result<DateTime<Utc>> {
+        let v = &self.records[self.counter / self.ncols][self.counter % self.ncols];
+        v.parse()
+            .map_err(|_| ConnectorAgentError::CannotParse(type_name::<DateTime<Utc>>(), v.into()))
+    }
+}
+
+impl Produce<Option<DateTime<Utc>>> for CSVSource {
+    fn produce(&mut self) -> Result<Option<DateTime<Utc>>> {
+        match &self.records[self.counter / self.ncols][self.counter % self.ncols] {
+            "" => Ok(None),
+            v => Ok(Some(v.parse().map_err(|_| {
+                ConnectorAgentError::CannotParse(type_name::<DateTime<Utc>>(), v.into())
+            })?)),
+        }
     }
 }

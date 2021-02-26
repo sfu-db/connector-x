@@ -1,6 +1,9 @@
-use arrow::array::{ArrayBuilder, BooleanBuilder, Float64Builder, StringBuilder, UInt64Builder};
+use arrow::array::{
+    ArrayBuilder, BooleanBuilder, Float64Builder, Int64Builder, StringBuilder, UInt64Builder,
+};
 use arrow::datatypes::DataType as ArrowDataType;
 use arrow::datatypes::Field;
+use chrono::{Date, DateTime, Utc};
 
 /// Associate arrow builder with native type
 pub trait ArrowAssoc {
@@ -40,6 +43,38 @@ impl ArrowAssoc for Option<u64> {
 
     fn field(header: &str) -> Field {
         Field::new(header, ArrowDataType::UInt64, true)
+    }
+}
+
+impl ArrowAssoc for i64 {
+    type Builder = Int64Builder;
+
+    fn builder(nrows: usize) -> Int64Builder {
+        Int64Builder::new(nrows)
+    }
+
+    fn append(builder: &mut Int64Builder, value: i64) {
+        builder.append_value(value).unwrap();
+    }
+
+    fn field(header: &str) -> Field {
+        Field::new(header, ArrowDataType::Int64, false)
+    }
+}
+
+impl ArrowAssoc for Option<i64> {
+    type Builder = Int64Builder;
+
+    fn builder(nrows: usize) -> Int64Builder {
+        Int64Builder::new(nrows)
+    }
+
+    fn append(builder: &mut Int64Builder, value: Option<i64>) {
+        builder.append_option(value).unwrap();
+    }
+
+    fn field(header: &str) -> Field {
+        Field::new(header, ArrowDataType::Int64, false)
     }
 }
 
@@ -139,5 +174,69 @@ impl ArrowAssoc for Option<String> {
 
     fn field(header: &str) -> Field {
         Field::new(header, ArrowDataType::Utf8, true)
+    }
+}
+
+impl ArrowAssoc for DateTime<Utc> {
+    type Builder = Float64Builder;
+
+    fn builder(_nrows: usize) -> Float64Builder {
+        unimplemented!()
+    }
+
+    fn append(_builder: &mut Self::Builder, _value: DateTime<Utc>) {
+        unimplemented!()
+    }
+
+    fn field(_header: &str) -> Field {
+        unimplemented!()
+    }
+}
+
+impl ArrowAssoc for Option<DateTime<Utc>> {
+    type Builder = Float64Builder;
+
+    fn builder(_nrows: usize) -> Float64Builder {
+        unimplemented!()
+    }
+
+    fn append(_builder: &mut Self::Builder, _value: Option<DateTime<Utc>>) {
+        unimplemented!()
+    }
+
+    fn field(_header: &str) -> Field {
+        unimplemented!()
+    }
+}
+
+impl ArrowAssoc for Date<Utc> {
+    type Builder = Float64Builder;
+
+    fn builder(_nrows: usize) -> Float64Builder {
+        unimplemented!()
+    }
+
+    fn append(_builder: &mut Self::Builder, _value: Date<Utc>) {
+        unimplemented!()
+    }
+
+    fn field(_header: &str) -> Field {
+        unimplemented!()
+    }
+}
+
+impl ArrowAssoc for Option<Date<Utc>> {
+    type Builder = Float64Builder;
+
+    fn builder(_nrows: usize) -> Float64Builder {
+        unimplemented!()
+    }
+
+    fn append(_builder: &mut Self::Builder, _value: Option<Date<Utc>>) {
+        unimplemented!()
+    }
+
+    fn field(_header: &str) -> Field {
+        unimplemented!()
     }
 }

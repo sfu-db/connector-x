@@ -8,6 +8,7 @@ use crate::{
 };
 use fehler::throw;
 use itertools::Itertools;
+use log::debug;
 use rayon::prelude::*;
 
 /// A dispatcher owns a `SourceBuilder` `SB` and a vector of `queries`
@@ -68,6 +69,8 @@ where
             .for_each(|(source, query)| {
                 source.prepare(query.as_str()).expect("run query");
             });
+
+        debug!("Finished data download");
 
         // infer schema if not given
         // self.schema = sources[0].infer_schema()?;
@@ -131,6 +134,9 @@ where
                     }
                 }
             });
+
+        debug!("Writing finished");
+
         Ok(())
     }
 }

@@ -12,6 +12,7 @@ use crate::{
     typesystem::{ParameterizedFunc, ParameterizedOn, TypeAssoc, TypeSystem},
     writers::{Consume, PartitionWriter},
 };
+use chrono::{Date, DateTime, Utc};
 use fehler::throws;
 use std::marker::PhantomData;
 /// This is our intermediate type system used in this library.
@@ -21,8 +22,11 @@ use std::marker::PhantomData;
 pub enum DataType {
     F64(bool), // nullable
     U64(bool),
+    I64(bool),
     Bool(bool),
     String(bool),
+    DateTime(bool),
+    Date(bool),
 }
 
 impl TypeSystem for DataType {}
@@ -30,13 +34,19 @@ impl TypeSystem for DataType {}
 associate_typesystem! {
     DataType,
     DataType::F64(false) => f64,
-    DataType::U64(false) => u64,
-    DataType::Bool(false) => bool,
-    DataType::String(false) => String,
     DataType::F64(true) => Option<f64>,
+    DataType::U64(false) => u64,
     DataType::U64(true) => Option<u64>,
+    DataType::I64(false) => i64,
+    DataType::I64(true) => Option<i64>,
+    DataType::Bool(false) => bool,
     DataType::Bool(true) => Option<bool>,
-    DataType::String(true) => Option<String>
+    DataType::String(false) => String,
+    DataType::String(true) => Option<String>,
+    DataType::DateTime(false) => DateTime<Utc>,
+    DataType::DateTime(true) => Option<DateTime<Utc>>,
+    DataType::Date(false) => Date<Utc>,
+    DataType::Date(true) => Option<Date<Utc>>
 }
 
 pub struct Transmit<'a, S, W>(PhantomData<(&'a S, W)>);

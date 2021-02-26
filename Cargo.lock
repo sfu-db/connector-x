@@ -271,6 +271,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "arrow",
+ "chrono",
  "criterion",
  "csv",
  "env_logger",
@@ -303,16 +304,13 @@ name = "connector-agent-python"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "arrow",
  "built",
+ "chrono",
  "connector-agent",
  "criterion",
  "criterion-macro",
  "env_logger",
- "failure",
  "fehler",
- "flate2",
- "futures",
  "itertools 0.10.0",
  "log",
  "ndarray",
@@ -321,7 +319,6 @@ dependencies = [
  "pyo3-built",
  "rayon",
  "thiserror",
- "tokio",
 ]
 
 [[package]]
