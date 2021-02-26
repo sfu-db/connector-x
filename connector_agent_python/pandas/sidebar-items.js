@@ -1,1 +1,0 @@
-initSidebarItems({"fn":[["write_pandas",""]],"trait":[["PandasDType",""]]});

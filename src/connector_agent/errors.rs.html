@@ -41,6 +41,9 @@
 <span id="38">38</span>
 <span id="39">39</span>
 <span id="40">40</span>
+<span id="41">41</span>
+<span id="42">42</span>
+<span id="43">43</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">data_order</span>::<span class="ident">DataOrder</span>, <span class="ident">types</span>::<span class="ident">DataType</span>};
 <span class="kw">use</span> <span class="ident">thiserror</span>::<span class="ident">Error</span>;
@@ -71,7 +74,10 @@
 
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Writer has not been allocated yet.&quot;</span>)]</span>
     <span class="ident">WriterNotAllocated</span>,
-    
+
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;The dimensions for sources and writers do not match: writers have {0}x{1}, sources have {2}x{3}.&quot;</span>)]</span>
+    <span class="ident">DimensionMismatch</span>(<span class="ident">usize</span>, <span class="ident">usize</span>, <span class="ident">usize</span>, <span class="ident">usize</span>),
+
     <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
     <span class="ident">IOError</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">std</span>::<span class="ident">io</span>::<span class="ident">Error</span>),
 

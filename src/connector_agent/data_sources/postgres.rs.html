@@ -155,6 +155,11 @@
 <span id="152">152</span>
 <span id="153">153</span>
 <span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">data_order</span>::<span class="ident">DataOrder</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">data_sources</span>::{<span class="ident">DataSource</span>, <span class="ident">Produce</span>, <span class="ident">SourceBuilder</span>};
@@ -235,11 +240,16 @@
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">nrows</span> <span class="op">&gt;</span> <span class="number">0</span> {
             <span class="self">self</span>.<span class="ident">ncols</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">records</span>[<span class="number">0</span>].<span class="ident">len</span>();
         }
+
         <span class="prelude-val">Ok</span>(())
     }
 
     <span class="kw">fn</span> <span class="ident">nrows</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
         <span class="self">self</span>.<span class="ident">nrows</span>
+    }
+
+    <span class="kw">fn</span> <span class="ident">ncols</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
+        <span class="self">self</span>.<span class="ident">ncols</span>
     }
 }
 

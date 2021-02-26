@@ -54,13 +54,14 @@
 <span id="51">51</span>
 <span id="52">52</span>
 <span id="53">53</span>
+<span id="54">54</span>
+<span id="55">55</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// When implementing a data source, be make sure to implement Queryable and</span>
 <span class="comment">// Producer for all supported types in crate::types::DataType.</span>
 
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">csv</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">dummy</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">mixed</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">postgres</span>;
 
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">data_order</span>::<span class="ident">DataOrder</span>;
@@ -95,8 +96,11 @@
         <span class="self">self</span>.<span class="ident">produce</span>()
     }
 
-    <span class="doccomment">/// Number of rows this `DataSource` get.</span>
+    <span class="doccomment">/// Number of rows this `DataSource` got.</span>
     <span class="kw">fn</span> <span class="ident">nrows</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span>;
+
+    <span class="doccomment">/// Number of cols this `DataSource` got.</span>
+    <span class="kw">fn</span> <span class="ident">ncols</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span>;
 
     <span class="doccomment">/// Infer schema from return data</span>
     <span class="kw">fn</span> <span class="ident">infer_schema</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">TypeSystem</span><span class="op">&gt;</span><span class="op">&gt;</span> {
