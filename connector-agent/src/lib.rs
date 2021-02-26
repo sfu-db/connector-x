@@ -21,7 +21,7 @@ pub use crate::data_sources::{
     csv::{CSVSource, CSVSourceBuilder},
     dummy::{MixedSource, MixedSourceBuilder},
     postgres::{PostgresDataSource, PostgresDataSourceBuilder},
-    {DataSource, SourceBuilder},
+    {PartitionedSource, Source},
 };
 pub use crate::dispatcher::Dispatcher;
 pub use crate::errors::{ConnectorAgentError, Result};

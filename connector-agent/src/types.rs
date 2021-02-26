@@ -7,7 +7,7 @@
 //
 
 use crate::{
-    data_sources::{DataSource, Produce},
+    data_sources::{PartitionedSource, Produce},
     errors::{ConnectorAgentError, Result},
     typesystem::{ParameterizedFunc, ParameterizedOn, TypeAssoc, TypeSystem},
     writers::{Consume, PartitionWriter},
@@ -57,7 +57,7 @@ impl<'a, S, W> ParameterizedFunc for Transmit<'a, S, W> {
 
 impl<'a, S, W, T> ParameterizedOn<T> for Transmit<'a, S, W>
 where
-    S: DataSource + Produce<T>,
+    S: PartitionedSource + Produce<T>,
     W: PartitionWriter<'a, TypeSystem = S::TypeSystem> + Consume<T>,
     T: TypeAssoc<S::TypeSystem> + 'static,
 {
@@ -65,7 +65,7 @@ where
         #[throws(ConnectorAgentError)]
         pub fn transmit<'a, S, W, T>(source: &mut S, writer: &mut W, row: usize, col: usize)
         where
-            S: DataSource + Produce<T>,
+            S: PartitionedSource + Produce<T>,
             W: PartitionWriter<'a, TypeSystem = S::TypeSystem> + Consume<T>,
             T: TypeAssoc<S::TypeSystem> + 'static,
         {
@@ -84,7 +84,7 @@ impl<'a, S, W> ParameterizedFunc for TransmitChecked<'a, S, W> {
 
 impl<'a, S, W, T> ParameterizedOn<T> for TransmitChecked<'a, S, W>
 where
-    S: DataSource + Produce<T>,
+    S: PartitionedSource + Produce<T>,
     W: PartitionWriter<'a, TypeSystem = S::TypeSystem> + Consume<T>,
     T: TypeAssoc<S::TypeSystem> + 'static,
 {
@@ -92,7 +92,7 @@ where
         #[throws(ConnectorAgentError)]
         pub fn transmit_checked<'a, S, W, T>(source: &mut S, writer: &mut W, row: usize, col: usize)
         where
-            S: DataSource + Produce<T>,
+            S: PartitionedSource + Produce<T>,
             W: PartitionWriter<'a, TypeSystem = S::TypeSystem> + Consume<T>,
             T: TypeAssoc<S::TypeSystem> + 'static,
         {

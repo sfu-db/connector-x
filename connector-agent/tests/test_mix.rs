@@ -1,6 +1,6 @@
 use connector_agent::{
     data_sources::dummy::MixedSourceBuilder, writers::memory::MemoryWriter, DataOrder, DataType,
-    Dispatcher, PartitionWriter, Result, SourceBuilder, Writer,
+    Dispatcher, PartitionWriter, Result, Source, Writer,
 };
 use ndarray::array;
 use rayon::iter::{IntoParallelIterator, ParallelIterator};

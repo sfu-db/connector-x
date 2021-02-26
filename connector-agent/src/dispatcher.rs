@@ -1,6 +1,6 @@
 use crate::{
     data_order::{coordinate, DataOrder},
-    data_sources::{DataSource, SourceBuilder},
+    data_sources::{PartitionedSource, Source},
     errors::{ConnectorAgentError, Result},
     types::{Transmit, TransmitChecked},
     typesystem::{Realize, TypeSystem},
@@ -22,12 +22,12 @@ pub struct Dispatcher<'a, SB, WT, TS> {
 
 impl<'a, SB, WT, TS> Dispatcher<'a, SB, WT, TS>
 where
-    SB: SourceBuilder,
-    SB::DataSource: Send + DataSource<TypeSystem = TS>,
+    SB: Source,
+    SB::Partition: Send + PartitionedSource<TypeSystem = TS>,
     TS: TypeSystem,
     WT: Writer<TypeSystem = TS>,
-    TS: for<'r> Realize<Transmit<'r, SB::DataSource, WT::PartitionWriter<'r>>>
-        + for<'r> Realize<TransmitChecked<'r, SB::DataSource, WT::PartitionWriter<'r>>>,
+    TS: for<'r> Realize<Transmit<'r, SB::Partition, WT::PartitionWriter<'r>>>
+        + for<'r> Realize<TransmitChecked<'r, SB::Partition, WT::PartitionWriter<'r>>>,
 {
     /// Create a new dispatcher by providing a source builder, schema (temporary) and the queries
     /// to be issued to the data source.
@@ -58,7 +58,7 @@ where
         self.source_builder.set_data_order(dorder)?;
 
         // generate sources
-        let mut sources: Vec<SB::DataSource> = (0..self.queries.len())
+        let mut sources: Vec<SB::Partition> = (0..self.queries.len())
             .map(|_i| self.source_builder.build())
             .collect();
 

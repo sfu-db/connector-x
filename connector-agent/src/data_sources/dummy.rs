@@ -1,4 +1,4 @@
-use super::{DataSource, Produce, SourceBuilder};
+use super::{PartitionedSource, Produce, Source};
 use crate::data_order::DataOrder;
 use crate::errors::{ConnectorAgentError, Result};
 use crate::types::DataType;
@@ -14,9 +14,9 @@ impl MixedSourceBuilder {
     }
 }
 
-impl SourceBuilder for MixedSourceBuilder {
+impl Source for MixedSourceBuilder {
     const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
-    type DataSource = MixedSource;
+    type Partition = MixedSource;
 
     #[throws(ConnectorAgentError)]
     fn set_data_order(&mut self, data_order: DataOrder) {
@@ -25,7 +25,7 @@ impl SourceBuilder for MixedSourceBuilder {
         }
     }
 
-    fn build(&mut self) -> Self::DataSource {
+    fn build(&mut self) -> Self::Partition {
         MixedSource::new()
     }
 }
@@ -46,7 +46,7 @@ impl MixedSource {
     }
 }
 
-impl DataSource for MixedSource {
+impl PartitionedSource for MixedSource {
     type TypeSystem = DataType;
 
     // query: nrows,ncols

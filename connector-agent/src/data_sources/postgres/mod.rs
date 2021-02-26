@@ -1,5 +1,7 @@
+mod types;
+
 use crate::data_order::DataOrder;
-use crate::data_sources::{DataSource, Produce, SourceBuilder};
+use crate::data_sources::{PartitionedSource, Produce, Source};
 use crate::errors::{ConnectorAgentError, Result};
 use crate::types::DataType;
 use chrono::{Date, DateTime, NaiveDate, Utc};
@@ -25,9 +27,9 @@ impl PostgresDataSourceBuilder {
     }
 }
 
-impl SourceBuilder for PostgresDataSourceBuilder {
+impl Source for PostgresDataSourceBuilder {
     const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
-    type DataSource = PostgresDataSource;
+    type Partition = PostgresDataSource;
 
     fn set_data_order(&mut self, data_order: DataOrder) -> Result<()> {
         if !matches!(data_order, DataOrder::RowMajor) {
@@ -36,7 +38,7 @@ impl SourceBuilder for PostgresDataSourceBuilder {
         Ok(())
     }
 
-    fn build(&mut self) -> Self::DataSource {
+    fn build(&mut self) -> Self::Partition {
         PostgresDataSource::new(self.pool.get().unwrap())
     }
 }
@@ -61,7 +63,7 @@ impl PostgresDataSource {
     }
 }
 
-impl DataSource for PostgresDataSource {
+impl PartitionedSource for PostgresDataSource {
     type TypeSystem = DataType;
 
     fn prepare(&mut self, query: &str) -> Result<()> {

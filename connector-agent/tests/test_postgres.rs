@@ -1,9 +1,9 @@
 use connector_agent::data_sources::{
     postgres::{PostgresDataSource, PostgresDataSourceBuilder},
-    DataSource, Produce,
+    PartitionedSource, Produce,
 };
 use connector_agent::writers::memory::MemoryWriter;
-use connector_agent::SourceBuilder;
+use connector_agent::Source;
 use connector_agent::{DataType, Dispatcher};
 use ndarray::array;
 use std::env;

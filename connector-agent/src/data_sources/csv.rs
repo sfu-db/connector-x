@@ -1,4 +1,4 @@
-use super::{DataSource, Produce, SourceBuilder};
+use super::{PartitionedSource, Produce, Source};
 use crate::data_order::DataOrder;
 use crate::errors::{ConnectorAgentError, Result};
 use crate::types::DataType;
@@ -15,9 +15,9 @@ impl CSVSourceBuilder {
     }
 }
 
-impl SourceBuilder for CSVSourceBuilder {
+impl Source for CSVSourceBuilder {
     const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
-    type DataSource = CSVSource;
+    type Partition = CSVSource;
 
     #[throws(ConnectorAgentError)]
     fn set_data_order(&mut self, data_order: DataOrder) {
@@ -26,7 +26,7 @@ impl SourceBuilder for CSVSourceBuilder {
         }
     }
 
-    fn build(&mut self) -> Self::DataSource {
+    fn build(&mut self) -> Self::Partition {
         CSVSource::new()
     }
 }
@@ -49,7 +49,7 @@ impl CSVSource {
     }
 }
 
-impl DataSource for CSVSource {
+impl PartitionedSource for CSVSource {
     type TypeSystem = DataType;
 
     /// The parameter `query` is the path of the csv file

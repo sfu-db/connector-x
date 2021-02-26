@@ -1,6 +1,6 @@
 use connector_agent::data_sources::{
     csv::{CSVSource, CSVSourceBuilder},
-    DataSource, Produce,
+    PartitionedSource, Produce,
 };
 use connector_agent::writers::memory::MemoryWriter;
 use connector_agent::{DataType, Dispatcher};
