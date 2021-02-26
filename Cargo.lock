@@ -285,7 +285,7 @@ dependencies = [
  "ndarray",
  "num-traits",
  "postgres",
- "pprof",
+ "pprof 0.3.20",
  "r2d2",
  "r2d2_postgres",
  "rand 0.8.2",
@@ -311,14 +311,17 @@ dependencies = [
  "criterion-macro",
  "env_logger",
  "fehler",
+ "iai",
  "itertools 0.10.0",
  "log",
  "ndarray",
  "numpy",
+ "pprof 0.4.2",
  "pyo3",
  "pyo3-built",
  "rayon",
  "thiserror",
+ "tokio",
 ]
 
 [[package]]
@@ -1224,6 +1227,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "nix"
+version = "0.19.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b2ccba0cfe4fdf15982d1674c69b1fd80bad427d293849982668dfe454bd61f2"
+dependencies = [
+ "bitflags",
+ "cc",
+ "cfg-if 1.0.0",
+ "libc",
+]
+
+[[package]]
 name = "nodrop"
 version = "0.1.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1580,7 +1595,26 @@ dependencies = [
  "lazy_static",
  "libc",
  "log",
- "nix",
+ "nix 0.17.0",
+ "parking_lot",
+ "symbolic-demangle",
+ "tempfile",
+ "thiserror",
+]
+
+[[package]]
+name = "pprof"
+version = "0.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a066eee7dbaf89a91078ceb15f56642c8d934eb2a639e7f098dd3f365651f55a"
+dependencies = [
+ "backtrace",
+ "criterion",
+ "inferno",
+ "lazy_static",
+ "libc",
+ "log",
+ "nix 0.19.1",
  "parking_lot",
  "symbolic-demangle",
  "tempfile",

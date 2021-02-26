@@ -20,7 +20,12 @@ seed-db:
     psql $POSTGRES_URL -c "DROP TABLE test_table;"
     psql $POSTGRES_URL -f scripts/postgres.sql
 
-tpch n="1": setup-python
-    RUST_LOG=connector_agent_python=debug \
+python-tpch n="1": setup-python
       cd connector-agent-python && \
       poetry run python ../scripts/test_tpch.py {{n}}
+
+tpch:
+    cd connector-agent-python && LD_LIBRARY_PATH=$HOME/.pyenv/versions/3.8.6/lib/ cargo criterion --no-default-features --features executable --bench tpch -- --profile-time=300
+
+tpch-old:
+    cd connector-agent-python && LD_LIBRARY_PATH=$HOME/.pyenv/versions/3.8.6/lib/ cargo criterion --no-default-features --features executable --bench tpch_old -- --profile-time=300

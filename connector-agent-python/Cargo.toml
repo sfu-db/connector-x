@@ -26,13 +26,16 @@ built = {version = "0.4", features = ["chrono"]}
 [dev-dependencies]
 criterion = "0.3"
 criterion-macro = "0.3"
+iai = "0.1"
+pprof = {version = "0.4", features = ["flamegraph", "criterion"]}
 rayon = "1"
+tokio = {version = "1", features = ["rt-multi-thread", "io-util"]}
 
 [lib]
-crate-type = ["cdylib"]
+crate-type = ["rlib", "cdylib"]
 name = "connector_agent_python"
 
 [features]
 default = ["extension"]
+executable = ["pyo3/auto-initialize"]
 extension = ["pyo3/extension-module"]
-tests = ["pyo3/auto-initialize"]
