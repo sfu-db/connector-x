@@ -17,6 +17,7 @@ impl MixedSourceBuilder {
 impl Source for MixedSourceBuilder {
     const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
     type Partition = MixedSource;
+    type TypeSystem = DataType;
 
     #[throws(ConnectorAgentError)]
     fn set_data_order(&mut self, data_order: DataOrder) {

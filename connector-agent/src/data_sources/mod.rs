@@ -12,7 +12,10 @@ use crate::typesystem::{TypeAssoc, TypeSystem};
 pub trait Source {
     /// Supported data orders, ordering by preference.
     const DATA_ORDERS: &'static [DataOrder];
-    type Partition: PartitionedSource;
+    /// The type system this `Source` associated with.
+    type TypeSystem: TypeSystem;
+    // Partition needs to be send to different threads for parallel execution
+    type Partition: PartitionedSource<TypeSystem = Self::TypeSystem> + Send;
 
     fn set_data_order(&mut self, data_order: DataOrder) -> Result<()>;
     fn build(&mut self) -> Self::Partition;
@@ -21,7 +24,6 @@ pub trait Source {
 /// In general, a `DataSource` abstracts the data source as a stream, which can produce
 /// a sequence of values of variate types by repetitively calling the function `produce`.
 pub trait PartitionedSource: Sized {
-    /// The type system this `DataSource` associated with.
     type TypeSystem: TypeSystem;
 
     /// Run the query and put the result into Self.

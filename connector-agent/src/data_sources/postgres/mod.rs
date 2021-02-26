@@ -30,6 +30,7 @@ impl PostgresDataSourceBuilder {
 impl Source for PostgresDataSourceBuilder {
     const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
     type Partition = PostgresDataSource;
+    type TypeSystem = DataType;
 
     fn set_data_order(&mut self, data_order: DataOrder) -> Result<()> {
         if !matches!(data_order, DataOrder::RowMajor) {

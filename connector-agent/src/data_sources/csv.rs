@@ -18,6 +18,7 @@ impl CSVSourceBuilder {
 impl Source for CSVSourceBuilder {
     const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
     type Partition = CSVSource;
+    type TypeSystem = DataType;
 
     #[throws(ConnectorAgentError)]
     fn set_data_order(&mut self, data_order: DataOrder) {

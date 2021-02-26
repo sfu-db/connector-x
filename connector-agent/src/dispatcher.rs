@@ -22,9 +22,8 @@ pub struct Dispatcher<'a, SB, WT, TS> {
 
 impl<'a, SB, WT, TS> Dispatcher<'a, SB, WT, TS>
 where
-    SB: Source,
-    SB::Partition: Send + PartitionedSource<TypeSystem = TS>,
     TS: TypeSystem,
+    SB: Source<TypeSystem = TS>,
     WT: Writer<TypeSystem = TS>,
     TS: for<'r> Realize<Transmit<'r, SB::Partition, WT::PartitionWriter<'r>>>
         + for<'r> Realize<TransmitChecked<'r, SB::Partition, WT::PartitionWriter<'r>>>,
