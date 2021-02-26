@@ -1,4 +1,5 @@
 use anyhow::anyhow;
+use chrono::{Date, DateTime, Utc};
 use connector_agent::writers::arrow::ArrowWriter;
 use connector_agent::{
     data_sources::{DataSource, Produce, SourceBuilder},
@@ -241,6 +242,18 @@ impl Produce<Option<u64>> for U64TestSource {
     }
 }
 
+impl Produce<i64> for U64TestSource {
+    fn produce(&mut self) -> Result<i64> {
+        throw!(anyhow!("Only u64 and Option<u64> is supported"));
+    }
+}
+
+impl Produce<Option<i64>> for U64TestSource {
+    fn produce(&mut self) -> Result<Option<i64>> {
+        throw!(anyhow!("Only u64 and Option<u64> is supported"));
+    }
+}
+
 impl Produce<f64> for U64TestSource {
     fn produce(&mut self) -> Result<f64> {
         throw!(anyhow!("Only u64 and Option<u64> is supported"));
@@ -273,6 +286,30 @@ impl Produce<String> for U64TestSource {
 
 impl Produce<Option<String>> for U64TestSource {
     fn produce(&mut self) -> Result<Option<String>> {
+        throw!(anyhow!("Only u64 and Option<u64> is supported"));
+    }
+}
+
+impl Produce<DateTime<Utc>> for U64TestSource {
+    fn produce(&mut self) -> Result<DateTime<Utc>> {
+        throw!(anyhow!("Only u64 and Option<u64> is supported"));
+    }
+}
+
+impl Produce<Option<DateTime<Utc>>> for U64TestSource {
+    fn produce(&mut self) -> Result<Option<DateTime<Utc>>> {
+        throw!(anyhow!("Only u64 and Option<u64> is supported"));
+    }
+}
+
+impl Produce<Date<Utc>> for U64TestSource {
+    fn produce(&mut self) -> Result<Date<Utc>> {
+        throw!(anyhow!("Only u64 and Option<u64> is supported"));
+    }
+}
+
+impl Produce<Option<Date<Utc>>> for U64TestSource {
+    fn produce(&mut self) -> Result<Option<Date<Utc>>> {
         throw!(anyhow!("Only u64 and Option<u64> is supported"));
     }
 }
@@ -355,6 +392,18 @@ impl Produce<Option<u64>> for OptU64TestSource {
     }
 }
 
+impl Produce<i64> for OptU64TestSource {
+    fn produce(&mut self) -> Result<i64> {
+        throw!(anyhow!("Only u64 and Option<u64> is supported"));
+    }
+}
+
+impl Produce<Option<i64>> for OptU64TestSource {
+    fn produce(&mut self) -> Result<Option<i64>> {
+        throw!(anyhow!("Only u64 and Option<u64> is supported"));
+    }
+}
+
 impl Produce<f64> for OptU64TestSource {
     fn produce(&mut self) -> Result<f64> {
         throw!(anyhow!("Only u64 and Option<u64> is supported"));
@@ -387,6 +436,30 @@ impl Produce<String> for OptU64TestSource {
 
 impl Produce<Option<String>> for OptU64TestSource {
     fn produce(&mut self) -> Result<Option<String>> {
+        throw!(anyhow!("Only u64 and Option<u64> is supported"));
+    }
+}
+
+impl Produce<DateTime<Utc>> for OptU64TestSource {
+    fn produce(&mut self) -> Result<DateTime<Utc>> {
+        throw!(anyhow!("Only u64 and Option<u64> is supported"));
+    }
+}
+
+impl Produce<Option<DateTime<Utc>>> for OptU64TestSource {
+    fn produce(&mut self) -> Result<Option<DateTime<Utc>>> {
+        throw!(anyhow!("Only u64 and Option<u64> is supported"));
+    }
+}
+
+impl Produce<Date<Utc>> for OptU64TestSource {
+    fn produce(&mut self) -> Result<Date<Utc>> {
+        throw!(anyhow!("Only u64 and Option<u64> is supported"));
+    }
+}
+
+impl Produce<Option<Date<Utc>>> for OptU64TestSource {
+    fn produce(&mut self) -> Result<Option<Date<Utc>>> {
         throw!(anyhow!("Only u64 and Option<u64> is supported"));
     }
 }

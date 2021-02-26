@@ -41,11 +41,11 @@ fn load_and_parse() {
         .prepare("select * from test_table")
         .expect("run query");
 
-    assert_eq!(6, source.nrows);
-    assert_eq!(5, source.ncols);
+    assert_eq!(6, source.nrows());
+    assert_eq!(5, source.ncols());
 
     let mut rows: Vec<Row> = Vec::new();
-    for _i in 0..source.nrows {
+    for _i in 0..source.nrows() {
         rows.push(Row(
             source.produce().unwrap(),
             source.produce().unwrap(),

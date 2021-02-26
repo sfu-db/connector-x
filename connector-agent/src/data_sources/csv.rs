@@ -2,7 +2,7 @@ use super::{DataSource, Produce, SourceBuilder};
 use crate::data_order::DataOrder;
 use crate::errors::{ConnectorAgentError, Result};
 use crate::types::DataType;
-use chrono::{DateTime, Utc};
+use chrono::{Date, DateTime, NaiveDate, Utc};
 use fehler::{throw, throws};
 use std::any::type_name;
 use std::fs::File;
@@ -98,6 +98,25 @@ impl Produce<Option<u64>> for CSVSource {
     }
 }
 
+impl Produce<i64> for CSVSource {
+    fn produce(&mut self) -> Result<i64> {
+        let v: &str = self.records[self.counter / self.ncols][self.counter % self.ncols].as_ref();
+        self.counter += 1;
+        Ok(v.parse().unwrap_or_default())
+    }
+}
+
+impl Produce<Option<i64>> for CSVSource {
+    fn produce(&mut self) -> Result<Option<i64>> {
+        let v: &str = self.records[self.counter / self.ncols][self.counter % self.ncols].as_ref();
+        self.counter += 1;
+        if v.is_empty() {
+            return Ok(None);
+        }
+        Ok(Some(v.parse().unwrap_or_default()))
+    }
+}
+
 impl Produce<f64> for CSVSource {
     fn produce(&mut self) -> Result<f64> {
         let v: &str = self.records[self.counter / self.ncols][self.counter % self.ncols].as_ref();
@@ -161,6 +180,30 @@ impl Produce<Option<DateTime<Utc>>> for CSVSource {
             v => Ok(Some(v.parse().map_err(|_| {
                 ConnectorAgentError::CannotParse(type_name::<DateTime<Utc>>(), v.into())
             })?)),
+        }
+    }
+}
+
+impl Produce<Date<Utc>> for CSVSource {
+    fn produce(&mut self) -> Result<Date<Utc>> {
+        let v = &self.records[self.counter / self.ncols][self.counter % self.ncols];
+        NaiveDate::parse_from_str(v, "%Y-%m-%d")
+            .map(|nd| Date::<Utc>::from_utc(nd, Utc))
+            .map_err(|_| ConnectorAgentError::CannotParse(type_name::<DateTime<Utc>>(), v.into()))
+    }
+}
+
+impl Produce<Option<Date<Utc>>> for CSVSource {
+    fn produce(&mut self) -> Result<Option<Date<Utc>>> {
+        match &self.records[self.counter / self.ncols][self.counter % self.ncols] {
+            "" => Ok(None),
+            v => Ok(Some(
+                NaiveDate::parse_from_str(v, "%Y-%m-%d")
+                    .map(|nd| Date::<Utc>::from_utc(nd, Utc))
+                    .map_err(|_| {
+                        ConnectorAgentError::CannotParse(type_name::<DateTime<Utc>>(), v.into())
+                    })?,
+            )),
         }
     }
 }
