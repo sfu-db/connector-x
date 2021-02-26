@@ -1,7 +1,17 @@
-from connector_agent_python import write_pandas
+"""
+Usage:
+  test_tpch.py <num>
+
+Options:
+  -h --help     Show this screen.
+  --version     Show version.
+"""
 import os
 from typing import List
+
 import numpy as np
+from connector_agent_python import write_pandas
+from docopt import docopt
 
 
 def get_sqls(count: int) -> List[str]:
@@ -15,10 +25,10 @@ def get_sqls(count: int) -> List[str]:
 
 
 if __name__ == "__main__":
-    # conn = os.environ["POSTGRES_URL"]
-    conn = "postgres://postgres:postgres@localhost:6666/tpch"
+    args = docopt(__doc__, version="Naval Fate 2.0")
+    conn = os.environ["POSTGRES_URL"]
 
-    queries = get_sqls(1)
+    queries = get_sqls(int(args["<num>"]))
 
     schema = [
         "int64",

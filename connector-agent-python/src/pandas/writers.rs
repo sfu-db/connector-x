@@ -305,7 +305,7 @@ where
 
     fn consume_checked(&mut self, row: usize, col: usize, value: T) -> Result<()> {
         self.schema[col].check::<T>()?;
-        assert!(self.columns[col].typecheck(TypeId::of::<T>()),);
+        assert!(self.columns[col].typecheck(TypeId::of::<T>()));
         unsafe { self.consume(row, col, value) };
 
         Ok(())
