@@ -35,7 +35,13 @@ impl Writer for MemoryWriter {
     type PartitionWriter<'a> = MemoryPartitionWriter<'a>;
 
     #[throws(ConnectorAgentError)]
-    fn allocate(&mut self, nrows: usize, schema: &[DataType], data_order: DataOrder) {
+    fn allocate<S: AsRef<str>>(
+        &mut self,
+        nrows: usize,
+        _names: &[S],
+        schema: &[DataType],
+        data_order: DataOrder,
+    ) {
         if !matches!(data_order, DataOrder::RowMajor) {
             throw!(ConnectorAgentError::UnsupportedDataOrder(data_order))
         }
@@ -181,7 +187,7 @@ where
             self.buffers[bid]
                 .downcast::<T>()
                 .ok_or(ConnectorAgentError::UnexpectedType(
-                    self.schema[col],
+                    format!("{:?}", self.schema[col]),
                     type_name::<T>(),
                 ))?;
         *mut_view

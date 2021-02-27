@@ -12,15 +12,16 @@ mod data_order;
 pub mod data_sources;
 mod dispatcher;
 mod errors;
+mod transmit;
 mod types;
 pub mod writers;
 
 pub use crate::any_array::{AnyArray, AnyArrayView, AnyArrayViewMut};
 pub use crate::data_order::DataOrder;
 pub use crate::data_sources::{
-    csv::{CSVSource, CSVSourceBuilder},
-    dummy::{MixedSource, MixedSourceBuilder},
-    postgres::{PostgresDataSource, PostgresDataSourceBuilder},
+    csv::{CSVSource, CSVSourceParser, CSVSourcePartition},
+    dummy::{MixedSource, MixedSourceParser, MixedSourcePartition},
+    postgres::{PostgresSource, PostgresSourceParser, PostgresSourcePartition},
     {PartitionedSource, Source},
 };
 pub use crate::dispatcher::Dispatcher;

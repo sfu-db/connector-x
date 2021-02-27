@@ -40,7 +40,13 @@ impl Writer for ArrowWriter {
     type PartitionWriter<'a> = ArrowPartitionWriter<'a>;
 
     #[throws(ConnectorAgentError)]
-    fn allocate(&mut self, nrows: usize, schema: &[DataType], _data_order: DataOrder) {
+    fn allocate<S: AsRef<str>>(
+        &mut self,
+        nrows: usize,
+        _names: &[S],
+        schema: &[DataType],
+        _data_order: DataOrder,
+    ) {
         // cannot really create builders since do not know each partition size here
         self.nrows = nrows;
         self.schema = schema.to_vec();

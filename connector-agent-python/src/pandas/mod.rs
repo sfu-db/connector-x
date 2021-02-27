@@ -4,7 +4,7 @@ mod writers;
 
 use crate::errors::{ConnectorAgentPythonError, Result};
 use anyhow::anyhow;
-use connector_agent::{DataType, Dispatcher, PostgresDataSourceBuilder};
+use connector_agent::{DataType, Dispatcher, PostgresSource};
 use fehler::{throw, throws};
 use log::debug;
 use pyo3::{PyAny, Python};
@@ -24,7 +24,7 @@ pub fn write_pandas<'a>(
     let schema = maybe_schema?;
 
     let mut writer = PandasWriter::new(py);
-    let sb = PostgresDataSourceBuilder::new(conn);
+    let sb = PostgresSource::new(conn);
 
     // TODO: unlock gil for these two line
     let dispatcher = Dispatcher::new(sb, &mut writer, queries, &schema);

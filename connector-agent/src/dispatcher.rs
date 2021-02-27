@@ -2,7 +2,7 @@ use crate::{
     data_order::{coordinate, DataOrder},
     data_sources::{PartitionedSource, Source},
     errors::{ConnectorAgentError, Result},
-    types::{Transmit, TransmitChecked},
+    transmit::{Transmit, TransmitChecked},
     typesystem::{Realize, TypeSystem},
     writers::{PartitionWriter, Writer},
 };
@@ -13,31 +13,38 @@ use rayon::prelude::*;
 
 /// A dispatcher owns a `SourceBuilder` `SB` and a vector of `queries`
 /// `schema` is a temporary input before we implement infer schema or get schema from DB.
-pub struct Dispatcher<'a, SB, WT, TS> {
-    source_builder: SB,
-    writer: &'a mut WT,
-    schema: Vec<TS>,
+pub struct Dispatcher<'a, S, W, TS>
+where
+    TS: TypeSystem,
+    S: Source<TypeSystem = TS>,
+    W: Writer<TypeSystem = TS>,
+{
+    source: S,
+    writer: &'a mut W,
     queries: Vec<String>,
 }
 
-impl<'a, SB, WT, TS> Dispatcher<'a, SB, WT, TS>
+impl<'w, S, W, TS> Dispatcher<'w, S, W, TS>
 where
     TS: TypeSystem,
-    SB: Source<TypeSystem = TS>,
-    WT: Writer<TypeSystem = TS>,
-    TS: for<'r> Realize<Transmit<'r, SB::Partition, WT::PartitionWriter<'r>>>
-        + for<'r> Realize<TransmitChecked<'r, SB::Partition, WT::PartitionWriter<'r>>>,
+    S: Source<TypeSystem = TS>,
+    W: Writer<TypeSystem = TS>,
+    TS: for<'s, 'r> Realize<
+        Transmit<<S::Partition as PartitionedSource>::Parser<'s>, W::PartitionWriter<'r>>,
+    >,
+    TS: for<'r, 's> Realize<
+        TransmitChecked<<S::Partition as PartitionedSource>::Parser<'s>, W::PartitionWriter<'r>>,
+    >,
 {
     /// Create a new dispatcher by providing a source builder, schema (temporary) and the queries
     /// to be issued to the data source.
-    pub fn new<S>(source_builder: SB, writer: &'a mut WT, queries: &[S], schema: &[TS]) -> Self
+    pub fn new<Q>(source: S, writer: &'w mut W, queries: &[Q]) -> Self
     where
-        S: ToString,
+        Q: ToString,
     {
         Dispatcher {
-            source_builder,
+            source,
             writer,
-            schema: schema.to_vec(),
             queries: queries.into_iter().map(ToString::to_string).collect(),
         }
     }
@@ -53,57 +60,46 @@ where
     /// Run the dispatcher by specifying the writer, the dispatcher will fetch, parse the data
     /// and return a writer with parsed result
     fn entry(mut self, checked: bool) -> Result<()> {
-        let dorder = coordinate(SB::DATA_ORDERS, WT::DATA_ORDERS)?;
-        self.source_builder.set_data_order(dorder)?;
+        let dorder = coordinate(S::DATA_ORDERS, W::DATA_ORDERS)?;
+        self.source.set_data_order(dorder)?;
+        self.source.set_queries(self.queries.as_slice());
+        self.source.fetch_metadata()?;
+        let schema = self.source.schema();
+        let names = self.source.names();
 
-        // generate sources
-        let mut sources: Vec<SB::Partition> = (0..self.queries.len())
-            .map(|_i| self.source_builder.build())
-            .collect();
+        // generate partitions
+        let mut partitions: Vec<S::Partition> = self.source.partition()?;
 
         // run queries
-        sources
-            .par_iter_mut()
-            .zip_eq(self.queries.as_slice())
-            .for_each(|(source, query)| {
-                source.prepare(query.as_str()).expect("run query");
-            });
+        partitions.par_iter_mut().for_each(|partition| {
+            partition.prepare().expect("run query");
+        });
 
         debug!("Finished data download");
 
-        // infer schema if not given
-        // self.schema = sources[0].infer_schema()?;
-
-        // collect transmit functions for schema
-        let funcs: Vec<_> = self
-            .schema
+        // allocate memory and create one partition writer for each source
+        let num_rows: Vec<usize> = partitions
             .iter()
-            .map(|&ty| {
-                if checked {
-                    Realize::<TransmitChecked<_, _>>::realize(ty)
-                } else {
-                    Realize::<Transmit<_, _>>::realize(ty)
-                }
-            })
+            .map(|partition| partition.nrows())
             .collect();
 
-        // allocate memory and create one partition writer for each source
-        let num_rows: Vec<usize> = sources.iter().map(|source| source.nrows()).collect();
         self.writer
-            .allocate(num_rows.iter().sum(), &self.schema, dorder)?;
-        let partition_writers = self.writer.partition_writers(num_rows.as_slice())?;
+            .allocate(num_rows.iter().sum(), &names, &schema, dorder)?;
 
-        let dims_are_same = sources
+        let partition_writers = self.writer.partition_writers(&num_rows)?;
+
+        let dims_are_same = partitions
             .iter()
             .zip_eq(&partition_writers)
             .all(|(src, dst)| src.nrows() == dst.nrows() && src.ncols() == dst.ncols());
+
         if !dims_are_same {
-            let snrows = sources.iter().map(|src| src.nrows()).sum();
+            let snrows = partitions.iter().map(|src| src.nrows()).sum();
             let wnrows = partition_writers.iter().map(|dst| dst.nrows()).sum();
 
             throw!(ConnectorAgentError::DimensionMismatch(
                 snrows,
-                sources[0].ncols(),
+                partitions[0].ncols(),
                 wnrows,
                 partition_writers[0].ncols()
             ))
@@ -112,22 +108,33 @@ where
         // parse and write
         partition_writers
             .into_par_iter()
-            .zip_eq(sources)
-            .for_each(|(mut writer, mut source)| {
-                let f = funcs.clone();
+            .zip_eq(partitions)
+            .for_each(|(mut writer, mut partition)| {
+                let f: Vec<_> = schema
+                    .iter()
+                    .map(|&ty| {
+                        if checked {
+                            Realize::<TransmitChecked<_, _>>::realize(ty)
+                        } else {
+                            Realize::<Transmit<_, _>>::realize(ty)
+                        }
+                    })
+                    .collect();
+
+                let mut parser = partition.parser().unwrap();
 
                 match dorder {
                     DataOrder::RowMajor => {
                         for row in 0..writer.nrows() {
                             for col in 0..writer.ncols() {
-                                f[col](&mut source, &mut writer, row, col).expect("write record");
+                                f[col](&mut parser, &mut writer, row, col).expect("write record");
                             }
                         }
                     }
                     DataOrder::ColumnMajor => {
                         for col in 0..writer.ncols() {
                             for row in 0..writer.nrows() {
-                                f[col](&mut source, &mut writer, row, col).expect("write record");
+                                f[col](&mut parser, &mut writer, row, col).expect("write record");
                             }
                         }
                     }

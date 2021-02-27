@@ -1,13 +1,13 @@
-use arrow::array::{BooleanArray, Float64Array, StringArray, UInt64Array};
+use arrow::array::{BooleanArray, Float64Array, Int64Array, StringArray};
 use arrow::record_batch::RecordBatch;
 use connector_agent::{
-    data_sources::dummy::MixedSourceBuilder, writers::arrow::ArrowWriter, DataType, Dispatcher,
+    data_sources::dummy::MixedSource, writers::arrow::ArrowWriter, DataType, Dispatcher,
 };
 
 #[test]
 fn test_arrow() {
     let schema = [
-        DataType::U64(true),
+        DataType::I64(true),
         DataType::F64(true),
         DataType::Bool(false),
         DataType::String(true),
@@ -21,7 +21,11 @@ fn test_arrow() {
     }
     let queries: Vec<String> = nrows.iter().map(|v| format!("{},{}", v, ncols)).collect();
     let mut writer = ArrowWriter::new();
-    let dispatcher = Dispatcher::new(MixedSourceBuilder::new(), &mut writer, &queries, &schema);
+    let dispatcher = Dispatcher::new(
+        MixedSource::new(&["a", "b", "c", "d", "e"], &schema),
+        &mut writer,
+        &queries,
+    );
     dispatcher.run_checked().expect("run dispatcher");
 
     let records: Vec<RecordBatch> = writer.finish(headers);
@@ -33,15 +37,15 @@ fn test_arrow() {
                 assert!(records[0]
                     .column(col)
                     .as_any()
-                    .downcast_ref::<UInt64Array>()
+                    .downcast_ref::<Int64Array>()
                     .unwrap()
-                    .eq(&UInt64Array::from(vec![0, 1, 2, 3])));
+                    .eq(&Int64Array::from(vec![0, 1, 2, 3])));
                 assert!(records[1]
                     .column(col)
                     .as_any()
-                    .downcast_ref::<UInt64Array>()
+                    .downcast_ref::<Int64Array>()
                     .unwrap()
-                    .eq(&UInt64Array::from(vec![0, 1, 2, 3, 4, 5, 6])));
+                    .eq(&Int64Array::from(vec![0, 1, 2, 3, 4, 5, 6])));
             }
             1 => {
                 assert!(records[0]

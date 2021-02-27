@@ -1,7 +1,4 @@
-use connector_agent::data_sources::{
-    csv::{CSVSource, CSVSourceBuilder},
-    PartitionedSource, Produce,
-};
+use connector_agent::data_sources::{csv::CSVSource, PartitionedSource, Produce, Source};
 use connector_agent::writers::memory::MemoryWriter;
 use connector_agent::{DataType, Dispatcher};
 use ndarray::array;
@@ -9,19 +6,28 @@ use ndarray::array;
 #[test]
 #[should_panic]
 fn no_file() {
-    let mut source = CSVSource::new();
-    source.prepare("./a_fake_file.csv").expect("run query");
+    let mut source = CSVSource::new(&[]);
+    source.set_queries(&["./a_fake_file.csv"]);
+    let partitions = source.partition().unwrap();
+    for mut p in partitions {
+        p.prepare().expect("run query");
+    }
 }
 
 #[test]
 #[should_panic]
 fn empty_file() {
-    let mut source = CSVSource::new();
-    source.prepare("./tests/data/empty.csv").expect("run query");
+    let mut source = CSVSource::new(&[]);
+    source.set_queries(&["./tests/data/empty.csv"]);
+    let mut partitions = source.partition().unwrap();
+    for p in &mut partitions {
+        p.prepare().expect("run query");
+    }
+    assert_eq!(0, partitions[0].nrows);
+    assert_eq!(0, partitions[0].ncols);
+    let parser = partitions[0].parser();
 
-    assert_eq!(0, source.nrows);
-    assert_eq!(0, source.ncols);
-    let _v: u64 = source.produce().expect("produce from emtpy");
+    let _v: i64 = parser.unwrap().produce().expect("produce from emtpy");
 }
 
 #[test]
@@ -30,28 +36,39 @@ fn load_and_parse() {
     enum Value {
         City(String),
         State(String),
-        Population(u64),
+        Population(i64),
         Longitude(f64),
         Latitude(f64),
     }
 
-    let mut source = CSVSource::new();
-    source
-        .prepare("./tests/data/uspop_0.csv")
-        .expect("run query");
+    let mut source = CSVSource::new(&[
+        DataType::String(false),
+        DataType::String(false),
+        DataType::String(false),
+        DataType::I64(false),
+        DataType::F64(false),
+        DataType::F64(false),
+    ]);
+    source.set_queries(&["./tests/data/uspop_0.csv"]);
 
-    assert_eq!(3, source.nrows);
-    assert_eq!(5, source.ncols);
+    let mut partitions = source.partition().unwrap();
+
+    let mut partition = partitions.remove(0);
+    partition.prepare().expect("run query");
+
+    assert_eq!(3, partition.nrows());
+    assert_eq!(5, partition.ncols());
 
     let mut results: Vec<Value> = Vec::new();
-    for _i in 0..source.nrows {
-        results.push(Value::City(source.produce().expect("parse city")));
-        results.push(Value::State(source.produce().expect("parse state")));
+    let mut parser = partition.parser().unwrap();
+    for _i in 0..3 {
+        results.push(Value::City(parser.produce().expect("parse city")));
+        results.push(Value::State(parser.produce().expect("parse state")));
         results.push(Value::Population(
-            source.produce().expect("parse population"),
+            parser.produce().expect("parse population"),
         ));
-        results.push(Value::Longitude(source.produce().expect("parse longitude")));
-        results.push(Value::Latitude(source.produce().expect("parse latitude")));
+        results.push(Value::Longitude(parser.produce().expect("parse longitude")));
+        results.push(Value::Latitude(parser.produce().expect("parse latitude")));
     }
 
     assert_eq!(
@@ -78,10 +95,12 @@ fn load_and_parse() {
 
 #[test]
 fn test_csv() {
-    let schema = [DataType::U64(false); 5];
+    let schema = [DataType::I64(false); 5];
     let files = ["./tests/data/uint_0.csv", "./tests/data/uint_1.csv"];
+    let source = CSVSource::new(&schema);
+
     let mut writer = MemoryWriter::new();
-    let dispatcher = Dispatcher::new(CSVSourceBuilder::new(), &mut writer, &files, &schema);
+    let dispatcher = Dispatcher::new(source, &mut writer, &files);
 
     dispatcher.run_checked().expect("run dispatcher");
 
@@ -99,6 +118,6 @@ fn test_csv() {
             [45, 46, 47, 48, 49],
             [50, 51, 52, 53, 54],
         ],
-        writer.buffer_view::<u64>(0).unwrap()
+        writer.buffer_view::<i64>(0).unwrap()
     );
 }

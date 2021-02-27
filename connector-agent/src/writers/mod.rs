@@ -15,9 +15,10 @@ pub trait Writer: Sized {
     /// Construct the `Writer`.
     /// This allocates the memory based on the types of each columns
     /// and the number of rows.
-    fn allocate(
+    fn allocate<S: AsRef<str>>(
         &mut self,
         nrow: usize,
+        names: &[S],
         schema: &[Self::TypeSystem],
         data_order: DataOrder,
     ) -> Result<()>;

@@ -4,7 +4,7 @@
 use crate::errors::Result;
 /// `TypeSystem` describes a type system in a value type (e.g. enum variants),
 /// which can be used to type check with a static type `T` through the `check` method.
-pub trait TypeSystem: Copy + Clone {
+pub trait TypeSystem: Copy + Clone + Send + Sync {
     /// Check whether T is the same type as defined by self.
     fn check<T: TypeAssoc<Self>>(self) -> Result<()> {
         T::check(self)
@@ -26,7 +26,7 @@ macro_rules! associate_typesystem {
             impl $crate::typesystem::TypeAssoc<$ts> for $native_type {
                 fn check(ts: $ts) -> $crate::errors::Result<()> {
                     if !matches!(ts, $variant) {
-                        fehler::throw!($crate::errors::ConnectorAgentError::UnexpectedType(ts, std::any::type_name::<$native_type>()))
+                        fehler::throw!($crate::errors::ConnectorAgentError::UnexpectedType(format!("{:?}", ts), std::any::type_name::<$native_type>()))
                     } else {
                         Ok(())
                     }
