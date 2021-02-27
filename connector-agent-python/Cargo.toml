@@ -8,13 +8,10 @@ version = "0.1.0"
 
 [dependencies]
 anyhow = "1"
-arrow = "3"
+chrono = "0.4"
 connector-agent = {path = "../connector-agent"}
 env_logger = "0.8"
-failure = "0.1"
 fehler = "1"
-flate2 = "1"
-futures = "0.3"
 itertools = "0.10"
 log = "0.4"
 ndarray = "0.14"
@@ -22,7 +19,6 @@ numpy = "0.13"
 pyo3 = {version = "0.13", default-features = false, features = ["macros"]}
 pyo3-built = "0.4"
 thiserror = "1"
-tokio = {version = "1", features = ["rt-multi-thread", "io-util"]}
 
 [build-dependencies]
 built = {version = "0.4", features = ["chrono"]}
@@ -30,13 +26,16 @@ built = {version = "0.4", features = ["chrono"]}
 [dev-dependencies]
 criterion = "0.3"
 criterion-macro = "0.3"
+iai = "0.1"
+pprof = {version = "0.4", features = ["flamegraph", "criterion"]}
 rayon = "1"
+tokio = {version = "1", features = ["rt-multi-thread", "io-util"]}
 
 [lib]
-crate-type = ["cdylib"]
+crate-type = ["rlib", "cdylib"]
 name = "connector_agent_python"
 
 [features]
 default = ["extension"]
+executable = ["pyo3/auto-initialize"]
 extension = ["pyo3/extension-module"]
-tests = ["pyo3/auto-initialize"]

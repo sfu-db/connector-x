@@ -21,7 +21,7 @@ def test_write_pandas(postgres_url: str) -> None:
     ]
 
     schema = ["uint64", "UInt64", "string", "float64", "boolean"]
-    df = write_pandas(postgres_url, queries, schema)
+    df = write_pandas(postgres_url, queries, schema, True)
 
     expected = pd.DataFrame(
         index=range(6),
@@ -45,4 +45,4 @@ def test_wrong_dimension(postgres_url: str) -> None:
     ]
 
     schema = ["uint64", "UInt64", "string", "float64"]
-    write_pandas(postgres_url, queries, schema)
+    write_pandas(postgres_url, queries, schema, True)

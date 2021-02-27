@@ -1,11 +1,18 @@
 mod boolean;
+mod date;
+mod datetime;
 mod float64;
+mod int64;
 mod string;
 mod uint64;
+// TODO: use macro for integers
 
 pub use boolean::{BooleanBlock, BooleanColumn};
+pub use date::{DateBlock, DateColumn};
+pub use datetime::{DateTimeBlock, DateTimeColumn};
 use fehler::throw;
 pub use float64::{Float64Block, Float64Column};
+pub use int64::{Int64Block, Int64Column};
 use pyo3::{exceptions::PyRuntimeError, PyAny, PyResult};
 use std::any::TypeId;
 pub use string::StringColumn;

@@ -1,6 +1,6 @@
 use super::pandas_columns::{
-    check_dtype, BooleanBlock, Float64Block, HasPandasColumn, PandasColumn, PandasColumnObject,
-    StringColumn, UInt64Block,
+    check_dtype, BooleanBlock, DateBlock, DateTimeBlock, Float64Block, HasPandasColumn, Int64Block,
+    PandasColumn, PandasColumnObject, StringColumn, UInt64Block,
 };
 use super::{pystring::PyString, PandasDType};
 use crate::errors::ConnectorAgentPythonError;
@@ -180,6 +180,17 @@ impl<'a> Writer for PandasWriter<'a> {
                                 .collect()
                         }
                     }
+                    DataType::I64(_) => {
+                        let ublock = Int64Block::extract(buf).map_err(|e| anyhow!(e))?;
+                        let ucols = ublock.split();
+                        for (&cid, ucol) in cids.iter().zip_eq(ucols) {
+                            partitioned_columns[cid] = ucol
+                                .partition(&counts)
+                                .into_iter()
+                                .map(|c| Box::new(c) as _)
+                                .collect()
+                        }
+                    }
                     DataType::Bool(_) => {
                         let bblock = BooleanBlock::extract(buf).map_err(|e| anyhow!(e))?;
                         let bcols = bblock.split();
@@ -201,6 +212,28 @@ impl<'a> Writer for PandasWriter<'a> {
                             .into_iter()
                             .map(|c| Box::new(c) as _)
                             .collect()
+                    }
+                    DataType::DateTime(_) => {
+                        let block = DateTimeBlock::extract(buf).map_err(|e| anyhow!(e))?;
+                        let cols = block.split();
+                        for (&cid, col) in cids.iter().zip_eq(cols) {
+                            partitioned_columns[cid] = col
+                                .partition(&counts)
+                                .into_iter()
+                                .map(|c| Box::new(c) as _)
+                                .collect()
+                        }
+                    }
+                    DataType::Date(_) => {
+                        let block = DateBlock::extract(buf).map_err(|e| anyhow!(e))?;
+                        let cols = block.split();
+                        for (&cid, col) in cids.iter().zip_eq(cols) {
+                            partitioned_columns[cid] = col
+                                .partition(&counts)
+                                .into_iter()
+                                .map(|c| Box::new(c) as _)
+                                .collect()
+                        }
                     }
                 }
             }

@@ -5,6 +5,7 @@ use arrow::record_batch::RecordBatch;
 use failure::Error;
 use fehler::throws;
 use futures::stream::{FuturesOrdered, StreamExt};
+use log::debug;
 use postgres::{Client, NoTls};
 use serde_json::{from_str, Value};
 use std::collections::HashMap;
@@ -15,6 +16,7 @@ use tokio::task::spawn_blocking;
 
 #[throws(Error)]
 pub async fn read_pg<S>(
+    conn: &str,
     sqls: &[S],
     schema: &str,
 ) -> HashMap<String, Vec<(*const FFI_ArrowArray, *const FFI_ArrowSchema)>>
@@ -24,10 +26,10 @@ where
     let schema = Arc::new(Schema::from(&from_str::<Value>(schema)?)?);
     let mut futs: FuturesOrdered<_> = sqls
         .iter()
-        .map(|sql| read_sql_as_batch(sql, schema.clone()))
+        .map(|sql| read_sql_as_batch(conn, sql, schema.clone()))
         .collect();
     let mut table = HashMap::new();
-    println!("start queries");
+    debug!("start queries");
     let start = Instant::now();
     while let Some(rb) = futs.next().await {
         if let Some(batches) = rb? {
@@ -48,27 +50,27 @@ where
             }
         }
     }
-    println!("finish to arrow table: {:?}", start.elapsed());
+    debug!("finish to arrow table: {:?}", start.elapsed());
     table
 }
 
 #[throws(Error)]
-pub async fn read_sql_as_batch<S>(sql: &S, schema: SchemaRef) -> Option<Vec<RecordBatch>>
+pub async fn read_sql_as_batch<S>(
+    conn: &str,
+    sql: &S,
+    schema: SchemaRef,
+) -> Option<Vec<RecordBatch>>
 where
     S: AsRef<str>,
 {
     let query = format!("COPY ({}) TO STDOUT WITH CSV", sql.as_ref());
-    // let query = format!("COPY ({}) TO STDOUT WITH BINARY", sql.as_ref());
+    let conn = conn.to_string();
     let batches = spawn_blocking(move || -> Result<_, Error> {
         let start = Instant::now();
         let mut buf = vec![];
-        let mut client = Client::connect(
-            "host=localhost user=postgres dbname=tpch port=6666 password=postgres",
-            NoTls,
-        )?;
+        let mut client = Client::connect(&conn, NoTls)?;
         client.copy_out(&*query)?.read_to_end(&mut buf)?;
         let t_copy = start.elapsed();
-        // println!("copy: {:?}", t_copy);
 
         let mut batches = vec![];
         let mut reader = ReaderBuilder::new()
@@ -79,7 +81,7 @@ where
             batches.push(rb?);
         }
         let t_arrow = start.elapsed();
-        println!("copy: {:?} batch: {:?}", t_copy, t_arrow);
+        debug!("copy: {:?} batch: {:?}", t_copy, t_arrow);
         Ok(batches)
     })
     .await??;

@@ -6,6 +6,7 @@ use crate::errors::{ConnectorAgentPythonError, Result};
 use anyhow::anyhow;
 use connector_agent::{DataType, Dispatcher, PostgresDataSourceBuilder};
 use fehler::{throw, throws};
+use log::debug;
 use pyo3::{PyAny, Python};
 use writers::PandasWriter;
 
@@ -15,6 +16,7 @@ pub fn write_pandas<'a>(
     conn: &str,
     queries: &[&str],
     schema: &[&str],
+    checked: bool,
 ) -> &'a PyAny {
     // convert schema
     let maybe_schema: Result<Vec<DataType>> =
@@ -26,9 +28,17 @@ pub fn write_pandas<'a>(
 
     // TODO: unlock gil for these two line
     let dispatcher = Dispatcher::new(sb, &mut writer, queries, &schema);
-    dispatcher.run_checked()?;
 
+    debug!("Running dispatcher");
+    if checked {
+        dispatcher.run_checked()?;
+    } else {
+        dispatcher.run()?;
+    }
+
+    debug!("Start writing string");
     writer.write_string_columns()?;
+    debug!("String writing finished");
 
     writer.result().ok_or(anyhow!("writer not run"))?
 }
@@ -43,10 +53,14 @@ impl PandasDType for DataType {
         match *self {
             DataType::U64(false) => "uint64",
             DataType::U64(true) => "UInt64",
+            DataType::I64(false) => "int64",
+            DataType::I64(true) => "Int64",
             DataType::F64(_) => "float64",
             DataType::Bool(false) => "bool",
             DataType::Bool(true) => "boolean",
             DataType::String(_) => "string",
+            DataType::DateTime(_) => "datetime64[ns]",
+            DataType::Date(_) => "datetime64[ns]",
         }
     }
 
@@ -55,10 +69,14 @@ impl PandasDType for DataType {
         match ty {
             "uint64" => DataType::U64(false),
             "UInt64" => DataType::U64(true),
+            "int64" => DataType::I64(false),
+            "Int64" => DataType::I64(true),
             "float64" => DataType::F64(true),
             "bool" => DataType::Bool(false),
             "boolean" => DataType::Bool(true),
             "string" => DataType::String(true),
+            "datetime" => DataType::DateTime(true),
+            "date" => DataType::Date(true),
             ty => throw!(ConnectorAgentPythonError::UnknownPandasType(ty.to_string())),
         }
     }

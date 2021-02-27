@@ -4,12 +4,12 @@ use crate::data_order::DataOrder;
 use crate::errors::{ConnectorAgentError, Result};
 use crate::types::DataType;
 use crate::typesystem::{ParameterizedFunc, ParameterizedOn, Realize, TypeAssoc, TypeSystem};
+use chrono::{Date, DateTime, NaiveDate, NaiveDateTime, Utc};
 use fehler::{throw, throws};
 use itertools::Itertools;
 use ndarray::{Array2, ArrayView1, ArrayView2, Axis, Ix2};
 use std::any::type_name;
 use std::collections::HashMap;
-
 /// This `Writer` can support mixed data type.
 pub struct MemoryWriter {
     nrows: usize,
@@ -197,17 +197,72 @@ impl ParameterizedFunc for FArray2 {
     type Function = fn(nrows: usize, ncols: usize) -> AnyArray<Ix2>;
 }
 
-impl<T> ParameterizedOn<T> for FArray2
+macro_rules! FArray2Parameterize {
+    ($($t: ty),+) => {
+        $(
+            impl ParameterizedOn<$t> for FArray2 {
+                fn parameterize() -> Self::Function {
+                    create_default_array::<$t>
+                }
+            }
+        )+
+    };
+}
+
+FArray2Parameterize!(
+    u64,
+    i64,
+    f64,
+    String,
+    bool,
+    Option<u64>,
+    Option<i64>,
+    Option<f64>,
+    Option<String>,
+    Option<bool>
+);
+
+fn create_default_array<T>(nrows: usize, ncols: usize) -> AnyArray<Ix2>
 where
     T: Default + Send + 'static,
 {
+    Array2::<T>::default((nrows, ncols)).into()
+}
+
+impl ParameterizedOn<DateTime<Utc>> for FArray2 {
     fn parameterize() -> Self::Function {
-        fn create_any_array<T>(nrows: usize, ncols: usize) -> AnyArray<Ix2>
-        where
-            T: Default + Send + 'static,
-        {
-            Array2::<T>::default((nrows, ncols)).into()
+        fn imp(nrows: usize, ncols: usize) -> AnyArray<Ix2> {
+            let t = DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp(0, 0), Utc);
+            Array2::from_elem((nrows, ncols), t).into()
         }
-        create_any_array::<T>
+        imp
+    }
+}
+
+impl ParameterizedOn<Option<DateTime<Utc>>> for FArray2 {
+    fn parameterize() -> Self::Function {
+        fn imp(nrows: usize, ncols: usize) -> AnyArray<Ix2> {
+            Array2::<Option<DateTime<Utc>>>::from_elem((nrows, ncols), None).into()
+        }
+        imp
+    }
+}
+
+impl ParameterizedOn<Date<Utc>> for FArray2 {
+    fn parameterize() -> Self::Function {
+        fn imp(nrows: usize, ncols: usize) -> AnyArray<Ix2> {
+            let t = Date::<Utc>::from_utc(NaiveDate::from_yo(1970, 0), Utc);
+            Array2::from_elem((nrows, ncols), t).into()
+        }
+        imp
+    }
+}
+
+impl ParameterizedOn<Option<Date<Utc>>> for FArray2 {
+    fn parameterize() -> Self::Function {
+        fn imp(nrows: usize, ncols: usize) -> AnyArray<Ix2> {
+            Array2::<Option<Date<Utc>>>::from_elem((nrows, ncols), None).into()
+        }
+        imp
     }
 }

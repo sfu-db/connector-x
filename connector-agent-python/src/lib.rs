@@ -2,10 +2,13 @@
 #![allow(incomplete_features)]
 
 mod errors;
-mod pandas;
+pub mod pandas;
 
 use pyo3::prelude::*;
 use pyo3::wrap_pyfunction;
+use std::sync::Once;
+
+static START: Once = Once::new();
 
 // https://github.com/PyO3/pyo3-built/issues/21
 // #[allow(dead_code)]
@@ -15,9 +18,12 @@ use pyo3::wrap_pyfunction;
 
 #[pymodule]
 fn connector_agent_python(_: Python, m: &PyModule) -> PyResult<()> {
-    // https://github.com/PyO3/pyo3-built/issues/21
-    // m.add("__build__", pyo3_built!(py, build))?;
+    START.call_once(|| {
+        let _ = env_logger::try_init();
+    });
+
     m.add_wrapped(wrap_pyfunction!(write_pandas))?;
+
     Ok(())
 }
 
@@ -27,6 +33,9 @@ fn write_pandas<'a>(
     conn: &str,
     queries: Vec<&str>,
     schema: Vec<&str>,
+    checked: bool,
 ) -> PyResult<&'a PyAny> {
-    Ok(crate::pandas::write_pandas(py, conn, &queries, &schema)?)
+    Ok(crate::pandas::write_pandas(
+        py, conn, &queries, &schema, checked,
+    )?)
 }

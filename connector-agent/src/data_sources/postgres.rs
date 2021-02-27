@@ -2,9 +2,11 @@ use crate::data_order::DataOrder;
 use crate::data_sources::{DataSource, Produce, SourceBuilder};
 use crate::errors::{ConnectorAgentError, Result};
 use crate::types::DataType;
+use chrono::{Date, DateTime, NaiveDate, Utc};
 use fehler::throw;
 use r2d2::{Pool, PooledConnection};
 use r2d2_postgres::{postgres::NoTls, PostgresConnectionManager};
+use std::any::type_name;
 use std::io::Read;
 
 type PgManager = PostgresConnectionManager<NoTls>;
@@ -42,8 +44,8 @@ impl SourceBuilder for PostgresDataSourceBuilder {
 pub struct PostgresDataSource {
     conn: PgConn,
     counter: usize,
-    pub nrows: usize,
-    pub ncols: usize,
+    nrows: usize,
+    ncols: usize,
     records: Vec<csv::StringRecord>,
 }
 
@@ -100,25 +102,58 @@ impl PostgresDataSource {
 
 impl Produce<u64> for PostgresDataSource {
     fn produce(&mut self) -> Result<u64> {
-        Ok(self.next_value().parse().unwrap_or_default())
+        let v = self.next_value();
+        v.parse()
+            .map_err(|_| ConnectorAgentError::CannotParse(type_name::<u64>(), v.into()))
     }
 }
 
 impl Produce<Option<u64>> for PostgresDataSource {
     fn produce(&mut self) -> Result<Option<u64>> {
-        Ok(self.next_value().parse().ok())
+        match self.next_value() {
+            "" => Ok(None),
+            v => Ok(Some(v.parse().map_err(|_| {
+                ConnectorAgentError::CannotParse(type_name::<u64>(), v.into())
+            })?)),
+        }
+    }
+}
+
+impl Produce<i64> for PostgresDataSource {
+    fn produce(&mut self) -> Result<i64> {
+        let v = self.next_value();
+        v.parse()
+            .map_err(|_| ConnectorAgentError::CannotParse(type_name::<i64>(), v.into()))
+    }
+}
+
+impl Produce<Option<i64>> for PostgresDataSource {
+    fn produce(&mut self) -> Result<Option<i64>> {
+        match self.next_value() {
+            "" => Ok(None),
+            v => Ok(Some(v.parse().map_err(|_| {
+                ConnectorAgentError::CannotParse(type_name::<i64>(), v.into())
+            })?)),
+        }
     }
 }
 
 impl Produce<f64> for PostgresDataSource {
     fn produce(&mut self) -> Result<f64> {
-        Ok(self.next_value().parse().unwrap_or_default())
+        let v = self.next_value();
+        v.parse()
+            .map_err(|_| ConnectorAgentError::CannotParse(type_name::<f64>(), v.into()))
     }
 }
 
 impl Produce<Option<f64>> for PostgresDataSource {
     fn produce(&mut self) -> Result<Option<f64>> {
-        Ok(self.next_value().parse().ok())
+        match self.next_value() {
+            "" => Ok(None),
+            v => Ok(Some(v.parse().map_err(|_| {
+                ConnectorAgentError::CannotParse(type_name::<f64>(), v.into())
+            })?)),
+        }
     }
 }
 
@@ -128,7 +163,10 @@ impl Produce<bool> for PostgresDataSource {
         let v = match v {
             "t" => true,
             "f" => false,
-            _ => throw!(ConnectorAgentError::CannotParsePostgresBool(v.to_string())),
+            _ => throw!(ConnectorAgentError::CannotParse(
+                type_name::<bool>(),
+                v.into()
+            )),
         };
         Ok(v)
     }
@@ -138,11 +176,15 @@ impl Produce<Option<bool>> for PostgresDataSource {
     fn produce(&mut self) -> Result<Option<bool>> {
         let v = self.next_value();
         let v = match v {
-            "t" => true,
-            "f" => false,
-            _ => return Ok(None),
+            "t" => Some(true),
+            "f" => Some(false),
+            "" => None,
+            _ => throw!(ConnectorAgentError::CannotParse(
+                type_name::<bool>(),
+                v.into()
+            )),
         };
-        Ok(Some(v))
+        Ok(v)
     }
 }
 
@@ -155,5 +197,48 @@ impl Produce<String> for PostgresDataSource {
 impl Produce<Option<String>> for PostgresDataSource {
     fn produce(&mut self) -> Result<Option<String>> {
         Ok(Some(String::from(self.next_value())))
+    }
+}
+
+impl Produce<DateTime<Utc>> for PostgresDataSource {
+    fn produce(&mut self) -> Result<DateTime<Utc>> {
+        let v = self.next_value();
+        v.parse()
+            .map_err(|_| ConnectorAgentError::CannotParse(type_name::<DateTime<Utc>>(), v.into()))
+    }
+}
+
+impl Produce<Option<DateTime<Utc>>> for PostgresDataSource {
+    fn produce(&mut self) -> Result<Option<DateTime<Utc>>> {
+        match self.next_value() {
+            "" => Ok(None),
+            v => Ok(Some(v.parse().map_err(|_| {
+                ConnectorAgentError::CannotParse(type_name::<DateTime<Utc>>(), v.into())
+            })?)),
+        }
+    }
+}
+
+impl Produce<Date<Utc>> for PostgresDataSource {
+    fn produce(&mut self) -> Result<Date<Utc>> {
+        let v = self.next_value();
+        NaiveDate::parse_from_str(v, "%Y-%m-%d")
+            .map(|nd| Date::<Utc>::from_utc(nd, Utc))
+            .map_err(|_| ConnectorAgentError::CannotParse(type_name::<DateTime<Utc>>(), v.into()))
+    }
+}
+
+impl Produce<Option<Date<Utc>>> for PostgresDataSource {
+    fn produce(&mut self) -> Result<Option<Date<Utc>>> {
+        match self.next_value() {
+            "" => Ok(None),
+            v => Ok(Some(
+                NaiveDate::parse_from_str(v, "%Y-%m-%d")
+                    .map(|nd| Date::<Utc>::from_utc(nd, Utc))
+                    .map_err(|_| {
+                        ConnectorAgentError::CannotParse(type_name::<DateTime<Utc>>(), v.into())
+                    })?,
+            )),
+        }
     }
 }
