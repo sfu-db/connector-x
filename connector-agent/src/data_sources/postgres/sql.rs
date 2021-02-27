@@ -1,14 +1,14 @@
-use log::debug;
+use log::{debug, trace};
 use sqlparser::ast::{
     Expr, Function, FunctionArg, Ident, ObjectName, SelectItem, SetExpr, Statement, Value,
 };
-use sqlparser::dialect::GenericDialect;
+use sqlparser::dialect::PostgreSqlDialect;
 use sqlparser::parser::Parser;
 
 pub fn count_query(sql: &str) -> String {
-    debug!("Incoming query: {}", sql);
+    trace!("Incoming query: {}", sql);
 
-    let dialect = GenericDialect {};
+    let dialect = PostgreSqlDialect {};
 
     let mut ast = Parser::parse_sql(&dialect, sql).unwrap();
 
@@ -42,9 +42,9 @@ pub fn count_query(sql: &str) -> String {
 }
 
 pub fn limit1_query(sql: &str) -> String {
-    debug!("Incoming query: {}", sql);
+    trace!("Incoming query: {}", sql);
 
-    let dialect = GenericDialect {};
+    let dialect = PostgreSqlDialect {};
 
     let mut ast = Parser::parse_sql(&dialect, sql).unwrap();
 

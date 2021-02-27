@@ -6,8 +6,9 @@ use crate::data_sources::{Parser, PartitionedSource, Produce, Source};
 use crate::errors::{ConnectorAgentError, Result};
 use crate::types::DataType;
 use anyhow::anyhow;
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
 use fehler::throw;
+use log::debug;
 use postgres::{
     binary_copy::{BinaryCopyOutIter, BinaryCopyOutRow},
     fallible_iterator::FallibleIterator,
@@ -64,23 +65,40 @@ impl Source for PostgresSource {
         assert!(self.queries.len() != 0);
 
         let mut conn = self.pool.get()?;
+        let mut success = false;
+        let mut error = None;
         for query in &self.queries {
             // assuming all the partition queries yield same schema
-            if let Ok(row) = conn.query_one(&limit1_query(query)[..], &[]) {
-                let (names, types) = row
-                    .columns()
-                    .into_iter()
-                    .map(|col| (col.name().to_string(), DataType::from(col.type_())))
-                    .unzip();
-                self.names = names;
-                self.schema = types;
-                self.pg_schema = row
-                    .columns()
-                    .into_iter()
-                    .map(|col| col.type_().clone())
-                    .collect();
-                break;
+            match conn.query_one(&limit1_query(query)[..], &[]) {
+                Ok(row) => {
+                    let (names, types) = row
+                        .columns()
+                        .into_iter()
+                        .map(|col| (col.name().to_string(), DataType::from(col.type_())))
+                        .unzip();
+
+                    self.names = names;
+                    self.schema = types;
+                    self.pg_schema = row
+                        .columns()
+                        .into_iter()
+                        .map(|col| col.type_().clone())
+                        .collect();
+                    success = true;
+                    break;
+                }
+                Err(e) => {
+                    debug!("cannot get metadata for '{}', try next query: {}", query, e);
+                    error = Some(e);
+                }
             }
+        }
+
+        if !success {
+            throw!(anyhow!(
+                "Cannot get metadata for the queries, last error {:?}",
+                error
+            ))
         }
 
         Ok(())
@@ -367,8 +385,18 @@ impl<'a> Produce<DateTime<Utc>> for PostgresSourceParser<'a> {
     fn produce(&mut self) -> Result<DateTime<Utc>> {
         let cidx = self.next_col_idx()?;
         match &self.pgschema[cidx] {
-            &Type::TIMESTAMP | &Type::TIMESTAMPTZ | &Type::DATE => {
+            &Type::TIMESTAMPTZ => {
                 let val = self.current_row.as_ref().unwrap().try_get(cidx)?;
+                Ok(val)
+            }
+            &Type::TIMESTAMP => {
+                let val: NaiveDateTime = self.current_row.as_ref().unwrap().try_get(cidx)?;
+                let val = DateTime::from_utc(val, Utc);
+                Ok(val)
+            }
+            &Type::DATE => {
+                let val: NaiveDate = self.current_row.as_ref().unwrap().try_get(cidx)?;
+                let val = DateTime::from_utc(val.and_hms(0, 0, 0), Utc);
                 Ok(val)
             }
             t => {
@@ -385,8 +413,19 @@ impl<'a> Produce<Option<DateTime<Utc>>> for PostgresSourceParser<'a> {
     fn produce(&mut self) -> Result<Option<DateTime<Utc>>> {
         let cidx = self.next_col_idx()?;
         match &self.pgschema[cidx] {
-            &Type::TIMESTAMP | &Type::TIMESTAMPTZ | &Type::DATE => {
+            &Type::TIMESTAMPTZ => {
                 let val = self.current_row.as_ref().unwrap().try_get(cidx)?;
+                Ok(val)
+            }
+            &Type::TIMESTAMP => {
+                let val: Option<NaiveDateTime> =
+                    self.current_row.as_ref().unwrap().try_get(cidx)?;
+                let val = val.map(|d| DateTime::from_utc(d, Utc));
+                Ok(val)
+            }
+            &Type::DATE => {
+                let val: Option<NaiveDate> = self.current_row.as_ref().unwrap().try_get(cidx)?;
+                let val = val.map(|d| DateTime::from_utc(d.and_hms(0, 0, 0), Utc));
                 Ok(val)
             }
             t => {
@@ -398,3 +437,7 @@ impl<'a> Produce<Option<DateTime<Utc>>> for PostgresSourceParser<'a> {
         }
     }
 }
+
+// fn convert_func(t1: &Type, t2: &DataType) {
+//     match (t1, t2) {}
+// }

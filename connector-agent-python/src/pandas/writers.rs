@@ -11,6 +11,7 @@ use connector_agent::{
 };
 use fehler::{throw, throws};
 use itertools::Itertools;
+use log::debug;
 use numpy::PyArray1;
 use pyo3::{
     types::{PyDict, PyList},
@@ -324,13 +325,17 @@ fn create_dataframe<'a, S: AsRef<str>>(
     schema: &[DataType],
     nrows: usize,
 ) -> (&'a PyAny, &'a PyList, &'a PyList) {
+    let names: Vec<_> = names.into_iter().map(|s| s.as_ref()).collect();
+    debug!("names: {:?}", names);
+    debug!("schema: {:?}", schema);
+
     let series: Vec<String> = schema
         .iter()
         .zip_eq(names)
         .map(|(&dt, name)| {
             format!(
                 "'{}': pd.Series(index=range({}), dtype='{}')",
-                name.as_ref(),
+                name,
                 nrows,
                 dt.dtype()
             )
@@ -351,6 +356,7 @@ index = [(i, j) for i, j in zip(df._mgr.blknos, df._mgr.blklocs)]"#,
         nrows,
         series.join(",")
     );
+    debug!("create dataframe code: {}", code);
 
     // run python code
     let locals = PyDict::new(py);

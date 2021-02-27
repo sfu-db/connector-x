@@ -61,19 +61,18 @@ where
         let dorder = coordinate(S::DATA_ORDERS, W::DATA_ORDERS)?;
         self.source.set_data_order(dorder)?;
         self.source.set_queries(self.queries.as_slice());
+        debug!("Fetching metadata");
         self.source.fetch_metadata()?;
         let schema = self.source.schema();
         let names = self.source.names();
 
         // generate partitions
         let mut partitions: Vec<S::Partition> = self.source.partition()?;
-
+        debug!("Prepare partitions");
         // run queries
         partitions.par_iter_mut().for_each(|partition| {
             partition.prepare().expect("run query");
         });
-
-        debug!("Finished data download");
 
         // allocate memory and create one partition writer for each source
         let num_rows: Vec<usize> = partitions
@@ -81,15 +80,18 @@ where
             .map(|partition| partition.nrows())
             .collect();
 
+        debug!("Allocate writer memory");
         self.writer
             .allocate(num_rows.iter().sum(), &names, &schema, dorder)?;
 
+        debug!("Create partition writers");
         let partition_writers = self.writer.partition_writers(&num_rows)?;
 
         for (i, p) in partition_writers.iter().enumerate() {
             debug!("Partition {}, {}x{}", i, p.nrows(), p.ncols());
         }
 
+        debug!("Start writing");
         // parse and write
         partition_writers
             .into_par_iter()
