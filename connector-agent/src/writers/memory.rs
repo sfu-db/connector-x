@@ -4,7 +4,7 @@ use crate::data_order::DataOrder;
 use crate::errors::{ConnectorAgentError, Result};
 use crate::types::DataType;
 use crate::typesystem::{ParameterizedFunc, ParameterizedOn, Realize, TypeAssoc, TypeSystem};
-use chrono::{Date, DateTime, NaiveDate, NaiveDateTime, Utc};
+use chrono::{DateTime, NaiveDateTime, Utc};
 use fehler::{throw, throws};
 use itertools::Itertools;
 use ndarray::{Array2, ArrayView1, ArrayView2, Axis, Ix2};
@@ -216,12 +216,12 @@ macro_rules! FArray2Parameterize {
 }
 
 FArray2Parameterize!(
-    u64,
+    i32,
     i64,
     f64,
     String,
     bool,
-    Option<u64>,
+    Option<i32>,
     Option<i64>,
     Option<f64>,
     Option<String>,
@@ -249,25 +249,6 @@ impl ParameterizedOn<Option<DateTime<Utc>>> for FArray2 {
     fn parameterize() -> Self::Function {
         fn imp(nrows: usize, ncols: usize) -> AnyArray<Ix2> {
             Array2::<Option<DateTime<Utc>>>::from_elem((nrows, ncols), None).into()
-        }
-        imp
-    }
-}
-
-impl ParameterizedOn<Date<Utc>> for FArray2 {
-    fn parameterize() -> Self::Function {
-        fn imp(nrows: usize, ncols: usize) -> AnyArray<Ix2> {
-            let t = Date::<Utc>::from_utc(NaiveDate::from_yo(1970, 0), Utc);
-            Array2::from_elem((nrows, ncols), t).into()
-        }
-        imp
-    }
-}
-
-impl ParameterizedOn<Option<Date<Utc>>> for FArray2 {
-    fn parameterize() -> Self::Function {
-        fn imp(nrows: usize, ncols: usize) -> AnyArray<Ix2> {
-            Array2::<Option<Date<Utc>>>::from_elem((nrows, ncols), None).into()
         }
         imp
     }

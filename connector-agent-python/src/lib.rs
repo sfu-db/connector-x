@@ -32,10 +32,7 @@ fn write_pandas<'a>(
     py: Python<'a>,
     conn: &str,
     queries: Vec<&str>,
-    schema: Vec<&str>,
     checked: bool,
 ) -> PyResult<&'a PyAny> {
-    Ok(crate::pandas::write_pandas(
-        py, conn, &queries, &schema, checked,
-    )?)
+    Ok(crate::pandas::write_pandas(py, conn, &queries, checked)?)
 }

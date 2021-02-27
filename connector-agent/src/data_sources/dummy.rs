@@ -157,7 +157,7 @@ macro_rules! numeric_impl {
     };
 }
 
-numeric_impl!(u64, i64, f64);
+numeric_impl!(u64, i32, i64, f64);
 
 impl<'a> Produce<String> for MixedSourceParser<'a> {
     fn produce(&mut self) -> Result<String> {

@@ -23,8 +23,8 @@ fn empty_file() {
     for p in &mut partitions {
         p.prepare().expect("run query");
     }
-    assert_eq!(0, partitions[0].nrows);
-    assert_eq!(0, partitions[0].ncols);
+    assert_eq!(0, partitions[0].nrows());
+    assert_eq!(0, partitions[0].ncols());
     let parser = partitions[0].parser();
 
     let _v: i64 = parser.unwrap().produce().expect("produce from emtpy");
@@ -42,7 +42,6 @@ fn load_and_parse() {
     }
 
     let mut source = CSVSource::new(&[
-        DataType::String(false),
         DataType::String(false),
         DataType::String(false),
         DataType::I64(false),

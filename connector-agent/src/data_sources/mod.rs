@@ -41,6 +41,7 @@ pub trait PartitionedSource: Sized {
     fn parser(&mut self) -> Result<Self::Parser<'_>>;
 
     /// Number of rows this `DataSource` got.
+    /// Sometimes it is not possible for the source to know how many rows it gets before reading the whole data.
     fn nrows(&self) -> usize;
 
     /// Number of cols this `DataSource` got.

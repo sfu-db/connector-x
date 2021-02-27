@@ -1,13 +1,11 @@
 use crate::{
     data_order::{coordinate, DataOrder},
     data_sources::{PartitionedSource, Source},
-    errors::{ConnectorAgentError, Result},
+    errors::Result,
     transmit::{Transmit, TransmitChecked},
     typesystem::{Realize, TypeSystem},
     writers::{PartitionWriter, Writer},
 };
-use fehler::throw;
-use itertools::Itertools;
 use log::debug;
 use rayon::prelude::*;
 
@@ -88,21 +86,8 @@ where
 
         let partition_writers = self.writer.partition_writers(&num_rows)?;
 
-        let dims_are_same = partitions
-            .iter()
-            .zip_eq(&partition_writers)
-            .all(|(src, dst)| src.nrows() == dst.nrows() && src.ncols() == dst.ncols());
-
-        if !dims_are_same {
-            let snrows = partitions.iter().map(|src| src.nrows()).sum();
-            let wnrows = partition_writers.iter().map(|dst| dst.nrows()).sum();
-
-            throw!(ConnectorAgentError::DimensionMismatch(
-                snrows,
-                partitions[0].ncols(),
-                wnrows,
-                partition_writers[0].ncols()
-            ))
+        for (i, p) in partition_writers.iter().enumerate() {
+            debug!("Partition {}, {}x{}", i, p.nrows(), p.ncols());
         }
 
         // parse and write

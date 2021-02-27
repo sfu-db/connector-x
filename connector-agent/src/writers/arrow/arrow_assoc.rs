@@ -1,5 +1,5 @@
 use arrow::array::{
-    ArrayBuilder, BooleanBuilder, Float64Builder, Int64Builder, StringBuilder, UInt64Builder,
+    ArrayBuilder, BooleanBuilder, Float64Builder, Int32Builder, Int64Builder, StringBuilder,
 };
 use arrow::datatypes::DataType as ArrowDataType;
 use arrow::datatypes::Field;
@@ -14,14 +14,14 @@ pub trait ArrowAssoc {
     fn field(header: &str) -> Field;
 }
 
-impl ArrowAssoc for u64 {
-    type Builder = UInt64Builder;
+impl ArrowAssoc for i32 {
+    type Builder = Int32Builder;
 
-    fn builder(nrows: usize) -> UInt64Builder {
-        UInt64Builder::new(nrows)
+    fn builder(nrows: usize) -> Int32Builder {
+        Int32Builder::new(nrows)
     }
 
-    fn append(builder: &mut UInt64Builder, value: u64) {
+    fn append(builder: &mut Int32Builder, value: i32) {
         builder.append_value(value).unwrap();
     }
 
@@ -30,14 +30,14 @@ impl ArrowAssoc for u64 {
     }
 }
 
-impl ArrowAssoc for Option<u64> {
-    type Builder = UInt64Builder;
+impl ArrowAssoc for Option<i32> {
+    type Builder = Int32Builder;
 
-    fn builder(nrows: usize) -> UInt64Builder {
-        UInt64Builder::new(nrows)
+    fn builder(nrows: usize) -> Int32Builder {
+        Int32Builder::new(nrows)
     }
 
-    fn append(builder: &mut UInt64Builder, value: Option<u64>) {
+    fn append(builder: &mut Int32Builder, value: Option<i32>) {
         builder.append_option(value).unwrap();
     }
 

@@ -76,8 +76,8 @@ pub struct CSVSourcePartition {
     schema: Vec<DataType>,
     records: Vec<csv::StringRecord>,
     counter: usize,
-    pub nrows: usize,
-    pub ncols: usize,
+    nrows: usize,
+    ncols: usize,
 }
 
 impl CSVSourcePartition {

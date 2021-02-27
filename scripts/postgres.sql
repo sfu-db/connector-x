@@ -2,7 +2,7 @@ CREATE TABLE IF NOT EXISTS test_table(
     test_int INTEGER NOT NULL,
     test_nullint INTEGER,
     test_str TEXT,
-    test_float REAL,
+    test_float DOUBLE PRECISION,
     test_bool BOOLEAN
 );
 

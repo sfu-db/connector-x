@@ -28,9 +28,6 @@ pub enum ConnectorAgentError {
     #[error("Writer has not been allocated yet.")]
     WriterNotAllocated,
 
-    #[error("The dimensions for sources and writers do not match: writers have {0}x{1}, sources have {2}x{3}.")]
-    DimensionMismatch(usize, usize, usize, usize),
-
     #[error(transparent)]
     IOError(#[from] std::io::Error),
 

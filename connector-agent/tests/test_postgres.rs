@@ -7,12 +7,15 @@ use std::env;
 
 #[test]
 fn load_and_parse() {
+    let _ = env_logger::builder().is_test(true).try_init();
+
     let dburl = env::var("POSTGRES_URL").unwrap();
     #[derive(Debug, PartialEq)]
-    struct Row(i64, Option<i64>, String, Option<f64>, Option<bool>);
+    struct Row(i64, Option<i64>, Option<String>, Option<f64>, Option<bool>);
 
     let mut source = PostgresSource::new(&dburl);
     source.set_queries(&["select * from test_table"]);
+    source.fetch_metadata().unwrap();
 
     let mut partitions = source.partition().unwrap();
     assert!(partitions.len() == 1);
@@ -37,12 +40,12 @@ fn load_and_parse() {
 
     assert_eq!(
         vec![
-            Row(1, Some(3), "str1".into(), None, Some(true)),
-            Row(2, None, "str2".into(), Some(2.2), Some(false)),
-            Row(0, Some(5), "a".into(), Some(3.1), None),
-            Row(3, Some(7), "b".into(), Some(3.), Some(false)),
-            Row(4, Some(9), "c".into(), Some(7.8), None),
-            Row(1314, Some(2), "".into(), Some(-10.), Some(true)),
+            Row(1, Some(3), Some("str1".into()), None, Some(true)),
+            Row(2, None, Some("str2".into()), Some(2.2), Some(false)),
+            Row(0, Some(5), Some("a".into()), Some(3.1), None),
+            Row(3, Some(7), Some("b".into()), Some(3.), Some(false)),
+            Row(4, Some(9), Some("c".into()), Some(7.8), None),
+            Row(1314, Some(2), None, Some(-10.), Some(true)),
         ],
         rows
     );
@@ -50,6 +53,8 @@ fn load_and_parse() {
 
 #[test]
 fn test_postgres() {
+    let _ = env_logger::builder().is_test(true).try_init();
+
     let dburl = env::var("POSTGRES_URL").unwrap();
 
     let queries = [
@@ -62,23 +67,23 @@ fn test_postgres() {
 
     dispatcher.run_checked().expect("run dispatcher");
     assert_eq!(
-        array![1, 0, 2, 3, 4, 1314],
-        writer.column_view::<u64>(0).unwrap()
+        array![Some(1), Some(0), Some(2), Some(3), Some(4), Some(1314)],
+        writer.column_view::<Option<i64>>(0).unwrap()
     );
     assert_eq!(
         array![Some(3), Some(5), None, Some(7), Some(9), Some(2)],
-        writer.column_view::<Option<u64>>(1).unwrap()
+        writer.column_view::<Option<i64>>(1).unwrap()
     );
     assert_eq!(
         array![
-            "str1".to_string(),
-            "a".to_string(),
-            "str2".to_string(),
-            "b".to_string(),
-            "c".to_string(),
-            "".to_string()
+            Some("str1".to_string()),
+            Some("a".to_string()),
+            Some("str2".to_string()),
+            Some("b".to_string()),
+            Some("c".to_string()),
+            None
         ],
-        writer.column_view::<String>(2).unwrap()
+        writer.column_view::<Option<String>>(2).unwrap()
     );
 
     assert_eq!(
