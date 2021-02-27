@@ -137,6 +137,12 @@
 <span id="134">134</span>
 <span id="135">135</span>
 <span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">data_order</span>::{<span class="ident">coordinate</span>, <span class="ident">DataOrder</span>},
@@ -148,6 +154,7 @@
 };
 <span class="kw">use</span> <span class="ident">fehler</span>::<span class="ident">throw</span>;
 <span class="kw">use</span> <span class="ident">itertools</span>::<span class="ident">Itertools</span>;
+<span class="kw">use</span> <span class="ident">log</span>::<span class="ident">debug</span>;
 <span class="kw">use</span> <span class="ident">rayon</span>::<span class="ident">prelude</span>::<span class="kw-2">*</span>;
 
 <span class="doccomment">/// A dispatcher owns a `SourceBuilder` `SB` and a vector of `queries`</span>
@@ -208,6 +215,8 @@
             .<span class="ident">for_each</span>(<span class="op">|</span>(<span class="ident">source</span>, <span class="ident">query</span>)<span class="op">|</span> {
                 <span class="ident">source</span>.<span class="ident">prepare</span>(<span class="ident">query</span>.<span class="ident">as_str</span>()).<span class="ident">expect</span>(<span class="string">&quot;run query&quot;</span>);
             });
+
+        <span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;Finished data download&quot;</span>);
 
         <span class="comment">// infer schema if not given</span>
         <span class="comment">// self.schema = sources[0].infer_schema()?;</span>
@@ -271,6 +280,9 @@
                     }
                 }
             });
+
+        <span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;Writing finished&quot;</span>);
+
         <span class="prelude-val">Ok</span>(())
     }
 }
