@@ -18,12 +18,13 @@ def get_sqls(count: int) -> List[str]:
     sqls = []
     split = np.linspace(0, 6000000, num=count + 1, endpoint=True, dtype=int)
     for i in range(len(split) - 1):
+
         sqls.append(
             f"""select  l_orderkey,
                 l_partkey,
                 l_suppkey,
                 l_linenumber,
-                cast(l_quantity as float8),
+                l_quantity::float8,
                 l_extendedprice::float8,
                 l_discount::float8,
                 l_tax::float8,
@@ -31,7 +32,7 @@ def get_sqls(count: int) -> List[str]:
                 l_linestatus,
                 l_shipdate,
                 l_commitdate,
-                l_receiptdate,
+                l_receiptdate,                
                 l_shipinstruct,
                 l_shipmode,
                 l_comment from lineitem where l_orderkey > {split[i]} and l_orderkey <= {split[i+1]}"""
