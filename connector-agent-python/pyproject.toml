@@ -13,6 +13,7 @@ python = "^3.6.1"
 maturin = "^0.9.4"
 pytest = "^6.2"
 docopt = "^0.6.2"
+pyarrow = "^3.0.0"
 
 [build-system]
 build-backend = "maturin"

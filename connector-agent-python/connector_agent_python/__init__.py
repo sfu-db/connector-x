@@ -1,1 +1,1 @@
-from .connector_agent_python import write_pandas
+from .connector_agent_python import write_pandas, read_pg

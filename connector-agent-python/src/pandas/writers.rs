@@ -334,7 +334,7 @@ fn create_dataframe<'a, S: AsRef<str>>(
         .zip_eq(names)
         .map(|(&dt, name)| {
             format!(
-                "'{}': pd.Series(index=range({}), dtype='{}')",
+                "'{}': pd.Series(data=np.empty([{}]), dtype='{}')",
                 name,
                 nrows,
                 dt.dtype()

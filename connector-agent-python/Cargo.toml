@@ -19,6 +19,7 @@ numpy = "0.13"
 pyo3 = {version = "0.13", default-features = false, features = ["macros"]}
 pyo3-built = "0.4"
 thiserror = "1"
+tokio = {version = "1", features = ["rt-multi-thread", "io-util"]}
 
 [build-dependencies]
 built = {version = "0.4", features = ["chrono"]}
