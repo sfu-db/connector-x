@@ -4,3 +4,4 @@ members = ["connector-agent", "connector-agent-python"]
 
 [profile.release]
 debug = true
+lto = true
