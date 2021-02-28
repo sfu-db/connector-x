@@ -59,6 +59,12 @@ pub trait Parser<'a> {
     {
         self.produce()
     }
+    /// Number of rows this `DataSource` got.
+    /// Sometimes it is not possible for the source to know how many rows it gets before reading the whole data.
+    fn nrows(&self) -> usize;
+
+    /// Number of cols this `DataSource` got.
+    fn ncols(&self) -> usize;
 }
 
 /// A type implemented `Produce<T>` means that it can produce a value `T` by consuming part of it's raw data buffer.

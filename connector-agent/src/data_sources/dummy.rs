@@ -135,6 +135,14 @@ impl<'a> MixedSourceParser<'a> {
 
 impl<'a> Parser<'a> for MixedSourceParser<'a> {
     type TypeSystem = DataType;
+
+    fn nrows(&self) -> usize {
+        self.nrows
+    }
+
+    fn ncols(&self) -> usize {
+        self.ncols
+    }
 }
 
 macro_rules! numeric_impl {

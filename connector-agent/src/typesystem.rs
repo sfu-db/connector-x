@@ -157,6 +157,11 @@ macro_rules! associate_typesystems {
             $(($($v1)+ (true), $($v2)+ (true)))|+ => (Option<$t1>, Option<$t2>),
         )+);
 
+        associate_typesystems!(Transmit ($ts1, $ts2), $(
+            $(($($v1)+ (false), $($v2)+ (false)))|+ => ($t1, $t2),
+            $(($($v1)+ (true), $($v2)+ (true)))|+ => (Option<$t1>, Option<$t2>),
+        )+);
+
         associate_typesystems!(Conversion ($ts1, $ts2), $(
             $(($($v1)+ (false), $($v2)+ (false))),+,
             $(($($v1)+ (true), $($v2)+ (true))),+,
@@ -177,6 +182,42 @@ macro_rules! associate_typesystems {
                 match self {
                     $(
                         $(($v1, $v2))|+ => Ok(F::realize::<($t1, $t2)>()),
+                    )+
+                    (v1, v2) => {
+                        fehler::throw!($crate::errors::ConnectorAgentError::NoTypeSystemConversionRule(
+                            format!("{:?}", v1), format!("{:?}", v2)
+                        ))
+                    }
+                }
+            }
+        }
+    };
+
+    (Transmit ($TS1:ty, $TS2:ty), $($(($V1:pat, $V2:pat))|+ => ($T1:ty, $T2:ty),)+) => {
+        impl<'s, 'w, S, W> $crate::typesystem::TransmitHack<S, W> for ($TS1, $TS2)
+        where
+            S: $crate::data_sources::Parser<'s, TypeSystem = $TS1>,
+            $(S: $crate::data_sources::Produce<$T1>,)+
+            W: $crate::writers::PartitionWriter<'w, TypeSystem = $TS2>,
+            $(W: $crate::writers::Consume<$T2>,)+
+            $($T1: $crate::typesystem::TypeAssoc<$TS1> + 'static,)+
+            $($T2: $crate::typesystem::TypeAssoc<$TS2> + 'static,)+
+            $(
+                ($TS1, $TS2): $crate::typesystem::TypeConversion<$T1, $T2>,
+            )+
+        {
+            #[fehler::throws($crate::errors::ConnectorAgentError)]
+            fn transmit(self, source: &mut S, writer: &mut W, row: usize, col: usize) {
+                match self {
+                    $(
+                        $(($V1, $V2))|+ => {
+                            let val: $T1 = source.read()?;
+                            let val =
+                                <(S::TypeSystem, W::TypeSystem) as TypeConversion<$T1, $T2>>::convert(
+                                    val,
+                                );
+                            unsafe { writer.write(row, col, val) }
+                        }
                     )+
                     (v1, v2) => {
                         fehler::throw!($crate::errors::ConnectorAgentError::NoTypeSystemConversionRule(
@@ -227,4 +268,8 @@ macro_rules! associate_typesystems {
     };
 
     (TypeConversion none $ts1:ty, $ts2:ty, $t1:ty, $t2:ty) => {};
+}
+
+pub trait TransmitHack<S, W> {
+    fn transmit(self, source: &mut S, writer: &mut W, row: usize, col: usize) -> Result<()>;
 }

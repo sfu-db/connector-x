@@ -151,7 +151,7 @@ impl PartitionedSource for PostgresSourcePartition {
         let pg_schema: Vec<_> = self.schema.iter().map(|&dt| dt.into()).collect();
         let iter = BinaryCopyOutIter::new(reader, &pg_schema);
 
-        Ok(PostgresSourceParser::new(iter, &self.schema))
+        Ok(PostgresSourceParser::new(iter, &self.schema, self.nrows))
     }
 
     fn nrows(&self) -> usize {
@@ -166,16 +166,18 @@ impl PartitionedSource for PostgresSourcePartition {
 pub struct PostgresSourceParser<'a> {
     iter: BinaryCopyOutIter<'a>,
     current_row: Option<BinaryCopyOutRow>,
+    nrows: usize,
     ncols: usize,
     current_col: usize,
 }
 
 impl<'a> PostgresSourceParser<'a> {
-    pub fn new(iter: BinaryCopyOutIter<'a>, schema: &[PostgresDTypes]) -> Self {
+    pub fn new(iter: BinaryCopyOutIter<'a>, schema: &[PostgresDTypes], nrows: usize) -> Self {
         Self {
             iter,
             current_row: None,
             current_col: 0,
+            nrows,
             ncols: schema.len(),
         }
     }
@@ -201,6 +203,14 @@ impl<'a> PostgresSourceParser<'a> {
 
 impl<'a> Parser<'a> for PostgresSourceParser<'a> {
     type TypeSystem = PostgresDTypes;
+
+    fn nrows(&self) -> usize {
+        self.nrows
+    }
+
+    fn ncols(&self) -> usize {
+        self.ncols
+    }
 }
 
 impl<'a, T> Produce<T> for PostgresSourceParser<'a>
@@ -213,146 +223,3 @@ where
         Ok(val)
     }
 }
-
-// impl<'a> Produce<Option<f64>> for PostgresSourceParser<'a> {
-//     fn produce(&mut self) -> Result<Option<f64>> {
-//         let cidx = self.next_col_idx()?;
-//         let val = self.current_row.as_ref().unwrap().try_get(cidx)?;
-//         Ok(val)
-//     }
-// }
-
-// impl<'a> Produce<i64> for PostgresSourceParser<'a> {
-//     fn produce(&mut self) -> Result<i64> {
-//         let cidx = self.next_col_idx()?;
-//         let val = self.current_row.as_ref().unwrap().try_get(cidx)?;
-//         Ok(val)
-//     }
-// }
-
-// impl<'a> Produce<Option<i64>> for PostgresSourceParser<'a> {
-//     fn produce(&mut self) -> Result<Option<i64>> {
-//         let cidx = self.next_col_idx()?;
-//         let val = self.current_row.as_ref().unwrap().try_get(cidx)?;
-//         Ok(val)
-//     }
-// }
-
-// impl<'a> Produce<bool> for PostgresSourceParser<'a> {
-//     fn produce(&mut self) -> Result<bool> {
-//         let cidx = self.next_col_idx()?;
-//         let val = self.current_row.as_ref().unwrap().try_get(cidx)?;
-//         Ok(val)
-//     }
-// }
-
-// impl<'a> Produce<Option<bool>> for PostgresSourceParser<'a> {
-//     fn produce(&mut self) -> Result<Option<bool>> {
-//         let cidx = self.next_col_idx()?;
-//         match &self.pgschema[cidx] {
-//             &Type::BOOL => {
-//                 let val = self.current_row.as_ref().unwrap().try_get(cidx)?;
-//                 Ok(val)
-//             }
-//             t => {
-//                 throw!(ConnectorAgentError::CannotParse(
-//                     type_name::<Option<bool>>(),
-//                     t.name().into()
-//                 ))
-//             }
-//         }
-//     }
-// }
-
-// impl<'a> Produce<String> for PostgresSourceParser<'a> {
-//     fn produce(&mut self) -> Result<String> {
-//         let cidx = self.next_col_idx()?;
-//         match &self.pgschema[cidx] {
-//             &Type::TEXT | &Type::VARCHAR | &Type::BPCHAR => {
-//                 let val = self.current_row.as_ref().unwrap().try_get(cidx)?;
-//                 Ok(val)
-//             }
-//             t => {
-//                 throw!(ConnectorAgentError::CannotParse(
-//                     type_name::<String>(),
-//                     t.name().into()
-//                 ))
-//             }
-//         }
-//     }
-// }
-
-// impl<'a> Produce<Option<String>> for PostgresSourceParser<'a> {
-//     fn produce(&mut self) -> Result<Option<String>> {
-//         let cidx = self.next_col_idx()?;
-//         match &self.pgschema[cidx] {
-//             &Type::TEXT | &Type::VARCHAR | &Type::BPCHAR => {
-//                 let val = self.current_row.as_ref().unwrap().try_get(cidx)?;
-//                 Ok(val)
-//             }
-//             t => {
-//                 throw!(ConnectorAgentError::CannotParse(
-//                     type_name::<String>(),
-//                     t.name().into()
-//                 ))
-//             }
-//         }
-//     }
-// }
-
-// impl<'a> Produce<DateTime<Utc>> for PostgresSourceParser<'a> {
-//     fn produce(&mut self) -> Result<DateTime<Utc>> {
-//         let cidx = self.next_col_idx()?;
-//         match &self.pgschema[cidx] {
-//             &Type::TIMESTAMPTZ => {
-//                 let val = self.current_row.as_ref().unwrap().try_get(cidx)?;
-//                 Ok(val)
-//             }
-//             &Type::TIMESTAMP => {
-//                 let val: NaiveDateTime = self.current_row.as_ref().unwrap().try_get(cidx)?;
-//                 let val = DateTime::from_utc(val, Utc);
-//                 Ok(val)
-//             }
-//             &Type::DATE => {
-//                 let val: NaiveDate = self.current_row.as_ref().unwrap().try_get(cidx)?;
-//                 let val = DateTime::from_utc(val.and_hms(0, 0, 0), Utc);
-//                 Ok(val)
-//             }
-//             t => {
-//                 throw!(ConnectorAgentError::CannotParse(
-//                     type_name::<DateTime<Utc>>(),
-//                     t.name().into()
-//                 ))
-//             }
-//         }
-//     }
-// }
-
-// impl<'a> Produce<Option<DateTime<Utc>>> for PostgresSourceParser<'a> {
-//     fn produce(&mut self) -> Result<Option<DateTime<Utc>>> {
-//         let cidx = self.next_col_idx()?;
-//         match &self.pgschema[cidx] {
-//             &Type::TIMESTAMPTZ => {
-//                 let val = self.current_row.as_ref().unwrap().try_get(cidx)?;
-//                 Ok(val)
-//             }
-//             &Type::TIMESTAMP => {
-//                 let val: Option<NaiveDateTime> =
-//                     self.current_row.as_ref().unwrap().try_get(cidx)?;
-//                 let val = val.map(|d| DateTime::from_utc(d, Utc));
-//                 Ok(val)
-//             }
-//             &Type::DATE => {
-//                 let val: Option<NaiveDate> = self.current_row.as_ref().unwrap().try_get(cidx)?;
-//                 let val = val.map(|d| DateTime::from_utc(d.and_hms(0, 0, 0), Utc));
-//                 Ok(val)
-//             }
-//             t => {
-//                 throw!(ConnectorAgentError::CannotParse(
-//                     type_name::<Option<DateTime<Utc>>>(),
-//                     t.name().into()
-//                 ))
-//             }
-//         }
-//     }
-// }

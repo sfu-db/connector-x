@@ -124,6 +124,7 @@ impl PartitionedSource for CSVSourcePartition {
             schema: self.schema.clone(),
             records: &mut self.records,
             counter: &mut self.counter,
+            nrows: self.nrows,
             ncols: self.ncols,
         })
     }
@@ -133,6 +134,7 @@ pub struct CSVSourceParser<'a> {
     schema: Vec<DataType>,
     records: &'a mut [csv::StringRecord],
     counter: &'a mut usize,
+    nrows: usize,
     ncols: usize,
 }
 
@@ -147,6 +149,14 @@ impl<'a> CSVSourceParser<'a> {
 
 impl<'a> Parser<'a> for CSVSourceParser<'a> {
     type TypeSystem = DataType;
+
+    fn nrows(&self) -> usize {
+        self.nrows
+    }
+
+    fn ncols(&self) -> usize {
+        self.ncols
+    }
 }
 
 impl<'a> Produce<i64> for CSVSourceParser<'a> {

@@ -3,7 +3,7 @@ use crate::{
     data_sources::{PartitionedSource, Source},
     errors::Result,
     transmit::{Transmit, TransmitChecked},
-    typesystem::{Realize, TypeSystem, TypeSystemConversion},
+    typesystem::{Realize, TransmitHack, TypeSystem, TypeSystemConversion},
     writers::{PartitionWriter, Writer},
 };
 use itertools::Itertools;
@@ -35,6 +35,10 @@ where
     >,
     (TSS, TSW): for<'r, 's> Realize<
         TransmitChecked<<S::Partition as PartitionedSource>::Parser<'s>, W::PartitionWriter<'r>>,
+    >,
+    (TSS, TSW): for<'r, 's> TransmitHack<
+        <S::Partition as PartitionedSource>::Parser<'s>,
+        W::PartitionWriter<'r>,
     >,
 {
     /// Create a new dispatcher by providing a source builder, schema (temporary) and the queries
@@ -121,9 +125,16 @@ where
 
                 match dorder {
                     DataOrder::RowMajor => {
+                        // for row in 0..writer.nrows() {
+                        //     for col in 0..writer.ncols() {
+                        //         f[col](&mut parser, &mut writer, row, col).expect("write record");
+                        //     }
+                        // }
                         for row in 0..writer.nrows() {
                             for col in 0..writer.ncols() {
-                                f[col](&mut parser, &mut writer, row, col).expect("write record");
+                                (src_schema[col], dst_schema[col])
+                                    .transmit(&mut parser, &mut writer, row, col)
+                                    .expect("write record");
                             }
                         }
                     }
