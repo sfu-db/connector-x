@@ -332,7 +332,14 @@ fn create_dataframe<'a, S: AsRef<str>>(
     let series: Vec<String> = schema
         .iter()
         .zip_eq(names)
-        .map(|(&dt, name)| format!("'{}': pd.Series(dtype='{}')", name, dt.dtype()))
+        .map(|(&dt, name)| {
+            format!(
+                "'{}': pd.Series(index=range({}), dtype='{}')",
+                name,
+                nrows,
+                dt.dtype()
+            )
+        })
         .collect();
 
     // https://github.com/pandas-dev/pandas/blob/master/pandas/core/internals/managers.py

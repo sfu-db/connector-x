@@ -62,7 +62,7 @@ impl Writer for MemoryWriter {
         {
             block_indices.insert(dt, bid);
             let count = grp.count();
-            let buffer = Realize::<FArray2>::realize(dt)(nrows, count);
+            let buffer = Realize::<FArray2>::realize(dt)?(nrows, count);
             self.buffers.push(buffer);
         }
 

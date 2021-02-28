@@ -1,7 +1,11 @@
-use connector_agent::data_sources::{postgres::PostgresSource, PartitionedSource, Produce};
-use connector_agent::writers::memory::MemoryWriter;
-use connector_agent::Dispatcher;
-use connector_agent::Source;
+use connector_agent::{
+    data_sources::{
+        postgres::{PostgresDTypes, PostgresSource},
+        PartitionedSource, Produce, Source,
+    },
+    writers::memory::MemoryWriter,
+    DataType, Dispatcher,
+};
 use ndarray::array;
 use std::env;
 
@@ -11,7 +15,7 @@ fn load_and_parse() {
 
     let dburl = env::var("POSTGRES_URL").unwrap();
     #[derive(Debug, PartialEq)]
-    struct Row(i64, Option<i64>, Option<String>, Option<f64>, Option<bool>);
+    struct Row(i32, Option<i32>, Option<String>, Option<f32>, Option<bool>);
 
     let mut source = PostgresSource::new(&dburl);
     source.set_queries(&["select * from test_table"]);
@@ -63,7 +67,11 @@ fn test_postgres() {
     ];
     let builder = PostgresSource::new(&dburl);
     let mut writer = MemoryWriter::new();
-    let dispatcher = Dispatcher::new(builder, &mut writer, &queries);
+    let dispatcher = Dispatcher::<PostgresSource, PostgresDTypes, MemoryWriter, DataType>::new(
+        builder,
+        &mut writer,
+        &queries,
+    );
 
     dispatcher.run_checked().expect("run dispatcher");
     assert_eq!(
@@ -87,7 +95,14 @@ fn test_postgres() {
     );
 
     assert_eq!(
-        array![None, Some(3.1), Some(2.2), Some(3.), Some(7.8), Some(-10.)],
+        array![
+            None,
+            Some(3.1f32 as f64),
+            Some(2.2f32 as f64),
+            Some(3f32 as f64),
+            Some(7.8f32 as f64),
+            Some(-10f32 as f64)
+        ],
         writer.column_view::<Option<f64>>(3).unwrap()
     );
 

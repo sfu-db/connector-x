@@ -3,34 +3,37 @@ use crate::{
     data_sources::{PartitionedSource, Source},
     errors::Result,
     transmit::{Transmit, TransmitChecked},
-    typesystem::{Realize, TypeSystem},
+    typesystem::{Realize, TypeSystem, TypeSystemConversion},
     writers::{PartitionWriter, Writer},
 };
+use itertools::Itertools;
 use log::debug;
 use rayon::prelude::*;
 
 /// A dispatcher owns a `SourceBuilder` `SB` and a vector of `queries`
 /// `schema` is a temporary input before we implement infer schema or get schema from DB.
-pub struct Dispatcher<'a, S, W, TS>
+pub struct Dispatcher<'a, S, TSS, W, TSW>
 where
-    TS: TypeSystem,
-    S: Source<TypeSystem = TS>,
-    W: Writer<TypeSystem = TS>,
+    TSS: TypeSystem,
+    TSW: TypeSystem,
+    S: Source<TypeSystem = TSS>,
+    W: Writer<TypeSystem = TSW>,
 {
     source: S,
     writer: &'a mut W,
     queries: Vec<String>,
 }
 
-impl<'w, S, W, TS> Dispatcher<'w, S, W, TS>
+impl<'w, S, TSS, W, TSW> Dispatcher<'w, S, TSS, W, TSW>
 where
-    TS: TypeSystem,
-    S: Source<TypeSystem = TS>,
-    W: Writer<TypeSystem = TS>,
-    TS: for<'s, 'r> Realize<
+    TSS: TypeSystem,
+    TSW: TypeSystem + TypeSystemConversion<TSS>,
+    S: Source<TypeSystem = TSS>,
+    W: Writer<TypeSystem = TSW>,
+    (TSS, TSW): for<'r, 's> Realize<
         Transmit<<S::Partition as PartitionedSource>::Parser<'s>, W::PartitionWriter<'r>>,
     >,
-    TS: for<'r, 's> Realize<
+    (TSS, TSW): for<'r, 's> Realize<
         TransmitChecked<<S::Partition as PartitionedSource>::Parser<'s>, W::PartitionWriter<'r>>,
     >,
 {
@@ -63,7 +66,11 @@ where
         self.source.set_queries(self.queries.as_slice());
         debug!("Fetching metadata");
         self.source.fetch_metadata()?;
-        let schema = self.source.schema();
+        let src_schema = self.source.schema();
+        let dst_schema = src_schema
+            .iter()
+            .map(|&s| TSW::from(s))
+            .collect::<Result<Vec<_>>>()?;
         let names = self.source.names();
 
         // generate partitions
@@ -82,7 +89,7 @@ where
 
         debug!("Allocate writer memory");
         self.writer
-            .allocate(num_rows.iter().sum(), &names, &schema, dorder)?;
+            .allocate(num_rows.iter().sum(), &names, &dst_schema, dorder)?;
 
         debug!("Create partition writers");
         let partition_writers = self.writer.partition_writers(&num_rows)?;
@@ -97,16 +104,18 @@ where
             .into_par_iter()
             .zip_eq(partitions)
             .for_each(|(mut writer, mut partition)| {
-                let f: Vec<_> = schema
+                let f: Vec<_> = src_schema
                     .iter()
-                    .map(|&ty| {
+                    .zip_eq(&dst_schema)
+                    .map(|(&src_ty, &dst_ty)| {
                         if checked {
-                            Realize::<TransmitChecked<_, _>>::realize(ty)
+                            Realize::<TransmitChecked<_, _>>::realize((src_ty, dst_ty))
                         } else {
-                            Realize::<Transmit<_, _>>::realize(ty)
+                            Realize::<Transmit<_, _>>::realize((src_ty, dst_ty))
                         }
                     })
-                    .collect();
+                    .collect::<Result<Vec<_>>>()
+                    .unwrap();
 
                 let mut parser = partition.parser().unwrap();
 

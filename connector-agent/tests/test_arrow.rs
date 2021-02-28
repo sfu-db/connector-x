@@ -28,7 +28,7 @@ fn test_arrow() {
     );
     dispatcher.run_checked().expect("run dispatcher");
 
-    let records: Vec<RecordBatch> = writer.finish(headers);
+    let records: Vec<RecordBatch> = writer.finish(headers).unwrap();
     assert_eq!(2, records.len());
 
     for col in 0..ncols {

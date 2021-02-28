@@ -24,14 +24,9 @@ impl TypeSystem for DataType {}
 
 associate_typesystem! {
     DataType,
-    DataType::F64(false) => f64,
-    DataType::F64(true) => Option<f64>,
-    DataType::I64(false) => i64,
-    DataType::I64(true) => Option<i64>,
-    DataType::Bool(false) => bool,
-    DataType::Bool(true) => Option<bool>,
-    DataType::String(false) => String,
-    DataType::String(true) => Option<String>,
-    DataType::DateTime(false) => DateTime<Utc>,
-    DataType::DateTime(true) => Option<DateTime<Utc>>
+    [DataType::F64] => f64,
+    [DataType::I64] => i64,
+    [DataType::Bool] => bool,
+    [DataType::String] => String,
+    [DataType::DateTime] => DateTime<Utc>,
 }

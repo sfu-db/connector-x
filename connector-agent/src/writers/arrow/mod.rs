@@ -3,7 +3,7 @@ use crate::data_order::DataOrder;
 use crate::errors::{ConnectorAgentError, Result};
 use crate::types::DataType;
 use crate::typesystem::{Realize, TypeAssoc, TypeSystem};
-use arrow::datatypes::{Field, Schema};
+use arrow::datatypes::Schema;
 use arrow::record_batch::RecordBatch;
 use arrow_assoc::ArrowAssoc;
 use fehler::throws;
@@ -58,11 +58,11 @@ impl Writer for ArrowWriter {
         assert_eq!(self.builders.len(), 0);
 
         for &c in counts {
-            let builders: Vec<_> = self
+            let builders = self
                 .schema
                 .iter()
-                .map(|&dt| Realize::<FNewBuilder>::realize(dt)(c))
-                .collect();
+                .map(|&dt| Ok(Realize::<FNewBuilder>::realize(dt)?(c)))
+                .collect::<Result<Vec<_>>>()?;
 
             self.builders.push(builders);
         }
@@ -81,13 +81,14 @@ impl Writer for ArrowWriter {
 }
 
 impl ArrowWriter {
+    #[throws(ConnectorAgentError)]
     pub fn finish(self, headers: Vec<String>) -> Vec<RecordBatch> {
-        let fields: Vec<Field> = self
+        let fields = self
             .schema
             .iter()
             .zip_eq(headers)
-            .map(|(&dt, h)| Realize::<FNewField>::realize(dt)(h.as_str()))
-            .collect();
+            .map(|(&dt, h)| Ok(Realize::<FNewField>::realize(dt)?(h.as_str())))
+            .collect::<Result<Vec<_>>>()?;
 
         let arrow_schema = Arc::new(Schema::new(fields));
         let schema = self.schema.clone();
@@ -97,11 +98,11 @@ impl ArrowWriter {
                 let columns = pbuilder
                     .into_iter()
                     .zip(schema.iter())
-                    .map(|(builder, &dt)| Realize::<FFinishBuilder>::realize(dt)(builder))
-                    .collect();
-                RecordBatch::try_new(Arc::clone(&arrow_schema), columns).unwrap()
+                    .map(|(builder, &dt)| Ok(Realize::<FFinishBuilder>::realize(dt)?(builder)))
+                    .collect::<Result<Vec<_>>>()?;
+                Ok(RecordBatch::try_new(Arc::clone(&arrow_schema), columns).unwrap())
             })
-            .collect()
+            .collect::<Result<Vec<_>>>()?
     }
 }
 

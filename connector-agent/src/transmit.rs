@@ -1,6 +1,6 @@
 use crate::data_sources::{Parser, Produce};
 use crate::errors::{ConnectorAgentError, Result};
-use crate::typesystem::{ParameterizedFunc, ParameterizedOn, TypeAssoc};
+use crate::typesystem::{ParameterizedFunc, ParameterizedOn, TypeAssoc, TypeConversion};
 use crate::writers::{Consume, PartitionWriter};
 use fehler::throws;
 use std::marker::PhantomData;
@@ -11,24 +11,34 @@ impl<S, W> ParameterizedFunc for Transmit<S, W> {
     type Function = fn(source: &mut S, writer: &mut W, row: usize, col: usize) -> Result<()>;
 }
 
-impl<'s, 'w, S, W, T> ParameterizedOn<T> for Transmit<S, W>
+impl<'s, 'w, S, W, T1, T2> ParameterizedOn<(T1, T2)> for Transmit<S, W>
 where
-    S: Parser<'s> + Produce<T>,
-    W: PartitionWriter<'w, TypeSystem = S::TypeSystem> + Consume<T>,
-    T: TypeAssoc<S::TypeSystem> + 'static,
+    S: Parser<'s> + Produce<T1>,
+    W: PartitionWriter<'w> + Consume<T2>,
+    T1: TypeAssoc<S::TypeSystem> + 'static,
+    T2: TypeAssoc<W::TypeSystem> + 'static,
+    (S::TypeSystem, W::TypeSystem): TypeConversion<T1, T2>,
 {
     fn parameterize() -> Self::Function {
         #[throws(ConnectorAgentError)]
-        pub fn transmit<'s, 'w, S, W, T>(source: &mut S, writer: &mut W, row: usize, col: usize)
-        where
-            S: Parser<'s> + Produce<T>,
-            W: PartitionWriter<'w, TypeSystem = S::TypeSystem> + Consume<T>,
-            T: TypeAssoc<S::TypeSystem> + 'static,
+        pub fn transmit<'s, 'w, S, W, T1, T2>(
+            source: &mut S,
+            writer: &mut W,
+            row: usize,
+            col: usize,
+        ) where
+            S: Parser<'s> + Produce<T1>,
+            W: PartitionWriter<'w> + Consume<T2>,
+            T1: TypeAssoc<S::TypeSystem> + 'static,
+            T2: TypeAssoc<W::TypeSystem> + 'static,
+            (S::TypeSystem, W::TypeSystem): TypeConversion<T1, T2>,
         {
-            unsafe { writer.write::<T>(row, col, source.read()?) }
+            let val: T1 = source.read()?;
+            let val = <(S::TypeSystem, W::TypeSystem) as TypeConversion<T1, T2>>::convert(val);
+            unsafe { writer.write(row, col, val) }
         }
 
-        transmit::<S, W, T>
+        transmit::<S, W, T1, T2>
     }
 }
 
@@ -38,26 +48,32 @@ impl<S, W> ParameterizedFunc for TransmitChecked<S, W> {
     type Function = fn(source: &mut S, writer: &mut W, row: usize, col: usize) -> Result<()>;
 }
 
-impl<'s, 'w, S, W, T> ParameterizedOn<T> for TransmitChecked<S, W>
+impl<'s, 'w, S, W, T1, T2> ParameterizedOn<(T1, T2)> for TransmitChecked<S, W>
 where
-    S: Parser<'s> + Produce<T>,
-    W: PartitionWriter<'w, TypeSystem = S::TypeSystem> + Consume<T>,
-    T: TypeAssoc<S::TypeSystem> + 'static,
+    S: Parser<'s> + Produce<T1>,
+    W: PartitionWriter<'w> + Consume<T2>,
+    T1: TypeAssoc<S::TypeSystem> + 'static,
+    T2: TypeAssoc<W::TypeSystem> + 'static,
+    (S::TypeSystem, W::TypeSystem): TypeConversion<T1, T2>,
 {
     fn parameterize() -> Self::Function {
         #[throws(ConnectorAgentError)]
-        pub fn transmit_checked<'s, 'w, S, W, T>(
+        pub fn transmit_checked<'s, 'w, S, W, T1, T2>(
             source: &mut S,
             writer: &mut W,
             row: usize,
             col: usize,
         ) where
-            S: Parser<'s> + Produce<T>,
-            W: PartitionWriter<'w, TypeSystem = S::TypeSystem> + Consume<T>,
-            T: TypeAssoc<S::TypeSystem> + 'static,
+            S: Parser<'s> + Produce<T1>,
+            W: PartitionWriter<'w> + Consume<T2>,
+            T1: TypeAssoc<S::TypeSystem> + 'static,
+            T2: TypeAssoc<W::TypeSystem> + 'static,
+            (S::TypeSystem, W::TypeSystem): TypeConversion<T1, T2>,
         {
-            writer.write_checked::<T>(row, col, source.read()?)?
+            let val: T1 = source.read()?;
+            let val = <(S::TypeSystem, W::TypeSystem) as TypeConversion<T1, T2>>::convert(val);
+            writer.write_checked(row, col, val)?
         }
-        transmit_checked::<S, W, T>
+        transmit_checked::<S, W, T1, T2>
     }
 }

@@ -28,6 +28,9 @@ pub enum ConnectorAgentError {
     #[error("Writer has not been allocated yet.")]
     WriterNotAllocated,
 
+    #[error("No type system conversion rule from {0} to {1}.")]
+    NoTypeSystemConversionRule(String, String),
+
     #[error(transparent)]
     IOError(#[from] std::io::Error),
 
