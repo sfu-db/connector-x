@@ -1,5 +1,6 @@
 pub mod arrow;
 pub mod memory;
+pub mod pandas;
 
 use crate::data_order::DataOrder;
 use crate::errors::Result;

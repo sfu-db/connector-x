@@ -5,16 +5,24 @@ use crate::data_order::DataOrder;
 use crate::data_sources::{Parser, PartitionedSource, Produce, Source};
 use crate::errors::{ConnectorAgentError, Result};
 use anyhow::anyhow;
+use bytes::Bytes;
+use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
 use fehler::throw;
 use log::debug;
 use postgres::{
     binary_copy::{BinaryCopyOutIter, BinaryCopyOutRow},
     fallible_iterator::FallibleIterator,
-    types::FromSql,
+    types::Type,
 };
 use r2d2::{Pool, PooledConnection};
 use r2d2_postgres::{postgres::NoTls, PostgresConnectionManager};
 use sql::{count_query, limit1_query};
+use std::sync::Arc;
+use std::{
+    mem::{self, transmute},
+    ops::Range,
+    thread,
+};
 pub use types::PostgresDTypes;
 
 type PgManager = PostgresConnectionManager<NoTls>;
@@ -168,35 +176,53 @@ impl PartitionedSource for PostgresSourcePartition {
 
 pub struct PostgresSourceParser<'a> {
     iter: BinaryCopyOutIter<'a>,
-    current_row: Option<BinaryCopyOutRow>,
+    buf_size: usize,
+    rowbuf: Vec<BinaryCopyOutRow>,
     ncols: usize,
     current_col: usize,
+    current_row: usize,
 }
 
 impl<'a> PostgresSourceParser<'a> {
     pub fn new(iter: BinaryCopyOutIter<'a>, schema: &[PostgresDTypes]) -> Self {
         Self {
             iter,
-            current_row: None,
-            current_col: 0,
+            buf_size: 10000,
+            rowbuf: Vec::with_capacity(10000),
             ncols: schema.len(),
+            current_row: 0,
+            current_col: 0,
         }
     }
 
-    fn next_col_idx(&mut self) -> Result<usize> {
-        if self.current_row.is_none() || self.current_col >= self.ncols {
-            // first time or new row
-            match self.iter.next()? {
-                Some(row) => {
-                    self.current_row = Some(row);
-                    self.current_col = 0;
-                }
-                None => throw!(anyhow!("Postgres EOF")),
+    fn next_loc(&mut self) -> Result<(usize, usize)> {
+        if self.current_row >= self.rowbuf.len() {
+            if !self.rowbuf.is_empty() {
+                let mut row = Vec::with_capacity(self.buf_size);
+                mem::swap(&mut row, &mut self.rowbuf);
+
+                thread::spawn(|| mem::drop(row));
             }
+
+            for _ in 0..self.buf_size {
+                match self.iter.next()? {
+                    Some(row) => {
+                        self.rowbuf.push(row);
+                    }
+                    None => break,
+                }
+            }
+
+            if self.rowbuf.is_empty() {
+                throw!(anyhow!("Postgres EOF"));
+            }
+            self.current_row = 0;
+            self.current_col = 0;
         }
 
-        let ret = self.current_col;
-        self.current_col += 1;
+        let ret = (self.current_row, self.current_col);
+        self.current_row += (self.current_col + 1) / self.ncols;
+        self.current_col = (self.current_col + 1) % self.ncols;
         Ok(ret)
     }
 }
@@ -205,156 +231,67 @@ impl<'a> Parser<'a> for PostgresSourceParser<'a> {
     type TypeSystem = PostgresDTypes;
 }
 
-impl<'a, T> Produce<T> for PostgresSourceParser<'a>
-where
-    T: for<'r> FromSql<'r>,
-{
-    fn produce(&mut self) -> Result<T> {
-        let cidx = self.next_col_idx()?;
-        let val = self.current_row.as_ref().unwrap().try_get(cidx)?;
+macro_rules! impl_produce {
+    ($($t: ty),+) => {
+        $(
+            impl<'a> Produce<$t> for PostgresSourceParser<'a> {
+                fn produce(&mut self) -> Result<$t> {
+                    let (ridx, cidx) = self.next_loc()?;
+                    let val = self.rowbuf[ridx].try_get(cidx)?;
+                    Ok(val)
+                }
+            }
+
+            impl<'a> Produce<Option<$t>> for PostgresSourceParser<'a> {
+                fn produce(&mut self) -> Result<Option<$t>> {
+                    let (ridx, cidx) = self.next_loc()?;
+                    let val = self.rowbuf[ridx].try_get(cidx)?;
+                    Ok(val)
+                }
+            }
+        )+
+    };
+}
+
+impl_produce!(
+    i32,
+    i64,
+    f32,
+    f64,
+    bool,
+    DateTime<Utc>,
+    NaiveDateTime,
+    NaiveDate
+);
+
+// unbox the binary copy result
+pub struct MyBinaryCopyOutRow {
+    buf: Bytes,
+    ranges: Vec<Option<Range<usize>>>,
+    _types: Arc<Vec<Type>>,
+}
+
+impl<'a> Produce<Bytes> for PostgresSourceParser<'a> {
+    fn produce(&mut self) -> Result<Bytes> {
+        let (ridx, cidx) = self.next_loc()?;
+        let row = &self.rowbuf[ridx];
+        let row: &MyBinaryCopyOutRow = unsafe { transmute(row) };
+        let val = row.ranges[cidx]
+            .clone()
+            .map(|rg| row.buf.slice(rg))
+            .unwrap();
+
         Ok(val)
     }
 }
 
-// impl<'a> Produce<Option<f64>> for PostgresSourceParser<'a> {
-//     fn produce(&mut self) -> Result<Option<f64>> {
-//         let cidx = self.next_col_idx()?;
-//         let val = self.current_row.as_ref().unwrap().try_get(cidx)?;
-//         Ok(val)
-//     }
-// }
+impl<'a> Produce<Option<Bytes>> for PostgresSourceParser<'a> {
+    fn produce(&mut self) -> Result<Option<Bytes>> {
+        let (ridx, cidx) = self.next_loc()?;
+        let row = &self.rowbuf[ridx];
+        let row: &MyBinaryCopyOutRow = unsafe { transmute(row) };
+        let val = row.ranges[cidx].clone().map(|rg| row.buf.slice(rg));
 
-// impl<'a> Produce<i64> for PostgresSourceParser<'a> {
-//     fn produce(&mut self) -> Result<i64> {
-//         let cidx = self.next_col_idx()?;
-//         let val = self.current_row.as_ref().unwrap().try_get(cidx)?;
-//         Ok(val)
-//     }
-// }
-
-// impl<'a> Produce<Option<i64>> for PostgresSourceParser<'a> {
-//     fn produce(&mut self) -> Result<Option<i64>> {
-//         let cidx = self.next_col_idx()?;
-//         let val = self.current_row.as_ref().unwrap().try_get(cidx)?;
-//         Ok(val)
-//     }
-// }
-
-// impl<'a> Produce<bool> for PostgresSourceParser<'a> {
-//     fn produce(&mut self) -> Result<bool> {
-//         let cidx = self.next_col_idx()?;
-//         let val = self.current_row.as_ref().unwrap().try_get(cidx)?;
-//         Ok(val)
-//     }
-// }
-
-// impl<'a> Produce<Option<bool>> for PostgresSourceParser<'a> {
-//     fn produce(&mut self) -> Result<Option<bool>> {
-//         let cidx = self.next_col_idx()?;
-//         match &self.pgschema[cidx] {
-//             &Type::BOOL => {
-//                 let val = self.current_row.as_ref().unwrap().try_get(cidx)?;
-//                 Ok(val)
-//             }
-//             t => {
-//                 throw!(ConnectorAgentError::CannotParse(
-//                     type_name::<Option<bool>>(),
-//                     t.name().into()
-//                 ))
-//             }
-//         }
-//     }
-// }
-
-// impl<'a> Produce<String> for PostgresSourceParser<'a> {
-//     fn produce(&mut self) -> Result<String> {
-//         let cidx = self.next_col_idx()?;
-//         match &self.pgschema[cidx] {
-//             &Type::TEXT | &Type::VARCHAR | &Type::BPCHAR => {
-//                 let val = self.current_row.as_ref().unwrap().try_get(cidx)?;
-//                 Ok(val)
-//             }
-//             t => {
-//                 throw!(ConnectorAgentError::CannotParse(
-//                     type_name::<String>(),
-//                     t.name().into()
-//                 ))
-//             }
-//         }
-//     }
-// }
-
-// impl<'a> Produce<Option<String>> for PostgresSourceParser<'a> {
-//     fn produce(&mut self) -> Result<Option<String>> {
-//         let cidx = self.next_col_idx()?;
-//         match &self.pgschema[cidx] {
-//             &Type::TEXT | &Type::VARCHAR | &Type::BPCHAR => {
-//                 let val = self.current_row.as_ref().unwrap().try_get(cidx)?;
-//                 Ok(val)
-//             }
-//             t => {
-//                 throw!(ConnectorAgentError::CannotParse(
-//                     type_name::<String>(),
-//                     t.name().into()
-//                 ))
-//             }
-//         }
-//     }
-// }
-
-// impl<'a> Produce<DateTime<Utc>> for PostgresSourceParser<'a> {
-//     fn produce(&mut self) -> Result<DateTime<Utc>> {
-//         let cidx = self.next_col_idx()?;
-//         match &self.pgschema[cidx] {
-//             &Type::TIMESTAMPTZ => {
-//                 let val = self.current_row.as_ref().unwrap().try_get(cidx)?;
-//                 Ok(val)
-//             }
-//             &Type::TIMESTAMP => {
-//                 let val: NaiveDateTime = self.current_row.as_ref().unwrap().try_get(cidx)?;
-//                 let val = DateTime::from_utc(val, Utc);
-//                 Ok(val)
-//             }
-//             &Type::DATE => {
-//                 let val: NaiveDate = self.current_row.as_ref().unwrap().try_get(cidx)?;
-//                 let val = DateTime::from_utc(val.and_hms(0, 0, 0), Utc);
-//                 Ok(val)
-//             }
-//             t => {
-//                 throw!(ConnectorAgentError::CannotParse(
-//                     type_name::<DateTime<Utc>>(),
-//                     t.name().into()
-//                 ))
-//             }
-//         }
-//     }
-// }
-
-// impl<'a> Produce<Option<DateTime<Utc>>> for PostgresSourceParser<'a> {
-//     fn produce(&mut self) -> Result<Option<DateTime<Utc>>> {
-//         let cidx = self.next_col_idx()?;
-//         match &self.pgschema[cidx] {
-//             &Type::TIMESTAMPTZ => {
-//                 let val = self.current_row.as_ref().unwrap().try_get(cidx)?;
-//                 Ok(val)
-//             }
-//             &Type::TIMESTAMP => {
-//                 let val: Option<NaiveDateTime> =
-//                     self.current_row.as_ref().unwrap().try_get(cidx)?;
-//                 let val = val.map(|d| DateTime::from_utc(d, Utc));
-//                 Ok(val)
-//             }
-//             &Type::DATE => {
-//                 let val: Option<NaiveDate> = self.current_row.as_ref().unwrap().try_get(cidx)?;
-//                 let val = val.map(|d| DateTime::from_utc(d.and_hms(0, 0, 0), Utc));
-//                 Ok(val)
-//             }
-//             t => {
-//                 throw!(ConnectorAgentError::CannotParse(
-//                     type_name::<Option<DateTime<Utc>>>(),
-//                     t.name().into()
-//                 ))
-//             }
-//         }
-//     }
-// }
+        Ok(val)
+    }
+}

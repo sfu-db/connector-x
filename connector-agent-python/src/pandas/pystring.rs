@@ -1,5 +1,7 @@
+use bytes::Bytes;
 use numpy::{npyffi::NPY_TYPES, Element, PyArrayDescr};
 use pyo3::{Py, Python};
+use std::str::from_utf8_unchecked;
 
 #[derive(Clone)]
 #[repr(transparent)]
@@ -14,7 +16,7 @@ impl Element for PyString {
 }
 
 impl PyString {
-    pub fn new(py: Python, val: &str) -> Self {
-        PyString(pyo3::types::PyString::new(py, val).into())
+    pub fn new(py: Python, val: &Bytes) -> Self {
+        PyString(pyo3::types::PyString::new(py, unsafe { from_utf8_unchecked(val) }).into())
     }
 }

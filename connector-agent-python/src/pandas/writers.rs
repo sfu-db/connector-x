@@ -2,12 +2,13 @@ use super::pandas_columns::{
     check_dtype, BooleanBlock, DateTimeBlock, Float64Block, HasPandasColumn, Int64Block,
     PandasColumn, PandasColumnObject, StringColumn,
 };
-use super::{pystring::PyString, PandasDType};
+use super::pystring::PyString;
 use crate::errors::ConnectorAgentPythonError;
 use anyhow::anyhow;
+use bytes::Bytes;
+use connector_agent::writers::pandas::{PandasDType, PandasTypes};
 use connector_agent::{
-    ConnectorAgentError, Consume, DataOrder, DataType, PartitionWriter, Result, TypeAssoc,
-    TypeSystem, Writer,
+    ConnectorAgentError, Consume, DataOrder, PartitionWriter, Result, TypeAssoc, TypeSystem, Writer,
 };
 use fehler::{throw, throws};
 use itertools::Itertools;
@@ -25,12 +26,12 @@ use std::thread;
 pub struct PandasWriter<'py> {
     py: Python<'py>,
     nrows: Option<usize>,
-    schema: Option<Vec<DataType>>,
+    schema: Option<Vec<PandasTypes>>,
     buffers: Option<&'py PyList>,
     buffer_column_index: Option<Vec<Vec<usize>>>,
     column_buffer_index: Option<Vec<(usize, usize)>>,
     dataframe: Option<&'py PyAny>, // Using this field other than the return purpose should be careful: this refers to the same data as buffers
-    string_columns: HashMap<usize, Vec<Option<String>>>, // We cannot create python string objects in parallel, so instead, we write string to memory first and write it to python later.
+    string_columns: HashMap<usize, Vec<Option<Bytes>>>, // We cannot create python string objects in parallel, so instead, we write string to memory first and write it to python later.
 }
 
 impl<'a> PandasWriter<'a> {
@@ -71,7 +72,7 @@ impl<'a> PandasWriter<'a> {
             };
             for (i, s) in col_data.iter().enumerate() {
                 if let Some(s) = s {
-                    view[i] = PyString::new(self.py, s);
+                    view[i] = PyString::new(self.py, &s);
                 }
                 // We don't need to write if s is None: already set NA for that in the df.
             }
@@ -88,7 +89,7 @@ impl<'a> PandasWriter<'a> {
 
 impl<'a> Writer for PandasWriter<'a> {
     const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
-    type TypeSystem = DataType;
+    type TypeSystem = PandasTypes;
     type PartitionWriter<'b> = PandasPartitionWriter<'b>;
 
     #[throws(ConnectorAgentError)]
@@ -96,7 +97,7 @@ impl<'a> Writer for PandasWriter<'a> {
         &mut self,
         nrows: usize,
         names: &[S],
-        schema: &[DataType],
+        schema: &[PandasTypes],
         data_order: DataOrder,
     ) {
         if !matches!(data_order, DataOrder::RowMajor) {
@@ -131,15 +132,16 @@ impl<'a> Writer for PandasWriter<'a> {
         self.buffer_column_index = Some(buffer_column_index);
         self.column_buffer_index = Some(column_buffer_index);
         self.dataframe = Some(df);
+        debug!("Allocating string buffers");
         for (i, &dt) in schema.iter().enumerate() {
             match dt {
-                DataType::String(..) => {
-                    self.string_columns
-                        .insert(i, vec![Some(String::new()); nrows]);
+                PandasTypes::String(..) => {
+                    self.string_columns.insert(i, vec![None; nrows]);
                 }
                 _ => {}
             }
         }
+        debug!("String buffers allocated");
     }
 
     #[throws(ConnectorAgentError)]
@@ -170,7 +172,7 @@ impl<'a> Writer for PandasWriter<'a> {
         for (buf, cids) in buffers.iter().zip_eq(buffer_column_index) {
             for &cid in cids {
                 match schema[cid] {
-                    DataType::F64(_) => {
+                    PandasTypes::F64(_) => {
                         let fblock = Float64Block::extract(buf).map_err(|e| anyhow!(e))?;
                         let fcols = fblock.split();
                         for (&cid, fcol) in cids.iter().zip_eq(fcols) {
@@ -181,7 +183,7 @@ impl<'a> Writer for PandasWriter<'a> {
                                 .collect()
                         }
                     }
-                    DataType::I64(_) => {
+                    PandasTypes::I64(_) => {
                         let ublock = Int64Block::extract(buf).map_err(|e| anyhow!(e))?;
                         let ucols = ublock.split();
                         for (&cid, ucol) in cids.iter().zip_eq(ucols) {
@@ -192,7 +194,7 @@ impl<'a> Writer for PandasWriter<'a> {
                                 .collect()
                         }
                     }
-                    DataType::Bool(_) => {
+                    PandasTypes::Bool(_) => {
                         let bblock = BooleanBlock::extract(buf).map_err(|e| anyhow!(e))?;
                         let bcols = bblock.split();
                         for (&cid, bcol) in cids.iter().zip_eq(bcols) {
@@ -203,7 +205,7 @@ impl<'a> Writer for PandasWriter<'a> {
                                 .collect()
                         }
                     }
-                    DataType::String(_) => {
+                    PandasTypes::String(_) => {
                         assert_eq!(cids.len(), 1, "string buffer has multiple columns");
 
                         let scol = StringColumn::new(h.remove(&cids[0]).unwrap());
@@ -214,7 +216,7 @@ impl<'a> Writer for PandasWriter<'a> {
                             .map(|c| Box::new(c) as _)
                             .collect()
                     }
-                    DataType::DateTime(_) => {
+                    PandasTypes::DateTime(_) => {
                         let block = DateTimeBlock::extract(buf).map_err(|e| anyhow!(e))?;
                         let cols = block.split();
                         for (&cid, col) in cids.iter().zip_eq(cols) {
@@ -247,7 +249,7 @@ impl<'a> Writer for PandasWriter<'a> {
         par_writers.into_iter().rev().collect()
     }
 
-    fn schema(&self) -> &[DataType] {
+    fn schema(&self) -> &[PandasTypes] {
         self.schema.as_ref().unwrap()
     }
 }
@@ -255,7 +257,7 @@ impl<'a> Writer for PandasWriter<'a> {
 pub struct PandasPartitionWriter<'a> {
     nrows: usize,
     columns: Vec<Box<dyn PandasColumnObject + 'a>>,
-    schema: &'a [DataType],
+    schema: &'a [PandasTypes],
     seq: usize,
 }
 
@@ -263,7 +265,7 @@ impl<'a> PandasPartitionWriter<'a> {
     fn new(
         nrows: usize,
         columns: Vec<Box<dyn PandasColumnObject + 'a>>,
-        schema: &'a [DataType],
+        schema: &'a [PandasTypes],
     ) -> Self {
         Self {
             nrows,
@@ -281,7 +283,7 @@ impl<'a> PandasPartitionWriter<'a> {
 }
 
 impl<'a> PartitionWriter<'a> for PandasPartitionWriter<'a> {
-    type TypeSystem = DataType;
+    type TypeSystem = PandasTypes;
 
     fn nrows(&self) -> usize {
         self.nrows
@@ -294,7 +296,7 @@ impl<'a> PartitionWriter<'a> for PandasPartitionWriter<'a> {
 
 impl<'a, T> Consume<T> for PandasPartitionWriter<'a>
 where
-    T: HasPandasColumn + TypeAssoc<DataType> + std::fmt::Debug + 'static,
+    T: HasPandasColumn + TypeAssoc<PandasTypes> + std::fmt::Debug + 'static,
 {
     unsafe fn consume(&mut self, value: T) {
         let (row, col) = self.loc();
@@ -318,7 +320,7 @@ where
 fn create_dataframe<'a, S: AsRef<str>>(
     py: Python<'a>,
     names: &[S],
-    schema: &[DataType],
+    schema: &[PandasTypes],
     nrows: usize,
 ) -> (&'a PyAny, &'a PyList, &'a PyList) {
     let names: Vec<_> = names.into_iter().map(|s| s.as_ref()).collect();

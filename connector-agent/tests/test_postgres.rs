@@ -1,3 +1,4 @@
+use bytes::Bytes;
 use connector_agent::{
     data_sources::{
         postgres::{PostgresDTypes, PostgresSource},
@@ -7,7 +8,7 @@ use connector_agent::{
     DataType, Dispatcher,
 };
 use ndarray::array;
-use std::env;
+use std::{env, str::from_utf8};
 
 #[test]
 fn load_and_parse() {
@@ -36,7 +37,9 @@ fn load_and_parse() {
         rows.push(Row(
             parser.produce().unwrap(),
             parser.produce().unwrap(),
-            parser.produce().unwrap(),
+            Produce::<Option<Bytes>>::produce(&mut parser)
+                .unwrap()
+                .map(|s| from_utf8(&s).unwrap().to_string()),
             parser.produce().unwrap(),
             parser.produce().unwrap(),
         ));
