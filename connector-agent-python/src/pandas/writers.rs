@@ -19,7 +19,8 @@ use pyo3::{
 };
 use std::any::TypeId;
 use std::collections::HashMap;
-use std::mem::transmute;
+use std::mem::{self, transmute};
+use std::thread;
 
 pub struct PandasWriter<'py> {
     py: Python<'py>,
@@ -68,12 +69,15 @@ impl<'a> PandasWriter<'a> {
                     .unwrap()
                     .as_array_mut()
             };
-            for (i, s) in col_data.into_iter().enumerate() {
+            for (i, s) in col_data.iter().enumerate() {
                 if let Some(s) = s {
-                    view[i] = PyString::new(self.py, &s);
+                    view[i] = PyString::new(self.py, s);
                 }
                 // We don't need to write if s is None: already set NA for that in the df.
             }
+
+            // Drop the large string data asynchronously
+            thread::spawn(move || mem::drop(col_data));
         }
     }
 

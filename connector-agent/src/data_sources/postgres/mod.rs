@@ -189,16 +189,15 @@ impl<'a> PostgresSourceParser<'a> {
             match self.iter.next()? {
                 Some(row) => {
                     self.current_row = Some(row);
-                    self.current_col = 1;
-                    Ok(0)
+                    self.current_col = 0;
                 }
                 None => throw!(anyhow!("Postgres EOF")),
             }
-        } else {
-            let ret = Ok(self.current_col);
-            self.current_col += 1;
-            ret
         }
+
+        let ret = self.current_col;
+        self.current_col += 1;
+        Ok(ret)
     }
 }
 
