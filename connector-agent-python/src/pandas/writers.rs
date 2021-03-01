@@ -343,6 +343,7 @@ fn create_dataframe<'a, S: AsRef<str>>(
 
     let code = format!(
         r#"import pandas as pd
+import numpy as np
 df = pd.DataFrame(index=range({}), data={{{}}})
 blocks = [b.values for b in df._mgr.blocks]
 index = [(i, j) for i, j in zip(df._mgr.blknos, df._mgr.blklocs)]"#,

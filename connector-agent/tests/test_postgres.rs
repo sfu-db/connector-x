@@ -17,7 +17,7 @@ fn load_and_parse() {
     #[derive(Debug, PartialEq)]
     struct Row(i32, Option<i32>, Option<String>, Option<f64>, Option<bool>);
 
-    let mut source = PostgresSource::new(&dburl);
+    let mut source = PostgresSource::new(&dburl, 1);
     source.set_queries(&["select * from test_table"]);
     source.fetch_metadata().unwrap();
 
@@ -65,7 +65,7 @@ fn test_postgres() {
         "select * from test_table where test_int < 2",
         "select * from test_table where test_int >= 2",
     ];
-    let builder = PostgresSource::new(&dburl);
+    let builder = PostgresSource::new(&dburl, 2);
     let mut writer = MemoryWriter::new();
     let dispatcher = Dispatcher::<PostgresSource, PostgresDTypes, MemoryWriter, DataType>::new(
         builder,
