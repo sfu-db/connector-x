@@ -22,7 +22,7 @@ fn benchmark(c: &mut Criterion) {
     let queries = get_sqls(1);
     let queries: Vec<_> = queries.iter().map(AsRef::as_ref).collect();
 
-    c.bench_function("tpch 6000", |b| {
+    c.bench_function("tpch 6000000", |b| {
         b.iter(|| {
             Python::with_gil(|py| {
                 write_pandas(py, &conn, black_box(&queries), false).unwrap();

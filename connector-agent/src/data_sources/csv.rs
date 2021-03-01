@@ -62,18 +62,16 @@ impl Source for CSVSource {
     }
 
     fn partition(self) -> Result<Vec<Self::Partition>> {
-        let schema = self.schema;
         Ok(self
             .files
             .into_iter()
-            .map(|f| CSVSourcePartition::new(&f, &schema))
+            .map(|f| CSVSourcePartition::new(&f))
             .collect())
     }
 }
 
 pub struct CSVSourcePartition {
     fname: String,
-    schema: Vec<DataType>,
     records: Vec<csv::StringRecord>,
     counter: usize,
     nrows: usize,
@@ -81,10 +79,9 @@ pub struct CSVSourcePartition {
 }
 
 impl CSVSourcePartition {
-    pub fn new(fname: &str, schema: &[DataType]) -> Self {
+    pub fn new(fname: &str) -> Self {
         Self {
             fname: fname.into(),
-            schema: schema.to_vec(),
             records: Vec::new(),
             counter: 0,
             nrows: 0,
@@ -100,7 +97,7 @@ impl PartitionedSource for CSVSourcePartition {
     /// The parameter `query` is the path of the csv file
     fn prepare(&mut self) -> Result<()> {
         let mut reader = csv::ReaderBuilder::new()
-            .has_headers(false)
+            .has_headers(true)
             .from_reader(File::open(&self.fname).expect("open file"));
 
         self.records = reader.records().map(|v| v.expect("csv record")).collect();
@@ -121,7 +118,6 @@ impl PartitionedSource for CSVSourcePartition {
 
     fn parser(&mut self) -> Result<Self::Parser<'_>> {
         Ok(CSVSourceParser {
-            schema: self.schema.clone(),
             records: &mut self.records,
             counter: &mut self.counter,
             ncols: self.ncols,
@@ -130,7 +126,6 @@ impl PartitionedSource for CSVSourcePartition {
 }
 
 pub struct CSVSourceParser<'a> {
-    schema: Vec<DataType>,
     records: &'a mut [csv::StringRecord],
     counter: &'a mut usize,
     ncols: usize,
@@ -151,64 +146,67 @@ impl<'a> Parser<'a> for CSVSourceParser<'a> {
 
 impl<'a> Produce<i64> for CSVSourceParser<'a> {
     fn produce(&mut self) -> Result<i64> {
-        let dt = self.schema[*self.counter % self.ncols];
-
-        if matches!(dt, DataType::I64(false)) {
-            let v = self.next_val();
-            Ok(v.parse().unwrap_or_default())
-        } else {
-            throw!(ConnectorAgentError::CannotParse("i64", format!("{:?}", dt)))
-        }
+        let v = self.next_val();
+        v.parse()
+            .map_err(|_| ConnectorAgentError::CannotParse(type_name::<i64>(), v.into()))
     }
 }
 
 impl<'a> Produce<Option<i64>> for CSVSourceParser<'a> {
     fn produce(&mut self) -> Result<Option<i64>> {
-        let dt = self.schema[*self.counter % self.ncols];
-
-        if matches!(dt, DataType::I64(_)) {
-            let v = self.next_val();
-            if v.is_empty() {
-                return Ok(None);
-            }
-            Ok(Some(v.parse().unwrap_or_default()))
-        } else {
-            throw!(ConnectorAgentError::CannotParse("i64", format!("{:?}", dt)))
+        let v = self.next_val();
+        if v.is_empty() {
+            return Ok(None);
         }
+        let v = v
+            .parse()
+            .map_err(|_| ConnectorAgentError::CannotParse(type_name::<Option<i64>>(), v.into()))?;
+
+        Ok(Some(v))
     }
 }
 
 impl<'a> Produce<f64> for CSVSourceParser<'a> {
     fn produce(&mut self) -> Result<f64> {
-        let dt = self.schema[*self.counter % self.ncols];
-
-        if matches!(dt, DataType::F64(false)) {
-            let v = self.next_val();
-            Ok(v.parse().unwrap_or_default())
-        } else {
-            throw!(ConnectorAgentError::CannotParse("f64", format!("{:?}", dt)))
-        }
+        let v = self.next_val();
+        v.parse()
+            .map_err(|_| ConnectorAgentError::CannotParse(type_name::<f64>(), v.into()))
     }
 }
 
 impl<'a> Produce<Option<f64>> for CSVSourceParser<'a> {
     fn produce(&mut self) -> Result<Option<f64>> {
         let v = self.next_val();
-        Ok(v.parse().ok())
+        if v.is_empty() {
+            return Ok(None);
+        }
+        let v = v
+            .parse()
+            .map_err(|_| ConnectorAgentError::CannotParse(type_name::<Option<f64>>(), v.into()))?;
+
+        Ok(Some(v))
     }
 }
 
 impl<'a> Produce<bool> for CSVSourceParser<'a> {
     fn produce(&mut self) -> Result<bool> {
         let v = self.next_val();
-        Ok(v.parse().unwrap_or_default())
+        v.parse()
+            .map_err(|_| ConnectorAgentError::CannotParse(type_name::<bool>(), v.into()))
     }
 }
 
 impl<'a> Produce<Option<bool>> for CSVSourceParser<'a> {
     fn produce(&mut self) -> Result<Option<bool>> {
         let v = self.next_val();
-        Ok(v.parse().ok())
+        if v.is_empty() {
+            return Ok(None);
+        }
+        let v = v
+            .parse()
+            .map_err(|_| ConnectorAgentError::CannotParse(type_name::<Option<bool>>(), v.into()))?;
+
+        Ok(Some(v))
     }
 }
 
@@ -237,11 +235,12 @@ impl<'a> Produce<DateTime<Utc>> for CSVSourceParser<'a> {
 impl<'a> Produce<Option<DateTime<Utc>>> for CSVSourceParser<'a> {
     fn produce(&mut self) -> Result<Option<DateTime<Utc>>> {
         let v = self.next_val();
-        match v {
-            "" => Ok(None),
-            v => Ok(Some(v.parse().map_err(|_| {
-                ConnectorAgentError::CannotParse(type_name::<DateTime<Utc>>(), v.into())
-            })?)),
+        if v.is_empty() {
+            return Ok(None);
         }
+        let v = v.parse().map_err(|_| {
+            ConnectorAgentError::CannotParse(type_name::<DateTime<Utc>>(), v.into())
+        })?;
+        Ok(Some(v))
     }
 }

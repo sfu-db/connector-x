@@ -8,7 +8,7 @@ use connector_agent::{DataType, Dispatcher, PostgresSource};
 use fehler::{throw, throws};
 use log::debug;
 use pyo3::{PyAny, Python};
-use writers::PandasWriter;
+pub use writers::{PandasPartitionWriter, PandasWriter};
 
 #[throws(ConnectorAgentPythonError)]
 pub fn write_pandas<'a>(py: Python<'a>, conn: &str, queries: &[&str], checked: bool) -> &'a PyAny {

@@ -15,8 +15,8 @@ impl<'s, 'w, S, W, T1, T2> ParameterizedOn<(T1, T2)> for Transmit<S, W>
 where
     S: Parser<'s> + Produce<T1>,
     W: PartitionWriter<'w> + Consume<T2>,
-    T1: TypeAssoc<S::TypeSystem> + 'static,
-    T2: TypeAssoc<W::TypeSystem> + 'static,
+    T1: TypeAssoc<S::TypeSystem>,
+    T2: TypeAssoc<W::TypeSystem>,
     (S::TypeSystem, W::TypeSystem): TypeConversion<T1, T2>,
 {
     fn parameterize() -> Self::Function {
@@ -25,8 +25,8 @@ where
         where
             S: Parser<'s> + Produce<T1>,
             W: PartitionWriter<'w> + Consume<T2>,
-            T1: TypeAssoc<S::TypeSystem> + 'static,
-            T2: TypeAssoc<W::TypeSystem> + 'static,
+            T1: TypeAssoc<S::TypeSystem>,
+            T2: TypeAssoc<W::TypeSystem>,
             (S::TypeSystem, W::TypeSystem): TypeConversion<T1, T2>,
         {
             let val: T1 = source.read()?;
@@ -48,8 +48,8 @@ impl<'s, 'w, S, W, T1, T2> ParameterizedOn<(T1, T2)> for TransmitChecked<S, W>
 where
     S: Parser<'s> + Produce<T1>,
     W: PartitionWriter<'w> + Consume<T2>,
-    T1: TypeAssoc<S::TypeSystem> + 'static,
-    T2: TypeAssoc<W::TypeSystem> + 'static,
+    T1: TypeAssoc<S::TypeSystem> + 's,
+    T2: TypeAssoc<W::TypeSystem>,
     (S::TypeSystem, W::TypeSystem): TypeConversion<T1, T2>,
 {
     fn parameterize() -> Self::Function {
@@ -58,8 +58,8 @@ where
         where
             S: Parser<'s> + Produce<T1>,
             W: PartitionWriter<'w> + Consume<T2>,
-            T1: TypeAssoc<S::TypeSystem> + 'static,
-            T2: TypeAssoc<W::TypeSystem> + 'static,
+            T1: TypeAssoc<S::TypeSystem>,
+            T2: TypeAssoc<W::TypeSystem>,
             (S::TypeSystem, W::TypeSystem): TypeConversion<T1, T2>,
         {
             let val: T1 = source.read()?;
