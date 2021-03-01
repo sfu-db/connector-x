@@ -22,6 +22,7 @@ pub trait TypeAssoc<TS: TypeSystem> {
 /// `associate_typesystem!(DataType, [DataType::F64] => f64, [DataType::I64] => i64);`
 /// This means for the type system `DataType`, it's variant `DataType::F64(false)` is corresponding to the physical type f64 and
 /// `DataType::F64(true)` is corresponding to the physical type Option<f64>. Same for I64 and i64
+#[macro_export]
 macro_rules! associate_typesystem {
     ($ts:ty, $(/*multiple mapping*/$(/*multiple variant*/ [$($variant:tt)+])|+ => $native_type:ty,)+) => {
         associate_typesystem!(IMPL $ts, $(/*multiple mapping*/
@@ -135,10 +136,10 @@ where
 /// of both their enum variants and the physical types
 ///
 /// # Example Usage
-/// ```
+/// ```ignore
 /// associate_typesystems! {
 ///     (PostgresDTypes, DataType),
-///     ([PostgresDTypes::Float4], [DataType::F64]) => (f32, f64) impl all,
+///     ([PostgresDTypes::Float4], [DataType::F64]) => (f32, f64) conversion all,
 /// }
 /// ```
 /// This means for the type system `PostgresDTypes`, is can be converted to another type system DataType.
@@ -150,6 +151,7 @@ where
 /// conversion trait `TypeConversion<Option<f32>, Option<f64>>` for `(PostgresDTypes, DataType)` by using
 /// casting rule (v as f64). If this is set to `half`, you need to manually write an `TypeConversion` implementation for `(f32,f64)`,
 /// but the conversion rule for `(Option<f32>, Option<f64>)` is still generated. `conversion none` means generate nothing.
+#[macro_export]
 macro_rules! associate_typesystems {
     (($ts1:ty, $ts2:ty), $($(([$($v1:tt)+], [$($v2:tt)+]))|+ => ($t1:ty, $t2:ty) conversion $cast:ident,)+) => {
         associate_typesystems!(Realize ($ts1, $ts2), $(
@@ -190,7 +192,7 @@ macro_rules! associate_typesystems {
 
     (Conversion ($ts1:ty, $ts2:ty), $(($v1:pat, $v2:expr),)+) => {
         impl $crate::typesystem::TypeSystemConversion<$ts1> for $ts2 {
-            fn from(dt: $ts1) -> Result<Self> {
+            fn from(dt: $ts1) -> $crate::errors::Result<Self> {
                 match dt {
                     $(
                         $v1 => Ok($v2),

@@ -2,6 +2,7 @@ use pyo3::exceptions::PyRuntimeError;
 use pyo3::PyErr;
 use thiserror::Error;
 
+#[allow(unused)]
 pub type Result<T> = std::result::Result<T, ConnectorAgentPythonError>;
 
 /// Errors that can be raised from this library.

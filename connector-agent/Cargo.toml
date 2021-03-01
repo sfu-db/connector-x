@@ -9,6 +9,7 @@ version = "0.1.0"
 [dependencies]
 anyhow = "1"
 arrow = "3"
+bytes = "1"
 chrono = "0.4"
 csv = "1"
 env_logger = "0.8"

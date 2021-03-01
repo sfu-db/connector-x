@@ -1,8 +1,10 @@
 use connector_agent_python::pandas::write_pandas;
 use ndarray::Array1;
+use pprof::protos::Message;
 use pyo3::Python;
 use std::env;
 use std::fs::File;
+use std::io::Write;
 
 fn get_sqls(count: usize) -> Vec<String> {
     let mut sqls = vec![];
@@ -38,7 +40,7 @@ fn get_sqls(count: usize) -> Vec<String> {
 
 fn main() {
     let conn = env::var("POSTGRES_URL").unwrap();
-    let queries = get_sqls(1);
+    let queries = get_sqls(10);
     let queries: Vec<_> = queries.iter().map(AsRef::as_ref).collect();
 
     let guard = pprof::ProfilerGuard::new(100).unwrap();
@@ -50,5 +52,12 @@ fn main() {
     if let Ok(report) = guard.report().build() {
         let file = File::create("flamegraph.svg").unwrap();
         report.flamegraph(file).unwrap();
+
+        let mut file = File::create("profile.pb").unwrap();
+        let profile = report.pprof().unwrap();
+
+        let mut content = Vec::new();
+        profile.encode(&mut content).unwrap();
+        file.write_all(&content).unwrap();
     };
 }
