@@ -15,9 +15,10 @@ pub trait Writer: Sized {
     /// Construct the `Writer`.
     /// This allocates the memory based on the types of each columns
     /// and the number of rows.
-    fn allocate(
+    fn allocate<S: AsRef<str>>(
         &mut self,
         nrow: usize,
+        names: &[S],
         schema: &[Self::TypeSystem],
         data_order: DataOrder,
     ) -> Result<()>;
@@ -36,21 +37,21 @@ pub trait PartitionWriter<'a>: Send {
 
     /// Write a value of type T to the location (row, col). The value is unchecked against the schema.
     /// This function is unsafe due to unchecked.
-    unsafe fn write<T: 'static>(&mut self, row: usize, col: usize, value: T)
+    unsafe fn write<T>(&mut self, value: T)
     where
         T: TypeAssoc<Self::TypeSystem>,
         Self: Consume<T>,
     {
-        self.consume(row, col, value)
+        self.consume(value)
     }
     /// Write a value of type T to the location (row, col), checked version. If T mismatch with the
     /// schema, `ConnectorAgentError::UnexpectedType` will return.
-    fn write_checked<T: 'static>(&mut self, row: usize, col: usize, value: T) -> Result<()>
+    fn write_checked<T>(&mut self, value: T) -> Result<()>
     where
         T: TypeAssoc<Self::TypeSystem>,
         Self: Consume<T>,
     {
-        self.consume_checked(row, col, value)
+        self.consume_checked(value)
     }
     /// Number of rows this `PartitionWriter` controls.
     fn nrows(&self) -> usize;
@@ -60,6 +61,6 @@ pub trait PartitionWriter<'a>: Send {
 
 /// A type implemented `Consume<T>` means that it can consume a value `T` by adding it to it's own buffer.
 pub trait Consume<T> {
-    unsafe fn consume(&mut self, row: usize, col: usize, value: T);
-    fn consume_checked(&mut self, row: usize, col: usize, value: T) -> Result<()>;
+    unsafe fn consume(&mut self, value: T);
+    fn consume_checked(&mut self, value: T) -> Result<()>;
 }

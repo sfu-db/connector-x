@@ -1,23 +1,32 @@
-use super::{DataSource, Produce, SourceBuilder};
+use super::{Parser, PartitionedSource, Produce, Source};
 use crate::data_order::DataOrder;
 use crate::errors::{ConnectorAgentError, Result};
 use crate::types::DataType;
-use chrono::{Date, DateTime, NaiveDate, Utc};
+use chrono::{DateTime, Utc};
 use fehler::{throw, throws};
 use std::any::type_name;
 use std::fs::File;
 
-pub struct CSVSourceBuilder {}
+pub struct CSVSource {
+    schema: Vec<DataType>,
+    files: Vec<String>,
+    names: Vec<String>,
+}
 
-impl CSVSourceBuilder {
-    pub fn new() -> Self {
-        CSVSourceBuilder {}
+impl CSVSource {
+    pub fn new(schema: &[DataType]) -> Self {
+        CSVSource {
+            schema: schema.to_vec(),
+            files: vec![],
+            names: vec![],
+        }
     }
 }
 
-impl SourceBuilder for CSVSourceBuilder {
+impl Source for CSVSource {
     const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
-    type DataSource = CSVSource;
+    type Partition = CSVSourcePartition;
+    type TypeSystem = DataType;
 
     #[throws(ConnectorAgentError)]
     fn set_data_order(&mut self, data_order: DataOrder) {
@@ -26,21 +35,53 @@ impl SourceBuilder for CSVSourceBuilder {
         }
     }
 
-    fn build(&mut self) -> Self::DataSource {
-        CSVSource::new()
+    fn set_queries<Q: AsRef<str>>(&mut self, queries: &[Q]) {
+        self.files = queries
+            .into_iter()
+            .map(|fname| fname.as_ref().to_string())
+            .collect();
+    }
+
+    fn fetch_metadata(&mut self) -> Result<()> {
+        let mut reader = csv::ReaderBuilder::new()
+            .has_headers(true)
+            .from_reader(File::open(&self.files[0]).expect("open file"));
+        let header = reader.headers()?;
+        assert_eq!(header.len(), self.schema.len());
+        self.names = header.iter().map(|s| s.to_string()).collect();
+
+        Ok(())
+    }
+
+    fn names(&self) -> Vec<String> {
+        self.names.clone()
+    }
+
+    fn schema(&self) -> Vec<Self::TypeSystem> {
+        self.schema.clone()
+    }
+
+    fn partition(self) -> Result<Vec<Self::Partition>> {
+        Ok(self
+            .files
+            .into_iter()
+            .map(|f| CSVSourcePartition::new(&f))
+            .collect())
     }
 }
 
-pub struct CSVSource {
+pub struct CSVSourcePartition {
+    fname: String,
     records: Vec<csv::StringRecord>,
     counter: usize,
-    pub nrows: usize,
-    pub ncols: usize,
+    nrows: usize,
+    ncols: usize,
 }
 
-impl CSVSource {
-    pub fn new() -> Self {
+impl CSVSourcePartition {
+    pub fn new(fname: &str) -> Self {
         Self {
+            fname: fname.into(),
             records: Vec::new(),
             counter: 0,
             nrows: 0,
@@ -49,14 +90,15 @@ impl CSVSource {
     }
 }
 
-impl DataSource for CSVSource {
+impl PartitionedSource for CSVSourcePartition {
     type TypeSystem = DataType;
+    type Parser<'a> = CSVSourceParser<'a>;
 
     /// The parameter `query` is the path of the csv file
-    fn prepare(&mut self, query: &str) -> Result<()> {
+    fn prepare(&mut self) -> Result<()> {
         let mut reader = csv::ReaderBuilder::new()
-            .has_headers(false)
-            .from_reader(File::open(query).expect("open file"));
+            .has_headers(true)
+            .from_reader(File::open(&self.fname).expect("open file"));
 
         self.records = reader.records().map(|v| v.expect("csv record")).collect();
         self.nrows = self.records.len();
@@ -74,136 +116,131 @@ impl DataSource for CSVSource {
         self.ncols
     }
 
-    fn infer_schema(&mut self) -> Result<Vec<DataType>> {
-        unimplemented!("infer schema using self.records!");
+    fn parser(&mut self) -> Result<Self::Parser<'_>> {
+        Ok(CSVSourceParser {
+            records: &mut self.records,
+            counter: &mut self.counter,
+            ncols: self.ncols,
+        })
     }
 }
 
-impl Produce<u64> for CSVSource {
-    fn produce(&mut self) -> Result<u64> {
-        let v: &str = self.records[self.counter / self.ncols][self.counter % self.ncols].as_ref();
-        self.counter += 1;
-        Ok(v.parse().unwrap_or_default())
+pub struct CSVSourceParser<'a> {
+    records: &'a mut [csv::StringRecord],
+    counter: &'a mut usize,
+    ncols: usize,
+}
+
+impl<'a> CSVSourceParser<'a> {
+    fn next_val(&mut self) -> &str {
+        let v: &str = self.records[*self.counter / self.ncols][*self.counter % self.ncols].as_ref();
+        *self.counter += 1;
+
+        v
     }
 }
 
-impl Produce<Option<u64>> for CSVSource {
-    fn produce(&mut self) -> Result<Option<u64>> {
-        let v: &str = self.records[self.counter / self.ncols][self.counter % self.ncols].as_ref();
-        self.counter += 1;
-        if v.is_empty() {
-            return Ok(None);
-        }
-        Ok(Some(v.parse().unwrap_or_default()))
-    }
+impl<'a> Parser<'a> for CSVSourceParser<'a> {
+    type TypeSystem = DataType;
 }
 
-impl Produce<i64> for CSVSource {
+impl<'a> Produce<i64> for CSVSourceParser<'a> {
     fn produce(&mut self) -> Result<i64> {
-        let v: &str = self.records[self.counter / self.ncols][self.counter % self.ncols].as_ref();
-        self.counter += 1;
-        Ok(v.parse().unwrap_or_default())
+        let v = self.next_val();
+        v.parse()
+            .map_err(|_| ConnectorAgentError::CannotParse(type_name::<i64>(), v.into()))
     }
 }
 
-impl Produce<Option<i64>> for CSVSource {
+impl<'a> Produce<Option<i64>> for CSVSourceParser<'a> {
     fn produce(&mut self) -> Result<Option<i64>> {
-        let v: &str = self.records[self.counter / self.ncols][self.counter % self.ncols].as_ref();
-        self.counter += 1;
+        let v = self.next_val();
         if v.is_empty() {
             return Ok(None);
         }
-        Ok(Some(v.parse().unwrap_or_default()))
+        let v = v
+            .parse()
+            .map_err(|_| ConnectorAgentError::CannotParse(type_name::<Option<i64>>(), v.into()))?;
+
+        Ok(Some(v))
     }
 }
 
-impl Produce<f64> for CSVSource {
+impl<'a> Produce<f64> for CSVSourceParser<'a> {
     fn produce(&mut self) -> Result<f64> {
-        let v: &str = self.records[self.counter / self.ncols][self.counter % self.ncols].as_ref();
-        self.counter += 1;
-        Ok(v.parse().unwrap_or_default())
+        let v = self.next_val();
+        v.parse()
+            .map_err(|_| ConnectorAgentError::CannotParse(type_name::<f64>(), v.into()))
     }
 }
 
-impl Produce<Option<f64>> for CSVSource {
+impl<'a> Produce<Option<f64>> for CSVSourceParser<'a> {
     fn produce(&mut self) -> Result<Option<f64>> {
-        let v: &str = self.records[self.counter / self.ncols][self.counter % self.ncols].as_ref();
-        self.counter += 1;
-        Ok(v.parse().ok())
+        let v = self.next_val();
+        if v.is_empty() {
+            return Ok(None);
+        }
+        let v = v
+            .parse()
+            .map_err(|_| ConnectorAgentError::CannotParse(type_name::<Option<f64>>(), v.into()))?;
+
+        Ok(Some(v))
     }
 }
 
-impl Produce<bool> for CSVSource {
+impl<'a> Produce<bool> for CSVSourceParser<'a> {
     fn produce(&mut self) -> Result<bool> {
-        let v: &str = self.records[self.counter / self.ncols][self.counter % self.ncols].as_ref();
-        self.counter += 1;
-        Ok(v.parse().unwrap_or_default())
+        let v = self.next_val();
+        v.parse()
+            .map_err(|_| ConnectorAgentError::CannotParse(type_name::<bool>(), v.into()))
     }
 }
 
-impl Produce<Option<bool>> for CSVSource {
+impl<'a> Produce<Option<bool>> for CSVSourceParser<'a> {
     fn produce(&mut self) -> Result<Option<bool>> {
-        let v: &str = self.records[self.counter / self.ncols][self.counter % self.ncols].as_ref();
-        self.counter += 1;
-        Ok(v.parse().ok())
+        let v = self.next_val();
+        if v.is_empty() {
+            return Ok(None);
+        }
+        let v = v
+            .parse()
+            .map_err(|_| ConnectorAgentError::CannotParse(type_name::<Option<bool>>(), v.into()))?;
+
+        Ok(Some(v))
     }
 }
 
-impl Produce<String> for CSVSource {
+impl<'a> Produce<String> for CSVSourceParser<'a> {
     fn produce(&mut self) -> Result<String> {
-        let v: &str = self.records[self.counter / self.ncols][self.counter % self.ncols].as_ref();
-        self.counter += 1;
+        let v = self.next_val();
         Ok(String::from(v))
     }
 }
 
-impl Produce<Option<String>> for CSVSource {
+impl<'a> Produce<Option<String>> for CSVSourceParser<'a> {
     fn produce(&mut self) -> Result<Option<String>> {
-        let v: &str = &self.records[self.counter / self.ncols][self.counter % self.ncols];
-        self.counter += 1;
+        let v = self.next_val();
         Ok(Some(String::from(v)))
     }
 }
 
-impl Produce<DateTime<Utc>> for CSVSource {
+impl<'a> Produce<DateTime<Utc>> for CSVSourceParser<'a> {
     fn produce(&mut self) -> Result<DateTime<Utc>> {
-        let v = &self.records[self.counter / self.ncols][self.counter % self.ncols];
+        let v = self.next_val();
         v.parse()
             .map_err(|_| ConnectorAgentError::CannotParse(type_name::<DateTime<Utc>>(), v.into()))
     }
 }
 
-impl Produce<Option<DateTime<Utc>>> for CSVSource {
+impl<'a> Produce<Option<DateTime<Utc>>> for CSVSourceParser<'a> {
     fn produce(&mut self) -> Result<Option<DateTime<Utc>>> {
-        match &self.records[self.counter / self.ncols][self.counter % self.ncols] {
-            "" => Ok(None),
-            v => Ok(Some(v.parse().map_err(|_| {
-                ConnectorAgentError::CannotParse(type_name::<DateTime<Utc>>(), v.into())
-            })?)),
+        let v = self.next_val();
+        if v.is_empty() {
+            return Ok(None);
         }
-    }
-}
-
-impl Produce<Date<Utc>> for CSVSource {
-    fn produce(&mut self) -> Result<Date<Utc>> {
-        let v = &self.records[self.counter / self.ncols][self.counter % self.ncols];
-        NaiveDate::parse_from_str(v, "%Y-%m-%d")
-            .map(|nd| Date::<Utc>::from_utc(nd, Utc))
-            .map_err(|_| ConnectorAgentError::CannotParse(type_name::<DateTime<Utc>>(), v.into()))
-    }
-}
-
-impl Produce<Option<Date<Utc>>> for CSVSource {
-    fn produce(&mut self) -> Result<Option<Date<Utc>>> {
-        match &self.records[self.counter / self.ncols][self.counter % self.ncols] {
-            "" => Ok(None),
-            v => Ok(Some(
-                NaiveDate::parse_from_str(v, "%Y-%m-%d")
-                    .map(|nd| Date::<Utc>::from_utc(nd, Utc))
-                    .map_err(|_| {
-                        ConnectorAgentError::CannotParse(type_name::<DateTime<Utc>>(), v.into())
-                    })?,
-            )),
-        }
+        let v = v.parse().map_err(|_| {
+            ConnectorAgentError::CannotParse(type_name::<DateTime<Utc>>(), v.into())
+        })?;
+        Ok(Some(v))
     }
 }

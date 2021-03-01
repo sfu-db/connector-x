@@ -1,9 +1,11 @@
 mod boolean;
+#[allow(unused)]
 mod date;
 mod datetime;
 mod float64;
 mod int64;
 mod string;
+#[allow(unused)]
 mod uint64;
 // TODO: use macro for integers
 

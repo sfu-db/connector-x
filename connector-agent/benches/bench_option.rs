@@ -2,7 +2,7 @@ use anyhow::anyhow;
 use chrono::{Date, DateTime, Utc};
 use connector_agent::writers::arrow::ArrowWriter;
 use connector_agent::{
-    data_sources::{DataSource, Produce, SourceBuilder},
+    data_sources::{PartitionedSource, Produce, Source},
     ConnectorAgentError, DataOrder, DataType, Dispatcher, Result,
 };
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
@@ -178,7 +178,7 @@ impl U64SourceBuilder {
     }
 }
 
-impl SourceBuilder for U64SourceBuilder {
+impl Source for U64SourceBuilder {
     const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
     type DataSource = U64TestSource;
 
@@ -189,7 +189,7 @@ impl SourceBuilder for U64SourceBuilder {
         }
     }
 
-    fn build(&mut self) -> Self::DataSource {
+    fn build(&mut self) -> Self::Partition {
         let ret = U64TestSource::new(self.fake_values.swap_remove(0), self.ncols);
         ret
     }
@@ -211,7 +211,7 @@ impl U64TestSource {
     }
 }
 
-impl DataSource for U64TestSource {
+impl PartitionedSource for U64TestSource {
     type TypeSystem = DataType;
     fn prepare(&mut self, _: &str) -> Result<()> {
         Ok(())
@@ -325,7 +325,7 @@ impl OptU64SourceBuilder {
     }
 }
 
-impl SourceBuilder for OptU64SourceBuilder {
+impl Source for OptU64SourceBuilder {
     const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
     type DataSource = OptU64TestSource;
 
@@ -336,7 +336,7 @@ impl SourceBuilder for OptU64SourceBuilder {
         }
     }
 
-    fn build(&mut self) -> Self::DataSource {
+    fn build(&mut self) -> Self::Partition {
         let ret = OptU64TestSource::new(self.fake_values.swap_remove(0), self.ncols);
         ret
     }
@@ -358,7 +358,7 @@ impl OptU64TestSource {
     }
 }
 
-impl DataSource for OptU64TestSource {
+impl PartitionedSource for OptU64TestSource {
     type TypeSystem = DataType;
     fn prepare(&mut self, _: &str) -> Result<()> {
         Ok(())

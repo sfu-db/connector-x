@@ -1,6 +1,6 @@
 use super::pandas_columns::{
-    check_dtype, BooleanBlock, DateBlock, DateTimeBlock, Float64Block, HasPandasColumn, Int64Block,
-    PandasColumn, PandasColumnObject, StringColumn, UInt64Block,
+    check_dtype, BooleanBlock, DateTimeBlock, Float64Block, HasPandasColumn, Int64Block,
+    PandasColumn, PandasColumnObject, StringColumn,
 };
 use super::{pystring::PyString, PandasDType};
 use crate::errors::ConnectorAgentPythonError;
@@ -11,6 +11,7 @@ use connector_agent::{
 };
 use fehler::{throw, throws};
 use itertools::Itertools;
+use log::debug;
 use numpy::PyArray1;
 use pyo3::{
     types::{PyDict, PyList},
@@ -18,7 +19,8 @@ use pyo3::{
 };
 use std::any::TypeId;
 use std::collections::HashMap;
-use std::mem::transmute;
+use std::mem::{self, transmute};
+use std::thread;
 
 pub struct PandasWriter<'py> {
     py: Python<'py>,
@@ -67,12 +69,15 @@ impl<'a> PandasWriter<'a> {
                     .unwrap()
                     .as_array_mut()
             };
-            for (i, s) in col_data.into_iter().enumerate() {
+            for (i, s) in col_data.iter().enumerate() {
                 if let Some(s) = s {
-                    view[i] = PyString::new(self.py, &s);
+                    view[i] = PyString::new(self.py, s);
                 }
                 // We don't need to write if s is None: already set NA for that in the df.
             }
+
+            // Drop the large string data asynchronously
+            thread::spawn(move || mem::drop(col_data));
         }
     }
 
@@ -87,7 +92,13 @@ impl<'a> Writer for PandasWriter<'a> {
     type PartitionWriter<'b> = PandasPartitionWriter<'b>;
 
     #[throws(ConnectorAgentError)]
-    fn allocate(&mut self, nrows: usize, schema: &[DataType], data_order: DataOrder) {
+    fn allocate<S: AsRef<str>>(
+        &mut self,
+        nrows: usize,
+        names: &[S],
+        schema: &[DataType],
+        data_order: DataOrder,
+    ) {
         if !matches!(data_order, DataOrder::RowMajor) {
             throw!(ConnectorAgentError::UnsupportedDataOrder(data_order))
         }
@@ -96,7 +107,8 @@ impl<'a> Writer for PandasWriter<'a> {
             throw!(ConnectorAgentError::DuplicatedAllocation);
         }
 
-        let (df, buffers, index) = create_dataframe(self.py, schema, nrows);
+        let (df, buffers, index) = create_dataframe(self.py, names, schema, nrows);
+        debug!("DataFrame created");
 
         // get index for each column: (index of block, index of column within the block)
         let column_buffer_index: Vec<(usize, usize)> =
@@ -169,17 +181,6 @@ impl<'a> Writer for PandasWriter<'a> {
                                 .collect()
                         }
                     }
-                    DataType::U64(_) => {
-                        let ublock = UInt64Block::extract(buf).map_err(|e| anyhow!(e))?;
-                        let ucols = ublock.split();
-                        for (&cid, ucol) in cids.iter().zip_eq(ucols) {
-                            partitioned_columns[cid] = ucol
-                                .partition(&counts)
-                                .into_iter()
-                                .map(|c| Box::new(c) as _)
-                                .collect()
-                        }
-                    }
                     DataType::I64(_) => {
                         let ublock = Int64Block::extract(buf).map_err(|e| anyhow!(e))?;
                         let ucols = ublock.split();
@@ -224,17 +225,6 @@ impl<'a> Writer for PandasWriter<'a> {
                                 .collect()
                         }
                     }
-                    DataType::Date(_) => {
-                        let block = DateBlock::extract(buf).map_err(|e| anyhow!(e))?;
-                        let cols = block.split();
-                        for (&cid, col) in cids.iter().zip_eq(cols) {
-                            partitioned_columns[cid] = col
-                                .partition(&counts)
-                                .into_iter()
-                                .map(|c| Box::new(c) as _)
-                                .collect()
-                        }
-                    }
                 }
             }
         }
@@ -266,6 +256,7 @@ pub struct PandasPartitionWriter<'a> {
     nrows: usize,
     columns: Vec<Box<dyn PandasColumnObject + 'a>>,
     schema: &'a [DataType],
+    seq: usize,
 }
 
 impl<'a> PandasPartitionWriter<'a> {
@@ -278,7 +269,14 @@ impl<'a> PandasPartitionWriter<'a> {
             nrows,
             columns,
             schema,
+            seq: 0,
         }
+    }
+
+    fn loc(&mut self) -> (usize, usize) {
+        let (row, col) = (self.seq / self.ncols(), self.seq % self.ncols());
+        self.seq += 1;
+        (row, col)
     }
 }
 
@@ -298,34 +296,44 @@ impl<'a, T> Consume<T> for PandasPartitionWriter<'a>
 where
     T: HasPandasColumn + TypeAssoc<DataType> + std::fmt::Debug + 'static,
 {
-    unsafe fn consume(&mut self, row: usize, col: usize, value: T) {
+    unsafe fn consume(&mut self, value: T) {
+        let (row, col) = self.loc();
         let (column, _): (&mut T::PandasColumn<'a>, *const ()) = transmute(&*self.columns[col]);
         column.write(row, value);
     }
 
-    fn consume_checked(&mut self, row: usize, col: usize, value: T) -> Result<()> {
+    fn consume_checked(&mut self, value: T) -> Result<()> {
+        let col = self.seq % self.ncols();
+
         self.schema[col].check::<T>()?;
         assert!(self.columns[col].typecheck(TypeId::of::<T>()));
-        unsafe { self.consume(row, col, value) };
+
+        unsafe { self.consume(value) };
 
         Ok(())
     }
 }
 
 /// call python code to construct the dataframe and expose its buffers
-fn create_dataframe<'a>(
+fn create_dataframe<'a, S: AsRef<str>>(
     py: Python<'a>,
+    names: &[S],
     schema: &[DataType],
     nrows: usize,
 ) -> (&'a PyAny, &'a PyList, &'a PyList) {
+    let names: Vec<_> = names.into_iter().map(|s| s.as_ref()).collect();
+    debug!("names: {:?}", names);
+    debug!("schema: {:?}", schema);
+
     let series: Vec<String> = schema
         .iter()
-        .enumerate()
-        .map(|(i, &dt)| {
+        .zip_eq(names)
+        .map(|(&dt, name)| {
             format!(
-                "'{}': pd.Series(index=range({}), dtype='{}')",
-                i,
+                "'{}': pd.Series(data=np.empty([{}], dtype='{}'), dtype='{}')",
+                name,
                 nrows,
+                dt.npdtype(),
                 dt.dtype()
             )
         })
@@ -339,12 +347,14 @@ fn create_dataframe<'a>(
 
     let code = format!(
         r#"import pandas as pd
+import numpy as np
 df = pd.DataFrame(index=range({}), data={{{}}})
 blocks = [b.values for b in df._mgr.blocks]
 index = [(i, j) for i, j in zip(df._mgr.blknos, df._mgr.blklocs)]"#,
         nrows,
         series.join(",")
     );
+    debug!("create dataframe code: {}", code);
 
     // run python code
     let locals = PyDict::new(py);

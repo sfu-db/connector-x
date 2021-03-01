@@ -4,7 +4,7 @@ use crate::data_order::DataOrder;
 use crate::errors::{ConnectorAgentError, Result};
 use crate::types::DataType;
 use crate::typesystem::{ParameterizedFunc, ParameterizedOn, Realize, TypeAssoc, TypeSystem};
-use chrono::{Date, DateTime, NaiveDate, NaiveDateTime, Utc};
+use chrono::{DateTime, NaiveDateTime, Utc};
 use fehler::{throw, throws};
 use itertools::Itertools;
 use ndarray::{Array2, ArrayView1, ArrayView2, Axis, Ix2};
@@ -35,7 +35,13 @@ impl Writer for MemoryWriter {
     type PartitionWriter<'a> = MemoryPartitionWriter<'a>;
 
     #[throws(ConnectorAgentError)]
-    fn allocate(&mut self, nrows: usize, schema: &[DataType], data_order: DataOrder) {
+    fn allocate<S: AsRef<str>>(
+        &mut self,
+        nrows: usize,
+        _names: &[S],
+        schema: &[DataType],
+        data_order: DataOrder,
+    ) {
         if !matches!(data_order, DataOrder::RowMajor) {
             throw!(ConnectorAgentError::UnsupportedDataOrder(data_order))
         }
@@ -56,7 +62,7 @@ impl Writer for MemoryWriter {
         {
             block_indices.insert(dt, bid);
             let count = grp.count();
-            let buffer = Realize::<FArray2>::realize(dt)(nrows, count);
+            let buffer = Realize::<FArray2>::realize(dt)?(nrows, count);
             self.buffers.push(buffer);
         }
 
@@ -130,9 +136,10 @@ impl MemoryWriter {
 /// The `PartitionedWriter` of `MemoryWriter`.
 pub struct MemoryPartitionWriter<'a> {
     nrows: usize,
-    buffers: Vec<AnyArrayViewMut<'a, Ix2>>,
     schema: Vec<DataType>,
+    buffers: Vec<AnyArrayViewMut<'a, Ix2>>,
     column_buffer_index: Vec<(usize, usize)>,
+    current: usize,
 }
 
 impl<'a> MemoryPartitionWriter<'a> {
@@ -147,7 +154,14 @@ impl<'a> MemoryPartitionWriter<'a> {
             buffers,
             schema,
             column_buffer_index,
+            current: 0,
         }
+    }
+
+    fn loc(&mut self) -> (usize, usize) {
+        let (row, col) = (self.current / self.ncols(), self.current % self.ncols());
+        self.current += 1;
+        (row, col)
     }
 }
 
@@ -167,13 +181,15 @@ impl<'a, T> Consume<T> for MemoryPartitionWriter<'a>
 where
     T: TypeAssoc<<Self as PartitionWriter<'a>>::TypeSystem> + 'static,
 {
-    unsafe fn consume(&mut self, row: usize, col: usize, value: T) {
+    unsafe fn consume(&mut self, value: T) {
+        let (row, col) = self.loc();
         let &(bid, col) = &self.column_buffer_index[col];
         let mut_view = self.buffers[bid].udowncast::<T>();
         *mut_view.get_mut((row, col)).unwrap() = value;
     }
 
-    fn consume_checked(&mut self, row: usize, col: usize, value: T) -> Result<()> {
+    fn consume_checked(&mut self, value: T) -> Result<()> {
+        let (row, col) = self.loc();
         self.schema[col].check::<T>()?;
         let &(bid, col) = &self.column_buffer_index[col];
 
@@ -181,7 +197,7 @@ where
             self.buffers[bid]
                 .downcast::<T>()
                 .ok_or(ConnectorAgentError::UnexpectedType(
-                    self.schema[col],
+                    format!("{:?}", self.schema[col]),
                     type_name::<T>(),
                 ))?;
         *mut_view
@@ -210,12 +226,12 @@ macro_rules! FArray2Parameterize {
 }
 
 FArray2Parameterize!(
-    u64,
+    i32,
     i64,
     f64,
     String,
     bool,
-    Option<u64>,
+    Option<i32>,
     Option<i64>,
     Option<f64>,
     Option<String>,
@@ -243,25 +259,6 @@ impl ParameterizedOn<Option<DateTime<Utc>>> for FArray2 {
     fn parameterize() -> Self::Function {
         fn imp(nrows: usize, ncols: usize) -> AnyArray<Ix2> {
             Array2::<Option<DateTime<Utc>>>::from_elem((nrows, ncols), None).into()
-        }
-        imp
-    }
-}
-
-impl ParameterizedOn<Date<Utc>> for FArray2 {
-    fn parameterize() -> Self::Function {
-        fn imp(nrows: usize, ncols: usize) -> AnyArray<Ix2> {
-            let t = Date::<Utc>::from_utc(NaiveDate::from_yo(1970, 0), Utc);
-            Array2::from_elem((nrows, ncols), t).into()
-        }
-        imp
-    }
-}
-
-impl ParameterizedOn<Option<Date<Utc>>> for FArray2 {
-    fn parameterize() -> Self::Function {
-        fn imp(nrows: usize, ncols: usize) -> AnyArray<Ix2> {
-            Array2::<Option<Date<Utc>>>::from_elem((nrows, ncols), None).into()
         }
         imp
     }

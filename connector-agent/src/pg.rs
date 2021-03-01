@@ -1,8 +1,8 @@
+use anyhow::Error;
 use arrow::csv::reader::ReaderBuilder;
 use arrow::datatypes::{Schema, SchemaRef};
 use arrow::ffi::{FFI_ArrowArray, FFI_ArrowSchema};
 use arrow::record_batch::RecordBatch;
-use failure::Error;
 use fehler::throws;
 use futures::stream::{FuturesOrdered, StreamExt};
 use log::debug;

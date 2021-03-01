@@ -1,34 +1,8 @@
-#![feature(custom_test_frameworks)]
-#![test_runner(criterion::runner)]
-
 use connector_agent_python::pandas::write_pandas;
-use criterion::{black_box, Criterion};
-use criterion_macro::criterion;
 use ndarray::Array1;
-use pprof::criterion::{Output, PProfProfiler};
 use pyo3::Python;
 use std::env;
-
-fn config() -> Criterion {
-    Criterion::default()
-        .measurement_time(std::time::Duration::from_secs(120))
-        .sample_size(30)
-}
-
-#[criterion(config())]
-fn benchmark(c: &mut Criterion) {
-    let conn = env::var("POSTGRES_URL").unwrap();
-    let queries = get_sqls(1);
-    let queries: Vec<_> = queries.iter().map(AsRef::as_ref).collect();
-
-    c.bench_function("tpch 6000000", |b| {
-        b.iter(|| {
-            Python::with_gil(|py| {
-                write_pandas(py, &conn, black_box(&queries), false).unwrap();
-            })
-        })
-    });
-}
+use std::fs::File;
 
 fn get_sqls(count: usize) -> Vec<String> {
     let mut sqls = vec![];
@@ -60,4 +34,21 @@ fn get_sqls(count: usize) -> Vec<String> {
     }
 
     sqls
+}
+
+fn main() {
+    let conn = env::var("POSTGRES_URL").unwrap();
+    let queries = get_sqls(1);
+    let queries: Vec<_> = queries.iter().map(AsRef::as_ref).collect();
+
+    let guard = pprof::ProfilerGuard::new(100).unwrap();
+
+    Python::with_gil(|py| {
+        write_pandas(py, &conn, &queries, false).unwrap();
+    });
+
+    if let Ok(report) = guard.report().build() {
+        let file = File::create("flamegraph.svg").unwrap();
+        report.flamegraph(file).unwrap();
+    };
 }

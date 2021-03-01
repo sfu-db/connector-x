@@ -1,68 +1,55 @@
-use connector_agent::data_sources::{
-    postgres::{PostgresDataSource, PostgresDataSourceBuilder},
-    DataSource, Produce,
+use connector_agent::{
+    data_sources::{
+        postgres::{PostgresDTypes, PostgresSource},
+        PartitionedSource, Produce, Source,
+    },
+    writers::memory::MemoryWriter,
+    DataType, Dispatcher,
 };
-use connector_agent::writers::memory::MemoryWriter;
-use connector_agent::SourceBuilder;
-use connector_agent::{DataType, Dispatcher};
 use ndarray::array;
 use std::env;
 
 #[test]
-#[should_panic]
-fn wrong_connection() {
-    let mut source_builder = PostgresDataSourceBuilder::new("wrong_connection_code");
-    let mut source: PostgresDataSource = source_builder.build();
-    source
-        .prepare("select * from test_table_1")
-        .expect("run query");
-}
-
-#[test]
-#[should_panic]
-fn wrong_table_name() {
-    let dburl = env::var("POSTGRES_URL").unwrap();
-    let mut source_builder = PostgresDataSourceBuilder::new(&dburl);
-    let mut source: PostgresDataSource = source_builder.build();
-    source
-        .prepare("select * from test_table_wrong")
-        .expect("run query");
-}
-
-#[test]
 fn load_and_parse() {
+    let _ = env_logger::builder().is_test(true).try_init();
+
     let dburl = env::var("POSTGRES_URL").unwrap();
     #[derive(Debug, PartialEq)]
-    struct Row(u64, Option<u64>, String, Option<f64>, Option<bool>);
+    struct Row(i32, Option<i32>, Option<String>, Option<f64>, Option<bool>);
 
-    let mut source_builder = PostgresDataSourceBuilder::new(&dburl);
-    let mut source: PostgresDataSource = source_builder.build();
-    source
-        .prepare("select * from test_table")
-        .expect("run query");
+    let mut source = PostgresSource::new(&dburl, 1);
+    source.set_queries(&["select * from test_table"]);
+    source.fetch_metadata().unwrap();
 
-    assert_eq!(6, source.nrows());
-    assert_eq!(5, source.ncols());
+    let mut partitions = source.partition().unwrap();
+    assert!(partitions.len() == 1);
+    let mut partition = partitions.remove(0);
+    partition.prepare().expect("run query");
+
+    assert_eq!(6, partition.nrows());
+    assert_eq!(5, partition.ncols());
+
+    let mut parser = partition.parser().unwrap();
 
     let mut rows: Vec<Row> = Vec::new();
-    for _i in 0..source.nrows() {
+    for _i in 0..6 {
         rows.push(Row(
-            source.produce().unwrap(),
-            source.produce().unwrap(),
-            source.produce().unwrap(),
-            source.produce().unwrap(),
-            source.produce().unwrap(),
+            parser.produce().unwrap(),
+            parser.produce().unwrap(),
+            parser.produce().unwrap(),
+            parser.produce().unwrap(),
+            parser.produce().unwrap(),
         ));
     }
 
     assert_eq!(
         vec![
-            Row(1, Some(3), "str1".into(), None, Some(true)),
-            Row(2, None, "str2".into(), Some(2.2), Some(false)),
-            Row(0, Some(5), "a".into(), Some(3.1), None),
-            Row(3, Some(7), "b".into(), Some(3.), Some(false)),
-            Row(4, Some(9), "c".into(), Some(7.8), None),
-            Row(1314, Some(2), "".into(), Some(-10.), Some(true)),
+            Row(1, Some(3), Some("str1".into()), None, Some(true)),
+            Row(2, None, Some("str2".into()), Some(2.2), Some(false)),
+            Row(0, Some(5), Some("a".into()), Some(3.1), None),
+            Row(3, Some(7), Some("b".into()), Some(3.), Some(false)),
+            Row(4, Some(9), Some("c".into()), Some(7.8), None),
+            Row(1314, Some(2), None, Some(-10.), Some(true)),
         ],
         rows
     );
@@ -70,45 +57,52 @@ fn load_and_parse() {
 
 #[test]
 fn test_postgres() {
+    let _ = env_logger::builder().is_test(true).try_init();
+
     let dburl = env::var("POSTGRES_URL").unwrap();
-    let schema = [
-        DataType::U64(false),
-        DataType::U64(true),
-        DataType::String(false),
-        DataType::F64(true),
-        DataType::Bool(true),
-    ];
+
     let queries = [
         "select * from test_table where test_int < 2",
         "select * from test_table where test_int >= 2",
     ];
-    let builder = PostgresDataSourceBuilder::new(&dburl);
+    let builder = PostgresSource::new(&dburl, 2);
     let mut writer = MemoryWriter::new();
-    let dispatcher = Dispatcher::new(builder, &mut writer, &queries, &schema);
+    let dispatcher = Dispatcher::<PostgresSource, PostgresDTypes, MemoryWriter, DataType>::new(
+        builder,
+        &mut writer,
+        &queries,
+    );
 
     dispatcher.run_checked().expect("run dispatcher");
     assert_eq!(
-        array![1, 0, 2, 3, 4, 1314],
-        writer.column_view::<u64>(0).unwrap()
+        array![Some(1), Some(0), Some(2), Some(3), Some(4), Some(1314)],
+        writer.column_view::<Option<i64>>(0).unwrap()
     );
     assert_eq!(
         array![Some(3), Some(5), None, Some(7), Some(9), Some(2)],
-        writer.column_view::<Option<u64>>(1).unwrap()
+        writer.column_view::<Option<i64>>(1).unwrap()
     );
     assert_eq!(
         array![
-            "str1".to_string(),
-            "a".to_string(),
-            "str2".to_string(),
-            "b".to_string(),
-            "c".to_string(),
-            "".to_string()
+            Some("str1".to_string()),
+            Some("a".to_string()),
+            Some("str2".to_string()),
+            Some("b".to_string()),
+            Some("c".to_string()),
+            None
         ],
-        writer.column_view::<String>(2).unwrap()
+        writer.column_view::<Option<String>>(2).unwrap()
     );
 
     assert_eq!(
-        array![None, Some(3.1), Some(2.2), Some(3.), Some(7.8), Some(-10.)],
+        array![
+            None,
+            Some(3.1 as f64),
+            Some(2.2 as f64),
+            Some(3 as f64),
+            Some(7.8 as f64),
+            Some(-10 as f64)
+        ],
         writer.column_view::<Option<f64>>(3).unwrap()
     );
 

@@ -3,7 +3,7 @@ use crate::data_order::DataOrder;
 use crate::errors::{ConnectorAgentError, Result};
 use crate::types::DataType;
 use crate::typesystem::{Realize, TypeAssoc, TypeSystem};
-use arrow::datatypes::{Field, Schema};
+use arrow::datatypes::Schema;
 use arrow::record_batch::RecordBatch;
 use arrow_assoc::ArrowAssoc;
 use fehler::throws;
@@ -40,7 +40,13 @@ impl Writer for ArrowWriter {
     type PartitionWriter<'a> = ArrowPartitionWriter<'a>;
 
     #[throws(ConnectorAgentError)]
-    fn allocate(&mut self, nrows: usize, schema: &[DataType], _data_order: DataOrder) {
+    fn allocate<S: AsRef<str>>(
+        &mut self,
+        nrows: usize,
+        _names: &[S],
+        schema: &[DataType],
+        _data_order: DataOrder,
+    ) {
         // cannot really create builders since do not know each partition size here
         self.nrows = nrows;
         self.schema = schema.to_vec();
@@ -52,11 +58,11 @@ impl Writer for ArrowWriter {
         assert_eq!(self.builders.len(), 0);
 
         for &c in counts {
-            let builders: Vec<_> = self
+            let builders = self
                 .schema
                 .iter()
-                .map(|&dt| Realize::<FNewBuilder>::realize(dt)(c))
-                .collect();
+                .map(|&dt| Ok(Realize::<FNewBuilder>::realize(dt)?(c)))
+                .collect::<Result<Vec<_>>>()?;
 
             self.builders.push(builders);
         }
@@ -75,13 +81,14 @@ impl Writer for ArrowWriter {
 }
 
 impl ArrowWriter {
+    #[throws(ConnectorAgentError)]
     pub fn finish(self, headers: Vec<String>) -> Vec<RecordBatch> {
-        let fields: Vec<Field> = self
+        let fields = self
             .schema
             .iter()
             .zip_eq(headers)
-            .map(|(&dt, h)| Realize::<FNewField>::realize(dt)(h.as_str()))
-            .collect();
+            .map(|(&dt, h)| Ok(Realize::<FNewField>::realize(dt)?(h.as_str())))
+            .collect::<Result<Vec<_>>>()?;
 
         let arrow_schema = Arc::new(Schema::new(fields));
         let schema = self.schema.clone();
@@ -91,11 +98,11 @@ impl ArrowWriter {
                 let columns = pbuilder
                     .into_iter()
                     .zip(schema.iter())
-                    .map(|(builder, &dt)| Realize::<FFinishBuilder>::realize(dt)(builder))
-                    .collect();
-                RecordBatch::try_new(Arc::clone(&arrow_schema), columns).unwrap()
+                    .map(|(builder, &dt)| Ok(Realize::<FFinishBuilder>::realize(dt)?(builder)))
+                    .collect::<Result<Vec<_>>>()?;
+                Ok(RecordBatch::try_new(Arc::clone(&arrow_schema), columns).unwrap())
             })
-            .collect()
+            .collect::<Result<Vec<_>>>()?
     }
 }
 
@@ -103,6 +110,7 @@ pub struct ArrowPartitionWriter<'a> {
     nrows: usize,
     schema: Vec<DataType>,
     builders: &'a mut Builders,
+    current_col: usize,
 }
 
 impl<'a> ArrowPartitionWriter<'a> {
@@ -111,6 +119,7 @@ impl<'a> ArrowPartitionWriter<'a> {
             nrows,
             schema,
             builders,
+            current_col: 0,
         }
     }
 }
@@ -131,7 +140,9 @@ impl<'a, T> Consume<T> for ArrowPartitionWriter<'a>
 where
     T: TypeAssoc<<Self as PartitionWriter<'a>>::TypeSystem> + ArrowAssoc + 'static,
 {
-    unsafe fn consume(&mut self, _row: usize, col: usize, value: T) {
+    unsafe fn consume(&mut self, value: T) {
+        let col = self.current_col;
+        self.current_col = (self.current_col + 1) % self.ncols();
         // NOTE: can use `get_mut_unchecked` instead of Mutex in the future to speed up
         <T as ArrowAssoc>::append(
             self.builders[col].downcast_mut::<T::Builder>().unwrap(),
@@ -139,9 +150,11 @@ where
         );
     }
 
-    fn consume_checked(&mut self, row: usize, col: usize, value: T) -> Result<()> {
+    fn consume_checked(&mut self, value: T) -> Result<()> {
+        let col = self.current_col;
+
         self.schema[col].check::<T>()?;
-        unsafe { self.write(row, col, value) };
+        unsafe { self.write(value) };
         Ok(())
     }
 }

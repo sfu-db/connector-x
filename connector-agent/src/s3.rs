@@ -1,8 +1,8 @@
+use anyhow::Error;
 use arrow::datatypes::{Schema, SchemaRef};
 use arrow::ffi::{FFI_ArrowArray, FFI_ArrowSchema};
 use arrow::json::reader::ReaderBuilder;
 use arrow::record_batch::RecordBatch;
-use failure::Error;
 use fehler::throws;
 use flate2::read::GzDecoder;
 use futures::stream::{FuturesOrdered, StreamExt};
