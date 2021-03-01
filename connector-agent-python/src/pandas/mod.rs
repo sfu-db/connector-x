@@ -13,7 +13,7 @@ use writers::PandasWriter;
 #[throws(ConnectorAgentPythonError)]
 pub fn write_pandas<'a>(py: Python<'a>, conn: &str, queries: &[&str], checked: bool) -> &'a PyAny {
     let mut writer = PandasWriter::new(py);
-    let sb = PostgresSource::new(conn);
+    let sb = PostgresSource::new(conn, queries.len());
 
     // TODO: unlock gil for these two line
     let dispatcher = Dispatcher::new(sb, &mut writer, queries);
@@ -34,6 +34,8 @@ pub fn write_pandas<'a>(py: Python<'a>, conn: &str, queries: &[&str], checked: b
 
 pub trait PandasDType: Sized {
     fn dtype(&self) -> &'static str;
+    // For initialize a numpy array when creating the pandas dataframe
+    fn npdtype(&self) -> &'static str;
     fn parse(ty: &str) -> Result<Self>;
 }
 
@@ -47,6 +49,16 @@ impl PandasDType for DataType {
             DataType::Bool(true) => "boolean",
             DataType::String(_) => "string",
             DataType::DateTime(_) => "datetime64[ns]",
+        }
+    }
+
+    fn npdtype(&self) -> &'static str {
+        match *self {
+            DataType::I64(_) => "i8",
+            DataType::F64(_) => "f8",
+            DataType::Bool(_) => "b1",
+            DataType::String(_) => "O",
+            DataType::DateTime(_) => "M8[ns]",
         }
     }
 

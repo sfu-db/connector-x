@@ -104,6 +104,7 @@ impl<'a> Writer for PandasWriter<'a> {
         }
 
         let (df, buffers, index) = create_dataframe(self.py, names, schema, nrows);
+        debug!("DataFrame created");
 
         // get index for each column: (index of block, index of column within the block)
         let column_buffer_index: Vec<(usize, usize)> =
@@ -325,9 +326,10 @@ fn create_dataframe<'a, S: AsRef<str>>(
         .zip_eq(names)
         .map(|(&dt, name)| {
             format!(
-                "'{}': pd.Series(data=np.empty([{}]), dtype='{}')",
+                "'{}': pd.Series(data=np.empty([{}], dtype='{}'), dtype='{}')",
                 name,
                 nrows,
+                dt.npdtype(),
                 dt.dtype()
             )
         })

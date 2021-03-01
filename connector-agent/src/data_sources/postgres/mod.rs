@@ -28,9 +28,9 @@ pub struct PostgresSource {
 }
 
 impl PostgresSource {
-    pub fn new(conn: &str) -> Self {
+    pub fn new(conn: &str, nconn: usize) -> Self {
         let manager = PostgresConnectionManager::new(conn.parse().unwrap(), NoTls);
-        let pool = Pool::new(manager).unwrap();
+        let pool = Pool::builder().max_size(nconn as u32).build(manager).unwrap();
 
         Self {
             pool,

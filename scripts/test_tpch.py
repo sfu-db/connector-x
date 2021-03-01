@@ -35,7 +35,8 @@ def get_sqls(count: int) -> List[str]:
                 l_receiptdate,                
                 l_shipinstruct,
                 l_shipmode,
-                l_comment from lineitem where l_orderkey > {split[i]} and l_orderkey <= {split[i+1]}"""
+                l_comment
+                from lineitem where l_orderkey > {split[i]} and l_orderkey <= {split[i+1]}"""
         )
     return sqls
 
