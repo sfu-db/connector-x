@@ -231,6 +231,8 @@
 <span id="228">228</span>
 <span id="229">229</span>
 <span id="230">230</span>
+<span id="231">231</span>
+<span id="232">232</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Why we need to implement Transmit for TypeSystem? This is because only TypeSystem knows how to dispatch</span>
 <span class="comment">// functions to it&#39;s native type N based on our defined type T. Remember, T is value and N is a type.</span>
@@ -256,6 +258,7 @@
 <span class="doccomment">/// `associate_typesystem!(DataType, [DataType::F64] =&gt; f64, [DataType::I64] =&gt; i64);`</span>
 <span class="doccomment">/// This means for the type system `DataType`, it&#39;s variant `DataType::F64(false)` is corresponding to the physical type f64 and</span>
 <span class="doccomment">/// `DataType::F64(true)` is corresponding to the physical type Option&lt;f64&gt;. Same for I64 and i64</span>
+<span class="attribute">#[<span class="ident">macro_export</span>]</span>
 <span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">associate_typesystem</span> {
     (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">ts</span>:<span class="ident">ty</span>, $(<span class="comment">/*multiple mapping*/</span>$(<span class="comment">/*multiple variant*/</span> [$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">variant</span>:<span class="ident">tt</span>)<span class="op">+</span>])<span class="op">|</span><span class="op">+</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">native_type</span>:<span class="ident">ty</span>,)<span class="op">+</span>) <span class="op">=</span><span class="op">&gt;</span> {
         <span class="macro">associate_typesystem</span><span class="macro">!</span>(<span class="ident">IMPL</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ts</span>, $(<span class="comment">/*multiple mapping*/</span>
@@ -369,10 +372,10 @@
 <span class="doccomment">/// of both their enum variants and the physical types</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// # Example Usage</span>
-<span class="doccomment">/// ```</span>
+<span class="doccomment">/// ```ignore</span>
 <span class="doccomment">/// associate_typesystems! {</span>
 <span class="doccomment">///     (PostgresDTypes, DataType),</span>
-<span class="doccomment">///     ([PostgresDTypes::Float4], [DataType::F64]) =&gt; (f32, f64) impl all,</span>
+<span class="doccomment">///     ([PostgresDTypes::Float4], [DataType::F64]) =&gt; (f32, f64) conversion all,</span>
 <span class="doccomment">/// }</span>
 <span class="doccomment">/// ```</span>
 <span class="doccomment">/// This means for the type system `PostgresDTypes`, is can be converted to another type system DataType.</span>
@@ -384,6 +387,7 @@
 <span class="doccomment">/// conversion trait `TypeConversion&lt;Option&lt;f32&gt;, Option&lt;f64&gt;&gt;` for `(PostgresDTypes, DataType)` by using</span>
 <span class="doccomment">/// casting rule (v as f64). If this is set to `half`, you need to manually write an `TypeConversion` implementation for `(f32,f64)`,</span>
 <span class="doccomment">/// but the conversion rule for `(Option&lt;f32&gt;, Option&lt;f64&gt;)` is still generated. `conversion none` means generate nothing.</span>
+<span class="attribute">#[<span class="ident">macro_export</span>]</span>
 <span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">associate_typesystems</span> {
     ((<span class="macro-nonterminal">$</span><span class="macro-nonterminal">ts1</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ts2</span>:<span class="ident">ty</span>), $($(([$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">v1</span>:<span class="ident">tt</span>)<span class="op">+</span>], [$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">v2</span>:<span class="ident">tt</span>)<span class="op">+</span>]))<span class="op">|</span><span class="op">+</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t1</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t2</span>:<span class="ident">ty</span>) <span class="ident">conversion</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">cast</span>:<span class="ident">ident</span>,)<span class="op">+</span>) <span class="op">=</span><span class="op">&gt;</span> {
         <span class="macro">associate_typesystems</span><span class="macro">!</span>(<span class="ident">Realize</span> (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">ts1</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ts2</span>), $(
@@ -424,7 +428,7 @@
 
     (<span class="ident">Conversion</span> (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">ts1</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ts2</span>:<span class="ident">ty</span>), $((<span class="macro-nonterminal">$</span><span class="macro-nonterminal">v1</span>:<span class="ident">pat</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">v2</span>:<span class="ident">expr</span>),)<span class="op">+</span>) <span class="op">=</span><span class="op">&gt;</span> {
         <span class="kw">impl</span> <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">typesystem</span>::<span class="ident">TypeSystemConversion</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">ts1</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ts2</span> {
-            <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">dt</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ts1</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+            <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">dt</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ts1</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">errors</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
                 <span class="kw">match</span> <span class="ident">dt</span> {
                     $(
                         <span class="macro-nonterminal">$</span><span class="macro-nonterminal">v1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">v2</span>),

@@ -44,6 +44,9 @@
 <span id="41">41</span>
 <span id="42">42</span>
 <span id="43">43</span>
+<span id="44">44</span>
+<span id="45">45</span>
+<span id="46">46</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="attribute">#![<span class="ident">feature</span>(<span class="ident">generic_associated_types</span>)]</span>
 <span class="attribute">#![<span class="ident">allow</span>(<span class="ident">incomplete_features</span>)]</span>
@@ -55,6 +58,7 @@
 <span class="attribute">#[<span class="ident">macro_use</span>]</span>
 <span class="kw">mod</span> <span class="ident">typesystem</span>;
 <span class="kw">mod</span> <span class="ident">any_array</span>;
+<span class="kw">mod</span> <span class="ident">conversions</span>;
 <span class="kw">mod</span> <span class="ident">data_order</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">data_sources</span>;
 <span class="kw">mod</span> <span class="ident">dispatcher</span>;
@@ -74,7 +78,9 @@
 <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">dispatcher</span>::<span class="ident">Dispatcher</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">errors</span>::{<span class="ident">ConnectorAgentError</span>, <span class="prelude-ty">Result</span>};
 <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::<span class="ident">DataType</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">typesystem</span>::{<span class="ident">ParameterizedFunc</span>, <span class="ident">ParameterizedOn</span>, <span class="ident">Realize</span>, <span class="ident">TypeAssoc</span>, <span class="ident">TypeSystem</span>};
+<span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">typesystem</span>::{
+    <span class="ident">ParameterizedFunc</span>, <span class="ident">ParameterizedOn</span>, <span class="ident">Realize</span>, <span class="ident">TypeAssoc</span>, <span class="ident">TypeConversion</span>, <span class="ident">TypeSystem</span>,
+};
 <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">writers</span>::{<span class="ident">Consume</span>, <span class="ident">PartitionWriter</span>, <span class="ident">Writer</span>};
 
 <span class="comment">// pub struct Partition {</span>

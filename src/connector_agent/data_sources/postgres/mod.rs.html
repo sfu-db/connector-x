@@ -298,69 +298,6 @@
 <span id="295">295</span>
 <span id="296">296</span>
 <span id="297">297</span>
-<span id="298">298</span>
-<span id="299">299</span>
-<span id="300">300</span>
-<span id="301">301</span>
-<span id="302">302</span>
-<span id="303">303</span>
-<span id="304">304</span>
-<span id="305">305</span>
-<span id="306">306</span>
-<span id="307">307</span>
-<span id="308">308</span>
-<span id="309">309</span>
-<span id="310">310</span>
-<span id="311">311</span>
-<span id="312">312</span>
-<span id="313">313</span>
-<span id="314">314</span>
-<span id="315">315</span>
-<span id="316">316</span>
-<span id="317">317</span>
-<span id="318">318</span>
-<span id="319">319</span>
-<span id="320">320</span>
-<span id="321">321</span>
-<span id="322">322</span>
-<span id="323">323</span>
-<span id="324">324</span>
-<span id="325">325</span>
-<span id="326">326</span>
-<span id="327">327</span>
-<span id="328">328</span>
-<span id="329">329</span>
-<span id="330">330</span>
-<span id="331">331</span>
-<span id="332">332</span>
-<span id="333">333</span>
-<span id="334">334</span>
-<span id="335">335</span>
-<span id="336">336</span>
-<span id="337">337</span>
-<span id="338">338</span>
-<span id="339">339</span>
-<span id="340">340</span>
-<span id="341">341</span>
-<span id="342">342</span>
-<span id="343">343</span>
-<span id="344">344</span>
-<span id="345">345</span>
-<span id="346">346</span>
-<span id="347">347</span>
-<span id="348">348</span>
-<span id="349">349</span>
-<span id="350">350</span>
-<span id="351">351</span>
-<span id="352">352</span>
-<span id="353">353</span>
-<span id="354">354</span>
-<span id="355">355</span>
-<span id="356">356</span>
-<span id="357">357</span>
-<span id="358">358</span>
-<span id="359">359</span>
-<span id="360">360</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">mod</span> <span class="ident">sql</span>;
 <span class="kw">mod</span> <span class="ident">types</span>;
@@ -369,16 +306,24 @@
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">data_sources</span>::{<span class="ident">Parser</span>, <span class="ident">PartitionedSource</span>, <span class="ident">Produce</span>, <span class="ident">Source</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">errors</span>::{<span class="ident">ConnectorAgentError</span>, <span class="prelude-ty">Result</span>};
 <span class="kw">use</span> <span class="ident">anyhow</span>::<span class="ident">anyhow</span>;
+<span class="kw">use</span> <span class="ident">bytes</span>::<span class="ident">Bytes</span>;
+<span class="kw">use</span> <span class="ident">chrono</span>::{<span class="ident">DateTime</span>, <span class="ident">NaiveDate</span>, <span class="ident">NaiveDateTime</span>, <span class="ident">Utc</span>};
 <span class="kw">use</span> <span class="ident">fehler</span>::<span class="ident">throw</span>;
 <span class="kw">use</span> <span class="ident">log</span>::<span class="ident">debug</span>;
 <span class="kw">use</span> <span class="ident">postgres</span>::{
     <span class="ident">binary_copy</span>::{<span class="ident">BinaryCopyOutIter</span>, <span class="ident">BinaryCopyOutRow</span>},
     <span class="ident">fallible_iterator</span>::<span class="ident">FallibleIterator</span>,
-    <span class="ident">types</span>::<span class="ident">FromSql</span>,
+    <span class="ident">types</span>::<span class="ident">Type</span>,
 };
 <span class="kw">use</span> <span class="ident">r2d2</span>::{<span class="ident">Pool</span>, <span class="ident">PooledConnection</span>};
 <span class="kw">use</span> <span class="ident">r2d2_postgres</span>::{<span class="ident">postgres</span>::<span class="ident">NoTls</span>, <span class="ident">PostgresConnectionManager</span>};
 <span class="kw">use</span> <span class="ident">sql</span>::{<span class="ident">count_query</span>, <span class="ident">limit1_query</span>};
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">sync</span>::<span class="ident">Arc</span>;
+<span class="kw">use</span> <span class="ident">std</span>::{
+    <span class="ident">mem</span>::{<span class="self">self</span>, <span class="ident">transmute</span>},
+    <span class="ident">ops</span>::<span class="ident">Range</span>,
+    <span class="ident">thread</span>,
+};
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">types</span>::<span class="ident">PostgresDTypes</span>;
 
 <span class="kw">type</span> <span class="ident">PgManager</span> <span class="op">=</span> <span class="ident">PostgresConnectionManager</span><span class="op">&lt;</span><span class="ident">NoTls</span><span class="op">&gt;</span>;
@@ -532,35 +477,53 @@
 
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PostgresSourceParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="ident">iter</span>: <span class="ident">BinaryCopyOutIter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
-    <span class="ident">current_row</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BinaryCopyOutRow</span><span class="op">&gt;</span>,
+    <span class="ident">buf_size</span>: <span class="ident">usize</span>,
+    <span class="ident">rowbuf</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">BinaryCopyOutRow</span><span class="op">&gt;</span>,
     <span class="ident">ncols</span>: <span class="ident">usize</span>,
     <span class="ident">current_col</span>: <span class="ident">usize</span>,
+    <span class="ident">current_row</span>: <span class="ident">usize</span>,
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">PostgresSourceParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">iter</span>: <span class="ident">BinaryCopyOutIter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>, <span class="ident">schema</span>: <span class="kw-2">&amp;</span>[<span class="ident">PostgresDTypes</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">iter</span>,
-            <span class="ident">current_row</span>: <span class="prelude-val">None</span>,
-            <span class="ident">current_col</span>: <span class="number">0</span>,
+            <span class="ident">buf_size</span>: <span class="number">10000</span>,
+            <span class="ident">rowbuf</span>: <span class="ident">Vec</span>::<span class="ident">with_capacity</span>(<span class="number">10000</span>),
             <span class="ident">ncols</span>: <span class="ident">schema</span>.<span class="ident">len</span>(),
+            <span class="ident">current_row</span>: <span class="number">0</span>,
+            <span class="ident">current_col</span>: <span class="number">0</span>,
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">next_col_idx</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">current_row</span>.<span class="ident">is_none</span>() <span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">current_col</span> <span class="op">&gt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">ncols</span> {
-            <span class="comment">// first time or new row</span>
-            <span class="kw">match</span> <span class="self">self</span>.<span class="ident">iter</span>.<span class="ident">next</span>()<span class="question-mark">?</span> {
-                <span class="prelude-val">Some</span>(<span class="ident">row</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="self">self</span>.<span class="ident">current_row</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">row</span>);
-                    <span class="self">self</span>.<span class="ident">current_col</span> <span class="op">=</span> <span class="number">0</span>;
-                }
-                <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">throw</span><span class="macro">!</span>(<span class="macro">anyhow</span><span class="macro">!</span>(<span class="string">&quot;Postgres EOF&quot;</span>)),
+    <span class="kw">fn</span> <span class="ident">next_loc</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">usize</span>, <span class="ident">usize</span>)<span class="op">&gt;</span> {
+        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">current_row</span> <span class="op">&gt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">rowbuf</span>.<span class="ident">len</span>() {
+            <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">rowbuf</span>.<span class="ident">is_empty</span>() {
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">row</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">with_capacity</span>(<span class="self">self</span>.<span class="ident">buf_size</span>);
+                <span class="ident">mem</span>::<span class="ident">swap</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">row</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">rowbuf</span>);
+
+                <span class="ident">thread</span>::<span class="ident">spawn</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">mem</span>::<span class="ident">drop</span>(<span class="ident">row</span>));
             }
+
+            <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="self">self</span>.<span class="ident">buf_size</span> {
+                <span class="kw">match</span> <span class="self">self</span>.<span class="ident">iter</span>.<span class="ident">next</span>()<span class="question-mark">?</span> {
+                    <span class="prelude-val">Some</span>(<span class="ident">row</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="self">self</span>.<span class="ident">rowbuf</span>.<span class="ident">push</span>(<span class="ident">row</span>);
+                    }
+                    <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">break</span>,
+                }
+            }
+
+            <span class="kw">if</span> <span class="self">self</span>.<span class="ident">rowbuf</span>.<span class="ident">is_empty</span>() {
+                <span class="macro">throw</span><span class="macro">!</span>(<span class="macro">anyhow</span><span class="macro">!</span>(<span class="string">&quot;Postgres EOF&quot;</span>));
+            }
+            <span class="self">self</span>.<span class="ident">current_row</span> <span class="op">=</span> <span class="number">0</span>;
+            <span class="self">self</span>.<span class="ident">current_col</span> <span class="op">=</span> <span class="number">0</span>;
         }
 
-        <span class="kw">let</span> <span class="ident">ret</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">current_col</span>;
-        <span class="self">self</span>.<span class="ident">current_col</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+        <span class="kw">let</span> <span class="ident">ret</span> <span class="op">=</span> (<span class="self">self</span>.<span class="ident">current_row</span>, <span class="self">self</span>.<span class="ident">current_col</span>);
+        <span class="self">self</span>.<span class="ident">current_row</span> <span class="op">+</span><span class="op">=</span> (<span class="self">self</span>.<span class="ident">current_col</span> <span class="op">+</span> <span class="number">1</span>) <span class="op">/</span> <span class="self">self</span>.<span class="ident">ncols</span>;
+        <span class="self">self</span>.<span class="ident">current_col</span> <span class="op">=</span> (<span class="self">self</span>.<span class="ident">current_col</span> <span class="op">+</span> <span class="number">1</span>) <span class="op">%</span> <span class="self">self</span>.<span class="ident">ncols</span>;
         <span class="prelude-val">Ok</span>(<span class="ident">ret</span>)
     }
 }
@@ -569,159 +532,70 @@
     <span class="kw">type</span> <span class="ident">TypeSystem</span> <span class="op">=</span> <span class="ident">PostgresDTypes</span>;
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span><span class="op">&gt;</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PostgresSourceParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">T</span>: <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span><span class="op">&gt;</span> <span class="ident">FromSql</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span><span class="op">&gt;</span>,
-{
-    <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">cidx</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">next_col_idx</span>()<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">val</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">current_row</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>().<span class="ident">try_get</span>(<span class="ident">cidx</span>)<span class="question-mark">?</span>;
+<span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">impl_produce</span> {
+    ($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>: <span class="ident">ty</span>),<span class="op">+</span>) <span class="op">=</span><span class="op">&gt;</span> {
+        $(
+            <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PostgresSourceParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+                <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span> {
+                    <span class="kw">let</span> (<span class="ident">ridx</span>, <span class="ident">cidx</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">next_loc</span>()<span class="question-mark">?</span>;
+                    <span class="kw">let</span> <span class="ident">val</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">rowbuf</span>[<span class="ident">ridx</span>].<span class="ident">try_get</span>(<span class="ident">cidx</span>)<span class="question-mark">?</span>;
+                    <span class="prelude-val">Ok</span>(<span class="ident">val</span>)
+                }
+            }
+
+            <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PostgresSourceParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+                <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+                    <span class="kw">let</span> (<span class="ident">ridx</span>, <span class="ident">cidx</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">next_loc</span>()<span class="question-mark">?</span>;
+                    <span class="kw">let</span> <span class="ident">val</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">rowbuf</span>[<span class="ident">ridx</span>].<span class="ident">try_get</span>(<span class="ident">cidx</span>)<span class="question-mark">?</span>;
+                    <span class="prelude-val">Ok</span>(<span class="ident">val</span>)
+                }
+            }
+        )<span class="op">+</span>
+    };
+}
+
+<span class="macro">impl_produce</span><span class="macro">!</span>(
+    <span class="ident">i32</span>,
+    <span class="ident">i64</span>,
+    <span class="ident">f32</span>,
+    <span class="ident">f64</span>,
+    <span class="ident">bool</span>,
+    <span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span>,
+    <span class="ident">NaiveDateTime</span>,
+    <span class="ident">NaiveDate</span>
+);
+
+<span class="comment">// unbox the binary copy result</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MyBinaryCopyOutRow</span> {
+    <span class="ident">buf</span>: <span class="ident">Bytes</span>,
+    <span class="ident">ranges</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Range</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">_types</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Type</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+}
+
+<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="ident">Bytes</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PostgresSourceParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Bytes</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> (<span class="ident">ridx</span>, <span class="ident">cidx</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">next_loc</span>()<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">row</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">rowbuf</span>[<span class="ident">ridx</span>];
+        <span class="kw">let</span> <span class="ident">row</span>: <span class="kw-2">&amp;</span><span class="ident">MyBinaryCopyOutRow</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">transmute</span>(<span class="ident">row</span>) };
+        <span class="kw">let</span> <span class="ident">val</span> <span class="op">=</span> <span class="ident">row</span>.<span class="ident">ranges</span>[<span class="ident">cidx</span>]
+            .<span class="ident">clone</span>()
+            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">rg</span><span class="op">|</span> <span class="ident">row</span>.<span class="ident">buf</span>.<span class="ident">slice</span>(<span class="ident">rg</span>))
+            .<span class="ident">unwrap</span>();
+
         <span class="prelude-val">Ok</span>(<span class="ident">val</span>)
     }
 }
 
-<span class="comment">// impl&lt;&#39;a&gt; Produce&lt;Option&lt;f64&gt;&gt; for PostgresSourceParser&lt;&#39;a&gt; {</span>
-<span class="comment">//     fn produce(&amp;mut self) -&gt; Result&lt;Option&lt;f64&gt;&gt; {</span>
-<span class="comment">//         let cidx = self.next_col_idx()?;</span>
-<span class="comment">//         let val = self.current_row.as_ref().unwrap().try_get(cidx)?;</span>
-<span class="comment">//         Ok(val)</span>
-<span class="comment">//     }</span>
-<span class="comment">// }</span>
+<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Bytes</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PostgresSourceParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Bytes</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> (<span class="ident">ridx</span>, <span class="ident">cidx</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">next_loc</span>()<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">row</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">rowbuf</span>[<span class="ident">ridx</span>];
+        <span class="kw">let</span> <span class="ident">row</span>: <span class="kw-2">&amp;</span><span class="ident">MyBinaryCopyOutRow</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">transmute</span>(<span class="ident">row</span>) };
+        <span class="kw">let</span> <span class="ident">val</span> <span class="op">=</span> <span class="ident">row</span>.<span class="ident">ranges</span>[<span class="ident">cidx</span>].<span class="ident">clone</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">rg</span><span class="op">|</span> <span class="ident">row</span>.<span class="ident">buf</span>.<span class="ident">slice</span>(<span class="ident">rg</span>));
 
-<span class="comment">// impl&lt;&#39;a&gt; Produce&lt;i64&gt; for PostgresSourceParser&lt;&#39;a&gt; {</span>
-<span class="comment">//     fn produce(&amp;mut self) -&gt; Result&lt;i64&gt; {</span>
-<span class="comment">//         let cidx = self.next_col_idx()?;</span>
-<span class="comment">//         let val = self.current_row.as_ref().unwrap().try_get(cidx)?;</span>
-<span class="comment">//         Ok(val)</span>
-<span class="comment">//     }</span>
-<span class="comment">// }</span>
-
-<span class="comment">// impl&lt;&#39;a&gt; Produce&lt;Option&lt;i64&gt;&gt; for PostgresSourceParser&lt;&#39;a&gt; {</span>
-<span class="comment">//     fn produce(&amp;mut self) -&gt; Result&lt;Option&lt;i64&gt;&gt; {</span>
-<span class="comment">//         let cidx = self.next_col_idx()?;</span>
-<span class="comment">//         let val = self.current_row.as_ref().unwrap().try_get(cidx)?;</span>
-<span class="comment">//         Ok(val)</span>
-<span class="comment">//     }</span>
-<span class="comment">// }</span>
-
-<span class="comment">// impl&lt;&#39;a&gt; Produce&lt;bool&gt; for PostgresSourceParser&lt;&#39;a&gt; {</span>
-<span class="comment">//     fn produce(&amp;mut self) -&gt; Result&lt;bool&gt; {</span>
-<span class="comment">//         let cidx = self.next_col_idx()?;</span>
-<span class="comment">//         let val = self.current_row.as_ref().unwrap().try_get(cidx)?;</span>
-<span class="comment">//         Ok(val)</span>
-<span class="comment">//     }</span>
-<span class="comment">// }</span>
-
-<span class="comment">// impl&lt;&#39;a&gt; Produce&lt;Option&lt;bool&gt;&gt; for PostgresSourceParser&lt;&#39;a&gt; {</span>
-<span class="comment">//     fn produce(&amp;mut self) -&gt; Result&lt;Option&lt;bool&gt;&gt; {</span>
-<span class="comment">//         let cidx = self.next_col_idx()?;</span>
-<span class="comment">//         match &amp;self.pgschema[cidx] {</span>
-<span class="comment">//             &amp;Type::BOOL =&gt; {</span>
-<span class="comment">//                 let val = self.current_row.as_ref().unwrap().try_get(cidx)?;</span>
-<span class="comment">//                 Ok(val)</span>
-<span class="comment">//             }</span>
-<span class="comment">//             t =&gt; {</span>
-<span class="comment">//                 throw!(ConnectorAgentError::CannotParse(</span>
-<span class="comment">//                     type_name::&lt;Option&lt;bool&gt;&gt;(),</span>
-<span class="comment">//                     t.name().into()</span>
-<span class="comment">//                 ))</span>
-<span class="comment">//             }</span>
-<span class="comment">//         }</span>
-<span class="comment">//     }</span>
-<span class="comment">// }</span>
-
-<span class="comment">// impl&lt;&#39;a&gt; Produce&lt;String&gt; for PostgresSourceParser&lt;&#39;a&gt; {</span>
-<span class="comment">//     fn produce(&amp;mut self) -&gt; Result&lt;String&gt; {</span>
-<span class="comment">//         let cidx = self.next_col_idx()?;</span>
-<span class="comment">//         match &amp;self.pgschema[cidx] {</span>
-<span class="comment">//             &amp;Type::TEXT | &amp;Type::VARCHAR | &amp;Type::BPCHAR =&gt; {</span>
-<span class="comment">//                 let val = self.current_row.as_ref().unwrap().try_get(cidx)?;</span>
-<span class="comment">//                 Ok(val)</span>
-<span class="comment">//             }</span>
-<span class="comment">//             t =&gt; {</span>
-<span class="comment">//                 throw!(ConnectorAgentError::CannotParse(</span>
-<span class="comment">//                     type_name::&lt;String&gt;(),</span>
-<span class="comment">//                     t.name().into()</span>
-<span class="comment">//                 ))</span>
-<span class="comment">//             }</span>
-<span class="comment">//         }</span>
-<span class="comment">//     }</span>
-<span class="comment">// }</span>
-
-<span class="comment">// impl&lt;&#39;a&gt; Produce&lt;Option&lt;String&gt;&gt; for PostgresSourceParser&lt;&#39;a&gt; {</span>
-<span class="comment">//     fn produce(&amp;mut self) -&gt; Result&lt;Option&lt;String&gt;&gt; {</span>
-<span class="comment">//         let cidx = self.next_col_idx()?;</span>
-<span class="comment">//         match &amp;self.pgschema[cidx] {</span>
-<span class="comment">//             &amp;Type::TEXT | &amp;Type::VARCHAR | &amp;Type::BPCHAR =&gt; {</span>
-<span class="comment">//                 let val = self.current_row.as_ref().unwrap().try_get(cidx)?;</span>
-<span class="comment">//                 Ok(val)</span>
-<span class="comment">//             }</span>
-<span class="comment">//             t =&gt; {</span>
-<span class="comment">//                 throw!(ConnectorAgentError::CannotParse(</span>
-<span class="comment">//                     type_name::&lt;String&gt;(),</span>
-<span class="comment">//                     t.name().into()</span>
-<span class="comment">//                 ))</span>
-<span class="comment">//             }</span>
-<span class="comment">//         }</span>
-<span class="comment">//     }</span>
-<span class="comment">// }</span>
-
-<span class="comment">// impl&lt;&#39;a&gt; Produce&lt;DateTime&lt;Utc&gt;&gt; for PostgresSourceParser&lt;&#39;a&gt; {</span>
-<span class="comment">//     fn produce(&amp;mut self) -&gt; Result&lt;DateTime&lt;Utc&gt;&gt; {</span>
-<span class="comment">//         let cidx = self.next_col_idx()?;</span>
-<span class="comment">//         match &amp;self.pgschema[cidx] {</span>
-<span class="comment">//             &amp;Type::TIMESTAMPTZ =&gt; {</span>
-<span class="comment">//                 let val = self.current_row.as_ref().unwrap().try_get(cidx)?;</span>
-<span class="comment">//                 Ok(val)</span>
-<span class="comment">//             }</span>
-<span class="comment">//             &amp;Type::TIMESTAMP =&gt; {</span>
-<span class="comment">//                 let val: NaiveDateTime = self.current_row.as_ref().unwrap().try_get(cidx)?;</span>
-<span class="comment">//                 let val = DateTime::from_utc(val, Utc);</span>
-<span class="comment">//                 Ok(val)</span>
-<span class="comment">//             }</span>
-<span class="comment">//             &amp;Type::DATE =&gt; {</span>
-<span class="comment">//                 let val: NaiveDate = self.current_row.as_ref().unwrap().try_get(cidx)?;</span>
-<span class="comment">//                 let val = DateTime::from_utc(val.and_hms(0, 0, 0), Utc);</span>
-<span class="comment">//                 Ok(val)</span>
-<span class="comment">//             }</span>
-<span class="comment">//             t =&gt; {</span>
-<span class="comment">//                 throw!(ConnectorAgentError::CannotParse(</span>
-<span class="comment">//                     type_name::&lt;DateTime&lt;Utc&gt;&gt;(),</span>
-<span class="comment">//                     t.name().into()</span>
-<span class="comment">//                 ))</span>
-<span class="comment">//             }</span>
-<span class="comment">//         }</span>
-<span class="comment">//     }</span>
-<span class="comment">// }</span>
-
-<span class="comment">// impl&lt;&#39;a&gt; Produce&lt;Option&lt;DateTime&lt;Utc&gt;&gt;&gt; for PostgresSourceParser&lt;&#39;a&gt; {</span>
-<span class="comment">//     fn produce(&amp;mut self) -&gt; Result&lt;Option&lt;DateTime&lt;Utc&gt;&gt;&gt; {</span>
-<span class="comment">//         let cidx = self.next_col_idx()?;</span>
-<span class="comment">//         match &amp;self.pgschema[cidx] {</span>
-<span class="comment">//             &amp;Type::TIMESTAMPTZ =&gt; {</span>
-<span class="comment">//                 let val = self.current_row.as_ref().unwrap().try_get(cidx)?;</span>
-<span class="comment">//                 Ok(val)</span>
-<span class="comment">//             }</span>
-<span class="comment">//             &amp;Type::TIMESTAMP =&gt; {</span>
-<span class="comment">//                 let val: Option&lt;NaiveDateTime&gt; =</span>
-<span class="comment">//                     self.current_row.as_ref().unwrap().try_get(cidx)?;</span>
-<span class="comment">//                 let val = val.map(|d| DateTime::from_utc(d, Utc));</span>
-<span class="comment">//                 Ok(val)</span>
-<span class="comment">//             }</span>
-<span class="comment">//             &amp;Type::DATE =&gt; {</span>
-<span class="comment">//                 let val: Option&lt;NaiveDate&gt; = self.current_row.as_ref().unwrap().try_get(cidx)?;</span>
-<span class="comment">//                 let val = val.map(|d| DateTime::from_utc(d.and_hms(0, 0, 0), Utc));</span>
-<span class="comment">//                 Ok(val)</span>
-<span class="comment">//             }</span>
-<span class="comment">//             t =&gt; {</span>
-<span class="comment">//                 throw!(ConnectorAgentError::CannotParse(</span>
-<span class="comment">//                     type_name::&lt;Option&lt;DateTime&lt;Utc&gt;&gt;&gt;(),</span>
-<span class="comment">//                     t.name().into()</span>
-<span class="comment">//                 ))</span>
-<span class="comment">//             }</span>
-<span class="comment">//         }</span>
-<span class="comment">//     }</span>
-<span class="comment">// }</span>
+        <span class="prelude-val">Ok</span>(<span class="ident">val</span>)
+    }
+}
 </pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="connector_agent"></div>
     <script src="../../../../main.js"></script><script src="../../../../source-script.js"></script><script src="../../../../source-files.js"></script><script defer src="../../../../search-index.js"></script></body></html>
