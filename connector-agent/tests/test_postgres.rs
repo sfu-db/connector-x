@@ -15,7 +15,7 @@ fn load_and_parse() {
 
     let dburl = env::var("POSTGRES_URL").unwrap();
     #[derive(Debug, PartialEq)]
-    struct Row(i32, Option<i32>, Option<String>, Option<f32>, Option<bool>);
+    struct Row(i32, Option<i32>, Option<String>, Option<f64>, Option<bool>);
 
     let mut source = PostgresSource::new(&dburl);
     source.set_queries(&["select * from test_table"]);
@@ -97,11 +97,11 @@ fn test_postgres() {
     assert_eq!(
         array![
             None,
-            Some(3.1f32 as f64),
-            Some(2.2f32 as f64),
-            Some(3f32 as f64),
-            Some(7.8f32 as f64),
-            Some(-10f32 as f64)
+            Some(3.1 as f64),
+            Some(2.2 as f64),
+            Some(3 as f64),
+            Some(7.8 as f64),
+            Some(-10 as f64)
         ],
         writer.column_view::<Option<f64>>(3).unwrap()
     );
