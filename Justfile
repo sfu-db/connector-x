@@ -20,6 +20,13 @@ seed-db:
     psql $POSTGRES_URL -c "DROP TABLE IF EXISTS test_table;"
     psql $POSTGRES_URL -f scripts/postgres.sql
 
+tpch:
+    cd connector-agent-python && LD_LIBRARY_PATH=$HOME/.pyenv/versions/3.8.6/lib/ cargo criterion --no-default-features --features executable --bench tpch -- --profile-time=300
+
+tpch-old:
+    cd connector-agent-python && LD_LIBRARY_PATH=$HOME/.pyenv/versions/3.8.6/lib/ cargo criterion --no-default-features --features executable --bench tpch_old -- --profile-time=300
+
+
 python-tpch n="1": setup-python
     cd connector-agent-python && \
     poetry run python ../scripts/test_tpch.py {{n}}
@@ -28,9 +35,11 @@ python-tpch-rust-arrow n="1": setup-python
     cd connector-agent-python && \
     poetry run python ../scripts/tpch-rust-arrow.py {{n}}
 
-tpch:
-    cd connector-agent-python && LD_LIBRARY_PATH=$HOME/.pyenv/versions/3.8.6/lib/ cargo criterion --no-default-features --features executable --bench tpch -- --profile-time=300
+python-tpch-pyarrow: 
+    cd connector-agent-python && \
+    poetry run python ../scripts/tpch-pyarrow.py
 
-tpch-old:
-    cd connector-agent-python && LD_LIBRARY_PATH=$HOME/.pyenv/versions/3.8.6/lib/ cargo criterion --no-default-features --features executable --bench tpch_old -- --profile-time=300
 
+python-tpch-pyarrow-p n="1": 
+    cd connector-agent-python && \
+    poetry run python ../scripts/tpch-pyarrow-p.py {{n}}
