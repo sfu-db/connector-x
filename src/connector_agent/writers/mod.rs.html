@@ -66,6 +66,7 @@
 <span id="63">63</span>
 <span id="64">64</span>
 <span id="65">65</span>
+<span id="66">66</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">arrow</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">memory</span>;
@@ -84,9 +85,10 @@
     <span class="doccomment">/// Construct the `Writer`.</span>
     <span class="doccomment">/// This allocates the memory based on the types of each columns</span>
     <span class="doccomment">/// and the number of rows.</span>
-    <span class="kw">fn</span> <span class="ident">allocate</span>(
+    <span class="kw">fn</span> <span class="ident">allocate</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">nrow</span>: <span class="ident">usize</span>,
+        <span class="ident">names</span>: <span class="kw-2">&amp;</span>[<span class="ident">S</span>],
         <span class="ident">schema</span>: <span class="kw-2">&amp;</span>[<span class="self">Self</span>::<span class="ident">TypeSystem</span>],
         <span class="ident">data_order</span>: <span class="ident">DataOrder</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>;
@@ -105,21 +107,21 @@
 
     <span class="doccomment">/// Write a value of type T to the location (row, col). The value is unchecked against the schema.</span>
     <span class="doccomment">/// This function is unsafe due to unchecked.</span>
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">write</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="lifetime">&#39;static</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">row</span>: <span class="ident">usize</span>, <span class="ident">col</span>: <span class="ident">usize</span>, <span class="ident">value</span>: <span class="ident">T</span>)
+    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">write</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">value</span>: <span class="ident">T</span>)
     <span class="kw">where</span>
         <span class="ident">T</span>: <span class="ident">TypeAssoc</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">TypeSystem</span><span class="op">&gt;</span>,
         <span class="self">Self</span>: <span class="ident">Consume</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
     {
-        <span class="self">self</span>.<span class="ident">consume</span>(<span class="ident">row</span>, <span class="ident">col</span>, <span class="ident">value</span>)
+        <span class="self">self</span>.<span class="ident">consume</span>(<span class="ident">value</span>)
     }
     <span class="doccomment">/// Write a value of type T to the location (row, col), checked version. If T mismatch with the</span>
     <span class="doccomment">/// schema, `ConnectorAgentError::UnexpectedType` will return.</span>
-    <span class="kw">fn</span> <span class="ident">write_checked</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="lifetime">&#39;static</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">row</span>: <span class="ident">usize</span>, <span class="ident">col</span>: <span class="ident">usize</span>, <span class="ident">value</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">write_checked</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">value</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">T</span>: <span class="ident">TypeAssoc</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">TypeSystem</span><span class="op">&gt;</span>,
         <span class="self">Self</span>: <span class="ident">Consume</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
     {
-        <span class="self">self</span>.<span class="ident">consume_checked</span>(<span class="ident">row</span>, <span class="ident">col</span>, <span class="ident">value</span>)
+        <span class="self">self</span>.<span class="ident">consume_checked</span>(<span class="ident">value</span>)
     }
     <span class="doccomment">/// Number of rows this `PartitionWriter` controls.</span>
     <span class="kw">fn</span> <span class="ident">nrows</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span>;
@@ -129,8 +131,8 @@
 
 <span class="doccomment">/// A type implemented `Consume&lt;T&gt;` means that it can consume a value `T` by adding it to it&#39;s own buffer.</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Consume</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">consume</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">row</span>: <span class="ident">usize</span>, <span class="ident">col</span>: <span class="ident">usize</span>, <span class="ident">value</span>: <span class="ident">T</span>);
-    <span class="kw">fn</span> <span class="ident">consume_checked</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">row</span>: <span class="ident">usize</span>, <span class="ident">col</span>: <span class="ident">usize</span>, <span class="ident">value</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>;
+    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">consume</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">value</span>: <span class="ident">T</span>);
+    <span class="kw">fn</span> <span class="ident">consume_checked</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">value</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>;
 }
 </pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="connector_agent"></div>

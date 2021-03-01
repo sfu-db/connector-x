@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["PostgresDataSource",""],["PostgresDataSourceBuilder",""]]});
+initSidebarItems({"enum":[["PostgresDTypes",""]],"struct":[["PostgresSource",""],["PostgresSourceParser",""],["PostgresSourcePartition",""]]});

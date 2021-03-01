@@ -144,11 +144,11 @@
 <span id="141">141</span>
 <span id="142">142</span>
 </pre><div class="example-wrap"><pre class="rust ">
+<span class="kw">use</span> <span class="ident">anyhow</span>::<span class="ident">Error</span>;
 <span class="kw">use</span> <span class="ident">arrow</span>::<span class="ident">datatypes</span>::{<span class="ident">Schema</span>, <span class="ident">SchemaRef</span>};
 <span class="kw">use</span> <span class="ident">arrow</span>::<span class="ident">ffi</span>::{<span class="ident">FFI_ArrowArray</span>, <span class="ident">FFI_ArrowSchema</span>};
 <span class="kw">use</span> <span class="ident">arrow</span>::<span class="ident">json</span>::<span class="ident">reader</span>::<span class="ident">ReaderBuilder</span>;
 <span class="kw">use</span> <span class="ident">arrow</span>::<span class="ident">record_batch</span>::<span class="ident">RecordBatch</span>;
-<span class="kw">use</span> <span class="ident">failure</span>::<span class="ident">Error</span>;
 <span class="kw">use</span> <span class="ident">fehler</span>::<span class="ident">throws</span>;
 <span class="kw">use</span> <span class="ident">flate2</span>::<span class="ident">read</span>::<span class="ident">GzDecoder</span>;
 <span class="kw">use</span> <span class="ident">futures</span>::<span class="ident">stream</span>::{<span class="ident">FuturesOrdered</span>, <span class="ident">StreamExt</span>};

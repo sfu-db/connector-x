@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["MixedSource",""],["MixedSourceBuilder",""]]});
+initSidebarItems({"struct":[["MixedSource",""],["MixedSourceParser",""],["MixedSourcePartition",""]]});

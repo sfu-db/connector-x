@@ -43,6 +43,7 @@
 <span id="40">40</span>
 <span id="41">41</span>
 <span id="42">42</span>
+<span id="43">43</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="attribute">#![<span class="ident">feature</span>(<span class="ident">generic_associated_types</span>)]</span>
 <span class="attribute">#![<span class="ident">allow</span>(<span class="ident">incomplete_features</span>)]</span>
@@ -58,16 +59,17 @@
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">data_sources</span>;
 <span class="kw">mod</span> <span class="ident">dispatcher</span>;
 <span class="kw">mod</span> <span class="ident">errors</span>;
+<span class="kw">mod</span> <span class="ident">transmit</span>;
 <span class="kw">mod</span> <span class="ident">types</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">writers</span>;
 
 <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">any_array</span>::{<span class="ident">AnyArray</span>, <span class="ident">AnyArrayView</span>, <span class="ident">AnyArrayViewMut</span>};
 <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">data_order</span>::<span class="ident">DataOrder</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">data_sources</span>::{
-    <span class="ident">csv</span>::{<span class="ident">CSVSource</span>, <span class="ident">CSVSourceBuilder</span>},
-    <span class="ident">dummy</span>::{<span class="ident">MixedSource</span>, <span class="ident">MixedSourceBuilder</span>},
-    <span class="ident">postgres</span>::{<span class="ident">PostgresDataSource</span>, <span class="ident">PostgresDataSourceBuilder</span>},
-    {<span class="ident">DataSource</span>, <span class="ident">SourceBuilder</span>},
+    <span class="ident">csv</span>::{<span class="ident">CSVSource</span>, <span class="ident">CSVSourceParser</span>, <span class="ident">CSVSourcePartition</span>},
+    <span class="ident">dummy</span>::{<span class="ident">MixedSource</span>, <span class="ident">MixedSourceParser</span>, <span class="ident">MixedSourcePartition</span>},
+    <span class="ident">postgres</span>::{<span class="ident">PostgresSource</span>, <span class="ident">PostgresSourceParser</span>, <span class="ident">PostgresSourcePartition</span>},
+    {<span class="ident">PartitionedSource</span>, <span class="ident">Source</span>},
 };
 <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">dispatcher</span>::<span class="ident">Dispatcher</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">errors</span>::{<span class="ident">ConnectorAgentError</span>, <span class="prelude-ty">Result</span>};
