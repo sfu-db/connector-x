@@ -121,16 +121,16 @@ where
 
                 match dorder {
                     DataOrder::RowMajor => {
-                        for row in 0..writer.nrows() {
+                        for _ in 0..writer.nrows() {
                             for col in 0..writer.ncols() {
-                                f[col](&mut parser, &mut writer, row, col).expect("write record");
+                                f[col](&mut parser, &mut writer).expect("write record");
                             }
                         }
                     }
                     DataOrder::ColumnMajor => {
                         for col in 0..writer.ncols() {
-                            for row in 0..writer.nrows() {
-                                f[col](&mut parser, &mut writer, row, col).expect("write record");
+                            for _ in 0..writer.nrows() {
+                                f[col](&mut parser, &mut writer).expect("write record");
                             }
                         }
                     }

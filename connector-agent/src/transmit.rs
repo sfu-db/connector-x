@@ -8,7 +8,7 @@ use std::marker::PhantomData;
 pub struct Transmit<S, W>(PhantomData<(S, W)>);
 
 impl<S, W> ParameterizedFunc for Transmit<S, W> {
-    type Function = fn(source: &mut S, writer: &mut W, row: usize, col: usize) -> Result<()>;
+    type Function = fn(source: &mut S, writer: &mut W) -> Result<()>;
 }
 
 impl<'s, 'w, S, W, T1, T2> ParameterizedOn<(T1, T2)> for Transmit<S, W>
@@ -21,12 +21,8 @@ where
 {
     fn parameterize() -> Self::Function {
         #[throws(ConnectorAgentError)]
-        pub fn transmit<'s, 'w, S, W, T1, T2>(
-            source: &mut S,
-            writer: &mut W,
-            row: usize,
-            col: usize,
-        ) where
+        pub fn transmit<'s, 'w, S, W, T1, T2>(source: &mut S, writer: &mut W)
+        where
             S: Parser<'s> + Produce<T1>,
             W: PartitionWriter<'w> + Consume<T2>,
             T1: TypeAssoc<S::TypeSystem> + 'static,
@@ -35,7 +31,7 @@ where
         {
             let val: T1 = source.read()?;
             let val = <(S::TypeSystem, W::TypeSystem) as TypeConversion<T1, T2>>::convert(val);
-            unsafe { writer.write(row, col, val) }
+            unsafe { writer.write(val) }
         }
 
         transmit::<S, W, T1, T2>
@@ -45,7 +41,7 @@ where
 pub struct TransmitChecked<S, W>(PhantomData<(S, W)>);
 
 impl<S, W> ParameterizedFunc for TransmitChecked<S, W> {
-    type Function = fn(source: &mut S, writer: &mut W, row: usize, col: usize) -> Result<()>;
+    type Function = fn(source: &mut S, writer: &mut W) -> Result<()>;
 }
 
 impl<'s, 'w, S, W, T1, T2> ParameterizedOn<(T1, T2)> for TransmitChecked<S, W>
@@ -58,12 +54,8 @@ where
 {
     fn parameterize() -> Self::Function {
         #[throws(ConnectorAgentError)]
-        pub fn transmit_checked<'s, 'w, S, W, T1, T2>(
-            source: &mut S,
-            writer: &mut W,
-            row: usize,
-            col: usize,
-        ) where
+        pub fn transmit_checked<'s, 'w, S, W, T1, T2>(source: &mut S, writer: &mut W)
+        where
             S: Parser<'s> + Produce<T1>,
             W: PartitionWriter<'w> + Consume<T2>,
             T1: TypeAssoc<S::TypeSystem> + 'static,
@@ -72,7 +64,7 @@ where
         {
             let val: T1 = source.read()?;
             let val = <(S::TypeSystem, W::TypeSystem) as TypeConversion<T1, T2>>::convert(val);
-            writer.write_checked(row, col, val)?
+            writer.write_checked(val)?
         }
         transmit_checked::<S, W, T1, T2>
     }

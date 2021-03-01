@@ -136,9 +136,10 @@ impl MemoryWriter {
 /// The `PartitionedWriter` of `MemoryWriter`.
 pub struct MemoryPartitionWriter<'a> {
     nrows: usize,
-    buffers: Vec<AnyArrayViewMut<'a, Ix2>>,
     schema: Vec<DataType>,
+    buffers: Vec<AnyArrayViewMut<'a, Ix2>>,
     column_buffer_index: Vec<(usize, usize)>,
+    current: usize,
 }
 
 impl<'a> MemoryPartitionWriter<'a> {
@@ -153,7 +154,14 @@ impl<'a> MemoryPartitionWriter<'a> {
             buffers,
             schema,
             column_buffer_index,
+            current: 0,
         }
+    }
+
+    fn loc(&mut self) -> (usize, usize) {
+        let (row, col) = (self.current / self.ncols(), self.current % self.ncols());
+        self.current += 1;
+        (row, col)
     }
 }
 
@@ -173,13 +181,15 @@ impl<'a, T> Consume<T> for MemoryPartitionWriter<'a>
 where
     T: TypeAssoc<<Self as PartitionWriter<'a>>::TypeSystem> + 'static,
 {
-    unsafe fn consume(&mut self, row: usize, col: usize, value: T) {
+    unsafe fn consume(&mut self, value: T) {
+        let (row, col) = self.loc();
         let &(bid, col) = &self.column_buffer_index[col];
         let mut_view = self.buffers[bid].udowncast::<T>();
         *mut_view.get_mut((row, col)).unwrap() = value;
     }
 
-    fn consume_checked(&mut self, row: usize, col: usize, value: T) -> Result<()> {
+    fn consume_checked(&mut self, value: T) -> Result<()> {
+        let (row, col) = self.loc();
         self.schema[col].check::<T>()?;
         let &(bid, col) = &self.column_buffer_index[col];
 

@@ -51,14 +51,12 @@ fn write_mixed_array() -> Result<()> {
 
     writers.into_par_iter().for_each(|mut writer| {
         for row in 0..writer.nrows() {
-            writer.write_checked(row, 0, row as i64).unwrap();
-            writer.write_checked(row, 1, row as f64).unwrap();
-            writer.write_checked(row, 2, row as i64 + 1000).unwrap();
-            writer.write_checked(row, 3, row.to_string()).unwrap();
-            writer.write_checked(row, 4, row as f64 + 1000.).unwrap();
-            writer
-                .write_checked(row, 5, (row + 1000).to_string())
-                .unwrap();
+            writer.write_checked(row as i64).unwrap();
+            writer.write_checked(row as f64).unwrap();
+            writer.write_checked(row as i64 + 1000).unwrap();
+            writer.write_checked(row.to_string()).unwrap();
+            writer.write_checked(row as f64 + 1000.).unwrap();
+            writer.write_checked((row + 1000).to_string()).unwrap();
         }
     });
     for (col, _) in dw.schema().into_iter().enumerate() {

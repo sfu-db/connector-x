@@ -110,6 +110,7 @@ pub struct ArrowPartitionWriter<'a> {
     nrows: usize,
     schema: Vec<DataType>,
     builders: &'a mut Builders,
+    current_col: usize,
 }
 
 impl<'a> ArrowPartitionWriter<'a> {
@@ -118,6 +119,7 @@ impl<'a> ArrowPartitionWriter<'a> {
             nrows,
             schema,
             builders,
+            current_col: 0,
         }
     }
 }
@@ -138,7 +140,9 @@ impl<'a, T> Consume<T> for ArrowPartitionWriter<'a>
 where
     T: TypeAssoc<<Self as PartitionWriter<'a>>::TypeSystem> + ArrowAssoc + 'static,
 {
-    unsafe fn consume(&mut self, _row: usize, col: usize, value: T) {
+    unsafe fn consume(&mut self, value: T) {
+        let col = self.current_col;
+        self.current_col = (self.current_col + 1) % self.ncols();
         // NOTE: can use `get_mut_unchecked` instead of Mutex in the future to speed up
         <T as ArrowAssoc>::append(
             self.builders[col].downcast_mut::<T::Builder>().unwrap(),
@@ -146,9 +150,11 @@ where
         );
     }
 
-    fn consume_checked(&mut self, row: usize, col: usize, value: T) -> Result<()> {
+    fn consume_checked(&mut self, value: T) -> Result<()> {
+        let col = self.current_col;
+
         self.schema[col].check::<T>()?;
-        unsafe { self.write(row, col, value) };
+        unsafe { self.write(value) };
         Ok(())
     }
 }

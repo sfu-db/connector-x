@@ -176,17 +176,6 @@ impl<'a> Writer for PandasWriter<'a> {
                                 .collect()
                         }
                     }
-                    // DataType::U64(_) => {
-                    //     let ublock = UInt64Block::extract(buf).map_err(|e| anyhow!(e))?;
-                    //     let ucols = ublock.split();
-                    //     for (&cid, ucol) in cids.iter().zip_eq(ucols) {
-                    //         partitioned_columns[cid] = ucol
-                    //             .partition(&counts)
-                    //             .into_iter()
-                    //             .map(|c| Box::new(c) as _)
-                    //             .collect()
-                    //     }
-                    // }
                     DataType::I64(_) => {
                         let ublock = Int64Block::extract(buf).map_err(|e| anyhow!(e))?;
                         let ucols = ublock.split();
@@ -230,17 +219,7 @@ impl<'a> Writer for PandasWriter<'a> {
                                 .map(|c| Box::new(c) as _)
                                 .collect()
                         }
-                    } // DataType::Date(_) => {
-                      //     let block = DateBlock::extract(buf).map_err(|e| anyhow!(e))?;
-                      //     let cols = block.split();
-                      //     for (&cid, col) in cids.iter().zip_eq(cols) {
-                      //         partitioned_columns[cid] = col
-                      //             .partition(&counts)
-                      //             .into_iter()
-                      //             .map(|c| Box::new(c) as _)
-                      //             .collect()
-                      //     }
-                      // }
+                    }
                 }
             }
         }
@@ -272,6 +251,7 @@ pub struct PandasPartitionWriter<'a> {
     nrows: usize,
     columns: Vec<Box<dyn PandasColumnObject + 'a>>,
     schema: &'a [DataType],
+    seq: usize,
 }
 
 impl<'a> PandasPartitionWriter<'a> {
@@ -284,7 +264,14 @@ impl<'a> PandasPartitionWriter<'a> {
             nrows,
             columns,
             schema,
+            seq: 0,
         }
+    }
+
+    fn loc(&mut self) -> (usize, usize) {
+        let (row, col) = (self.seq / self.ncols(), self.seq % self.ncols());
+        self.seq += 1;
+        (row, col)
     }
 }
 
@@ -304,15 +291,19 @@ impl<'a, T> Consume<T> for PandasPartitionWriter<'a>
 where
     T: HasPandasColumn + TypeAssoc<DataType> + std::fmt::Debug + 'static,
 {
-    unsafe fn consume(&mut self, row: usize, col: usize, value: T) {
+    unsafe fn consume(&mut self, value: T) {
+        let (row, col) = self.loc();
         let (column, _): (&mut T::PandasColumn<'a>, *const ()) = transmute(&*self.columns[col]);
         column.write(row, value);
     }
 
-    fn consume_checked(&mut self, row: usize, col: usize, value: T) -> Result<()> {
+    fn consume_checked(&mut self, value: T) -> Result<()> {
+        let col = self.seq % self.ncols();
+
         self.schema[col].check::<T>()?;
         assert!(self.columns[col].typecheck(TypeId::of::<T>()));
-        unsafe { self.consume(row, col, value) };
+
+        unsafe { self.consume(value) };
 
         Ok(())
     }
