@@ -18,11 +18,7 @@ use r2d2::{Pool, PooledConnection};
 use r2d2_postgres::{postgres::NoTls, PostgresConnectionManager};
 use sql::{count_query, limit1_query};
 use std::sync::Arc;
-use std::{
-    mem::{self, transmute},
-    ops::Range,
-    thread,
-};
+use std::{mem::transmute, ops::Range};
 pub use types::PostgresDTypes;
 
 type PgManager = PostgresConnectionManager<NoTls>;
@@ -33,6 +29,7 @@ pub struct PostgresSource {
     queries: Vec<String>,
     names: Vec<String>,
     schema: Vec<PostgresDTypes>,
+    buf_size: usize,
 }
 
 impl PostgresSource {
@@ -48,7 +45,12 @@ impl PostgresSource {
             queries: vec![],
             names: vec![],
             schema: vec![],
+            buf_size: 32,
         }
+    }
+
+    pub fn buf_size(&mut self, buf_size: usize) {
+        self.buf_size = buf_size;
     }
 }
 
@@ -120,7 +122,12 @@ impl Source for PostgresSource {
         for query in self.queries {
             let conn = self.pool.get()?;
 
-            ret.push(PostgresSourcePartition::new(conn, &query, &self.schema));
+            ret.push(PostgresSourcePartition::new(
+                conn,
+                &query,
+                &self.schema,
+                self.buf_size,
+            ));
         }
         Ok(ret)
     }
@@ -132,16 +139,18 @@ pub struct PostgresSourcePartition {
     schema: Vec<PostgresDTypes>,
     nrows: usize,
     ncols: usize,
+    buf_size: usize,
 }
 
 impl PostgresSourcePartition {
-    pub fn new(conn: PgConn, query: &str, schema: &[PostgresDTypes]) -> Self {
+    pub fn new(conn: PgConn, query: &str, schema: &[PostgresDTypes], buf_size: usize) -> Self {
         Self {
             conn,
             query: query.to_string(),
             schema: schema.to_vec(),
             nrows: 0,
             ncols: schema.len(),
+            buf_size,
         }
     }
 }
@@ -162,7 +171,7 @@ impl PartitionedSource for PostgresSourcePartition {
         let pg_schema: Vec<_> = self.schema.iter().map(|&dt| dt.into()).collect();
         let iter = BinaryCopyOutIter::new(reader, &pg_schema);
 
-        Ok(PostgresSourceParser::new(iter, &self.schema))
+        Ok(PostgresSourceParser::new(iter, &self.schema, self.buf_size))
     }
 
     fn nrows(&self) -> usize {
@@ -184,11 +193,11 @@ pub struct PostgresSourceParser<'a> {
 }
 
 impl<'a> PostgresSourceParser<'a> {
-    pub fn new(iter: BinaryCopyOutIter<'a>, schema: &[PostgresDTypes]) -> Self {
+    pub fn new(iter: BinaryCopyOutIter<'a>, schema: &[PostgresDTypes], buf_size: usize) -> Self {
         Self {
             iter,
-            buf_size: 10000,
-            rowbuf: Vec::with_capacity(10000),
+            buf_size: buf_size,
+            rowbuf: Vec::with_capacity(buf_size),
             ncols: schema.len(),
             current_row: 0,
             current_col: 0,
@@ -198,10 +207,7 @@ impl<'a> PostgresSourceParser<'a> {
     fn next_loc(&mut self) -> Result<(usize, usize)> {
         if self.current_row >= self.rowbuf.len() {
             if !self.rowbuf.is_empty() {
-                let mut row = Vec::with_capacity(self.buf_size);
-                mem::swap(&mut row, &mut self.rowbuf);
-
-                thread::spawn(|| mem::drop(row));
+                self.rowbuf.drain(..);
             }
 
             for _ in 0..self.buf_size {
