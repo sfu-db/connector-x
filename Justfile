@@ -20,12 +20,15 @@ seed-db:
     psql $POSTGRES_URL -c "DROP TABLE IF EXISTS test_table;"
     psql $POSTGRES_URL -f scripts/postgres.sql
 
-perf-tpch:
-    cd connector-agent-python && LD_LIBRARY_PATH=$HOME/.pyenv/versions/3.8.6/lib/ cargo run --no-default-features --features executable --release --example perf_tpch
+# benches 
+flame-tpch:
+    cd connector-agent-python && LD_LIBRARY_PATH=$HOME/.pyenv/versions/3.8.6/lib/ cargo run --no-default-features --features executable --release --example flame_tpch
 
-flame-tpch-old:
-    cd connector-agent-python && LD_LIBRARY_PATH=$HOME/.pyenv/versions/3.8.6/lib/ cargo criterion --no-default-features --features executable --bench tpch_old -- --profile-time=300
+build-tpch:
+    cd connector-agent-python && cargo build --no-default-features --features executable --release --example tpch
 
+cachegrind-tpch: build-tpch
+    valgrind --tool=cachegrind target/release/examples/tpch
 
 python-tpch n="1": setup-python
     cd connector-agent-python && \
