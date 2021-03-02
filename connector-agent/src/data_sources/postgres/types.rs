@@ -1,5 +1,4 @@
 use crate::typesystem::TypeSystem;
-use bytes::Bytes;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
 use postgres::types::Type;
 
@@ -59,14 +58,14 @@ impl<'a> From<PostgresDTypes> for Type {
 }
 
 define_typesystem! {
-    PostgresDTypes,
-    [PostgresDTypes::Int4] => i32,
-    [PostgresDTypes::Int8] => i64,
-    [PostgresDTypes::Float4] => f32,
-    [PostgresDTypes::Float8] => f64,
-    [PostgresDTypes::Bool] => bool,
-    [PostgresDTypes::Text] | [PostgresDTypes::BpChar] | [PostgresDTypes::VarChar] => Bytes,
-    [PostgresDTypes::Timestamp] => NaiveDateTime,
-    [PostgresDTypes::TimestampTz] => DateTime<Utc>,
-    [PostgresDTypes::Date] => NaiveDate,
+    PostgresDTypes, <'a>,
+    [PostgresDTypes::Int4] => [i32],
+    [PostgresDTypes::Int8] => [i64],
+    [PostgresDTypes::Float4] => [f32],
+    [PostgresDTypes::Float8] => [f64],
+    [PostgresDTypes::Bool] => [bool],
+    [PostgresDTypes::Text] | [PostgresDTypes::BpChar] | [PostgresDTypes::VarChar] => <'a> [&'a [u8]],
+    [PostgresDTypes::Timestamp] => [NaiveDateTime],
+    [PostgresDTypes::TimestampTz] => [DateTime<Utc>],
+    [PostgresDTypes::Date] => [NaiveDate],
 }

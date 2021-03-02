@@ -1,8 +1,8 @@
 // When implementing a data source, be make sure to implement Queryable and
 // Producer for all supported types in crate::types::DataType.
 
-pub mod csv;
-pub mod dummy;
+// pub mod csv;
+// pub mod dummy;
 pub mod postgres;
 
 use crate::data_order::DataOrder;
@@ -55,13 +55,15 @@ pub trait Parser<'a> {
     fn read<'r, T>(&'r mut self) -> Result<T>
     where
         T: TypeAssoc<Self::TypeSystem> + 'r,
-        Self: Produce<T>,
+        Self: Produce<'r, T>,
     {
         self.produce()
     }
 }
 
 /// A type implemented `Produce<T>` means that it can produce a value `T` by consuming part of it's raw data buffer.
-pub trait Produce<T> {
-    fn produce(&mut self) -> Result<T>;
+pub trait Produce<'b, T> {
+    fn produce<'r>(&'r mut self) -> Result<T>
+    where
+        'r: 'b;
 }

@@ -244,7 +244,7 @@ impl<'a> PartitionWriter<'a> for PandasPartitionWriter<'a> {
 
 impl<'a, T> Consume<T> for PandasPartitionWriter<'a>
 where
-    T: HasPandasColumn + TypeAssoc<PandasTypes> + std::fmt::Debug + 'static,
+    T: HasPandasColumn + TypeAssoc<PandasTypes> + std::fmt::Debug,
 {
     unsafe fn consume(&mut self, value: T) {
         let (_, col) = self.loc();
@@ -256,7 +256,7 @@ where
         let col = self.seq % self.ncols();
 
         self.schema[col].check::<T>()?;
-        assert!(self.columns[col].typecheck(TypeId::of::<T>()));
+        // assert!(self.columns[col].typecheck(TypeId::of::<T>()));
 
         unsafe { self.consume(value) };
 

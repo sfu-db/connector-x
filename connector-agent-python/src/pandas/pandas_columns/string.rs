@@ -93,16 +93,16 @@ impl<'a> PandasColumnObject for StringColumn<'a> {
     }
 }
 
-impl<'a> PandasColumn<Bytes> for StringColumn<'a> {
-    fn write(&mut self, val: Bytes) {
+impl<'a> PandasColumn<&'a [u8]> for StringColumn<'a> {
+    fn write(&mut self, val: &'a [u8]) {
         self.string_lengths.push(val.len());
         self.string_buf.extend(val);
         self.try_flush();
     }
 }
 
-impl<'a> PandasColumn<Option<Bytes>> for StringColumn<'a> {
-    fn write(&mut self, val: Option<Bytes>) {
+impl<'a> PandasColumn<Option<&'a [u8]>> for StringColumn<'a> {
+    fn write(&mut self, val: Option<&'a [u8]>) {
         match val {
             Some(b) => {
                 self.string_lengths.push(b.len());
@@ -116,12 +116,12 @@ impl<'a> PandasColumn<Option<Bytes>> for StringColumn<'a> {
     }
 }
 
-impl HasPandasColumn for Bytes {
-    type PandasColumn<'a> = StringColumn<'a>;
+impl<'a> HasPandasColumn for &'a [u8] {
+    type PandasColumn<'b> = StringColumn<'a>;
 }
 
-impl HasPandasColumn for Option<Bytes> {
-    type PandasColumn<'a> = StringColumn<'a>;
+impl<'a> HasPandasColumn for Option<&'a [u8]> {
+    type PandasColumn<'b> = StringColumn<'a>;
 }
 
 impl<'a> StringColumn<'a> {

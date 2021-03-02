@@ -22,9 +22,9 @@ pub enum DataType {
 
 define_typesystem! {
     DataType,
-    [DataType::F64] => f64,
-    [DataType::I64] => i64,
-    [DataType::Bool] => bool,
-    [DataType::String] => String,
-    [DataType::DateTime] => DateTime<Utc>,
+    [DataType::F64] => [f64],
+    [DataType::I64] => [i64],
+    [DataType::Bool] => [bool],
+    [DataType::String] => [String],
+    [DataType::DateTime] => [DateTime<Utc>],
 }

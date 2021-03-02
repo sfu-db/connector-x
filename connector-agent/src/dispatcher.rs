@@ -30,11 +30,15 @@ where
     TSW: TypeSystem + TypeSystemConversion<TSS>,
     S: Source<TypeSystem = TSS>,
     W: Writer<TypeSystem = TSW>,
-    (TSS, TSW): for<'r, 's> Realize<
-        Transmit<<S::Partition as PartitionedSource>::Parser<'s>, W::PartitionWriter<'r>>,
+    (TSS, TSW): for<'s> Realize<
+        Transmit<<S::Partition as PartitionedSource>::Parser<'s>, W::PartitionWriter<'w>>,
     >,
-    (TSS, TSW): for<'r, 's> Realize<
-        TransmitChecked<<S::Partition as PartitionedSource>::Parser<'s>, W::PartitionWriter<'r>>,
+    (TSS, TSW): for<'s, 'r> Realize<
+        TransmitChecked<
+            'r,
+            <S::Partition as PartitionedSource>::Parser<'s>,
+            W::PartitionWriter<'w>,
+        >,
     >,
 {
     /// Create a new dispatcher by providing a source builder, schema (temporary) and the queries

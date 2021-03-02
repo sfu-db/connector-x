@@ -17,8 +17,8 @@ use postgres::{
 use r2d2::{Pool, PooledConnection};
 use r2d2_postgres::{postgres::NoTls, PostgresConnectionManager};
 use sql::{count_query, limit1_query};
+use std::ops::Range;
 use std::sync::Arc;
-use std::{mem::transmute, ops::Range};
 pub use types::PostgresDTypes;
 
 type PgManager = PostgresConnectionManager<NoTls>;
@@ -240,16 +240,16 @@ impl<'a> Parser<'a> for PostgresSourceParser<'a> {
 macro_rules! impl_produce {
     ($($t: ty),+) => {
         $(
-            impl<'a> Produce<$t> for PostgresSourceParser<'a> {
-                fn produce(&mut self) -> Result<$t> {
+            impl<'a,'b> Produce<'b, $t> for PostgresSourceParser<'a> {
+                fn produce<'r:'b>(&'r mut self) -> Result<$t> {
                     let (ridx, cidx) = self.next_loc()?;
                     let val = self.rowbuf[ridx].try_get(cidx)?;
                     Ok(val)
                 }
             }
 
-            impl<'a> Produce<Option<$t>> for PostgresSourceParser<'a> {
-                fn produce(&mut self) -> Result<Option<$t>> {
+            impl<'a,'b> Produce<'b, Option<$t>> for PostgresSourceParser<'a> {
+                fn produce<'r:'b>(&'r mut self) -> Result<Option<$t>> {
                     let (ridx, cidx) = self.next_loc()?;
                     let val = self.rowbuf[ridx].try_get(cidx)?;
                     Ok(val)
@@ -277,26 +277,21 @@ pub struct MyBinaryCopyOutRow {
     _types: Arc<Vec<Type>>,
 }
 
-impl<'a> Produce<Bytes> for PostgresSourceParser<'a> {
-    fn produce(&mut self) -> Result<Bytes> {
+impl<'a, 'b> Produce<'b, &'b [u8]> for PostgresSourceParser<'a> {
+    fn produce<'r: 'b>(&'r mut self) -> Result<&'b [u8]> {
         let (ridx, cidx) = self.next_loc()?;
         let row = &self.rowbuf[ridx];
-        let row: &MyBinaryCopyOutRow = unsafe { transmute(row) };
-        let val = row.ranges[cidx]
-            .clone()
-            .map(|rg| row.buf.slice(rg))
-            .unwrap();
+        let val = row.try_get(cidx)?;
 
         Ok(val)
     }
 }
 
-impl<'a> Produce<Option<Bytes>> for PostgresSourceParser<'a> {
-    fn produce(&mut self) -> Result<Option<Bytes>> {
+impl<'a, 'b> Produce<'b, Option<&'b [u8]>> for PostgresSourceParser<'a> {
+    fn produce<'r: 'b>(&'r mut self) -> Result<Option<&'b [u8]>> {
         let (ridx, cidx) = self.next_loc()?;
         let row = &self.rowbuf[ridx];
-        let row: &MyBinaryCopyOutRow = unsafe { transmute(row) };
-        let val = row.ranges[cidx].clone().map(|rg| row.buf.slice(rg));
+        let val = row.try_get(cidx)?;
 
         Ok(val)
     }

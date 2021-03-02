@@ -1,7 +1,6 @@
 // Unfortunately, due to the orphan rule, typesystem implementation should be in this crate.
 use crate::errors::{ConnectorAgentError, Result};
 use crate::TypeSystem;
-use bytes::Bytes;
 use chrono::{DateTime, Utc};
 use fehler::throws;
 
@@ -60,10 +59,10 @@ impl PandasDType for PandasTypes {
 }
 
 define_typesystem! {
-    PandasTypes,
-    [PandasTypes::F64] => f64,
-    [PandasTypes::I64] => i64,
-    [PandasTypes::Bool] => bool,
-    [PandasTypes::String] => Bytes,
-    [PandasTypes::DateTime] => DateTime<Utc>,
+    PandasTypes, <'a>,
+    [PandasTypes::F64] => [f64],
+    [PandasTypes::I64] => [i64],
+    [PandasTypes::Bool] => [bool],
+    [PandasTypes::String] => <'a> [&'a [u8]],
+    [PandasTypes::DateTime] => [DateTime<Utc>],
 }

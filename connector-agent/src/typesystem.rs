@@ -24,18 +24,18 @@ pub trait TypeAssoc<TS: TypeSystem> {
 /// `DataType::F64(true)` is corresponding to the physical type Option<f64>. Same for I64 and i64
 #[macro_export]
 macro_rules! define_typesystem {
-    ($TS:ty, $(/*multiple mapping*/$(/*multiple variant*/ [$($V:tt)+])|+ => $NT:ty,)+) => {
-        define_typesystem!(IMPL $TS, $(/*multiple mapping*/
-            $(/*multiple variant*/$($V)+ (false))+ => $NT,
-            $(/*multiple variant*/$($V)+ (true))+ => Option<$NT>,
+    ($TS:ty, $(<$LT0:lifetime>,)? $(/*multiple mapping*/$(/*multiple variant*/ [$($V:tt)+])|+ => $(<$LT:lifetime>)? [$NT:ty],)+) => {
+        define_typesystem!(IMPL $TS, [$($LT0)?] $(/*multiple mapping*/
+            $(/*multiple variant*/$($V)+ (false))+ => $($LT)? [$NT],
+            $(/*multiple variant*/$($V)+ (true))+ => $($LT)? [Option<$NT>],
         )+);
     };
 
-    (IMPL $TS:ty, $($($V:pat)+ => $NT:ty,)+) => {
+    (IMPL $TS:ty, [$($LT0:lifetime)?] $($($V:pat)+ => $($LT:lifetime)? [$NT:ty],)+) => {
         impl TypeSystem for $TS {}
 
         $(
-            impl $crate::typesystem::TypeAssoc<$TS> for $NT {
+            impl $(<$LT>)? $crate::typesystem::TypeAssoc<$TS> for $NT {
                 fn check(ts: $TS) -> $crate::errors::Result<()> {
                     match ts {
                         $(
@@ -47,7 +47,7 @@ macro_rules! define_typesystem {
             }
         )+
 
-        impl<F> $crate::typesystem::Realize<F> for $TS
+        impl<$($LT0,)? F> $crate::typesystem::Realize<F> for $TS
         where
             F: $crate::typesystem::ParameterizedFunc,
             $(F: $crate::typesystem::ParameterizedOn<$NT>),+
@@ -62,7 +62,7 @@ macro_rules! define_typesystem {
         }
 
         // Always true for type system self conversion
-        impl<F> $crate::typesystem::Realize<F> for ($TS, $TS)
+        impl<$($LT0,)? F> $crate::typesystem::Realize<F> for ($TS, $TS)
         where
             F: $crate::typesystem::ParameterizedFunc,
             $(F: $crate::typesystem::ParameterizedOn<($NT, $NT)>),+
@@ -82,7 +82,7 @@ macro_rules! define_typesystem {
         }
 
         $(
-            impl $crate::typesystem::TypeConversion<$NT, $NT> for ($TS, $TS) {
+            impl <$($LT,)?> $crate::typesystem::TypeConversion<$NT, $NT> for ($TS, $TS) {
                 fn convert(val: $NT) -> $NT { val }
             }
         )+
@@ -155,10 +155,10 @@ where
 /// but the conversion rule for `(Option<f32>, Option<f64>)` is still generated. `conversion none` means generate nothing.
 #[macro_export]
 macro_rules! associate_typesystems {
-    (($TS1:ty, $TS2:ty), $($(([$($v1:tt)+], [$($v2:tt)+]))|+ => ($T1:ty, $T2:ty) conversion $cast:ident,)+) => {
-        associate_typesystems!(Realize ($TS1, $TS2), $(
-            $(($($v1)+ (false), $($v2)+ (false)))|+ => ($T1, $T2),
-            $(($($v1)+ (true), $($v2)+ (true)))|+ => (Option<$T1>, Option<$T2>),
+    (($TS1:ty, $TS2:ty), $(<$LT0:lifetime>,)? $($(([$($v1:tt)+], [$($v2:tt)+]))|+ => $(<$LT:lifetime>)? [$T1:ty, $T2:ty] conversion $cast:ident,)+) => {
+        associate_typesystems!(Realize ($TS1, $TS2), [$($LT0)?] $(
+            $(($($v1)+ (false), $($v2)+ (false)))|+ => [$($LT)?] ($T1, $T2),
+            $(($($v1)+ (true), $($v2)+ (true)))|+ => [$($LT)?] (Option<$T1>, Option<$T2>),
         )+);
 
         associate_typesystems!(Conversion ($TS1, $TS2), $(
@@ -167,12 +167,12 @@ macro_rules! associate_typesystems {
         )+);
 
         $(
-            associate_typesystems!(TypeConversion $cast $TS1, $TS2, $T1, $T2);
+            associate_typesystems!(TypeConversion $cast [$($LT)?] $TS1, $TS2, $T1, $T2);
         )+
     };
 
-    (Realize ($TS1:ty, $TS2:ty), $($(($v1:pat, $v2:pat))|+ => ($T1:ty, $T2:ty),)+) => {
-        impl<F> $crate::typesystem::Realize<F> for ($TS1, $TS2)
+    (Realize ($TS1:ty, $TS2:ty), [$($LT0:lifetime)?] $($(($v1:pat, $v2:pat))|+ => [$($LT:lifetime)?] ($T1:ty, $T2:ty),)+) => {
+        impl<$($LT0,)? F> $crate::typesystem::Realize<F> for ($TS1, $TS2)
         where
             F: $crate::typesystem::ParameterizedFunc,
             $(F: $crate::typesystem::ParameterizedOn<($T1, $T2)>),+
@@ -208,27 +208,23 @@ macro_rules! associate_typesystems {
         }
     };
 
-    (TypeConversion all $TS1:ty, $TS2:ty, $T1:ty, $T2:ty) => {
-        impl $crate::typesystem::TypeConversion<$T1, $T2> for ($TS1, $TS2) {
+    (TypeConversion all [$($LT:lifetime)?] $TS1:ty, $TS2:ty, $T1:ty, $T2:ty) => {
+        impl <$($LT,)?> $crate::typesystem::TypeConversion<$T1, $T2> for ($TS1, $TS2) {
             fn convert(val: $T1) -> $T2 {
                 val as _
             }
         }
 
-        impl $crate::typesystem::TypeConversion<Option<$T1>, Option<$T2>> for ($TS1, $TS2) {
+        associate_typesystems!(TypeConversion half [$($LT)?] $TS1, $TS2, $T1, $T2);
+    };
+
+    (TypeConversion half [$($LT:lifetime)?] $TS1:ty, $TS2:ty, $T1:ty, $T2:ty) => {
+        impl <$($LT,)?> $crate::typesystem::TypeConversion<Option<$T1>, Option<$T2>> for ($TS1, $TS2) {
             fn convert(val: Option<$T1>) -> Option<$T2> {
                 val.map(Self::convert)
             }
         }
     };
 
-    (TypeConversion half $TS1:ty, $TS2:ty, $T1:ty, $T2:ty) => {
-        impl $crate::typesystem::TypeConversion<Option<$T1>, Option<$T2>> for ($TS1, $TS2) {
-            fn convert(val: Option<$T1>) -> Option<$T2> {
-                val.map(Self::convert)
-            }
-        }
-    };
-
-    (TypeConversion none $TS1:ty, $TS2:ty, $T1:ty, $T2:ty) => {};
+    (TypeConversion none [$($LT:lifetime)?] $TS1:ty, $TS2:ty, $T1:ty, $T2:ty) => {};
 }
