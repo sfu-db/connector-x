@@ -145,6 +145,8 @@
 <span id="142">142</span>
 <span id="143">143</span>
 <span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">data_order</span>::{<span class="ident">coordinate</span>, <span class="ident">DataOrder</span>},
@@ -283,6 +285,8 @@
                         }
                     }
                 }
+
+                <span class="ident">writer</span>.<span class="ident">finalize</span>().<span class="ident">unwrap</span>();
             });
 
         <span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;Writing finished&quot;</span>);

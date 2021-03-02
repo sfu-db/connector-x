@@ -68,6 +68,12 @@
 <span id="65">65</span>
 <span id="66">66</span>
 <span id="67">67</span>
+<span id="68">68</span>
+<span id="69">69</span>
+<span id="70">70</span>
+<span id="71">71</span>
+<span id="72">72</span>
+<span id="73">73</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">arrow</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">memory</span>;
@@ -127,8 +133,14 @@
     }
     <span class="doccomment">/// Number of rows this `PartitionWriter` controls.</span>
     <span class="kw">fn</span> <span class="ident">nrows</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span>;
+
     <span class="doccomment">/// Number of rows this `PartitionWriter` controls.</span>
     <span class="kw">fn</span> <span class="ident">ncols</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span>;
+
+    <span class="doccomment">/// Final clean ups</span>
+    <span class="kw">fn</span> <span class="ident">finalize</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="prelude-val">Ok</span>(())
+    }
 }
 
 <span class="doccomment">/// A type implemented `Consume&lt;T&gt;` means that it can consume a value `T` by adding it to it&#39;s own buffer.</span>
