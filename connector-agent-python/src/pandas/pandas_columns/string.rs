@@ -63,11 +63,17 @@ impl<'a> StringColumn<'a> {
                 if len != 0 {
                     unsafe { self.data[self.next_write + i].write(&self.string_buf[start..end]) };
                 }
-                start = len;
+                start = end;
             }
 
             self.string_buf.drain(..);
             self.next_write += nstrings;
+        }
+    }
+
+    pub fn try_flush(&mut self) {
+        if self.string_buf.len() >= self.buf_size {
+            self.flush();
         }
     }
 }
@@ -91,9 +97,7 @@ impl<'a> PandasColumn<Bytes> for StringColumn<'a> {
     fn write(&mut self, val: Bytes) {
         self.string_lengths.push(val.len());
         self.string_buf.extend(val);
-        if self.string_buf.len() >= self.buf_size {
-            self.flush();
-        }
+        self.try_flush();
     }
 }
 
@@ -103,9 +107,7 @@ impl<'a> PandasColumn<Option<Bytes>> for StringColumn<'a> {
             Some(b) => {
                 self.string_lengths.push(b.len());
                 self.string_buf.extend(b);
-                if self.string_buf.len() >= self.buf_size {
-                    self.flush();
-                }
+                self.try_flush();
             }
             None => {
                 self.string_lengths.push(0);

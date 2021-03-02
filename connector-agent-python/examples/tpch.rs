@@ -6,7 +6,7 @@ use std::env;
 fn get_sqls(count: usize) -> Vec<String> {
     let mut sqls = vec![];
 
-    let split = Array1::linspace(0., 60000., count + 1);
+    let split = Array1::linspace(0., 6000000., count + 1);
 
     for i in 0..split.len() - 1 {
         sqls.push(format!(

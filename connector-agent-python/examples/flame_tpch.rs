@@ -7,7 +7,7 @@ use std::io::Write;
 fn main() {
     let guard = pprof::ProfilerGuard::new(100).unwrap();
 
-    tpch::run(10);
+    tpch::run(1);
 
     if let Ok(report) = guard.report().build() {
         let file = File::create("flamegraph.svg").unwrap();
