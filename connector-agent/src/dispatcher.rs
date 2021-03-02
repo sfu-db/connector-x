@@ -135,6 +135,8 @@ where
                         }
                     }
                 }
+
+                writer.finalize().unwrap();
             });
 
         debug!("Writing finished");

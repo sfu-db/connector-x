@@ -33,6 +33,7 @@ impl<'a> UInt64Block<'a> {
             UInt64Block::Extention(data, mask) => ret.push(UInt64Column {
                 data,
                 mask: Some(mask),
+                i: 0,
             }),
             UInt64Block::NumPy(mut view) => {
                 let nrows = view.ncols();
@@ -42,6 +43,7 @@ impl<'a> UInt64Block<'a> {
                     ret.push(UInt64Column {
                         data: col.into_shape(nrows).expect("reshape"),
                         mask: None,
+                        i: 0,
                     })
                 }
             }
@@ -54,6 +56,7 @@ impl<'a> UInt64Block<'a> {
 pub struct UInt64Column<'a> {
     data: ArrayViewMut1<'a, u64>,
     mask: Option<ArrayViewMut1<'a, bool>>,
+    i: usize,
 }
 
 impl<'a> PandasColumnObject for UInt64Column<'a> {
@@ -69,31 +72,33 @@ impl<'a> PandasColumnObject for UInt64Column<'a> {
 }
 
 impl<'a> PandasColumn<u64> for UInt64Column<'a> {
-    fn write(&mut self, i: usize, val: u64) {
-        self.data[i] = val;
+    fn write(&mut self, val: u64) {
+        self.data[self.i] = val;
         if let Some(mask) = self.mask.as_mut() {
-            mask[i] = false;
+            mask[self.i] = false;
         }
+        self.i += 1;
     }
 }
 
 impl<'a> PandasColumn<Option<u64>> for UInt64Column<'a> {
-    fn write(&mut self, i: usize, val: Option<u64>) {
+    fn write(&mut self, val: Option<u64>) {
         match val {
             Some(val) => {
-                self.data[i] = val;
+                self.data[self.i] = val;
                 if let Some(mask) = self.mask.as_mut() {
-                    mask[i] = false;
+                    mask[self.i] = false;
                 }
             }
             None => {
                 if let Some(mask) = self.mask.as_mut() {
-                    mask[i] = true;
+                    mask[self.i] = true;
                 } else {
                     panic!("Writing null u64 to not null pandas array")
                 }
             }
         }
+        self.i += 1;
     }
 }
 
@@ -127,6 +132,7 @@ impl<'a> UInt64Column<'a> {
             partitions.push(UInt64Column {
                 data: splitted_data,
                 mask: splitted_mask,
+                i: 0,
             });
         }
 

@@ -31,6 +31,7 @@ impl<'a> DateTimeBlock<'a> {
             view = rest;
             ret.push(DateTimeColumn {
                 data: col.into_shape(nrows).expect("reshape"),
+                i: 0,
             })
         }
         ret
@@ -39,6 +40,7 @@ impl<'a> DateTimeBlock<'a> {
 
 pub struct DateTimeColumn<'a> {
     data: ArrayViewMut1<'a, i64>,
+    i: usize,
 }
 
 impl<'a> PandasColumnObject for DateTimeColumn<'a> {
@@ -54,14 +56,17 @@ impl<'a> PandasColumnObject for DateTimeColumn<'a> {
 }
 
 impl<'a> PandasColumn<DateTime<Utc>> for DateTimeColumn<'a> {
-    fn write(&mut self, i: usize, val: DateTime<Utc>) {
-        self.data[i] = val.timestamp_nanos();
+    fn write(&mut self, val: DateTime<Utc>) {
+        self.data[self.i] = val.timestamp_nanos();
+        self.i += 1;
     }
 }
 
 impl<'a> PandasColumn<Option<DateTime<Utc>>> for DateTimeColumn<'a> {
-    fn write(&mut self, i: usize, val: Option<DateTime<Utc>>) {
-        self.data[i] = val.map(|t| t.timestamp_nanos()).unwrap_or(i64::MIN);
+    fn write(&mut self, val: Option<DateTime<Utc>>) {
+        // numpy use i64::MIN as NaT
+        self.data[self.i] = val.map(|t| t.timestamp_nanos()).unwrap_or(i64::MIN);
+        self.i += 1;
     }
 }
 
@@ -84,6 +89,7 @@ impl<'a> DateTimeColumn<'a> {
 
             partitions.push(DateTimeColumn {
                 data: splitted_data,
+                i: 0,
             });
         }
 

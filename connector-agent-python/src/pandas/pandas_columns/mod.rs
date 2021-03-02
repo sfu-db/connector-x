@@ -24,10 +24,11 @@ pub trait PandasColumnObject: Send {
     fn typecheck(&self, _: TypeId) -> bool;
     fn typename(&self) -> &'static str;
     fn len(&self) -> usize;
+    fn finalize(&mut self) {}
 }
 
 pub trait PandasColumn<V>: Sized + PandasColumnObject {
-    fn write(&mut self, i: usize, val: V);
+    fn write(&mut self, val: V);
 }
 
 // Indicates a type has an associated pandas column

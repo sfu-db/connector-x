@@ -31,6 +31,7 @@ impl<'a> DateBlock<'a> {
             view = rest;
             ret.push(DateColumn {
                 data: col.into_shape(nrows).expect("reshape"),
+                i: 0,
             })
         }
         ret
@@ -39,6 +40,7 @@ impl<'a> DateBlock<'a> {
 
 pub struct DateColumn<'a> {
     data: ArrayViewMut1<'a, i64>,
+    i: usize,
 }
 
 impl<'a> PandasColumnObject for DateColumn<'a> {
@@ -54,16 +56,18 @@ impl<'a> PandasColumnObject for DateColumn<'a> {
 }
 
 impl<'a> PandasColumn<Date<Utc>> for DateColumn<'a> {
-    fn write(&mut self, i: usize, val: Date<Utc>) {
-        self.data[i] = val.and_hms(0, 0, 0).timestamp_nanos();
+    fn write(&mut self, val: Date<Utc>) {
+        self.data[self.i] = val.and_hms(0, 0, 0).timestamp_nanos();
+        self.i += 1;
     }
 }
 
 impl<'a> PandasColumn<Option<Date<Utc>>> for DateColumn<'a> {
-    fn write(&mut self, i: usize, val: Option<Date<Utc>>) {
-        self.data[i] = val
+    fn write(&mut self, val: Option<Date<Utc>>) {
+        self.data[self.i] = val
             .map(|t| t.and_hms(0, 0, 0).timestamp_nanos())
             .unwrap_or(i64::MIN);
+        self.i += 1;
     }
 }
 
@@ -86,6 +90,7 @@ impl<'a> DateColumn<'a> {
 
             partitions.push(DateColumn {
                 data: splitted_data,
+                i: 0,
             });
         }
 

@@ -29,6 +29,7 @@ impl<'a> Float64Block<'a> {
             view = rest;
             ret.push(Float64Column {
                 data: col.into_shape(nrows).expect("reshape"),
+                i: 0,
             })
         }
         ret
@@ -37,6 +38,7 @@ impl<'a> Float64Block<'a> {
 
 pub struct Float64Column<'a> {
     data: ArrayViewMut1<'a, f64>,
+    i: usize,
 }
 
 impl<'a> PandasColumnObject for Float64Column<'a> {
@@ -52,17 +54,19 @@ impl<'a> PandasColumnObject for Float64Column<'a> {
 }
 
 impl<'a> PandasColumn<f64> for Float64Column<'a> {
-    fn write(&mut self, i: usize, val: f64) {
-        self.data[i] = val;
+    fn write(&mut self, val: f64) {
+        self.data[self.i] = val;
+        self.i += 1;
     }
 }
 
 impl<'a> PandasColumn<Option<f64>> for Float64Column<'a> {
-    fn write(&mut self, i: usize, val: Option<f64>) {
+    fn write(&mut self, val: Option<f64>) {
         match val {
-            None => self.data[i] = f64::NAN,
-            Some(val) => self.data[i] = val,
+            None => self.data[self.i] = f64::NAN,
+            Some(val) => self.data[self.i] = val,
         }
+        self.i += 1;
     }
 }
 
@@ -84,6 +88,7 @@ impl<'a> Float64Column<'a> {
             data = rest;
             partitions.push(Float64Column {
                 data: splitted.into_shape(c).expect("reshape"),
+                i: 0,
             });
         }
 

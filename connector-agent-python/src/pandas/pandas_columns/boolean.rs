@@ -34,6 +34,7 @@ impl<'a> BooleanBlock<'a> {
             BooleanBlock::Extention(data, mask) => ret.push(BooleanColumn {
                 data,
                 mask: Some(mask),
+                i: 0,
             }),
             BooleanBlock::NumPy(mut view) => {
                 let nrows = view.ncols();
@@ -43,6 +44,7 @@ impl<'a> BooleanBlock<'a> {
                     ret.push(BooleanColumn {
                         data: col.into_shape(nrows).expect("reshape"),
                         mask: None,
+                        i: 0,
                     })
                 }
             }
@@ -54,6 +56,7 @@ impl<'a> BooleanBlock<'a> {
 pub struct BooleanColumn<'a> {
     data: ArrayViewMut1<'a, bool>,
     mask: Option<ArrayViewMut1<'a, bool>>,
+    i: usize,
 }
 
 impl<'a> PandasColumnObject for BooleanColumn<'a> {
@@ -69,31 +72,33 @@ impl<'a> PandasColumnObject for BooleanColumn<'a> {
 }
 
 impl<'a> PandasColumn<bool> for BooleanColumn<'a> {
-    fn write(&mut self, i: usize, val: bool) {
-        self.data[i] = val;
+    fn write(&mut self, val: bool) {
+        self.data[self.i] = val;
         if let Some(mask) = self.mask.as_mut() {
-            mask[i] = false;
+            mask[self.i] = false;
         }
+        self.i += 1;
     }
 }
 
 impl<'a> PandasColumn<Option<bool>> for BooleanColumn<'a> {
-    fn write(&mut self, i: usize, val: Option<bool>) {
+    fn write(&mut self, val: Option<bool>) {
         match val {
             Some(val) => {
-                self.data[i] = val;
+                self.data[self.i] = val;
                 if let Some(mask) = self.mask.as_mut() {
-                    mask[i] = false;
+                    mask[self.i] = false;
                 }
             }
             None => {
                 if let Some(mask) = self.mask.as_mut() {
-                    mask[i] = true;
+                    mask[self.i] = true;
                 } else {
                     panic!("Writing null u64 to not null pandas array")
                 }
             }
         }
+        self.i += 1;
     }
 }
 
@@ -127,6 +132,7 @@ impl<'a> BooleanColumn<'a> {
             partitions.push(BooleanColumn {
                 data: splitted_data,
                 mask: splitted_mask,
+                i: 0,
             });
         }
 

@@ -25,9 +25,5 @@ pub fn write_pandas<'a>(py: Python<'a>, conn: &str, queries: &[&str], checked: b
         dispatcher.run()?;
     }
 
-    debug!("Start writing string");
-    writer.write_string_columns()?;
-    debug!("String writing finished");
-
     writer.result().ok_or(anyhow!("writer not run"))?
 }

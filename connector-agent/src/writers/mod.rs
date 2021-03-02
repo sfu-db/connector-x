@@ -56,8 +56,14 @@ pub trait PartitionWriter<'a>: Send {
     }
     /// Number of rows this `PartitionWriter` controls.
     fn nrows(&self) -> usize;
+
     /// Number of rows this `PartitionWriter` controls.
     fn ncols(&self) -> usize;
+
+    /// Final clean ups
+    fn finalize(&mut self) -> Result<()> {
+        Ok(())
+    }
 }
 
 /// A type implemented `Consume<T>` means that it can consume a value `T` by adding it to it's own buffer.

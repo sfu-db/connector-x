@@ -1,11 +1,8 @@
 use super::pandas_columns::{
-    check_dtype, BooleanBlock, DateTimeBlock, Float64Block, HasPandasColumn, Int64Block,
-    PandasColumn, PandasColumnObject, StringColumn,
+    BooleanBlock, DateTimeBlock, Float64Block, HasPandasColumn, Int64Block, PandasColumn,
+    PandasColumnObject, StringColumn,
 };
-use super::pystring::PyString;
-use crate::errors::ConnectorAgentPythonError;
 use anyhow::anyhow;
-use bytes::Bytes;
 use connector_agent::writers::pandas::{PandasDType, PandasTypes};
 use connector_agent::{
     ConnectorAgentError, Consume, DataOrder, PartitionWriter, Result, TypeAssoc, TypeSystem, Writer,
@@ -13,25 +10,20 @@ use connector_agent::{
 use fehler::{throw, throws};
 use itertools::Itertools;
 use log::debug;
-use numpy::PyArray1;
 use pyo3::{
     types::{PyDict, PyList},
     FromPyObject, PyAny, Python,
 };
 use std::any::TypeId;
-use std::collections::HashMap;
-use std::mem::{self, transmute};
-use std::thread;
-
+use std::mem::transmute;
+use std::sync::{Arc, Mutex};
 pub struct PandasWriter<'py> {
     py: Python<'py>,
     nrows: Option<usize>,
     schema: Option<Vec<PandasTypes>>,
     buffers: Option<&'py PyList>,
     buffer_column_index: Option<Vec<Vec<usize>>>,
-    column_buffer_index: Option<Vec<(usize, usize)>>,
     dataframe: Option<&'py PyAny>, // Using this field other than the return purpose should be careful: this refers to the same data as buffers
-    string_columns: HashMap<usize, Vec<Option<Bytes>>>, // We cannot create python string objects in parallel, so instead, we write string to memory first and write it to python later.
 }
 
 impl<'a> PandasWriter<'a> {
@@ -42,43 +34,7 @@ impl<'a> PandasWriter<'a> {
             schema: None,
             buffers: None,
             buffer_column_index: None,
-            column_buffer_index: None,
             dataframe: None,
-            string_columns: HashMap::new(),
-        }
-    }
-
-    #[throws(ConnectorAgentPythonError)]
-    pub fn write_string_columns(&mut self) {
-        let buffers = self.buffers.as_mut().unwrap();
-        let buffers: Vec<_> = buffers.iter().collect();
-
-        let column_buffer_index = self.column_buffer_index.as_ref().unwrap();
-
-        for (cid, col_data) in self.string_columns.drain() {
-            let (blkno, blkloc) = column_buffer_index[cid];
-            assert_eq!(
-                blkloc, 0,
-                "not possible that string buffer contains multiple columns"
-            );
-
-            check_dtype(buffers[blkno], "string")?;
-            let data = buffers[blkno].getattr("_ndarray")?;
-            check_dtype(data, "object")?;
-            let mut view = unsafe {
-                data.downcast::<PyArray1<PyString>>()
-                    .unwrap()
-                    .as_array_mut()
-            };
-            for (i, s) in col_data.iter().enumerate() {
-                if let Some(s) = s {
-                    view[i] = PyString::new(self.py, &s);
-                }
-                // We don't need to write if s is None: already set NA for that in the df.
-            }
-
-            // Drop the large string data asynchronously
-            thread::spawn(move || mem::drop(col_data));
         }
     }
 
@@ -130,18 +86,7 @@ impl<'a> Writer for PandasWriter<'a> {
         self.schema = Some(schema.to_vec());
         self.buffers = Some(buffers);
         self.buffer_column_index = Some(buffer_column_index);
-        self.column_buffer_index = Some(column_buffer_index);
         self.dataframe = Some(df);
-        debug!("Allocating string buffers");
-        for (i, &dt) in schema.iter().enumerate() {
-            match dt {
-                PandasTypes::String(..) => {
-                    self.string_columns.insert(i, vec![None; nrows]);
-                }
-                _ => {}
-            }
-        }
-        debug!("String buffers allocated");
     }
 
     #[throws(ConnectorAgentError)]
@@ -163,12 +108,7 @@ impl<'a> Writer for PandasWriter<'a> {
         let mut partitioned_columns: Vec<Vec<Box<dyn PandasColumnObject>>> =
             (0..schema.len()).map(|_| vec![]).collect();
 
-        let mut h: HashMap<_, _> = self
-            .string_columns
-            .iter_mut()
-            .map(|(&key, value)| (key, value))
-            .collect();
-
+        let object_mutex = Arc::new(Mutex::new(()));
         for (buf, cids) in buffers.iter().zip_eq(buffer_column_index) {
             for &cid in cids {
                 match schema[cid] {
@@ -208,7 +148,8 @@ impl<'a> Writer for PandasWriter<'a> {
                     PandasTypes::String(_) => {
                         assert_eq!(cids.len(), 1, "string buffer has multiple columns");
 
-                        let scol = StringColumn::new(h.remove(&cids[0]).unwrap());
+                        let scol =
+                            StringColumn::new(buf, object_mutex.clone()).map_err(|e| anyhow!(e))?;
 
                         partitioned_columns[cids[0]] = scol
                             .partition(&counts)
@@ -292,6 +233,13 @@ impl<'a> PartitionWriter<'a> for PandasPartitionWriter<'a> {
     fn ncols(&self) -> usize {
         self.schema.len()
     }
+
+    fn finalize(&mut self) -> Result<()> {
+        for col in &mut self.columns {
+            col.finalize();
+        }
+        Ok(())
+    }
 }
 
 impl<'a, T> Consume<T> for PandasPartitionWriter<'a>
@@ -299,9 +247,9 @@ where
     T: HasPandasColumn + TypeAssoc<PandasTypes> + std::fmt::Debug + 'static,
 {
     unsafe fn consume(&mut self, value: T) {
-        let (row, col) = self.loc();
+        let (_, col) = self.loc();
         let (column, _): (&mut T::PandasColumn<'a>, *const ()) = transmute(&*self.columns[col]);
-        column.write(row, value);
+        column.write(value);
     }
 
     fn consume_checked(&mut self, value: T) -> Result<()> {
