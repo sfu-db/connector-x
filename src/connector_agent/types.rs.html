@@ -31,6 +31,8 @@
 <span id="28">28</span>
 <span id="29">29</span>
 <span id="30">30</span>
+<span id="31">31</span>
+<span id="32">32</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Each variant in DataType represents a type that connector-agent currently</span>
 <span class="comment">// supports to read from a data source and write into a writer.</span>
@@ -54,13 +56,15 @@
     <span class="ident">DateTime</span>(<span class="ident">bool</span>),
 }
 
-<span class="macro">define_typesystem</span><span class="macro">!</span> {
+<span class="kw">impl</span> <span class="ident">TypeSystem</span> <span class="kw">for</span> <span class="ident">DataType</span> {}
+
+<span class="macro">associate_typesystem</span><span class="macro">!</span> {
     <span class="ident">DataType</span>,
-    [<span class="ident">DataType</span>::<span class="ident">F64</span>] <span class="op">=</span><span class="op">&gt;</span> [<span class="ident">f64</span>],
-    [<span class="ident">DataType</span>::<span class="ident">I64</span>] <span class="op">=</span><span class="op">&gt;</span> [<span class="ident">i64</span>],
-    [<span class="ident">DataType</span>::<span class="ident">Bool</span>] <span class="op">=</span><span class="op">&gt;</span> [<span class="ident">bool</span>],
-    [<span class="ident">DataType</span>::<span class="ident">String</span>] <span class="op">=</span><span class="op">&gt;</span> [<span class="ident">String</span>],
-    [<span class="ident">DataType</span>::<span class="ident">DateTime</span>] <span class="op">=</span><span class="op">&gt;</span> [<span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span>],
+    [<span class="ident">DataType</span>::<span class="ident">F64</span>] <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f64</span>,
+    [<span class="ident">DataType</span>::<span class="ident">I64</span>] <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i64</span>,
+    [<span class="ident">DataType</span>::<span class="ident">Bool</span>] <span class="op">=</span><span class="op">&gt;</span> <span class="ident">bool</span>,
+    [<span class="ident">DataType</span>::<span class="ident">String</span>] <span class="op">=</span><span class="op">&gt;</span> <span class="ident">String</span>,
+    [<span class="ident">DataType</span>::<span class="ident">DateTime</span>] <span class="op">=</span><span class="op">&gt;</span> <span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span>,
 }
 </pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="connector_agent"></div>

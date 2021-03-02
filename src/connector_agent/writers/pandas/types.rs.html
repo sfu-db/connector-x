@@ -69,10 +69,14 @@
 <span id="66">66</span>
 <span id="67">67</span>
 <span id="68">68</span>
+<span id="69">69</span>
+<span id="70">70</span>
+<span id="71">71</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Unfortunately, due to the orphan rule, typesystem implementation should be in this crate.</span>
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">errors</span>::{<span class="ident">ConnectorAgentError</span>, <span class="prelude-ty">Result</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">TypeSystem</span>;
+<span class="kw">use</span> <span class="ident">bytes</span>::<span class="ident">Bytes</span>;
 <span class="kw">use</span> <span class="ident">chrono</span>::{<span class="ident">DateTime</span>, <span class="ident">Utc</span>};
 <span class="kw">use</span> <span class="ident">fehler</span>::<span class="ident">throws</span>;
 
@@ -84,6 +88,8 @@
     <span class="ident">String</span>(<span class="ident">bool</span>),
     <span class="ident">DateTime</span>(<span class="ident">bool</span>),
 }
+
+<span class="kw">impl</span> <span class="ident">TypeSystem</span> <span class="kw">for</span> <span class="ident">PandasTypes</span> {}
 
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">PandasDType</span>: <span class="ident">Sized</span> {
     <span class="kw">fn</span> <span class="ident">dtype</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>;
@@ -130,13 +136,13 @@
     }
 }
 
-<span class="macro">define_typesystem</span><span class="macro">!</span> {
-    <span class="ident">PandasTypes</span>, <span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
-    [<span class="ident">PandasTypes</span>::<span class="ident">F64</span>] <span class="op">=</span><span class="op">&gt;</span> [<span class="ident">f64</span>],
-    [<span class="ident">PandasTypes</span>::<span class="ident">I64</span>] <span class="op">=</span><span class="op">&gt;</span> [<span class="ident">i64</span>],
-    [<span class="ident">PandasTypes</span>::<span class="ident">Bool</span>] <span class="op">=</span><span class="op">&gt;</span> [<span class="ident">bool</span>],
-    [<span class="ident">PandasTypes</span>::<span class="ident">String</span>] <span class="op">=</span><span class="op">&gt;</span> <span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> [<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">u8</span>]],
-    [<span class="ident">PandasTypes</span>::<span class="ident">DateTime</span>] <span class="op">=</span><span class="op">&gt;</span> [<span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span>],
+<span class="macro">associate_typesystem</span><span class="macro">!</span> {
+    <span class="ident">PandasTypes</span>,
+    [<span class="ident">PandasTypes</span>::<span class="ident">F64</span>] <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f64</span>,
+    [<span class="ident">PandasTypes</span>::<span class="ident">I64</span>] <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i64</span>,
+    [<span class="ident">PandasTypes</span>::<span class="ident">Bool</span>] <span class="op">=</span><span class="op">&gt;</span> <span class="ident">bool</span>,
+    [<span class="ident">PandasTypes</span>::<span class="ident">String</span>] <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Bytes</span>,
+    [<span class="ident">PandasTypes</span>::<span class="ident">DateTime</span>] <span class="op">=</span><span class="op">&gt;</span> <span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span>,
 }
 </pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="connector_agent"></div>

@@ -72,8 +72,12 @@
 <span id="69">69</span>
 <span id="70">70</span>
 <span id="71">71</span>
+<span id="72">72</span>
+<span id="73">73</span>
+<span id="74">74</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">typesystem</span>::<span class="ident">TypeSystem</span>;
+<span class="kw">use</span> <span class="ident">bytes</span>::<span class="ident">Bytes</span>;
 <span class="kw">use</span> <span class="ident">chrono</span>::{<span class="ident">DateTime</span>, <span class="ident">NaiveDate</span>, <span class="ident">NaiveDateTime</span>, <span class="ident">Utc</span>};
 <span class="kw">use</span> <span class="ident">postgres</span>::<span class="ident">types</span>::<span class="ident">Type</span>;
 
@@ -132,17 +136,19 @@
     }
 }
 
-<span class="macro">define_typesystem</span><span class="macro">!</span> {
-    <span class="ident">PostgresDTypes</span>, <span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
-    [<span class="ident">PostgresDTypes</span>::<span class="ident">Int4</span>] <span class="op">=</span><span class="op">&gt;</span> [<span class="ident">i32</span>],
-    [<span class="ident">PostgresDTypes</span>::<span class="ident">Int8</span>] <span class="op">=</span><span class="op">&gt;</span> [<span class="ident">i64</span>],
-    [<span class="ident">PostgresDTypes</span>::<span class="ident">Float4</span>] <span class="op">=</span><span class="op">&gt;</span> [<span class="ident">f32</span>],
-    [<span class="ident">PostgresDTypes</span>::<span class="ident">Float8</span>] <span class="op">=</span><span class="op">&gt;</span> [<span class="ident">f64</span>],
-    [<span class="ident">PostgresDTypes</span>::<span class="ident">Bool</span>] <span class="op">=</span><span class="op">&gt;</span> [<span class="ident">bool</span>],
-    [<span class="ident">PostgresDTypes</span>::<span class="ident">Text</span>] <span class="op">|</span> [<span class="ident">PostgresDTypes</span>::<span class="ident">BpChar</span>] <span class="op">|</span> [<span class="ident">PostgresDTypes</span>::<span class="ident">VarChar</span>] <span class="op">=</span><span class="op">&gt;</span> <span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> [<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">u8</span>]],
-    [<span class="ident">PostgresDTypes</span>::<span class="ident">Timestamp</span>] <span class="op">=</span><span class="op">&gt;</span> [<span class="ident">NaiveDateTime</span>],
-    [<span class="ident">PostgresDTypes</span>::<span class="ident">TimestampTz</span>] <span class="op">=</span><span class="op">&gt;</span> [<span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span>],
-    [<span class="ident">PostgresDTypes</span>::<span class="ident">Date</span>] <span class="op">=</span><span class="op">&gt;</span> [<span class="ident">NaiveDate</span>],
+<span class="kw">impl</span> <span class="ident">TypeSystem</span> <span class="kw">for</span> <span class="ident">PostgresDTypes</span> {}
+
+<span class="macro">associate_typesystem</span><span class="macro">!</span> {
+    <span class="ident">PostgresDTypes</span>,
+    [<span class="ident">PostgresDTypes</span>::<span class="ident">Int4</span>] <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i32</span>,
+    [<span class="ident">PostgresDTypes</span>::<span class="ident">Int8</span>] <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i64</span>,
+    [<span class="ident">PostgresDTypes</span>::<span class="ident">Float4</span>] <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f32</span>,
+    [<span class="ident">PostgresDTypes</span>::<span class="ident">Float8</span>] <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f64</span>,
+    [<span class="ident">PostgresDTypes</span>::<span class="ident">Bool</span>] <span class="op">=</span><span class="op">&gt;</span> <span class="ident">bool</span>,
+    [<span class="ident">PostgresDTypes</span>::<span class="ident">Text</span>] <span class="op">|</span> [<span class="ident">PostgresDTypes</span>::<span class="ident">BpChar</span>] <span class="op">|</span> [<span class="ident">PostgresDTypes</span>::<span class="ident">VarChar</span>] <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Bytes</span>,
+    [<span class="ident">PostgresDTypes</span>::<span class="ident">Timestamp</span>] <span class="op">=</span><span class="op">&gt;</span> <span class="ident">NaiveDateTime</span>,
+    [<span class="ident">PostgresDTypes</span>::<span class="ident">TimestampTz</span>] <span class="op">=</span><span class="op">&gt;</span> <span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span>,
+    [<span class="ident">PostgresDTypes</span>::<span class="ident">Date</span>] <span class="op">=</span><span class="op">&gt;</span> <span class="ident">NaiveDate</span>,
 }
 </pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="connector_agent"></div>

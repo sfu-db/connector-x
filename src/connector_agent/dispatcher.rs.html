@@ -147,10 +147,6 @@
 <span id="144">144</span>
 <span id="145">145</span>
 <span id="146">146</span>
-<span id="147">147</span>
-<span id="148">148</span>
-<span id="149">149</span>
-<span id="150">150</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">data_order</span>::{<span class="ident">coordinate</span>, <span class="ident">DataOrder</span>},
@@ -184,15 +180,11 @@
     <span class="ident">TSW</span>: <span class="ident">TypeSystem</span> <span class="op">+</span> <span class="ident">TypeSystemConversion</span><span class="op">&lt;</span><span class="ident">TSS</span><span class="op">&gt;</span>,
     <span class="ident">S</span>: <span class="ident">Source</span><span class="op">&lt;</span><span class="ident">TypeSystem</span> <span class="op">=</span> <span class="ident">TSS</span><span class="op">&gt;</span>,
     <span class="ident">W</span>: <span class="ident">Writer</span><span class="op">&lt;</span><span class="ident">TypeSystem</span> <span class="op">=</span> <span class="ident">TSW</span><span class="op">&gt;</span>,
-    (<span class="ident">TSS</span>, <span class="ident">TSW</span>): <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;s</span><span class="op">&gt;</span> <span class="ident">Realize</span><span class="op">&lt;</span>
-        <span class="ident">Transmit</span><span class="op">&lt;</span><span class="op">&lt;</span><span class="ident">S</span>::<span class="ident">Partition</span> <span class="kw">as</span> <span class="ident">PartitionedSource</span><span class="op">&gt;</span>::<span class="ident">Parser</span><span class="op">&lt;</span><span class="lifetime">&#39;s</span><span class="op">&gt;</span>, <span class="ident">W</span>::<span class="ident">PartitionWriter</span><span class="op">&lt;</span><span class="lifetime">&#39;w</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    (<span class="ident">TSS</span>, <span class="ident">TSW</span>): <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;s</span><span class="op">&gt;</span> <span class="ident">Realize</span><span class="op">&lt;</span>
+        <span class="ident">Transmit</span><span class="op">&lt;</span><span class="op">&lt;</span><span class="ident">S</span>::<span class="ident">Partition</span> <span class="kw">as</span> <span class="ident">PartitionedSource</span><span class="op">&gt;</span>::<span class="ident">Parser</span><span class="op">&lt;</span><span class="lifetime">&#39;s</span><span class="op">&gt;</span>, <span class="ident">W</span>::<span class="ident">PartitionWriter</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="op">&gt;</span>,
-    (<span class="ident">TSS</span>, <span class="ident">TSW</span>): <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;s</span>, <span class="lifetime">&#39;r</span><span class="op">&gt;</span> <span class="ident">Realize</span><span class="op">&lt;</span>
-        <span class="ident">TransmitChecked</span><span class="op">&lt;</span>
-            <span class="lifetime">&#39;r</span>,
-            <span class="op">&lt;</span><span class="ident">S</span>::<span class="ident">Partition</span> <span class="kw">as</span> <span class="ident">PartitionedSource</span><span class="op">&gt;</span>::<span class="ident">Parser</span><span class="op">&lt;</span><span class="lifetime">&#39;s</span><span class="op">&gt;</span>,
-            <span class="ident">W</span>::<span class="ident">PartitionWriter</span><span class="op">&lt;</span><span class="lifetime">&#39;w</span><span class="op">&gt;</span>,
-        <span class="op">&gt;</span>,
+    (<span class="ident">TSS</span>, <span class="ident">TSW</span>): <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;s</span><span class="op">&gt;</span> <span class="ident">Realize</span><span class="op">&lt;</span>
+        <span class="ident">TransmitChecked</span><span class="op">&lt;</span><span class="op">&lt;</span><span class="ident">S</span>::<span class="ident">Partition</span> <span class="kw">as</span> <span class="ident">PartitionedSource</span><span class="op">&gt;</span>::<span class="ident">Parser</span><span class="op">&lt;</span><span class="lifetime">&#39;s</span><span class="op">&gt;</span>, <span class="ident">W</span>::<span class="ident">PartitionWriter</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="op">&gt;</span>,
 {
     <span class="doccomment">/// Create a new dispatcher by providing a source builder, schema (temporary) and the queries</span>
