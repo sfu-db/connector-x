@@ -52,9 +52,9 @@ pub trait Parser<'a> {
     type TypeSystem: TypeSystem;
     /// Read a value `T` by calling `Produce<T>::produce`. Usually this function does not need to be
     /// implemented.
-    fn read<T>(&mut self) -> Result<T>
+    fn read<'r, T>(&'r mut self) -> Result<T>
     where
-        T: TypeAssoc<Self::TypeSystem>,
+        T: TypeAssoc<Self::TypeSystem> + 'r,
         Self: Produce<T>,
     {
         self.produce()

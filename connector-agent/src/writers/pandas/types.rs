@@ -14,8 +14,6 @@ pub enum PandasTypes {
     DateTime(bool),
 }
 
-impl TypeSystem for PandasTypes {}
-
 pub trait PandasDType: Sized {
     fn dtype(&self) -> &'static str;
     // For initialize a numpy array when creating the pandas dataframe
@@ -61,7 +59,7 @@ impl PandasDType for PandasTypes {
     }
 }
 
-associate_typesystem! {
+define_typesystem! {
     PandasTypes,
     [PandasTypes::F64] => f64,
     [PandasTypes::I64] => i64,

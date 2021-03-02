@@ -58,9 +58,7 @@ impl<'a> From<PostgresDTypes> for Type {
     }
 }
 
-impl TypeSystem for PostgresDTypes {}
-
-associate_typesystem! {
+define_typesystem! {
     PostgresDTypes,
     [PostgresDTypes::Int4] => i32,
     [PostgresDTypes::Int8] => i64,

@@ -38,9 +38,9 @@ pub trait PartitionWriter<'a>: Send {
 
     /// Write a value of type T to the location (row, col). The value is unchecked against the schema.
     /// This function is unsafe due to unchecked.
-    unsafe fn write<T>(&mut self, value: T)
+    unsafe fn write<'r, T>(&'r mut self, value: T)
     where
-        T: TypeAssoc<Self::TypeSystem>,
+        T: TypeAssoc<Self::TypeSystem> + 'r,
         Self: Consume<T>,
     {
         self.consume(value)
