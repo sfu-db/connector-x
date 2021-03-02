@@ -10,7 +10,8 @@ use std::sync::{Arc, Mutex};
 pub struct StringColumn<'a> {
     data: ArrayViewMut1<'a, PyString>,
     next_write: usize,
-    local_buf: Vec<Option<Bytes>>,
+    string_buf: Vec<u8>,
+    string_lengths: Vec<usize>,
     buf_size: usize,
     mutex: Arc<Mutex<()>>,
 }
@@ -21,7 +22,7 @@ impl<'a> StringColumn<'a> {
         let data = ob.getattr("_ndarray")?;
         check_dtype(data, "object")?;
 
-        let buf_size = 40960;
+        let buf_size_mb = 16; // in MB
         Ok(StringColumn {
             data: unsafe {
                 data.downcast::<PyArray1<PyString>>()
@@ -29,35 +30,44 @@ impl<'a> StringColumn<'a> {
                     .as_array_mut()
             },
             next_write: 0,
-            local_buf: Vec::with_capacity(buf_size),
-            buf_size: buf_size,
+            string_buf: Vec::with_capacity(buf_size_mb * 2 << 20),
+            string_lengths: vec![],
+            buf_size: buf_size_mb * 2 << 20,
             mutex,
         })
     }
 
     pub fn flush(&mut self) {
-        let buflen = self.local_buf.len();
+        let nstrings = self.string_lengths.len();
 
-        if buflen > 0 {
+        if nstrings > 0 {
             let py = unsafe { Python::assume_gil_acquired() };
 
             {
                 // allocation in python is not thread safe
                 let _guard = self.mutex.lock().expect("Mutex Poisoned");
-                for (i, b) in self.local_buf.iter().enumerate() {
-                    if let Some(b) = b {
-                        self.data[self.next_write + i] = PyString::new(py, b);
+                let mut start = 0;
+                for (i, &len) in self.string_lengths.iter().enumerate() {
+                    let end = start + len;
+                    if len != 0 {
+                        self.data[self.next_write + i] =
+                            PyString::new(py, &self.string_buf[start..end]);
                     }
+                    start = end;
                 }
             }
 
-            for (i, b) in self.local_buf.drain(..).enumerate() {
-                if let Some(b) = b {
-                    unsafe { self.data[self.next_write + i].write(&b) };
+            let mut start = 0;
+            for (i, len) in self.string_lengths.drain(..).enumerate() {
+                let end = start + len;
+                if len != 0 {
+                    unsafe { self.data[self.next_write + i].write(&self.string_buf[start..end]) };
                 }
+                start = len;
             }
 
-            self.next_write += buflen;
+            self.string_buf.drain(..);
+            self.next_write += nstrings;
         }
     }
 }
@@ -79,8 +89,9 @@ impl<'a> PandasColumnObject for StringColumn<'a> {
 
 impl<'a> PandasColumn<Bytes> for StringColumn<'a> {
     fn write(&mut self, val: Bytes) {
-        self.local_buf.push(Some(val));
-        if self.local_buf.len() >= self.buf_size {
+        self.string_lengths.push(val.len());
+        self.string_buf.extend(val);
+        if self.string_buf.len() >= self.buf_size {
             self.flush();
         }
     }
@@ -88,9 +99,17 @@ impl<'a> PandasColumn<Bytes> for StringColumn<'a> {
 
 impl<'a> PandasColumn<Option<Bytes>> for StringColumn<'a> {
     fn write(&mut self, val: Option<Bytes>) {
-        self.local_buf.push(val);
-        if self.local_buf.len() >= self.buf_size {
-            self.flush();
+        match val {
+            Some(b) => {
+                self.string_lengths.push(b.len());
+                self.string_buf.extend(b);
+                if self.string_buf.len() >= self.buf_size {
+                    self.flush();
+                }
+            }
+            None => {
+                self.string_lengths.push(0);
+            }
         }
     }
 }
@@ -115,7 +134,8 @@ impl<'a> StringColumn<'a> {
             partitions.push(StringColumn {
                 data: splitted_data,
                 next_write: 0,
-                local_buf: Vec::with_capacity(self.buf_size),
+                string_lengths: vec![],
+                string_buf: Vec::with_capacity(self.buf_size),
                 buf_size: self.buf_size,
                 mutex: self.mutex.clone(),
             });
