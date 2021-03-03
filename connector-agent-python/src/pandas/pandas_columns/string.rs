@@ -1,11 +1,52 @@
 use super::super::pystring::PyString;
 use super::{check_dtype, HasPandasColumn, PandasColumn, PandasColumnObject};
 use bytes::Bytes;
-use ndarray::{ArrayViewMut1, Axis};
-use numpy::PyArray1;
-use pyo3::{PyAny, PyResult, Python};
+use ndarray::{ArrayViewMut1, ArrayViewMut2, Axis, Ix2};
+use numpy::PyArray;
+use pyo3::{FromPyObject, PyAny, PyResult, Python};
 use std::any::TypeId;
 use std::sync::{Arc, Mutex};
+
+pub struct StringBlock<'a> {
+    data: ArrayViewMut2<'a, PyString>,
+    mutex: Arc<Mutex<()>>,
+    buf_size_mb: usize,
+}
+
+impl<'a> FromPyObject<'a> for StringBlock<'a> {
+    fn extract(ob: &'a PyAny) -> PyResult<Self> {
+        check_dtype(ob, "object")?;
+        let array = ob.downcast::<PyArray<PyString, Ix2>>()?;
+        let data = unsafe { array.as_array_mut() };
+        Ok(StringBlock {
+            data,
+            mutex: Arc::new(Mutex::new(())),
+            buf_size_mb: 16, // in MB
+        })
+    }
+}
+
+impl<'a> StringBlock<'a> {
+    pub fn split(self) -> Vec<StringColumn<'a>> {
+        let mut ret = vec![];
+        let mut view = self.data;
+
+        let nrows = view.ncols();
+        while view.nrows() > 0 {
+            let (col, rest) = view.split_at(Axis(0), 1);
+            view = rest;
+            ret.push(StringColumn {
+                data: col.into_shape(nrows).expect("reshape"),
+                next_write: 0,
+                string_lengths: vec![],
+                string_buf: Vec::with_capacity(self.buf_size_mb * 2 << 20),
+                buf_size: self.buf_size_mb * 2 << 20,
+                mutex: self.mutex.clone(),
+            })
+        }
+        ret
+    }
+}
 
 pub struct StringColumn<'a> {
     data: ArrayViewMut1<'a, PyString>,
@@ -14,68 +55,6 @@ pub struct StringColumn<'a> {
     string_lengths: Vec<usize>,
     buf_size: usize,
     mutex: Arc<Mutex<()>>,
-}
-
-impl<'a> StringColumn<'a> {
-    pub fn new(ob: &'a PyAny, mutex: Arc<Mutex<()>>) -> PyResult<Self> {
-        check_dtype(ob, "string")?;
-        let data = ob.getattr("_ndarray")?;
-        check_dtype(data, "object")?;
-
-        let buf_size_mb = 16; // in MB
-        Ok(StringColumn {
-            data: unsafe {
-                data.downcast::<PyArray1<PyString>>()
-                    .unwrap()
-                    .as_array_mut()
-            },
-            next_write: 0,
-            string_buf: Vec::with_capacity(buf_size_mb * 2 << 20),
-            string_lengths: vec![],
-            buf_size: buf_size_mb * 2 << 20,
-            mutex,
-        })
-    }
-
-    pub fn flush(&mut self) {
-        let nstrings = self.string_lengths.len();
-
-        if nstrings > 0 {
-            let py = unsafe { Python::assume_gil_acquired() };
-
-            {
-                // allocation in python is not thread safe
-                let _guard = self.mutex.lock().expect("Mutex Poisoned");
-                let mut start = 0;
-                for (i, &len) in self.string_lengths.iter().enumerate() {
-                    let end = start + len;
-                    if len != 0 {
-                        self.data[self.next_write + i] =
-                            PyString::new(py, &self.string_buf[start..end]);
-                    }
-                    start = end;
-                }
-            }
-
-            let mut start = 0;
-            for (i, len) in self.string_lengths.drain(..).enumerate() {
-                let end = start + len;
-                if len != 0 {
-                    unsafe { self.data[self.next_write + i].write(&self.string_buf[start..end]) };
-                }
-                start = end;
-            }
-
-            self.string_buf.drain(..);
-            self.next_write += nstrings;
-        }
-    }
-
-    pub fn try_flush(&mut self) {
-        if self.string_buf.len() >= self.buf_size {
-            self.flush();
-        }
-    }
 }
 
 impl<'a> PandasColumnObject for StringColumn<'a> {
@@ -144,5 +123,45 @@ impl<'a> StringColumn<'a> {
         }
 
         partitions
+    }
+
+    pub fn flush(&mut self) {
+        let nstrings = self.string_lengths.len();
+
+        if nstrings > 0 {
+            let py = unsafe { Python::assume_gil_acquired() };
+
+            {
+                // allocation in python is not thread safe
+                let _guard = self.mutex.lock().expect("Mutex Poisoned");
+                let mut start = 0;
+                for (i, &len) in self.string_lengths.iter().enumerate() {
+                    let end = start + len;
+                    if len != 0 {
+                        self.data[self.next_write + i] =
+                            PyString::new(py, &self.string_buf[start..end]);
+                    }
+                    start = end;
+                }
+            }
+
+            let mut start = 0;
+            for (i, len) in self.string_lengths.drain(..).enumerate() {
+                let end = start + len;
+                if len != 0 {
+                    unsafe { self.data[self.next_write + i].write(&self.string_buf[start..end]) };
+                }
+                start = end;
+            }
+
+            self.string_buf.drain(..);
+            self.next_write += nstrings;
+        }
+    }
+
+    pub fn try_flush(&mut self) {
+        if self.string_buf.len() >= self.buf_size {
+            self.flush();
+        }
     }
 }

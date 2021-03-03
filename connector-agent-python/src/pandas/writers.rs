@@ -1,6 +1,6 @@
 use super::pandas_columns::{
     BooleanBlock, DateTimeBlock, Float64Block, HasPandasColumn, Int64Block, PandasColumn,
-    PandasColumnObject, StringColumn,
+    PandasColumnObject, StringBlock,
 };
 use anyhow::anyhow;
 use connector_agent::writers::pandas::{PandasDType, PandasTypes};
@@ -16,7 +16,6 @@ use pyo3::{
 };
 use std::any::TypeId;
 use std::mem::transmute;
-use std::sync::{Arc, Mutex};
 pub struct PandasWriter<'py> {
     py: Python<'py>,
     nrows: Option<usize>,
@@ -108,7 +107,6 @@ impl<'a> Writer for PandasWriter<'a> {
         let mut partitioned_columns: Vec<Vec<Box<dyn PandasColumnObject>>> =
             (0..schema.len()).map(|_| vec![]).collect();
 
-        let object_mutex = Arc::new(Mutex::new(()));
         for (buf, cids) in buffers.iter().zip_eq(buffer_column_index) {
             for &cid in cids {
                 match schema[cid] {
@@ -146,17 +144,28 @@ impl<'a> Writer for PandasWriter<'a> {
                         }
                     }
                     PandasTypes::String(_) => {
-                        assert_eq!(cids.len(), 1, "string buffer has multiple columns");
-
-                        let scol =
-                            StringColumn::new(buf, object_mutex.clone()).map_err(|e| anyhow!(e))?;
-
-                        partitioned_columns[cids[0]] = scol
-                            .partition(&counts)
-                            .into_iter()
-                            .map(|c| Box::new(c) as _)
-                            .collect()
+                        let block = StringBlock::extract(buf).map_err(|e| anyhow!(e))?;
+                        let cols = block.split();
+                        for (&cid, col) in cids.iter().zip_eq(cols) {
+                            partitioned_columns[cid] = col
+                                .partition(&counts)
+                                .into_iter()
+                                .map(|c| Box::new(c) as _)
+                                .collect()
+                        }
                     }
+                    // PandasTypes::String(_) => {
+                    //     assert_eq!(cids.len(), 1, "string buffer has multiple columns");
+
+                    //     let scol =
+                    //         StringColumn::new(buf, object_mutex.clone()).map_err(|e| anyhow!(e))?;
+
+                    //     partitioned_columns[cids[0]] = scol
+                    //         .partition(&counts)
+                    //         .into_iter()
+                    //         .map(|c| Box::new(c) as _)
+                    //         .collect()
+                    // }
                     PandasTypes::DateTime(_) => {
                         let block = DateTimeBlock::extract(buf).map_err(|e| anyhow!(e))?;
                         let cols = block.split();

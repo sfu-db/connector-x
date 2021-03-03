@@ -31,7 +31,8 @@ impl PandasDType for PandasTypes {
             PandasTypes::F64(_) => "float64",
             PandasTypes::Bool(false) => "bool",
             PandasTypes::Bool(true) => "boolean",
-            PandasTypes::String(_) => "string",
+            PandasTypes::String(_) => "object",
+            // PandasTypes::String(_) => "string",
             PandasTypes::DateTime(_) => "datetime64[ns]",
         }
     }
