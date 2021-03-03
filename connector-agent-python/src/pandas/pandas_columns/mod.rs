@@ -17,7 +17,7 @@ pub use float64::{Float64Block, Float64Column};
 pub use int64::{Int64Block, Int64Column};
 use pyo3::{exceptions::PyRuntimeError, PyAny, PyResult};
 use std::any::TypeId;
-pub use string::StringColumn;
+pub use string::{StringBlock, StringColumn};
 pub use uint64::{UInt64Block, UInt64Column};
 
 pub trait PandasColumnObject: Send {

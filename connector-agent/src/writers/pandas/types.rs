@@ -21,6 +21,8 @@ pub trait PandasDType: Sized {
     // For initialize a numpy array when creating the pandas dataframe
     fn npdtype(&self) -> &'static str;
     fn parse(ty: &str) -> Result<Self>;
+    fn is_extension(&self) -> bool;
+    fn block_name(&self) -> &'static str;
 }
 
 impl PandasDType for PandasTypes {
@@ -31,7 +33,7 @@ impl PandasDType for PandasTypes {
             PandasTypes::F64(_) => "float64",
             PandasTypes::Bool(false) => "bool",
             PandasTypes::Bool(true) => "boolean",
-            PandasTypes::String(_) => "string",
+            PandasTypes::String(_) => "object",
             PandasTypes::DateTime(_) => "datetime64[ns]",
         }
     }
@@ -54,9 +56,33 @@ impl PandasDType for PandasTypes {
             "float64" => PandasTypes::F64(true),
             "bool" => PandasTypes::Bool(false),
             "boolean" => PandasTypes::Bool(true),
-            "string" => PandasTypes::String(true),
+            "object" => PandasTypes::String(true),
             "datetime" => PandasTypes::DateTime(true),
             ty => unimplemented!("{}", ty),
+        }
+    }
+
+    fn is_extension(&self) -> bool {
+        match *self {
+            PandasTypes::I64(false) => false,
+            PandasTypes::I64(true) => true,
+            PandasTypes::F64(_) => false,
+            PandasTypes::Bool(false) => false,
+            PandasTypes::Bool(true) => true,
+            PandasTypes::String(_) => false, // we use object instead of string (Extension) for now
+            PandasTypes::DateTime(_) => false,
+        }
+    }
+
+    fn block_name(&self) -> &'static str {
+        match *self {
+            PandasTypes::I64(false) => "IntBlock",
+            PandasTypes::I64(true) => "ExtensionBlock",
+            PandasTypes::F64(_) => "FloatBlock",
+            PandasTypes::Bool(false) => "BoolBlock",
+            PandasTypes::Bool(true) => "ExtensionBlock",
+            PandasTypes::String(_) => "ObjectBlock", // we use object instead of string (Extension) for now
+            PandasTypes::DateTime(_) => "DatetimeBlock",
         }
     }
 }
