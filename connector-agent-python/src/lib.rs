@@ -7,6 +7,12 @@ use fehler::throw;
 use pyo3::prelude::*;
 use pyo3::wrap_pyfunction;
 use std::sync::Once;
+use log::{debug, trace};
+use sqlparser::ast::{
+    Expr, SetExpr, Statement, Value,
+};
+use sqlparser::dialect::PostgreSqlDialect;
+use sqlparser::parser::Parser;
 
 static START: Once = Once::new();
 
@@ -73,6 +79,41 @@ fn read_pg(py: Python, conn: &str, sqls: Vec<String>, schema: &str) -> PyResult<
     PyResult::Ok(ret.into_py_dict(py).to_object(py))
 }
 
+fn index_query(query: &str, col: &str, lower: i64, upper: i64,) -> String {
+    trace!("Incoming query: {}", query);
+
+    let dialect = PostgreSqlDialect {};
+
+    let mut ast = Parser::parse_sql(&dialect, query).unwrap();
+
+    match &mut ast[0] {
+        Statement::Query(q) => {
+            match &mut q.body {
+                SetExpr::Select(select) => {
+                    let cur_selection =  select.selection.as_ref();
+                    let mut _partition_query = format!(
+                        "{} >= {} and {} < {}",
+                        col, lower, col, upper
+                    );
+                    if !cur_selection.is_none() {
+                        _partition_query = format!(
+                            "{} and {} >= {} and {} < {}",
+                            cur_selection.unwrap(), col, lower, col, upper
+                        );
+                    }
+                    select.selection = Some(Expr::Value(Value::Number(_partition_query, false)));
+                }
+                _ => {}
+            }
+        }
+        _ => {}
+    };
+
+    let sql = format!("{}", ast[0]);
+    debug!("Transformed query: {}", sql);
+    sql
+}
+
 #[pyfunction]
 fn read_sql<'a>(
     py: Python<'a>,
@@ -93,13 +134,11 @@ fn read_sql<'a>(
     for i in 0..num {
         let lower = min + i * partition_size;
         let upper = min + (i + 1) * partition_size;
-        let partition_query = format!(
-            "{} where {} >= {} and {} < {}",
-            query, col, lower, col, upper
-        );
+        let partition_query = index_query(&query, &col, lower, upper);
         queries.push(partition_query);
     }
     let queries: Vec<_> = queries.iter().map(|s| s.as_str()).collect();
+    print!("{:?}", queries);
     match return_type {
         "pandas" => Ok(crate::pandas::write_pandas(py, conn, &queries, false)?),
         "arrow" => todo!(),

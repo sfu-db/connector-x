@@ -322,6 +322,7 @@ dependencies = [
  "pyo3",
  "pyo3-built",
  "rayon",
+ "sqlparser",
  "thiserror",
  "tokio",
 ]
