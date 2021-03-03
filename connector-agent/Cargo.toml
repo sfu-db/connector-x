@@ -33,8 +33,6 @@ sqlparser = "0.8"
 strum = {version = "0.20", features = ["derive"]}
 thiserror = "1"
 tokio = {version = "1", features = ["rt-multi-thread", "io-util"]}
-tokio-postgres = "0.7"
-fallible-iterator = "0.2"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
