@@ -80,7 +80,7 @@ fn read_pg(py: Python, conn: &str, sqls: Vec<String>, schema: &str) -> PyResult<
 }
 
 fn index_query(query: &str, col: &str, lower: i64, upper: i64,) -> String {
-    trace!("Incoming query: {}", query);
+    trace!("Incoming query: {}", query); 
 
     let dialect = PostgreSqlDialect {};
 
