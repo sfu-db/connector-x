@@ -34,7 +34,6 @@ impl PandasDType for PandasTypes {
             PandasTypes::Bool(false) => "bool",
             PandasTypes::Bool(true) => "boolean",
             PandasTypes::String(_) => "object",
-            // PandasTypes::String(_) => "string",
             PandasTypes::DateTime(_) => "datetime64[ns]",
         }
     }
@@ -58,7 +57,6 @@ impl PandasDType for PandasTypes {
             "bool" => PandasTypes::Bool(false),
             "boolean" => PandasTypes::Bool(true),
             "object" => PandasTypes::String(true),
-            // "string" => PandasTypes::String(true),
             "datetime" => PandasTypes::DateTime(true),
             ty => unimplemented!("{}", ty),
         }

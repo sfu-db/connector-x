@@ -155,18 +155,6 @@ impl<'a> Writer for PandasWriter<'a> {
                                 .collect()
                         }
                     }
-                    // PandasTypes::String(_) => {
-                    //     assert_eq!(cids.len(), 1, "string buffer has multiple columns");
-
-                    //     let scol =
-                    //         StringColumn::new(buf, object_mutex.clone()).map_err(|e| anyhow!(e))?;
-
-                    //     partitioned_columns[cids[0]] = scol
-                    //         .partition(&counts)
-                    //         .into_iter()
-                    //         .map(|c| Box::new(c) as _)
-                    //         .collect()
-                    // }
                     PandasTypes::DateTime(_) => {
                         let block = DateTimeBlock::extract(buf).map_err(|e| anyhow!(e))?;
                         let cols = block.split();
