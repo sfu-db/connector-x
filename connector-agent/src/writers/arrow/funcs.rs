@@ -10,7 +10,7 @@ impl ParameterizedFunc for FNewBuilder {
     type Function = fn(nrows: usize) -> Builder;
 }
 
-impl<T> ParameterizedOn<T> for FNewBuilder
+impl<'a, T> ParameterizedOn<'a, T> for FNewBuilder
 where
     T: ArrowAssoc,
 {
@@ -31,7 +31,7 @@ impl ParameterizedFunc for FFinishBuilder {
     type Function = fn(Builder) -> ArrayRef;
 }
 
-impl<T> ParameterizedOn<T> for FFinishBuilder
+impl<'a, T> ParameterizedOn<'a, T> for FFinishBuilder
 where
     T: ArrowAssoc,
 {
@@ -52,7 +52,7 @@ impl ParameterizedFunc for FNewField {
     type Function = fn(header: &str) -> Field;
 }
 
-impl<T> ParameterizedOn<T> for FNewField
+impl<'a, T> ParameterizedOn<'a, T> for FNewField
 where
     T: ArrowAssoc,
 {

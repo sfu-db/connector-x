@@ -47,10 +47,10 @@ macro_rules! define_typesystem {
             }
         )+
 
-        impl<$($LT0,)? F> $crate::typesystem::Realize<F> for $TS
+        impl<'hlt, $($LT0,)? F> $crate::typesystem::Realize<F> for $TS
         where
             F: $crate::typesystem::ParameterizedFunc,
-            $(F: $crate::typesystem::ParameterizedOn<$NT>),+
+            $(F: $crate::typesystem::ParameterizedOn<'hlt, $NT>),+
         {
             fn realize(self) -> $crate::errors::Result<F::Function> {
                 match self {
@@ -62,15 +62,15 @@ macro_rules! define_typesystem {
         }
 
         // Always true for type system self conversion
-        impl<$($LT0,)? F> $crate::typesystem::Realize<F> for ($TS, $TS)
+        impl<'hlt, $($LT0,)? F> $crate::typesystem::Realize<F> for ($TS, $TS)
         where
             F: $crate::typesystem::ParameterizedFunc,
-            $(F: $crate::typesystem::ParameterizedOn<($NT, $NT)>),+
+            $(F: $crate::typesystem::ParameterizedOn<'hlt, ($NT, $NT)>),+
         {
             fn realize(self) -> $crate::errors::Result<F::Function> {
                 match self {
                     $($(
-                        ($V, $V) => Ok(F::realize::<($NT,$NT)>()),
+                        ($V, $V) => Ok(F::realize::<($NT, $NT)>()),
                     )+)+
                     (v1, v2) => {
                         fehler::throw!($crate::errors::ConnectorAgentError::NoTypeSystemConversionRule(
@@ -108,9 +108,9 @@ where
 /// to the writer, its type `T` is determined by the schema at the runtime.
 pub trait ParameterizedFunc {
     type Function;
-    fn realize<T>() -> Self::Function
+    fn realize<'a, T>() -> Self::Function
     where
-        Self: ParameterizedOn<T>,
+        Self: ParameterizedOn<'a, T>,
     {
         Self::parameterize()
     }
@@ -118,7 +118,7 @@ pub trait ParameterizedFunc {
 
 /// `ParameterizedOn` indicates a parameterized function `Self`
 /// is parameterized on type `T`
-pub trait ParameterizedOn<T>: ParameterizedFunc {
+pub trait ParameterizedOn<'r, T>: ParameterizedFunc {
     fn parameterize() -> Self::Function;
 }
 
@@ -172,10 +172,10 @@ macro_rules! associate_typesystems {
     };
 
     (Realize ($TS1:ty, $TS2:ty), [$($LT0:lifetime)?] $($(($v1:pat, $v2:pat))|+ => [$($LT:lifetime)?] ($T1:ty, $T2:ty),)+) => {
-        impl<$($LT0,)? F> $crate::typesystem::Realize<F> for ($TS1, $TS2)
+        impl<'hlt, $($LT0,)? F> $crate::typesystem::Realize<F> for ($TS1, $TS2)
         where
             F: $crate::typesystem::ParameterizedFunc,
-            $(F: $crate::typesystem::ParameterizedOn<($T1, $T2)>),+
+            $(F: $crate::typesystem::ParameterizedOn<'hlt, ($T1, $T2)>),+
         {
             fn realize(self) -> $crate::errors::Result<F::Function> {
                 match self {

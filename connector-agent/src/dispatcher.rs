@@ -33,12 +33,8 @@ where
     (TSS, TSW): for<'s> Realize<
         Transmit<<S::Partition as PartitionedSource>::Parser<'s>, W::PartitionWriter<'w>>,
     >,
-    (TSS, TSW): for<'s, 'r> Realize<
-        TransmitChecked<
-            'r,
-            <S::Partition as PartitionedSource>::Parser<'s>,
-            W::PartitionWriter<'w>,
-        >,
+    (TSS, TSW): for<'s> Realize<
+        TransmitChecked<<S::Partition as PartitionedSource>::Parser<'s>, W::PartitionWriter<'w>>,
     >,
 {
     /// Create a new dispatcher by providing a source builder, schema (temporary) and the queries

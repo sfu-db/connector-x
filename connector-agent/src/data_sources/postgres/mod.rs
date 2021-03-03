@@ -240,16 +240,16 @@ impl<'a> Parser<'a> for PostgresSourceParser<'a> {
 macro_rules! impl_produce {
     ($($t: ty),+) => {
         $(
-            impl<'a,'b> Produce<'b, $t> for PostgresSourceParser<'a> {
-                fn produce<'r:'b>(&'r mut self) -> Result<$t> {
+            impl<'a,'b> Produce<'b,$t> for PostgresSourceParser<'a> {
+                fn produce(&mut self) -> Result<$t> {
                     let (ridx, cidx) = self.next_loc()?;
                     let val = self.rowbuf[ridx].try_get(cidx)?;
                     Ok(val)
                 }
             }
 
-            impl<'a,'b> Produce<'b, Option<$t>> for PostgresSourceParser<'a> {
-                fn produce<'r:'b>(&'r mut self) -> Result<Option<$t>> {
+            impl<'a,'b> Produce<'b,Option<$t>> for PostgresSourceParser<'a> {
+                fn produce(&mut self) -> Result<Option<$t>> {
                     let (ridx, cidx) = self.next_loc()?;
                     let val = self.rowbuf[ridx].try_get(cidx)?;
                     Ok(val)
@@ -278,7 +278,7 @@ pub struct MyBinaryCopyOutRow {
 }
 
 impl<'a, 'b> Produce<'b, &'b [u8]> for PostgresSourceParser<'a> {
-    fn produce<'r: 'b>(&'r mut self) -> Result<&'b [u8]> {
+    fn produce(&'b mut self) -> Result<&'b [u8]> {
         let (ridx, cidx) = self.next_loc()?;
         let row = &self.rowbuf[ridx];
         let val = row.try_get(cidx)?;
@@ -288,7 +288,7 @@ impl<'a, 'b> Produce<'b, &'b [u8]> for PostgresSourceParser<'a> {
 }
 
 impl<'a, 'b> Produce<'b, Option<&'b [u8]>> for PostgresSourceParser<'a> {
-    fn produce<'r: 'b>(&'r mut self) -> Result<Option<&'b [u8]>> {
+    fn produce(&'b mut self) -> Result<Option<&'b [u8]>> {
         let (ridx, cidx) = self.next_loc()?;
         let row = &self.rowbuf[ridx];
         let val = row.try_get(cidx)?;

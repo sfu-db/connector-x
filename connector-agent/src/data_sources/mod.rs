@@ -63,7 +63,5 @@ pub trait Parser<'a> {
 
 /// A type implemented `Produce<T>` means that it can produce a value `T` by consuming part of it's raw data buffer.
 pub trait Produce<'b, T> {
-    fn produce<'r>(&'r mut self) -> Result<T>
-    where
-        'r: 'b;
+    fn produce(&'b mut self) -> Result<T>;
 }

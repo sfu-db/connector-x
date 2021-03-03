@@ -216,7 +216,7 @@ impl ParameterizedFunc for FArray2 {
 macro_rules! FArray2Parameterize {
     ($($t: ty),+) => {
         $(
-            impl ParameterizedOn<$t> for FArray2 {
+            impl<'a> ParameterizedOn<'a, $t> for FArray2 {
                 fn parameterize() -> Self::Function {
                     create_default_array::<$t>
                 }
@@ -245,7 +245,7 @@ where
     Array2::<T>::default((nrows, ncols)).into()
 }
 
-impl ParameterizedOn<DateTime<Utc>> for FArray2 {
+impl<'a> ParameterizedOn<'a, DateTime<Utc>> for FArray2 {
     fn parameterize() -> Self::Function {
         fn imp(nrows: usize, ncols: usize) -> AnyArray<Ix2> {
             let t = DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp(0, 0), Utc);
@@ -255,7 +255,7 @@ impl ParameterizedOn<DateTime<Utc>> for FArray2 {
     }
 }
 
-impl ParameterizedOn<Option<DateTime<Utc>>> for FArray2 {
+impl<'a> ParameterizedOn<'a, Option<DateTime<Utc>>> for FArray2 {
     fn parameterize() -> Self::Function {
         fn imp(nrows: usize, ncols: usize) -> AnyArray<Ix2> {
             Array2::<Option<DateTime<Utc>>>::from_elem((nrows, ncols), None).into()
