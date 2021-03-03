@@ -156,7 +156,7 @@ where
 #[macro_export]
 macro_rules! associate_typesystems {
     (($TS1:ty, $TS2:ty), $(<$LT0:lifetime>,)? $($(([$($v1:tt)+], [$($v2:tt)+]))|+ => $(<$LT:lifetime>)? [$T1:ty, $T2:ty] conversion $cast:ident,)+) => {
-        associate_typesystems!(Realize ($TS1, $TS2), [$($LT0)?] $(
+        associate_typesystems!(Transmit ($TS1, $TS2), [$($LT0)?] $(
             $(($($v1)+ (false), $($v2)+ (false)))|+ => [$($LT)?] ($T1, $T2),
             $(($($v1)+ (true), $($v2)+ (true)))|+ => [$($LT)?] (Option<$T1>, Option<$T2>),
         )+);
@@ -171,16 +171,43 @@ macro_rules! associate_typesystems {
         )+
     };
 
-    (Realize ($TS1:ty, $TS2:ty), [$($LT0:lifetime)?] $($(($v1:pat, $v2:pat))|+ => [$($LT:lifetime)?] ($T1:ty, $T2:ty),)+) => {
-        impl<'hlt, $($LT0,)? F> $crate::typesystem::Realize<F> for ($TS1, $TS2)
+    (Transmit ($TS1:ty, $TS2:ty), [$($LT0:lifetime)?] $($(($v1:pat, $v2:pat))|+ => [$($LT:lifetime)?] ($T1:ty, $T2:ty),)+) => {
+        impl<'a, S, W> $crate::typesystem::Transmit<S, W> for ($TS1, $TS2)
         where
-            F: $crate::typesystem::ParameterizedFunc,
-            $(F: $crate::typesystem::ParameterizedOn<'hlt, ($T1, $T2)>),+
+            S: $crate::data_sources::Parser<'a, TypeSystem = $TS1>,
+            W: $crate::writers::PartitionWriter<'a, TypeSystem = $TS1>,
+            $(S: $crate::data_sources::Produce<'a, $T1>,)+
+            $(W: $crate::writers::Consume<$T2>,)+
+            $($T1: $crate::typesystem::TypeAssoc<S::TypeSystem>,)+
+            $($T2: $crate::typesystem::TypeAssoc<W::TypeSystem>,)+
+            $((S::TypeSystem, W::TypeSystem): TypeConversion<$T1, $T2>,)+
         {
-            fn realize(self) -> $crate::errors::Result<F::Function> {
+            fn transmit_checked(self, source: &mut S, writer: &mut W) -> $crate::errors::Result<()> {
                 match self {
                     $(
-                        $(($v1, $v2))|+ => Ok(F::realize::<($T1, $T2)>()),
+                        $(($v1, $v2))|+ => {
+                            let val: $T1 = source.read()?;
+                            let val = <(S::TypeSystem, W::TypeSystem) as TypeConversion<$T1, $T2>>::convert(val);
+                            writer.write_checked(val)
+                        }
+                    )+
+                    (v1, v2) => {
+                        fehler::throw!($crate::errors::ConnectorAgentError::NoTypeSystemConversionRule(
+                            format!("{:?}", v1), format!("{:?}", v2)
+                        ))
+                    }
+                }
+            }
+
+            unsafe fn transmit(self, source: &'a mut S, writer: &mut W) -> $crate::errors::Result<()> {
+                match self {
+                    $(
+                        $(($v1, $v2))|+ => {
+                            let val: $T1 = source.read()?;
+                            let val = <(S::TypeSystem, W::TypeSystem) as TypeConversion<$T1, $T2>>::convert(val);
+                            unsafe { writer.write(val) };
+                            Ok(())
+                        }
                     )+
                     (v1, v2) => {
                         fehler::throw!($crate::errors::ConnectorAgentError::NoTypeSystemConversionRule(
@@ -228,3 +255,23 @@ macro_rules! associate_typesystems {
 
     (TypeConversion none [$($LT:lifetime)?] $TS1:ty, $TS2:ty, $T1:ty, $T2:ty) => {};
 }
+
+pub trait Transmit<S, W> {
+    unsafe fn transmit(self, source: &mut S, writer: &mut W) -> Result<()>;
+
+    fn transmit_checked(self, source: &mut S, writer: &mut W) -> Result<()>;
+}
+
+// #[throws(ConnectorAgentError)]
+// pub fn inner<'s, 'w, 'r, S, W, T1, T2>(source: &'r mut S, writer: &mut W)
+// where
+//     S: Parser<'s> + Produce<'r, T1>,
+//     W: PartitionWriter<'w> + Consume<T2>,
+//     T1: TypeAssoc<S::TypeSystem> + 'r,
+//     T2: TypeAssoc<W::TypeSystem>,
+//     (S::TypeSystem, W::TypeSystem): TypeConversion<T1, T2>,
+// {
+//     let val: T1 = source.read()?;
+//     let val = <(S::TypeSystem, W::TypeSystem) as TypeConversion<T1, T2>>::convert(val);
+//     unsafe { writer.write(val) }
+// }

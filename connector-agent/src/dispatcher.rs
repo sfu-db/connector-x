@@ -2,8 +2,8 @@ use crate::{
     data_order::{coordinate, DataOrder},
     data_sources::{PartitionedSource, Source},
     errors::Result,
-    transmit::{Transmit, TransmitChecked},
-    typesystem::{Realize, TypeSystem, TypeSystemConversion},
+    // transmit::{Transmit, TransmitChecked},
+    typesystem::{Realize, Transmit, TypeSystem, TypeSystemConversion},
     writers::{PartitionWriter, Writer},
 };
 use itertools::Itertools;
@@ -30,12 +30,8 @@ where
     TSW: TypeSystem + TypeSystemConversion<TSS>,
     S: Source<TypeSystem = TSS>,
     W: Writer<TypeSystem = TSW>,
-    (TSS, TSW): for<'s> Realize<
-        Transmit<<S::Partition as PartitionedSource>::Parser<'s>, W::PartitionWriter<'w>>,
-    >,
-    (TSS, TSW): for<'s> Realize<
-        TransmitChecked<<S::Partition as PartitionedSource>::Parser<'s>, W::PartitionWriter<'w>>,
-    >,
+    (TSS, TSW):
+        for<'s> Transmit<<S::Partition as PartitionedSource>::Parser<'s>, W::PartitionWriter<'w>>,
 {
     /// Create a new dispatcher by providing a source builder, schema (temporary) and the queries
     /// to be issued to the data source.
