@@ -154,7 +154,7 @@ impl<'a> StringColumn<'a> {
                 start = end;
             }
 
-            self.string_buf.drain(..);
+            self.string_buf.truncate(0);
             self.next_write += nstrings;
         }
     }
