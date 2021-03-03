@@ -13,7 +13,7 @@ bootstrap-python:
 setup-python:
     cd connector-agent-python && poetry run maturin develop --release --strip
     
-test-python: setup-python
+test-python:
     cd connector-agent-python && poetry run pytest connector_agent_python/tests -v
 
 seed-db:
