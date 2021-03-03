@@ -75,7 +75,7 @@ impl<'a> PandasColumnObject for StringColumn<'a> {
 impl<'a> PandasColumn<Bytes> for StringColumn<'a> {
     fn write(&mut self, val: Bytes) {
         self.string_lengths.push(val.len());
-        self.string_buf.extend(val);
+        self.string_buf.extend_from_slice(&val);
         self.try_flush();
     }
 }
@@ -85,7 +85,7 @@ impl<'a> PandasColumn<Option<Bytes>> for StringColumn<'a> {
         match val {
             Some(b) => {
                 self.string_lengths.push(b.len());
-                self.string_buf.extend(b);
+                self.string_buf.extend_from_slice(&b);
                 self.try_flush();
             }
             None => {
