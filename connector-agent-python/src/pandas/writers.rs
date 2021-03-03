@@ -15,6 +15,7 @@ use pyo3::{
     FromPyObject, PyAny, Python,
 };
 use std::any::TypeId;
+use std::collections::HashMap;
 use std::mem::transmute;
 pub struct PandasWriter<'py> {
     py: Python<'py>,
@@ -284,19 +285,39 @@ fn create_dataframe<'a, S: AsRef<str>>(
     debug!("names: {:?}", names);
     debug!("schema: {:?}", schema);
 
-    let series: Vec<String> = schema
+    let mut schema_dict: HashMap<PandasTypes, Vec<usize>> = HashMap::new();
+    schema.iter().enumerate().for_each(|(idx, &dt)| {
+        let indices = schema_dict.entry(dt).or_insert(vec![]);
+        indices.push(idx);
+    });
+    debug!("schema_dict: {:?}", schema_dict);
+
+    let mut blocks_code = vec![];
+    schema_dict
         .iter()
-        .zip_eq(names)
-        .map(|(&dt, name)| {
-            format!(
-                "'{}': pd.Series(data=np.empty([{}], dtype='{}'), dtype='{}')",
-                name,
-                nrows,
-                dt.npdtype(),
-                dt.dtype()
-            )
-        })
-        .collect();
+        .for_each(|(&dt, indices)| {
+            if dt.is_extension() {
+                // each extension block only contains one column
+                for idx in indices {
+                blocks_code.push(format!(
+                    "pd.core.internals.ExtensionBlock(pd.array(np.empty([{}], dtype='{}'), dtype='{}'), placement={}, ndim=2)",
+                    nrows,
+                    dt.npdtype(),
+                    dt.dtype(),
+                    idx,
+                ));
+                }
+            } else {
+                blocks_code.push(format!(
+                    "pd.core.internals.{}(np.empty([{}, {}], dtype='{}'), placement={:?}, ndim=2)",
+                    dt.block_name(),
+                    indices.len(),
+                    nrows,
+                    dt.npdtype(),
+                    indices,
+                ));
+            }
+        });
 
     // https://github.com/pandas-dev/pandas/blob/master/pandas/core/internals/managers.py
     // Suppose we want to find the array corresponding to our i'th column.
@@ -307,11 +328,15 @@ fn create_dataframe<'a, S: AsRef<str>>(
     let code = format!(
         r#"import pandas as pd
 import numpy as np
-df = pd.DataFrame(index=range({}), data={{{}}})
+blocks = [{}]
+block_manager = pd.core.internals.BlockManager(
+    blocks, [pd.Index(['{}']), pd.RangeIndex(start=0, stop={}, step=1)])
+df = pd.DataFrame(block_manager)
 blocks = [b.values for b in df._mgr.blocks]
 index = [(i, j) for i, j in zip(df._mgr.blknos, df._mgr.blklocs)]"#,
+        blocks_code.join(","),
+        format!("{}", names.join("\',\'")),
         nrows,
-        series.join(",")
     );
     debug!("create dataframe code: {}", code);
 
