@@ -3,7 +3,7 @@
 
 mod errors;
 pub mod pandas;
-use fehler::{throw};
+use fehler::throw;
 use pyo3::prelude::*;
 use pyo3::wrap_pyfunction;
 use std::sync::Once;
@@ -84,22 +84,28 @@ fn read_sql<'a>(
     num: i64,
     return_type: &str,
 ) -> PyResult<&'a PyAny> {
-    let mut queries:Vec<String> = vec![];
-    let partition_size= match (max - min + 1) % num == 0 {
+    let mut queries: Vec<String> = vec![];
+    let partition_size = match (max - min + 1) % num == 0 {
         true => (max - min + 1) / num,
-        false => (max - min + 1) / num + 1
+        false => (max - min + 1) / num + 1,
     };
 
     for i in 0..num {
         let lower = min + i * partition_size;
         let upper = min + (i + 1) * partition_size;
-        let partition_query = format!("{} where {} >= {} and {} < {}", query, col, lower, col, upper);
+        let partition_query = format!(
+            "{} where {} >= {} and {} < {}",
+            query, col, lower, col, upper
+        );
         queries.push(partition_query);
     }
     let queries: Vec<_> = queries.iter().map(|s| s.as_str()).collect();
     match return_type {
         "pandas" => Ok(crate::pandas::write_pandas(py, conn, &queries, false)?),
         "arrow" => todo!(),
-        _ => throw!(errors::ConnectorAgentPythonError::UnexpectedReturnType("pandas or arrow".to_string(), return_type.to_string())),
+        _ => throw!(errors::ConnectorAgentPythonError::UnexpectedReturnType(
+            "pandas or arrow".to_string(),
+            return_type.to_string()
+        )),
     }
 }
