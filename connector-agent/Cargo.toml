@@ -42,13 +42,3 @@ name = "connector_agent"
 criterion = "0.3"
 iai = "0.1"
 pprof = {version = "0.3", features = ["flamegraph"]}
-
-[[bench]]
-harness = false
-name = "bench_option"
-path = "benches/bench_option.rs"
-
-[[bench]]
-harness = false
-name = "perf_option"
-path = "benches/perf_option.rs"
