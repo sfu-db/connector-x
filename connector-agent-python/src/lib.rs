@@ -4,15 +4,13 @@
 mod errors;
 pub mod pandas;
 use fehler::throw;
+use log::{debug, trace};
 use pyo3::prelude::*;
 use pyo3::wrap_pyfunction;
-use std::sync::Once;
-use log::{debug, trace};
-use sqlparser::ast::{
-    Expr, SetExpr, Statement, Value,
-};
+use sqlparser::ast::{Expr, SetExpr, Statement, Value};
 use sqlparser::dialect::PostgreSqlDialect;
 use sqlparser::parser::Parser;
+use std::sync::Once;
 
 static START: Once = Once::new();
 
@@ -79,33 +77,32 @@ fn read_pg(py: Python, conn: &str, sqls: Vec<String>, schema: &str) -> PyResult<
     PyResult::Ok(ret.into_py_dict(py).to_object(py))
 }
 
-fn index_query(query: &str, col: &str, lower: i64, upper: i64,) -> String {
-    trace!("Incoming query: {}", query); 
+fn index_query(query: &str, col: &str, lower: i64, upper: i64) -> String {
+    trace!("Incoming query: {}", query);
 
     let dialect = PostgreSqlDialect {};
 
     let mut ast = Parser::parse_sql(&dialect, query).unwrap();
 
     match &mut ast[0] {
-        Statement::Query(q) => {
-            match &mut q.body {
-                SetExpr::Select(select) => {
-                    let cur_selection =  select.selection.as_ref();
-                    let mut _partition_query = format!(
-                        "{} >= {} and {} < {}",
-                        col, lower, col, upper
+        Statement::Query(q) => match &mut q.body {
+            SetExpr::Select(select) => {
+                let cur_selection = select.selection.as_ref();
+                let mut _partition_query = format!("{} >= {} and {} < {}", col, lower, col, upper);
+                if !cur_selection.is_none() {
+                    _partition_query = format!(
+                        "{} and {} >= {} and {} < {}",
+                        cur_selection.unwrap(),
+                        col,
+                        lower,
+                        col,
+                        upper
                     );
-                    if !cur_selection.is_none() {
-                        _partition_query = format!(
-                            "{} and {} >= {} and {} < {}",
-                            cur_selection.unwrap(), col, lower, col, upper
-                        );
-                    }
-                    select.selection = Some(Expr::Value(Value::Number(_partition_query, false)));
                 }
-                _ => {}
+                select.selection = Some(Expr::Value(Value::Number(_partition_query, false)));
             }
-        }
+            _ => {}
+        },
         _ => {}
     };
 
