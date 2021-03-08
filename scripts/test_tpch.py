@@ -12,6 +12,7 @@ from typing import List
 import numpy as np
 from connector_agent_python import write_pandas
 from docopt import docopt
+import time
 
 
 def get_sqls(count: int) -> List[str]:
@@ -47,7 +48,9 @@ if __name__ == "__main__":
 
     queries = get_sqls(int(args["<num>"]))
 
+    then = time.time()
     df = write_pandas(conn, queries, False)
+    print("time in total:", time.time()-then)
 
     print(df.head())
     print(len(df))
