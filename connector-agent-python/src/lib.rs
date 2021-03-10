@@ -116,29 +116,35 @@ fn read_sql<'a>(
     py: Python<'a>,
     conn: &str,
     query: &str,
-    col: &str,
-    min: i64,
-    max: i64,
-    num: i64,
+    partition_config: Option<(&str, i64, i64, i64)>,
     return_type: &str,
 ) -> PyResult<&'a PyAny> {
     let mut queries: Vec<String> = vec![];
-    let partition_size = match (max - min + 1) % num == 0 {
-        true => (max - min + 1) / num,
-        false => (max - min + 1) / num + 1,
-    };
+    if partition_config != None {
+        let partition_config = partition_config.unwrap();
+        let col = partition_config.0;
+        let min = partition_config.1;
+        let max = partition_config.2;
+        let num = partition_config.3;
+        let partition_size = match (max - min + 1) % num == 0 {
+            true => (max - min + 1) / num,
+            false => (max - min + 1) / num + 1,
+        };
 
-    for i in 0..num {
-        let lower = min + i * partition_size;
-        let upper = min + (i + 1) * partition_size;
-        let partition_query = index_query(&query, &col, lower, upper);
-        queries.push(partition_query);
+        for i in 0..num {
+            let lower = min + i * partition_size;
+            let upper = min + (i + 1) * partition_size;
+            let partition_query = index_query(&query, &col, lower, upper);
+            queries.push(partition_query);
+        }
+    } else {
+        queries.push(format!("{}", query));
     }
+
     let queries: Vec<_> = queries.iter().map(|s| s.as_str()).collect();
-    print!("{:?}", queries);
     match return_type {
         "pandas" => Ok(crate::pandas::write_pandas(py, conn, &queries, false)?),
-        "arrow" => todo!(),
+        "arrow" => unimplemented!("arrow return type is not implemented"),
         _ => throw!(errors::ConnectorAgentPythonError::UnexpectedReturnType(
             "pandas or arrow".to_string(),
             return_type.to_string()
