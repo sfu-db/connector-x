@@ -13,9 +13,19 @@ def postgres_url() -> str:
     return conn
 
 
-def test_read_sql_with_partition(postgres_url: str) -> None:
+@pytest.mark.xfail
+def test_wrong_partition(postgres_url: str) -> None:
     query = "select * from test_table"
-    df = read_sql(postgres_url, query, ("test_int", 0, 2000, 3), "pandas")
+    df = read_sql(conn=postgres_url, query=query, return_type="pandas", partition={'col': 'test_int',
+                                                                                   'min': 1,
+                                                                                   'max_wrong': 1000,
+                                                                                   'num': 3}
+                  )
+
+
+def test_read_sql_without_partition(postgres_url: str) -> None:
+    query = "select * from test_table"
+    df = read_sql(postgres_url, query, "pandas")
     expected = pd.DataFrame(
         index=range(6),
         data={
@@ -32,9 +42,14 @@ def test_read_sql_with_partition(postgres_url: str) -> None:
     )
     assert_frame_equal(df, expected, check_names=True)
 
-def test_read_sql_without_partition(postgres_url: str) -> None:
+
+def test_read_sql_with_partition(postgres_url: str) -> None:
     query = "select * from test_table"
-    df = read_sql(postgres_url, query, return_type = "pandas")
+    df = read_sql(postgres_url, query, "pandas", partition={'col': 'test_int',
+                                                            'min': 0,
+                                                            'max': 2000,
+                                                            'num': 3}
+                  )
     expected = pd.DataFrame(
         index=range(6),
         data={

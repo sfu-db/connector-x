@@ -116,16 +116,16 @@ fn read_sql<'a>(
     py: Python<'a>,
     conn: &str,
     query: &str,
-    partition_config: Option<(&str, i64, i64, i64)>,
     return_type: &str,
+    partition: Option<(&str, i64, i64, i64)>,
 ) -> PyResult<&'a PyAny> {
     let mut queries: Vec<String> = vec![];
-    if partition_config != None {
-        let partition_config = partition_config.unwrap();
-        let col = partition_config.0;
-        let min = partition_config.1;
-        let max = partition_config.2;
-        let num = partition_config.3;
+    if partition != None {
+        let partition = partition.unwrap();
+        let col = partition.0;
+        let min = partition.1;
+        let max = partition.2;
+        let num = partition.3;
         let partition_size = match (max - min + 1) % num == 0 {
             true => (max - min + 1) / num,
             false => (max - min + 1) / num + 1,
