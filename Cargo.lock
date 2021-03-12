@@ -291,6 +291,7 @@ dependencies = [
  "r2d2_postgres",
  "rand 0.8.3",
  "rayon",
+ "regex",
  "rusoto_core",
  "rusoto_s3",
  "serde",
