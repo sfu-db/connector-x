@@ -1,4 +1,3 @@
-use chrono::DateTime;
 use connector_agent::data_sources::{csv::CSVSource, PartitionedSource, Produce, Source};
 use connector_agent::writers::memory::MemoryWriter;
 use connector_agent::{DataType, Dispatcher, Writer};
