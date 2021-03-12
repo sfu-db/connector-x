@@ -13,6 +13,7 @@ mod data_order;
 pub mod data_sources;
 mod dispatcher;
 mod errors;
+pub mod partition;
 mod transmit;
 mod types;
 pub mod writers;
@@ -32,15 +33,3 @@ pub use crate::typesystem::{
     ParameterizedFunc, ParameterizedOn, Realize, TypeAssoc, TypeConversion, TypeSystem,
 };
 pub use crate::writers::{Consume, PartitionWriter, Writer};
-
-// pub struct Partition {
-//     col: String,
-//     min: i64,
-//     max: i64,
-//     num: u64,
-// }
-
-// #[throws(ConnectorAgentError)]
-// pub fn read_sql(sql: &str, conn: &str, partition: Partition) {
-//     // Start the BB8 connection pool
-// }

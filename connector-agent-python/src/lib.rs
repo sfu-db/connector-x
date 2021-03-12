@@ -3,10 +3,19 @@
 
 mod errors;
 pub mod pandas;
-
+use anyhow::Result;
+use connector_agent::partition::pg_single_col_partition_query;
+use connector_agent::pg;
+use dict_derive::FromPyObject;
+use fehler::throw;
 use pyo3::prelude::*;
-use pyo3::wrap_pyfunction;
+use pyo3::{
+    exceptions::{PyNotImplementedError, PyValueError},
+    types::{IntoPyDict, PyTuple},
+    wrap_pyfunction, PyResult,
+};
 use std::sync::Once;
+use tokio::runtime;
 
 static START: Once = Once::new();
 
@@ -22,33 +31,13 @@ fn connector_agent_python(_: Python, m: &PyModule) -> PyResult<()> {
         let _ = env_logger::try_init();
     });
 
-    m.add_wrapped(wrap_pyfunction!(write_pandas))?;
     m.add_wrapped(wrap_pyfunction!(read_pg))?;
-
+    m.add_wrapped(wrap_pyfunction!(read_sql))?;
     Ok(())
 }
 
 #[pyfunction]
-fn write_pandas<'a>(
-    py: Python<'a>,
-    conn: &str,
-    queries: Vec<&str>,
-    checked: bool,
-) -> PyResult<&'a PyAny> {
-    Ok(crate::pandas::write_pandas(py, conn, &queries, checked)?)
-}
-
-#[pyfunction]
 fn read_pg(py: Python, conn: &str, sqls: Vec<String>, schema: &str) -> PyResult<PyObject> {
-    use anyhow::Result;
-    use connector_agent::pg;
-    use pyo3::{
-        exceptions::PyValueError,
-        types::{IntoPyDict, PyTuple},
-        PyResult,
-    };
-    use tokio::runtime;
-
     let ret: Result<Vec<(String, Vec<(isize, isize)>)>> = py.allow_threads(|| {
         let r = runtime::Runtime::new()?;
         let ret = r.block_on(pg::read_pg(conn, &sqls, schema))?;
@@ -71,4 +60,70 @@ fn read_pg(py: Python, conn: &str, sqls: Vec<String>, schema: &str) -> PyResult<
         .map(|(k, v)| (k, PyTuple::new(py, v)))
         .collect();
     PyResult::Ok(ret.into_py_dict(py).to_object(py))
+}
+
+#[derive(FromPyObject)]
+pub struct PartitionQuery {
+    query: String,
+    column: String,
+    min: i64,
+    max: i64,
+    num: usize,
+}
+
+#[pyfunction]
+fn read_sql<'a>(
+    py: Python<'a>,
+    conn: &str,
+    return_type: &str,
+    queries: Option<Vec<String>>,
+    partition_query: Option<PartitionQuery>,
+    checked: bool,
+) -> PyResult<&'a PyAny> {
+    let queries = match (queries, partition_query) {
+        (Some(queries), None) => queries,
+        (
+            None,
+            Some(PartitionQuery {
+                query,
+                column: col,
+                min,
+                max,
+                num,
+            }),
+        ) => {
+            let mut queries = vec![];
+            let num = num as i64;
+            let partition_size = match (max - min + 1) % num == 0 {
+                true => (max - min + 1) / num,
+                false => (max - min + 1) / num + 1,
+            };
+
+            for i in 0..num {
+                let lower = min + i * partition_size;
+                let upper = min + (i + 1) * partition_size;
+                let partition_query = pg_single_col_partition_query(&query, &col, lower, upper);
+                queries.push(partition_query);
+            }
+            queries
+        }
+        (Some(_), Some(_)) => throw!(PyValueError::new_err(
+            "partition_query and queries cannot be both specified",
+        )),
+        (None, None) => throw!(PyValueError::new_err(
+            "partition_query and queries cannot be both None",
+        )),
+    };
+
+    let queries: Vec<_> = queries.iter().map(|s| s.as_str()).collect();
+    match return_type {
+        "pandas" => Ok(crate::pandas::write_pandas(py, conn, &queries, checked)?),
+        "arrow" => Err(PyNotImplementedError::new_err(
+            "arrow return type is not implemented",
+        )),
+        _ => Err(PyValueError::new_err(format!(
+            "return type should be 'pandas' or 'arrow', got '{}'",
+            return_type
+        ))),
+    }
 }
