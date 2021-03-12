@@ -6,13 +6,13 @@ pub mod pg;
 #[doc(hidden)]
 pub mod s3;
 #[macro_use]
-mod typesystem;
+pub mod typesystem;
 mod any_array;
 mod conversions;
 mod data_order;
 pub mod data_sources;
 mod dispatcher;
-mod errors;
+pub mod errors;
 pub mod partition;
 mod transmit;
 mod types;

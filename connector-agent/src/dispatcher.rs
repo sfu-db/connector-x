@@ -2,40 +2,30 @@ use crate::{
     data_order::{coordinate, DataOrder},
     data_sources::{PartitionedSource, Source},
     errors::Result,
-    transmit::{Transmit, TransmitChecked},
-    typesystem::{Realize, TypeSystem, TypeSystemConversion},
+    typesystem::{Transport, TypeSystem},
     writers::{PartitionWriter, Writer},
 };
 use itertools::Itertools;
 use log::debug;
 use rayon::prelude::*;
+use std::marker::PhantomData;
 
 /// A dispatcher owns a `SourceBuilder` `SB` and a vector of `queries`
 /// `schema` is a temporary input before we implement infer schema or get schema from DB.
-pub struct Dispatcher<'a, S, TSS, W, TSW>
+pub struct Dispatcher<'a, S, W, TP> {
+    source: S,
+    writer: &'a mut W,
+    queries: Vec<String>,
+    _phantom: PhantomData<TP>,
+}
+
+impl<'w, S, TSS, W, TSW, TP> Dispatcher<'w, S, W, TP>
 where
     TSS: TypeSystem,
     TSW: TypeSystem,
     S: Source<TypeSystem = TSS>,
     W: Writer<TypeSystem = TSW>,
-{
-    source: S,
-    writer: &'a mut W,
-    queries: Vec<String>,
-}
-
-impl<'w, S, TSS, W, TSW> Dispatcher<'w, S, TSS, W, TSW>
-where
-    TSS: TypeSystem,
-    TSW: TypeSystem + TypeSystemConversion<TSS>,
-    S: Source<TypeSystem = TSS>,
-    W: Writer<TypeSystem = TSW>,
-    (TSS, TSW): for<'r, 's> Realize<
-        Transmit<<S::Partition as PartitionedSource>::Parser<'s>, W::PartitionWriter<'r>>,
-    >,
-    (TSS, TSW): for<'r, 's> Realize<
-        TransmitChecked<<S::Partition as PartitionedSource>::Parser<'s>, W::PartitionWriter<'r>>,
-    >,
+    for<'s> TP: Transport<TS1 = TSS, TS2 = TSW, S = S, W = W>,
 {
     /// Create a new dispatcher by providing a source builder, schema (temporary) and the queries
     /// to be issued to the data source.
@@ -47,6 +37,7 @@ where
             source,
             writer,
             queries: queries.into_iter().map(ToString::to_string).collect(),
+            _phantom: PhantomData,
         }
     }
 
@@ -69,7 +60,7 @@ where
         let src_schema = self.source.schema();
         let dst_schema = src_schema
             .iter()
-            .map(|&s| TSW::from(s))
+            .map(|&s| TP::convert_typesystem(s))
             .collect::<Result<Vec<_>>>()?;
         let names = self.source.names();
 
@@ -98,39 +89,40 @@ where
             debug!("Partition {}, {}x{}", i, p.nrows(), p.ncols());
         }
 
+        let transport = if checked {
+            TP::process_checked
+        } else {
+            TP::process
+        };
+
+        let schemas: Vec<_> = src_schema
+            .iter()
+            .zip_eq(&dst_schema)
+            .map(|(&src_ty, &dst_ty)| (src_ty, dst_ty))
+            .collect();
+
         debug!("Start writing");
         // parse and write
         partition_writers
             .into_par_iter()
             .zip_eq(partitions)
             .for_each(|(mut writer, mut partition)| {
-                let f: Vec<_> = src_schema
-                    .iter()
-                    .zip_eq(&dst_schema)
-                    .map(|(&src_ty, &dst_ty)| {
-                        if checked {
-                            Realize::<TransmitChecked<_, _>>::realize((src_ty, dst_ty))
-                        } else {
-                            Realize::<Transmit<_, _>>::realize((src_ty, dst_ty))
-                        }
-                    })
-                    .collect::<Result<Vec<_>>>()
-                    .unwrap();
-
                 let mut parser = partition.parser().unwrap();
 
                 match dorder {
                     DataOrder::RowMajor => {
                         for _ in 0..writer.nrows() {
                             for col in 0..writer.ncols() {
-                                f[col](&mut parser, &mut writer).expect("write record");
+                                let (s1, s2) = schemas[col];
+                                transport(s1, s2, &mut parser, &mut writer).expect("write record");
                             }
                         }
                     }
                     DataOrder::ColumnMajor => {
                         for col in 0..writer.ncols() {
                             for _ in 0..writer.nrows() {
-                                f[col](&mut parser, &mut writer).expect("write record");
+                                let (s1, s2) = schemas[col];
+                                transport(s1, s2, &mut parser, &mut writer).expect("write record");
                             }
                         }
                     }

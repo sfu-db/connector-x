@@ -2,8 +2,8 @@ use super::pandas_columns::{
     BooleanBlock, DateTimeBlock, Float64Block, HasPandasColumn, Int64Block, PandasColumn,
     PandasColumnObject, StringBlock,
 };
+use super::types::{PandasDType, PandasTypes};
 use anyhow::anyhow;
-use connector_agent::writers::pandas::{PandasDType, PandasTypes};
 use connector_agent::{
     ConnectorAgentError, Consume, DataOrder, PartitionWriter, Result, TypeAssoc, TypeSystem, Writer,
 };

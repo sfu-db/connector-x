@@ -1,8 +1,8 @@
 // Unfortunately, due to the orphan rule, typesystem implementation should be in this crate.
-use crate::errors::{ConnectorAgentError, Result};
-use crate::TypeSystem;
 use bytes::Bytes;
 use chrono::{DateTime, Utc};
+use connector_agent::errors::{ConnectorAgentError, Result};
+use connector_agent::{associate_typesystem, TypeSystem};
 use fehler::throws;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]

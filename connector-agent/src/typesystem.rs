@@ -1,7 +1,10 @@
 // Why we need to implement Transmit for TypeSystem? This is because only TypeSystem knows how to dispatch
 // functions to it's native type N based on our defined type T. Remember, T is value and N is a type.
 
+use crate::data_sources::{PartitionedSource, Source};
 use crate::errors::Result;
+use crate::writers::Writer;
+
 /// `TypeSystem` describes a type system in a value type (e.g. enum variants),
 /// which can be used to type check with a static type `T` through the `check` method.
 pub trait TypeSystem: Copy + Clone + Send + Sync {
@@ -24,70 +27,46 @@ pub trait TypeAssoc<TS: TypeSystem> {
 /// `DataType::F64(true)` is corresponding to the physical type Option<f64>. Same for I64 and i64
 #[macro_export]
 macro_rules! associate_typesystem {
-    ($ts:ty, $(/*multiple mapping*/$(/*multiple variant*/ [$($variant:tt)+])|+ => $native_type:ty,)+) => {
-        associate_typesystem!(IMPL $ts, $(/*multiple mapping*/
-            $(/*multiple variant*/$($variant)+ (false))+ => $native_type,
-            $(/*multiple variant*/$($variant)+ (true))+ => Option<$native_type>,
+    ($TS:ty, $(/*multiple mapping*/$(/*multiple variant*/ [$($V:tt)+])|+ => $NT:ty,)+) => {
+        associate_typesystem!(IMPL $TS, $(/*multiple mapping*/
+            $(/*multiple variant*/$($V)+ (false))+ => $NT,
+            $(/*multiple variant*/$($V)+ (true))+ => Option<$NT>,
         )+);
     };
 
-    (IMPL $ts:ty, $($($variant:pat)+ => $native_type:ty,)+) => {
+    (IMPL $TS:ty, $($($V:pat)+ => $NT:ty,)+) => {
         $(
-            impl $crate::typesystem::TypeAssoc<$ts> for $native_type {
-                fn check(ts: $ts) -> $crate::errors::Result<()> {
+            impl $crate::typesystem::TypeAssoc<$TS> for $NT {
+                fn check(ts: $TS) -> $crate::errors::Result<()> {
                     match ts {
                         $(
-                            $variant => Ok(()),
+                            $V => Ok(()),
                         )+
-                        _ => fehler::throw!($crate::errors::ConnectorAgentError::UnexpectedType(format!("{:?}", ts), std::any::type_name::<$native_type>()))
+                        _ => fehler::throw!($crate::errors::ConnectorAgentError::UnexpectedType(format!("{:?}", ts), std::any::type_name::<$NT>()))
                     }
                 }
             }
         )+
 
-        impl<F> $crate::typesystem::Realize<F> for $ts
+        impl<F> $crate::typesystem::Realize<F> for $TS
         where
             F: $crate::typesystem::ParameterizedFunc,
-            $(F: $crate::typesystem::ParameterizedOn<$native_type>),+
+            $(F: $crate::typesystem::ParameterizedOn<$NT>),+
         {
             fn realize(self) -> $crate::errors::Result<F::Function> {
                 match self {
                     $(
-                        $($variant)|+ => Ok(F::realize::<$native_type>()),
+                        $($V)|+ => Ok(F::realize::<$NT>()),
                     )+
                 }
             }
         }
 
-        // Always true for type system self conversion
-        impl<F> $crate::typesystem::Realize<F> for ($ts, $ts)
-        where
-            F: $crate::typesystem::ParameterizedFunc,
-            $(F: $crate::typesystem::ParameterizedOn<($native_type, $native_type)>),+
-        {
-            fn realize(self) -> $crate::errors::Result<F::Function> {
-                match self {
-                    $($(
-                        ($variant, $variant) => Ok(F::realize::<($native_type,$native_type)>()),
-                    )+)+
-                    (v1, v2) => {
-                        fehler::throw!($crate::errors::ConnectorAgentError::NoTypeSystemConversionRule(
-                            format!("{:?}", v1), format!("{:?}", v2)
-                        ))
-                    }
-                }
-            }
-        }
-
-        $(
-            impl $crate::typesystem::TypeConversion<$native_type, $native_type> for ($ts, $ts) {
-                fn convert(val: $native_type) -> $native_type { val }
-            }
-        )+
-
-        impl $crate::typesystem::TypeSystemConversion<$ts> for $ts {
-            fn from(dt: $ts) -> $crate::errors::Result<$ts> { Ok(dt) }
-        }
+        // $(
+        //     impl $crate::typesystem::TypeConversion<$NT, $NT> for ($TS, $TS) {
+        //         fn convert(val: $NT) -> $NT { val }
+        //     }
+        // )+
     };
 }
 
@@ -124,12 +103,34 @@ pub trait TypeConversion<T, U> {
     fn convert(val: T) -> U;
 }
 
-pub trait TypeSystemConversion<T>
-where
-    T: TypeSystem,
-    Self: TypeSystem,
-{
-    fn from(dt: T) -> Result<Self>;
+pub trait Transport {
+    type TS1: TypeSystem;
+    type TS2: TypeSystem;
+    type S: Source;
+    type W: Writer;
+
+    fn convert_typesystem(ts: Self::TS1) -> Result<Self::TS2>;
+
+    fn convert_type<T1, T2>(val: T1) -> T2
+    where
+        Self: TypeConversion<T1, T2>,
+    {
+        <Self as TypeConversion<T1, T2>>::convert(val)
+    }
+
+    fn process<'s, 'w>(
+        ts1: Self::TS1,
+        ts2: Self::TS2,
+        source: &mut <<Self::S as Source>::Partition as PartitionedSource>::Parser<'s>,
+        writer: &mut <Self::W as Writer>::PartitionWriter<'w>,
+    ) -> Result<()>;
+
+    fn process_checked<'s, 'w>(
+        ts1: Self::TS1,
+        ts2: Self::TS2,
+        source: &mut <<Self::S as Source>::Partition as PartitionedSource>::Parser<'s>,
+        writer: &mut <Self::W as Writer>::PartitionWriter<'w>,
+    ) -> Result<()>;
 }
 
 /// A macro to define how to convert between one type system to another, in terms
@@ -137,7 +138,7 @@ where
 ///
 /// # Example Usage
 /// ```ignore
-/// associate_typesystems! {
+/// create_transport! {
 ///     (PostgresDTypes, DataType),
 ///     ([PostgresDTypes::Float4], [DataType::F64]) => (f32, f64) conversion all,
 /// }
@@ -152,81 +153,138 @@ where
 /// casting rule (v as f64). If this is set to `half`, you need to manually write an `TypeConversion` implementation for `(f32,f64)`,
 /// but the conversion rule for `(Option<f32>, Option<f64>)` is still generated. `conversion none` means generate nothing.
 #[macro_export]
-macro_rules! associate_typesystems {
-    (($ts1:ty, $ts2:ty), $($(([$($v1:tt)+], [$($v2:tt)+]))|+ => ($t1:ty, $t2:ty) conversion $cast:ident,)+) => {
-        associate_typesystems!(Realize ($ts1, $ts2), $(
-            $(($($v1)+ (false), $($v2)+ (false)))|+ => ($t1, $t2),
-            $(($($v1)+ (true), $($v2)+ (true)))|+ => (Option<$t1>, Option<$t2>),
-        )+);
+macro_rules! create_transport {
+    ([$($LT:lifetime)?], $TP:ty, $TS1:ty => $TS2:ty, $S:ty => $W:ty, $($(([$($V1:tt)+], [$($V2:tt)+]))|+ => ($T1:ty, $T2:ty) conversion $cast:ident,)+) => {
+        create_transport! (
+            Transport $TP, ($TS1, $TS2) [$($LT)?] ($S => $W) $(
+                $([$($V1)+ (false), $($V2)+ (false)] => [$T1, $T2])+
+                $([$($V1)+ (true), $($V2)+ (true)] => [Option<$T1>, Option<$T2>])+
+            )+
+        );
 
-        associate_typesystems!(Conversion ($ts1, $ts2), $(
-            $(($($v1)+ (false), $($v2)+ (false))),+,
-            $(($($v1)+ (true), $($v2)+ (true))),+,
-        )+);
-
-        $(
-            associate_typesystems!(TypeConversion $cast $ts1, $ts2, $t1, $t2);
-        )+
+        create_transport!(TypeConversionDispatch [$($LT)?] $TP, $($cast $T1 => $T2)+);
     };
 
-    (Realize ($ts1:ty, $ts2:ty), $($(($v1:pat, $v2:pat))|+ => ($t1:ty, $t2:ty),)+) => {
-        impl<F> $crate::typesystem::Realize<F> for ($ts1, $ts2)
-        where
-            F: $crate::typesystem::ParameterizedFunc,
-            $(F: $crate::typesystem::ParameterizedOn<($t1, $t2)>),+
-        {
-            fn realize(self) -> $crate::errors::Result<F::Function> {
-                match self {
-                    $(
-                        $(($v1, $v2))|+ => Ok(F::realize::<($t1, $t2)>()),
-                    )+
-                    (v1, v2) => {
-                        fehler::throw!($crate::errors::ConnectorAgentError::NoTypeSystemConversionRule(
-                            format!("{:?}", v1), format!("{:?}", v2)
-                        ))
-                    }
-                }
-            }
-        }
-    };
+    (Transport $TP:ty, ($TS1:ty, $TS2:ty) [$($LT:lifetime)?] ($S:ty => $W:ty) $([$V1:pat, $($V2:tt)+] => [$T1:ty, $T2:ty])+ ) => {
+        impl $(<$LT>)? $crate::typesystem::Transport for $TP {
+            type TS1 = $TS1;
+            type TS2 = $TS2;
+            type S = $S;
+            type W = $W;
 
-    (Conversion ($ts1:ty, $ts2:ty), $(($v1:pat, $v2:expr),)+) => {
-        impl $crate::typesystem::TypeSystemConversion<$ts1> for $ts2 {
-            fn from(dt: $ts1) -> $crate::errors::Result<Self> {
-                match dt {
+            fn convert_typesystem(ts: Self::TS1) -> $crate::errors::Result<Self::TS2> {
+                match ts {
                     $(
-                        $v1 => Ok($v2),
+                        $V1 => Ok($crate::cvt!(Expr $($V2)+)),
                     )+
                     #[allow(unreachable_patterns)]
                     _ => fehler::throw!($crate::errors::ConnectorAgentError::NoTypeSystemConversionRule(
-                        format!("{:?}", dt), format!("{}", std::any::type_name::<$ts2>())
+                        format!("{:?}", ts), format!("{}", std::any::type_name::<Self::TS2>())
                     ))
                 }
+            }
+
+            fn process<'s, 'w>(
+                ts1: Self::TS1,
+                ts2: Self::TS2,
+                source: &mut <<Self::S as $crate::data_sources::Source>::Partition as $crate::data_sources::PartitionedSource>::Parser<'s>,
+                writer: &mut <Self::W as $crate::writers::Writer>::PartitionWriter<'w>,
+            ) -> $crate::errors::Result<()> {
+                match (ts1, ts2) {
+                    $(
+                        ($V1, $crate::cvt!(Pat $($V2)+)) => {
+                            let val: $T1 = $crate::data_sources::Parser::read(source)?;
+                            let val = <Self as TypeConversion<$T1, $T2>>::convert(val);
+                            unsafe { $crate::writers::PartitionWriter::write(writer, val) };
+                            Ok(())
+                        }
+                    )+
+                    #[allow(unreachable_patterns)]
+                    _ => fehler::throw!($crate::errors::ConnectorAgentError::NoTypeSystemConversionRule(
+                        format!("{:?}", ts1), format!("{:?}", ts1))
+                    )
+                }
+
+            }
+
+            fn process_checked<'s, 'w>(
+                ts1: Self::TS1,
+                ts2: Self::TS2,
+                source: &mut <<Self::S as $crate::data_sources::Source>::Partition as $crate::data_sources::PartitionedSource>::Parser<'s>,
+                writer: &mut <Self::W as $crate::writers::Writer>::PartitionWriter<'w>,
+            ) -> $crate::errors::Result<()> {
+                match (ts1, ts2) {
+                    $(
+                        ($V1, $crate::cvt!(Pat $($V2)+)) => {
+                            let val: $T1 = $crate::data_sources::Parser::read(source)?;
+                            let val = <Self as TypeConversion<$T1, $T2>>::convert(val);
+                            $crate::writers::PartitionWriter::write_checked(writer, val)?;
+                            Ok(())
+                        }
+                    )+
+                    #[allow(unreachable_patterns)]
+                    _ => fehler::throw!($crate::errors::ConnectorAgentError::NoTypeSystemConversionRule(
+                        format!("{:?}", ts1), format!("{:?}", ts1))
+                    )
+                }
+
             }
         }
     };
 
-    (TypeConversion all $ts1:ty, $ts2:ty, $t1:ty, $t2:ty) => {
-        impl $crate::typesystem::TypeConversion<$t1, $t2> for ($ts1, $ts2) {
-            fn convert(val: $t1) -> $t2 {
+    (TypeConversionDispatch [$LT:lifetime] $TP:ty, $($cast:ident $T1:ty => $T2:ty)+) => {
+        $(
+            create_transport!(TypeConversion $cast [$LT] $TP, $T1 => $T2);
+        )+
+    };
+
+    (TypeConversionDispatch [] $TP:ty, $($cast:ident $T1:ty => $T2:ty)+) => {
+        $(
+            create_transport!(TypeConversion $cast [] $TP, $T1 => $T2);
+        )+
+    };
+
+    (TypeConversion all [$($LT:lifetime)?] $TP:ty, $T1:ty => $T2:ty) => {
+        impl <$($LT)?> $crate::typesystem::TypeConversion<$T1, $T2> for $TP {
+            fn convert(val: $T1) -> $T2 {
                 val as _
             }
         }
 
-        impl $crate::typesystem::TypeConversion<Option<$t1>, Option<$t2>> for ($ts1, $ts2) {
-            fn convert(val: Option<$t1>) -> Option<$t2> {
+        impl <$($LT)?> $crate::typesystem::TypeConversion<Option<$T1>, Option<$T2>> for $TP {
+            fn convert(val: Option<$T1>) -> Option<$T2> {
                 val.map(Self::convert)
             }
         }
     };
 
-    (TypeConversion half $ts1:ty, $ts2:ty, $t1:ty, $t2:ty) => {
-        impl $crate::typesystem::TypeConversion<Option<$t1>, Option<$t2>> for ($ts1, $ts2) {
-            fn convert(val: Option<$t1>) -> Option<$t2> {
+
+    (TypeConversion half [$($LT:lifetime)?] $TP:ty, $T1:ty => $T2:ty) => {
+        impl <$($LT)?> $crate::typesystem::TypeConversion<Option<$T1>, Option<$T2>> for $TP {
+            fn convert(val: Option<$T1>) -> Option<$T2> {
                 val.map(Self::convert)
             }
         }
     };
 
-    (TypeConversion none $ts1:ty, $ts2:ty, $t1:ty, $t2:ty) => {};
+    (TypeConversion none [$($LT:lifetime)?] $TP:ty, $T1:ty => $T2:ty) => {};
+}
+
+#[macro_export]
+macro_rules! cvt {
+    (Pat $V:pat) => {
+        $V
+    };
+
+    (Expr $V:expr) => {
+        $V
+    };
+
+    (Ident $V:ident) => {
+        $V
+    };
+
+    (Ty $V:ty) => {
+        $V
+    };
 }
