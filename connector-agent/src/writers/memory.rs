@@ -181,25 +181,16 @@ impl<'a, T> Consume<T> for MemoryPartitionWriter<'a>
 where
     T: TypeAssoc<<Self as PartitionWriter<'a>>::TypeSystem> + 'static,
 {
-    unsafe fn consume(&mut self, value: T) {
+    fn consume(&mut self, value: T) -> Result<()> {
         let (row, col) = self.loc();
-        let &(bid, col) = &self.column_buffer_index[col];
-        let mut_view = self.buffers[bid].udowncast::<T>();
-        *mut_view.get_mut((row, col)).unwrap() = value;
-    }
+        let col_schema = self.schema[col];
+        col_schema.check::<T>()?;
 
-    fn consume_checked(&mut self, value: T) -> Result<()> {
-        let (row, col) = self.loc();
-        self.schema[col].check::<T>()?;
         let &(bid, col) = &self.column_buffer_index[col];
 
-        let mut_view =
-            self.buffers[bid]
-                .downcast::<T>()
-                .ok_or(ConnectorAgentError::UnexpectedType(
-                    format!("{:?}", self.schema[col]),
-                    type_name::<T>(),
-                ))?;
+        let mut_view = self.buffers[bid].downcast::<T>().ok_or_else(|| {
+            ConnectorAgentError::UnexpectedType(format!("{:?}", col_schema), type_name::<T>())
+        })?;
         *mut_view
             .get_mut((row, col))
             .ok_or(ConnectorAgentError::OutOfBound)? = value;

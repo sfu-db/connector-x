@@ -101,7 +101,7 @@ fn test_csv() {
     let mut writer = MemoryWriter::new();
     let dispatcher = Dispatcher::new(source, &mut writer, &files);
 
-    dispatcher.run_checked().expect("run dispatcher");
+    dispatcher.run().expect("run dispatcher");
 
     assert_eq!(
         array![

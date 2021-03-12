@@ -76,7 +76,7 @@ fn test_postgres() {
         &queries,
     );
 
-    dispatcher.run_checked().expect("run dispatcher");
+    dispatcher.run().expect("run dispatcher");
     assert_eq!(
         array![Some(1), Some(0), Some(2), Some(3), Some(4), Some(1314)],
         writer.column_view::<Option<i64>>(0).unwrap()

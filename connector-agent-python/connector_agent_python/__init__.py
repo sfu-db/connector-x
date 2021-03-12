@@ -14,7 +14,6 @@ def read_sql(
     partition_on: Optional[str] = None,
     partition_range: Optional[Tuple[int, int]] = None,
     partition_num: Optional[int] = None,
-    checked: bool = False
 ) -> pd.DataFrame:
     if isinstance(query, str):
         if partition_on is None:
@@ -43,5 +42,4 @@ def read_sql(
         return_type,
         queries=queries,
         partition_query=partition_query,
-        checked=checked,
     )

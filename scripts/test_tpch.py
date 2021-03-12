@@ -49,7 +49,7 @@ if __name__ == "__main__":
     queries = get_sqls(int(args["<num>"]))
 
     then = time.time()
-    df = read_sql(conn, queries, checked=False)
+    df = read_sql(conn, queries)
     print("time in total:", time.time() - then)
 
     print(df.head())

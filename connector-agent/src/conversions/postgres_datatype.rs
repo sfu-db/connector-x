@@ -26,7 +26,7 @@ impl TypeConversion<NaiveDate, DateTime<Utc>> for PostgresDataTypeTransport {
 
 pub struct PostgresDataTypeTransport;
 
-create_transport!(
+define_transport!(
     [],
     PostgresDataTypeTransport,
     PostgresDTypes => DataType,

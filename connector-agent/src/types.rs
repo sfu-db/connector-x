@@ -22,7 +22,7 @@ pub enum DataType {
 
 impl TypeSystem for DataType {}
 
-associate_typesystem! {
+define_typesystem! {
     DataType,
     [DataType::F64] => f64,
     [DataType::I64] => i64,

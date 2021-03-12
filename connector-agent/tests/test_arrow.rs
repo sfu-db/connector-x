@@ -26,7 +26,7 @@ fn test_arrow() {
         &mut writer,
         &queries,
     );
-    dispatcher.run_checked().expect("run dispatcher");
+    dispatcher.run().expect("run dispatcher");
 
     let records: Vec<RecordBatch> = writer.finish(headers).unwrap();
     assert_eq!(2, records.len());

@@ -15,7 +15,7 @@ pub use types::{PandasDType, PandasTypes};
 pub use writers::{PandasPartitionWriter, PandasWriter};
 
 #[throws(ConnectorAgentPythonError)]
-pub fn write_pandas<'a>(py: Python<'a>, conn: &str, queries: &[&str], checked: bool) -> &'a PyAny {
+pub fn write_pandas<'a>(py: Python<'a>, conn: &str, queries: &[&str]) -> &'a PyAny {
     let mut writer = PandasWriter::new(py);
     let sb = PostgresSource::new(conn, queries.len());
 
@@ -27,11 +27,7 @@ pub fn write_pandas<'a>(py: Python<'a>, conn: &str, queries: &[&str], checked: b
     );
 
     debug!("Running dispatcher");
-    if checked {
-        dispatcher.run_checked()?;
-    } else {
-        dispatcher.run()?;
-    }
+    dispatcher.run()?;
 
     writer.result().ok_or(anyhow!("writer not run"))?
 }

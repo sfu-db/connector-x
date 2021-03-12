@@ -41,17 +41,9 @@ where
         }
     }
 
-    pub fn run_checked(self) -> Result<()> {
-        self.entry(true)
-    }
-
-    pub fn run(self) -> Result<()> {
-        self.entry(false)
-    }
-
     /// Run the dispatcher by specifying the writer, the dispatcher will fetch, parse the data
     /// and return a writer with parsed result
-    fn entry(mut self, checked: bool) -> Result<()> {
+    pub fn run(mut self) -> Result<()> {
         let dorder = coordinate(S::DATA_ORDERS, W::DATA_ORDERS)?;
         self.source.set_data_order(dorder)?;
         self.source.set_queries(self.queries.as_slice());
@@ -89,12 +81,6 @@ where
             debug!("Partition {}, {}x{}", i, p.nrows(), p.ncols());
         }
 
-        let transport = if checked {
-            TP::process_checked
-        } else {
-            TP::process
-        };
-
         let schemas: Vec<_> = src_schema
             .iter()
             .zip_eq(&dst_schema)
@@ -114,7 +100,8 @@ where
                         for _ in 0..writer.nrows() {
                             for col in 0..writer.ncols() {
                                 let (s1, s2) = schemas[col];
-                                transport(s1, s2, &mut parser, &mut writer).expect("write record");
+                                TP::process(s1, s2, &mut parser, &mut writer)
+                                    .expect("write record");
                             }
                         }
                     }
@@ -122,7 +109,8 @@ where
                         for col in 0..writer.ncols() {
                             for _ in 0..writer.nrows() {
                                 let (s1, s2) = schemas[col];
-                                transport(s1, s2, &mut parser, &mut writer).expect("write record");
+                                TP::process(s1, s2, &mut parser, &mut writer)
+                                    .expect("write record");
                             }
                         }
                     }

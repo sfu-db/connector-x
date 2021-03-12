@@ -3,14 +3,14 @@ use super::writers::PandasWriter;
 use bytes::Bytes;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
 use connector_agent::{
-    create_transport,
     data_sources::postgres::{PostgresDTypes, PostgresSource},
+    define_transport,
     typesystem::TypeConversion,
 };
 
 pub struct PostgresPandasTransport<'py>(&'py ());
 
-create_transport! {
+define_transport! {
     ['py],
     PostgresPandasTransport<'py>,
     PostgresDTypes => PandasTypes,

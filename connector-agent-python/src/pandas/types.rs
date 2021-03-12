@@ -2,7 +2,7 @@
 use bytes::Bytes;
 use chrono::{DateTime, Utc};
 use connector_agent::errors::{ConnectorAgentError, Result};
-use connector_agent::{associate_typesystem, TypeSystem};
+use connector_agent::{define_typesystem, TypeSystem};
 use fehler::throws;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -87,7 +87,7 @@ impl PandasDType for PandasTypes {
     }
 }
 
-associate_typesystem! {
+define_typesystem! {
     PandasTypes,
     [PandasTypes::F64] => f64,
     [PandasTypes::I64] => i64,

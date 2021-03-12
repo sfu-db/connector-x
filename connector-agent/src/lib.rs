@@ -14,7 +14,6 @@ pub mod data_sources;
 mod dispatcher;
 pub mod errors;
 pub mod partition;
-mod transmit;
 mod types;
 pub mod writers;
 

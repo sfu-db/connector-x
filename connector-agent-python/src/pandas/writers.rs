@@ -244,19 +244,15 @@ impl<'a, T> Consume<T> for PandasPartitionWriter<'a>
 where
     T: HasPandasColumn + TypeAssoc<PandasTypes> + std::fmt::Debug + 'static,
 {
-    unsafe fn consume(&mut self, value: T) {
+    fn consume(&mut self, value: T) -> Result<()> {
         let (_, col) = self.loc();
-        let (column, _): (&mut T::PandasColumn<'a>, *const ()) = transmute(&*self.columns[col]);
-        column.write(value);
-    }
-
-    fn consume_checked(&mut self, value: T) -> Result<()> {
-        let col = self.seq % self.ncols();
 
         self.schema[col].check::<T>()?;
         assert!(self.columns[col].typecheck(TypeId::of::<T>()));
 
-        unsafe { self.consume(value) };
+        let (column, _): (&mut T::PandasColumn<'a>, *const ()) =
+            unsafe { transmute(&*self.columns[col]) };
+        column.write(value);
 
         Ok(())
     }

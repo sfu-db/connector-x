@@ -140,21 +140,17 @@ impl<'a, T> Consume<T> for ArrowPartitionWriter<'a>
 where
     T: TypeAssoc<<Self as PartitionWriter<'a>>::TypeSystem> + ArrowAssoc + 'static,
 {
-    unsafe fn consume(&mut self, value: T) {
+    fn consume(&mut self, value: T) -> Result<()> {
         let col = self.current_col;
         self.current_col = (self.current_col + 1) % self.ncols();
-        // NOTE: can use `get_mut_unchecked` instead of Mutex in the future to speed up
+
+        self.schema[col].check::<T>()?;
+
         <T as ArrowAssoc>::append(
             self.builders[col].downcast_mut::<T::Builder>().unwrap(),
             value,
         );
-    }
 
-    fn consume_checked(&mut self, value: T) -> Result<()> {
-        let col = self.current_col;
-
-        self.schema[col].check::<T>()?;
-        unsafe { self.write(value) };
         Ok(())
     }
 }

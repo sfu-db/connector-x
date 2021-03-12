@@ -5,8 +5,9 @@ use crate::data_sources::{PartitionedSource, Source};
 use crate::errors::Result;
 use crate::writers::Writer;
 
-/// `TypeSystem` describes a type system in a value type (e.g. enum variants),
-/// which can be used to type check with a static type `T` through the `check` method.
+/// `TypeSystem` describes all the types a source or writer support
+/// using enum variants.
+/// The variant can be used to type check with a static type `T` through the `check` method.
 pub trait TypeSystem: Copy + Clone + Send + Sync {
     /// Check whether T is the same type as defined by self.
     fn check<T: TypeAssoc<Self>>(self) -> Result<()> {
@@ -22,13 +23,13 @@ pub trait TypeAssoc<TS: TypeSystem> {
 /// A macro to implement `TypeAssoc` and `Realize` which saves repetitive code.
 ///
 /// # Example Usage
-/// `associate_typesystem!(DataType, [DataType::F64] => f64, [DataType::I64] => i64);`
+/// `define_typesystem!(DataType, [DataType::F64] => f64, [DataType::I64] => i64);`
 /// This means for the type system `DataType`, it's variant `DataType::F64(false)` is corresponding to the physical type f64 and
 /// `DataType::F64(true)` is corresponding to the physical type Option<f64>. Same for I64 and i64
 #[macro_export]
-macro_rules! associate_typesystem {
+macro_rules! define_typesystem {
     ($TS:ty, $(/*multiple mapping*/$(/*multiple variant*/ [$($V:tt)+])|+ => $NT:ty,)+) => {
-        associate_typesystem!(IMPL $TS, $(/*multiple mapping*/
+        define_typesystem!(IMPL $TS, $(/*multiple mapping*/
             $(/*multiple variant*/$($V)+ (false))+ => $NT,
             $(/*multiple variant*/$($V)+ (true))+ => Option<$NT>,
         )+);
@@ -61,12 +62,6 @@ macro_rules! associate_typesystem {
                 }
             }
         }
-
-        // $(
-        //     impl $crate::typesystem::TypeConversion<$NT, $NT> for ($TS, $TS) {
-        //         fn convert(val: $NT) -> $NT { val }
-        //     }
-        // )+
     };
 }
 
@@ -103,14 +98,20 @@ pub trait TypeConversion<T, U> {
     fn convert(val: T) -> U;
 }
 
+/// Transport defines how to produce a value, do type conversion and then write
+/// the value to a writer.
 pub trait Transport {
     type TS1: TypeSystem;
     type TS2: TypeSystem;
     type S: Source;
     type W: Writer;
 
+    /// convert_typesystem convert the source type system TS1 to the writer
+    /// type system TS2.
     fn convert_typesystem(ts: Self::TS1) -> Result<Self::TS2>;
 
+    /// convert_type convert the type T1 associated with the source type system
+    /// TS1 to a type T2 which is associated with the writer type system TS2.
     fn convert_type<T1, T2>(val: T1) -> T2
     where
         Self: TypeConversion<T1, T2>,
@@ -118,14 +119,10 @@ pub trait Transport {
         <Self as TypeConversion<T1, T2>>::convert(val)
     }
 
+    /// `process` will ask source to produce a value with type T1, based on TS1, and then do
+    /// type conversion using `convert_type` to get value with type T2, which is associated to
+    /// TS2. Finally, it will write the value with type T2 to the writer.
     fn process<'s, 'w>(
-        ts1: Self::TS1,
-        ts2: Self::TS2,
-        source: &mut <<Self::S as Source>::Partition as PartitionedSource>::Parser<'s>,
-        writer: &mut <Self::W as Writer>::PartitionWriter<'w>,
-    ) -> Result<()>;
-
-    fn process_checked<'s, 'w>(
         ts1: Self::TS1,
         ts2: Self::TS2,
         source: &mut <<Self::S as Source>::Partition as PartitionedSource>::Parser<'s>,
@@ -133,40 +130,35 @@ pub trait Transport {
     ) -> Result<()>;
 }
 
-/// A macro to define how to convert between one type system to another, in terms
-/// of both their enum variants and the physical types
+/// A macro to help define Transport.
 ///
 /// # Example Usage
 /// ```ignore
-/// create_transport! {
-///     (PostgresDTypes, DataType),
-///     ([PostgresDTypes::Float4], [DataType::F64]) => (f32, f64) conversion all,
+/// define_transport! {
+///    ['py],
+///    PostgresPandasTransport<'py>,
+///    PostgresDTypes => PandasTypes,
+///    PostgresSource => PandasWriter<'py>,
+///    ([PostgresDTypes::Float4], [PandasTypes::F64]) => (f32, f64) conversion all
 /// }
 /// ```
-/// This means for the type system `PostgresDTypes`, is can be converted to another type system DataType.
-/// Specifically, the variant `PostgresDTypes::Float4(false)` is corresponding to the variant `DataType::F64(false)` and
-/// the variant `PostgresDTypes::Float4(true)` is corresponding to the variant `DataType::F64(true)`.
-/// Also, the physical type `f32` is corresponding to the physical type `f64` and the physical type `Option<f32>` is
-/// corresponding to the type `Option<f64>`.
-/// The last piece of `conversion all` means auto implementing the physical type conversion trait `TypeConversion<f32, f64>` and
-/// conversion trait `TypeConversion<Option<f32>, Option<f64>>` for `(PostgresDTypes, DataType)` by using
-/// casting rule (v as f64). If this is set to `half`, you need to manually write an `TypeConversion` implementation for `(f32,f64)`,
-/// but the conversion rule for `(Option<f32>, Option<f64>)` is still generated. `conversion none` means generate nothing.
+/// This implements `Transport` to `PostgresPandasTransport<'py>`.
+/// The lifetime used must be declare in the first argument in the bracket.
 #[macro_export]
-macro_rules! create_transport {
+macro_rules! define_transport {
     ([$($LT:lifetime)?], $TP:ty, $TS1:ty => $TS2:ty, $S:ty => $W:ty, $($(([$($V1:tt)+], [$($V2:tt)+]))|+ => ($T1:ty, $T2:ty) conversion $cast:ident,)+) => {
-        create_transport! (
-            Transport $TP, ($TS1, $TS2) [$($LT)?] ($S => $W) $(
+        define_transport! (
+            Transport [$($LT)?], $TP, ($TS1, $TS2) ($S => $W) $(
                 $([$($V1)+ (false), $($V2)+ (false)] => [$T1, $T2])+
                 $([$($V1)+ (true), $($V2)+ (true)] => [Option<$T1>, Option<$T2>])+
             )+
         );
 
-        create_transport!(TypeConversionDispatch [$($LT)?] $TP, $($cast $T1 => $T2)+);
+        define_transport!(TypeConversionDispatch [$($LT)?] $TP, $($cast $T1 => $T2)+);
     };
 
-    (Transport $TP:ty, ($TS1:ty, $TS2:ty) [$($LT:lifetime)?] ($S:ty => $W:ty) $([$V1:pat, $($V2:tt)+] => [$T1:ty, $T2:ty])+ ) => {
-        impl $(<$LT>)? $crate::typesystem::Transport for $TP {
+    (Transport [$($LT:lifetime)?], $TP:ty, ($TS1:ty, $TS2:ty) ($S:ty => $W:ty) $([$V1:pat, $($V2:tt)+] => [$T1:ty, $T2:ty])+ ) => {
+        impl <$($LT)?> $crate::typesystem::Transport for $TP {
             type TS1 = $TS1;
             type TS2 = $TS2;
             type S = $S;
@@ -195,30 +187,7 @@ macro_rules! create_transport {
                         ($V1, $crate::cvt!(Pat $($V2)+)) => {
                             let val: $T1 = $crate::data_sources::Parser::read(source)?;
                             let val = <Self as TypeConversion<$T1, $T2>>::convert(val);
-                            unsafe { $crate::writers::PartitionWriter::write(writer, val) };
-                            Ok(())
-                        }
-                    )+
-                    #[allow(unreachable_patterns)]
-                    _ => fehler::throw!($crate::errors::ConnectorAgentError::NoTypeSystemConversionRule(
-                        format!("{:?}", ts1), format!("{:?}", ts1))
-                    )
-                }
-
-            }
-
-            fn process_checked<'s, 'w>(
-                ts1: Self::TS1,
-                ts2: Self::TS2,
-                source: &mut <<Self::S as $crate::data_sources::Source>::Partition as $crate::data_sources::PartitionedSource>::Parser<'s>,
-                writer: &mut <Self::W as $crate::writers::Writer>::PartitionWriter<'w>,
-            ) -> $crate::errors::Result<()> {
-                match (ts1, ts2) {
-                    $(
-                        ($V1, $crate::cvt!(Pat $($V2)+)) => {
-                            let val: $T1 = $crate::data_sources::Parser::read(source)?;
-                            let val = <Self as TypeConversion<$T1, $T2>>::convert(val);
-                            $crate::writers::PartitionWriter::write_checked(writer, val)?;
+                            $crate::writers::PartitionWriter::write(writer, val)?;
                             Ok(())
                         }
                     )+
@@ -234,13 +203,13 @@ macro_rules! create_transport {
 
     (TypeConversionDispatch [$LT:lifetime] $TP:ty, $($cast:ident $T1:ty => $T2:ty)+) => {
         $(
-            create_transport!(TypeConversion $cast [$LT] $TP, $T1 => $T2);
+            define_transport!(TypeConversion $cast [$LT] $TP, $T1 => $T2);
         )+
     };
 
     (TypeConversionDispatch [] $TP:ty, $($cast:ident $T1:ty => $T2:ty)+) => {
         $(
-            create_transport!(TypeConversion $cast [] $TP, $T1 => $T2);
+            define_transport!(TypeConversion $cast [] $TP, $T1 => $T2);
         )+
     };
 
