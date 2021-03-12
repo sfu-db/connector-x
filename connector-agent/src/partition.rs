@@ -1,5 +1,5 @@
 use log::{debug, trace};
-use sqlparser::ast::{Expr, SetExpr, Statement, Value};
+use sqlparser::ast::{BinaryOperator, Expr, Ident, SetExpr, Statement, Value};
 use sqlparser::dialect::PostgreSqlDialect;
 use sqlparser::parser::Parser;
 
@@ -13,19 +13,39 @@ pub fn pg_single_col_partition_query(query: &str, col: &str, lower: i64, upper: 
     match &mut ast[0] {
         Statement::Query(q) => match &mut q.body {
             SetExpr::Select(select) => {
-                let cur_selection = select.selection.as_ref();
-                let mut _partition_query = format!("{} >= {} and {} < {}", col, lower, col, upper);
-                if !cur_selection.is_none() {
-                    _partition_query = format!(
-                        "{} and {} >= {} and {} < {}",
-                        cur_selection.unwrap(),
-                        col,
-                        lower,
-                        col,
-                        upper
-                    );
+                let lb = Expr::BinaryOp {
+                    left: Box::new(Expr::Value(Value::Number(lower.to_string(), false))),
+                    op: BinaryOperator::LtEq,
+                    right: Box::new(Expr::Identifier(Ident {
+                        value: col.to_string(),
+                        quote_style: None,
+                    })),
+                };
+
+                let ub = Expr::BinaryOp {
+                    left: Box::new(Expr::Identifier(Ident {
+                        value: col.to_string(),
+                        quote_style: None,
+                    })),
+                    op: BinaryOperator::Lt,
+                    right: Box::new(Expr::Value(Value::Number(upper.to_string(), false))),
+                };
+
+                let mut selection = Expr::BinaryOp {
+                    left: Box::new(lb),
+                    op: BinaryOperator::And,
+                    right: Box::new(ub),
+                };
+
+                if let Some(exist_selection) = select.selection.take() {
+                    selection = Expr::BinaryOp {
+                        left: Box::new(Expr::Nested(Box::new(exist_selection))),
+                        op: BinaryOperator::And,
+                        right: Box::new(Expr::Nested(Box::new(selection))),
+                    };
                 }
-                select.selection = Some(Expr::Value(Value::Number(_partition_query, false)));
+
+                select.selection.replace(selection);
             }
             _ => {}
         },
