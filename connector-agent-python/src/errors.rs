@@ -15,9 +15,6 @@ pub enum ConnectorAgentPythonError {
     #[error("Python: {0}.")]
     PythonError(String),
 
-    #[error("Unexpected return type, expect: {0}, but get {1}.")]
-    UnexpectedReturnType(String, String),
-
     #[error(transparent)]
     ConnectorAgentError(#[from] connector_agent::ConnectorAgentError),
 

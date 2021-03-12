@@ -16,6 +16,7 @@ mod errors;
 mod transmit;
 mod types;
 pub mod writers;
+pub mod partition;
 
 pub use crate::any_array::{AnyArray, AnyArrayView, AnyArrayViewMut};
 pub use crate::data_order::DataOrder;

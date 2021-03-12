@@ -14,7 +14,7 @@ setup-python:
     cd connector-agent-python && poetry run maturin develop --release --strip
     
 test-python: setup-python
-    cd connector-agent-python && poetry run pytest connector_agent_python/tests -v
+    cd connector-agent-python && poetry run pytest connector_agent_python/tests -vv
 
 seed-db:
     psql $POSTGRES_URL -c "DROP TABLE IF EXISTS test_table;"
