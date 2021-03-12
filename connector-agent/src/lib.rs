@@ -13,10 +13,10 @@ mod data_order;
 pub mod data_sources;
 mod dispatcher;
 mod errors;
+pub mod partition;
 mod transmit;
 mod types;
 pub mod writers;
-pub mod partition;
 
 pub use crate::any_array::{AnyArray, AnyArrayView, AnyArrayViewMut};
 pub use crate::data_order::DataOrder;
