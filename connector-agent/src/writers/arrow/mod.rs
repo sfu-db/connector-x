@@ -1,7 +1,7 @@
 use super::{Consume, PartitionWriter, Writer};
 use crate::data_order::DataOrder;
+use crate::dummy_typesystem::DummyTypeSystem;
 use crate::errors::{ConnectorAgentError, Result};
-use crate::types::DataType;
 use crate::typesystem::{Realize, TypeAssoc, TypeSystem};
 use arrow::datatypes::Schema;
 use arrow::record_batch::RecordBatch;
@@ -20,7 +20,7 @@ type Builders = Vec<Builder>;
 
 pub struct ArrowWriter {
     nrows: usize,
-    schema: Vec<DataType>,
+    schema: Vec<DummyTypeSystem>,
     builders: Vec<Builders>,
 }
 
@@ -36,7 +36,7 @@ impl ArrowWriter {
 
 impl Writer for ArrowWriter {
     const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::ColumnMajor, DataOrder::RowMajor];
-    type TypeSystem = DataType;
+    type TypeSystem = DummyTypeSystem;
     type PartitionWriter<'a> = ArrowPartitionWriter<'a>;
 
     #[throws(ConnectorAgentError)]
@@ -44,7 +44,7 @@ impl Writer for ArrowWriter {
         &mut self,
         nrows: usize,
         _names: &[S],
-        schema: &[DataType],
+        schema: &[DummyTypeSystem],
         _data_order: DataOrder,
     ) {
         // cannot really create builders since do not know each partition size here
@@ -75,7 +75,7 @@ impl Writer for ArrowWriter {
             .collect()
     }
 
-    fn schema(&self) -> &[DataType] {
+    fn schema(&self) -> &[DummyTypeSystem] {
         self.schema.as_slice()
     }
 }
@@ -108,13 +108,13 @@ impl ArrowWriter {
 
 pub struct ArrowPartitionWriter<'a> {
     nrows: usize,
-    schema: Vec<DataType>,
+    schema: Vec<DummyTypeSystem>,
     builders: &'a mut Builders,
     current_col: usize,
 }
 
 impl<'a> ArrowPartitionWriter<'a> {
-    fn new(schema: Vec<DataType>, builders: &'a mut Builders, nrows: usize) -> Self {
+    fn new(schema: Vec<DummyTypeSystem>, builders: &'a mut Builders, nrows: usize) -> Self {
         ArrowPartitionWriter {
             nrows,
             schema,
@@ -125,7 +125,7 @@ impl<'a> ArrowPartitionWriter<'a> {
 }
 
 impl<'a> PartitionWriter<'a> for ArrowPartitionWriter<'a> {
-    type TypeSystem = DataType;
+    type TypeSystem = DummyTypeSystem;
 
     fn nrows(&self) -> usize {
         self.nrows

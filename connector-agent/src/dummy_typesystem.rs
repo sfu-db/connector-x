@@ -6,13 +6,12 @@
 // 3. Add `DataType::T => N` to the macro impl_transmit!.
 //
 
-use crate::typesystem::TypeSystem;
 use chrono::{DateTime, Utc};
 /// This is our intermediate type system used in this library.
 /// For all the sources, their output values must be one of the types defined by DataType.
 /// For all the writers, they must support writing any value whose type is defined by DataType.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
-pub enum DataType {
+pub enum DummyTypeSystem {
     F64(bool), // nullable
     I64(bool),
     Bool(bool),
@@ -20,13 +19,11 @@ pub enum DataType {
     DateTime(bool),
 }
 
-impl TypeSystem for DataType {}
-
-define_typesystem! {
-    DataType,
-    [DataType::F64] => f64,
-    [DataType::I64] => i64,
-    [DataType::Bool] => bool,
-    [DataType::String] => String,
-    [DataType::DateTime] => DateTime<Utc>,
+impl_typesystem! {
+    DummyTypeSystem,
+    [DummyTypeSystem::F64] => f64,
+    [DummyTypeSystem::I64] => i64,
+    [DummyTypeSystem::Bool] => bool,
+    [DummyTypeSystem::String] => String,
+    [DummyTypeSystem::DateTime] => DateTime<Utc>,
 }

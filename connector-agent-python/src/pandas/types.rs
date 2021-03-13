@@ -2,11 +2,11 @@
 use bytes::Bytes;
 use chrono::{DateTime, Utc};
 use connector_agent::errors::{ConnectorAgentError, Result};
-use connector_agent::{define_typesystem, TypeSystem};
+use connector_agent::impl_typesystem;
 use fehler::throws;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
-pub enum PandasTypes {
+pub enum PandasTypeSystem {
     F64(bool),
     I64(bool),
     Bool(bool),
@@ -14,7 +14,14 @@ pub enum PandasTypes {
     DateTime(bool),
 }
 
-impl TypeSystem for PandasTypes {}
+impl_typesystem! {
+    PandasTypeSystem,
+    [PandasTypeSystem::F64] => f64,
+    [PandasTypeSystem::I64] => i64,
+    [PandasTypeSystem::Bool] => bool,
+    [PandasTypeSystem::String] => Bytes,
+    [PandasTypeSystem::DateTime] => DateTime<Utc>,
+}
 
 pub trait PandasDType: Sized {
     fn dtype(&self) -> &'static str;
@@ -25,73 +32,64 @@ pub trait PandasDType: Sized {
     fn block_name(&self) -> &'static str;
 }
 
-impl PandasDType for PandasTypes {
+impl PandasDType for PandasTypeSystem {
     fn dtype(&self) -> &'static str {
         match *self {
-            PandasTypes::I64(false) => "int64",
-            PandasTypes::I64(true) => "Int64",
-            PandasTypes::F64(_) => "float64",
-            PandasTypes::Bool(false) => "bool",
-            PandasTypes::Bool(true) => "boolean",
-            PandasTypes::String(_) => "object",
-            PandasTypes::DateTime(_) => "datetime64[ns]",
+            PandasTypeSystem::I64(false) => "int64",
+            PandasTypeSystem::I64(true) => "Int64",
+            PandasTypeSystem::F64(_) => "float64",
+            PandasTypeSystem::Bool(false) => "bool",
+            PandasTypeSystem::Bool(true) => "boolean",
+            PandasTypeSystem::String(_) => "object",
+            PandasTypeSystem::DateTime(_) => "datetime64[ns]",
         }
     }
 
     fn npdtype(&self) -> &'static str {
         match *self {
-            PandasTypes::I64(_) => "i8",
-            PandasTypes::F64(_) => "f8",
-            PandasTypes::Bool(_) => "b1",
-            PandasTypes::String(_) => "O",
-            PandasTypes::DateTime(_) => "M8[ns]",
+            PandasTypeSystem::I64(_) => "i8",
+            PandasTypeSystem::F64(_) => "f8",
+            PandasTypeSystem::Bool(_) => "b1",
+            PandasTypeSystem::String(_) => "O",
+            PandasTypeSystem::DateTime(_) => "M8[ns]",
         }
     }
 
     #[throws(ConnectorAgentError)]
     fn parse(ty: &str) -> Self {
         match ty {
-            "int64" => PandasTypes::I64(false),
-            "Int64" => PandasTypes::I64(true),
-            "float64" => PandasTypes::F64(true),
-            "bool" => PandasTypes::Bool(false),
-            "boolean" => PandasTypes::Bool(true),
-            "object" => PandasTypes::String(true),
-            "datetime" => PandasTypes::DateTime(true),
+            "int64" => PandasTypeSystem::I64(false),
+            "Int64" => PandasTypeSystem::I64(true),
+            "float64" => PandasTypeSystem::F64(true),
+            "bool" => PandasTypeSystem::Bool(false),
+            "boolean" => PandasTypeSystem::Bool(true),
+            "object" => PandasTypeSystem::String(true),
+            "datetime" => PandasTypeSystem::DateTime(true),
             ty => unimplemented!("{}", ty),
         }
     }
 
     fn is_extension(&self) -> bool {
         match *self {
-            PandasTypes::I64(false) => false,
-            PandasTypes::I64(true) => true,
-            PandasTypes::F64(_) => false,
-            PandasTypes::Bool(false) => false,
-            PandasTypes::Bool(true) => true,
-            PandasTypes::String(_) => false, // we use object instead of string (Extension) for now
-            PandasTypes::DateTime(_) => false,
+            PandasTypeSystem::I64(false) => false,
+            PandasTypeSystem::I64(true) => true,
+            PandasTypeSystem::F64(_) => false,
+            PandasTypeSystem::Bool(false) => false,
+            PandasTypeSystem::Bool(true) => true,
+            PandasTypeSystem::String(_) => false, // we use object instead of string (Extension) for now
+            PandasTypeSystem::DateTime(_) => false,
         }
     }
 
     fn block_name(&self) -> &'static str {
         match *self {
-            PandasTypes::I64(false) => "IntBlock",
-            PandasTypes::I64(true) => "ExtensionBlock",
-            PandasTypes::F64(_) => "FloatBlock",
-            PandasTypes::Bool(false) => "BoolBlock",
-            PandasTypes::Bool(true) => "ExtensionBlock",
-            PandasTypes::String(_) => "ObjectBlock", // we use object instead of string (Extension) for now
-            PandasTypes::DateTime(_) => "DatetimeBlock",
+            PandasTypeSystem::I64(false) => "IntBlock",
+            PandasTypeSystem::I64(true) => "ExtensionBlock",
+            PandasTypeSystem::F64(_) => "FloatBlock",
+            PandasTypeSystem::Bool(false) => "BoolBlock",
+            PandasTypeSystem::Bool(true) => "ExtensionBlock",
+            PandasTypeSystem::String(_) => "ObjectBlock", // we use object instead of string (Extension) for now
+            PandasTypeSystem::DateTime(_) => "DatetimeBlock",
         }
     }
-}
-
-define_typesystem! {
-    PandasTypes,
-    [PandasTypes::F64] => f64,
-    [PandasTypes::I64] => i64,
-    [PandasTypes::Bool] => bool,
-    [PandasTypes::String] => Bytes,
-    [PandasTypes::DateTime] => DateTime<Utc>,
 }

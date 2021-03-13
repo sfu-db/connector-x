@@ -2,8 +2,8 @@ mod any_array;
 
 use super::{Consume, PartitionWriter, Writer};
 use crate::data_order::DataOrder;
+use crate::dummy_typesystem::DummyTypeSystem;
 use crate::errors::{ConnectorAgentError, Result};
-use crate::types::DataType;
 use crate::typesystem::{ParameterizedFunc, ParameterizedOn, Realize, TypeAssoc, TypeSystem};
 use any_array::{AnyArray, AnyArrayViewMut};
 use chrono::{DateTime, NaiveDateTime, Utc};
@@ -15,7 +15,7 @@ use std::collections::HashMap;
 /// This `Writer` can support mixed data type.
 pub struct MemoryWriter {
     nrows: usize,
-    schema: Vec<DataType>,
+    schema: Vec<DummyTypeSystem>,
     buffers: Vec<AnyArray<Ix2>>,
     column_buffer_index: Vec<(usize, usize)>,
 }
@@ -33,7 +33,7 @@ impl MemoryWriter {
 
 impl Writer for MemoryWriter {
     const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
-    type TypeSystem = DataType;
+    type TypeSystem = DummyTypeSystem;
     type PartitionWriter<'a> = MemoryPartitionWriter<'a>;
 
     #[throws(ConnectorAgentError)]
@@ -41,7 +41,7 @@ impl Writer for MemoryWriter {
         &mut self,
         nrows: usize,
         _names: &[S],
-        schema: &[DataType],
+        schema: &[DummyTypeSystem],
         data_order: DataOrder,
     ) {
         if !matches!(data_order, DataOrder::RowMajor) {
@@ -107,7 +107,7 @@ impl Writer for MemoryWriter {
         ret
     }
 
-    fn schema(&self) -> &[DataType] {
+    fn schema(&self) -> &[DummyTypeSystem] {
         self.schema.as_slice()
     }
 }
@@ -138,7 +138,7 @@ impl MemoryWriter {
 /// The `PartitionedWriter` of `MemoryWriter`.
 pub struct MemoryPartitionWriter<'a> {
     nrows: usize,
-    schema: Vec<DataType>,
+    schema: Vec<DummyTypeSystem>,
     buffers: Vec<AnyArrayViewMut<'a, Ix2>>,
     column_buffer_index: Vec<(usize, usize)>,
     current: usize,
@@ -148,7 +148,7 @@ impl<'a> MemoryPartitionWriter<'a> {
     fn new(
         nrows: usize,
         buffers: Vec<AnyArrayViewMut<'a, Ix2>>,
-        schema: Vec<DataType>,
+        schema: Vec<DummyTypeSystem>,
         column_buffer_index: Vec<(usize, usize)>,
     ) -> Self {
         Self {
@@ -168,7 +168,7 @@ impl<'a> MemoryPartitionWriter<'a> {
 }
 
 impl<'a> PartitionWriter<'a> for MemoryPartitionWriter<'a> {
-    type TypeSystem = DataType;
+    type TypeSystem = DummyTypeSystem;
 
     fn nrows(&self) -> usize {
         self.nrows

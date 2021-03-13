@@ -1,19 +1,19 @@
 use super::{Parser, PartitionedSource, Produce, Source};
 use crate::data_order::DataOrder;
+use crate::dummy_typesystem::DummyTypeSystem;
 use crate::errors::{ConnectorAgentError, Result};
-use crate::types::DataType;
 use chrono::{offset, Date, DateTime, Utc};
 use fehler::{throw, throws};
 use num_traits::cast::FromPrimitive;
 
 pub struct MixedSource {
     names: Vec<String>,
-    schema: Vec<DataType>,
+    schema: Vec<DummyTypeSystem>,
     queries: Vec<String>,
 }
 
 impl MixedSource {
-    pub fn new<S: AsRef<str>>(names: &[S], schema: &[DataType]) -> Self {
+    pub fn new<S: AsRef<str>>(names: &[S], schema: &[DummyTypeSystem]) -> Self {
         assert_eq!(names.len(), schema.len());
         MixedSource {
             names: names.into_iter().map(|s| s.as_ref().to_string()).collect(),
@@ -25,7 +25,7 @@ impl MixedSource {
 
 impl Source for MixedSource {
     const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
-    type TypeSystem = DataType;
+    type TypeSystem = DummyTypeSystem;
     type Partition = MixedSourcePartition;
 
     #[throws(ConnectorAgentError)]
@@ -74,7 +74,7 @@ pub struct MixedSourcePartition {
 }
 
 impl MixedSourcePartition {
-    pub fn new(_schema: &[DataType], q: &str) -> Self {
+    pub fn new(_schema: &[DummyTypeSystem], q: &str) -> Self {
         let v: Vec<usize> = q.split(',').map(|s| s.parse().unwrap()).collect();
 
         MixedSourcePartition {
@@ -86,7 +86,7 @@ impl MixedSourcePartition {
 }
 
 impl PartitionedSource for MixedSourcePartition {
-    type TypeSystem = DataType;
+    type TypeSystem = DummyTypeSystem;
     type Parser<'a> = MixedSourceParser<'a>;
 
     fn prepare(&mut self) -> Result<()> {
@@ -134,7 +134,7 @@ impl<'a> MixedSourceParser<'a> {
 }
 
 impl<'a> Parser<'a> for MixedSourceParser<'a> {
-    type TypeSystem = DataType;
+    type TypeSystem = DummyTypeSystem;
 }
 
 macro_rules! numeric_impl {

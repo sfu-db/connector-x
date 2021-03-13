@@ -1,20 +1,20 @@
 use super::{Parser, PartitionedSource, Produce, Source};
 use crate::data_order::DataOrder;
+use crate::dummy_typesystem::DummyTypeSystem;
 use crate::errors::{ConnectorAgentError, Result};
-use crate::types::DataType;
 use chrono::{DateTime, Utc};
 use fehler::{throw, throws};
 use std::any::type_name;
 use std::fs::File;
 
 pub struct CSVSource {
-    schema: Vec<DataType>,
+    schema: Vec<DummyTypeSystem>,
     files: Vec<String>,
     names: Vec<String>,
 }
 
 impl CSVSource {
-    pub fn new(schema: &[DataType]) -> Self {
+    pub fn new(schema: &[DummyTypeSystem]) -> Self {
         CSVSource {
             schema: schema.to_vec(),
             files: vec![],
@@ -26,7 +26,7 @@ impl CSVSource {
 impl Source for CSVSource {
     const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
     type Partition = CSVSourcePartition;
-    type TypeSystem = DataType;
+    type TypeSystem = DummyTypeSystem;
 
     #[throws(ConnectorAgentError)]
     fn set_data_order(&mut self, data_order: DataOrder) {
@@ -91,7 +91,7 @@ impl CSVSourcePartition {
 }
 
 impl PartitionedSource for CSVSourcePartition {
-    type TypeSystem = DataType;
+    type TypeSystem = DummyTypeSystem;
     type Parser<'a> = CSVSourceParser<'a>;
 
     /// The parameter `query` is the path of the csv file
@@ -141,7 +141,7 @@ impl<'a> CSVSourceParser<'a> {
 }
 
 impl<'a> Parser<'a> for CSVSourceParser<'a> {
-    type TypeSystem = DataType;
+    type TypeSystem = DummyTypeSystem;
 }
 
 impl<'a> Produce<i64> for CSVSourceParser<'a> {

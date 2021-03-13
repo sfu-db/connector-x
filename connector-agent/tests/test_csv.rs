@@ -1,6 +1,6 @@
 use connector_agent::data_sources::{csv::CSVSource, PartitionedSource, Produce, Source};
 use connector_agent::writers::memory::MemoryWriter;
-use connector_agent::{transport::CSVMemoryTransport, DataType, Dispatcher};
+use connector_agent::{transport::CSVMemoryTransport, Dispatcher, DummyTypeSystem};
 use ndarray::array;
 
 #[test]
@@ -42,11 +42,11 @@ fn load_and_parse() {
     }
 
     let mut source = CSVSource::new(&[
-        DataType::String(false),
-        DataType::String(false),
-        DataType::I64(false),
-        DataType::F64(false),
-        DataType::F64(false),
+        DummyTypeSystem::String(false),
+        DummyTypeSystem::String(false),
+        DummyTypeSystem::I64(false),
+        DummyTypeSystem::F64(false),
+        DummyTypeSystem::F64(false),
     ]);
     source.set_queries(&["./tests/data/uspop_0.csv"]);
 
@@ -94,7 +94,7 @@ fn load_and_parse() {
 
 #[test]
 fn test_csv() {
-    let schema = [DataType::I64(false); 5];
+    let schema = [DummyTypeSystem::I64(false); 5];
     let files = ["./tests/data/uint_0.csv", "./tests/data/uint_1.csv"];
     let source = CSVSource::new(&schema);
 

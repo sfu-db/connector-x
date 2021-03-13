@@ -2,17 +2,17 @@ use arrow::array::{BooleanArray, Float64Array, Int64Array, StringArray};
 use arrow::record_batch::RecordBatch;
 use connector_agent::{
     data_sources::dummy::MixedSource, transport::DummyArrowTransport, writers::arrow::ArrowWriter,
-    DataType, Dispatcher,
+    Dispatcher, DummyTypeSystem,
 };
 
 #[test]
 fn test_arrow() {
     let schema = [
-        DataType::I64(true),
-        DataType::F64(true),
-        DataType::Bool(false),
-        DataType::String(true),
-        DataType::F64(false),
+        DummyTypeSystem::I64(true),
+        DummyTypeSystem::F64(true),
+        DummyTypeSystem::Bool(false),
+        DummyTypeSystem::String(true),
+        DummyTypeSystem::F64(false),
     ];
     let nrows = vec![4, 7];
     let ncols = schema.len();

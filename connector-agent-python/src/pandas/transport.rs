@@ -1,29 +1,29 @@
-use super::types::PandasTypes;
+use super::types::PandasTypeSystem;
 use super::writers::PandasWriter;
 use bytes::Bytes;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
 use connector_agent::{
-    data_sources::postgres::{PostgresDTypes, PostgresSource},
-    define_transport,
+    data_sources::postgres::{PostgresSource, PostgresTypeSystem},
+    impl_transport,
     typesystem::TypeConversion,
 };
 
 pub struct PostgresPandasTransport<'py>(&'py ());
 
-define_transport! {
+impl_transport! {
     ['py],
     PostgresPandasTransport<'py>,
-    PostgresDTypes => PandasTypes,
+    PostgresTypeSystem => PandasTypeSystem,
     PostgresSource => PandasWriter<'py>,
-    ([PostgresDTypes::Float4], [PandasTypes::F64]) => (f32, f64) conversion all,
-    ([PostgresDTypes::Float8], [PandasTypes::F64]) => (f64, f64) conversion all,
-    ([PostgresDTypes::Int4], [PandasTypes::I64]) => (i32, i64) conversion all,
-    ([PostgresDTypes::Int8], [PandasTypes::I64]) => (i64, i64) conversion all,
-    ([PostgresDTypes::Bool], [PandasTypes::Bool]) => (bool, bool) conversion all,
-    ([PostgresDTypes::Text], [PandasTypes::String]) | ([PostgresDTypes::BpChar], [PandasTypes::String]) | ([PostgresDTypes::VarChar], [PandasTypes::String]) => (Bytes, Bytes) conversion all,
-    ([PostgresDTypes::Timestamp], [PandasTypes::DateTime]) => (NaiveDateTime, DateTime<Utc>) conversion half,
-    ([PostgresDTypes::TimestampTz], [PandasTypes::DateTime]) => (DateTime<Utc>, DateTime<Utc>) conversion all,
-    ([PostgresDTypes::Date], [PandasTypes::DateTime]) => (NaiveDate, DateTime<Utc>) conversion half,
+    ([PostgresTypeSystem::Float4], [PandasTypeSystem::F64]) => (f32, f64) conversion all,
+    ([PostgresTypeSystem::Float8], [PandasTypeSystem::F64]) => (f64, f64) conversion all,
+    ([PostgresTypeSystem::Int4], [PandasTypeSystem::I64]) => (i32, i64) conversion all,
+    ([PostgresTypeSystem::Int8], [PandasTypeSystem::I64]) => (i64, i64) conversion all,
+    ([PostgresTypeSystem::Bool], [PandasTypeSystem::Bool]) => (bool, bool) conversion all,
+    ([PostgresTypeSystem::Text], [PandasTypeSystem::String]) | ([PostgresTypeSystem::BpChar], [PandasTypeSystem::String]) | ([PostgresTypeSystem::VarChar], [PandasTypeSystem::String]) => (Bytes, Bytes) conversion all,
+    ([PostgresTypeSystem::Timestamp], [PandasTypeSystem::DateTime]) => (NaiveDateTime, DateTime<Utc>) conversion half,
+    ([PostgresTypeSystem::TimestampTz], [PandasTypeSystem::DateTime]) => (DateTime<Utc>, DateTime<Utc>) conversion all,
+    ([PostgresTypeSystem::Date], [PandasTypeSystem::DateTime]) => (NaiveDate, DateTime<Utc>) conversion half,
 }
 
 impl<'py> TypeConversion<NaiveDateTime, DateTime<Utc>> for PostgresPandasTransport<'py> {

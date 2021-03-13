@@ -1,10 +1,9 @@
-use crate::typesystem::TypeSystem;
 use bytes::Bytes;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
 use postgres::types::Type;
 
 #[derive(Copy, Clone, Debug)]
-pub enum PostgresDTypes {
+pub enum PostgresTypeSystem {
     Bool(bool),
     Float4(bool),
     Float8(bool),
@@ -18,9 +17,22 @@ pub enum PostgresDTypes {
     TimestampTz(bool),
 }
 
-impl<'a> From<&'a Type> for PostgresDTypes {
-    fn from(ty: &'a Type) -> PostgresDTypes {
-        use PostgresDTypes::*;
+impl_typesystem! {
+    PostgresTypeSystem,
+    [PostgresTypeSystem::Int4] => i32,
+    [PostgresTypeSystem::Int8] => i64,
+    [PostgresTypeSystem::Float4] => f32,
+    [PostgresTypeSystem::Float8] => f64,
+    [PostgresTypeSystem::Bool] => bool,
+    [PostgresTypeSystem::Text] | [PostgresTypeSystem::BpChar] | [PostgresTypeSystem::VarChar] => Bytes,
+    [PostgresTypeSystem::Timestamp] => NaiveDateTime,
+    [PostgresTypeSystem::TimestampTz] => DateTime<Utc>,
+    [PostgresTypeSystem::Date] => NaiveDate,
+}
+
+impl<'a> From<&'a Type> for PostgresTypeSystem {
+    fn from(ty: &'a Type) -> PostgresTypeSystem {
+        use PostgresTypeSystem::*;
         match ty.name() {
             "int4" => Int4(true),
             "int8" => Int8(true),
@@ -39,9 +51,9 @@ impl<'a> From<&'a Type> for PostgresDTypes {
 }
 
 // Link PostgresDTypes back to the one defiend by the postgres crate.
-impl<'a> From<PostgresDTypes> for Type {
-    fn from(ty: PostgresDTypes) -> Type {
-        use PostgresDTypes::*;
+impl<'a> From<PostgresTypeSystem> for Type {
+    fn from(ty: PostgresTypeSystem) -> Type {
+        use PostgresTypeSystem::*;
         match ty {
             Int4(_) => Type::INT4,
             Int8(_) => Type::INT8,
@@ -56,19 +68,4 @@ impl<'a> From<PostgresDTypes> for Type {
             Date(_) => Type::DATE,
         }
     }
-}
-
-impl TypeSystem for PostgresDTypes {}
-
-define_typesystem! {
-    PostgresDTypes,
-    [PostgresDTypes::Int4] => i32,
-    [PostgresDTypes::Int8] => i64,
-    [PostgresDTypes::Float4] => f32,
-    [PostgresDTypes::Float8] => f64,
-    [PostgresDTypes::Bool] => bool,
-    [PostgresDTypes::Text] | [PostgresDTypes::BpChar] | [PostgresDTypes::VarChar] => Bytes,
-    [PostgresDTypes::Timestamp] => NaiveDateTime,
-    [PostgresDTypes::TimestampTz] => DateTime<Utc>,
-    [PostgresDTypes::Date] => NaiveDate,
 }

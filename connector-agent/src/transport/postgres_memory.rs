@@ -1,5 +1,5 @@
-use crate::data_sources::postgres::{PostgresDTypes, PostgresSource};
-use crate::types::DataType;
+use crate::data_sources::postgres::{PostgresSource, PostgresTypeSystem};
+use crate::dummy_typesystem::DummyTypeSystem;
 use crate::typesystem::TypeConversion;
 use crate::writers::memory::MemoryWriter;
 use bytes::Bytes;
@@ -26,18 +26,18 @@ impl TypeConversion<NaiveDate, DateTime<Utc>> for PostgresMemoryTransport {
 
 pub struct PostgresMemoryTransport;
 
-define_transport!(
+impl_transport!(
     [],
     PostgresMemoryTransport,
-    PostgresDTypes => DataType,
+    PostgresTypeSystem => DummyTypeSystem,
     PostgresSource => MemoryWriter,
-    ([PostgresDTypes::Float4], [DataType::F64]) => (f32, f64) conversion all,
-    ([PostgresDTypes::Float8], [DataType::F64]) => (f64, f64) conversion all,
-    ([PostgresDTypes::Int4], [DataType::I64]) => (i32, i64) conversion all,
-    ([PostgresDTypes::Int8], [DataType::I64]) => (i64, i64) conversion all,
-    ([PostgresDTypes::Bool], [DataType::Bool]) => (bool, bool) conversion all,
-    ([PostgresDTypes::Text], [DataType::String]) | ([PostgresDTypes::BpChar], [DataType::String]) | ([PostgresDTypes::VarChar], [DataType::String]) => (Bytes, String) conversion half,
-    ([PostgresDTypes::Timestamp], [DataType::DateTime]) => (NaiveDateTime, DateTime<Utc>) conversion half,
-    ([PostgresDTypes::TimestampTz], [DataType::DateTime]) => (DateTime<Utc>, DateTime<Utc>) conversion all,
-    ([PostgresDTypes::Date], [DataType::DateTime]) => (NaiveDate, DateTime<Utc>) conversion half,
+    ([PostgresTypeSystem::Float4], [DummyTypeSystem::F64]) => (f32, f64) conversion all,
+    ([PostgresTypeSystem::Float8], [DummyTypeSystem::F64]) => (f64, f64) conversion all,
+    ([PostgresTypeSystem::Int4], [DummyTypeSystem::I64]) => (i32, i64) conversion all,
+    ([PostgresTypeSystem::Int8], [DummyTypeSystem::I64]) => (i64, i64) conversion all,
+    ([PostgresTypeSystem::Bool], [DummyTypeSystem::Bool]) => (bool, bool) conversion all,
+    ([PostgresTypeSystem::Text], [DummyTypeSystem::String]) | ([PostgresTypeSystem::BpChar], [DummyTypeSystem::String]) | ([PostgresTypeSystem::VarChar], [DummyTypeSystem::String]) => (Bytes, String) conversion half,
+    ([PostgresTypeSystem::Timestamp], [DummyTypeSystem::DateTime]) => (NaiveDateTime, DateTime<Utc>) conversion half,
+    ([PostgresTypeSystem::TimestampTz], [DummyTypeSystem::DateTime]) => (DateTime<Utc>, DateTime<Utc>) conversion all,
+    ([PostgresTypeSystem::Date], [DummyTypeSystem::DateTime]) => (NaiveDate, DateTime<Utc>) conversion half,
 );

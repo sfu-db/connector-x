@@ -11,7 +11,7 @@ use fehler::throws;
 use log::debug;
 use pyo3::{PyAny, Python};
 pub use transport::PostgresPandasTransport;
-pub use types::{PandasDType, PandasTypes};
+pub use types::{PandasDType, PandasTypeSystem};
 pub use writers::{PandasPartitionWriter, PandasWriter};
 
 #[throws(ConnectorAgentPythonError)]

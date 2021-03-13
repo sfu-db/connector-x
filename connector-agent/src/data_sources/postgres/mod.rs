@@ -19,7 +19,7 @@ use r2d2_postgres::{postgres::NoTls, PostgresConnectionManager};
 use sql::{count_query, limit1_query};
 use std::sync::Arc;
 use std::{mem::transmute, ops::Range};
-pub use types::PostgresDTypes;
+pub use types::PostgresTypeSystem;
 
 type PgManager = PostgresConnectionManager<NoTls>;
 type PgConn = PooledConnection<PgManager>;
@@ -28,7 +28,7 @@ pub struct PostgresSource {
     pool: Pool<PgManager>,
     queries: Vec<String>,
     names: Vec<String>,
-    schema: Vec<PostgresDTypes>,
+    schema: Vec<PostgresTypeSystem>,
     buf_size: usize,
 }
 
@@ -57,7 +57,7 @@ impl PostgresSource {
 impl Source for PostgresSource {
     const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
     type Partition = PostgresSourcePartition;
-    type TypeSystem = PostgresDTypes;
+    type TypeSystem = PostgresTypeSystem;
 
     fn set_data_order(&mut self, data_order: DataOrder) -> Result<()> {
         if !matches!(data_order, DataOrder::RowMajor) {
@@ -83,7 +83,12 @@ impl Source for PostgresSource {
                     let (names, types) = row
                         .columns()
                         .into_iter()
-                        .map(|col| (col.name().to_string(), PostgresDTypes::from(col.type_())))
+                        .map(|col| {
+                            (
+                                col.name().to_string(),
+                                PostgresTypeSystem::from(col.type_()),
+                            )
+                        })
                         .unzip();
 
                     self.names = names;
@@ -136,14 +141,14 @@ impl Source for PostgresSource {
 pub struct PostgresSourcePartition {
     conn: PgConn,
     query: String,
-    schema: Vec<PostgresDTypes>,
+    schema: Vec<PostgresTypeSystem>,
     nrows: usize,
     ncols: usize,
     buf_size: usize,
 }
 
 impl PostgresSourcePartition {
-    pub fn new(conn: PgConn, query: &str, schema: &[PostgresDTypes], buf_size: usize) -> Self {
+    pub fn new(conn: PgConn, query: &str, schema: &[PostgresTypeSystem], buf_size: usize) -> Self {
         Self {
             conn,
             query: query.to_string(),
@@ -156,7 +161,7 @@ impl PostgresSourcePartition {
 }
 
 impl PartitionedSource for PostgresSourcePartition {
-    type TypeSystem = PostgresDTypes;
+    type TypeSystem = PostgresTypeSystem;
     type Parser<'a> = PostgresSourceParser<'a>;
 
     fn prepare(&mut self) -> Result<()> {
@@ -193,7 +198,11 @@ pub struct PostgresSourceParser<'a> {
 }
 
 impl<'a> PostgresSourceParser<'a> {
-    pub fn new(iter: BinaryCopyOutIter<'a>, schema: &[PostgresDTypes], buf_size: usize) -> Self {
+    pub fn new(
+        iter: BinaryCopyOutIter<'a>,
+        schema: &[PostgresTypeSystem],
+        buf_size: usize,
+    ) -> Self {
         Self {
             iter,
             buf_size: buf_size,
@@ -234,7 +243,7 @@ impl<'a> PostgresSourceParser<'a> {
 }
 
 impl<'a> Parser<'a> for PostgresSourceParser<'a> {
-    type TypeSystem = PostgresDTypes;
+    type TypeSystem = PostgresTypeSystem;
 }
 
 macro_rules! impl_produce {

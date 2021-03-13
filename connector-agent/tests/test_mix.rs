@@ -1,6 +1,6 @@
 use connector_agent::{
     data_sources::dummy::MixedSource, transport::DummyMemoryTransport,
-    writers::memory::MemoryWriter, DataOrder, DataType, Dispatcher, PartitionWriter, Result,
+    writers::memory::MemoryWriter, DataOrder, Dispatcher, DummyTypeSystem, PartitionWriter, Result,
     Source, Writer,
 };
 use ndarray::array;
@@ -15,9 +15,9 @@ fn mixed_writer_col_major() {
             11,
             &["a", "b", "c"],
             &[
-                DataType::I64(false),
-                DataType::F64(true),
-                DataType::String(true),
+                DummyTypeSystem::I64(false),
+                DummyTypeSystem::F64(true),
+                DummyTypeSystem::String(true),
             ],
             DataOrder::ColumnMajor,
         )
@@ -27,7 +27,7 @@ fn mixed_writer_col_major() {
 #[test]
 #[should_panic]
 fn mixed_source_col_major() {
-    let mut source = MixedSource::new(&["a"], &[DataType::F64(false)]);
+    let mut source = MixedSource::new(&["a"], &[DummyTypeSystem::F64(false)]);
     source.set_data_order(DataOrder::ColumnMajor).unwrap();
 }
 
@@ -38,12 +38,12 @@ fn write_mixed_array() -> Result<()> {
         11,
         &["a", "b", "c", "d", "e"],
         &[
-            DataType::I64(false),
-            DataType::F64(false),
-            DataType::I64(false),
-            DataType::String(false),
-            DataType::F64(false),
-            DataType::String(false),
+            DummyTypeSystem::I64(false),
+            DummyTypeSystem::F64(false),
+            DummyTypeSystem::I64(false),
+            DummyTypeSystem::String(false),
+            DummyTypeSystem::F64(false),
+            DummyTypeSystem::String(false),
         ],
         DataOrder::RowMajor,
     )
@@ -134,13 +134,13 @@ fn write_mixed_array() -> Result<()> {
 #[test]
 fn test_mixed() {
     let schema = [
-        DataType::I64(false),
-        DataType::F64(false),
-        DataType::String(false),
-        DataType::F64(false),
-        DataType::Bool(false),
-        DataType::String(false),
-        DataType::F64(false),
+        DummyTypeSystem::I64(false),
+        DummyTypeSystem::F64(false),
+        DummyTypeSystem::String(false),
+        DummyTypeSystem::F64(false),
+        DummyTypeSystem::Bool(false),
+        DummyTypeSystem::String(false),
+        DummyTypeSystem::F64(false),
     ];
     let nrows = vec![4, 7];
     let ncols = schema.len();

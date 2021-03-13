@@ -23,13 +23,15 @@ pub trait TypeAssoc<TS: TypeSystem> {
 /// A macro to implement `TypeAssoc` and `Realize` which saves repetitive code.
 ///
 /// # Example Usage
-/// `define_typesystem!(DataType, [DataType::F64] => f64, [DataType::I64] => i64);`
+/// `impl_typesystem!(DataType, [DataType::F64] => f64, [DataType::I64] => i64);`
 /// This means for the type system `DataType`, it's variant `DataType::F64(false)` is corresponding to the physical type f64 and
 /// `DataType::F64(true)` is corresponding to the physical type Option<f64>. Same for I64 and i64
 #[macro_export]
-macro_rules! define_typesystem {
+macro_rules! impl_typesystem {
     ($TS:ty, $(/*multiple mapping*/$(/*multiple variant*/ [$($V:tt)+])|+ => $NT:ty,)+) => {
-        define_typesystem!(IMPL $TS, $(/*multiple mapping*/
+        impl $crate::typesystem::TypeSystem for $TS {}
+
+        impl_typesystem!(IMPL $TS, $(/*multiple mapping*/
             $(/*multiple variant*/$($V)+ (false))+ => $NT,
             $(/*multiple variant*/$($V)+ (true))+ => Option<$NT>,
         )+);
@@ -134,7 +136,7 @@ pub trait Transport {
 ///
 /// # Example Usage
 /// ```ignore
-/// define_transport! {
+/// impl_transport! {
 ///    ['py],
 ///    PostgresPandasTransport<'py>,
 ///    PostgresDTypes => PandasTypes,
@@ -145,16 +147,16 @@ pub trait Transport {
 /// This implements `Transport` to `PostgresPandasTransport<'py>`.
 /// The lifetime used must be declare in the first argument in the bracket.
 #[macro_export]
-macro_rules! define_transport {
+macro_rules! impl_transport {
     ([$($LT:lifetime)?], $TP:ty, $TS1:ty => $TS2:ty, $S:ty => $W:ty, $($(([$($V1:tt)+], [$($V2:tt)+]))|+ => ($T1:ty, $T2:ty) conversion $cast:ident,)+) => {
-        define_transport! (
+        impl_transport! (
             Transport [$($LT)?], $TP, ($TS1, $TS2) ($S => $W) $(
                 $([$($V1)+ (false), $($V2)+ (false)] => [$T1, $T2])+
                 $([$($V1)+ (true), $($V2)+ (true)] => [Option<$T1>, Option<$T2>])+
             )+
         );
 
-        define_transport!(TypeConversionDispatch [$($LT)?] $TP, $($cast $T1 => $T2)+);
+        impl_transport!(TypeConversionDispatch [$($LT)?] $TP, $($cast $T1 => $T2)+);
     };
 
     (Transport [$($LT:lifetime)?], $TP:ty, ($TS1:ty, $TS2:ty) ($S:ty => $W:ty) $([$V1:pat, $($V2:tt)+] => [$T1:ty, $T2:ty])+ ) => {
@@ -203,13 +205,13 @@ macro_rules! define_transport {
 
     (TypeConversionDispatch [$LT:lifetime] $TP:ty, $($cast:ident $T1:ty => $T2:ty)+) => {
         $(
-            define_transport!(TypeConversion $cast [$LT] $TP, $T1 => $T2);
+            impl_transport!(TypeConversion $cast [$LT] $TP, $T1 => $T2);
         )+
     };
 
     (TypeConversionDispatch [] $TP:ty, $($cast:ident $T1:ty => $T2:ty)+) => {
         $(
-            define_transport!(TypeConversion $cast [] $TP, $T1 => $T2);
+            impl_transport!(TypeConversion $cast [] $TP, $T1 => $T2);
         )+
     };
 

@@ -1,5 +1,5 @@
 use crate::data_sources::csv::CSVSource;
-use crate::types::DataType;
+use crate::dummy_typesystem::DummyTypeSystem;
 use crate::typesystem::TypeConversion;
 use crate::writers::arrow::ArrowWriter;
 use bytes::Bytes;
@@ -26,14 +26,14 @@ impl TypeConversion<NaiveDate, DateTime<Utc>> for CSVArrowTransport {
 
 pub struct CSVArrowTransport;
 
-define_transport!(
+impl_transport!(
     [],
     CSVArrowTransport,
-    DataType => DataType,
+    DummyTypeSystem => DummyTypeSystem,
     CSVSource => ArrowWriter,
-    ([DataType::F64], [DataType::F64]) => (f64, f64) conversion all,
-    ([DataType::I64], [DataType::I64]) => (i64, i64) conversion all,
-    ([DataType::Bool], [DataType::Bool]) => (bool, bool) conversion all,
-    ([DataType::String], [DataType::String]) => (String, String) conversion all,
-    ([DataType::DateTime], [DataType::DateTime]) => (DateTime<Utc>, DateTime<Utc>) conversion all,
+    ([DummyTypeSystem::F64], [DummyTypeSystem::F64]) => (f64, f64) conversion all,
+    ([DummyTypeSystem::I64], [DummyTypeSystem::I64]) => (i64, i64) conversion all,
+    ([DummyTypeSystem::Bool], [DummyTypeSystem::Bool]) => (bool, bool) conversion all,
+    ([DummyTypeSystem::String], [DummyTypeSystem::String]) => (String, String) conversion all,
+    ([DummyTypeSystem::DateTime], [DummyTypeSystem::DateTime]) => (DateTime<Utc>, DateTime<Utc>) conversion all,
 );
