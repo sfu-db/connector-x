@@ -1,6 +1,6 @@
 use connector_agent::data_sources::{csv::CSVSource, PartitionedSource, Produce, Source};
 use connector_agent::writers::memory::MemoryWriter;
-use connector_agent::{DataType, Dispatcher};
+use connector_agent::{transport::CSVMemoryTransport, DataType, Dispatcher};
 use ndarray::array;
 
 #[test]
@@ -99,7 +99,7 @@ fn test_csv() {
     let source = CSVSource::new(&schema);
 
     let mut writer = MemoryWriter::new();
-    let dispatcher = Dispatcher::new(source, &mut writer, &files);
+    let dispatcher = Dispatcher::<_, _, CSVMemoryTransport>::new(source, &mut writer, &files);
 
     dispatcher.run().expect("run dispatcher");
 

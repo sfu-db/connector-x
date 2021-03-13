@@ -1,6 +1,7 @@
 use connector_agent::{
-    data_sources::dummy::MixedSource, writers::memory::MemoryWriter, DataOrder, DataType,
-    Dispatcher, PartitionWriter, Result, Source, Writer,
+    data_sources::dummy::MixedSource, transport::DummyMemoryTransport,
+    writers::memory::MemoryWriter, DataOrder, DataType, Dispatcher, PartitionWriter, Result,
+    Source, Writer,
 };
 use ndarray::array;
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
@@ -146,7 +147,7 @@ fn test_mixed() {
     let queries: Vec<String> = nrows.iter().map(|v| format!("{},{}", v, ncols)).collect();
 
     let mut writer = MemoryWriter::new();
-    let dispatcher = Dispatcher::new(
+    let dispatcher = Dispatcher::<_, _, DummyMemoryTransport>::new(
         MixedSource::new(&["a", "b", "c", "d", "e", "f", "g"], &schema),
         &mut writer,
         &queries,

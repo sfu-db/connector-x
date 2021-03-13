@@ -25,7 +25,7 @@ where
     TSW: TypeSystem,
     S: Source<TypeSystem = TSS>,
     W: Writer<TypeSystem = TSW>,
-    for<'s> TP: Transport<TS1 = TSS, TS2 = TSW, S = S, W = W>,
+    TP: Transport<TS1 = TSS, TS2 = TSW, S = S, W = W>,
 {
     /// Create a new dispatcher by providing a source builder, schema (temporary) and the queries
     /// to be issued to the data source.

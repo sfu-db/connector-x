@@ -1,11 +1,9 @@
 use bytes::Bytes;
 use connector_agent::{
-    data_sources::{
-        postgres::{PostgresDTypes, PostgresSource},
-        PartitionedSource, Produce, Source,
-    },
+    data_sources::{postgres::PostgresSource, PartitionedSource, Produce, Source},
+    transport::PostgresMemoryTransport,
     writers::memory::MemoryWriter,
-    DataType, Dispatcher,
+    Dispatcher,
 };
 use ndarray::array;
 use std::{env, str::from_utf8};
@@ -70,11 +68,8 @@ fn test_postgres() {
     ];
     let builder = PostgresSource::new(&dburl, 2);
     let mut writer = MemoryWriter::new();
-    let dispatcher = Dispatcher::<PostgresSource, PostgresDTypes, MemoryWriter, DataType>::new(
-        builder,
-        &mut writer,
-        &queries,
-    );
+    let dispatcher =
+        Dispatcher::<_, _, PostgresMemoryTransport>::new(builder, &mut writer, &queries);
 
     dispatcher.run().expect("run dispatcher");
     assert_eq!(

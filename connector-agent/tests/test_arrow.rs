@@ -1,7 +1,8 @@
 use arrow::array::{BooleanArray, Float64Array, Int64Array, StringArray};
 use arrow::record_batch::RecordBatch;
 use connector_agent::{
-    data_sources::dummy::MixedSource, writers::arrow::ArrowWriter, DataType, Dispatcher,
+    data_sources::dummy::MixedSource, transport::DummyArrowTransport, writers::arrow::ArrowWriter,
+    DataType, Dispatcher,
 };
 
 #[test]
@@ -21,7 +22,7 @@ fn test_arrow() {
     }
     let queries: Vec<String> = nrows.iter().map(|v| format!("{},{}", v, ncols)).collect();
     let mut writer = ArrowWriter::new();
-    let dispatcher = Dispatcher::new(
+    let dispatcher = Dispatcher::<_, _, DummyArrowTransport>::new(
         MixedSource::new(&["a", "b", "c", "d", "e"], &schema),
         &mut writer,
         &queries,

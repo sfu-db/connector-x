@@ -1,36 +1,36 @@
 use crate::data_sources::postgres::{PostgresDTypes, PostgresSource};
 use crate::types::DataType;
 use crate::typesystem::TypeConversion;
-use crate::writers::memory::MemoryWriter;
+use crate::writers::arrow::ArrowWriter;
 use bytes::Bytes;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
 use std::str::from_utf8;
 
-impl TypeConversion<Bytes, String> for PostgresDataTypeTransport {
+impl TypeConversion<Bytes, String> for PostgresArrowTransport {
     fn convert(val: Bytes) -> String {
         from_utf8(&val[..]).unwrap().to_string()
     }
 }
 
-impl TypeConversion<NaiveDateTime, DateTime<Utc>> for PostgresDataTypeTransport {
+impl TypeConversion<NaiveDateTime, DateTime<Utc>> for PostgresArrowTransport {
     fn convert(val: NaiveDateTime) -> DateTime<Utc> {
         DateTime::from_utc(val, Utc)
     }
 }
 
-impl TypeConversion<NaiveDate, DateTime<Utc>> for PostgresDataTypeTransport {
+impl TypeConversion<NaiveDate, DateTime<Utc>> for PostgresArrowTransport {
     fn convert(val: NaiveDate) -> DateTime<Utc> {
         DateTime::from_utc(val.and_hms(0, 0, 0), Utc)
     }
 }
 
-pub struct PostgresDataTypeTransport;
+pub struct PostgresArrowTransport;
 
 define_transport!(
     [],
-    PostgresDataTypeTransport,
+    PostgresArrowTransport,
     PostgresDTypes => DataType,
-    PostgresSource => MemoryWriter,
+    PostgresSource => ArrowWriter,
     ([PostgresDTypes::Float4], [DataType::F64]) => (f32, f64) conversion all,
     ([PostgresDTypes::Float8], [DataType::F64]) => (f64, f64) conversion all,
     ([PostgresDTypes::Int4], [DataType::I64]) => (i32, i64) conversion all,

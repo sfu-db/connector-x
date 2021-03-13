@@ -1,9 +1,11 @@
+mod any_array;
+
 use super::{Consume, PartitionWriter, Writer};
-use crate::any_array::{AnyArray, AnyArrayViewMut};
 use crate::data_order::DataOrder;
 use crate::errors::{ConnectorAgentError, Result};
 use crate::types::DataType;
 use crate::typesystem::{ParameterizedFunc, ParameterizedOn, Realize, TypeAssoc, TypeSystem};
+use any_array::{AnyArray, AnyArrayViewMut};
 use chrono::{DateTime, NaiveDateTime, Utc};
 use fehler::{throw, throws};
 use itertools::Itertools;

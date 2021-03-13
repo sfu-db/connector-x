@@ -7,24 +7,17 @@ pub mod pg;
 pub mod s3;
 #[macro_use]
 pub mod typesystem;
-mod any_array;
-mod conversions;
-mod data_order;
+pub mod data_order;
 pub mod data_sources;
-mod dispatcher;
+pub mod dispatcher;
 pub mod errors;
 pub mod partition;
-mod types;
+pub mod transport;
+pub mod types;
 pub mod writers;
 
-pub use crate::any_array::{AnyArray, AnyArrayView, AnyArrayViewMut};
 pub use crate::data_order::DataOrder;
-pub use crate::data_sources::{
-    csv::{CSVSource, CSVSourceParser, CSVSourcePartition},
-    dummy::{MixedSource, MixedSourceParser, MixedSourcePartition},
-    postgres::{PostgresSource, PostgresSourceParser, PostgresSourcePartition},
-    {PartitionedSource, Source},
-};
+pub use crate::data_sources::{PartitionedSource, Source};
 pub use crate::dispatcher::Dispatcher;
 pub use crate::errors::{ConnectorAgentError, Result};
 pub use crate::types::DataType;
