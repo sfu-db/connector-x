@@ -2,8 +2,8 @@ mod sql;
 mod types;
 
 use crate::data_order::DataOrder;
-use crate::data_sources::{Parser, PartitionedSource, Produce, Source};
 use crate::errors::{ConnectorAgentError, Result};
+use crate::sources::{PartitionParser, Produce, Source, SourcePartition};
 use anyhow::anyhow;
 use bytes::Bytes;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
@@ -19,7 +19,7 @@ use r2d2_postgres::{postgres::NoTls, PostgresConnectionManager};
 use sql::{count_query, limit1_query};
 use std::sync::Arc;
 use std::{mem::transmute, ops::Range};
-pub use types::PostgresDTypes;
+pub use types::PostgresTypeSystem;
 
 type PgManager = PostgresConnectionManager<NoTls>;
 type PgConn = PooledConnection<PgManager>;
@@ -28,7 +28,7 @@ pub struct PostgresSource {
     pool: Pool<PgManager>,
     queries: Vec<String>,
     names: Vec<String>,
-    schema: Vec<PostgresDTypes>,
+    schema: Vec<PostgresTypeSystem>,
     buf_size: usize,
 }
 
@@ -57,7 +57,7 @@ impl PostgresSource {
 impl Source for PostgresSource {
     const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
     type Partition = PostgresSourcePartition;
-    type TypeSystem = PostgresDTypes;
+    type TypeSystem = PostgresTypeSystem;
 
     fn set_data_order(&mut self, data_order: DataOrder) -> Result<()> {
         if !matches!(data_order, DataOrder::RowMajor) {
@@ -83,7 +83,12 @@ impl Source for PostgresSource {
                     let (names, types) = row
                         .columns()
                         .into_iter()
-                        .map(|col| (col.name().to_string(), PostgresDTypes::from(col.type_())))
+                        .map(|col| {
+                            (
+                                col.name().to_string(),
+                                PostgresTypeSystem::from(col.type_()),
+                            )
+                        })
                         .unzip();
 
                     self.names = names;
@@ -136,14 +141,14 @@ impl Source for PostgresSource {
 pub struct PostgresSourcePartition {
     conn: PgConn,
     query: String,
-    schema: Vec<PostgresDTypes>,
+    schema: Vec<PostgresTypeSystem>,
     nrows: usize,
     ncols: usize,
     buf_size: usize,
 }
 
 impl PostgresSourcePartition {
-    pub fn new(conn: PgConn, query: &str, schema: &[PostgresDTypes], buf_size: usize) -> Self {
+    pub fn new(conn: PgConn, query: &str, schema: &[PostgresTypeSystem], buf_size: usize) -> Self {
         Self {
             conn,
             query: query.to_string(),
@@ -155,9 +160,9 @@ impl PostgresSourcePartition {
     }
 }
 
-impl PartitionedSource for PostgresSourcePartition {
-    type TypeSystem = PostgresDTypes;
-    type Parser<'a> = PostgresSourceParser<'a>;
+impl SourcePartition for PostgresSourcePartition {
+    type TypeSystem = PostgresTypeSystem;
+    type Parser<'a> = PostgresSourcePartitionParser<'a>;
 
     fn prepare(&mut self) -> Result<()> {
         let row = self.conn.query_one(&count_query(&self.query)[..], &[])?;
@@ -171,7 +176,11 @@ impl PartitionedSource for PostgresSourcePartition {
         let pg_schema: Vec<_> = self.schema.iter().map(|&dt| dt.into()).collect();
         let iter = BinaryCopyOutIter::new(reader, &pg_schema);
 
-        Ok(PostgresSourceParser::new(iter, &self.schema, self.buf_size))
+        Ok(PostgresSourcePartitionParser::new(
+            iter,
+            &self.schema,
+            self.buf_size,
+        ))
     }
 
     fn nrows(&self) -> usize {
@@ -183,7 +192,7 @@ impl PartitionedSource for PostgresSourcePartition {
     }
 }
 
-pub struct PostgresSourceParser<'a> {
+pub struct PostgresSourcePartitionParser<'a> {
     iter: BinaryCopyOutIter<'a>,
     buf_size: usize,
     rowbuf: Vec<BinaryCopyOutRow>,
@@ -192,8 +201,12 @@ pub struct PostgresSourceParser<'a> {
     current_row: usize,
 }
 
-impl<'a> PostgresSourceParser<'a> {
-    pub fn new(iter: BinaryCopyOutIter<'a>, schema: &[PostgresDTypes], buf_size: usize) -> Self {
+impl<'a> PostgresSourcePartitionParser<'a> {
+    pub fn new(
+        iter: BinaryCopyOutIter<'a>,
+        schema: &[PostgresTypeSystem],
+        buf_size: usize,
+    ) -> Self {
         Self {
             iter,
             buf_size: buf_size,
@@ -233,14 +246,14 @@ impl<'a> PostgresSourceParser<'a> {
     }
 }
 
-impl<'a> Parser<'a> for PostgresSourceParser<'a> {
-    type TypeSystem = PostgresDTypes;
+impl<'a> PartitionParser<'a> for PostgresSourcePartitionParser<'a> {
+    type TypeSystem = PostgresTypeSystem;
 }
 
 macro_rules! impl_produce {
     ($($t: ty),+) => {
         $(
-            impl<'a> Produce<$t> for PostgresSourceParser<'a> {
+            impl<'a> Produce<$t> for PostgresSourcePartitionParser<'a> {
                 fn produce(&mut self) -> Result<$t> {
                     let (ridx, cidx) = self.next_loc()?;
                     let val = self.rowbuf[ridx].try_get(cidx)?;
@@ -248,7 +261,7 @@ macro_rules! impl_produce {
                 }
             }
 
-            impl<'a> Produce<Option<$t>> for PostgresSourceParser<'a> {
+            impl<'a> Produce<Option<$t>> for PostgresSourcePartitionParser<'a> {
                 fn produce(&mut self) -> Result<Option<$t>> {
                     let (ridx, cidx) = self.next_loc()?;
                     let val = self.rowbuf[ridx].try_get(cidx)?;
@@ -277,7 +290,7 @@ pub struct MyBinaryCopyOutRow {
     _types: Arc<Vec<Type>>,
 }
 
-impl<'a> Produce<Bytes> for PostgresSourceParser<'a> {
+impl<'a> Produce<Bytes> for PostgresSourcePartitionParser<'a> {
     fn produce(&mut self) -> Result<Bytes> {
         let (ridx, cidx) = self.next_loc()?;
         let row = &self.rowbuf[ridx];
@@ -291,7 +304,7 @@ impl<'a> Produce<Bytes> for PostgresSourceParser<'a> {
     }
 }
 
-impl<'a> Produce<Option<Bytes>> for PostgresSourceParser<'a> {
+impl<'a> Produce<Option<Bytes>> for PostgresSourcePartitionParser<'a> {
     fn produce(&mut self) -> Result<Option<Bytes>> {
         let (ridx, cidx) = self.next_loc()?;
         let row = &self.rowbuf[ridx];

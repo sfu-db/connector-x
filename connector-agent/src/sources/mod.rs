@@ -15,7 +15,7 @@ pub trait Source {
     /// The type system this `Source` associated with.
     type TypeSystem: TypeSystem;
     // Partition needs to be send to different threads for parallel execution
-    type Partition: PartitionedSource<TypeSystem = Self::TypeSystem> + Send;
+    type Partition: SourcePartition<TypeSystem = Self::TypeSystem> + Send;
 
     fn set_data_order(&mut self, data_order: DataOrder) -> Result<()>;
 
@@ -32,9 +32,9 @@ pub trait Source {
 
 /// In general, a `DataSource` abstracts the data source as a stream, which can produce
 /// a sequence of values of variate types by repetitively calling the function `produce`.
-pub trait PartitionedSource: Sized {
+pub trait SourcePartition: Sized {
     type TypeSystem: TypeSystem;
-    type Parser<'a>: Parser<'a, TypeSystem = Self::TypeSystem>;
+    type Parser<'a>: PartitionParser<'a, TypeSystem = Self::TypeSystem>;
     /// Run the query and put the result into Self.
     fn prepare(&mut self) -> Result<()>;
 
@@ -48,11 +48,11 @@ pub trait PartitionedSource: Sized {
     fn ncols(&self) -> usize;
 }
 
-pub trait Parser<'a> {
+pub trait PartitionParser<'a> {
     type TypeSystem: TypeSystem;
     /// Read a value `T` by calling `Produce<T>::produce`. Usually this function does not need to be
     /// implemented.
-    fn read<T>(&mut self) -> Result<T>
+    fn parse<T>(&mut self) -> Result<T>
     where
         T: TypeAssoc<Self::TypeSystem>,
         Self: Produce<T>,

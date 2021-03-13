@@ -1,11 +1,9 @@
 use bytes::Bytes;
 use connector_agent::{
-    data_sources::{
-        postgres::{PostgresDTypes, PostgresSource},
-        PartitionedSource, Produce, Source,
-    },
-    writers::memory::MemoryWriter,
-    DataType, Dispatcher,
+    destinations::memory::MemoryDestination,
+    sources::{postgres::PostgresSource, Produce, Source, SourcePartition},
+    transport::PostgresMemoryTransport,
+    Dispatcher,
 };
 use ndarray::array;
 use std::{env, str::from_utf8};
@@ -69,21 +67,18 @@ fn test_postgres() {
         "select * from test_table where test_int >= 2",
     ];
     let builder = PostgresSource::new(&dburl, 2);
-    let mut writer = MemoryWriter::new();
-    let dispatcher = Dispatcher::<PostgresSource, PostgresDTypes, MemoryWriter, DataType>::new(
-        builder,
-        &mut writer,
-        &queries,
-    );
+    let mut destination = MemoryDestination::new();
+    let dispatcher =
+        Dispatcher::<_, _, PostgresMemoryTransport>::new(builder, &mut destination, &queries);
 
-    dispatcher.run_checked().expect("run dispatcher");
+    dispatcher.run().expect("run dispatcher");
     assert_eq!(
         array![Some(1), Some(0), Some(2), Some(3), Some(4), Some(1314)],
-        writer.column_view::<Option<i64>>(0).unwrap()
+        destination.column_view::<Option<i64>>(0).unwrap()
     );
     assert_eq!(
         array![Some(3), Some(5), None, Some(7), Some(9), Some(2)],
-        writer.column_view::<Option<i64>>(1).unwrap()
+        destination.column_view::<Option<i64>>(1).unwrap()
     );
     assert_eq!(
         array![
@@ -94,7 +89,7 @@ fn test_postgres() {
             Some("c".to_string()),
             None
         ],
-        writer.column_view::<Option<String>>(2).unwrap()
+        destination.column_view::<Option<String>>(2).unwrap()
     );
 
     assert_eq!(
@@ -106,11 +101,11 @@ fn test_postgres() {
             Some(7.8 as f64),
             Some(-10 as f64)
         ],
-        writer.column_view::<Option<f64>>(3).unwrap()
+        destination.column_view::<Option<f64>>(3).unwrap()
     );
 
     assert_eq!(
         array![Some(true), None, Some(false), Some(false), None, Some(true)],
-        writer.column_view::<Option<bool>>(4).unwrap()
+        destination.column_view::<Option<bool>>(4).unwrap()
     );
 }

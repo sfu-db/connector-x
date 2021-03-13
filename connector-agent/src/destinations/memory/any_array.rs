@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use ndarray::{Array, ArrayView, ArrayViewMut, Axis, Dimension, Ix};
 use std::any::{Any, TypeId};
 use std::mem::transmute;

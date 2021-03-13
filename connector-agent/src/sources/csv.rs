@@ -1,20 +1,20 @@
-use super::{Parser, PartitionedSource, Produce, Source};
+use super::{PartitionParser, Produce, Source, SourcePartition};
 use crate::data_order::DataOrder;
+use crate::dummy_typesystem::DummyTypeSystem;
 use crate::errors::{ConnectorAgentError, Result};
-use crate::types::DataType;
 use chrono::{DateTime, Utc};
 use fehler::{throw, throws};
 use std::any::type_name;
 use std::fs::File;
 
 pub struct CSVSource {
-    schema: Vec<DataType>,
+    schema: Vec<DummyTypeSystem>,
     files: Vec<String>,
     names: Vec<String>,
 }
 
 impl CSVSource {
-    pub fn new(schema: &[DataType]) -> Self {
+    pub fn new(schema: &[DummyTypeSystem]) -> Self {
         CSVSource {
             schema: schema.to_vec(),
             files: vec![],
@@ -26,7 +26,7 @@ impl CSVSource {
 impl Source for CSVSource {
     const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
     type Partition = CSVSourcePartition;
-    type TypeSystem = DataType;
+    type TypeSystem = DummyTypeSystem;
 
     #[throws(ConnectorAgentError)]
     fn set_data_order(&mut self, data_order: DataOrder) {
@@ -90,9 +90,9 @@ impl CSVSourcePartition {
     }
 }
 
-impl PartitionedSource for CSVSourcePartition {
-    type TypeSystem = DataType;
-    type Parser<'a> = CSVSourceParser<'a>;
+impl SourcePartition for CSVSourcePartition {
+    type TypeSystem = DummyTypeSystem;
+    type Parser<'a> = CSVSourcePartitionParser<'a>;
 
     /// The parameter `query` is the path of the csv file
     fn prepare(&mut self) -> Result<()> {
@@ -117,7 +117,7 @@ impl PartitionedSource for CSVSourcePartition {
     }
 
     fn parser(&mut self) -> Result<Self::Parser<'_>> {
-        Ok(CSVSourceParser {
+        Ok(CSVSourcePartitionParser {
             records: &mut self.records,
             counter: &mut self.counter,
             ncols: self.ncols,
@@ -125,13 +125,13 @@ impl PartitionedSource for CSVSourcePartition {
     }
 }
 
-pub struct CSVSourceParser<'a> {
+pub struct CSVSourcePartitionParser<'a> {
     records: &'a mut [csv::StringRecord],
     counter: &'a mut usize,
     ncols: usize,
 }
 
-impl<'a> CSVSourceParser<'a> {
+impl<'a> CSVSourcePartitionParser<'a> {
     fn next_val(&mut self) -> &str {
         let v: &str = self.records[*self.counter / self.ncols][*self.counter % self.ncols].as_ref();
         *self.counter += 1;
@@ -140,11 +140,11 @@ impl<'a> CSVSourceParser<'a> {
     }
 }
 
-impl<'a> Parser<'a> for CSVSourceParser<'a> {
-    type TypeSystem = DataType;
+impl<'a> PartitionParser<'a> for CSVSourcePartitionParser<'a> {
+    type TypeSystem = DummyTypeSystem;
 }
 
-impl<'a> Produce<i64> for CSVSourceParser<'a> {
+impl<'a> Produce<i64> for CSVSourcePartitionParser<'a> {
     fn produce(&mut self) -> Result<i64> {
         let v = self.next_val();
         v.parse()
@@ -152,7 +152,7 @@ impl<'a> Produce<i64> for CSVSourceParser<'a> {
     }
 }
 
-impl<'a> Produce<Option<i64>> for CSVSourceParser<'a> {
+impl<'a> Produce<Option<i64>> for CSVSourcePartitionParser<'a> {
     fn produce(&mut self) -> Result<Option<i64>> {
         let v = self.next_val();
         if v.is_empty() {
@@ -166,7 +166,7 @@ impl<'a> Produce<Option<i64>> for CSVSourceParser<'a> {
     }
 }
 
-impl<'a> Produce<f64> for CSVSourceParser<'a> {
+impl<'a> Produce<f64> for CSVSourcePartitionParser<'a> {
     fn produce(&mut self) -> Result<f64> {
         let v = self.next_val();
         v.parse()
@@ -174,7 +174,7 @@ impl<'a> Produce<f64> for CSVSourceParser<'a> {
     }
 }
 
-impl<'a> Produce<Option<f64>> for CSVSourceParser<'a> {
+impl<'a> Produce<Option<f64>> for CSVSourcePartitionParser<'a> {
     fn produce(&mut self) -> Result<Option<f64>> {
         let v = self.next_val();
         if v.is_empty() {
@@ -188,7 +188,7 @@ impl<'a> Produce<Option<f64>> for CSVSourceParser<'a> {
     }
 }
 
-impl<'a> Produce<bool> for CSVSourceParser<'a> {
+impl<'a> Produce<bool> for CSVSourcePartitionParser<'a> {
     fn produce(&mut self) -> Result<bool> {
         let v = self.next_val();
         v.parse()
@@ -196,7 +196,7 @@ impl<'a> Produce<bool> for CSVSourceParser<'a> {
     }
 }
 
-impl<'a> Produce<Option<bool>> for CSVSourceParser<'a> {
+impl<'a> Produce<Option<bool>> for CSVSourcePartitionParser<'a> {
     fn produce(&mut self) -> Result<Option<bool>> {
         let v = self.next_val();
         if v.is_empty() {
@@ -210,21 +210,21 @@ impl<'a> Produce<Option<bool>> for CSVSourceParser<'a> {
     }
 }
 
-impl<'a> Produce<String> for CSVSourceParser<'a> {
+impl<'a> Produce<String> for CSVSourcePartitionParser<'a> {
     fn produce(&mut self) -> Result<String> {
         let v = self.next_val();
         Ok(String::from(v))
     }
 }
 
-impl<'a> Produce<Option<String>> for CSVSourceParser<'a> {
+impl<'a> Produce<Option<String>> for CSVSourcePartitionParser<'a> {
     fn produce(&mut self) -> Result<Option<String>> {
         let v = self.next_val();
         Ok(Some(String::from(v)))
     }
 }
 
-impl<'a> Produce<DateTime<Utc>> for CSVSourceParser<'a> {
+impl<'a> Produce<DateTime<Utc>> for CSVSourcePartitionParser<'a> {
     fn produce(&mut self) -> Result<DateTime<Utc>> {
         let v = self.next_val();
         v.parse()
@@ -232,7 +232,7 @@ impl<'a> Produce<DateTime<Utc>> for CSVSourceParser<'a> {
     }
 }
 
-impl<'a> Produce<Option<DateTime<Utc>>> for CSVSourceParser<'a> {
+impl<'a> Produce<Option<DateTime<Utc>>> for CSVSourcePartitionParser<'a> {
     fn produce(&mut self) -> Result<Option<DateTime<Utc>>> {
         let v = self.next_val();
         if v.is_empty() {

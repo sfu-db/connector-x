@@ -1,17 +1,18 @@
 use arrow::array::{BooleanArray, Float64Array, Int64Array, StringArray};
 use arrow::record_batch::RecordBatch;
 use connector_agent::{
-    data_sources::dummy::MixedSource, writers::arrow::ArrowWriter, DataType, Dispatcher,
+    destinations::arrow::ArrowDestination, sources::dummy::DummySource,
+    transport::DummyArrowTransport, Dispatcher, DummyTypeSystem,
 };
 
 #[test]
 fn test_arrow() {
     let schema = [
-        DataType::I64(true),
-        DataType::F64(true),
-        DataType::Bool(false),
-        DataType::String(true),
-        DataType::F64(false),
+        DummyTypeSystem::I64(true),
+        DummyTypeSystem::F64(true),
+        DummyTypeSystem::Bool(false),
+        DummyTypeSystem::String(true),
+        DummyTypeSystem::F64(false),
     ];
     let nrows = vec![4, 7];
     let ncols = schema.len();
@@ -20,15 +21,15 @@ fn test_arrow() {
         headers.push(format!("c{}", c));
     }
     let queries: Vec<String> = nrows.iter().map(|v| format!("{},{}", v, ncols)).collect();
-    let mut writer = ArrowWriter::new();
-    let dispatcher = Dispatcher::new(
-        MixedSource::new(&["a", "b", "c", "d", "e"], &schema),
-        &mut writer,
+    let mut destination = ArrowDestination::new();
+    let dispatcher = Dispatcher::<_, _, DummyArrowTransport>::new(
+        DummySource::new(&["a", "b", "c", "d", "e"], &schema),
+        &mut destination,
         &queries,
     );
-    dispatcher.run_checked().expect("run dispatcher");
+    dispatcher.run().expect("run dispatcher");
 
-    let records: Vec<RecordBatch> = writer.finish(headers).unwrap();
+    let records: Vec<RecordBatch> = destination.finish(headers).unwrap();
     assert_eq!(2, records.len());
 
     for col in 0..ncols {

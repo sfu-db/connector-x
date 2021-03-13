@@ -6,30 +6,22 @@ pub mod pg;
 #[doc(hidden)]
 pub mod s3;
 #[macro_use]
-mod typesystem;
-mod any_array;
-mod conversions;
-mod data_order;
-pub mod data_sources;
-mod dispatcher;
-mod errors;
+pub mod typesystem;
+pub mod data_order;
+pub mod destinations;
+pub mod dispatcher;
+pub mod dummy_typesystem;
+pub mod errors;
 pub mod partition;
-mod transmit;
-mod types;
-pub mod writers;
+pub mod sources;
+pub mod transport;
 
-pub use crate::any_array::{AnyArray, AnyArrayView, AnyArrayViewMut};
 pub use crate::data_order::DataOrder;
-pub use crate::data_sources::{
-    csv::{CSVSource, CSVSourceParser, CSVSourcePartition},
-    dummy::{MixedSource, MixedSourceParser, MixedSourcePartition},
-    postgres::{PostgresSource, PostgresSourceParser, PostgresSourcePartition},
-    {PartitionedSource, Source},
-};
+pub use crate::destinations::{Consume, Destination, DestinationPartition};
 pub use crate::dispatcher::Dispatcher;
+pub use crate::dummy_typesystem::DummyTypeSystem;
 pub use crate::errors::{ConnectorAgentError, Result};
-pub use crate::types::DataType;
+pub use crate::sources::{Source, SourcePartition};
 pub use crate::typesystem::{
     ParameterizedFunc, ParameterizedOn, Realize, TypeAssoc, TypeConversion, TypeSystem,
 };
-pub use crate::writers::{Consume, PartitionWriter, Writer};

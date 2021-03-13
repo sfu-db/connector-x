@@ -32,7 +32,7 @@ cachegrind-tpch: build-tpch
 
 python-tpch n="1": setup-python
     cd connector-agent-python && \
-    poetry run python ../scripts/test_tpch.py {{n}}
+    poetry run python ../scripts/test-tpch.py {{n}}
 
 python-tpch-rust-arrow n="1": setup-python
     cd connector-agent-python && \

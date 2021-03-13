@@ -1,7 +1,7 @@
-use super::{Consume, PartitionWriter, Writer};
+use super::{Consume, Destination, DestinationPartition};
 use crate::data_order::DataOrder;
+use crate::dummy_typesystem::DummyTypeSystem;
 use crate::errors::{ConnectorAgentError, Result};
-use crate::types::DataType;
 use crate::typesystem::{Realize, TypeAssoc, TypeSystem};
 use arrow::datatypes::Schema;
 use arrow::record_batch::RecordBatch;
@@ -18,15 +18,15 @@ mod funcs;
 type Builder = Box<dyn Any + Send>;
 type Builders = Vec<Builder>;
 
-pub struct ArrowWriter {
+pub struct ArrowDestination {
     nrows: usize,
-    schema: Vec<DataType>,
+    schema: Vec<DummyTypeSystem>,
     builders: Vec<Builders>,
 }
 
-impl ArrowWriter {
+impl ArrowDestination {
     pub fn new() -> Self {
-        ArrowWriter {
+        ArrowDestination {
             nrows: 0,
             schema: vec![],
             builders: vec![],
@@ -34,17 +34,17 @@ impl ArrowWriter {
     }
 }
 
-impl Writer for ArrowWriter {
+impl Destination for ArrowDestination {
     const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::ColumnMajor, DataOrder::RowMajor];
-    type TypeSystem = DataType;
-    type PartitionWriter<'a> = ArrowPartitionWriter<'a>;
+    type TypeSystem = DummyTypeSystem;
+    type Partition<'a> = ArrowPartitionWriter<'a>;
 
     #[throws(ConnectorAgentError)]
     fn allocate<S: AsRef<str>>(
         &mut self,
         nrows: usize,
         _names: &[S],
-        schema: &[DataType],
+        schema: &[DummyTypeSystem],
         _data_order: DataOrder,
     ) {
         // cannot really create builders since do not know each partition size here
@@ -53,7 +53,7 @@ impl Writer for ArrowWriter {
     }
 
     #[throws(ConnectorAgentError)]
-    fn partition_writers(&mut self, counts: &[usize]) -> Vec<Self::PartitionWriter<'_>> {
+    fn partition(&mut self, counts: &[usize]) -> Vec<Self::Partition<'_>> {
         assert_eq!(counts.iter().sum::<usize>(), self.nrows);
         assert_eq!(self.builders.len(), 0);
 
@@ -75,12 +75,12 @@ impl Writer for ArrowWriter {
             .collect()
     }
 
-    fn schema(&self) -> &[DataType] {
+    fn schema(&self) -> &[DummyTypeSystem] {
         self.schema.as_slice()
     }
 }
 
-impl ArrowWriter {
+impl ArrowDestination {
     #[throws(ConnectorAgentError)]
     pub fn finish(self, headers: Vec<String>) -> Vec<RecordBatch> {
         let fields = self
@@ -108,13 +108,13 @@ impl ArrowWriter {
 
 pub struct ArrowPartitionWriter<'a> {
     nrows: usize,
-    schema: Vec<DataType>,
+    schema: Vec<DummyTypeSystem>,
     builders: &'a mut Builders,
     current_col: usize,
 }
 
 impl<'a> ArrowPartitionWriter<'a> {
-    fn new(schema: Vec<DataType>, builders: &'a mut Builders, nrows: usize) -> Self {
+    fn new(schema: Vec<DummyTypeSystem>, builders: &'a mut Builders, nrows: usize) -> Self {
         ArrowPartitionWriter {
             nrows,
             schema,
@@ -124,8 +124,8 @@ impl<'a> ArrowPartitionWriter<'a> {
     }
 }
 
-impl<'a> PartitionWriter<'a> for ArrowPartitionWriter<'a> {
-    type TypeSystem = DataType;
+impl<'a> DestinationPartition<'a> for ArrowPartitionWriter<'a> {
+    type TypeSystem = DummyTypeSystem;
 
     fn nrows(&self) -> usize {
         self.nrows
@@ -138,23 +138,19 @@ impl<'a> PartitionWriter<'a> for ArrowPartitionWriter<'a> {
 
 impl<'a, T> Consume<T> for ArrowPartitionWriter<'a>
 where
-    T: TypeAssoc<<Self as PartitionWriter<'a>>::TypeSystem> + ArrowAssoc + 'static,
+    T: TypeAssoc<<Self as DestinationPartition<'a>>::TypeSystem> + ArrowAssoc + 'static,
 {
-    unsafe fn consume(&mut self, value: T) {
+    fn consume(&mut self, value: T) -> Result<()> {
         let col = self.current_col;
         self.current_col = (self.current_col + 1) % self.ncols();
-        // NOTE: can use `get_mut_unchecked` instead of Mutex in the future to speed up
+
+        self.schema[col].check::<T>()?;
+
         <T as ArrowAssoc>::append(
             self.builders[col].downcast_mut::<T::Builder>().unwrap(),
             value,
         );
-    }
 
-    fn consume_checked(&mut self, value: T) -> Result<()> {
-        let col = self.current_col;
-
-        self.schema[col].check::<T>()?;
-        unsafe { self.write(value) };
         Ok(())
     }
 }

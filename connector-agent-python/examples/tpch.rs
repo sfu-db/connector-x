@@ -41,7 +41,7 @@ pub fn run(nq: usize) {
     let queries: Vec<_> = queries.iter().map(AsRef::as_ref).collect();
 
     Python::with_gil(|py| {
-        write_pandas(py, &conn, &queries, false).unwrap();
+        write_pandas(py, &conn, &queries).unwrap();
     });
 }
 

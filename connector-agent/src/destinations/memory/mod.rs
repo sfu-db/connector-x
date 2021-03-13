@@ -1,26 +1,28 @@
-use super::{Consume, PartitionWriter, Writer};
-use crate::any_array::{AnyArray, AnyArrayViewMut};
+mod any_array;
+
+use super::{Consume, Destination, DestinationPartition};
 use crate::data_order::DataOrder;
+use crate::dummy_typesystem::DummyTypeSystem;
 use crate::errors::{ConnectorAgentError, Result};
-use crate::types::DataType;
 use crate::typesystem::{ParameterizedFunc, ParameterizedOn, Realize, TypeAssoc, TypeSystem};
+use any_array::{AnyArray, AnyArrayViewMut};
 use chrono::{DateTime, NaiveDateTime, Utc};
 use fehler::{throw, throws};
 use itertools::Itertools;
 use ndarray::{Array2, ArrayView1, ArrayView2, Axis, Ix2};
 use std::any::type_name;
 use std::collections::HashMap;
-/// This `Writer` can support mixed data type.
-pub struct MemoryWriter {
+/// This `Destination` can support mixed data type.
+pub struct MemoryDestination {
     nrows: usize,
-    schema: Vec<DataType>,
+    schema: Vec<DummyTypeSystem>,
     buffers: Vec<AnyArray<Ix2>>,
     column_buffer_index: Vec<(usize, usize)>,
 }
 
-impl MemoryWriter {
+impl MemoryDestination {
     pub fn new() -> Self {
-        MemoryWriter {
+        MemoryDestination {
             nrows: 0,
             schema: vec![],
             buffers: vec![],
@@ -29,17 +31,17 @@ impl MemoryWriter {
     }
 }
 
-impl Writer for MemoryWriter {
+impl Destination for MemoryDestination {
     const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
-    type TypeSystem = DataType;
-    type PartitionWriter<'a> = MemoryPartitionWriter<'a>;
+    type TypeSystem = DummyTypeSystem;
+    type Partition<'a> = MemoryPartitionDestination<'a>;
 
     #[throws(ConnectorAgentError)]
     fn allocate<S: AsRef<str>>(
         &mut self,
         nrows: usize,
         _names: &[S],
-        schema: &[DataType],
+        schema: &[DummyTypeSystem],
         data_order: DataOrder,
     ) {
         if !matches!(data_order, DataOrder::RowMajor) {
@@ -76,7 +78,7 @@ impl Writer for MemoryWriter {
     }
 
     #[throws(ConnectorAgentError)]
-    fn partition_writers(&mut self, counts: &[usize]) -> Vec<Self::PartitionWriter<'_>> {
+    fn partition(&mut self, counts: &[usize]) -> Vec<Self::Partition<'_>> {
         assert_eq!(counts.iter().sum::<usize>(), self.nrows);
 
         let nbuffers = self.buffers.len();
@@ -95,7 +97,7 @@ impl Writer for MemoryWriter {
                 views[bid] = Some(rest);
                 sub_buffers.push(splitted);
             }
-            ret.push(MemoryPartitionWriter::new(
+            ret.push(MemoryPartitionDestination::new(
                 c,
                 sub_buffers,
                 self.schema.clone(),
@@ -105,12 +107,12 @@ impl Writer for MemoryWriter {
         ret
     }
 
-    fn schema(&self) -> &[DataType] {
+    fn schema(&self) -> &[DummyTypeSystem] {
         self.schema.as_slice()
     }
 }
 
-impl MemoryWriter {
+impl MemoryDestination {
     pub fn buffer_view<'a, T>(&'a self, bid: usize) -> Option<ArrayView2<T>>
     where
         T: 'static + Send,
@@ -133,20 +135,20 @@ impl MemoryWriter {
         self.column_buffer_index[col]
     }
 }
-/// The `PartitionedWriter` of `MemoryWriter`.
-pub struct MemoryPartitionWriter<'a> {
+/// The `PartitionedDestination` of `MemoryDestination`.
+pub struct MemoryPartitionDestination<'a> {
     nrows: usize,
-    schema: Vec<DataType>,
+    schema: Vec<DummyTypeSystem>,
     buffers: Vec<AnyArrayViewMut<'a, Ix2>>,
     column_buffer_index: Vec<(usize, usize)>,
     current: usize,
 }
 
-impl<'a> MemoryPartitionWriter<'a> {
+impl<'a> MemoryPartitionDestination<'a> {
     fn new(
         nrows: usize,
         buffers: Vec<AnyArrayViewMut<'a, Ix2>>,
-        schema: Vec<DataType>,
+        schema: Vec<DummyTypeSystem>,
         column_buffer_index: Vec<(usize, usize)>,
     ) -> Self {
         Self {
@@ -165,8 +167,8 @@ impl<'a> MemoryPartitionWriter<'a> {
     }
 }
 
-impl<'a> PartitionWriter<'a> for MemoryPartitionWriter<'a> {
-    type TypeSystem = DataType;
+impl<'a> DestinationPartition<'a> for MemoryPartitionDestination<'a> {
+    type TypeSystem = DummyTypeSystem;
 
     fn nrows(&self) -> usize {
         self.nrows
@@ -177,29 +179,20 @@ impl<'a> PartitionWriter<'a> for MemoryPartitionWriter<'a> {
     }
 }
 
-impl<'a, T> Consume<T> for MemoryPartitionWriter<'a>
+impl<'a, T> Consume<T> for MemoryPartitionDestination<'a>
 where
-    T: TypeAssoc<<Self as PartitionWriter<'a>>::TypeSystem> + 'static,
+    T: TypeAssoc<<Self as DestinationPartition<'a>>::TypeSystem> + 'static,
 {
-    unsafe fn consume(&mut self, value: T) {
+    fn consume(&mut self, value: T) -> Result<()> {
         let (row, col) = self.loc();
-        let &(bid, col) = &self.column_buffer_index[col];
-        let mut_view = self.buffers[bid].udowncast::<T>();
-        *mut_view.get_mut((row, col)).unwrap() = value;
-    }
+        let col_schema = self.schema[col];
+        col_schema.check::<T>()?;
 
-    fn consume_checked(&mut self, value: T) -> Result<()> {
-        let (row, col) = self.loc();
-        self.schema[col].check::<T>()?;
         let &(bid, col) = &self.column_buffer_index[col];
 
-        let mut_view =
-            self.buffers[bid]
-                .downcast::<T>()
-                .ok_or(ConnectorAgentError::UnexpectedType(
-                    format!("{:?}", self.schema[col]),
-                    type_name::<T>(),
-                ))?;
+        let mut_view = self.buffers[bid].downcast::<T>().ok_or_else(|| {
+            ConnectorAgentError::UnexpectedType(format!("{:?}", col_schema), type_name::<T>())
+        })?;
         *mut_view
             .get_mut((row, col))
             .ok_or(ConnectorAgentError::OutOfBound)? = value;

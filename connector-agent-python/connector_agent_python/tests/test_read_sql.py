@@ -20,7 +20,7 @@ def test_manual_partition(postgres_url: str) -> None:
         "SELECT * FROM test_table WHERE test_int >= 2",
     ]
 
-    df = read_sql(postgres_url, query=queries, checked=True)
+    df = read_sql(postgres_url, query=queries)
 
     expected = pd.DataFrame(
         index=range(6),

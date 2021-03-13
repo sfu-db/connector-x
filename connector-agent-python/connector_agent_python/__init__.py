@@ -14,8 +14,41 @@ def read_sql(
     partition_on: Optional[str] = None,
     partition_range: Optional[Tuple[int, int]] = None,
     partition_num: Optional[int] = None,
-    checked: bool = False
 ) -> pd.DataFrame:
+    """
+    Run the SQL query, download the data from database into a Pandas dataframe.
+
+    Parameters
+    ==========
+    conn
+      the connection string.
+    query
+      a SQL query or a list of SQL query.
+    return_type
+      the return type of this function. Currently only "pandas" is supported.
+    partition_on
+      the column to partition the result.
+    partition_range
+      the value range of the partition column.
+    partition_num
+      how many partition to generate.
+
+    Note
+    ====
+    There are three ways to call this function.
+
+    1. `read_sql(conn, query)`: execute the query and download the data into
+       a pandas dataframe without doing partition.
+    2. `read_sql(conn, query, partition_on=...)`: execute the query and download
+       the data into a pandas dataframe, with parallelism on multiple partitions.
+    3. `read_sql(conn, [query1, query2])`: execute a bunch of queries and download the
+       data into a pandas dataframe. This call form assumes you do the partition
+       by your self. Note, the schemas of all the query results should be same.
+    """
+
+    if isinstance(query, list) and len(query) == 1:
+        query = query[0]
+
     if isinstance(query, str):
         if partition_on is None:
             queries = [query]
@@ -43,5 +76,4 @@ def read_sql(
         return_type,
         queries=queries,
         partition_query=partition_query,
-        checked=checked,
     )

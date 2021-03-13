@@ -25,11 +25,11 @@ pub enum ConnectorAgentError {
     #[error("Allocate is already called.")]
     DuplicatedAllocation,
 
-    #[error("Writer has not been allocated yet.")]
-    WriterNotAllocated,
+    #[error("Destination has not been allocated yet.")]
+    DestinationNotAllocated,
 
-    #[error("No type system conversion rule from {0} to {1}.")]
-    NoTypeSystemConversionRule(String, String),
+    #[error("No conversion rule from {0} to {1}.")]
+    NoConversionRule(String, String),
 
     #[error(transparent)]
     IOError(#[from] std::io::Error),
