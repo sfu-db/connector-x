@@ -19,7 +19,7 @@ if __name__ == "__main__":
     conn = os.environ["POSTGRES_URL"]
     table = os.environ["POSTGRES_TABLE"]
     npartition = int(args["<num>"])
-    cluster = LocalCluster(n_workers=npartition, scheduler_port=0, memory_limit="120G")
+    cluster = LocalCluster(n_workers=npartition, scheduler_port=0, memory_limit="130G")
     client = Client(cluster)
 
     with Timer() as timer:

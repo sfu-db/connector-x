@@ -30,31 +30,6 @@ build-tpch:
 cachegrind-tpch: build-tpch
     valgrind --tool=cachegrind target/release/examples/tpch
 
-python-tpch n="1" protocol="binary": setup-python
+python-tpch name +ARGS="": setup-python
     cd connector-agent-python && \
-    poetry run python ../scripts/tpch-ca.py {{n}} --protocol={{protocol}}
-
-python-tpch-rust-arrow n="1": setup-python
-    cd connector-agent-python && \
-    poetry run python ../scripts/tpch-rust-arrow.py {{n}}
-
-python-tpch-pyarrow: 
-    cd connector-agent-python && \
-    poetry run python ../scripts/tpch-pyarrow.py
-
-python-tpch-pyarrow-p n="1": 
-    cd connector-agent-python && \
-    poetry run python ../scripts/tpch-pyarrow-p.py {{n}}
-
-python-tpch-pandas:
-    cd connector-agent-python && \
-    poetry run python ../scripts/tpch-pandas.py
-
-python-tpch-dask n="1":
-    cd connector-agent-python && \
-    poetry run python ../scripts/tpch-dask.py {{n}}
-
-
-python-tpch-modin n="1":
-    cd connector-agent-python && \
-    poetry run python ../scripts/tpch-modin.py {{n}}
+    poetry run python ../benchmarks/tpch-{{name}}.py {{ARGS}}
