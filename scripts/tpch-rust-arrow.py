@@ -1,6 +1,6 @@
 """
 Usage:
-  test_tpch.py <num>
+  test-tpch.py <num>
 
 Options:
   -h --help     Show this screen.
