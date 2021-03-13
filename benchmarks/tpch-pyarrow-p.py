@@ -68,8 +68,7 @@ def func(id: int, conn: str, query: str) -> Any:
 
 
 if __name__ == "__main__":
-    # multiprocessing.set_start_method('forkserver')
-    args = docopt(__doc__, version="Naval Fate 2.0")
+    args = docopt(__doc__, version="1.0")
     conn = os.environ["POSTGRES_URL"]
     table = os.environ["POSTGRES_TABLE"]
 

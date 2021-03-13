@@ -1,11 +1,21 @@
+"""
+Usage:
+  tpch-pyarrow.py
+
+Options:
+  -h --help     Show this screen.
+  --version     Show version.
+"""
 import io
 import os
 
 from contexttimer import Timer
 from pyarrow import csv
 from sqlalchemy import create_engine
+from docopt import docopt
 
 if __name__ == "__main__":
+    args = docopt(__doc__, version="1.0")
     conn = os.environ["POSTGRES_URL"]
     table = os.environ["POSTGRES_TABLE"]
 

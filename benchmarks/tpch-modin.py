@@ -16,7 +16,7 @@ from docopt import docopt
 from dask.distributed import Client, LocalCluster
 
 if __name__ == "__main__":
-    args = docopt(__doc__, version="Naval Fate 2.0")
+    args = docopt(__doc__, version="1.0")
     conn = os.environ["POSTGRES_URL"]
     table = os.environ["POSTGRES_TABLE"]
 

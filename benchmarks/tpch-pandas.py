@@ -1,11 +1,21 @@
+"""
+Usage:
+  tpch-pandas.py
+
+Options:
+  -h --help     Show this screen.
+  --version     Show version.
+"""
+
 import os
 
 from contexttimer import Timer
 from sqlalchemy import create_engine
-
+from docopt import docopt
 import pandas as pd
 
 if __name__ == "__main__":
+    docopt(__doc__, version="1.0")
     conn = os.environ["POSTGRES_URL"]
     table = os.environ["POSTGRES_TABLE"]
 

@@ -1,6 +1,6 @@
 """
 Usage:
-  test-tpch.py [--protocol=<protocol>] <num>
+  tpch-ca.py [--protocol=<protocol>] <num>
 
 Options:
   --protocol=<protocol>  The protocol to use [default: binary].
