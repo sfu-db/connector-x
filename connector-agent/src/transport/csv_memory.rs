@@ -1,7 +1,7 @@
-use crate::data_sources::csv::CSVSource;
+use crate::destinations::memory::MemoryDestination;
 use crate::dummy_typesystem::DummyTypeSystem;
+use crate::sources::csv::CSVSource;
 use crate::typesystem::TypeConversion;
-use crate::writers::memory::MemoryWriter;
 use bytes::Bytes;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
 use std::str::from_utf8;
@@ -30,7 +30,7 @@ impl_transport!(
     [],
     CSVMemoryTransport,
     DummyTypeSystem => DummyTypeSystem,
-    CSVSource => MemoryWriter,
+    CSVSource => MemoryDestination,
     ([DummyTypeSystem::F64], [DummyTypeSystem::F64]) => (f64, f64) conversion all,
     ([DummyTypeSystem::I64], [DummyTypeSystem::I64]) => (i64, i64) conversion all,
     ([DummyTypeSystem::Bool], [DummyTypeSystem::Bool]) => (bool, bool) conversion all,

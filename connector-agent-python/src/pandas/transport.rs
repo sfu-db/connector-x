@@ -1,10 +1,10 @@
+use super::destination::PandasDestination;
 use super::types::PandasTypeSystem;
-use super::writers::PandasWriter;
 use bytes::Bytes;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
 use connector_agent::{
-    data_sources::postgres::{PostgresSource, PostgresTypeSystem},
     impl_transport,
+    sources::postgres::{PostgresSource, PostgresTypeSystem},
     typesystem::TypeConversion,
 };
 
@@ -14,7 +14,7 @@ impl_transport! {
     ['py],
     PostgresPandasTransport<'py>,
     PostgresTypeSystem => PandasTypeSystem,
-    PostgresSource => PandasWriter<'py>,
+    PostgresSource => PandasDestination<'py>,
     ([PostgresTypeSystem::Float4], [PandasTypeSystem::F64]) => (f32, f64) conversion all,
     ([PostgresTypeSystem::Float8], [PandasTypeSystem::F64]) => (f64, f64) conversion all,
     ([PostgresTypeSystem::Int4], [PandasTypeSystem::I64]) => (i32, i64) conversion all,

@@ -1,7 +1,7 @@
-use crate::data_sources::postgres::{PostgresSource, PostgresTypeSystem};
+use crate::destinations::memory::MemoryDestination;
 use crate::dummy_typesystem::DummyTypeSystem;
+use crate::sources::postgres::{PostgresSource, PostgresTypeSystem};
 use crate::typesystem::TypeConversion;
-use crate::writers::memory::MemoryWriter;
 use bytes::Bytes;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
 use std::str::from_utf8;
@@ -30,7 +30,7 @@ impl_transport!(
     [],
     PostgresMemoryTransport,
     PostgresTypeSystem => DummyTypeSystem,
-    PostgresSource => MemoryWriter,
+    PostgresSource => MemoryDestination,
     ([PostgresTypeSystem::Float4], [DummyTypeSystem::F64]) => (f32, f64) conversion all,
     ([PostgresTypeSystem::Float8], [DummyTypeSystem::F64]) => (f64, f64) conversion all,
     ([PostgresTypeSystem::Int4], [DummyTypeSystem::I64]) => (i32, i64) conversion all,

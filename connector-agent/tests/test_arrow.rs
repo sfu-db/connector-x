@@ -1,8 +1,8 @@
 use arrow::array::{BooleanArray, Float64Array, Int64Array, StringArray};
 use arrow::record_batch::RecordBatch;
 use connector_agent::{
-    data_sources::dummy::MixedSource, transport::DummyArrowTransport, writers::arrow::ArrowWriter,
-    Dispatcher, DummyTypeSystem,
+    destinations::arrow::ArrowDestination, sources::dummy::DummySource,
+    transport::DummyArrowTransport, Dispatcher, DummyTypeSystem,
 };
 
 #[test]
@@ -21,15 +21,15 @@ fn test_arrow() {
         headers.push(format!("c{}", c));
     }
     let queries: Vec<String> = nrows.iter().map(|v| format!("{},{}", v, ncols)).collect();
-    let mut writer = ArrowWriter::new();
+    let mut destination = ArrowDestination::new();
     let dispatcher = Dispatcher::<_, _, DummyArrowTransport>::new(
-        MixedSource::new(&["a", "b", "c", "d", "e"], &schema),
-        &mut writer,
+        DummySource::new(&["a", "b", "c", "d", "e"], &schema),
+        &mut destination,
         &queries,
     );
     dispatcher.run().expect("run dispatcher");
 
-    let records: Vec<RecordBatch> = writer.finish(headers).unwrap();
+    let records: Vec<RecordBatch> = destination.finish(headers).unwrap();
     assert_eq!(2, records.len());
 
     for col in 0..ncols {

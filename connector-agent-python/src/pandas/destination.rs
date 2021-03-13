@@ -5,7 +5,8 @@ use super::pandas_columns::{
 use super::types::{PandasDType, PandasTypeSystem};
 use anyhow::anyhow;
 use connector_agent::{
-    ConnectorAgentError, Consume, DataOrder, PartitionWriter, Result, TypeAssoc, TypeSystem, Writer,
+    ConnectorAgentError, Consume, DataOrder, Destination, DestinationPartition, Result, TypeAssoc,
+    TypeSystem,
 };
 use fehler::{throw, throws};
 use itertools::Itertools;
@@ -17,7 +18,7 @@ use pyo3::{
 use std::any::TypeId;
 use std::collections::HashMap;
 use std::mem::transmute;
-pub struct PandasWriter<'py> {
+pub struct PandasDestination<'py> {
     py: Python<'py>,
     nrows: Option<usize>,
     schema: Option<Vec<PandasTypeSystem>>,
@@ -26,9 +27,9 @@ pub struct PandasWriter<'py> {
     dataframe: Option<&'py PyAny>, // Using this field other than the return purpose should be careful: this refers to the same data as buffers
 }
 
-impl<'a> PandasWriter<'a> {
+impl<'a> PandasDestination<'a> {
     pub fn new(py: Python<'a>) -> Self {
-        PandasWriter {
+        PandasDestination {
             py,
             nrows: None,
             schema: None,
@@ -43,10 +44,10 @@ impl<'a> PandasWriter<'a> {
     }
 }
 
-impl<'a> Writer for PandasWriter<'a> {
+impl<'a> Destination for PandasDestination<'a> {
     const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
     type TypeSystem = PandasTypeSystem;
-    type PartitionWriter<'b> = PandasPartitionWriter<'b>;
+    type Partition<'b> = PandasPartitionDestination<'b>;
 
     #[throws(ConnectorAgentError)]
     fn allocate<S: AsRef<str>>(
@@ -90,16 +91,16 @@ impl<'a> Writer for PandasWriter<'a> {
     }
 
     #[throws(ConnectorAgentError)]
-    fn partition_writers(&mut self, counts: &[usize]) -> Vec<Self::PartitionWriter<'_>> {
+    fn partition(&mut self, counts: &[usize]) -> Vec<Self::Partition<'_>> {
         if matches!(self.nrows, None) {
-            panic!("{}", ConnectorAgentError::WriterNotAllocated);
+            panic!("{}", ConnectorAgentError::DestinationNotAllocated);
         }
 
         assert_eq!(counts.iter().sum::<usize>(), self.nrows.unwrap());
 
         let buffers = self
             .buffers
-            .ok_or(ConnectorAgentError::WriterNotAllocated)
+            .ok_or(ConnectorAgentError::DestinationNotAllocated)
             .unwrap();
 
         let schema = self.schema.as_ref().unwrap();
@@ -170,22 +171,22 @@ impl<'a> Writer for PandasWriter<'a> {
             }
         }
 
-        let mut par_writers = vec![];
+        let mut par_destinations = vec![];
         for &c in counts.into_iter().rev() {
             let columns: Vec<_> = partitioned_columns
                 .iter_mut()
                 .map(|partitions| partitions.pop().unwrap())
                 .collect();
 
-            par_writers.push(PandasPartitionWriter::new(
+            par_destinations.push(PandasPartitionDestination::new(
                 c,
                 columns,
                 self.schema.as_ref().unwrap(),
             ));
         }
 
-        // We need to reverse the par_writers because partitions are poped reversely
-        par_writers.into_iter().rev().collect()
+        // We need to reverse the par_destinations because partitions are poped reversely
+        par_destinations.into_iter().rev().collect()
     }
 
     fn schema(&self) -> &[PandasTypeSystem] {
@@ -193,14 +194,14 @@ impl<'a> Writer for PandasWriter<'a> {
     }
 }
 
-pub struct PandasPartitionWriter<'a> {
+pub struct PandasPartitionDestination<'a> {
     nrows: usize,
     columns: Vec<Box<dyn PandasColumnObject + 'a>>,
     schema: &'a [PandasTypeSystem],
     seq: usize,
 }
 
-impl<'a> PandasPartitionWriter<'a> {
+impl<'a> PandasPartitionDestination<'a> {
     fn new(
         nrows: usize,
         columns: Vec<Box<dyn PandasColumnObject + 'a>>,
@@ -221,7 +222,7 @@ impl<'a> PandasPartitionWriter<'a> {
     }
 }
 
-impl<'a> PartitionWriter<'a> for PandasPartitionWriter<'a> {
+impl<'a> DestinationPartition<'a> for PandasPartitionDestination<'a> {
     type TypeSystem = PandasTypeSystem;
 
     fn nrows(&self) -> usize {
@@ -240,7 +241,7 @@ impl<'a> PartitionWriter<'a> for PandasPartitionWriter<'a> {
     }
 }
 
-impl<'a, T> Consume<T> for PandasPartitionWriter<'a>
+impl<'a, T> Consume<T> for PandasPartitionDestination<'a>
 where
     T: HasPandasColumn + TypeAssoc<PandasTypeSystem> + std::fmt::Debug + 'static,
 {

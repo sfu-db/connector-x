@@ -1,4 +1,4 @@
-use super::{Consume, PartitionWriter, Writer};
+use super::{Consume, Destination, DestinationPartition};
 use crate::data_order::DataOrder;
 use crate::dummy_typesystem::DummyTypeSystem;
 use crate::errors::{ConnectorAgentError, Result};
@@ -18,15 +18,15 @@ mod funcs;
 type Builder = Box<dyn Any + Send>;
 type Builders = Vec<Builder>;
 
-pub struct ArrowWriter {
+pub struct ArrowDestination {
     nrows: usize,
     schema: Vec<DummyTypeSystem>,
     builders: Vec<Builders>,
 }
 
-impl ArrowWriter {
+impl ArrowDestination {
     pub fn new() -> Self {
-        ArrowWriter {
+        ArrowDestination {
             nrows: 0,
             schema: vec![],
             builders: vec![],
@@ -34,10 +34,10 @@ impl ArrowWriter {
     }
 }
 
-impl Writer for ArrowWriter {
+impl Destination for ArrowDestination {
     const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::ColumnMajor, DataOrder::RowMajor];
     type TypeSystem = DummyTypeSystem;
-    type PartitionWriter<'a> = ArrowPartitionWriter<'a>;
+    type Partition<'a> = ArrowPartitionWriter<'a>;
 
     #[throws(ConnectorAgentError)]
     fn allocate<S: AsRef<str>>(
@@ -53,7 +53,7 @@ impl Writer for ArrowWriter {
     }
 
     #[throws(ConnectorAgentError)]
-    fn partition_writers(&mut self, counts: &[usize]) -> Vec<Self::PartitionWriter<'_>> {
+    fn partition(&mut self, counts: &[usize]) -> Vec<Self::Partition<'_>> {
         assert_eq!(counts.iter().sum::<usize>(), self.nrows);
         assert_eq!(self.builders.len(), 0);
 
@@ -80,7 +80,7 @@ impl Writer for ArrowWriter {
     }
 }
 
-impl ArrowWriter {
+impl ArrowDestination {
     #[throws(ConnectorAgentError)]
     pub fn finish(self, headers: Vec<String>) -> Vec<RecordBatch> {
         let fields = self
@@ -124,7 +124,7 @@ impl<'a> ArrowPartitionWriter<'a> {
     }
 }
 
-impl<'a> PartitionWriter<'a> for ArrowPartitionWriter<'a> {
+impl<'a> DestinationPartition<'a> for ArrowPartitionWriter<'a> {
     type TypeSystem = DummyTypeSystem;
 
     fn nrows(&self) -> usize {
@@ -138,7 +138,7 @@ impl<'a> PartitionWriter<'a> for ArrowPartitionWriter<'a> {
 
 impl<'a, T> Consume<T> for ArrowPartitionWriter<'a>
 where
-    T: TypeAssoc<<Self as PartitionWriter<'a>>::TypeSystem> + ArrowAssoc + 'static,
+    T: TypeAssoc<<Self as DestinationPartition<'a>>::TypeSystem> + ArrowAssoc + 'static,
 {
     fn consume(&mut self, value: T) -> Result<()> {
         let col = self.current_col;

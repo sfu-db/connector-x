@@ -5,14 +5,14 @@ use crate::data_order::DataOrder;
 use crate::errors::Result;
 use crate::typesystem::{TypeAssoc, TypeSystem};
 
-/// A `Writer` is associated with a `TypeSystem` and a `PartitionWriter`.
-/// `PartitionWriter` allows multiple threads write data into the buffer owned by `Writer`.
-pub trait Writer: Sized {
+/// A `Destination` is associated with a `TypeSystem` and a `PartitionDestination`.
+/// `PartitionDestination` allows multiple threads write data into the buffer owned by `Destination`.
+pub trait Destination: Sized {
     const DATA_ORDERS: &'static [DataOrder];
     type TypeSystem: TypeSystem;
-    type PartitionWriter<'a>: PartitionWriter<'a, TypeSystem = Self::TypeSystem>;
+    type Partition<'a>: DestinationPartition<'a, TypeSystem = Self::TypeSystem>;
 
-    /// Construct the `Writer`.
+    /// Construct the `Destination`.
     /// This allocates the memory based on the types of each columns
     /// and the number of rows.
     fn allocate<S: AsRef<str>>(
@@ -23,16 +23,16 @@ pub trait Writer: Sized {
         data_order: DataOrder,
     ) -> Result<()>;
 
-    /// Create a bunch of partition writers, with each write `count` number of rows.
-    fn partition_writers(&mut self, counts: &[usize]) -> Result<Vec<Self::PartitionWriter<'_>>>;
-    /// Return the schema of the writer.
+    /// Create a bunch of partition destinations, with each write `count` number of rows.
+    fn partition(&mut self, counts: &[usize]) -> Result<Vec<Self::Partition<'_>>>;
+    /// Return the schema of the destination.
     fn schema(&self) -> &[Self::TypeSystem];
 }
 
-/// `PartitionWriter` writes values to its own region. `PartitionWriter` is parameterized
-/// on lifetime `'a`, which is the lifetime of the parent `Writer`. This indicates
-/// the `PartitionWriter` can never live longer than the parent.
-pub trait PartitionWriter<'a>: Send {
+/// `PartitionDestination` writes values to its own region. `PartitionDestination` is parameterized
+/// on lifetime `'a`, which is the lifetime of the parent `Destination`. This indicates
+/// the `PartitionDestination` can never live longer than the parent.
+pub trait DestinationPartition<'a>: Send {
     type TypeSystem: TypeSystem;
 
     /// Write a value of type T to the location (row, col). If T mismatch with the
@@ -45,10 +45,10 @@ pub trait PartitionWriter<'a>: Send {
         self.consume(value)
     }
 
-    /// Number of rows this `PartitionWriter` controls.
+    /// Number of rows this `PartitionDestination` controls.
     fn nrows(&self) -> usize;
 
-    /// Number of rows this `PartitionWriter` controls.
+    /// Number of rows this `PartitionDestination` controls.
     fn ncols(&self) -> usize;
 
     /// Final clean ups
