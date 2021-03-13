@@ -11,6 +11,7 @@ def read_sql(
     query: Union[List[str], str],
     *,
     return_type: str = "pandas",
+    protocol: str = "binary",
     partition_on: Optional[str] = None,
     partition_range: Optional[Tuple[int, int]] = None,
     partition_num: Optional[int] = None,
@@ -75,5 +76,6 @@ def read_sql(
         conn,
         return_type,
         queries=queries,
+        protocol=protocol,
         partition_query=partition_query,
     )

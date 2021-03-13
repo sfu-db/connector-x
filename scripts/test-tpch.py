@@ -1,10 +1,11 @@
 """
 Usage:
-  test-tpch.py <num>
+  test-tpch.py [--protocol=<protocol>] <num>
 
 Options:
-  -h --help     Show this screen.
-  --version     Show version.
+  --protocol=<protocol>  The protocol to use [default: binary].
+  -h --help              Show this screen.
+  --version              Show version.
 """
 import os
 import time
@@ -41,6 +42,7 @@ if __name__ == "__main__":
             partition_on="l_orderkey",
             partition_range=(0, 60000000),
             partition_num=int(args["<num>"]),
+            protocol=args["--protocol"],
         )
     print("time in total:", timer.elapsed)
 

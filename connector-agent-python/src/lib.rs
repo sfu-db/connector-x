@@ -76,6 +76,7 @@ fn read_sql<'a>(
     py: Python<'a>,
     conn: &str,
     return_type: &str,
+    protocol: Option<&str>,
     queries: Option<Vec<String>>,
     partition_query: Option<PartitionQuery>,
 ) -> PyResult<&'a PyAny> {
@@ -116,7 +117,12 @@ fn read_sql<'a>(
 
     let queries: Vec<_> = queries.iter().map(|s| s.as_str()).collect();
     match return_type {
-        "pandas" => Ok(crate::pandas::write_pandas(py, conn, &queries)?),
+        "pandas" => Ok(crate::pandas::write_pandas(
+            py,
+            conn,
+            &queries,
+            protocol.unwrap_or("binary"),
+        )?),
         "arrow" => Err(PyNotImplementedError::new_err(
             "arrow return type is not implemented",
         )),
