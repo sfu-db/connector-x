@@ -233,13 +233,46 @@
 <span id="230">230</span>
 <span id="231">231</span>
 <span id="232">232</span>
+<span id="233">233</span>
+<span id="234">234</span>
+<span id="235">235</span>
+<span id="236">236</span>
+<span id="237">237</span>
+<span id="238">238</span>
+<span id="239">239</span>
+<span id="240">240</span>
+<span id="241">241</span>
+<span id="242">242</span>
+<span id="243">243</span>
+<span id="244">244</span>
+<span id="245">245</span>
+<span id="246">246</span>
+<span id="247">247</span>
+<span id="248">248</span>
+<span id="249">249</span>
+<span id="250">250</span>
+<span id="251">251</span>
+<span id="252">252</span>
+<span id="253">253</span>
+<span id="254">254</span>
+<span id="255">255</span>
+<span id="256">256</span>
+<span id="257">257</span>
+<span id="258">258</span>
+<span id="259">259</span>
+<span id="260">260</span>
+<span id="261">261</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Why we need to implement Transmit for TypeSystem? This is because only TypeSystem knows how to dispatch</span>
 <span class="comment">// functions to it&#39;s native type N based on our defined type T. Remember, T is value and N is a type.</span>
 
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">destinations</span>::<span class="ident">Destination</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">errors</span>::<span class="prelude-ty">Result</span>;
-<span class="doccomment">/// `TypeSystem` describes a type system in a value type (e.g. enum variants),</span>
-<span class="doccomment">/// which can be used to type check with a static type `T` through the `check` method.</span>
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">sources</span>::{<span class="ident">Source</span>, <span class="ident">SourcePartition</span>};
+
+<span class="doccomment">/// `TypeSystem` describes all the types a source or destination support</span>
+<span class="doccomment">/// using enum variants.</span>
+<span class="doccomment">/// The variant can be used to type check with a static type `T` through the `check` method.</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">TypeSystem</span>: <span class="ident">Copy</span> <span class="op">+</span> <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> {
     <span class="doccomment">/// Check whether T is the same type as defined by self.</span>
     <span class="kw">fn</span> <span class="ident">check</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">TypeAssoc</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
@@ -255,74 +288,46 @@
 <span class="doccomment">/// A macro to implement `TypeAssoc` and `Realize` which saves repetitive code.</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// # Example Usage</span>
-<span class="doccomment">/// `associate_typesystem!(DataType, [DataType::F64] =&gt; f64, [DataType::I64] =&gt; i64);`</span>
+<span class="doccomment">/// `impl_typesystem!(DataType, [DataType::F64] =&gt; f64, [DataType::I64] =&gt; i64);`</span>
 <span class="doccomment">/// This means for the type system `DataType`, it&#39;s variant `DataType::F64(false)` is corresponding to the physical type f64 and</span>
 <span class="doccomment">/// `DataType::F64(true)` is corresponding to the physical type Option&lt;f64&gt;. Same for I64 and i64</span>
 <span class="attribute">#[<span class="ident">macro_export</span>]</span>
-<span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">associate_typesystem</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">ts</span>:<span class="ident">ty</span>, $(<span class="comment">/*multiple mapping*/</span>$(<span class="comment">/*multiple variant*/</span> [$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">variant</span>:<span class="ident">tt</span>)<span class="op">+</span>])<span class="op">|</span><span class="op">+</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">native_type</span>:<span class="ident">ty</span>,)<span class="op">+</span>) <span class="op">=</span><span class="op">&gt;</span> {
-        <span class="macro">associate_typesystem</span><span class="macro">!</span>(<span class="ident">IMPL</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ts</span>, $(<span class="comment">/*multiple mapping*/</span>
-            $(<span class="comment">/*multiple variant*/</span>$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">variant</span>)<span class="op">+</span> (<span class="bool-val">false</span>))<span class="op">+</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">native_type</span>,
-            $(<span class="comment">/*multiple variant*/</span>$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">variant</span>)<span class="op">+</span> (<span class="bool-val">true</span>))<span class="op">+</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">native_type</span><span class="op">&gt;</span>,
+<span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">impl_typesystem</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">TS</span>:<span class="ident">ty</span>, $(<span class="comment">/*multiple mapping*/</span>$(<span class="comment">/*multiple variant*/</span> [$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">V</span>:<span class="ident">tt</span>)<span class="op">+</span>])<span class="op">|</span><span class="op">+</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">NT</span>:<span class="ident">ty</span>,)<span class="op">+</span>) <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="kw">impl</span> <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">typesystem</span>::<span class="ident">TypeSystem</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TS</span> {}
+
+        <span class="macro">impl_typesystem</span><span class="macro">!</span>(<span class="ident">IMPL</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TS</span>, $(<span class="comment">/*multiple mapping*/</span>
+            $(<span class="comment">/*multiple variant*/</span>$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">V</span>)<span class="op">+</span> (<span class="bool-val">false</span>))<span class="op">+</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">NT</span>,
+            $(<span class="comment">/*multiple variant*/</span>$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">V</span>)<span class="op">+</span> (<span class="bool-val">true</span>))<span class="op">+</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">NT</span><span class="op">&gt;</span>,
         )<span class="op">+</span>);
     };
 
-    (<span class="ident">IMPL</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ts</span>:<span class="ident">ty</span>, $($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">variant</span>:<span class="ident">pat</span>)<span class="op">+</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">native_type</span>:<span class="ident">ty</span>,)<span class="op">+</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    (<span class="ident">IMPL</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TS</span>:<span class="ident">ty</span>, $($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">V</span>:<span class="ident">pat</span>)<span class="op">+</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">NT</span>:<span class="ident">ty</span>,)<span class="op">+</span>) <span class="op">=</span><span class="op">&gt;</span> {
         $(
-            <span class="kw">impl</span> <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">typesystem</span>::<span class="ident">TypeAssoc</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">ts</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">native_type</span> {
-                <span class="kw">fn</span> <span class="ident">check</span>(<span class="ident">ts</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ts</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">errors</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+            <span class="kw">impl</span> <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">typesystem</span>::<span class="ident">TypeAssoc</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">TS</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">NT</span> {
+                <span class="kw">fn</span> <span class="ident">check</span>(<span class="ident">ts</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TS</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">errors</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
                     <span class="kw">match</span> <span class="ident">ts</span> {
                         $(
-                            <span class="macro-nonterminal">$</span><span class="macro-nonterminal">variant</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(()),
+                            <span class="macro-nonterminal">$</span><span class="macro-nonterminal">V</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(()),
                         )<span class="op">+</span>
-                        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">fehler</span>::<span class="macro">throw</span><span class="macro">!</span>(<span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">errors</span>::<span class="ident">ConnectorAgentError</span>::<span class="ident">UnexpectedType</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">ts</span>), <span class="ident">std</span>::<span class="ident">any</span>::<span class="ident">type_name</span>::<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">native_type</span><span class="op">&gt;</span>()))
+                        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">fehler</span>::<span class="macro">throw</span><span class="macro">!</span>(<span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">errors</span>::<span class="ident">ConnectorAgentError</span>::<span class="ident">UnexpectedType</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">ts</span>), <span class="ident">std</span>::<span class="ident">any</span>::<span class="ident">type_name</span>::<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">NT</span><span class="op">&gt;</span>()))
                     }
                 }
             }
         )<span class="op">+</span>
 
-        <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">typesystem</span>::<span class="ident">Realize</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ts</span>
+        <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">typesystem</span>::<span class="ident">Realize</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TS</span>
         <span class="kw">where</span>
             <span class="ident">F</span>: <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">typesystem</span>::<span class="ident">ParameterizedFunc</span>,
-            $(<span class="ident">F</span>: <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">typesystem</span>::<span class="ident">ParameterizedOn</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">native_type</span><span class="op">&gt;</span>),<span class="op">+</span>
+            $(<span class="ident">F</span>: <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">typesystem</span>::<span class="ident">ParameterizedOn</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">NT</span><span class="op">&gt;</span>),<span class="op">+</span>
         {
             <span class="kw">fn</span> <span class="ident">realize</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">errors</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">F</span>::<span class="ident">Function</span><span class="op">&gt;</span> {
                 <span class="kw">match</span> <span class="self">self</span> {
                     $(
-                        $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">variant</span>)<span class="op">|</span><span class="op">+</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">F</span>::<span class="ident">realize</span>::<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">native_type</span><span class="op">&gt;</span>()),
+                        $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">V</span>)<span class="op">|</span><span class="op">+</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">F</span>::<span class="ident">realize</span>::<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">NT</span><span class="op">&gt;</span>()),
                     )<span class="op">+</span>
                 }
             }
-        }
-
-        <span class="comment">// Always true for type system self conversion</span>
-        <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">typesystem</span>::<span class="ident">Realize</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="kw">for</span> (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">ts</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ts</span>)
-        <span class="kw">where</span>
-            <span class="ident">F</span>: <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">typesystem</span>::<span class="ident">ParameterizedFunc</span>,
-            $(<span class="ident">F</span>: <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">typesystem</span>::<span class="ident">ParameterizedOn</span><span class="op">&lt;</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">native_type</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">native_type</span>)<span class="op">&gt;</span>),<span class="op">+</span>
-        {
-            <span class="kw">fn</span> <span class="ident">realize</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">errors</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">F</span>::<span class="ident">Function</span><span class="op">&gt;</span> {
-                <span class="kw">match</span> <span class="self">self</span> {
-                    $($(
-                        (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">variant</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">variant</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">F</span>::<span class="ident">realize</span>::<span class="op">&lt;</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">native_type</span>,<span class="macro-nonterminal">$</span><span class="macro-nonterminal">native_type</span>)<span class="op">&gt;</span>()),
-                    )<span class="op">+</span>)<span class="op">+</span>
-                    (<span class="ident">v1</span>, <span class="ident">v2</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="ident">fehler</span>::<span class="macro">throw</span><span class="macro">!</span>(<span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">errors</span>::<span class="ident">ConnectorAgentError</span>::<span class="ident">NoTypeSystemConversionRule</span>(
-                            <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">v1</span>), <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">v2</span>)
-                        ))
-                    }
-                }
-            }
-        }
-
-        $(
-            <span class="kw">impl</span> <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">typesystem</span>::<span class="ident">TypeConversion</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">native_type</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">native_type</span><span class="op">&gt;</span> <span class="kw">for</span> (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">ts</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ts</span>) {
-                <span class="kw">fn</span> <span class="ident">convert</span>(<span class="ident">val</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">native_type</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">native_type</span> { <span class="ident">val</span> }
-            }
-        )<span class="op">+</span>
-
-        <span class="kw">impl</span> <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">typesystem</span>::<span class="ident">TypeSystemConversion</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">ts</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ts</span> {
-            <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">dt</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ts</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">errors</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">ts</span><span class="op">&gt;</span> { <span class="prelude-val">Ok</span>(<span class="ident">dt</span>) }
         }
     };
 }
@@ -339,7 +344,7 @@
 <span class="doccomment">/// A ParameterizedFunc refers to a function that is parameterized on a type T,</span>
 <span class="doccomment">/// where type T will be dynaically determined by the variant of a TypeSystem.</span>
 <span class="doccomment">/// An example is the `transmit&lt;S,W,T&gt;` function. When piping values from a source</span>
-<span class="doccomment">/// to the writer, its type `T` is determined by the schema at the runtime.</span>
+<span class="doccomment">/// to the destination, its type `T` is determined by the schema at the runtime.</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">ParameterizedFunc</span> {
     <span class="kw">type</span> <span class="ident">Function</span>;
     <span class="kw">fn</span> <span class="ident">realize</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Function</span>
@@ -360,111 +365,164 @@
     <span class="kw">fn</span> <span class="ident">convert</span>(<span class="ident">val</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">U</span>;
 }
 
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">TypeSystemConversion</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">T</span>: <span class="ident">TypeSystem</span>,
-    <span class="self">Self</span>: <span class="ident">TypeSystem</span>,
-{
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">dt</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>;
+<span class="doccomment">/// Transport defines how to produce a value, do type conversion and then write</span>
+<span class="doccomment">/// the value to a destination.</span>
+<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Transport</span> {
+    <span class="kw">type</span> <span class="ident">TSS</span>: <span class="ident">TypeSystem</span>;
+    <span class="kw">type</span> <span class="ident">TSD</span>: <span class="ident">TypeSystem</span>;
+    <span class="kw">type</span> <span class="ident">S</span>: <span class="ident">Source</span>;
+    <span class="kw">type</span> <span class="ident">D</span>: <span class="ident">Destination</span>;
+
+    <span class="doccomment">/// convert_typesystem convert the source type system TSS to the destination</span>
+    <span class="doccomment">/// type system TSD.</span>
+    <span class="kw">fn</span> <span class="ident">convert_typesystem</span>(<span class="ident">ts</span>: <span class="self">Self</span>::<span class="ident">TSS</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">TSD</span><span class="op">&gt;</span>;
+
+    <span class="doccomment">/// convert_type convert the type T1 associated with the source type system</span>
+    <span class="doccomment">/// TSS to a type T2 which is associated with the destination type system TSD.</span>
+    <span class="kw">fn</span> <span class="ident">convert_type</span><span class="op">&lt;</span><span class="ident">T1</span>, <span class="ident">T2</span><span class="op">&gt;</span>(<span class="ident">val</span>: <span class="ident">T1</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T2</span>
+    <span class="kw">where</span>
+        <span class="self">Self</span>: <span class="ident">TypeConversion</span><span class="op">&lt;</span><span class="ident">T1</span>, <span class="ident">T2</span><span class="op">&gt;</span>,
+    {
+        <span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">TypeConversion</span><span class="op">&lt;</span><span class="ident">T1</span>, <span class="ident">T2</span><span class="op">&gt;</span><span class="op">&gt;</span>::<span class="ident">convert</span>(<span class="ident">val</span>)
+    }
+
+    <span class="doccomment">/// `process` will ask source to produce a value with type T1, based on TSS, and then do</span>
+    <span class="doccomment">/// type conversion using `convert_type` to get value with type T2, which is associated to</span>
+    <span class="doccomment">/// TSD. Finally, it will write the value with type T2 to the destination.</span>
+    <span class="kw">fn</span> <span class="ident">process</span><span class="op">&lt;</span><span class="lifetime">&#39;s</span>, <span class="lifetime">&#39;d</span><span class="op">&gt;</span>(
+        <span class="ident">ts1</span>: <span class="self">Self</span>::<span class="ident">TSS</span>,
+        <span class="ident">ts2</span>: <span class="self">Self</span>::<span class="ident">TSD</span>,
+        <span class="ident">source</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="op">&lt;</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">S</span> <span class="kw">as</span> <span class="ident">Source</span><span class="op">&gt;</span>::<span class="ident">Partition</span> <span class="kw">as</span> <span class="ident">SourcePartition</span><span class="op">&gt;</span>::<span class="ident">Parser</span><span class="op">&lt;</span><span class="lifetime">&#39;s</span><span class="op">&gt;</span>,
+        <span class="ident">destination</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">D</span> <span class="kw">as</span> <span class="ident">Destination</span><span class="op">&gt;</span>::<span class="ident">Partition</span><span class="op">&lt;</span><span class="lifetime">&#39;d</span><span class="op">&gt;</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>;
 }
 
-<span class="doccomment">/// A macro to define how to convert between one type system to another, in terms</span>
-<span class="doccomment">/// of both their enum variants and the physical types</span>
+<span class="doccomment">/// A macro to help define Transport.</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// # Example Usage</span>
 <span class="doccomment">/// ```ignore</span>
-<span class="doccomment">/// associate_typesystems! {</span>
-<span class="doccomment">///     (PostgresDTypes, DataType),</span>
-<span class="doccomment">///     ([PostgresDTypes::Float4], [DataType::F64]) =&gt; (f32, f64) conversion all,</span>
+<span class="doccomment">/// impl_transport! {</span>
+<span class="doccomment">///    [&#39;py],</span>
+<span class="doccomment">///    PostgresPandasTransport&lt;&#39;py&gt;,</span>
+<span class="doccomment">///    PostgresDTypes =&gt; PandasTypes,</span>
+<span class="doccomment">///    PostgresSource =&gt; PandasDestination&lt;&#39;py&gt;,</span>
+<span class="doccomment">///    ([PostgresDTypes::Float4], [PandasTypes::F64]) =&gt; (f32, f64) conversion all</span>
 <span class="doccomment">/// }</span>
 <span class="doccomment">/// ```</span>
-<span class="doccomment">/// This means for the type system `PostgresDTypes`, is can be converted to another type system DataType.</span>
-<span class="doccomment">/// Specifically, the variant `PostgresDTypes::Float4(false)` is corresponding to the variant `DataType::F64(false)` and</span>
-<span class="doccomment">/// the variant `PostgresDTypes::Float4(true)` is corresponding to the variant `DataType::F64(true)`.</span>
-<span class="doccomment">/// Also, the physical type `f32` is corresponding to the physical type `f64` and the physical type `Option&lt;f32&gt;` is</span>
-<span class="doccomment">/// corresponding to the type `Option&lt;f64&gt;`.</span>
-<span class="doccomment">/// The last piece of `conversion all` means auto implementing the physical type conversion trait `TypeConversion&lt;f32, f64&gt;` and</span>
-<span class="doccomment">/// conversion trait `TypeConversion&lt;Option&lt;f32&gt;, Option&lt;f64&gt;&gt;` for `(PostgresDTypes, DataType)` by using</span>
-<span class="doccomment">/// casting rule (v as f64). If this is set to `half`, you need to manually write an `TypeConversion` implementation for `(f32,f64)`,</span>
-<span class="doccomment">/// but the conversion rule for `(Option&lt;f32&gt;, Option&lt;f64&gt;)` is still generated. `conversion none` means generate nothing.</span>
+<span class="doccomment">/// This implements `Transport` to `PostgresPandasTransport&lt;&#39;py&gt;`.</span>
+<span class="doccomment">/// The lifetime used must be declare in the first argument in the bracket.</span>
 <span class="attribute">#[<span class="ident">macro_export</span>]</span>
-<span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">associate_typesystems</span> {
-    ((<span class="macro-nonterminal">$</span><span class="macro-nonterminal">ts1</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ts2</span>:<span class="ident">ty</span>), $($(([$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">v1</span>:<span class="ident">tt</span>)<span class="op">+</span>], [$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">v2</span>:<span class="ident">tt</span>)<span class="op">+</span>]))<span class="op">|</span><span class="op">+</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t1</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t2</span>:<span class="ident">ty</span>) <span class="ident">conversion</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">cast</span>:<span class="ident">ident</span>,)<span class="op">+</span>) <span class="op">=</span><span class="op">&gt;</span> {
-        <span class="macro">associate_typesystems</span><span class="macro">!</span>(<span class="ident">Realize</span> (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">ts1</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ts2</span>), $(
-            $(($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">v1</span>)<span class="op">+</span> (<span class="bool-val">false</span>), $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">v2</span>)<span class="op">+</span> (<span class="bool-val">false</span>)))<span class="op">|</span><span class="op">+</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t1</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t2</span>),
-            $(($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">v1</span>)<span class="op">+</span> (<span class="bool-val">true</span>), $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">v2</span>)<span class="op">+</span> (<span class="bool-val">true</span>)))<span class="op">|</span><span class="op">+</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t1</span><span class="op">&gt;</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t2</span><span class="op">&gt;</span>),
-        )<span class="op">+</span>);
+<span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">impl_transport</span> {
+    ([$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">LT</span>:<span class="ident">lifetime</span>)<span class="question-mark">?</span>], <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TP</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TSS</span>:<span class="ident">ty</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TSD</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">S</span>:<span class="ident">ty</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">D</span>:<span class="ident">ty</span>, $($(([$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">V1</span>:<span class="ident">tt</span>)<span class="op">+</span>], [$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">V2</span>:<span class="ident">tt</span>)<span class="op">+</span>]))<span class="op">|</span><span class="op">+</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span>:<span class="ident">ty</span>) <span class="ident">conversion</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">cast</span>:<span class="ident">ident</span>,)<span class="op">+</span>) <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="macro">impl_transport</span><span class="macro">!</span> (
+            <span class="ident">Transport</span> [$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">LT</span>)<span class="question-mark">?</span>], <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TP</span>, (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">TSS</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TSD</span>) (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">S</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">D</span>) $(
+                $([$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">V1</span>)<span class="op">+</span> (<span class="bool-val">false</span>), $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">V2</span>)<span class="op">+</span> (<span class="bool-val">false</span>)] <span class="op">=</span><span class="op">&gt;</span> [<span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span>])<span class="op">+</span>
+                $([$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">V1</span>)<span class="op">+</span> (<span class="bool-val">true</span>), $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">V2</span>)<span class="op">+</span> (<span class="bool-val">true</span>)] <span class="op">=</span><span class="op">&gt;</span> [<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span><span class="op">&gt;</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span><span class="op">&gt;</span>])<span class="op">+</span>
+            )<span class="op">+</span>
+        );
 
-        <span class="macro">associate_typesystems</span><span class="macro">!</span>(<span class="ident">Conversion</span> (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">ts1</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ts2</span>), $(
-            $(($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">v1</span>)<span class="op">+</span> (<span class="bool-val">false</span>), $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">v2</span>)<span class="op">+</span> (<span class="bool-val">false</span>))),<span class="op">+</span>,
-            $(($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">v1</span>)<span class="op">+</span> (<span class="bool-val">true</span>), $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">v2</span>)<span class="op">+</span> (<span class="bool-val">true</span>))),<span class="op">+</span>,
-        )<span class="op">+</span>);
-
-        $(
-            <span class="macro">associate_typesystems</span><span class="macro">!</span>(<span class="ident">TypeConversion</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">cast</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ts1</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ts2</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t1</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t2</span>);
-        )<span class="op">+</span>
+        <span class="macro">impl_transport</span><span class="macro">!</span>(<span class="ident">TypeConversionDispatch</span> [$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">LT</span>)<span class="question-mark">?</span>] <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TP</span>, $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">cast</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span>)<span class="op">+</span>);
     };
 
-    (<span class="ident">Realize</span> (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">ts1</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ts2</span>:<span class="ident">ty</span>), $($((<span class="macro-nonterminal">$</span><span class="macro-nonterminal">v1</span>:<span class="ident">pat</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">v2</span>:<span class="ident">pat</span>))<span class="op">|</span><span class="op">+</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t1</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t2</span>:<span class="ident">ty</span>),)<span class="op">+</span>) <span class="op">=</span><span class="op">&gt;</span> {
-        <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">typesystem</span>::<span class="ident">Realize</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="kw">for</span> (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">ts1</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ts2</span>)
-        <span class="kw">where</span>
-            <span class="ident">F</span>: <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">typesystem</span>::<span class="ident">ParameterizedFunc</span>,
-            $(<span class="ident">F</span>: <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">typesystem</span>::<span class="ident">ParameterizedOn</span><span class="op">&lt;</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t1</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t2</span>)<span class="op">&gt;</span>),<span class="op">+</span>
-        {
-            <span class="kw">fn</span> <span class="ident">realize</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">errors</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">F</span>::<span class="ident">Function</span><span class="op">&gt;</span> {
-                <span class="kw">match</span> <span class="self">self</span> {
-                    $(
-                        $((<span class="macro-nonterminal">$</span><span class="macro-nonterminal">v1</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">v2</span>))<span class="op">|</span><span class="op">+</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">F</span>::<span class="ident">realize</span>::<span class="op">&lt;</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t1</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t2</span>)<span class="op">&gt;</span>()),
-                    )<span class="op">+</span>
-                    (<span class="ident">v1</span>, <span class="ident">v2</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="ident">fehler</span>::<span class="macro">throw</span><span class="macro">!</span>(<span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">errors</span>::<span class="ident">ConnectorAgentError</span>::<span class="ident">NoTypeSystemConversionRule</span>(
-                            <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">v1</span>), <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">v2</span>)
-                        ))
-                    }
-                }
-            }
-        }
-    };
+    (<span class="ident">Transport</span> [$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">LT</span>:<span class="ident">lifetime</span>)<span class="question-mark">?</span>], <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TP</span>:<span class="ident">ty</span>, (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">TSS</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TSD</span>:<span class="ident">ty</span>) (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">S</span>:<span class="ident">ty</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">D</span>:<span class="ident">ty</span>) $([<span class="macro-nonterminal">$</span><span class="macro-nonterminal">V1</span>:<span class="ident">pat</span>, $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">V2</span>:<span class="ident">tt</span>)<span class="op">+</span>] <span class="op">=</span><span class="op">&gt;</span> [<span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span>:<span class="ident">ty</span>])<span class="op">+</span> ) <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="kw">impl</span> <span class="op">&lt;</span>$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">LT</span>)<span class="question-mark">?</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">typesystem</span>::<span class="ident">Transport</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TP</span> {
+            <span class="kw">type</span> <span class="ident">TSS</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TSS</span>;
+            <span class="kw">type</span> <span class="ident">TSD</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TSD</span>;
+            <span class="kw">type</span> <span class="ident">S</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">S</span>;
+            <span class="kw">type</span> <span class="ident">D</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">D</span>;
 
-    (<span class="ident">Conversion</span> (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">ts1</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ts2</span>:<span class="ident">ty</span>), $((<span class="macro-nonterminal">$</span><span class="macro-nonterminal">v1</span>:<span class="ident">pat</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">v2</span>:<span class="ident">expr</span>),)<span class="op">+</span>) <span class="op">=</span><span class="op">&gt;</span> {
-        <span class="kw">impl</span> <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">typesystem</span>::<span class="ident">TypeSystemConversion</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">ts1</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ts2</span> {
-            <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">dt</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ts1</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">errors</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-                <span class="kw">match</span> <span class="ident">dt</span> {
+            <span class="kw">fn</span> <span class="ident">convert_typesystem</span>(<span class="ident">ts</span>: <span class="self">Self</span>::<span class="ident">TSS</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">errors</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">TSD</span><span class="op">&gt;</span> {
+                <span class="kw">match</span> <span class="ident">ts</span> {
                     $(
-                        <span class="macro-nonterminal">$</span><span class="macro-nonterminal">v1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">v2</span>),
+                        <span class="macro-nonterminal">$</span><span class="macro-nonterminal">V1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro">cvt</span><span class="macro">!</span>(<span class="macro-nonterminal">Expr</span> $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">V2</span>)<span class="op">+</span>)),
                     )<span class="op">+</span>
                     <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unreachable_patterns</span>)]</span>
-                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">fehler</span>::<span class="macro">throw</span><span class="macro">!</span>(<span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">errors</span>::<span class="ident">ConnectorAgentError</span>::<span class="ident">NoTypeSystemConversionRule</span>(
-                        <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">dt</span>), <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">std</span>::<span class="ident">any</span>::<span class="ident">type_name</span>::<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">ts2</span><span class="op">&gt;</span>())
+                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">fehler</span>::<span class="macro">throw</span><span class="macro">!</span>(<span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">errors</span>::<span class="ident">ConnectorAgentError</span>::<span class="ident">NoConversionRule</span>(
+                        <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">ts</span>), <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">std</span>::<span class="ident">any</span>::<span class="ident">type_name</span>::<span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">TSD</span><span class="op">&gt;</span>())
                     ))
                 }
             }
+
+            <span class="kw">fn</span> <span class="ident">process</span><span class="op">&lt;</span><span class="lifetime">&#39;s</span>, <span class="lifetime">&#39;d</span><span class="op">&gt;</span>(
+                <span class="ident">ts1</span>: <span class="self">Self</span>::<span class="ident">TSS</span>,
+                <span class="ident">ts2</span>: <span class="self">Self</span>::<span class="ident">TSD</span>,
+                <span class="ident">source</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="op">&lt;</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">S</span> <span class="kw">as</span> <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">sources</span>::<span class="ident">Source</span><span class="op">&gt;</span>::<span class="ident">Partition</span> <span class="kw">as</span> <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">sources</span>::<span class="ident">SourcePartition</span><span class="op">&gt;</span>::<span class="ident">Parser</span><span class="op">&lt;</span><span class="lifetime">&#39;s</span><span class="op">&gt;</span>,
+                <span class="ident">dst</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">D</span> <span class="kw">as</span> <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">destinations</span>::<span class="ident">Destination</span><span class="op">&gt;</span>::<span class="ident">Partition</span><span class="op">&lt;</span><span class="lifetime">&#39;d</span><span class="op">&gt;</span>,
+            ) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">errors</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+                <span class="kw">match</span> (<span class="ident">ts1</span>, <span class="ident">ts2</span>) {
+                    $(
+                        (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">V1</span>, <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro">cvt</span><span class="macro">!</span>(<span class="macro-nonterminal">Pat</span> $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">V2</span>)<span class="op">+</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="kw">let</span> <span class="ident">val</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">sources</span>::<span class="ident">PartitionParser</span>::<span class="ident">parse</span>(<span class="ident">source</span>)<span class="question-mark">?</span>;
+                            <span class="kw">let</span> <span class="ident">val</span> <span class="op">=</span> <span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">TypeConversion</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span><span class="op">&gt;</span><span class="op">&gt;</span>::<span class="ident">convert</span>(<span class="ident">val</span>);
+                            <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">destinations</span>::<span class="ident">DestinationPartition</span>::<span class="ident">write</span>(<span class="ident">dst</span>, <span class="ident">val</span>)<span class="question-mark">?</span>;
+                            <span class="prelude-val">Ok</span>(())
+                        }
+                    )<span class="op">+</span>
+                    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unreachable_patterns</span>)]</span>
+                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">fehler</span>::<span class="macro">throw</span><span class="macro">!</span>(<span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">errors</span>::<span class="ident">ConnectorAgentError</span>::<span class="ident">NoConversionRule</span>(
+                        <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">ts1</span>), <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">ts1</span>))
+                    )
+                }
+
+            }
         }
     };
 
-    (<span class="ident">TypeConversion</span> <span class="ident">all</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ts1</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ts2</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t1</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t2</span>:<span class="ident">ty</span>) <span class="op">=</span><span class="op">&gt;</span> {
-        <span class="kw">impl</span> <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">typesystem</span>::<span class="ident">TypeConversion</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t1</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t2</span><span class="op">&gt;</span> <span class="kw">for</span> (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">ts1</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ts2</span>) {
-            <span class="kw">fn</span> <span class="ident">convert</span>(<span class="ident">val</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t1</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t2</span> {
+    (<span class="ident">TypeConversionDispatch</span> [<span class="macro-nonterminal">$</span><span class="macro-nonterminal">LT</span>:<span class="ident">lifetime</span>] <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TP</span>:<span class="ident">ty</span>, $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">cast</span>:<span class="ident">ident</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span>:<span class="ident">ty</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span>:<span class="ident">ty</span>)<span class="op">+</span>) <span class="op">=</span><span class="op">&gt;</span> {
+        $(
+            <span class="macro">impl_transport</span><span class="macro">!</span>(<span class="ident">TypeConversion</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">cast</span> [<span class="macro-nonterminal">$</span><span class="macro-nonterminal">LT</span>] <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TP</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span>);
+        )<span class="op">+</span>
+    };
+
+    (<span class="ident">TypeConversionDispatch</span> [] <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TP</span>:<span class="ident">ty</span>, $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">cast</span>:<span class="ident">ident</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span>:<span class="ident">ty</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span>:<span class="ident">ty</span>)<span class="op">+</span>) <span class="op">=</span><span class="op">&gt;</span> {
+        $(
+            <span class="macro">impl_transport</span><span class="macro">!</span>(<span class="ident">TypeConversion</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">cast</span> [] <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TP</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span>);
+        )<span class="op">+</span>
+    };
+
+    (<span class="ident">TypeConversion</span> <span class="ident">all</span> [$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">LT</span>:<span class="ident">lifetime</span>)<span class="question-mark">?</span>] <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TP</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span>:<span class="ident">ty</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span>:<span class="ident">ty</span>) <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="kw">impl</span> <span class="op">&lt;</span>$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">LT</span>)<span class="question-mark">?</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">typesystem</span>::<span class="ident">TypeConversion</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TP</span> {
+            <span class="kw">fn</span> <span class="ident">convert</span>(<span class="ident">val</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span> {
                 <span class="ident">val</span> <span class="kw">as</span> <span class="kw">_</span>
             }
         }
 
-        <span class="kw">impl</span> <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">typesystem</span>::<span class="ident">TypeConversion</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t1</span><span class="op">&gt;</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t2</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">ts1</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ts2</span>) {
-            <span class="kw">fn</span> <span class="ident">convert</span>(<span class="ident">val</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t1</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t2</span><span class="op">&gt;</span> {
+        <span class="kw">impl</span> <span class="op">&lt;</span>$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">LT</span>)<span class="question-mark">?</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">typesystem</span>::<span class="ident">TypeConversion</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span><span class="op">&gt;</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TP</span> {
+            <span class="kw">fn</span> <span class="ident">convert</span>(<span class="ident">val</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span><span class="op">&gt;</span> {
                 <span class="ident">val</span>.<span class="ident">map</span>(<span class="self">Self</span>::<span class="ident">convert</span>)
             }
         }
     };
 
-    (<span class="ident">TypeConversion</span> <span class="ident">half</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ts1</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ts2</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t1</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t2</span>:<span class="ident">ty</span>) <span class="op">=</span><span class="op">&gt;</span> {
-        <span class="kw">impl</span> <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">typesystem</span>::<span class="ident">TypeConversion</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t1</span><span class="op">&gt;</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t2</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">ts1</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ts2</span>) {
-            <span class="kw">fn</span> <span class="ident">convert</span>(<span class="ident">val</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t1</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t2</span><span class="op">&gt;</span> {
+
+    (<span class="ident">TypeConversion</span> <span class="ident">half</span> [$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">LT</span>:<span class="ident">lifetime</span>)<span class="question-mark">?</span>] <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TP</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span>:<span class="ident">ty</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span>:<span class="ident">ty</span>) <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="kw">impl</span> <span class="op">&lt;</span>$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">LT</span>)<span class="question-mark">?</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">typesystem</span>::<span class="ident">TypeConversion</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span><span class="op">&gt;</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TP</span> {
+            <span class="kw">fn</span> <span class="ident">convert</span>(<span class="ident">val</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span><span class="op">&gt;</span> {
                 <span class="ident">val</span>.<span class="ident">map</span>(<span class="self">Self</span>::<span class="ident">convert</span>)
             }
         }
     };
 
-    (<span class="ident">TypeConversion</span> <span class="ident">none</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ts1</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ts2</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t1</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t2</span>:<span class="ident">ty</span>) <span class="op">=</span><span class="op">&gt;</span> {};
+    (<span class="ident">TypeConversion</span> <span class="ident">none</span> [$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">LT</span>:<span class="ident">lifetime</span>)<span class="question-mark">?</span>] <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TP</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span>:<span class="ident">ty</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span>:<span class="ident">ty</span>) <span class="op">=</span><span class="op">&gt;</span> {};
+}
+
+<span class="attribute">#[<span class="ident">macro_export</span>]</span>
+<span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">cvt</span> {
+    (<span class="ident">Pat</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">V</span>:<span class="ident">pat</span>) <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="macro-nonterminal">$</span><span class="macro-nonterminal">V</span>
+    };
+
+    (<span class="ident">Expr</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">V</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="macro-nonterminal">$</span><span class="macro-nonterminal">V</span>
+    };
+
+    (<span class="ident">Ident</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">V</span>:<span class="ident">ident</span>) <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="macro-nonterminal">$</span><span class="macro-nonterminal">V</span>
+    };
+
+    (<span class="ident">Ty</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">V</span>:<span class="ident">ty</span>) <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="macro-nonterminal">$</span><span class="macro-nonterminal">V</span>
+    };
 }
 </pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="connector_agent"></div>

@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["ConnectorAgentError","Errors that can be raised from this library."]],"type":[["Result",""]]});

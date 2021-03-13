@@ -1,1 +1,0 @@
-initSidebarItems({"enum":[["PostgresDTypes",""]],"struct":[["MyBinaryCopyOutRow",""],["PostgresSource",""],["PostgresSourceParser",""],["PostgresSourcePartition",""]]});

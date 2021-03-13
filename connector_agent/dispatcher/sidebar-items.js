@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Dispatcher","A dispatcher owns a `SourceBuilder` `SB` and a vector of `queries` `schema` is a temporary input before we implement infer schema or get schema from DB."]]});

@@ -78,11 +78,11 @@
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Allocate is already called.&quot;</span>)]</span>
     <span class="ident">DuplicatedAllocation</span>,
 
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Writer has not been allocated yet.&quot;</span>)]</span>
-    <span class="ident">WriterNotAllocated</span>,
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Destination has not been allocated yet.&quot;</span>)]</span>
+    <span class="ident">DestinationNotAllocated</span>,
 
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;No type system conversion rule from {0} to {1}.&quot;</span>)]</span>
-    <span class="ident">NoTypeSystemConversionRule</span>(<span class="ident">String</span>, <span class="ident">String</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;No conversion rule from {0} to {1}.&quot;</span>)]</span>
+    <span class="ident">NoConversionRule</span>(<span class="ident">String</span>, <span class="ident">String</span>),
 
     <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
     <span class="ident">IOError</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">std</span>::<span class="ident">io</span>::<span class="ident">Error</span>),

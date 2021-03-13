@@ -1,1 +1,0 @@
-initSidebarItems({"struct":[["MemoryPartitionWriter","The `PartitionedWriter` of `MemoryWriter`."],["MemoryWriter","This `Writer` can support mixed data type."]]});

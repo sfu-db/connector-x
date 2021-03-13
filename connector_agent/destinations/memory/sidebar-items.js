@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["MemoryDestination","This `Destination` can support mixed data type."],["MemoryPartitionDestination","The `PartitionedDestination` of `MemoryDestination`."]]});
