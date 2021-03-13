@@ -17,7 +17,7 @@ from connector_agent_python import read_pg
 from docopt import docopt
 
 
-def get_sqls(count: int) -> List[str]:
+def get_sqls(table: str, count: int) -> List[str]:
     sqls = []
     split = np.linspace(0, 60000000, num=count + 1, endpoint=True, dtype=int)
     for i in range(len(split) - 1):
@@ -38,7 +38,7 @@ def get_sqls(count: int) -> List[str]:
                 l_receiptdate,                
                 l_shipinstruct,
                 l_shipmode,
-                l_comment from lineitem_s10 where l_orderkey > {split[i]} and l_orderkey <= {split[i+1]}"""
+                l_comment from {table} where l_orderkey > {split[i]} and l_orderkey <= {split[i+1]}"""
         )
     return sqls
 
@@ -127,8 +127,9 @@ SCHEMA = pa.schema(
 if __name__ == "__main__":
     args = docopt(__doc__, version="Naval Fate 2.0")
     conn = os.environ["POSTGRES_URL"]
+    table = os.environ["POSTGRES_TABLE"]
 
-    queries = get_sqls(int(args["<num>"]))
+    queries = get_sqls(table, int(args["<num>"]))
 
     print(f"numer of threads: {int(args['<num>'])}\nsqls: {queries}")
 

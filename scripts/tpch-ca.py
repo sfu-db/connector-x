@@ -17,11 +17,12 @@ from docopt import docopt
 if __name__ == "__main__":
     args = docopt(__doc__, version="Naval Fate 2.0")
     conn = os.environ["POSTGRES_URL"]
+    table = os.environ["POSTGRES_TABLE"]
 
     with Timer() as timer:
         df = read_sql(
             conn,
-            """SELECT 
+            f"""SELECT 
               l_orderkey,
               l_partkey,
               l_suppkey,
@@ -38,7 +39,7 @@ if __name__ == "__main__":
               l_shipinstruct,
               l_shipmode,
               l_comment
-            FROM lineitem_s10""",
+            FROM {table}""",
             partition_on="l_orderkey",
             partition_range=(0, 60000000),
             partition_num=int(args["<num>"]),

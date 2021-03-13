@@ -7,6 +7,7 @@ from sqlalchemy import create_engine
 
 if __name__ == "__main__":
     conn = os.environ["POSTGRES_URL"]
+    table = os.environ["POSTGRES_TABLE"]
 
     engine = create_engine(conn)
     conn = engine.connect()
@@ -15,7 +16,7 @@ if __name__ == "__main__":
     store = io.BytesIO()
     with Timer() as timer:
         cur.copy_expert(
-            "COPY (select * from lineitem) TO STDOUT WITH CSV HEADER;", store
+            f"COPY (SELECT * FROM {table}) TO STDOUT WITH CSV HEADER;", store
         )
     print(f"[Copy] {timer.elapsed:.2f}s")
 

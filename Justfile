@@ -32,7 +32,7 @@ cachegrind-tpch: build-tpch
 
 python-tpch n="1" protocol="binary": setup-python
     cd connector-agent-python && \
-    poetry run python ../scripts/test-tpch.py {{n}} --protocol={{protocol}}
+    poetry run python ../scripts/tpch-ca.py {{n}} --protocol={{protocol}}
 
 python-tpch-rust-arrow n="1": setup-python
     cd connector-agent-python && \
@@ -42,7 +42,19 @@ python-tpch-pyarrow:
     cd connector-agent-python && \
     poetry run python ../scripts/tpch-pyarrow.py
 
-
 python-tpch-pyarrow-p n="1": 
     cd connector-agent-python && \
     poetry run python ../scripts/tpch-pyarrow-p.py {{n}}
+
+python-tpch-pandas:
+    cd connector-agent-python && \
+    poetry run python ../scripts/tpch-pandas.py
+
+python-tpch-dask n="1":
+    cd connector-agent-python && \
+    poetry run python ../scripts/tpch-dask.py {{n}}
+
+
+python-tpch-modin n="1":
+    cd connector-agent-python && \
+    poetry run python ../scripts/tpch-modin.py {{n}}

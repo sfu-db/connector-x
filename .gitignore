@@ -11,3 +11,4 @@ perf.data
 .pytest_cache
 data.txt
 profile.pb
+dask-worker-space
