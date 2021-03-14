@@ -23,7 +23,7 @@ if __name__ == "__main__":
     partitions = int(args["<num>"])
     config.NPartitions.put(partitions)
 
-    cluster = LocalCluster(n_workers=partitions, scheduler_port=0, memory_limit="130G")
+    cluster = LocalCluster(n_workers=partitions, scheduler_port=0, memory_limit="230G")
     client = Client(cluster)
 
     with Timer() as timer:
