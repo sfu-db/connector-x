@@ -28,18 +28,18 @@ pub trait TypeAssoc<TS: TypeSystem> {
 /// `DataType::F64(true)` is corresponding to the physical type Option<f64>. Same for I64 and i64
 #[macro_export]
 macro_rules! impl_typesystem {
-    ($TS:ty, $(/*multiple mapping*/$(/*multiple variant*/ [$($V:tt)+])|+ => $NT:ty,)+) => {
+    ([$($LT:lifetime)?] $TS:ty, $(/*multiple mapping*/$(/*multiple variant*/ [$($V:tt)+])|+ => $([$LTT:lifetime])? ($NT:ty),)+) => {
         impl $crate::typesystem::TypeSystem for $TS {}
 
-        impl_typesystem!(IMPL $TS, $(/*multiple mapping*/
-            $(/*multiple variant*/$($V)+ (false))+ => $NT,
-            $(/*multiple variant*/$($V)+ (true))+ => Option<$NT>,
+        impl_typesystem!(IMPL [$($LT)?] $TS, $(/*multiple mapping*/
+            $(/*multiple variant*/$($V)+ (false))+ => [$($LTT)?] $NT,
+            $(/*multiple variant*/$($V)+ (true))+ => [$($LTT)?] Option<$NT>,
         )+);
     };
 
-    (IMPL $TS:ty, $($($V:pat)+ => $NT:ty,)+) => {
+    (IMPL [$($LT:lifetime)?] $TS:ty, $($($V:pat)+ => [$($LTT:lifetime)?] $NT:ty,)+) => {
         $(
-            impl $crate::typesystem::TypeAssoc<$TS> for $NT {
+            impl <$($LTT,)?> $crate::typesystem::TypeAssoc<$TS> for $NT {
                 fn check(ts: $TS) -> $crate::errors::Result<()> {
                     match ts {
                         $(
@@ -51,7 +51,7 @@ macro_rules! impl_typesystem {
             }
         )+
 
-        impl<F> $crate::typesystem::Realize<F> for $TS
+        impl<$($LT,)? F> $crate::typesystem::Realize<F> for $TS
         where
             F: $crate::typesystem::ParameterizedFunc,
             $(F: $crate::typesystem::ParameterizedOn<$NT>),+
@@ -124,11 +124,11 @@ pub trait Transport {
     /// `process` will ask source to produce a value with type T1, based on TSS, and then do
     /// type conversion using `convert_type` to get value with type T2, which is associated to
     /// TSD. Finally, it will write the value with type T2 to the destination.
-    fn process<'s, 'd>(
+    fn process<'s, 'd, 'r>(
         ts1: Self::TSS,
         ts2: Self::TSD,
-        source: &mut <<Self::S as Source>::Partition as SourcePartition>::Parser<'s>,
-        destination: &mut <Self::D as Destination>::Partition<'d>,
+        src: &'r mut <<Self::S as Source>::Partition as SourcePartition>::Parser<'s>,
+        dst: &'r mut <Self::D as Destination>::Partition<'d>,
     ) -> Result<()>;
 }
 
@@ -148,7 +148,7 @@ pub trait Transport {
 /// The lifetime used must be declare in the first argument in the bracket.
 #[macro_export]
 macro_rules! impl_transport {
-    ([$($LT:lifetime)?], $TP:ty, $TSS:ty => $TSD:ty, $S:ty => $D:ty, $($(([$($V1:tt)+], [$($V2:tt)+]))|+ => ($T1:ty, $T2:ty) conversion $cast:ident,)+) => {
+    ([$($LT:lifetime)?], $TP:ty, $TSS:ty => $TSD:ty, $S:ty => $D:ty, $($(([$($V1:tt)+], [$($V2:tt)+]))|+ => $([$LTT:lifetime])? ($T1:ty, $T2:ty) conversion $cast:ident,)+) => {
         impl_transport! (
             Transport [$($LT)?], $TP, ($TSS, $TSD) ($S => $D) $(
                 $([$($V1)+ (false), $($V2)+ (false)] => [$T1, $T2])+
@@ -156,7 +156,7 @@ macro_rules! impl_transport {
             )+
         );
 
-        impl_transport!(TypeConversionDispatch [$($LT)?] $TP, $($cast $T1 => $T2)+);
+        impl_transport!(TypeConversionDispatch [$($LT)?] $TP, $($cast [$($LTT)?] $T1 => $T2)+);
     };
 
     (Transport [$($LT:lifetime)?], $TP:ty, ($TSS:ty, $TSD:ty) ($S:ty => $D:ty) $([$V1:pat, $($V2:tt)+] => [$T1:ty, $T2:ty])+ ) => {
@@ -178,16 +178,16 @@ macro_rules! impl_transport {
                 }
             }
 
-            fn process<'s, 'd>(
+            fn process<'s, 'd, 'r>(
                 ts1: Self::TSS,
                 ts2: Self::TSD,
-                source: &mut <<Self::S as $crate::sources::Source>::Partition as $crate::sources::SourcePartition>::Parser<'s>,
-                dst: &mut <Self::D as $crate::destinations::Destination>::Partition<'d>,
+                src: &'r mut <<Self::S as $crate::sources::Source>::Partition as $crate::sources::SourcePartition>::Parser<'s>,
+                dst: &'r mut <Self::D as $crate::destinations::Destination>::Partition<'d>,
             ) -> $crate::errors::Result<()> {
                 match (ts1, ts2) {
                     $(
                         ($V1, $crate::cvt!(Pat $($V2)+)) => {
-                            let val: $T1 = $crate::sources::PartitionParser::parse(source)?;
+                            let val: $T1 = $crate::sources::PartitionParser::parse(src)?;
                             let val = <Self as TypeConversion<$T1, $T2>>::convert(val);
                             $crate::destinations::DestinationPartition::write(dst, val)?;
                             Ok(())
@@ -203,26 +203,26 @@ macro_rules! impl_transport {
         }
     };
 
-    (TypeConversionDispatch [$LT:lifetime] $TP:ty, $($cast:ident $T1:ty => $T2:ty)+) => {
+    (TypeConversionDispatch [$LT:lifetime] $TP:ty, $($cast:ident [$($LTT:lifetime)?] $T1:ty => $T2:ty)+) => {
         $(
-            impl_transport!(TypeConversion $cast [$LT] $TP, $T1 => $T2);
+            impl_transport!(TypeConversion $cast [$LT] $TP, [$($LTT)?] $T1 => $T2);
         )+
     };
 
-    (TypeConversionDispatch [] $TP:ty, $($cast:ident $T1:ty => $T2:ty)+) => {
+    (TypeConversionDispatch [] $TP:ty, $($cast:ident [$($LTT:lifetime)?] $T1:ty => $T2:ty)+) => {
         $(
-            impl_transport!(TypeConversion $cast [] $TP, $T1 => $T2);
+            impl_transport!(TypeConversion $cast [] $TP, [$($LTT)?] $T1 => $T2);
         )+
     };
 
-    (TypeConversion all [$($LT:lifetime)?] $TP:ty, $T1:ty => $T2:ty) => {
-        impl <$($LT)?> $crate::typesystem::TypeConversion<$T1, $T2> for $TP {
+    (TypeConversion all [$($LT:lifetime)?] $TP:ty, [$($LTT:lifetime)?] $T1:ty => $T2:ty) => {
+        impl <$($LT,)? $($LTT,)?> $crate::typesystem::TypeConversion<$T1, $T2> for $TP {
             fn convert(val: $T1) -> $T2 {
                 val as _
             }
         }
 
-        impl <$($LT)?> $crate::typesystem::TypeConversion<Option<$T1>, Option<$T2>> for $TP {
+        impl <$($LT,)? $($LTT,)?> $crate::typesystem::TypeConversion<Option<$T1>, Option<$T2>> for $TP {
             fn convert(val: Option<$T1>) -> Option<$T2> {
                 val.map(Self::convert)
             }
@@ -230,15 +230,15 @@ macro_rules! impl_transport {
     };
 
 
-    (TypeConversion half [$($LT:lifetime)?] $TP:ty, $T1:ty => $T2:ty) => {
-        impl <$($LT)?> $crate::typesystem::TypeConversion<Option<$T1>, Option<$T2>> for $TP {
+    (TypeConversion half [$($LT:lifetime)?] $TP:ty, [$($LTT:lifetime)?] $T1:ty => $T2:ty) => {
+        impl <$($LT,)? $($LTT,)?> $crate::typesystem::TypeConversion<Option<$T1>, Option<$T2>> for $TP {
             fn convert(val: Option<$T1>) -> Option<$T2> {
                 val.map(Self::convert)
             }
         }
     };
 
-    (TypeConversion none [$($LT:lifetime)?] $TP:ty, $T1:ty => $T2:ty) => {};
+    (TypeConversion none [$($LT:lifetime)?] $TP:ty, [$($LTT:lifetime)?] $T1:ty => $T2:ty) => {};
 }
 
 #[macro_export]

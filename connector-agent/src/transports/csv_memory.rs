@@ -2,15 +2,7 @@ use crate::destinations::memory::MemoryDestination;
 use crate::dummy_typesystem::DummyTypeSystem;
 use crate::sources::csv::CSVSource;
 use crate::typesystem::TypeConversion;
-use bytes::Bytes;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
-use std::str::from_utf8;
-
-impl TypeConversion<Bytes, String> for CSVMemoryTransport {
-    fn convert(val: Bytes) -> String {
-        from_utf8(&val[..]).unwrap().to_string()
-    }
-}
 
 impl TypeConversion<NaiveDateTime, DateTime<Utc>> for CSVMemoryTransport {
     fn convert(val: NaiveDateTime) -> DateTime<Utc> {

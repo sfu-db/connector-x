@@ -1,6 +1,5 @@
 use super::super::pystring::PyString;
 use super::{check_dtype, HasPandasColumn, PandasColumn, PandasColumnObject};
-use bytes::Bytes;
 use ndarray::{ArrayViewMut1, ArrayViewMut2, Axis, Ix2};
 use numpy::PyArray;
 use pyo3::{FromPyObject, PyAny, PyResult, Python};
@@ -59,33 +58,35 @@ pub struct StringColumn<'a> {
 
 impl<'a> PandasColumnObject for StringColumn<'a> {
     fn typecheck(&self, id: TypeId) -> bool {
-        id == TypeId::of::<Bytes>() || id == TypeId::of::<Option<Bytes>>()
+        id == TypeId::of::<&'static [u8]>() || id == TypeId::of::<Option<&'static [u8]>>()
     }
     fn len(&self) -> usize {
         self.data.len()
     }
     fn typename(&self) -> &'static str {
-        std::any::type_name::<Bytes>()
+        std::any::type_name::<&'static [u8]>()
     }
     fn finalize(&mut self) {
         self.flush()
     }
 }
 
-impl<'a> PandasColumn<Bytes> for StringColumn<'a> {
-    fn write(&mut self, val: Bytes) {
-        self.string_lengths.push(val.len());
-        self.string_buf.extend_from_slice(&val);
+impl<'r, 'a> PandasColumn<&'r str> for StringColumn<'a> {
+    fn write(&mut self, val: &'r str) {
+        let bytes = val.as_bytes();
+        self.string_lengths.push(bytes.len());
+        self.string_buf.extend_from_slice(bytes);
         self.try_flush();
     }
 }
 
-impl<'a> PandasColumn<Option<Bytes>> for StringColumn<'a> {
-    fn write(&mut self, val: Option<Bytes>) {
+impl<'r, 'a> PandasColumn<Option<&'r str>> for StringColumn<'a> {
+    fn write(&mut self, val: Option<&'r str>) {
         match val {
             Some(b) => {
-                self.string_lengths.push(b.len());
-                self.string_buf.extend_from_slice(&b);
+                let bytes = b.as_bytes();
+                self.string_lengths.push(bytes.len());
+                self.string_buf.extend_from_slice(bytes);
                 self.try_flush();
             }
             None => {
@@ -95,11 +96,11 @@ impl<'a> PandasColumn<Option<Bytes>> for StringColumn<'a> {
     }
 }
 
-impl HasPandasColumn for Bytes {
+impl<'r> HasPandasColumn for &'r str {
     type PandasColumn<'a> = StringColumn<'a>;
 }
 
-impl HasPandasColumn for Option<Bytes> {
+impl<'r> HasPandasColumn for Option<&'r str> {
     type PandasColumn<'a> = StringColumn<'a>;
 }
 

@@ -15,7 +15,7 @@ use pyo3::{
     types::{PyDict, PyList},
     FromPyObject, PyAny, Python,
 };
-use std::any::TypeId;
+// use std::any::TypeId;
 use std::collections::HashMap;
 use std::mem::transmute;
 pub struct PandasDestination<'py> {
@@ -243,13 +243,14 @@ impl<'a> DestinationPartition<'a> for PandasPartitionDestination<'a> {
 
 impl<'a, T> Consume<T> for PandasPartitionDestination<'a>
 where
-    T: HasPandasColumn + TypeAssoc<PandasTypeSystem> + std::fmt::Debug + 'static,
+    T: HasPandasColumn + TypeAssoc<PandasTypeSystem> + std::fmt::Debug,
 {
     fn consume(&mut self, value: T) -> Result<()> {
         let (_, col) = self.loc();
 
         self.schema[col].check::<T>()?;
-        assert!(self.columns[col].typecheck(TypeId::of::<T>()));
+        // How do we check type id for borrowed types?
+        // assert!(self.columns[col].typecheck(TypeId::of::<T>()));
 
         let (column, _): (&mut T::PandasColumn<'a>, *const ()) =
             unsafe { transmute(&*self.columns[col]) };

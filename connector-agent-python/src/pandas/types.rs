@@ -1,5 +1,4 @@
 // Unfortunately, due to the orphan rule, typesystem implementation should be in this crate.
-use bytes::Bytes;
 use chrono::{DateTime, Utc};
 use connector_agent::errors::{ConnectorAgentError, Result};
 use connector_agent::impl_typesystem;
@@ -15,12 +14,12 @@ pub enum PandasTypeSystem {
 }
 
 impl_typesystem! {
-    PandasTypeSystem,
-    [PandasTypeSystem::F64] => f64,
-    [PandasTypeSystem::I64] => i64,
-    [PandasTypeSystem::Bool] => bool,
-    [PandasTypeSystem::String] => Bytes,
-    [PandasTypeSystem::DateTime] => DateTime<Utc>,
+    ['r] PandasTypeSystem,
+    [PandasTypeSystem::F64] => (f64),
+    [PandasTypeSystem::I64] => (i64),
+    [PandasTypeSystem::Bool] => (bool),
+    [PandasTypeSystem::String] => ['r] (&'r str),
+    [PandasTypeSystem::DateTime] => (DateTime<Utc>),
 }
 
 pub trait PandasDType: Sized {

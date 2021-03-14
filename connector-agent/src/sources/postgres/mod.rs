@@ -1,11 +1,10 @@
 mod sql;
-mod types;
+mod typesystem;
 
 use crate::data_order::DataOrder;
 use crate::errors::{ConnectorAgentError, Result};
 use crate::sources::{PartitionParser, Produce, Source, SourcePartition};
 use anyhow::anyhow;
-use bytes::Bytes;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
 use csv::{ReaderBuilder, StringRecord, StringRecordsIntoIter};
 use fehler::throw;
@@ -13,16 +12,13 @@ use log::debug;
 use postgres::{
     binary_copy::{BinaryCopyOutIter, BinaryCopyOutRow},
     fallible_iterator::FallibleIterator,
-    types::Type,
     CopyOutReader,
 };
 use r2d2::{Pool, PooledConnection};
 use r2d2_postgres::{postgres::NoTls, PostgresConnectionManager};
 use sql::{count_query, limit1_query};
 use std::any::type_name;
-use std::sync::Arc;
-use std::{mem::transmute, ops::Range};
-pub use types::PostgresTypeSystem;
+pub use typesystem::PostgresTypeSystem;
 
 type PgManager = PostgresConnectionManager<NoTls>;
 type PgConn = PooledConnection<PgManager>;
@@ -256,7 +252,7 @@ impl<'a> PartitionParser<'a> for PostgresSourcePartitionParser<'a> {
 macro_rules! impl_produce {
     ($($t: ty),+) => {
         $(
-            impl<'a> Produce<$t> for PostgresSourcePartitionParser<'a> {
+            impl<'r, 'a> Produce<'r, $t> for PostgresSourcePartitionParser<'a> {
                 fn produce(&mut self) -> Result<$t> {
                     let (ridx, cidx) = self.next_loc()?;
                     let val = self.rowbuf[ridx].try_get(cidx)?;
@@ -264,7 +260,7 @@ macro_rules! impl_produce {
                 }
             }
 
-            impl<'a> Produce<Option<$t>> for PostgresSourcePartitionParser<'a> {
+            impl<'r, 'a> Produce<'r, Option<$t>> for PostgresSourcePartitionParser<'a> {
                 fn produce(&mut self) -> Result<Option<$t>> {
                     let (ridx, cidx) = self.next_loc()?;
                     let val = self.rowbuf[ridx].try_get(cidx)?;
@@ -286,33 +282,21 @@ impl_produce!(
     NaiveDate
 );
 
-// unbox the binary copy result
-pub struct MyBinaryCopyOutRow {
-    buf: Bytes,
-    ranges: Vec<Option<Range<usize>>>,
-    _types: Arc<Vec<Type>>,
-}
-
-impl<'a> Produce<Bytes> for PostgresSourcePartitionParser<'a> {
-    fn produce(&mut self) -> Result<Bytes> {
+impl<'r, 'a> Produce<'r, &'r str> for PostgresSourcePartitionParser<'a> {
+    fn produce(&'r mut self) -> Result<&'r str> {
         let (ridx, cidx) = self.next_loc()?;
         let row = &self.rowbuf[ridx];
-        let row: &MyBinaryCopyOutRow = unsafe { transmute(row) };
-        let val = row.ranges[cidx]
-            .clone()
-            .map(|rg| row.buf.slice(rg))
-            .unwrap();
+        let val = row.try_get(cidx)?;
 
         Ok(val)
     }
 }
 
-impl<'a> Produce<Option<Bytes>> for PostgresSourcePartitionParser<'a> {
-    fn produce(&mut self) -> Result<Option<Bytes>> {
+impl<'r, 'a> Produce<'r, Option<&'r str>> for PostgresSourcePartitionParser<'a> {
+    fn produce(&'r mut self) -> Result<Option<&'r str>> {
         let (ridx, cidx) = self.next_loc()?;
         let row = &self.rowbuf[ridx];
-        let row: &MyBinaryCopyOutRow = unsafe { transmute(row) };
-        let val = row.ranges[cidx].clone().map(|rg| row.buf.slice(rg));
+        let val = row.try_get(cidx)?;
 
         Ok(val)
     }
@@ -547,14 +531,14 @@ impl<'a> PartitionParser<'a> for PostgresSourceCSVParser<'a> {
 macro_rules! impl_csv_produce {
     ($($t: ty),+) => {
         $(
-            impl<'a> Produce<$t> for PostgresSourceCSVParser<'a> {
+            impl<'r, 'a> Produce<'r, $t> for PostgresSourceCSVParser<'a> {
                 fn produce(&mut self) -> Result<$t> {
                     let (ridx, cidx) = self.next_loc()?;
                     self.rowbuf[ridx][cidx].parse().map_err(|_| ConnectorAgentError::CannotParse(type_name::<$t>(), self.rowbuf[ridx][cidx].into()))
                 }
             }
 
-            impl<'a> Produce<Option<$t>> for PostgresSourceCSVParser<'a> {
+            impl<'r, 'a> Produce<'r, Option<$t>> for PostgresSourceCSVParser<'a> {
                 fn produce(&mut self) -> Result<Option<$t>> {
                     let (ridx, cidx) = self.next_loc()?;
                     match &self.rowbuf[ridx][cidx][..] {
@@ -571,7 +555,7 @@ macro_rules! impl_csv_produce {
 
 impl_csv_produce!(i32, i64, f32, f64);
 
-impl<'a> Produce<bool> for PostgresSourceCSVParser<'a> {
+impl<'r, 'a> Produce<'r, bool> for PostgresSourceCSVParser<'a> {
     fn produce(&mut self) -> Result<bool> {
         let (ridx, cidx) = self.next_loc()?;
         let ret = match &self.rowbuf[ridx][cidx][..] {
@@ -586,7 +570,7 @@ impl<'a> Produce<bool> for PostgresSourceCSVParser<'a> {
     }
 }
 
-impl<'a> Produce<Option<bool>> for PostgresSourceCSVParser<'a> {
+impl<'r, 'a> Produce<'r, Option<bool>> for PostgresSourceCSVParser<'a> {
     fn produce(&mut self) -> Result<Option<bool>> {
         let (ridx, cidx) = self.next_loc()?;
         let ret = match &self.rowbuf[ridx][cidx][..] {
@@ -602,7 +586,7 @@ impl<'a> Produce<Option<bool>> for PostgresSourceCSVParser<'a> {
     }
 }
 
-impl<'a> Produce<DateTime<Utc>> for PostgresSourceCSVParser<'a> {
+impl<'r, 'a> Produce<'r, DateTime<Utc>> for PostgresSourceCSVParser<'a> {
     fn produce(&mut self) -> Result<DateTime<Utc>> {
         let (ridx, cidx) = self.next_loc()?;
         self.rowbuf[ridx][cidx].parse().map_err(|_| {
@@ -614,7 +598,7 @@ impl<'a> Produce<DateTime<Utc>> for PostgresSourceCSVParser<'a> {
     }
 }
 
-impl<'a> Produce<Option<DateTime<Utc>>> for PostgresSourceCSVParser<'a> {
+impl<'r, 'a> Produce<'r, Option<DateTime<Utc>>> for PostgresSourceCSVParser<'a> {
     fn produce(&mut self) -> Result<Option<DateTime<Utc>>> {
         let (ridx, cidx) = self.next_loc()?;
         match &self.rowbuf[ridx][cidx][..] {
@@ -626,7 +610,7 @@ impl<'a> Produce<Option<DateTime<Utc>>> for PostgresSourceCSVParser<'a> {
     }
 }
 
-impl<'a> Produce<NaiveDate> for PostgresSourceCSVParser<'a> {
+impl<'r, 'a> Produce<'r, NaiveDate> for PostgresSourceCSVParser<'a> {
     fn produce(&mut self) -> Result<NaiveDate> {
         let (ridx, cidx) = self.next_loc()?;
         NaiveDate::parse_from_str(&self.rowbuf[ridx][cidx], "%Y-%m-%d").map_err(|_| {
@@ -638,7 +622,7 @@ impl<'a> Produce<NaiveDate> for PostgresSourceCSVParser<'a> {
     }
 }
 
-impl<'a> Produce<Option<NaiveDate>> for PostgresSourceCSVParser<'a> {
+impl<'r, 'a> Produce<'r, Option<NaiveDate>> for PostgresSourceCSVParser<'a> {
     fn produce(&mut self) -> Result<Option<NaiveDate>> {
         let (ridx, cidx) = self.next_loc()?;
         match &self.rowbuf[ridx][cidx][..] {
@@ -650,7 +634,7 @@ impl<'a> Produce<Option<NaiveDate>> for PostgresSourceCSVParser<'a> {
     }
 }
 
-impl<'a> Produce<NaiveDateTime> for PostgresSourceCSVParser<'a> {
+impl<'r, 'a> Produce<'r, NaiveDateTime> for PostgresSourceCSVParser<'a> {
     fn produce(&mut self) -> Result<NaiveDateTime> {
         let (ridx, cidx) = self.next_loc()?;
         NaiveDateTime::parse_from_str(&self.rowbuf[ridx][cidx], "%Y-%m-%d %H:%M:%S").map_err(|_| {
@@ -662,7 +646,7 @@ impl<'a> Produce<NaiveDateTime> for PostgresSourceCSVParser<'a> {
     }
 }
 
-impl<'a> Produce<Option<NaiveDateTime>> for PostgresSourceCSVParser<'a> {
+impl<'r, 'a> Produce<'r, Option<NaiveDateTime>> for PostgresSourceCSVParser<'a> {
     fn produce(&mut self) -> Result<Option<NaiveDateTime>> {
         let (ridx, cidx) = self.next_loc()?;
         match &self.rowbuf[ridx][cidx][..] {
@@ -676,19 +660,19 @@ impl<'a> Produce<Option<NaiveDateTime>> for PostgresSourceCSVParser<'a> {
     }
 }
 
-impl<'a> Produce<Bytes> for PostgresSourceCSVParser<'a> {
-    fn produce(&mut self) -> Result<Bytes> {
+impl<'r, 'a> Produce<'r, &'r str> for PostgresSourceCSVParser<'a> {
+    fn produce(&'r mut self) -> Result<&'r str> {
         let (ridx, cidx) = self.next_loc()?;
-        Ok(Bytes::copy_from_slice(self.rowbuf[ridx][cidx].as_bytes()))
+        Ok(&self.rowbuf[ridx][cidx])
     }
 }
 
-impl<'a> Produce<Option<Bytes>> for PostgresSourceCSVParser<'a> {
-    fn produce(&mut self) -> Result<Option<Bytes>> {
+impl<'r, 'a> Produce<'r, Option<&'r str>> for PostgresSourceCSVParser<'a> {
+    fn produce(&'r mut self) -> Result<Option<&'r str>> {
         let (ridx, cidx) = self.next_loc()?;
         match &self.rowbuf[ridx][cidx][..] {
             "" => Ok(None),
-            v => Ok(Some(Bytes::copy_from_slice(v.as_bytes()))),
+            v => Ok(Some(&v)),
         }
     }
 }

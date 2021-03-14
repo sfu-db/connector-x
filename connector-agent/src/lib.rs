@@ -14,7 +14,7 @@ pub mod dummy_typesystem;
 pub mod errors;
 pub mod partition;
 pub mod sources;
-pub mod transport;
+pub mod transports;
 
 pub use crate::data_order::DataOrder;
 pub use crate::destinations::{Consume, Destination, DestinationPartition};

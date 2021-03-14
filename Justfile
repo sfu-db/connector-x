@@ -33,3 +33,7 @@ cachegrind-tpch: build-tpch
 python-tpch name +ARGS="": setup-python
     cd connector-agent-python && \
     poetry run python ../benchmarks/tpch-{{name}}.py {{ARGS}}
+
+python-shell:
+    cd connector-agent-python && \
+    poetry run ipython

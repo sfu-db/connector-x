@@ -1,11 +1,10 @@
-use bytes::Bytes;
 use connector_agent::{
     destinations::memory::MemoryDestination,
     sources::{
         postgres::{PostgresSource, PostgresSourceCSV},
         Produce, Source, SourcePartition,
     },
-    transport::{PostgresCSVMemoryTransport, PostgresMemoryTransport},
+    transports::{PostgresCSVMemoryTransport, PostgresMemoryTransport},
     Dispatcher,
 };
 use ndarray::array;
@@ -38,7 +37,7 @@ fn load_and_parse() {
         rows.push(Row(
             parser.produce().unwrap(),
             parser.produce().unwrap(),
-            Produce::<Option<Bytes>>::produce(&mut parser)
+            Produce::<Option<&[u8]>>::produce(&mut parser)
                 .unwrap()
                 .map(|s| from_utf8(&s).unwrap().to_string()),
             parser.produce().unwrap(),
@@ -140,7 +139,7 @@ fn load_and_parse_csv() {
         rows.push(Row(
             parser.produce().unwrap(),
             parser.produce().unwrap(),
-            Produce::<Option<Bytes>>::produce(&mut parser)
+            Produce::<Option<&[u8]>>::produce(&mut parser)
                 .unwrap()
                 .map(|s| from_utf8(&s).unwrap().to_string()),
             parser.produce().unwrap(),

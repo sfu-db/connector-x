@@ -52,16 +52,16 @@ pub trait PartitionParser<'a> {
     type TypeSystem: TypeSystem;
     /// Read a value `T` by calling `Produce<T>::produce`. Usually this function does not need to be
     /// implemented.
-    fn parse<T>(&mut self) -> Result<T>
+    fn parse<'r, T>(&'r mut self) -> Result<T>
     where
         T: TypeAssoc<Self::TypeSystem>,
-        Self: Produce<T>,
+        Self: Produce<'r, T>,
     {
         self.produce()
     }
 }
 
 /// A type implemented `Produce<T>` means that it can produce a value `T` by consuming part of it's raw data buffer.
-pub trait Produce<T> {
-    fn produce(&mut self) -> Result<T>;
+pub trait Produce<'r, T> {
+    fn produce(&'r mut self) -> Result<T>;
 }
