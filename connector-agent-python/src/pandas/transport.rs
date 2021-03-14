@@ -9,21 +9,24 @@ use connector_agent::{
 
 pub struct PostgresPandasTransport<'py>(&'py ());
 
-impl_transport! {
-    ['py],
-    PostgresPandasTransport<'py>,
-    PostgresTypeSystem => PandasTypeSystem,
-    PostgresSource => PandasDestination<'py>,
-    ([PostgresTypeSystem::Float4], [PandasTypeSystem::F64]) => (f32, f64) conversion all,
-    ([PostgresTypeSystem::Float8], [PandasTypeSystem::F64]) => (f64, f64) conversion all,
-    ([PostgresTypeSystem::Int4], [PandasTypeSystem::I64]) => (i32, i64) conversion all,
-    ([PostgresTypeSystem::Int8], [PandasTypeSystem::I64]) => (i64, i64) conversion all,
-    ([PostgresTypeSystem::Bool], [PandasTypeSystem::Bool]) => (bool, bool) conversion all,
-    ([PostgresTypeSystem::Text], [PandasTypeSystem::String]) | ([PostgresTypeSystem::BpChar], [PandasTypeSystem::String]) | ([PostgresTypeSystem::VarChar], [PandasTypeSystem::String]) => ['r] (&'r str, &'r str) conversion all,
-    ([PostgresTypeSystem::Timestamp], [PandasTypeSystem::DateTime]) => (NaiveDateTime, DateTime<Utc>) conversion half,
-    ([PostgresTypeSystem::TimestampTz], [PandasTypeSystem::DateTime]) => (DateTime<Utc>, DateTime<Utc>) conversion all,
-    ([PostgresTypeSystem::Date], [PandasTypeSystem::DateTime]) => (NaiveDate, DateTime<Utc>) conversion half,
-}
+impl_transport!(
+    name = PostgresPandasTransport<'tp>,
+    systems = PostgresTypeSystem => PandasTypeSystem,
+    route = PostgresSource => PandasDestination<'tp>,
+    mappings = {
+        [Float4      => F64      | f32           => f64           | conversion all]
+        [Float8      => F64      | f64           => f64           | conversion all]
+        [Int4        => I64      | i32           => i64           | conversion all]
+        [Int8        => I64      | i64           => i64           | conversion all]
+        [Bool        => Bool     | bool          => bool          | conversion all]
+        [Text        => String   | &'r str       => &'r str       | conversion all]
+        [BpChar      => String   | &'r str       => &'r str       | conversion none]
+        [VarChar     => String   | &'r str       => &'r str       | conversion none]
+        [Timestamp   => DateTime | NaiveDateTime => DateTime<Utc> | conversion half]
+        [TimestampTz => DateTime | DateTime<Utc> => DateTime<Utc> | conversion all]
+        [Date        => DateTime | NaiveDate     => DateTime<Utc> | conversion half]
+    }
+);
 
 impl<'py> TypeConversion<NaiveDateTime, DateTime<Utc>> for PostgresPandasTransport<'py> {
     fn convert(val: NaiveDateTime) -> DateTime<Utc> {
@@ -39,21 +42,24 @@ impl<'py> TypeConversion<NaiveDate, DateTime<Utc>> for PostgresPandasTransport<'
 
 pub struct PostgresCSVPandasTransport<'py>(&'py ());
 
-impl_transport! {
-    ['py],
-    PostgresCSVPandasTransport<'py>,
-    PostgresTypeSystem => PandasTypeSystem,
-    PostgresSourceCSV => PandasDestination<'py>,
-    ([PostgresTypeSystem::Float4], [PandasTypeSystem::F64]) => (f32, f64) conversion all,
-    ([PostgresTypeSystem::Float8], [PandasTypeSystem::F64]) => (f64, f64) conversion all,
-    ([PostgresTypeSystem::Int4], [PandasTypeSystem::I64]) => (i32, i64) conversion all,
-    ([PostgresTypeSystem::Int8], [PandasTypeSystem::I64]) => (i64, i64) conversion all,
-    ([PostgresTypeSystem::Bool], [PandasTypeSystem::Bool]) => (bool, bool) conversion all,
-    ([PostgresTypeSystem::Text], [PandasTypeSystem::String]) | ([PostgresTypeSystem::BpChar], [PandasTypeSystem::String]) | ([PostgresTypeSystem::VarChar], [PandasTypeSystem::String]) => ['r] (&'r str, &'r str) conversion all,
-    ([PostgresTypeSystem::Timestamp], [PandasTypeSystem::DateTime]) => (NaiveDateTime, DateTime<Utc>) conversion half,
-    ([PostgresTypeSystem::TimestampTz], [PandasTypeSystem::DateTime]) => (DateTime<Utc>, DateTime<Utc>) conversion all,
-    ([PostgresTypeSystem::Date], [PandasTypeSystem::DateTime]) => (NaiveDate, DateTime<Utc>) conversion half,
-}
+impl_transport!(
+    name = PostgresCSVPandasTransport<'tp>,
+    systems = PostgresTypeSystem => PandasTypeSystem,
+    route = PostgresSourceCSV => PandasDestination<'tp>,
+    mappings = {
+        [Float4      => F64      | f32           => f64           | conversion all]
+        [Float8      => F64      | f64           => f64           | conversion all]
+        [Int4        => I64      | i32           => i64           | conversion all]
+        [Int8        => I64      | i64           => i64           | conversion all]
+        [Bool        => Bool     | bool          => bool          | conversion all]
+        [Text        => String   | &'r str       => &'r str       | conversion all]
+        [BpChar      => String   | &'r str       => &'r str       | conversion none]
+        [VarChar     => String   | &'r str       => &'r str       | conversion none]
+        [Timestamp   => DateTime | NaiveDateTime => DateTime<Utc> | conversion half]
+        [TimestampTz => DateTime | DateTime<Utc> => DateTime<Utc> | conversion all]
+        [Date        => DateTime | NaiveDate     => DateTime<Utc> | conversion half]
+    }
+);
 
 impl<'py> TypeConversion<NaiveDateTime, DateTime<Utc>> for PostgresCSVPandasTransport<'py> {
     fn convert(val: NaiveDateTime) -> DateTime<Utc> {

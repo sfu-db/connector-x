@@ -81,34 +81,33 @@ where
             debug!("Partition {}, {}x{}", i, p.nrows(), p.ncols());
         }
 
-        let schemas: Vec<_> = src_schema
-            .iter()
-            .zip_eq(&dst_schema)
-            .map(|(&src_ty, &dst_ty)| (src_ty, dst_ty))
-            .collect();
-
         debug!("Start writing");
         // parse and write
         dst_partitions
             .into_par_iter()
             .zip_eq(src_partitions)
             .for_each(|(mut src, mut dst)| {
+                let f: Vec<_> = src_schema
+                    .iter()
+                    .zip_eq(&dst_schema)
+                    .map(|(&src_ty, &dst_ty)| TP::process_func(src_ty, dst_ty))
+                    .collect::<Result<Vec<_>>>()
+                    .unwrap();
+
                 let mut parser = dst.parser().unwrap();
 
                 match dorder {
                     DataOrder::RowMajor => {
                         for _ in 0..src.nrows() {
                             for col in 0..src.ncols() {
-                                let (s1, s2) = schemas[col];
-                                TP::process(s1, s2, &mut parser, &mut src).expect("write record");
+                                f[col](&mut parser, &mut src).unwrap();
                             }
                         }
                     }
                     DataOrder::ColumnMajor => {
                         for col in 0..src.ncols() {
                             for _ in 0..src.nrows() {
-                                let (s1, s2) = schemas[col];
-                                TP::process(s1, s2, &mut parser, &mut src).expect("write record");
+                                f[col](&mut parser, &mut src).unwrap();
                             }
                         }
                     }

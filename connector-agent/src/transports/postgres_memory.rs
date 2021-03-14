@@ -7,19 +7,22 @@ use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
 pub struct PostgresMemoryTransport;
 
 impl_transport!(
-    [],
-    PostgresMemoryTransport,
-    PostgresTypeSystem => DummyTypeSystem,
-    PostgresSource => MemoryDestination,
-    ([PostgresTypeSystem::Float4], [DummyTypeSystem::F64]) => (f32, f64) conversion all,
-    ([PostgresTypeSystem::Float8], [DummyTypeSystem::F64]) => (f64, f64) conversion all,
-    ([PostgresTypeSystem::Int4], [DummyTypeSystem::I64]) => (i32, i64) conversion all,
-    ([PostgresTypeSystem::Int8], [DummyTypeSystem::I64]) => (i64, i64) conversion all,
-    ([PostgresTypeSystem::Bool], [DummyTypeSystem::Bool]) => (bool, bool) conversion all,
-    ([PostgresTypeSystem::Text], [DummyTypeSystem::String]) | ([PostgresTypeSystem::BpChar], [DummyTypeSystem::String]) | ([PostgresTypeSystem::VarChar], [DummyTypeSystem::String]) => ['r] (&'r str, String) conversion half,
-    ([PostgresTypeSystem::Timestamp], [DummyTypeSystem::DateTime]) => (NaiveDateTime, DateTime<Utc>) conversion half,
-    ([PostgresTypeSystem::TimestampTz], [DummyTypeSystem::DateTime]) => (DateTime<Utc>, DateTime<Utc>) conversion all,
-    ([PostgresTypeSystem::Date], [DummyTypeSystem::DateTime]) => (NaiveDate, DateTime<Utc>) conversion half,
+    name = PostgresMemoryTransport,
+    systems = PostgresTypeSystem => DummyTypeSystem,
+    route = PostgresSource => MemoryDestination,
+    mappings = {
+        [Float4      => F64      | f32           => f64           | conversion all]
+        [Float8      => F64      | f64           => f64           | conversion all]
+        [Int4        => I64      | i32           => i64           | conversion all]
+        [Int8        => I64      | i64           => i64           | conversion all]
+        [Bool        => Bool     | bool          => bool          | conversion all]
+        [Text        => String   | &'r str       => String        | conversion half]
+        [BpChar      => String   | &'r str       => String        | conversion none]
+        [VarChar     => String   | &'r str       => String        | conversion none]
+        [Timestamp   => DateTime | NaiveDateTime => DateTime<Utc> | conversion half]
+        [TimestampTz => DateTime | DateTime<Utc> => DateTime<Utc> | conversion all]
+        [Date        => DateTime | NaiveDate     => DateTime<Utc> | conversion half]
+    }
 );
 
 impl<'r> TypeConversion<&'r str, String> for PostgresMemoryTransport {
