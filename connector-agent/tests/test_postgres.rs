@@ -8,7 +8,7 @@ use connector_agent::{
     Dispatcher,
 };
 use ndarray::array;
-use std::{env, str::from_utf8};
+use std::env;
 
 #[test]
 fn load_and_parse() {
@@ -37,9 +37,9 @@ fn load_and_parse() {
         rows.push(Row(
             parser.produce().unwrap(),
             parser.produce().unwrap(),
-            Produce::<Option<&[u8]>>::produce(&mut parser)
+            Produce::<Option<&str>>::produce(&mut parser)
                 .unwrap()
-                .map(|s| from_utf8(&s).unwrap().to_string()),
+                .map(ToString::to_string),
             parser.produce().unwrap(),
             parser.produce().unwrap(),
         ));
@@ -139,9 +139,9 @@ fn load_and_parse_csv() {
         rows.push(Row(
             parser.produce().unwrap(),
             parser.produce().unwrap(),
-            Produce::<Option<&[u8]>>::produce(&mut parser)
+            Produce::<Option<&str>>::produce(&mut parser)
                 .unwrap()
-                .map(|s| from_utf8(&s).unwrap().to_string()),
+                .map(ToString::to_string),
             parser.produce().unwrap(),
             parser.produce().unwrap(),
         ));

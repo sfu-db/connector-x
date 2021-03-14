@@ -12,7 +12,6 @@ import os
 from connector_agent_python import read_sql
 from contexttimer import Timer
 from docopt import docopt
-import gc
 
 if __name__ == "__main__":
     args = docopt(__doc__, version="Naval Fate 2.0")
@@ -49,6 +48,3 @@ if __name__ == "__main__":
 
     print(df.head())
     print(len(df))
-del df
-gc.collect()
-input("aa")
