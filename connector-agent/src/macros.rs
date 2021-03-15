@@ -14,7 +14,7 @@ macro_rules! impl_typesystem {
             )*
         }
     ) => {
-        impl $crate::typesystem::TypeSystem for $TS {}
+        impl $crate::TypeSystem for $TS {}
 
         $(
             impl_typesystem!(@typeassoc $TS [$($V)+], $NT);
@@ -24,37 +24,37 @@ macro_rules! impl_typesystem {
     };
 
     (@typeassoc $TS:tt [$($V:tt)+], $NT:ty) => {
-        impl<'r> $crate::typesystem::TypeAssoc<$TS> for $NT {
+        impl<'r> $crate::TypeAssoc<$TS> for $NT {
             fn check(ts: $TS) -> $crate::Result<()> {
                 match ts {
                     $(
                         $TS::$V(false) => Ok(()),
                     )+
-                    _ => fehler::throw!($crate::errors::ConnectorAgentError::UnexpectedType(format!("{:?}", ts), std::any::type_name::<$NT>()))
+                    _ => fehler::throw!($crate::ConnectorAgentError::UnexpectedType(format!("{:?}", ts), std::any::type_name::<$NT>()))
                 }
             }
         }
 
-        impl<'r> $crate::typesystem::TypeAssoc<$TS> for Option<$NT> {
+        impl<'r> $crate::TypeAssoc<$TS> for Option<$NT> {
             fn check(ts: $TS) -> $crate::Result<()> {
                 match ts {
                     $(
                         $TS::$V(true) => Ok(()),
                     )+
-                    _ => fehler::throw!($crate::errors::ConnectorAgentError::UnexpectedType(format!("{:?}", ts), std::any::type_name::<$NT>()))
+                    _ => fehler::throw!($crate::ConnectorAgentError::UnexpectedType(format!("{:?}", ts), std::any::type_name::<$NT>()))
                 }
             }
         }
     };
 
     (@realize $TS:tt $([ [$($V:tt)+] => $NT:ty ])+) => {
-        impl<'r, F> $crate::typesystem::Realize<F> for $TS
+        impl<'r, F> $crate::Realize<F> for $TS
         where
-            F: $crate::typesystem::ParameterizedFunc,
-            $(F: $crate::typesystem::ParameterizedOn<$NT>,)+
-            $(F: $crate::typesystem::ParameterizedOn<Option<$NT>>,)+
+            F: $crate::ParameterizedFunc,
+            $(F: $crate::ParameterizedOn<$NT>,)+
+            $(F: $crate::ParameterizedOn<Option<$NT>>,)+
         {
-            fn realize(self) -> $crate::errors::Result<F::Function> {
+            fn realize(self) -> $crate::Result<F::Function> {
                 match self {
                     $(
                         $(
@@ -106,7 +106,7 @@ macro_rules! impl_transport {
 
     // transport
     (@transport $TP:ty [$TSS:tt, $TSD:tt] [$S:ty, $D:ty] $([ $($TOKENS:tt)+ ])*) => {
-        impl <'tp> $crate::typesystem::Transport for $TP {
+        impl <'tp> $crate::Transport for $TP {
             type TSS = $TSS;
             type TSD = $TSD;
             type S = $S;
@@ -119,14 +119,14 @@ macro_rules! impl_transport {
     };
 
     (@cvtts [$TSS:tt, $TSD:tt] $( [$V1:tt => $V2:tt | $T1:ty => $T2:ty | conversion $HOW:ident] )*) => {
-        fn convert_typesystem(ts: Self::TSS) -> $crate::errors::Result<Self::TSD> {
+        fn convert_typesystem(ts: Self::TSS) -> $crate::Result<Self::TSD> {
             match ts {
                 $(
                     $TSS::$V1(true) => Ok($TSD::$V2(true)),
                     $TSS::$V1(false) => Ok($TSD::$V2(false)),
                 )*
                 #[allow(unreachable_patterns)]
-                _ => fehler::throw!($crate::errors::ConnectorAgentError::NoConversionRule(
+                _ => fehler::throw!($crate::ConnectorAgentError::NoConversionRule(
                     format!("{:?}", ts), format!("{}", std::any::type_name::<Self::TSD>())
                 ))
             }
@@ -137,27 +137,27 @@ macro_rules! impl_transport {
         fn process<'s, 'd, 'r>(
             ts1: Self::TSS,
             ts2: Self::TSD,
-            src: &'r mut <<Self::S as $crate::sources::Source>::Partition as $crate::sources::SourcePartition>::Parser<'s>,
-            dst: &'r mut <Self::D as $crate::destinations::Destination>::Partition<'d>,
-        ) -> $crate::errors::Result<()> {
+            src: &'r mut <<Self::S as $crate::Source>::Partition as $crate::SourcePartition>::Parser<'s>,
+            dst: &'r mut <Self::D as $crate::Destination>::Partition<'d>,
+        ) -> $crate::Result<()> {
             match (ts1, ts2) {
                 $(
                     ($TSS::$V1(true), $TSD::$V2(true)) => {
-                        let val: Option<$T1> = $crate::sources::PartitionParser::parse(src)?;
+                        let val: Option<$T1> = $crate::PartitionParser::parse(src)?;
                         let val: Option<$T2> = <Self as TypeConversion<Option<$T1>, _>>::convert(val);
-                        $crate::destinations::DestinationPartition::write(dst, val)?;
+                        $crate::DestinationPartition::write(dst, val)?;
                         Ok(())
                     }
 
                     ($TSS::$V1(false), $TSD::$V2(false)) => {
-                        let val: $T1 = $crate::sources::PartitionParser::parse(src)?;
+                        let val: $T1 = $crate::PartitionParser::parse(src)?;
                         let val: $T2 = <Self as TypeConversion<$T1, _>>::convert(val);
-                        $crate::destinations::DestinationPartition::write(dst, val)?;
+                        $crate::DestinationPartition::write(dst, val)?;
                         Ok(())
                     }
                 )*
                 #[allow(unreachable_patterns)]
-                _ => fehler::throw!($crate::errors::ConnectorAgentError::NoConversionRule(
+                _ => fehler::throw!($crate::ConnectorAgentError::NoConversionRule(
                     format!("{:?}", ts1), format!("{:?}", ts1))
                 )
             }
@@ -186,7 +186,7 @@ macro_rules! impl_transport {
                     }
                 )*
                 #[allow(unreachable_patterns)]
-                _ => fehler::throw!($crate::errors::ConnectorAgentError::NoConversionRule(
+                _ => fehler::throw!($crate::ConnectorAgentError::NoConversionRule(
                     format!("{:?}", ts1), format!("{:?}", ts1))
                 )
             }
@@ -222,13 +222,13 @@ macro_rules! impl_transport {
         impl_transport!(@cvt $HOW $TP, $T1, $T2);
     };
     (@cvt all $TP:ty, $T1:ty, $T2:ty) => {
-        impl<'tp, 'r> $crate::typesystem::TypeConversion<$T1, $T2> for $TP {
+        impl<'tp, 'r> $crate::TypeConversion<$T1, $T2> for $TP {
             fn convert(val: $T1) -> $T2 {
                 val as _
             }
         }
 
-        impl<'tp, 'r> $crate::typesystem::TypeConversion<Option<$T1>, Option<$T2>> for $TP {
+        impl<'tp, 'r> $crate::TypeConversion<Option<$T1>, Option<$T2>> for $TP {
             fn convert(val: Option<$T1>) -> Option<$T2> {
                 val.map(Self::convert)
             }
@@ -237,7 +237,7 @@ macro_rules! impl_transport {
 
 
     (@cvt half $TP:ty, $T1:ty, $T2:ty) => {
-        impl<'tp, 'r> $crate::typesystem::TypeConversion<Option<$T1>, Option<$T2>> for $TP {
+        impl<'tp, 'r> $crate::TypeConversion<Option<$T1>, Option<$T2>> for $TP {
             fn convert(val: Option<$T1>) -> Option<$T2> {
                 val.map(Self::convert)
             }

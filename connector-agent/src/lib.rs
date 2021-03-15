@@ -25,5 +25,5 @@ pub use crate::dummy_typesystem::DummyTypeSystem;
 pub use crate::errors::{ConnectorAgentError, Result};
 pub use crate::sources::{PartitionParser, Source, SourcePartition};
 pub use crate::typesystem::{
-    ParameterizedFunc, ParameterizedOn, Realize, TypeAssoc, TypeConversion, TypeSystem,
+    ParameterizedFunc, ParameterizedOn, Realize, Transport, TypeAssoc, TypeConversion, TypeSystem,
 };
