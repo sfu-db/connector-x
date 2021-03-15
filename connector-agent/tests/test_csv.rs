@@ -1,6 +1,6 @@
 use connector_agent::destinations::memory::MemoryDestination;
 use connector_agent::sources::{csv::CSVSource, Produce, Source, SourcePartition};
-use connector_agent::{transport::CSVMemoryTransport, Dispatcher, DummyTypeSystem};
+use connector_agent::{transports::CSVMemoryTransport, Dispatcher, DummyTypeSystem};
 use ndarray::array;
 
 #[test]

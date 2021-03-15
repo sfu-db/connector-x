@@ -1,5 +1,5 @@
 use super::{check_dtype, HasPandasColumn, PandasColumn, PandasColumnObject};
-use ndarray::{ArrayViewMut1, ArrayViewMut2, Axis, Ix2};
+use ndarray::{ArrayViewMut2, Axis, Ix2};
 use numpy::PyArray;
 use pyo3::{FromPyObject, PyAny, PyResult};
 use std::any::TypeId;
@@ -28,7 +28,11 @@ impl<'a> Float64Block<'a> {
             let (col, rest) = view.split_at(Axis(0), 1);
             view = rest;
             ret.push(Float64Column {
-                data: col.into_shape(nrows).expect("reshape"),
+                data: col
+                    .into_shape(nrows)
+                    .expect("reshape")
+                    .into_slice()
+                    .expect("into_slice"),
                 i: 0,
             })
         }
@@ -37,7 +41,7 @@ impl<'a> Float64Block<'a> {
 }
 
 pub struct Float64Column<'a> {
-    data: ArrayViewMut1<'a, f64>,
+    data: &'a mut [f64],
     i: usize,
 }
 
@@ -55,7 +59,7 @@ impl<'a> PandasColumnObject for Float64Column<'a> {
 
 impl<'a> PandasColumn<f64> for Float64Column<'a> {
     fn write(&mut self, val: f64) {
-        self.data[self.i] = val;
+        unsafe { *self.data.get_unchecked_mut(self.i) = val };
         self.i += 1;
     }
 }
@@ -63,8 +67,8 @@ impl<'a> PandasColumn<f64> for Float64Column<'a> {
 impl<'a> PandasColumn<Option<f64>> for Float64Column<'a> {
     fn write(&mut self, val: Option<f64>) {
         match val {
-            None => self.data[self.i] = f64::NAN,
-            Some(val) => self.data[self.i] = val,
+            None => unsafe { *self.data.get_unchecked_mut(self.i) = f64::NAN },
+            Some(val) => unsafe { *self.data.get_unchecked_mut(self.i) = val },
         }
         self.i += 1;
     }
@@ -84,10 +88,10 @@ impl<'a> Float64Column<'a> {
         let mut data = self.data;
 
         for &c in counts {
-            let (splitted, rest) = data.split_at(Axis(0), c);
+            let (splitted, rest) = data.split_at_mut(c);
             data = rest;
             partitions.push(Float64Column {
-                data: splitted.into_shape(c).expect("reshape"),
+                data: splitted,
                 i: 0,
             });
         }

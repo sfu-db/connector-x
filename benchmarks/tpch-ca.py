@@ -1,13 +1,13 @@
 """
 Usage:
-  test-tpch.py <num>
+  tpch-ca.py [--protocol=<protocol>] <num>
 
 Options:
-  -h --help     Show this screen.
-  --version     Show version.
+  --protocol=<protocol>  The protocol to use [default: binary].
+  -h --help              Show this screen.
+  --version              Show version.
 """
 import os
-import time
 
 from connector_agent_python import read_sql
 from contexttimer import Timer
@@ -16,11 +16,12 @@ from docopt import docopt
 if __name__ == "__main__":
     args = docopt(__doc__, version="Naval Fate 2.0")
     conn = os.environ["POSTGRES_URL"]
+    table = os.environ["POSTGRES_TABLE"]
 
     with Timer() as timer:
         df = read_sql(
             conn,
-            """SELECT 
+            f"""SELECT 
               l_orderkey,
               l_partkey,
               l_suppkey,
@@ -37,10 +38,11 @@ if __name__ == "__main__":
               l_shipinstruct,
               l_shipmode,
               l_comment
-            FROM lineitem_s10""",
+            FROM {table}""",
             partition_on="l_orderkey",
             partition_range=(0, 60000000),
             partition_num=int(args["<num>"]),
+            protocol=args["--protocol"],
         )
     print("time in total:", timer.elapsed)
 

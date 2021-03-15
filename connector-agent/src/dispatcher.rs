@@ -81,6 +81,10 @@ where
             debug!("Partition {}, {}x{}", i, p.nrows(), p.ncols());
         }
 
+        #[cfg(all(not(feature = "branch"), not(feature = "fptr")))]
+        compile_error!("branch or fptr, pick one");
+
+        #[cfg(feature = "branch")]
         let schemas: Vec<_> = src_schema
             .iter()
             .zip_eq(&dst_schema)
@@ -93,22 +97,43 @@ where
             .into_par_iter()
             .zip_eq(src_partitions)
             .for_each(|(mut src, mut dst)| {
+                #[cfg(feature = "fptr")]
+                let f: Vec<_> = src_schema
+                    .iter()
+                    .zip_eq(&dst_schema)
+                    .map(|(&src_ty, &dst_ty)| TP::processor(src_ty, dst_ty))
+                    .collect::<Result<Vec<_>>>()
+                    .unwrap();
+
                 let mut parser = dst.parser().unwrap();
 
                 match dorder {
                     DataOrder::RowMajor => {
                         for _ in 0..src.nrows() {
                             for col in 0..src.ncols() {
-                                let (s1, s2) = schemas[col];
-                                TP::process(s1, s2, &mut parser, &mut src).expect("write record");
+                                #[cfg(feature = "fptr")]
+                                f[col](&mut parser, &mut src).unwrap();
+
+                                #[cfg(feature = "branch")]
+                                {
+                                    let (s1, s2) = schemas[col];
+                                    TP::process(s1, s2, &mut parser, &mut src)
+                                        .expect("write record");
+                                }
                             }
                         }
                     }
                     DataOrder::ColumnMajor => {
                         for col in 0..src.ncols() {
                             for _ in 0..src.nrows() {
-                                let (s1, s2) = schemas[col];
-                                TP::process(s1, s2, &mut parser, &mut src).expect("write record");
+                                #[cfg(feature = "fptr")]
+                                f[col](&mut parser, &mut src).unwrap();
+                                #[cfg(feature = "branch")]
+                                {
+                                    let (s1, s2) = schemas[col];
+                                    TP::process(s1, s2, &mut parser, &mut src)
+                                        .expect("write record");
+                                }
                             }
                         }
                     }

@@ -1,7 +1,6 @@
 use super::super::pystring::PyString;
 use super::{check_dtype, HasPandasColumn, PandasColumn, PandasColumnObject};
-use bytes::Bytes;
-use ndarray::{ArrayViewMut1, ArrayViewMut2, Axis, Ix2};
+use ndarray::{ArrayViewMut2, Axis, Ix2};
 use numpy::PyArray;
 use pyo3::{FromPyObject, PyAny, PyResult, Python};
 use std::any::TypeId;
@@ -36,10 +35,14 @@ impl<'a> StringBlock<'a> {
             let (col, rest) = view.split_at(Axis(0), 1);
             view = rest;
             ret.push(StringColumn {
-                data: col.into_shape(nrows).expect("reshape"),
+                data: col
+                    .into_shape(nrows)
+                    .expect("reshape")
+                    .into_slice()
+                    .unwrap(),
                 next_write: 0,
                 string_lengths: vec![],
-                string_buf: Vec::with_capacity(self.buf_size_mb * 2 << 20),
+                string_buf: Vec::with_capacity(self.buf_size_mb * 2 << 20 * 11 / 10), // allocate a little bit more memory to avoid Vec growth
                 buf_size: self.buf_size_mb * 2 << 20,
                 mutex: self.mutex.clone(),
             })
@@ -49,7 +52,7 @@ impl<'a> StringBlock<'a> {
 }
 
 pub struct StringColumn<'a> {
-    data: ArrayViewMut1<'a, PyString>,
+    data: &'a mut [PyString],
     next_write: usize,
     string_buf: Vec<u8>,
     string_lengths: Vec<usize>,
@@ -59,33 +62,35 @@ pub struct StringColumn<'a> {
 
 impl<'a> PandasColumnObject for StringColumn<'a> {
     fn typecheck(&self, id: TypeId) -> bool {
-        id == TypeId::of::<Bytes>() || id == TypeId::of::<Option<Bytes>>()
+        id == TypeId::of::<&'static [u8]>() || id == TypeId::of::<Option<&'static [u8]>>()
     }
     fn len(&self) -> usize {
         self.data.len()
     }
     fn typename(&self) -> &'static str {
-        std::any::type_name::<Bytes>()
+        std::any::type_name::<&'static [u8]>()
     }
     fn finalize(&mut self) {
         self.flush()
     }
 }
 
-impl<'a> PandasColumn<Bytes> for StringColumn<'a> {
-    fn write(&mut self, val: Bytes) {
-        self.string_lengths.push(val.len());
-        self.string_buf.extend_from_slice(&val);
+impl<'r, 'a> PandasColumn<&'r str> for StringColumn<'a> {
+    fn write(&mut self, val: &'r str) {
+        let bytes = val.as_bytes();
+        self.string_lengths.push(bytes.len());
+        self.string_buf.extend_from_slice(bytes);
         self.try_flush();
     }
 }
 
-impl<'a> PandasColumn<Option<Bytes>> for StringColumn<'a> {
-    fn write(&mut self, val: Option<Bytes>) {
+impl<'r, 'a> PandasColumn<Option<&'r str>> for StringColumn<'a> {
+    fn write(&mut self, val: Option<&'r str>) {
         match val {
             Some(b) => {
-                self.string_lengths.push(b.len());
-                self.string_buf.extend_from_slice(&b);
+                let bytes = b.as_bytes();
+                self.string_lengths.push(bytes.len());
+                self.string_buf.extend_from_slice(bytes);
                 self.try_flush();
             }
             None => {
@@ -95,11 +100,11 @@ impl<'a> PandasColumn<Option<Bytes>> for StringColumn<'a> {
     }
 }
 
-impl HasPandasColumn for Bytes {
+impl<'r> HasPandasColumn for &'r str {
     type PandasColumn<'a> = StringColumn<'a>;
 }
 
-impl HasPandasColumn for Option<Bytes> {
+impl<'r> HasPandasColumn for Option<&'r str> {
     type PandasColumn<'a> = StringColumn<'a>;
 }
 
@@ -109,7 +114,7 @@ impl<'a> StringColumn<'a> {
         let mut data = self.data;
 
         for &c in counts {
-            let (splitted_data, rest) = data.split_at(Axis(0), c);
+            let (splitted_data, rest) = data.split_at_mut(c);
             data = rest;
 
             partitions.push(StringColumn {
@@ -138,8 +143,10 @@ impl<'a> StringColumn<'a> {
                 for (i, &len) in self.string_lengths.iter().enumerate() {
                     let end = start + len;
                     if len != 0 {
-                        self.data[self.next_write + i] =
-                            PyString::new(py, &self.string_buf[start..end]);
+                        unsafe {
+                            *self.data.get_unchecked_mut(self.next_write + i) =
+                                PyString::new(py, &self.string_buf[start..end])
+                        };
                     }
                     start = end;
                 }

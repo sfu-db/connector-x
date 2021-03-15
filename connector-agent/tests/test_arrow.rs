@@ -2,7 +2,7 @@ use arrow::array::{BooleanArray, Float64Array, Int64Array, StringArray};
 use arrow::record_batch::RecordBatch;
 use connector_agent::{
     destinations::arrow::ArrowDestination, sources::dummy::DummySource,
-    transport::DummyArrowTransport, Dispatcher, DummyTypeSystem,
+    transports::DummyArrowTransport, Dispatcher, DummyTypeSystem,
 };
 
 #[test]

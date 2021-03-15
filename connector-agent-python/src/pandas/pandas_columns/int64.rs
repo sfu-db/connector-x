@@ -31,8 +31,8 @@ impl<'a> Int64Block<'a> {
         let mut ret = vec![];
         match self {
             Int64Block::Extention(data, mask) => ret.push(Int64Column {
-                data,
-                mask: Some(mask),
+                data: data.into_slice().unwrap(),
+                mask: Some(mask.into_slice().unwrap()),
                 i: 0,
             }),
             Int64Block::NumPy(mut view) => {
@@ -41,7 +41,11 @@ impl<'a> Int64Block<'a> {
                     let (col, rest) = view.split_at(Axis(0), 1);
                     view = rest;
                     ret.push(Int64Column {
-                        data: col.into_shape(nrows).expect("reshape"),
+                        data: col
+                            .into_shape(nrows)
+                            .expect("reshape")
+                            .into_slice()
+                            .unwrap(),
                         mask: None,
                         i: 0,
                     })
@@ -54,8 +58,8 @@ impl<'a> Int64Block<'a> {
 
 // for uint64 and Int64
 pub struct Int64Column<'a> {
-    data: ArrayViewMut1<'a, i64>,
-    mask: Option<ArrayViewMut1<'a, bool>>,
+    data: &'a mut [i64],
+    mask: Option<&'a mut [bool]>,
     i: usize,
 }
 
@@ -73,9 +77,9 @@ impl<'a> PandasColumnObject for Int64Column<'a> {
 
 impl<'a> PandasColumn<i64> for Int64Column<'a> {
     fn write(&mut self, val: i64) {
-        self.data[self.i] = val;
+        unsafe { *self.data.get_unchecked_mut(self.i) = val };
         if let Some(mask) = self.mask.as_mut() {
-            mask[self.i] = false;
+            unsafe { *mask.get_unchecked_mut(self.i) = false };
         }
         self.i += 1;
     }
@@ -85,14 +89,14 @@ impl<'a> PandasColumn<Option<i64>> for Int64Column<'a> {
     fn write(&mut self, val: Option<i64>) {
         match val {
             Some(val) => {
-                self.data[self.i] = val;
+                unsafe { *self.data.get_unchecked_mut(self.i) = val };
                 if let Some(mask) = self.mask.as_mut() {
-                    mask[self.i] = false;
+                    unsafe { *mask.get_unchecked_mut(self.i) = false };
                 }
             }
             None => {
                 if let Some(mask) = self.mask.as_mut() {
-                    mask[self.i] = true;
+                    unsafe { *mask.get_unchecked_mut(self.i) = true };
                 } else {
                     panic!("Writing null i64 to not null pandas array")
                 }
@@ -117,11 +121,11 @@ impl<'a> Int64Column<'a> {
         let mut mask = self.mask;
 
         for &c in counts {
-            let (splitted_data, rest) = data.split_at(Axis(0), c);
+            let (splitted_data, rest) = data.split_at_mut(c);
             data = rest;
             let (splitted_mask, rest) = match mask {
                 Some(mask) => {
-                    let (a, b) = mask.split_at(Axis(0), c);
+                    let (a, b) = mask.split_at_mut(c);
                     (Some(a), Some(b))
                 }
                 None => (None, None),

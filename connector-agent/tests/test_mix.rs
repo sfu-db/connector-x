@@ -1,6 +1,6 @@
 use connector_agent::{
     destinations::memory::MemoryDestination, sources::dummy::DummySource,
-    transport::DummyMemoryTransport, DataOrder, Destination, DestinationPartition, Dispatcher,
+    transports::DummyMemoryTransport, DataOrder, Destination, DestinationPartition, Dispatcher,
     DummyTypeSystem, Result, Source,
 };
 use ndarray::array;

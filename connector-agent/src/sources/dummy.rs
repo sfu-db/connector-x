@@ -140,14 +140,14 @@ impl<'a> PartitionParser<'a> for DummySourcePartitionParser<'a> {
 macro_rules! numeric_impl {
     ($($t: ty),+) => {
         $(
-            impl<'a> Produce<$t> for DummySourcePartitionParser<'a> {
+            impl<'r, 'a> Produce<'r, $t> for DummySourcePartitionParser<'a> {
                 fn produce(&mut self) -> Result<$t> {
                     let ret = self.next_val();
                     Ok(FromPrimitive::from_usize(ret).unwrap_or_default())
                 }
             }
 
-            impl<'a> Produce<Option<$t>> for DummySourcePartitionParser<'a> {
+            impl<'r, 'a> Produce<'r, Option<$t>> for DummySourcePartitionParser<'a> {
                 fn produce(&mut self) -> Result<Option<$t>> {
                     let ret = self.next_val();
                     Ok(Some(FromPrimitive::from_usize(ret).unwrap_or_default()))
@@ -159,28 +159,28 @@ macro_rules! numeric_impl {
 
 numeric_impl!(u64, i32, i64, f64);
 
-impl<'a> Produce<String> for DummySourcePartitionParser<'a> {
+impl<'r, 'a> Produce<'r, String> for DummySourcePartitionParser<'a> {
     fn produce(&mut self) -> Result<String> {
         let ret = self.next_val().to_string();
         Ok(ret)
     }
 }
 
-impl<'a> Produce<Option<String>> for DummySourcePartitionParser<'a> {
+impl<'r, 'a> Produce<'r, Option<String>> for DummySourcePartitionParser<'a> {
     fn produce(&mut self) -> Result<Option<String>> {
         let ret = self.next_val().to_string();
         Ok(Some(ret))
     }
 }
 
-impl<'a> Produce<bool> for DummySourcePartitionParser<'a> {
+impl<'r, 'a> Produce<'r, bool> for DummySourcePartitionParser<'a> {
     fn produce(&mut self) -> Result<bool> {
         let ret = self.next_val() % 2 == 0;
         Ok(ret)
     }
 }
 
-impl<'a> Produce<Option<bool>> for DummySourcePartitionParser<'a> {
+impl<'r, 'a> Produce<'r, Option<bool>> for DummySourcePartitionParser<'a> {
     fn produce(&mut self) -> Result<Option<bool>> {
         let ret = match self.next_val() % 3 {
             0 => Some(true),
@@ -193,7 +193,7 @@ impl<'a> Produce<Option<bool>> for DummySourcePartitionParser<'a> {
     }
 }
 
-impl<'a> Produce<DateTime<Utc>> for DummySourcePartitionParser<'a> {
+impl<'r, 'a> Produce<'r, DateTime<Utc>> for DummySourcePartitionParser<'a> {
     fn produce(&mut self) -> Result<DateTime<Utc>> {
         self.next_val();
         let ret = offset::Utc::now();
@@ -202,7 +202,7 @@ impl<'a> Produce<DateTime<Utc>> for DummySourcePartitionParser<'a> {
     }
 }
 
-impl<'a> Produce<Option<DateTime<Utc>>> for DummySourcePartitionParser<'a> {
+impl<'r, 'a> Produce<'r, Option<DateTime<Utc>>> for DummySourcePartitionParser<'a> {
     fn produce(&mut self) -> Result<Option<DateTime<Utc>>> {
         self.next_val();
         let ret = match self.next_val() % 2 {
@@ -214,7 +214,7 @@ impl<'a> Produce<Option<DateTime<Utc>>> for DummySourcePartitionParser<'a> {
     }
 }
 
-impl<'a> Produce<Date<Utc>> for DummySourcePartitionParser<'a> {
+impl<'r, 'a> Produce<'r, Date<Utc>> for DummySourcePartitionParser<'a> {
     fn produce(&mut self) -> Result<Date<Utc>> {
         self.next_val();
         let ret = offset::Utc::now().date();
@@ -222,7 +222,7 @@ impl<'a> Produce<Date<Utc>> for DummySourcePartitionParser<'a> {
     }
 }
 
-impl<'a> Produce<Option<Date<Utc>>> for DummySourcePartitionParser<'a> {
+impl<'r, 'a> Produce<'r, Option<Date<Utc>>> for DummySourcePartitionParser<'a> {
     fn produce(&mut self) -> Result<Option<Date<Utc>>> {
         self.next_val();
         let ret = match self.next_val() % 2 {

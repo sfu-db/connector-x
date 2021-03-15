@@ -1,12 +1,23 @@
+"""
+Usage:
+  tpch-pyarrow.py
+
+Options:
+  -h --help     Show this screen.
+  --version     Show version.
+"""
 import io
 import os
 
 from contexttimer import Timer
 from pyarrow import csv
 from sqlalchemy import create_engine
+from docopt import docopt
 
 if __name__ == "__main__":
+    args = docopt(__doc__, version="1.0")
     conn = os.environ["POSTGRES_URL"]
+    table = os.environ["POSTGRES_TABLE"]
 
     engine = create_engine(conn)
     conn = engine.connect()
@@ -15,7 +26,7 @@ if __name__ == "__main__":
     store = io.BytesIO()
     with Timer() as timer:
         cur.copy_expert(
-            "COPY (select * from lineitem) TO STDOUT WITH CSV HEADER;", store
+            f"COPY (SELECT * FROM {table}) TO STDOUT WITH CSV HEADER;", store
         )
     print(f"[Copy] {timer.elapsed:.2f}s")
 

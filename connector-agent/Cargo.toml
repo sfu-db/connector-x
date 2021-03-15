@@ -43,3 +43,8 @@ name = "connector_agent"
 criterion = "0.3"
 iai = "0.1"
 pprof = {version = "0.3", features = ["flamegraph"]}
+
+[features]
+branch = []
+default = ["branch"]
+fptr = []
