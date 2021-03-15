@@ -1,5 +1,5 @@
-use connector_agent::destinations::memory::MemoryDestination;
 use connector_agent::sources::{csv::CSVSource, Produce, Source, SourcePartition};
+use connector_agent::{destinations::memory::MemoryDestination, Destination};
 use connector_agent::{transports::CSVMemoryTransport, Dispatcher, DummyTypeSystem};
 use ndarray::array;
 
@@ -119,4 +119,28 @@ fn test_csv() {
         ],
         destination.buffer_view::<i64>(0).unwrap()
     );
+}
+
+#[test]
+fn test_csv_infer_schema() {
+    let files = ["./tests/data/infer_0.csv"];
+    let source = CSVSource::new(&[]);
+
+    let mut writer = MemoryDestination::new();
+    let dispatcher = Dispatcher::<_, _, CSVMemoryTransport>::new(source, &mut writer, &files);
+
+    dispatcher.run().expect("run dispatcher");
+
+    let expected_schema = vec![
+        DummyTypeSystem::I64(false),
+        DummyTypeSystem::F64(false),
+        DummyTypeSystem::Bool(true),
+        DummyTypeSystem::String(true),
+        DummyTypeSystem::F64(false),
+        DummyTypeSystem::String(true),
+        DummyTypeSystem::String(false),
+        DummyTypeSystem::String(true),
+    ];
+
+    assert_eq!(expected_schema, writer.schema());
 }
