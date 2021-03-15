@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["CSVArrowTransport",""],["CSVMemoryTransport",""],["DummyArrowTransport",""],["DummyMemoryTransport",""],["PostgresArrowTransport",""],["PostgresCSVMemoryTransport",""],["PostgresMemoryTransport",""]]});

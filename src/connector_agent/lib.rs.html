@@ -28,16 +28,20 @@
 <span id="25">25</span>
 <span id="26">26</span>
 <span id="27">27</span>
+<span id="28">28</span>
+<span id="29">29</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="attribute">#![<span class="ident">feature</span>(<span class="ident">generic_associated_types</span>)]</span>
+<span class="attribute">#![<span class="ident">feature</span>(<span class="ident">log_syntax</span>)]</span>
 <span class="attribute">#![<span class="ident">allow</span>(<span class="ident">incomplete_features</span>)]</span>
 
 <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">pg</span>;
 <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">s3</span>;
-<span class="attribute">#[<span class="ident">macro_use</span>]</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">typesystem</span>;
+<span class="attribute">#[<span class="ident">macro_use</span>]</span>
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">macros</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">data_order</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">destinations</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">dispatcher</span>;
@@ -45,14 +49,14 @@
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">errors</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">partition</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">sources</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">transport</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">transports</span>;
 
 <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">data_order</span>::<span class="ident">DataOrder</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">destinations</span>::{<span class="ident">Consume</span>, <span class="ident">Destination</span>, <span class="ident">DestinationPartition</span>};
 <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">dispatcher</span>::<span class="ident">Dispatcher</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">dummy_typesystem</span>::<span class="ident">DummyTypeSystem</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">errors</span>::{<span class="ident">ConnectorAgentError</span>, <span class="prelude-ty">Result</span>};
-<span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">sources</span>::{<span class="ident">Source</span>, <span class="ident">SourcePartition</span>};
+<span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">sources</span>::{<span class="ident">PartitionParser</span>, <span class="ident">Source</span>, <span class="ident">SourcePartition</span>};
 <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">typesystem</span>::{
     <span class="ident">ParameterizedFunc</span>, <span class="ident">ParameterizedOn</span>, <span class="ident">Realize</span>, <span class="ident">TypeAssoc</span>, <span class="ident">TypeConversion</span>, <span class="ident">TypeSystem</span>,
 };
