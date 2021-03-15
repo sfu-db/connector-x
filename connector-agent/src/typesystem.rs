@@ -84,13 +84,13 @@ pub trait Transport {
         dst: &'r mut <Self::D as Destination>::Partition<'d>,
     ) -> Result<()>;
 
-    fn process_func<'s, 'd>(
+    fn processor<'s, 'd>(
         ts1: Self::TSS,
         ts2: Self::TSD,
     ) -> Result<
-        for<'r> fn(
-            src: &'r mut <<Self::S as Source>::Partition as SourcePartition>::Parser<'s>,
-            dst: &'r mut <Self::D as Destination>::Partition<'d>,
+        fn(
+            src: &mut <<Self::S as Source>::Partition as SourcePartition>::Parser<'s>,
+            dst: &mut <Self::D as Destination>::Partition<'d>,
         ) -> Result<()>,
     >;
 }

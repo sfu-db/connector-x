@@ -89,7 +89,7 @@ macro_rules! impl_transport {
 
             impl_transport!(@cvtts [$TSS, $TSD] $([ $($TOKENS)+ ])*);
             impl_transport!(@process [$TSS, $TSD] $([ $($TOKENS)+ ])*);
-            impl_transport!(@process_func [$TSS, $TSD] $([ $($TOKENS)+ ])*, $([ $($TOKENS)+ ])*);
+            impl_transport!(@processor [$TSS, $TSD] $([ $($TOKENS)+ ])*, $([ $($TOKENS)+ ])*);
         }
     };
 
@@ -140,14 +140,14 @@ macro_rules! impl_transport {
         }
     };
 
-    (@process_func [$TSS:tt, $TSD:tt] $([ $V1:tt => $V2:tt | $T1:ty => $T2:ty | conversion $HOW:ident ])*, $([ $($TOKENS:tt)+ ])*) => {
-        fn process_func<'s, 'd>(
+    (@processor [$TSS:tt, $TSD:tt] $([ $V1:tt => $V2:tt | $T1:ty => $T2:ty | conversion $HOW:ident ])*, $([ $($TOKENS:tt)+ ])*) => {
+        fn processor<'s, 'd>(
             ts1: Self::TSS,
             ts2: Self::TSD,
         ) -> $crate::Result<
-            for<'r> fn(
-                src: &'r mut <<Self::S as $crate::Source>::Partition as $crate::SourcePartition>::Parser<'s>,
-                dst: &'r mut <Self::D as $crate::Destination>::Partition<'d>,
+            fn(
+                src: &mut <<Self::S as $crate::Source>::Partition as $crate::SourcePartition>::Parser<'s>,
+                dst: &mut <Self::D as $crate::Destination>::Partition<'d>,
             ) -> $crate::Result<()>,
         > {
             match (ts1, ts2) {
