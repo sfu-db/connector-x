@@ -10,3 +10,5 @@ perf.data
 .venv
 .pytest_cache
 data.txt
+profile.pb
+dask-worker-space

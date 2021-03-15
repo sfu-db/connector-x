@@ -1,12 +1,12 @@
-use connector_agent::data_sources::{csv::CSVSource, PartitionedSource, Produce, Source};
-use connector_agent::writers::memory::MemoryWriter;
-use connector_agent::{DataType, Dispatcher, Writer};
+use connector_agent::sources::{csv::CSVSource, Produce, Source, SourcePartition};
+use connector_agent::{destinations::memory::MemoryDestination, Destination};
+use connector_agent::{transports::CSVMemoryTransport, Dispatcher, DummyTypeSystem};
 use ndarray::array;
 
 #[test]
 #[should_panic]
 fn no_file() {
-    let mut source = CSVSource::new(Some(&[]));
+    let mut source = CSVSource::new(&[]);
     source.set_queries(&["./a_fake_file.csv"]);
     let partitions = source.partition().unwrap();
     for mut p in partitions {
@@ -17,7 +17,7 @@ fn no_file() {
 #[test]
 #[should_panic]
 fn empty_file() {
-    let mut source = CSVSource::new(Some(&[]));
+    let mut source = CSVSource::new(&[]);
     source.set_queries(&["./tests/data/empty.csv"]);
     let mut partitions = source.partition().unwrap();
     for p in &mut partitions {
@@ -41,13 +41,13 @@ fn load_and_parse() {
         Latitude(f64),
     }
 
-    let mut source = CSVSource::new(Some(&[
-        DataType::String(false),
-        DataType::String(false),
-        DataType::I64(false),
-        DataType::F64(false),
-        DataType::F64(false),
-    ]));
+    let mut source = CSVSource::new(&[
+        DummyTypeSystem::String(false),
+        DummyTypeSystem::String(false),
+        DummyTypeSystem::I64(false),
+        DummyTypeSystem::F64(false),
+        DummyTypeSystem::F64(false),
+    ]);
     source.set_queries(&["./tests/data/uspop_0.csv"]);
 
     let mut partitions = source.partition().unwrap();
@@ -94,14 +94,14 @@ fn load_and_parse() {
 
 #[test]
 fn test_csv() {
-    let schema = [DataType::I64(false); 5];
+    let schema = [DummyTypeSystem::I64(false); 5];
     let files = ["./tests/data/uint_0.csv", "./tests/data/uint_1.csv"];
-    let source = CSVSource::new(Some(&schema));
+    let source = CSVSource::new(&schema);
 
-    let mut writer = MemoryWriter::new();
-    let dispatcher = Dispatcher::new(source, &mut writer, &files);
+    let mut destination = MemoryDestination::new();
+    let dispatcher = Dispatcher::<_, _, CSVMemoryTransport>::new(source, &mut destination, &files);
 
-    dispatcher.run_checked().expect("run dispatcher");
+    dispatcher.run().expect("run dispatcher");
 
     assert_eq!(
         array![
@@ -117,29 +117,29 @@ fn test_csv() {
             [45, 46, 47, 48, 49],
             [50, 51, 52, 53, 54],
         ],
-        writer.buffer_view::<i64>(0).unwrap()
+        destination.buffer_view::<i64>(0).unwrap()
     );
 }
 
 #[test]
 fn test_csv_infer_schema() {
     let files = ["./tests/data/infer_0.csv"];
-    let source = CSVSource::new(None);
+    let source = CSVSource::new(&[]);
 
-    let mut writer = MemoryWriter::new();
-    let dispatcher = Dispatcher::new(source, &mut writer, &files);
+    let mut writer = MemoryDestination::new();
+    let dispatcher = Dispatcher::<_, _, CSVMemoryTransport>::new(source, &mut writer, &files);
 
-    dispatcher.run_checked().expect("run dispatcher");
+    dispatcher.run().expect("run dispatcher");
 
     let expected_schema = vec![
-        DataType::I64(false),
-        DataType::F64(false),
-        DataType::Bool(true),
-        DataType::String(true),
-        DataType::F64(false),
-        DataType::String(true),
-        DataType::String(false),
-        DataType::String(true),
+        DummyTypeSystem::I64(false),
+        DummyTypeSystem::F64(false),
+        DummyTypeSystem::Bool(true),
+        DummyTypeSystem::String(true),
+        DummyTypeSystem::F64(false),
+        DummyTypeSystem::String(true),
+        DummyTypeSystem::String(false),
+        DummyTypeSystem::String(true),
     ];
 
     assert_eq!(expected_schema, writer.schema());

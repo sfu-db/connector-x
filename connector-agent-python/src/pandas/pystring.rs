@@ -1,6 +1,6 @@
 use numpy::{npyffi::NPY_TYPES, Element, PyArrayDescr};
 use pyo3::{ffi, Py, Python};
-use std::str::from_utf8;
+use std::str::from_utf8_unchecked;
 
 #[derive(Clone)]
 #[repr(transparent)]
@@ -22,7 +22,7 @@ impl Element for PyString {
 
 impl PyString {
     pub fn new(py: Python, val: &[u8]) -> Self {
-        let val = from_utf8(val).unwrap();
+        let val = unsafe { from_utf8_unchecked(val) };
         let maxchar = val.chars().map(|c| c as u32).max().unwrap_or(0);
         let maxchar = if maxchar <= 0x7F {
             0x7F

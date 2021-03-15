@@ -1,29 +1,47 @@
+mod destination;
 mod pandas_columns;
 mod pystring;
-mod writers;
+mod transport;
+mod types;
 
+pub use self::destination::{PandasDestination, PandasPartitionDestination};
+pub use self::transport::{PostgresCSVPandasTransport, PostgresPandasTransport};
+pub use self::types::{PandasDType, PandasTypeSystem};
 use crate::errors::ConnectorAgentPythonError;
 use anyhow::anyhow;
-use connector_agent::{Dispatcher, PostgresSource};
+use connector_agent::{
+    sources::postgres::{PostgresSource, PostgresSourceCSV},
+    Dispatcher,
+};
 use fehler::throws;
 use log::debug;
 use pyo3::{PyAny, Python};
-pub use writers::{PandasPartitionWriter, PandasWriter};
 
 #[throws(ConnectorAgentPythonError)]
-pub fn write_pandas<'a>(py: Python<'a>, conn: &str, queries: &[&str], checked: bool) -> &'a PyAny {
-    let mut writer = PandasWriter::new(py);
-    let sb = PostgresSource::new(conn, queries.len());
+pub fn write_pandas<'a>(py: Python<'a>, conn: &str, queries: &[&str], protocol: &str) -> &'a PyAny {
+    let mut destination = PandasDestination::new(py);
 
-    // TODO: unlock gil for these two line
-    let dispatcher = Dispatcher::new(sb, &mut writer, queries);
+    // TODO: unlock gil if possible
+    debug!("Protocol: {}", protocol);
+    match protocol {
+        "csv" => {
+            let sb = PostgresSourceCSV::new(conn, queries.len());
+            let dispatcher =
+                Dispatcher::<_, _, PostgresCSVPandasTransport>::new(sb, &mut destination, queries);
 
-    debug!("Running dispatcher");
-    if checked {
-        dispatcher.run_checked()?;
-    } else {
-        dispatcher.run()?;
+            debug!("Running dispatcher");
+            dispatcher.run()?;
+        }
+        "binary" => {
+            let sb = PostgresSource::new(conn, queries.len());
+            let dispatcher =
+                Dispatcher::<_, _, PostgresPandasTransport>::new(sb, &mut destination, queries);
+
+            debug!("Running dispatcher");
+            dispatcher.run()?;
+        }
+        _ => unimplemented!("{} protocol not supported", protocol),
     }
 
-    writer.result().ok_or(anyhow!("writer not run"))?
+    destination.result().ok_or(anyhow!("destination not run"))?
 }

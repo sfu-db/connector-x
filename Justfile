@@ -22,27 +22,18 @@ seed-db:
 
 # benches 
 flame-tpch:
-    cd connector-agent-python && LD_LIBRARY_PATH=$HOME/.pyenv/versions/3.8.6/lib/ cargo run --no-default-features --features executable --release --example flame_tpch
+    cd connector-agent-python && LD_LIBRARY_PATH=$HOME/.pyenv/versions/3.8.6/lib/ cargo run --no-default-features --features executable --features fptr --release --example flame_tpch
 
 build-tpch:
-    cd connector-agent-python && cargo build --no-default-features --features executable --release --example tpch
+    cd connector-agent-python && cargo build --no-default-features --features executable --features fptr --release --example tpch
 
 cachegrind-tpch: build-tpch
     valgrind --tool=cachegrind target/release/examples/tpch
 
-python-tpch n="1": setup-python
+python-tpch name +ARGS="": setup-python
     cd connector-agent-python && \
-    poetry run python ../scripts/test_tpch.py {{n}}
+    poetry run python ../benchmarks/tpch-{{name}}.py {{ARGS}}
 
-python-tpch-rust-arrow n="1": setup-python
+python-shell:
     cd connector-agent-python && \
-    poetry run python ../scripts/tpch-rust-arrow.py {{n}}
-
-python-tpch-pyarrow: 
-    cd connector-agent-python && \
-    poetry run python ../scripts/tpch-pyarrow.py
-
-
-python-tpch-pyarrow-p n="1": 
-    cd connector-agent-python && \
-    poetry run python ../scripts/tpch-pyarrow-p.py {{n}}
+    poetry run ipython

@@ -24,7 +24,7 @@ fn benchmark(c: &mut Criterion) {
     c.bench_function("tpch 6000000", |b| {
         b.iter(|| {
             Python::with_gil(|py| {
-                write_pandas(py, &conn, black_box(&queries), false).unwrap();
+                write_pandas(py, &conn, black_box(&queries), "binary").unwrap();
             })
         })
     });

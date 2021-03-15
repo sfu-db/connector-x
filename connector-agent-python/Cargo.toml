@@ -10,7 +10,7 @@ version = "0.1.0"
 anyhow = "1"
 bytes = "1"
 chrono = "0.4"
-connector-agent = {path = "../connector-agent"}
+connector-agent = {path = "../connector-agent", default-features = false}
 dict_derive = "0.3"
 env_logger = "0.8"
 fehler = "1"
@@ -40,6 +40,8 @@ crate-type = ["rlib", "cdylib"]
 name = "connector_agent_python"
 
 [features]
-default = ["extension"]
+branch = ["connector-agent/branch"]
+default = ["extension", "fptr"]
 executable = ["pyo3/auto-initialize"]
 extension = ["pyo3/extension-module"]
+fptr = ["connector-agent/fptr"]

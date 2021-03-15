@@ -1,9 +1,13 @@
 // Why we need to implement Transmit for TypeSystem? This is because only TypeSystem knows how to dispatch
 // functions to it's native type N based on our defined type T. Remember, T is value and N is a type.
 
+use crate::destinations::{Consume, Destination, DestinationPartition};
 use crate::errors::Result;
-/// `TypeSystem` describes a type system in a value type (e.g. enum variants),
-/// which can be used to type check with a static type `T` through the `check` method.
+use crate::sources::{PartitionParser, Produce, Source, SourcePartition};
+
+/// `TypeSystem` describes all the types a source or destination support
+/// using enum variants.
+/// The variant can be used to type check with a static type `T` through the `check` method.
 pub trait TypeSystem: Copy + Clone + Send + Sync {
     /// Check whether T is the same type as defined by self.
     fn check<T: TypeAssoc<Self>>(self) -> Result<()> {
@@ -14,81 +18,6 @@ pub trait TypeSystem: Copy + Clone + Send + Sync {
 /// Associate a static type to a TypeSystem
 pub trait TypeAssoc<TS: TypeSystem> {
     fn check(ts: TS) -> Result<()>;
-}
-
-/// A macro to implement `TypeAssoc` and `Realize` which saves repetitive code.
-///
-/// # Example Usage
-/// `associate_typesystem!(DataType, [DataType::F64] => f64, [DataType::I64] => i64);`
-/// This means for the type system `DataType`, it's variant `DataType::F64(false)` is corresponding to the physical type f64 and
-/// `DataType::F64(true)` is corresponding to the physical type Option<f64>. Same for I64 and i64
-#[macro_export]
-macro_rules! associate_typesystem {
-    ($ts:ty, $(/*multiple mapping*/$(/*multiple variant*/ [$($variant:tt)+])|+ => $native_type:ty,)+) => {
-        associate_typesystem!(IMPL $ts, $(/*multiple mapping*/
-            $(/*multiple variant*/$($variant)+ (false))+ => $native_type,
-            $(/*multiple variant*/$($variant)+ (true))+ => Option<$native_type>,
-        )+);
-    };
-
-    (IMPL $ts:ty, $($($variant:pat)+ => $native_type:ty,)+) => {
-        $(
-            impl $crate::typesystem::TypeAssoc<$ts> for $native_type {
-                fn check(ts: $ts) -> $crate::errors::Result<()> {
-                    match ts {
-                        $(
-                            $variant => Ok(()),
-                        )+
-                        _ => fehler::throw!($crate::errors::ConnectorAgentError::UnexpectedType(format!("{:?}", ts), std::any::type_name::<$native_type>()))
-                    }
-                }
-            }
-        )+
-
-        impl<F> $crate::typesystem::Realize<F> for $ts
-        where
-            F: $crate::typesystem::ParameterizedFunc,
-            $(F: $crate::typesystem::ParameterizedOn<$native_type>),+
-        {
-            fn realize(self) -> $crate::errors::Result<F::Function> {
-                match self {
-                    $(
-                        $($variant)|+ => Ok(F::realize::<$native_type>()),
-                    )+
-                }
-            }
-        }
-
-        // Always true for type system self conversion
-        impl<F> $crate::typesystem::Realize<F> for ($ts, $ts)
-        where
-            F: $crate::typesystem::ParameterizedFunc,
-            $(F: $crate::typesystem::ParameterizedOn<($native_type, $native_type)>),+
-        {
-            fn realize(self) -> $crate::errors::Result<F::Function> {
-                match self {
-                    $($(
-                        ($variant, $variant) => Ok(F::realize::<($native_type,$native_type)>()),
-                    )+)+
-                    (v1, v2) => {
-                        fehler::throw!($crate::errors::ConnectorAgentError::NoTypeSystemConversionRule(
-                            format!("{:?}", v1), format!("{:?}", v2)
-                        ))
-                    }
-                }
-            }
-        }
-
-        $(
-            impl $crate::typesystem::TypeConversion<$native_type, $native_type> for ($ts, $ts) {
-                fn convert(val: $native_type) -> $native_type { val }
-            }
-        )+
-
-        impl $crate::typesystem::TypeSystemConversion<$ts> for $ts {
-            fn from(dt: $ts) -> $crate::errors::Result<$ts> { Ok(dt) }
-        }
-    };
 }
 
 /// Realize means that a TypeSystem can realize a parameterized func F, based on its current variants.
@@ -103,7 +32,7 @@ where
 /// A ParameterizedFunc refers to a function that is parameterized on a type T,
 /// where type T will be dynaically determined by the variant of a TypeSystem.
 /// An example is the `transmit<S,W,T>` function. When piping values from a source
-/// to the writer, its type `T` is determined by the schema at the runtime.
+/// to the destination, its type `T` is determined by the schema at the runtime.
 pub trait ParameterizedFunc {
     type Function;
     fn realize<T>() -> Self::Function
@@ -124,109 +53,63 @@ pub trait TypeConversion<T, U> {
     fn convert(val: T) -> U;
 }
 
-pub trait TypeSystemConversion<T>
-where
-    T: TypeSystem,
-    Self: TypeSystem,
-{
-    fn from(dt: T) -> Result<Self>;
+/// Transport defines how to produce a value, do type conversion and then write
+/// the value to a destination.
+pub trait Transport {
+    type TSS: TypeSystem;
+    type TSD: TypeSystem;
+    type S: Source;
+    type D: Destination;
+
+    /// convert_typesystem convert the source type system TSS to the destination
+    /// type system TSD.
+    fn convert_typesystem(ts: Self::TSS) -> Result<Self::TSD>;
+
+    /// convert_type convert the type T1 associated with the source type system
+    /// TSS to a type T2 which is associated with the destination type system TSD.
+    fn convert_type<T1, T2>(val: T1) -> T2
+    where
+        Self: TypeConversion<T1, T2>,
+    {
+        <Self as TypeConversion<T1, T2>>::convert(val)
+    }
+
+    /// `process` will ask source to produce a value with type T1, based on TSS, and then do
+    /// type conversion using `convert_type` to get value with type T2, which is associated to
+    /// TSD. Finally, it will write the value with type T2 to the destination.
+    fn process<'s, 'd, 'r>(
+        ts1: Self::TSS,
+        ts2: Self::TSD,
+        src: &'r mut <<Self::S as Source>::Partition as SourcePartition>::Parser<'s>,
+        dst: &'r mut <Self::D as Destination>::Partition<'d>,
+    ) -> Result<()>;
+
+    fn processor<'s, 'd>(
+        ts1: Self::TSS,
+        ts2: Self::TSD,
+    ) -> Result<
+        fn(
+            src: &mut <<Self::S as Source>::Partition as SourcePartition>::Parser<'s>,
+            dst: &mut <Self::D as Destination>::Partition<'d>,
+        ) -> Result<()>,
+    >;
 }
 
-/// A macro to define how to convert between one type system to another, in terms
-/// of both their enum variants and the physical types
-///
-/// # Example Usage
-/// ```ignore
-/// associate_typesystems! {
-///     (PostgresDTypes, DataType),
-///     ([PostgresDTypes::Float4], [DataType::F64]) => (f32, f64) conversion all,
-/// }
-/// ```
-/// This means for the type system `PostgresDTypes`, is can be converted to another type system DataType.
-/// Specifically, the variant `PostgresDTypes::Float4(false)` is corresponding to the variant `DataType::F64(false)` and
-/// the variant `PostgresDTypes::Float4(true)` is corresponding to the variant `DataType::F64(true)`.
-/// Also, the physical type `f32` is corresponding to the physical type `f64` and the physical type `Option<f32>` is
-/// corresponding to the type `Option<f64>`.
-/// The last piece of `conversion all` means auto implementing the physical type conversion trait `TypeConversion<f32, f64>` and
-/// conversion trait `TypeConversion<Option<f32>, Option<f64>>` for `(PostgresDTypes, DataType)` by using
-/// casting rule (v as f64). If this is set to `half`, you need to manually write an `TypeConversion` implementation for `(f32,f64)`,
-/// but the conversion rule for `(Option<f32>, Option<f64>)` is still generated. `conversion none` means generate nothing.
-#[macro_export]
-macro_rules! associate_typesystems {
-    (($ts1:ty, $ts2:ty), $($(([$($v1:tt)+], [$($v2:tt)+]))|+ => ($t1:ty, $t2:ty) conversion $cast:ident,)+) => {
-        associate_typesystems!(Realize ($ts1, $ts2), $(
-            $(($($v1)+ (false), $($v2)+ (false)))|+ => ($t1, $t2),
-            $(($($v1)+ (true), $($v2)+ (true)))|+ => (Option<$t1>, Option<$t2>),
-        )+);
-
-        associate_typesystems!(Conversion ($ts1, $ts2), $(
-            $(($($v1)+ (false), $($v2)+ (false))),+,
-            $(($($v1)+ (true), $($v2)+ (true))),+,
-        )+);
-
-        $(
-            associate_typesystems!(TypeConversion $cast $ts1, $ts2, $t1, $t2);
-        )+
-    };
-
-    (Realize ($ts1:ty, $ts2:ty), $($(($v1:pat, $v2:pat))|+ => ($t1:ty, $t2:ty),)+) => {
-        impl<F> $crate::typesystem::Realize<F> for ($ts1, $ts2)
-        where
-            F: $crate::typesystem::ParameterizedFunc,
-            $(F: $crate::typesystem::ParameterizedOn<($t1, $t2)>),+
-        {
-            fn realize(self) -> $crate::errors::Result<F::Function> {
-                match self {
-                    $(
-                        $(($v1, $v2))|+ => Ok(F::realize::<($t1, $t2)>()),
-                    )+
-                    (v1, v2) => {
-                        fehler::throw!($crate::errors::ConnectorAgentError::NoTypeSystemConversionRule(
-                            format!("{:?}", v1), format!("{:?}", v2)
-                        ))
-                    }
-                }
-            }
-        }
-    };
-
-    (Conversion ($ts1:ty, $ts2:ty), $(($v1:pat, $v2:expr),)+) => {
-        impl $crate::typesystem::TypeSystemConversion<$ts1> for $ts2 {
-            fn from(dt: $ts1) -> $crate::errors::Result<Self> {
-                match dt {
-                    $(
-                        $v1 => Ok($v2),
-                    )+
-                    #[allow(unreachable_patterns)]
-                    _ => fehler::throw!($crate::errors::ConnectorAgentError::NoTypeSystemConversionRule(
-                        format!("{:?}", dt), format!("{}", std::any::type_name::<$ts2>())
-                    ))
-                }
-            }
-        }
-    };
-
-    (TypeConversion all $ts1:ty, $ts2:ty, $t1:ty, $t2:ty) => {
-        impl $crate::typesystem::TypeConversion<$t1, $t2> for ($ts1, $ts2) {
-            fn convert(val: $t1) -> $t2 {
-                val as _
-            }
-        }
-
-        impl $crate::typesystem::TypeConversion<Option<$t1>, Option<$t2>> for ($ts1, $ts2) {
-            fn convert(val: Option<$t1>) -> Option<$t2> {
-                val.map(Self::convert)
-            }
-        }
-    };
-
-    (TypeConversion half $ts1:ty, $ts2:ty, $t1:ty, $t2:ty) => {
-        impl $crate::typesystem::TypeConversion<Option<$t1>, Option<$t2>> for ($ts1, $ts2) {
-            fn convert(val: Option<$t1>) -> Option<$t2> {
-                val.map(Self::convert)
-            }
-        }
-    };
-
-    (TypeConversion none $ts1:ty, $ts2:ty, $t1:ty, $t2:ty) => {};
+pub fn process<'s, 'd, 'r, T1, T2, TP, S, D>(
+    src: &'r mut <<S as Source>::Partition as SourcePartition>::Parser<'s>,
+    dst: &'r mut <D as Destination>::Partition<'d>,
+) -> crate::errors::Result<()>
+where
+    T1: TypeAssoc<<S as Source>::TypeSystem>,
+    T2: TypeAssoc<<D as Destination>::TypeSystem>,
+    TP: TypeConversion<T1, T2>,
+    S: Source,
+    D: Destination,
+    <<S as Source>::Partition as SourcePartition>::Parser<'s>: Produce<'r, T1>,
+    <D as Destination>::Partition<'d>: Consume<T2>,
+{
+    let val: T1 = PartitionParser::parse(src)?;
+    let val: T2 = <TP as TypeConversion<T1, _>>::convert(val);
+    DestinationPartition::write(dst, val)?;
+    Ok(())
 }

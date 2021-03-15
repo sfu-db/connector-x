@@ -1,22 +1,23 @@
 use connector_agent::{
-    data_sources::dummy::MixedSource, writers::memory::MemoryWriter, DataOrder, DataType,
-    Dispatcher, PartitionWriter, Result, Source, Writer,
+    destinations::memory::MemoryDestination, sources::dummy::DummySource,
+    transports::DummyMemoryTransport, DataOrder, Destination, DestinationPartition, Dispatcher,
+    DummyTypeSystem, Result, Source,
 };
 use ndarray::array;
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
 #[test]
 #[should_panic]
-fn mixed_writer_col_major() {
-    let mut dw = MemoryWriter::new();
+fn mixed_destination_col_major() {
+    let mut dw = MemoryDestination::new();
     let _ = dw
         .allocate(
             11,
             &["a", "b", "c"],
             &[
-                DataType::I64(false),
-                DataType::F64(true),
-                DataType::String(true),
+                DummyTypeSystem::I64(false),
+                DummyTypeSystem::F64(true),
+                DummyTypeSystem::String(true),
             ],
             DataOrder::ColumnMajor,
         )
@@ -26,37 +27,37 @@ fn mixed_writer_col_major() {
 #[test]
 #[should_panic]
 fn mixed_source_col_major() {
-    let mut source = MixedSource::new(&["a"], &[DataType::F64(false)]);
+    let mut source = DummySource::new(&["a"], &[DummyTypeSystem::F64(false)]);
     source.set_data_order(DataOrder::ColumnMajor).unwrap();
 }
 
 #[test]
 fn write_mixed_array() -> Result<()> {
-    let mut dw = MemoryWriter::new();
+    let mut dw = MemoryDestination::new();
     dw.allocate(
         11,
         &["a", "b", "c", "d", "e"],
         &[
-            DataType::I64(false),
-            DataType::F64(false),
-            DataType::I64(false),
-            DataType::String(false),
-            DataType::F64(false),
-            DataType::String(false),
+            DummyTypeSystem::I64(false),
+            DummyTypeSystem::F64(false),
+            DummyTypeSystem::I64(false),
+            DummyTypeSystem::String(false),
+            DummyTypeSystem::F64(false),
+            DummyTypeSystem::String(false),
         ],
         DataOrder::RowMajor,
     )
     .unwrap();
-    let writers = dw.partition_writers(&[4, 7])?;
+    let destinations = dw.partition(&[4, 7])?;
 
-    writers.into_par_iter().for_each(|mut writer| {
-        for row in 0..writer.nrows() {
-            writer.write_checked(row as i64).unwrap();
-            writer.write_checked(row as f64).unwrap();
-            writer.write_checked(row as i64 + 1000).unwrap();
-            writer.write_checked(row.to_string()).unwrap();
-            writer.write_checked(row as f64 + 1000.).unwrap();
-            writer.write_checked((row + 1000).to_string()).unwrap();
+    destinations.into_par_iter().for_each(|mut destination| {
+        for row in 0..destination.nrows() {
+            destination.write(row as i64).unwrap();
+            destination.write(row as f64).unwrap();
+            destination.write(row as i64 + 1000).unwrap();
+            destination.write(row.to_string()).unwrap();
+            destination.write(row as f64 + 1000.).unwrap();
+            destination.write((row + 1000).to_string()).unwrap();
         }
     });
     for (col, _) in dw.schema().into_iter().enumerate() {
@@ -133,43 +134,43 @@ fn write_mixed_array() -> Result<()> {
 #[test]
 fn test_mixed() {
     let schema = [
-        DataType::I64(false),
-        DataType::F64(false),
-        DataType::String(false),
-        DataType::F64(false),
-        DataType::Bool(false),
-        DataType::String(false),
-        DataType::F64(false),
+        DummyTypeSystem::I64(false),
+        DummyTypeSystem::F64(false),
+        DummyTypeSystem::String(false),
+        DummyTypeSystem::F64(false),
+        DummyTypeSystem::Bool(false),
+        DummyTypeSystem::String(false),
+        DummyTypeSystem::F64(false),
     ];
     let nrows = vec![4, 7];
     let ncols = schema.len();
     let queries: Vec<String> = nrows.iter().map(|v| format!("{},{}", v, ncols)).collect();
 
-    let mut writer = MemoryWriter::new();
-    let dispatcher = Dispatcher::new(
-        MixedSource::new(&["a", "b", "c", "d", "e", "f", "g"], &schema),
-        &mut writer,
+    let mut destination = MemoryDestination::new();
+    let dispatcher = Dispatcher::<_, _, DummyMemoryTransport>::new(
+        DummySource::new(&["a", "b", "c", "d", "e", "f", "g"], &schema),
+        &mut destination,
         &queries,
     );
-    dispatcher.run_checked().expect("run dispatcher");
+    dispatcher.run().expect("run dispatcher");
 
-    for (col, _) in writer.schema().into_iter().enumerate() {
+    for (col, _) in destination.schema().into_iter().enumerate() {
         match col {
             0 => {
                 assert_eq!(
-                    writer.column_view::<i64>(col).unwrap(),
+                    destination.column_view::<i64>(col).unwrap(),
                     array![0, 1, 2, 3, 0, 1, 2, 3, 4, 5, 6]
                 )
             }
             1 => {
                 assert_eq!(
-                    writer.column_view::<f64>(col).unwrap(),
+                    destination.column_view::<f64>(col).unwrap(),
                     array![0.0, 1.0, 2.0, 3.0, 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
                 )
             }
             2 => {
                 assert_eq!(
-                    writer.column_view::<String>(col).unwrap(),
+                    destination.column_view::<String>(col).unwrap(),
                     array![
                         "0".to_string(),
                         "1".to_string(),
@@ -187,19 +188,19 @@ fn test_mixed() {
             }
             3 => {
                 assert_eq!(
-                    writer.column_view::<f64>(col).unwrap(),
+                    destination.column_view::<f64>(col).unwrap(),
                     array![0.0, 1.0, 2.0, 3.0, 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
                 )
             }
             4 => {
                 assert_eq!(
-                    writer.column_view::<bool>(col).unwrap(),
+                    destination.column_view::<bool>(col).unwrap(),
                     array![true, false, true, false, true, false, true, false, true, false, true]
                 )
             }
             5 => {
                 assert_eq!(
-                    writer.column_view::<String>(col).unwrap(),
+                    destination.column_view::<String>(col).unwrap(),
                     array![
                         "0".to_string(),
                         "1".to_string(),
@@ -217,7 +218,7 @@ fn test_mixed() {
             }
             6 => {
                 assert_eq!(
-                    writer.column_view::<f64>(col).unwrap(),
+                    destination.column_view::<f64>(col).unwrap(),
                     array![0.0, 1.0, 2.0, 3.0, 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
                 )
             }
