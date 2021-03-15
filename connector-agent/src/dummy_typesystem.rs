@@ -20,10 +20,12 @@ pub enum DummyTypeSystem {
 }
 
 impl_typesystem! {
-    [] DummyTypeSystem,
-    [DummyTypeSystem::F64] => (f64),
-    [DummyTypeSystem::I64] => (i64),
-    [DummyTypeSystem::Bool] => (bool),
-    [DummyTypeSystem::String] => (String),
-    [DummyTypeSystem::DateTime] => (DateTime<Utc>),
+    system = DummyTypeSystem,
+    mappings = {
+        [F64 => f64]
+        [I64 => i64]
+        [Bool => bool]
+        [String => String]
+        [DateTime => DateTime<Utc>]
+    }
 }

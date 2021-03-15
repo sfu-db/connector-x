@@ -14,12 +14,14 @@ pub enum PandasTypeSystem {
 }
 
 impl_typesystem! {
-    ['r] PandasTypeSystem,
-    [PandasTypeSystem::F64] => (f64),
-    [PandasTypeSystem::I64] => (i64),
-    [PandasTypeSystem::Bool] => (bool),
-    [PandasTypeSystem::String] => ['r] (&'r str),
-    [PandasTypeSystem::DateTime] => (DateTime<Utc>),
+    system = PandasTypeSystem,
+    mappings = {
+        [F64 => f64]
+        [I64 => i64]
+        [Bool => bool]
+        [String => &'r str]
+        [DateTime => DateTime<Utc>]
+    }
 }
 
 pub trait PandasDType: Sized {

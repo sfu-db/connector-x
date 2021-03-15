@@ -17,16 +17,18 @@ pub enum PostgresTypeSystem {
 }
 
 impl_typesystem! {
-    ['r] PostgresTypeSystem,
-    [PostgresTypeSystem::Int4] => (i32),
-    [PostgresTypeSystem::Int8] => (i64),
-    [PostgresTypeSystem::Float4] => (f32),
-    [PostgresTypeSystem::Float8] => (f64),
-    [PostgresTypeSystem::Bool] => (bool),
-    [PostgresTypeSystem::Text] | [PostgresTypeSystem::BpChar] | [PostgresTypeSystem::VarChar] => ['r] (&'r str),
-    [PostgresTypeSystem::Timestamp] => (NaiveDateTime),
-    [PostgresTypeSystem::TimestampTz] => (DateTime<Utc>),
-    [PostgresTypeSystem::Date] => (NaiveDate),
+    system = PostgresTypeSystem,
+    mappings = {
+        [Int4 => i32]
+        [Int8 => i64]
+        [Float4 => f32]
+        [Float8 => f64]
+        [Bool => bool]
+        [Text | BpChar | VarChar => &'r str]
+        [Timestamp => NaiveDateTime]
+        [TimestampTz => DateTime<Utc>]
+        [Date => NaiveDate]
+    }
 }
 
 impl<'a> From<&'a Type> for PostgresTypeSystem {

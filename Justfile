@@ -22,10 +22,10 @@ seed-db:
 
 # benches 
 flame-tpch:
-    cd connector-agent-python && LD_LIBRARY_PATH=$HOME/.pyenv/versions/3.8.6/lib/ cargo run --no-default-features --features executable --release --example flame_tpch
+    cd connector-agent-python && LD_LIBRARY_PATH=$HOME/.pyenv/versions/3.8.6/lib/ cargo run --no-default-features --features executable --features fptr --release --example flame_tpch
 
 build-tpch:
-    cd connector-agent-python && cargo build --no-default-features --features executable --release --example tpch
+    cd connector-agent-python && cargo build --no-default-features --features executable --features fptr --release --example tpch
 
 cachegrind-tpch: build-tpch
     valgrind --tool=cachegrind target/release/examples/tpch

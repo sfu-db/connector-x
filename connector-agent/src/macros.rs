@@ -6,38 +6,63 @@
 /// `DataType::F64(true)` is corresponding to the physical type Option<f64>. Same for I64 and i64
 #[macro_export]
 macro_rules! impl_typesystem {
-    ([$($LT:lifetime)?] $TS:ty, $(/*multiple mapping*/$(/*multiple variant*/ [$($V:tt)+])|+ => $([$LTT:lifetime])? ($NT:ty),)+) => {
+    (
+        system = $TS:tt,
+        mappings = {
+            $(
+                [ $($V:tt)|+ => $NT:ty ]
+            )*
+        }
+    ) => {
         impl $crate::typesystem::TypeSystem for $TS {}
 
-        impl_typesystem!(IMPL [$($LT)?] $TS, $(/*multiple mapping*/
-            $(/*multiple variant*/$($V)+ (false))+ => [$($LTT)?] $NT,
-            $(/*multiple variant*/$($V)+ (true))+ => [$($LTT)?] Option<$NT>,
-        )+);
-    };
-
-    (IMPL [$($LT:lifetime)?] $TS:ty, $($($V:pat)+ => [$($LTT:lifetime)?] $NT:ty,)+) => {
         $(
-            impl <$($LTT,)?> $crate::typesystem::TypeAssoc<$TS> for $NT {
-                fn check(ts: $TS) -> $crate::errors::Result<()> {
-                    match ts {
-                        $(
-                            $V => Ok(()),
-                        )+
-                        _ => fehler::throw!($crate::errors::ConnectorAgentError::UnexpectedType(format!("{:?}", ts), std::any::type_name::<$NT>()))
-                    }
-                }
-            }
+            impl_typesystem!(@typeassoc $TS [$($V)+], $NT);
         )+
 
-        impl<$($LT,)? F> $crate::typesystem::Realize<F> for $TS
+        impl_typesystem!(@realize $TS $([ [$($V)+] => $NT ])+ );
+    };
+
+    (@typeassoc $TS:tt [$($V:tt)+], $NT:ty) => {
+        impl<'r> $crate::typesystem::TypeAssoc<$TS> for $NT {
+            fn check(ts: $TS) -> $crate::Result<()> {
+                match ts {
+                    $(
+                        $TS::$V(false) => Ok(()),
+                    )+
+                    _ => fehler::throw!($crate::errors::ConnectorAgentError::UnexpectedType(format!("{:?}", ts), std::any::type_name::<$NT>()))
+                }
+            }
+        }
+
+        impl<'r> $crate::typesystem::TypeAssoc<$TS> for Option<$NT> {
+            fn check(ts: $TS) -> $crate::Result<()> {
+                match ts {
+                    $(
+                        $TS::$V(true) => Ok(()),
+                    )+
+                    _ => fehler::throw!($crate::errors::ConnectorAgentError::UnexpectedType(format!("{:?}", ts), std::any::type_name::<$NT>()))
+                }
+            }
+        }
+    };
+
+    (@realize $TS:tt $([ [$($V:tt)+] => $NT:ty ])+) => {
+        impl<'r, F> $crate::typesystem::Realize<F> for $TS
         where
             F: $crate::typesystem::ParameterizedFunc,
-            $(F: $crate::typesystem::ParameterizedOn<$NT>),+
+            $(F: $crate::typesystem::ParameterizedOn<$NT>,)+
+            $(F: $crate::typesystem::ParameterizedOn<Option<$NT>>,)+
         {
             fn realize(self) -> $crate::errors::Result<F::Function> {
                 match self {
                     $(
-                        $($V)|+ => Ok(F::realize::<$NT>()),
+                        $(
+                            $TS::$V(false) => Ok(F::realize::<$NT>()),
+                        )+
+                        $(
+                            $TS::$V(true) => Ok(F::realize::<Option<$NT>>()),
+                        )+
                     )+
                 }
             }
