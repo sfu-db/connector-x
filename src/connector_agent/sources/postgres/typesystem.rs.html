@@ -95,15 +95,15 @@
 <span class="macro">impl_typesystem</span><span class="macro">!</span> {
     <span class="ident">system</span> <span class="op">=</span> <span class="ident">PostgresTypeSystem</span>,
     <span class="ident">mappings</span> <span class="op">=</span> {
-        [<span class="ident">Int4</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i32</span>]
-        [<span class="ident">Int8</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i64</span>]
-        [<span class="ident">Float4</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f32</span>]
-        [<span class="ident">Float8</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f64</span>]
-        [<span class="ident">Bool</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">bool</span>]
-        [<span class="ident">Text</span> <span class="op">|</span> <span class="ident">BpChar</span> <span class="op">|</span> <span class="ident">VarChar</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;r</span> <span class="ident">str</span>]
-        [<span class="ident">Timestamp</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">NaiveDateTime</span>]
-        [<span class="ident">TimestampTz</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span>]
-        [<span class="ident">Date</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">NaiveDate</span>]
+        { <span class="ident">Int4</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i32</span> }
+        { <span class="ident">Int8</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i64</span> }
+        { <span class="ident">Float4</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f32</span> }
+        { <span class="ident">Float8</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f64</span> }
+        { <span class="ident">Bool</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">bool</span> }
+        { <span class="ident">Text</span> <span class="op">|</span> <span class="ident">BpChar</span> <span class="op">|</span> <span class="ident">VarChar</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;r</span> <span class="ident">str</span> }
+        { <span class="ident">Timestamp</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">NaiveDateTime</span> }
+        { <span class="ident">TimestampTz</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span> }
+        { <span class="ident">Date</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">NaiveDate</span> }
     }
 }
 

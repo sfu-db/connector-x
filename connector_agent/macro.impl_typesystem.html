@@ -7,7 +7,7 @@
         <span class="ident">system</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TS</span>:<span class="ident">tt</span>,
         <span class="ident">mappings</span> <span class="op">=</span> {
             $(
-                [ $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">V</span>:<span class="ident">tt</span>)<span class="op">|</span><span class="op">+</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">NT</span>:<span class="ident">ty</span> ]
+                { $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">V</span>:<span class="ident">tt</span>)<span class="op">|</span><span class="op">+</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">NT</span>:<span class="ident">ty</span> }
             )<span class="op">*</span>
         }
     ) <span class="op">=</span><span class="op">&gt;</span> { ... };
