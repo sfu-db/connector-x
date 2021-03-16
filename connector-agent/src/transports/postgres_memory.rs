@@ -11,17 +11,17 @@ impl_transport!(
     systems = PostgresTypeSystem => DummyTypeSystem,
     route = PostgresSource => MemoryDestination,
     mappings = {
-        [Float4      => F64      | f32           => f64           | conversion all]
-        [Float8      => F64      | f64           => f64           | conversion all]
-        [Int4        => I64      | i32           => i64           | conversion all]
-        [Int8        => I64      | i64           => i64           | conversion all]
-        [Bool        => Bool     | bool          => bool          | conversion all]
-        [Text        => String   | &'r str       => String        | conversion half]
-        [BpChar      => String   | &'r str       => String        | conversion none]
-        [VarChar     => String   | &'r str       => String        | conversion none]
-        [Timestamp   => DateTime | NaiveDateTime => DateTime<Utc> | conversion half]
-        [TimestampTz => DateTime | DateTime<Utc> => DateTime<Utc> | conversion all]
-        [Date        => DateTime | NaiveDate     => DateTime<Utc> | conversion half]
+        { Float4[f32]                => F64[f64]                | conversion all }
+        { Float8[f64]                => F64[f64]                | conversion all }
+        { Int4[i32]                  => I64[i64]                | conversion all }
+        { Int8[i64]                  => I64[i64]                | conversion all }
+        { Bool[bool]                 => Bool[bool]              | conversion all  }
+        { Text[&'r str]              => String[String]          | conversion half }
+        { BpChar[&'r str]            => String[String]          | conversion none }
+        { VarChar[&'r str]           => String[String]          | conversion none }
+        { Timestamp[NaiveDateTime]   => DateTime[DateTime<Utc>] | conversion half }
+        { TimestampTz[DateTime<Utc>] => DateTime[DateTime<Utc>] | conversion all }
+        { Date[NaiveDate]            => DateTime[DateTime<Utc>] | conversion half }
     }
 );
 

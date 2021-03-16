@@ -11,11 +11,11 @@ impl_transport!(
     systems = DummyTypeSystem => DummyTypeSystem,
     route = CSVSource => MemoryDestination,
     mappings = {
-        [F64      => F64      | f64           => f64           | conversion all]
-        [I64      => I64      | i64           => i64           | conversion all]
-        [Bool     => Bool     | bool          => bool          | conversion all]
-        [String   => String   | String        => String        | conversion all]
-        [DateTime => DateTime | DateTime<Utc> => DateTime<Utc> | conversion all]
+        { F64[f64]                => F64[f64]                | conversion all}
+        { I64[i64]                => I64[i64]                | conversion all}
+        { Bool[bool]              => Bool[bool]              | conversion all}
+        { String[String]          => String[String]          | conversion all}
+        { DateTime[DateTime<Utc>] => DateTime[DateTime<Utc>] | conversion all}
     }
 );
 

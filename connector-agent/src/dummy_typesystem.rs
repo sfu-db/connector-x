@@ -22,10 +22,10 @@ pub enum DummyTypeSystem {
 impl_typesystem! {
     system = DummyTypeSystem,
     mappings = {
-        [F64 => f64]
-        [I64 => i64]
-        [Bool => bool]
-        [String => String]
-        [DateTime => DateTime<Utc>]
+        { F64 => f64 }
+        { I64 => i64 }
+        { Bool => bool }
+        { String => String }
+        { DateTime => DateTime<Utc> }
     }
 }

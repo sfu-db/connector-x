@@ -16,11 +16,11 @@ pub enum PandasTypeSystem {
 impl_typesystem! {
     system = PandasTypeSystem,
     mappings = {
-        [F64 => f64]
-        [I64 => i64]
-        [Bool => bool]
-        [String => &'r str]
-        [DateTime => DateTime<Utc>]
+        { F64 => f64 }
+        { I64 => i64 }
+        { Bool => bool }
+        { String => &'r str }
+        { DateTime => DateTime<Utc> }
     }
 }
 

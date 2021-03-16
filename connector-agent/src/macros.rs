@@ -10,7 +10,7 @@ macro_rules! impl_typesystem {
         system = $TS:tt,
         mappings = {
             $(
-                [ $($V:tt)|+ => $NT:ty ]
+                { $($V:tt)|+ => $NT:ty }
             )*
         }
     ) => {
@@ -84,7 +84,6 @@ macro_rules! impl_typesystem {
 /// ```
 /// This implements `Transport` to `PostgresPandasTransport<'py>`.
 /// The lifetime used must be declare in the first argument in the bracket.
-
 #[macro_export]
 macro_rules! impl_transport {
     (
@@ -93,7 +92,7 @@ macro_rules! impl_transport {
         route = $S:ty => $D:ty,
         mappings = {
             $(
-                [$($TOKENS:tt)+]
+                { $($TOKENS:tt)+ }
             )*
         }
     ) => {
@@ -118,7 +117,7 @@ macro_rules! impl_transport {
         }
     };
 
-    (@cvtts [$TSS:tt, $TSD:tt] $( [$V1:tt => $V2:tt | $T1:ty => $T2:ty | conversion $HOW:ident] )*) => {
+    (@cvtts [$TSS:tt, $TSD:tt] $( [$V1:tt [$T1:ty] => $V2:tt [$T2:ty] | conversion $HOW:ident] )*) => {
         fn convert_typesystem(ts: Self::TSS) -> $crate::Result<Self::TSD> {
             match ts {
                 $(
@@ -133,7 +132,7 @@ macro_rules! impl_transport {
         }
     };
 
-    (@process [$TSS:tt, $TSD:tt] $([ $V1:tt => $V2:tt | $T1:ty => $T2:ty | conversion $HOW:ident ])*) => {
+    (@process [$TSS:tt, $TSD:tt] $([ $V1:tt [$T1:ty] => $V2:tt [$T2:ty] | conversion $HOW:ident ])*) => {
         fn process<'s, 'd, 'r>(
             ts1: Self::TSS,
             ts2: Self::TSD,
@@ -165,7 +164,7 @@ macro_rules! impl_transport {
         }
     };
 
-    (@processor [$TSS:tt, $TSD:tt] $([ $V1:tt => $V2:tt | $T1:ty => $T2:ty | conversion $HOW:ident ])*, $([ $($TOKENS:tt)+ ])*) => {
+    (@processor [$TSS:tt, $TSD:tt] $([ $V1:tt [$T1:ty] => $V2:tt [$T2:ty] | conversion $HOW:ident ])*, $([ $($TOKENS:tt)+ ])*) => {
         fn processor<'s, 'd>(
             ts1: Self::TSS,
             ts2: Self::TSD,
@@ -194,16 +193,16 @@ macro_rules! impl_transport {
         }
     };
 
-    (@process_func_branch $OPT:ident [ $V1:tt => $V2:tt | &$L1:lifetime $T1:ty => &$L2:lifetime $T2:ty | conversion $HOW:ident ]) => {
+    (@process_func_branch $OPT:ident [ $V1:tt [&$L1:lifetime $T1:ty] => $V2:tt [&$L2:lifetime $T2:ty] | conversion $HOW:ident ]) => {
         impl_transport!(@process_func_branch $OPT &$T1, &$T2)
     };
-    (@process_func_branch $OPT:ident [ $V1:tt => $V2:tt | $T1:ty => &$L:lifetime $T2:ty | conversion $HOW:ident ]) => {
+    (@process_func_branch $OPT:ident [ $V1:tt [$T1:ty] => $V2:tt [&$L2:lifetime $T2:ty] | conversion $HOW:ident ]) => {
         impl_transport!(@process_func_branch $OPT $T1, &$T2)
     };
-    (@process_func_branch $OPT:ident [ $V1:tt => $V2:tt | &$L:lifetime $T1:ty => $T2:ty | conversion $HOW:ident ]) => {
+    (@process_func_branch $OPT:ident [ $V1:tt [&$L1:lifetime $T1:ty] => $V2:tt [$T2:ty] | conversion $HOW:ident ]) => {
         impl_transport!(@process_func_branch $OPT &$T1, $T2)
     };
-    (@process_func_branch $OPT:ident [ $V1:tt => $V2:tt | $T1:ty => $T2:ty | conversion $HOW:ident ]) => {
+    (@process_func_branch $OPT:ident [ $V1:tt [$T1:ty] => $V2:tt [$T2:ty] | conversion $HOW:ident ]) => {
         impl_transport!(@process_func_branch $OPT $T1, $T2)
     };
     (@process_func_branch true $T1:ty, $T2:ty) => {
@@ -218,7 +217,7 @@ macro_rules! impl_transport {
     };
 
     // TypeConversion
-    (@cvt $TP:ty, $V1:tt => $V2:tt | $T1:ty => $T2:ty | conversion $HOW:ident) => {
+    (@cvt $TP:ty, $V1:tt [$T1:ty] => $V2:tt [$T2:ty] | conversion $HOW:ident) => {
         impl_transport!(@cvt $HOW $TP, $T1, $T2);
     };
     (@cvt all $TP:ty, $T1:ty, $T2:ty) => {
