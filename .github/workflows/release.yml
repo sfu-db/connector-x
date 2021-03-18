@@ -1,0 +1,232 @@
+name: release
+
+on: 
+  push:
+    branches:
+      - release
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    container: ubuntu:18.04
+    strategy:
+      matrix:
+        python:
+          - 3.7.10
+          - 3.8.8
+          - 3.9.2
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install tools
+        run: |
+          apt-get update
+          apt-get install -y ca-certificates make build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncurses5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev pkg-config git
+        env:
+          DEBIAN_FRONTEND: noninteractive
+
+      - name: Install Pyenv 
+        run: |
+          curl https://pyenv.run | bash
+          echo "$HOME/.pyenv/bin" >> $GITHUB_PATH
+
+      - name: Install Python
+        run: |
+          eval "$(pyenv init -)"
+          eval "$(pyenv virtualenv-init -)"
+          pyenv install "${{ matrix.python }}"
+          pyenv global "${{ matrix.python }}"
+          pip install -U pip  # upgrade pip after installing python
+          pip install poetry
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly-2021-02-15
+          components: rustfmt
+          default: true
+
+      - name: Install other dependent tools
+        run: |
+          cargo install cargo-quickinstall
+          cargo quickinstall just
+
+      - name: Install python dependencies
+        run: |
+          eval "$(pyenv init -)"
+          eval "$(pyenv virtualenv-init -)"
+          just bootstrap-python
+
+      - name: build python dependencies
+        run: |
+          eval "$(pyenv init -)"
+          eval "$(pyenv virtualenv-init -)"
+          just setup-python
+      
+      - name: Print the result
+        run: ls connector-agent-python/connector_agent_python
+
+      - name: Build wheel
+        run: |
+          eval "$(pyenv init -)"
+          eval "$(pyenv virtualenv-init -)"
+          just build-python-wheel rename-wheel
+          echo "Built artifacts"
+          ls connector-agent-python/dist
+
+      - name: Persist artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: "linux-${{ matrix.python }}"
+          path: connector-agent-python/dist/*.whl
+
+          
+  darwin:
+    runs-on: macos-10.15
+    strategy:
+      matrix:
+        python:
+          - 3.7.10
+          - 3.8.8
+          - 3.9.2
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install tools
+        run: |
+          brew install openssl readline sqlite3 xz zlib
+
+      - name: Install Pyenv 
+        run: |
+          curl https://pyenv.run | bash
+          echo "$HOME/.pyenv/bin" >> $GITHUB_PATH
+
+      - name: Install Python
+        run: |
+          eval "$(pyenv init -)"
+          eval "$(pyenv virtualenv-init -)"
+          pyenv install "${{ matrix.python }}"
+          pyenv global "${{ matrix.python }}"
+          pip install -U pip  # upgrade pip after installing python
+          pip install poetry
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly-2021-02-15
+          components: rustfmt
+          default: true
+
+      - name: Install other dependent tools
+        run: |
+          cargo install cargo-quickinstall
+          cargo quickinstall just
+
+      - name: Install python dependencies
+        run: |
+          eval "$(pyenv init -)"
+          eval "$(pyenv virtualenv-init -)"
+          just bootstrap-python
+
+      - name: build python dependencies
+        run: |
+          eval "$(pyenv init -)"
+          eval "$(pyenv virtualenv-init -)"
+          just setup-python
+      
+      - name: Print the result
+        run: ls connector-agent-python/connector_agent_python
+
+      - name: Build wheel
+        run: |
+          eval "$(pyenv init -)"
+          eval "$(pyenv virtualenv-init -)" 
+          just build-python-wheel rename-wheel
+          echo "Built artifacts"
+          ls connector-agent-python/dist
+
+      - name: Persist artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: "darwin-${{ matrix.python }}"
+          path: connector-agent-python/dist/*.whl
+
+  win32:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        python:
+          - 3.7.7
+          - 3.8.2
+        
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Pyenv
+        run: |
+          pip install pyenv-win --target $HOME\\.pyenv
+          echo "$HOME\.pyenv\pyenv-win\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          echo "$HOME\.pyenv\pyenv-win\shims" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          echo "PYENV=$HOME\.pyenv\pyenv-win\" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          echo "PYENV_HOME=$HOME\.pyenv\pyenv-win\" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: List supported pythons 
+        run: |
+          pyenv install --list
+
+      - name: Install Python
+        run: |
+          pyenv install "${{ matrix.python }}"
+          pyenv global "${{ matrix.python }}"
+          pip install -U pip  # upgrade pip after installing python
+          pip install poetry
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly-2021-02-15
+          components: rustfmt
+          default: true
+
+      - name: Install other dependent tools
+        run: |
+          cargo install cargo-quickinstall
+          cargo quickinstall just
+
+      - name: Install python dependencies
+        run: |
+          just bootstrap-python
+
+      - name: build python dependencies
+        run: |
+          just setup-python
+      
+      - name: Print the result
+        run: ls connector-agent-python/connector_agent_python
+
+      - name: Build wheel
+        run: |
+          just build-python-wheel rename-wheel
+          echo "Built artifacts"
+          ls connector-agent-python/dist
+
+      - name: Persist artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: "win32-${{ matrix.python }}"
+          path: connector-agent-python/dist/*.whl
+
+    # upload:
+    #   runs-on: ubuntu-latest
+    #   steps:
+    #     - name: Download artifacts
+    #       uses: actions/upload-artifact@v2
+    #       with:
+    #         name: "win32-${{ matrix.python }}"
+    #         path: connector-agent-python/dist/*.whl
+
+    #     - name: Download artifacts
+    #       run: |
+    #         twine upload --repository-url https://test.pypi.org/legacy/ dist/*      

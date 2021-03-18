@@ -37,3 +37,43 @@ python-tpch name +ARGS="": setup-python
 python-shell:
     cd connector-agent-python && \
     poetry run ipython
+
+
+# releases
+build-python-wheel:
+    cd connector-agent-python && poetry build
+    
+rename-wheel:
+    #!/usr/bin/env python3
+    from pathlib import Path
+    import sys
+    import os
+
+    platform = sys.platform
+    for p in Path("connector-agent-python/connector_agent_python").iterdir():
+        print("file is", p)
+        if platform == "win32" and p.suffix == ".pyd":
+            platform_string = p.suffixes[0][1:]
+            abi_tag, platform_tag = platform_string.split("-")
+            platform_string = f"{abi_tag}-{platform_tag}"
+        elif platform == "linux" and p.suffix == ".so":
+            platform_string = p.suffixes[0][1:]
+            cpython, abi_tag, *platform_tag = platform_string.split("-")
+            platform_string = f"cp{abi_tag}-manylinux2014_x86_64"
+        elif platform == "darwin" and p.suffix == ".so": 
+            platform_string = p.suffixes[0][1:]
+            cpython, abi_tag, *platform_tag = platform_string.split("-")
+            platform_string = f"cp{abi_tag}-macosx_10_15_intel"
+        else:
+            pass
+
+    for p in Path("connector-agent-python/dist").iterdir():
+        if p.suffix == ".whl":
+            fname = p.stem
+            fname = "-".join(fname.split("-")[:3])
+            break
+
+    os.rename(
+        p,
+        f"connector-agent-python/dist/{fname}-{platform_string}.whl",
+    )
