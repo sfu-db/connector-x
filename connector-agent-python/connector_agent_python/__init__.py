@@ -58,8 +58,8 @@ def read_sql(
             partition_query = {
                 "query": query,
                 "column": partition_on,
-                "min": partition_range[0],
-                "max": partition_range[1],
+                "min": partition_range[0] if partition_range else None,
+                "max": partition_range[1] if partition_range else None,
                 "num": partition_num,
             }
             queries = None

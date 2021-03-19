@@ -85,6 +85,32 @@ def test_read_sql_with_partition(postgres_url: str) -> None:
     assert_frame_equal(df, expected, check_names=True)
 
 
+def test_read_sql_with_partition_without_partition_range(postgres_url: str) -> None:
+    query = "SELECT * FROM test_table where test_float > 3"
+    df = read_sql(
+        postgres_url,
+        query,
+        partition_on="test_int",
+        partition_num=3,
+    )
+
+    expected = pd.DataFrame(
+        index=range(2),
+        data={
+            "test_int": pd.Series([0, 4], dtype="Int64"),
+            "test_nullint": pd.Series([5, 9], dtype="Int64"),
+            "test_str": pd.Series(
+                ["a", "c"], dtype="object"
+            ),
+            "test_float": pd.Series([3.1, 7.8], dtype="float64"),
+            "test_bool": pd.Series(
+                [None, None], dtype="boolean"
+            ),
+        },
+    )
+    assert_frame_equal(df, expected, check_names=True)
+
+
 def test_read_sql_with_partition_and_selection(postgres_url: str) -> None:
     query = "SELECT * FROM test_table WHERE 1 = 3 OR 2 = 2"
     df = read_sql(
