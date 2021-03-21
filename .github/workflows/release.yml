@@ -73,7 +73,8 @@ jobs:
         env:
           PYPI_TEST_TOKEN: ${{ secrets.PYPI_TEST_TOKEN }}
         run: |
-          twine upload --non-interactive --repository-url https://test.pypi.org/legacy/ -u __token__ -p $PYPI_TEST_TOKEN connector-agent-python/dist/*.whl
+          cd connector-agent-python
+          poetry run twine upload --non-interactive --repository-url https://test.pypi.org/legacy/ -u __token__ -p $PYPI_TEST_TOKEN dist/*.whl
 
 
           
@@ -151,7 +152,10 @@ jobs:
         env:
           PYPI_TEST_TOKEN: ${{ secrets.PYPI_TEST_TOKEN }}
         run: |
-          twine upload --non-interactive --repository-url https://test.pypi.org/legacy/ -u __token__ -p $PYPI_TEST_TOKEN connector-agent-python/dist/*.whl
+          eval "$(pyenv init -)"
+          eval "$(pyenv virtualenv-init -)" 
+          cd connector-agent-python
+          poetry run twine upload --non-interactive --repository-url https://test.pypi.org/legacy/ -u __token__ -p $PYPI_TEST_TOKEN dist/*.whl
 
   win32:
     runs-on: windows-latest
@@ -221,7 +225,11 @@ jobs:
         env:
           PYPI_TEST_TOKEN: ${{ secrets.PYPI_TEST_TOKEN }}
         run: |
-          twine upload --non-interactive --repository-url https://test.pypi.org/legacy/ -u __token__ -p $PYPI_TEST_TOKEN connector-agent-python/dist/*.whl
+          cd connector-agent-python
+          Get-ChildItem "dist" -Filter *.whl | 
+          foreach {
+            poetry run twine upload -- --non-interactive --repository-url https://test.pypi.org/legacy/ -u __token__ -p $PYPI_TEST_TOKEN $_.FullName
+          }
 
     # upload:
     #   runs-on: ubuntu-latest

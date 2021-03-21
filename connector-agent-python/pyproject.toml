@@ -22,6 +22,7 @@ modin = "^0.9.0"
 psycopg2-binary = "^2.8.6"
 pyarrow = "^3.0.0"
 pytest = "^6.2"
+twine = "^3.4.1"
 
 [build-system]
 # build-backend = "maturin"

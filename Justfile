@@ -55,25 +55,27 @@ rename-wheel:
         if platform == "win32" and p.suffix == ".pyd":
             platform_string = p.suffixes[0][1:]
             abi_tag, platform_tag = platform_string.split("-")
-            platform_string = f"{abi_tag}-{platform_tag}"
+            py_tag = abi_tag.rstrip("m")
+            platform_string = f"{py_tag}-{abi_tag}-{platform_tag}"
         elif platform == "linux" and p.suffix == ".so":
             platform_string = p.suffixes[0][1:]
             cpython, abi_tag, *platform_tag = platform_string.split("-")
-            platform_string = f"cp{abi_tag}-manylinux2014_x86_64"
+            py_tag = abi_tag.rstrip("m")
+            platform_string = f"cp{py_tag}-cp{abi_tag}-manylinux2014_x86_64"
         elif platform == "darwin" and p.suffix == ".so": 
             platform_string = p.suffixes[0][1:]
             cpython, abi_tag, *platform_tag = platform_string.split("-")
-            platform_string = f"cp{abi_tag}-macosx_10_15_intel"
+            py_tag = abi_tag.rstrip("m")
+            platform_string = f"cp{py_tag}-cp{abi_tag}-macosx_10_15_intel"
         else:
             pass
 
     for p in Path("connector-agent-python/dist").iterdir():
         if p.suffix == ".whl":
-            fname = p.stem
-            fname = "-".join(fname.split("-")[:3])
+            pkgname, version, *rest = p.stem.split("-")
             break
 
     os.rename(
         p,
-        f"connector-agent-python/dist/{fname}-{platform_string}.whl",
+        f"connector-agent-python/dist/{pkgname}-{version}-{platform_string}.whl",
     )
