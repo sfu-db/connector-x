@@ -4,7 +4,7 @@ description = ""
 include = ["connector_agent_python/*.so", "connector_agent_python/*.pyd"]
 name = "connector_agent_python"
 
-version = "0.1.0"
+version = "0.1.0a0"
 
 [tool.poetry.dependencies]
 numpy = "^1"
@@ -25,7 +25,5 @@ pytest = "^6.2"
 twine = "^3.4.1"
 
 [build-system]
-# build-backend = "maturin"
-# requires = ["maturin>=0.10,<0.11"]
 build-backend = "poetry.core.masonry.api"
 requires = ["poetry_core>=1.0.0"]
