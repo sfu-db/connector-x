@@ -32,7 +32,7 @@ pub fn run(nq: usize) {
             "pandas",
             None,
             None,
-            Some(PartitionQuery::new(QUERY, "l_orderkey", 0, 6000000, nq)),
+            Some(PartitionQuery::new(QUERY, "l_orderkey", None, None, nq)),
         )
         .unwrap();
     });
