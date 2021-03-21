@@ -1,4 +1,4 @@
-use connector_agent::partition::pg_single_col_partition_query;
+use connector_agent::partition::{pg_get_partition_range, pg_single_col_partition_query};
 use dict_derive::FromPyObject;
 use fehler::throw;
 use pyo3::prelude::*;
@@ -11,13 +11,13 @@ use pyo3::{
 pub struct PartitionQuery {
     query: String,
     column: String,
-    min: i64,
-    max: i64,
+    min: Option<i64>,
+    max: Option<i64>,
     num: usize,
 }
 
 impl PartitionQuery {
-    pub fn new(query: &str, column: &str, min: i64, max: i64, num: usize) -> Self {
+    pub fn new(query: &str, column: &str, min: Option<i64>, max: Option<i64>, num: usize) -> Self {
         Self {
             query: query.into(),
             column: column.into(),
@@ -50,14 +50,23 @@ pub fn read_sql<'a>(
         ) => {
             let mut queries = vec![];
             let num = num as i64;
-            let partition_size = match (max - min + 1) % num == 0 {
-                true => (max - min + 1) / num,
-                false => (max - min + 1) / num + 1,
+
+            let (min, max) = match (min, max) {
+                (None, None) => pg_get_partition_range(conn, &query, &col).unwrap(),
+                (Some(min), Some(max)) => (min, max),
+                _ => throw!(PyValueError::new_err(
+                    "partition_query range can not be partially specified",
+                )),
             };
+
+            let partition_size = (max - min + 1) / num;
 
             for i in 0..num {
                 let lower = min + i * partition_size;
-                let upper = min + (i + 1) * partition_size;
+                let upper = match i == num - 1 {
+                    true => max + 1,
+                    false => min + (i + 1) * partition_size,
+                };
                 let partition_query = pg_single_col_partition_query(&query, &col, lower, upper);
                 queries.push(partition_query);
             }
