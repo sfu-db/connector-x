@@ -9,142 +9,142 @@ on:
       - main
 
 jobs:
-  linux:
-    runs-on: ubuntu-latest
-    container: quay.io/pypa/manylinux2014_x86_64
-    strategy:
-      matrix:
-        python:
-          - 37
-          - 38
-          - 39
+  # linux:
+  #   runs-on: ubuntu-latest
+  #   container: quay.io/pypa/manylinux2014_x86_64
+  #   strategy:
+  #     matrix:
+  #       python:
+  #         - 37
+  #         - 38
+  #         - 39
 
-    steps:
-      - uses: actions/checkout@v2
-      - name: Set python version
-        run: |
-          if [[ "${{ matrix.python }}" == "37" ]]; then
-            echo "/opt/python/cp37-cp37m/bin" >> $GITHUB_PATH
-          else
-            echo "/opt/python/cp${{ matrix.python }}-cp${{ matrix.python }}/bin" >> $GITHUB_PATH
-          fi
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - name: Set python version
+  #       run: |
+  #         if [[ "${{ matrix.python }}" == "37" ]]; then
+  #           echo "/opt/python/cp37-cp37m/bin" >> $GITHUB_PATH
+  #         else
+  #           echo "/opt/python/cp${{ matrix.python }}-cp${{ matrix.python }}/bin" >> $GITHUB_PATH
+  #         fi
 
-      - name: Install Poetry
-        run: |
-          echo $(which python)
-          pip install poetry
+  #     - name: Install Poetry
+  #       run: |
+  #         echo $(which python)
+  #         pip install poetry
 
-      - name: Install Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: nightly-2021-02-15
-          components: rustfmt
-          default: true
+  #     - name: Install Rust
+  #       uses: actions-rs/toolchain@v1
+  #       with:
+  #         toolchain: nightly-2021-02-15
+  #         components: rustfmt
+  #         default: true
 
-      - name: Install other dependent tools
-        run: |
-          cargo install just
-          yum install -y openssl-devel
+  #     - name: Install other dependent tools
+  #       run: |
+  #         cargo install just
+  #         yum install -y openssl-devel
 
-      - name: Install python dependencies
-        run: |
-          just bootstrap-python
+  #     - name: Install python dependencies
+  #       run: |
+  #         just bootstrap-python
 
-      - name: build python dependencies
-        run: |
-          just setup-python
+  #     - name: build python dependencies
+  #       run: |
+  #         just setup-python
       
-      - name: Print the result
-        run: ls connector-agent-python/connector_agent_python
+  #     - name: Print the result
+  #       run: ls connector-agent-python/connector_agent_python
 
-      - name: Build wheel
-        run: |
-          just build-python-wheel rename-wheel
-          echo "Built artifacts"
-          ls connector-agent-python/dist
+  #     - name: Build wheel
+  #       run: |
+  #         just build-python-wheel rename-wheel
+  #         echo "Built artifacts"
+  #         ls connector-agent-python/dist
 
-      - name: Persist artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          name: "linux-${{ matrix.python }}"
-          path: connector-agent-python/dist/*.whl
+  #     - name: Persist artifacts
+  #       uses: actions/upload-artifact@v2
+  #       with:
+  #         name: "linux-${{ matrix.python }}"
+  #         path: connector-agent-python/dist/*.whl
           
-  darwin:
-    runs-on: macos-10.15
-    strategy:
-      matrix:
-        python:
-          - 3.7.10
-          - 3.8.8
-          - 3.9.2
+  # darwin:
+  #   runs-on: macos-10.15
+  #   strategy:
+  #     matrix:
+  #       python:
+  #         - 3.7.10
+  #         - 3.8.8
+  #         - 3.9.2
 
-    steps:
-      - uses: actions/checkout@v2
-      - name: Install tools
-        run: |
-          brew install openssl readline sqlite3 xz zlib
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - name: Install tools
+  #       run: |
+  #         brew install openssl readline sqlite3 xz zlib
 
-      - name: Install Pyenv 
-        run: |
-          curl https://pyenv.run | bash
-          echo "$HOME/.pyenv/bin" >> $GITHUB_PATH
+  #     - name: Install Pyenv 
+  #       run: |
+  #         curl https://pyenv.run | bash
+  #         echo "$HOME/.pyenv/bin" >> $GITHUB_PATH
 
-      - name: Install Python
-        run: |
-          eval "$(pyenv init -)"
-          eval "$(pyenv virtualenv-init -)"
-          pyenv install "${{ matrix.python }}"
-          pyenv global "${{ matrix.python }}"
-          pip install -U pip  # upgrade pip after installing python
-          pip install poetry
+  #     - name: Install Python
+  #       run: |
+  #         eval "$(pyenv init -)"
+  #         eval "$(pyenv virtualenv-init -)"
+  #         pyenv install "${{ matrix.python }}"
+  #         pyenv global "${{ matrix.python }}"
+  #         pip install -U pip  # upgrade pip after installing python
+  #         pip install poetry
 
-      - name: Install Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: nightly-2021-02-15
-          components: rustfmt
-          default: true
+  #     - name: Install Rust
+  #       uses: actions-rs/toolchain@v1
+  #       with:
+  #         toolchain: nightly-2021-02-15
+  #         components: rustfmt
+  #         default: true
 
-      - name: Install other dependent tools
-        run: |
-          cargo install cargo-quickinstall
-          cargo quickinstall just
+  #     - name: Install other dependent tools
+  #       run: |
+  #         cargo install cargo-quickinstall
+  #         cargo quickinstall just
 
-      - name: Install python dependencies
-        run: |
-          eval "$(pyenv init -)"
-          eval "$(pyenv virtualenv-init -)"
-          just bootstrap-python
+  #     - name: Install python dependencies
+  #       run: |
+  #         eval "$(pyenv init -)"
+  #         eval "$(pyenv virtualenv-init -)"
+  #         just bootstrap-python
 
-      - name: build python dependencies
-        run: |
-          eval "$(pyenv init -)"
-          eval "$(pyenv virtualenv-init -)"
-          just setup-python
+  #     - name: build python dependencies
+  #       run: |
+  #         eval "$(pyenv init -)"
+  #         eval "$(pyenv virtualenv-init -)"
+  #         just setup-python
       
-      - name: Print the result
-        run: ls connector-agent-python/connector_agent_python
+  #     - name: Print the result
+  #       run: ls connector-agent-python/connector_agent_python
 
-      - name: Build wheel
-        run: |
-          eval "$(pyenv init -)"
-          eval "$(pyenv virtualenv-init -)" 
-          just build-python-wheel rename-wheel
-          echo "Built artifacts"
-          ls connector-agent-python/dist
+  #     - name: Build wheel
+  #       run: |
+  #         eval "$(pyenv init -)"
+  #         eval "$(pyenv virtualenv-init -)" 
+  #         just build-python-wheel rename-wheel
+  #         echo "Built artifacts"
+  #         ls connector-agent-python/dist
 
-      - name: Persist artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          name: "darwin-${{ matrix.python }}"
-          path: connector-agent-python/dist/*.whl
+  #     - name: Persist artifacts
+  #       uses: actions/upload-artifact@v2
+  #       with:
+  #         name: "darwin-${{ matrix.python }}"
+  #         path: connector-agent-python/dist/*.whl
 
   win32:
     runs-on: windows-latest
     strategy:
       matrix:
         python:
-          - 3.7.7
+          # - 3.7.7
           - 3.8.2
         
     steps:
@@ -152,10 +152,16 @@ jobs:
       - name: Install Pyenv
         run: |
           pip install pyenv-win --target $HOME\\.pyenv
-          echo "$HOME\.pyenv\pyenv-win\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+          cat $env:GITHUB_PATH | Out-File -FilePath PATH_TEMP -Encoding utf8
+
+          echo "$HOME\.pyenv\pyenv-win\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8
           echo "$HOME\.pyenv\pyenv-win\shims" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          cat PATH_TEMP | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          
           echo "PYENV=$HOME\.pyenv\pyenv-win\" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           echo "PYENV_HOME=$HOME\.pyenv\pyenv-win\" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          echo "$HOME\.pyenv\pyenv-win\versions\{{ $matrix.python }}\Scripts" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
       - name: List supported pythons 
         run: |
@@ -165,8 +171,13 @@ jobs:
         run: |
           pyenv install "${{ matrix.python }}"
           pyenv global "${{ matrix.python }}"
+          pyenv rehash
+
+
           pip install -U pip  # upgrade pip after installing python
           pip install poetry
+          pyenv rehash
+          echo $(which python)
 
       - name: Install Rust
         uses: actions-rs/toolchain@v1
@@ -182,6 +193,7 @@ jobs:
 
       - name: Install python dependencies
         run: |
+          echo $(which python)
           just bootstrap-python
 
       - name: build python dependencies
@@ -205,7 +217,8 @@ jobs:
 
   upload:
     runs-on: ubuntu-latest
-    needs: [win32, darwin, linux]
+    # needs: [win32, darwin, linux]
+    needs: [win32]
     steps:
       - name: Download all rtifacts
         uses: actions/download-artifact@v2
@@ -220,4 +233,7 @@ jobs:
         env:
           PYPI_TEST_TOKEN: ${{ secrets.PYPI_TEST_TOKEN }}
         run: |
-          twine upload --non-interactive --repository-url https://test.pypi.org/legacy/ -u __token__ -p $PYPI_TEST_TOKEN **/*.whl
+          for file in $(ls **/*.whl)
+          do
+            twine upload --non-interactive --repository-url https://test.pypi.org/legacy/ -u __token__ -p $PYPI_TEST_TOKEN $file || continue
+          done
