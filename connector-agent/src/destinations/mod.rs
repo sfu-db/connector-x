@@ -36,7 +36,7 @@ pub trait DestinationPartition<'a>: Send {
     type TypeSystem: TypeSystem;
 
     /// Write a value of type T to the location (row, col). If T mismatch with the
-    /// schema, `ConnectorAgentError::UnexpectedType` will return.
+    /// schema, `ConnectorAgentError::TypeCheckFailed` will return.
     fn write<T>(&mut self, value: T) -> Result<()>
     where
         T: TypeAssoc<Self::TypeSystem>,

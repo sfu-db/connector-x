@@ -1,5 +1,6 @@
 use crate::errors::ConnectorAgentError;
 use crate::sources::postgres::PostgresTypeSystem;
+use anyhow::anyhow;
 use fehler::{throw, throws};
 use log::{debug, trace};
 use postgres::{Client, NoTls};
@@ -129,11 +130,20 @@ pub fn pg_get_partition_range(conn: &str, query: &str, col: &str) -> (i64, i64) 
         PostgresTypeSystem::Int8(_) => {
             let min_v: i64 = row.get(0);
             let max_v: i64 = row.get(1);
+            (min_v, max_v)
+        }
+        PostgresTypeSystem::Float4(_) => {
+            let min_v: f32 = row.get(0);
+            let max_v: f32 = row.get(1);
             (min_v as i64, max_v as i64)
         }
-        _ => throw!(ConnectorAgentError::NoConversionRule(
-            format!("{:?}", col_type),
-            "Int4 or Int8".to_string()
+        PostgresTypeSystem::Float8(_) => {
+            let min_v: f64 = row.get(0);
+            let max_v: f64 = row.get(1);
+            (min_v as i64, max_v as i64)
+        }
+        _ => throw!(anyhow!(
+            "Partition can only be done on int or float columns"
         )),
     };
 

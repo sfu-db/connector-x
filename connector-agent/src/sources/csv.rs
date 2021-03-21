@@ -5,7 +5,6 @@ use crate::errors::{ConnectorAgentError, Result};
 use chrono::{DateTime, Utc};
 use fehler::{throw, throws};
 use regex::{Regex, RegexBuilder};
-use std::any::type_name;
 use std::collections::HashSet;
 use std::fs::File;
 
@@ -259,7 +258,7 @@ impl<'r, 'a> Produce<'r, i64> for CSVSourcePartitionParser<'a> {
     fn produce(&mut self) -> Result<i64> {
         let v = self.next_val();
         v.parse()
-            .map_err(|_| ConnectorAgentError::CannotParse(type_name::<i64>(), v.into()))
+            .map_err(|_| ConnectorAgentError::cannot_produce::<i64>(Some(v.into())))
     }
 }
 
@@ -271,7 +270,7 @@ impl<'r, 'a> Produce<'r, Option<i64>> for CSVSourcePartitionParser<'a> {
         }
         let v = v
             .parse()
-            .map_err(|_| ConnectorAgentError::CannotParse(type_name::<Option<i64>>(), v.into()))?;
+            .map_err(|_| ConnectorAgentError::cannot_produce::<Option<i64>>(Some(v.into())))?;
 
         Ok(Some(v))
     }
@@ -281,7 +280,7 @@ impl<'r, 'a> Produce<'r, f64> for CSVSourcePartitionParser<'a> {
     fn produce(&mut self) -> Result<f64> {
         let v = self.next_val();
         v.parse()
-            .map_err(|_| ConnectorAgentError::CannotParse(type_name::<f64>(), v.into()))
+            .map_err(|_| ConnectorAgentError::cannot_produce::<f64>(Some(v.into())))
     }
 }
 
@@ -293,7 +292,7 @@ impl<'r, 'a> Produce<'r, Option<f64>> for CSVSourcePartitionParser<'a> {
         }
         let v = v
             .parse()
-            .map_err(|_| ConnectorAgentError::CannotParse(type_name::<Option<f64>>(), v.into()))?;
+            .map_err(|_| ConnectorAgentError::cannot_produce::<Option<f64>>(Some(v.into())))?;
 
         Ok(Some(v))
     }
@@ -303,7 +302,7 @@ impl<'r, 'a> Produce<'r, bool> for CSVSourcePartitionParser<'a> {
     fn produce(&mut self) -> Result<bool> {
         let v = self.next_val();
         v.parse()
-            .map_err(|_| ConnectorAgentError::CannotParse(type_name::<bool>(), v.into()))
+            .map_err(|_| ConnectorAgentError::cannot_produce::<bool>(Some(v.into())))
     }
 }
 
@@ -315,7 +314,7 @@ impl<'r, 'a> Produce<'r, Option<bool>> for CSVSourcePartitionParser<'a> {
         }
         let v = v
             .parse()
-            .map_err(|_| ConnectorAgentError::CannotParse(type_name::<Option<bool>>(), v.into()))?;
+            .map_err(|_| ConnectorAgentError::cannot_produce::<Option<bool>>(Some(v.into())))?;
 
         Ok(Some(v))
     }
@@ -339,7 +338,7 @@ impl<'r, 'a> Produce<'r, DateTime<Utc>> for CSVSourcePartitionParser<'a> {
     fn produce(&mut self) -> Result<DateTime<Utc>> {
         let v = self.next_val();
         v.parse()
-            .map_err(|_| ConnectorAgentError::CannotParse(type_name::<DateTime<Utc>>(), v.into()))
+            .map_err(|_| ConnectorAgentError::cannot_produce::<DateTime<Utc>>(Some(v.into())))
     }
 }
 
@@ -349,9 +348,9 @@ impl<'r, 'a> Produce<'r, Option<DateTime<Utc>>> for CSVSourcePartitionParser<'a>
         if v.is_empty() {
             return Ok(None);
         }
-        let v = v.parse().map_err(|_| {
-            ConnectorAgentError::CannotParse(type_name::<DateTime<Utc>>(), v.into())
-        })?;
+        let v = v
+            .parse()
+            .map_err(|_| ConnectorAgentError::cannot_produce::<DateTime<Utc>>(Some(v.into())))?;
         Ok(Some(v))
     }
 }

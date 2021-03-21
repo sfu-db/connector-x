@@ -30,7 +30,7 @@ macro_rules! impl_typesystem {
                     $(
                         $TS::$V(false) => Ok(()),
                     )+
-                    _ => fehler::throw!($crate::ConnectorAgentError::UnexpectedType(format!("{:?}", ts), std::any::type_name::<$NT>()))
+                    _ => fehler::throw!($crate::ConnectorAgentError::TypeCheckFailed(format!("{:?}", ts), std::any::type_name::<$NT>()))
                 }
             }
         }
@@ -41,7 +41,7 @@ macro_rules! impl_typesystem {
                     $(
                         $TS::$V(true) => Ok(()),
                     )+
-                    _ => fehler::throw!($crate::ConnectorAgentError::UnexpectedType(format!("{:?}", ts), std::any::type_name::<$NT>()))
+                    _ => fehler::throw!($crate::ConnectorAgentError::TypeCheckFailed(format!("{:?}", ts), std::any::type_name::<$NT>()))
                 }
             }
         }

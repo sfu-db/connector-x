@@ -191,7 +191,7 @@ where
         let &(bid, col) = &self.column_buffer_index[col];
 
         let mut_view = self.buffers[bid].downcast::<T>().ok_or_else(|| {
-            ConnectorAgentError::UnexpectedType(format!("{:?}", col_schema), type_name::<T>())
+            ConnectorAgentError::TypeCheckFailed(format!("{:?}", col_schema), type_name::<T>())
         })?;
         *mut_view
             .get_mut((row, col))

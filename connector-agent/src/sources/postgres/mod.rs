@@ -17,7 +17,6 @@ use postgres::{
 use r2d2::{Pool, PooledConnection};
 use r2d2_postgres::{postgres::NoTls, PostgresConnectionManager};
 use sql::{count_query, limit1_query};
-use std::any::type_name;
 pub use typesystem::PostgresTypeSystem;
 
 type PgManager = PostgresConnectionManager<NoTls>;
@@ -534,7 +533,9 @@ macro_rules! impl_csv_produce {
             impl<'r, 'a> Produce<'r, $t> for PostgresSourceCSVParser<'a> {
                 fn produce(&mut self) -> Result<$t> {
                     let (ridx, cidx) = self.next_loc()?;
-                    self.rowbuf[ridx][cidx].parse().map_err(|_| ConnectorAgentError::CannotParse(type_name::<$t>(), self.rowbuf[ridx][cidx].into()))
+                    self.rowbuf[ridx][cidx].parse().map_err(|_| {
+                        ConnectorAgentError::cannot_produce::<$t>(Some(self.rowbuf[ridx][cidx].into()))
+                    })
                 }
             }
 
@@ -544,7 +545,7 @@ macro_rules! impl_csv_produce {
                     match &self.rowbuf[ridx][cidx][..] {
                         "" => Ok(None),
                         v => Ok(Some(v.parse().map_err(|_| {
-                            ConnectorAgentError::CannotParse(type_name::<$t>(), self.rowbuf[ridx][cidx].into())
+                            ConnectorAgentError::cannot_produce::<$t>(Some(self.rowbuf[ridx][cidx].into()))
                         })?)),
                     }
                 }
@@ -561,10 +562,9 @@ impl<'r, 'a> Produce<'r, bool> for PostgresSourceCSVParser<'a> {
         let ret = match &self.rowbuf[ridx][cidx][..] {
             "t" => true,
             "f" => false,
-            _ => throw!(ConnectorAgentError::CannotParse(
-                type_name::<bool>(),
+            _ => throw!(ConnectorAgentError::cannot_produce::<bool>(Some(
                 self.rowbuf[ridx][cidx].into()
-            )),
+            ))),
         };
         Ok(ret)
     }
@@ -577,10 +577,9 @@ impl<'r, 'a> Produce<'r, Option<bool>> for PostgresSourceCSVParser<'a> {
             "" => None,
             "t" => Some(true),
             "f" => Some(false),
-            _ => throw!(ConnectorAgentError::CannotParse(
-                type_name::<bool>(),
+            _ => throw!(ConnectorAgentError::cannot_produce::<bool>(Some(
                 self.rowbuf[ridx][cidx].into()
-            )),
+            ))),
         };
         Ok(ret)
     }
@@ -590,10 +589,9 @@ impl<'r, 'a> Produce<'r, DateTime<Utc>> for PostgresSourceCSVParser<'a> {
     fn produce(&mut self) -> Result<DateTime<Utc>> {
         let (ridx, cidx) = self.next_loc()?;
         self.rowbuf[ridx][cidx].parse().map_err(|_| {
-            ConnectorAgentError::CannotParse(
-                type_name::<DateTime<Utc>>(),
+            ConnectorAgentError::cannot_produce::<DateTime<Utc>>(Some(
                 self.rowbuf[ridx][cidx].into(),
-            )
+            ))
         })
     }
 }
@@ -604,7 +602,7 @@ impl<'r, 'a> Produce<'r, Option<DateTime<Utc>>> for PostgresSourceCSVParser<'a> 
         match &self.rowbuf[ridx][cidx][..] {
             "" => Ok(None),
             v => Ok(Some(v.parse().map_err(|_| {
-                ConnectorAgentError::CannotParse(type_name::<DateTime<Utc>>(), v.into())
+                ConnectorAgentError::cannot_produce::<DateTime<Utc>>(Some(v.into()))
             })?)),
         }
     }
@@ -614,10 +612,7 @@ impl<'r, 'a> Produce<'r, NaiveDate> for PostgresSourceCSVParser<'a> {
     fn produce(&mut self) -> Result<NaiveDate> {
         let (ridx, cidx) = self.next_loc()?;
         NaiveDate::parse_from_str(&self.rowbuf[ridx][cidx], "%Y-%m-%d").map_err(|_| {
-            ConnectorAgentError::CannotParse(
-                type_name::<NaiveDate>(),
-                self.rowbuf[ridx][cidx].into(),
-            )
+            ConnectorAgentError::cannot_produce::<NaiveDate>(Some(self.rowbuf[ridx][cidx].into()))
         })
     }
 }
@@ -628,7 +623,7 @@ impl<'r, 'a> Produce<'r, Option<NaiveDate>> for PostgresSourceCSVParser<'a> {
         match &self.rowbuf[ridx][cidx][..] {
             "" => Ok(None),
             v => Ok(Some(NaiveDate::parse_from_str(v, "%Y-%m-%d").map_err(
-                |_| ConnectorAgentError::CannotParse(type_name::<NaiveDate>(), v.into()),
+                |_| ConnectorAgentError::cannot_produce::<NaiveDate>(Some(v.into())),
             )?)),
         }
     }
@@ -638,10 +633,9 @@ impl<'r, 'a> Produce<'r, NaiveDateTime> for PostgresSourceCSVParser<'a> {
     fn produce(&mut self) -> Result<NaiveDateTime> {
         let (ridx, cidx) = self.next_loc()?;
         NaiveDateTime::parse_from_str(&self.rowbuf[ridx][cidx], "%Y-%m-%d %H:%M:%S").map_err(|_| {
-            ConnectorAgentError::CannotParse(
-                type_name::<NaiveDateTime>(),
+            ConnectorAgentError::cannot_produce::<NaiveDateTime>(Some(
                 self.rowbuf[ridx][cidx].into(),
-            )
+            ))
         })
     }
 }
@@ -653,7 +647,7 @@ impl<'r, 'a> Produce<'r, Option<NaiveDateTime>> for PostgresSourceCSVParser<'a> 
             "" => Ok(None),
             v => Ok(Some(
                 NaiveDateTime::parse_from_str(v, "%Y-%m-%d %H:%M:%S").map_err(|_| {
-                    ConnectorAgentError::CannotParse(type_name::<NaiveDateTime>(), v.into())
+                    ConnectorAgentError::cannot_produce::<NaiveDateTime>(Some(v.into()))
                 })?,
             )),
         }
