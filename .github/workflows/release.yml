@@ -11,35 +11,27 @@ on:
 jobs:
   linux:
     runs-on: ubuntu-latest
-    container: ubuntu:18.04
+    container: quay.io/pypa/manylinux2014_x86_64
     strategy:
       matrix:
         python:
-          - 3.7.10
-          - 3.8.8
-          - 3.9.2
+          - 37
+          - 38
+          - 39
 
     steps:
       - uses: actions/checkout@v2
-      - name: Install tools
+      - name: Set python version
         run: |
-          apt-get update
-          apt-get install -y ca-certificates make build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncurses5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev pkg-config git
-        env:
-          DEBIAN_FRONTEND: noninteractive
+          if [[ "${{ matrix.python }}" == "37" ]]; then
+            echo "/opt/python/cp37-cp37m/bin" >> $GITHUB_PATH
+          else
+            echo "/opt/python/cp${{ matrix.python }}-cp${{ matrix.python }}/bin" >> $GITHUB_PATH
+          fi
 
-      - name: Install Pyenv 
+      - name: Install Poetry
         run: |
-          curl https://pyenv.run | bash
-          echo "$HOME/.pyenv/bin" >> $GITHUB_PATH
-
-      - name: Install Python
-        run: |
-          eval "$(pyenv init -)"
-          eval "$(pyenv virtualenv-init -)"
-          pyenv install "${{ matrix.python }}"
-          pyenv global "${{ matrix.python }}"
-          pip install -U pip  # upgrade pip after installing python
+          echo $(which python)
           pip install poetry
 
       - name: Install Rust
@@ -51,19 +43,15 @@ jobs:
 
       - name: Install other dependent tools
         run: |
-          cargo install cargo-quickinstall
-          cargo quickinstall just
+          cargo install just
+          yum install -y openssl-devel
 
       - name: Install python dependencies
         run: |
-          eval "$(pyenv init -)"
-          eval "$(pyenv virtualenv-init -)"
           just bootstrap-python
 
       - name: build python dependencies
         run: |
-          eval "$(pyenv init -)"
-          eval "$(pyenv virtualenv-init -)"
           just setup-python
       
       - name: Print the result
@@ -71,8 +59,6 @@ jobs:
 
       - name: Build wheel
         run: |
-          eval "$(pyenv init -)"
-          eval "$(pyenv virtualenv-init -)"
           just build-python-wheel rename-wheel
           echo "Built artifacts"
           ls connector-agent-python/dist
@@ -82,6 +68,13 @@ jobs:
         with:
           name: "linux-${{ matrix.python }}"
           path: connector-agent-python/dist/*.whl
+        
+      - name: Upload to PyPI test site
+        env:
+          PYPI_TEST_TOKEN: ${{ secrets.PYPI_TEST_TOKEN }}
+        run: |
+          twine upload --non-interactive --repository-url https://test.pypi.org/legacy/ -u __token__ -p $PYPI_TEST_TOKEN connector-agent-python/dist/*.whl
+
 
           
   darwin:
@@ -154,6 +147,12 @@ jobs:
           name: "darwin-${{ matrix.python }}"
           path: connector-agent-python/dist/*.whl
 
+      - name: Upload to PyPI test site
+        env:
+          PYPI_TEST_TOKEN: ${{ secrets.PYPI_TEST_TOKEN }}
+        run: |
+          twine upload --non-interactive --repository-url https://test.pypi.org/legacy/ -u __token__ -p $PYPI_TEST_TOKEN connector-agent-python/dist/*.whl
+
   win32:
     runs-on: windows-latest
     strategy:
@@ -217,6 +216,12 @@ jobs:
         with:
           name: "win32-${{ matrix.python }}"
           path: connector-agent-python/dist/*.whl
+
+      - name: Upload to PyPI test site
+        env:
+          PYPI_TEST_TOKEN: ${{ secrets.PYPI_TEST_TOKEN }}
+        run: |
+          twine upload --non-interactive --repository-url https://test.pypi.org/legacy/ -u __token__ -p $PYPI_TEST_TOKEN connector-agent-python/dist/*.whl
 
     # upload:
     #   runs-on: ubuntu-latest
