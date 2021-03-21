@@ -103,7 +103,7 @@
     <span class="kw">type</span> <span class="ident">TypeSystem</span>: <span class="ident">TypeSystem</span>;
 
     <span class="doccomment">/// Write a value of type T to the location (row, col). If T mismatch with the</span>
-    <span class="doccomment">/// schema, `ConnectorAgentError::UnexpectedType` will return.</span>
+    <span class="doccomment">/// schema, `ConnectorAgentError::TypeCheckFailed` will return.</span>
     <span class="kw">fn</span> <span class="ident">write</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">value</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">T</span>: <span class="ident">TypeAssoc</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">TypeSystem</span><span class="op">&gt;</span>,

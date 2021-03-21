@@ -357,7 +357,6 @@
 <span id="354">354</span>
 <span id="355">355</span>
 <span id="356">356</span>
-<span id="357">357</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">PartitionParser</span>, <span class="ident">Produce</span>, <span class="ident">Source</span>, <span class="ident">SourcePartition</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">data_order</span>::<span class="ident">DataOrder</span>;
@@ -366,7 +365,6 @@
 <span class="kw">use</span> <span class="ident">chrono</span>::{<span class="ident">DateTime</span>, <span class="ident">Utc</span>};
 <span class="kw">use</span> <span class="ident">fehler</span>::{<span class="ident">throw</span>, <span class="ident">throws</span>};
 <span class="kw">use</span> <span class="ident">regex</span>::{<span class="ident">Regex</span>, <span class="ident">RegexBuilder</span>};
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">any</span>::<span class="ident">type_name</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">collections</span>::<span class="ident">HashSet</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">fs</span>::<span class="ident">File</span>;
 
@@ -620,7 +618,7 @@
     <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">v</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">next_val</span>();
         <span class="ident">v</span>.<span class="ident">parse</span>()
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">ConnectorAgentError</span>::<span class="ident">CannotParse</span>(<span class="ident">type_name</span>::<span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span>(), <span class="ident">v</span>.<span class="ident">into</span>()))
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">ConnectorAgentError</span>::<span class="ident">cannot_produce</span>::<span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span>(<span class="prelude-val">Some</span>(<span class="ident">v</span>.<span class="ident">into</span>())))
     }
 }
 
@@ -632,7 +630,7 @@
         }
         <span class="kw">let</span> <span class="ident">v</span> <span class="op">=</span> <span class="ident">v</span>
             .<span class="ident">parse</span>()
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">ConnectorAgentError</span>::<span class="ident">CannotParse</span>(<span class="ident">type_name</span>::<span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span><span class="op">&gt;</span>(), <span class="ident">v</span>.<span class="ident">into</span>()))<span class="question-mark">?</span>;
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">ConnectorAgentError</span>::<span class="ident">cannot_produce</span>::<span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="prelude-val">Some</span>(<span class="ident">v</span>.<span class="ident">into</span>())))<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">v</span>))
     }
@@ -642,7 +640,7 @@
     <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">v</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">next_val</span>();
         <span class="ident">v</span>.<span class="ident">parse</span>()
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">ConnectorAgentError</span>::<span class="ident">CannotParse</span>(<span class="ident">type_name</span>::<span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span>(), <span class="ident">v</span>.<span class="ident">into</span>()))
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">ConnectorAgentError</span>::<span class="ident">cannot_produce</span>::<span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span>(<span class="prelude-val">Some</span>(<span class="ident">v</span>.<span class="ident">into</span>())))
     }
 }
 
@@ -654,7 +652,7 @@
         }
         <span class="kw">let</span> <span class="ident">v</span> <span class="op">=</span> <span class="ident">v</span>
             .<span class="ident">parse</span>()
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">ConnectorAgentError</span>::<span class="ident">CannotParse</span>(<span class="ident">type_name</span>::<span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span><span class="op">&gt;</span>(), <span class="ident">v</span>.<span class="ident">into</span>()))<span class="question-mark">?</span>;
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">ConnectorAgentError</span>::<span class="ident">cannot_produce</span>::<span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="prelude-val">Some</span>(<span class="ident">v</span>.<span class="ident">into</span>())))<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">v</span>))
     }
@@ -664,7 +662,7 @@
     <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">v</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">next_val</span>();
         <span class="ident">v</span>.<span class="ident">parse</span>()
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">ConnectorAgentError</span>::<span class="ident">CannotParse</span>(<span class="ident">type_name</span>::<span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>(), <span class="ident">v</span>.<span class="ident">into</span>()))
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">ConnectorAgentError</span>::<span class="ident">cannot_produce</span>::<span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>(<span class="prelude-val">Some</span>(<span class="ident">v</span>.<span class="ident">into</span>())))
     }
 }
 
@@ -676,7 +674,7 @@
         }
         <span class="kw">let</span> <span class="ident">v</span> <span class="op">=</span> <span class="ident">v</span>
             .<span class="ident">parse</span>()
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">ConnectorAgentError</span>::<span class="ident">CannotParse</span>(<span class="ident">type_name</span>::<span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span><span class="op">&gt;</span>(), <span class="ident">v</span>.<span class="ident">into</span>()))<span class="question-mark">?</span>;
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">ConnectorAgentError</span>::<span class="ident">cannot_produce</span>::<span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="prelude-val">Some</span>(<span class="ident">v</span>.<span class="ident">into</span>())))<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">v</span>))
     }
@@ -700,7 +698,7 @@
     <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">v</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">next_val</span>();
         <span class="ident">v</span>.<span class="ident">parse</span>()
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">ConnectorAgentError</span>::<span class="ident">CannotParse</span>(<span class="ident">type_name</span>::<span class="op">&lt;</span><span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span><span class="op">&gt;</span>(), <span class="ident">v</span>.<span class="ident">into</span>()))
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">ConnectorAgentError</span>::<span class="ident">cannot_produce</span>::<span class="op">&lt;</span><span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="prelude-val">Some</span>(<span class="ident">v</span>.<span class="ident">into</span>())))
     }
 }
 
@@ -710,9 +708,9 @@
         <span class="kw">if</span> <span class="ident">v</span>.<span class="ident">is_empty</span>() {
             <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
         }
-        <span class="kw">let</span> <span class="ident">v</span> <span class="op">=</span> <span class="ident">v</span>.<span class="ident">parse</span>().<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
-            <span class="ident">ConnectorAgentError</span>::<span class="ident">CannotParse</span>(<span class="ident">type_name</span>::<span class="op">&lt;</span><span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span><span class="op">&gt;</span>(), <span class="ident">v</span>.<span class="ident">into</span>())
-        })<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">v</span> <span class="op">=</span> <span class="ident">v</span>
+            .<span class="ident">parse</span>()
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">ConnectorAgentError</span>::<span class="ident">cannot_produce</span>::<span class="op">&lt;</span><span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="prelude-val">Some</span>(<span class="ident">v</span>.<span class="ident">into</span>())))<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">v</span>))
     }
 }

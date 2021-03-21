@@ -673,12 +673,6 @@
 <span id="670">670</span>
 <span id="671">671</span>
 <span id="672">672</span>
-<span id="673">673</span>
-<span id="674">674</span>
-<span id="675">675</span>
-<span id="676">676</span>
-<span id="677">677</span>
-<span id="678">678</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">mod</span> <span class="ident">sql</span>;
 <span class="kw">mod</span> <span class="ident">typesystem</span>;
@@ -699,7 +693,6 @@
 <span class="kw">use</span> <span class="ident">r2d2</span>::{<span class="ident">Pool</span>, <span class="ident">PooledConnection</span>};
 <span class="kw">use</span> <span class="ident">r2d2_postgres</span>::{<span class="ident">postgres</span>::<span class="ident">NoTls</span>, <span class="ident">PostgresConnectionManager</span>};
 <span class="kw">use</span> <span class="ident">sql</span>::{<span class="ident">count_query</span>, <span class="ident">limit1_query</span>};
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">any</span>::<span class="ident">type_name</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">typesystem</span>::<span class="ident">PostgresTypeSystem</span>;
 
 <span class="kw">type</span> <span class="ident">PgManager</span> <span class="op">=</span> <span class="ident">PostgresConnectionManager</span><span class="op">&lt;</span><span class="ident">NoTls</span><span class="op">&gt;</span>;
@@ -1216,7 +1209,9 @@
             <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PostgresSourceCSVParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
                 <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span> {
                     <span class="kw">let</span> (<span class="ident">ridx</span>, <span class="ident">cidx</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">next_loc</span>()<span class="question-mark">?</span>;
-                    <span class="self">self</span>.<span class="ident">rowbuf</span>[<span class="ident">ridx</span>][<span class="ident">cidx</span>].<span class="ident">parse</span>().<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">ConnectorAgentError</span>::<span class="ident">CannotParse</span>(<span class="ident">type_name</span>::<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span>(), <span class="self">self</span>.<span class="ident">rowbuf</span>[<span class="ident">ridx</span>][<span class="ident">cidx</span>].<span class="ident">into</span>()))
+                    <span class="self">self</span>.<span class="ident">rowbuf</span>[<span class="ident">ridx</span>][<span class="ident">cidx</span>].<span class="ident">parse</span>().<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
+                        <span class="ident">ConnectorAgentError</span>::<span class="ident">cannot_produce</span>::<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span>(<span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="ident">rowbuf</span>[<span class="ident">ridx</span>][<span class="ident">cidx</span>].<span class="ident">into</span>()))
+                    })
                 }
             }
 
@@ -1226,7 +1221,7 @@
                     <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">rowbuf</span>[<span class="ident">ridx</span>][<span class="ident">cidx</span>][..] {
                         <span class="string">&quot;&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
                         <span class="ident">v</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">v</span>.<span class="ident">parse</span>().<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
-                            <span class="ident">ConnectorAgentError</span>::<span class="ident">CannotParse</span>(<span class="ident">type_name</span>::<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span>(), <span class="self">self</span>.<span class="ident">rowbuf</span>[<span class="ident">ridx</span>][<span class="ident">cidx</span>].<span class="ident">into</span>())
+                            <span class="ident">ConnectorAgentError</span>::<span class="ident">cannot_produce</span>::<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span>(<span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="ident">rowbuf</span>[<span class="ident">ridx</span>][<span class="ident">cidx</span>].<span class="ident">into</span>()))
                         })<span class="question-mark">?</span>)),
                     }
                 }
@@ -1243,10 +1238,9 @@
         <span class="kw">let</span> <span class="ident">ret</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">rowbuf</span>[<span class="ident">ridx</span>][<span class="ident">cidx</span>][..] {
             <span class="string">&quot;t&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
             <span class="string">&quot;f&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">throw</span><span class="macro">!</span>(<span class="ident">ConnectorAgentError</span>::<span class="ident">CannotParse</span>(
-                <span class="ident">type_name</span>::<span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>(),
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">throw</span><span class="macro">!</span>(<span class="ident">ConnectorAgentError</span>::<span class="ident">cannot_produce</span>::<span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>(<span class="prelude-val">Some</span>(
                 <span class="self">self</span>.<span class="ident">rowbuf</span>[<span class="ident">ridx</span>][<span class="ident">cidx</span>].<span class="ident">into</span>()
-            )),
+            ))),
         };
         <span class="prelude-val">Ok</span>(<span class="ident">ret</span>)
     }
@@ -1259,10 +1253,9 @@
             <span class="string">&quot;&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
             <span class="string">&quot;t&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="bool-val">true</span>),
             <span class="string">&quot;f&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="bool-val">false</span>),
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">throw</span><span class="macro">!</span>(<span class="ident">ConnectorAgentError</span>::<span class="ident">CannotParse</span>(
-                <span class="ident">type_name</span>::<span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>(),
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">throw</span><span class="macro">!</span>(<span class="ident">ConnectorAgentError</span>::<span class="ident">cannot_produce</span>::<span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>(<span class="prelude-val">Some</span>(
                 <span class="self">self</span>.<span class="ident">rowbuf</span>[<span class="ident">ridx</span>][<span class="ident">cidx</span>].<span class="ident">into</span>()
-            )),
+            ))),
         };
         <span class="prelude-val">Ok</span>(<span class="ident">ret</span>)
     }
@@ -1272,10 +1265,9 @@
     <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> (<span class="ident">ridx</span>, <span class="ident">cidx</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">next_loc</span>()<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">rowbuf</span>[<span class="ident">ridx</span>][<span class="ident">cidx</span>].<span class="ident">parse</span>().<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
-            <span class="ident">ConnectorAgentError</span>::<span class="ident">CannotParse</span>(
-                <span class="ident">type_name</span>::<span class="op">&lt;</span><span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span><span class="op">&gt;</span>(),
+            <span class="ident">ConnectorAgentError</span>::<span class="ident">cannot_produce</span>::<span class="op">&lt;</span><span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="prelude-val">Some</span>(
                 <span class="self">self</span>.<span class="ident">rowbuf</span>[<span class="ident">ridx</span>][<span class="ident">cidx</span>].<span class="ident">into</span>(),
-            )
+            ))
         })
     }
 }
@@ -1286,7 +1278,7 @@
         <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">rowbuf</span>[<span class="ident">ridx</span>][<span class="ident">cidx</span>][..] {
             <span class="string">&quot;&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
             <span class="ident">v</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">v</span>.<span class="ident">parse</span>().<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
-                <span class="ident">ConnectorAgentError</span>::<span class="ident">CannotParse</span>(<span class="ident">type_name</span>::<span class="op">&lt;</span><span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span><span class="op">&gt;</span>(), <span class="ident">v</span>.<span class="ident">into</span>())
+                <span class="ident">ConnectorAgentError</span>::<span class="ident">cannot_produce</span>::<span class="op">&lt;</span><span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="prelude-val">Some</span>(<span class="ident">v</span>.<span class="ident">into</span>()))
             })<span class="question-mark">?</span>)),
         }
     }
@@ -1296,10 +1288,7 @@
     <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">NaiveDate</span><span class="op">&gt;</span> {
         <span class="kw">let</span> (<span class="ident">ridx</span>, <span class="ident">cidx</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">next_loc</span>()<span class="question-mark">?</span>;
         <span class="ident">NaiveDate</span>::<span class="ident">parse_from_str</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">rowbuf</span>[<span class="ident">ridx</span>][<span class="ident">cidx</span>], <span class="string">&quot;%Y-%m-%d&quot;</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
-            <span class="ident">ConnectorAgentError</span>::<span class="ident">CannotParse</span>(
-                <span class="ident">type_name</span>::<span class="op">&lt;</span><span class="ident">NaiveDate</span><span class="op">&gt;</span>(),
-                <span class="self">self</span>.<span class="ident">rowbuf</span>[<span class="ident">ridx</span>][<span class="ident">cidx</span>].<span class="ident">into</span>(),
-            )
+            <span class="ident">ConnectorAgentError</span>::<span class="ident">cannot_produce</span>::<span class="op">&lt;</span><span class="ident">NaiveDate</span><span class="op">&gt;</span>(<span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="ident">rowbuf</span>[<span class="ident">ridx</span>][<span class="ident">cidx</span>].<span class="ident">into</span>()))
         })
     }
 }
@@ -1310,7 +1299,7 @@
         <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">rowbuf</span>[<span class="ident">ridx</span>][<span class="ident">cidx</span>][..] {
             <span class="string">&quot;&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
             <span class="ident">v</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">NaiveDate</span>::<span class="ident">parse_from_str</span>(<span class="ident">v</span>, <span class="string">&quot;%Y-%m-%d&quot;</span>).<span class="ident">map_err</span>(
-                <span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">ConnectorAgentError</span>::<span class="ident">CannotParse</span>(<span class="ident">type_name</span>::<span class="op">&lt;</span><span class="ident">NaiveDate</span><span class="op">&gt;</span>(), <span class="ident">v</span>.<span class="ident">into</span>()),
+                <span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">ConnectorAgentError</span>::<span class="ident">cannot_produce</span>::<span class="op">&lt;</span><span class="ident">NaiveDate</span><span class="op">&gt;</span>(<span class="prelude-val">Some</span>(<span class="ident">v</span>.<span class="ident">into</span>())),
             )<span class="question-mark">?</span>)),
         }
     }
@@ -1320,10 +1309,9 @@
     <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">NaiveDateTime</span><span class="op">&gt;</span> {
         <span class="kw">let</span> (<span class="ident">ridx</span>, <span class="ident">cidx</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">next_loc</span>()<span class="question-mark">?</span>;
         <span class="ident">NaiveDateTime</span>::<span class="ident">parse_from_str</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">rowbuf</span>[<span class="ident">ridx</span>][<span class="ident">cidx</span>], <span class="string">&quot;%Y-%m-%d %H:%M:%S&quot;</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
-            <span class="ident">ConnectorAgentError</span>::<span class="ident">CannotParse</span>(
-                <span class="ident">type_name</span>::<span class="op">&lt;</span><span class="ident">NaiveDateTime</span><span class="op">&gt;</span>(),
+            <span class="ident">ConnectorAgentError</span>::<span class="ident">cannot_produce</span>::<span class="op">&lt;</span><span class="ident">NaiveDateTime</span><span class="op">&gt;</span>(<span class="prelude-val">Some</span>(
                 <span class="self">self</span>.<span class="ident">rowbuf</span>[<span class="ident">ridx</span>][<span class="ident">cidx</span>].<span class="ident">into</span>(),
-            )
+            ))
         })
     }
 }
@@ -1335,7 +1323,7 @@
             <span class="string">&quot;&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
             <span class="ident">v</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(
                 <span class="ident">NaiveDateTime</span>::<span class="ident">parse_from_str</span>(<span class="ident">v</span>, <span class="string">&quot;%Y-%m-%d %H:%M:%S&quot;</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
-                    <span class="ident">ConnectorAgentError</span>::<span class="ident">CannotParse</span>(<span class="ident">type_name</span>::<span class="op">&lt;</span><span class="ident">NaiveDateTime</span><span class="op">&gt;</span>(), <span class="ident">v</span>.<span class="ident">into</span>())
+                    <span class="ident">ConnectorAgentError</span>::<span class="ident">cannot_produce</span>::<span class="op">&lt;</span><span class="ident">NaiveDateTime</span><span class="op">&gt;</span>(<span class="prelude-val">Some</span>(<span class="ident">v</span>.<span class="ident">into</span>()))
                 })<span class="question-mark">?</span>,
             )),
         }
