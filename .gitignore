@@ -12,3 +12,4 @@ perf.data
 data.txt
 profile.pb
 dask-worker-space
+dist

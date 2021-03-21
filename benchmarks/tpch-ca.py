@@ -40,7 +40,6 @@ if __name__ == "__main__":
               l_comment
             FROM {table}""",
             partition_on="l_orderkey",
-            partition_range=(0, 60000000),
             partition_num=int(args["<num>"]),
             protocol=args["--protocol"],
         )
