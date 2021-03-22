@@ -5,6 +5,20 @@ use sqlparser::ast::{
 use sqlparser::dialect::PostgreSqlDialect;
 use sqlparser::parser::Parser;
 
+pub fn get_limit(sql: &str) -> Option<usize> {
+    let dialect = PostgreSqlDialect {};
+    let mut ast = Parser::parse_sql(&dialect, sql).unwrap();
+    match &mut ast[0] {
+        Statement::Query(q) => match &q.limit {
+            // Some(expr) => expr.to_string().parse().map_err(|| throw!(anyhow!())),
+            Some(expr) => return Some(expr.to_string().parse().unwrap()),
+            _ => {}
+        },
+        _ => {}
+    };
+    None
+}
+
 pub fn count_query(sql: &str) -> String {
     trace!("Incoming query: {}", sql);
 
