@@ -2,7 +2,6 @@ use bitfield::bitfield;
 use numpy::{npyffi::NPY_TYPES, Element, PyArrayDescr};
 use pyo3::{ffi, Py, Python};
 use std::str::from_utf8_unchecked;
-// use widestring::{U16String, U32String};
 #[derive(Clone)]
 #[repr(transparent)]
 pub struct PyString(Py<pyo3::types::PyString>);
@@ -14,12 +13,6 @@ impl Element for PyString {
         unsafe { *dtype.as_dtype_ptr() }.type_num == NPY_TYPES::NPY_OBJECT as i32
     }
 }
-
-// impl PyString {
-//     pub fn new(py: Python, val: &[u8]) -> Self {
-//         PyString(pyo3::types::PyString::new(py, unsafe { from_utf8_unchecked(val) }).into())
-//     }
-// }
 
 #[derive(Clone, Copy)]
 pub enum StringInfo {
@@ -100,9 +93,6 @@ impl PyString {
                     .map(|c| c as u16)
                     .collect();
                 buf.copy_from_slice(&data);
-
-                // let ucs_string = U16String::from_str(from_utf8_unchecked(data));
-                // buf.copy_from_slice(ucs_string.as_slice());
             }
             StringInfo::UCS4(len) => {
                 let pyobj = PyCompactUnicodeObject::from_owned(self.0.clone());
@@ -115,9 +105,6 @@ impl PyString {
                     .map(|c| c as u32)
                     .collect();
                 buf.copy_from_slice(&data);
-
-                // let ucs_string = U32String::from_str(from_utf8_unchecked(data));
-                // buf.copy_from_slice(ucs_string.as_slice());
             }
         }
     }
