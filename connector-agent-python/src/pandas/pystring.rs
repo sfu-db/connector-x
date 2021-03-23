@@ -1,7 +1,7 @@
 use numpy::{npyffi::NPY_TYPES, Element, PyArrayDescr};
 use pyo3::{ffi, Py, Python};
 use std::str::from_utf8_unchecked;
-
+use widestring::U16String;
 #[derive(Clone)]
 #[repr(transparent)]
 pub struct PyString(Py<pyo3::types::PyString>);
@@ -24,14 +24,14 @@ impl PyString {
     pub fn new(py: Python, val: &[u8]) -> Self {
         let val = unsafe { from_utf8_unchecked(val) };
         let maxchar = val.chars().map(|c| c as u32).max().unwrap_or(0);
-        let maxchar = if maxchar <= 0x7F {
-            0x7F
+        let (maxchar, length) = if maxchar <= 0x7F {
+            (0x7F, val.len())
         } else if maxchar <= 0xFF {
-            0xFF
+            (0xFF, val.chars().count())
         } else if maxchar <= 0xFFFF {
-            0xFFFF
+            (0xFFFF, val.chars().count())
         } else {
-            0x10FFFF
+            (0x10FFFF, val.chars().count())
         };
         println!(
             "{:?}, max char: {}, val len: {}, val chars count: {}",
@@ -41,8 +41,8 @@ impl PyString {
             val.chars().count()
         );
 
-        // let objptr = unsafe { ffi::PyUnicode_New(val.chars().count() as ffi::Py_ssize_t, maxchar) };
-        let objptr = unsafe { ffi::PyUnicode_New(val.len() as ffi::Py_ssize_t, maxchar) };
+        let objptr = unsafe { ffi::PyUnicode_New(length as ffi::Py_ssize_t, maxchar) };
+        // let objptr = unsafe { ffi::PyUnicode_New(val.len() as ffi::Py_ssize_t, maxchar) };
 
         let s: &pyo3::types::PyString = unsafe { py.from_owned_ptr(objptr) };
         PyString(s.into())
@@ -77,11 +77,14 @@ impl PyString {
                 compact.utf8_length,
                 compact.wstr_length
             );
+            let val = from_utf8_unchecked(val);
+
+            let ucs_string = U16String::from_str(val);
             let buf = std::slice::from_raw_parts_mut(
-                (compact as *mut PyCompactUnicodeObject).offset(1) as *mut u8,
-                val.len() as usize,
+                (compact as *mut PyCompactUnicodeObject).offset(1) as *mut u16,
+                ucs_string.len(),
             );
-            buf.copy_from_slice(val);
+            buf.copy_from_slice(ucs_string.as_slice());
         }
         // println!(
         //     "state: {:#034b}, kind: {}, compact: {}, ascii: {}",
