@@ -25,3 +25,4 @@ INSERT INTO test_str VALUES (1, '中文', '你好');
 INSERT INTO test_str VALUES (2, '日本語', 'こんにちは');
 INSERT INTO test_str VALUES (3, 'русский', 'Здра́вствуйте');
 INSERT INTO test_str VALUES (4, 'Emoji', '😁😂😜');
+INSERT INTO test_str VALUES (5, 'Symbol', '¥§¤®ð');

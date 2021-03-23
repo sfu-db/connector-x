@@ -1,7 +1,7 @@
 use numpy::{npyffi::NPY_TYPES, Element, PyArrayDescr};
 use pyo3::{ffi, Py, Python};
 use std::str::from_utf8_unchecked;
-use widestring::U16String;
+use widestring::{U16String, U32String};
 #[derive(Clone)]
 #[repr(transparent)]
 pub struct PyString(Py<pyo3::types::PyString>);
@@ -33,16 +33,8 @@ impl PyString {
         } else {
             (0x10FFFF, val.chars().count())
         };
-        println!(
-            "{:?}, max char: {}, val len: {}, val chars count: {}",
-            val,
-            maxchar,
-            val.len(),
-            val.chars().count()
-        );
 
         let objptr = unsafe { ffi::PyUnicode_New(length as ffi::Py_ssize_t, maxchar) };
-        // let objptr = unsafe { ffi::PyUnicode_New(val.len() as ffi::Py_ssize_t, maxchar) };
 
         let s: &pyo3::types::PyString = unsafe { py.from_owned_ptr(objptr) };
         PyString(s.into())
@@ -53,13 +45,6 @@ impl PyString {
         let ascii = PyASCIIObject::from_owned(self.0.clone());
         let is_ascii = (ascii.state & 0x00000040) >> 6;
         if is_ascii == 1 {
-            println!(
-                "str: {:?}, ascii, ascii len: {}, val len: {}",
-                std::str::from_utf8(val),
-                ascii.length,
-                val.len(),
-            );
-
             let buf = std::slice::from_raw_parts_mut(
                 (ascii as *mut PyASCIIObject).offset(1) as *mut u8,
                 ascii.length as usize,
@@ -68,31 +53,30 @@ impl PyString {
         } else {
             let kind = (ascii.state & 0x0000001C) >> 2;
             let compact = PyCompactUnicodeObject::from_owned(self.0.clone());
-            println!(
-                "str: {:?}, not ascii kind: {}, ascii len: {}, val len: {}, utf8_length: {}, wstr_length: {}",
-                std::str::from_utf8(val),
-                kind,
-                ascii.length,
-                val.len(),
-                compact.utf8_length,
-                compact.wstr_length
-            );
             let val = from_utf8_unchecked(val);
-
-            let ucs_string = U16String::from_str(val);
-            let buf = std::slice::from_raw_parts_mut(
-                (compact as *mut PyCompactUnicodeObject).offset(1) as *mut u16,
-                ucs_string.len(),
-            );
-            buf.copy_from_slice(ucs_string.as_slice());
+            if kind == 1 {
+                let chars: Vec<u8> = val.chars().map(|c| c as u8).collect();
+                let buf = std::slice::from_raw_parts_mut(
+                    (compact as *mut PyCompactUnicodeObject).offset(1) as *mut u8,
+                    chars.len(),
+                );
+                buf.copy_from_slice(chars.as_slice());
+            } else if kind == 2 {
+                let ucs_string = U16String::from_str(val);
+                let buf = std::slice::from_raw_parts_mut(
+                    (compact as *mut PyCompactUnicodeObject).offset(1) as *mut u16,
+                    ucs_string.len(),
+                );
+                buf.copy_from_slice(ucs_string.as_slice());
+            } else {
+                let ucs_string = U32String::from_str(val);
+                let buf = std::slice::from_raw_parts_mut(
+                    (compact as *mut PyCompactUnicodeObject).offset(1) as *mut u32,
+                    ucs_string.len(),
+                );
+                buf.copy_from_slice(ucs_string.as_slice());
+            }
         }
-        // println!(
-        //     "state: {:#034b}, kind: {}, compact: {}, ascii: {}",
-        //     ascii.state,
-        //     (ascii.state & 0x0000001C) >> 2,
-        //     (ascii.state & 0x00000020) >> 5,
-        //     (ascii.state & 0x00000040) >> 6
-        // );
     }
 }
 
