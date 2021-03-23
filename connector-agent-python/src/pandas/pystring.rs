@@ -1,3 +1,4 @@
+use bitfield::bitfield;
 use numpy::{npyffi::NPY_TYPES, Element, PyArrayDescr};
 use pyo3::{ffi, Py, Python};
 use std::str::from_utf8_unchecked;
@@ -20,64 +21,106 @@ impl Element for PyString {
 //     }
 // }
 
-impl PyString {
-    pub fn new(py: Python, val: &[u8]) -> Self {
-        let val = unsafe { from_utf8_unchecked(val) };
-        let maxchar = val.chars().map(|c| c as u32).max().unwrap_or(0);
-        let (maxchar, length) = if maxchar <= 0x7F {
-            (0x7F, val.len())
-        } else if maxchar <= 0xFF {
-            (0xFF, val.chars().count())
-        } else if maxchar <= 0xFFFF {
-            (0xFFFF, val.chars().count())
-        } else {
-            (0x10FFFF, val.chars().count())
-        };
+#[derive(Clone, Copy)]
+pub enum StringInfo {
+    ASCII(usize), // len of the string, not byte length
+    UCS1(usize),
+    UCS2(usize),
+    UCS4(usize),
+}
 
-        let objptr = unsafe { ffi::PyUnicode_New(length as ffi::Py_ssize_t, maxchar) };
+impl StringInfo {
+    pub fn inspect(s: &str) -> StringInfo {
+        let mut maxchar = 0;
+        let mut len = 0; // TODO: assuming the # of chars in the utf8 string will be same as the converted ucs strings. Check!
+
+        for ch in s.chars() {
+            if ch as u32 > maxchar {
+                maxchar = ch as u32;
+            }
+            len += 1;
+        }
+
+        if maxchar <= 0x7F {
+            StringInfo::ASCII(len)
+        } else if maxchar <= 0xFF {
+            StringInfo::UCS1(len)
+        } else if maxchar <= 0xFFFF {
+            StringInfo::UCS2(len)
+        } else {
+            StringInfo::UCS4(len)
+        }
+    }
+
+    pub fn pystring(&self, py: Python) -> PyString {
+        let objptr = unsafe {
+            match self {
+                StringInfo::ASCII(len) => ffi::PyUnicode_New(*len as ffi::Py_ssize_t, 0x7F),
+                StringInfo::UCS1(len) => ffi::PyUnicode_New(*len as ffi::Py_ssize_t, 0xFF),
+                StringInfo::UCS2(len) => ffi::PyUnicode_New(*len as ffi::Py_ssize_t, 0xFFFF),
+                StringInfo::UCS4(len) => ffi::PyUnicode_New(*len as ffi::Py_ssize_t, 0x10FFFF),
+            }
+        };
 
         let s: &pyo3::types::PyString = unsafe { py.from_owned_ptr(objptr) };
         PyString(s.into())
     }
+}
 
+impl PyString {
     // the val should be same as the val used for new
-    pub unsafe fn write(&mut self, val: &[u8]) {
-        let ascii = PyASCIIObject::from_owned(self.0.clone());
-        let is_ascii = (ascii.state & 0x00000040) >> 6;
-        if is_ascii == 1 {
-            let buf = std::slice::from_raw_parts_mut(
-                (ascii as *mut PyASCIIObject).offset(1) as *mut u8,
-                ascii.length as usize,
-            );
-            buf.copy_from_slice(val);
-        } else {
-            let kind = (ascii.state & 0x0000001C) >> 2;
-            let compact = PyCompactUnicodeObject::from_owned(self.0.clone());
-            let val = from_utf8_unchecked(val);
-            if kind == 1 {
-                let chars: Vec<u8> = val.chars().map(|c| c as u8).collect();
+    pub unsafe fn write(&mut self, data: &[u8], info: StringInfo) {
+        match info {
+            StringInfo::ASCII(len) => {
+                let pyobj = PyASCIIObject::from_owned(self.0.clone());
                 let buf = std::slice::from_raw_parts_mut(
-                    (compact as *mut PyCompactUnicodeObject).offset(1) as *mut u8,
-                    chars.len(),
+                    (pyobj as *mut PyASCIIObject).offset(1) as *mut u8,
+                    len as usize,
                 );
-                buf.copy_from_slice(chars.as_slice());
-            } else if kind == 2 {
-                let ucs_string = U16String::from_str(val);
+
+                buf.copy_from_slice(data);
+            }
+            StringInfo::UCS1(len) => {
+                let pyobj = PyCompactUnicodeObject::from_owned(self.0.clone());
                 let buf = std::slice::from_raw_parts_mut(
-                    (compact as *mut PyCompactUnicodeObject).offset(1) as *mut u16,
-                    ucs_string.len(),
+                    (pyobj as *mut PyCompactUnicodeObject).offset(1) as *mut u8,
+                    len as usize,
                 );
+                let data: Vec<u8> = from_utf8_unchecked(data).chars().map(|c| c as u8).collect();
+                buf.copy_from_slice(&data);
+            }
+            StringInfo::UCS2(len) => {
+                let pyobj = PyCompactUnicodeObject::from_owned(self.0.clone());
+                let buf = std::slice::from_raw_parts_mut(
+                    (pyobj as *mut PyCompactUnicodeObject).offset(1) as *mut u16,
+                    len as usize,
+                );
+                let ucs_string = U16String::from_str(from_utf8_unchecked(data));
+
                 buf.copy_from_slice(ucs_string.as_slice());
-            } else {
-                let ucs_string = U32String::from_str(val);
+            }
+            StringInfo::UCS4(len) => {
+                let pyobj = PyCompactUnicodeObject::from_owned(self.0.clone());
                 let buf = std::slice::from_raw_parts_mut(
-                    (compact as *mut PyCompactUnicodeObject).offset(1) as *mut u32,
-                    ucs_string.len(),
+                    (pyobj as *mut PyCompactUnicodeObject).offset(1) as *mut u32,
+                    len as usize,
                 );
+                let ucs_string = U32String::from_str(from_utf8_unchecked(data));
+
                 buf.copy_from_slice(ucs_string.as_slice());
             }
         }
     }
+}
+
+bitfield! {
+    struct PyUnicodeState(u32);
+    u32;
+    interned, _: 1, 0;
+    kind, _: 4, 2;
+    compact, _: 5, 5;
+    ascii, _: 6, 6;
+    ready, _: 7, 7;
 }
 
 #[repr(C)]
@@ -85,7 +128,7 @@ pub struct PyASCIIObject {
     obj: ffi::PyObject,
     length: ffi::Py_ssize_t,
     hash: ffi::Py_hash_t,
-    state: u32,
+    state: PyUnicodeState,
     wstr: *mut u8,
     // python string stores data right after all the fields
 }
@@ -108,7 +151,7 @@ pub struct PyCompactUnicodeObject {
 
 impl PyCompactUnicodeObject {
     pub unsafe fn from_owned<'a>(obj: Py<pyo3::types::PyString>) -> &'a mut Self {
-        let utf8: &mut PyCompactUnicodeObject = std::mem::transmute(obj);
-        utf8
+        let unicode: &mut PyCompactUnicodeObject = std::mem::transmute(obj);
+        unicode
     }
 }
