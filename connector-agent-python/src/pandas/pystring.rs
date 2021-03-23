@@ -2,7 +2,7 @@ use bitfield::bitfield;
 use numpy::{npyffi::NPY_TYPES, Element, PyArrayDescr};
 use pyo3::{ffi, Py, Python};
 use std::str::from_utf8_unchecked;
-use widestring::{U16String, U32String};
+// use widestring::{U16String, U32String};
 #[derive(Clone)]
 #[repr(transparent)]
 pub struct PyString(Py<pyo3::types::PyString>);
@@ -32,7 +32,7 @@ pub enum StringInfo {
 impl StringInfo {
     pub fn inspect(s: &str) -> StringInfo {
         let mut maxchar = 0;
-        let mut len = 0; // TODO: assuming the # of chars in the utf8 string will be same as the converted ucs strings. Check!
+        let mut len = 0;
 
         for ch in s.chars() {
             if ch as u32 > maxchar {
@@ -95,9 +95,14 @@ impl PyString {
                     (pyobj as *mut PyCompactUnicodeObject).offset(1) as *mut u16,
                     len as usize,
                 );
-                let ucs_string = U16String::from_str(from_utf8_unchecked(data));
+                let data: Vec<u16> = from_utf8_unchecked(data)
+                    .chars()
+                    .map(|c| c as u16)
+                    .collect();
+                buf.copy_from_slice(&data);
 
-                buf.copy_from_slice(ucs_string.as_slice());
+                // let ucs_string = U16String::from_str(from_utf8_unchecked(data));
+                // buf.copy_from_slice(ucs_string.as_slice());
             }
             StringInfo::UCS4(len) => {
                 let pyobj = PyCompactUnicodeObject::from_owned(self.0.clone());
@@ -105,9 +110,14 @@ impl PyString {
                     (pyobj as *mut PyCompactUnicodeObject).offset(1) as *mut u32,
                     len as usize,
                 );
-                let ucs_string = U32String::from_str(from_utf8_unchecked(data));
+                let data: Vec<u32> = from_utf8_unchecked(data)
+                    .chars()
+                    .map(|c| c as u32)
+                    .collect();
+                buf.copy_from_slice(&data);
 
-                buf.copy_from_slice(ucs_string.as_slice());
+                // let ucs_string = U32String::from_str(from_utf8_unchecked(data));
+                // buf.copy_from_slice(ucs_string.as_slice());
             }
         }
     }
