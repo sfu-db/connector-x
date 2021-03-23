@@ -135,3 +135,34 @@ def test_read_sql_with_partition_and_selection(postgres_url: str) -> None:
         },
     )
     assert_frame_equal(df, expected, check_names=True)
+
+
+def test_read_sql_on_utf8(postgres_url: str) -> None:
+    # query = "SELECT * FROM test_str limit 2"
+    query = "SELECT * FROM test_str"
+    df = read_sql(postgres_url, query)
+    expected = pd.DataFrame(
+        index=range(5),
+        data={
+            "id": pd.Series([0, 1, 2, 3, 4], dtype="Int64"),
+            "test_language": pd.Series(
+                ["English", "中文", "日本語", "русский", "Emoji"], dtype="object"
+            ),
+            "test_hello": pd.Series(
+                ["Hello", "你好", "こんにちは", "Здра́вствуйте", "😁😂😜"], dtype="object"
+            ),
+        },
+    )
+    # expected = pd.DataFrame(
+    #     index=range(2),
+    #     data={
+    #         "id": pd.Series([0, 1], dtype="Int64"),
+    #         "test_language": pd.Series(
+    #             ["English", "中文"], dtype="object"
+    #         ),
+    #         "test_hello": pd.Series(
+    #             ["Hello", "你好"], dtype="object"
+    #         ),
+    #     },
+    # )
+    assert_frame_equal(df, expected, check_names=True)
