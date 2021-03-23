@@ -16,7 +16,7 @@ use postgres::{
 };
 use r2d2::{Pool, PooledConnection};
 use r2d2_postgres::{postgres::NoTls, PostgresConnectionManager};
-use sql::{count_query, limit1_query};
+use sql::{count_query, get_limit, limit1_query};
 pub use typesystem::PostgresTypeSystem;
 
 type PgManager = PostgresConnectionManager<NoTls>;
@@ -163,8 +163,13 @@ impl SourcePartition for PostgresSourcePartition {
     type Parser<'a> = PostgresSourcePartitionParser<'a>;
 
     fn prepare(&mut self) -> Result<()> {
-        let row = self.conn.query_one(&count_query(&self.query)[..], &[])?;
-        self.nrows = row.get::<_, i64>(0) as usize;
+        self.nrows = match get_limit(&self.query) {
+            None => {
+                let row = self.conn.query_one(&count_query(&self.query)[..], &[])?;
+                row.get::<_, i64>(0) as usize
+            }
+            Some(n) => n,
+        };
         Ok(())
     }
 
