@@ -23,7 +23,8 @@ pub enum StringInfo {
 }
 
 impl StringInfo {
-    pub fn inspect(s: &str) -> StringInfo {
+    pub unsafe fn detect(s: &[u8]) -> StringInfo {
+        let s = from_utf8_unchecked(s);
         let mut maxchar = 0;
         let mut len = 0;
 

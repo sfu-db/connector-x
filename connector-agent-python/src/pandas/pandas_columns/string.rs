@@ -43,7 +43,6 @@ impl<'a> StringBlock<'a> {
                     .unwrap(),
                 next_write: 0,
                 string_lengths: vec![],
-                string_infos: vec![],
                 string_buf: Vec::with_capacity(self.buf_size_mb * 2 << 20 * 11 / 10), // allocate a little bit more memory to avoid Vec growth
                 buf_size: self.buf_size_mb * 2 << 20,
                 mutex: self.mutex.clone(),
@@ -58,7 +57,6 @@ pub struct StringColumn<'a> {
     next_write: usize,
     string_buf: Vec<u8>,
     string_lengths: Vec<usize>,
-    string_infos: Vec<StringInfo>,
     buf_size: usize,
     mutex: Arc<Mutex<()>>,
 }
@@ -81,7 +79,6 @@ impl<'a> PandasColumnObject for StringColumn<'a> {
 impl<'r, 'a> PandasColumn<&'r str> for StringColumn<'a> {
     fn write(&mut self, val: &'r str) {
         let bytes = val.as_bytes();
-        self.string_infos.push(StringInfo::inspect(val));
         self.string_lengths.push(bytes.len());
         self.string_buf.extend_from_slice(bytes);
         self.try_flush();
@@ -93,14 +90,12 @@ impl<'r, 'a> PandasColumn<Option<&'r str>> for StringColumn<'a> {
         match val {
             Some(b) => {
                 let bytes = b.as_bytes();
-                self.string_infos.push(StringInfo::inspect(b));
                 self.string_lengths.push(bytes.len());
                 self.string_buf.extend_from_slice(bytes);
                 self.try_flush();
             }
             None => {
                 self.string_lengths.push(0);
-                self.string_infos.push(StringInfo::inspect(""));
             }
         }
     }
@@ -127,7 +122,6 @@ impl<'a> StringColumn<'a> {
                 data: splitted_data,
                 next_write: 0,
                 string_lengths: vec![],
-                string_infos: vec![],
                 string_buf: Vec::with_capacity(self.buf_size),
                 buf_size: self.buf_size,
                 mutex: self.mutex.clone(),
@@ -142,21 +136,21 @@ impl<'a> StringColumn<'a> {
 
         if nstrings > 0 {
             let py = unsafe { Python::assume_gil_acquired() };
+            let mut string_infos = Vec::with_capacity(self.string_lengths.len());
 
             {
                 // allocation in python is not thread safe
                 let _guard = self.mutex.lock().expect("Mutex Poisoned");
                 let mut start = 0;
-                for (i, (&len, info)) in self
-                    .string_lengths
-                    .iter()
-                    .zip_eq(&self.string_infos)
-                    .enumerate()
-                {
+                for (i, &len) in self.string_lengths.iter().enumerate() {
                     let end = start + len;
+                    unsafe {
+                        string_infos.push(StringInfo::detect(&self.string_buf[start..end]));
+                    }
                     if len != 0 {
                         unsafe {
-                            *self.data.get_unchecked_mut(self.next_write + i) = info.pystring(py)
+                            *self.data.get_unchecked_mut(self.next_write + i) =
+                                string_infos.last().unwrap().pystring(py)
                         };
                     }
                     start = end;
@@ -167,7 +161,7 @@ impl<'a> StringColumn<'a> {
             for (i, (len, info)) in self
                 .string_lengths
                 .drain(..)
-                .zip_eq(self.string_infos.drain(..))
+                .zip_eq(string_infos)
                 .enumerate()
             {
                 let end = start + len;
