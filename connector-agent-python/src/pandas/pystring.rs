@@ -41,7 +41,8 @@ impl PyString {
             val.chars().count()
         );
 
-        let objptr = unsafe { ffi::PyUnicode_New(val.chars().count() as ffi::Py_ssize_t, maxchar) };
+        // let objptr = unsafe { ffi::PyUnicode_New(val.chars().count() as ffi::Py_ssize_t, maxchar) };
+        let objptr = unsafe { ffi::PyUnicode_New(val.len() as ffi::Py_ssize_t, maxchar) };
 
         let s: &pyo3::types::PyString = unsafe { py.from_owned_ptr(objptr) };
         PyString(s.into())
