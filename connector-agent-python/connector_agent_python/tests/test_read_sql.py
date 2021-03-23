@@ -141,14 +141,14 @@ def test_read_sql_on_utf8(postgres_url: str) -> None:
     query = "SELECT * FROM test_str"
     df = read_sql(postgres_url, query)
     expected = pd.DataFrame(
-        index=range(6),
+        index=range(8),
         data={
-            "id": pd.Series([0, 1, 2, 3, 4, 5], dtype="Int64"),
+            "id": pd.Series([0, 1, 2, 3, 4, 5, 6, 7], dtype="Int64"),
             "test_language": pd.Series(
-                ["English", "中文", "日本語", "русский", "Emoji", "Symbol"], dtype="object"
+                ["English", "中文", "日本語", "русский", "Emoji", "Latin1", "Extra", "Mixed"], dtype="object"
             ),
             "test_hello": pd.Series(
-                ["Hello", "你好", "こんにちは", "Здра́вствуйте", "😁😂😜", "¥§¤®ð"], dtype="object"
+                ["Hello", "你好", "こんにちは", "Здра́вствуйте", "😁😂😜", "¥§¤®ð", "y̆", "Ha好ち😁ðy̆"], dtype="object"
             ),
         },
     )
