@@ -9,7 +9,7 @@ on:
         default: 'https://test.pypi.org/simple/'
       version:
         description: 'version'  
-        required: true
+        required: false
         default: ''
 
 
