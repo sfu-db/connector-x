@@ -23,14 +23,14 @@ def main() -> None:
         "base_prefix": sys.base_prefix,
     }
 
-    if metadata["platform"] == "win32":
+    if metadata["platform"] == "windows":
         suffix = ".dll"
     elif metadata["platform"] == "linux":
         suffix = ".so"
     elif metadata["platform"] == "darwin":
         suffix = ".dylib"
     else:
-        raise NotImplementedError(f"platform '{platform}' not supported")
+        raise NotImplementedError(f"platform '{metadata['platform']}' not supported")
 
     copyfile(f"../target/release/libconnector_agent_python{suffix}", f"connector_agent/connector_agent_python{metadata['ext_suffix']}")
 
