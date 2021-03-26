@@ -14,7 +14,7 @@ build-python-extention:
     cd connector-agent-python && cargo build --release
 
 setup-python: build-python-extention
-    cd connector-agent-python && poetry run python ../scripts/copy-extension.py
+    cd connector-agent-python && poetry run python ../scripts/python-helper.py copy-extension
     
 test-python: setup-python
     cd connector-agent-python && poetry run pytest connector_agent/tests -v -s
