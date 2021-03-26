@@ -3,7 +3,7 @@ use super::types::PandasTypeSystem;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
 use connector_agent::{
     impl_transport,
-    sources::postgres::{PostgresSource, PostgresSourceCSV, PostgresTypeSystem},
+    sources::postgres::{PostgresBinarySource, PostgresCSVSource, PostgresTypeSystem},
     typesystem::TypeConversion,
 };
 
@@ -12,7 +12,7 @@ pub struct PostgresPandasTransport<'py>(&'py ());
 impl_transport!(
     name = PostgresPandasTransport<'tp>,
     systems = PostgresTypeSystem => PandasTypeSystem,
-    route = PostgresSource => PandasDestination<'tp>,
+    route = PostgresBinarySource => PandasDestination<'tp>,
     mappings = {
         { Float4[f32]                => F64[f64]                | conversion all }
         { Float8[f64]                => F64[f64]                | conversion all }
@@ -45,7 +45,7 @@ pub struct PostgresCSVPandasTransport<'py>(&'py ());
 impl_transport!(
     name = PostgresCSVPandasTransport<'tp>,
     systems = PostgresTypeSystem => PandasTypeSystem,
-    route = PostgresSourceCSV => PandasDestination<'tp>,
+    route = PostgresCSVSource => PandasDestination<'tp>,
     mappings = {
         { Float4[f32]                => F64[f64]                | conversion all }
         { Float8[f64]                => F64[f64]                | conversion all }

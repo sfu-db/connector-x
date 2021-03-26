@@ -1,6 +1,6 @@
 use crate::destinations::memory::MemoryDestination;
 use crate::dummy_typesystem::DummyTypeSystem;
-use crate::sources::postgres::{PostgresSource, PostgresTypeSystem};
+use crate::sources::postgres::{PostgresBinarySource, PostgresTypeSystem};
 use crate::typesystem::TypeConversion;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
 
@@ -9,7 +9,7 @@ pub struct PostgresMemoryTransport;
 impl_transport!(
     name = PostgresMemoryTransport,
     systems = PostgresTypeSystem => DummyTypeSystem,
-    route = PostgresSource => MemoryDestination,
+    route = PostgresBinarySource => MemoryDestination,
     mappings = {
         { Float4[f32]                => F64[f64]                | conversion all }
         { Float8[f64]                => F64[f64]                | conversion all }

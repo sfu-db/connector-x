@@ -1,6 +1,6 @@
 use crate::destinations::memory::MemoryDestination;
 use crate::dummy_typesystem::DummyTypeSystem;
-use crate::sources::postgres::{PostgresSourceCSV, PostgresTypeSystem};
+use crate::sources::postgres::{PostgresCSVSource, PostgresTypeSystem};
 use crate::typesystem::TypeConversion;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
 
@@ -9,7 +9,7 @@ pub struct PostgresCSVMemoryTransport;
 impl_transport!(
     name = PostgresCSVMemoryTransport,
     systems = PostgresTypeSystem => DummyTypeSystem,
-    route = PostgresSourceCSV => MemoryDestination,
+    route = PostgresCSVSource => MemoryDestination,
     mappings = {
         { Float4[f32]                => F64[f64]                | conversion all }
         { Float8[f64]                => F64[f64]                | conversion all }

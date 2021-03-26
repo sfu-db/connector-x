@@ -10,7 +10,7 @@ pub use self::types::{PandasDType, PandasTypeSystem};
 use crate::errors::ConnectorAgentPythonError;
 use anyhow::anyhow;
 use connector_agent::{
-    sources::postgres::{PostgresSource, PostgresSourceCSV},
+    sources::postgres::{PostgresBinarySource, PostgresCSVSource},
     Dispatcher,
 };
 use fehler::throws;
@@ -25,7 +25,7 @@ pub fn write_pandas<'a>(py: Python<'a>, conn: &str, queries: &[&str], protocol: 
     debug!("Protocol: {}", protocol);
     match protocol {
         "csv" => {
-            let sb = PostgresSourceCSV::new(conn, queries.len());
+            let sb = PostgresCSVSource::new(conn, queries.len());
             let dispatcher =
                 Dispatcher::<_, _, PostgresCSVPandasTransport>::new(sb, &mut destination, queries);
 
@@ -33,7 +33,7 @@ pub fn write_pandas<'a>(py: Python<'a>, conn: &str, queries: &[&str], protocol: 
             dispatcher.run()?;
         }
         "binary" => {
-            let sb = PostgresSource::new(conn, queries.len());
+            let sb = PostgresBinarySource::new(conn, queries.len());
             let dispatcher =
                 Dispatcher::<_, _, PostgresPandasTransport>::new(sb, &mut destination, queries);
 

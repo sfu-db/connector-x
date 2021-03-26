@@ -22,7 +22,7 @@ pub use typesystem::PostgresTypeSystem;
 type PgManager = PostgresConnectionManager<NoTls>;
 type PgConn = PooledConnection<PgManager>;
 
-pub struct PostgresSource {
+pub struct PostgresBinarySource {
     pool: Pool<PgManager>,
     queries: Vec<String>,
     names: Vec<String>,
@@ -30,7 +30,7 @@ pub struct PostgresSource {
     buf_size: usize,
 }
 
-impl PostgresSource {
+impl PostgresBinarySource {
     pub fn new(conn: &str, nconn: usize) -> Self {
         let manager = PostgresConnectionManager::new(conn.parse().unwrap(), NoTls);
         let pool = Pool::builder()
@@ -52,9 +52,9 @@ impl PostgresSource {
     }
 }
 
-impl Source for PostgresSource {
+impl Source for PostgresBinarySource {
     const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
-    type Partition = PostgresSourcePartition;
+    type Partition = PostgresBinarySourcePartition;
     type TypeSystem = PostgresTypeSystem;
 
     fn set_data_order(&mut self, data_order: DataOrder) -> Result<()> {
@@ -125,7 +125,7 @@ impl Source for PostgresSource {
         for query in self.queries {
             let conn = self.pool.get()?;
 
-            ret.push(PostgresSourcePartition::new(
+            ret.push(PostgresBinarySourcePartition::new(
                 conn,
                 &query,
                 &self.schema,
@@ -136,7 +136,7 @@ impl Source for PostgresSource {
     }
 }
 
-pub struct PostgresSourcePartition {
+pub struct PostgresBinarySourcePartition {
     conn: PgConn,
     query: String,
     schema: Vec<PostgresTypeSystem>,
@@ -145,7 +145,7 @@ pub struct PostgresSourcePartition {
     buf_size: usize,
 }
 
-impl PostgresSourcePartition {
+impl PostgresBinarySourcePartition {
     pub fn new(conn: PgConn, query: &str, schema: &[PostgresTypeSystem], buf_size: usize) -> Self {
         Self {
             conn,
@@ -158,9 +158,9 @@ impl PostgresSourcePartition {
     }
 }
 
-impl SourcePartition for PostgresSourcePartition {
+impl SourcePartition for PostgresBinarySourcePartition {
     type TypeSystem = PostgresTypeSystem;
-    type Parser<'a> = PostgresSourcePartitionParser<'a>;
+    type Parser<'a> = PostgresBinarySourcePartitionParser<'a>;
 
     fn prepare(&mut self) -> Result<()> {
         self.nrows = match get_limit(&self.query) {
@@ -179,7 +179,7 @@ impl SourcePartition for PostgresSourcePartition {
         let pg_schema: Vec<_> = self.schema.iter().map(|&dt| dt.into()).collect();
         let iter = BinaryCopyOutIter::new(reader, &pg_schema);
 
-        Ok(PostgresSourcePartitionParser::new(
+        Ok(PostgresBinarySourcePartitionParser::new(
             iter,
             &self.schema,
             self.buf_size,
@@ -195,7 +195,7 @@ impl SourcePartition for PostgresSourcePartition {
     }
 }
 
-pub struct PostgresSourcePartitionParser<'a> {
+pub struct PostgresBinarySourcePartitionParser<'a> {
     iter: BinaryCopyOutIter<'a>,
     buf_size: usize,
     rowbuf: Vec<BinaryCopyOutRow>,
@@ -204,7 +204,7 @@ pub struct PostgresSourcePartitionParser<'a> {
     current_row: usize,
 }
 
-impl<'a> PostgresSourcePartitionParser<'a> {
+impl<'a> PostgresBinarySourcePartitionParser<'a> {
     pub fn new(
         iter: BinaryCopyOutIter<'a>,
         schema: &[PostgresTypeSystem],
@@ -249,14 +249,14 @@ impl<'a> PostgresSourcePartitionParser<'a> {
     }
 }
 
-impl<'a> PartitionParser<'a> for PostgresSourcePartitionParser<'a> {
+impl<'a> PartitionParser<'a> for PostgresBinarySourcePartitionParser<'a> {
     type TypeSystem = PostgresTypeSystem;
 }
 
 macro_rules! impl_produce {
     ($($t: ty),+) => {
         $(
-            impl<'r, 'a> Produce<'r, $t> for PostgresSourcePartitionParser<'a> {
+            impl<'r, 'a> Produce<'r, $t> for PostgresBinarySourcePartitionParser<'a> {
                 fn produce(&mut self) -> Result<$t> {
                     let (ridx, cidx) = self.next_loc()?;
                     let val = self.rowbuf[ridx].try_get(cidx)?;
@@ -264,7 +264,7 @@ macro_rules! impl_produce {
                 }
             }
 
-            impl<'r, 'a> Produce<'r, Option<$t>> for PostgresSourcePartitionParser<'a> {
+            impl<'r, 'a> Produce<'r, Option<$t>> for PostgresBinarySourcePartitionParser<'a> {
                 fn produce(&mut self) -> Result<Option<$t>> {
                     let (ridx, cidx) = self.next_loc()?;
                     let val = self.rowbuf[ridx].try_get(cidx)?;
@@ -286,7 +286,7 @@ impl_produce!(
     NaiveDate
 );
 
-impl<'r, 'a> Produce<'r, &'r str> for PostgresSourcePartitionParser<'a> {
+impl<'r, 'a> Produce<'r, &'r str> for PostgresBinarySourcePartitionParser<'a> {
     fn produce(&'r mut self) -> Result<&'r str> {
         let (ridx, cidx) = self.next_loc()?;
         let row = &self.rowbuf[ridx];
@@ -296,7 +296,7 @@ impl<'r, 'a> Produce<'r, &'r str> for PostgresSourcePartitionParser<'a> {
     }
 }
 
-impl<'r, 'a> Produce<'r, Option<&'r str>> for PostgresSourcePartitionParser<'a> {
+impl<'r, 'a> Produce<'r, Option<&'r str>> for PostgresBinarySourcePartitionParser<'a> {
     fn produce(&'r mut self) -> Result<Option<&'r str>> {
         let (ridx, cidx) = self.next_loc()?;
         let row = &self.rowbuf[ridx];
@@ -306,7 +306,7 @@ impl<'r, 'a> Produce<'r, Option<&'r str>> for PostgresSourcePartitionParser<'a> 
     }
 }
 
-pub struct PostgresSourceCSV {
+pub struct PostgresCSVSource {
     pool: Pool<PgManager>,
     queries: Vec<String>,
     names: Vec<String>,
@@ -314,7 +314,7 @@ pub struct PostgresSourceCSV {
     buf_size: usize,
 }
 
-impl PostgresSourceCSV {
+impl PostgresCSVSource {
     pub fn new(conn: &str, nconn: usize) -> Self {
         let manager = PostgresConnectionManager::new(conn.parse().unwrap(), NoTls);
         let pool = Pool::builder()
@@ -336,9 +336,9 @@ impl PostgresSourceCSV {
     }
 }
 
-impl Source for PostgresSourceCSV {
+impl Source for PostgresCSVSource {
     const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
-    type Partition = PostgresSourceCSVPartition;
+    type Partition = PostgresCSVSourcePartition;
     type TypeSystem = PostgresTypeSystem;
 
     fn set_data_order(&mut self, data_order: DataOrder) -> Result<()> {
@@ -409,7 +409,7 @@ impl Source for PostgresSourceCSV {
         for query in self.queries {
             let conn = self.pool.get()?;
 
-            ret.push(PostgresSourceCSVPartition::new(
+            ret.push(PostgresCSVSourcePartition::new(
                 conn,
                 &query,
                 &self.schema,
@@ -420,7 +420,7 @@ impl Source for PostgresSourceCSV {
     }
 }
 
-pub struct PostgresSourceCSVPartition {
+pub struct PostgresCSVSourcePartition {
     conn: PgConn,
     query: String,
     schema: Vec<PostgresTypeSystem>,
@@ -429,7 +429,7 @@ pub struct PostgresSourceCSVPartition {
     buf_size: usize,
 }
 
-impl PostgresSourceCSVPartition {
+impl PostgresCSVSourcePartition {
     pub fn new(conn: PgConn, query: &str, schema: &[PostgresTypeSystem], buf_size: usize) -> Self {
         Self {
             conn,
@@ -442,9 +442,9 @@ impl PostgresSourceCSVPartition {
     }
 }
 
-impl SourcePartition for PostgresSourceCSVPartition {
+impl SourcePartition for PostgresCSVSourcePartition {
     type TypeSystem = PostgresTypeSystem;
-    type Parser<'a> = PostgresSourceCSVParser<'a>;
+    type Parser<'a> = PostgresCSVSourceParser<'a>;
 
     fn prepare(&mut self) -> Result<()> {
         let row = self.conn.query_one(&count_query(&self.query)[..], &[])?;
@@ -460,7 +460,7 @@ impl SourcePartition for PostgresSourceCSVPartition {
             .from_reader(reader)
             .into_records();
 
-        Ok(PostgresSourceCSVParser::new(
+        Ok(PostgresCSVSourceParser::new(
             iter,
             &self.schema,
             self.buf_size,
@@ -475,7 +475,7 @@ impl SourcePartition for PostgresSourceCSVPartition {
         self.ncols
     }
 }
-pub struct PostgresSourceCSVParser<'a> {
+pub struct PostgresCSVSourceParser<'a> {
     iter: StringRecordsIntoIter<CopyOutReader<'a>>,
     buf_size: usize,
     rowbuf: Vec<StringRecord>,
@@ -484,7 +484,7 @@ pub struct PostgresSourceCSVParser<'a> {
     current_row: usize,
 }
 
-impl<'a> PostgresSourceCSVParser<'a> {
+impl<'a> PostgresCSVSourceParser<'a> {
     pub fn new(
         iter: StringRecordsIntoIter<CopyOutReader<'a>>,
         schema: &[PostgresTypeSystem],
@@ -528,14 +528,14 @@ impl<'a> PostgresSourceCSVParser<'a> {
     }
 }
 
-impl<'a> PartitionParser<'a> for PostgresSourceCSVParser<'a> {
+impl<'a> PartitionParser<'a> for PostgresCSVSourceParser<'a> {
     type TypeSystem = PostgresTypeSystem;
 }
 
 macro_rules! impl_csv_produce {
     ($($t: ty),+) => {
         $(
-            impl<'r, 'a> Produce<'r, $t> for PostgresSourceCSVParser<'a> {
+            impl<'r, 'a> Produce<'r, $t> for PostgresCSVSourceParser<'a> {
                 fn produce(&mut self) -> Result<$t> {
                     let (ridx, cidx) = self.next_loc()?;
                     self.rowbuf[ridx][cidx].parse().map_err(|_| {
@@ -544,7 +544,7 @@ macro_rules! impl_csv_produce {
                 }
             }
 
-            impl<'r, 'a> Produce<'r, Option<$t>> for PostgresSourceCSVParser<'a> {
+            impl<'r, 'a> Produce<'r, Option<$t>> for PostgresCSVSourceParser<'a> {
                 fn produce(&mut self) -> Result<Option<$t>> {
                     let (ridx, cidx) = self.next_loc()?;
                     match &self.rowbuf[ridx][cidx][..] {
@@ -561,7 +561,7 @@ macro_rules! impl_csv_produce {
 
 impl_csv_produce!(i32, i64, f32, f64);
 
-impl<'r, 'a> Produce<'r, bool> for PostgresSourceCSVParser<'a> {
+impl<'r, 'a> Produce<'r, bool> for PostgresCSVSourceParser<'a> {
     fn produce(&mut self) -> Result<bool> {
         let (ridx, cidx) = self.next_loc()?;
         let ret = match &self.rowbuf[ridx][cidx][..] {
@@ -575,7 +575,7 @@ impl<'r, 'a> Produce<'r, bool> for PostgresSourceCSVParser<'a> {
     }
 }
 
-impl<'r, 'a> Produce<'r, Option<bool>> for PostgresSourceCSVParser<'a> {
+impl<'r, 'a> Produce<'r, Option<bool>> for PostgresCSVSourceParser<'a> {
     fn produce(&mut self) -> Result<Option<bool>> {
         let (ridx, cidx) = self.next_loc()?;
         let ret = match &self.rowbuf[ridx][cidx][..] {
@@ -590,7 +590,7 @@ impl<'r, 'a> Produce<'r, Option<bool>> for PostgresSourceCSVParser<'a> {
     }
 }
 
-impl<'r, 'a> Produce<'r, DateTime<Utc>> for PostgresSourceCSVParser<'a> {
+impl<'r, 'a> Produce<'r, DateTime<Utc>> for PostgresCSVSourceParser<'a> {
     fn produce(&mut self) -> Result<DateTime<Utc>> {
         let (ridx, cidx) = self.next_loc()?;
         self.rowbuf[ridx][cidx].parse().map_err(|_| {
@@ -601,7 +601,7 @@ impl<'r, 'a> Produce<'r, DateTime<Utc>> for PostgresSourceCSVParser<'a> {
     }
 }
 
-impl<'r, 'a> Produce<'r, Option<DateTime<Utc>>> for PostgresSourceCSVParser<'a> {
+impl<'r, 'a> Produce<'r, Option<DateTime<Utc>>> for PostgresCSVSourceParser<'a> {
     fn produce(&mut self) -> Result<Option<DateTime<Utc>>> {
         let (ridx, cidx) = self.next_loc()?;
         match &self.rowbuf[ridx][cidx][..] {
@@ -613,7 +613,7 @@ impl<'r, 'a> Produce<'r, Option<DateTime<Utc>>> for PostgresSourceCSVParser<'a> 
     }
 }
 
-impl<'r, 'a> Produce<'r, NaiveDate> for PostgresSourceCSVParser<'a> {
+impl<'r, 'a> Produce<'r, NaiveDate> for PostgresCSVSourceParser<'a> {
     fn produce(&mut self) -> Result<NaiveDate> {
         let (ridx, cidx) = self.next_loc()?;
         NaiveDate::parse_from_str(&self.rowbuf[ridx][cidx], "%Y-%m-%d").map_err(|_| {
@@ -622,7 +622,7 @@ impl<'r, 'a> Produce<'r, NaiveDate> for PostgresSourceCSVParser<'a> {
     }
 }
 
-impl<'r, 'a> Produce<'r, Option<NaiveDate>> for PostgresSourceCSVParser<'a> {
+impl<'r, 'a> Produce<'r, Option<NaiveDate>> for PostgresCSVSourceParser<'a> {
     fn produce(&mut self) -> Result<Option<NaiveDate>> {
         let (ridx, cidx) = self.next_loc()?;
         match &self.rowbuf[ridx][cidx][..] {
@@ -634,7 +634,7 @@ impl<'r, 'a> Produce<'r, Option<NaiveDate>> for PostgresSourceCSVParser<'a> {
     }
 }
 
-impl<'r, 'a> Produce<'r, NaiveDateTime> for PostgresSourceCSVParser<'a> {
+impl<'r, 'a> Produce<'r, NaiveDateTime> for PostgresCSVSourceParser<'a> {
     fn produce(&mut self) -> Result<NaiveDateTime> {
         let (ridx, cidx) = self.next_loc()?;
         NaiveDateTime::parse_from_str(&self.rowbuf[ridx][cidx], "%Y-%m-%d %H:%M:%S").map_err(|_| {
@@ -645,7 +645,7 @@ impl<'r, 'a> Produce<'r, NaiveDateTime> for PostgresSourceCSVParser<'a> {
     }
 }
 
-impl<'r, 'a> Produce<'r, Option<NaiveDateTime>> for PostgresSourceCSVParser<'a> {
+impl<'r, 'a> Produce<'r, Option<NaiveDateTime>> for PostgresCSVSourceParser<'a> {
     fn produce(&mut self) -> Result<Option<NaiveDateTime>> {
         let (ridx, cidx) = self.next_loc()?;
         match &self.rowbuf[ridx][cidx][..] {
@@ -659,14 +659,14 @@ impl<'r, 'a> Produce<'r, Option<NaiveDateTime>> for PostgresSourceCSVParser<'a> 
     }
 }
 
-impl<'r, 'a> Produce<'r, &'r str> for PostgresSourceCSVParser<'a> {
+impl<'r, 'a> Produce<'r, &'r str> for PostgresCSVSourceParser<'a> {
     fn produce(&'r mut self) -> Result<&'r str> {
         let (ridx, cidx) = self.next_loc()?;
         Ok(&self.rowbuf[ridx][cidx])
     }
 }
 
-impl<'r, 'a> Produce<'r, Option<&'r str>> for PostgresSourceCSVParser<'a> {
+impl<'r, 'a> Produce<'r, Option<&'r str>> for PostgresCSVSourceParser<'a> {
     fn produce(&'r mut self) -> Result<Option<&'r str>> {
         let (ridx, cidx) = self.next_loc()?;
         match &self.rowbuf[ridx][cidx][..] {
