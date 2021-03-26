@@ -1,10 +1,10 @@
 use connector_agent::{
     destinations::memory::MemoryDestination,
     sources::{
-        postgres::{PostgresSource, PostgresSourceCSV},
+        postgres::{Binary, PostgresSource, CSV},
         Produce, Source, SourcePartition,
     },
-    transports::{PostgresCSVMemoryTransport, PostgresMemoryTransport},
+    transports::PostgresMemoryTransport,
     Dispatcher,
 };
 use ndarray::array;
@@ -18,7 +18,7 @@ fn load_and_parse() {
     #[derive(Debug, PartialEq)]
     struct Row(i32, Option<i32>, Option<String>, Option<f64>, Option<bool>);
 
-    let mut source = PostgresSource::new(&dburl, 1);
+    let mut source = PostgresSource::<Binary>::new(&dburl, 1);
     source.set_queries(&["select * from test_table"]);
     source.fetch_metadata().unwrap();
 
@@ -70,8 +70,11 @@ fn test_postgres() {
     ];
     let builder = PostgresSource::new(&dburl, 2);
     let mut destination = MemoryDestination::new();
-    let dispatcher =
-        Dispatcher::<_, _, PostgresMemoryTransport>::new(builder, &mut destination, &queries);
+    let dispatcher = Dispatcher::<_, _, PostgresMemoryTransport<Binary>>::new(
+        builder,
+        &mut destination,
+        &queries,
+    );
 
     dispatcher.run().expect("run dispatcher");
     assert_eq!(
@@ -120,7 +123,7 @@ fn load_and_parse_csv() {
     #[derive(Debug, PartialEq)]
     struct Row(i32, Option<i32>, Option<String>, Option<f64>, Option<bool>);
 
-    let mut source = PostgresSourceCSV::new(&dburl, 1);
+    let mut source = PostgresSource::<CSV>::new(&dburl, 1);
     source.set_queries(&["select * from test_table"]);
     source.fetch_metadata().unwrap();
 
@@ -170,10 +173,10 @@ fn test_postgres_csv() {
         "select * from test_table where test_int < 2",
         "select * from test_table where test_int >= 2",
     ];
-    let builder = PostgresSourceCSV::new(&dburl, 2);
+    let builder = PostgresSource::<CSV>::new(&dburl, 2);
     let mut dst = MemoryDestination::new();
     let dispatcher =
-        Dispatcher::<_, _, PostgresCSVMemoryTransport>::new(builder, &mut dst, &queries);
+        Dispatcher::<_, _, PostgresMemoryTransport<CSV>>::new(builder, &mut dst, &queries);
 
     dispatcher.run().expect("run dispatcher");
     assert_eq!(

@@ -5,12 +5,12 @@ mod transport;
 mod types;
 
 pub use self::destination::{PandasDestination, PandasPartitionDestination};
-pub use self::transport::{PostgresCSVPandasTransport, PostgresPandasTransport};
+pub use self::transport::PostgresPandasTransport;
 pub use self::types::{PandasDType, PandasTypeSystem};
 use crate::errors::ConnectorAgentPythonError;
 use anyhow::anyhow;
 use connector_agent::{
-    sources::postgres::{PostgresSource, PostgresSourceCSV},
+    sources::postgres::{Binary, PostgresSource, CSV},
     Dispatcher,
 };
 use fehler::throws;
@@ -25,17 +25,23 @@ pub fn write_pandas<'a>(py: Python<'a>, conn: &str, queries: &[&str], protocol: 
     debug!("Protocol: {}", protocol);
     match protocol {
         "csv" => {
-            let sb = PostgresSourceCSV::new(conn, queries.len());
-            let dispatcher =
-                Dispatcher::<_, _, PostgresCSVPandasTransport>::new(sb, &mut destination, queries);
+            let sb = PostgresSource::<CSV>::new(conn, queries.len());
+            let dispatcher = Dispatcher::<_, _, PostgresPandasTransport<CSV>>::new(
+                sb,
+                &mut destination,
+                queries,
+            );
 
             debug!("Running dispatcher");
             dispatcher.run()?;
         }
         "binary" => {
-            let sb = PostgresSource::new(conn, queries.len());
-            let dispatcher =
-                Dispatcher::<_, _, PostgresPandasTransport>::new(sb, &mut destination, queries);
+            let sb = PostgresSource::<Binary>::new(conn, queries.len());
+            let dispatcher = Dispatcher::<_, _, PostgresPandasTransport<Binary>>::new(
+                sb,
+                &mut destination,
+                queries,
+            );
 
             debug!("Running dispatcher");
             dispatcher.run()?;

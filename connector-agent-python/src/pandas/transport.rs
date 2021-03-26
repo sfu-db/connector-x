@@ -3,16 +3,17 @@ use super::types::PandasTypeSystem;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
 use connector_agent::{
     impl_transport,
-    sources::postgres::{PostgresSource, PostgresSourceCSV, PostgresTypeSystem},
+    sources::postgres::{Binary, PostgresSource, PostgresTypeSystem, CSV},
     typesystem::TypeConversion,
 };
+use std::marker::PhantomData;
 
-pub struct PostgresPandasTransport<'py>(&'py ());
+pub struct PostgresPandasTransport<'py, P>(&'py (), PhantomData<P>);
 
 impl_transport!(
-    name = PostgresPandasTransport<'tp>,
+    name = PostgresPandasTransport<'tp, Binary>,
     systems = PostgresTypeSystem => PandasTypeSystem,
-    route = PostgresSource => PandasDestination<'tp>,
+    route = PostgresSource<Binary> => PandasDestination<'tp>,
     mappings = {
         { Float4[f32]                => F64[f64]                | conversion all }
         { Float8[f64]                => F64[f64]                | conversion all }
@@ -28,24 +29,10 @@ impl_transport!(
     }
 );
 
-impl<'py> TypeConversion<NaiveDateTime, DateTime<Utc>> for PostgresPandasTransport<'py> {
-    fn convert(val: NaiveDateTime) -> DateTime<Utc> {
-        DateTime::from_utc(val, Utc)
-    }
-}
-
-impl<'py> TypeConversion<NaiveDate, DateTime<Utc>> for PostgresPandasTransport<'py> {
-    fn convert(val: NaiveDate) -> DateTime<Utc> {
-        DateTime::from_utc(val.and_hms(0, 0, 0), Utc)
-    }
-}
-
-pub struct PostgresCSVPandasTransport<'py>(&'py ());
-
 impl_transport!(
-    name = PostgresCSVPandasTransport<'tp>,
+    name = PostgresPandasTransport<'tp, CSV>,
     systems = PostgresTypeSystem => PandasTypeSystem,
-    route = PostgresSourceCSV => PandasDestination<'tp>,
+    route = PostgresSource<CSV> => PandasDestination<'tp>,
     mappings = {
         { Float4[f32]                => F64[f64]                | conversion all }
         { Float8[f64]                => F64[f64]                | conversion all }
@@ -61,13 +48,13 @@ impl_transport!(
     }
 );
 
-impl<'py> TypeConversion<NaiveDateTime, DateTime<Utc>> for PostgresCSVPandasTransport<'py> {
+impl<'py, P> TypeConversion<NaiveDateTime, DateTime<Utc>> for PostgresPandasTransport<'py, P> {
     fn convert(val: NaiveDateTime) -> DateTime<Utc> {
         DateTime::from_utc(val, Utc)
     }
 }
 
-impl<'py> TypeConversion<NaiveDate, DateTime<Utc>> for PostgresCSVPandasTransport<'py> {
+impl<'py, P> TypeConversion<NaiveDate, DateTime<Utc>> for PostgresPandasTransport<'py, P> {
     fn convert(val: NaiveDate) -> DateTime<Utc> {
         DateTime::from_utc(val.and_hms(0, 0, 0), Utc)
     }
