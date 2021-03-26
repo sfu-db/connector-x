@@ -36,7 +36,7 @@ jobs:
       - name: Install connector agent
         run: |
           echo $(which python)
-          $version = '${{ github.event.inputs.version }}'
+          version='${{ github.event.inputs.version }}'
           if [-z $version]
           then
             pip install --index-url ${{ github.event.inputs.indexUrl }} connector-agent
@@ -79,7 +79,7 @@ jobs:
           eval "$(pyenv init -)"
           eval "$(pyenv virtualenv-init -)"
           echo $(which python)
-          $version = '${{ github.event.inputs.version }}'
+          version='${{ github.event.inputs.version }}'
           if [-z $version]
           then
             pip install --index-url ${{ github.event.inputs.indexUrl }} connector-agent
