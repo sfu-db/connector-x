@@ -45,8 +45,8 @@ def main() -> None:
         else:
             raise NotImplementedError(f"platform '{METADATA['platform']}' not supported")
 
-        src = "../target/release/libconnector_agent_python"
-        dst = "./connector_agent/connector_agent_python"
+        src = Path("../target/release/libconnector_agent_python")
+        dst = Path("./connector_agent/connector_agent_python")
         copyfile(src.with_suffix(suffix), dst.with_suffix(METADATA["ext_suffix"]))
     elif args["rename-wheel"]:
         if METADATA["platform"] == "windows":
