@@ -67,16 +67,19 @@ ci-rename-wheel:
             abi_tag, platform_tag = platform_string.split("-")
             py_tag = abi_tag.rstrip("m")
             platform_string = f"{py_tag}-{abi_tag}-{platform_tag}"
+            break
         elif platform == "linux" and p.suffix == ".so":
             platform_string = p.suffixes[0][1:]
             cpython, abi_tag, *platform_tag = platform_string.split("-")
             py_tag = abi_tag.rstrip("m")
             platform_string = f"cp{py_tag}-cp{abi_tag}-manylinux2014_x86_64"
+            break
         elif platform == "darwin" and p.suffix == ".so": 
             platform_string = p.suffixes[0][1:]
             cpython, abi_tag, *platform_tag = platform_string.split("-")
             py_tag = abi_tag.rstrip("m")
             platform_string = f"cp{py_tag}-cp{abi_tag}-macosx_10_15_intel"
+            break
         else:
             raise NotImplementedError(f"platform '{platform}' not supported")
 
