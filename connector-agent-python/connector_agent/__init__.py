@@ -4,7 +4,12 @@ import pandas as pd
 
 from .connector_agent_python import read_pg
 from .connector_agent_python import read_sql as _read_sql
+from importlib.metadata import version
 
+try:
+    __version__ = version(__name__)
+except:
+    pass
 
 def read_sql(
     conn: str,

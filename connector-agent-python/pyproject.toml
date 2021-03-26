@@ -18,7 +18,7 @@ keywords = ["read_sql"]
 license = "MIT" 
 maintainers = ["Weiyuan Wu <youngw@sfu.ca>"] 
 name = "connector_agent" 
-readme = "../README.md" # Markdown files are supported
+readme = "README.md" # Markdown files are supported
 version = "0.1.0-alpha.2" 
 
 [tool.poetry.dependencies]
