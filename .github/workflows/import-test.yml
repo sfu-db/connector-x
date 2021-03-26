@@ -131,15 +131,12 @@ jobs:
           pyenv global "${{ matrix.python }}"
           pyenv rehash
 
-          pip install -U pip  # upgrade pip after installing python
-          pyenv rehash
-
       - name: Install connector agent
         run: |
           echo $(which python)
 
           pip install pandas numpy
-          
+
           $version = '${{ github.event.inputs.version }}'
           if ($version) {
             pip install --index-url ${{ github.event.inputs.indexUrl }} connector-agent==$version
