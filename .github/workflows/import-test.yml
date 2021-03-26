@@ -36,6 +36,8 @@ jobs:
       - name: Install connector agent
         run: |
           echo $(which python)
+          pip install pandas numpy
+
           version='${{ github.event.inputs.version }}'
           if [ -z $version ]
           then
@@ -79,6 +81,9 @@ jobs:
           eval "$(pyenv init -)"
           eval "$(pyenv virtualenv-init -)"
           echo $(which python)
+
+          pip install pandas numpy
+
           version='${{ github.event.inputs.version }}'
           if [ -z $version ]
           then
@@ -132,6 +137,9 @@ jobs:
       - name: Install connector agent
         run: |
           echo $(which python)
+
+          pip install pandas numpy
+          
           $version = '${{ github.event.inputs.version }}'
           if ($version) {
             pip install --index-url ${{ github.event.inputs.indexUrl }} connector-agent==$version
