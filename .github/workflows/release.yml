@@ -49,7 +49,7 @@ jobs:
 
       - name: build python dependencies
         run: |
-          just ci-setup-python
+          just ci-build-python-extention
       
       - name: Print the result
         run: ls connector-agent-python/connector_agent
@@ -116,7 +116,7 @@ jobs:
         run: |
           eval "$(pyenv init -)"
           eval "$(pyenv virtualenv-init -)"
-          just ci-setup-python
+          just ci-build-python-extention
       
       - name: Print the result
         run: ls connector-agent-python/connector_agent
@@ -192,7 +192,7 @@ jobs:
 
       - name: build python dependencies
         run: |
-          just ci-setup-python
+          just ci-build-python-extention
       
       - name: Print the result
         run: ls connector-agent-python/connector_agent

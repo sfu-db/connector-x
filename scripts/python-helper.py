@@ -1,6 +1,6 @@
 """
 Usage:
-  python-helper.py (copy-extention|rename-wheel)
+  python-helper.py (copy-extension|rename-wheel)
 
 Options:
   -h --help     Show this screen.

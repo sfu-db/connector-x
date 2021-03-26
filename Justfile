@@ -46,11 +46,9 @@ python-shell:
 # releases
 ci-build-python-extention:
     cd connector-agent-python && cargo build --release
-
-ci-setup-python: ci-build-python-extention
     ls target/release
     cd connector-agent-python && poetry run python ../scripts/python-helper.py copy-extension
-    
+
 ci-build-python-wheel:
     cd connector-agent-python && poetry build
     
