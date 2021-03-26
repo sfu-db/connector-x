@@ -36,7 +36,13 @@ jobs:
       - name: Install connector agent
         run: |
           echo $(which python)
-          pip install --index-url ${{ github.event.inputs.indexUrl }} connector-agent
+          $version = '${{ github.event.inputs.version }}'
+          if [-z $version]
+          then
+            pip install --index-url ${{ github.event.inputs.indexUrl }} connector-agent
+          else
+            pip install --index-url ${{ github.event.inputs.indexUrl }} connector-agent==$version
+          fi
 
       - name: Import
         run: python -c "from connector_agent import read_sql"
@@ -73,7 +79,13 @@ jobs:
           eval "$(pyenv init -)"
           eval "$(pyenv virtualenv-init -)"
           echo $(which python)
-          pip install --index-url ${{ github.event.inputs.indexUrl }} connector-agent
+          $version = '${{ github.event.inputs.version }}'
+          if [-z $version]
+          then
+            pip install --index-url ${{ github.event.inputs.indexUrl }} connector-agent
+          else
+            pip install --index-url ${{ github.event.inputs.indexUrl }} connector-agent==$version
+          fi
 
       - name: Import
         run: |
@@ -120,7 +132,13 @@ jobs:
       - name: Install connector agent
         run: |
           echo $(which python)
-          pip install --index-url ${{ github.event.inputs.indexUrl }} connector-agent
+          $version = '${{ github.event.inputs.version }}'
+          if ($version) {
+            pip install --index-url ${{ github.event.inputs.indexUrl }} connector-agent==$version
+          } else { 
+            pip install --index-url ${{ github.event.inputs.indexUrl }} connector-agent
+          }
+          
 
       - name: Import
         run: |
