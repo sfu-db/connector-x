@@ -217,8 +217,10 @@ jobs:
       - name: Download all artifacts
         uses: actions/download-artifact@v2
 
-      - name: Show downloaded artifacts
-        run: tree .
+      - name: Setup environment
+        run: |
+            tree .
+            echo "/home/runner/.local/bin" >> $GITHUB_PATH
 
       - name: Install Twine
         run: pip install twine
@@ -240,8 +242,10 @@ jobs:
       - name: Download all artifacts
         uses: actions/download-artifact@v2
 
-      - name: Show downloaded artifacts
-        run: tree .
+      - name: Setup environment
+        run: |
+            tree .
+            echo "/home/runner/.local/bin" >> $GITHUB_PATH
 
       - name: Install Twine
         run: pip install twine
