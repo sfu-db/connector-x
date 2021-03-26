@@ -45,7 +45,7 @@ python-shell:
 
 # releases
 ci-build-python-extention:
-    cd connector-agent-python && RUSTFLAGS='-C link-arg=-s' cargo build --release
+    cd connector-agent-python && cargo build --release
 
 ci-setup-python: ci-build-python-extention
     cd connector-agent-python && poetry run python ../scripts/copy-extension.py
