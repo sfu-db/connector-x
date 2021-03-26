@@ -9,7 +9,7 @@ Options:
 """
 import os
 
-from connector_agent_python import read_sql
+from connector_agent import read_sql
 from contexttimer import Timer
 from docopt import docopt
 

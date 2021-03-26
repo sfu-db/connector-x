@@ -1,10 +1,10 @@
 [tool.poetry]
 authors = ["Weiyuan Wu <youngw@sfu.ca>"]
 description = ""
-include = ["connector_agent_python/*.so", "connector_agent_python/*.pyd"]
-name = "connector_agent_python"
+include = ["connector_agent/*.so", "connector_agent/*.pyd"]
+name = "connector_agent"
 
-version = "0.1.0a0"
+version = "0.1.0a1"
 
 [tool.poetry.dependencies]
 numpy = "^1"

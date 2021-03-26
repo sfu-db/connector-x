@@ -3,6 +3,7 @@ name: release
 on: 
   push:
     branches:
+      - prerelease
       - release
 
 jobs:
@@ -48,14 +49,14 @@ jobs:
 
       - name: build python dependencies
         run: |
-          just setup-python
+          just ci-build-python-extention
       
       - name: Print the result
-        run: ls connector-agent-python/connector_agent_python
+        run: ls connector-agent-python/connector_agent
 
       - name: Build wheel
         run: |
-          just build-python-wheel rename-wheel
+          just ci-build-python-wheel ci-rename-wheel
           echo "Built artifacts"
           ls connector-agent-python/dist
 
@@ -115,16 +116,16 @@ jobs:
         run: |
           eval "$(pyenv init -)"
           eval "$(pyenv virtualenv-init -)"
-          just setup-python
+          just ci-build-python-extention
       
       - name: Print the result
-        run: ls connector-agent-python/connector_agent_python
+        run: ls connector-agent-python/connector_agent
 
       - name: Build wheel
         run: |
           eval "$(pyenv init -)"
           eval "$(pyenv virtualenv-init -)" 
-          just build-python-wheel rename-wheel
+          just ci-build-python-wheel ci-rename-wheel
           echo "Built artifacts"
           ls connector-agent-python/dist
 
@@ -191,14 +192,14 @@ jobs:
 
       - name: build python dependencies
         run: |
-          just setup-python
+          just ci-build-python-extention
       
       - name: Print the result
-        run: ls connector-agent-python/connector_agent_python
+        run: ls connector-agent-python/connector_agent
 
       - name: Build wheel
         run: |
-          just build-python-wheel rename-wheel
+          just ci-build-python-wheel ci-rename-wheel
           echo "Built artifacts"
           ls connector-agent-python/dist
 
@@ -211,12 +212,15 @@ jobs:
   upload:
     runs-on: ubuntu-latest
     needs: [win32, darwin, linux]
+    if: github.ref == 'refs/heads/release'
     steps:
       - name: Download all artifacts
         uses: actions/download-artifact@v2
 
-      - name: Show downloaded artifacts
-        run: tree .
+      - name: Setup environment
+        run: |
+            tree .
+            echo "/home/runner/.local/bin" >> $GITHUB_PATH
 
       - name: Install Twine
         run: pip install twine
@@ -228,4 +232,29 @@ jobs:
           for file in $(ls **/*.whl)
           do
             twine upload --non-interactive -u __token__ -p $PYPI_TOKEN $file || continue
+          done
+
+  upload-test:
+    runs-on: ubuntu-latest
+    needs: [win32, darwin, linux]
+    if: github.ref == 'refs/heads/prerelease'
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v2
+
+      - name: Setup environment
+        run: |
+            tree .
+            echo "/home/runner/.local/bin" >> $GITHUB_PATH
+
+      - name: Install Twine
+        run: pip install twine
+
+      - name: Upload to PyPI test site
+        env:
+          PYPI_TEST_TOKEN: ${{ secrets.PYPI_TEST_TOKEN }}
+        run: |
+          for file in $(ls **/*.whl)
+          do
+            twine upload --non-interactive --repository-url https://test.pypi.org/legacy/ -u __token__ -p $PYPI_TEST_TOKEN $file || continue
           done

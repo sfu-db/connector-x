@@ -8,6 +8,7 @@ version = "0.1.0"
 
 [dependencies]
 anyhow = "1"
+bitfield = "0.13"
 bytes = "1"
 chrono = "0.4"
 connector-agent = {path = "../connector-agent", default-features = false}

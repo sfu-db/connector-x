@@ -1,5 +1,6 @@
-use super::super::pystring::PyString;
+use super::super::pystring::{PyString, StringInfo};
 use super::{check_dtype, HasPandasColumn, PandasColumn, PandasColumnObject};
+use itertools::Itertools;
 use ndarray::{ArrayViewMut2, Axis, Ix2};
 use numpy::PyArray;
 use pyo3::{FromPyObject, PyAny, PyResult, Python};
@@ -135,6 +136,7 @@ impl<'a> StringColumn<'a> {
 
         if nstrings > 0 {
             let py = unsafe { Python::assume_gil_acquired() };
+            let mut string_infos = Vec::with_capacity(self.string_lengths.len());
 
             {
                 // allocation in python is not thread safe
@@ -142,10 +144,13 @@ impl<'a> StringColumn<'a> {
                 let mut start = 0;
                 for (i, &len) in self.string_lengths.iter().enumerate() {
                     let end = start + len;
+                    unsafe {
+                        string_infos.push(StringInfo::detect(&self.string_buf[start..end]));
+                    }
                     if len != 0 {
                         unsafe {
                             *self.data.get_unchecked_mut(self.next_write + i) =
-                                PyString::new(py, &self.string_buf[start..end])
+                                string_infos.last().unwrap().pystring(py)
                         };
                     }
                     start = end;
@@ -153,10 +158,17 @@ impl<'a> StringColumn<'a> {
             }
 
             let mut start = 0;
-            for (i, len) in self.string_lengths.drain(..).enumerate() {
+            for (i, (len, info)) in self
+                .string_lengths
+                .drain(..)
+                .zip_eq(string_infos)
+                .enumerate()
+            {
                 let end = start + len;
                 if len != 0 {
-                    unsafe { self.data[self.next_write + i].write(&self.string_buf[start..end]) };
+                    unsafe {
+                        self.data[self.next_write + i].write(&self.string_buf[start..end], info)
+                    };
                 }
                 start = end;
             }

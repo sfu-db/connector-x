@@ -1,6 +1,6 @@
 use crate::destinations::arrow::ArrowDestination;
 use crate::dummy_typesystem::DummyTypeSystem;
-use crate::sources::postgres::{PostgresSource, PostgresTypeSystem};
+use crate::sources::postgres::{Binary, PostgresSource, PostgresTypeSystem};
 use crate::typesystem::TypeConversion;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
 
@@ -9,7 +9,7 @@ pub struct PostgresArrowTransport;
 impl_transport!(
     name = PostgresArrowTransport,
     systems = PostgresTypeSystem => DummyTypeSystem,
-    route = PostgresSource => ArrowDestination,
+    route = PostgresSource<Binary> => ArrowDestination,
     mappings = {
         { Float4[f32]                => F64[f64]                | conversion all }
         { Float8[f64]                => F64[f64]                | conversion all }
