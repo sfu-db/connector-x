@@ -26,15 +26,16 @@ r2d2 = "0.8"
 r2d2_postgres = "0.18"
 rand = "0.8"
 rayon = "1"
+regex = "1"
 rusoto_core = "0.46"
 rusoto_s3 = "0.46"
+rust_decimal = {version = "1", features = ["db-postgres"]}
 serde = {version = "1", features = ["derive"]}
 serde_json = "1"
 sqlparser = "0.8"
 strum = {version = "0.20", features = ["derive"]}
 thiserror = "1"
 tokio = {version = "1", features = ["rt-multi-thread", "io-util"]}
-regex = "1"
 
 [lib]
 crate-type = ["cdylib", "rlib"]

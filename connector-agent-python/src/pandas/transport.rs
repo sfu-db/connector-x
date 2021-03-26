@@ -6,6 +6,7 @@ use connector_agent::{
     sources::postgres::{Binary, PostgresSource, PostgresTypeSystem, CSV},
     typesystem::TypeConversion,
 };
+use rust_decimal::prelude::*;
 use std::marker::PhantomData;
 
 pub struct PostgresPandasTransport<'py, P>(&'py (), PhantomData<P>);
@@ -17,6 +18,7 @@ impl_transport!(
     mappings = {
         { Float4[f32]                => F64[f64]                | conversion all }
         { Float8[f64]                => F64[f64]                | conversion all }
+        { Numeric[Decimal]           => F64[f64]                | conversion half }
         { Int4[i32]                  => I64[i64]                | conversion all }
         { Int8[i64]                  => I64[i64]                | conversion all }
         { Bool[bool]                 => Bool[bool]              | conversion all }
@@ -36,6 +38,7 @@ impl_transport!(
     mappings = {
         { Float4[f32]                => F64[f64]                | conversion all }
         { Float8[f64]                => F64[f64]                | conversion all }
+        { Numeric[Decimal]           => F64[f64]                | conversion half }
         { Int4[i32]                  => I64[i64]                | conversion all }
         { Int8[i64]                  => I64[i64]                | conversion all }
         { Bool[bool]                 => Bool[bool]              | conversion all }
@@ -47,6 +50,12 @@ impl_transport!(
         { Date[NaiveDate]            => DateTime[DateTime<Utc>] | conversion half }
     }
 );
+
+impl<'py, P> TypeConversion<Decimal, f64> for PostgresPandasTransport<'py, P> {
+    fn convert(val: Decimal) -> f64 {
+        val.to_f64().unwrap()
+    }
+}
 
 impl<'py, P> TypeConversion<NaiveDateTime, DateTime<Utc>> for PostgresPandasTransport<'py, P> {
     fn convert(val: NaiveDateTime) -> DateTime<Utc> {

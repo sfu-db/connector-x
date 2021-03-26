@@ -21,24 +21,7 @@ if __name__ == "__main__":
     with Timer() as timer:
         df = read_sql(
             conn,
-            f"""SELECT 
-              l_orderkey,
-              l_partkey,
-              l_suppkey,
-              l_linenumber,
-              l_quantity::float8,
-              l_extendedprice::float8,
-              l_discount::float8,
-              l_tax::float8,
-              l_returnflag,
-              l_linestatus,
-              l_shipdate,
-              l_commitdate,
-              l_receiptdate,                
-              l_shipinstruct,
-              l_shipmode,
-              l_comment
-            FROM {table}""",
+            f"""SELECT * FROM {table}""",
             partition_on="l_orderkey",
             partition_num=int(args["<num>"]),
             protocol=args["--protocol"],

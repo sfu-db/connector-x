@@ -16,6 +16,7 @@ use postgres::{
 };
 use r2d2::{Pool, PooledConnection};
 use r2d2_postgres::{postgres::NoTls, PostgresConnectionManager};
+use rust_decimal::Decimal;
 use sql::{count_query, get_limit, limit1_query};
 use std::marker::PhantomData;
 pub use typesystem::PostgresTypeSystem;
@@ -329,7 +330,8 @@ impl_produce!(
     bool,
     DateTime<Utc>,
     NaiveDateTime,
-    NaiveDate
+    NaiveDate,
+    Decimal
 );
 
 impl<'r, 'a> Produce<'r, &'r str> for PostgresBinarySourcePartitionParser<'a> {
@@ -436,7 +438,7 @@ macro_rules! impl_csv_produce {
     };
 }
 
-impl_csv_produce!(i32, i64, f32, f64);
+impl_csv_produce!(i32, i64, f32, f64, Decimal);
 
 impl<'r, 'a> Produce<'r, bool> for PostgresCSVSourceParser<'a> {
     fn produce(&mut self) -> Result<bool> {
