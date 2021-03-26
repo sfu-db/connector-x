@@ -3,8 +3,8 @@ name: release
 on: 
   push:
     branches:
-      - release
       - prerelease
+      - release
 
 jobs:
   linux:
