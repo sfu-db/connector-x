@@ -58,7 +58,7 @@ def main() -> None:
         else:
             raise NotImplementedError(f"platform '{platform}' not supported")
 
-        for p in Path("connector-agent-python/dist").iterdir():
+        for p in Path("./dist").iterdir():
             if p.suffix == ".whl":
                 pkgname, version, *rest = p.stem.split("-")
                 break
