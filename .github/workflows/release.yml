@@ -49,14 +49,14 @@ jobs:
 
       - name: build python dependencies
         run: |
-          just setup-python
+          just ci-setup-python
       
       - name: Print the result
-        run: ls connector-agent-python/connector_agent_python
+        run: ls connector-agent-python/connector_agent
 
       - name: Build wheel
         run: |
-          just build-python-wheel rename-wheel
+          just ci-build-python-wheel ci-rename-wheel
           echo "Built artifacts"
           ls connector-agent-python/dist
 
@@ -116,16 +116,16 @@ jobs:
         run: |
           eval "$(pyenv init -)"
           eval "$(pyenv virtualenv-init -)"
-          just setup-python
+          just ci-setup-python
       
       - name: Print the result
-        run: ls connector-agent-python/connector_agent_python
+        run: ls connector-agent-python/connector_agent
 
       - name: Build wheel
         run: |
           eval "$(pyenv init -)"
           eval "$(pyenv virtualenv-init -)" 
-          just build-python-wheel rename-wheel
+          just ci-build-python-wheel ci-rename-wheel
           echo "Built artifacts"
           ls connector-agent-python/dist
 
@@ -192,14 +192,14 @@ jobs:
 
       - name: build python dependencies
         run: |
-          just setup-python
+          just ci-setup-python
       
       - name: Print the result
-        run: ls connector-agent-python/connector_agent_python
+        run: ls connector-agent-python/connector_agent
 
       - name: Build wheel
         run: |
-          just build-python-wheel rename-wheel
+          just ci-build-python-wheel ci-rename-wheel
           echo "Built artifacts"
           ls connector-agent-python/dist
 

@@ -9,12 +9,15 @@ test:
 
 bootstrap-python:
     cd connector-agent-python && poetry install
-    
-setup-python:
-    cd connector-agent-python && poetry run maturin develop --release --strip
+
+build-python-extention:
+    cd connector-agent-python && cargo build --release
+
+setup-python: build-python-extention
+    cd connector-agent-python && poetry run python ../scripts/copy-extension.py
     
 test-python: setup-python
-    cd connector-agent-python && poetry run pytest connector_agent_python/tests -v -s
+    cd connector-agent-python && poetry run pytest connector_agent/tests -v -s
 
 seed-db:
     psql $POSTGRES_URL -c "DROP TABLE IF EXISTS test_table;"
@@ -41,17 +44,23 @@ python-shell:
 
 
 # releases
-build-python-wheel:
+ci-build-python-extention:
+    cd connector-agent-python && RUSTFLAGS='-C link-arg=-s' cargo build --release
+
+ci-setup-python: ci-build-python-extention
+    cd connector-agent-python && poetry run python ../scripts/copy-extension.py
+    
+ci-build-python-wheel:
     cd connector-agent-python && poetry build
     
-rename-wheel:
+ci-rename-wheel:
     #!/usr/bin/env python3
     from pathlib import Path
     import sys
     import os
 
     platform = sys.platform
-    for p in Path("connector-agent-python/connector_agent_python").iterdir():
+    for p in Path("connector-agent-python/connector_agent").iterdir():
         print("file is", p)
         if platform == "win32" and p.suffix == ".pyd":
             platform_string = p.suffixes[0][1:]
@@ -69,7 +78,7 @@ rename-wheel:
             py_tag = abi_tag.rstrip("m")
             platform_string = f"cp{py_tag}-cp{abi_tag}-macosx_10_15_intel"
         else:
-            pass
+            raise NotImplementedError(f"platform '{platform}' not supported")
 
     for p in Path("connector-agent-python/dist").iterdir():
         if p.suffix == ".whl":
