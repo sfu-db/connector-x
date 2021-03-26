@@ -703,7 +703,7 @@
 <span class="kw">type</span> <span class="ident">PgManager</span> <span class="op">=</span> <span class="ident">PostgresConnectionManager</span><span class="op">&lt;</span><span class="ident">NoTls</span><span class="op">&gt;</span>;
 <span class="kw">type</span> <span class="ident">PgConn</span> <span class="op">=</span> <span class="ident">PooledConnection</span><span class="op">&lt;</span><span class="ident">PgManager</span><span class="op">&gt;</span>;
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PostgresSource</span> {
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PostgresBinarySource</span> {
     <span class="ident">pool</span>: <span class="ident">Pool</span><span class="op">&lt;</span><span class="ident">PgManager</span><span class="op">&gt;</span>,
     <span class="ident">queries</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
     <span class="ident">names</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
@@ -711,7 +711,7 @@
     <span class="ident">buf_size</span>: <span class="ident">usize</span>,
 }
 
-<span class="kw">impl</span> <span class="ident">PostgresSource</span> {
+<span class="kw">impl</span> <span class="ident">PostgresBinarySource</span> {
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">conn</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">nconn</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">let</span> <span class="ident">manager</span> <span class="op">=</span> <span class="ident">PostgresConnectionManager</span>::<span class="ident">new</span>(<span class="ident">conn</span>.<span class="ident">parse</span>().<span class="ident">unwrap</span>(), <span class="ident">NoTls</span>);
         <span class="kw">let</span> <span class="ident">pool</span> <span class="op">=</span> <span class="ident">Pool</span>::<span class="ident">builder</span>()
@@ -733,9 +733,9 @@
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Source</span> <span class="kw">for</span> <span class="ident">PostgresSource</span> {
+<span class="kw">impl</span> <span class="ident">Source</span> <span class="kw">for</span> <span class="ident">PostgresBinarySource</span> {
     <span class="kw">const</span> <span class="ident">DATA_ORDERS</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">DataOrder</span>] <span class="op">=</span> <span class="kw-2">&amp;</span>[<span class="ident">DataOrder</span>::<span class="ident">RowMajor</span>];
-    <span class="kw">type</span> <span class="ident">Partition</span> <span class="op">=</span> <span class="ident">PostgresSourcePartition</span>;
+    <span class="kw">type</span> <span class="ident">Partition</span> <span class="op">=</span> <span class="ident">PostgresBinarySourcePartition</span>;
     <span class="kw">type</span> <span class="ident">TypeSystem</span> <span class="op">=</span> <span class="ident">PostgresTypeSystem</span>;
 
     <span class="kw">fn</span> <span class="ident">set_data_order</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">data_order</span>: <span class="ident">DataOrder</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
@@ -806,7 +806,7 @@
         <span class="kw">for</span> <span class="ident">query</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">queries</span> {
             <span class="kw">let</span> <span class="ident">conn</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">pool</span>.<span class="ident">get</span>()<span class="question-mark">?</span>;
 
-            <span class="ident">ret</span>.<span class="ident">push</span>(<span class="ident">PostgresSourcePartition</span>::<span class="ident">new</span>(
+            <span class="ident">ret</span>.<span class="ident">push</span>(<span class="ident">PostgresBinarySourcePartition</span>::<span class="ident">new</span>(
                 <span class="ident">conn</span>,
                 <span class="kw-2">&amp;</span><span class="ident">query</span>,
                 <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">schema</span>,
@@ -817,7 +817,7 @@
     }
 }
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PostgresSourcePartition</span> {
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PostgresBinarySourcePartition</span> {
     <span class="ident">conn</span>: <span class="ident">PgConn</span>,
     <span class="ident">query</span>: <span class="ident">String</span>,
     <span class="ident">schema</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">PostgresTypeSystem</span><span class="op">&gt;</span>,
@@ -826,7 +826,7 @@
     <span class="ident">buf_size</span>: <span class="ident">usize</span>,
 }
 
-<span class="kw">impl</span> <span class="ident">PostgresSourcePartition</span> {
+<span class="kw">impl</span> <span class="ident">PostgresBinarySourcePartition</span> {
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">conn</span>: <span class="ident">PgConn</span>, <span class="ident">query</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">schema</span>: <span class="kw-2">&amp;</span>[<span class="ident">PostgresTypeSystem</span>], <span class="ident">buf_size</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">conn</span>,
@@ -839,9 +839,9 @@
     }
 }
 
-<span class="kw">impl</span> <span class="ident">SourcePartition</span> <span class="kw">for</span> <span class="ident">PostgresSourcePartition</span> {
+<span class="kw">impl</span> <span class="ident">SourcePartition</span> <span class="kw">for</span> <span class="ident">PostgresBinarySourcePartition</span> {
     <span class="kw">type</span> <span class="ident">TypeSystem</span> <span class="op">=</span> <span class="ident">PostgresTypeSystem</span>;
-    <span class="kw">type</span> <span class="ident">Parser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">PostgresSourcePartitionParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>;
+    <span class="kw">type</span> <span class="ident">Parser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">PostgresBinarySourcePartitionParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>;
 
     <span class="kw">fn</span> <span class="ident">prepare</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">nrows</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">get_limit</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">query</span>) {
@@ -860,7 +860,7 @@
         <span class="kw">let</span> <span class="ident">pg_schema</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">schema</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">dt</span><span class="op">|</span> <span class="ident">dt</span>.<span class="ident">into</span>()).<span class="ident">collect</span>();
         <span class="kw">let</span> <span class="ident">iter</span> <span class="op">=</span> <span class="ident">BinaryCopyOutIter</span>::<span class="ident">new</span>(<span class="ident">reader</span>, <span class="kw-2">&amp;</span><span class="ident">pg_schema</span>);
 
-        <span class="prelude-val">Ok</span>(<span class="ident">PostgresSourcePartitionParser</span>::<span class="ident">new</span>(
+        <span class="prelude-val">Ok</span>(<span class="ident">PostgresBinarySourcePartitionParser</span>::<span class="ident">new</span>(
             <span class="ident">iter</span>,
             <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">schema</span>,
             <span class="self">self</span>.<span class="ident">buf_size</span>,
@@ -876,7 +876,7 @@
     }
 }
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PostgresSourcePartitionParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PostgresBinarySourcePartitionParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="ident">iter</span>: <span class="ident">BinaryCopyOutIter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
     <span class="ident">buf_size</span>: <span class="ident">usize</span>,
     <span class="ident">rowbuf</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">BinaryCopyOutRow</span><span class="op">&gt;</span>,
@@ -885,7 +885,7 @@
     <span class="ident">current_row</span>: <span class="ident">usize</span>,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">PostgresSourcePartitionParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">PostgresBinarySourcePartitionParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(
         <span class="ident">iter</span>: <span class="ident">BinaryCopyOutIter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
         <span class="ident">schema</span>: <span class="kw-2">&amp;</span>[<span class="ident">PostgresTypeSystem</span>],
@@ -930,14 +930,14 @@
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">PartitionParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PostgresSourcePartitionParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">PartitionParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PostgresBinarySourcePartitionParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="kw">type</span> <span class="ident">TypeSystem</span> <span class="op">=</span> <span class="ident">PostgresTypeSystem</span>;
 }
 
 <span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">impl_produce</span> {
     ($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>: <span class="ident">ty</span>),<span class="op">+</span>) <span class="op">=</span><span class="op">&gt;</span> {
         $(
-            <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PostgresSourcePartitionParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+            <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PostgresBinarySourcePartitionParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
                 <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span> {
                     <span class="kw">let</span> (<span class="ident">ridx</span>, <span class="ident">cidx</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">next_loc</span>()<span class="question-mark">?</span>;
                     <span class="kw">let</span> <span class="ident">val</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">rowbuf</span>[<span class="ident">ridx</span>].<span class="ident">try_get</span>(<span class="ident">cidx</span>)<span class="question-mark">?</span>;
@@ -945,7 +945,7 @@
                 }
             }
 
-            <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PostgresSourcePartitionParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+            <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PostgresBinarySourcePartitionParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
                 <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span><span class="op">&gt;</span> {
                     <span class="kw">let</span> (<span class="ident">ridx</span>, <span class="ident">cidx</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">next_loc</span>()<span class="question-mark">?</span>;
                     <span class="kw">let</span> <span class="ident">val</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">rowbuf</span>[<span class="ident">ridx</span>].<span class="ident">try_get</span>(<span class="ident">cidx</span>)<span class="question-mark">?</span>;
@@ -967,7 +967,7 @@
     <span class="ident">NaiveDate</span>
 );
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;r</span> <span class="ident">str</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PostgresSourcePartitionParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;r</span> <span class="ident">str</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PostgresBinarySourcePartitionParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;r</span> <span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;r</span> <span class="ident">str</span><span class="op">&gt;</span> {
         <span class="kw">let</span> (<span class="ident">ridx</span>, <span class="ident">cidx</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">next_loc</span>()<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">row</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">rowbuf</span>[<span class="ident">ridx</span>];
@@ -977,7 +977,7 @@
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;r</span> <span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PostgresSourcePartitionParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;r</span> <span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PostgresBinarySourcePartitionParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;r</span> <span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;r</span> <span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> (<span class="ident">ridx</span>, <span class="ident">cidx</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">next_loc</span>()<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">row</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">rowbuf</span>[<span class="ident">ridx</span>];
@@ -987,7 +987,7 @@
     }
 }
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PostgresSourceCSV</span> {
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PostgresCSVSource</span> {
     <span class="ident">pool</span>: <span class="ident">Pool</span><span class="op">&lt;</span><span class="ident">PgManager</span><span class="op">&gt;</span>,
     <span class="ident">queries</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
     <span class="ident">names</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
@@ -995,7 +995,7 @@
     <span class="ident">buf_size</span>: <span class="ident">usize</span>,
 }
 
-<span class="kw">impl</span> <span class="ident">PostgresSourceCSV</span> {
+<span class="kw">impl</span> <span class="ident">PostgresCSVSource</span> {
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">conn</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">nconn</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">let</span> <span class="ident">manager</span> <span class="op">=</span> <span class="ident">PostgresConnectionManager</span>::<span class="ident">new</span>(<span class="ident">conn</span>.<span class="ident">parse</span>().<span class="ident">unwrap</span>(), <span class="ident">NoTls</span>);
         <span class="kw">let</span> <span class="ident">pool</span> <span class="op">=</span> <span class="ident">Pool</span>::<span class="ident">builder</span>()
@@ -1017,9 +1017,9 @@
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Source</span> <span class="kw">for</span> <span class="ident">PostgresSourceCSV</span> {
+<span class="kw">impl</span> <span class="ident">Source</span> <span class="kw">for</span> <span class="ident">PostgresCSVSource</span> {
     <span class="kw">const</span> <span class="ident">DATA_ORDERS</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">DataOrder</span>] <span class="op">=</span> <span class="kw-2">&amp;</span>[<span class="ident">DataOrder</span>::<span class="ident">RowMajor</span>];
-    <span class="kw">type</span> <span class="ident">Partition</span> <span class="op">=</span> <span class="ident">PostgresSourceCSVPartition</span>;
+    <span class="kw">type</span> <span class="ident">Partition</span> <span class="op">=</span> <span class="ident">PostgresCSVSourcePartition</span>;
     <span class="kw">type</span> <span class="ident">TypeSystem</span> <span class="op">=</span> <span class="ident">PostgresTypeSystem</span>;
 
     <span class="kw">fn</span> <span class="ident">set_data_order</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">data_order</span>: <span class="ident">DataOrder</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
@@ -1090,7 +1090,7 @@
         <span class="kw">for</span> <span class="ident">query</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">queries</span> {
             <span class="kw">let</span> <span class="ident">conn</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">pool</span>.<span class="ident">get</span>()<span class="question-mark">?</span>;
 
-            <span class="ident">ret</span>.<span class="ident">push</span>(<span class="ident">PostgresSourceCSVPartition</span>::<span class="ident">new</span>(
+            <span class="ident">ret</span>.<span class="ident">push</span>(<span class="ident">PostgresCSVSourcePartition</span>::<span class="ident">new</span>(
                 <span class="ident">conn</span>,
                 <span class="kw-2">&amp;</span><span class="ident">query</span>,
                 <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">schema</span>,
@@ -1101,7 +1101,7 @@
     }
 }
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PostgresSourceCSVPartition</span> {
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PostgresCSVSourcePartition</span> {
     <span class="ident">conn</span>: <span class="ident">PgConn</span>,
     <span class="ident">query</span>: <span class="ident">String</span>,
     <span class="ident">schema</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">PostgresTypeSystem</span><span class="op">&gt;</span>,
@@ -1110,7 +1110,7 @@
     <span class="ident">buf_size</span>: <span class="ident">usize</span>,
 }
 
-<span class="kw">impl</span> <span class="ident">PostgresSourceCSVPartition</span> {
+<span class="kw">impl</span> <span class="ident">PostgresCSVSourcePartition</span> {
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">conn</span>: <span class="ident">PgConn</span>, <span class="ident">query</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">schema</span>: <span class="kw-2">&amp;</span>[<span class="ident">PostgresTypeSystem</span>], <span class="ident">buf_size</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">conn</span>,
@@ -1123,9 +1123,9 @@
     }
 }
 
-<span class="kw">impl</span> <span class="ident">SourcePartition</span> <span class="kw">for</span> <span class="ident">PostgresSourceCSVPartition</span> {
+<span class="kw">impl</span> <span class="ident">SourcePartition</span> <span class="kw">for</span> <span class="ident">PostgresCSVSourcePartition</span> {
     <span class="kw">type</span> <span class="ident">TypeSystem</span> <span class="op">=</span> <span class="ident">PostgresTypeSystem</span>;
-    <span class="kw">type</span> <span class="ident">Parser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">PostgresSourceCSVParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>;
+    <span class="kw">type</span> <span class="ident">Parser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">PostgresCSVSourceParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>;
 
     <span class="kw">fn</span> <span class="ident">prepare</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">row</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">conn</span>.<span class="ident">query_one</span>(<span class="kw-2">&amp;</span><span class="ident">count_query</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">query</span>)[..], <span class="kw-2">&amp;</span>[])<span class="question-mark">?</span>;
@@ -1141,7 +1141,7 @@
             .<span class="ident">from_reader</span>(<span class="ident">reader</span>)
             .<span class="ident">into_records</span>();
 
-        <span class="prelude-val">Ok</span>(<span class="ident">PostgresSourceCSVParser</span>::<span class="ident">new</span>(
+        <span class="prelude-val">Ok</span>(<span class="ident">PostgresCSVSourceParser</span>::<span class="ident">new</span>(
             <span class="ident">iter</span>,
             <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">schema</span>,
             <span class="self">self</span>.<span class="ident">buf_size</span>,
@@ -1156,7 +1156,7 @@
         <span class="self">self</span>.<span class="ident">ncols</span>
     }
 }
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PostgresSourceCSVParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PostgresCSVSourceParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="ident">iter</span>: <span class="ident">StringRecordsIntoIter</span><span class="op">&lt;</span><span class="ident">CopyOutReader</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="ident">buf_size</span>: <span class="ident">usize</span>,
     <span class="ident">rowbuf</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">StringRecord</span><span class="op">&gt;</span>,
@@ -1165,7 +1165,7 @@
     <span class="ident">current_row</span>: <span class="ident">usize</span>,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">PostgresSourceCSVParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">PostgresCSVSourceParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(
         <span class="ident">iter</span>: <span class="ident">StringRecordsIntoIter</span><span class="op">&lt;</span><span class="ident">CopyOutReader</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span>,
         <span class="ident">schema</span>: <span class="kw-2">&amp;</span>[<span class="ident">PostgresTypeSystem</span>],
@@ -1209,14 +1209,14 @@
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">PartitionParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PostgresSourceCSVParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">PartitionParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PostgresCSVSourceParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="kw">type</span> <span class="ident">TypeSystem</span> <span class="op">=</span> <span class="ident">PostgresTypeSystem</span>;
 }
 
 <span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">impl_csv_produce</span> {
     ($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>: <span class="ident">ty</span>),<span class="op">+</span>) <span class="op">=</span><span class="op">&gt;</span> {
         $(
-            <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PostgresSourceCSVParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+            <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PostgresCSVSourceParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
                 <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span> {
                     <span class="kw">let</span> (<span class="ident">ridx</span>, <span class="ident">cidx</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">next_loc</span>()<span class="question-mark">?</span>;
                     <span class="self">self</span>.<span class="ident">rowbuf</span>[<span class="ident">ridx</span>][<span class="ident">cidx</span>].<span class="ident">parse</span>().<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
@@ -1225,7 +1225,7 @@
                 }
             }
 
-            <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PostgresSourceCSVParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+            <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PostgresCSVSourceParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
                 <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span><span class="op">&gt;</span> {
                     <span class="kw">let</span> (<span class="ident">ridx</span>, <span class="ident">cidx</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">next_loc</span>()<span class="question-mark">?</span>;
                     <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">rowbuf</span>[<span class="ident">ridx</span>][<span class="ident">cidx</span>][..] {
@@ -1242,7 +1242,7 @@
 
 <span class="macro">impl_csv_produce</span><span class="macro">!</span>(<span class="ident">i32</span>, <span class="ident">i64</span>, <span class="ident">f32</span>, <span class="ident">f64</span>);
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="ident">bool</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PostgresSourceCSVParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="ident">bool</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PostgresCSVSourceParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
         <span class="kw">let</span> (<span class="ident">ridx</span>, <span class="ident">cidx</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">next_loc</span>()<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">ret</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">rowbuf</span>[<span class="ident">ridx</span>][<span class="ident">cidx</span>][..] {
@@ -1256,7 +1256,7 @@
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PostgresSourceCSVParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PostgresCSVSourceParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> (<span class="ident">ridx</span>, <span class="ident">cidx</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">next_loc</span>()<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">ret</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">rowbuf</span>[<span class="ident">ridx</span>][<span class="ident">cidx</span>][..] {
@@ -1271,7 +1271,7 @@
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PostgresSourceCSVParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PostgresCSVSourceParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> (<span class="ident">ridx</span>, <span class="ident">cidx</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">next_loc</span>()<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">rowbuf</span>[<span class="ident">ridx</span>][<span class="ident">cidx</span>].<span class="ident">parse</span>().<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
@@ -1282,7 +1282,7 @@
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PostgresSourceCSVParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PostgresCSVSourceParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> (<span class="ident">ridx</span>, <span class="ident">cidx</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">next_loc</span>()<span class="question-mark">?</span>;
         <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">rowbuf</span>[<span class="ident">ridx</span>][<span class="ident">cidx</span>][..] {
@@ -1294,7 +1294,7 @@
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="ident">NaiveDate</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PostgresSourceCSVParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="ident">NaiveDate</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PostgresCSVSourceParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">NaiveDate</span><span class="op">&gt;</span> {
         <span class="kw">let</span> (<span class="ident">ridx</span>, <span class="ident">cidx</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">next_loc</span>()<span class="question-mark">?</span>;
         <span class="ident">NaiveDate</span>::<span class="ident">parse_from_str</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">rowbuf</span>[<span class="ident">ridx</span>][<span class="ident">cidx</span>], <span class="string">&quot;%Y-%m-%d&quot;</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
@@ -1303,7 +1303,7 @@
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">NaiveDate</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PostgresSourceCSVParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">NaiveDate</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PostgresCSVSourceParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">NaiveDate</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> (<span class="ident">ridx</span>, <span class="ident">cidx</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">next_loc</span>()<span class="question-mark">?</span>;
         <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">rowbuf</span>[<span class="ident">ridx</span>][<span class="ident">cidx</span>][..] {
@@ -1315,7 +1315,7 @@
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="ident">NaiveDateTime</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PostgresSourceCSVParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="ident">NaiveDateTime</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PostgresCSVSourceParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">NaiveDateTime</span><span class="op">&gt;</span> {
         <span class="kw">let</span> (<span class="ident">ridx</span>, <span class="ident">cidx</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">next_loc</span>()<span class="question-mark">?</span>;
         <span class="ident">NaiveDateTime</span>::<span class="ident">parse_from_str</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">rowbuf</span>[<span class="ident">ridx</span>][<span class="ident">cidx</span>], <span class="string">&quot;%Y-%m-%d %H:%M:%S&quot;</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
@@ -1326,7 +1326,7 @@
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">NaiveDateTime</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PostgresSourceCSVParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">NaiveDateTime</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PostgresCSVSourceParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">NaiveDateTime</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> (<span class="ident">ridx</span>, <span class="ident">cidx</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">next_loc</span>()<span class="question-mark">?</span>;
         <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">rowbuf</span>[<span class="ident">ridx</span>][<span class="ident">cidx</span>][..] {
@@ -1340,14 +1340,14 @@
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;r</span> <span class="ident">str</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PostgresSourceCSVParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;r</span> <span class="ident">str</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PostgresCSVSourceParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;r</span> <span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;r</span> <span class="ident">str</span><span class="op">&gt;</span> {
         <span class="kw">let</span> (<span class="ident">ridx</span>, <span class="ident">cidx</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">next_loc</span>()<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">rowbuf</span>[<span class="ident">ridx</span>][<span class="ident">cidx</span>])
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;r</span> <span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PostgresSourceCSVParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;r</span> <span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PostgresCSVSourceParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;r</span> <span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;r</span> <span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> (<span class="ident">ridx</span>, <span class="ident">cidx</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">next_loc</span>()<span class="question-mark">?</span>;
         <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">rowbuf</span>[<span class="ident">ridx</span>][<span class="ident">cidx</span>][..] {

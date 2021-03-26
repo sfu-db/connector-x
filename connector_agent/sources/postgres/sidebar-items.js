@@ -1,1 +1,1 @@
-initSidebarItems({"enum":[["PostgresTypeSystem",""]],"struct":[["PostgresSource",""],["PostgresSourceCSV",""],["PostgresSourceCSVParser",""],["PostgresSourceCSVPartition",""],["PostgresSourcePartition",""],["PostgresSourcePartitionParser",""]]});
+initSidebarItems({"enum":[["PostgresTypeSystem",""]],"struct":[["PostgresBinarySource",""],["PostgresBinarySourcePartition",""],["PostgresBinarySourcePartitionParser",""],["PostgresCSVSource",""],["PostgresCSVSourceParser",""],["PostgresCSVSourcePartition",""]]});

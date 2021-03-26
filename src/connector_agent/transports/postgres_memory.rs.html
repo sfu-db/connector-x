@@ -48,7 +48,7 @@
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">destinations</span>::<span class="ident">memory</span>::<span class="ident">MemoryDestination</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">dummy_typesystem</span>::<span class="ident">DummyTypeSystem</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">sources</span>::<span class="ident">postgres</span>::{<span class="ident">PostgresSource</span>, <span class="ident">PostgresTypeSystem</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">sources</span>::<span class="ident">postgres</span>::{<span class="ident">PostgresBinarySource</span>, <span class="ident">PostgresTypeSystem</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">typesystem</span>::<span class="ident">TypeConversion</span>;
 <span class="kw">use</span> <span class="ident">chrono</span>::{<span class="ident">DateTime</span>, <span class="ident">NaiveDate</span>, <span class="ident">NaiveDateTime</span>, <span class="ident">Utc</span>};
 
@@ -57,7 +57,7 @@
 <span class="macro">impl_transport</span><span class="macro">!</span>(
     <span class="ident">name</span> <span class="op">=</span> <span class="ident">PostgresMemoryTransport</span>,
     <span class="ident">systems</span> <span class="op">=</span> <span class="ident">PostgresTypeSystem</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">DummyTypeSystem</span>,
-    <span class="ident">route</span> <span class="op">=</span> <span class="ident">PostgresSource</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">MemoryDestination</span>,
+    <span class="ident">route</span> <span class="op">=</span> <span class="ident">PostgresBinarySource</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">MemoryDestination</span>,
     <span class="ident">mappings</span> <span class="op">=</span> {
         { <span class="ident">Float4</span>[<span class="ident">f32</span>]                <span class="op">=</span><span class="op">&gt;</span> <span class="ident">F64</span>[<span class="ident">f64</span>]                <span class="op">|</span> <span class="ident">conversion</span> <span class="ident">all</span> }
         { <span class="ident">Float8</span>[<span class="ident">f64</span>]                <span class="op">=</span><span class="op">&gt;</span> <span class="ident">F64</span>[<span class="ident">f64</span>]                <span class="op">|</span> <span class="ident">conversion</span> <span class="ident">all</span> }
