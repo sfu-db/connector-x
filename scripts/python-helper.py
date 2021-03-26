@@ -51,12 +51,21 @@ def main() -> None:
         dst = Path("./connector_agent/connector_agent_python")
         copyfile(src.with_suffix(suffix), dst.with_suffix(METADATA["ext_suffix"]))
     elif args["rename-wheel"]:
+        pyver = f"{METADATA['major']}{METADATA['minor']}"
+
         if METADATA["platform"] == "windows":
             arch = "win_amd64"
+            # abitag = METADATA["abi_tag"] # this does not work on windows
+            if pyver == "37":
+                abitag = "37m"
+            else:
+                abitag = pyver
         elif METADATA["platform"] == "linux":
             arch = "manylinux2014_x86_64"
+            abitag = METADATA["abi_tag"]
         elif METADATA["platform"] == "darwin":
             arch = "macosx_10_15_intel"
+            abitag = METADATA["abi_tag"]
         else:
             raise NotImplementedError(f"platform '{platform}' not supported")
 
@@ -65,10 +74,10 @@ def main() -> None:
                 pkgname, version, *rest = p.stem.split("-")
                 break
 
-        pyver = f"{METADATA['major']}{METADATA['minor']}"
+
         os.rename(
             p,
-            f"./dist/{pkgname}-{version}-cp{pyver}-cp{METADATA['abi_tag']}-{arch}.whl",
+            f"./dist/{pkgname}-{version}-cp{pyver}-cp{abitag}-{arch}.whl",
         )
     else:
         raise ValueError(f"args not understand {args}")
