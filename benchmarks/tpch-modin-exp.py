@@ -20,7 +20,8 @@ if __name__ == "__main__":
     table = os.environ["POSTGRES_TABLE"]
 
     partitions = int(args["<num>"])
-    ray.init(num_cpus=partitions, object_store_memory=10**10, _plasma_directory="/tmp")
+    # ray.init(num_cpus=partitions, object_store_memory=10**10, _plasma_directory="/tmp")
+    ray.init(num_cpus=partitions, object_store_memory=10**10)
 
     import modin.config as config
     import modin.experimental.pandas as pd
