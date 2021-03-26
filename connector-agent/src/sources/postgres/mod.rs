@@ -17,20 +17,25 @@ use postgres::{
 use r2d2::{Pool, PooledConnection};
 use r2d2_postgres::{postgres::NoTls, PostgresConnectionManager};
 use sql::{count_query, get_limit, limit1_query};
+use std::marker::PhantomData;
 pub use typesystem::PostgresTypeSystem;
 
 type PgManager = PostgresConnectionManager<NoTls>;
 type PgConn = PooledConnection<PgManager>;
 
-pub struct PostgresBinarySource {
+pub enum Binary {}
+pub enum CSV {}
+
+pub struct PostgresSource<P> {
     pool: Pool<PgManager>,
     queries: Vec<String>,
     names: Vec<String>,
     schema: Vec<PostgresTypeSystem>,
     buf_size: usize,
+    _protocol: PhantomData<P>,
 }
 
-impl PostgresBinarySource {
+impl<P> PostgresSource<P> {
     pub fn new(conn: &str, nconn: usize) -> Self {
         let manager = PostgresConnectionManager::new(conn.parse().unwrap(), NoTls);
         let pool = Pool::builder()
@@ -44,6 +49,7 @@ impl PostgresBinarySource {
             names: vec![],
             schema: vec![],
             buf_size: 32,
+            _protocol: PhantomData,
         }
     }
 
@@ -52,9 +58,13 @@ impl PostgresBinarySource {
     }
 }
 
-impl Source for PostgresBinarySource {
+impl<P> Source for PostgresSource<P>
+where
+    PostgresSourcePartition<P>: SourcePartition<TypeSystem = PostgresTypeSystem>,
+    P: Send,
+{
     const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
-    type Partition = PostgresBinarySourcePartition;
+    type Partition = PostgresSourcePartition<P>;
     type TypeSystem = PostgresTypeSystem;
 
     fn set_data_order(&mut self, data_order: DataOrder) -> Result<()> {
@@ -125,7 +135,7 @@ impl Source for PostgresBinarySource {
         for query in self.queries {
             let conn = self.pool.get()?;
 
-            ret.push(PostgresBinarySourcePartition::new(
+            ret.push(PostgresSourcePartition::<P>::new(
                 conn,
                 &query,
                 &self.schema,
@@ -136,16 +146,17 @@ impl Source for PostgresBinarySource {
     }
 }
 
-pub struct PostgresBinarySourcePartition {
+pub struct PostgresSourcePartition<P> {
     conn: PgConn,
     query: String,
     schema: Vec<PostgresTypeSystem>,
     nrows: usize,
     ncols: usize,
     buf_size: usize,
+    _protocol: PhantomData<P>,
 }
 
-impl PostgresBinarySourcePartition {
+impl<P> PostgresSourcePartition<P> {
     pub fn new(conn: PgConn, query: &str, schema: &[PostgresTypeSystem], buf_size: usize) -> Self {
         Self {
             conn,
@@ -154,11 +165,12 @@ impl PostgresBinarySourcePartition {
             nrows: 0,
             ncols: schema.len(),
             buf_size,
+            _protocol: PhantomData,
         }
     }
 }
 
-impl SourcePartition for PostgresBinarySourcePartition {
+impl SourcePartition for PostgresSourcePartition<Binary> {
     type TypeSystem = PostgresTypeSystem;
     type Parser<'a> = PostgresBinarySourcePartitionParser<'a>;
 
@@ -180,6 +192,40 @@ impl SourcePartition for PostgresBinarySourcePartition {
         let iter = BinaryCopyOutIter::new(reader, &pg_schema);
 
         Ok(PostgresBinarySourcePartitionParser::new(
+            iter,
+            &self.schema,
+            self.buf_size,
+        ))
+    }
+
+    fn nrows(&self) -> usize {
+        self.nrows
+    }
+
+    fn ncols(&self) -> usize {
+        self.ncols
+    }
+}
+
+impl SourcePartition for PostgresSourcePartition<CSV> {
+    type TypeSystem = PostgresTypeSystem;
+    type Parser<'a> = PostgresCSVSourceParser<'a>;
+
+    fn prepare(&mut self) -> Result<()> {
+        let row = self.conn.query_one(&count_query(&self.query)[..], &[])?;
+        self.nrows = row.get::<_, i64>(0) as usize;
+        Ok(())
+    }
+
+    fn parser(&mut self) -> Result<Self::Parser<'_>> {
+        let query = format!("COPY ({}) TO STDOUT WITH CSV", self.query);
+        let reader = self.conn.copy_out(&*query)?; // unless reading the data, it seems like issue the query is fast
+        let iter = ReaderBuilder::new()
+            .has_headers(false)
+            .from_reader(reader)
+            .into_records();
+
+        Ok(PostgresCSVSourceParser::new(
             iter,
             &self.schema,
             self.buf_size,
@@ -306,175 +352,6 @@ impl<'r, 'a> Produce<'r, Option<&'r str>> for PostgresBinarySourcePartitionParse
     }
 }
 
-pub struct PostgresCSVSource {
-    pool: Pool<PgManager>,
-    queries: Vec<String>,
-    names: Vec<String>,
-    schema: Vec<PostgresTypeSystem>,
-    buf_size: usize,
-}
-
-impl PostgresCSVSource {
-    pub fn new(conn: &str, nconn: usize) -> Self {
-        let manager = PostgresConnectionManager::new(conn.parse().unwrap(), NoTls);
-        let pool = Pool::builder()
-            .max_size(nconn as u32)
-            .build(manager)
-            .unwrap();
-
-        Self {
-            pool,
-            queries: vec![],
-            names: vec![],
-            schema: vec![],
-            buf_size: 32,
-        }
-    }
-
-    pub fn buf_size(&mut self, buf_size: usize) {
-        self.buf_size = buf_size;
-    }
-}
-
-impl Source for PostgresCSVSource {
-    const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
-    type Partition = PostgresCSVSourcePartition;
-    type TypeSystem = PostgresTypeSystem;
-
-    fn set_data_order(&mut self, data_order: DataOrder) -> Result<()> {
-        if !matches!(data_order, DataOrder::RowMajor) {
-            throw!(ConnectorAgentError::UnsupportedDataOrder(data_order));
-        }
-        Ok(())
-    }
-
-    fn set_queries<Q: AsRef<str>>(&mut self, queries: &[Q]) {
-        self.queries = queries.iter().map(|q| q.as_ref().to_string()).collect();
-    }
-
-    fn fetch_metadata(&mut self) -> Result<()> {
-        assert!(self.queries.len() != 0);
-
-        let mut conn = self.pool.get()?;
-        let mut success = false;
-        let mut error = None;
-        for query in &self.queries {
-            // assuming all the partition queries yield same schema
-            match conn.query_one(&limit1_query(query)[..], &[]) {
-                Ok(row) => {
-                    let (names, types) = row
-                        .columns()
-                        .into_iter()
-                        .map(|col| {
-                            (
-                                col.name().to_string(),
-                                PostgresTypeSystem::from(col.type_()),
-                            )
-                        })
-                        .unzip();
-
-                    self.names = names;
-                    self.schema = types;
-
-                    success = true;
-                    break;
-                }
-                Err(e) => {
-                    debug!("cannot get metadata for '{}', try next query: {}", query, e);
-                    error = Some(e);
-                }
-            }
-        }
-
-        if !success {
-            throw!(anyhow!(
-                "Cannot get metadata for the queries, last error: {:?}",
-                error
-            ))
-        }
-
-        Ok(())
-    }
-
-    fn names(&self) -> Vec<String> {
-        self.names.clone()
-    }
-
-    fn schema(&self) -> Vec<Self::TypeSystem> {
-        self.schema.clone()
-    }
-
-    fn partition(self) -> Result<Vec<Self::Partition>> {
-        let mut ret = vec![];
-        for query in self.queries {
-            let conn = self.pool.get()?;
-
-            ret.push(PostgresCSVSourcePartition::new(
-                conn,
-                &query,
-                &self.schema,
-                self.buf_size,
-            ));
-        }
-        Ok(ret)
-    }
-}
-
-pub struct PostgresCSVSourcePartition {
-    conn: PgConn,
-    query: String,
-    schema: Vec<PostgresTypeSystem>,
-    nrows: usize,
-    ncols: usize,
-    buf_size: usize,
-}
-
-impl PostgresCSVSourcePartition {
-    pub fn new(conn: PgConn, query: &str, schema: &[PostgresTypeSystem], buf_size: usize) -> Self {
-        Self {
-            conn,
-            query: query.to_string(),
-            schema: schema.to_vec(),
-            nrows: 0,
-            ncols: schema.len(),
-            buf_size,
-        }
-    }
-}
-
-impl SourcePartition for PostgresCSVSourcePartition {
-    type TypeSystem = PostgresTypeSystem;
-    type Parser<'a> = PostgresCSVSourceParser<'a>;
-
-    fn prepare(&mut self) -> Result<()> {
-        let row = self.conn.query_one(&count_query(&self.query)[..], &[])?;
-        self.nrows = row.get::<_, i64>(0) as usize;
-        Ok(())
-    }
-
-    fn parser(&mut self) -> Result<Self::Parser<'_>> {
-        let query = format!("COPY ({}) TO STDOUT WITH CSV", self.query);
-        let reader = self.conn.copy_out(&*query)?; // unless reading the data, it seems like issue the query is fast
-        let iter = ReaderBuilder::new()
-            .has_headers(false)
-            .from_reader(reader)
-            .into_records();
-
-        Ok(PostgresCSVSourceParser::new(
-            iter,
-            &self.schema,
-            self.buf_size,
-        ))
-    }
-
-    fn nrows(&self) -> usize {
-        self.nrows
-    }
-
-    fn ncols(&self) -> usize {
-        self.ncols
-    }
-}
 pub struct PostgresCSVSourceParser<'a> {
     iter: StringRecordsIntoIter<CopyOutReader<'a>>,
     buf_size: usize,
