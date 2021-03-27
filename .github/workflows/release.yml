@@ -3,8 +3,8 @@ name: release
 on: 
   push:
     branches:
-      - release
       - prerelease
+      - release
 
 jobs:
   linux:
@@ -49,14 +49,14 @@ jobs:
 
       - name: build python dependencies
         run: |
-          just setup-python
+          just ci-build-python-extention
       
       - name: Print the result
-        run: ls connector-agent-python/connector_agent_python
+        run: ls connector-agent-python/connector_agent
 
       - name: Build wheel
         run: |
-          just build-python-wheel rename-wheel
+          just ci-build-python-wheel ci-rename-wheel
           echo "Built artifacts"
           ls connector-agent-python/dist
 
@@ -116,16 +116,16 @@ jobs:
         run: |
           eval "$(pyenv init -)"
           eval "$(pyenv virtualenv-init -)"
-          just setup-python
+          just ci-build-python-extention
       
       - name: Print the result
-        run: ls connector-agent-python/connector_agent_python
+        run: ls connector-agent-python/connector_agent
 
       - name: Build wheel
         run: |
           eval "$(pyenv init -)"
           eval "$(pyenv virtualenv-init -)" 
-          just build-python-wheel rename-wheel
+          just ci-build-python-wheel ci-rename-wheel
           echo "Built artifacts"
           ls connector-agent-python/dist
 
@@ -192,14 +192,14 @@ jobs:
 
       - name: build python dependencies
         run: |
-          just setup-python
+          just ci-build-python-extention
       
       - name: Print the result
-        run: ls connector-agent-python/connector_agent_python
+        run: ls connector-agent-python/connector_agent
 
       - name: Build wheel
         run: |
-          just build-python-wheel rename-wheel
+          just ci-build-python-wheel ci-rename-wheel
           echo "Built artifacts"
           ls connector-agent-python/dist
 
@@ -217,8 +217,10 @@ jobs:
       - name: Download all artifacts
         uses: actions/download-artifact@v2
 
-      - name: Show downloaded artifacts
-        run: tree .
+      - name: Setup environment
+        run: |
+            tree .
+            echo "/home/runner/.local/bin" >> $GITHUB_PATH
 
       - name: Install Twine
         run: pip install twine
@@ -240,8 +242,10 @@ jobs:
       - name: Download all artifacts
         uses: actions/download-artifact@v2
 
-      - name: Show downloaded artifacts
-        run: tree .
+      - name: Setup environment
+        run: |
+            tree .
+            echo "/home/runner/.local/bin" >> $GITHUB_PATH
 
       - name: Install Twine
         run: pip install twine

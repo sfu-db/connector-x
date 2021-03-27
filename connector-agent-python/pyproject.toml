@@ -1,16 +1,30 @@
 [tool.poetry]
-authors = ["Weiyuan Wu <youngw@sfu.ca>"]
-description = ""
-include = ["connector_agent_python/*.so", "connector_agent_python/*.pyd"]
-name = "connector_agent_python"
-
-version = "0.1.0a0"
+authors = ["SFU Database System Lab <dsl.cs.sfu@gmail.com>"] 
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Topic :: Software Development :: Build Tools",
+  "Environment :: Console",
+  "Operating System :: OS Independent",
+  "Intended Audience :: Science/Research",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Financial and Insurance Industry",
+  "Intended Audience :: Healthcare Industry",
+  "Topic :: Scientific/Engineering",
+  "Framework :: IPython",
+] 
+description = "" 
+include = ["connector_agent/*.so", "connector_agent/*.pyd"] 
+keywords = ["read_sql"] 
+license = "MIT" 
+maintainers = ["Weiyuan Wu <youngw@sfu.ca>"] 
+name = "connector_agent" 
+readme = "README.md" # Markdown files are supported
+version = "0.1.0-alpha.2" 
 
 [tool.poetry.dependencies]
 numpy = "^1"
 pandas = "^1"
 python = "^3.7.1"
-ray = "^1.2.0"
 
 [tool.poetry.dev-dependencies]
 SQLAlchemy = "^1.3.23"
