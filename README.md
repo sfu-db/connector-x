@@ -68,3 +68,41 @@ This allows it to make full use of the CPU by becoming cache and branch predicto
 * New features
   - [ ] Local data cache
   - [ ] Database aware partition scheme
+
+# Examples
+
+* Read sql without partition
+
+  ```python
+  from connector_agent import read_sql
+  
+  # postgres_url = 'postgresql://username:password@server:port/database'
+  postgres_url = 'postgresql://postgres:postgres@localhost:5432/postgres'
+  query = 'SELECT * FROM lineitem'
+  read_sql(postgres_url, query)
+  ```
+
+* Read sql with multiple queries
+
+  ```python
+  from connector_agent import read_sql
+  
+  # postgres_url = 'postgresql://username:password@server:port/database'
+  postgres_url = 'postgresql://postgres:postgres@localhost:5432/postgres'
+  queries = ['SELECT * FROM lineitem WHERE partition_col <= 10', 'SELECT * FROM lineitem WHERE partition_col > 10']
+  read_sql(postgres_url, query)
+  ```
+
+* Read sql with parallelism on multiple partitions
+
+  ```python
+  from connector_agent import read_sql
+  
+  # postgres_url = 'postgresql://username:password@server:port/database'
+  postgres_url = 'postgresql://postgres:postgres@localhost:5432/postgres'
+  query = 'SELECT * FROM lineitem'
+  read_sql(postgres_url, query, partition_on='partition_col', partition_num=10)
+  ```
+
+  
+

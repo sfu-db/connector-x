@@ -63,7 +63,7 @@ def read_sql(
     >>> query = 'SELECT * FROM lineitem'
     >>> read_sql(postgres_url, query)
 
-    Read sql with manual partition
+    Read sql with multiple queries
 
     >>> postgres_url = 'postgresql://username:password@server:port/database'
     >>> queries = ['SELECT * FROM lineitem WHERE partition_col <= 10', 'SELECT * FROM lineitem WHERE partition_col > 10']
