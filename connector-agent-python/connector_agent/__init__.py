@@ -50,6 +50,26 @@ def read_sql(
     3. `read_sql(conn, [query1, query2])`: execute a bunch of queries and download the
        data into a pandas dataframe. This call form assumes you do the partition
        by your self. Note, the schemas of all the query results should be same.
+
+    Examples
+    ========
+    Read sql without doing partition
+
+    >>> postgres_url = 'postgresql://username:password@server:port/database'
+    >>> query = 'SELECT * FROM lineitem'
+    >>> read_sql(postgres_url, query)
+
+    Read sql with manual partition
+
+    >>> postgres_url = 'postgresql://username:password@server:port/database'
+    >>> queries = ['SELECT * FROM lineitem WHERE partition_col <= 10', 'SELECT * FROM lineitem WHERE partition_col > 10']
+    >>> read_sql(postgres_url, queries)
+
+    Read sql with parallelism on multiple partitions.
+
+    >>> postgres_url = 'postgresql://username:password@server:port/database'
+    >>> query = 'SELECT * FROM lineitem'
+    >>> read_sql(postgres_url, query, partition_on='partition_col', partition_num=10)
     """
 
     if isinstance(query, list) and len(query) == 1:
