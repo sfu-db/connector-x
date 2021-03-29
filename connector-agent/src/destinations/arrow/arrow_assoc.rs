@@ -1,16 +1,18 @@
+use crate::errors::{ConnectorAgentError, Result};
 use arrow::array::{
     ArrayBuilder, BooleanBuilder, Float64Builder, Int32Builder, Int64Builder, StringBuilder,
 };
 use arrow::datatypes::DataType as ArrowDataType;
 use arrow::datatypes::Field;
 use chrono::{Date, DateTime, Utc};
+use fehler::throws;
 
 /// Associate arrow builder with native type
 pub trait ArrowAssoc {
     type Builder: ArrayBuilder + Send;
 
     fn builder(nrows: usize) -> Self::Builder;
-    fn append(builder: &mut Self::Builder, value: Self);
+    fn append(builder: &mut Self::Builder, value: Self) -> Result<()>;
     fn field(header: &str) -> Field;
 }
 
@@ -21,8 +23,9 @@ impl ArrowAssoc for i32 {
         Int32Builder::new(nrows)
     }
 
+    #[throws(ConnectorAgentError)]
     fn append(builder: &mut Int32Builder, value: i32) {
-        builder.append_value(value).unwrap();
+        builder.append_value(value)?;
     }
 
     fn field(header: &str) -> Field {
@@ -37,8 +40,9 @@ impl ArrowAssoc for Option<i32> {
         Int32Builder::new(nrows)
     }
 
+    #[throws(ConnectorAgentError)]
     fn append(builder: &mut Int32Builder, value: Option<i32>) {
-        builder.append_option(value).unwrap();
+        builder.append_option(value)?;
     }
 
     fn field(header: &str) -> Field {
@@ -53,8 +57,9 @@ impl ArrowAssoc for i64 {
         Int64Builder::new(nrows)
     }
 
+    #[throws(ConnectorAgentError)]
     fn append(builder: &mut Int64Builder, value: i64) {
-        builder.append_value(value).unwrap();
+        builder.append_value(value)?;
     }
 
     fn field(header: &str) -> Field {
@@ -69,8 +74,9 @@ impl ArrowAssoc for Option<i64> {
         Int64Builder::new(nrows)
     }
 
+    #[throws(ConnectorAgentError)]
     fn append(builder: &mut Int64Builder, value: Option<i64>) {
-        builder.append_option(value).unwrap();
+        builder.append_option(value)?;
     }
 
     fn field(header: &str) -> Field {
@@ -85,8 +91,9 @@ impl ArrowAssoc for f64 {
         Float64Builder::new(nrows)
     }
 
+    #[throws(ConnectorAgentError)]
     fn append(builder: &mut Self::Builder, value: f64) {
-        builder.append_value(value).unwrap();
+        builder.append_value(value)?;
     }
 
     fn field(header: &str) -> Field {
@@ -101,8 +108,9 @@ impl ArrowAssoc for Option<f64> {
         Float64Builder::new(nrows)
     }
 
+    #[throws(ConnectorAgentError)]
     fn append(builder: &mut Self::Builder, value: Option<f64>) {
-        builder.append_option(value).unwrap();
+        builder.append_option(value)?;
     }
 
     fn field(header: &str) -> Field {
@@ -117,8 +125,9 @@ impl ArrowAssoc for bool {
         BooleanBuilder::new(nrows)
     }
 
+    #[throws(ConnectorAgentError)]
     fn append(builder: &mut Self::Builder, value: bool) {
-        builder.append_value(value).unwrap();
+        builder.append_value(value)?;
     }
 
     fn field(header: &str) -> Field {
@@ -133,8 +142,9 @@ impl ArrowAssoc for Option<bool> {
         BooleanBuilder::new(nrows)
     }
 
+    #[throws(ConnectorAgentError)]
     fn append(builder: &mut Self::Builder, value: Self) {
-        builder.append_option(value).unwrap();
+        builder.append_option(value)?;
     }
 
     fn field(header: &str) -> Field {
@@ -149,8 +159,9 @@ impl ArrowAssoc for String {
         StringBuilder::new(nrows)
     }
 
+    #[throws(ConnectorAgentError)]
     fn append(builder: &mut Self::Builder, value: String) {
-        builder.append_value(value.as_str()).unwrap();
+        builder.append_value(value.as_str())?;
     }
 
     fn field(header: &str) -> Field {
@@ -165,10 +176,11 @@ impl ArrowAssoc for Option<String> {
         StringBuilder::new(nrows)
     }
 
+    #[throws(ConnectorAgentError)]
     fn append(builder: &mut Self::Builder, value: Self) {
         match value {
-            Some(s) => builder.append_value(s.as_str()).unwrap(),
-            None => builder.append_null().unwrap(),
+            Some(s) => builder.append_value(s.as_str())?,
+            None => builder.append_null()?,
         }
     }
 
@@ -184,7 +196,7 @@ impl ArrowAssoc for DateTime<Utc> {
         unimplemented!()
     }
 
-    fn append(_builder: &mut Self::Builder, _value: DateTime<Utc>) {
+    fn append(_builder: &mut Self::Builder, _value: DateTime<Utc>) -> Result<()> {
         unimplemented!()
     }
 
@@ -200,7 +212,7 @@ impl ArrowAssoc for Option<DateTime<Utc>> {
         unimplemented!()
     }
 
-    fn append(_builder: &mut Self::Builder, _value: Option<DateTime<Utc>>) {
+    fn append(_builder: &mut Self::Builder, _value: Option<DateTime<Utc>>) -> Result<()> {
         unimplemented!()
     }
 
@@ -216,7 +228,7 @@ impl ArrowAssoc for Date<Utc> {
         unimplemented!()
     }
 
-    fn append(_builder: &mut Self::Builder, _value: Date<Utc>) {
+    fn append(_builder: &mut Self::Builder, _value: Date<Utc>) -> Result<()> {
         unimplemented!()
     }
 
@@ -232,7 +244,7 @@ impl ArrowAssoc for Option<Date<Utc>> {
         unimplemented!()
     }
 
-    fn append(_builder: &mut Self::Builder, _value: Option<Date<Utc>>) {
+    fn append(_builder: &mut Self::Builder, _value: Option<Date<Utc>>) -> Result<()> {
         unimplemented!()
     }
 

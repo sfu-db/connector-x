@@ -99,21 +99,20 @@ impl<'a> Destination for PandasDestination<'a> {
         assert_eq!(
             counts.iter().sum::<usize>(),
             self.nrows
-                .ok_or(ConnectorAgentError::DestinationNotAllocated)?
+                .ok_or(ConnectorAgentError::DestinationNotAllocated)?,
+            "counts: {} != nrows: {:?}",
+            counts.iter().sum::<usize>(),
+            self.nrows
         );
 
-        let buffers = self
-            .buffers
-            .ok_or(ConnectorAgentError::DestinationNotAllocated)?;
+        let buffers = self.buffers.ok_or(anyhow!("got None buffers"))?;
 
-        let schema = self
-            .schema
-            .as_ref()
-            .ok_or(ConnectorAgentError::DestinationNotAllocated)?;
+        let schema = self.schema.as_ref().ok_or(anyhow!("got None schema"))?;
+
         let buffer_column_index = self
             .buffer_column_index
             .as_ref()
-            .ok_or(ConnectorAgentError::DestinationNotAllocated)?;
+            .ok_or(anyhow!("got None buffer_column_index"))?;
 
         let mut partitioned_columns: Vec<Vec<Box<dyn PandasColumnObject>>> =
             (0..schema.len()).map(|_| vec![]).collect();
@@ -182,7 +181,7 @@ impl<'a> Destination for PandasDestination<'a> {
 
         let mut par_destinations = vec![];
         for &c in counts.into_iter().rev() {
-            let mut columns = vec![];
+            let mut columns = Vec::with_capacity(partitioned_columns.len());
             for (i, partitions) in partitioned_columns.iter_mut().enumerate() {
                 columns.push(
                     partitions
@@ -199,9 +198,8 @@ impl<'a> Destination for PandasDestination<'a> {
     }
 
     fn schema(&self) -> &[PandasTypeSystem] {
-        self.schema
-            .as_ref()
-            .unwrap_or_else(|| panic!("schema not ready"))
+        static EMPTY_SCHEMA: Vec<PandasTypeSystem> = vec![];
+        self.schema.as_ref().unwrap_or(EMPTY_SCHEMA.as_ref())
     }
 }
 

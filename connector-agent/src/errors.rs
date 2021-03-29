@@ -54,6 +54,9 @@ pub enum ConnectorAgentError {
     #[error(transparent)]
     NdArrayShapeError(#[from] ndarray::ShapeError),
 
+    #[error(transparent)]
+    ArrowError(#[from] arrow::error::ArrowError),
+
     /// Any other errors that are too trivial to be put here explicitly.
     #[error(transparent)]
     Other(#[from] anyhow::Error),

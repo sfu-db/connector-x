@@ -150,7 +150,7 @@ impl<'a> StringColumn<'a> {
                 let _guard = self
                     .mutex
                     .lock()
-                    .map_err(|e| anyhow!("mutex poisoned: {}", e))?;
+                    .map_err(|e| anyhow!("mutex poisoned {}", e))?;
                 let mut start = 0;
                 for (i, &len) in self.string_lengths.iter().enumerate() {
                     let end = start + len;

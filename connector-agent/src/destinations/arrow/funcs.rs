@@ -1,6 +1,8 @@
 use super::arrow_assoc::ArrowAssoc;
 use super::Builder;
+use crate::errors::Result;
 use crate::typesystem::{ParameterizedFunc, ParameterizedOn};
+use anyhow::anyhow;
 use arrow::array::{ArrayBuilder, ArrayRef};
 use arrow::datatypes::Field;
 
@@ -28,7 +30,7 @@ where
 pub struct FFinishBuilder;
 
 impl ParameterizedFunc for FFinishBuilder {
-    type Function = fn(Builder) -> ArrayRef;
+    type Function = fn(Builder) -> Result<ArrayRef>;
 }
 
 impl<T> ParameterizedOn<T> for FFinishBuilder
@@ -36,11 +38,15 @@ where
     T: ArrowAssoc,
 {
     fn parameterize() -> Self::Function {
-        fn imp<T>(mut builder: Builder) -> ArrayRef
+        fn imp<T>(mut builder: Builder) -> Result<ArrayRef>
         where
             T: ArrowAssoc,
         {
-            ArrayBuilder::finish(builder.downcast_mut::<T::Builder>().unwrap())
+            Ok(ArrayBuilder::finish(
+                builder
+                    .downcast_mut::<T::Builder>()
+                    .ok_or(anyhow!("cannot cast arrow builder for finish"))?,
+            ))
         }
         imp::<T>
     }

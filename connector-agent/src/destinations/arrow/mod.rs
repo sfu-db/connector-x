@@ -3,6 +3,7 @@ use crate::data_order::DataOrder;
 use crate::dummy_typesystem::DummyTypeSystem;
 use crate::errors::{ConnectorAgentError, Result};
 use crate::typesystem::{Realize, TypeAssoc, TypeSystem};
+use anyhow::anyhow;
 use arrow::datatypes::Schema;
 use arrow::record_batch::RecordBatch;
 use arrow_assoc::ArrowAssoc;
@@ -98,9 +99,9 @@ impl ArrowDestination {
                 let columns = pbuilder
                     .into_iter()
                     .zip(schema.iter())
-                    .map(|(builder, &dt)| Ok(Realize::<FFinishBuilder>::realize(dt)?(builder)))
+                    .map(|(builder, &dt)| Ok(Realize::<FFinishBuilder>::realize(dt)?(builder)?))
                     .collect::<Result<Vec<_>>>()?;
-                Ok(RecordBatch::try_new(Arc::clone(&arrow_schema), columns).unwrap())
+                Ok(RecordBatch::try_new(Arc::clone(&arrow_schema), columns)?)
             })
             .collect::<Result<Vec<_>>>()?
     }
@@ -147,9 +148,11 @@ where
         self.schema[col].check::<T>()?;
 
         <T as ArrowAssoc>::append(
-            self.builders[col].downcast_mut::<T::Builder>().unwrap(),
+            self.builders[col]
+                .downcast_mut::<T::Builder>()
+                .ok_or(anyhow!("cannot cast arrow builder for append"))?,
             value,
-        );
+        )?;
 
         Ok(())
     }
