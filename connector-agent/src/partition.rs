@@ -12,12 +12,13 @@ use sqlparser::ast::{
 use sqlparser::dialect::PostgreSqlDialect;
 use sqlparser::parser::Parser;
 
+#[throws(ConnectorAgentError)]
 pub fn pg_single_col_partition_query(query: &str, col: &str, lower: i64, upper: i64) -> String {
     trace!("Incoming query: {}", query);
 
     let dialect = PostgreSqlDialect {};
 
-    let mut ast = Parser::parse_sql(&dialect, query).unwrap();
+    let mut ast = Parser::parse_sql(&dialect, query)?;
 
     match &mut ast[0] {
         Statement::Query(q) => match &mut q.body {
@@ -66,10 +67,11 @@ pub fn pg_single_col_partition_query(query: &str, col: &str, lower: i64, upper: 
     sql
 }
 
+#[throws(ConnectorAgentError)]
 fn pg_get_parition_range_query(query: &str, col: &str) -> String {
     trace!("Incoming query: {}", query);
     let dialect = PostgreSqlDialect {};
-    let mut ast = Parser::parse_sql(&dialect, query).unwrap();
+    let mut ast = Parser::parse_sql(&dialect, query)?;
     match &mut ast[0] {
         Statement::Query(q) => {
             q.order_by = vec![];
@@ -116,11 +118,11 @@ fn pg_get_parition_range_query(query: &str, col: &str) -> String {
 
 #[throws(ConnectorAgentError)]
 pub fn pg_get_partition_range(conn: &str, query: &str, col: &str) -> (i64, i64) {
-    let mut client = Client::connect(conn, NoTls).unwrap();
-    let range_query = pg_get_parition_range_query(query.clone(), col.clone());
-    let row = client.query_one(range_query.as_str(), &[]).unwrap();
+    let mut client = Client::connect(conn, NoTls)?;
+    let range_query = pg_get_parition_range_query(query.clone(), col.clone())?;
+    let row = client.query_one(range_query.as_str(), &[])?;
 
-    let col_type = PostgresTypeSystem::from(row.columns().get(0).unwrap().type_());
+    let col_type = PostgresTypeSystem::from(row.columns()[0].type_());
     let (min_v, max_v) = match col_type {
         PostgresTypeSystem::Int4(_) => {
             let min_v: i32 = row.get(0);

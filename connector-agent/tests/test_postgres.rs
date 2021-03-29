@@ -18,7 +18,7 @@ fn load_and_parse() {
     #[derive(Debug, PartialEq)]
     struct Row(i32, Option<i32>, Option<String>, Option<f64>, Option<bool>);
 
-    let mut source = PostgresSource::<Binary>::new(&dburl, 1);
+    let mut source = PostgresSource::<Binary>::new(&dburl, 1).unwrap();
     source.set_queries(&["select * from test_table"]);
     source.fetch_metadata().unwrap();
 
@@ -68,7 +68,7 @@ fn test_postgres() {
         "select * from test_table where test_int < 2",
         "select * from test_table where test_int >= 2",
     ];
-    let builder = PostgresSource::new(&dburl, 2);
+    let builder = PostgresSource::new(&dburl, 2).unwrap();
     let mut destination = MemoryDestination::new();
     let dispatcher = Dispatcher::<_, _, PostgresMemoryTransport<Binary>>::new(
         builder,
@@ -123,7 +123,7 @@ fn load_and_parse_csv() {
     #[derive(Debug, PartialEq)]
     struct Row(i32, Option<i32>, Option<String>, Option<f64>, Option<bool>);
 
-    let mut source = PostgresSource::<CSV>::new(&dburl, 1);
+    let mut source = PostgresSource::<CSV>::new(&dburl, 1).unwrap();
     source.set_queries(&["select * from test_table"]);
     source.fetch_metadata().unwrap();
 
@@ -173,7 +173,7 @@ fn test_postgres_csv() {
         "select * from test_table where test_int < 2",
         "select * from test_table where test_int >= 2",
     ];
-    let builder = PostgresSource::<CSV>::new(&dburl, 2);
+    let builder = PostgresSource::<CSV>::new(&dburl, 2).unwrap();
     let mut dst = MemoryDestination::new();
     let dispatcher =
         Dispatcher::<_, _, PostgresMemoryTransport<CSV>>::new(builder, &mut dst, &queries);

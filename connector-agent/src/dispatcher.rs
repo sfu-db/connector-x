@@ -60,9 +60,9 @@ where
         let mut src_partitions: Vec<S::Partition> = self.src.partition()?;
         debug!("Prepare partitions");
         // run queries
-        src_partitions.par_iter_mut().for_each(|partition| {
-            partition.prepare().expect("run query");
-        });
+        src_partitions
+            .par_iter_mut()
+            .try_for_each(|partition| -> Result<()> { partition.prepare() })?;
 
         // allocate memory and create one partition for each source
         let num_rows: Vec<usize> = src_partitions
@@ -96,29 +96,27 @@ where
         dst_partitions
             .into_par_iter()
             .zip_eq(src_partitions)
-            .for_each(|(mut src, mut dst)| {
+            .try_for_each(|(mut src, mut dst)| -> Result<()> {
                 #[cfg(feature = "fptr")]
                 let f: Vec<_> = src_schema
                     .iter()
                     .zip_eq(&dst_schema)
                     .map(|(&src_ty, &dst_ty)| TP::processor(src_ty, dst_ty))
-                    .collect::<Result<Vec<_>>>()
-                    .unwrap();
+                    .collect::<Result<Vec<_>>>()?;
 
-                let mut parser = dst.parser().unwrap();
+                let mut parser = dst.parser()?;
 
                 match dorder {
                     DataOrder::RowMajor => {
                         for _ in 0..src.nrows() {
                             for col in 0..src.ncols() {
                                 #[cfg(feature = "fptr")]
-                                f[col](&mut parser, &mut src).unwrap();
+                                f[col](&mut parser, &mut src)?;
 
                                 #[cfg(feature = "branch")]
                                 {
                                     let (s1, s2) = schemas[col];
-                                    TP::process(s1, s2, &mut parser, &mut src)
-                                        .expect("write record");
+                                    TP::process(s1, s2, &mut parser, &mut src)?;
                                 }
                             }
                         }
@@ -127,20 +125,19 @@ where
                         for col in 0..src.ncols() {
                             for _ in 0..src.nrows() {
                                 #[cfg(feature = "fptr")]
-                                f[col](&mut parser, &mut src).unwrap();
+                                f[col](&mut parser, &mut src)?;
                                 #[cfg(feature = "branch")]
                                 {
                                     let (s1, s2) = schemas[col];
-                                    TP::process(s1, s2, &mut parser, &mut src)
-                                        .expect("write record");
+                                    TP::process(s1, s2, &mut parser, &mut src)?;
                                 }
                             }
                         }
                     }
                 }
 
-                src.finalize().unwrap();
-            });
+                src.finalize()
+            })?;
 
         debug!("Writing finished");
 

@@ -37,21 +37,18 @@ pub struct PostgresSource<P> {
 }
 
 impl<P> PostgresSource<P> {
-    pub fn new(conn: &str, nconn: usize) -> Self {
-        let manager = PostgresConnectionManager::new(conn.parse().unwrap(), NoTls);
-        let pool = Pool::builder()
-            .max_size(nconn as u32)
-            .build(manager)
-            .unwrap();
+    pub fn new(conn: &str, nconn: usize) -> Result<Self> {
+        let manager = PostgresConnectionManager::new(conn.parse()?, NoTls);
+        let pool = Pool::builder().max_size(nconn as u32).build(manager)?;
 
-        Self {
+        Ok(Self {
             pool,
             queries: vec![],
             names: vec![],
             schema: vec![],
             buf_size: 32,
             _protocol: PhantomData,
-        }
+        })
     }
 
     pub fn buf_size(&mut self, buf_size: usize) {
@@ -87,7 +84,7 @@ where
         let mut error = None;
         for query in &self.queries {
             // assuming all the partition queries yield same schema
-            match conn.query_one(&limit1_query(query)[..], &[]) {
+            match conn.query_one(&limit1_query(query)?[..], &[]) {
                 Ok(row) => {
                     let (names, types) = row
                         .columns()
@@ -176,9 +173,9 @@ impl SourcePartition for PostgresSourcePartition<Binary> {
     type Parser<'a> = PostgresBinarySourcePartitionParser<'a>;
 
     fn prepare(&mut self) -> Result<()> {
-        self.nrows = match get_limit(&self.query) {
+        self.nrows = match get_limit(&self.query)? {
             None => {
-                let row = self.conn.query_one(&count_query(&self.query)[..], &[])?;
+                let row = self.conn.query_one(&count_query(&self.query)?[..], &[])?;
                 row.get::<_, i64>(0) as usize
             }
             Some(n) => n,
@@ -213,7 +210,7 @@ impl SourcePartition for PostgresSourcePartition<CSV> {
     type Parser<'a> = PostgresCSVSourceParser<'a>;
 
     fn prepare(&mut self) -> Result<()> {
-        let row = self.conn.query_one(&count_query(&self.query)[..], &[])?;
+        let row = self.conn.query_one(&count_query(&self.query)?[..], &[])?;
         self.nrows = row.get::<_, i64>(0) as usize;
         Ok(())
     }

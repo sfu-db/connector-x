@@ -30,6 +30,9 @@ pub enum ConnectorAgentError {
     #[error("Destination has not been allocated yet.")]
     DestinationNotAllocated,
 
+    #[error("Python: {0}.")]
+    PythonError(String),
+
     #[error("No conversion rule from {0} to {1}.")]
     NoConversionRule(String, String),
 
@@ -44,6 +47,12 @@ pub enum ConnectorAgentError {
 
     #[error(transparent)]
     CSVError(#[from] csv::Error),
+
+    #[error(transparent)]
+    SQLParserError(#[from] sqlparser::parser::ParserError),
+
+    #[error(transparent)]
+    RegexError(#[from] regex::Error),
 
     /// Any other errors that are too trivial to be put here explicitly.
     #[error(transparent)]

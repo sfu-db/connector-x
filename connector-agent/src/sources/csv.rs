@@ -2,6 +2,7 @@ use super::{PartitionParser, Produce, Source, SourcePartition};
 use crate::data_order::DataOrder;
 use crate::dummy_typesystem::DummyTypeSystem;
 use crate::errors::{ConnectorAgentError, Result};
+use anyhow::anyhow;
 use chrono::{DateTime, Utc};
 use fehler::{throw, throws};
 use regex::{Regex, RegexBuilder};
@@ -25,18 +26,17 @@ impl CSVSource {
 
     pub fn infer_schema(&mut self) -> Result<Vec<DummyTypeSystem>> {
         // regular expressions for infer DummyTypeSystem from string
-        let decimal_re: Regex = Regex::new(r"^-?(\d+\.\d+)$").unwrap();
-        let integer_re: Regex = Regex::new(r"^-?(\d+)$").unwrap();
+        let decimal_re: Regex = Regex::new(r"^-?(\d+\.\d+)$")?;
+        let integer_re: Regex = Regex::new(r"^-?(\d+)$")?;
         let boolean_re: Regex = RegexBuilder::new(r"^(true)$|^(false)$")
             .case_insensitive(true)
-            .build()
-            .unwrap();
-        let datetime_re: Regex = Regex::new(r"^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d$").unwrap();
+            .build()?;
+        let datetime_re: Regex = Regex::new(r"^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d$")?;
 
         // read max_records rows to infer possible DummyTypeSystems for each field
         let mut reader = csv::ReaderBuilder::new()
             .has_headers(true)
-            .from_reader(File::open(&self.files[0]).expect("open file"));
+            .from_reader(File::open(&self.files[0])?);
 
         let max_records_to_read = 50;
         let num_cols = self.names.len();
@@ -149,13 +149,13 @@ impl Source for CSVSource {
     fn fetch_metadata(&mut self) -> Result<()> {
         let mut reader = csv::ReaderBuilder::new()
             .has_headers(true)
-            .from_reader(File::open(&self.files[0]).expect("open file"));
+            .from_reader(File::open(&self.files[0])?);
         let header = reader.headers()?;
 
         self.names = header.iter().map(|s| s.to_string()).collect();
 
         if self.schema.len() == 0 {
-            self.schema = self.infer_schema().unwrap_or_default();
+            self.schema = self.infer_schema()?;
         }
 
         assert_eq!(header.len(), self.schema.len());
@@ -206,11 +206,14 @@ impl SourcePartition for CSVSourcePartition {
 
     /// The parameter `query` is the path of the csv file
     fn prepare(&mut self) -> Result<()> {
-        let mut reader = csv::ReaderBuilder::new()
+        let reader = csv::ReaderBuilder::new()
             .has_headers(true)
-            .from_reader(File::open(&self.fname).expect("open file"));
+            .from_reader(File::open(&self.fname)?);
 
-        self.records = reader.records().map(|v| v.expect("csv record")).collect();
+        reader.into_records().try_for_each(|v| -> Result<()> {
+            self.records.push(v.map_err(|e| anyhow!(e))?);
+            Ok(())
+        })?;
         self.nrows = self.records.len();
         if self.nrows > 0 {
             self.ncols = self.records[0].len();
