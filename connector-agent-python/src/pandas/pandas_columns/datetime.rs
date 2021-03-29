@@ -1,5 +1,8 @@
 use super::{check_dtype, HasPandasColumn, PandasColumn, PandasColumnObject};
+use anyhow::anyhow;
 use chrono::{DateTime, Utc};
+use connector_agent::ConnectorAgentError;
+use fehler::throws;
 use ndarray::{ArrayViewMut2, Axis, Ix2};
 use numpy::PyArray;
 use pyo3::{FromPyObject, PyAny, PyResult};
@@ -21,6 +24,7 @@ impl<'a> FromPyObject<'a> for DateTimeBlock<'a> {
 }
 
 impl<'a> DateTimeBlock<'a> {
+    #[throws(ConnectorAgentError)]
     pub fn split(self) -> Vec<DateTimeColumn<'a>> {
         let mut ret = vec![];
         let mut view = self.data;
@@ -31,10 +35,9 @@ impl<'a> DateTimeBlock<'a> {
             view = rest;
             ret.push(DateTimeColumn {
                 data: col
-                    .into_shape(nrows)
-                    .expect("reshape")
+                    .into_shape(nrows)?
                     .into_slice()
-                    .unwrap(),
+                    .ok_or(anyhow!("get None for splitted DateTime data"))?,
                 i: 0,
             })
         }
@@ -60,6 +63,7 @@ impl<'a> PandasColumnObject for DateTimeColumn<'a> {
 }
 
 impl<'a> PandasColumn<DateTime<Utc>> for DateTimeColumn<'a> {
+    #[throws(ConnectorAgentError)]
     fn write(&mut self, val: DateTime<Utc>) {
         unsafe { *self.data.get_unchecked_mut(self.i) = val.timestamp_nanos() };
         self.i += 1;
@@ -67,6 +71,7 @@ impl<'a> PandasColumn<DateTime<Utc>> for DateTimeColumn<'a> {
 }
 
 impl<'a> PandasColumn<Option<DateTime<Utc>>> for DateTimeColumn<'a> {
+    #[throws(ConnectorAgentError)]
     fn write(&mut self, val: Option<DateTime<Utc>>) {
         // numpy use i64::MIN as NaT
         unsafe {

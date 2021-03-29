@@ -1,4 +1,7 @@
 use super::{check_dtype, HasPandasColumn, PandasColumn, PandasColumnObject};
+use anyhow::anyhow;
+use connector_agent::ConnectorAgentError;
+use fehler::throws;
 use ndarray::{ArrayViewMut1, ArrayViewMut2, Axis, Ix2};
 use numpy::{PyArray, PyArray1};
 use pyo3::{FromPyObject, PyAny, PyResult};
@@ -20,20 +23,26 @@ impl<'a> FromPyObject<'a> for BooleanBlock<'a> {
             let mask = ob.getattr("_mask")?;
 
             Ok(BooleanBlock::Extention(
-                unsafe { data.downcast::<PyArray1<bool>>().unwrap().as_array_mut() },
-                unsafe { mask.downcast::<PyArray1<bool>>().unwrap().as_array_mut() },
+                unsafe { data.downcast::<PyArray1<bool>>()?.as_array_mut() },
+                unsafe { mask.downcast::<PyArray1<bool>>()?.as_array_mut() },
             ))
         }
     }
 }
 
 impl<'a> BooleanBlock<'a> {
+    #[throws(ConnectorAgentError)]
     pub fn split(self) -> Vec<BooleanColumn<'a>> {
         let mut ret = vec![];
         match self {
             BooleanBlock::Extention(data, mask) => ret.push(BooleanColumn {
-                data: data.into_slice().unwrap(),
-                mask: Some(mask.into_slice().unwrap()),
+                data: data
+                    .into_slice()
+                    .ok_or(anyhow!("get None for Boolean data"))?,
+                mask: Some(
+                    mask.into_slice()
+                        .ok_or(anyhow!("get None for Boolean mask"))?,
+                ),
                 i: 0,
             }),
             BooleanBlock::NumPy(mut view) => {
@@ -43,10 +52,9 @@ impl<'a> BooleanBlock<'a> {
                     view = rest;
                     ret.push(BooleanColumn {
                         data: col
-                            .into_shape(nrows)
-                            .expect("reshape")
+                            .into_shape(nrows)?
                             .into_slice()
-                            .unwrap(),
+                            .ok_or(anyhow!("get None for splitted Boolean data"))?,
                         mask: None,
                         i: 0,
                     })
@@ -76,6 +84,7 @@ impl<'a> PandasColumnObject for BooleanColumn<'a> {
 }
 
 impl<'a> PandasColumn<bool> for BooleanColumn<'a> {
+    #[throws(ConnectorAgentError)]
     fn write(&mut self, val: bool) {
         unsafe { *self.data.get_unchecked_mut(self.i) = val };
         if let Some(mask) = self.mask.as_mut() {
@@ -86,6 +95,7 @@ impl<'a> PandasColumn<bool> for BooleanColumn<'a> {
 }
 
 impl<'a> PandasColumn<Option<bool>> for BooleanColumn<'a> {
+    #[throws(ConnectorAgentError)]
     fn write(&mut self, val: Option<bool>) {
         match val {
             Some(val) => {

@@ -53,7 +53,8 @@ impl_transport!(
 
 impl<'py, P> TypeConversion<Decimal, f64> for PostgresPandasTransport<'py, P> {
     fn convert(val: Decimal) -> f64 {
-        val.to_f64().unwrap()
+        val.to_f64()
+            .unwrap_or_else(|| panic!("cannot convert decimal {:?} to float64", val))
     }
 }
 

@@ -6,6 +6,7 @@ mod string;
 // TODO: use macro for integers
 
 pub use boolean::{BooleanBlock, BooleanColumn};
+use connector_agent::Result;
 pub use datetime::{DateTimeBlock, DateTimeColumn};
 use fehler::throw;
 pub use float64::{Float64Block, Float64Column};
@@ -18,11 +19,13 @@ pub trait PandasColumnObject: Send {
     fn typecheck(&self, _: TypeId) -> bool;
     fn typename(&self) -> &'static str;
     fn len(&self) -> usize;
-    fn finalize(&mut self) {}
+    fn finalize(&mut self) -> Result<()> {
+        Ok(())
+    }
 }
 
 pub trait PandasColumn<V>: Sized + PandasColumnObject {
-    fn write(&mut self, val: V);
+    fn write(&mut self, val: V) -> Result<()>;
 }
 
 // Indicates a type has an associated pandas column

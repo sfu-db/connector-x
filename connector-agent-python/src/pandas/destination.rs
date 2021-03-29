@@ -15,7 +15,6 @@ use pyo3::{
     types::{PyDict, PyList},
     FromPyObject, PyAny, Python,
 };
-// use std::any::TypeId;
 use std::collections::HashMap;
 use std::mem::transmute;
 pub struct PandasDestination<'py> {
@@ -65,12 +64,17 @@ impl<'a> Destination for PandasDestination<'a> {
             throw!(ConnectorAgentError::DuplicatedAllocation);
         }
 
-        let (df, buffers, index) = create_dataframe(self.py, names, schema, nrows);
+        let (df, buffers, index) = create_dataframe(self.py, names, schema, nrows)?;
         debug!("DataFrame created");
 
         // get index for each column: (index of block, index of column within the block)
-        let column_buffer_index: Vec<(usize, usize)> =
-            index.iter().map(|tuple| tuple.extract().unwrap()).collect();
+        let mut column_buffer_index: Vec<(usize, usize)> = Vec::with_capacity(index.len());
+        index.iter().try_for_each(|tuple| -> Result<()> {
+            column_buffer_index.push(tuple.extract().map_err(|e| {
+                anyhow!("cannot extract index tuple for `column_buffer_index` {}", e)
+            })?);
+            Ok(())
+        })?;
 
         let nbuffers = buffers.len();
 
@@ -92,19 +96,24 @@ impl<'a> Destination for PandasDestination<'a> {
 
     #[throws(ConnectorAgentError)]
     fn partition(&mut self, counts: &[usize]) -> Vec<Self::Partition<'_>> {
-        if matches!(self.nrows, None) {
-            panic!("{}", ConnectorAgentError::DestinationNotAllocated);
-        }
-
-        assert_eq!(counts.iter().sum::<usize>(), self.nrows.unwrap());
+        assert_eq!(
+            counts.iter().sum::<usize>(),
+            self.nrows
+                .ok_or(ConnectorAgentError::DestinationNotAllocated)?
+        );
 
         let buffers = self
             .buffers
-            .ok_or(ConnectorAgentError::DestinationNotAllocated)
-            .unwrap();
+            .ok_or(ConnectorAgentError::DestinationNotAllocated)?;
 
-        let schema = self.schema.as_ref().unwrap();
-        let buffer_column_index = self.buffer_column_index.as_ref().unwrap();
+        let schema = self
+            .schema
+            .as_ref()
+            .ok_or(ConnectorAgentError::DestinationNotAllocated)?;
+        let buffer_column_index = self
+            .buffer_column_index
+            .as_ref()
+            .ok_or(ConnectorAgentError::DestinationNotAllocated)?;
 
         let mut partitioned_columns: Vec<Vec<Box<dyn PandasColumnObject>>> =
             (0..schema.len()).map(|_| vec![]).collect();
@@ -114,7 +123,7 @@ impl<'a> Destination for PandasDestination<'a> {
                 match schema[cid] {
                     PandasTypeSystem::F64(_) => {
                         let fblock = Float64Block::extract(buf).map_err(|e| anyhow!(e))?;
-                        let fcols = fblock.split();
+                        let fcols = fblock.split()?;
                         for (&cid, fcol) in cids.iter().zip_eq(fcols) {
                             partitioned_columns[cid] = fcol
                                 .partition(&counts)
@@ -125,7 +134,7 @@ impl<'a> Destination for PandasDestination<'a> {
                     }
                     PandasTypeSystem::I64(_) => {
                         let ublock = Int64Block::extract(buf).map_err(|e| anyhow!(e))?;
-                        let ucols = ublock.split();
+                        let ucols = ublock.split()?;
                         for (&cid, ucol) in cids.iter().zip_eq(ucols) {
                             partitioned_columns[cid] = ucol
                                 .partition(&counts)
@@ -136,7 +145,7 @@ impl<'a> Destination for PandasDestination<'a> {
                     }
                     PandasTypeSystem::Bool(_) => {
                         let bblock = BooleanBlock::extract(buf).map_err(|e| anyhow!(e))?;
-                        let bcols = bblock.split();
+                        let bcols = bblock.split()?;
                         for (&cid, bcol) in cids.iter().zip_eq(bcols) {
                             partitioned_columns[cid] = bcol
                                 .partition(&counts)
@@ -147,7 +156,7 @@ impl<'a> Destination for PandasDestination<'a> {
                     }
                     PandasTypeSystem::String(_) => {
                         let block = StringBlock::extract(buf).map_err(|e| anyhow!(e))?;
-                        let cols = block.split();
+                        let cols = block.split()?;
                         for (&cid, col) in cids.iter().zip_eq(cols) {
                             partitioned_columns[cid] = col
                                 .partition(&counts)
@@ -158,7 +167,7 @@ impl<'a> Destination for PandasDestination<'a> {
                     }
                     PandasTypeSystem::DateTime(_) => {
                         let block = DateTimeBlock::extract(buf).map_err(|e| anyhow!(e))?;
-                        let cols = block.split();
+                        let cols = block.split()?;
                         for (&cid, col) in cids.iter().zip_eq(cols) {
                             partitioned_columns[cid] = col
                                 .partition(&counts)
@@ -173,16 +182,16 @@ impl<'a> Destination for PandasDestination<'a> {
 
         let mut par_destinations = vec![];
         for &c in counts.into_iter().rev() {
-            let columns: Vec<_> = partitioned_columns
-                .iter_mut()
-                .map(|partitions| partitions.pop().unwrap())
-                .collect();
+            let mut columns = vec![];
+            for (i, partitions) in partitioned_columns.iter_mut().enumerate() {
+                columns.push(
+                    partitions
+                        .pop()
+                        .ok_or(anyhow!("empty partition for {}th column", i))?,
+                );
+            }
 
-            par_destinations.push(PandasPartitionDestination::new(
-                c,
-                columns,
-                self.schema.as_ref().unwrap(),
-            ));
+            par_destinations.push(PandasPartitionDestination::new(c, columns, schema));
         }
 
         // We need to reverse the par_destinations because partitions are poped reversely
@@ -190,7 +199,9 @@ impl<'a> Destination for PandasDestination<'a> {
     }
 
     fn schema(&self) -> &[PandasTypeSystem] {
-        self.schema.as_ref().unwrap()
+        self.schema
+            .as_ref()
+            .unwrap_or_else(|| panic!("schema not ready"))
     }
 }
 
@@ -235,7 +246,7 @@ impl<'a> DestinationPartition<'a> for PandasPartitionDestination<'a> {
 
     fn finalize(&mut self) -> Result<()> {
         for col in &mut self.columns {
-            col.finalize();
+            col.finalize()?;
         }
         Ok(())
     }
@@ -254,13 +265,12 @@ where
 
         let (column, _): (&mut T::PandasColumn<'a>, *const ()) =
             unsafe { transmute(&*self.columns[col]) };
-        column.write(value);
-
-        Ok(())
+        column.write(value)
     }
 }
 
 /// call python code to construct the dataframe and expose its buffers
+#[throws(ConnectorAgentError)]
 fn create_dataframe<'a, S: AsRef<str>>(
     py: Python<'a>,
     names: &[S],
@@ -328,22 +338,25 @@ index = [(i, j) for i, j in zip(df._mgr.blknos, df._mgr.blklocs)]"#,
 
     // run python code
     let locals = PyDict::new(py);
-    py.run(code.as_str(), None, Some(locals)).unwrap();
+    py.run(code.as_str(), None, Some(locals))
+        .map_err(|e| anyhow!(e))?;
 
     // get # of blocks in dataframe
     let buffers: &PyList = locals
         .get_item("blocks")
-        .expect("cannot get `blocks` from locals")
+        .ok_or(anyhow!("cannot get `blocks` from locals"))?
         .downcast::<PyList>()
-        .expect("cannot downcast `blocks` to PyList");
+        .map_err(|e| anyhow!("cannot downcast `blocks` to PyList {}", e))?;
 
     let index = locals
         .get_item("index")
-        .expect("cannot get `index` from locals")
+        .ok_or(anyhow!("cannot get `index` from locals"))?
         .downcast::<PyList>()
-        .expect("cannot downcast `index` to PyList");
+        .map_err(|e| anyhow!("cannot downcast `index` to PyList {}", e))?;
 
-    let df = locals.get_item("df").expect("cannot get `df` from locals");
+    let df = locals
+        .get_item("df")
+        .ok_or(anyhow!("cannot get `df` from locals"))?;
 
     (df, buffers, index)
 }
