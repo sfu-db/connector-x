@@ -38,10 +38,10 @@ impl<'a> BooleanBlock<'a> {
             BooleanBlock::Extention(data, mask) => ret.push(BooleanColumn {
                 data: data
                     .into_slice()
-                    .ok_or(anyhow!("get None for Boolean data"))?,
+                    .ok_or_else(|| anyhow!("get None for Boolean data"))?,
                 mask: Some(
                     mask.into_slice()
-                        .ok_or(anyhow!("get None for Boolean mask"))?,
+                        .ok_or_else(|| anyhow!("get None for Boolean mask"))?,
                 ),
                 i: 0,
             }),
@@ -54,7 +54,7 @@ impl<'a> BooleanBlock<'a> {
                         data: col
                             .into_shape(nrows)?
                             .into_slice()
-                            .ok_or(anyhow!("get None for splitted Boolean data"))?,
+                            .ok_or_else(|| anyhow!("get None for splitted Boolean data"))?,
                         mask: None,
                         i: 0,
                     })

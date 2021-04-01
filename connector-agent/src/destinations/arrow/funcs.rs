@@ -45,7 +45,7 @@ where
             Ok(ArrayBuilder::finish(
                 builder
                     .downcast_mut::<T::Builder>()
-                    .ok_or(anyhow!("cannot cast arrow builder for finish"))?,
+                    .ok_or_else(|| anyhow!("cannot cast arrow builder for finish"))?,
             ))
         }
         imp::<T>

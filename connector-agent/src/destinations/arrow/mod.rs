@@ -150,7 +150,7 @@ where
         <T as ArrowAssoc>::append(
             self.builders[col]
                 .downcast_mut::<T::Builder>()
-                .ok_or(anyhow!("cannot cast arrow builder for append"))?,
+                .ok_or_else(|| anyhow!("cannot cast arrow builder for append"))?,
             value,
         )?;
 

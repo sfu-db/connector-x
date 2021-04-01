@@ -37,7 +37,7 @@ impl<'a> DateTimeBlock<'a> {
                 data: col
                     .into_shape(nrows)?
                     .into_slice()
-                    .ok_or(anyhow!("get None for splitted DateTime data"))?,
+                    .ok_or_else(|| anyhow!("get None for splitted DateTime data"))?,
                 i: 0,
             })
         }

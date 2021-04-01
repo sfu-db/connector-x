@@ -99,20 +99,23 @@ impl<'a> Destination for PandasDestination<'a> {
         assert_eq!(
             counts.iter().sum::<usize>(),
             self.nrows
-                .ok_or(ConnectorAgentError::DestinationNotAllocated)?,
+                .ok_or_else(|| ConnectorAgentError::DestinationNotAllocated)?,
             "counts: {} != nrows: {:?}",
             counts.iter().sum::<usize>(),
             self.nrows
         );
 
-        let buffers = self.buffers.ok_or(anyhow!("got None buffers"))?;
+        let buffers = self.buffers.ok_or_else(|| anyhow!("got None buffers"))?;
 
-        let schema = self.schema.as_ref().ok_or(anyhow!("got None schema"))?;
+        let schema = self
+            .schema
+            .as_ref()
+            .ok_or_else(|| anyhow!("got None schema"))?;
 
         let buffer_column_index = self
             .buffer_column_index
             .as_ref()
-            .ok_or(anyhow!("got None buffer_column_index"))?;
+            .ok_or_else(|| anyhow!("got None buffer_column_index"))?;
 
         let mut partitioned_columns: Vec<Vec<Box<dyn PandasColumnObject>>> =
             (0..schema.len()).map(|_| vec![]).collect();
@@ -186,7 +189,7 @@ impl<'a> Destination for PandasDestination<'a> {
                 columns.push(
                     partitions
                         .pop()
-                        .ok_or(anyhow!("empty partition for {}th column", i))?,
+                        .ok_or_else(|| anyhow!("empty partition for {}th column", i))?,
                 );
             }
 
@@ -342,19 +345,19 @@ index = [(i, j) for i, j in zip(df._mgr.blknos, df._mgr.blklocs)]"#,
     // get # of blocks in dataframe
     let buffers: &PyList = locals
         .get_item("blocks")
-        .ok_or(anyhow!("cannot get `blocks` from locals"))?
+        .ok_or_else(|| anyhow!("cannot get `blocks` from locals"))?
         .downcast::<PyList>()
         .map_err(|e| anyhow!("cannot downcast `blocks` to PyList {}", e))?;
 
     let index = locals
         .get_item("index")
-        .ok_or(anyhow!("cannot get `index` from locals"))?
+        .ok_or_else(|| anyhow!("cannot get `index` from locals"))?
         .downcast::<PyList>()
         .map_err(|e| anyhow!("cannot downcast `index` to PyList {}", e))?;
 
     let df = locals
         .get_item("df")
-        .ok_or(anyhow!("cannot get `df` from locals"))?;
+        .ok_or_else(|| anyhow!("cannot get `df` from locals"))?;
 
     (df, buffers, index)
 }

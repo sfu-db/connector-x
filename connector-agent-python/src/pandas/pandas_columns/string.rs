@@ -43,7 +43,7 @@ impl<'a> StringBlock<'a> {
                 data: col
                     .into_shape(nrows)?
                     .into_slice()
-                    .ok_or(anyhow!("get None for splitted String data"))?,
+                    .ok_or_else(|| anyhow!("get None for splitted String data"))?,
                 next_write: 0,
                 string_lengths: vec![],
                 string_buf: Vec::with_capacity(self.buf_size_mb * 2 << 20 * 11 / 10), // allocate a little bit more memory to avoid Vec growth
@@ -161,7 +161,7 @@ impl<'a> StringColumn<'a> {
                         unsafe {
                             *self.data.get_unchecked_mut(self.next_write + i) = string_infos
                                 .last()
-                                .ok_or(anyhow!("empty string_info vector"))?
+                                .ok_or_else(|| anyhow!("empty string_info vector"))?
                                 .pystring(py)
                         };
                     }

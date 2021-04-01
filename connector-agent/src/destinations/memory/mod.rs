@@ -95,7 +95,7 @@ impl Destination for MemoryDestination {
             for bid in 0..nbuffers {
                 let view = views[bid].take();
                 let (splitted, rest) = view
-                    .ok_or(anyhow!("got None for {}th view", bid))?
+                    .ok_or_else(|| anyhow!("got None for {}th view", bid))?
                     .split_at(Axis(0), c);
                 views[bid] = Some(rest);
                 sub_buffers.push(splitted);
@@ -198,7 +198,7 @@ where
         })?;
         *mut_view
             .get_mut((row, col))
-            .ok_or(ConnectorAgentError::OutOfBound)? = value;
+            .ok_or_else(|| ConnectorAgentError::OutOfBound)? = value;
         Ok(())
     }
 }

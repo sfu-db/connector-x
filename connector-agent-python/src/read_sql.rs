@@ -54,7 +54,7 @@ pub fn read_sql<'a>(
 
             let (min, max) = match (min, max) {
                 (None, None) => pg_get_partition_range(conn, &query, &col)
-                    .map_err(|e| ConnectorAgentPythonError::ConnectorAgentError(e))?,
+                    .map_err(ConnectorAgentPythonError::ConnectorAgentError)?,
                 (Some(min), Some(max)) => (min, max),
                 _ => throw!(PyValueError::new_err(
                     "partition_query range can not be partially specified",
@@ -70,7 +70,7 @@ pub fn read_sql<'a>(
                     false => min + (i + 1) * partition_size,
                 };
                 let partition_query = pg_single_col_partition_query(&query, &col, lower, upper)
-                    .map_err(|e| ConnectorAgentPythonError::ConnectorAgentError(e))?;
+                    .map_err(ConnectorAgentPythonError::ConnectorAgentError)?;
                 queries.push(partition_query);
             }
             queries

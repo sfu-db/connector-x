@@ -35,7 +35,7 @@ impl<'a> Float64Block<'a> {
                 data: col
                     .into_shape(nrows)?
                     .into_slice()
-                    .ok_or(anyhow!("get None for splitted Float64 data"))?,
+                    .ok_or_else(|| anyhow!("get None for splitted Float64 data"))?,
                 i: 0,
             })
         }

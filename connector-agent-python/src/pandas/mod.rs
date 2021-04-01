@@ -49,5 +49,7 @@ pub fn write_pandas<'a>(py: Python<'a>, conn: &str, queries: &[&str], protocol: 
         _ => unimplemented!("{} protocol not supported", protocol),
     }
 
-    destination.result().ok_or(anyhow!("destination not run"))?
+    destination
+        .result()
+        .ok_or_else(|| anyhow!("destination not run"))?
 }

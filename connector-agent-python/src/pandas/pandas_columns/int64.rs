@@ -37,10 +37,10 @@ impl<'a> Int64Block<'a> {
             Int64Block::Extention(data, mask) => ret.push(Int64Column {
                 data: data
                     .into_slice()
-                    .ok_or(anyhow!("get None for Int64 data"))?,
+                    .ok_or_else(|| anyhow!("get None for Int64 data"))?,
                 mask: Some(
                     mask.into_slice()
-                        .ok_or(anyhow!("get None for Int64 mask"))?,
+                        .ok_or_else(|| anyhow!("get None for Int64 mask"))?,
                 ),
                 i: 0,
             }),
@@ -53,7 +53,7 @@ impl<'a> Int64Block<'a> {
                         data: col
                             .into_shape(nrows)?
                             .into_slice()
-                            .ok_or(anyhow!("get None for splitted Int64 data"))?,
+                            .ok_or_else(|| anyhow!("get None for splitted Int64 data"))?,
                         mask: None,
                         i: 0,
                     })
