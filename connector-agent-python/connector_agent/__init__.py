@@ -9,6 +9,10 @@ try:
     from importlib.metadata import version
     __version__ = version(__name__)
 except:
+  try:
+    from importlib_metadata import version
+    __version__ = version(__name__)
+  except:
     pass
 
 def read_sql(
