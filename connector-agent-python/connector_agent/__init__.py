@@ -4,9 +4,9 @@ import pandas as pd
 
 from .connector_agent_python import read_pg
 from .connector_agent_python import read_sql as _read_sql
-from importlib.metadata import version
 
 try:
+    from importlib.metadata import version
     __version__ = version(__name__)
 except:
     pass
