@@ -73,15 +73,22 @@
 <span id="70">70</span>
 <span id="71">71</span>
 <span id="72">72</span>
+<span id="73">73</span>
+<span id="74">74</span>
+<span id="75">75</span>
+<span id="76">76</span>
+<span id="77">77</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">chrono</span>::{<span class="ident">DateTime</span>, <span class="ident">NaiveDate</span>, <span class="ident">NaiveDateTime</span>, <span class="ident">Utc</span>};
 <span class="kw">use</span> <span class="ident">postgres</span>::<span class="ident">types</span>::<span class="ident">Type</span>;
+<span class="kw">use</span> <span class="ident">rust_decimal</span>::<span class="ident">Decimal</span>;
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">PostgresTypeSystem</span> {
     <span class="ident">Bool</span>(<span class="ident">bool</span>),
     <span class="ident">Float4</span>(<span class="ident">bool</span>),
     <span class="ident">Float8</span>(<span class="ident">bool</span>),
+    <span class="ident">Numeric</span>(<span class="ident">bool</span>),
     <span class="ident">Int4</span>(<span class="ident">bool</span>),
     <span class="ident">Int8</span>(<span class="ident">bool</span>),
     <span class="ident">Date</span>(<span class="ident">bool</span>),
@@ -99,6 +106,7 @@
         { <span class="ident">Int8</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i64</span> }
         { <span class="ident">Float4</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f32</span> }
         { <span class="ident">Float8</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f64</span> }
+        { <span class="ident">Numeric</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Decimal</span> }
         { <span class="ident">Bool</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">bool</span> }
         { <span class="ident">Text</span> <span class="op">|</span> <span class="ident">BpChar</span> <span class="op">|</span> <span class="ident">VarChar</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;r</span> <span class="ident">str</span> }
         { <span class="ident">Timestamp</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">NaiveDateTime</span> }
@@ -115,6 +123,7 @@
             <span class="string">&quot;int8&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Int8</span>(<span class="bool-val">true</span>),
             <span class="string">&quot;float4&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Float4</span>(<span class="bool-val">true</span>),
             <span class="string">&quot;float8&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Float8</span>(<span class="bool-val">true</span>),
+            <span class="string">&quot;numeric&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Numeric</span>(<span class="bool-val">true</span>),
             <span class="string">&quot;bool&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Bool</span>(<span class="bool-val">true</span>),
             <span class="string">&quot;text&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Text</span>(<span class="bool-val">true</span>),
             <span class="string">&quot;bpchar&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">BpChar</span>(<span class="bool-val">true</span>),
@@ -136,6 +145,7 @@
             <span class="ident">Int8</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type</span>::<span class="ident">INT8</span>,
             <span class="ident">Float4</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type</span>::<span class="ident">FLOAT4</span>,
             <span class="ident">Float8</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type</span>::<span class="ident">FLOAT8</span>,
+            <span class="ident">Numeric</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type</span>::<span class="ident">NUMERIC</span>,
             <span class="ident">Bool</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type</span>::<span class="ident">BOOL</span>,
             <span class="ident">Text</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type</span>::<span class="ident">TEXT</span>,
             <span class="ident">BpChar</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type</span>::<span class="ident">BPCHAR</span>,

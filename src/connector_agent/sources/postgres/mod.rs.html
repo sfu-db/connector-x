@@ -555,6 +555,8 @@
 <span id="552">552</span>
 <span id="553">553</span>
 <span id="554">554</span>
+<span id="555">555</span>
+<span id="556">556</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">mod</span> <span class="ident">sql</span>;
 <span class="kw">mod</span> <span class="ident">typesystem</span>;
@@ -574,6 +576,7 @@
 };
 <span class="kw">use</span> <span class="ident">r2d2</span>::{<span class="ident">Pool</span>, <span class="ident">PooledConnection</span>};
 <span class="kw">use</span> <span class="ident">r2d2_postgres</span>::{<span class="ident">postgres</span>::<span class="ident">NoTls</span>, <span class="ident">PostgresConnectionManager</span>};
+<span class="kw">use</span> <span class="ident">rust_decimal</span>::<span class="ident">Decimal</span>;
 <span class="kw">use</span> <span class="ident">sql</span>::{<span class="ident">count_query</span>, <span class="ident">get_limit</span>, <span class="ident">limit1_query</span>};
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">marker</span>::<span class="ident">PhantomData</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">typesystem</span>::<span class="ident">PostgresTypeSystem</span>;
@@ -887,7 +890,8 @@
     <span class="ident">bool</span>,
     <span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span>,
     <span class="ident">NaiveDateTime</span>,
-    <span class="ident">NaiveDate</span>
+    <span class="ident">NaiveDate</span>,
+    <span class="ident">Decimal</span>
 );
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;r</span> <span class="ident">str</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PostgresBinarySourcePartitionParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
@@ -994,7 +998,7 @@
     };
 }
 
-<span class="macro">impl_csv_produce</span><span class="macro">!</span>(<span class="ident">i32</span>, <span class="ident">i64</span>, <span class="ident">f32</span>, <span class="ident">f64</span>);
+<span class="macro">impl_csv_produce</span><span class="macro">!</span>(<span class="ident">i32</span>, <span class="ident">i64</span>, <span class="ident">f32</span>, <span class="ident">f64</span>, <span class="ident">Decimal</span>);
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="ident">bool</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PostgresCSVSourceParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
