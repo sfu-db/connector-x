@@ -14,28 +14,27 @@ on:
 
 
 jobs:
-  linux:
-    runs-on: ubuntu-latest
-    container: quay.io/pypa/manylinux2014_x86_64
+  check:
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python:
-          - 37
-          - 38
-          - 39
+        os: [ubuntu-latest, macos-10.15, windows-latest]
+        python-version: ["3.7", "3.8", "3.9"]
     steps:
       - uses: actions/checkout@v2
-      - name: Set python version
-        run: |
-          if [[ "${{ matrix.python }}" == "37" ]]; then
-            echo "/opt/python/cp37-cp37m/bin" >> $GITHUB_PATH
-          else
-            echo "/opt/python/cp${{ matrix.python }}-cp${{ matrix.python }}/bin" >> $GITHUB_PATH
-          fi
+
+      - name: Setup python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+          architecture: x64
+
+      - name: Check which python we use
+        run: | 
+          echo $(which python)
 
       - name: Install connector agent
         run: |
-          echo $(which python)
           pip install pandas numpy
 
           version='${{ github.event.inputs.version }}'
@@ -49,102 +48,3 @@ jobs:
       - name: Import
         run: python -c "from connector_agent import read_sql"
           
-  darwin:
-    runs-on: macos-10.15
-    strategy:
-      matrix:
-        python:
-          - 3.7.10
-          - 3.8.8
-          - 3.9.2
-    steps:
-      - uses: actions/checkout@v2
-      - name: Install tools
-        run: |
-          brew install openssl readline sqlite3 xz zlib
-
-      - name: Install Pyenv 
-        run: |
-          curl https://pyenv.run | bash
-          echo "$HOME/.pyenv/bin" >> $GITHUB_PATH
-
-      - name: Install Python
-        run: |
-          eval "$(pyenv init -)"
-          eval "$(pyenv virtualenv-init -)"
-          pyenv install "${{ matrix.python }}"
-          pyenv global "${{ matrix.python }}"
-          pip install -U pip  # upgrade pip after installing python
-
-      - name: Install connector agent
-        run: |
-          eval "$(pyenv init -)"
-          eval "$(pyenv virtualenv-init -)"
-          echo $(which python)
-
-          pip install pandas numpy
-
-          version='${{ github.event.inputs.version }}'
-          if [ -z $version ]
-          then
-            pip install --index-url ${{ github.event.inputs.indexUrl }} connector-agent
-          else
-            pip install --index-url ${{ github.event.inputs.indexUrl }} connector-agent==$version
-          fi
-
-      - name: Import
-        run: |
-          eval "$(pyenv init -)"
-          eval "$(pyenv virtualenv-init -)"
-          python -c "from connector_agent import read_sql"
-
-  win32:
-    runs-on: windows-latest
-    strategy:
-      matrix:
-        python:
-          - 3.7.7
-          - 3.8.2
-    steps:
-      - uses: actions/checkout@v2
-      - name: Install Pyenv
-        run: |
-          pip install pyenv-win --target $HOME\\.pyenv
-
-          cat $env:GITHUB_PATH | Out-File -FilePath PATH_TEMP -Encoding utf8
-
-          echo "$HOME\.pyenv\pyenv-win\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8
-          echo "$HOME\.pyenv\pyenv-win\shims" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-          echo "$HOME\.pyenv\pyenv-win\versions\{{ $matrix.python }}\Scripts" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-          cat PATH_TEMP | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-
-          echo "PYENV=$HOME\.pyenv\pyenv-win\" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          echo "PYENV_HOME=$HOME\.pyenv\pyenv-win\" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          
-      - name: List supported pythons 
-        run: |
-          pyenv install --list
-
-      - name: Install Python
-        run: |
-          pyenv install "${{ matrix.python }}"
-          pyenv global "${{ matrix.python }}"
-          pyenv rehash
-
-      - name: Install connector agent
-        run: |
-          echo $(which python)
-
-          pip install pandas numpy
-
-          $version = '${{ github.event.inputs.version }}'
-          if ($version) {
-            pip install --index-url ${{ github.event.inputs.indexUrl }} connector-agent==$version
-          } else { 
-            pip install --index-url ${{ github.event.inputs.indexUrl }} connector-agent
-          }
-          
-
-      - name: Import
-        run: |
-          python -c "from connector_agent import read_sql"
