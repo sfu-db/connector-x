@@ -25,7 +25,7 @@ pub fn write_pandas<'a>(py: Python<'a>, conn: &str, queries: &[&str], protocol: 
     debug!("Protocol: {}", protocol);
     match protocol {
         "csv" => {
-            let sb = PostgresSource::<CSV>::new(conn, queries.len());
+            let sb = PostgresSource::<CSV>::new(conn, queries.len())?;
             let dispatcher = Dispatcher::<_, _, PostgresPandasTransport<CSV>>::new(
                 sb,
                 &mut destination,
@@ -36,7 +36,7 @@ pub fn write_pandas<'a>(py: Python<'a>, conn: &str, queries: &[&str], protocol: 
             dispatcher.run()?;
         }
         "binary" => {
-            let sb = PostgresSource::<Binary>::new(conn, queries.len());
+            let sb = PostgresSource::<Binary>::new(conn, queries.len())?;
             let dispatcher = Dispatcher::<_, _, PostgresPandasTransport<Binary>>::new(
                 sb,
                 &mut destination,
@@ -49,5 +49,7 @@ pub fn write_pandas<'a>(py: Python<'a>, conn: &str, queries: &[&str], protocol: 
         _ => unimplemented!("{} protocol not supported", protocol),
     }
 
-    destination.result().ok_or(anyhow!("destination not run"))?
+    destination
+        .result()
+        .ok_or_else(|| anyhow!("destination not run"))?
 }

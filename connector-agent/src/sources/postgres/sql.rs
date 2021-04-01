@@ -1,3 +1,6 @@
+use crate::errors::ConnectorAgentError;
+use anyhow::anyhow;
+use fehler::throws;
 use log::{debug, trace};
 use sqlparser::ast::{
     Expr, Function, FunctionArg, Ident, ObjectName, SelectItem, SetExpr, Statement, Value,
@@ -5,12 +8,19 @@ use sqlparser::ast::{
 use sqlparser::dialect::PostgreSqlDialect;
 use sqlparser::parser::Parser;
 
+#[throws(ConnectorAgentError)]
 pub fn get_limit(sql: &str) -> Option<usize> {
     let dialect = PostgreSqlDialect {};
-    let mut ast = Parser::parse_sql(&dialect, sql).unwrap();
+    let mut ast = Parser::parse_sql(&dialect, sql)?;
     match &mut ast[0] {
         Statement::Query(q) => match &q.limit {
-            Some(expr) => return Some(expr.to_string().parse().unwrap()),
+            Some(expr) => {
+                return Some(
+                    expr.to_string()
+                        .parse()
+                        .map_err(|e: std::num::ParseIntError| anyhow!(e))?,
+                )
+            }
             _ => {}
         },
         _ => {}
@@ -18,12 +28,13 @@ pub fn get_limit(sql: &str) -> Option<usize> {
     None
 }
 
+#[throws(ConnectorAgentError)]
 pub fn count_query(sql: &str) -> String {
     trace!("Incoming query: {}", sql);
 
     let dialect = PostgreSqlDialect {};
 
-    let mut ast = Parser::parse_sql(&dialect, sql).unwrap();
+    let mut ast = Parser::parse_sql(&dialect, sql)?;
 
     match &mut ast[0] {
         Statement::Query(q) => {
@@ -54,12 +65,13 @@ pub fn count_query(sql: &str) -> String {
     sql
 }
 
+#[throws(ConnectorAgentError)]
 pub fn limit1_query(sql: &str) -> String {
     trace!("Incoming query: {}", sql);
 
     let dialect = PostgreSqlDialect {};
 
-    let mut ast = Parser::parse_sql(&dialect, sql).unwrap();
+    let mut ast = Parser::parse_sql(&dialect, sql)?;
 
     match &mut ast[0] {
         Statement::Query(q) => {

@@ -1,5 +1,8 @@
 use super::super::pystring::{PyString, StringInfo};
 use super::{check_dtype, HasPandasColumn, PandasColumn, PandasColumnObject};
+use anyhow::anyhow;
+use connector_agent::ConnectorAgentError;
+use fehler::throws;
 use itertools::Itertools;
 use ndarray::{ArrayViewMut2, Axis, Ix2};
 use numpy::PyArray;
@@ -27,6 +30,7 @@ impl<'a> FromPyObject<'a> for StringBlock<'a> {
 }
 
 impl<'a> StringBlock<'a> {
+    #[throws(ConnectorAgentError)]
     pub fn split(self) -> Vec<StringColumn<'a>> {
         let mut ret = vec![];
         let mut view = self.data;
@@ -37,10 +41,9 @@ impl<'a> StringBlock<'a> {
             view = rest;
             ret.push(StringColumn {
                 data: col
-                    .into_shape(nrows)
-                    .expect("reshape")
+                    .into_shape(nrows)?
                     .into_slice()
-                    .unwrap(),
+                    .ok_or_else(|| anyhow!("get None for splitted String data"))?,
                 next_write: 0,
                 string_lengths: vec![],
                 string_buf: Vec::with_capacity(self.buf_size_mb * 2 << 20 * 11 / 10), // allocate a little bit more memory to avoid Vec growth
@@ -71,28 +74,31 @@ impl<'a> PandasColumnObject for StringColumn<'a> {
     fn typename(&self) -> &'static str {
         std::any::type_name::<&'static [u8]>()
     }
+    #[throws(ConnectorAgentError)]
     fn finalize(&mut self) {
-        self.flush()
+        self.flush()?;
     }
 }
 
 impl<'r, 'a> PandasColumn<&'r str> for StringColumn<'a> {
+    #[throws(ConnectorAgentError)]
     fn write(&mut self, val: &'r str) {
         let bytes = val.as_bytes();
         self.string_lengths.push(bytes.len());
         self.string_buf.extend_from_slice(bytes);
-        self.try_flush();
+        self.try_flush()?;
     }
 }
 
 impl<'r, 'a> PandasColumn<Option<&'r str>> for StringColumn<'a> {
+    #[throws(ConnectorAgentError)]
     fn write(&mut self, val: Option<&'r str>) {
         match val {
             Some(b) => {
                 let bytes = b.as_bytes();
                 self.string_lengths.push(bytes.len());
                 self.string_buf.extend_from_slice(bytes);
-                self.try_flush();
+                self.try_flush()?;
             }
             None => {
                 self.string_lengths.push(0);
@@ -131,6 +137,7 @@ impl<'a> StringColumn<'a> {
         partitions
     }
 
+    #[throws(ConnectorAgentError)]
     pub fn flush(&mut self) {
         let nstrings = self.string_lengths.len();
 
@@ -140,7 +147,10 @@ impl<'a> StringColumn<'a> {
 
             {
                 // allocation in python is not thread safe
-                let _guard = self.mutex.lock().expect("Mutex Poisoned");
+                let _guard = self
+                    .mutex
+                    .lock()
+                    .map_err(|e| anyhow!("mutex poisoned {}", e))?;
                 let mut start = 0;
                 for (i, &len) in self.string_lengths.iter().enumerate() {
                     let end = start + len;
@@ -149,8 +159,10 @@ impl<'a> StringColumn<'a> {
                     }
                     if len != 0 {
                         unsafe {
-                            *self.data.get_unchecked_mut(self.next_write + i) =
-                                string_infos.last().unwrap().pystring(py)
+                            *self.data.get_unchecked_mut(self.next_write + i) = string_infos
+                                .last()
+                                .ok_or_else(|| anyhow!("empty string_info vector"))?
+                                .pystring(py)
                         };
                     }
                     start = end;
@@ -178,9 +190,10 @@ impl<'a> StringColumn<'a> {
         }
     }
 
+    #[throws(ConnectorAgentError)]
     pub fn try_flush(&mut self) {
         if self.string_buf.len() >= self.buf_size {
-            self.flush();
+            self.flush()?;
         }
     }
 }

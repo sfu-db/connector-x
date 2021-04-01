@@ -1,4 +1,7 @@
 use super::{check_dtype, HasPandasColumn, PandasColumn, PandasColumnObject};
+use anyhow::anyhow;
+use connector_agent::ConnectorAgentError;
+use fehler::throws;
 use ndarray::{ArrayViewMut1, ArrayViewMut2, Axis, Ix2};
 use numpy::{PyArray, PyArray1};
 use pyo3::{FromPyObject, PyAny, PyResult};
@@ -19,20 +22,26 @@ impl<'a> FromPyObject<'a> for Int64Block<'a> {
             let mask = ob.getattr("_mask")?;
 
             Ok(Int64Block::Extention(
-                unsafe { data.downcast::<PyArray1<i64>>().unwrap().as_array_mut() },
-                unsafe { mask.downcast::<PyArray1<bool>>().unwrap().as_array_mut() },
+                unsafe { data.downcast::<PyArray1<i64>>()?.as_array_mut() },
+                unsafe { mask.downcast::<PyArray1<bool>>()?.as_array_mut() },
             ))
         }
     }
 }
 
 impl<'a> Int64Block<'a> {
+    #[throws(ConnectorAgentError)]
     pub fn split(self) -> Vec<Int64Column<'a>> {
         let mut ret = vec![];
         match self {
             Int64Block::Extention(data, mask) => ret.push(Int64Column {
-                data: data.into_slice().unwrap(),
-                mask: Some(mask.into_slice().unwrap()),
+                data: data
+                    .into_slice()
+                    .ok_or_else(|| anyhow!("get None for Int64 data"))?,
+                mask: Some(
+                    mask.into_slice()
+                        .ok_or_else(|| anyhow!("get None for Int64 mask"))?,
+                ),
                 i: 0,
             }),
             Int64Block::NumPy(mut view) => {
@@ -42,10 +51,9 @@ impl<'a> Int64Block<'a> {
                     view = rest;
                     ret.push(Int64Column {
                         data: col
-                            .into_shape(nrows)
-                            .expect("reshape")
+                            .into_shape(nrows)?
                             .into_slice()
-                            .unwrap(),
+                            .ok_or_else(|| anyhow!("get None for splitted Int64 data"))?,
                         mask: None,
                         i: 0,
                     })
@@ -76,6 +84,7 @@ impl<'a> PandasColumnObject for Int64Column<'a> {
 }
 
 impl<'a> PandasColumn<i64> for Int64Column<'a> {
+    #[throws(ConnectorAgentError)]
     fn write(&mut self, val: i64) {
         unsafe { *self.data.get_unchecked_mut(self.i) = val };
         if let Some(mask) = self.mask.as_mut() {
@@ -86,6 +95,7 @@ impl<'a> PandasColumn<i64> for Int64Column<'a> {
 }
 
 impl<'a> PandasColumn<Option<i64>> for Int64Column<'a> {
+    #[throws(ConnectorAgentError)]
     fn write(&mut self, val: Option<i64>) {
         match val {
             Some(val) => {

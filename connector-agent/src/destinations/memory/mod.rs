@@ -6,6 +6,7 @@ use crate::dummy_typesystem::DummyTypeSystem;
 use crate::errors::{ConnectorAgentError, Result};
 use crate::typesystem::{ParameterizedFunc, ParameterizedOn, Realize, TypeAssoc, TypeSystem};
 use any_array::{AnyArray, AnyArrayViewMut};
+use anyhow::anyhow;
 use chrono::{DateTime, NaiveDateTime, Utc};
 use fehler::{throw, throws};
 use itertools::Itertools;
@@ -93,7 +94,9 @@ impl Destination for MemoryDestination {
 
             for bid in 0..nbuffers {
                 let view = views[bid].take();
-                let (splitted, rest) = view.unwrap().split_at(Axis(0), c);
+                let (splitted, rest) = view
+                    .ok_or_else(|| anyhow!("got None for {}th view", bid))?
+                    .split_at(Axis(0), c);
                 views[bid] = Some(rest);
                 sub_buffers.push(splitted);
             }
@@ -195,7 +198,7 @@ where
         })?;
         *mut_view
             .get_mut((row, col))
-            .ok_or(ConnectorAgentError::OutOfBound)? = value;
+            .ok_or_else(|| ConnectorAgentError::OutOfBound)? = value;
         Ok(())
     }
 }

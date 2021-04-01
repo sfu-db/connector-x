@@ -45,6 +45,18 @@ pub enum ConnectorAgentError {
     #[error(transparent)]
     CSVError(#[from] csv::Error),
 
+    #[error(transparent)]
+    SQLParserError(#[from] sqlparser::parser::ParserError),
+
+    #[error(transparent)]
+    RegexError(#[from] regex::Error),
+
+    #[error(transparent)]
+    NdArrayShapeError(#[from] ndarray::ShapeError),
+
+    #[error(transparent)]
+    ArrowError(#[from] arrow::error::ArrowError),
+
     /// Any other errors that are too trivial to be put here explicitly.
     #[error(transparent)]
     Other(#[from] anyhow::Error),

@@ -1,3 +1,4 @@
+use crate::errors::ConnectorAgentPythonError;
 use connector_agent::partition::{pg_get_partition_range, pg_single_col_partition_query};
 use dict_derive::FromPyObject;
 use fehler::throw;
@@ -52,7 +53,8 @@ pub fn read_sql<'a>(
             let num = num as i64;
 
             let (min, max) = match (min, max) {
-                (None, None) => pg_get_partition_range(conn, &query, &col).unwrap(),
+                (None, None) => pg_get_partition_range(conn, &query, &col)
+                    .map_err(ConnectorAgentPythonError::ConnectorAgentError)?,
                 (Some(min), Some(max)) => (min, max),
                 _ => throw!(PyValueError::new_err(
                     "partition_query range can not be partially specified",
@@ -67,7 +69,8 @@ pub fn read_sql<'a>(
                     true => max + 1,
                     false => min + (i + 1) * partition_size,
                 };
-                let partition_query = pg_single_col_partition_query(&query, &col, lower, upper);
+                let partition_query = pg_single_col_partition_query(&query, &col, lower, upper)
+                    .map_err(ConnectorAgentPythonError::ConnectorAgentError)?;
                 queries.push(partition_query);
             }
             queries
