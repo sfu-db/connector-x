@@ -8,6 +8,7 @@ test:
     cargo test -- --nocapture
 
 bootstrap-python:
+    cp README.md connector-agent-python/README.md
     cd connector-agent-python && poetry install
 
 build-python-extention:
@@ -50,6 +51,7 @@ ci-build-python-extention:
     cd connector-agent-python && poetry run python ../scripts/python-helper.py copy-extension
 
 ci-build-python-wheel:
+    cp README.md connector-agent-python/README.md
     cd connector-agent-python && poetry build
     
 ci-rename-wheel:

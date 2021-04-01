@@ -21,6 +21,7 @@ ndarray = "0.14"
 numpy = "0.13"
 pyo3 = {version = "0.13", default-features = false, features = ["macros"]}
 pyo3-built = "0.4"
+rust_decimal = {version = "1", features = ["db-postgres"]}
 sqlparser = "0.8.0"
 thiserror = "1"
 tokio = {version = "1", features = ["rt-multi-thread", "io-util"]}

@@ -26,10 +26,9 @@ jobs:
             echo "/opt/python/cp${{ matrix.python }}-cp${{ matrix.python }}/bin" >> $GITHUB_PATH
           fi
 
-      - name: Install Poetry
-        run: |
+      - name: Check which python we use
+        run: | 
           echo $(which python)
-          pip install poetry
 
       - name: Install Rust
         uses: actions-rs/toolchain@v1
@@ -38,22 +37,20 @@ jobs:
           components: rustfmt
           default: true
 
-      - name: Install other dependent tools
+      - name: Install tools
         run: |
+          pip install poetry
           cargo install just
           yum install -y openssl-devel
 
-      - name: Install python dependencies
+      - name: Setup project
         run: |
           just bootstrap-python
-
-      - name: build python dependencies
-        run: |
           just ci-build-python-extention
-      
-      - name: Print the result
-        run: ls connector-agent-python/connector_agent
+          echo "Content of the source folder"
+          ls connector-agent-python/connector_agent
 
+      
       - name: Build wheel
         run: |
           just ci-build-python-wheel ci-rename-wheel
@@ -66,136 +63,44 @@ jobs:
           name: "linux-${{ matrix.python }}"
           path: connector-agent-python/dist/*.whl
           
-  darwin:
-    runs-on: macos-10.15
+  win32-and-darwin:
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python:
-          - 3.7.10
-          - 3.8.8
-          - 3.9.2
+        os: [macos-10.15, windows-latest]
+        python-version: ["3.7", "3.8", "3.9"]
     steps:
       - uses: actions/checkout@v2
+
+      - name: Setup python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+          architecture: x64
+
+      - name: Check which python we use
+        run: | 
+          echo $(which python)
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly-2021-02-15
+          components: rustfmt
+          default: true
+
       - name: Install tools
         run: |
-          brew install openssl readline sqlite3 xz zlib
-
-      - name: Install Pyenv 
-        run: |
-          curl https://pyenv.run | bash
-          echo "$HOME/.pyenv/bin" >> $GITHUB_PATH
-
-      - name: Install Python
-        run: |
-          eval "$(pyenv init -)"
-          eval "$(pyenv virtualenv-init -)"
-          pyenv install "${{ matrix.python }}"
-          pyenv global "${{ matrix.python }}"
-          pip install -U pip  # upgrade pip after installing python
           pip install poetry
-
-      - name: Install Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: nightly-2021-02-15
-          components: rustfmt
-          default: true
-
-      - name: Install other dependent tools
-        run: |
           cargo install cargo-quickinstall
           cargo quickinstall just
 
-      - name: Install python dependencies
+      - name: Setup project
         run: |
-          eval "$(pyenv init -)"
-          eval "$(pyenv virtualenv-init -)"
           just bootstrap-python
-
-      - name: build python dependencies
-        run: |
-          eval "$(pyenv init -)"
-          eval "$(pyenv virtualenv-init -)"
           just ci-build-python-extention
-      
-      - name: Print the result
-        run: ls connector-agent-python/connector_agent
-
-      - name: Build wheel
-        run: |
-          eval "$(pyenv init -)"
-          eval "$(pyenv virtualenv-init -)" 
-          just ci-build-python-wheel ci-rename-wheel
-          echo "Built artifacts"
-          ls connector-agent-python/dist
-
-      - name: Persist artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          name: "darwin-${{ matrix.python }}"
-          path: connector-agent-python/dist/*.whl
-
-  win32:
-    runs-on: windows-latest
-    strategy:
-      matrix:
-        python:
-          - 3.7.7
-          - 3.8.2
-    steps:
-      - uses: actions/checkout@v2
-      - name: Install Pyenv
-        run: |
-          pip install pyenv-win --target $HOME\\.pyenv
-
-          cat $env:GITHUB_PATH | Out-File -FilePath PATH_TEMP -Encoding utf8
-
-          echo "$HOME\.pyenv\pyenv-win\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8
-          echo "$HOME\.pyenv\pyenv-win\shims" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-          echo "$HOME\.pyenv\pyenv-win\versions\{{ $matrix.python }}\Scripts" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-          cat PATH_TEMP | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-
-          echo "PYENV=$HOME\.pyenv\pyenv-win\" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          echo "PYENV_HOME=$HOME\.pyenv\pyenv-win\" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          
-      - name: List supported pythons 
-        run: |
-          pyenv install --list
-
-      - name: Install Python
-        run: |
-          pyenv install "${{ matrix.python }}"
-          pyenv global "${{ matrix.python }}"
-          pyenv rehash
-
-          pip install -U pip  # upgrade pip after installing python
-          pip install poetry
-          pyenv rehash
-          echo $(which python)
-
-      - name: Install Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: nightly-2021-02-15
-          components: rustfmt
-          default: true
-
-      - name: Install other dependent tools
-        run: |
-          cargo install cargo-quickinstall
-          cargo quickinstall just
-
-      - name: Install python dependencies
-        run: |
-          echo $(which python)
-          just bootstrap-python
-
-      - name: build python dependencies
-        run: |
-          just ci-build-python-extention
-      
-      - name: Print the result
-        run: ls connector-agent-python/connector_agent
+          echo "Content of the source folder"
+          ls connector-agent-python/connector_agent
 
       - name: Build wheel
         run: |
@@ -206,12 +111,12 @@ jobs:
       - name: Persist artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: "win32-${{ matrix.python }}"
+          name: "${{ matrix.os }}-${{ matrix.python-version }}"
           path: connector-agent-python/dist/*.whl
 
   upload:
     runs-on: ubuntu-latest
-    needs: [win32, darwin, linux]
+    needs: [win32-and-darwin, linux]
     if: github.ref == 'refs/heads/release'
     steps:
       - name: Download all artifacts
@@ -236,7 +141,7 @@ jobs:
 
   upload-test:
     runs-on: ubuntu-latest
-    needs: [win32, darwin, linux]
+    needs: [win32-and-darwin, linux]
     if: github.ref == 'refs/heads/prerelease'
     steps:
       - name: Download all artifacts
