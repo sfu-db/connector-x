@@ -69,39 +69,36 @@ This allows it to make full use of the CPU by becoming cache and branch predicto
   - [ ] Local data cache
   - [ ] Database aware partition scheme
 
-# Examples
+# Detailed Examples
 
-* Read sql without partition
-
+* Read a DataFrame from a SQL using a single thread
   ```python
   from connector_agent import read_sql
+
+  postgres_url = "postgresql://username:password@server:port/database"
+  query = "SELECT * FROM lineitem"
   
-  # postgres_url = 'postgresql://username:password@server:port/database'
-  postgres_url = 'postgresql://postgres:postgres@localhost:5432/postgres'
-  query = 'SELECT * FROM lineitem'
   read_sql(postgres_url, query)
   ```
 
-* Read sql with multiple queries
-
+* Read a DataFrame parallelly using 10 threads by automatically partitioning the provided SQL on the partition column
   ```python
   from connector_agent import read_sql
-  
-  # postgres_url = 'postgresql://username:password@server:port/database'
-  postgres_url = 'postgresql://postgres:postgres@localhost:5432/postgres'
-  queries = ['SELECT * FROM lineitem WHERE partition_col <= 10', 'SELECT * FROM lineitem WHERE partition_col > 10']
-  read_sql(postgres_url, query)
+
+  postgres_url = "postgresql://username:password@server:port/database"
+  query = "SELECT * FROM lineitem"
+
+  read_sql(postgres_url, query, partition_on="partition_col", partition_num=10)
   ```
 
-* Read sql with parallelism on multiple partitions
-
+* Read a DataFrame parallelly using 2 threads by manually providing two partition SQLs
   ```python
   from connector_agent import read_sql
-  
-  # postgres_url = 'postgresql://username:password@server:port/database'
-  postgres_url = 'postgresql://postgres:postgres@localhost:5432/postgres'
-  query = 'SELECT * FROM lineitem'
-  read_sql(postgres_url, query, partition_on='partition_col', partition_num=10)
+
+  postgres_url = "postgresql://username:password@server:port/database"
+  queries = ["SELECT * FROM lineitem WHERE partition_col <= 10", "SELECT * FROM lineitem WHERE partition_col > 10"]
+
+  read_sql(postgres_url, queries)
   ```
 
   
