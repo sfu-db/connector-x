@@ -19,7 +19,7 @@ license = "MIT"
 maintainers = ["Weiyuan Wu <youngw@sfu.ca>"] 
 name = "connector_agent" 
 readme = "README.md" # Markdown files are supported
-version = "0.1.0-alpha.2" 
+version = "0.1.0-alpha.3" 
 
 [tool.poetry.dependencies]
 numpy = "^1"
