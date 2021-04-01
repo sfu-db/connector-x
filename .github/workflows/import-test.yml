@@ -34,8 +34,9 @@ jobs:
           echo $(which python)
 
       - name: Install connector agent
+        if: ${{ matrix.os != 'windows-latest' }}
         run: |
-          pip install pandas numpy
+          pip install pandas numpy importlib-metadata
 
           version='${{ github.event.inputs.version }}'
           if [ -z $version ]
@@ -44,6 +45,19 @@ jobs:
           else
             pip install --index-url ${{ github.event.inputs.indexUrl }} connector-agent==$version
           fi
+
+      - name: Install connector agent
+        if: ${{ matrix.os == 'windows-latest' }}
+        run: |
+          pip install pandas numpy importlib-metadata
+
+          $version = '${{ github.event.inputs.version }}'
+          if ($version) {
+            pip install --index-url ${{ github.event.inputs.indexUrl }} connector-agent==$version
+          } else { 
+            pip install --index-url ${{ github.event.inputs.indexUrl }} connector-agent
+          }
+          
 
       - name: Import
         run: python -c "from connector_agent import read_sql"
