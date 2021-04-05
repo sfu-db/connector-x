@@ -41,7 +41,7 @@ We compared different solutions in Python that provides the `read_sql` function,
 <p align="center"><img alt="memory chart" src="assets/memory.svg"/></p>
 
 
-In conclusion, ConnectorX uses up to 3x less memory and 11x less time.
+In conclusion, ConnectorX uses up to **3x** less memory and **11x** less time.
 
 ## How does ConnectorX achieve a lightening speed while keeps the memory footprint low?
 
