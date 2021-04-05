@@ -272,7 +272,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "connector-agent"
+name = "connectorx"
 version = "0.1.0"
 dependencies = [
  "anyhow",
@@ -310,7 +310,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "connector-agent-python"
+name = "connectorx-python"
 version = "0.1.0"
 dependencies = [
  "anyhow",
@@ -318,7 +318,7 @@ dependencies = [
  "built",
  "bytes",
  "chrono",
- "connector-agent",
+ "connectorx",
  "criterion",
  "criterion-macro",
  "dict_derive",

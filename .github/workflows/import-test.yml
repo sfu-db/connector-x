@@ -33,7 +33,7 @@ jobs:
         run: | 
           echo $(which python)
 
-      - name: Install connector agent
+      - name: Install connectorx
         if: ${{ matrix.os != 'windows-latest' }}
         run: |
           pip install pandas numpy importlib-metadata
@@ -41,24 +41,24 @@ jobs:
           version='${{ github.event.inputs.version }}'
           if [ -z $version ]
           then
-            pip install --index-url ${{ github.event.inputs.indexUrl }} connector-agent
+            pip install --index-url ${{ github.event.inputs.indexUrl }} connectorx
           else
-            pip install --index-url ${{ github.event.inputs.indexUrl }} connector-agent==$version
+            pip install --index-url ${{ github.event.inputs.indexUrl }} connectorx==$version
           fi
 
-      - name: Install connector agent
+      - name: Install connectorx
         if: ${{ matrix.os == 'windows-latest' }}
         run: |
           pip install pandas numpy importlib-metadata
 
           $version = '${{ github.event.inputs.version }}'
           if ($version) {
-            pip install --index-url ${{ github.event.inputs.indexUrl }} connector-agent==$version
+            pip install --index-url ${{ github.event.inputs.indexUrl }} connectorx==$version
           } else { 
-            pip install --index-url ${{ github.event.inputs.indexUrl }} connector-agent
+            pip install --index-url ${{ github.event.inputs.indexUrl }} connectorx
           }
           
 
       - name: Import
-        run: python -c "from connector_agent import read_sql"
+        run: python -c "from connectorx import read_sql"
           

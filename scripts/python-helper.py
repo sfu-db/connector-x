@@ -38,17 +38,17 @@ def main() -> None:
     if args["copy-extension"]:
         if METADATA["platform"] == "windows":
             suffix = ".dll"
-            src = Path("../target/release/connector_agent_python")
+            src = Path("../target/release/connectorx_python")
         elif METADATA["platform"] == "linux":
             suffix = ".so"
-            src = Path("../target/release/libconnector_agent_python")
+            src = Path("../target/release/libconnectorx_python")
         elif METADATA["platform"] == "darwin":
             suffix = ".dylib"
-            src = Path("../target/release/libconnector_agent_python")
+            src = Path("../target/release/libconnectorx_python")
         else:
             raise NotImplementedError(f"platform '{METADATA['platform']}' not supported")
 
-        dst = Path("./connector_agent/connector_agent_python")
+        dst = Path("./connectorx/connectorx_python")
         copyfile(src.with_suffix(suffix), dst.with_suffix(METADATA["ext_suffix"]))
     elif args["rename-wheel"]:
         pyver = f"{METADATA['major']}{METADATA['minor']}"

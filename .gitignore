@@ -1,6 +1,6 @@
 **/target
 /.vscode
-connector-agent-python/connector_agent/*.so
+connectorx-python/connectorx/*.so
 __pycache__
 .python-version
 .idea/
@@ -13,4 +13,4 @@ data.txt
 profile.pb
 dask-worker-space
 dist
-connector-agent-python/README.md
+connectorx-python/README.md

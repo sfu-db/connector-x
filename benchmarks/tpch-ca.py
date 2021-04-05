@@ -9,7 +9,7 @@ Options:
 """
 import os
 
-from connector_agent import read_sql
+import connectorx as cx
 from contexttimer import Timer
 from docopt import docopt
 
@@ -19,7 +19,7 @@ if __name__ == "__main__":
     table = os.environ["POSTGRES_TABLE"]
 
     with Timer() as timer:
-        df = read_sql(
+        df = cx.read_sql(
             conn,
             f"""SELECT * FROM {table}""",
             partition_on="l_orderkey",
