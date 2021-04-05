@@ -13,7 +13,7 @@ from typing import List
 
 import numpy as np
 import pyarrow as pa
-from connector_agent import read_pg
+from connectorx import read_pg
 from docopt import docopt
 
 

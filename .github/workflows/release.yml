@@ -47,19 +47,19 @@ jobs:
           just bootstrap-python
           just ci-build-python-extention
           echo "Content of the source folder"
-          ls connector-agent-python/connector_agent
+          ls connectorx-python/connectorx
 
       - name: Build wheel
         run: |
           just ci-build-python-wheel ci-rename-wheel
           echo "Built artifacts"
-          ls connector-agent-python/dist
+          ls connectorx-python/dist
 
       - name: Persist artifacts
         uses: actions/upload-artifact@v2
         with:
           name: "linux-${{ matrix.python-version }}"
-          path: connector-agent-python/dist/*.whl
+          path: connectorx-python/dist/*.whl
           
   win32-and-darwin:
     runs-on: ${{ matrix.os }}
@@ -98,19 +98,19 @@ jobs:
           just bootstrap-python
           just ci-build-python-extention
           echo "Content of the source folder"
-          ls connector-agent-python/connector_agent
+          ls connectorx-python/connectorx
 
       - name: Build wheel
         run: |
           just ci-build-python-wheel ci-rename-wheel
           echo "Built artifacts"
-          ls connector-agent-python/dist
+          ls connectorx-python/dist
 
       - name: Persist artifacts
         uses: actions/upload-artifact@v2
         with:
           name: "${{ matrix.os }}-${{ matrix.python-version }}"
-          path: connector-agent-python/dist/*.whl
+          path: connectorx-python/dist/*.whl
 
   upload:
     runs-on: ubuntu-latest

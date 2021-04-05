@@ -1,0 +1,49 @@
+[package]
+authors = ["Weiyuan Wu <youngw@sfu.ca>"]
+edition = "2018"
+name = "connectorx-python"
+version = "0.1.0"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1"
+bitfield = "0.13"
+bytes = "1"
+chrono = "0.4"
+connectorx = {path = "../connectorx", default-features = false}
+dict_derive = "0.3"
+env_logger = "0.8"
+fehler = "1"
+itertools = "0.10"
+log = "0.4"
+ndarray = "0.14"
+numpy = "0.13"
+pyo3 = {version = "0.13", default-features = false, features = ["macros"]}
+pyo3-built = "0.4"
+rust_decimal = {version = "1", features = ["db-postgres"]}
+sqlparser = "0.8.0"
+thiserror = "1"
+tokio = {version = "1", features = ["rt-multi-thread", "io-util"]}
+
+[build-dependencies]
+built = {version = "0.4", features = ["chrono"]}
+
+[dev-dependencies]
+criterion = "0.3"
+criterion-macro = "0.3"
+iai = "0.1"
+pprof = {version = "0.4", features = ["flamegraph", "criterion", "protobuf"]}
+rayon = "1"
+tokio = {version = "1", features = ["rt-multi-thread", "io-util"]}
+
+[lib]
+crate-type = ["rlib", "cdylib"]
+name = "connectorx_python"
+
+[features]
+branch = ["connectorx/branch"]
+default = ["extension", "fptr"]
+executable = ["pyo3/auto-initialize"]
+extension = ["pyo3/extension-module"]
+fptr = ["connectorx/fptr"]

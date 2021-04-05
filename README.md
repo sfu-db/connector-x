@@ -13,22 +13,22 @@ Connector Agent enables you to load data from databases into Python in the faste
 
 What you need is one line of code:
 ```python
-from connector_agent import read_sql
+import connectorx as cx
 
-read_sql("postgres://localhost", "SELECT * FROM lineitem")
+cx.read_sql("postgres://localhost", "SELECT * FROM lineitem")
 ```
 
 Optionally, you can accelerate the data loading using parallelism by specifying a partition column.
 ```python
-from connector_agent import read_sql
+import connectorx as cx
 
-read_sql("postgres://localhost", "SELECT * FROM lineitem", partition_on="l_orderkey", partition_num=10)
+cx.read_sql("postgres://localhost", "SELECT * FROM lineitem", partition_on="l_orderkey", partition_num=10)
 ```
 
 # Installation
 
 ```bash
-pip install connector-agent
+pip install connectorx
 ```
 # Performance
 
@@ -41,7 +41,7 @@ We compared different solutions in Python that provides the `read_sql` function,
 <p align="center"><img alt="memory chart" src="assets/memory.svg"/></p>
 
 
-In conclusion, Connector Agent uses up to 3x less memory and 11x less time.
+In conclusion, ConnectorX uses up to 3x less memory and 11x less time.
 
 ## How does Connector Agent achieve a lightening speed while keeps the memory footprint low?
 
