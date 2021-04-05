@@ -6,7 +6,7 @@
 [docs_badge]: https://github.com/sfu-db/connector-agent/workflows/docs/badge.svg
 [docs_page]: https://sfu-db.github.io/connector-agent/connector_agent/
 
-Load data from <img src="assets/sources.gif" width="6.5%" style="margin-bottom: -2px"/> to <img src="assets/destinations.gif" width="7%" style="margin-bottom: -2px"/>, the fastest way.
+Load data from <img src="https://raw.githubusercontent.com/sfu-db/connector-agent/main/assets/sources.gif" width="6.5%" style="margin-bottom: -2px"/> to <img src="https://raw.githubusercontent.com/sfu-db/connector-agent/main/assets/destinations.gif" width="7%" style="margin-bottom: -2px"/>, the fastest way.
 
 
 ConnectorX enables you to load data from databases into Python in the fastest and most memory efficient way.
@@ -35,10 +35,10 @@ pip install connectorx
 We compared different solutions in Python that provides the `read_sql` function, by loading a 10x TPC-H lineitem table (8.6GB) from Postgres into a DataFrame, with 4 cores parallelism. 
 
 ## Time chart, lower is better.
-<p align="center"><img alt="time chart" src="assets/time.svg"/></p>
+<p align="center"><img alt="time chart" src="https://raw.githubusercontent.com/sfu-db/connector-agent/main/assets/time.svg"/></p>
 
 ## Memory consumption chart, lower is better.
-<p align="center"><img alt="memory chart" src="assets/memory.svg"/></p>
+<p align="center"><img alt="memory chart" src="https://raw.githubusercontent.com/sfu-db/connector-agent/main/assets/memory.svg"/></p>
 
 
 In conclusion, ConnectorX uses up to **3x** less memory and **11x** less time.
