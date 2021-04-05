@@ -1,4 +1,4 @@
-# Connector Agent [![status][ci_badge]][ci_page] [![docs][docs_badge]][docs_page]
+# ConnectorX [![status][ci_badge]][ci_page] [![docs][docs_badge]][docs_page]
 
 [ci_badge]: https://github.com/sfu-db/connector-agent/workflows/ci/badge.svg
 [ci_page]: https://github.com/sfu-db/connector-agent/actions
@@ -9,7 +9,7 @@
 Load data from <img src="assets/sources.gif" width="6.5%" style="margin-bottom: -2px"/> to <img src="assets/destinations.gif" width="7%" style="margin-bottom: -2px"/>, the fastest way.
 
 
-Connector Agent enables you to load data from databases into Python in the fastest and most memory efficient way.
+ConnectorX enables you to load data from databases into Python in the fastest and most memory efficient way.
 
 What you need is one line of code:
 ```python
@@ -43,13 +43,13 @@ We compared different solutions in Python that provides the `read_sql` function,
 
 In conclusion, ConnectorX uses up to 3x less memory and 11x less time.
 
-## How does Connector Agent achieve a lightening speed while keeps the memory footprint low?
+## How does ConnectorX achieve a lightening speed while keeps the memory footprint low?
 
 We observe that existing solutions more or less do data copy multiple times when downloading the data.
 Additionally, implementing a data intensive application in Python brings additional cost.
 
-Connector Agent is written in Rust and follows "zero-copy" principle.
-This allows it to make full use of the CPU by becoming cache and branch predictor friendly. Moreover, the architecture of Connector Agent ensures the data will be copied exactly once, directly from the source to the destination.
+ConnectorX is written in Rust and follows "zero-copy" principle.
+This allows it to make full use of the CPU by becoming cache and branch predictor friendly. Moreover, the architecture of ConnectorX ensures the data will be copied exactly once, directly from the source to the destination.
 
 # Implementation status
 
