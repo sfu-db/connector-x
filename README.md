@@ -43,7 +43,7 @@ We compared different solutions in Python that provides the `read_sql` function,
 
 In conclusion, ConnectorX uses up to **3x** less memory and **11x** less time.
 
-## How does ConnectorX achieve a lightening speed while keeps the memory footprint low?
+## How does ConnectorX achieve a lightening speed while keeping the memory footprint low?
 
 We observe that existing solutions more or less do data copy multiple times when downloading the data.
 Additionally, implementing a data intensive application in Python brings additional cost.
