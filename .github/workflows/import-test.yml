@@ -33,7 +33,7 @@ jobs:
         run: | 
           echo $(which python)
 
-      - name: Install connectorx
+      - name: Install ConnectorX - POSIX
         if: ${{ matrix.os != 'windows-latest' }}
         run: |
           pip install pandas numpy importlib-metadata
@@ -46,7 +46,7 @@ jobs:
             pip install --index-url ${{ github.event.inputs.indexUrl }} connectorx==$version
           fi
 
-      - name: Install connectorx
+      - name: Install ConnectorX - Windows
         if: ${{ matrix.os == 'windows-latest' }}
         run: |
           pip install pandas numpy importlib-metadata
@@ -58,7 +58,6 @@ jobs:
             pip install --index-url ${{ github.event.inputs.indexUrl }} connectorx
           }
           
-
       - name: Import
         run: python -c "from connectorx import read_sql"
           
