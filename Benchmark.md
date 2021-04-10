@@ -1,6 +1,6 @@
 # Benchmark Setup
 
-## Postgres
+## Postgres (Docker)
 
 1. Download PostgreSQL from docker
 ```
