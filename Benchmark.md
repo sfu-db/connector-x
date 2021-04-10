@@ -14,7 +14,11 @@ mkdir -p $YOUR_DOCKER_DIR/docker/volumes/postgres
 
 3. Run PostgreSQL:
 ```
+# With local mount point
 docker run --rm --name pg-connector -e POSTGRES_USER=postgres -e POSTGRES_DB=tpch -e POSTGRES_PASSWORD=postgres -d -p 5432:5432 -v $YOUR_DOCKER_DIR/docker/volumes/postgres:/var/lib/postgresql/data postgres -c shared_buffers=1024MB
+
+# Without local mount point
+docker run --rm --name pg-connector -e POSTGRES_USER=postgres -e POSTGRES_DB=tpch -e POSTGRES_PASSWORD=postgres -d -p 5432:5432 -c shared_buffers=1024MB
 ```
 
 ## TPC-H
@@ -45,7 +49,7 @@ psql -h localhost -U postgres -d tpch < dss.ddl
 psql -h localhost -U postgres -d tpch -c "\copy LINEITEM FROM '$YOUR_TPCH_DIR/tpch-kit/dbgen/lineitem.tbl' DELIMITER '|' ENCODING 'LATIN1';"
 ```
 
-5. Create index for `LINEITEM` on `l_orderkey` (Optional)
+5. Create index for `LINEITEM` on `l_orderkey`
 ```
 psql -h localhost -U postgres -d tpch -c "CREATE INDEX lineitem_l_orderkey_idx ON LINEITEM USING btree (l_orderkey);"
 ```
