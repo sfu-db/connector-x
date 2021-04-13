@@ -24,7 +24,9 @@ pub fn pg_single_col_partition_query(query: &str, col: &str, lower: i64, upper: 
         Statement::Query(q) => match &mut q.body {
             SetExpr::Select(select) => {
                 if select.group_by.len() > 0 {
-                    throw!(ConnectorAgentError::SQLQueryNotSupported(query.to_string()))
+                    throw!(ConnectorAgentError::SQLQueryPartitionNotSupported(
+                        query.to_string()
+                    ))
                 }
 
                 let lb = Expr::BinaryOp {
@@ -82,7 +84,9 @@ fn pg_get_parition_range_query(query: &str, col: &str) -> String {
             match &mut q.body {
                 SetExpr::Select(select) => {
                     if select.group_by.len() > 0 {
-                        throw!(ConnectorAgentError::SQLQueryNotSupported(query.to_string()))
+                        throw!(ConnectorAgentError::SQLQueryPartitionNotSupported(
+                            query.to_string()
+                        ))
                     }
                     select.distinct = false;
                     select.top = None;

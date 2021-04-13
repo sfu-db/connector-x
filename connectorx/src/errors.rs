@@ -33,8 +33,11 @@ pub enum ConnectorAgentError {
     #[error("No conversion rule from {0} to {1}.")]
     NoConversionRule(String, String),
 
-    #[error("Only support SPJ query, got {0}.")]
+    #[error("Only support query with SELECT statement, got {0}.")]
     SQLQueryNotSupported(String),
+
+    #[error("Only support partition on SPJ query, got {0}.")]
+    SQLQueryPartitionNotSupported(String),
 
     #[error(transparent)]
     IOError(#[from] std::io::Error),
