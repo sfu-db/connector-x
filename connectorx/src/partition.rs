@@ -19,10 +19,19 @@ pub fn pg_single_col_partition_query(query: &str, col: &str, lower: i64, upper: 
     let dialect = PostgreSqlDialect {};
 
     let mut ast = Parser::parse_sql(&dialect, query)?;
+    if ast.len() != 1 {
+        throw!(ConnectorAgentError::SQLQueryNotSupported(query.to_string()));
+    }
 
     match &mut ast[0] {
         Statement::Query(q) => match &mut q.body {
             SetExpr::Select(select) => {
+                if select.group_by.len() > 0 {
+                    throw!(ConnectorAgentError::SQLQueryPartitionNotSupported(
+                        query.to_string()
+                    ))
+                }
+
                 let lb = Expr::BinaryOp {
                     left: Box::new(Expr::Value(Value::Number(lower.to_string(), false))),
                     op: BinaryOperator::LtEq,
@@ -57,9 +66,9 @@ pub fn pg_single_col_partition_query(query: &str, col: &str, lower: i64, upper: 
 
                 select.selection.replace(selection);
             }
-            _ => {}
+            _ => throw!(ConnectorAgentError::SQLQueryNotSupported(query.to_string())),
         },
-        _ => {}
+        _ => throw!(ConnectorAgentError::SQLQueryNotSupported(query.to_string())),
     };
 
     let sql = format!("{}", ast[0]);
@@ -72,11 +81,20 @@ fn pg_get_parition_range_query(query: &str, col: &str) -> String {
     trace!("Incoming query: {}", query);
     let dialect = PostgreSqlDialect {};
     let mut ast = Parser::parse_sql(&dialect, query)?;
+    if ast.len() != 1 {
+        throw!(ConnectorAgentError::SQLQueryNotSupported(query.to_string()));
+    }
+
     match &mut ast[0] {
         Statement::Query(q) => {
             q.order_by = vec![];
             match &mut q.body {
                 SetExpr::Select(select) => {
+                    if select.group_by.len() > 0 {
+                        throw!(ConnectorAgentError::SQLQueryPartitionNotSupported(
+                            query.to_string()
+                        ))
+                    }
                     select.distinct = false;
                     select.top = None;
                     select.projection = vec![
@@ -107,10 +125,10 @@ fn pg_get_parition_range_query(query: &str, col: &str) -> String {
                     ];
                     select.sort_by = vec![];
                 }
-                _ => {}
+                _ => throw!(ConnectorAgentError::SQLQueryNotSupported(query.to_string())),
             }
         }
-        _ => {}
+        _ => throw!(ConnectorAgentError::SQLQueryNotSupported(query.to_string())),
     };
     let sql = format!("{}", ast[0]);
     sql

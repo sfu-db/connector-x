@@ -1,9 +1,10 @@
 use crate::errors::ConnectorAgentError;
 use anyhow::anyhow;
-use fehler::throws;
+use fehler::{throw, throws};
 use log::{debug, trace};
 use sqlparser::ast::{
-    Expr, Function, FunctionArg, Ident, ObjectName, SelectItem, SetExpr, Statement, Value,
+    Expr, Function, FunctionArg, Ident, ObjectName, Query, Select, SelectItem, SetExpr, Statement,
+    TableAlias, TableFactor, TableWithJoins, Value,
 };
 use sqlparser::dialect::PostgreSqlDialect;
 use sqlparser::parser::Parser;
@@ -12,6 +13,10 @@ use sqlparser::parser::Parser;
 pub fn get_limit(sql: &str) -> Option<usize> {
     let dialect = PostgreSqlDialect {};
     let mut ast = Parser::parse_sql(&dialect, sql)?;
+    if ast.len() != 1 {
+        throw!(ConnectorAgentError::SQLQueryNotSupported(sql.to_string()));
+    }
+
     match &mut ast[0] {
         Statement::Query(q) => match &q.limit {
             Some(expr) => {
@@ -23,7 +28,7 @@ pub fn get_limit(sql: &str) -> Option<usize> {
             }
             _ => {}
         },
-        _ => {}
+        _ => throw!(ConnectorAgentError::SQLQueryNotSupported(sql.to_string())),
     };
     None
 }
@@ -35,32 +40,68 @@ pub fn count_query(sql: &str) -> String {
     let dialect = PostgreSqlDialect {};
 
     let mut ast = Parser::parse_sql(&dialect, sql)?;
+    if ast.len() != 1 {
+        throw!(ConnectorAgentError::SQLQueryNotSupported(sql.to_string()));
+    }
+
+    let ast_count: Statement;
 
     match &mut ast[0] {
         Statement::Query(q) => {
             q.order_by = vec![];
             match &mut q.body {
                 SetExpr::Select(select) => {
-                    select.distinct = false;
-                    select.top = None;
-                    select.projection = vec![SelectItem::UnnamedExpr(Expr::Function(Function {
-                        name: ObjectName(vec![Ident {
-                            value: "count".to_string(),
-                            quote_style: None,
-                        }]),
-                        args: vec![FunctionArg::Unnamed(Expr::Wildcard)],
-                        over: None,
-                        distinct: false,
-                    }))];
                     select.sort_by = vec![];
+
+                    ast_count = Statement::Query(Box::new(Query {
+                        with: None,
+                        body: SetExpr::Select(Box::new(Select {
+                            distinct: false,
+                            top: None,
+                            projection: vec![SelectItem::UnnamedExpr(Expr::Function(Function {
+                                name: ObjectName(vec![Ident {
+                                    value: "count".to_string(),
+                                    quote_style: None,
+                                }]),
+                                args: vec![FunctionArg::Unnamed(Expr::Wildcard)],
+                                over: None,
+                                distinct: false,
+                            }))],
+                            from: vec![TableWithJoins {
+                                relation: TableFactor::Derived {
+                                    lateral: false,
+                                    subquery: q.clone(),
+                                    alias: Some(TableAlias {
+                                        name: Ident {
+                                            value: "t".to_string(),
+                                            quote_style: None,
+                                        },
+                                        columns: vec![],
+                                    }),
+                                },
+                                joins: vec![],
+                            }],
+                            lateral_views: vec![],
+                            selection: None,
+                            group_by: vec![],
+                            cluster_by: vec![],
+                            distribute_by: vec![],
+                            sort_by: vec![],
+                            having: None,
+                        })),
+                        order_by: vec![],
+                        limit: None,
+                        offset: None,
+                        fetch: None,
+                    }))
                 }
-                _ => {}
+                _ => throw!(ConnectorAgentError::SQLQueryNotSupported(sql.to_string())),
             }
         }
-        _ => {}
+        _ => throw!(ConnectorAgentError::SQLQueryNotSupported(sql.to_string())),
     };
 
-    let sql = format!("{}", ast[0]);
+    let sql = format!("{}", ast_count);
     debug!("Transformed query: {}", sql);
     sql
 }
@@ -72,12 +113,15 @@ pub fn limit1_query(sql: &str) -> String {
     let dialect = PostgreSqlDialect {};
 
     let mut ast = Parser::parse_sql(&dialect, sql)?;
+    if ast.len() != 1 {
+        throw!(ConnectorAgentError::SQLQueryNotSupported(sql.to_string()));
+    }
 
     match &mut ast[0] {
         Statement::Query(q) => {
             q.limit = Some(Expr::Value(Value::Number("1".to_string(), false)));
         }
-        _ => {}
+        _ => throw!(ConnectorAgentError::SQLQueryNotSupported(sql.to_string())),
     };
 
     let sql = format!("{}", ast[0]);
