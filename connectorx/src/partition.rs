@@ -19,6 +19,9 @@ pub fn pg_single_col_partition_query(query: &str, col: &str, lower: i64, upper: 
     let dialect = PostgreSqlDialect {};
 
     let mut ast = Parser::parse_sql(&dialect, query)?;
+    if ast.len() != 1 {
+        throw!(ConnectorAgentError::SQLQueryNotSupported(query.to_string()));
+    }
 
     match &mut ast[0] {
         Statement::Query(q) => match &mut q.body {
@@ -78,6 +81,10 @@ fn pg_get_parition_range_query(query: &str, col: &str) -> String {
     trace!("Incoming query: {}", query);
     let dialect = PostgreSqlDialect {};
     let mut ast = Parser::parse_sql(&dialect, query)?;
+    if ast.len() != 1 {
+        throw!(ConnectorAgentError::SQLQueryNotSupported(query.to_string()));
+    }
+
     match &mut ast[0] {
         Statement::Query(q) => {
             q.order_by = vec![];

@@ -13,6 +13,10 @@ use sqlparser::parser::Parser;
 pub fn get_limit(sql: &str) -> Option<usize> {
     let dialect = PostgreSqlDialect {};
     let mut ast = Parser::parse_sql(&dialect, sql)?;
+    if ast.len() != 1 {
+        throw!(ConnectorAgentError::SQLQueryNotSupported(sql.to_string()));
+    }
+
     match &mut ast[0] {
         Statement::Query(q) => match &q.limit {
             Some(expr) => {
@@ -36,7 +40,11 @@ pub fn count_query(sql: &str) -> String {
     let dialect = PostgreSqlDialect {};
 
     let mut ast = Parser::parse_sql(&dialect, sql)?;
-    let mut ast_count: Vec<Statement> = vec![];
+    if ast.len() != 1 {
+        throw!(ConnectorAgentError::SQLQueryNotSupported(sql.to_string()));
+    }
+
+    let ast_count: Statement;
 
     match &mut ast[0] {
         Statement::Query(q) => {
@@ -45,7 +53,7 @@ pub fn count_query(sql: &str) -> String {
                 SetExpr::Select(select) => {
                     select.sort_by = vec![];
 
-                    ast_count.push(Statement::Query(Box::new(Query {
+                    ast_count = Statement::Query(Box::new(Query {
                         with: None,
                         body: SetExpr::Select(Box::new(Select {
                             distinct: false,
@@ -85,7 +93,7 @@ pub fn count_query(sql: &str) -> String {
                         limit: None,
                         offset: None,
                         fetch: None,
-                    })))
+                    }))
                 }
                 _ => throw!(ConnectorAgentError::SQLQueryNotSupported(sql.to_string())),
             }
@@ -93,7 +101,7 @@ pub fn count_query(sql: &str) -> String {
         _ => throw!(ConnectorAgentError::SQLQueryNotSupported(sql.to_string())),
     };
 
-    let sql = format!("{}", ast_count[0]);
+    let sql = format!("{}", ast_count);
     debug!("Transformed query: {}", sql);
     sql
 }
@@ -105,6 +113,9 @@ pub fn limit1_query(sql: &str) -> String {
     let dialect = PostgreSqlDialect {};
 
     let mut ast = Parser::parse_sql(&dialect, sql)?;
+    if ast.len() != 1 {
+        throw!(ConnectorAgentError::SQLQueryNotSupported(sql.to_string()));
+    }
 
     match &mut ast[0] {
         Statement::Query(q) => {
