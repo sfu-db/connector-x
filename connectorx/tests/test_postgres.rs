@@ -116,6 +116,32 @@ fn test_postgres() {
 }
 
 #[test]
+fn test_postgres_agg() {
+    let _ = env_logger::builder().is_test(true).try_init();
+
+    let dburl = env::var("POSTGRES_URL").unwrap();
+
+    let queries = ["SELECT test_bool, SUM(test_float) FROM test_table GROUP BY test_bool"];
+    let builder = PostgresSource::new(&dburl, 1).unwrap();
+    let mut destination = MemoryDestination::new();
+    let dispatcher = Dispatcher::<_, _, PostgresMemoryTransport<Binary>>::new(
+        builder,
+        &mut destination,
+        &queries,
+    );
+
+    dispatcher.run().expect("run dispatcher");
+    assert_eq!(
+        array![None, Some(false), Some(true)],
+        destination.column_view::<Option<bool>>(0).unwrap()
+    );
+    assert_eq!(
+        array![Some(10.9), Some(5.2), Some(-10.0)],
+        destination.column_view::<Option<f64>>(1).unwrap()
+    );
+}
+
+#[test]
 fn load_and_parse_csv() {
     let _ = env_logger::builder().is_test(true).try_init();
 

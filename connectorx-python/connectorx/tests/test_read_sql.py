@@ -13,6 +13,32 @@ def postgres_url() -> str:
     return conn
 
 
+@pytest.mark.xfail
+def test_on_non_select(postgres_url: str) -> None:
+    query = "CREATE TABLE non_select(id INTEGER NOT NULL)"
+    df = read_sql(postgres_url, query)
+
+
+@pytest.mark.xfail
+def test_partition_on_aggregation(postgres_url: str) -> None:
+    query = "SELECT test_bool, SUM(test_float) FROM test_table GROUP BY test_bool"
+    df = read_sql(postgres_url, query,
+                  partition_on="test_int", partition_num=2)
+
+
+def test_aggregation(postgres_url: str) -> None:
+    query = "SELECT test_bool, SUM(test_float) FROM test_table GROUP BY test_bool"
+    df = read_sql(postgres_url, query)
+    expected = pd.DataFrame(
+        index=range(3),
+        data={
+            "test_bool": pd.Series([None, False, True], dtype="boolean"),
+            "sum": pd.Series([10.9, 5.2, -10.0], dtype="float64")
+        }
+    )
+    assert_frame_equal(df, expected, check_names=True)
+
+
 def test_manual_partition(postgres_url: str) -> None:
 
     queries = [

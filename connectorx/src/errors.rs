@@ -33,6 +33,9 @@ pub enum ConnectorAgentError {
     #[error("No conversion rule from {0} to {1}.")]
     NoConversionRule(String, String),
 
+    #[error("Only support SPJ query, got {0}.")]
+    SQLQueryNotSupported(String),
+
     #[error(transparent)]
     IOError(#[from] std::io::Error),
 
