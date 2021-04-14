@@ -307,6 +307,7 @@ dependencies = [
  "strum",
  "thiserror",
  "tokio",
+ "uuid",
 ]
 
 [[package]]
@@ -1632,6 +1633,7 @@ dependencies = [
  "chrono",
  "fallible-iterator",
  "postgres-protocol",
+ "uuid",
 ]
 
 [[package]]
