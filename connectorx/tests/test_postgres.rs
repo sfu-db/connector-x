@@ -9,7 +9,6 @@ use connectorx::{
 };
 use ndarray::array;
 use std::env;
-use uuid::Uuid;
 
 #[test]
 fn load_and_parse() {
@@ -17,14 +16,7 @@ fn load_and_parse() {
 
     let dburl = env::var("POSTGRES_URL").unwrap();
     #[derive(Debug, PartialEq)]
-    struct Row(
-        i32,
-        Option<i32>,
-        Option<String>,
-        Option<f64>,
-        Option<bool>,
-        Option<String>,
-    );
+    struct Row(i32, Option<i32>, Option<String>, Option<f64>, Option<bool>);
 
     let mut source = PostgresSource::<Binary>::new(&dburl, 1).unwrap();
     source.set_queries(&["select * from test_table"]);
@@ -36,7 +28,7 @@ fn load_and_parse() {
     partition.prepare().expect("run query");
 
     assert_eq!(6, partition.nrows());
-    assert_eq!(6, partition.ncols());
+    assert_eq!(5, partition.ncols());
 
     let mut parser = partition.parser().unwrap();
 
@@ -50,62 +42,17 @@ fn load_and_parse() {
                 .map(ToString::to_string),
             parser.produce().unwrap(),
             parser.produce().unwrap(),
-            Produce::<Option<Uuid>>::produce(&mut parser)
-                .unwrap()
-                .map(|uuid| uuid.to_hyphenated().to_string()),
         ));
     }
 
     assert_eq!(
         vec![
-            Row(
-                1,
-                Some(3),
-                Some("str1".into()),
-                None,
-                Some(true),
-                Some("86b494cc-96b2-11eb-9298-3e22fbb9fe9d".into())
-            ),
-            Row(
-                2,
-                None,
-                Some("str2".into()),
-                Some(2.2),
-                Some(false),
-                Some("86b49b84-96b2-11eb-9298-3e22fbb9fe9d".into())
-            ),
-            Row(
-                0,
-                Some(5),
-                Some("a".into()),
-                Some(3.1),
-                None,
-                Some("86b49c42-96b2-11eb-9298-3e22fbb9fe9d".into())
-            ),
-            Row(
-                3,
-                Some(7),
-                Some("b".into()),
-                Some(3.),
-                Some(false),
-                Some("86b49cce-96b2-11eb-9298-3e22fbb9fe9d".into())
-            ),
-            Row(
-                4,
-                Some(9),
-                Some("c".into()),
-                Some(7.8),
-                None,
-                Some("59e06bb4-9d02-11eb-9021-3e22fbb9fe9d".into())
-            ),
-            Row(
-                1314,
-                Some(2),
-                None,
-                Some(-10.),
-                Some(true),
-                Some("5fd2de58-9d02-11eb-9021-3e22fbb9fe9d".into())
-            ),
+            Row(1, Some(3), Some("str1".into()), None, Some(true)),
+            Row(2, None, Some("str2".into()), Some(2.2), Some(false)),
+            Row(0, Some(5), Some("a".into()), Some(3.1), None),
+            Row(3, Some(7), Some("b".into()), Some(3.), Some(false)),
+            Row(4, Some(9), Some("c".into()), Some(7.8), None),
+            Row(1314, Some(2), None, Some(-10.), Some(true)),
         ],
         rows
     );
@@ -166,18 +113,46 @@ fn test_postgres() {
         array![Some(true), None, Some(false), Some(false), None, Some(true)],
         destination.column_view::<Option<bool>>(4).unwrap()
     );
+}
 
-    // assert_eq!(
-    //     array![
-    //         Some("86b494cc-96b2-11eb-9298-3e22fbb9fe9d".to_string()),
-    //         Some("86b49b84-96b2-11eb-9298-3e22fbb9fe9d".to_string()),
-    //         Some("86b49c42-96b2-11eb-9298-3e22fbb9fe9d".to_string()),
-    //         Some("86b49cce-96b2-11eb-9298-3e22fbb9fe9d".to_string()),
-    //         Some("59e06bb4-9d02-11eb-9021-3e22fbb9fe9d".to_string()),
-    //         Some("5fd2de58-9d02-11eb-9021-3e22fbb9fe9d".to_string())
-    //     ],
-    //     destination.column_view::<Option<String>>(5).unwrap()
-    // );
+#[test]
+fn test_postgres_new_types() {
+    let _ = env_logger::builder().is_test(true).try_init();
+
+    let dburl = env::var("POSTGRES_URL").unwrap();
+
+    let queries = ["select * from test_uuid_char_int16"];
+    let builder = PostgresSource::new(&dburl, 2).unwrap();
+    let mut destination = MemoryDestination::new();
+    let dispatcher = Dispatcher::<_, _, PostgresMemoryTransport<Binary>>::new(
+        builder,
+        &mut destination,
+        &queries,
+    );
+
+    dispatcher.run().expect("run dispatcher");
+    assert_eq!(
+        array![Some(0), Some(1), Some(2), Some(3)],
+        destination.column_view::<Option<i64>>(0).unwrap()
+    );
+    assert_eq!(
+        array![
+            Some("a".to_string()),
+            Some("b".to_string()),
+            Some("c".to_string()),
+            Some("d".to_string())
+        ],
+        destination.column_view::<Option<String>>(1).unwrap()
+    );
+    assert_eq!(
+        array![
+            Some("86b494cc-96b2-11eb-9298-3e22fbb9fe9d".to_string()),
+            Some("86b49b84-96b2-11eb-9298-3e22fbb9fe9d".to_string()),
+            Some("86b49c42-96b2-11eb-9298-3e22fbb9fe9d".to_string()),
+            Some("86b49cce-96b2-11eb-9298-3e22fbb9fe9d".to_string()),
+        ],
+        destination.column_view::<Option<String>>(2).unwrap()
+    );
 }
 
 #[test]
@@ -212,14 +187,7 @@ fn load_and_parse_csv() {
 
     let dburl = env::var("POSTGRES_URL").unwrap();
     #[derive(Debug, PartialEq)]
-    struct Row(
-        i32,
-        Option<i32>,
-        Option<String>,
-        Option<f64>,
-        Option<bool>,
-        Option<String>,
-    );
+    struct Row(i32, Option<i32>, Option<String>, Option<f64>, Option<bool>);
 
     let mut source = PostgresSource::<CSV>::new(&dburl, 1).unwrap();
     source.set_queries(&["select * from test_table"]);
@@ -231,7 +199,7 @@ fn load_and_parse_csv() {
     partition.prepare().expect("run query");
 
     assert_eq!(6, partition.nrows());
-    assert_eq!(6, partition.ncols());
+    assert_eq!(5, partition.ncols());
 
     let mut parser = partition.parser().unwrap();
 
@@ -245,62 +213,17 @@ fn load_and_parse_csv() {
                 .map(ToString::to_string),
             parser.produce().unwrap(),
             parser.produce().unwrap(),
-            Produce::<Option<Uuid>>::produce(&mut parser)
-                .unwrap()
-                .map(|uuid| uuid.to_hyphenated().to_string()),
         ));
     }
 
     assert_eq!(
         vec![
-            Row(
-                1,
-                Some(3),
-                Some("str1".into()),
-                None,
-                Some(true),
-                Some("86b494cc-96b2-11eb-9298-3e22fbb9fe9d".into())
-            ),
-            Row(
-                2,
-                None,
-                Some("str2".into()),
-                Some(2.2),
-                Some(false),
-                Some("86b49b84-96b2-11eb-9298-3e22fbb9fe9d".into())
-            ),
-            Row(
-                0,
-                Some(5),
-                Some("a".into()),
-                Some(3.1),
-                None,
-                Some("86b49c42-96b2-11eb-9298-3e22fbb9fe9d".into())
-            ),
-            Row(
-                3,
-                Some(7),
-                Some("b".into()),
-                Some(3.),
-                Some(false),
-                Some("86b49cce-96b2-11eb-9298-3e22fbb9fe9d".into())
-            ),
-            Row(
-                4,
-                Some(9),
-                Some("c".into()),
-                Some(7.8),
-                None,
-                Some("59e06bb4-9d02-11eb-9021-3e22fbb9fe9d".into())
-            ),
-            Row(
-                1314,
-                Some(2),
-                None,
-                Some(-10.),
-                Some(true),
-                Some("5fd2de58-9d02-11eb-9021-3e22fbb9fe9d".into())
-            ),
+            Row(1, Some(3), Some("str1".into()), None, Some(true)),
+            Row(2, None, Some("str2".into()), Some(2.2), Some(false)),
+            Row(0, Some(5), Some("a".into()), Some(3.1), None),
+            Row(3, Some(7), Some("b".into()), Some(3.), Some(false)),
+            Row(4, Some(9), Some("c".into()), Some(7.8), None),
+            Row(1314, Some(2), None, Some(-10.), Some(true)),
         ],
         rows
     );
@@ -358,16 +281,41 @@ fn test_postgres_csv() {
         array![Some(true), None, Some(false), Some(false), None, Some(true)],
         dst.column_view::<Option<bool>>(4).unwrap()
     );
+}
 
-    // assert_eq!(
-    //     array![
-    //         Some("86b494cc-96b2-11eb-9298-3e22fbb9fe9d".to_string()),
-    //         Some("86b49b84-96b2-11eb-9298-3e22fbb9fe9d".to_string()),
-    //         Some("86b49c42-96b2-11eb-9298-3e22fbb9fe9d".to_string()),
-    //         Some("86b49cce-96b2-11eb-9298-3e22fbb9fe9d".to_string()),
-    //         Some("59e06bb4-9d02-11eb-9021-3e22fbb9fe9d".to_string()),
-    //         Some("5fd2de58-9d02-11eb-9021-3e22fbb9fe9d".to_string())
-    //     ],
-    //     destination.column_view::<Option<String>>(5).unwrap()
-    // );
+#[test]
+fn test_postgres_new_types_csv() {
+    let _ = env_logger::builder().is_test(true).try_init();
+
+    let dburl = env::var("POSTGRES_URL").unwrap();
+
+    let queries = ["select * from test_uuid_char_int16"];
+    let builder = PostgresSource::<CSV>::new(&dburl, 2).unwrap();
+    let mut dst = MemoryDestination::new();
+    let dispatcher =
+        Dispatcher::<_, _, PostgresMemoryTransport<CSV>>::new(builder, &mut dst, &queries);
+
+    dispatcher.run().expect("run dispatcher");
+    assert_eq!(
+        array![Some(0), Some(1), Some(2), Some(3)],
+        dst.column_view::<Option<i64>>(0).unwrap()
+    );
+    assert_eq!(
+        array![
+            Some("a".to_string()),
+            Some("b".to_string()),
+            Some("c".to_string()),
+            Some("d".to_string())
+        ],
+        dst.column_view::<Option<String>>(1).unwrap()
+    );
+    assert_eq!(
+        array![
+            Some("86b494cc-96b2-11eb-9298-3e22fbb9fe9d".to_string()),
+            Some("86b49b84-96b2-11eb-9298-3e22fbb9fe9d".to_string()),
+            Some("86b49c42-96b2-11eb-9298-3e22fbb9fe9d".to_string()),
+            Some("86b49cce-96b2-11eb-9298-3e22fbb9fe9d".to_string()),
+        ],
+        dst.column_view::<Option<String>>(2).unwrap()
+    );
 }
