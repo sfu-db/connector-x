@@ -29,13 +29,13 @@ INSERT INTO test_str VALUES (6, 'Extra', 'y̆');
 INSERT INTO test_str VALUES (7, 'Mixed', 'Ha好ち😁ðy̆');
 
 CREATE TABLE IF NOT EXISTS test_uuid_char_int16(
-    test_in16 SMALLINT,
+    test_int16 SMALLINT,
     test_char CHAR,
     test_uuid UUID NOT NULL
 );
 
-INSERT INTO test_uuid VALUES (0, 'a', '86b494cc-96b2-11eb-9298-3e22fbb9fe9d');
-INSERT INTO test_uuid VALUES (1, 'b', '86b49b84-96b2-11eb-9298-3e22fbb9fe9d');
-INSERT INTO test_uuid VALUES (2, 'c', '86b49c42-96b2-11eb-9298-3e22fbb9fe9d');
-INSERT INTO test_uuid VALUES (3, 'd', '86b49cce-96b2-11eb-9298-3e22fbb9fe9d');
+INSERT INTO test_uuid_char_int16 VALUES (0, 'a', '86b494cc-96b2-11eb-9298-3e22fbb9fe9d');
+INSERT INTO test_uuid_char_int16 VALUES (1, 'b', '86b49b84-96b2-11eb-9298-3e22fbb9fe9d');
+INSERT INTO test_uuid_char_int16 VALUES (2, 'c', '86b49c42-96b2-11eb-9298-3e22fbb9fe9d');
+INSERT INTO test_uuid_char_int16 VALUES (3, 'd', '86b49cce-96b2-11eb-9298-3e22fbb9fe9d');
 

@@ -121,7 +121,10 @@ fn test_postgres_new_types() {
 
     let dburl = env::var("POSTGRES_URL").unwrap();
 
-    let queries = ["select * from test_uuid_char_int16"];
+    let queries = [
+        "select * from test_uuid_char_int16 where test_int16 < 2",
+        "select * from test_uuid_char_int16 where test_int16 >= 2",
+    ];
     let builder = PostgresSource::new(&dburl, 2).unwrap();
     let mut destination = MemoryDestination::new();
     let dispatcher = Dispatcher::<_, _, PostgresMemoryTransport<Binary>>::new(
@@ -289,7 +292,10 @@ fn test_postgres_new_types_csv() {
 
     let dburl = env::var("POSTGRES_URL").unwrap();
 
-    let queries = ["select * from test_uuid_char_int16"];
+    let queries = [
+        "select * from test_uuid_char_int16 where test_int16 < 2",
+        "select * from test_uuid_char_int16 where test_int16 >= 2",
+    ];
     let builder = PostgresSource::<CSV>::new(&dburl, 2).unwrap();
     let mut dst = MemoryDestination::new();
     let dispatcher =
