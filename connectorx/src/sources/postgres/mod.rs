@@ -5,7 +5,7 @@ use crate::data_order::DataOrder;
 use crate::errors::{ConnectorAgentError, Result};
 use crate::sources::{PartitionParser, Produce, Source, SourcePartition};
 use anyhow::anyhow;
-use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
+use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
 use csv::{ReaderBuilder, StringRecord, StringRecordsIntoIter};
 use fehler::throw;
 use log::debug;
@@ -20,6 +20,7 @@ use rust_decimal::Decimal;
 use sql::{count_query, get_limit, limit1_query};
 use std::marker::PhantomData;
 pub use typesystem::PostgresTypeSystem;
+use uuid::Uuid;
 
 type PgManager = PostgresConnectionManager<NoTls>;
 type PgConn = PooledConnection<PgManager>;
@@ -320,6 +321,7 @@ macro_rules! impl_produce {
 }
 
 impl_produce!(
+    i16,
     i32,
     i64,
     f32,
@@ -328,7 +330,9 @@ impl_produce!(
     DateTime<Utc>,
     NaiveDateTime,
     NaiveDate,
-    Decimal
+    Decimal,
+    Uuid,
+    NaiveTime
 );
 
 impl<'r, 'a> Produce<'r, &'r str> for PostgresBinarySourcePartitionParser<'a> {
@@ -435,7 +439,7 @@ macro_rules! impl_csv_produce {
     };
 }
 
-impl_csv_produce!(i32, i64, f32, f64, Decimal);
+impl_csv_produce!(i16, i32, i64, f32, f64, Decimal, Uuid);
 
 impl<'r, 'a> Produce<'r, bool> for PostgresCSVSourceParser<'a> {
     fn produce(&mut self) -> Result<bool> {
@@ -551,3 +555,12 @@ impl<'r, 'a> Produce<'r, Option<&'r str>> for PostgresCSVSourceParser<'a> {
         }
     }
 }
+
+// impl<'r, 'a> Produce<'r, NaiveTime> for PostgresCSVSourceParser<'a> {
+//     fn produce(&mut self) -> Result<NaiveTime> {
+//         let (ridx, cidx) = self.next_loc()?;
+//         NaiveTime::parse_from_str(&self.rowbuf[ridx][cidx], "%H:%M:%S").map_err(|_| {
+//             ConnectorAgentError::cannot_produce::<NaiveTime>(Some(self.rowbuf[ridx][cidx].into()))
+//         })
+//     }
+// }

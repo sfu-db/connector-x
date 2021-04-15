@@ -116,6 +116,49 @@ fn test_postgres() {
 }
 
 #[test]
+fn test_postgres_new_types() {
+    let _ = env_logger::builder().is_test(true).try_init();
+
+    let dburl = env::var("POSTGRES_URL").unwrap();
+
+    let queries = [
+        "select * from test_uuid_char_int16 where test_int16 < 2",
+        "select * from test_uuid_char_int16 where test_int16 >= 2",
+    ];
+    let builder = PostgresSource::new(&dburl, 2).unwrap();
+    let mut destination = MemoryDestination::new();
+    let dispatcher = Dispatcher::<_, _, PostgresMemoryTransport<Binary>>::new(
+        builder,
+        &mut destination,
+        &queries,
+    );
+
+    dispatcher.run().expect("run dispatcher");
+    assert_eq!(
+        array![Some(0), Some(1), Some(2), Some(3)],
+        destination.column_view::<Option<i64>>(0).unwrap()
+    );
+    assert_eq!(
+        array![
+            Some("a".to_string()),
+            Some("b".to_string()),
+            Some("c".to_string()),
+            Some("d".to_string())
+        ],
+        destination.column_view::<Option<String>>(1).unwrap()
+    );
+    assert_eq!(
+        array![
+            Some("86b494cc-96b2-11eb-9298-3e22fbb9fe9d".to_string()),
+            Some("86b49b84-96b2-11eb-9298-3e22fbb9fe9d".to_string()),
+            Some("86b49c42-96b2-11eb-9298-3e22fbb9fe9d".to_string()),
+            Some("86b49cce-96b2-11eb-9298-3e22fbb9fe9d".to_string()),
+        ],
+        destination.column_view::<Option<String>>(2).unwrap()
+    );
+}
+
+#[test]
 fn test_postgres_agg() {
     let _ = env_logger::builder().is_test(true).try_init();
 
@@ -240,5 +283,45 @@ fn test_postgres_csv() {
     assert_eq!(
         array![Some(true), None, Some(false), Some(false), None, Some(true)],
         dst.column_view::<Option<bool>>(4).unwrap()
+    );
+}
+
+#[test]
+fn test_postgres_new_types_csv() {
+    let _ = env_logger::builder().is_test(true).try_init();
+
+    let dburl = env::var("POSTGRES_URL").unwrap();
+
+    let queries = [
+        "select * from test_uuid_char_int16 where test_int16 < 2",
+        "select * from test_uuid_char_int16 where test_int16 >= 2",
+    ];
+    let builder = PostgresSource::<CSV>::new(&dburl, 2).unwrap();
+    let mut dst = MemoryDestination::new();
+    let dispatcher =
+        Dispatcher::<_, _, PostgresMemoryTransport<CSV>>::new(builder, &mut dst, &queries);
+
+    dispatcher.run().expect("run dispatcher");
+    assert_eq!(
+        array![Some(0), Some(1), Some(2), Some(3)],
+        dst.column_view::<Option<i64>>(0).unwrap()
+    );
+    assert_eq!(
+        array![
+            Some("a".to_string()),
+            Some("b".to_string()),
+            Some("c".to_string()),
+            Some("d".to_string())
+        ],
+        dst.column_view::<Option<String>>(1).unwrap()
+    );
+    assert_eq!(
+        array![
+            Some("86b494cc-96b2-11eb-9298-3e22fbb9fe9d".to_string()),
+            Some("86b49b84-96b2-11eb-9298-3e22fbb9fe9d".to_string()),
+            Some("86b49c42-96b2-11eb-9298-3e22fbb9fe9d".to_string()),
+            Some("86b49cce-96b2-11eb-9298-3e22fbb9fe9d".to_string()),
+        ],
+        dst.column_view::<Option<String>>(2).unwrap()
     );
 }
