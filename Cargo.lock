@@ -286,6 +286,7 @@ dependencies = [
  "fehler",
  "flate2",
  "futures",
+ "hex",
  "iai",
  "itertools 0.10.0",
  "log",

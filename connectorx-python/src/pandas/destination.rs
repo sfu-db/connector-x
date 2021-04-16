@@ -158,7 +158,8 @@ impl<'a> Destination for PandasDestination<'a> {
                     }
                     PandasTypeSystem::String(_)
                     | PandasTypeSystem::Str(_)
-                    | PandasTypeSystem::Char(_) => {
+                    | PandasTypeSystem::Char(_)
+                    | PandasTypeSystem::ByteA(_) => {
                         let block = StringBlock::extract(buf).map_err(|e| anyhow!(e))?;
                         let cols = block.split()?;
                         for (&cid, col) in cids.iter().zip_eq(cols) {

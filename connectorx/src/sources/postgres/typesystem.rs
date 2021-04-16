@@ -18,6 +18,7 @@ pub enum PostgresTypeSystem {
     BpChar(bool),
     VarChar(bool),
     Text(bool),
+    ByteA(bool),
     Time(bool),
     Timestamp(bool),
     TimestampTz(bool),
@@ -38,6 +39,7 @@ impl_typesystem! {
         { Bool => bool }
         { Char => i8 }
         { Text | BpChar | VarChar => &'r str }
+        { ByteA => Vec<u8> }
         { Time => NaiveTime }
         { Timestamp => NaiveDateTime }
         { TimestampTz => DateTime<Utc> }
@@ -62,6 +64,7 @@ impl<'a> From<&'a Type> for PostgresTypeSystem {
             "text" => Text(true),
             "bpchar" => BpChar(true),
             "varchar" => VarChar(true),
+            "bytea" => ByteA(true),
             "time" => Time(true),
             "timestamp" => TimestampTz(true),
             "timestamptz" => Timestamp(true),
@@ -90,6 +93,7 @@ impl<'a> From<PostgresTypeSystem> for Type {
             BpChar(_) => Type::BPCHAR,
             VarChar(_) => Type::VARCHAR,
             Char(_) => Type::CHAR,
+            ByteA(_) => Type::BYTEA,
             Date(_) => Type::DATE,
             Time(_) => Type::TIME,
             Timestamp(_) => Type::TIMESTAMP,

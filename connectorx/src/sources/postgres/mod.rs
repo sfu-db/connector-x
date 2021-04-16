@@ -25,6 +25,7 @@ use uuid::Uuid;
 
 type PgManager = PostgresConnectionManager<NoTls>;
 type PgConn = PooledConnection<PgManager>;
+use hex::decode;
 
 pub enum Binary {}
 pub enum CSV {}
@@ -333,6 +334,7 @@ impl_produce!(
     Decimal,
     bool,
     &'r str,
+    Vec<u8>,
     NaiveTime,
     NaiveDateTime,
     DateTime<Utc>,
@@ -559,6 +561,24 @@ impl<'r, 'a> Produce<'r, Option<&'r str>> for PostgresCSVSourceParser<'a> {
         match &self.rowbuf[ridx][cidx][..] {
             "" => Ok(None),
             v => Ok(Some(&v)),
+        }
+    }
+}
+
+impl<'r, 'a> Produce<'r, Vec<u8>> for PostgresCSVSourceParser<'a> {
+    fn produce(&'r mut self) -> Result<Vec<u8>> {
+        let (ridx, cidx) = self.next_loc()?;
+        Ok(decode(&self.rowbuf[ridx][cidx][2..])?) // escape \x in the beginning
+    }
+}
+
+impl<'r, 'a> Produce<'r, Option<Vec<u8>>> for PostgresCSVSourceParser<'a> {
+    fn produce(&'r mut self) -> Result<Option<Vec<u8>>> {
+        let (ridx, cidx) = self.next_loc()?;
+        match &self.rowbuf[ridx][cidx][2..] {
+            // escape \x in the beginning
+            "" => Ok(None),
+            v => Ok(Some(decode(&v)?)),
         }
     }
 }

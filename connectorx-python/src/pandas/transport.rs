@@ -36,6 +36,7 @@ impl_transport!(
         { JSON[Value]                => String[String]          | conversion half }
         { JSONB[Value]               => String[String]          | conversion none }
         { Time[NaiveTime]            => String[String]          | conversion half }
+        { ByteA[Vec<u8>]             => ByteA[Vec<u8>]          | conversion all }
     }
 );
 
@@ -62,6 +63,7 @@ impl_transport!(
         { JSON[Value]                => String[String]          | conversion half }
         { JSONB[Value]               => String[String]          | conversion none }
         { Time[NaiveTime]            => String[String]          | conversion half }
+        { ByteA[Vec<u8>]             => ByteA[Vec<u8>]          | conversion all }
     }
 );
 

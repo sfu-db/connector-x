@@ -227,7 +227,7 @@ def test_read_sql_on_utf8(postgres_url: str) -> None:
 
 def test_types_binary(postgres_url: str) -> None:
     # query = "SELECT * FROM test_types"
-    query = "SELECT test_int16, test_char, test_uuid, test_time, test_json, test_jsonb FROM test_types"
+    query = "SELECT test_int16, test_char, test_uuid, test_time, test_json, test_jsonb, test_bytea FROM test_types"
     df = read_sql(postgres_url, query)
     expected = pd.DataFrame(
         index=range(4),
@@ -258,7 +258,8 @@ def test_types_binary(postgres_url: str) -> None:
                     '{"qty":1,"product":"Toy Car"}',
                     '{"qty":2,"product":"Toy Train"}',
                 ], dtype="object"
-            )
+            ),
+            "test_bytea": pd.Series(['test', 'Здра́вствуйте', '123bhaf4', '😜'], dtype="object")
         },
     )
     assert_frame_equal(df, expected, check_names=True)
@@ -266,7 +267,7 @@ def test_types_binary(postgres_url: str) -> None:
 
 def test_types_csv(postgres_url: str) -> None:
     # query = "SELECT * FROM test_types"
-    query = "SELECT test_int16, test_char, test_uuid, test_time, test_json, test_jsonb FROM test_types"
+    query = "SELECT test_int16, test_char, test_uuid, test_time, test_json, test_jsonb, test_bytea FROM test_types"
     df = read_sql(postgres_url, query, protocol="csv")
     expected = pd.DataFrame(
         index=range(4),
@@ -297,7 +298,8 @@ def test_types_csv(postgres_url: str) -> None:
                     '{"qty":1,"product":"Toy Car"}',
                     '{"qty":2,"product":"Toy Train"}',
                 ], dtype="object"
-            )
+            ),
+            "test_bytea": pd.Series(['test', 'Здра́вствуйте', '123bhaf4', '😜'], dtype="object")
         },
     )
     assert_frame_equal(df, expected, check_names=True)

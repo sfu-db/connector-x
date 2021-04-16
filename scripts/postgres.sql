@@ -39,8 +39,8 @@ CREATE TABLE IF NOT EXISTS test_types(
     test_bytea BYTEA
 );
 
-INSERT INTO test_types VALUES (0, 'a', '86b494cc-96b2-11eb-9298-3e22fbb9fe9d', '08:12:40', '1 year 2 months 3 days', '{"customer": "John Doe", "items": {"product": "Beer","qty": 6}}', '{"product": "Beer","qty": 6}', decode('beef', 'hex'));
-INSERT INTO test_types VALUES (1, 'b', '86b49b84-96b2-11eb-9298-3e22fbb9fe9d', '10:03:00', '2 weeks ago', '{"customer": "Lily Bush", "items": {"product": "Diaper","qty": 24}}', '{"product": "Diaper","qty": 24}', decode('dead', 'hex'));
-INSERT INTO test_types VALUES (2, 'c', '86b49c42-96b2-11eb-9298-3e22fbb9fe9d', '23:00:10', '3 months 2 days ago', '{"customer": "Josh William", "items": {"product": "Toy Car","qty": 1}}', '{"product": "Toy Car","qty": 1}', decode('123bdaf4', 'hex'));
-INSERT INTO test_types VALUES (3, 'd', '86b49cce-96b2-11eb-9298-3e22fbb9fe9d', '18:30:00', '3 year', '{"customer": "Mary Clark", "items": {"product": "Toy Train","qty": 2}}', '{"product": "Toy Train","qty": 2}', decode('013d7d16d7ad4fefb61bd95b765c8ceb', 'hex'));
+INSERT INTO test_types VALUES (0, 'a', '86b494cc-96b2-11eb-9298-3e22fbb9fe9d', '08:12:40', '1 year 2 months 3 days', '{"customer": "John Doe", "items": {"product": "Beer","qty": 6}}', '{"product": "Beer","qty": 6}', 'test');
+INSERT INTO test_types VALUES (1, 'b', '86b49b84-96b2-11eb-9298-3e22fbb9fe9d', '10:03:00', '2 weeks ago', '{"customer": "Lily Bush", "items": {"product": "Diaper","qty": 24}}', '{"product": "Diaper","qty": 24}', 'Здра́вствуйте');
+INSERT INTO test_types VALUES (2, 'c', '86b49c42-96b2-11eb-9298-3e22fbb9fe9d', '23:00:10', '3 months 2 days ago', '{"customer": "Josh William", "items": {"product": "Toy Car","qty": 1}}', '{"product": "Toy Car","qty": 1}', '123bhaf4');
+INSERT INTO test_types VALUES (3, 'd', '86b49cce-96b2-11eb-9298-3e22fbb9fe9d', '18:30:00', '3 year', '{"customer": "Mary Clark", "items": {"product": "Toy Train","qty": 2}}', '{"product": "Toy Train","qty": 2}', '😜');
 

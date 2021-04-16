@@ -20,9 +20,6 @@ setup-python: build-python-extention
 test-python: setup-python
     cd connectorx-python && poetry run pytest connectorx/tests -v -s
 
-test-xy: setup-python
-    cd connectorx-python && poetry run python connectorx/test_xy.py
-
 seed-db:
     psql $POSTGRES_URL -c "DROP TABLE IF EXISTS test_table;"
     psql $POSTGRES_URL -c "DROP TABLE IF EXISTS test_str;"
