@@ -21,7 +21,7 @@ itertools = "0.10"
 log = "0.4"
 ndarray = "0.14"
 num-traits = "0.2"
-postgres = {version = "0.19", features = ["with-chrono-0_4", "with-uuid-0_8"]}
+postgres = {version = "0.19", features = ["with-chrono-0_4", "with-uuid-0_8", "with-serde_json-1"]}
 r2d2 = "0.8"
 r2d2_postgres = "0.18"
 rand = "0.8"

@@ -1,6 +1,7 @@
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
 use postgres::types::Type;
 use rust_decimal::Decimal;
+use serde_json::Value;
 use uuid::Uuid;
 
 #[derive(Copy, Clone, Debug)]
@@ -13,34 +14,36 @@ pub enum PostgresTypeSystem {
     Int4(bool),
     Int8(bool),
     Date(bool),
+    Char(bool),
     BpChar(bool),
     VarChar(bool),
     Text(bool),
+    Time(bool),
     Timestamp(bool),
     TimestampTz(bool),
     UUID(bool),
-    Char(bool),
-    // Time(bool),
-    // Interval(bool),
+    JSON(bool),
+    JSONB(bool),
 }
 
 impl_typesystem! {
     system = PostgresTypeSystem,
     mappings = {
-        { Int2 => i16}
+        { Int2 => i16 }
         { Int4 => i32 }
         { Int8 => i64 }
         { Float4 => f32 }
         { Float8 => f64 }
         { Numeric => Decimal }
         { Bool => bool }
-        { Text | BpChar | VarChar | Char => &'r str }
+        { Char => i8 }
+        { Text | BpChar | VarChar => &'r str }
+        { Time => NaiveTime }
         { Timestamp => NaiveDateTime }
         { TimestampTz => DateTime<Utc> }
         { Date => NaiveDate }
-        { UUID => Uuid}
-        // { Time => NaiveTime }
-        // { Interval => &'r str }
+        { UUID => Uuid }
+        { JSON | JSONB => Value }
     }
 }
 
@@ -55,16 +58,17 @@ impl<'a> From<&'a Type> for PostgresTypeSystem {
             "float8" => Float8(true),
             "numeric" => Numeric(true),
             "bool" => Bool(true),
+            "char" => Char(true),
             "text" => Text(true),
             "bpchar" => BpChar(true),
             "varchar" => VarChar(true),
+            "time" => Time(true),
             "timestamp" => TimestampTz(true),
             "timestamptz" => Timestamp(true),
             "date" => Date(true),
             "uuid" => UUID(true),
-            "char" => Char(true),
-            // "time" => Time(true),
-            // "interval" => Interval(true),
+            "json" => JSON(true),
+            "jsonb" => JSONB(true),
             ty => unimplemented!("{}", ty),
         }
     }
@@ -85,13 +89,14 @@ impl<'a> From<PostgresTypeSystem> for Type {
             Text(_) => Type::TEXT,
             BpChar(_) => Type::BPCHAR,
             VarChar(_) => Type::VARCHAR,
+            Char(_) => Type::CHAR,
+            Date(_) => Type::DATE,
+            Time(_) => Type::TIME,
             Timestamp(_) => Type::TIMESTAMP,
             TimestampTz(_) => Type::TIMESTAMPTZ,
-            Date(_) => Type::DATE,
             UUID(_) => Type::UUID,
-            Char(_) => Type::CHAR,
-            // Time(_) => Type::TIME,
-            // Interval(_) => Type::INTERVAL
+            JSON(_) => Type::JSON,
+            JSONB(_) => Type::JSONB,
         }
     }
 }
