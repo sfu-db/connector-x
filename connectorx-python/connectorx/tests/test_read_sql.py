@@ -259,7 +259,13 @@ def test_types_binary(postgres_url: str) -> None:
                     '{"qty":2,"product":"Toy Train"}',
                 ], dtype="object"
             ),
-            "test_bytea": pd.Series(['test', 'Здра́вствуйте', '123bhaf4', '😜'], dtype="object")
+            "test_bytea": pd.Series(
+                [
+                    b'test',
+                    b'\xd0\x97\xd0\xb4\xd1\x80\xd0\xb0\xcc\x81\xd0\xb2\xd1\x81\xd1\x82\xd0\xb2\xd1\x83\xd0\xb9\xd1\x82\xd0\xb5',
+                    b'123bhaf4',
+                    b'\xf0\x9f\x98\x9c'
+                ], dtype="object")
         },
     )
     assert_frame_equal(df, expected, check_names=True)
@@ -299,7 +305,13 @@ def test_types_csv(postgres_url: str) -> None:
                     '{"qty":2,"product":"Toy Train"}',
                 ], dtype="object"
             ),
-            "test_bytea": pd.Series(['test', 'Здра́вствуйте', '123bhaf4', '😜'], dtype="object")
+            "test_bytea": pd.Series(
+                [
+                    b'test',
+                    b'\xd0\x97\xd0\xb4\xd1\x80\xd0\xb0\xcc\x81\xd0\xb2\xd1\x81\xd1\x82\xd0\xb2\xd1\x83\xd0\xb9\xd1\x82\xd0\xb5',
+                    b'123bhaf4',
+                    b'\xf0\x9f\x98\x9c'
+                ], dtype="object")
         },
     )
     assert_frame_equal(df, expected, check_names=True)

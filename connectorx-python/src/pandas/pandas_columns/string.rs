@@ -111,15 +111,6 @@ impl<'a> PandasColumn<char> for StringColumn<'a> {
     }
 }
 
-impl<'a> PandasColumn<Vec<u8>> for StringColumn<'a> {
-    #[throws(ConnectorAgentError)]
-    fn write(&mut self, val: Vec<u8>) {
-        self.string_lengths.push(val.len());
-        self.string_buf.extend_from_slice(&val[..]);
-        self.try_flush()?;
-    }
-}
-
 impl<'r, 'a> PandasColumn<Option<&'r str>> for StringColumn<'a> {
     #[throws(ConnectorAgentError)]
     fn write(&mut self, val: Option<&'r str>) {
@@ -172,22 +163,6 @@ impl<'a> PandasColumn<Option<char>> for StringColumn<'a> {
     }
 }
 
-impl<'a> PandasColumn<Option<Vec<u8>>> for StringColumn<'a> {
-    #[throws(ConnectorAgentError)]
-    fn write(&mut self, val: Option<Vec<u8>>) {
-        match val {
-            Some(b) => {
-                self.string_lengths.push(b.len());
-                self.string_buf.extend_from_slice(&b[..]);
-                self.try_flush()?;
-            }
-            None => {
-                self.string_lengths.push(0);
-            }
-        }
-    }
-}
-
 impl<'r> HasPandasColumn for &'r str {
     type PandasColumn<'a> = StringColumn<'a>;
 }
@@ -209,14 +184,6 @@ impl HasPandasColumn for char {
 }
 
 impl HasPandasColumn for Option<char> {
-    type PandasColumn<'a> = StringColumn<'a>;
-}
-
-impl HasPandasColumn for Vec<u8> {
-    type PandasColumn<'a> = StringColumn<'a>;
-}
-
-impl HasPandasColumn for Option<Vec<u8>> {
     type PandasColumn<'a> = StringColumn<'a>;
 }
 

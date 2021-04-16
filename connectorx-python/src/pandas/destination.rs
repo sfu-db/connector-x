@@ -1,6 +1,6 @@
 use super::pandas_columns::{
-    BooleanBlock, DateTimeBlock, Float64Block, HasPandasColumn, Int64Block, PandasColumn,
-    PandasColumnObject, StringBlock,
+    BooleanBlock, BytesBlock, DateTimeBlock, Float64Block, HasPandasColumn, Int64Block,
+    PandasColumn, PandasColumnObject, StringBlock,
 };
 use super::types::{PandasDType, PandasTypeSystem};
 use anyhow::anyhow;
@@ -158,9 +158,19 @@ impl<'a> Destination for PandasDestination<'a> {
                     }
                     PandasTypeSystem::String(_)
                     | PandasTypeSystem::Str(_)
-                    | PandasTypeSystem::Char(_)
-                    | PandasTypeSystem::ByteA(_) => {
+                    | PandasTypeSystem::Char(_) => {
                         let block = StringBlock::extract(buf).map_err(|e| anyhow!(e))?;
+                        let cols = block.split()?;
+                        for (&cid, col) in cids.iter().zip_eq(cols) {
+                            partitioned_columns[cid] = col
+                                .partition(&counts)
+                                .into_iter()
+                                .map(|c| Box::new(c) as _)
+                                .collect()
+                        }
+                    }
+                    PandasTypeSystem::ByteA(_) => {
+                        let block = BytesBlock::extract(buf).map_err(|e| anyhow!(e))?;
                         let cols = block.split()?;
                         for (&cid, col) in cids.iter().zip_eq(cols) {
                             partitioned_columns[cid] = col
