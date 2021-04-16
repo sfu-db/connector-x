@@ -223,3 +223,81 @@ def test_read_sql_on_utf8(postgres_url: str) -> None:
         },
     )
     assert_frame_equal(df, expected, check_names=True)
+
+
+def test_types_binary(postgres_url: str) -> None:
+    # query = "SELECT * FROM test_types"
+    query = "SELECT test_int16, test_char, test_uuid, test_time, test_json, test_jsonb FROM test_types"
+    df = read_sql(postgres_url, query)
+    expected = pd.DataFrame(
+        index=range(4),
+        data={
+            "test_int16": pd.Series([0, 1, 2, 3], dtype="Int64"),
+            "test_char": pd.Series(["a", "b", "c", "d"], dtype="object"),
+            "test_uuid": pd.Series(
+                [
+                    "86b494cc-96b2-11eb-9298-3e22fbb9fe9d",
+                    "86b49b84-96b2-11eb-9298-3e22fbb9fe9d",
+                    "86b49c42-96b2-11eb-9298-3e22fbb9fe9d",
+                    "86b49cce-96b2-11eb-9298-3e22fbb9fe9d"
+                ], dtype="object"
+            ),
+            "test_time": pd.Series(["08:12:40", "10:03:00", "23:00:10", "18:30:00"], dtype="object"),
+            "test_json": pd.Series(
+                [
+                    '{"customer":"John Doe","items":{"product":"Beer","qty":6}}',
+                    '{"customer":"Lily Bush","items":{"product":"Diaper","qty":24}}',
+                    '{"customer":"Josh William","items":{"product":"Toy Car","qty":1}}',
+                    '{"customer":"Mary Clark","items":{"product":"Toy Train","qty":2}}',
+                ], dtype="object"
+            ),
+            "test_jsonb": pd.Series(
+                [
+                    '{"qty":6,"product":"Beer"}',
+                    '{"qty":24,"product":"Diaper"}',
+                    '{"qty":1,"product":"Toy Car"}',
+                    '{"qty":2,"product":"Toy Train"}',
+                ], dtype="object"
+            )
+        },
+    )
+    assert_frame_equal(df, expected, check_names=True)
+
+
+def test_types_csv(postgres_url: str) -> None:
+    # query = "SELECT * FROM test_types"
+    query = "SELECT test_int16, test_char, test_uuid, test_time, test_json, test_jsonb FROM test_types"
+    df = read_sql(postgres_url, query, protocol="csv")
+    expected = pd.DataFrame(
+        index=range(4),
+        data={
+            "test_int16": pd.Series([0, 1, 2, 3], dtype="Int64"),
+            "test_char": pd.Series(["a", "b", "c", "d"], dtype="object"),
+            "test_uuid": pd.Series(
+                [
+                    "86b494cc-96b2-11eb-9298-3e22fbb9fe9d",
+                    "86b49b84-96b2-11eb-9298-3e22fbb9fe9d",
+                    "86b49c42-96b2-11eb-9298-3e22fbb9fe9d",
+                    "86b49cce-96b2-11eb-9298-3e22fbb9fe9d"
+                ], dtype="object"
+            ),
+            "test_time": pd.Series(["08:12:40", "10:03:00", "23:00:10", "18:30:00"], dtype="object"),
+            "test_json": pd.Series(
+                [
+                    '{"customer":"John Doe","items":{"product":"Beer","qty":6}}',
+                    '{"customer":"Lily Bush","items":{"product":"Diaper","qty":24}}',
+                    '{"customer":"Josh William","items":{"product":"Toy Car","qty":1}}',
+                    '{"customer":"Mary Clark","items":{"product":"Toy Train","qty":2}}',
+                ], dtype="object"
+            ),
+            "test_jsonb": pd.Series(
+                [
+                    '{"qty":6,"product":"Beer"}',
+                    '{"qty":24,"product":"Diaper"}',
+                    '{"qty":1,"product":"Toy Car"}',
+                    '{"qty":2,"product":"Toy Train"}',
+                ], dtype="object"
+            )
+        },
+    )
+    assert_frame_equal(df, expected, check_names=True)

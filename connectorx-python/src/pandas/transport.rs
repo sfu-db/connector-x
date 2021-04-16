@@ -1,6 +1,6 @@
 use super::destination::PandasDestination;
 use super::types::PandasTypeSystem;
-use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
+use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
 use connectorx::{
     impl_transport,
     sources::postgres::{Binary, PostgresSource, PostgresTypeSystem, CSV},
@@ -29,13 +29,13 @@ impl_transport!(
         { Text[&'r str]              => Str[&'r str]            | conversion all }
         { BpChar[&'r str]            => Str[&'r str]            | conversion none }
         { VarChar[&'r str]           => Str[&'r str]            | conversion none }
-        // { Time[NaiveTime]            => DateTime[DateTime<Utc>] | conversion half }
         { Timestamp[NaiveDateTime]   => DateTime[DateTime<Utc>] | conversion half }
         { TimestampTz[DateTime<Utc>] => DateTime[DateTime<Utc>] | conversion all }
         { Date[NaiveDate]            => DateTime[DateTime<Utc>] | conversion half }
         { UUID[Uuid]                 => String[String]          | conversion half }
         { JSON[Value]                => String[String]          | conversion half }
         { JSONB[Value]               => String[String]          | conversion none }
+        { Time[NaiveTime]            => String[String]          | conversion half }
     }
 );
 
@@ -55,13 +55,13 @@ impl_transport!(
         { Text[&'r str]              => Str[&'r str]            | conversion all }
         { BpChar[&'r str]            => Str[&'r str]            | conversion none }
         { VarChar[&'r str]           => Str[&'r str]            | conversion none }
-        // { Time[NaiveTime]            => DateTime[DateTime<Utc>] | conversion half }
         { Timestamp[NaiveDateTime]   => DateTime[DateTime<Utc>] | conversion half }
         { TimestampTz[DateTime<Utc>] => DateTime[DateTime<Utc>] | conversion all }
         { Date[NaiveDate]            => DateTime[DateTime<Utc>] | conversion half }
         { UUID[Uuid]                 => String[String]          | conversion half }
         { JSON[Value]                => String[String]          | conversion half }
         { JSONB[Value]               => String[String]          | conversion none }
+        { Time[NaiveTime]            => String[String]          | conversion half }
     }
 );
 
@@ -69,6 +69,12 @@ impl<'py, P> TypeConversion<Decimal, f64> for PostgresPandasTransport<'py, P> {
     fn convert(val: Decimal) -> f64 {
         val.to_f64()
             .unwrap_or_else(|| panic!("cannot convert decimal {:?} to float64", val))
+    }
+}
+
+impl<'py, P> TypeConversion<NaiveTime, String> for PostgresPandasTransport<'py, P> {
+    fn convert(val: NaiveTime) -> String {
+        val.to_string()
     }
 }
 

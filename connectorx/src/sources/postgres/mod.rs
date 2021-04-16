@@ -525,6 +525,27 @@ impl<'r, 'a> Produce<'r, Option<NaiveDateTime>> for PostgresCSVSourceParser<'a> 
     }
 }
 
+impl<'r, 'a> Produce<'r, NaiveTime> for PostgresCSVSourceParser<'a> {
+    fn produce(&mut self) -> Result<NaiveTime> {
+        let (ridx, cidx) = self.next_loc()?;
+        NaiveTime::parse_from_str(&self.rowbuf[ridx][cidx], "%H:%M:%S").map_err(|_| {
+            ConnectorAgentError::cannot_produce::<NaiveTime>(Some(self.rowbuf[ridx][cidx].into()))
+        })
+    }
+}
+
+impl<'r, 'a> Produce<'r, Option<NaiveTime>> for PostgresCSVSourceParser<'a> {
+    fn produce(&mut self) -> Result<Option<NaiveTime>> {
+        let (ridx, cidx) = self.next_loc()?;
+        match &self.rowbuf[ridx][cidx][..] {
+            "" => Ok(None),
+            v => Ok(Some(NaiveTime::parse_from_str(v, "%H:%M:%S").map_err(
+                |_| ConnectorAgentError::cannot_produce::<NaiveTime>(Some(v.into())),
+            )?)),
+        }
+    }
+}
+
 impl<'r, 'a> Produce<'r, &'r str> for PostgresCSVSourceParser<'a> {
     fn produce(&'r mut self) -> Result<&'r str> {
         let (ridx, cidx) = self.next_loc()?;

@@ -9,6 +9,7 @@ pub enum PandasTypeSystem {
     F64(bool),
     I64(bool),
     Bool(bool),
+    Char(bool),
     Str(bool),
     String(bool),
     DateTime(bool),
@@ -20,6 +21,7 @@ impl_typesystem! {
         { F64 => f64 }
         { I64 => i64 }
         { Bool => bool }
+        { Char => char }
         { Str => &'r str }
         { String => String }
         { DateTime => DateTime<Utc> }
@@ -43,6 +45,7 @@ impl PandasDType for PandasTypeSystem {
             PandasTypeSystem::F64(_) => "float64",
             PandasTypeSystem::Bool(false) => "bool",
             PandasTypeSystem::Bool(true) => "boolean",
+            PandasTypeSystem::Char(_) => "object",
             PandasTypeSystem::Str(_) => "object",
             PandasTypeSystem::String(_) => "object",
             PandasTypeSystem::DateTime(_) => "datetime64[ns]",
@@ -54,6 +57,7 @@ impl PandasDType for PandasTypeSystem {
             PandasTypeSystem::I64(_) => "i8",
             PandasTypeSystem::F64(_) => "f8",
             PandasTypeSystem::Bool(_) => "b1",
+            PandasTypeSystem::Char(_) => "O",
             PandasTypeSystem::Str(_) => "O",
             PandasTypeSystem::String(_) => "O",
             PandasTypeSystem::DateTime(_) => "M8[ns]",
@@ -81,6 +85,7 @@ impl PandasDType for PandasTypeSystem {
             PandasTypeSystem::F64(_) => false,
             PandasTypeSystem::Bool(false) => false,
             PandasTypeSystem::Bool(true) => true,
+            PandasTypeSystem::Char(_) => false, // we use object instead of string (Extension) for now
             PandasTypeSystem::Str(_) => false, // we use object instead of string (Extension) for now
             PandasTypeSystem::String(_) => false, // we use object instead of string (Extension) for now
             PandasTypeSystem::DateTime(_) => false,
@@ -94,6 +99,7 @@ impl PandasDType for PandasTypeSystem {
             PandasTypeSystem::F64(_) => "FloatBlock",
             PandasTypeSystem::Bool(false) => "BoolBlock",
             PandasTypeSystem::Bool(true) => "ExtensionBlock",
+            PandasTypeSystem::Char(_) => "ObjectBlock", // we use object instead of string (Extension) for now
             PandasTypeSystem::Str(_) => "ObjectBlock", // we use object instead of string (Extension) for now
             PandasTypeSystem::String(_) => "ObjectBlock", // we use object instead of string (Extension) for now
             PandasTypeSystem::DateTime(_) => "DatetimeBlock",
