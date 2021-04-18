@@ -8,6 +8,7 @@ use anyhow::anyhow;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
 use csv::{ReaderBuilder, StringRecord, StringRecordsIntoIter};
 use fehler::throw;
+use hex::decode;
 use log::debug;
 use postgres::{
     binary_copy::{BinaryCopyOutIter, BinaryCopyOutRow},
@@ -22,9 +23,9 @@ use sql::{count_query, get_limit, limit1_query};
 use std::marker::PhantomData;
 pub use typesystem::PostgresTypeSystem;
 use uuid::Uuid;
+
 type PgManager = PostgresConnectionManager<NoTls>;
 type PgConn = PooledConnection<PgManager>;
-use hex::decode;
 
 pub enum Binary {}
 pub enum CSV {}
