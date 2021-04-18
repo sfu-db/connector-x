@@ -25,6 +25,7 @@ pub enum PostgresTypeSystem {
     UUID(bool),
     JSON(bool),
     JSONB(bool),
+    Enum(bool),
 }
 
 impl_typesystem! {
@@ -38,7 +39,7 @@ impl_typesystem! {
         { Numeric => Decimal }
         { Bool => bool }
         { Char => i8 }
-        { Text | BpChar | VarChar => &'r str }
+        { Text | BpChar | VarChar | Enum => &'r str }
         { ByteA => Vec<u8> }
         { Time => NaiveTime }
         { Timestamp => NaiveDateTime }
@@ -72,7 +73,10 @@ impl<'a> From<&'a Type> for PostgresTypeSystem {
             "uuid" => UUID(true),
             "json" => JSON(true),
             "jsonb" => JSONB(true),
-            ty => unimplemented!("{}", ty),
+            _ => match ty.kind() {
+                postgres::types::Kind::Enum(_) => Enum(true),
+                _ => unimplemented!("{}", ty.name()),
+            },
         }
     }
 }
@@ -101,6 +105,7 @@ impl<'a> From<PostgresTypeSystem> for Type {
             UUID(_) => Type::UUID,
             JSON(_) => Type::JSON,
             JSONB(_) => Type::JSONB,
+            Enum(_) => Type::TEXT,
         }
     }
 }

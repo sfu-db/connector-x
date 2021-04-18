@@ -226,8 +226,7 @@ def test_read_sql_on_utf8(postgres_url: str) -> None:
 
 
 def test_types_binary(postgres_url: str) -> None:
-    # query = "SELECT * FROM test_types"
-    query = "SELECT test_int16, test_char, test_uuid, test_time, test_json, test_jsonb, test_bytea FROM test_types"
+    query = "SELECT test_int16, test_char, test_uuid, test_time, test_json, test_jsonb, test_bytea, test_enum FROM test_types"
     df = read_sql(postgres_url, query)
     expected = pd.DataFrame(
         index=range(4),
@@ -265,15 +264,15 @@ def test_types_binary(postgres_url: str) -> None:
                     b'\xd0\x97\xd0\xb4\xd1\x80\xd0\xb0\xcc\x81\xd0\xb2\xd1\x81\xd1\x82\xd0\xb2\xd1\x83\xd0\xb9\xd1\x82\xd0\xb5',
                     b'123bhaf4',
                     b'\xf0\x9f\x98\x9c'
-                ], dtype="object")
+                ], dtype="object"),
+            "test_enum": pd.Series(['happy', 'very happy', 'ecstatic', 'ecstatic'], dtype="object")
         },
     )
     assert_frame_equal(df, expected, check_names=True)
 
 
 def test_types_csv(postgres_url: str) -> None:
-    # query = "SELECT * FROM test_types"
-    query = "SELECT test_int16, test_char, test_uuid, test_time, test_json, test_jsonb, test_bytea FROM test_types"
+    query = "SELECT test_int16, test_char, test_uuid, test_time, test_json, test_jsonb, test_bytea, test_enum::text FROM test_types"
     df = read_sql(postgres_url, query, protocol="csv")
     expected = pd.DataFrame(
         index=range(4),
@@ -311,7 +310,8 @@ def test_types_csv(postgres_url: str) -> None:
                     b'\xd0\x97\xd0\xb4\xd1\x80\xd0\xb0\xcc\x81\xd0\xb2\xd1\x81\xd1\x82\xd0\xb2\xd1\x83\xd0\xb9\xd1\x82\xd0\xb5',
                     b'123bhaf4',
                     b'\xf0\x9f\x98\x9c'
-                ], dtype="object")
+                ], dtype="object"),
+            "test_enum": pd.Series(['happy', 'very happy', 'ecstatic', 'ecstatic'], dtype="object")
         },
     )
     assert_frame_equal(df, expected, check_names=True)

@@ -22,7 +22,6 @@ use sql::{count_query, get_limit, limit1_query};
 use std::marker::PhantomData;
 pub use typesystem::PostgresTypeSystem;
 use uuid::Uuid;
-
 type PgManager = PostgresConnectionManager<NoTls>;
 type PgConn = PooledConnection<PgManager>;
 use hex::decode;

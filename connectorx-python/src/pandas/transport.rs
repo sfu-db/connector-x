@@ -37,6 +37,7 @@ impl_transport!(
         { JSONB[Value]               => String[String]          | conversion none }
         { Time[NaiveTime]            => String[String]          | conversion half }
         { ByteA[Vec<u8>]             => ByteA[Vec<u8>]          | conversion all }
+        { Enum[&'r str]              => Str[&'r str]            | conversion none }
     }
 );
 
@@ -64,6 +65,7 @@ impl_transport!(
         { JSONB[Value]               => String[String]          | conversion none }
         { Time[NaiveTime]            => String[String]          | conversion half }
         { ByteA[Vec<u8>]             => ByteA[Vec<u8>]          | conversion all }
+        { Enum[&'r str]              => Str[&'r str]            | conversion none }
     }
 );
 
@@ -79,13 +81,6 @@ impl<'py, P> TypeConversion<NaiveTime, String> for PostgresPandasTransport<'py, 
         val.to_string()
     }
 }
-
-// impl<'py, P> TypeConversion<NaiveDateTime, DateTime<Utc>> for PostgresPandasTransport<'py, P> {
-//     fn convert(val: NaiveTime) -> DateTime<Utc> {
-//         val.
-//         DateTime::from_utc(val, Utc)
-//     }
-// }
 
 impl<'py, P> TypeConversion<i8, char> for PostgresPandasTransport<'py, P> {
     fn convert(val: i8) -> char {
