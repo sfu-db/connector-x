@@ -63,6 +63,9 @@ pub enum ConnectorAgentError {
     #[error(transparent)]
     ArrowError(#[from] arrow::error::ArrowError),
 
+    #[error(transparent)]
+    HexError(#[from] hex::FromHexError),
+
     /// Any other errors that are too trivial to be put here explicitly.
     #[error(transparent)]
     Other(#[from] anyhow::Error),

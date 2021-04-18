@@ -1,3 +1,8 @@
+DROP TABLE IF EXISTS test_table;
+DROP TABLE IF EXISTS test_str;
+DROP TABLE IF EXISTS test_types;
+DROP TYPE IF EXISTS happiness;
+
 CREATE TABLE IF NOT EXISTS test_table(
     test_int INTEGER NOT NULL,
     test_nullint INTEGER,
@@ -28,14 +33,21 @@ INSERT INTO test_str VALUES (5, 'Latin1', '¥§¤®ð');
 INSERT INTO test_str VALUES (6, 'Extra', 'y̆');
 INSERT INTO test_str VALUES (7, 'Mixed', 'Ha好ち😁ðy̆');
 
-CREATE TABLE IF NOT EXISTS test_uuid_char_int16(
+CREATE TYPE happiness AS ENUM ('happy', 'very happy', 'ecstatic');
+CREATE TABLE IF NOT EXISTS test_types(
     test_int16 SMALLINT,
     test_char CHAR,
-    test_uuid UUID NOT NULL
+    test_uuid UUID NOT NULL,
+    test_time TIME,
+    test_interval INTERVAL,
+    test_json JSON,
+    test_jsonb JSONB,
+    test_bytea BYTEA,
+    test_enum happiness
 );
 
-INSERT INTO test_uuid_char_int16 VALUES (0, 'a', '86b494cc-96b2-11eb-9298-3e22fbb9fe9d');
-INSERT INTO test_uuid_char_int16 VALUES (1, 'b', '86b49b84-96b2-11eb-9298-3e22fbb9fe9d');
-INSERT INTO test_uuid_char_int16 VALUES (2, 'c', '86b49c42-96b2-11eb-9298-3e22fbb9fe9d');
-INSERT INTO test_uuid_char_int16 VALUES (3, 'd', '86b49cce-96b2-11eb-9298-3e22fbb9fe9d');
+INSERT INTO test_types VALUES (0, 'a', '86b494cc-96b2-11eb-9298-3e22fbb9fe9d', '08:12:40', '1 year 2 months 3 days', '{"customer": "John Doe", "items": {"product": "Beer","qty": 6}}', '{"product": "Beer","qty": 6}', 'test', 'happy');
+INSERT INTO test_types VALUES (1, 'b', '86b49b84-96b2-11eb-9298-3e22fbb9fe9d', '10:03:00', '2 weeks ago', '{"customer": "Lily Bush", "items": {"product": "Diaper","qty": 24}}', '{"product": "Diaper","qty": 24}', 'Здра́вствуйте', 'very happy');
+INSERT INTO test_types VALUES (2, 'c', '86b49c42-96b2-11eb-9298-3e22fbb9fe9d', '23:00:10', '3 months 2 days ago', '{"customer": "Josh William", "items": {"product": "Toy Car","qty": 1}}', '{"product": "Toy Car","qty": 1}', '123bhaf4', 'ecstatic');
+INSERT INTO test_types VALUES (3, 'd', '86b49cce-96b2-11eb-9298-3e22fbb9fe9d', '18:30:00', '3 year', '{"customer": "Mary Clark", "items": {"product": "Toy Train","qty": 2}}', '{"product": "Toy Train","qty": 2}', '😜', 'ecstatic');
 
