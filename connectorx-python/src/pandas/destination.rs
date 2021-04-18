@@ -169,7 +169,7 @@ impl<'a> Destination for PandasDestination<'a> {
                                 .collect()
                         }
                     }
-                    PandasTypeSystem::ByteA(_) => {
+                    PandasTypeSystem::Bytes(_) => {
                         let block = BytesBlock::extract(buf).map_err(|e| anyhow!(e))?;
                         let cols = block.split()?;
                         for (&cid, col) in cids.iter().zip_eq(cols) {
