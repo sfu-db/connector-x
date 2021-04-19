@@ -73,7 +73,7 @@ pub fn count_query(sql: &str) -> String {
                                     subquery: q.clone(),
                                     alias: Some(TableAlias {
                                         name: Ident {
-                                            value: "t".to_string(),
+                                            value: "CX_TMP_TABLE".to_string(),
                                             quote_style: None,
                                         },
                                         columns: vec![],
