@@ -34,6 +34,8 @@ cachegrind-tpch: build-tpch
     valgrind --tool=cachegrind target/release/examples/tpch
 
 python-tpch name +ARGS="": setup-python
+    #!/bin/bash
+    export PYTHONPATH=$PWD/connectorx-python
     cd connectorx-python && \
     poetry run python ../benchmarks/tpch-{{name}}.py {{ARGS}}
 
