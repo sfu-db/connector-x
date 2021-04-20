@@ -27,7 +27,7 @@ cx.read_sql("postgresql://username:password@server:port/database", "SELECT * FRO
 
 The function will partition the query by **evenly** splitting the specified column to the amount of partitions.
 ConnectorX will assign one thread for each partition to load and write data in parallel.
-Currently, we only support partitioning on **integer** columns, and **SPJ** queries.
+Currently, we support partitioning on **integer** columns for **SPJA** queries.
 
 Check out more detailed usage and examples [here](#detailed-usage-and-examples).
 
