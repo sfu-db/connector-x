@@ -19,13 +19,6 @@ def test_on_non_select(postgres_url: str) -> None:
     df = read_sql(postgres_url, query)
 
 
-@pytest.mark.xfail
-def test_partition_on_aggregation(postgres_url: str) -> None:
-    query = "SELECT test_bool, SUM(test_float) FROM test_table GROUP BY test_bool"
-    df = read_sql(postgres_url, query,
-                  partition_on="test_int", partition_num=2)
-
-
 def test_aggregation(postgres_url: str) -> None:
     query = "SELECT test_bool, SUM(test_float) FROM test_table GROUP BY test_bool"
     df = read_sql(postgres_url, query)
@@ -34,6 +27,59 @@ def test_aggregation(postgres_url: str) -> None:
         data={
             "test_bool": pd.Series([None, False, True], dtype="boolean"),
             "sum": pd.Series([10.9, 5.2, -10.0], dtype="float64")
+        }
+    )
+    assert_frame_equal(df, expected, check_names=True)
+
+
+def test_partition_on_aggregation(postgres_url: str) -> None:
+    query = "SELECT test_bool, SUM(test_int) AS test_int FROM test_table GROUP BY test_bool"
+    df = read_sql(postgres_url, query,
+                  partition_on="test_int", partition_num=2)
+    expected = pd.DataFrame(
+        index=range(3),
+        data={
+            "test_bool": pd.Series([None, False, True], dtype="boolean"),
+            "test_int": pd.Series([4, 5, 1315], dtype="Int64")
+        }
+    )
+    assert_frame_equal(df, expected, check_names=True)
+
+
+def test_aggregation2(postgres_url: str) -> None:
+    query = "select DISTINCT(test_bool) from test_table"
+    df = read_sql(postgres_url, query)
+    expected = pd.DataFrame(
+        index=range(3),
+        data={
+            "test_bool": pd.Series([None, False, True], dtype="boolean"),
+        }
+    )
+    assert_frame_equal(df, expected, check_names=True)
+
+
+def test_partition_on_aggregation2(postgres_url: str) -> None:
+    query = "select MAX(test_int), MIN(test_int) from test_table"
+    df = read_sql(postgres_url, query,
+                  partition_on="max", partition_num=2)
+    expected = pd.DataFrame(
+        index=range(1),
+        data={
+            "max": pd.Series([1314], dtype="Int64"),
+            "min": pd.Series([0], dtype="Int64"),
+        }
+    )
+    assert_frame_equal(df, expected, check_names=True)
+
+
+def test_udf(postgres_url: str) -> None:
+    query = "select increment(test_int) as test_int from test_table ORDER BY test_int"
+    df = read_sql(postgres_url, query,
+                  partition_on="test_int", partition_num=2)
+    expected = pd.DataFrame(
+        index=range(6),
+        data={
+            "test_int": pd.Series([1, 2, 3, 4, 5, 1315], dtype="Int64"),
         }
     )
     assert_frame_equal(df, expected, check_names=True)

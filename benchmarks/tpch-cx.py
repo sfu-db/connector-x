@@ -1,6 +1,6 @@
 """
 Usage:
-  tpch-ca.py [--protocol=<protocol>] <num>
+  tpch-cx.py [--protocol=<protocol>] <num>
 
 Options:
   --protocol=<protocol>  The protocol to use [default: binary].
@@ -14,6 +14,7 @@ from contexttimer import Timer
 from docopt import docopt
 
 if __name__ == "__main__":
+
     args = docopt(__doc__, version="Naval Fate 2.0")
     conn = os.environ["POSTGRES_URL"]
     table = os.environ["POSTGRES_TABLE"]
