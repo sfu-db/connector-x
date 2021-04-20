@@ -7,13 +7,16 @@ Options:
   -h --help              Show this screen.
   --version              Show version.
 """
-import os
-
-import connectorx as cx
-from contexttimer import Timer
 from docopt import docopt
+from contexttimer import Timer
+import os
+import sys
+sys.path.append("../connectorx-python")
+print(sys.path)
 
 if __name__ == "__main__":
+    import connectorx as cx
+
     args = docopt(__doc__, version="Naval Fate 2.0")
     conn = os.environ["POSTGRES_URL"]
     table = os.environ["POSTGRES_TABLE"]
