@@ -1,21 +1,19 @@
 """
 Usage:
-  tpch-ca.py [--protocol=<protocol>] <num>
+  tpch-cx.py [--protocol=<protocol>] <num>
 
 Options:
   --protocol=<protocol>  The protocol to use [default: binary].
   -h --help              Show this screen.
   --version              Show version.
 """
-from docopt import docopt
-from contexttimer import Timer
 import os
-import sys
-sys.path.append("../connectorx-python")
-print(sys.path)
+
+import connectorx as cx
+from contexttimer import Timer
+from docopt import docopt
 
 if __name__ == "__main__":
-    import connectorx as cx
 
     args = docopt(__doc__, version="Naval Fate 2.0")
     conn = os.environ["POSTGRES_URL"]
