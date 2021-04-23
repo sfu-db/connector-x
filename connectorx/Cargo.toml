@@ -21,7 +21,7 @@ itertools = "0.10"
 log = "0.4"
 ndarray = "0.14"
 num-traits = "0.2"
-postgres = {version = "0.19", features = ["with-chrono-0_4"]}
+postgres = {version = "0.19", features = ["with-chrono-0_4", "with-uuid-0_8", "with-serde_json-1"]}
 r2d2 = "0.8"
 r2d2_postgres = "0.18"
 rand = "0.8"
@@ -36,6 +36,8 @@ sqlparser = "0.8"
 strum = {version = "0.20", features = ["derive"]}
 thiserror = "1"
 tokio = {version = "1", features = ["rt-multi-thread", "io-util"]}
+uuid = "0.8"
+hex = "0.4"
 
 [lib]
 crate-type = ["cdylib", "rlib"]

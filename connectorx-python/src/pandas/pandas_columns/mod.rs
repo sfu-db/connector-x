@@ -1,10 +1,12 @@
 mod boolean;
+mod bytes;
 mod datetime;
 mod float64;
 mod int64;
 mod string;
 // TODO: use macro for integers
 
+pub use crate::pandas::pandas_columns::bytes::{BytesBlock, BytesColumn};
 pub use boolean::{BooleanBlock, BooleanColumn};
 use connectorx::Result;
 pub use datetime::{DateTimeBlock, DateTimeColumn};

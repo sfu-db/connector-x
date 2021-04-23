@@ -286,6 +286,7 @@ dependencies = [
  "fehler",
  "flate2",
  "futures",
+ "hex",
  "iai",
  "itertools 0.10.0",
  "log",
@@ -307,6 +308,7 @@ dependencies = [
  "strum",
  "thiserror",
  "tokio",
+ "uuid",
 ]
 
 [[package]]
@@ -334,9 +336,11 @@ dependencies = [
  "pyo3-built",
  "rayon",
  "rust_decimal",
+ "serde_json",
  "sqlparser",
  "thiserror",
  "tokio",
+ "uuid",
 ]
 
 [[package]]
@@ -1632,6 +1636,9 @@ dependencies = [
  "chrono",
  "fallible-iterator",
  "postgres-protocol",
+ "serde",
+ "serde_json",
+ "uuid",
 ]
 
 [[package]]

@@ -43,17 +43,26 @@ def read_sql(
     partition_num
       how many partition to generate.
 
-    Note
-    ====
-    There are three ways to call this function.
+    Examples
+    ========
+    Read a DataFrame from a SQL using a single thread:
 
-    1. `read_sql(conn, query)`: execute the query and download the data into
-       a pandas dataframe without doing partition.
-    2. `read_sql(conn, query, partition_on=...)`: execute the query and download
-       the data into a pandas dataframe, with parallelism on multiple partitions.
-    3. `read_sql(conn, [query1, query2])`: execute a bunch of queries and download the
-       data into a pandas dataframe. This call form assumes you do the partition
-       by your self. Note, the schemas of all the query results should be same.
+    >>> postgres_url = "postgresql://username:password@server:port/database"
+    >>> query = "SELECT * FROM lineitem"
+    >>> read_sql(postgres_url, query)
+
+    Read a DataFrame parallelly using 10 threads by automatically partitioning the provided SQL on the partition column:
+
+    >>> postgres_url = "postgresql://username:password@server:port/database"
+    >>> query = "SELECT * FROM lineitem"
+    >>> read_sql(postgres_url, query, partition_on="partition_col", partition_num=10)
+
+    Read a DataFrame parallelly using 2 threads by manually providing two partition SQLs:
+
+    >>> postgres_url = "postgresql://username:password@server:port/database"
+    >>> queries = ["SELECT * FROM lineitem WHERE partition_col <= 10", "SELECT * FROM lineitem WHERE partition_col > 10"]
+    >>> read_sql(postgres_url, queries)
+
     """
 
     if isinstance(query, list) and len(query) == 1:

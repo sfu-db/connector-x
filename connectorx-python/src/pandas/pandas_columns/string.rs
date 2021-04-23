@@ -90,6 +90,27 @@ impl<'r, 'a> PandasColumn<&'r str> for StringColumn<'a> {
     }
 }
 
+impl<'a> PandasColumn<String> for StringColumn<'a> {
+    #[throws(ConnectorAgentError)]
+    fn write(&mut self, val: String) {
+        let bytes = val.as_bytes();
+        self.string_lengths.push(bytes.len());
+        self.string_buf.extend_from_slice(bytes);
+        self.try_flush()?;
+    }
+}
+
+impl<'a> PandasColumn<char> for StringColumn<'a> {
+    #[throws(ConnectorAgentError)]
+    fn write(&mut self, val: char) {
+        let mut buffer = [0; 4]; // a char is max to 4 bytes
+        let bytes = val.encode_utf8(&mut buffer).as_bytes();
+        self.string_lengths.push(bytes.len());
+        self.string_buf.extend_from_slice(bytes);
+        self.try_flush()?;
+    }
+}
+
 impl<'r, 'a> PandasColumn<Option<&'r str>> for StringColumn<'a> {
     #[throws(ConnectorAgentError)]
     fn write(&mut self, val: Option<&'r str>) {
@@ -107,11 +128,62 @@ impl<'r, 'a> PandasColumn<Option<&'r str>> for StringColumn<'a> {
     }
 }
 
+impl<'a> PandasColumn<Option<String>> for StringColumn<'a> {
+    #[throws(ConnectorAgentError)]
+    fn write(&mut self, val: Option<String>) {
+        match val {
+            Some(b) => {
+                let bytes = b.as_bytes();
+                self.string_lengths.push(bytes.len());
+                self.string_buf.extend_from_slice(bytes);
+                self.try_flush()?;
+            }
+            None => {
+                self.string_lengths.push(0);
+            }
+        }
+    }
+}
+
+impl<'a> PandasColumn<Option<char>> for StringColumn<'a> {
+    #[throws(ConnectorAgentError)]
+    fn write(&mut self, val: Option<char>) {
+        match val {
+            Some(b) => {
+                let mut buffer = [0; 4]; // a char is max to 4 bytes
+                let bytes = b.encode_utf8(&mut buffer).as_bytes();
+                self.string_lengths.push(bytes.len());
+                self.string_buf.extend_from_slice(bytes);
+                self.try_flush()?;
+            }
+            None => {
+                self.string_lengths.push(0);
+            }
+        }
+    }
+}
+
 impl<'r> HasPandasColumn for &'r str {
     type PandasColumn<'a> = StringColumn<'a>;
 }
 
 impl<'r> HasPandasColumn for Option<&'r str> {
+    type PandasColumn<'a> = StringColumn<'a>;
+}
+
+impl HasPandasColumn for String {
+    type PandasColumn<'a> = StringColumn<'a>;
+}
+
+impl HasPandasColumn for Option<String> {
+    type PandasColumn<'a> = StringColumn<'a>;
+}
+
+impl HasPandasColumn for char {
+    type PandasColumn<'a> = StringColumn<'a>;
+}
+
+impl HasPandasColumn for Option<char> {
     type PandasColumn<'a> = StringColumn<'a>;
 }
 
