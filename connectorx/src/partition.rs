@@ -26,7 +26,7 @@ pub fn pg_single_col_partition_query(query: &str, col: &str, lower: i64, upper: 
 
     match &mut ast[0] {
         Statement::Query(q) => match &mut q.body {
-            SetExpr::Select(select) => {
+            SetExpr::Select(_select) => {
                 let lb = Expr::BinaryOp {
                     left: Box::new(Expr::Value(Value::Number(lower.to_string(), false))),
                     op: BinaryOperator::LtEq,
@@ -57,19 +57,11 @@ pub fn pg_single_col_partition_query(query: &str, col: &str, lower: i64, upper: 
                     right: Box::new(Expr::Value(Value::Number(upper.to_string(), false))),
                 };
 
-                let mut selection = Expr::BinaryOp {
+                let selection = Expr::BinaryOp {
                     left: Box::new(lb),
                     op: BinaryOperator::And,
                     right: Box::new(ub),
                 };
-
-                if let Some(exist_selection) = select.selection.take() {
-                    selection = Expr::BinaryOp {
-                        left: Box::new(Expr::Nested(Box::new(exist_selection))),
-                        op: BinaryOperator::And,
-                        right: Box::new(Expr::Nested(Box::new(selection))),
-                    };
-                }
 
                 ast_part = Statement::Query(Box::new(Query {
                     with: None,
