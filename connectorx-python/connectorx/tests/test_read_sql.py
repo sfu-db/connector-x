@@ -253,6 +253,21 @@ def test_read_sql_with_partition_and_join(postgres_url: str) -> None:
     assert_frame_equal(df, expected, check_names=True)
 
 
+def test_read_sql_with_partition_and_spja(postgres_url: str) -> None:
+    query = "select test_bool, AVG(test_float) as avg, SUM(test_int) as sum from test_table as a, test_str as b where a.test_int = b.id AND test_nullint is not NULL GROUP BY test_bool ORDER BY sum"
+    df = read_sql(postgres_url, query,
+                  partition_on="sum", partition_num=2)
+    expected = pd.DataFrame(
+        index=range(3),
+        data={
+            "test_bool": pd.Series([True, False, None], dtype="boolean"),
+            "avg": pd.Series([None, 3, 5.45], dtype="float64"),
+            "sum": pd.Series([1, 3, 4], dtype="Int64")
+        }
+    )
+    assert_frame_equal(df, expected, check_names=True)
+
+
 def test_read_sql_on_utf8(postgres_url: str) -> None:
     query = "SELECT * FROM test_str"
     df = read_sql(postgres_url, query)
