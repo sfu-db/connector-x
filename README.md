@@ -97,7 +97,7 @@ Run the SQL query, download the data from database into a Pandas dataframe.
   postgres_url = "postgresql://username:password@server:port/database"
   query = "SELECT * FROM lineitem"
 
-  cx.read_sql(postgres_url, query, partition_on="partition_col", partition_num=10)
+  cx.read_sql(postgres_url, query, partition_on="l_orderkey", partition_num=10)
   ```
 
 - Read a DataFrame parallelly using 2 threads by manually providing two partition SQLs (the schemas of all the query results should be same)
@@ -106,9 +106,37 @@ Run the SQL query, download the data from database into a Pandas dataframe.
   import connectorx as cx
 
   postgres_url = "postgresql://username:password@server:port/database"
-  queries = ["SELECT * FROM lineitem WHERE partition_col <= 10", "SELECT * FROM lineitem WHERE partition_col > 10"]
+  queries = ["SELECT * FROM lineitem WHERE l_orderkey <= 30000000", "SELECT * FROM lineitem WHERE l_orderkey > 30000000"]
 
   cx.read_sql(postgres_url, queries)
+
+  ```
+  
+- Read a DataFrame parallelly using 4 threads from a more complex query
+
+  ```python
+  import connectorx as cx
+
+  postgres_url = "postgresql://username:password@server:port/database"
+  query = f"""
+  SELECT l_orderkey,
+         SUM(l_extendedprice * ( 1 - l_discount )) AS revenue,
+         o_orderdate,
+         o_shippriority
+  FROM   customer,
+         orders,
+         lineitem
+  WHERE  c_mktsegment = 'BUILDING'
+         AND c_custkey = o_custkey
+         AND l_orderkey = o_orderkey
+         AND o_orderdate < DATE '1995-03-15'
+         AND l_shipdate > DATE '1995-03-15'
+  GROUP  BY l_orderkey,
+            o_orderdate,
+            o_shippriority 
+  """
+
+  cx.read_sql(postgres_url, query, partition_on="l_orderkey", partition_num=10)
 
   ```
 
