@@ -136,7 +136,7 @@ Run the SQL query, download the data from database into a Pandas dataframe.
             o_shippriority 
   """
 
-  cx.read_sql(postgres_url, query, partition_on="l_orderkey", partition_num=10)
+  cx.read_sql(postgres_url, query, partition_on="l_orderkey", partition_num=4)
 
   ```
 
