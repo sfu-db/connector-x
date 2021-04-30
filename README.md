@@ -43,11 +43,11 @@ We compared different solutions in Python that provides the `read_sql` function,
 
 ## Time chart, lower is better.
 
-<p align="center"><img alt="time chart" src="https://raw.githubusercontent.com/sfu-db/connector-agent/main/assets/time.svg"/></p>
+<p align="center"><img alt="time chart" src="https://raw.githubusercontent.com/sfu-db/connector-agent/main/assets/time.jpg"/></p>
 
 ## Memory consumption chart, lower is better.
 
-<p align="center"><img alt="memory chart" src="https://raw.githubusercontent.com/sfu-db/connector-agent/main/assets/memory.svg"/></p>
+<p align="center"><img alt="memory chart" src="https://raw.githubusercontent.com/sfu-db/connector-agent/main/assets/memory.jpg"/></p>
 
 In conclusion, ConnectorX uses up to **3x** less memory and **11x** less time.
 
