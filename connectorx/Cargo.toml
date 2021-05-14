@@ -35,7 +35,7 @@ serde_json = "1"
 sqlparser = "0.8"
 strum = {version = "0.20", features = ["derive"]}
 thiserror = "1"
-tokio = {version = "1", features = ["rt-multi-thread", "io-util"]}
+tokio = {version = "1", features = ["rt", "io-util"]}
 uuid = "0.8"
 hex = "0.4"
 sqlx = { version = "0.5", features = [ "runtime-tokio-rustls", "postgres", "chrono", "bigdecimal" ] }
