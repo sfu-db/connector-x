@@ -25,10 +25,7 @@ fn main() -> Result<(), sqlx::Error> {
     println!("run fetch");
     let query = format!("SELECT * FROM lineitem limit {}", count);
 
-    let mut rows = rt.block_on(async {
-        let rows = sqlx::query(query.as_str()).fetch(&pool);
-        Ok::<_, sqlx::Error>(rows)
-    })?;
+    let mut rows = sqlx::query(query.as_str()).fetch(&pool);
 
     let start_stmp = Instant::now();
     println!("start traverse!");
