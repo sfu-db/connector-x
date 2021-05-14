@@ -38,6 +38,8 @@ thiserror = "1"
 tokio = {version = "1", features = ["rt-multi-thread", "io-util"]}
 uuid = "0.8"
 hex = "0.4"
+sqlx = { version = "0.5", features = [ "runtime-tokio-rustls", "postgres", "chrono", "bigdecimal" ] }
+bigdecimal = "0.2"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
