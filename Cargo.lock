@@ -28,6 +28,12 @@ dependencies = [
 
 [[package]]
 name = "ahash"
+version = "0.4.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "739f4a8db6605981345c5654f3a85b056ce52f37a39d34da03f25bf2151ea16e"
+
+[[package]]
+name = "ahash"
 version = "0.6.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "796540673305a66d127804eef19ad696f1f204b8c1025aaca4958c17eab32877"
@@ -80,7 +86,7 @@ dependencies = [
  "hex",
  "indexmap",
  "lazy_static",
- "lexical-core 0.7.5",
+ "lexical-core 0.7.6",
  "num",
  "rand 0.7.3",
  "regex",
@@ -148,6 +154,12 @@ name = "base64"
 version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b41b7ea54a0c9d92199de89e20e58d49f02f8e699814ef3fdf266f6f748d15c7"
+
+[[package]]
+name = "base64"
+version = "0.12.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3441f0f7b02788e948e47f457ca01f1d7e6d92c693bc132c22b087d3141c03ff"
 
 [[package]]
 name = "base64"
@@ -362,6 +374,7 @@ dependencies = [
  "iai",
  "itertools 0.10.0",
  "log",
+ "mysql 20.1.0",
  "ndarray",
  "num-traits",
  "postgres",
@@ -1011,6 +1024,9 @@ name = "hashbrown"
 version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d7afe4a420e3fe79967a00898cc1f4db7c8a49a9333a29f8a4bd76a253d5cd04"
+dependencies = [
+ "ahash 0.4.7",
+]
 
 [[package]]
 name = "heck"
@@ -1283,6 +1299,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "lexical"
+version = "5.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f404a90a744e32e8be729034fc33b90cf2a56418fbf594d69aa3c0214ad414e5"
+dependencies = [
+ "cfg-if 1.0.0",
+ "lexical-core 0.7.6",
+]
+
+[[package]]
 name = "lexical-core"
 version = "0.6.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1298,9 +1324,9 @@ dependencies = [
 
 [[package]]
 name = "lexical-core"
-version = "0.7.5"
+version = "0.7.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "21f866863575d0e1d654fbeeabdc927292fdf862873dc3c96c6f753357e13374"
+checksum = "6607c62aa161d23d17a9072cc5da0be67cdfc89d3afb1e8d9c842bebc2525ffe"
 dependencies = [
  "arrayvec 0.5.2",
  "bitflags",
@@ -1351,6 +1377,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0609345ddee5badacf857d4f547e0e5a2e987db77085c24cd887f73573a04237"
 dependencies = [
  "hashbrown 0.6.3",
+]
+
+[[package]]
+name = "lru"
+version = "0.6.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1f374d42cdfc1d7dbf3d3dec28afab2eb97ffbf43a3234d795b5986dbf4b90ba"
+dependencies = [
+ "hashbrown 0.9.1",
 ]
 
 [[package]]
@@ -1447,8 +1482,8 @@ dependencies = [
  "bufstream",
  "io-enum",
  "libc",
- "lru",
- "mysql_common",
+ "lru 0.4.3",
+ "mysql_common 0.20.2",
  "named_pipe",
  "native-tls",
  "net2",
@@ -1459,6 +1494,29 @@ dependencies = [
  "twox-hash",
  "url",
  "winapi",
+]
+
+[[package]]
+name = "mysql"
+version = "20.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e5a8660184af84975ac1639aa692a539c37739cec8a22a414de3db9cb573c1aa"
+dependencies = [
+ "bufstream",
+ "io-enum",
+ "libc",
+ "lru 0.6.5",
+ "mysql_common 0.24.1",
+ "named_pipe",
+ "native-tls",
+ "nix 0.19.1",
+ "pem",
+ "percent-encoding",
+ "serde",
+ "serde_json",
+ "socket2",
+ "twox-hash",
+ "url",
 ]
 
 [[package]]
@@ -1476,7 +1534,7 @@ dependencies = [
  "failure",
  "flate2",
  "lazy_static",
- "lexical",
+ "lexical 4.2.1",
  "num-bigint 0.2.6",
  "num-traits",
  "rand 0.7.3",
@@ -1487,6 +1545,35 @@ dependencies = [
  "sha1",
  "sha2 0.8.2",
  "time 0.1.43",
+ "twox-hash",
+ "uuid",
+]
+
+[[package]]
+name = "mysql_common"
+version = "0.24.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "de63b87a5f24c5db252418a6f04abb2f62823bd838dc9b1d7fdb8ae972ef76cf"
+dependencies = [
+ "base64 0.12.3",
+ "bigdecimal",
+ "bitflags",
+ "byteorder",
+ "bytes 0.5.6",
+ "chrono",
+ "flate2",
+ "lazy_static",
+ "lexical 5.2.2",
+ "num-bigint 0.2.6",
+ "num-traits",
+ "rand 0.7.3",
+ "regex",
+ "rust_decimal",
+ "serde",
+ "serde_json",
+ "sha1",
+ "sha2 0.8.2",
+ "time 0.2.26",
  "twox-hash",
  "uuid",
 ]
@@ -1808,6 +1895,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d95a7db200b97ef370c8e6de0088252f7e0dfff7d047a28528e47456c0fc98b6"
 dependencies = [
  "proc-macro-hack",
+]
+
+[[package]]
+name = "pem"
+version = "0.8.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fd56cbd21fea48d0c440b41cd69c589faacade08c992d9a54e471b79d0fd13eb"
+dependencies = [
+ "base64 0.13.0",
+ "once_cell",
+ "regex",
 ]
 
 [[package]]
@@ -2155,7 +2253,7 @@ version = "18.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2038c346c2fe66863ffdf74c755650c5cebdab8d0e26e342d298edaccb9a252e"
 dependencies = [
- "mysql",
+ "mysql 18.2.0",
  "r2d2",
 ]
 
