@@ -4,6 +4,7 @@
 pub mod csv;
 pub mod dummy;
 pub mod postgres;
+pub mod mysql;
 
 use crate::data_order::DataOrder;
 use crate::errors::Result;
