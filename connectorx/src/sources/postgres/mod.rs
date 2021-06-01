@@ -22,6 +22,7 @@ pub use typesystem::PostgresTypeSystem;
 use crate::data_order::DataOrder;
 use crate::errors::{ConnectorAgentError, Result};
 use crate::sources::{PartitionParser, Produce, Source, SourcePartition};
+use crate::sources::sql::{limit1_query, count_query, get_limit};
 
 mod typesystem;
 

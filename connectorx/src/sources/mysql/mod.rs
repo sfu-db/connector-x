@@ -5,6 +5,7 @@ pub enum Binary {}
 use crate::data_order::DataOrder;
 use crate::errors::{ConnectorAgentError, Result};
 use crate::sources::{PartitionParser, Produce, Source, SourcePartition};
+use crate::sources::sql::{limit1_query, count_query, get_limit};
 
 use r2d2::{Pool, PooledConnection};
 use r2d2_mysql::{mysql::{consts::ColumnType, Opts, OptsBuilder, prelude::Queryable}, MysqlConnectionManager};
