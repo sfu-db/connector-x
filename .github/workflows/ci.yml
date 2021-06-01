@@ -43,7 +43,7 @@ jobs:
       - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly-2021-04-12
+          toolchain: nightly-2021-05-30
           components: rustfmt
           default: true
 
@@ -102,7 +102,7 @@ jobs:
       - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly-2021-04-12
+          toolchain: nightly-2021-05-30
           components: rustfmt
           default: true
 
