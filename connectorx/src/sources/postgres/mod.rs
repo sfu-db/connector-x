@@ -1,9 +1,5 @@
-mod sql;
-mod typesystem;
+use std::marker::PhantomData;
 
-use crate::data_order::DataOrder;
-use crate::errors::{ConnectorAgentError, Result};
-use crate::sources::{PartitionParser, Produce, Source, SourcePartition};
 use anyhow::anyhow;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
 use csv::{ReaderBuilder, StringRecord, StringRecordsIntoIter};
@@ -12,17 +8,22 @@ use hex::decode;
 use log::debug;
 use postgres::{
     binary_copy::{BinaryCopyOutIter, BinaryCopyOutRow},
-    fallible_iterator::FallibleIterator,
     CopyOutReader,
+    fallible_iterator::FallibleIterator,
 };
 use r2d2::{Pool, PooledConnection};
 use r2d2_postgres::{postgres::NoTls, PostgresConnectionManager};
 use rust_decimal::Decimal;
 use serde_json::{from_str, Value};
-use sql::{count_query, get_limit, limit1_query};
-use std::marker::PhantomData;
-pub use typesystem::PostgresTypeSystem;
 use uuid::Uuid;
+
+pub use typesystem::PostgresTypeSystem;
+
+use crate::data_order::DataOrder;
+use crate::errors::{ConnectorAgentError, Result};
+use crate::sources::{PartitionParser, Produce, Source, SourcePartition};
+
+mod typesystem;
 
 type PgManager = PostgresConnectionManager<NoTls>;
 type PgConn = PooledConnection<PgManager>;
@@ -295,7 +296,7 @@ impl<'a> PostgresBinarySourcePartitionParser<'a> {
         Ok(ret)
     }
 }
-
+----------!
 impl<'a> PartitionParser<'a> for PostgresBinarySourcePartitionParser<'a> {
     type TypeSystem = PostgresTypeSystem;
 }

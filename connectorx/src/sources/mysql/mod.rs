@@ -1,5 +1,7 @@
 mod typesystem;
 
+pub enum Binary {}
+
 use crate::data_order::DataOrder;
 use crate::errors::{ConnectorAgentError, Result};
 use crate::sources::{PartitionParser, Produce, Source, SourcePartition};
@@ -133,7 +135,7 @@ where
     }
 }
 
-pub struct MysqlPartition<P> {
+pub struct MysqlSourcePartition<P> {
     conn: MysqlConn,
     query: String,
     schema: Vec<MysqlTypeSystem>,  // 5
@@ -143,4 +145,107 @@ pub struct MysqlPartition<P> {
     _protocol: PhantomData<P>,
 }
 
+impl<P> MysqlSourcePartition<P> {
+    pub fn new(conn: PgConn, query: &str, schema: &[MysqlTypeSystem], buf_size: usize) -> Self {
+        Self {
+            conn,
+            query: query.to_string(),
+            schema: schema.to_vec(),
+            nrows: 0,
+            ncols: schema.len(),
+            buf_size,
+            _protocol: PhantomData,
+        }
+    }
+}
+
+impl SourcePartition for MysqlSourcePartition<Binary> {
+    type TypeSystem = MysqlTypeSystem;
+    type Parser<'a> = PostgresBinarySourcePartitionParser<'a>;
+
+    fn prepare(&mut self) -> Result<()> {
+        self.nrows = match get_limit(&self.query)? {
+            None => {
+                let row = self.conn.query()
+                row.get::<_, i64>(0) as usize
+            }
+            Some(n) => n,
+        };
+        Ok(())
+    }
+
+    fn parser(&mut self) -> Result<Self::Parser<'_>> {
+        let reader = self.conn.copy_out(&*query)?; // unless reading the data, it seems like issue the query is fast
+        let pg_schema: Vec<_> = self.schema.iter().map(|&dt| dt.into()).collect();
+        let iter = BinaryCopyOutIter::new(reader, &pg_schema);
+
+        Ok(PostgresBinarySourcePartitionParser::new(
+            iter,
+            &self.schema,
+            self.buf_size,
+        ))
+    }
+
+    fn nrows(&self) -> usize {
+        self.nrows
+    }
+
+    fn ncols(&self) -> usize {
+        self.ncols
+    }
+}
+
+pub struct PostgresBinarySourcePartitionParser<'a> {
+    iter: BinaryCopyOutIter<'a>,
+    buf_size: usize,
+    rowbuf: Vec<BinaryCopyOutRow>,
+    ncols: usize,
+    current_col: usize,
+    current_row: usize,
+}
+
+impl<'a> PostgresBinarySourcePartitionParser<'a> {
+    pub fn new(
+        iter: BinaryCopyOutIter<'a>,
+        schema: &[PostgresTypeSystem],
+        buf_size: usize,
+    ) -> Self {
+        Self {
+            iter,
+            buf_size,
+            rowbuf: Vec::with_capacity(buf_size),
+            ncols: schema.len(),
+            current_row: 0,
+            current_col: 0,
+        }
+    }
+
+    fn next_loc(&mut self) -> Result<(usize, usize)> {
+        if self.current_row >= self.rowbuf.len() {
+            if !self.rowbuf.is_empty() {
+                self.rowbuf.drain(..);
+            }
+
+            for _ in 0..self.buf_size {
+                match self.iter.next()? {
+                    Some(row) => {
+                        self.rowbuf.push(row);
+                    }
+                    None => break,
+                }
+            }
+
+            if self.rowbuf.is_empty() {
+                throw!(anyhow!("Postgres EOF"));
+            }
+            self.current_row = 0;
+            self.current_col = 0;
+        }
+
+        let ret = (self.current_row, self.current_col);
+        self.current_row += (self.current_col + 1) / self.ncols;
+        self.current_col = (self.current_col + 1) % self.ncols;
+        Ok(ret)
+    }
+}
 

@@ -1,14 +1,15 @@
 // When implementing a data source, be make sure to implement Queryable and
 // Producer for all supported types in crate::types::DataType.
 
+use crate::data_order::DataOrder;
+use crate::errors::Result;
+use crate::typesystem::{TypeAssoc, TypeSystem};
+
 pub mod csv;
 pub mod dummy;
 pub mod postgres;
 pub mod mysql;
-
-use crate::data_order::DataOrder;
-use crate::errors::Result;
-use crate::typesystem::{TypeAssoc, TypeSystem};
+mod sql;
 
 pub trait Source {
     /// Supported data orders, ordering by preference.
