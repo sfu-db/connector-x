@@ -8,7 +8,7 @@
 Load data from <img src="https://raw.githubusercontent.com/sfu-db/connector-agent/main/assets/sources.gif" width="6.5%" style="margin-bottom: -2px"/> to <img src="https://raw.githubusercontent.com/sfu-db/connector-agent/main/assets/destinations.gif" width="7%" style="margin-bottom: -2px"/>, the fastest way.
 
 **Currently only support Postgres to Pandas. MySQL is in development.**
-For more data sources, please check out our [discussion](https://github.com/sfu-db/connector-x/discussions/61)
+For more data sources, please check out our [discussion](https://github.com/sfu-db/connector-x/discussions/61).
 
 ConnectorX enables you to load data from databases into Python in the fastest and most memory efficient way.
 
