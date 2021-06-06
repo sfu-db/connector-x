@@ -3,6 +3,7 @@ mod pandas_columns;
 mod pystring;
 mod transport;
 mod types;
+mod mysql_pandas;
 
 pub use self::destination::{PandasDestination, PandasPartitionDestination};
 pub use self::transport::PostgresPandasTransport;
