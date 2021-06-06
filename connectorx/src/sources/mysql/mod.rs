@@ -87,10 +87,9 @@ where
                     //         )
                     //     })
                     //     .unzip();
-                    self.names = vec!["test_int", "test_float", "test_str"];  //names;
+                    self.names = vec!["test_int", "test_float"];  //names;
                     self.schema = vec![ColumnType::MYSQL_TYPE_LONG,
-                                       ColumnType::MYSQL_TYPE_DOUBLE,
-                                       ColumnType::MYSQL_TYPE_BLOB];          //types;
+                                       ColumnType::MYSQL_TYPE_DOUBLE];          //types;
 
                     success = true;
                     break;
@@ -124,7 +123,6 @@ where
         let mut ret = vec![];
         for query in self.queries {
             let conn = self.pool.get()?;
-
             ret.push(MysqlSourcePartition::<P>::new(
                 conn,
                 &query,
@@ -167,7 +165,7 @@ impl SourcePartition for MysqlSourcePartition<Binary> {
     fn prepare(&mut self) -> Result<()> {
         self.nrows = match get_limit(&self.query)? {
             None => {
-                let row = self.conn.query()
+                let row = self.conn.query_first(&count_query(&self.query)?)?; // 这里我应该写错的
                 row.get::<_, i64>(0) as usize
             }
             Some(n) => n,
@@ -176,7 +174,7 @@ impl SourcePartition for MysqlSourcePartition<Binary> {
     }
 
     fn parser(&mut self) -> Result<Self::Parser<'_>> {
-        let reader = self.conn.copy_out(&*query)?; // unless reading the data, it seems like issue the query is fast
+        let reader = self.conn.query(&*query)?; // unless reading the data, it seems like issue the query is fast
         let pg_schema: Vec<_> = self.schema.iter().map(|&dt| dt.into()).collect();
         let iter = BinaryCopyOutIter::new(reader, &pg_schema);
 
@@ -208,7 +206,7 @@ pub struct PostgresBinarySourcePartitionParser<'a> {
 impl<'a> PostgresBinarySourcePartitionParser<'a> {
     pub fn new(
         iter: BinaryCopyOutIter<'a>,
-        schema: &[PostgresTypeSystem],
+        schema: &[MysqlTypeSystem],
         buf_size: usize,
     ) -> Self {
         Self {
