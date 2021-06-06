@@ -18,16 +18,16 @@ pub use typesystem::MysqlTypeSystem;
 type MysqlManager = MysqlConnectionManager;
 type MysqlConn = PooledConnection<MysqlManager>;
 
-pub struct MysqlSource<P> {
+pub struct MysqlSource {
     pool: Pool<MysqlManager>,
     queries: Vec<String>,
     names: Vec<String>,
     schema: Vec<MysqlTypeSystem>, // 4
     buf_size: usize,
-    _protocol: PhantomData<P>,
+    // _protocol: PhantomData<P>,
 }
 
-impl<P> MysqlSource<P> {
+impl MysqlSource {
     pub fn new(conn: &str, nconn: usize) -> Result<Self> {
         let manager = MysqlConnectionManager::new(OptsBuilder::from_opts(Opts::from_url(&url).unwrap()));
         let pool = r2d2::Pool::builder().max_size(4).build(manager).unwrap();
@@ -38,7 +38,7 @@ impl<P> MysqlSource<P> {
             names: vec![],
             schema: vec![],
             buf_size: 32,
-            _protocol: PhantomData,
+            // _protocol: PhantomData,
         })
     }
 
@@ -47,7 +47,7 @@ impl<P> MysqlSource<P> {
     }
 }
 
-impl<P> Source for MysqlSource<P>
+impl Source for MysqlSource
 where
     MysqlSourcePartition<P>: SourcePartition<TypeSystem = MysqlTypeSystem>, // 1
     P: Send,
@@ -134,17 +134,17 @@ where
     }
 }
 
-pub struct MysqlSourcePartition<P> {
+pub struct MysqlSourcePartition {
     conn: MysqlConn,
     query: String,
     schema: Vec<MysqlTypeSystem>,  // 5
     nrows: usize,
     ncols: usize,
     buf_size: usize,
-    _protocol: PhantomData<P>,
+    // _protocol: PhantomData<P>,
 }
 
-impl<P> MysqlSourcePartition<P> {
+impl MysqlSourcePartition {
     pub fn new(conn: PgConn, query: &str, schema: &[MysqlTypeSystem], buf_size: usize) -> Self {
         Self {
             conn,
@@ -153,7 +153,7 @@ impl<P> MysqlSourcePartition<P> {
             nrows: 0,
             ncols: schema.len(),
             buf_size,
-            _protocol: PhantomData,
+            // _protocol: PhantomData,
         }
     }
 }
@@ -173,17 +173,17 @@ impl SourcePartition for MysqlSourcePartition<Binary> {
         Ok(())
     }
 
-    fn parser(&mut self) -> Result<Self::Parser<'_>> {
-        let reader = self.conn.query(&*query)?; // unless reading the data, it seems like issue the query is fast
-        let pg_schema: Vec<_> = self.schema.iter().map(|&dt| dt.into()).collect();
-        let iter = BinaryCopyOutIter::new(reader, &pg_schema);
-
-        Ok(PostgresBinarySourcePartitionParser::new(
-            iter,
-            &self.schema,
-            self.buf_size,
-        ))
-    }
+    // fn parser(&mut self) -> Result<Self::Parser<'_>> {
+    //     let reader = self.conn.query(&*query)?; // unless reading the data, it seems like issue the query is fast
+    //     let pg_schema: Vec<_> = self.schema.iter().map(|&dt| dt.into()).collect();
+    //     let iter = BinaryCopyOutIter::new(reader, &pg_schema);
+    //
+    //     Ok(PostgresBinarySourcePartitionParser::new(
+    //         iter,
+    //         &self.schema,
+    //         self.buf_size,
+    //     ))
+    // }
 
     fn nrows(&self) -> usize {
         self.nrows

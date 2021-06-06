@@ -23,71 +23,37 @@ pub fn write_pandas<'a>(py: Python<'a>, conn: &str, queries: &[&str], protocol: 
 
     // TODO: unlock gil if possible
     debug!("Protocol: {}", protocol);
-    match protocol {
-        "csv" => {
-            let sb = PostgresSource::<CSV>::new(conn, queries.len())?;
-            let dispatcher = Dispatcher::<_, _, PostgresPandasTransport<CSV>>::new(
-                sb,
-                &mut destination,
-                queries,
-            );
-
-            debug!("Running dispatcher");
-            dispatcher.run()?;
-        }
-        "binary" => {
-            let sb = PostgresSource::<Binary>::new(conn, queries.len())?;
-            let dispatcher = Dispatcher::<_, _, PostgresPandasTransport<Binary>>::new(
-                sb,
-                &mut destination,
-                queries,
-            );
-
-            debug!("Running dispatcher");
-            dispatcher.run()?;
-        }
-        _ => unimplemented!("{} protocol not supported", protocol),
+    if conn.starts_with("mysql") {
+        todo!(something);
     }
+    else if conn.starts_with("postgres") {
+        match protocol {
+            "csv" => {
+                let sb = PostgresSource::<CSV>::new(conn, queries.len())?;
+                let dispatcher = Dispatcher::<_, _, PostgresPandasTransport<CSV>>::new(
+                    sb,
+                    &mut destination,
+                    queries,
+                );
 
+                debug!("Running dispatcher");
+                dispatcher.run()?;
+            }
+            "binary" => {
+                let sb = PostgresSource::<Binary>::new(conn, queries.len())?;
+                let dispatcher = Dispatcher::<_, _, PostgresPandasTransport<Binary>>::new(
+                    sb,
+                    &mut destination,
+                    queries,
+                );
+
+                debug!("Running dispatcher");
+                dispatcher.run()?;
+            }
+            _ => unimplemented!("{} protocol not supported", protocol),
+        }
+    }
     destination
         .result()
         .ok_or_else(|| anyhow!("destination not run"))?
 }
-
-#[throws(ConnectorAgentPythonError)]
-pub fn write_pandas_mysql<'a>(py: Python<'a>, conn: &str, queries: &[&str], protocol: &str) -> &'a PyAny {
-    let mut destination = PandasDestination::new(py);
-
-    // TODO: unlock gil if possible
-    debug!("Protocol: {}", protocol);
-    match protocol {
-        "csv" => {
-            let sb = PostgresSource::<CSV>::new(conn, queries.len())?;
-            let dispatcher = Dispatcher::<_, _, PostgresPandasTransport<CSV>>::new(
-                sb,
-                &mut destination,
-                queries,
-            );
-
-            debug!("Running dispatcher");
-            dispatcher.run()?;
-        }
-        "binary" => {
-            let sb = PostgresSource::<Binary>::new(conn, queries.len())?;
-            let dispatcher = Dispatcher::<_, _, PostgresPandasTransport<Binary>>::new(
-                sb,
-                &mut destination,
-                queries,
-            );
-
-            debug!("Running dispatcher");
-            dispatcher.run()?;
-        }
-        _ => unimplemented!("{} protocol not supported", protocol),
-    }
-
-    destination
-        .result()
-        .ok_or_else(|| anyhow!("destination not run"))?
-}
-
