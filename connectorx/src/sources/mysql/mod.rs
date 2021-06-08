@@ -9,8 +9,6 @@ use r2d2_mysql::{mysql::{consts::ColumnType, Opts, OptsBuilder, prelude::Queryab
 use sql::{count_query, get_limit, limit1_query};
 use std::marker::PhantomData;
 
-use fehler::throw;
-
 pub use typesystem::MysqlTypeSystem;
 
 mod typesystem;
@@ -30,7 +28,6 @@ impl MysqlSource {
     pub fn new(conn: &str, nconn: usize) -> Result<Self> {
         let manager = MysqlConnectionManager::new(OptsBuilder::from_opts(Opts::from_url(&conn).unwrap()));
         let pool = r2d2::Pool::builder().max_size(nconn as u32).build(manager).unwrap();
-
         Ok(Self {
             pool,
             queries: vec![],
@@ -47,7 +44,7 @@ impl MysqlSource {
 
 impl Source for MysqlSource
 where
-    MysqlSourcePartition: SourcePartition<TypeSystem = MysqlTypeSystem>,
+    MysqlSourcePartition: SourcePartition<TypeSystem = MysqlTypeSystem>
 {
     const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
     type Partition = MysqlSourcePartition;
@@ -84,9 +81,9 @@ where
                     //         )
                     //     })
                     //     .unzip();
-                    self.names = vec!["test_int", "test_float"];
+                    self.names = vec!["test_int", "test_float"];  //names;
                     self.schema = vec![ColumnType::MYSQL_TYPE_LONG,
-                                       ColumnType::MYSQL_TYPE_DOUBLE];
+                                       ColumnType::MYSQL_TYPE_DOUBLE];          //types;
 
                     success = true;
                     break;
@@ -120,7 +117,7 @@ where
         let mut ret = vec![];
         for query in self.queries {
             let conn = self.pool.get()?;
-            ret.push(MysqlSourcePartition::new(
+            ret.push(MysqlSourcePartition::<P>::new(
                 conn,
                 &query,
                 &self.schema,
@@ -138,6 +135,7 @@ pub struct MysqlSourcePartition {
     nrows: usize,
     ncols: usize,
     buf_size: usize,
+    // _protocol: PhantomData<P>,
 }
 
 impl MysqlSourcePartition {
@@ -149,18 +147,19 @@ impl MysqlSourcePartition {
             nrows: 0,
             ncols: schema.len(),
             buf_size,
+            // _protocol: PhantomData,
         }
     }
 }
 
-impl SourcePartition for MysqlSourcePartition<Binary> {
+impl SourcePartition for MysqlSourcePartition {
     type TypeSystem = MysqlTypeSystem;
     type Parser<'a> = PostgresBinarySourcePartitionParser<'a>;
 
     fn prepare(&mut self) -> Result<()> {
         self.nrows = match get_limit(&self.query)? {
             None => {
-                let row = self.conn.query_first(&count_query(&self.query)?)?; // 这里我应该写错的
+                let row_number:Option<i64> = self.conn.query_first(&count_query(&self.query)?).unwrap();
                 row.get::<_, i64>(0) as usize
             }
             Some(n) => n,
@@ -168,17 +167,17 @@ impl SourcePartition for MysqlSourcePartition<Binary> {
         Ok(())
     }
 
-    // fn parser(&mut self) -> Result<Self::Parser<'_>> {
-    //     let reader = self.conn.query(&*query)?; // unless reading the data, it seems like issue the query is fast
-    //     let pg_schema: Vec<_> = self.schema.iter().map(|&dt| dt.into()).collect();
-    //     let iter = BinaryCopyOutIter::new(reader, &pg_schema);
-    //
-    //     Ok(PostgresBinarySourcePartitionParser::new(
-    //         iter,
-    //         &self.schema,
-    //         self.buf_size,
-    //     ))
-    // }
+    fn parser(&mut self) -> Result<Self::Parser<'_>> {
+        let reader = self.conn.query(&*query)?; // unless reading the data, it seems like issue the query is fast
+        let pg_schema: Vec<_> = self.schema.iter().map(|&dt| dt.into()).collect();
+        let iter = BinaryCopyOutIter::new(reader, &pg_schema);
+
+        Ok(PostgresBinarySourcePartitionParser::new(
+            iter,
+            &self.schema,
+            self.buf_size,
+        ))
+    }
 
     fn nrows(&self) -> usize {
         self.nrows
