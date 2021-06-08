@@ -297,7 +297,7 @@ impl<'a> PostgresBinarySourcePartitionParser<'a> {
         Ok(ret)
     }
 }
-----------!
+
 impl<'a> PartitionParser<'a> for PostgresBinarySourcePartitionParser<'a> {
     type TypeSystem = PostgresTypeSystem;
 }
