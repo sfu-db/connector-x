@@ -9,6 +9,8 @@ use r2d2_mysql::{mysql::{consts::ColumnType, Opts, OptsBuilder, prelude::Queryab
 use sql::{count_query, get_limit, limit1_query};
 use std::marker::PhantomData;
 
+use fehler::throw;
+
 pub use typesystem::MysqlTypeSystem;
 
 mod typesystem;
@@ -45,12 +47,11 @@ impl MysqlSource {
 
 impl Source for MysqlSource
 where
-    MysqlSourcePartition: SourcePartition<TypeSystem = MysqlTypeSystem>, // 1
-    P: Send,
+    MysqlSourcePartition: SourcePartition<TypeSystem = MysqlTypeSystem>,
 {
     const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
-    type Partition = MysqlSourcePartition;               // 2
-    type TypeSystem = MysqlTypeSystem;                      // 3
+    type Partition = MysqlSourcePartition;
+    type TypeSystem = MysqlTypeSystem;
 
     fn set_data_order(&mut self, data_order: DataOrder) -> Result<()> {
         if !matches!(data_order, DataOrder::RowMajor) {
@@ -83,9 +84,9 @@ where
                     //         )
                     //     })
                     //     .unzip();
-                    self.names = vec!["test_int", "test_float"];  //names;
+                    self.names = vec!["test_int", "test_float"];
                     self.schema = vec![ColumnType::MYSQL_TYPE_LONG,
-                                       ColumnType::MYSQL_TYPE_DOUBLE];          //types;
+                                       ColumnType::MYSQL_TYPE_DOUBLE];
 
                     success = true;
                     break;
@@ -119,7 +120,7 @@ where
         let mut ret = vec![];
         for query in self.queries {
             let conn = self.pool.get()?;
-            ret.push(MysqlSourcePartition::<P>::new(
+            ret.push(MysqlSourcePartition::new(
                 conn,
                 &query,
                 &self.schema,
@@ -137,7 +138,6 @@ pub struct MysqlSourcePartition {
     nrows: usize,
     ncols: usize,
     buf_size: usize,
-    // _protocol: PhantomData<P>,
 }
 
 impl MysqlSourcePartition {
@@ -149,7 +149,6 @@ impl MysqlSourcePartition {
             nrows: 0,
             ncols: schema.len(),
             buf_size,
-            // _protocol: PhantomData,
         }
     }
 }
