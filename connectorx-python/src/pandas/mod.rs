@@ -1,9 +1,9 @@
 mod destination;
+mod mysql_pandas;
 mod pandas_columns;
 mod pystring;
 mod transport;
 mod types;
-mod mysql_pandas;
 
 pub use self::destination::{PandasDestination, PandasPartitionDestination};
 pub use self::transport::PostgresPandasTransport;
@@ -26,8 +26,7 @@ pub fn write_pandas<'a>(py: Python<'a>, conn: &str, queries: &[&str], protocol: 
     debug!("Protocol: {}", protocol);
     if conn.starts_with("mysql") {
         todo!(something);
-    }
-    else if conn.starts_with("postgres") {
+    } else if conn.starts_with("postgres") {
         match protocol {
             "csv" => {
                 let sb = PostgresSource::<CSV>::new(conn, queries.len())?;

@@ -7,8 +7,8 @@ use crate::typesystem::{TypeAssoc, TypeSystem};
 
 pub mod csv;
 pub mod dummy;
-pub mod postgres;
 pub mod mysql;
+pub mod postgres;
 mod sql;
 
 pub trait Source {
