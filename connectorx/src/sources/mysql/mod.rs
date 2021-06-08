@@ -29,7 +29,7 @@ pub struct MysqlSource {
 
 impl MysqlSource {
     pub fn new(conn: &str, nconn: usize) -> Result<Self> {
-        let manager = MysqlConnectionManager::new(OptsBuilder::from_opts(Opts::from_url(&url).unwrap()));
+        let manager = MysqlConnectionManager::new(OptsBuilder::from_opts(Opts::from_url(&conn).unwrap()));
         let pool = r2d2::Pool::builder().max_size(4).build(manager).unwrap();
 
         Ok(Self {
@@ -49,11 +49,11 @@ impl MysqlSource {
 
 impl Source for MysqlSource
 where
-    MysqlSourcePartition<P>: SourcePartition<TypeSystem = MysqlTypeSystem>, // 1
+    MysqlSourcePartition: SourcePartition<TypeSystem = MysqlTypeSystem>,
     P: Send,
 {
     const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
-    type Partition = MysqlSourcePartition<P>;               // 2
+    type Partition = MysqlSourcePartition;               // 2
     type TypeSystem = MysqlTypeSystem;                      // 3
 
     fn set_data_order(&mut self, data_order: DataOrder) -> Result<()> {
@@ -158,7 +158,7 @@ impl MysqlSourcePartition {
     }
 }
 
-impl SourcePartition for MysqlSourcePartition<Binary> {
+impl SourcePartition for MysqlSourcePartition {
     type TypeSystem = MysqlTypeSystem;
     type Parser<'a> = PostgresBinarySourcePartitionParser<'a>;
 
@@ -173,17 +173,17 @@ impl SourcePartition for MysqlSourcePartition<Binary> {
         Ok(())
     }
 
-    // fn parser(&mut self) -> Result<Self::Parser<'_>> {
-    //     let reader = self.conn.query(&*query)?; // unless reading the data, it seems like issue the query is fast
-    //     let pg_schema: Vec<_> = self.schema.iter().map(|&dt| dt.into()).collect();
-    //     let iter = BinaryCopyOutIter::new(reader, &pg_schema);
-    //
-    //     Ok(PostgresBinarySourcePartitionParser::new(
-    //         iter,
-    //         &self.schema,
-    //         self.buf_size,
-    //     ))
-    // }
+    fn parser(&mut self) -> Result<Self::Parser<'_>> {
+        let reader = self.conn.query(&*query)?; // unless reading the data, it seems like issue the query is fast
+        let pg_schema: Vec<_> = self.schema.iter().map(|&dt| dt.into()).collect();
+        let iter = BinaryCopyOutIter::new(reader, &pg_schema);
+
+        Ok(PostgresBinarySourcePartitionParser::new(
+            iter,
+            &self.schema,
+            self.buf_size,
+        ))
+    }
 
     fn nrows(&self) -> usize {
         self.nrows
