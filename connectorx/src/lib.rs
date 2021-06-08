@@ -1,5 +1,6 @@
 #![feature(generic_associated_types)]
 #![feature(log_syntax)]
+#![feature(in_band_lifetimes)]
 #![allow(incomplete_features)]
 
 #[doc(hidden)]

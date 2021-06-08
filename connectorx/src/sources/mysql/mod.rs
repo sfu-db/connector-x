@@ -3,11 +3,12 @@ use crate::errors::{ConnectorAgentError, Result};
 use crate::sources::{PartitionParser, Produce, Source, SourcePartition};
 use crate::sources::sql::{limit1_query, count_query, get_limit};
 
-use r2d2::{Pool, PooledConnection};
-use r2d2_mysql::{mysql::{consts::ColumnType, Opts, OptsBuilder, prelude::Queryable}, MysqlConnectionManager};
+use anyhow::anyhow;
+use fehler::throw;
+use log::debug;
 
-use sql::{count_query, get_limit, limit1_query};
-use std::marker::PhantomData;
+use r2d2::{Pool, PooledConnection};
+use r2d2_mysql::{mysql::{consts::ColumnType, Opts, OptsBuilder, prelude::Queryable, QueryResult, Text}, MysqlConnectionManager};
 
 pub use typesystem::MysqlTypeSystem;
 
@@ -117,7 +118,7 @@ where
         let mut ret = vec![];
         for query in self.queries {
             let conn = self.pool.get()?;
-            ret.push(MysqlSourcePartition::<P>::new(
+            ret.push(MysqlSourcePartition::new(
                 conn,
                 &query,
                 &self.schema,
@@ -131,7 +132,7 @@ where
 pub struct MysqlSourcePartition {
     conn: MysqlConn,
     query: String,
-    schema: Vec<MysqlTypeSystem>,  // 5
+    schema: Vec<MysqlTypeSystem>,
     nrows: usize,
     ncols: usize,
     buf_size: usize,
@@ -139,7 +140,7 @@ pub struct MysqlSourcePartition {
 }
 
 impl MysqlSourcePartition {
-    pub fn new(conn: PgConn, query: &str, schema: &[MysqlTypeSystem], buf_size: usize) -> Self {
+    pub fn new(conn: MysqlConn, query: &str, schema: &[MysqlTypeSystem], buf_size: usize) -> Self {
         Self {
             conn,
             query: query.to_string(),
@@ -154,13 +155,13 @@ impl MysqlSourcePartition {
 
 impl SourcePartition for MysqlSourcePartition {
     type TypeSystem = MysqlTypeSystem;
-    type Parser<'a> = PostgresBinarySourcePartitionParser<'a>;
+    type Parser<'a> = MysqlSourcePartitionParser<'a>;
 
     fn prepare(&mut self) -> Result<()> {
-        self.nrows = match get_limit(&self.query)? {
+        self.nrows = match get_limit(&self.query)? {  // now get_limit using PostgreDialect
             None => {
-                let row_number:Option<i64> = self.conn.query_first(&count_query(&self.query)?).unwrap();
-                row.get::<_, i64>(0) as usize
+                let row: Option<usize> = self.conn.query_first(&count_query(&self.query)?).unwrap();
+                row.unwrap()
             }
             Some(n) => n,
         };
@@ -168,11 +169,9 @@ impl SourcePartition for MysqlSourcePartition {
     }
 
     fn parser(&mut self) -> Result<Self::Parser<'_>> {
-        let reader = self.conn.query(&*query)?; // unless reading the data, it seems like issue the query is fast
-        let pg_schema: Vec<_> = self.schema.iter().map(|&dt| dt.into()).collect();
-        let iter = BinaryCopyOutIter::new(reader, &pg_schema);
-
-        Ok(PostgresBinarySourcePartitionParser::new(
+        let query = self.query.clone();
+        let mut iter = self.conn.query_iter(query).unwrap();
+        Ok(MysqlSourcePartitionParser::new(
             iter,
             &self.schema,
             self.buf_size,
@@ -188,18 +187,18 @@ impl SourcePartition for MysqlSourcePartition {
     }
 }
 
-pub struct PostgresBinarySourcePartitionParser<'a> {
-    iter: BinaryCopyOutIter<'a>,
+pub struct MysqlSourcePartitionParser<'a> {
+    iter: QueryResult<'a, 'a, 'a, Text>,
     buf_size: usize,
-    rowbuf: Vec<BinaryCopyOutRow>,
+    rowbuf: Vec<_>,
     ncols: usize,
     current_col: usize,
     current_row: usize,
 }
 
-impl<'a> PostgresBinarySourcePartitionParser<'a> {
+impl<'a> MysqlSourcePartitionParser<'a> {
     pub fn new(
-        iter: BinaryCopyOutIter<'a>,
+        iter: QueryResult<'a, 'a, 'a, Text>,   // hardcode
         schema: &[MysqlTypeSystem],
         buf_size: usize,
     ) -> Self {
@@ -220,11 +219,10 @@ impl<'a> PostgresBinarySourcePartitionParser<'a> {
             }
 
             for _ in 0..self.buf_size {
-                match self.iter.next()? {
-                    Some(row) => {
-                        self.rowbuf.push(row);
-                    }
-                    None => break,
+                if let Some(item) = self.iter.next() {
+                    self.rowbuf.push(item.unwrap());
+                } else {
+                    break;
                 }
             }
 
@@ -234,11 +232,28 @@ impl<'a> PostgresBinarySourcePartitionParser<'a> {
             self.current_row = 0;
             self.current_col = 0;
         }
-
         let ret = (self.current_row, self.current_col);
         self.current_row += (self.current_col + 1) / self.ncols;
         self.current_col = (self.current_col + 1) % self.ncols;
         Ok(ret)
+    }
+}
+
+impl<'a> PartitionParser<'a> for MysqlSourcePartitionParser<'a> {
+    type TypeSystem = MysqlTypeSystem;
+}
+
+impl<'r, 'a> Produce<'r, i32> for MysqlSourceParser<'a> {
+    fn produce(&mut self) -> Result<i32> {
+        let (ridx, cidx) = self.next_loc()?;
+        Ok(self.row_buf[ridx].get(cidx).unwrap() as i32)
+    }
+}
+
+impl<'r, 'a> Produce<'r, f32> for MysqlSourceParser<'a> {
+    fn produce(&mut self) -> Result<f32> {
+        let (ridx, cidx) = self.next_loc()?;
+        Ok(self.row_buf[ridx].get(cidx).unwrap() as f32)
     }
 }
 
