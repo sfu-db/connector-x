@@ -1,6 +1,5 @@
 use super::destination::PandasDestination;
 use super::types::PandasTypeSystem;
-// use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
 use connectorx::{
     impl_transport,
     sources::mysql::{MysqlSource, MysqlTypeSystem},
