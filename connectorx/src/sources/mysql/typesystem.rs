@@ -20,7 +20,7 @@ impl<'a> From<&'a ColumnType> for MysqlTypeSystem {
         match ty {
             ColumnType::MYSQL_TYPE_LONG => Long(true),
             ColumnType::MYSQL_TYPE_DOUBLE => Double(true),
-            _ => unimplemented!("{}", ty.name()),
+            _ => unimplemented!("{}", format!("{:?}", ty)),
         }
     }
 }

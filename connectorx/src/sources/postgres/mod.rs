@@ -8,8 +8,8 @@ use hex::decode;
 use log::debug;
 use postgres::{
     binary_copy::{BinaryCopyOutIter, BinaryCopyOutRow},
-    CopyOutReader,
     fallible_iterator::FallibleIterator,
+    CopyOutReader,
 };
 use r2d2::{Pool, PooledConnection};
 use r2d2_postgres::{postgres::NoTls, PostgresConnectionManager};
@@ -21,8 +21,8 @@ pub use typesystem::PostgresTypeSystem;
 
 use crate::data_order::DataOrder;
 use crate::errors::{ConnectorAgentError, Result};
+use crate::sources::sql::{count_query, get_limit, limit1_query};
 use crate::sources::{PartitionParser, Produce, Source, SourcePartition};
-use crate::sources::sql::{limit1_query, count_query, get_limit};
 
 mod typesystem;
 
