@@ -160,7 +160,7 @@ impl SourcePartition for MysqlSourcePartition {
     fn prepare(&mut self) -> Result<()> {
         self.nrows = match get_limit(&self.query)? {
             None => {
-                let row = self.conn.query_first(&count_query(&self.query)?)?; // 这里我应该写错的
+                let row_number:Option<i64> = self.conn.query_first(&count_query(&self.query)?).unwrap();
                 row.get::<_, i64>(0) as usize
             }
             Some(n) => n,
