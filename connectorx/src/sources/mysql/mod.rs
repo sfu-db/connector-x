@@ -1,7 +1,3 @@
-mod typesystem;
-
-pub enum Binary {}
-
 use crate::data_order::DataOrder;
 use crate::errors::{ConnectorAgentError, Result};
 use crate::sources::{PartitionParser, Produce, Source, SourcePartition};
@@ -15,6 +11,8 @@ use std::marker::PhantomData;
 
 pub use typesystem::MysqlTypeSystem;
 
+mod typesystem;
+
 type MysqlManager = MysqlConnectionManager;
 type MysqlConn = PooledConnection<MysqlManager>;
 
@@ -22,23 +20,20 @@ pub struct MysqlSource {
     pool: Pool<MysqlManager>,
     queries: Vec<String>,
     names: Vec<String>,
-    schema: Vec<MysqlTypeSystem>, // 4
+    schema: Vec<MysqlTypeSystem>,
     buf_size: usize,
-    // _protocol: PhantomData<P>,
 }
 
 impl MysqlSource {
     pub fn new(conn: &str, nconn: usize) -> Result<Self> {
         let manager = MysqlConnectionManager::new(OptsBuilder::from_opts(Opts::from_url(&conn).unwrap()));
-        let pool = r2d2::Pool::builder().max_size(4).build(manager).unwrap();
-
+        let pool = r2d2::Pool::builder().max_size(nconn as u32).build(manager).unwrap();
         Ok(Self {
             pool,
             queries: vec![],
             names: vec![],
             schema: vec![],
             buf_size: 32,
-            // _protocol: PhantomData,
         })
     }
 
@@ -53,8 +48,8 @@ where
     P: Send,
 {
     const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
-    type Partition = MysqlSourcePartition;               // 2
-    type TypeSystem = MysqlTypeSystem;                      // 3
+    type Partition = MysqlSourcePartition;
+    type TypeSystem = MysqlTypeSystem;
 
     fn set_data_order(&mut self, data_order: DataOrder) -> Result<()> {
         if !matches!(data_order, DataOrder::RowMajor) {
