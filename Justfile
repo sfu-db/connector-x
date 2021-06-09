@@ -21,7 +21,8 @@ test-python: setup-python
     cd connectorx-python && poetry run pytest connectorx/tests -v -s
 
 seed-db:
-    psql $POSTGRES_URL -f scripts/postgres.sql
+    # psql $POSTGRES_URL -f scripts/postgres.sql
+    sqlite3 $SQLITE_DB < scripts/sqlite.sql
 
 # benches 
 flame-tpch:

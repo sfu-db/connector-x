@@ -49,6 +49,9 @@ pub enum ConnectorAgentError {
     PostgresError(#[from] postgres::Error),
 
     #[error(transparent)]
+    SQLiteError(#[from] rusqlite::Error),
+
+    #[error(transparent)]
     CSVError(#[from] csv::Error),
 
     #[error(transparent)]

@@ -38,6 +38,8 @@ thiserror = "1"
 tokio = {version = "1", features = ["rt-multi-thread", "io-util"]}
 uuid = "0.8"
 hex = "0.4"
+rusqlite = "0.25"
+r2d2_sqlite = "0.18"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
