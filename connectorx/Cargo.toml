@@ -41,6 +41,7 @@ hex = "0.4"
 rusqlite = {version = "0.25", features = ["column_decltype", "chrono"]}
 r2d2_sqlite = "0.18"
 fallible-streaming-iterator = "0.1"
+owning_ref = "0.4"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
