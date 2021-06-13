@@ -79,6 +79,9 @@ where
         // let mut error = None;
         for query in &self.queries {
             // assuming all the partition queries yield same schema
+            // meeting
+            // mysql dump command, allow us to dump the database(maybe more efficient)
+            // conn.exec_batched("")
             self.names = vec!["test_int".to_string(), "test_float".to_string()]; // hardcode
             self.schema = vec![Long(true), Double(true)]; // hardcode
             // success = true;
@@ -182,7 +185,7 @@ impl SourcePartition for MysqlSourcePartition {
 
     fn parser(&mut self) -> Result<Self::Parser<'_>> {
         let query = self.query.clone();
-        let mut iter = self.conn.query_iter(query).unwrap();
+        let mut iter = self.conn.query_iter(query).unwrap();   // if it is one row, inefficient.
         Ok(MysqlSourcePartitionParser::new(
             iter,
             &self.schema,
@@ -255,18 +258,35 @@ impl<'a> PartitionParser<'a> for MysqlSourcePartitionParser<'a> {
     type TypeSystem = MysqlTypeSystem;
 }
 
-impl<'r, 'a> Produce<'r, i32> for MysqlSourcePartitionParser<'a> {
-    fn produce(&mut self) -> Result<i32> {
+impl<'r, 'a> Produce<'r, i64> for MysqlSourcePartitionParser<'a> {
+    fn produce(&mut self) -> Result<i64> {
         let (ridx, cidx) = self.next_loc()?;
-        let res:i32 = self.rowbuf[ridx].get(cidx).unwrap();
+        let res:i64 = self.rowbuf[ridx].get(cidx).unwrap();
         Ok(res)
     }
 }
 
-impl<'r, 'a> Produce<'r, f32> for MysqlSourcePartitionParser<'a> {
-    fn produce(&mut self) -> Result<f32> {
+impl<'r, 'a> Produce<'r, f64> for MysqlSourcePartitionParser<'a> {
+    fn produce(&mut self) -> Result<f64> {
         let (ridx, cidx) = self.next_loc()?;
-        let res:f32 = self.rowbuf[ridx].get(cidx).unwrap();
+        let res:f64 = self.rowbuf[ridx].get(cidx).unwrap();
+        Ok(res)
+    }
+}
+
+
+impl<'r, 'a> Produce<'r, Option<i64>> for MysqlSourcePartitionParser<'a> {
+    fn produce(&mut self) -> Result<Option<i64>> {
+        let (ridx, cidx) = self.next_loc()?;
+        let res = self.rowbuf[ridx].get(cidx);
+        Ok(res)
+    }
+}
+
+impl<'r, 'a> Produce<'r, Option<f64>> for MysqlSourcePartitionParser<'a> {
+    fn produce(&mut self) -> Result<Option<f64>> {
+        let (ridx, cidx) = self.next_loc()?;
+        let res = self.rowbuf[ridx].get(cidx);
         Ok(res)
     }
 }

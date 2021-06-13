@@ -1,7 +1,8 @@
 use std::env;
 use connectorx::sources::mysql::MysqlSource;
-use connectorx::{Source, SourcePartition};
+use connectorx::{Source, SourcePartition, Dispatcher};
 use connectorx::sources::Produce;
+// use connectorx::destinations::memory::MemoryDestination;
 
 #[test]
 fn load_and_parse() {
