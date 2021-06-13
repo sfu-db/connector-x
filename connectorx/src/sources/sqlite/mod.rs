@@ -7,7 +7,7 @@ use crate::errors::{ConnectorAgentError, Result};
 use crate::sources::{PartitionParser, Produce, Source, SourcePartition};
 use anyhow::anyhow;
 use fehler::throw;
-use owning_ref::OwningRefMut;
+use owning_ref::OwningHandle;
 use r2d2::{Pool, PooledConnection};
 use r2d2_sqlite::SqliteConnectionManager;
 use rusqlite::{Row, Rows, Statement};
@@ -130,9 +130,25 @@ impl SourcePartition for SqliteSourcePartition {
 }
 
 pub struct SqliteSourcePartitionParser<'a> {
-    rows: OwningRefMut<Box<Statement<'a>>, Rows<'a>>,
+    rows: OwningHandle<Box<Statement<'a>>, MyRows<'a>>,
     ncols: usize,
     current_col: usize,
+}
+
+struct MyRows<'a>(Rows<'a>);
+
+impl<'a> std::ops::Deref for MyRows<'a> {
+    type Target = Rows<'a>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl<'a> std::ops::DerefMut for MyRows<'a> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
 }
 
 impl<'a> SqliteSourcePartitionParser<'a> {
@@ -142,8 +158,15 @@ impl<'a> SqliteSourcePartitionParser<'a> {
         schema: &[SqliteTypeSystem],
     ) -> Result<Self> {
         let stmt: Statement<'a> = conn.prepare(query)?;
-        let rows: OwningRefMut<Box<Statement<'a>>, Rows<'a>> = OwningRefMut::new(Box::new(stmt))
-            .map_mut(|stmt: &mut Statement<'a>| &mut stmt.query([]).unwrap());
+
+        // Safety: MyRows borrows the on-heap stmt, which is owned by the OwningHandle.
+        // No matter how we move the owning handle (thus the Box<Statment>), the Statement
+        // keeps its address static on the heap, thus the borrow of MyRows keeps valid.
+        let rows: OwningHandle<Box<Statement<'a>>, MyRows<'a>> =
+            OwningHandle::new_with_fn(Box::new(stmt), |stmt: *const Statement<'a>| unsafe {
+                MyRows((&mut *(stmt as *mut Statement<'_>)).query([]).unwrap())
+            });
+
         Ok(Self {
             rows,
             ncols: schema.len(),
