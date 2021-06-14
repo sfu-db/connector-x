@@ -1,5 +1,8 @@
 use crate::errors::ConnectorAgentPythonError;
-use connectorx::partition::{pg_get_partition_range, pg_single_col_partition_query};
+use crate::source_router::SourceType;
+use connectorx::partition::{
+    pg_get_partition_range, single_col_partition_query, sqlite_get_partition_range,
+};
 use dict_derive::FromPyObject;
 use fehler::throw;
 use pyo3::prelude::*;
@@ -7,6 +10,7 @@ use pyo3::{
     exceptions::{PyNotImplementedError, PyValueError},
     PyResult,
 };
+use sqlparser::dialect::{PostgreSqlDialect, SQLiteDialect};
 
 #[derive(FromPyObject)]
 pub struct PartitionQuery {
@@ -37,6 +41,7 @@ pub fn read_sql<'a>(
     queries: Option<Vec<String>>,
     partition_query: Option<PartitionQuery>,
 ) -> PyResult<&'a PyAny> {
+    let st = SourceType::from(conn);
     let queries = match (queries, partition_query) {
         (Some(queries), None) => queries,
         (
@@ -53,8 +58,12 @@ pub fn read_sql<'a>(
             let num = num as i64;
 
             let (min, max) = match (min, max) {
-                (None, None) => pg_get_partition_range(conn, &query, &col)
-                    .map_err(ConnectorAgentPythonError::ConnectorAgentError)?,
+                (None, None) => match st {
+                    SourceType::Postgres => pg_get_partition_range(conn, &query, &col)
+                        .map_err(ConnectorAgentPythonError::ConnectorAgentError)?,
+                    SourceType::Sqlite => sqlite_get_partition_range(conn, &query, &col)
+                        .map_err(ConnectorAgentPythonError::ConnectorAgentError)?,
+                },
                 (Some(min), Some(max)) => (min, max),
                 _ => throw!(PyValueError::new_err(
                     "partition_query range can not be partially specified",
@@ -69,8 +78,20 @@ pub fn read_sql<'a>(
                     true => max + 1,
                     false => min + (i + 1) * partition_size,
                 };
-                let partition_query = pg_single_col_partition_query(&query, &col, lower, upper)
-                    .map_err(ConnectorAgentPythonError::ConnectorAgentError)?;
+                let partition_query = match st {
+                    SourceType::Postgres => single_col_partition_query(
+                        &query,
+                        &col,
+                        lower,
+                        upper,
+                        &PostgreSqlDialect {},
+                    )
+                    .map_err(ConnectorAgentPythonError::ConnectorAgentError)?,
+                    SourceType::Sqlite => {
+                        single_col_partition_query(&query, &col, lower, upper, &SQLiteDialect {})
+                            .map_err(ConnectorAgentPythonError::ConnectorAgentError)?
+                    }
+                };
                 queries.push(partition_query);
             }
             queries

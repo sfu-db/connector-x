@@ -39,7 +39,6 @@ def test_read_sql_with_partition(sqlite_db: str) -> None:
         sqlite_db,
         query,
         partition_on="test_int",
-        partition_range=(0, 2000),
         partition_num=3,
     )
     expected = pd.DataFrame(

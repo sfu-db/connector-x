@@ -24,7 +24,7 @@ use pyo3::{PyAny, Python};
 pub fn write_pandas<'a>(py: Python<'a>, conn: &str, queries: &[&str], protocol: &str) -> &'a PyAny {
     let mut destination = PandasDestination::new(py);
 
-    if conn.starts_with("postgresql") {
+    if conn.starts_with("postgresql://") {
         // TODO: unlock gil if possible
         debug!("Protocol: {}", protocol);
         match protocol {
@@ -54,7 +54,7 @@ pub fn write_pandas<'a>(py: Python<'a>, conn: &str, queries: &[&str], protocol: 
         }
     } else {
         debug!("Sqlite DB: {}", conn);
-        let source = SqliteSource::new(conn, queries.len())?;
+        let source = SqliteSource::new(&conn[9..], queries.len())?;
         let dispatcher =
             Dispatcher::<_, _, SqlitePandasTransport>::new(source, &mut destination, queries);
         debug!("Running dispatcher");

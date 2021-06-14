@@ -17,12 +17,12 @@ build-python-extention:
 setup-python: build-python-extention
     cd connectorx-python && poetry run python ../scripts/python-helper.py copy-extension
     
-test-python: setup-python
-    cd connectorx-python && poetry run pytest connectorx/tests -v -s
+test-python opts="": setup-python
+    cd connectorx-python && poetry run pytest connectorx/tests -v -s {{opts}}
 
 seed-db:
-    # psql $POSTGRES_URL -f scripts/postgres.sql
-    sqlite3 $SQLITE_DB < scripts/sqlite.sql
+    psql $POSTGRES_URL -f scripts/postgres.sql
+    sqlite3 ${SQLITE_URL#sqlite://} < scripts/sqlite.sql
 
 # benches 
 flame-tpch:

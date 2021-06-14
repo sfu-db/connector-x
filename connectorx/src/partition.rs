@@ -4,20 +4,25 @@ use anyhow::anyhow;
 use fehler::{throw, throws};
 use log::{debug, trace};
 use postgres::{Client, NoTls};
+use rusqlite::{types::Type, Connection};
 use sqlparser::ast::{
     BinaryOperator, Expr, Function, FunctionArg, Ident, ObjectName, Query, Select, SelectItem,
     SetExpr, Statement, TableAlias, TableFactor, TableWithJoins, Value,
 };
-use sqlparser::dialect::PostgreSqlDialect;
+use sqlparser::dialect::{Dialect, PostgreSqlDialect, SQLiteDialect};
 use sqlparser::parser::Parser;
 
 #[throws(ConnectorAgentError)]
-pub fn pg_single_col_partition_query(query: &str, col: &str, lower: i64, upper: i64) -> String {
+pub fn single_col_partition_query<T: Dialect>(
+    query: &str,
+    col: &str,
+    lower: i64,
+    upper: i64,
+    dialect: &T,
+) -> String {
     trace!("Incoming query: {}", query);
 
-    let dialect = PostgreSqlDialect {};
-
-    let mut ast = Parser::parse_sql(&dialect, query)?;
+    let mut ast = Parser::parse_sql(dialect, query)?;
     if ast.len() != 1 {
         throw!(ConnectorAgentError::SQLQueryNotSupported(query.to_string()));
     }
@@ -108,10 +113,9 @@ pub fn pg_single_col_partition_query(query: &str, col: &str, lower: i64, upper: 
 }
 
 #[throws(ConnectorAgentError)]
-fn pg_get_parition_range_query(query: &str, col: &str) -> String {
+fn get_parition_range_query<T: Dialect>(query: &str, col: &str, dialect: &T) -> String {
     trace!("Incoming query: {}", query);
-    let dialect = PostgreSqlDialect {};
-    let mut ast = Parser::parse_sql(&dialect, query)?;
+    let mut ast = Parser::parse_sql(dialect, query)?;
     if ast.len() != 1 {
         throw!(ConnectorAgentError::SQLQueryNotSupported(query.to_string()));
     }
@@ -211,7 +215,7 @@ fn pg_get_parition_range_query(query: &str, col: &str) -> String {
 #[throws(ConnectorAgentError)]
 pub fn pg_get_partition_range(conn: &str, query: &str, col: &str) -> (i64, i64) {
     let mut client = Client::connect(conn, NoTls)?;
-    let range_query = pg_get_parition_range_query(query.clone(), col.clone())?;
+    let range_query = get_parition_range_query(query.clone(), col.clone(), &PostgreSqlDialect {})?;
     let row = client.query_one(range_query.as_str(), &[])?;
 
     let col_type = PostgresTypeSystem::from(row.columns()[0].type_());
@@ -240,6 +244,37 @@ pub fn pg_get_partition_range(conn: &str, query: &str, col: &str) -> (i64, i64) 
             "Partition can only be done on int or float columns"
         )),
     };
+
+    (min_v, max_v)
+}
+
+#[throws(ConnectorAgentError)]
+pub fn sqlite_get_partition_range(conn: &str, query: &str, col: &str) -> (i64, i64) {
+    let conn = Connection::open(&conn[9..])?;
+    let range_query = get_parition_range_query(query.clone(), col.clone(), &SQLiteDialect {})?;
+    let mut error = None;
+    let (min_v, max_v) = conn.query_row(range_query.as_str(), [], |row| {
+        // declare type for count query will be None, only need to check the returned value type
+        let col_type = row.get_ref(0)?.data_type();
+        match col_type {
+            Type::Integer => {
+                let min_v: i64 = row.get(0)?;
+                let max_v: i64 = row.get(1)?;
+                Ok((min_v, max_v))
+            }
+            _ => {
+                error = Some(anyhow!(
+                    "Partition can only be done on int or float columns"
+                ));
+                Ok((0, 0))
+            }
+        }
+    })?;
+
+    match error {
+        None => {}
+        Some(e) => throw!(e),
+    }
 
     (min_v, max_v)
 }
