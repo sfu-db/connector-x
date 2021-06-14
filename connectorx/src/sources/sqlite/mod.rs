@@ -154,12 +154,24 @@ impl<'a> SqliteSourcePartitionParser<'a> {
             OwningHandle::new_with_fn(Box::new(stmt), |stmt: *const Statement<'a>| unsafe {
                 DummyBox((&mut *(stmt as *mut Statement<'_>)).query([]).unwrap())
             });
-
         Ok(Self {
             rows,
             ncols: schema.len(),
             current_col: 0,
         })
+    }
+
+    fn next_loc(&mut self) -> Result<(&Row, usize)> {
+        let row: &Row = match self.current_col {
+            0 => self.rows.next()?.ok_or_else(|| anyhow!("Sqlite EOF"))?,
+            _ => self
+                .rows
+                .get()
+                .ok_or_else(|| anyhow!("Sqlite empty current row"))?,
+        };
+        let col = self.current_col;
+        self.current_col = (self.current_col + 1) % self.ncols;
+        Ok((row, col))
     }
 }
 
@@ -169,16 +181,8 @@ impl<'a> PartitionParser<'a> for SqliteSourcePartitionParser<'a> {
 
 impl<'r, 'a> Produce<'r, i32> for SqliteSourcePartitionParser<'a> {
     fn produce(&'r mut self) -> Result<i32> {
-        let row: &Row = match self.current_col {
-            0 => self.rows.next()?.ok_or_else(|| anyhow!("Sqlite EOF"))?,
-            _ => self
-                .rows
-                .get()
-                .ok_or_else(|| anyhow!("Sqlite empty current row"))?,
-        };
-
-        let val = row.get(self.current_col)?;
-        self.current_col = (self.current_col + 1) % self.ncols;
+        let (row, col) = self.next_loc()?;
+        let val = row.get(col)?;
         Ok(val)
     }
 }
