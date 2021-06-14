@@ -1,5 +1,5 @@
-use super::destination::PandasDestination;
-use super::types::PandasTypeSystem;
+use crate::pandas::destination::PandasDestination;
+use crate::pandas::types::PandasTypeSystem;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
 use connectorx::{
     impl_transport,

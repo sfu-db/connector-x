@@ -1,3 +1,4 @@
+mod sql;
 mod typesystem;
 
 use fallible_streaming_iterator::FallibleStreamingIterator;
@@ -8,10 +9,12 @@ use crate::sources::{PartitionParser, Produce, Source, SourcePartition};
 use anyhow::anyhow;
 use derive_more::{Deref, DerefMut};
 use fehler::throw;
+use log::debug;
 use owning_ref::OwningHandle;
 use r2d2::{Pool, PooledConnection};
 use r2d2_sqlite::SqliteConnectionManager;
 use rusqlite::{Row, Rows, Statement};
+use sql::{count_query, get_limit, limit1_query};
 pub use typesystem::SqliteTypeSystem;
 
 #[derive(Deref, DerefMut)]
@@ -61,6 +64,41 @@ where
 
     fn fetch_metadata(&mut self) -> Result<()> {
         assert!(self.queries.len() != 0);
+        let conn = self.pool.get()?;
+        let mut success = false;
+        let mut error = None;
+        for query in &self.queries {
+            // assuming all the partition queries yield same schema
+            let (names, types) = conn.query_row(&limit1_query(query)?[..], [], |row| {
+                let mut names = vec![];
+                let mut types = vec![];
+                row.columns().iter().enumerate().for_each(|(i, col)| {
+                    names.push(col.name().to_string());
+                    match row.get_ref(i) {
+                        Ok(vr) => {
+                            types.push(SqliteTypeSystem::from((col.decl_type(), vr.data_type())))
+                        }
+                        Err(e) => {
+                            debug!("cannot get metadata for '{}', try next query: {}", query, e);
+                            error = Some(e);
+                        }
+                    }
+                });
+                Ok((names, types))
+            })?;
+
+            self.names = names;
+            self.schema = types;
+            success = true;
+            break;
+        }
+
+        if !success {
+            throw!(anyhow!(
+                "Cannot get metadata for the queries, last error: {:?}",
+                error
+            ))
+        }
 
         Ok(())
     }
@@ -113,6 +151,14 @@ impl SourcePartition for SqliteSourcePartition {
     type Parser<'a> = SqliteSourcePartitionParser<'a>;
 
     fn prepare(&mut self) -> Result<()> {
+        self.nrows = match get_limit(&self.query)? {
+            None => self
+                .conn
+                .query_row(&count_query(&self.query)?[..], [], |row| {
+                    Ok(row.get::<_, i64>(0)? as usize)
+                })?,
+            Some(n) => n,
+        };
         Ok(())
     }
 
@@ -163,9 +209,8 @@ impl<'a> SqliteSourcePartitionParser<'a> {
 
     fn next_loc(&mut self) -> Result<(&Row, usize)> {
         let row: &Row = match self.current_col {
-            0 => self.rows.next()?.ok_or_else(|| anyhow!("Sqlite EOF"))?,
-            _ => self
-                .rows
+            0 => (*self.rows).next()?.ok_or_else(|| anyhow!("Sqlite EOF"))?,
+            _ => (*self.rows)
                 .get()
                 .ok_or_else(|| anyhow!("Sqlite empty current row"))?,
         };
@@ -179,10 +224,26 @@ impl<'a> PartitionParser<'a> for SqliteSourcePartitionParser<'a> {
     type TypeSystem = SqliteTypeSystem;
 }
 
-impl<'r, 'a> Produce<'r, i32> for SqliteSourcePartitionParser<'a> {
-    fn produce(&'r mut self) -> Result<i32> {
-        let (row, col) = self.next_loc()?;
-        let val = row.get(col)?;
-        Ok(val)
-    }
+macro_rules! impl_produce {
+    ($($t: ty,)+) => {
+        $(
+            impl<'r, 'a> Produce<'r, $t> for SqliteSourcePartitionParser<'a> {
+                fn produce(&'r mut self) -> Result<$t> {
+                    let (row, col) = self.next_loc()?;
+                    let val = row.get(col)?;
+                    Ok(val)
+                }
+            }
+
+            impl<'r, 'a> Produce<'r, Option<$t>> for SqliteSourcePartitionParser<'a> {
+                fn produce(&'r mut self) -> Result<Option<$t>> {
+                    let (row, col) = self.next_loc()?;
+                    let val = row.get(col)?;
+                    Ok(val)
+                }
+            }
+        )+
+    };
 }
+
+impl_produce!(bool, i64, f64, Box<str>,);

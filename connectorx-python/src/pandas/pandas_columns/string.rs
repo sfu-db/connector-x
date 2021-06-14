@@ -90,6 +90,16 @@ impl<'r, 'a> PandasColumn<&'r str> for StringColumn<'a> {
     }
 }
 
+impl<'a> PandasColumn<Box<str>> for StringColumn<'a> {
+    #[throws(ConnectorAgentError)]
+    fn write(&mut self, val: Box<str>) {
+        let bytes = val.as_bytes();
+        self.string_lengths.push(bytes.len());
+        self.string_buf.extend_from_slice(bytes);
+        self.try_flush()?;
+    }
+}
+
 impl<'a> PandasColumn<String> for StringColumn<'a> {
     #[throws(ConnectorAgentError)]
     fn write(&mut self, val: String) {
@@ -128,6 +138,22 @@ impl<'r, 'a> PandasColumn<Option<&'r str>> for StringColumn<'a> {
     }
 }
 
+impl<'a> PandasColumn<Option<Box<str>>> for StringColumn<'a> {
+    #[throws(ConnectorAgentError)]
+    fn write(&mut self, val: Option<Box<str>>) {
+        match val {
+            Some(b) => {
+                let bytes = b.as_bytes();
+                self.string_lengths.push(bytes.len());
+                self.string_buf.extend_from_slice(bytes);
+                self.try_flush()?;
+            }
+            None => {
+                self.string_lengths.push(0);
+            }
+        }
+    }
+}
 impl<'a> PandasColumn<Option<String>> for StringColumn<'a> {
     #[throws(ConnectorAgentError)]
     fn write(&mut self, val: Option<String>) {
@@ -184,6 +210,14 @@ impl HasPandasColumn for char {
 }
 
 impl HasPandasColumn for Option<char> {
+    type PandasColumn<'a> = StringColumn<'a>;
+}
+
+impl HasPandasColumn for Box<str> {
+    type PandasColumn<'a> = StringColumn<'a>;
+}
+
+impl HasPandasColumn for Option<Box<str>> {
     type PandasColumn<'a> = StringColumn<'a>;
 }
 
