@@ -17,6 +17,8 @@ use connectorx::{
 use fehler::throws;
 use log::debug;
 use pyo3::{PyAny, Python};
+use connectorx::sources::mysql::MysqlSource;
+use crate::pandas::mysql_pandas::MysqlPandasTransport;
 
 #[throws(ConnectorAgentPythonError)]
 pub fn write_pandas<'a>(py: Python<'a>, conn: &str, queries: &[&str], protocol: &str) -> &'a PyAny {
@@ -25,7 +27,14 @@ pub fn write_pandas<'a>(py: Python<'a>, conn: &str, queries: &[&str], protocol: 
     // TODO: unlock gil if possible
     debug!("Protocol: {}", protocol);
     if conn.starts_with("mysql") {
-        todo!(something);
+        let sb = MysqlSource::new(conn, queries.len())?;
+        let dispatcher = Dispatcher::<_, _, MysqlPandasTransport>::new(
+            sb,
+            &mut destination,
+            queries,
+        );
+        debug!("Running dispatcher");
+        dispatcher.run()?;
     } else if conn.starts_with("postgres") {
         match protocol {
             "csv" => {

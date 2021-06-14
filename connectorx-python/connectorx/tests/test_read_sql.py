@@ -13,6 +13,25 @@ def postgres_url() -> str:
     return conn
 
 
+@pytest.fixture(scope="module")  # type: ignore
+def mysql_url() -> str:
+    conn = os.environ["MYSQL_URL"]
+    return conn
+
+
+def test_on_mysql(mysql_url: str) -> None:
+    query = "select * from test_table"
+    df = read_sql(mysql_url, query)
+    expected = pd.DataFrame(
+        index=range(3),
+        data={
+            "test_int": pd.Series([1, 2, 3], dtype="Int64"),
+            "test_float": pd.Series([1.1, 2.2, 3.3], dtype="float64")
+        }
+    )
+    assert_frame_equal(df, expected, check_names=True)
+
+
 @pytest.mark.xfail
 def test_on_non_select(postgres_url: str) -> None:
     query = "CREATE TABLE non_select(id INTEGER NOT NULL)"
@@ -86,7 +105,6 @@ def test_udf(postgres_url: str) -> None:
 
 
 def test_manual_partition(postgres_url: str) -> None:
-
     queries = [
         "SELECT * FROM test_table WHERE test_int < 2",
         "SELECT * FROM test_table WHERE test_int >= 2",
