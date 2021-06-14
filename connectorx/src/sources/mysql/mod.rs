@@ -9,12 +9,9 @@ use log::debug;
 
 use r2d2::{Pool, PooledConnection};
 use r2d2_mysql::{
-    mysql::{prelude::Queryable, Opts, OptsBuilder, QueryResult, Text},
+    mysql::{prelude::Queryable, Opts, OptsBuilder, QueryResult, Row, Text},
     MysqlConnectionManager,
 };
-
-use crate::sources::mysql::typesystem::MysqlTypeSystem::{Double, Long};
-use r2d2_mysql::mysql::Row;
 pub use typesystem::MysqlTypeSystem;
 
 mod typesystem;
@@ -74,48 +71,40 @@ where
     fn fetch_metadata(&mut self) -> Result<()> {
         assert!(self.queries.len() != 0);
 
-        // let mut conn = self.pool.get()?;
-        // let mut success = false;
-        // let mut error = None;
+        let mut conn = self.pool.get()?;
+        let mut success = false;
+        let mut error = None;
         for query in &self.queries {
             // assuming all the partition queries yield same schema
-            // meeting
-            // mysql dump command, allow us to dump the database(maybe more efficient)
-            // conn.exec_batched("")
-            self.names = vec!["test_int".to_string(), "test_float".to_string()]; // hardcode
-            self.schema = vec![Long(true), Double(true)]; // hardcode
-            // success = true;
-            // match conn.query_first("select * from test_table limit 1") {
-            //     Ok(row) => {
-            //         // let (names, types) = row // 获得这一行的names和types
-            //         //     .columns_ref()
-            //         //     .into_iter()
-            //         //     .map(|col| {
-            //         //         (
-            //         //             col.name().to_string(),
-            //         //             PostgresTypeSystem::from(col.type_()),
-            //         //         )
-            //         //     })
-            //         //     .unzip();
-            //         self.names = vec!["test_int".to_string(), "test_float".to_string()]; // hardcode
-            //         self.schema = vec![Long(true), Double(true)]; // hardcode
-            //
-            //         success = true;
-            //         break;
-            //     }
-            //     Err(e) => {
-            //         debug!("cannot get metadata for '{}', try next query: {}", query, e);
-            //         error = Some(e);
-            //     }
-            // }
+            match conn.query_first(&limit1_query(query)?[..]) {
+                Ok(res) => {
+                    let row: Row = res.unwrap();
+                    self.names = row
+                        .columns_ref()
+                        .into_iter()
+                        .map(|col| col.name_str().to_string())
+                        .collect();
+                    self.schema = row
+                        .columns_ref()
+                        .into_iter()
+                        .map(|col| MysqlTypeSystem::from(&col.column_type()))
+                        .collect();
+                    success = true;
+                    break;
+                }
+                Err(e) => {
+                    debug!("cannot get metadata for '{}', try next query: {}", query, e);
+                    error = Some(e);
+                }
+            }
         }
 
-        // if !success {
-        //     throw!(anyhow!(
-        //         "Cannot get metadata for the queries, last error: {:?}",
-        //         error
-        //     ))
-        // }
+        if !success {
+            throw!(anyhow!(
+                "Cannot get metadata for the queries, last error: {:?}",
+                error
+            ))
+        }
 
         Ok(())
     }
@@ -185,7 +174,7 @@ impl SourcePartition for MysqlSourcePartition {
 
     fn parser(&mut self) -> Result<Self::Parser<'_>> {
         let query = self.query.clone();
-        let mut iter = self.conn.query_iter(query).unwrap();   // if it is one row, inefficient.
+        let iter = self.conn.query_iter(query).unwrap(); // if it is one row, inefficient.
         Ok(MysqlSourcePartitionParser::new(
             iter,
             &self.schema,
@@ -213,7 +202,7 @@ pub struct MysqlSourcePartitionParser<'a> {
 
 impl<'a> MysqlSourcePartitionParser<'a> {
     pub fn new(
-        iter: QueryResult<'a, 'a, 'a, Text>, // hardcode
+        iter: QueryResult<'a, 'a, 'a, Text>,
         schema: &[MysqlTypeSystem],
         buf_size: usize,
     ) -> Self {
@@ -261,7 +250,7 @@ impl<'a> PartitionParser<'a> for MysqlSourcePartitionParser<'a> {
 impl<'r, 'a> Produce<'r, i64> for MysqlSourcePartitionParser<'a> {
     fn produce(&mut self) -> Result<i64> {
         let (ridx, cidx) = self.next_loc()?;
-        let res:i64 = self.rowbuf[ridx].get(cidx).unwrap();
+        let res: i64 = self.rowbuf[ridx].get(cidx).unwrap();
         Ok(res)
     }
 }
@@ -269,11 +258,10 @@ impl<'r, 'a> Produce<'r, i64> for MysqlSourcePartitionParser<'a> {
 impl<'r, 'a> Produce<'r, f64> for MysqlSourcePartitionParser<'a> {
     fn produce(&mut self) -> Result<f64> {
         let (ridx, cidx) = self.next_loc()?;
-        let res:f64 = self.rowbuf[ridx].get(cidx).unwrap();
+        let res: f64 = self.rowbuf[ridx].get(cidx).unwrap();
         Ok(res)
     }
 }
-
 
 impl<'r, 'a> Produce<'r, Option<i64>> for MysqlSourcePartitionParser<'a> {
     fn produce(&mut self) -> Result<Option<i64>> {

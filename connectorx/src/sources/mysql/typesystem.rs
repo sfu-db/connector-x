@@ -1,4 +1,4 @@
-use mysql::consts::ColumnType;
+use r2d2_mysql::mysql::consts::ColumnType;
 
 #[derive(Copy, Clone, Debug)]
 pub enum MysqlTypeSystem {
