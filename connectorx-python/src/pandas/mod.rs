@@ -9,7 +9,9 @@ pub use self::destination::{PandasDestination, PandasPartitionDestination};
 pub use self::transport::PostgresPandasTransport;
 pub use self::types::{PandasDType, PandasTypeSystem};
 use crate::errors::ConnectorAgentPythonError;
+use crate::pandas::mysql_pandas::MysqlPandasTransport;
 use anyhow::anyhow;
+use connectorx::sources::mysql::MysqlSource;
 use connectorx::{
     sources::postgres::{Binary, PostgresSource, CSV},
     Dispatcher,
@@ -17,8 +19,6 @@ use connectorx::{
 use fehler::throws;
 use log::debug;
 use pyo3::{PyAny, Python};
-use connectorx::sources::mysql::MysqlSource;
-use crate::pandas::mysql_pandas::MysqlPandasTransport;
 
 #[throws(ConnectorAgentPythonError)]
 pub fn write_pandas<'a>(py: Python<'a>, conn: &str, queries: &[&str], protocol: &str) -> &'a PyAny {
@@ -28,11 +28,8 @@ pub fn write_pandas<'a>(py: Python<'a>, conn: &str, queries: &[&str], protocol: 
     debug!("Protocol: {}", protocol);
     if conn.starts_with("mysql") {
         let sb = MysqlSource::new(conn, queries.len())?;
-        let dispatcher = Dispatcher::<_, _, MysqlPandasTransport>::new(
-            sb,
-            &mut destination,
-            queries,
-        );
+        let dispatcher =
+            Dispatcher::<_, _, MysqlPandasTransport>::new(sb, &mut destination, queries);
         debug!("Running dispatcher");
         dispatcher.run()?;
     } else if conn.starts_with("postgres") {

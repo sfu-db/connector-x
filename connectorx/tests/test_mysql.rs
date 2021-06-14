@@ -1,7 +1,7 @@
-use std::env;
 use connectorx::sources::mysql::MysqlSource;
-use connectorx::{Source, SourcePartition, Dispatcher};
 use connectorx::sources::Produce;
+use connectorx::{Source, SourcePartition};
+use std::env;
 // use connectorx::destinations::memory::MemoryDestination;
 
 #[test]
@@ -10,7 +10,7 @@ fn load_and_parse() {
 
     let dburl = env::var("MYSQL_URL").unwrap();
     #[derive(Debug, PartialEq)]
-    struct Row(i32, f32);
+    struct Row(i64, f64);
 
     let mut source = MysqlSource::new(&dburl, 1).unwrap();
     source.set_queries(&["select * from test_table"]);
@@ -28,17 +28,8 @@ fn load_and_parse() {
 
     let mut rows: Vec<Row> = Vec::new();
     for _i in 0..2 {
-        rows.push(Row(
-            parser.produce().unwrap(),
-            parser.produce().unwrap(),
-        ));
+        rows.push(Row(parser.produce().unwrap(), parser.produce().unwrap()));
     }
 
-    assert_eq!(
-        vec![
-            Row(1, 1.1),
-            Row(2, 2.2)
-        ],
-        rows
-    );
+    assert_eq!(vec![Row(1, 1.1), Row(2, 2.2)], rows);
 }
