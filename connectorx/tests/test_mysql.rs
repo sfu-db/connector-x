@@ -27,9 +27,9 @@ fn load_and_parse() {
     let mut parser = partition.parser().unwrap();
 
     let mut rows: Vec<Row> = Vec::new();
-    for _i in 0..2 {
+    for _i in 0..3 {
         rows.push(Row(parser.produce().unwrap(), parser.produce().unwrap()));
     }
 
-    assert_eq!(vec![Row(1, 1.1), Row(2, 2.2)], rows);
+    assert_eq!(vec![Row(1, 1.1), Row(2, 2.2), Row(3, 3.3)], rows);
 }
