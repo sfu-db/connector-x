@@ -247,34 +247,31 @@ impl<'a> PartitionParser<'a> for MysqlSourcePartitionParser<'a> {
     type TypeSystem = MysqlTypeSystem;
 }
 
-impl<'r, 'a> Produce<'r, i64> for MysqlSourcePartitionParser<'a> {
-    fn produce(&mut self) -> Result<i64> {
-        let (ridx, cidx) = self.next_loc()?;
-        let res: i64 = self.rowbuf[ridx].get(cidx).unwrap();
-        Ok(res)
-    }
+
+macro_rules! impl_produce {
+    ($($t: ty,)+) => {
+        $(
+            impl<'r, 'a> Produce<'r, $t> for MysqlSourcePartitionParser<'a> {
+                fn produce(&'r mut self) -> Result<$t> {
+                    let (ridx, cidx) = self.next_loc()?;
+                    let res = self.rowbuf[ridx].get(cidx).unwrap();
+                    Ok(res)
+                }
+            }
+
+            impl<'r, 'a> Produce<'r, Option<$t>> for MysqlSourcePartitionParser<'a> {
+                fn produce(&'r mut self) -> Result<Option<$t>> {
+                    let (ridx, cidx) = self.next_loc()?;
+                    let res = self.rowbuf[ridx].get(cidx);
+                    Ok(res)
+                }
+            }
+        )+
+    };
 }
 
-impl<'r, 'a> Produce<'r, f64> for MysqlSourcePartitionParser<'a> {
-    fn produce(&mut self) -> Result<f64> {
-        let (ridx, cidx) = self.next_loc()?;
-        let res: f64 = self.rowbuf[ridx].get(cidx).unwrap();
-        Ok(res)
-    }
-}
 
-impl<'r, 'a> Produce<'r, Option<i64>> for MysqlSourcePartitionParser<'a> {
-    fn produce(&mut self) -> Result<Option<i64>> {
-        let (ridx, cidx) = self.next_loc()?;
-        let res = self.rowbuf[ridx].get(cidx);
-        Ok(res)
-    }
-}
-
-impl<'r, 'a> Produce<'r, Option<f64>> for MysqlSourcePartitionParser<'a> {
-    fn produce(&mut self) -> Result<Option<f64>> {
-        let (ridx, cidx) = self.next_loc()?;
-        let res = self.rowbuf[ridx].get(cidx);
-        Ok(res)
-    }
-}
+impl_produce!(
+    i64,
+    f64,
+);
