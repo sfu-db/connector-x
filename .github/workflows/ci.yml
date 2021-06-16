@@ -1,6 +1,6 @@
 name: ci
 
-on: 
+on:
   pull_request:
     branches:
       - main
@@ -43,7 +43,7 @@ jobs:
       - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly-2021-02-15
+          toolchain: nightly-2021-05-30
           components: rustfmt
           default: true
 
@@ -52,7 +52,7 @@ jobs:
         with:
           command: fmt
           args: --all -- --check -q
-      
+
       - name: Seed the database
         run: "psql postgresql://postgres:postgres@postgres:5432/postgres -f scripts/postgres.sql"
 
@@ -62,7 +62,7 @@ jobs:
           command: test
         env:
           POSTGRES_URL: "postgresql://postgres:postgres@postgres:5432/postgres"
-      
+
       - name: Test build docs
         uses: actions-rs/cargo@v1
         with:
@@ -102,7 +102,7 @@ jobs:
       - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly-2021-02-15
+          toolchain: nightly-2021-05-30
           components: rustfmt
           default: true
 
