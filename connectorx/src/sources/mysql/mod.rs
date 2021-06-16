@@ -6,6 +6,7 @@ use crate::sources::{PartitionParser, Produce, Source, SourcePartition};
 use anyhow::anyhow;
 use fehler::throw;
 use log::debug;
+use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
 
 use r2d2::{Pool, PooledConnection};
 use r2d2_mysql::{
@@ -274,4 +275,7 @@ macro_rules! impl_produce {
 impl_produce!(
     i64,
     f64,
+    NaiveDate,
+    NaiveTime,
+    NaiveDateTime,
 );

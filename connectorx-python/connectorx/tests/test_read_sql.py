@@ -394,3 +394,17 @@ def test_types_csv(postgres_url: str) -> None:
         },
     )
     assert_frame_equal(df, expected, check_names=True)
+
+
+def test_types_mysql(mysql_url: str) -> None:
+    query = "select test_date, test_time, test_datetime from test_types"
+    df = read_sql(mysql_url, query)
+    expected = pd.DataFrame(
+        index=range(3),
+        data={
+            "test_date": pd.Series(["1999-07-25", "2020-12-31", "2021-01-28"], dtype="datetime64[ns]"),
+            "test_time": pd.Series(["00:00:00", "23:59:59", "12:30:30"], dtype="object"),
+            "test_datetime": pd.Series(["1999-07-25 00:00:00", "2020-12-31 23:59:59", "2021-01-28 12:30:30"], dtype="datetime64[ns]"),
+        }
+    )
+    assert_frame_equal(df, expected, check_names=True)
