@@ -1,4 +1,3 @@
-mod sql;
 mod typesystem;
 
 use fallible_streaming_iterator::FallibleStreamingIterator;
@@ -6,6 +5,7 @@ use fallible_streaming_iterator::FallibleStreamingIterator;
 use crate::data_order::DataOrder;
 use crate::errors::{ConnectorAgentError, Result};
 use crate::sources::{PartitionParser, Produce, Source, SourcePartition};
+use crate::sql::{count_query, get_limit, limit1_query};
 use anyhow::anyhow;
 use derive_more::{Deref, DerefMut};
 use fehler::throw;
@@ -14,7 +14,7 @@ use owning_ref::OwningHandle;
 use r2d2::{Pool, PooledConnection};
 use r2d2_sqlite::SqliteConnectionManager;
 use rusqlite::{Row, Rows, Statement};
-use sql::{count_query, get_limit, limit1_query};
+use sqlparser::dialect::SQLiteDialect;
 pub use typesystem::SqliteTypeSystem;
 
 #[derive(Deref, DerefMut)]
@@ -69,23 +69,26 @@ where
         let mut error = None;
         for query in &self.queries {
             // assuming all the partition queries yield same schema
-            let (names, types) = conn.query_row(&limit1_query(query)?[..], [], |row| {
-                let mut names = vec![];
-                let mut types = vec![];
-                row.columns().iter().enumerate().for_each(|(i, col)| {
-                    names.push(col.name().to_string());
-                    match row.get_ref(i) {
-                        Ok(vr) => {
-                            types.push(SqliteTypeSystem::from((col.decl_type(), vr.data_type())))
+            let (names, types) =
+                conn.query_row(&limit1_query(query, &SQLiteDialect {})?[..], [], |row| {
+                    let mut names = vec![];
+                    let mut types = vec![];
+                    row.columns().iter().enumerate().for_each(|(i, col)| {
+                        names.push(col.name().to_string());
+                        match row.get_ref(i) {
+                            Ok(vr) => types
+                                .push(SqliteTypeSystem::from((col.decl_type(), vr.data_type()))),
+                            Err(e) => {
+                                debug!(
+                                    "cannot get metadata for '{}', try next query: {}",
+                                    query, e
+                                );
+                                error = Some(e);
+                            }
                         }
-                        Err(e) => {
-                            debug!("cannot get metadata for '{}', try next query: {}", query, e);
-                            error = Some(e);
-                        }
-                    }
-                });
-                Ok((names, types))
-            })?;
+                    });
+                    Ok((names, types))
+                })?;
 
             self.names = names;
             self.schema = types;
@@ -151,10 +154,11 @@ impl SourcePartition for SqliteSourcePartition {
     type Parser<'a> = SqliteSourcePartitionParser<'a>;
 
     fn prepare(&mut self) -> Result<()> {
-        self.nrows = match get_limit(&self.query)? {
+        let dialect = SQLiteDialect {};
+        self.nrows = match get_limit(&self.query, &dialect)? {
             None => self
                 .conn
-                .query_row(&count_query(&self.query)?[..], [], |row| {
+                .query_row(&count_query(&self.query, &dialect)?[..], [], |row| {
                     Ok(row.get::<_, i64>(0)? as usize)
                 })?,
             Some(n) => n,

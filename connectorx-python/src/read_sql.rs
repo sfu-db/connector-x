@@ -1,8 +1,7 @@
 use crate::errors::ConnectorAgentPythonError;
 use crate::source_router::SourceType;
-use connectorx::partition::{
-    pg_get_partition_range, single_col_partition_query, sqlite_get_partition_range,
-};
+use connectorx::partition::{pg_get_partition_range, sqlite_get_partition_range};
+use connectorx::sql::single_col_partition_query;
 use dict_derive::FromPyObject;
 use fehler::throw;
 use pyo3::prelude::*;
