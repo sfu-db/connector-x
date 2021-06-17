@@ -27,6 +27,11 @@ if __name__ == "__main__":
             df = pd.read_sql(
                 f"SELECT * FROM {table}",
                 conn,
+                parse_dates=[
+                    "l_shipdate",
+                    "l_commitdate",
+                    "l_receiptdate",
+                ],
             )
         print(f"[Total] {timer.elapsed:.2f}s")
         conn.close()

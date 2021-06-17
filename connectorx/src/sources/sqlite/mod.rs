@@ -7,6 +7,7 @@ use crate::errors::{ConnectorAgentError, Result};
 use crate::sources::{PartitionParser, Produce, Source, SourcePartition};
 use crate::sql::{count_query, get_limit, limit1_query};
 use anyhow::anyhow;
+use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
 use derive_more::{Deref, DerefMut};
 use fehler::throw;
 use log::debug;
@@ -250,4 +251,12 @@ macro_rules! impl_produce {
     };
 }
 
-impl_produce!(bool, i64, f64, Box<str>,);
+impl_produce!(
+    bool,
+    i64,
+    f64,
+    Box<str>,
+    NaiveDate,
+    NaiveTime,
+    NaiveDateTime,
+);

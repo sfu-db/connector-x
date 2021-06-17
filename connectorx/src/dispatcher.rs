@@ -96,7 +96,8 @@ where
         dst_partitions
             .into_par_iter()
             .zip_eq(src_partitions)
-            .try_for_each(|(mut src, mut dst)| -> Result<()> {
+            .enumerate()
+            .try_for_each(|(i, (mut src, mut dst))| -> Result<()> {
                 #[cfg(feature = "fptr")]
                 let f: Vec<_> = src_schema
                     .iter()
@@ -136,7 +137,10 @@ where
                     }
                 }
 
-                src.finalize()
+                debug!("Finalize partition {}", i);
+                src.finalize()?;
+                debug!("Partition {} finished", i);
+                Ok(())
             })?;
 
         debug!("Writing finished");
