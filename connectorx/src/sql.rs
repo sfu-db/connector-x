@@ -143,7 +143,7 @@ pub fn single_col_partition_query<T: Dialect>(
     dialect: &T,
 ) -> String {
     trace!("Incoming query: {}", query);
-    static PART_TMP_TAB_NAME: &'static str = "CXTMPTAB_PART";
+    const PART_TMP_TAB_NAME: &'static str = "CXTMPTAB_PART";
 
     let mut ast = Parser::parse_sql(dialect, query)?;
     if ast.len() != 1 {
@@ -211,7 +211,7 @@ pub fn single_col_partition_query<T: Dialect>(
 #[throws(ConnectorAgentError)]
 pub fn get_partition_range_query<T: Dialect>(query: &str, col: &str, dialect: &T) -> String {
     trace!("Incoming query: {}", query);
-    static RANGE_TMP_TAB_NAME: &'static str = "CXTMPTAB_RANGE";
+    const RANGE_TMP_TAB_NAME: &'static str = "CXTMPTAB_RANGE";
     let mut ast = Parser::parse_sql(dialect, query)?;
     if ast.len() != 1 {
         throw!(ConnectorAgentError::SQLQueryNotSupported(query.to_string()));
@@ -282,7 +282,7 @@ pub fn get_partition_range_query_sep<T: Dialect>(
     dialect: &T,
 ) -> (String, String) {
     trace!("Incoming query: {}", query);
-    static RANGE_TMP_TAB_NAME: &'static str = "CXTMPTAB_RANGE";
+    const RANGE_TMP_TAB_NAME: &'static str = "CXTMPTAB_RANGE";
     let mut ast = Parser::parse_sql(dialect, query)?;
     if ast.len() != 1 {
         throw!(ConnectorAgentError::SQLQueryNotSupported(query.to_string()));

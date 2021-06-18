@@ -1,13 +1,15 @@
 mod tpch;
 
 use pprof::protos::Message;
+use std::env;
 use std::fs::File;
 use std::io::Write;
 
 fn main() {
-    let guard = pprof::ProfilerGuard::new(100).unwrap();
+    let args: Vec<String> = env::args().collect();
+    let guard = pprof::ProfilerGuard::new(10).unwrap();
 
-    tpch::run(1);
+    tpch::run(1, &args[1]);
 
     if let Ok(report) = guard.report().build() {
         let file = File::create("flamegraph.svg").unwrap();
