@@ -15,12 +15,15 @@ impl_transport!(
     route = SqliteSource => PandasDestination<'tp>,
     mappings = {
         { Bool[bool]                 => Bool[bool]              | conversion all }
-        { Integer[i64]               => I64[i64]                | conversion all }
+        { Int8[i64]                  => I64[i64]                | conversion all }
+        { Int4[i32]                  => I64[i64]                | conversion all }
+        { Int2[i16]                  => I64[i64]                | conversion all }
         { Real[f64]                  => F64[f64]                | conversion all }
         { Text[Box<str>]             => BoxStr[Box<str>]        | conversion all }
         { Date[NaiveDate]            => DateTime[DateTime<Utc>] | conversion half }
         { Time[NaiveTime]            => String[String]          | conversion half }
         { Timestamp[NaiveDateTime]   => DateTime[DateTime<Utc>] | conversion half }
+        { Blob[Vec<u8>]              => Bytes[Vec<u8>]          | conversion all }
     }
 );
 
