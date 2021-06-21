@@ -330,7 +330,10 @@ impl<'a> StringColumn<'a> {
     pub fn try_flush(&mut self) {
         if self.string_buf.len() >= self.buf_size {
             self.flush(true)?;
-        } else if self.string_buf.len() >= self.buf_size / 2 {
+            return;
+        }
+        #[cfg(feature = "nbstr")]
+        if self.string_buf.len() >= self.buf_size / 2 {
             self.flush(false)?;
         }
     }

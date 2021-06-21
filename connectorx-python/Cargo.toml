@@ -44,8 +44,9 @@ crate-type = ["rlib", "cdylib"]
 name = "connectorx_python"
 
 [features]
+nbstr = []
 branch = ["connectorx/branch"]
-default = ["extension", "fptr"]
+default = ["extension", "fptr", "nbstr"]
 executable = ["pyo3/auto-initialize"]
 extension = ["pyo3/extension-module"]
 fptr = ["connectorx/fptr"]
