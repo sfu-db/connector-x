@@ -59,6 +59,9 @@ jobs:
 
       - name: Seed the database
         run: just seed-db
+        env:
+          POSTGRES_URL: "postgresql://postgres:postgres@postgres:5432/postgres"
+          SQLITE_URL: "sqlite://test.db"
 
       - name: Run tests
         uses: actions-rs/cargo@v1
@@ -121,6 +124,10 @@ jobs:
 
       - name: Seed the database
         run: just seed-db
+        env:
+          POSTGRES_URL: "postgresql://postgres:postgres@postgres:5432/postgres"
+          SQLITE_URL: "sqlite://test.db"
+
 
       - name: Test python
         run: just test-python
