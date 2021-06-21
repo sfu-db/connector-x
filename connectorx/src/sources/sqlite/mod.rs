@@ -254,9 +254,12 @@ macro_rules! impl_produce {
 impl_produce!(
     bool,
     i64,
+    i32,
+    i16,
     f64,
     Box<str>,
     NaiveDate,
     NaiveTime,
     NaiveDateTime,
+    Vec<u8>,
 );

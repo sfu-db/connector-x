@@ -9,7 +9,7 @@ fn main() {
     let args: Vec<String> = env::args().collect();
     let guard = pprof::ProfilerGuard::new(10).unwrap();
 
-    tpch::run(1, &args[1]);
+    tpch::run(10, &args[1]);
 
     if let Ok(report) = guard.report().build() {
         let file = File::create("flamegraph.svg").unwrap();

@@ -4,7 +4,6 @@
 mod errors;
 pub mod pandas;
 pub mod read_sql;
-mod source_router;
 
 use anyhow::Result;
 use connectorx::pg;

@@ -31,4 +31,5 @@ if __name__ == "__main__":
     print("time in total:", timer.elapsed)
 
     print(df.head())
+    print(df.tail())
     print(len(df))

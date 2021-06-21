@@ -51,7 +51,7 @@ if __name__ == "__main__":
             )
         print(f"[Total] {timer.elapsed:.2f}s")
         conn.close()
-        engine.close()
 
     print(df.head())
+    print(df.tail())
     print(len(df))
