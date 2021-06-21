@@ -47,6 +47,10 @@ jobs:
           components: rustfmt
           default: true
 
+      - name: Install other dependent tools
+        run: |
+          cargo install just
+
       - name: Is the code formatted?
         uses: actions-rs/cargo@v1
         with:
