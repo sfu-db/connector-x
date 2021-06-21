@@ -31,6 +31,7 @@ pub fn write_pandas<'a>(
 ) -> &'a PyAny {
     let mut destination = PandasDestination::new(py);
 
+    // TODO: unlock gil if possible
     match source_type {
         SourceType::Postgres => {
             debug!("Protocol: {}", protocol);
