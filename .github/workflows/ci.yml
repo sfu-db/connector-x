@@ -61,7 +61,7 @@ jobs:
         run: just seed-db
         env:
           POSTGRES_URL: "postgresql://postgres:postgres@postgres:5432/postgres"
-          SQLITE_URL: "sqlite://test.db"
+          SQLITE_URL: "sqlite:///tmp/test.db"
 
       - name: Run tests
         uses: actions-rs/cargo@v1
@@ -69,7 +69,7 @@ jobs:
           command: test
         env:
           POSTGRES_URL: "postgresql://postgres:postgres@postgres:5432/postgres"
-          SQLITE_URL: "sqlite://test.db"
+          SQLITE_URL: "sqlite:///tmp/test.db"
 
       - name: Test build docs
         uses: actions-rs/cargo@v1
@@ -126,11 +126,11 @@ jobs:
         run: just seed-db
         env:
           POSTGRES_URL: "postgresql://postgres:postgres@postgres:5432/postgres"
-          SQLITE_URL: "sqlite://test.db"
+          SQLITE_URL: "sqlite:///tmp/test.db"
 
 
       - name: Test python
         run: just test-python
         env:
           POSTGRES_URL: "postgresql://postgres:postgres@postgres:5432/postgres"
-          SQLITE_URL: "sqlite://test.db"
+          SQLITE_URL: "sqlite:///tmp/test.db"
