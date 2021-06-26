@@ -9,7 +9,7 @@ pub use self::transports::{PostgresPandasTransport, SqlitePandasTransport};
 pub use self::types::{PandasDType, PandasTypeSystem};
 use crate::errors::ConnectorAgentPythonError;
 use anyhow::anyhow;
-use connectorx::source_router::SourceType;
+use connectorx::source_router::{SourceConn, SourceType};
 use connectorx::{
     sources::{
         postgres::{Binary, PostgresSource, CSV},
@@ -24,20 +24,19 @@ use pyo3::{PyAny, Python};
 #[throws(ConnectorAgentPythonError)]
 pub fn write_pandas<'a>(
     py: Python<'a>,
-    source_type: &SourceType,
-    conn: &str,
+    source_conn: &SourceConn,
     queries: &[&str],
     protocol: &str,
 ) -> &'a PyAny {
     let mut destination = PandasDestination::new(py);
 
     // TODO: unlock gil if possible
-    match source_type {
+    match source_conn.ty {
         SourceType::Postgres => {
             debug!("Protocol: {}", protocol);
             match protocol {
                 "csv" => {
-                    let sb = PostgresSource::<CSV>::new(conn, queries.len())?;
+                    let sb = PostgresSource::<CSV>::new(&source_conn.conn[..], queries.len())?;
                     let dispatcher = Dispatcher::<_, _, PostgresPandasTransport<CSV>>::new(
                         sb,
                         &mut destination,
@@ -48,7 +47,7 @@ pub fn write_pandas<'a>(
                     dispatcher.run()?;
                 }
                 "binary" => {
-                    let sb = PostgresSource::<Binary>::new(conn, queries.len())?;
+                    let sb = PostgresSource::<Binary>::new(&source_conn.conn[..], queries.len())?;
                     let dispatcher = Dispatcher::<_, _, PostgresPandasTransport<Binary>>::new(
                         sb,
                         &mut destination,
@@ -62,8 +61,7 @@ pub fn write_pandas<'a>(
             }
         }
         SourceType::Sqlite => {
-            debug!("Sqlite DB: {}", conn);
-            let source = SqliteSource::new(&conn[9..], queries.len())?;
+            let source = SqliteSource::new(&source_conn.conn[..], queries.len())?;
             let dispatcher =
                 Dispatcher::<_, _, SqlitePandasTransport>::new(source, &mut destination, queries);
             debug!("Running dispatcher");

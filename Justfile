@@ -17,7 +17,7 @@ build-python-extention:
 setup-python: build-python-extention
     cd connectorx-python && poetry run python ../scripts/python-helper.py copy-extension
     
-test-python opts="": setup-python
+test-python +opts="": setup-python
     cd connectorx-python && poetry run pytest connectorx/tests -v -s {{opts}}
 
 seed-db:

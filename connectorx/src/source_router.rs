@@ -1,27 +1,41 @@
-use crate::errors::ConnectorAgentError;
-use crate::errors::Result;
+use crate::errors::{ConnectorAgentError, Result};
 use crate::sources::postgres::PostgresTypeSystem;
-use crate::sql::single_col_partition_query;
-use crate::sql::{get_partition_range_query, get_partition_range_query_sep};
+use crate::sql::{
+    get_partition_range_query, get_partition_range_query_sep, single_col_partition_query,
+};
 use anyhow::anyhow;
 use fehler::{throw, throws};
 use postgres::{Client, NoTls};
 use rusqlite::{types::Type, Connection};
 use sqlparser::dialect::{PostgreSqlDialect, SQLiteDialect};
+use std::convert::TryFrom;
+use url::Url;
 
 pub enum SourceType {
     Postgres,
     Sqlite,
 }
 
-impl From<&str> for SourceType {
-    fn from(conn: &str) -> SourceType {
-        if conn.starts_with("postgresql://") {
-            SourceType::Postgres
-        } else if conn.starts_with("sqlite://") {
-            SourceType::Sqlite
-        } else {
-            unimplemented!("Connection: {} not supported!", conn);
+pub struct SourceConn {
+    pub ty: SourceType,
+    pub conn: String,
+}
+
+impl TryFrom<&str> for SourceConn {
+    type Error = ConnectorAgentError;
+
+    fn try_from(conn: &str) -> Result<SourceConn> {
+        let url = Url::parse(conn).map_err(|e| anyhow!("parse error: {}", e))?;
+        match url.scheme() {
+            "postgres" | "postgresql" => Ok(SourceConn {
+                ty: SourceType::Postgres,
+                conn: conn.into(),
+            }),
+            "sqlite" => Ok(SourceConn {
+                ty: SourceType::Sqlite,
+                conn: conn[9..].into(),
+            }),
+            _ => unimplemented!("Connection: {} not supported!", conn),
         }
     }
 }

@@ -1,5 +1,5 @@
 use crate::errors::ConnectorAgentPythonError;
-use connectorx::source_router::SourceType;
+use connectorx::source_router::SourceConn;
 use dict_derive::FromPyObject;
 use fehler::throw;
 use pyo3::prelude::*;
@@ -7,6 +7,7 @@ use pyo3::{
     exceptions::{PyNotImplementedError, PyValueError},
     PyResult,
 };
+use std::convert::TryFrom;
 
 #[derive(FromPyObject)]
 pub struct PartitionQuery {
@@ -37,7 +38,8 @@ pub fn read_sql<'a>(
     queries: Option<Vec<String>>,
     partition_query: Option<PartitionQuery>,
 ) -> PyResult<&'a PyAny> {
-    let source_type = SourceType::from(conn);
+    let source_conn =
+        SourceConn::try_from(conn).map_err(ConnectorAgentPythonError::ConnectorAgentError)?;
     let queries = match (queries, partition_query) {
         (Some(queries), None) => queries,
         (
@@ -54,7 +56,8 @@ pub fn read_sql<'a>(
             let num = num as i64;
 
             let (min, max) = match (min, max) {
-                (None, None) => source_type
+                (None, None) => source_conn
+                    .ty
                     .get_col_range(conn, &query, &col)
                     .map_err(ConnectorAgentPythonError::ConnectorAgentError)?,
                 (Some(min), Some(max)) => (min, max),
@@ -71,7 +74,8 @@ pub fn read_sql<'a>(
                     true => max + 1,
                     false => min + (i + 1) * partition_size,
                 };
-                let partition_query = source_type
+                let partition_query = source_conn
+                    .ty
                     .get_part_query(&query, &col, lower, upper)
                     .map_err(ConnectorAgentPythonError::ConnectorAgentError)?;
                 queries.push(partition_query);
@@ -90,8 +94,7 @@ pub fn read_sql<'a>(
     match return_type {
         "pandas" => Ok(crate::pandas::write_pandas(
             py,
-            &source_type,
-            conn,
+            &source_conn,
             &queries,
             protocol.unwrap_or("binary"),
         )?),
