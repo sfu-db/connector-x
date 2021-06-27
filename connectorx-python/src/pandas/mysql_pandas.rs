@@ -6,7 +6,6 @@ use connectorx::{
     typesystem::TypeConversion,
 };
 use rust_decimal::prelude::*;
-use serde_json::{to_string, Value};
 use uuid::Uuid;
 use chrono::{DateTime, NaiveDate, NaiveTime, NaiveDateTime, Utc};
 
@@ -22,6 +21,11 @@ impl_transport!(
         { Date[NaiveDate]            => DateTime[DateTime<Utc>] | conversion half }
         { Time[NaiveTime]            => String[String]          | conversion half }
         { Datetime[NaiveDateTime]    => DateTime[DateTime<Utc>] | conversion half }
+        { Decimal[Decimal]           => F64[f64]                | conversion half }
+        // { Char[&'r str]              => Char[&'r str]           | conversion none }
+        // { VarChar[&'r str]           => Str[&'r str]            | conversion none }
+        { Char[String]              => Char[String]           | conversion none }
+        { VarChar[String]           => Str[String]            | conversion none }
     }
 );
 
@@ -40,5 +44,12 @@ impl<'py> TypeConversion<NaiveTime, String> for MysqlPandasTransport<'py> {
 impl<'py> TypeConversion<NaiveDateTime, DateTime<Utc>> for MysqlPandasTransport<'py> {
     fn convert(val: NaiveDateTime) -> DateTime<Utc> {
         DateTime::from_utc(val, Utc)
+    }
+}
+
+impl<'py> TypeConversion<Decimal, f64> for MysqlPandasTransport<'py> {
+    fn convert(val: Decimal) -> f64 {
+        val.to_f64()
+            .unwrap_or_else(|| panic!("cannot convert decimal {:?} to float64", val))
     }
 }

@@ -6,6 +6,7 @@ use crate::sources::{PartitionParser, Produce, Source, SourcePartition};
 use anyhow::anyhow;
 use fehler::throw;
 use log::debug;
+use rust_decimal::Decimal;
 use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
 
 use r2d2::{Pool, PooledConnection};
@@ -278,4 +279,6 @@ impl_produce!(
     NaiveDate,
     NaiveTime,
     NaiveDateTime,
+    Decimal,
+    String,
 );

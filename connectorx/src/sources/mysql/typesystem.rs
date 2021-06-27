@@ -1,6 +1,6 @@
 use r2d2_mysql::mysql::consts::ColumnType;
 use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
-
+use rust_decimal::Decimal;
 #[derive(Copy, Clone, Debug)]
 pub enum MysqlTypeSystem {
     Double(bool),
@@ -8,6 +8,9 @@ pub enum MysqlTypeSystem {
     Datetime(bool),
     Date(bool),
     Time(bool),
+    Decimal(bool),
+    Char(bool),
+    VarChar(bool)
 }
 
 impl_typesystem! {
@@ -18,6 +21,8 @@ impl_typesystem! {
         { Datetime => NaiveDateTime}
         { Date => NaiveDate}
         { Time => NaiveTime}
+        { Decimal => Decimal}
+        { Char | VarChar => String}
     }
 }
 
@@ -30,6 +35,9 @@ impl<'a> From<&'a ColumnType> for MysqlTypeSystem {
             ColumnType::MYSQL_TYPE_DATETIME => Datetime(true),
             ColumnType::MYSQL_TYPE_DATE => Date(true),
             ColumnType::MYSQL_TYPE_TIME => Time(true),
+            ColumnType::MYSQL_TYPE_NEWDECIMAL => Decimal(true),
+            ColumnType::MYSQL_TYPE_STRING => Char(true),
+            ColumnType::MYSQL_TYPE_VAR_STRING => VarChar(true),
             _ => unimplemented!("{}", format!("{:?}", ty)),
         }
     }
@@ -45,6 +53,9 @@ impl<'a> From<MysqlTypeSystem> for ColumnType {
             Datetime(_) => ColumnType::MYSQL_TYPE_DATETIME,
             Date(_) => ColumnType::MYSQL_TYPE_DATE,
             Time(_) => ColumnType::MYSQL_TYPE_TIME,
+            Decimal(_) => ColumnType::MYSQL_TYPE_NEWDECIMAL,
+            Char(_) => ColumnType::MYSQL_TYPE_STRING,
+            VarChar(_) => ColumnType::MYSQL_TYPE_VAR_STRING,
         }
     }
 }
