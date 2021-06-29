@@ -157,6 +157,7 @@ impl<'a> Destination for PandasDestination<'a> {
                         }
                     }
                     PandasTypeSystem::String(_)
+                    | PandasTypeSystem::BoxStr(_)
                     | PandasTypeSystem::Str(_)
                     | PandasTypeSystem::Char(_) => {
                         let block = StringBlock::extract(buf).map_err(|e| anyhow!(e))?;

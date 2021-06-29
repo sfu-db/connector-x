@@ -14,3 +14,4 @@ profile.pb
 dask-worker-space
 dist
 connectorx-python/README.md
+*.db

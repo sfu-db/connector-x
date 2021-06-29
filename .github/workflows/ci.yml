@@ -36,7 +36,7 @@ jobs:
       - name: Install tools
         run: |
           apt-get update
-          apt-get install -y curl postgresql-client build-essential pkg-config libssl-dev git
+          apt-get install -y curl postgresql-client build-essential pkg-config libssl-dev git sqlite3 libsqlite3-dev
         env:
           DEBIAN_FRONTEND: noninteractive
 
@@ -47,6 +47,10 @@ jobs:
           components: rustfmt
           default: true
 
+      - name: Install other dependent tools
+        run: |
+          cargo install just
+
       - name: Is the code formatted?
         uses: actions-rs/cargo@v1
         with:
@@ -54,7 +58,10 @@ jobs:
           args: --all -- --check -q
 
       - name: Seed the database
-        run: "psql postgresql://postgres:postgres@postgres:5432/postgres -f scripts/postgres.sql"
+        run: just seed-db
+        env:
+          POSTGRES_URL: "postgresql://postgres:postgres@postgres:5432/postgres"
+          SQLITE_URL: "sqlite:///tmp/test.db"
 
       - name: Run tests
         uses: actions-rs/cargo@v1
@@ -62,6 +69,7 @@ jobs:
           command: test
         env:
           POSTGRES_URL: "postgresql://postgres:postgres@postgres:5432/postgres"
+          SQLITE_URL: "sqlite:///tmp/test.db"
 
       - name: Test build docs
         uses: actions-rs/cargo@v1
@@ -95,7 +103,7 @@ jobs:
       - name: Install tools
         run: |
           apt-get update
-          apt-get install -y curl postgresql-client build-essential python3-dev python3-pip pkg-config libssl-dev git
+          apt-get install -y curl postgresql-client build-essential python3-dev python3-pip pkg-config libssl-dev git sqlite3 libsqlite3-dev
         env:
           DEBIAN_FRONTEND: noninteractive
 
@@ -115,9 +123,14 @@ jobs:
         run: just bootstrap-python
 
       - name: Seed the database
-        run: "psql postgresql://postgres:postgres@postgres:5432/postgres -f scripts/postgres.sql"
+        run: just seed-db
+        env:
+          POSTGRES_URL: "postgresql://postgres:postgres@postgres:5432/postgres"
+          SQLITE_URL: "sqlite:///tmp/test.db"
+
 
       - name: Test python
         run: just test-python
         env:
           POSTGRES_URL: "postgresql://postgres:postgres@postgres:5432/postgres"
+          SQLITE_URL: "sqlite:///tmp/test.db"

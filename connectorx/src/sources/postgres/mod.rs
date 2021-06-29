@@ -1,9 +1,9 @@
-mod sql;
 mod typesystem;
 
 use crate::data_order::DataOrder;
 use crate::errors::{ConnectorAgentError, Result};
 use crate::sources::{PartitionParser, Produce, Source, SourcePartition};
+use crate::sql::{count_query, get_limit, limit1_query};
 use anyhow::anyhow;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
 use csv::{ReaderBuilder, StringRecord, StringRecordsIntoIter};
@@ -19,7 +19,7 @@ use r2d2::{Pool, PooledConnection};
 use r2d2_postgres::{postgres::NoTls, PostgresConnectionManager};
 use rust_decimal::Decimal;
 use serde_json::{from_str, Value};
-use sql::{count_query, get_limit, limit1_query};
+use sqlparser::dialect::PostgreSqlDialect;
 use std::marker::PhantomData;
 pub use typesystem::PostgresTypeSystem;
 use uuid::Uuid;
@@ -87,7 +87,7 @@ where
         let mut error = None;
         for query in &self.queries {
             // assuming all the partition queries yield same schema
-            match conn.query_one(&limit1_query(query)?[..], &[]) {
+            match conn.query_one(&limit1_query(query, &PostgreSqlDialect {})?[..], &[]) {
                 Ok(row) => {
                     let (names, types) = row
                         .columns()
@@ -176,9 +176,12 @@ impl SourcePartition for PostgresSourcePartition<Binary> {
     type Parser<'a> = PostgresBinarySourcePartitionParser<'a>;
 
     fn prepare(&mut self) -> Result<()> {
-        self.nrows = match get_limit(&self.query)? {
+        let dialect = PostgreSqlDialect {};
+        self.nrows = match get_limit(&self.query, &dialect)? {
             None => {
-                let row = self.conn.query_one(&count_query(&self.query)?[..], &[])?;
+                let row = self
+                    .conn
+                    .query_one(&count_query(&self.query, &dialect)?[..], &[])?;
                 row.get::<_, i64>(0) as usize
             }
             Some(n) => n,
@@ -213,7 +216,9 @@ impl SourcePartition for PostgresSourcePartition<CSV> {
     type Parser<'a> = PostgresCSVSourceParser<'a>;
 
     fn prepare(&mut self) -> Result<()> {
-        let row = self.conn.query_one(&count_query(&self.query)?[..], &[])?;
+        let row = self
+            .conn
+            .query_one(&count_query(&self.query, &PostgreSqlDialect {})?[..], &[])?;
         self.nrows = row.get::<_, i64>(0) as usize;
         Ok(())
     }
