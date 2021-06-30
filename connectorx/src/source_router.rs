@@ -14,6 +14,7 @@ use url::Url;
 pub enum SourceType {
     Postgres,
     Sqlite,
+    Mysql
 }
 
 pub struct SourceConn {
@@ -34,6 +35,10 @@ impl TryFrom<&str> for SourceConn {
             "sqlite" => Ok(SourceConn {
                 ty: SourceType::Sqlite,
                 conn: conn[9..].into(),
+            }),
+            "mysql" => Ok(SourceConn {
+                ty: SourceType::Mysql,
+                conn: conn.into(),
             }),
             _ => unimplemented!("Connection: {} not supported!", conn),
         }
