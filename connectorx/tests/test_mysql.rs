@@ -31,7 +31,17 @@ fn load_and_parse() {
         rows.push(Row(parser.produce().unwrap(), parser.produce().unwrap()));
     }
 
-    assert_eq!(vec![Row(1, 1.1), Row(2, 2.2), Row(3, 3.3), Row(4, 4.4), Row(5, 5.5), Row(6, 6.6)], rows);
+    assert_eq!(
+        vec![
+            Row(1, 1.1),
+            Row(2, 2.2),
+            Row(3, 3.3),
+            Row(4, 4.4),
+            Row(5, 5.5),
+            Row(6, 6.6)
+        ],
+        rows
+    );
 }
 
 #[test]
@@ -61,5 +71,12 @@ fn test_types() {
         rows.push(Row(parser.produce().unwrap(), parser.produce().unwrap()));
     }
 
-    assert_eq!(vec![Row(1.0, "char1".to_string()), Row(2.0, "char2".to_string()), Row(3.0, "char3".to_string())], rows);
+    assert_eq!(
+        vec![
+            Row(1.0, "char1".to_string()),
+            Row(2.0, "char2".to_string()),
+            Row(3.0, "char3".to_string())
+        ],
+        rows
+    );
 }

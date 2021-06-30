@@ -1,22 +1,23 @@
-use r2d2_mysql::mysql::consts::ColumnType;
 use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
+use r2d2_mysql::mysql::consts::ColumnType;
 use rust_decimal::Decimal;
 #[derive(Copy, Clone, Debug)]
 pub enum MysqlTypeSystem {
     Double(bool),
     Long(bool),
+    LongLong(bool),
     Datetime(bool),
     Date(bool),
     Time(bool),
     Decimal(bool),
     Char(bool),
-    VarChar(bool)
+    VarChar(bool),
 }
 
 impl_typesystem! {
     system = MysqlTypeSystem,
     mappings = {
-        { Long => i64 }
+        { Long|LongLong => i64 }
         { Double => f64 }
         { Datetime => NaiveDateTime}
         { Date => NaiveDate}
@@ -31,6 +32,7 @@ impl<'a> From<&'a ColumnType> for MysqlTypeSystem {
         use MysqlTypeSystem::*;
         match ty {
             ColumnType::MYSQL_TYPE_LONG => Long(true),
+            ColumnType::MYSQL_TYPE_LONGLONG => LongLong(true),
             ColumnType::MYSQL_TYPE_DOUBLE => Double(true),
             ColumnType::MYSQL_TYPE_DATETIME => Datetime(true),
             ColumnType::MYSQL_TYPE_DATE => Date(true),
@@ -49,6 +51,7 @@ impl<'a> From<MysqlTypeSystem> for ColumnType {
         use MysqlTypeSystem::*;
         match ty {
             Long(_) => ColumnType::MYSQL_TYPE_LONG,
+            LongLong(_) => ColumnType::MYSQL_TYPE_LONGLONG,
             Double(_) => ColumnType::MYSQL_TYPE_DOUBLE,
             Datetime(_) => ColumnType::MYSQL_TYPE_DATETIME,
             Date(_) => ColumnType::MYSQL_TYPE_DATE,
