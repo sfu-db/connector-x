@@ -1,4 +1,5 @@
 use crate::errors::{ConnectorAgentError, Result};
+use crate::sources::mysql::MysqlTypeSystem;
 use crate::sources::postgres::PostgresTypeSystem;
 use crate::sql::{
     get_partition_range_query, get_partition_range_query_sep, single_col_partition_query,
@@ -6,15 +7,16 @@ use crate::sql::{
 use anyhow::anyhow;
 use fehler::{throw, throws};
 use postgres::{Client, NoTls};
+use r2d2_mysql::mysql::{prelude::Queryable, Pool, Row};
 use rusqlite::{types::Type, Connection};
-use sqlparser::dialect::{PostgreSqlDialect, SQLiteDialect};
+use sqlparser::dialect::{MySqlDialect, PostgreSqlDialect, SQLiteDialect};
 use std::convert::TryFrom;
 use url::Url;
 
 pub enum SourceType {
     Postgres,
     Sqlite,
-    Mysql
+    Mysql,
 }
 
 pub struct SourceConn {
@@ -50,6 +52,7 @@ impl SourceType {
         match *self {
             SourceType::Postgres => pg_get_partition_range(conn, query, col),
             SourceType::Sqlite => sqlite_get_partition_range(conn, query, col),
+            SourceType::Mysql => mysql_get_partition_range(conn, query, col),
         }
     }
 
@@ -60,6 +63,9 @@ impl SourceType {
             }
             SourceType::Sqlite => {
                 single_col_partition_query(query, col, lower, upper, &SQLiteDialect {})
+            }
+            SourceType::Mysql => {
+                single_col_partition_query(query, col, lower, upper, &MySqlDialect {})
             }
         }
     }
@@ -138,6 +144,31 @@ fn sqlite_get_partition_range(conn: &str, query: &str, col: &str) -> (i64, i64) 
         None => {}
         Some(e) => throw!(e),
     }
+
+    (min_v, max_v)
+}
+
+#[throws(ConnectorAgentError)]
+fn mysql_get_partition_range(conn: &str, query: &str, col: &str) -> (i64, i64) {
+    let pool = Pool::new(conn).unwrap();
+    let mut conn = pool.get_conn().unwrap();
+    let range_query = get_partition_range_query(query.clone(), col.clone(), &MySqlDialect {})?;
+    let row: Row = conn.query_first(range_query).unwrap().unwrap();
+
+    let col_type = MysqlTypeSystem::from(&row.columns()[0].column_type());
+    let (min_v, max_v) = match col_type {
+        MysqlTypeSystem::Long(_) => {
+            let min_v: i64 = row.get(0).unwrap();
+            let max_v: i64 = row.get(1).unwrap();
+            (min_v, max_v)
+        }
+        MysqlTypeSystem::LongLong(_) => {
+            let min_v: i64 = row.get(0).unwrap();
+            let max_v: i64 = row.get(1).unwrap();
+            (min_v, max_v)
+        }
+        _ => throw!(anyhow!("Partition can only be done on int columns")),
+    };
 
     (min_v, max_v)
 }

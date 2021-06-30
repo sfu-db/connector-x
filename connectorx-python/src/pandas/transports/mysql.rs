@@ -1,5 +1,5 @@
-use super::destination::PandasDestination;
-use super::types::PandasTypeSystem;
+use crate::pandas::destination::PandasDestination;
+use crate::pandas::types::PandasTypeSystem;
 use connectorx::{
     impl_transport,
     sources::mysql::{MysqlSource, MysqlTypeSystem},
@@ -7,7 +7,7 @@ use connectorx::{
 };
 use rust_decimal::prelude::*;
 // use uuid::Uuid;
-use chrono::{DateTime, NaiveDate, NaiveTime, NaiveDateTime, Utc};
+use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
 
 pub struct MysqlPandasTransport<'py>(&'py ());
 
@@ -18,6 +18,7 @@ impl_transport!(
     mappings = {
         { Double[f64]                => F64[f64]                | conversion all }
         { Long[i64]                  => I64[i64]                | conversion all }
+        { LongLong[i64]              => I64[i64]                | conversion none }
         { Date[NaiveDate]            => DateTime[DateTime<Utc>] | conversion half }
         { Time[NaiveTime]            => String[String]          | conversion half }
         { Datetime[NaiveDateTime]    => DateTime[DateTime<Utc>] | conversion half }
@@ -51,4 +52,3 @@ impl<'py> TypeConversion<Decimal, f64> for MysqlPandasTransport<'py> {
             .unwrap_or_else(|| panic!("cannot convert decimal {:?} to float64", val))
     }
 }
-

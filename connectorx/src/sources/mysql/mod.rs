@@ -1,19 +1,19 @@
 use crate::data_order::DataOrder;
 use crate::errors::{ConnectorAgentError, Result};
-use crate::sql::{count_query, get_limit, limit1_query};
 use crate::sources::{PartitionParser, Produce, Source, SourcePartition};
+use crate::sql::{count_query, get_limit, limit1_query};
 
 use anyhow::anyhow;
+use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
 use fehler::throw;
 use log::debug;
-use rust_decimal::Decimal;
-use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
-use sqlparser::dialect::MySqlDialect;
 use r2d2::{Pool, PooledConnection};
 use r2d2_mysql::{
     mysql::{prelude::Queryable, Opts, OptsBuilder, QueryResult, Row, Text},
     MysqlConnectionManager,
 };
+use rust_decimal::Decimal;
+use sqlparser::dialect::MySqlDialect;
 pub use typesystem::MysqlTypeSystem;
 
 mod typesystem;
@@ -164,7 +164,10 @@ impl SourcePartition for MysqlSourcePartition {
         self.nrows = match get_limit(&self.query, &MySqlDialect {})? {
             // now get_limit using PostgreDialect
             None => {
-                let row: Option<usize> = self.conn.query_first(&count_query(&self.query, &MySqlDialect {})?).unwrap();
+                let row: Option<usize> = self
+                    .conn
+                    .query_first(&count_query(&self.query, &MySqlDialect {})?)
+                    .unwrap();
                 row.unwrap_or_else(|| panic!("failed to get the count of query: {:?}", self.query))
             }
             Some(n) => n,
@@ -247,7 +250,6 @@ impl<'a> PartitionParser<'a> for MysqlSourcePartitionParser<'a> {
     type TypeSystem = MysqlTypeSystem;
 }
 
-
 macro_rules! impl_produce {
     ($($t: ty,)+) => {
         $(
@@ -269,7 +271,6 @@ macro_rules! impl_produce {
         )+
     };
 }
-
 
 impl_produce!(
     i64,

@@ -5,11 +5,12 @@ mod transports;
 mod types;
 
 pub use self::destination::{PandasDestination, PandasPartitionDestination};
-pub use self::transports::{PostgresPandasTransport, SqlitePandasTransport};
+pub use self::transports::{MysqlPandasTransport, PostgresPandasTransport, SqlitePandasTransport};
 pub use self::types::{PandasDType, PandasTypeSystem};
 use crate::errors::ConnectorAgentPythonError;
 use anyhow::anyhow;
 use connectorx::source_router::{SourceConn, SourceType};
+use connectorx::sources::mysql::MysqlSource;
 use connectorx::{
     sources::{
         postgres::{Binary, PostgresSource, CSV},
@@ -20,7 +21,6 @@ use connectorx::{
 use fehler::throws;
 use log::debug;
 use pyo3::{PyAny, Python};
-use connectorx::sources::mysql::MysqlSource;
 
 #[throws(ConnectorAgentPythonError)]
 pub fn write_pandas<'a>(
@@ -69,7 +69,11 @@ pub fn write_pandas<'a>(
             dispatcher.run()?;
         }
         SourceType::Mysql => {
-            let source = MysqlSource::new(&)
+            let source = MysqlSource::new(&source_conn.conn[..], queries.len())?;
+            let dispatcher =
+                Dispatcher::<_, _, MysqlPandasTransport>::new(source, &mut destination, queries);
+            debug!("Running dispatcher");
+            dispatcher.run()?;
         }
     }
 
