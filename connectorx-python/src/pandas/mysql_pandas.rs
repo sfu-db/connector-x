@@ -6,7 +6,7 @@ use connectorx::{
     typesystem::TypeConversion,
 };
 use rust_decimal::prelude::*;
-use uuid::Uuid;
+// use uuid::Uuid;
 use chrono::{DateTime, NaiveDate, NaiveTime, NaiveDateTime, Utc};
 
 pub struct MysqlPandasTransport<'py>(&'py ());
@@ -22,10 +22,8 @@ impl_transport!(
         { Time[NaiveTime]            => String[String]          | conversion half }
         { Datetime[NaiveDateTime]    => DateTime[DateTime<Utc>] | conversion half }
         { Decimal[Decimal]           => F64[f64]                | conversion half }
-        // { Char[&'r str]              => Char[&'r str]           | conversion none }
-        // { VarChar[&'r str]           => Str[&'r str]            | conversion none }
-        { Char[String]              => Char[String]           | conversion none }
-        { VarChar[String]           => Str[String]            | conversion none }
+        { VarChar[String]            => String[String]          | conversion all }
+        { Char[String]               => String[String]          | conversion none }
     }
 );
 
@@ -53,3 +51,4 @@ impl<'py> TypeConversion<Decimal, f64> for MysqlPandasTransport<'py> {
             .unwrap_or_else(|| panic!("cannot convert decimal {:?} to float64", val))
     }
 }
+

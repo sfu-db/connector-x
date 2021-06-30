@@ -13,25 +13,6 @@ def postgres_url() -> str:
     return conn
 
 
-@pytest.fixture(scope="module")  # type: ignore
-def mysql_url() -> str:
-    conn = os.environ["MYSQL_URL"]
-    return conn
-
-
-def test_on_mysql(mysql_url: str) -> None:
-    query = "select * from test_table"
-    df = read_sql(mysql_url, query)
-    expected = pd.DataFrame(
-        index=range(3),
-        data={
-            "test_int": pd.Series([1, 2, 3], dtype="Int64"),
-            "test_float": pd.Series([1.1, 2.2, 3.3], dtype="float64")
-        }
-    )
-    assert_frame_equal(df, expected, check_names=True)
-
-
 @pytest.mark.xfail
 def test_on_non_select(postgres_url: str) -> None:
     query = "CREATE TABLE non_select(id INTEGER NOT NULL)"
@@ -392,21 +373,5 @@ def test_types_csv(postgres_url: str) -> None:
                 ], dtype="object"),
             "test_enum": pd.Series(['happy', 'very happy', 'ecstatic', 'ecstatic'], dtype="object")
         },
-    )
-    assert_frame_equal(df, expected, check_names=True)
-
-
-def test_types_mysql(mysql_url: str) -> None:
-    query = "select * from test_types"
-    df = read_sql(mysql_url, query)
-    expected = pd.DataFrame(
-        index=range(3),
-        data={
-            "test_date": pd.Series(["1999-07-25", "2020-12-31", "2021-01-28"], dtype="datetime64[ns]"),
-            "test_time": pd.Series(["00:00:00", "23:59:59", "12:30:30"], dtype="object"),
-            "test_datetime": pd.Series(["1999-07-25 00:00:00", "2020-12-31 23:59:59", "2021-01-28 12:30:30"], dtype="datetime64[ns]"),
-            "test_new_decimal": pd.Series([1.1, 2.2, 3.3], dtype="float"),
-            "test_decimal": pd.Series([1, 2, 3], dtype="float"),
-        }
     )
     assert_frame_equal(df, expected, check_names=True)
