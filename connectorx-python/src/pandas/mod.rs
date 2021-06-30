@@ -20,6 +20,7 @@ use connectorx::{
 use fehler::throws;
 use log::debug;
 use pyo3::{PyAny, Python};
+use connectorx::sources::mysql::MysqlSource;
 
 #[throws(ConnectorAgentPythonError)]
 pub fn write_pandas<'a>(
@@ -66,6 +67,9 @@ pub fn write_pandas<'a>(
                 Dispatcher::<_, _, SqlitePandasTransport>::new(source, &mut destination, queries);
             debug!("Running dispatcher");
             dispatcher.run()?;
+        }
+        SourceType::Mysql => {
+            let source = MysqlSource::new(&)
         }
     }
 
