@@ -390,7 +390,7 @@ def test_empty_result(postgres_url: str) -> None:
     )
     assert_frame_equal(df, expected, check_names=True)
 
-def test_empty_result_on_single_partition(postgres_url: str) -> None:
+def test_empty_result_on_some_partition(postgres_url: str) -> None:
     query = "SELECT * FROM test_table where test_int < 1"
     df = read_sql(postgres_url, query, partition_on="test_int", partition_num=3)
     expected = pd.DataFrame(
