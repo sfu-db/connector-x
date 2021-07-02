@@ -75,8 +75,8 @@ where
             let mut types = vec![];
 
             match conn.query_row(&limit1_query(query, &SQLiteDialect {})?[..], [], |row| {
+                zero_tuple = false;
                 row.columns().iter().enumerate().for_each(|(i, col)| {
-                    zero_tuple = false;
                     names.push(col.name().to_string());
                     match row.get_ref(i) {
                         Ok(vr) => {
@@ -96,7 +96,7 @@ where
                 Err(e) => {
                     match e {
                         rusqlite::Error::QueryReturnedNoRows => {}
-                        _ => zero_tuple = false,
+                        _ => zero_tuple = false, // erro not caused by zero-tuple result
                     }
                     debug!("cannot get metadata for '{}', try next query: {}", query, e);
                     error = Some(e);
@@ -115,7 +115,6 @@ where
             if zero_tuple {
                 let mut stmt = conn.prepare(self.queries[0].as_str())?;
                 let rows = stmt.query([])?;
-                // if query contains limit, column_names will be None
                 match rows.column_names() {
                     Some(cnames) => {
                         self.names = cnames.into_iter().map(|s| s.to_string()).collect();
