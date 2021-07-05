@@ -23,6 +23,7 @@ test-python +opts="": setup-python
 seed-db:
     psql $POSTGRES_URL -f scripts/postgres.sql
     sqlite3 ${SQLITE_URL#sqlite://} < scripts/sqlite.sql
+    mysql --protocol tcp -h$MYSQL_HOST -P$MYSQL_PORT -u$MYSQL_USER -p$MYSQL_PASSWORD $MYSQL_DB < scripts/mysql.sql
 
 # benches 
 flame-tpch conn="POSTGRES_URL":

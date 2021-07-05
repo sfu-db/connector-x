@@ -35,10 +35,10 @@ def test_mysql_with_partition(mysql_url: str) -> None:
         partition_num=3,
     )
     expected = pd.DataFrame(
-        index=range(7),
+        index=range(6),
         data={
-            "test_int": pd.Series([1, 2, 3, 4, 5, 6, 7], dtype="Int64"),
-            "test_float": pd.Series([1.1, 2.2, 3.3, 4.4, 5.5, 6.6, 7.7], dtype="float64")
+            "test_int": pd.Series([1, 2, 3, 4, 5, 6], dtype="Int64"),
+            "test_float": pd.Series([1.1, 2.2, 3.3, 4.4, 5.5, 6.6], dtype="float64")
         }
     )
     assert_frame_equal(df, expected, check_names=True)
