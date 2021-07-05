@@ -12,7 +12,6 @@ def postgres_url() -> str:
     conn = os.environ["POSTGRES_URL"]
     return conn
 
-
 @pytest.mark.xfail
 def test_on_non_select(postgres_url: str) -> None:
     query = "CREATE TABLE non_select(id INTEGER NOT NULL)"
@@ -374,5 +373,33 @@ def test_types_csv(postgres_url: str) -> None:
                 ], dtype="object"),
             "test_enum": pd.Series(['happy', 'very happy', 'ecstatic', 'ecstatic'], dtype="object")
         },
+    )
+    assert_frame_equal(df, expected, check_names=True)
+
+def test_empty_result(postgres_url: str) -> None:
+    query = "SELECT * FROM test_table where test_int < -100"
+    df = read_sql(postgres_url, query)
+    expected = pd.DataFrame(
+        data={
+            "test_int": pd.Series([], dtype="object"),
+            "test_nullint": pd.Series([], dtype="object"),
+            "test_str": pd.Series([], dtype="object"),
+            "test_float": pd.Series([], dtype="object"),
+            "test_bool": pd.Series([], dtype="object"),
+        }
+    )
+    assert_frame_equal(df, expected, check_names=True)
+
+def test_empty_result_on_some_partition(postgres_url: str) -> None:
+    query = "SELECT * FROM test_table where test_int < 1"
+    df = read_sql(postgres_url, query, partition_on="test_int", partition_num=3)
+    expected = pd.DataFrame(
+        data={
+            "test_int": pd.Series([0], dtype="Int64"),
+            "test_nullint": pd.Series([5], dtype="Int64"),
+            "test_str": pd.Series(["a"], dtype="object"),
+            "test_float": pd.Series([3.1], dtype="float"),
+            "test_bool": pd.Series([None], dtype="boolean"),
+        }
     )
     assert_frame_equal(df, expected, check_names=True)

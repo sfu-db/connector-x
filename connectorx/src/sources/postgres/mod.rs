@@ -20,6 +20,7 @@ use r2d2_postgres::{postgres::NoTls, PostgresConnectionManager};
 use rust_decimal::Decimal;
 use serde_json::{from_str, Value};
 use sqlparser::dialect::PostgreSqlDialect;
+use std::io::BufRead;
 use std::marker::PhantomData;
 pub use typesystem::PostgresTypeSystem;
 use uuid::Uuid;
@@ -84,11 +85,12 @@ where
 
         let mut conn = self.pool.get()?;
         let mut success = false;
+        let mut zero_tuple = true;
         let mut error = None;
         for query in &self.queries {
             // assuming all the partition queries yield same schema
-            match conn.query_one(&limit1_query(query, &PostgreSqlDialect {})?[..], &[]) {
-                Ok(row) => {
+            match conn.query_opt(&limit1_query(query, &PostgreSqlDialect {})?[..], &[]) {
+                Ok(Some(row)) => {
                     let (names, types) = row
                         .columns()
                         .into_iter()
@@ -104,20 +106,37 @@ where
                     self.schema = types;
 
                     success = true;
+                    zero_tuple = false;
                     break;
                 }
+                Ok(None) => {}
                 Err(e) => {
                     debug!("cannot get metadata for '{}', try next query: {}", query, e);
                     error = Some(e);
+                    zero_tuple = false;
                 }
             }
         }
 
         if !success {
-            throw!(anyhow!(
-                "Cannot get metadata for the queries, last error: {:?}",
-                error
-            ))
+            if zero_tuple {
+                // try to use COPY command get the column headers
+                let copy_query = format!("COPY ({}) TO STDOUT WITH CSV HEADER", self.queries[0]);
+                let mut reader = conn.copy_out(&*copy_query)?;
+                let mut buf = String::new();
+                reader.read_line(&mut buf)?;
+                self.names = buf[0..buf.len() - 1] // remove last '\n'
+                    .split(",")
+                    .map(|s| s.to_string())
+                    .collect();
+                // set all columns as string (align with pandas)
+                self.schema = vec![PostgresTypeSystem::Text(false); self.names.len()];
+            } else {
+                throw!(anyhow!(
+                    "Cannot get metadata for the queries, last error: {:?}",
+                    error
+                ))
+            }
         }
 
         Ok(())

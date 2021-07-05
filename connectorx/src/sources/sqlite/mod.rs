@@ -67,37 +67,64 @@ where
         assert!(self.queries.len() != 0);
         let conn = self.pool.get()?;
         let mut success = false;
+        let mut zero_tuple = true;
         let mut error = None;
         for query in &self.queries {
             // assuming all the partition queries yield same schema
-            let (names, types) =
-                conn.query_row(&limit1_query(query, &SQLiteDialect {})?[..], [], |row| {
-                    let mut names = vec![];
-                    let mut types = vec![];
-                    row.columns().iter().enumerate().for_each(|(i, col)| {
-                        names.push(col.name().to_string());
-                        match row.get_ref(i) {
-                            Ok(vr) => types
-                                .push(SqliteTypeSystem::from((col.decl_type(), vr.data_type()))),
-                            Err(e) => {
-                                debug!(
-                                    "cannot get metadata for '{}', try next query: {}",
-                                    query, e
-                                );
-                                error = Some(e);
-                            }
-                        }
-                    });
-                    Ok((names, types))
-                })?;
+            let mut names = vec![];
+            let mut types = vec![];
 
-            self.names = names;
-            self.schema = types;
-            success = true;
-            break;
+            match conn.query_row(&limit1_query(query, &SQLiteDialect {})?[..], [], |row| {
+                zero_tuple = false;
+                row.columns().iter().enumerate().for_each(|(i, col)| {
+                    names.push(col.name().to_string());
+                    match row.get_ref(i) {
+                        Ok(vr) => {
+                            types.push(SqliteTypeSystem::from((col.decl_type(), vr.data_type())))
+                        }
+                        Err(e) => {
+                            debug!("cannot get ref at {} on query: {}", i, query);
+                            error = Some(e);
+                            types.clear(); // clear types and return directly when error occurs
+                            return;
+                        }
+                    }
+                });
+                Ok(())
+            }) {
+                Ok(_) => {}
+                Err(e) => {
+                    match e {
+                        rusqlite::Error::QueryReturnedNoRows => {}
+                        _ => zero_tuple = false, // erro not caused by zero-tuple result
+                    }
+                    debug!("cannot get metadata for '{}', try next query: {}", query, e);
+                    error = Some(e);
+                }
+            }
+
+            if !names.is_empty() && !types.is_empty() {
+                success = true;
+                self.names = names;
+                self.schema = types;
+                break;
+            }
         }
 
         if !success {
+            if zero_tuple {
+                let mut stmt = conn.prepare(self.queries[0].as_str())?;
+                let rows = stmt.query([])?;
+                match rows.column_names() {
+                    Some(cnames) => {
+                        self.names = cnames.into_iter().map(|s| s.to_string()).collect();
+                        // set all columns as string (align with pandas)
+                        self.schema = vec![SqliteTypeSystem::Text(false); self.names.len()];
+                        return Ok(());
+                    }
+                    None => {}
+                }
+            }
             throw!(anyhow!(
                 "Cannot get metadata for the queries, last error: {:?}",
                 error
