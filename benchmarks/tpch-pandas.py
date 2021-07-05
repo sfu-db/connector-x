@@ -15,42 +15,33 @@ from sqlalchemy import create_engine
 from docopt import docopt
 import pandas as pd
 import sqlite3
+import pymysql
 
 if __name__ == "__main__":
     args = docopt(__doc__, version="1.0")
     conn = os.environ[args["--conn"]]
     table = os.environ["TPCH_TABLE"]
 
-    if conn.startswith("sqlite://"):
+    if conn.startswith("sqlite"):
         conn = sqlite3.connect(conn[9:])
-        with Timer() as timer:
-            df = pd.read_sql(
-                f"SELECT * FROM {table}",
-                conn,
-                parse_dates=[
-                    "l_shipdate",
-                    "l_commitdate",
-                    "l_receiptdate",
-                ],
-            )
-        print(f"[Total] {timer.elapsed:.2f}s")
-        conn.close()
-
-    else:
+    elif conn.startswith("mysql"):
+        conn = pymysql.connect(host="localhost", user="root", passwd="wjz283200", db="tpch", charset="utf8")
+    elif conn.startswith("postgres"):
         engine = create_engine(conn)
         conn = engine.connect()
-        with Timer() as timer:
-            df = pd.read_sql(
-                f"SELECT * FROM {table}",
-                conn,
-                parse_dates=[
-                    "l_shipdate",
-                    "l_commitdate",
-                    "l_receiptdate",
-                ],
-            )
-        print(f"[Total] {timer.elapsed:.2f}s")
-        conn.close()
+
+    with Timer() as timer:
+        df = pd.read_sql(
+            f"SELECT * FROM {table}",
+            conn,
+            parse_dates=[
+                "l_shipdate",
+                "l_commitdate",
+                "l_receiptdate",
+            ],
+        )
+    print(f"[Total] {timer.elapsed:.2f}s")
+    conn.close()
 
     print(df.head())
     print(df.tail())

@@ -13,7 +13,7 @@ def mysql_url() -> str:
     return conn
 
 
-def test_mysql_without_partitio(mysql_url: str) -> None:
+def test_mysql_without_partition(mysql_url: str) -> None:
     query = "select * from test_table limit 3"
     df = read_sql(mysql_url, query)
     expected = pd.DataFrame(
@@ -25,6 +25,7 @@ def test_mysql_without_partitio(mysql_url: str) -> None:
     )
     assert_frame_equal(df, expected, check_names=True)
 
+
 def test_mysql_with_partition(mysql_url: str) -> None:
     query = "select * from test_table"
     df = read_sql(
@@ -34,13 +35,14 @@ def test_mysql_with_partition(mysql_url: str) -> None:
         partition_num=3,
     )
     expected = pd.DataFrame(
-        index=range(3),
+        index=range(7),
         data={
             "test_int": pd.Series([1, 2, 3, 4, 5, 6, 7], dtype="Int64"),
             "test_float": pd.Series([1.1, 2.2, 3.3, 4.4, 5.5, 6.6, 7.7], dtype="float64")
         }
     )
     assert_frame_equal(df, expected, check_names=True)
+
 
 def test_mysql_types(mysql_url: str) -> None:
     query = "select * from test_types"
