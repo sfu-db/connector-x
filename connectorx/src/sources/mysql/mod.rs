@@ -181,7 +181,6 @@ impl SourcePartition for MysqlSourcePartition {
 
     fn prepare(&mut self) -> Result<()> {
         self.nrows = match get_limit(&self.query, &MySqlDialect {})? {
-            // now get_limit using PostgreDialect
             None => {
                 let row: usize = self
                     .conn
