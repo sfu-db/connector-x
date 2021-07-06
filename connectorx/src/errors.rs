@@ -49,6 +49,12 @@ pub enum ConnectorAgentError {
     PostgresError(#[from] postgres::Error),
 
     #[error(transparent)]
+    MysqlError(#[from] r2d2_mysql::mysql::Error),
+
+    #[error(transparent)]
+    MysqlUrlError(#[from] r2d2_mysql::mysql::UrlError),
+
+    #[error(transparent)]
     SQLiteError(#[from] rusqlite::Error),
 
     #[error(transparent)]

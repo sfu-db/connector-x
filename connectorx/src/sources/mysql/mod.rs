@@ -31,12 +31,10 @@ pub struct MysqlSource {
 
 impl MysqlSource {
     pub fn new(conn: &str, nconn: usize) -> Result<Self> {
-        let manager =
-            MysqlConnectionManager::new(OptsBuilder::from_opts(Opts::from_url(&conn).unwrap()));
+        let manager = MysqlConnectionManager::new(OptsBuilder::from_opts(Opts::from_url(&conn)?));
         let pool = r2d2::Pool::builder()
             .max_size(nconn as u32)
-            .build(manager)
-            .unwrap();
+            .build(manager)?;
         Ok(Self {
             pool,
             queries: vec![],
@@ -75,37 +73,58 @@ where
 
         let mut conn = self.pool.get()?;
         let mut success = false;
+        let mut zero_tuple = true;
         let mut error = None;
         for query in &self.queries {
             // assuming all the partition queries yield same schema
-            match conn.query_first(&limit1_query(query, &MySqlDialect {})?[..]) {
-                Ok(res) => {
-                    let row: Row = res.unwrap();
-                    self.names = row
+            match conn.query_first::<Row, _>(&limit1_query(query, &MySqlDialect {})?[..]) {
+                Ok(Some(row)) => {
+                    let (names, types) = row
                         .columns_ref()
                         .into_iter()
-                        .map(|col| col.name_str().to_string())
-                        .collect();
-                    self.schema = row
-                        .columns_ref()
-                        .into_iter()
-                        .map(|col| MysqlTypeSystem::from(&col.column_type()))
-                        .collect();
+                        .map(|col| {
+                            (
+                                col.name_str().to_string(),
+                                MysqlTypeSystem::from(&col.column_type()),
+                            )
+                        })
+                        .unzip();
+                    self.names = names;
+                    self.schema = types;
                     success = true;
-                    break;
+                    zero_tuple = false;
                 }
+                Ok(None) => {}
                 Err(e) => {
                     debug!("cannot get metadata for '{}', try next query: {}", query, e);
                     error = Some(e);
+                    zero_tuple = false;
                 }
             }
         }
 
         if !success {
-            throw!(anyhow!(
-                "Cannot get metadata for the queries, last error: {:?}",
-                error
-            ))
+            if zero_tuple {
+                let iter = conn.query_iter(self.queries[0].clone())?;
+                let (names, types) = iter
+                    .columns()
+                    .as_ref()
+                    .into_iter()
+                    .map(|col| {
+                        (
+                            col.name_str().to_string(),
+                            MysqlTypeSystem::VarChar(false), // set all columns as string (align with pandas)
+                        )
+                    })
+                    .unzip();
+                self.names = names;
+                self.schema = types;
+            } else {
+                throw!(anyhow!(
+                    "Cannot get metadata for the queries, last error: {:?}",
+                    error
+                ))
+            }
         }
 
         Ok(())
@@ -164,11 +183,13 @@ impl SourcePartition for MysqlSourcePartition {
         self.nrows = match get_limit(&self.query, &MySqlDialect {})? {
             // now get_limit using PostgreDialect
             None => {
-                let row: Option<usize> = self
+                let row: usize = self
                     .conn
-                    .query_first(&count_query(&self.query, &MySqlDialect {})?)
-                    .unwrap();
-                row.unwrap_or_else(|| panic!("failed to get the count of query: {:?}", self.query))
+                    .query_first(&count_query(&self.query, &MySqlDialect {})?)?
+                    .ok_or_else(|| {
+                        anyhow!("mysql failed to get the count of query: {}", self.query)
+                    })?;
+                row
             }
             Some(n) => n,
         };
@@ -177,7 +198,7 @@ impl SourcePartition for MysqlSourcePartition {
 
     fn parser(&mut self) -> Result<Self::Parser<'_>> {
         let query = self.query.clone();
-        let iter = self.conn.query_iter(query).unwrap();
+        let iter = self.conn.query_iter(query)?;
         Ok(MysqlSourcePartitionParser::new(
             iter,
             &self.schema,
@@ -227,7 +248,7 @@ impl<'a> MysqlSourcePartitionParser<'a> {
 
             for _ in 0..self.buf_size {
                 if let Some(item) = self.iter.next() {
-                    self.rowbuf.push(item.unwrap());
+                    self.rowbuf.push(item?);
                 } else {
                     break;
                 }
@@ -256,7 +277,7 @@ macro_rules! impl_produce {
             impl<'r, 'a> Produce<'r, $t> for MysqlSourcePartitionParser<'a> {
                 fn produce(&'r mut self) -> Result<$t> {
                     let (ridx, cidx) = self.next_loc()?;
-                    let res = self.rowbuf[ridx].get(cidx).unwrap();
+                    let res = self.rowbuf[ridx].get(cidx).ok_or_else(|| anyhow!("mysql get None at position: ({}, {})", ridx, cidx))?;
                     Ok(res)
                 }
             }

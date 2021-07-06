@@ -149,21 +149,31 @@ fn sqlite_get_partition_range(conn: &str, query: &str, col: &str) -> (i64, i64) 
 
 #[throws(ConnectorAgentError)]
 fn mysql_get_partition_range(conn: &str, query: &str, col: &str) -> (i64, i64) {
-    let pool = Pool::new(conn).unwrap();
-    let mut conn = pool.get_conn().unwrap();
+    let pool = Pool::new(conn)?;
+    let mut conn = pool.get_conn()?;
     let range_query = get_partition_range_query(query.clone(), col.clone(), &MySqlDialect {})?;
-    let row: Row = conn.query_first(range_query).unwrap().unwrap();
+    let row: Row = conn
+        .query_first(range_query)?
+        .ok_or_else(|| anyhow!("mysql range: no row returns"))?;
 
     let col_type = MysqlTypeSystem::from(&row.columns()[0].column_type());
     let (min_v, max_v) = match col_type {
         MysqlTypeSystem::Long(_) => {
-            let min_v: i64 = row.get(0).unwrap();
-            let max_v: i64 = row.get(1).unwrap();
+            let min_v: i64 = row
+                .get(0)
+                .ok_or_else(|| anyhow!("mysql range: cannot get min value"))?;
+            let max_v: i64 = row
+                .get(1)
+                .ok_or_else(|| anyhow!("mysql range: cannot get max value"))?;
             (min_v, max_v)
         }
         MysqlTypeSystem::LongLong(_) => {
-            let min_v: i64 = row.get(0).unwrap();
-            let max_v: i64 = row.get(1).unwrap();
+            let min_v: i64 = row
+                .get(0)
+                .ok_or_else(|| anyhow!("mysql range: cannot get min value"))?;
+            let max_v: i64 = row
+                .get(1)
+                .ok_or_else(|| anyhow!("mysql range: cannot get max value"))?;
             (min_v, max_v)
         }
         _ => throw!(anyhow!("Partition can only be done on int columns")),

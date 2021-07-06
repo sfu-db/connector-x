@@ -60,3 +60,27 @@ def test_mysql_types(mysql_url: str) -> None:
         }
     )
     assert_frame_equal(df, expected, check_names=True)
+
+def test_empty_result(mysql_url: str) -> None:
+    query = "SELECT * FROM test_table where test_int < -100"
+    df = read_sql(mysql_url, query)
+    expected = pd.DataFrame(
+        data={
+            "test_int": pd.Series([], dtype="object"),
+            "test_float": pd.Series([], dtype="object"),
+        }
+    )
+    assert_frame_equal(df, expected, check_names=True)
+
+def test_empty_result_on_some_partition(mysql_url: str) -> None:
+    query = "SELECT * FROM test_table where test_int = 6"
+    df = read_sql(mysql_url, query, partition_on="test_int", partition_num=3)
+    expected = pd.DataFrame(
+        index=range(1),
+        data={
+            "test_int": pd.Series([6], dtype="Int64"),
+            "test_float": pd.Series([6.6], dtype="float64")
+        }
+    )
+    assert_frame_equal(df, expected, check_names=True)
+
