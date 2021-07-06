@@ -21,7 +21,7 @@ fn load_and_parse() {
     let mut partition = partitions.remove(0);
     partition.prepare().expect("run query");
 
-    assert_eq!(7, partition.nrows());
+    assert_eq!(6, partition.nrows());
     assert_eq!(2, partition.ncols());
 
     let mut parser = partition.parser().unwrap();

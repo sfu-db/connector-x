@@ -15,7 +15,6 @@ from sqlalchemy import create_engine
 from docopt import docopt
 import pandas as pd
 import sqlite3
-import pymysql
 
 if __name__ == "__main__":
     args = docopt(__doc__, version="1.0")
@@ -25,8 +24,9 @@ if __name__ == "__main__":
     if conn.startswith("sqlite"):
         conn = sqlite3.connect(conn[9:])
     elif conn.startswith("mysql"):
-        conn = pymysql.connect(host="localhost", user="root", passwd="wjz283200", db="tpch", charset="utf8")
-    elif conn.startswith("postgres"):
+        engine = create_engine(f"mysql+py{conn}")
+        conn = engine.connect()
+    else:
         engine = create_engine(conn)
         conn = engine.connect()
 
