@@ -1,4 +1,4 @@
-use arrow::array::{BooleanArray, Float64Array, Int64Array, StringArray};
+use arrow::array::{BooleanArray, Float64Array, Int64Array, LargeStringArray};
 use arrow::record_batch::RecordBatch;
 use connectorx::{
     destinations::arrow::ArrowDestination, sources::dummy::DummySource,
@@ -82,15 +82,17 @@ fn test_arrow() {
                 assert!(records[0]
                     .column(col)
                     .as_any()
-                    .downcast_ref::<StringArray>()
+                    .downcast_ref::<LargeStringArray>()
                     .unwrap()
-                    .eq(&StringArray::from(vec!["0", "1", "2", "3"])));
+                    .eq(&LargeStringArray::from(vec!["0", "1", "2", "3"])));
                 assert!(records[1]
                     .column(col)
                     .as_any()
-                    .downcast_ref::<StringArray>()
+                    .downcast_ref::<LargeStringArray>()
                     .unwrap()
-                    .eq(&StringArray::from(vec!["0", "1", "2", "3", "4", "5", "6"])));
+                    .eq(&LargeStringArray::from(vec![
+                        "0", "1", "2", "3", "4", "5", "6"
+                    ])));
             }
             4 => {
                 assert!(records[0]
