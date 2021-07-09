@@ -86,7 +86,7 @@ impl CSVSource {
             match possibilities.len() {
                 1 => {
                     for dt in possibilities.iter() {
-                        match dt.clone() {
+                        match *dt {
                             DummyTypeSystem::I64(false) => {
                                 schema.push(DummyTypeSystem::I64(has_nulls));
                             }
@@ -141,7 +141,7 @@ impl Source for CSVSource {
 
     fn set_queries<Q: AsRef<str>>(&mut self, queries: &[Q]) {
         self.files = queries
-            .into_iter()
+            .iter()
             .map(|fname| fname.as_ref().to_string())
             .collect();
     }
@@ -154,7 +154,7 @@ impl Source for CSVSource {
 
         self.names = header.iter().map(|s| s.to_string()).collect();
 
-        if self.schema.len() == 0 {
+        if self.schema.is_empty() {
             self.schema = self.infer_schema()?;
         }
 

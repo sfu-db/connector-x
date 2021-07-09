@@ -25,13 +25,19 @@ pub struct ArrowDestination {
     builders: Vec<Builders>,
 }
 
-impl ArrowDestination {
-    pub fn new() -> Self {
+impl Default for ArrowDestination {
+    fn default() -> Self {
         ArrowDestination {
             nrows: 0,
             schema: vec![],
             builders: vec![],
         }
+    }
+}
+
+impl ArrowDestination {
+    pub fn new() -> Self {
+        Self::default()
     }
 }
 
@@ -99,7 +105,7 @@ impl ArrowDestination {
                 let columns = pbuilder
                     .into_iter()
                     .zip(schema.iter())
-                    .map(|(builder, &dt)| Ok(Realize::<FFinishBuilder>::realize(dt)?(builder)?))
+                    .map(|(builder, &dt)| Realize::<FFinishBuilder>::realize(dt)?(builder))
                     .collect::<Result<Vec<_>>>()?;
                 Ok(RecordBatch::try_new(Arc::clone(&arrow_schema), columns)?)
             })

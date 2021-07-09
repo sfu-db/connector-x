@@ -66,7 +66,7 @@ where
 
                     table
                         .entry(f.name().clone())
-                        .or_insert_with(|| vec![])
+                        .or_insert_with(Vec::new)
                         .push(batch.column(i).to_raw()?)
                 }
             }
@@ -82,7 +82,7 @@ async fn read_as_record_batch(
     schema: SchemaRef,
     json_format: JsonFormat,
 ) -> Option<Vec<RecordBatch>> {
-    if let None = payload.body.as_ref() {
+    if payload.body.as_ref().is_none() {
         return None;
     }
 
@@ -102,11 +102,11 @@ async fn read_as_record_batch(
             JsonFormat::Array => {
                 array_to_jsonl(rawjson.as_mut());
                 ReaderBuilder::new()
-                    .with_schema(schema.clone())
+                    .with_schema(schema)
                     .build(Cursor::new(&rawjson[1..rawjson.len() - 1]))?
             }
             JsonFormat::JsonL => ReaderBuilder::new()
-                .with_schema(schema.clone())
+                .with_schema(schema)
                 .build(Cursor::new(&rawjson[..]))?,
         };
 

@@ -57,6 +57,11 @@ jobs:
           command: fmt
           args: --all -- --check -q
 
+      - name: Clippy linting
+        uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+
       - name: Seed the database
         run: just seed-db
         env:

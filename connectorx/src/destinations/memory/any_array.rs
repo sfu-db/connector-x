@@ -52,14 +52,14 @@ where
         }
     }
 
-    pub fn view<'a>(&'a self) -> AnyArrayView<'a, D> {
+    pub fn view(&self) -> AnyArrayView<'_, D> {
         AnyArrayView {
             inner: self.inner.view(),
             elem_type: self.elem_type,
         }
     }
 
-    pub fn view_mut<'a>(&'a mut self) -> AnyArrayViewMut<'a, D> {
+    pub fn view_mut(&mut self) -> AnyArrayViewMut<'_, D> {
         AnyArrayViewMut {
             inner: self.inner.view_mut(),
             elem_type: self.elem_type,

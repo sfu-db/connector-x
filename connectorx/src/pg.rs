@@ -44,7 +44,7 @@ where
                     }
                     table
                         .entry(f.name().clone())
-                        .or_insert_with(|| vec![])
+                        .or_insert_with(Vec::new)
                         .push(batch.column(i).to_raw()?)
                 }
             }
@@ -73,11 +73,12 @@ where
         let t_copy = start.elapsed();
 
         let mut batches = vec![];
-        let mut reader = ReaderBuilder::new()
-            .with_schema(schema.clone())
+        let reader = ReaderBuilder::new()
+            .with_schema(schema)
             .with_delimiter(b',')
             .build(Cursor::new(&buf[..]))?;
-        while let Some(rb) = reader.next() {
+
+        for rb in reader {
             batches.push(rb?);
         }
         let t_arrow = start.elapsed();

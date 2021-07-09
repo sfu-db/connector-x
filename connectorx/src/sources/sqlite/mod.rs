@@ -64,7 +64,7 @@ where
     }
 
     fn fetch_metadata(&mut self) -> Result<()> {
-        assert!(self.queries.len() != 0);
+        assert!(!self.queries.is_empty());
         let conn = self.pool.get()?;
         let mut success = false;
         let mut zero_tuple = true;
@@ -86,7 +86,6 @@ where
                             debug!("cannot get ref at {} on query: {}", i, query);
                             error = Some(e);
                             types.clear(); // clear types and return directly when error occurs
-                            return;
                         }
                     }
                 });
@@ -115,14 +114,12 @@ where
             if zero_tuple {
                 let mut stmt = conn.prepare(self.queries[0].as_str())?;
                 let rows = stmt.query([])?;
-                match rows.column_names() {
-                    Some(cnames) => {
-                        self.names = cnames.into_iter().map(|s| s.to_string()).collect();
-                        // set all columns as string (align with pandas)
-                        self.schema = vec![SqliteTypeSystem::Text(false); self.names.len()];
-                        return Ok(());
-                    }
-                    None => {}
+
+                if let Some(cnames) = rows.column_names() {
+                    self.names = cnames.into_iter().map(|s| s.to_string()).collect();
+                    // set all columns as string (align with pandas)
+                    self.schema = vec![SqliteTypeSystem::Text(false); self.names.len()];
+                    return Ok(());
                 }
             }
             throw!(anyhow!(
@@ -195,11 +192,7 @@ impl SourcePartition for SqliteSourcePartition {
     }
 
     fn parser(&mut self) -> Result<Self::Parser<'_>> {
-        Ok(SqliteSourcePartitionParser::new(
-            &self.conn,
-            self.query.as_str(),
-            &self.schema,
-        )?)
+        SqliteSourcePartitionParser::new(&self.conn, self.query.as_str(), &self.schema)
     }
 
     fn nrows(&self) -> usize {

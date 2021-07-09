@@ -36,7 +36,7 @@ where
         Dispatcher {
             src,
             dst,
-            queries: queries.into_iter().map(ToString::to_string).collect(),
+            queries: queries.iter().map(ToString::to_string).collect(),
             _phantom: PhantomData,
         }
     }
@@ -110,6 +110,7 @@ where
                 match dorder {
                     DataOrder::RowMajor => {
                         for _ in 0..src.nrows() {
+                            #[allow(clippy::needless_range_loop)]
                             for col in 0..src.ncols() {
                                 #[cfg(feature = "fptr")]
                                 f[col](&mut parser, &mut src)?;
@@ -122,7 +123,9 @@ where
                             }
                         }
                     }
-                    DataOrder::ColumnMajor => {
+                    DataOrder::ColumnMajor =>
+                    {
+                        #[allow(clippy::needless_range_loop)]
                         for col in 0..src.ncols() {
                             for _ in 0..src.nrows() {
                                 #[cfg(feature = "fptr")]

@@ -81,7 +81,7 @@ where
     }
 
     fn fetch_metadata(&mut self) -> Result<()> {
-        assert!(self.queries.len() != 0);
+        assert!(!self.queries.is_empty());
 
         let mut conn = self.pool.get()?;
         let mut success = false;
@@ -93,7 +93,7 @@ where
                 Ok(Some(row)) => {
                     let (names, types) = row
                         .columns()
-                        .into_iter()
+                        .iter()
                         .map(|col| {
                             (
                                 col.name().to_string(),
@@ -126,7 +126,7 @@ where
                 let mut buf = String::new();
                 reader.read_line(&mut buf)?;
                 self.names = buf[0..buf.len() - 1] // remove last '\n'
-                    .split(",")
+                    .split(',')
                     .map(|s| s.to_string())
                     .collect();
                 // set all columns as string (align with pandas)
