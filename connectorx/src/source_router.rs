@@ -63,7 +63,7 @@ impl SourceType {
 #[throws(ConnectorAgentError)]
 fn pg_get_partition_range(conn: &str, query: &str, col: &str) -> (i64, i64) {
     let mut client = Client::connect(conn, NoTls)?;
-    let range_query = get_partition_range_query(query.clone(), col.clone(), &PostgreSqlDialect {})?;
+    let range_query = get_partition_range_query(query, col, &PostgreSqlDialect {})?;
     let row = client.query_one(range_query.as_str(), &[])?;
 
     let col_type = PostgresTypeSystem::from(row.columns()[0].type_());
@@ -101,8 +101,7 @@ fn sqlite_get_partition_range(conn: &str, query: &str, col: &str) -> (i64, i64) 
     let conn = Connection::open(&conn[9..])?;
     // SQLite only optimize min max queries when there is only one aggregation
     // https://www.sqlite.org/optoverview.html#minmax
-    let (min_query, max_query) =
-        get_partition_range_query_sep(query.clone(), col.clone(), &SQLiteDialect {})?;
+    let (min_query, max_query) = get_partition_range_query_sep(query, col, &SQLiteDialect {})?;
     let mut error = None;
     let min_v = conn.query_row(min_query.as_str(), [], |row| {
         // declare type for count query will be None, only need to check the returned value type

@@ -84,6 +84,7 @@ pub trait Transport {
         dst: &'r mut <Self::D as Destination>::Partition<'d>,
     ) -> Result<()>;
 
+    #[allow(clippy::type_complexity)]
     fn processor<'s, 'd>(
         ts1: Self::TSS,
         ts2: Self::TSD,

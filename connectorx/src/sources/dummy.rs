@@ -16,7 +16,7 @@ impl DummySource {
     pub fn new<S: AsRef<str>>(names: &[S], schema: &[DummyTypeSystem]) -> Self {
         assert_eq!(names.len(), schema.len());
         DummySource {
-            names: names.into_iter().map(|s| s.as_ref().to_string()).collect(),
+            names: names.iter().map(|s| s.as_ref().to_string()).collect(),
             schema: schema.to_vec(),
             queries: vec![],
         }
@@ -37,10 +37,7 @@ impl Source for DummySource {
 
     // query: nrows,ncols
     fn set_queries<Q: AsRef<str>>(&mut self, queries: &[Q]) {
-        self.queries = queries
-            .into_iter()
-            .map(|q| q.as_ref().to_string())
-            .collect();
+        self.queries = queries.iter().map(|q| q.as_ref().to_string()).collect();
     }
 
     fn fetch_metadata(&mut self) -> Result<()> {
@@ -56,7 +53,7 @@ impl Source for DummySource {
     }
 
     fn partition(self) -> Result<Vec<Self::Partition>> {
-        assert!(self.queries.len() != 0);
+        assert!(!self.queries.is_empty());
         let queries = self.queries;
         let schema = self.schema;
 

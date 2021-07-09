@@ -17,16 +17,15 @@ pub fn get_limit<T: Dialect>(sql: &str, dialect: &T) -> Option<usize> {
     }
 
     match &mut ast[0] {
-        Statement::Query(q) => match &q.limit {
-            Some(expr) => {
+        Statement::Query(q) => {
+            if let Some(expr) = &q.limit {
                 return Some(
                     expr.to_string()
                         .parse()
                         .map_err(|e: std::num::ParseIntError| anyhow!(e))?,
-                )
+                );
             }
-            _ => {}
-        },
+        }
         _ => throw!(ConnectorAgentError::SQLQueryNotSupported(sql.to_string())),
     };
     None
@@ -43,7 +42,7 @@ fn wrap_query(
         body: SetExpr::Select(Box::new(Select {
             distinct: false,
             top: None,
-            projection: projection,
+            projection,
             from: vec![TableWithJoins {
                 relation: TableFactor::Derived {
                     lateral: false,
@@ -59,7 +58,7 @@ fn wrap_query(
                 joins: vec![],
             }],
             lateral_views: vec![],
-            selection: selection,
+            selection,
             group_by: vec![],
             cluster_by: vec![],
             distribute_by: vec![],
@@ -143,7 +142,7 @@ pub fn single_col_partition_query<T: Dialect>(
     dialect: &T,
 ) -> String {
     trace!("Incoming query: {}", query);
-    const PART_TMP_TAB_NAME: &'static str = "CXTMPTAB_PART";
+    const PART_TMP_TAB_NAME: &str = "CXTMPTAB_PART";
 
     let mut ast = Parser::parse_sql(dialect, query)?;
     if ast.len() != 1 {
@@ -211,7 +210,7 @@ pub fn single_col_partition_query<T: Dialect>(
 #[throws(ConnectorAgentError)]
 pub fn get_partition_range_query<T: Dialect>(query: &str, col: &str, dialect: &T) -> String {
     trace!("Incoming query: {}", query);
-    const RANGE_TMP_TAB_NAME: &'static str = "CXTMPTAB_RANGE";
+    const RANGE_TMP_TAB_NAME: &str = "CXTMPTAB_RANGE";
     let mut ast = Parser::parse_sql(dialect, query)?;
     if ast.len() != 1 {
         throw!(ConnectorAgentError::SQLQueryNotSupported(query.to_string()));
@@ -282,7 +281,7 @@ pub fn get_partition_range_query_sep<T: Dialect>(
     dialect: &T,
 ) -> (String, String) {
     trace!("Incoming query: {}", query);
-    const RANGE_TMP_TAB_NAME: &'static str = "CXTMPTAB_RANGE";
+    const RANGE_TMP_TAB_NAME: &str = "CXTMPTAB_RANGE";
     let mut ast = Parser::parse_sql(dialect, query)?;
     if ast.len() != 1 {
         throw!(ConnectorAgentError::SQLQueryNotSupported(query.to_string()));
