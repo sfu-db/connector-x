@@ -1,10 +1,12 @@
+use crate::constants::SECONDS_IN_DAY;
 use crate::errors::{ConnectorAgentError, Result};
 use arrow::array::{
-    ArrayBuilder, BooleanBuilder, Float64Builder, Int32Builder, Int64Builder, StringBuilder,
+    ArrayBuilder, BooleanBuilder, Date32Builder, Date64Builder, Float64Builder, Int32Builder,
+    Int64Builder, LargeStringBuilder,
 };
-use arrow::datatypes::DataType as ArrowDataType;
 use arrow::datatypes::Field;
-use chrono::{Date, DateTime, Utc};
+use arrow::datatypes::{DataType as ArrowDataType, DateUnit};
+use chrono::{Date, DateTime, NaiveDate, NaiveDateTime, Utc};
 use fehler::throws;
 
 /// Associate arrow builder with native type
@@ -153,10 +155,10 @@ impl ArrowAssoc for Option<bool> {
 }
 
 impl ArrowAssoc for String {
-    type Builder = StringBuilder;
+    type Builder = LargeStringBuilder;
 
-    fn builder(nrows: usize) -> StringBuilder {
-        StringBuilder::new(nrows)
+    fn builder(nrows: usize) -> Self::Builder {
+        LargeStringBuilder::new(nrows)
     }
 
     #[throws(ConnectorAgentError)]
@@ -165,15 +167,15 @@ impl ArrowAssoc for String {
     }
 
     fn field(header: &str) -> Field {
-        Field::new(header, ArrowDataType::Utf8, false)
+        Field::new(header, ArrowDataType::LargeUtf8, false)
     }
 }
 
 impl ArrowAssoc for Option<String> {
-    type Builder = StringBuilder;
+    type Builder = LargeStringBuilder;
 
-    fn builder(nrows: usize) -> StringBuilder {
-        StringBuilder::new(nrows)
+    fn builder(nrows: usize) -> Self::Builder {
+        LargeStringBuilder::new(nrows)
     }
 
     #[throws(ConnectorAgentError)]
@@ -185,7 +187,7 @@ impl ArrowAssoc for Option<String> {
     }
 
     fn field(header: &str) -> Field {
-        Field::new(header, ArrowDataType::Utf8, true)
+        Field::new(header, ArrowDataType::LargeUtf8, true)
     }
 }
 
@@ -250,5 +252,81 @@ impl ArrowAssoc for Option<Date<Utc>> {
 
     fn field(_header: &str) -> Field {
         unimplemented!()
+    }
+}
+
+fn naive_date_to_arrow(nd: NaiveDate) -> i32 {
+    (nd.and_hms(0, 0, 0).timestamp() / SECONDS_IN_DAY) as i32
+}
+
+fn naive_datetime_to_arrow(nd: NaiveDateTime) -> i64 {
+    nd.timestamp_millis()
+}
+
+impl ArrowAssoc for Option<NaiveDate> {
+    type Builder = Date32Builder;
+
+    fn builder(nrows: usize) -> Self::Builder {
+        Date32Builder::new(nrows)
+    }
+
+    fn append(builder: &mut Self::Builder, value: Option<NaiveDate>) -> Result<()> {
+        builder.append_option(value.map(naive_date_to_arrow))?;
+        Ok(())
+    }
+
+    fn field(header: &str) -> Field {
+        Field::new(header, ArrowDataType::Date32(DateUnit::Day), true)
+    }
+}
+
+impl ArrowAssoc for NaiveDate {
+    type Builder = Date32Builder;
+
+    fn builder(nrows: usize) -> Self::Builder {
+        Date32Builder::new(nrows)
+    }
+
+    fn append(builder: &mut Self::Builder, value: NaiveDate) -> Result<()> {
+        builder.append_value(naive_date_to_arrow(value))?;
+        Ok(())
+    }
+
+    fn field(header: &str) -> Field {
+        Field::new(header, ArrowDataType::Date32(DateUnit::Day), false)
+    }
+}
+
+impl ArrowAssoc for Option<NaiveDateTime> {
+    type Builder = Date64Builder;
+
+    fn builder(nrows: usize) -> Self::Builder {
+        Date64Builder::new(nrows)
+    }
+
+    fn append(builder: &mut Self::Builder, value: Option<NaiveDateTime>) -> Result<()> {
+        builder.append_option(value.map(naive_datetime_to_arrow))?;
+        Ok(())
+    }
+
+    fn field(header: &str) -> Field {
+        Field::new(header, ArrowDataType::Date64(DateUnit::Millisecond), true)
+    }
+}
+
+impl ArrowAssoc for NaiveDateTime {
+    type Builder = Date64Builder;
+
+    fn builder(nrows: usize) -> Self::Builder {
+        Date64Builder::new(nrows)
+    }
+
+    fn append(builder: &mut Self::Builder, value: NaiveDateTime) -> Result<()> {
+        builder.append_value(naive_datetime_to_arrow(value))?;
+        Ok(())
+    }
+
+    fn field(header: &str) -> Field {
+        Field::new(header, ArrowDataType::Date64(DateUnit::Millisecond), false)
     }
 }
