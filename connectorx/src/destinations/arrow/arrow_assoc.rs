@@ -1,8 +1,8 @@
 use crate::constants::SECONDS_IN_DAY;
 use crate::errors::{ConnectorAgentError, Result};
 use arrow::array::{
-    ArrayBuilder, BooleanBuilder, Date32Builder, Date64Builder, Float64Builder, Int32Builder,
-    Int64Builder, LargeStringBuilder,
+    ArrayBuilder, BooleanBuilder, Date32Builder, Date64Builder, Float32Builder, Float64Builder,
+    Int32Builder, Int64Builder, LargeStringBuilder, UInt32Builder, UInt64Builder,
 };
 use arrow::datatypes::Field;
 use arrow::datatypes::{DataType as ArrowDataType, DateUnit};
@@ -18,6 +18,74 @@ pub trait ArrowAssoc {
     fn field(header: &str) -> Field;
 }
 
+impl ArrowAssoc for u32 {
+    type Builder = UInt32Builder;
+
+    fn builder(nrows: usize) -> UInt32Builder {
+        UInt32Builder::new(nrows)
+    }
+
+    #[throws(ConnectorAgentError)]
+    fn append(builder: &mut UInt32Builder, value: u32) {
+        builder.append_value(value)?;
+    }
+
+    fn field(header: &str) -> Field {
+        Field::new(header, ArrowDataType::UInt64, false)
+    }
+}
+
+impl ArrowAssoc for Option<u32> {
+    type Builder = UInt32Builder;
+
+    fn builder(nrows: usize) -> UInt32Builder {
+        UInt32Builder::new(nrows)
+    }
+
+    #[throws(ConnectorAgentError)]
+    fn append(builder: &mut UInt32Builder, value: Option<u32>) {
+        builder.append_option(value)?;
+    }
+
+    fn field(header: &str) -> Field {
+        Field::new(header, ArrowDataType::UInt32, true)
+    }
+}
+
+impl ArrowAssoc for u64 {
+    type Builder = UInt64Builder;
+
+    fn builder(nrows: usize) -> UInt64Builder {
+        UInt64Builder::new(nrows)
+    }
+
+    #[throws(ConnectorAgentError)]
+    fn append(builder: &mut UInt64Builder, value: u64) {
+        builder.append_value(value)?;
+    }
+
+    fn field(header: &str) -> Field {
+        Field::new(header, ArrowDataType::UInt64, false)
+    }
+}
+
+impl ArrowAssoc for Option<u64> {
+    type Builder = UInt64Builder;
+
+    fn builder(nrows: usize) -> UInt64Builder {
+        UInt64Builder::new(nrows)
+    }
+
+    #[throws(ConnectorAgentError)]
+    fn append(builder: &mut UInt64Builder, value: Option<u64>) {
+        builder.append_option(value)?;
+    }
+
+    fn field(header: &str) -> Field {
+        Field::new(header, ArrowDataType::UInt64, true)
+    }
+}
+
 impl ArrowAssoc for i32 {
     type Builder = Int32Builder;
 
@@ -31,7 +99,7 @@ impl ArrowAssoc for i32 {
     }
 
     fn field(header: &str) -> Field {
-        Field::new(header, ArrowDataType::UInt64, false)
+        Field::new(header, ArrowDataType::Int32, false)
     }
 }
 
@@ -48,7 +116,7 @@ impl ArrowAssoc for Option<i32> {
     }
 
     fn field(header: &str) -> Field {
-        Field::new(header, ArrowDataType::UInt64, true)
+        Field::new(header, ArrowDataType::Int32, true)
     }
 }
 
@@ -83,6 +151,40 @@ impl ArrowAssoc for Option<i64> {
 
     fn field(header: &str) -> Field {
         Field::new(header, ArrowDataType::Int64, false)
+    }
+}
+
+impl ArrowAssoc for f32 {
+    type Builder = Float32Builder;
+
+    fn builder(nrows: usize) -> Float32Builder {
+        Float32Builder::new(nrows)
+    }
+
+    #[throws(ConnectorAgentError)]
+    fn append(builder: &mut Self::Builder, value: f32) {
+        builder.append_value(value)?;
+    }
+
+    fn field(header: &str) -> Field {
+        Field::new(header, ArrowDataType::Float64, false)
+    }
+}
+
+impl ArrowAssoc for Option<f32> {
+    type Builder = Float32Builder;
+
+    fn builder(nrows: usize) -> Float32Builder {
+        Float32Builder::new(nrows)
+    }
+
+    #[throws(ConnectorAgentError)]
+    fn append(builder: &mut Self::Builder, value: Option<f32>) {
+        builder.append_option(value)?;
+    }
+
+    fn field(header: &str) -> Field {
+        Field::new(header, ArrowDataType::Float32, true)
     }
 }
 
@@ -182,6 +284,43 @@ impl ArrowAssoc for Option<String> {
     fn append(builder: &mut Self::Builder, value: Self) {
         match value {
             Some(s) => builder.append_value(s.as_str())?,
+            None => builder.append_null()?,
+        }
+    }
+
+    fn field(header: &str) -> Field {
+        Field::new(header, ArrowDataType::LargeUtf8, true)
+    }
+}
+
+impl ArrowAssoc for &str {
+    type Builder = LargeStringBuilder;
+
+    fn builder(nrows: usize) -> Self::Builder {
+        LargeStringBuilder::new(nrows)
+    }
+
+    #[throws(ConnectorAgentError)]
+    fn append(builder: &mut Self::Builder, value: Self) {
+        builder.append_value(value)?;
+    }
+
+    fn field(header: &str) -> Field {
+        Field::new(header, ArrowDataType::LargeUtf8, false)
+    }
+}
+
+impl ArrowAssoc for Option<&str> {
+    type Builder = LargeStringBuilder;
+
+    fn builder(nrows: usize) -> Self::Builder {
+        LargeStringBuilder::new(nrows)
+    }
+
+    #[throws(ConnectorAgentError)]
+    fn append(builder: &mut Self::Builder, value: Self) {
+        match value {
+            Some(s) => builder.append_value(s)?,
             None => builder.append_null()?,
         }
     }

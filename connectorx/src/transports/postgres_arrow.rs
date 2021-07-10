@@ -1,5 +1,4 @@
-use crate::destinations::arrow::ArrowDestination;
-use crate::dummy_typesystem::DummyTypeSystem;
+use crate::destinations::arrow::{types::ArrowTypeSystem, ArrowDestination};
 use crate::sources::postgres::{Binary, PostgresSource, PostgresTypeSystem};
 use crate::typesystem::TypeConversion;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
@@ -9,24 +8,23 @@ pub struct PostgresArrowTransport;
 
 impl_transport!(
     name = PostgresArrowTransport,
-    systems = PostgresTypeSystem => DummyTypeSystem,
+    systems = PostgresTypeSystem => ArrowTypeSystem,
     route = PostgresSource<Binary> => ArrowDestination,
     mappings = {
-        { Float4[f32]                => F64[f64]                | conversion all }
-        { Float8[f64]                => F64[f64]                | conversion all }
-        { Int2[i16]                  => I64[i64]                | conversion all }
-        { Int4[i32]                  => I64[i64]                | conversion all }
-        { Int8[i64]                  => I64[i64]                | conversion all }
-        { Bool[bool]                 => Bool[bool]              | conversion all  }
-        { Text[&'r str]              => String[String]          | conversion half }
-        { BpChar[&'r str]            => String[String]          | conversion none }
-        { VarChar[&'r str]           => String[String]          | conversion none }
-        { Timestamp[NaiveDateTime]   => DateTime[DateTime<Utc>] | conversion half }
-        { TimestampTz[DateTime<Utc>] => DateTime[DateTime<Utc>] | conversion all }
-        { Date[NaiveDate]            => DateTime[DateTime<Utc>] | conversion half }
-        { UUID[Uuid]                 => String[String]          | conversion half }
-        { Char[&'r str]              => String[String]          | conversion none}
-        // { Time[NaiveTime]            => String[String]          | conversion half }
+        { Float4[f32]                => Float32[f32]            | conversion all }
+        { Float8[f64]                => Float64[f64]            | conversion all }
+        { Int2[i16]                  => Int32[i32]              | conversion all }
+        { Int4[i32]                  => Int32[i32]              | conversion all }
+        { Int8[i64]                  => Int64[i64]              | conversion all }
+        { Bool[bool]                 => Boolean[bool]           | conversion all  }
+        { Text[&'r str]              => LargeUtf8[String]       | conversion half }
+        { BpChar[&'r str]            => LargeUtf8[String]       | conversion none }
+        { VarChar[&'r str]           => LargeUtf8[String]       | conversion none }
+        { Timestamp[NaiveDateTime]   => Date64[NaiveDateTime]   | conversion half }
+        { Date[NaiveDate]            => Date32[NaiveDate]       | conversion half }
+        { UUID[Uuid]                 => LargeUtf8[String]       | conversion half }
+        { Char[&'r str]              => LargeUtf8[String]       | conversion none}
+        // { Time[NaiveTime]            => String[String]       | conversion half }
     }
 );
 
@@ -45,6 +43,24 @@ impl TypeConversion<NaiveTime, String> for PostgresArrowTransport {
 impl<'r> TypeConversion<&'r str, String> for PostgresArrowTransport {
     fn convert(val: &'r str) -> String {
         val.to_string()
+    }
+}
+
+impl<'r> TypeConversion<&'r str, &'r str> for PostgresArrowTransport {
+    fn convert(val: &'r str) -> &'r str {
+        val
+    }
+}
+
+impl TypeConversion<NaiveDate, NaiveDate> for PostgresArrowTransport {
+    fn convert(val: NaiveDate) -> NaiveDate {
+        val
+    }
+}
+
+impl TypeConversion<NaiveDateTime, NaiveDateTime> for PostgresArrowTransport {
+    fn convert(val: NaiveDateTime) -> NaiveDateTime {
+        val
     }
 }
 
