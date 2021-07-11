@@ -23,7 +23,7 @@ impl_transport!(
         { Timestamp[NaiveDateTime]   => Date64[NaiveDateTime]   | conversion half }
         { Date[NaiveDate]            => Date32[NaiveDate]       | conversion half }
         { UUID[Uuid]                 => LargeUtf8[String]       | conversion half }
-        { Char[&'r str]              => LargeUtf8[String]       | conversion none}
+        { Char[&'r str]              => LargeUtf8[String]       | conversion none }
         // { Time[NaiveTime]            => String[String]       | conversion half }
     }
 );
@@ -43,12 +43,6 @@ impl TypeConversion<NaiveTime, String> for PostgresArrowTransport {
 impl<'r> TypeConversion<&'r str, String> for PostgresArrowTransport {
     fn convert(val: &'r str) -> String {
         val.to_string()
-    }
-}
-
-impl<'r> TypeConversion<&'r str, &'r str> for PostgresArrowTransport {
-    fn convert(val: &'r str) -> &'r str {
-        val
     }
 }
 
