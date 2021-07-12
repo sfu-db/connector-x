@@ -151,7 +151,7 @@ fn sqlite_get_partition_range(conn: &str, query: &str, col: &str) -> (i64, i64) 
 fn mysql_get_partition_range(conn: &str, query: &str, col: &str) -> (i64, i64) {
     let pool = Pool::new(conn)?;
     let mut conn = pool.get_conn()?;
-    let range_query = get_partition_range_query(query.clone(), col.clone(), &MySqlDialect {})?;
+    let range_query = get_partition_range_query(query, col, &MySqlDialect {})?;
     let row: Row = conn
         .query_first(range_query)?
         .ok_or_else(|| anyhow!("mysql range: no row returns"))?;
