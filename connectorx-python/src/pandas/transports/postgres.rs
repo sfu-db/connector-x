@@ -3,7 +3,7 @@ use crate::pandas::types::PandasTypeSystem;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
 use connectorx::{
     impl_transport,
-    sources::postgres::{Binary, PostgresSource, PostgresTypeSystem, CSV},
+    sources::postgres::{Binary, PostgresSource, PostgresTypeSystem, Raw, CSV},
     typesystem::TypeConversion,
 };
 use rust_decimal::prelude::*;
@@ -45,6 +45,34 @@ impl_transport!(
     name = PostgresPandasTransport<'tp, CSV>,
     systems = PostgresTypeSystem => PandasTypeSystem,
     route = PostgresSource<CSV> => PandasDestination<'tp>,
+    mappings = {
+        { Float4[f32]                => F64[f64]                | conversion all }
+        { Float8[f64]                => F64[f64]                | conversion all }
+        { Numeric[Decimal]           => F64[f64]                | conversion half }
+        { Int2[i16]                  => I64[i64]                | conversion all }
+        { Int4[i32]                  => I64[i64]                | conversion all }
+        { Int8[i64]                  => I64[i64]                | conversion all }
+        { Bool[bool]                 => Bool[bool]              | conversion all }
+        { Char[i8]                   => Char[char]              | conversion half }
+        { Text[&'r str]              => Str[&'r str]            | conversion all }
+        { BpChar[&'r str]            => Str[&'r str]            | conversion none }
+        { VarChar[&'r str]           => Str[&'r str]            | conversion none }
+        { Timestamp[NaiveDateTime]   => DateTime[DateTime<Utc>] | conversion half }
+        { TimestampTz[DateTime<Utc>] => DateTime[DateTime<Utc>] | conversion all }
+        { Date[NaiveDate]            => DateTime[DateTime<Utc>] | conversion half }
+        { UUID[Uuid]                 => String[String]          | conversion half }
+        { JSON[Value]                => String[String]          | conversion half }
+        { JSONB[Value]               => String[String]          | conversion none }
+        { Time[NaiveTime]            => String[String]          | conversion half }
+        { ByteA[Vec<u8>]             => Bytes[Vec<u8>]          | conversion all }
+        { Enum[&'r str]              => Str[&'r str]            | conversion none }
+    }
+);
+
+impl_transport!(
+    name = PostgresPandasTransport<'tp, Raw>,
+    systems = PostgresTypeSystem => PandasTypeSystem,
+    route = PostgresSource<Raw> => PandasDestination<'tp>,
     mappings = {
         { Float4[f32]                => F64[f64]                | conversion all }
         { Float8[f64]                => F64[f64]                | conversion all }

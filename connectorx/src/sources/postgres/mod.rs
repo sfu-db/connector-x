@@ -13,7 +13,7 @@ use log::debug;
 use postgres::{
     binary_copy::{BinaryCopyOutIter, BinaryCopyOutRow},
     fallible_iterator::FallibleIterator,
-    CopyOutReader,
+    CopyOutReader, Row, RowIter,
 };
 use r2d2::{Pool, PooledConnection};
 use r2d2_postgres::{postgres::NoTls, PostgresConnectionManager};
@@ -30,6 +30,7 @@ type PgConn = PooledConnection<PgManager>;
 
 pub enum Binary {}
 pub enum CSV {}
+pub enum Raw {}
 
 pub struct PostgresSource<P> {
     pool: Pool<PgManager>,
@@ -266,6 +267,35 @@ impl SourcePartition for PostgresSourcePartition<CSV> {
     }
 }
 
+impl SourcePartition for PostgresSourcePartition<Raw> {
+    type TypeSystem = PostgresTypeSystem;
+    type Parser<'a> = PostgresRawSourceParser<'a>;
+
+    fn prepare(&mut self) -> Result<()> {
+        let row = self
+            .conn
+            .query_one(&count_query(&self.query, &PostgreSqlDialect {})?[..], &[])?;
+        self.nrows = row.get::<_, i64>(0) as usize;
+        Ok(())
+    }
+
+    fn parser(&mut self) -> Result<Self::Parser<'_>> {
+        let iter = self.conn.query_raw::<_, bool, _>(&self.query[..], vec![])?; // unless reading the data, it seems like issue the query is fast
+        Ok(PostgresRawSourceParser::new(
+            iter,
+            &self.schema,
+            self.buf_size,
+        ))
+    }
+
+    fn nrows(&self) -> usize {
+        self.nrows
+    }
+
+    fn ncols(&self) -> usize {
+        self.ncols
+    }
+}
 pub struct PostgresBinarySourcePartitionParser<'a> {
     iter: BinaryCopyOutIter<'a>,
     buf_size: usize,
@@ -626,3 +656,99 @@ impl<'r, 'a> Produce<'r, Option<Value>> for PostgresCSVSourceParser<'a> {
         }
     }
 }
+
+pub struct PostgresRawSourceParser<'a> {
+    iter: RowIter<'a>,
+    buf_size: usize,
+    rowbuf: Vec<Row>,
+    ncols: usize,
+    current_col: usize,
+    current_row: usize,
+}
+
+impl<'a> PostgresRawSourceParser<'a> {
+    pub fn new(iter: RowIter<'a>, schema: &[PostgresTypeSystem], buf_size: usize) -> Self {
+        Self {
+            iter,
+            buf_size,
+            rowbuf: Vec::with_capacity(buf_size),
+            ncols: schema.len(),
+            current_row: 0,
+            current_col: 0,
+        }
+    }
+
+    fn next_loc(&mut self) -> Result<(usize, usize)> {
+        if self.current_row >= self.rowbuf.len() {
+            if !self.rowbuf.is_empty() {
+                self.rowbuf.drain(..);
+            }
+
+            for _ in 0..self.buf_size {
+                if let Some(row) = self.iter.next()? {
+                    self.rowbuf.push(row);
+                } else {
+                    break;
+                }
+            }
+
+            if self.rowbuf.is_empty() {
+                throw!(anyhow!("Postgres EOF"));
+            }
+            self.current_row = 0;
+            self.current_col = 0;
+        }
+
+        let ret = (self.current_row, self.current_col);
+        self.current_row += (self.current_col + 1) / self.ncols;
+        self.current_col = (self.current_col + 1) % self.ncols;
+        Ok(ret)
+    }
+}
+
+impl<'a> PartitionParser<'a> for PostgresRawSourceParser<'a> {
+    type TypeSystem = PostgresTypeSystem;
+}
+
+macro_rules! impl_produce {
+    ($($t: ty,)+) => {
+        $(
+            impl<'r, 'a> Produce<'r, $t> for PostgresRawSourceParser<'a> {
+                fn produce(&'r mut self) -> Result<$t> {
+                    let (ridx, cidx) = self.next_loc()?;
+                    let row = &self.rowbuf[ridx];
+                    let val = row.try_get(cidx)?;
+                    Ok(val)
+                }
+            }
+
+            impl<'r, 'a> Produce<'r, Option<$t>> for PostgresRawSourceParser<'a> {
+                fn produce(&'r mut self) -> Result<Option<$t>> {
+                    let (ridx, cidx) = self.next_loc()?;
+                    let row = &self.rowbuf[ridx];
+                    let val = row.try_get(cidx)?;
+                    Ok(val)
+                }
+            }
+        )+
+    };
+}
+
+impl_produce!(
+    i8,
+    i16,
+    i32,
+    i64,
+    f32,
+    f64,
+    Decimal,
+    bool,
+    &'r str,
+    Vec<u8>,
+    NaiveTime,
+    NaiveDateTime,
+    DateTime<Utc>,
+    NaiveDate,
+    Uuid,
+    Value,
+);

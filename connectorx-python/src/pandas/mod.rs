@@ -13,7 +13,7 @@ use connectorx::source_router::{SourceConn, SourceType};
 use connectorx::sources::mysql::MysqlSource;
 use connectorx::{
     sources::{
-        postgres::{Binary, PostgresSource, CSV},
+        postgres::{Binary, PostgresSource, Raw, CSV},
         sqlite::SqliteSource,
     },
     Dispatcher,
@@ -50,6 +50,17 @@ pub fn write_pandas<'a>(
                 "binary" => {
                     let sb = PostgresSource::<Binary>::new(&source_conn.conn[..], queries.len())?;
                     let dispatcher = Dispatcher::<_, _, PostgresPandasTransport<Binary>>::new(
+                        sb,
+                        &mut destination,
+                        queries,
+                    );
+
+                    debug!("Running dispatcher");
+                    dispatcher.run()?;
+                }
+                "raw" => {
+                    let sb = PostgresSource::<Raw>::new(&source_conn.conn[..], queries.len())?;
+                    let dispatcher = Dispatcher::<_, _, PostgresPandasTransport<Raw>>::new(
                         sb,
                         &mut destination,
                         queries,
