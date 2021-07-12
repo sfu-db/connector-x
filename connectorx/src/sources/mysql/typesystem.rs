@@ -1,6 +1,7 @@
 use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
 use r2d2_mysql::mysql::consts::ColumnType;
 use rust_decimal::Decimal;
+
 #[derive(Copy, Clone, Debug)]
 pub enum MysqlTypeSystem {
     Double(bool),
@@ -17,7 +18,7 @@ pub enum MysqlTypeSystem {
 impl_typesystem! {
     system = MysqlTypeSystem,
     mappings = {
-        { Long|LongLong => i64 }
+        { Long | LongLong => i64 }
         { Double => f64 }
         { Datetime => NaiveDateTime}
         { Date => NaiveDate}

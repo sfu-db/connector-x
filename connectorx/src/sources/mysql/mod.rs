@@ -69,7 +69,7 @@ where
     }
 
     fn fetch_metadata(&mut self) -> Result<()> {
-        assert!(self.queries.len() != 0);
+        assert!(!self.queries.is_empty());
 
         let mut conn = self.pool.get()?;
         let mut success = false;
@@ -81,7 +81,7 @@ where
                 Ok(Some(row)) => {
                     let (names, types) = row
                         .columns_ref()
-                        .into_iter()
+                        .iter()
                         .map(|col| {
                             (
                                 col.name_str().to_string(),
@@ -109,7 +109,7 @@ where
                 let (names, types) = iter
                     .columns()
                     .as_ref()
-                    .into_iter()
+                    .iter()
                     .map(|col| {
                         (
                             col.name_str().to_string(),
