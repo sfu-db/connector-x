@@ -103,6 +103,12 @@
 <span id="100">100</span>
 <span id="101">101</span>
 <span id="102">102</span>
+<span id="103">103</span>
+<span id="104">104</span>
+<span id="105">105</span>
+<span id="106">106</span>
+<span id="107">107</span>
+<span id="108">108</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">data_order</span>::<span class="ident">DataOrder</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">any</span>::<span class="ident">type_name</span>;
@@ -140,10 +146,7 @@
     <span class="ident">NoConversionRule</span>(<span class="ident">String</span>, <span class="ident">String</span>),
 
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Only support single query with SELECT statement, got {0}.&quot;</span>)]</span>
-    <span class="ident">SQLQueryNotSupported</span>(<span class="ident">String</span>),
-
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Only support partition on SPJ query, got {0}.&quot;</span>)]</span>
-    <span class="ident">SQLQueryPartitionNotSupported</span>(<span class="ident">String</span>),
+    <span class="ident">SqlQueryNotSupported</span>(<span class="ident">String</span>),
 
     <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
     <span class="ident">IOError</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">std</span>::<span class="ident">io</span>::<span class="ident">Error</span>),
@@ -153,6 +156,15 @@
 
     <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
     <span class="ident">PostgresError</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">postgres</span>::<span class="ident">Error</span>),
+
+    <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
+    <span class="ident">MysqlError</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">r2d2_mysql</span>::<span class="ident">mysql</span>::<span class="ident">Error</span>),
+
+    <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
+    <span class="ident">MysqlUrlError</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">r2d2_mysql</span>::<span class="ident">mysql</span>::<span class="ident">UrlError</span>),
+
+    <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
+    <span class="ident">SQLiteError</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">rusqlite</span>::<span class="ident">Error</span>),
 
     <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
     <span class="ident">CSVError</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">csv</span>::<span class="ident">Error</span>),

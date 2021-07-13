@@ -1,1 +1,0 @@
-initSidebarItems({"fn":[["pg_get_partition_range",""],["pg_single_col_partition_query",""]]});

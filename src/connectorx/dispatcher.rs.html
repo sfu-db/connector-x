@@ -147,12 +147,18 @@
 <span id="144">144</span>
 <span id="145">145</span>
 <span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">data_order</span>::{<span class="ident">coordinate</span>, <span class="ident">DataOrder</span>},
     <span class="ident">destinations</span>::{<span class="ident">Destination</span>, <span class="ident">DestinationPartition</span>},
     <span class="ident">errors</span>::<span class="prelude-ty">Result</span>,
     <span class="ident">sources</span>::{<span class="ident">Source</span>, <span class="ident">SourcePartition</span>},
+    <span class="ident">sql</span>::<span class="ident">CXQuery</span>,
     <span class="ident">typesystem</span>::{<span class="ident">Transport</span>, <span class="ident">TypeSystem</span>},
 };
 <span class="kw">use</span> <span class="ident">itertools</span>::<span class="ident">Itertools</span>;
@@ -165,7 +171,7 @@
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Dispatcher</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">S</span>, <span class="ident">W</span>, <span class="ident">TP</span><span class="op">&gt;</span> {
     <span class="ident">src</span>: <span class="ident">S</span>,
     <span class="ident">dst</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="ident">W</span>,
-    <span class="ident">queries</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
+    <span class="ident">queries</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">CXQuery</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="ident">_phantom</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">TP</span><span class="op">&gt;</span>,
 }
 
@@ -179,14 +185,11 @@
 {
     <span class="doccomment">/// Create a new dispatcher by providing a source builder, schema (temporary) and the queries</span>
     <span class="doccomment">/// to be issued to the data source.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span><span class="op">&lt;</span><span class="ident">Q</span><span class="op">&gt;</span>(<span class="ident">src</span>: <span class="ident">S</span>, <span class="ident">dst</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;w</span> <span class="kw-2">mut</span> <span class="ident">W</span>, <span class="ident">queries</span>: <span class="kw-2">&amp;</span>[<span class="ident">Q</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>
-    <span class="kw">where</span>
-        <span class="ident">Q</span>: <span class="ident">ToString</span>,
-    {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span><span class="op">&lt;</span><span class="ident">Q</span>: <span class="ident">ToString</span><span class="op">&gt;</span>(<span class="ident">src</span>: <span class="ident">S</span>, <span class="ident">dst</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;w</span> <span class="kw-2">mut</span> <span class="ident">W</span>, <span class="ident">queries</span>: <span class="kw-2">&amp;</span>[<span class="ident">CXQuery</span><span class="op">&lt;</span><span class="ident">Q</span><span class="op">&gt;</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="ident">Dispatcher</span> {
             <span class="ident">src</span>,
             <span class="ident">dst</span>,
-            <span class="ident">queries</span>: <span class="ident">queries</span>.<span class="ident">into_iter</span>().<span class="ident">map</span>(<span class="ident">ToString</span>::<span class="ident">to_string</span>).<span class="ident">collect</span>(),
+            <span class="ident">queries</span>: <span class="ident">queries</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">q</span><span class="op">|</span> <span class="ident">q</span>.<span class="ident">map</span>(<span class="ident">Q</span>::<span class="ident">to_string</span>)).<span class="ident">collect</span>(),
             <span class="ident">_phantom</span>: <span class="ident">PhantomData</span>,
         }
     }
@@ -246,7 +249,8 @@
         <span class="ident">dst_partitions</span>
             .<span class="ident">into_par_iter</span>()
             .<span class="ident">zip_eq</span>(<span class="ident">src_partitions</span>)
-            .<span class="ident">try_for_each</span>(<span class="op">|</span>(<span class="kw-2">mut</span> <span class="ident">src</span>, <span class="kw-2">mut</span> <span class="ident">dst</span>)<span class="op">|</span> <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+            .<span class="ident">enumerate</span>()
+            .<span class="ident">try_for_each</span>(<span class="op">|</span>(<span class="ident">i</span>, (<span class="kw-2">mut</span> <span class="ident">src</span>, <span class="kw-2">mut</span> <span class="ident">dst</span>))<span class="op">|</span> <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
                 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;fptr&quot;</span>)]</span>
                 <span class="kw">let</span> <span class="ident">f</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">src_schema</span>
                     .<span class="ident">iter</span>()
@@ -259,6 +263,7 @@
                 <span class="kw">match</span> <span class="ident">dorder</span> {
                     <span class="ident">DataOrder</span>::<span class="ident">RowMajor</span> <span class="op">=</span><span class="op">&gt;</span> {
                         <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">src</span>.<span class="ident">nrows</span>() {
+                            <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">needless_range_loop</span>)]</span>
                             <span class="kw">for</span> <span class="ident">col</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">src</span>.<span class="ident">ncols</span>() {
                                 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;fptr&quot;</span>)]</span>
                                 <span class="ident">f</span>[<span class="ident">col</span>](<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">parser</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">src</span>)<span class="question-mark">?</span>;
@@ -271,7 +276,9 @@
                             }
                         }
                     }
-                    <span class="ident">DataOrder</span>::<span class="ident">ColumnMajor</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">DataOrder</span>::<span class="ident">ColumnMajor</span> <span class="op">=</span><span class="op">&gt;</span>
+                    {
+                        <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">needless_range_loop</span>)]</span>
                         <span class="kw">for</span> <span class="ident">col</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">src</span>.<span class="ident">ncols</span>() {
                             <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">src</span>.<span class="ident">nrows</span>() {
                                 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;fptr&quot;</span>)]</span>
@@ -286,7 +293,10 @@
                     }
                 }
 
-                <span class="ident">src</span>.<span class="ident">finalize</span>()
+                <span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;Finalize partition {}&quot;</span>, <span class="ident">i</span>);
+                <span class="ident">src</span>.<span class="ident">finalize</span>()<span class="question-mark">?</span>;
+                <span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;Partition {} finished&quot;</span>, <span class="ident">i</span>);
+                <span class="prelude-val">Ok</span>(())
             })<span class="question-mark">?</span>;
 
         <span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;Writing finished&quot;</span>);

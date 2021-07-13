@@ -358,13 +358,12 @@
 <span id="355">355</span>
 <span id="356">356</span>
 <span id="357">357</span>
-<span id="358">358</span>
-<span id="359">359</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">PartitionParser</span>, <span class="ident">Produce</span>, <span class="ident">Source</span>, <span class="ident">SourcePartition</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">data_order</span>::<span class="ident">DataOrder</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">dummy_typesystem</span>::<span class="ident">DummyTypeSystem</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">errors</span>::{<span class="ident">ConnectorAgentError</span>, <span class="prelude-ty">Result</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">sql</span>::<span class="ident">CXQuery</span>;
 <span class="kw">use</span> <span class="ident">anyhow</span>::<span class="ident">anyhow</span>;
 <span class="kw">use</span> <span class="ident">chrono</span>::{<span class="ident">DateTime</span>, <span class="ident">Utc</span>};
 <span class="kw">use</span> <span class="ident">fehler</span>::{<span class="ident">throw</span>, <span class="ident">throws</span>};
@@ -374,7 +373,7 @@
 
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">CSVSource</span> {
     <span class="ident">schema</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">DummyTypeSystem</span><span class="op">&gt;</span>,
-    <span class="ident">files</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
+    <span class="ident">files</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">CXQuery</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="ident">names</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
 }
 
@@ -399,7 +398,7 @@
         <span class="comment">// read max_records rows to infer possible DummyTypeSystems for each field</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">reader</span> <span class="op">=</span> <span class="ident">csv</span>::<span class="ident">ReaderBuilder</span>::<span class="ident">new</span>()
             .<span class="ident">has_headers</span>(<span class="bool-val">true</span>)
-            .<span class="ident">from_reader</span>(<span class="ident">File</span>::<span class="ident">open</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">files</span>[<span class="number">0</span>])<span class="question-mark">?</span>);
+            .<span class="ident">from_reader</span>(<span class="ident">File</span>::<span class="ident">open</span>(<span class="self">self</span>.<span class="ident">files</span>[<span class="number">0</span>].<span class="ident">as_str</span>())<span class="question-mark">?</span>);
 
         <span class="kw">let</span> <span class="ident">max_records_to_read</span> <span class="op">=</span> <span class="number">50</span>;
         <span class="kw">let</span> <span class="ident">num_cols</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">names</span>.<span class="ident">len</span>();
@@ -449,7 +448,7 @@
             <span class="kw">match</span> <span class="ident">possibilities</span>.<span class="ident">len</span>() {
                 <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="kw">for</span> <span class="ident">dt</span> <span class="kw">in</span> <span class="ident">possibilities</span>.<span class="ident">iter</span>() {
-                        <span class="kw">match</span> <span class="ident">dt</span>.<span class="ident">clone</span>() {
+                        <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">dt</span> {
                             <span class="ident">DummyTypeSystem</span>::<span class="ident">I64</span>(<span class="bool-val">false</span>) <span class="op">=</span><span class="op">&gt;</span> {
                                 <span class="ident">schema</span>.<span class="ident">push</span>(<span class="ident">DummyTypeSystem</span>::<span class="ident">I64</span>(<span class="ident">has_nulls</span>));
                             }
@@ -502,22 +501,19 @@
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">set_queries</span><span class="op">&lt;</span><span class="ident">Q</span>: <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">queries</span>: <span class="kw-2">&amp;</span>[<span class="ident">Q</span>]) {
-        <span class="self">self</span>.<span class="ident">files</span> <span class="op">=</span> <span class="ident">queries</span>
-            .<span class="ident">into_iter</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">fname</span><span class="op">|</span> <span class="ident">fname</span>.<span class="ident">as_ref</span>().<span class="ident">to_string</span>())
-            .<span class="ident">collect</span>();
+    <span class="kw">fn</span> <span class="ident">set_queries</span><span class="op">&lt;</span><span class="ident">Q</span>: <span class="ident">ToString</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">queries</span>: <span class="kw-2">&amp;</span>[<span class="ident">CXQuery</span><span class="op">&lt;</span><span class="ident">Q</span><span class="op">&gt;</span>]) {
+        <span class="self">self</span>.<span class="ident">files</span> <span class="op">=</span> <span class="ident">queries</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">q</span><span class="op">|</span> <span class="ident">q</span>.<span class="ident">map</span>(<span class="ident">Q</span>::<span class="ident">to_string</span>)).<span class="ident">collect</span>();
     }
 
     <span class="kw">fn</span> <span class="ident">fetch_metadata</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">reader</span> <span class="op">=</span> <span class="ident">csv</span>::<span class="ident">ReaderBuilder</span>::<span class="ident">new</span>()
             .<span class="ident">has_headers</span>(<span class="bool-val">true</span>)
-            .<span class="ident">from_reader</span>(<span class="ident">File</span>::<span class="ident">open</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">files</span>[<span class="number">0</span>])<span class="question-mark">?</span>);
+            .<span class="ident">from_reader</span>(<span class="ident">File</span>::<span class="ident">open</span>(<span class="self">self</span>.<span class="ident">files</span>[<span class="number">0</span>].<span class="ident">as_str</span>())<span class="question-mark">?</span>);
         <span class="kw">let</span> <span class="ident">header</span> <span class="op">=</span> <span class="ident">reader</span>.<span class="ident">headers</span>()<span class="question-mark">?</span>;
 
         <span class="self">self</span>.<span class="ident">names</span> <span class="op">=</span> <span class="ident">header</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">s</span><span class="op">|</span> <span class="ident">s</span>.<span class="ident">to_string</span>()).<span class="ident">collect</span>();
 
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">schema</span>.<span class="ident">len</span>() <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">schema</span>.<span class="ident">is_empty</span>() {
             <span class="self">self</span>.<span class="ident">schema</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">infer_schema</span>()<span class="question-mark">?</span>;
         }
 
@@ -538,13 +534,13 @@
         <span class="prelude-val">Ok</span>(<span class="self">self</span>
             .<span class="ident">files</span>
             .<span class="ident">into_iter</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">f</span><span class="op">|</span> <span class="ident">CSVSourcePartition</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="ident">f</span>))
+            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">f</span><span class="op">|</span> <span class="ident">CSVSourcePartition</span>::<span class="ident">new</span>(<span class="ident">f</span>))
             .<span class="ident">collect</span>())
     }
 }
 
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">CSVSourcePartition</span> {
-    <span class="ident">fname</span>: <span class="ident">String</span>,
+    <span class="ident">fname</span>: <span class="ident">CXQuery</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
     <span class="ident">records</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">csv</span>::<span class="ident">StringRecord</span><span class="op">&gt;</span>,
     <span class="ident">counter</span>: <span class="ident">usize</span>,
     <span class="ident">nrows</span>: <span class="ident">usize</span>,
@@ -552,9 +548,9 @@
 }
 
 <span class="kw">impl</span> <span class="ident">CSVSourcePartition</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">fname</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">fname</span>: <span class="ident">CXQuery</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
-            <span class="ident">fname</span>: <span class="ident">fname</span>.<span class="ident">into</span>(),
+            <span class="ident">fname</span>: <span class="ident">fname</span>,
             <span class="ident">records</span>: <span class="ident">Vec</span>::<span class="ident">new</span>(),
             <span class="ident">counter</span>: <span class="number">0</span>,
             <span class="ident">nrows</span>: <span class="number">0</span>,
@@ -571,7 +567,7 @@
     <span class="kw">fn</span> <span class="ident">prepare</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">reader</span> <span class="op">=</span> <span class="ident">csv</span>::<span class="ident">ReaderBuilder</span>::<span class="ident">new</span>()
             .<span class="ident">has_headers</span>(<span class="bool-val">true</span>)
-            .<span class="ident">from_reader</span>(<span class="ident">File</span>::<span class="ident">open</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">fname</span>)<span class="question-mark">?</span>);
+            .<span class="ident">from_reader</span>(<span class="ident">File</span>::<span class="ident">open</span>(<span class="self">self</span>.<span class="ident">fname</span>.<span class="ident">as_str</span>())<span class="question-mark">?</span>);
 
         <span class="ident">reader</span>.<span class="ident">into_records</span>().<span class="ident">try_for_each</span>(<span class="op">|</span><span class="ident">v</span><span class="op">|</span> <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
             <span class="self">self</span>.<span class="ident">records</span>.<span class="ident">push</span>(<span class="ident">v</span>.<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">anyhow</span><span class="macro">!</span>(<span class="ident">e</span>))<span class="question-mark">?</span>);

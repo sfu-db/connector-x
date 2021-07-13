@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["ArrowDestination",""],["ArrowPartitionWriter",""]]});
+initSidebarItems({"mod":[["types",""]],"struct":[["ArrowDestination",""],["ArrowPartitionWriter",""]]});

@@ -33,7 +33,15 @@
 <span id="30">30</span>
 <span id="31">31</span>
 <span id="32">32</span>
+<span id="33">33</span>
+<span id="34">34</span>
+<span id="35">35</span>
+<span id="36">36</span>
+<span id="37">37</span>
+<span id="38">38</span>
+<span id="39">39</span>
 </pre><div class="example-wrap"><pre class="rust ">
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">destinations</span>::<span class="ident">arrow</span>::<span class="ident">types</span>::<span class="ident">ArrowTypeSystem</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">destinations</span>::<span class="ident">arrow</span>::<span class="ident">ArrowDestination</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">dummy_typesystem</span>::<span class="ident">DummyTypeSystem</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">sources</span>::<span class="ident">dummy</span>::<span class="ident">DummySource</span>;
@@ -44,16 +52,22 @@
 
 <span class="macro">impl_transport</span><span class="macro">!</span>(
     <span class="ident">name</span> <span class="op">=</span> <span class="ident">DummyArrowTransport</span>,
-    <span class="ident">systems</span> <span class="op">=</span> <span class="ident">DummyTypeSystem</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">DummyTypeSystem</span>,
+    <span class="ident">systems</span> <span class="op">=</span> <span class="ident">DummyTypeSystem</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ArrowTypeSystem</span>,
     <span class="ident">route</span> <span class="op">=</span> <span class="ident">DummySource</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ArrowDestination</span>,
     <span class="ident">mappings</span> <span class="op">=</span> {
-        { <span class="ident">F64</span>[<span class="ident">f64</span>]                <span class="op">=</span><span class="op">&gt;</span> <span class="ident">F64</span>[<span class="ident">f64</span>]                <span class="op">|</span> <span class="ident">conversion</span> <span class="ident">all</span>}
-        { <span class="ident">I64</span>[<span class="ident">i64</span>]                <span class="op">=</span><span class="op">&gt;</span> <span class="ident">I64</span>[<span class="ident">i64</span>]                <span class="op">|</span> <span class="ident">conversion</span> <span class="ident">all</span>}
-        { <span class="ident">Bool</span>[<span class="ident">bool</span>]              <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Bool</span>[<span class="ident">bool</span>]              <span class="op">|</span> <span class="ident">conversion</span> <span class="ident">all</span>}
-        { <span class="ident">String</span>[<span class="ident">String</span>]          <span class="op">=</span><span class="op">&gt;</span> <span class="ident">String</span>[<span class="ident">String</span>]          <span class="op">|</span> <span class="ident">conversion</span> <span class="ident">all</span>}
-        { <span class="ident">DateTime</span>[<span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span>] <span class="op">=</span><span class="op">&gt;</span> <span class="ident">DateTime</span>[<span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span>] <span class="op">|</span> <span class="ident">conversion</span> <span class="ident">all</span>}
+        { <span class="ident">F64</span>[<span class="ident">f64</span>]                <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Float64</span>[<span class="ident">f64</span>]               <span class="op">|</span> <span class="ident">conversion</span> <span class="ident">all</span>}
+        { <span class="ident">I64</span>[<span class="ident">i64</span>]                <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Int64</span>[<span class="ident">i64</span>]                 <span class="op">|</span> <span class="ident">conversion</span> <span class="ident">all</span>}
+        { <span class="ident">Bool</span>[<span class="ident">bool</span>]              <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Boolean</span>[<span class="ident">bool</span>]              <span class="op">|</span> <span class="ident">conversion</span> <span class="ident">all</span>}
+        { <span class="ident">String</span>[<span class="ident">String</span>]          <span class="op">=</span><span class="op">&gt;</span> <span class="ident">LargeUtf8</span>[<span class="ident">String</span>]          <span class="op">|</span> <span class="ident">conversion</span> <span class="ident">all</span>}
+        { <span class="ident">DateTime</span>[<span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span>] <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Date64</span>[<span class="ident">NaiveDateTime</span>]      <span class="op">|</span> <span class="ident">conversion</span> <span class="ident">half</span>}
     }
 );
+
+<span class="kw">impl</span> <span class="ident">TypeConversion</span><span class="op">&lt;</span><span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span>, <span class="ident">NaiveDateTime</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">DummyArrowTransport</span> {
+    <span class="kw">fn</span> <span class="ident">convert</span>(<span class="ident">val</span>: <span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">NaiveDateTime</span> {
+        <span class="ident">NaiveDateTime</span>::<span class="ident">from_timestamp</span>(<span class="ident">val</span>.<span class="ident">timestamp</span>(), <span class="ident">val</span>.<span class="ident">timestamp_subsec_nanos</span>())
+    }
+}
 
 <span class="kw">impl</span> <span class="ident">TypeConversion</span><span class="op">&lt;</span><span class="ident">NaiveDateTime</span>, <span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">DummyArrowTransport</span> {
     <span class="kw">fn</span> <span class="ident">convert</span>(<span class="ident">val</span>: <span class="ident">NaiveDateTime</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span> {
