@@ -30,7 +30,7 @@ type PgConn = PooledConnection<PgManager>;
 
 pub enum Binary {}
 pub enum CSV {}
-pub enum Raw {}
+pub enum Cursor {}
 
 pub struct PostgresSource<P> {
     pool: Pool<PgManager>,
@@ -267,7 +267,7 @@ impl SourcePartition for PostgresSourcePartition<CSV> {
     }
 }
 
-impl SourcePartition for PostgresSourcePartition<Raw> {
+impl SourcePartition for PostgresSourcePartition<Cursor> {
     type TypeSystem = PostgresTypeSystem;
     type Parser<'a> = PostgresRawSourceParser<'a>;
 

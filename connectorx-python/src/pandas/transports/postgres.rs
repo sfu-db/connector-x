@@ -3,7 +3,7 @@ use crate::pandas::types::PandasTypeSystem;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
 use connectorx::{
     impl_transport,
-    sources::postgres::{Binary, PostgresSource, PostgresTypeSystem, Raw, CSV},
+    sources::postgres::{Binary, Cursor, PostgresSource, PostgresTypeSystem, CSV},
     typesystem::TypeConversion,
 };
 use rust_decimal::prelude::*;
@@ -70,9 +70,9 @@ impl_transport!(
 );
 
 impl_transport!(
-    name = PostgresPandasTransport<'tp, Raw>,
+    name = PostgresPandasTransport<'tp, Cursor>,
     systems = PostgresTypeSystem => PandasTypeSystem,
-    route = PostgresSource<Raw> => PandasDestination<'tp>,
+    route = PostgresSource<Cursor> => PandasDestination<'tp>,
     mappings = {
         { Float4[f32]                => F64[f64]                | conversion all }
         { Float8[f64]                => F64[f64]                | conversion all }
