@@ -1,3 +1,7 @@
+mod arrow_assoc;
+mod funcs;
+pub mod types;
+
 use super::{Consume, Destination, DestinationPartition};
 use crate::data_order::DataOrder;
 use crate::destinations::arrow::types::ArrowTypeSystem;
@@ -12,10 +16,6 @@ use funcs::{FFinishBuilder, FNewBuilder, FNewField};
 use itertools::Itertools;
 use std::any::Any;
 use std::sync::Arc;
-
-mod arrow_assoc;
-mod funcs;
-pub mod types;
 
 type Builder = Box<dyn Any + Send>;
 type Builders = Vec<Builder>;

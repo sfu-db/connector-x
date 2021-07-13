@@ -2,12 +2,13 @@ use crate::destinations::arrow::{types::ArrowTypeSystem, ArrowDestination};
 use crate::sources::postgres::{Binary, PostgresSource, PostgresTypeSystem};
 use crate::typesystem::TypeConversion;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
+use std::marker::PhantomData;
 use uuid::Uuid;
 
-pub struct PostgresArrowTransport;
+pub struct PostgresArrowTransport<P>(PhantomData<P>);
 
 impl_transport!(
-    name = PostgresArrowTransport,
+    name = PostgresArrowTransport<Binary>,
     systems = PostgresTypeSystem => ArrowTypeSystem,
     route = PostgresSource<Binary> => ArrowDestination,
     mappings = {
@@ -20,51 +21,39 @@ impl_transport!(
         { Text[&'r str]              => LargeUtf8[String]       | conversion half }
         { BpChar[&'r str]            => LargeUtf8[String]       | conversion none }
         { VarChar[&'r str]           => LargeUtf8[String]       | conversion none }
-        { Timestamp[NaiveDateTime]   => Date64[NaiveDateTime]   | conversion half }
-        { Date[NaiveDate]            => Date32[NaiveDate]       | conversion half }
+        { Timestamp[NaiveDateTime]   => Date64[NaiveDateTime]   | conversion all }
+        { Date[NaiveDate]            => Date32[NaiveDate]       | conversion all }
         { UUID[Uuid]                 => LargeUtf8[String]       | conversion half }
         { Char[&'r str]              => LargeUtf8[String]       | conversion none }
         // { Time[NaiveTime]            => String[String]       | conversion half }
     }
 );
 
-impl TypeConversion<Uuid, String> for PostgresArrowTransport {
+impl<P> TypeConversion<Uuid, String> for PostgresArrowTransport<P> {
     fn convert(val: Uuid) -> String {
         val.to_string()
     }
 }
 
-impl TypeConversion<NaiveTime, String> for PostgresArrowTransport {
+impl<P> TypeConversion<NaiveTime, String> for PostgresArrowTransport<P> {
     fn convert(val: NaiveTime) -> String {
         val.to_string()
     }
 }
 
-impl<'r> TypeConversion<&'r str, String> for PostgresArrowTransport {
+impl<'r, P> TypeConversion<&'r str, String> for PostgresArrowTransport<P> {
     fn convert(val: &'r str) -> String {
         val.to_string()
     }
 }
 
-impl TypeConversion<NaiveDate, NaiveDate> for PostgresArrowTransport {
-    fn convert(val: NaiveDate) -> NaiveDate {
-        val
-    }
-}
-
-impl TypeConversion<NaiveDateTime, NaiveDateTime> for PostgresArrowTransport {
-    fn convert(val: NaiveDateTime) -> NaiveDateTime {
-        val
-    }
-}
-
-impl TypeConversion<NaiveDateTime, DateTime<Utc>> for PostgresArrowTransport {
+impl<P> TypeConversion<NaiveDateTime, DateTime<Utc>> for PostgresArrowTransport<P> {
     fn convert(val: NaiveDateTime) -> DateTime<Utc> {
         DateTime::from_utc(val, Utc)
     }
 }
 
-impl TypeConversion<NaiveDate, DateTime<Utc>> for PostgresArrowTransport {
+impl<P> TypeConversion<NaiveDate, DateTime<Utc>> for PostgresArrowTransport<P> {
     fn convert(val: NaiveDate) -> DateTime<Utc> {
         DateTime::from_utc(val.and_hms(0, 0, 0), Utc)
     }

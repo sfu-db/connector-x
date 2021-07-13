@@ -19,16 +19,16 @@ pub enum ArrowTypeSystem {
 impl_typesystem! {
     system= ArrowTypeSystem,
     mappings = {
-        { Float64 => f64               }
-        { Float32 => f32               }
-        { Int32 => i32                 }
-        { Int64 => i64                 }
-        { UInt32 => u32                }
-        { UInt64 => u64                }
-        { LargeUtf8 => String          }
-        { Date32 => NaiveDate          }
-        { Date64 => NaiveDateTime      }
-        { Boolean => bool              }
-        { DateTimeTz => DateTime<Utc>  }
+        { Float64    => f64           }
+        { Float32    => f32           }
+        { Int32      => i32           }
+        { Int64      => i64           }
+        { UInt32     => u32           }
+        { UInt64     => u64           }
+        { LargeUtf8  => String        }
+        { Date32     => NaiveDate     }
+        { Date64     => NaiveDateTime }
+        { Boolean    => bool          }
+        { DateTimeTz => DateTime<Utc> }
     }
 }
