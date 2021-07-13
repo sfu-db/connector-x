@@ -1,8 +1,8 @@
 use crate::constants::SECONDS_IN_DAY;
 use crate::errors::{ConnectorAgentError, Result};
 use arrow::array::{
-    ArrayBuilder, BooleanBuilder, Date32Builder, Date64Builder, Float64Builder, Int32Builder,
-    Int64Builder, LargeStringBuilder,
+    ArrayBuilder, BooleanBuilder, Date32Builder, Date64Builder, Float32Builder, Float64Builder,
+    Int32Builder, Int64Builder, LargeStringBuilder, UInt32Builder, UInt64Builder,
 };
 use arrow::datatypes::Field;
 use arrow::datatypes::{DataType as ArrowDataType, DateUnit};
@@ -18,139 +18,86 @@ pub trait ArrowAssoc {
     fn field(header: &str) -> Field;
 }
 
-impl ArrowAssoc for i32 {
-    type Builder = Int32Builder;
+macro_rules! impl_arrow_assoc {
+    ($T:ty, $AT:expr, $B:ty) => {
+        impl ArrowAssoc for $T {
+            type Builder = $B;
 
-    fn builder(nrows: usize) -> Int32Builder {
-        Int32Builder::new(nrows)
-    }
+            fn builder(nrows: usize) -> Self::Builder {
+                Self::Builder::new(nrows)
+            }
 
-    #[throws(ConnectorAgentError)]
-    fn append(builder: &mut Int32Builder, value: i32) {
-        builder.append_value(value)?;
-    }
+            #[throws(ConnectorAgentError)]
+            fn append(builder: &mut Self::Builder, value: Self) {
+                builder.append_value(value)?;
+            }
 
-    fn field(header: &str) -> Field {
-        Field::new(header, ArrowDataType::UInt64, false)
-    }
+            fn field(header: &str) -> Field {
+                Field::new(header, $AT, false)
+            }
+        }
+
+        impl ArrowAssoc for Option<$T> {
+            type Builder = $B;
+
+            fn builder(nrows: usize) -> Self::Builder {
+                Self::Builder::new(nrows)
+            }
+
+            #[throws(ConnectorAgentError)]
+            fn append(builder: &mut Self::Builder, value: Self) {
+                builder.append_option(value)?;
+            }
+
+            fn field(header: &str) -> Field {
+                Field::new(header, $AT, true)
+            }
+        }
+    };
 }
 
-impl ArrowAssoc for Option<i32> {
-    type Builder = Int32Builder;
+impl_arrow_assoc!(u32, ArrowDataType::UInt32, UInt32Builder);
+impl_arrow_assoc!(u64, ArrowDataType::UInt64, UInt64Builder);
+impl_arrow_assoc!(i32, ArrowDataType::Int32, Int32Builder);
+impl_arrow_assoc!(i64, ArrowDataType::Int64, Int64Builder);
+impl_arrow_assoc!(f32, ArrowDataType::Float32, Float32Builder);
+impl_arrow_assoc!(f64, ArrowDataType::Float64, Float64Builder);
+impl_arrow_assoc!(bool, ArrowDataType::Boolean, BooleanBuilder);
 
-    fn builder(nrows: usize) -> Int32Builder {
-        Int32Builder::new(nrows)
-    }
+impl ArrowAssoc for &str {
+    type Builder = LargeStringBuilder;
 
-    #[throws(ConnectorAgentError)]
-    fn append(builder: &mut Int32Builder, value: Option<i32>) {
-        builder.append_option(value)?;
-    }
-
-    fn field(header: &str) -> Field {
-        Field::new(header, ArrowDataType::UInt64, true)
-    }
-}
-
-impl ArrowAssoc for i64 {
-    type Builder = Int64Builder;
-
-    fn builder(nrows: usize) -> Int64Builder {
-        Int64Builder::new(nrows)
-    }
-
-    #[throws(ConnectorAgentError)]
-    fn append(builder: &mut Int64Builder, value: i64) {
-        builder.append_value(value)?;
-    }
-
-    fn field(header: &str) -> Field {
-        Field::new(header, ArrowDataType::Int64, false)
-    }
-}
-
-impl ArrowAssoc for Option<i64> {
-    type Builder = Int64Builder;
-
-    fn builder(nrows: usize) -> Int64Builder {
-        Int64Builder::new(nrows)
-    }
-
-    #[throws(ConnectorAgentError)]
-    fn append(builder: &mut Int64Builder, value: Option<i64>) {
-        builder.append_option(value)?;
-    }
-
-    fn field(header: &str) -> Field {
-        Field::new(header, ArrowDataType::Int64, false)
-    }
-}
-
-impl ArrowAssoc for f64 {
-    type Builder = Float64Builder;
-
-    fn builder(nrows: usize) -> Float64Builder {
-        Float64Builder::new(nrows)
-    }
-
-    #[throws(ConnectorAgentError)]
-    fn append(builder: &mut Self::Builder, value: f64) {
-        builder.append_value(value)?;
-    }
-
-    fn field(header: &str) -> Field {
-        Field::new(header, ArrowDataType::Float64, false)
-    }
-}
-
-impl ArrowAssoc for Option<f64> {
-    type Builder = Float64Builder;
-
-    fn builder(nrows: usize) -> Float64Builder {
-        Float64Builder::new(nrows)
-    }
-
-    #[throws(ConnectorAgentError)]
-    fn append(builder: &mut Self::Builder, value: Option<f64>) {
-        builder.append_option(value)?;
-    }
-
-    fn field(header: &str) -> Field {
-        Field::new(header, ArrowDataType::Float64, true)
-    }
-}
-
-impl ArrowAssoc for bool {
-    type Builder = BooleanBuilder;
-
-    fn builder(nrows: usize) -> BooleanBuilder {
-        BooleanBuilder::new(nrows)
-    }
-
-    #[throws(ConnectorAgentError)]
-    fn append(builder: &mut Self::Builder, value: bool) {
-        builder.append_value(value)?;
-    }
-
-    fn field(header: &str) -> Field {
-        Field::new(header, ArrowDataType::Boolean, false)
-    }
-}
-
-impl ArrowAssoc for Option<bool> {
-    type Builder = BooleanBuilder;
-
-    fn builder(nrows: usize) -> BooleanBuilder {
-        BooleanBuilder::new(nrows)
+    fn builder(nrows: usize) -> Self::Builder {
+        LargeStringBuilder::new(nrows)
     }
 
     #[throws(ConnectorAgentError)]
     fn append(builder: &mut Self::Builder, value: Self) {
-        builder.append_option(value)?;
+        builder.append_value(value)?;
     }
 
     fn field(header: &str) -> Field {
-        Field::new(header, ArrowDataType::Boolean, true)
+        Field::new(header, ArrowDataType::LargeUtf8, false)
+    }
+}
+
+impl ArrowAssoc for Option<&str> {
+    type Builder = LargeStringBuilder;
+
+    fn builder(nrows: usize) -> Self::Builder {
+        LargeStringBuilder::new(nrows)
+    }
+
+    #[throws(ConnectorAgentError)]
+    fn append(builder: &mut Self::Builder, value: Self) {
+        match value {
+            Some(s) => builder.append_value(s)?,
+            None => builder.append_null()?,
+        }
+    }
+
+    fn field(header: &str) -> Field {
+        Field::new(header, ArrowDataType::LargeUtf8, true)
     }
 }
 

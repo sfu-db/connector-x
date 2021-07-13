@@ -1,6 +1,10 @@
+mod arrow_assoc;
+mod funcs;
+pub mod types;
+
 use super::{Consume, Destination, DestinationPartition};
 use crate::data_order::DataOrder;
-use crate::dummy_typesystem::DummyTypeSystem;
+use crate::destinations::arrow::types::ArrowTypeSystem;
 use crate::errors::{ConnectorAgentError, Result};
 use crate::typesystem::{Realize, TypeAssoc, TypeSystem};
 use anyhow::anyhow;
@@ -13,15 +17,12 @@ use itertools::Itertools;
 use std::any::Any;
 use std::sync::Arc;
 
-mod arrow_assoc;
-mod funcs;
-
 type Builder = Box<dyn Any + Send>;
 type Builders = Vec<Builder>;
 
 pub struct ArrowDestination {
     nrows: usize,
-    schema: Vec<DummyTypeSystem>,
+    schema: Vec<ArrowTypeSystem>,
     builders: Vec<Builders>,
 }
 
@@ -43,7 +44,7 @@ impl ArrowDestination {
 
 impl Destination for ArrowDestination {
     const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::ColumnMajor, DataOrder::RowMajor];
-    type TypeSystem = DummyTypeSystem;
+    type TypeSystem = ArrowTypeSystem;
     type Partition<'a> = ArrowPartitionWriter<'a>;
 
     #[throws(ConnectorAgentError)]
@@ -51,7 +52,7 @@ impl Destination for ArrowDestination {
         &mut self,
         nrows: usize,
         _names: &[S],
-        schema: &[DummyTypeSystem],
+        schema: &[ArrowTypeSystem],
         _data_order: DataOrder,
     ) {
         // cannot really create builders since do not know each partition size here
@@ -82,7 +83,7 @@ impl Destination for ArrowDestination {
             .collect()
     }
 
-    fn schema(&self) -> &[DummyTypeSystem] {
+    fn schema(&self) -> &[ArrowTypeSystem] {
         self.schema.as_slice()
     }
 }
@@ -115,13 +116,13 @@ impl ArrowDestination {
 
 pub struct ArrowPartitionWriter<'a> {
     nrows: usize,
-    schema: Vec<DummyTypeSystem>,
+    schema: Vec<ArrowTypeSystem>,
     builders: &'a mut Builders,
     current_col: usize,
 }
 
 impl<'a> ArrowPartitionWriter<'a> {
-    fn new(schema: Vec<DummyTypeSystem>, builders: &'a mut Builders, nrows: usize) -> Self {
+    fn new(schema: Vec<ArrowTypeSystem>, builders: &'a mut Builders, nrows: usize) -> Self {
         ArrowPartitionWriter {
             nrows,
             schema,
@@ -132,7 +133,7 @@ impl<'a> ArrowPartitionWriter<'a> {
 }
 
 impl<'a> DestinationPartition<'a> for ArrowPartitionWriter<'a> {
-    type TypeSystem = DummyTypeSystem;
+    type TypeSystem = ArrowTypeSystem;
 
     fn nrows(&self) -> usize {
         self.nrows
