@@ -7,7 +7,6 @@
 
 Load data from <img src="https://raw.githubusercontent.com/sfu-db/connector-agent/main/assets/sources.gif" width="6.5%" style="margin-bottom: -2px"/> to <img src="https://raw.githubusercontent.com/sfu-db/connector-agent/main/assets/destinations.gif" width="7%" style="margin-bottom: -2px"/>, the fastest way.
 
-**Currently only support Postgres to Pandas. MySQL is in development.**
 For more data sources, please check out our [discussion](https://github.com/sfu-db/connector-x/discussions/61).
 
 ConnectorX enables you to load data from databases into Python in the fastest and most memory efficient way.
@@ -62,6 +61,21 @@ Additionally, implementing a data intensive application in Python brings additio
 ConnectorX is written in Rust and follows "zero-copy" principle.
 This allows it to make full use of the CPU by becoming cache and branch predictor friendly. Moreover, the architecture of ConnectorX ensures the data will be copied exactly once, directly from the source to the destination.
 
+# Supported Sources & Destinations
+## Sources
+- [x] Postgres
+- [x] Mysql
+- [x] Sqlite
+- [x] Redshift (through postgres protocol)
+- [x] Clickhouse (through mysql protocol)
+- [ ] SQL Server
+- [ ] Oracle
+- [ ] ...
+
+## Destinations
+- [x] Pandas (<1.3 only, WIP for Pandas 1.3)
+- [ ] PyArrow (WIP)
+  
 # Detailed Usage and Examples
 
 ## API

@@ -2,7 +2,7 @@
 authors = ["Weiyuan Wu <youngw@sfu.ca>"]
 edition = "2018"
 name = "connectorx-python"
-version = "0.1.0"
+version = "0.2.0-alpha.1"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -44,9 +44,9 @@ crate-type = ["rlib", "cdylib"]
 name = "connectorx_python"
 
 [features]
-nbstr = []
 branch = ["connectorx/branch"]
 default = ["extension", "fptr", "nbstr"]
 executable = ["pyo3/auto-initialize"]
 extension = ["pyo3/extension-module"]
 fptr = ["connectorx/fptr"]
+nbstr = []
