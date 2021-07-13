@@ -1,7 +1,7 @@
 use crate::data_order::DataOrder;
 use crate::errors::{ConnectorAgentError, Result};
 use crate::sources::{PartitionParser, Produce, Source, SourcePartition};
-use crate::sql::{count_query, get_limit, limit1_query};
+use crate::sql::{count_query, get_limit, limit1_query, CXQuery};
 
 use anyhow::anyhow;
 use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
@@ -9,7 +9,7 @@ use fehler::throw;
 use log::debug;
 use r2d2::{Pool, PooledConnection};
 use r2d2_mysql::{
-    mysql::{prelude::Queryable, Opts, OptsBuilder, QueryResult, Row, Text},
+    mysql::{prelude::Queryable, Binary, Opts, OptsBuilder, QueryResult, Row, Text},
     MysqlConnectionManager,
 };
 use rust_decimal::Decimal;
@@ -23,7 +23,7 @@ type MysqlConn = PooledConnection<MysqlManager>;
 
 pub struct MysqlSource {
     pool: Pool<MysqlManager>,
-    queries: Vec<String>,
+    queries: Vec<CXQuery<String>>,
     names: Vec<String>,
     schema: Vec<MysqlTypeSystem>,
     buf_size: usize,
@@ -35,6 +35,7 @@ impl MysqlSource {
         let pool = r2d2::Pool::builder()
             .max_size(nconn as u32)
             .build(manager)?;
+
         Ok(Self {
             pool,
             queries: vec![],
@@ -64,8 +65,8 @@ where
         Ok(())
     }
 
-    fn set_queries<Q: AsRef<str>>(&mut self, queries: &[Q]) {
-        self.queries = queries.iter().map(|q| q.as_ref().to_string()).collect();
+    fn set_queries<Q: ToString>(&mut self, queries: &[CXQuery<Q>]) {
+        self.queries = queries.iter().map(|q| q.map(Q::to_string)).collect();
     }
 
     fn fetch_metadata(&mut self) -> Result<()> {
@@ -77,7 +78,7 @@ where
         let mut error = None;
         for query in &self.queries {
             // assuming all the partition queries yield same schema
-            match conn.query_first::<Row, _>(&limit1_query(query, &MySqlDialect {})?[..]) {
+            match conn.query_first::<Row, _>(limit1_query(query, &MySqlDialect {})?.as_str()) {
                 Ok(Some(row)) => {
                     let (names, types) = row
                         .columns_ref()
@@ -105,7 +106,7 @@ where
 
         if !success {
             if zero_tuple {
-                let iter = conn.query_iter(self.queries[0].clone())?;
+                let iter = conn.query_iter(self.queries[0].as_str())?;
                 let (names, types) = iter
                     .columns()
                     .as_ref()
@@ -155,7 +156,7 @@ where
 
 pub struct MysqlSourcePartition {
     conn: MysqlConn,
-    query: String,
+    query: CXQuery<String>,
     schema: Vec<MysqlTypeSystem>,
     nrows: usize,
     ncols: usize,
@@ -163,10 +164,15 @@ pub struct MysqlSourcePartition {
 }
 
 impl MysqlSourcePartition {
-    pub fn new(conn: MysqlConn, query: &str, schema: &[MysqlTypeSystem], buf_size: usize) -> Self {
+    pub fn new(
+        conn: MysqlConn,
+        query: &CXQuery<String>,
+        schema: &[MysqlTypeSystem],
+        buf_size: usize,
+    ) -> Self {
         Self {
             conn,
-            query: query.to_string(),
+            query: query.clone(),
             schema: schema.to_vec(),
             nrows: 0,
             ncols: schema.len(),
@@ -196,8 +202,8 @@ impl SourcePartition for MysqlSourcePartition {
     }
 
     fn parser(&mut self) -> Result<Self::Parser<'_>> {
-        let query = self.query.clone();
-        let iter = self.conn.query_iter(query)?;
+        let stmt = self.conn.prep(self.query.as_str())?;
+        let iter = self.conn.exec_iter(stmt, ())?;
         Ok(MysqlSourcePartitionParser::new(
             iter,
             &self.schema,
@@ -215,7 +221,7 @@ impl SourcePartition for MysqlSourcePartition {
 }
 
 pub struct MysqlSourcePartitionParser<'a> {
-    iter: QueryResult<'a, 'a, 'a, Text>,
+    iter: QueryResult<'a, 'a, 'a, Binary>,
     buf_size: usize,
     rowbuf: Vec<Row>,
     ncols: usize,
@@ -225,7 +231,7 @@ pub struct MysqlSourcePartitionParser<'a> {
 
 impl<'a> MysqlSourcePartitionParser<'a> {
     pub fn new(
-        iter: QueryResult<'a, 'a, 'a, Text>,
+        iter: QueryResult<'a, 'a, 'a, Binary>,
         schema: &[MysqlTypeSystem],
         buf_size: usize,
     ) -> Self {

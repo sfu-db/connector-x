@@ -9,6 +9,7 @@ pub mod sqlite;
 
 use crate::data_order::DataOrder;
 use crate::errors::Result;
+use crate::sql::CXQuery;
 use crate::typesystem::{TypeAssoc, TypeSystem};
 
 pub trait Source {
@@ -21,7 +22,7 @@ pub trait Source {
 
     fn set_data_order(&mut self, data_order: DataOrder) -> Result<()>;
 
-    fn set_queries<Q: AsRef<str>>(&mut self, queries: &[Q]);
+    fn set_queries<Q: ToString>(&mut self, queries: &[CXQuery<Q>]);
 
     fn fetch_metadata(&mut self) -> Result<()>;
 

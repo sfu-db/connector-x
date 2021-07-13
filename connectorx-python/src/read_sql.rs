@@ -1,5 +1,6 @@
 use crate::errors::ConnectorAgentPythonError;
 use connectorx::source_router::SourceConn;
+use connectorx::sql::CXQuery;
 use dict_derive::FromPyObject;
 use fehler::throw;
 use pyo3::prelude::*;
@@ -41,7 +42,7 @@ pub fn read_sql<'a>(
     let source_conn =
         SourceConn::try_from(conn).map_err(ConnectorAgentPythonError::ConnectorAgentError)?;
     let queries = match (queries, partition_query) {
-        (Some(queries), None) => queries,
+        (Some(queries), None) => queries.into_iter().map(|q| CXQuery::Naked(q)).collect(),
         (
             None,
             Some(PartitionQuery {
@@ -90,7 +91,6 @@ pub fn read_sql<'a>(
         )),
     };
 
-    let queries: Vec<_> = queries.iter().map(|s| s.as_str()).collect();
     match return_type {
         "pandas" => Ok(crate::pandas::write_pandas(
             py,

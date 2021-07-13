@@ -20,11 +20,11 @@ impl_typesystem! {
     mappings = {
         { Long | LongLong => i64 }
         { Double => f64 }
-        { Datetime => NaiveDateTime}
-        { Date => NaiveDate}
-        { Time => NaiveTime}
-        { Decimal => Decimal}
-        { Char | VarChar => String}
+        { Datetime => NaiveDateTime }
+        { Date => NaiveDate }
+        { Time => NaiveTime }
+        { Decimal => Decimal }
+        { Char | VarChar => String }
     }
 }
 

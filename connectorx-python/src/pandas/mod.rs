@@ -11,6 +11,7 @@ use crate::errors::ConnectorAgentPythonError;
 use anyhow::anyhow;
 use connectorx::source_router::{SourceConn, SourceType};
 use connectorx::sources::mysql::MysqlSource;
+use connectorx::sql::CXQuery;
 use connectorx::{
     sources::{
         postgres::{Binary, Cursor, PostgresSource, CSV},
@@ -26,7 +27,7 @@ use pyo3::{PyAny, Python};
 pub fn write_pandas<'a>(
     py: Python<'a>,
     source_conn: &SourceConn,
-    queries: &[&str],
+    queries: &[CXQuery<String>],
     protocol: &str,
 ) -> &'a PyAny {
     let mut destination = PandasDestination::new(py);

@@ -9,9 +9,63 @@ use sqlparser::ast::{
 use sqlparser::dialect::Dialect;
 use sqlparser::parser::Parser;
 
+#[derive(Debug, Clone)]
+pub enum CXQuery<Q> {
+    Naked(Q),   // The query directly comes from the user
+    Wrapped(Q), // The user query is already wrapped in a subquery
+}
+
+impl<Q: std::fmt::Display> std::fmt::Display for CXQuery<Q> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            CXQuery::Naked(q) => write!(f, "{}", q),
+            CXQuery::Wrapped(q) => write!(f, "{}", q),
+        }
+    }
+}
+
+impl<Q: AsRef<str>> CXQuery<Q> {
+    pub fn as_str(&self) -> &str {
+        match self {
+            CXQuery::Naked(q) => q.as_ref(),
+            CXQuery::Wrapped(q) => q.as_ref(),
+        }
+    }
+}
+
+impl<Q: AsRef<str>> AsRef<str> for CXQuery<Q> {
+    fn as_ref(&self) -> &str {
+        match self {
+            CXQuery::Naked(q) => q.as_ref(),
+            CXQuery::Wrapped(q) => q.as_ref(),
+        }
+    }
+}
+
+impl<Q> CXQuery<Q> {
+    pub fn map<F, U>(&self, f: F) -> CXQuery<U>
+    where
+        F: Fn(&Q) -> U,
+    {
+        match self {
+            CXQuery::Naked(q) => CXQuery::Naked(f(q)),
+            CXQuery::Wrapped(q) => CXQuery::Wrapped(f(q)),
+        }
+    }
+}
+
+impl<Q, E> CXQuery<Result<Q, E>> {
+    pub fn result(self) -> Result<CXQuery<Q>, E> {
+        match self {
+            CXQuery::Naked(q) => q.map(CXQuery::Naked),
+            CXQuery::Wrapped(q) => q.map(CXQuery::Wrapped),
+        }
+    }
+}
+
 #[throws(ConnectorAgentError)]
-pub fn get_limit<T: Dialect>(sql: &str, dialect: &T) -> Option<usize> {
-    let mut ast = Parser::parse_sql(dialect, sql)?;
+pub fn get_limit<T: Dialect>(sql: &CXQuery<String>, dialect: &T) -> Option<usize> {
+    let mut ast = Parser::parse_sql(dialect, sql.as_str())?;
     if ast.len() != 1 {
         throw!(ConnectorAgentError::SqlQueryNotSupported(sql.to_string()));
     }
@@ -32,10 +86,10 @@ pub fn get_limit<T: Dialect>(sql: &str, dialect: &T) -> Option<usize> {
 }
 
 fn wrap_query(
-    query: Box<Query>,
+    query: &Query,
     projection: Vec<SelectItem>,
     selection: Option<Expr>,
-    tmp_tab_name: String,
+    tmp_tab_name: &str,
 ) -> Statement {
     Statement::Query(Box::new(Query {
         with: None,
@@ -46,10 +100,10 @@ fn wrap_query(
             from: vec![TableWithJoins {
                 relation: TableFactor::Derived {
                     lateral: false,
-                    subquery: query,
+                    subquery: Box::new(query.clone()),
                     alias: Some(TableAlias {
                         name: Ident {
-                            value: tmp_tab_name,
+                            value: tmp_tab_name.into(),
                             quote_style: None,
                         },
                         columns: vec![],
@@ -72,51 +126,90 @@ fn wrap_query(
     }))
 }
 
+trait StatementExt {
+    fn as_query(&self) -> Option<&Query>;
+}
+
+impl StatementExt for Statement {
+    fn as_query(&self) -> Option<&Query> {
+        match self {
+            Statement::Query(q) => Some(q),
+            _ => None,
+        }
+    }
+}
+
+trait QueryExt {
+    fn as_select_mut(&mut self) -> Option<&mut Select>;
+}
+
+impl QueryExt for Query {
+    fn as_select_mut(&mut self) -> Option<&mut Select> {
+        match self.body {
+            SetExpr::Select(ref mut select) => Some(select),
+            _ => None,
+        }
+    }
+}
+
 #[throws(ConnectorAgentError)]
-pub fn count_query<T: Dialect>(sql: &str, dialect: &T) -> String {
+pub fn count_query<T: Dialect>(sql: &CXQuery<String>, dialect: &T) -> CXQuery<String> {
     trace!("Incoming query: {}", sql);
 
-    let mut ast = Parser::parse_sql(dialect, sql)?;
-    if ast.len() != 1 {
-        throw!(ConnectorAgentError::SqlQueryNotSupported(sql.to_string()));
-    }
+    let projection = vec![SelectItem::UnnamedExpr(Expr::Function(Function {
+        name: ObjectName(vec![Ident {
+            value: "count".to_string(),
+            quote_style: None,
+        }]),
+        args: vec![FunctionArg::Unnamed(Expr::Wildcard)],
+        over: None,
+        distinct: false,
+    }))];
 
-    let ast_count: Statement;
+    let ast = sql.map(|sql| Parser::parse_sql(dialect, sql)).result()?;
 
-    match &mut ast[0] {
-        Statement::Query(q) => {
-            q.order_by = vec![];
-            match &mut q.body {
-                SetExpr::Select(select) => {
-                    select.sort_by = vec![];
-                    let projection = vec![SelectItem::UnnamedExpr(Expr::Function(Function {
-                        name: ObjectName(vec![Ident {
-                            value: "count".to_string(),
-                            quote_style: None,
-                        }]),
-                        args: vec![FunctionArg::Unnamed(Expr::Wildcard)],
-                        over: None,
-                        distinct: false,
-                    }))];
-                    ast_count =
-                        wrap_query(q.clone(), projection, None, String::from("CXTMPTAB_COUNT"));
-                }
-                _ => throw!(ConnectorAgentError::SqlQueryNotSupported(sql.to_string())),
+    let ast_count: Statement = match ast {
+        CXQuery::Naked(ast) => {
+            if ast.len() != 1 {
+                throw!(ConnectorAgentError::SqlQueryNotSupported(sql.to_string()));
             }
+            let mut query = ast[0]
+                .as_query()
+                .ok_or_else(|| ConnectorAgentError::SqlQueryNotSupported(sql.to_string()))?
+                .clone();
+            query.order_by = vec![];
+            let select = query
+                .as_select_mut()
+                .ok_or_else(|| ConnectorAgentError::SqlQueryNotSupported(sql.to_string()))?;
+            select.sort_by = vec![];
+            wrap_query(&query, projection, None, "CXTMPTAB_COUNT")
         }
-        _ => throw!(ConnectorAgentError::SqlQueryNotSupported(sql.to_string())),
+        CXQuery::Wrapped(ast) => {
+            if ast.len() != 1 {
+                throw!(ConnectorAgentError::SqlQueryNotSupported(sql.to_string()));
+            }
+            let mut query = ast[0]
+                .as_query()
+                .ok_or_else(|| ConnectorAgentError::SqlQueryNotSupported(sql.to_string()))?
+                .clone();
+            let select = query
+                .as_select_mut()
+                .ok_or_else(|| ConnectorAgentError::SqlQueryNotSupported(sql.to_string()))?;
+            select.projection = projection;
+            Statement::Query(Box::new(query))
+        }
     };
 
     let sql = format!("{}", ast_count);
     debug!("Transformed count query: {}", sql);
-    sql
+    CXQuery::Wrapped(sql)
 }
 
 #[throws(ConnectorAgentError)]
-pub fn limit1_query<T: Dialect>(sql: &str, dialect: &T) -> String {
+pub fn limit1_query<T: Dialect>(sql: &CXQuery<String>, dialect: &T) -> CXQuery<String> {
     trace!("Incoming query: {}", sql);
 
-    let mut ast = Parser::parse_sql(dialect, sql)?;
+    let mut ast = Parser::parse_sql(dialect, sql.as_str())?;
     if ast.len() != 1 {
         throw!(ConnectorAgentError::SqlQueryNotSupported(sql.to_string()));
     }
@@ -130,7 +223,7 @@ pub fn limit1_query<T: Dialect>(sql: &str, dialect: &T) -> String {
 
     let sql = format!("{}", ast[0]);
     debug!("Transformed limit 1 query: {}", sql);
-    sql
+    CXQuery::Wrapped(sql)
 }
 
 #[throws(ConnectorAgentError)]
@@ -191,10 +284,10 @@ pub fn single_col_partition_query<T: Dialect>(
                 };
 
                 ast_part = wrap_query(
-                    q.clone(),
+                    &q,
                     vec![SelectItem::Wildcard],
                     Some(selection),
-                    PART_TMP_TAB_NAME.to_string(),
+                    PART_TMP_TAB_NAME,
                 );
             }
             _ => throw!(ConnectorAgentError::SqlQueryNotSupported(query.to_string())),
@@ -261,8 +354,7 @@ pub fn get_partition_range_query<T: Dialect>(query: &str, col: &str, dialect: &T
                             distinct: false,
                         })),
                     ];
-                    ast_range =
-                        wrap_query(q.clone(), projection, None, RANGE_TMP_TAB_NAME.to_string());
+                    ast_range = wrap_query(&q, projection, None, RANGE_TMP_TAB_NAME);
                 }
                 _ => throw!(ConnectorAgentError::SqlQueryNotSupported(query.to_string())),
             }
@@ -320,21 +412,19 @@ pub fn get_partition_range_query_sep<T: Dialect>(
                         }]),
                         args: vec![FunctionArg::Unnamed(Expr::CompoundIdentifier(vec![
                             Ident {
-                                value: RANGE_TMP_TAB_NAME.to_string(),
+                                value: RANGE_TMP_TAB_NAME.into(),
                                 quote_style: None,
                             },
                             Ident {
-                                value: col.to_string(),
+                                value: col.into(),
                                 quote_style: None,
                             },
                         ]))],
                         over: None,
                         distinct: false,
                     }))];
-                    ast_range_min =
-                        wrap_query(q.clone(), min_proj, None, RANGE_TMP_TAB_NAME.to_string());
-                    ast_range_max =
-                        wrap_query(q.clone(), max_proj, None, RANGE_TMP_TAB_NAME.to_string());
+                    ast_range_min = wrap_query(&q, min_proj, None, RANGE_TMP_TAB_NAME);
+                    ast_range_max = wrap_query(&q, max_proj, None, RANGE_TMP_TAB_NAME);
                 }
                 _ => throw!(ConnectorAgentError::SqlQueryNotSupported(query.to_string())),
             }

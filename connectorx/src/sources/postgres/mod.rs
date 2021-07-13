@@ -3,7 +3,7 @@ mod typesystem;
 use crate::data_order::DataOrder;
 use crate::errors::{ConnectorAgentError, Result};
 use crate::sources::{PartitionParser, Produce, Source, SourcePartition};
-use crate::sql::{count_query, get_limit, limit1_query};
+use crate::sql::{count_query, get_limit, limit1_query, CXQuery};
 use anyhow::anyhow;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
 use csv::{ReaderBuilder, StringRecord, StringRecordsIntoIter};
@@ -34,7 +34,7 @@ pub enum Cursor {}
 
 pub struct PostgresSource<P> {
     pool: Pool<PgManager>,
-    queries: Vec<String>,
+    queries: Vec<CXQuery<String>>,
     names: Vec<String>,
     schema: Vec<PostgresTypeSystem>,
     buf_size: usize,
@@ -77,8 +77,8 @@ where
         Ok(())
     }
 
-    fn set_queries<Q: AsRef<str>>(&mut self, queries: &[Q]) {
-        self.queries = queries.iter().map(|q| q.as_ref().to_string()).collect();
+    fn set_queries<Q: ToString>(&mut self, queries: &[CXQuery<Q>]) {
+        self.queries = queries.iter().map(|q| q.map(Q::to_string)).collect();
     }
 
     fn fetch_metadata(&mut self) -> Result<()> {
@@ -90,7 +90,7 @@ where
         let mut error = None;
         for query in &self.queries {
             // assuming all the partition queries yield same schema
-            match conn.query_opt(&limit1_query(query, &PostgreSqlDialect {})?[..], &[]) {
+            match conn.query_opt(limit1_query(query, &PostgreSqlDialect {})?.as_str(), &[]) {
                 Ok(Some(row)) => {
                     let (names, types) = row
                         .columns()
@@ -169,7 +169,7 @@ where
 
 pub struct PostgresSourcePartition<P> {
     conn: PgConn,
-    query: String,
+    query: CXQuery<String>,
     schema: Vec<PostgresTypeSystem>,
     nrows: usize,
     ncols: usize,
@@ -178,10 +178,15 @@ pub struct PostgresSourcePartition<P> {
 }
 
 impl<P> PostgresSourcePartition<P> {
-    pub fn new(conn: PgConn, query: &str, schema: &[PostgresTypeSystem], buf_size: usize) -> Self {
+    pub fn new(
+        conn: PgConn,
+        query: &CXQuery<String>,
+        schema: &[PostgresTypeSystem],
+        buf_size: usize,
+    ) -> Self {
         Self {
             conn,
-            query: query.to_string(),
+            query: query.clone(),
             schema: schema.to_vec(),
             nrows: 0,
             ncols: schema.len(),
@@ -201,7 +206,7 @@ impl SourcePartition for PostgresSourcePartition<Binary> {
             None => {
                 let row = self
                     .conn
-                    .query_one(&count_query(&self.query, &dialect)?[..], &[])?;
+                    .query_one(count_query(&self.query, &dialect)?.as_str(), &[])?;
                 row.get::<_, i64>(0) as usize
             }
             Some(n) => n,
@@ -236,9 +241,10 @@ impl SourcePartition for PostgresSourcePartition<CSV> {
     type Parser<'a> = PostgresCSVSourceParser<'a>;
 
     fn prepare(&mut self) -> Result<()> {
-        let row = self
-            .conn
-            .query_one(&count_query(&self.query, &PostgreSqlDialect {})?[..], &[])?;
+        let row = self.conn.query_one(
+            count_query(&self.query, &PostgreSqlDialect {})?.as_str(),
+            &[],
+        )?;
         self.nrows = row.get::<_, i64>(0) as usize;
         Ok(())
     }
@@ -272,15 +278,18 @@ impl SourcePartition for PostgresSourcePartition<Cursor> {
     type Parser<'a> = PostgresRawSourceParser<'a>;
 
     fn prepare(&mut self) -> Result<()> {
-        let row = self
-            .conn
-            .query_one(&count_query(&self.query, &PostgreSqlDialect {})?[..], &[])?;
+        let row = self.conn.query_one(
+            count_query(&self.query, &PostgreSqlDialect {})?.as_str(),
+            &[],
+        )?;
         self.nrows = row.get::<_, i64>(0) as usize;
         Ok(())
     }
 
     fn parser(&mut self) -> Result<Self::Parser<'_>> {
-        let iter = self.conn.query_raw::<_, bool, _>(&self.query[..], vec![])?; // unless reading the data, it seems like issue the query is fast
+        let iter = self
+            .conn
+            .query_raw::<_, bool, _>(self.query.as_str(), vec![])?; // unless reading the data, it seems like issue the query is fast
         Ok(PostgresRawSourceParser::new(
             iter,
             &self.schema,

@@ -5,7 +5,7 @@ use fallible_streaming_iterator::FallibleStreamingIterator;
 use crate::data_order::DataOrder;
 use crate::errors::{ConnectorAgentError, Result};
 use crate::sources::{PartitionParser, Produce, Source, SourcePartition};
-use crate::sql::{count_query, get_limit, limit1_query};
+use crate::sql::{count_query, get_limit, limit1_query, CXQuery};
 use anyhow::anyhow;
 use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
 use derive_more::{Deref, DerefMut};
@@ -23,7 +23,7 @@ struct DummyBox<T>(T);
 
 pub struct SqliteSource {
     pool: Pool<SqliteConnectionManager>,
-    queries: Vec<String>,
+    queries: Vec<CXQuery<String>>,
     names: Vec<String>,
     schema: Vec<SqliteTypeSystem>,
 }
@@ -59,8 +59,8 @@ where
         Ok(())
     }
 
-    fn set_queries<Q: AsRef<str>>(&mut self, queries: &[Q]) {
-        self.queries = queries.iter().map(|q| q.as_ref().to_string()).collect();
+    fn set_queries<Q: ToString>(&mut self, queries: &[CXQuery<Q>]) {
+        self.queries = queries.iter().map(|q| q.map(Q::to_string)).collect();
     }
 
     fn fetch_metadata(&mut self) -> Result<()> {
@@ -74,23 +74,26 @@ where
             let mut names = vec![];
             let mut types = vec![];
 
-            match conn.query_row(&limit1_query(query, &SQLiteDialect {})?[..], [], |row| {
-                zero_tuple = false;
-                row.columns().iter().enumerate().for_each(|(i, col)| {
-                    names.push(col.name().to_string());
-                    match row.get_ref(i) {
-                        Ok(vr) => {
-                            types.push(SqliteTypeSystem::from((col.decl_type(), vr.data_type())))
+            match conn.query_row(
+                &limit1_query(query, &SQLiteDialect {})?.as_str(),
+                [],
+                |row| {
+                    zero_tuple = false;
+                    row.columns().iter().enumerate().for_each(|(i, col)| {
+                        names.push(col.name().to_string());
+                        match row.get_ref(i) {
+                            Ok(vr) => types
+                                .push(SqliteTypeSystem::from((col.decl_type(), vr.data_type()))),
+                            Err(e) => {
+                                debug!("cannot get ref at {} on query: {}", i, query);
+                                error = Some(e);
+                                types.clear(); // clear types and return directly when error occurs
+                            }
                         }
-                        Err(e) => {
-                            debug!("cannot get ref at {} on query: {}", i, query);
-                            error = Some(e);
-                            types.clear(); // clear types and return directly when error occurs
-                        }
-                    }
-                });
-                Ok(())
-            }) {
+                    });
+                    Ok(())
+                },
+            ) {
                 Ok(_) => {}
                 Err(e) => {
                     match e {
@@ -152,7 +155,7 @@ where
 
 pub struct SqliteSourcePartition {
     conn: PooledConnection<SqliteConnectionManager>,
-    query: String,
+    query: CXQuery<String>,
     schema: Vec<SqliteTypeSystem>,
     nrows: usize,
     ncols: usize,
@@ -161,12 +164,12 @@ pub struct SqliteSourcePartition {
 impl SqliteSourcePartition {
     pub fn new(
         conn: PooledConnection<SqliteConnectionManager>,
-        query: &str,
+        query: &CXQuery<String>,
         schema: &[SqliteTypeSystem],
     ) -> Self {
         Self {
             conn,
-            query: query.to_string(),
+            query: query.clone(),
             schema: schema.to_vec(),
             nrows: 0,
             ncols: schema.len(),
@@ -181,11 +184,12 @@ impl SourcePartition for SqliteSourcePartition {
     fn prepare(&mut self) -> Result<()> {
         let dialect = SQLiteDialect {};
         self.nrows = match get_limit(&self.query, &dialect)? {
-            None => self
-                .conn
-                .query_row(&count_query(&self.query, &dialect)?[..], [], |row| {
-                    Ok(row.get::<_, i64>(0)? as usize)
-                })?,
+            None => {
+                self.conn
+                    .query_row(count_query(&self.query, &dialect)?.as_str(), [], |row| {
+                        Ok(row.get::<_, i64>(0)? as usize)
+                    })?
+            }
             Some(n) => n,
         };
         Ok(())

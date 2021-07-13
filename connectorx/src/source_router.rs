@@ -1,6 +1,7 @@
 use crate::errors::{ConnectorAgentError, Result};
 use crate::sources::mysql::MysqlTypeSystem;
 use crate::sources::postgres::PostgresTypeSystem;
+use crate::sql::CXQuery;
 use crate::sql::{
     get_partition_range_query, get_partition_range_query_sep, single_col_partition_query,
 };
@@ -49,25 +50,34 @@ impl TryFrom<&str> for SourceConn {
 
 impl SourceType {
     pub fn get_col_range(&self, conn: &str, query: &str, col: &str) -> Result<(i64, i64)> {
-        match *self {
+        match self {
             SourceType::Postgres => pg_get_partition_range(conn, query, col),
             SourceType::Sqlite => sqlite_get_partition_range(conn, query, col),
             SourceType::Mysql => mysql_get_partition_range(conn, query, col),
         }
     }
 
-    pub fn get_part_query(&self, query: &str, col: &str, lower: i64, upper: i64) -> Result<String> {
-        match *self {
+    #[throws(ConnectorAgentError)]
+    pub fn get_part_query(
+        &self,
+        query: &str,
+        col: &str,
+        lower: i64,
+        upper: i64,
+    ) -> CXQuery<String> {
+        let query = match self {
             SourceType::Postgres => {
-                single_col_partition_query(query, col, lower, upper, &PostgreSqlDialect {})
+                single_col_partition_query(query, col, lower, upper, &PostgreSqlDialect {})?
             }
             SourceType::Sqlite => {
-                single_col_partition_query(query, col, lower, upper, &SQLiteDialect {})
+                single_col_partition_query(query, col, lower, upper, &SQLiteDialect {})?
             }
             SourceType::Mysql => {
-                single_col_partition_query(query, col, lower, upper, &MySqlDialect {})
+                single_col_partition_query(query, col, lower, upper, &MySqlDialect {})?
             }
-        }
+        };
+
+        CXQuery::Wrapped(query)
     }
 }
 
