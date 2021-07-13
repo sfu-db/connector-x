@@ -1,6 +1,6 @@
 #![feature(generic_associated_types)]
-#![feature(log_syntax)]
 #![allow(incomplete_features)]
+#![allow(clippy::upper_case_acronyms)]
 
 #[doc(hidden)]
 pub mod pg;

@@ -3,6 +3,7 @@
 
 pub mod csv;
 pub mod dummy;
+pub mod mysql;
 pub mod postgres;
 pub mod sqlite;
 

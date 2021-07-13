@@ -26,6 +26,19 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+      # mysql 
+      mysql:
+        image: mysql
+        env:
+          MYSQL_DATABASE: mysql
+          MYSQL_ROOT_PASSWORD: mysql
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd "mysqladmin ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
       - uses: actions/checkout@v2
@@ -36,7 +49,7 @@ jobs:
       - name: Install tools
         run: |
           apt-get update
-          apt-get install -y curl postgresql-client build-essential pkg-config libssl-dev git sqlite3 libsqlite3-dev
+          apt-get install -y curl postgresql-client build-essential pkg-config libssl-dev git sqlite3 libsqlite3-dev mysql-client
         env:
           DEBIAN_FRONTEND: noninteractive
 
@@ -67,6 +80,12 @@ jobs:
         env:
           POSTGRES_URL: "postgresql://postgres:postgres@postgres:5432/postgres"
           SQLITE_URL: "sqlite:///tmp/test.db"
+          MYSQL_HOST: mysql
+          MYSQL_PORT: 3306
+          MYSQL_DB: mysql
+          MYSQL_USER: root
+          MYSQL_PASSWORD: mysql
+
 
       - name: Run tests
         uses: actions-rs/cargo@v1
@@ -75,6 +94,7 @@ jobs:
         env:
           POSTGRES_URL: "postgresql://postgres:postgres@postgres:5432/postgres"
           SQLITE_URL: "sqlite:///tmp/test.db"
+          MYSQL_URL: "mysql://root:mysql@mysql:3306/mysql"
 
       - name: Test build docs
         uses: actions-rs/cargo@v1
@@ -98,6 +118,19 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+      # mysql 
+      mysql:
+        image: mysql
+        env:
+          MYSQL_DATABASE: mysql
+          MYSQL_ROOT_PASSWORD: mysql
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd "mysqladmin ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
       - uses: actions/checkout@v2
@@ -108,7 +141,7 @@ jobs:
       - name: Install tools
         run: |
           apt-get update
-          apt-get install -y curl postgresql-client build-essential python3-dev python3-pip pkg-config libssl-dev git sqlite3 libsqlite3-dev
+          apt-get install -y curl postgresql-client build-essential python3-dev python3-pip pkg-config libssl-dev git sqlite3 libsqlite3-dev mysql-client
         env:
           DEBIAN_FRONTEND: noninteractive
 
@@ -132,6 +165,11 @@ jobs:
         env:
           POSTGRES_URL: "postgresql://postgres:postgres@postgres:5432/postgres"
           SQLITE_URL: "sqlite:///tmp/test.db"
+          MYSQL_HOST: mysql
+          MYSQL_PORT: 3306
+          MYSQL_DB: mysql
+          MYSQL_USER: root
+          MYSQL_PASSWORD: mysql
 
 
       - name: Test python
@@ -139,3 +177,4 @@ jobs:
         env:
           POSTGRES_URL: "postgresql://postgres:postgres@postgres:5432/postgres"
           SQLITE_URL: "sqlite:///tmp/test.db"
+          MYSQL_URL: "mysql://root:mysql@mysql:3306/mysql"

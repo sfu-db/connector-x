@@ -21,36 +21,27 @@ if __name__ == "__main__":
     conn = os.environ[args["--conn"]]
     table = os.environ["TPCH_TABLE"]
 
-    if conn.startswith("sqlite://"):
+    if conn.startswith("sqlite"):
         conn = sqlite3.connect(conn[9:])
-        with Timer() as timer:
-            df = pd.read_sql(
-                f"SELECT * FROM {table}",
-                conn,
-                parse_dates=[
-                    "l_shipdate",
-                    "l_commitdate",
-                    "l_receiptdate",
-                ],
-            )
-        print(f"[Total] {timer.elapsed:.2f}s")
-        conn.close()
-
+    elif conn.startswith("mysql"):
+        engine = create_engine(f"mysql+py{conn}")
+        conn = engine.connect()
     else:
         engine = create_engine(conn)
         conn = engine.connect()
-        with Timer() as timer:
-            df = pd.read_sql(
-                f"SELECT * FROM {table}",
-                conn,
-                parse_dates=[
-                    "l_shipdate",
-                    "l_commitdate",
-                    "l_receiptdate",
-                ],
-            )
-        print(f"[Total] {timer.elapsed:.2f}s")
-        conn.close()
+
+    with Timer() as timer:
+        df = pd.read_sql(
+            f"SELECT * FROM {table}",
+            conn,
+            parse_dates=[
+                "l_shipdate",
+                "l_commitdate",
+                "l_receiptdate",
+            ],
+        )
+    print(f"[Total] {timer.elapsed:.2f}s")
+    conn.close()
 
     print(df.head())
     print(df.tail())

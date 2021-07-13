@@ -13,7 +13,7 @@ use sqlparser::parser::Parser;
 pub fn get_limit<T: Dialect>(sql: &str, dialect: &T) -> Option<usize> {
     let mut ast = Parser::parse_sql(dialect, sql)?;
     if ast.len() != 1 {
-        throw!(ConnectorAgentError::SQLQueryNotSupported(sql.to_string()));
+        throw!(ConnectorAgentError::SqlQueryNotSupported(sql.to_string()));
     }
 
     match &mut ast[0] {
@@ -26,7 +26,7 @@ pub fn get_limit<T: Dialect>(sql: &str, dialect: &T) -> Option<usize> {
                 );
             }
         }
-        _ => throw!(ConnectorAgentError::SQLQueryNotSupported(sql.to_string())),
+        _ => throw!(ConnectorAgentError::SqlQueryNotSupported(sql.to_string())),
     };
     None
 }
@@ -78,7 +78,7 @@ pub fn count_query<T: Dialect>(sql: &str, dialect: &T) -> String {
 
     let mut ast = Parser::parse_sql(dialect, sql)?;
     if ast.len() != 1 {
-        throw!(ConnectorAgentError::SQLQueryNotSupported(sql.to_string()));
+        throw!(ConnectorAgentError::SqlQueryNotSupported(sql.to_string()));
     }
 
     let ast_count: Statement;
@@ -101,10 +101,10 @@ pub fn count_query<T: Dialect>(sql: &str, dialect: &T) -> String {
                     ast_count =
                         wrap_query(q.clone(), projection, None, String::from("CXTMPTAB_COUNT"));
                 }
-                _ => throw!(ConnectorAgentError::SQLQueryNotSupported(sql.to_string())),
+                _ => throw!(ConnectorAgentError::SqlQueryNotSupported(sql.to_string())),
             }
         }
-        _ => throw!(ConnectorAgentError::SQLQueryNotSupported(sql.to_string())),
+        _ => throw!(ConnectorAgentError::SqlQueryNotSupported(sql.to_string())),
     };
 
     let sql = format!("{}", ast_count);
@@ -118,14 +118,14 @@ pub fn limit1_query<T: Dialect>(sql: &str, dialect: &T) -> String {
 
     let mut ast = Parser::parse_sql(dialect, sql)?;
     if ast.len() != 1 {
-        throw!(ConnectorAgentError::SQLQueryNotSupported(sql.to_string()));
+        throw!(ConnectorAgentError::SqlQueryNotSupported(sql.to_string()));
     }
 
     match &mut ast[0] {
         Statement::Query(q) => {
             q.limit = Some(Expr::Value(Value::Number("1".to_string(), false)));
         }
-        _ => throw!(ConnectorAgentError::SQLQueryNotSupported(sql.to_string())),
+        _ => throw!(ConnectorAgentError::SqlQueryNotSupported(sql.to_string())),
     };
 
     let sql = format!("{}", ast[0]);
@@ -146,7 +146,7 @@ pub fn single_col_partition_query<T: Dialect>(
 
     let mut ast = Parser::parse_sql(dialect, query)?;
     if ast.len() != 1 {
-        throw!(ConnectorAgentError::SQLQueryNotSupported(query.to_string()));
+        throw!(ConnectorAgentError::SqlQueryNotSupported(query.to_string()));
     }
 
     let ast_part: Statement;
@@ -197,9 +197,9 @@ pub fn single_col_partition_query<T: Dialect>(
                     PART_TMP_TAB_NAME.to_string(),
                 );
             }
-            _ => throw!(ConnectorAgentError::SQLQueryNotSupported(query.to_string())),
+            _ => throw!(ConnectorAgentError::SqlQueryNotSupported(query.to_string())),
         },
-        _ => throw!(ConnectorAgentError::SQLQueryNotSupported(query.to_string())),
+        _ => throw!(ConnectorAgentError::SqlQueryNotSupported(query.to_string())),
     };
 
     let sql = format!("{}", ast_part);
@@ -213,7 +213,7 @@ pub fn get_partition_range_query<T: Dialect>(query: &str, col: &str, dialect: &T
     const RANGE_TMP_TAB_NAME: &str = "CXTMPTAB_RANGE";
     let mut ast = Parser::parse_sql(dialect, query)?;
     if ast.len() != 1 {
-        throw!(ConnectorAgentError::SQLQueryNotSupported(query.to_string()));
+        throw!(ConnectorAgentError::SqlQueryNotSupported(query.to_string()));
     }
 
     let ast_range: Statement;
@@ -264,10 +264,10 @@ pub fn get_partition_range_query<T: Dialect>(query: &str, col: &str, dialect: &T
                     ast_range =
                         wrap_query(q.clone(), projection, None, RANGE_TMP_TAB_NAME.to_string());
                 }
-                _ => throw!(ConnectorAgentError::SQLQueryNotSupported(query.to_string())),
+                _ => throw!(ConnectorAgentError::SqlQueryNotSupported(query.to_string())),
             }
         }
-        _ => throw!(ConnectorAgentError::SQLQueryNotSupported(query.to_string())),
+        _ => throw!(ConnectorAgentError::SqlQueryNotSupported(query.to_string())),
     };
     let sql = format!("{}", ast_range);
     debug!("Transformed partition range query: {}", sql);
@@ -284,7 +284,7 @@ pub fn get_partition_range_query_sep<T: Dialect>(
     const RANGE_TMP_TAB_NAME: &str = "CXTMPTAB_RANGE";
     let mut ast = Parser::parse_sql(dialect, query)?;
     if ast.len() != 1 {
-        throw!(ConnectorAgentError::SQLQueryNotSupported(query.to_string()));
+        throw!(ConnectorAgentError::SqlQueryNotSupported(query.to_string()));
     }
 
     let ast_range_min: Statement;
@@ -336,10 +336,10 @@ pub fn get_partition_range_query_sep<T: Dialect>(
                     ast_range_max =
                         wrap_query(q.clone(), max_proj, None, RANGE_TMP_TAB_NAME.to_string());
                 }
-                _ => throw!(ConnectorAgentError::SQLQueryNotSupported(query.to_string())),
+                _ => throw!(ConnectorAgentError::SqlQueryNotSupported(query.to_string())),
             }
         }
-        _ => throw!(ConnectorAgentError::SQLQueryNotSupported(query.to_string())),
+        _ => throw!(ConnectorAgentError::SqlQueryNotSupported(query.to_string())),
     };
     let sql_min = format!("{}", ast_range_min);
     let sql_max = format!("{}", ast_range_max);

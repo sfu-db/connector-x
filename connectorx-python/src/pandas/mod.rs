@@ -5,14 +5,15 @@ mod transports;
 mod types;
 
 pub use self::destination::{PandasDestination, PandasPartitionDestination};
-pub use self::transports::{PostgresPandasTransport, SqlitePandasTransport};
+pub use self::transports::{MysqlPandasTransport, PostgresPandasTransport, SqlitePandasTransport};
 pub use self::types::{PandasDType, PandasTypeSystem};
 use crate::errors::ConnectorAgentPythonError;
 use anyhow::anyhow;
 use connectorx::source_router::{SourceConn, SourceType};
+use connectorx::sources::mysql::MysqlSource;
 use connectorx::{
     sources::{
-        postgres::{Binary, PostgresSource, CSV},
+        postgres::{Binary, Cursor, PostgresSource, CSV},
         sqlite::SqliteSource,
     },
     Dispatcher,
@@ -57,6 +58,17 @@ pub fn write_pandas<'a>(
                     debug!("Running dispatcher");
                     dispatcher.run()?;
                 }
+                "cursor" => {
+                    let sb = PostgresSource::<Cursor>::new(&source_conn.conn[..], queries.len())?;
+                    let dispatcher = Dispatcher::<_, _, PostgresPandasTransport<Cursor>>::new(
+                        sb,
+                        &mut destination,
+                        queries,
+                    );
+
+                    debug!("Running dispatcher");
+                    dispatcher.run()?;
+                }
                 _ => unimplemented!("{} protocol not supported", protocol),
             }
         }
@@ -64,6 +76,13 @@ pub fn write_pandas<'a>(
             let source = SqliteSource::new(&source_conn.conn[..], queries.len())?;
             let dispatcher =
                 Dispatcher::<_, _, SqlitePandasTransport>::new(source, &mut destination, queries);
+            debug!("Running dispatcher");
+            dispatcher.run()?;
+        }
+        SourceType::Mysql => {
+            let source = MysqlSource::new(&source_conn.conn[..], queries.len())?;
+            let dispatcher =
+                Dispatcher::<_, _, MysqlPandasTransport>::new(source, &mut destination, queries);
             debug!("Running dispatcher");
             dispatcher.run()?;
         }

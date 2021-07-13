@@ -34,10 +34,7 @@ pub enum ConnectorAgentError {
     NoConversionRule(String, String),
 
     #[error("Only support single query with SELECT statement, got {0}.")]
-    SQLQueryNotSupported(String),
-
-    #[error("Only support partition on SPJ query, got {0}.")]
-    SQLQueryPartitionNotSupported(String),
+    SqlQueryNotSupported(String),
 
     #[error(transparent)]
     IOError(#[from] std::io::Error),
@@ -47,6 +44,12 @@ pub enum ConnectorAgentError {
 
     #[error(transparent)]
     PostgresError(#[from] postgres::Error),
+
+    #[error(transparent)]
+    MysqlError(#[from] r2d2_mysql::mysql::Error),
+
+    #[error(transparent)]
+    MysqlUrlError(#[from] r2d2_mysql::mysql::UrlError),
 
     #[error(transparent)]
     SQLiteError(#[from] rusqlite::Error),
