@@ -9,7 +9,7 @@ use fehler::throw;
 use log::debug;
 use r2d2::{Pool, PooledConnection};
 use r2d2_mysql::{
-    mysql::{prelude::Queryable, Binary, Opts, OptsBuilder, QueryResult, Row, Text},
+    mysql::{prelude::Queryable, Binary, Opts, OptsBuilder, QueryResult, Row},
     MysqlConnectionManager,
 };
 use rust_decimal::Decimal;
@@ -282,7 +282,7 @@ macro_rules! impl_produce {
             impl<'r, 'a> Produce<'r, $t> for MysqlSourcePartitionParser<'a> {
                 fn produce(&'r mut self) -> Result<$t> {
                     let (ridx, cidx) = self.next_loc()?;
-                    let res = self.rowbuf[ridx].get(cidx).ok_or_else(|| anyhow!("mysql get None at position: ({}, {})", ridx, cidx))?;
+                    let res = self.rowbuf[ridx].take(cidx).ok_or_else(|| anyhow!("mysql get None at position: ({}, {})", ridx, cidx))?;
                     Ok(res)
                 }
             }
@@ -290,7 +290,7 @@ macro_rules! impl_produce {
             impl<'r, 'a> Produce<'r, Option<$t>> for MysqlSourcePartitionParser<'a> {
                 fn produce(&'r mut self) -> Result<Option<$t>> {
                     let (ridx, cidx) = self.next_loc()?;
-                    let res = self.rowbuf[ridx].get(cidx);
+                    let res = self.rowbuf[ridx].take(cidx);
                     Ok(res)
                 }
             }
