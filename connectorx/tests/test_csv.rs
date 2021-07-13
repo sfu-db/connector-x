@@ -1,4 +1,5 @@
 use connectorx::sources::{csv::CSVSource, Produce, Source, SourcePartition};
+use connectorx::sql::CXQuery;
 use connectorx::{destinations::memory::MemoryDestination, Destination};
 use connectorx::{transports::CSVMemoryTransport, Dispatcher, DummyTypeSystem};
 use ndarray::array;
@@ -7,7 +8,7 @@ use ndarray::array;
 #[should_panic]
 fn no_file() {
     let mut source = CSVSource::new(&[]);
-    source.set_queries(&["./a_fake_file.csv"]);
+    source.set_queries(&[CXQuery::naked("./a_fake_file.csv")]);
     let partitions = source.partition().unwrap();
     for mut p in partitions {
         p.prepare().expect("run query");
@@ -18,7 +19,7 @@ fn no_file() {
 #[should_panic]
 fn empty_file() {
     let mut source = CSVSource::new(&[]);
-    source.set_queries(&["./tests/data/empty.csv"]);
+    source.set_queries(&[CXQuery::naked("./tests/data/empty.csv")]);
     let mut partitions = source.partition().unwrap();
     for p in &mut partitions {
         p.prepare().expect("run query");
@@ -48,7 +49,7 @@ fn load_and_parse() {
         DummyTypeSystem::F64(false),
         DummyTypeSystem::F64(false),
     ]);
-    source.set_queries(&["./tests/data/uspop_0.csv"]);
+    source.set_queries(&[CXQuery::naked("./tests/data/uspop_0.csv")]);
 
     let mut partitions = source.partition().unwrap();
 
@@ -95,7 +96,10 @@ fn load_and_parse() {
 #[test]
 fn test_csv() {
     let schema = [DummyTypeSystem::I64(false); 5];
-    let files = ["./tests/data/uint_0.csv", "./tests/data/uint_1.csv"];
+    let files = [
+        CXQuery::naked("./tests/data/uint_0.csv"),
+        CXQuery::naked("./tests/data/uint_1.csv"),
+    ];
     let source = CSVSource::new(&schema);
 
     let mut destination = MemoryDestination::new();
@@ -123,7 +127,7 @@ fn test_csv() {
 
 #[test]
 fn test_csv_infer_schema() {
-    let files = ["./tests/data/infer_0.csv"];
+    let files = [CXQuery::naked("./tests/data/infer_0.csv")];
     let source = CSVSource::new(&[]);
 
     let mut writer = MemoryDestination::new();

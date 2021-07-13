@@ -1,6 +1,8 @@
-use connectorx::sources::mysql::MysqlSource;
-use connectorx::sources::Produce;
-use connectorx::{Source, SourcePartition};
+use connectorx::{
+    sources::{mysql::MysqlSource, Produce, Source},
+    sql::CXQuery,
+    SourcePartition,
+};
 use std::env;
 // use connectorx::destinations::memory::MemoryDestination;
 
@@ -13,7 +15,7 @@ fn load_and_parse() {
     struct Row(i64, f64);
 
     let mut source = MysqlSource::new(&dburl, 1).unwrap();
-    source.set_queries(&["select * from test_table"]);
+    source.set_queries(&[CXQuery::naked("select * from test_table")]);
     source.fetch_metadata().unwrap();
 
     let mut partitions = source.partition().unwrap();
@@ -53,7 +55,9 @@ fn test_types() {
     struct Row(f64, String);
 
     let mut source = MysqlSource::new(&dburl, 1).unwrap();
-    source.set_queries(&["select test_decimal, test_char from test_types"]);
+    source.set_queries(&[CXQuery::naked(
+        "select test_decimal, test_char from test_types",
+    )]);
     source.fetch_metadata().unwrap();
 
     let mut partitions = source.partition().unwrap();

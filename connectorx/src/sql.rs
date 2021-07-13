@@ -10,7 +10,7 @@ use sqlparser::dialect::Dialect;
 use sqlparser::parser::Parser;
 
 #[derive(Debug, Clone)]
-pub enum CXQuery<Q> {
+pub enum CXQuery<Q = String> {
     Naked(Q),   // The query directly comes from the user
     Wrapped(Q), // The user query is already wrapped in a subquery
 }
@@ -30,6 +30,12 @@ impl<Q: AsRef<str>> CXQuery<Q> {
             CXQuery::Naked(q) => q.as_ref(),
             CXQuery::Wrapped(q) => q.as_ref(),
         }
+    }
+}
+
+impl CXQuery<String> {
+    pub fn naked<Q: AsRef<str>>(q: Q) -> Self {
+        CXQuery::Naked(q.as_ref().to_string())
     }
 }
 

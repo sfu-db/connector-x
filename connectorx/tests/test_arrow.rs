@@ -6,6 +6,7 @@ use connectorx::{
         dummy::DummySource,
         postgres::{Binary, PostgresSource},
     },
+    sql::CXQuery,
     transports::{DummyArrowTransport, PostgresArrowTransport},
     Dispatcher, DummyTypeSystem,
 };
@@ -22,7 +23,10 @@ fn test_arrow() {
     ];
     let nrows = vec![4, 7];
     let ncols = schema.len();
-    let queries: Vec<String> = nrows.iter().map(|v| format!("{},{}", v, ncols)).collect();
+    let queries: Vec<CXQuery> = nrows
+        .iter()
+        .map(|v| CXQuery::naked(format!("{},{}", v, ncols)))
+        .collect();
     let mut destination = ArrowDestination::new();
     let dispatcher = Dispatcher::<_, _, DummyArrowTransport>::new(
         DummySource::new(&["a", "b", "c", "d", "e"], &schema),
@@ -123,8 +127,8 @@ fn test_postgres_arrow() {
     let dburl = env::var("POSTGRES_URL").unwrap();
 
     let queries = [
-        "select * from test_table where test_int < 2",
-        "select * from test_table where test_int >= 2",
+        CXQuery::naked("select * from test_table where test_int < 2"),
+        CXQuery::naked("select * from test_table where test_int >= 2"),
     ];
     let builder = PostgresSource::new(&dburl, 2).unwrap();
     let mut destination = ArrowDestination::new();

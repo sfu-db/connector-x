@@ -4,6 +4,7 @@ use connectorx::{
         postgres::{Binary, PostgresSource, CSV},
         Produce, Source, SourcePartition,
     },
+    sql::CXQuery,
     transports::PostgresMemoryTransport,
     Dispatcher,
 };
@@ -19,7 +20,7 @@ fn load_and_parse() {
     struct Row(i32, Option<i32>, Option<String>, Option<f64>, Option<bool>);
 
     let mut source = PostgresSource::<Binary>::new(&dburl, 1).unwrap();
-    source.set_queries(&["select * from test_table"]);
+    source.set_queries(&[CXQuery::naked("select * from test_table")]);
     source.fetch_metadata().unwrap();
 
     let mut partitions = source.partition().unwrap();
@@ -65,8 +66,8 @@ fn test_postgres() {
     let dburl = env::var("POSTGRES_URL").unwrap();
 
     let queries = [
-        "select * from test_table where test_int < 2",
-        "select * from test_table where test_int >= 2",
+        CXQuery::naked("select * from test_table where test_int < 2"),
+        CXQuery::naked("select * from test_table where test_int >= 2"),
     ];
     let builder = PostgresSource::new(&dburl, 2).unwrap();
     let mut destination = MemoryDestination::new();
@@ -121,7 +122,9 @@ fn test_postgres_agg() {
 
     let dburl = env::var("POSTGRES_URL").unwrap();
 
-    let queries = ["SELECT test_bool, SUM(test_float) FROM test_table GROUP BY test_bool"];
+    let queries = [CXQuery::naked(
+        "SELECT test_bool, SUM(test_float) FROM test_table GROUP BY test_bool",
+    )];
     let builder = PostgresSource::new(&dburl, 1).unwrap();
     let mut destination = MemoryDestination::new();
     let dispatcher = Dispatcher::<_, _, PostgresMemoryTransport<Binary>>::new(
@@ -150,7 +153,7 @@ fn load_and_parse_csv() {
     struct Row(i32, Option<i32>, Option<String>, Option<f64>, Option<bool>);
 
     let mut source = PostgresSource::<CSV>::new(&dburl, 1).unwrap();
-    source.set_queries(&["select * from test_table"]);
+    source.set_queries(&[CXQuery::naked("select * from test_table")]);
     source.fetch_metadata().unwrap();
 
     let mut partitions = source.partition().unwrap();
@@ -196,8 +199,8 @@ fn test_postgres_csv() {
     let dburl = env::var("POSTGRES_URL").unwrap();
 
     let queries = [
-        "select * from test_table where test_int < 2",
-        "select * from test_table where test_int >= 2",
+        CXQuery::naked("select * from test_table where test_int < 2"),
+        CXQuery::naked("select * from test_table where test_int >= 2"),
     ];
     let builder = PostgresSource::<CSV>::new(&dburl, 2).unwrap();
     let mut dst = MemoryDestination::new();
