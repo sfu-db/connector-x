@@ -32,13 +32,6 @@ jobs:
         run: |
           echo $(which python)
 
-      - name: check libssl
-        if: ${{ matrix.os == 'ubuntu-latest' }}
-        run: |
-          sudo apt-get update
-          sudo apt-get install libssl-dev
-          ls /lib/x86_64-linux-gnu
-
       - name: Install ConnectorX - POSIX
         if: ${{ matrix.os != 'windows-latest' }}
         run: |
