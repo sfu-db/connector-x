@@ -17,7 +17,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-10.15, windows-latest]
+        os: [macos-10.15, windows-latest]
         python-version: ["3.7", "3.8", "3.9"]
     steps:
       - uses: actions/checkout@v2
@@ -31,6 +31,13 @@ jobs:
       - name: Check which python we use
         run: |
           echo $(which python)
+
+      - name: check libssl
+        if: ${{ matrix.os == 'ubuntu-latest' }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install libssl-dev
+          ls /lib/x86_64-linux-gnu
 
       - name: Install ConnectorX - POSIX
         if: ${{ matrix.os != 'windows-latest' }}

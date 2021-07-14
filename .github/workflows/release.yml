@@ -38,7 +38,7 @@ jobs:
         run: |
           pip install poetry
           cargo install just
-          yum install -y openssl-devel
+          yum install -y openssl11-devel
 
       - name: Setup project
         env:
