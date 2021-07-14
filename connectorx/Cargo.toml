@@ -8,7 +8,7 @@ version = "0.2.0-alpha.2"
 
 [dependencies]
 anyhow = "1"
-arrow = "3"
+arrow = "4"
 bytes = "1"
 chrono = "0.4"
 csv = "1"
@@ -17,7 +17,6 @@ dict_derive = "0.3"
 env_logger = "0.8"
 fallible-streaming-iterator = "0.1"
 fehler = "1"
-flate2 = "1"
 futures = "0.3"
 hex = "0.4"
 itertools = "0.10"
@@ -37,10 +36,8 @@ rusqlite = {version = "0.25", features = ["column_decltype", "chrono", "bundled"
 rust_decimal = {version = "1", features = ["db-postgres"]}
 serde = {version = "1", features = ["derive"]}
 serde_json = "1"
-sqlparser = "0.8"
-strum = {version = "0.20", features = ["derive"]}
+sqlparser = "0.9"
 thiserror = "1"
-tokio = {version = "1", features = ["rt-multi-thread", "io-util"]}
 url = "2.2"
 uuid = "0.8"
 
@@ -51,7 +48,7 @@ name = "connectorx"
 [dev-dependencies]
 criterion = "0.3"
 iai = "0.1"
-pprof = {version = "0.3", features = ["flamegraph"]}
+pprof = {version = "0.4", features = ["flamegraph"]}
 
 [features]
 branch = []

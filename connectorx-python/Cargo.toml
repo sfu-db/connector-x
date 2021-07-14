@@ -18,18 +18,17 @@ fehler = "1"
 itertools = "0.10"
 log = "0.4"
 ndarray = "0.15"
-numpy = "0.13"
-pyo3 = {version = "0.13", default-features = false, features = ["macros"]}
+numpy = "0.14"
+pyo3 = {version = "0.14", default-features = false, features = ["macros"]}
 pyo3-built = "0.4"
 rust_decimal = {version = "1", features = ["db-postgres"]}
 serde_json = "1"
-sqlparser = "0.8.0"
+sqlparser = "0.9"
 thiserror = "1"
-tokio = {version = "1", features = ["rt-multi-thread", "io-util"]}
 uuid = "0.8"
 
 [build-dependencies]
-built = {version = "0.4", features = ["chrono"]}
+built = {version = "0.5", features = ["chrono"]}
 
 [dev-dependencies]
 criterion = "0.3"
@@ -37,7 +36,6 @@ criterion-macro = "0.3"
 iai = "0.1"
 pprof = {version = "0.4", features = ["flamegraph", "criterion", "protobuf"]}
 rayon = "1"
-tokio = {version = "1", features = ["rt-multi-thread", "io-util"]}
 
 [lib]
 crate-type = ["rlib", "cdylib"]

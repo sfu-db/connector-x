@@ -4,8 +4,8 @@ use arrow::array::{
     ArrayBuilder, BooleanBuilder, Date32Builder, Date64Builder, Float32Builder, Float64Builder,
     Int32Builder, Int64Builder, LargeStringBuilder, UInt32Builder, UInt64Builder,
 };
+use arrow::datatypes::DataType as ArrowDataType;
 use arrow::datatypes::Field;
-use arrow::datatypes::{DataType as ArrowDataType, DateUnit};
 use chrono::{Date, DateTime, NaiveDate, NaiveDateTime, Utc};
 use fehler::throws;
 
@@ -223,7 +223,7 @@ impl ArrowAssoc for Option<NaiveDate> {
     }
 
     fn field(header: &str) -> Field {
-        Field::new(header, ArrowDataType::Date32(DateUnit::Day), true)
+        Field::new(header, ArrowDataType::Date32, true)
     }
 }
 
@@ -240,7 +240,7 @@ impl ArrowAssoc for NaiveDate {
     }
 
     fn field(header: &str) -> Field {
-        Field::new(header, ArrowDataType::Date32(DateUnit::Day), false)
+        Field::new(header, ArrowDataType::Date32, false)
     }
 }
 
@@ -257,7 +257,7 @@ impl ArrowAssoc for Option<NaiveDateTime> {
     }
 
     fn field(header: &str) -> Field {
-        Field::new(header, ArrowDataType::Date64(DateUnit::Millisecond), true)
+        Field::new(header, ArrowDataType::Date64, true)
     }
 }
 
@@ -274,6 +274,6 @@ impl ArrowAssoc for NaiveDateTime {
     }
 
     fn field(header: &str) -> Field {
-        Field::new(header, ArrowDataType::Date64(DateUnit::Millisecond), false)
+        Field::new(header, ArrowDataType::Date64, false)
     }
 }

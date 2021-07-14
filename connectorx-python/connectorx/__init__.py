@@ -2,7 +2,6 @@ from typing import Optional, Tuple, Union, List
 
 import pandas as pd
 
-from .connectorx_python import read_pg
 from .connectorx_python import read_sql as _read_sql
 
 try:
