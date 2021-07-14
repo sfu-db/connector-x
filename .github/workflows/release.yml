@@ -39,6 +39,8 @@ jobs:
           pip install poetry
           cargo install just
           yum install -y openssl11-devel
+          ln -s /usr/lib64/pkgconfig/openssl11.pc /usr/lib64/pkgconfig/openssl.pc
+          ln -s /usr/lib64/pkgconfig/libssl11.pc /usr/lib64/pkgconfig/libssl.pc
 
       - name: Setup project
         env:
