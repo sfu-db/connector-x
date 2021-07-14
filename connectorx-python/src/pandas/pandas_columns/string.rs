@@ -24,7 +24,7 @@ impl<'a> FromPyObject<'a> for StringBlock<'a> {
         Ok(StringBlock {
             data,
             mutex: Arc::new(Mutex::new(())), // allocate the lock here since only StringBlock needs to aquire the GIL for now
-            buf_size_mb: 16,                 // in MB
+            buf_size_mb: 4,                  // in MB
         })
     }
 }
@@ -76,13 +76,23 @@ impl<'a> PandasColumnObject for StringColumn<'a> {
     }
     #[throws(ConnectorAgentError)]
     fn finalize(&mut self) {
-        self.flush()?;
+        self.flush(true)?;
     }
 }
 
 impl<'r, 'a> PandasColumn<&'r str> for StringColumn<'a> {
     #[throws(ConnectorAgentError)]
     fn write(&mut self, val: &'r str) {
+        let bytes = val.as_bytes();
+        self.string_lengths.push(bytes.len());
+        self.string_buf.extend_from_slice(bytes);
+        self.try_flush()?;
+    }
+}
+
+impl<'a> PandasColumn<Box<str>> for StringColumn<'a> {
+    #[throws(ConnectorAgentError)]
+    fn write(&mut self, val: Box<str>) {
         let bytes = val.as_bytes();
         self.string_lengths.push(bytes.len());
         self.string_buf.extend_from_slice(bytes);
@@ -128,6 +138,22 @@ impl<'r, 'a> PandasColumn<Option<&'r str>> for StringColumn<'a> {
     }
 }
 
+impl<'a> PandasColumn<Option<Box<str>>> for StringColumn<'a> {
+    #[throws(ConnectorAgentError)]
+    fn write(&mut self, val: Option<Box<str>>) {
+        match val {
+            Some(b) => {
+                let bytes = b.as_bytes();
+                self.string_lengths.push(bytes.len());
+                self.string_buf.extend_from_slice(bytes);
+                self.try_flush()?;
+            }
+            None => {
+                self.string_lengths.push(0);
+            }
+        }
+    }
+}
 impl<'a> PandasColumn<Option<String>> for StringColumn<'a> {
     #[throws(ConnectorAgentError)]
     fn write(&mut self, val: Option<String>) {
@@ -187,6 +213,14 @@ impl HasPandasColumn for Option<char> {
     type PandasColumn<'a> = StringColumn<'a>;
 }
 
+impl HasPandasColumn for Box<str> {
+    type PandasColumn<'a> = StringColumn<'a>;
+}
+
+impl HasPandasColumn for Option<Box<str>> {
+    type PandasColumn<'a> = StringColumn<'a>;
+}
+
 impl<'a> StringColumn<'a> {
     pub fn partition(self, counts: &[usize]) -> Vec<StringColumn<'a>> {
         let mut partitions = vec![];
@@ -210,19 +244,21 @@ impl<'a> StringColumn<'a> {
     }
 
     #[throws(ConnectorAgentError)]
-    pub fn flush(&mut self) {
+    pub fn flush(&mut self, force_flush: bool) {
         let nstrings = self.string_lengths.len();
+        if nstrings == 0 {
+            return;
+        }
 
-        if nstrings > 0 {
-            let py = unsafe { Python::assume_gil_acquired() };
-            let mut string_infos = Vec::with_capacity(self.string_lengths.len());
-
-            {
+        let py = unsafe { Python::assume_gil_acquired() };
+        let string_infos = match force_flush {
+            true => {
                 // allocation in python is not thread safe
                 let _guard = self
                     .mutex
                     .lock()
                     .map_err(|e| anyhow!("mutex poisoned {}", e))?;
+                let mut string_infos = Vec::with_capacity(self.string_lengths.len());
                 let mut start = 0;
                 for (i, &len) in self.string_lengths.iter().enumerate() {
                     let end = start + len;
@@ -239,8 +275,36 @@ impl<'a> StringColumn<'a> {
                     }
                     start = end;
                 }
+                string_infos
             }
+            false => match self.mutex.try_lock() {
+                Ok(_guard) => {
+                    let mut string_infos = Vec::with_capacity(self.string_lengths.len());
+                    let mut start = 0;
+                    for (i, &len) in self.string_lengths.iter().enumerate() {
+                        let end = start + len;
+                        unsafe {
+                            string_infos.push(StringInfo::detect(&self.string_buf[start..end]));
+                        }
+                        if len != 0 {
+                            unsafe {
+                                *self.data.get_unchecked_mut(self.next_write + i) = string_infos
+                                    .last()
+                                    .ok_or_else(|| anyhow!("empty string_info vector"))?
+                                    .pystring(py)
+                            };
+                        }
+                        start = end;
+                    }
+                    string_infos
+                }
+                Err(_e) => {
+                    vec![]
+                }
+            },
+        };
 
+        if string_infos.len() > 0 {
             let mut start = 0;
             for (i, (len, info)) in self
                 .string_lengths
@@ -265,7 +329,12 @@ impl<'a> StringColumn<'a> {
     #[throws(ConnectorAgentError)]
     pub fn try_flush(&mut self) {
         if self.string_buf.len() >= self.buf_size {
-            self.flush()?;
+            self.flush(true)?;
+            return;
+        }
+        #[cfg(feature = "nbstr")]
+        if self.string_buf.len() >= self.buf_size / 2 {
+            self.flush(false)?;
         }
     }
 }

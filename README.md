@@ -7,6 +7,8 @@
 
 Load data from <img src="https://raw.githubusercontent.com/sfu-db/connector-agent/main/assets/sources.gif" width="6.5%" style="margin-bottom: -2px"/> to <img src="https://raw.githubusercontent.com/sfu-db/connector-agent/main/assets/destinations.gif" width="7%" style="margin-bottom: -2px"/>, the fastest way.
 
+For more data sources, please check out our [discussion](https://github.com/sfu-db/connector-x/discussions/61).
+
 ConnectorX enables you to load data from databases into Python in the fastest and most memory efficient way.
 
 What you need is one line of code:
@@ -43,11 +45,11 @@ We compared different solutions in Python that provides the `read_sql` function,
 
 ## Time chart, lower is better.
 
-<p align="center"><img alt="time chart" src="https://raw.githubusercontent.com/sfu-db/connector-agent/main/assets/time.svg"/></p>
+<p align="center"><img alt="time chart" src="https://raw.githubusercontent.com/sfu-db/connector-agent/main/assets/time.jpg"/></p>
 
 ## Memory consumption chart, lower is better.
 
-<p align="center"><img alt="memory chart" src="https://raw.githubusercontent.com/sfu-db/connector-agent/main/assets/memory.svg"/></p>
+<p align="center"><img alt="memory chart" src="https://raw.githubusercontent.com/sfu-db/connector-agent/main/assets/memory.jpg"/></p>
 
 In conclusion, ConnectorX uses up to **3x** less memory and **11x** less time.
 
@@ -59,6 +61,21 @@ Additionally, implementing a data intensive application in Python brings additio
 ConnectorX is written in Rust and follows "zero-copy" principle.
 This allows it to make full use of the CPU by becoming cache and branch predictor friendly. Moreover, the architecture of ConnectorX ensures the data will be copied exactly once, directly from the source to the destination.
 
+# Supported Sources & Destinations
+## Sources
+- [x] Postgres
+- [x] Mysql
+- [x] Sqlite
+- [x] Redshift (through postgres protocol)
+- [x] Clickhouse (through mysql protocol)
+- [ ] SQL Server
+- [ ] Oracle
+- [ ] ...
+
+## Destinations
+- [x] Pandas (<1.3 only, WIP for Pandas 1.3)
+- [ ] PyArrow (WIP)
+  
 # Detailed Usage and Examples
 
 ## API
@@ -97,7 +114,7 @@ Run the SQL query, download the data from database into a Pandas dataframe.
   postgres_url = "postgresql://username:password@server:port/database"
   query = "SELECT * FROM lineitem"
 
-  cx.read_sql(postgres_url, query, partition_on="partition_col", partition_num=10)
+  cx.read_sql(postgres_url, query, partition_on="l_orderkey", partition_num=10)
   ```
 
 - Read a DataFrame parallelly using 2 threads by manually providing two partition SQLs (the schemas of all the query results should be same)
@@ -106,9 +123,37 @@ Run the SQL query, download the data from database into a Pandas dataframe.
   import connectorx as cx
 
   postgres_url = "postgresql://username:password@server:port/database"
-  queries = ["SELECT * FROM lineitem WHERE partition_col <= 10", "SELECT * FROM lineitem WHERE partition_col > 10"]
+  queries = ["SELECT * FROM lineitem WHERE l_orderkey <= 30000000", "SELECT * FROM lineitem WHERE l_orderkey > 30000000"]
 
   cx.read_sql(postgres_url, queries)
+
+  ```
+  
+- Read a DataFrame parallelly using 4 threads from a more complex query
+
+  ```python
+  import connectorx as cx
+
+  postgres_url = "postgresql://username:password@server:port/database"
+  query = f"""
+  SELECT l_orderkey,
+         SUM(l_extendedprice * ( 1 - l_discount )) AS revenue,
+         o_orderdate,
+         o_shippriority
+  FROM   customer,
+         orders,
+         lineitem
+  WHERE  c_mktsegment = 'BUILDING'
+         AND c_custkey = o_custkey
+         AND l_orderkey = o_orderkey
+         AND o_orderdate < DATE '1995-03-15'
+         AND l_shipdate > DATE '1995-03-15'
+  GROUP  BY l_orderkey,
+            o_orderdate,
+            o_shippriority 
+  """
+
+  cx.read_sql(postgres_url, query, partition_on="l_orderkey", partition_num=4)
 
   ```
 

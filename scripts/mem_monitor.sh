@@ -12,5 +12,6 @@ do
         max=$sum
     fi
     echo "current max: $max"
+    [ -z $sum ] && exit 0 || echo "continue..."
     sleep 2
 done

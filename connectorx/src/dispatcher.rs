@@ -3,6 +3,7 @@ use crate::{
     destinations::{Destination, DestinationPartition},
     errors::Result,
     sources::{Source, SourcePartition},
+    sql::CXQuery,
     typesystem::{Transport, TypeSystem},
 };
 use itertools::Itertools;
@@ -15,7 +16,7 @@ use std::marker::PhantomData;
 pub struct Dispatcher<'a, S, W, TP> {
     src: S,
     dst: &'a mut W,
-    queries: Vec<String>,
+    queries: Vec<CXQuery<String>>,
     _phantom: PhantomData<TP>,
 }
 
@@ -29,14 +30,11 @@ where
 {
     /// Create a new dispatcher by providing a source builder, schema (temporary) and the queries
     /// to be issued to the data source.
-    pub fn new<Q>(src: S, dst: &'w mut W, queries: &[Q]) -> Self
-    where
-        Q: ToString,
-    {
+    pub fn new<Q: ToString>(src: S, dst: &'w mut W, queries: &[CXQuery<Q>]) -> Self {
         Dispatcher {
             src,
             dst,
-            queries: queries.into_iter().map(ToString::to_string).collect(),
+            queries: queries.iter().map(|q| q.map(Q::to_string)).collect(),
             _phantom: PhantomData,
         }
     }
@@ -96,7 +94,8 @@ where
         dst_partitions
             .into_par_iter()
             .zip_eq(src_partitions)
-            .try_for_each(|(mut src, mut dst)| -> Result<()> {
+            .enumerate()
+            .try_for_each(|(i, (mut src, mut dst))| -> Result<()> {
                 #[cfg(feature = "fptr")]
                 let f: Vec<_> = src_schema
                     .iter()
@@ -109,6 +108,7 @@ where
                 match dorder {
                     DataOrder::RowMajor => {
                         for _ in 0..src.nrows() {
+                            #[allow(clippy::needless_range_loop)]
                             for col in 0..src.ncols() {
                                 #[cfg(feature = "fptr")]
                                 f[col](&mut parser, &mut src)?;
@@ -121,7 +121,9 @@ where
                             }
                         }
                     }
-                    DataOrder::ColumnMajor => {
+                    DataOrder::ColumnMajor =>
+                    {
+                        #[allow(clippy::needless_range_loop)]
                         for col in 0..src.ncols() {
                             for _ in 0..src.nrows() {
                                 #[cfg(feature = "fptr")]
@@ -136,7 +138,10 @@ where
                     }
                 }
 
-                src.finalize()
+                debug!("Finalize partition {}", i);
+                src.finalize()?;
+                debug!("Partition {} finished", i);
+                Ok(())
             })?;
 
         debug!("Writing finished");

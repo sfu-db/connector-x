@@ -21,14 +21,20 @@ pub struct MemoryDestination {
     column_buffer_index: Vec<(usize, usize)>,
 }
 
-impl MemoryDestination {
-    pub fn new() -> Self {
+impl Default for MemoryDestination {
+    fn default() -> Self {
         MemoryDestination {
             nrows: 0,
             schema: vec![],
             buffers: vec![],
             column_buffer_index: vec![],
         }
+    }
+}
+
+impl MemoryDestination {
+    pub fn new() -> Self {
+        Self::default()
     }
 }
 
@@ -92,12 +98,12 @@ impl Destination for MemoryDestination {
         for &c in counts {
             let mut sub_buffers = vec![];
 
-            for bid in 0..nbuffers {
-                let view = views[bid].take();
+            for (bid, view) in views.iter_mut().enumerate().take(nbuffers) {
                 let (splitted, rest) = view
+                    .take()
                     .ok_or_else(|| anyhow!("got None for {}th view", bid))?
                     .split_at(Axis(0), c);
-                views[bid] = Some(rest);
+                *view = Some(rest);
                 sub_buffers.push(splitted);
             }
             ret.push(MemoryPartitionDestination::new(
@@ -116,14 +122,14 @@ impl Destination for MemoryDestination {
 }
 
 impl MemoryDestination {
-    pub fn buffer_view<'a, T>(&'a self, bid: usize) -> Option<ArrayView2<T>>
+    pub fn buffer_view<T>(&self, bid: usize) -> Option<ArrayView2<T>>
     where
         T: 'static + Send,
     {
         self.buffers[bid].downcast_ref::<T>().map(|arr| arr.view())
     }
 
-    pub fn column_view<'a, T>(&'a self, col: usize) -> Option<ArrayView1<T>>
+    pub fn column_view<T>(&self, col: usize) -> Option<ArrayView1<T>>
     where
         T: 'static + Send,
     {
@@ -198,7 +204,7 @@ where
         })?;
         *mut_view
             .get_mut((row, col))
-            .ok_or_else(|| ConnectorAgentError::OutOfBound)? = value;
+            .ok_or(ConnectorAgentError::OutOfBound)? = value;
         Ok(())
     }
 }

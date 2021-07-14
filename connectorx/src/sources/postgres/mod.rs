@@ -1,9 +1,9 @@
-mod sql;
 mod typesystem;
 
 use crate::data_order::DataOrder;
 use crate::errors::{ConnectorAgentError, Result};
 use crate::sources::{PartitionParser, Produce, Source, SourcePartition};
+use crate::sql::{count_query, get_limit, limit1_query, CXQuery};
 use anyhow::anyhow;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
 use csv::{ReaderBuilder, StringRecord, StringRecordsIntoIter};
@@ -13,13 +13,14 @@ use log::debug;
 use postgres::{
     binary_copy::{BinaryCopyOutIter, BinaryCopyOutRow},
     fallible_iterator::FallibleIterator,
-    CopyOutReader,
+    CopyOutReader, Row, RowIter,
 };
 use r2d2::{Pool, PooledConnection};
 use r2d2_postgres::{postgres::NoTls, PostgresConnectionManager};
 use rust_decimal::Decimal;
 use serde_json::{from_str, Value};
-use sql::{count_query, get_limit, limit1_query};
+use sqlparser::dialect::PostgreSqlDialect;
+use std::io::BufRead;
 use std::marker::PhantomData;
 pub use typesystem::PostgresTypeSystem;
 use uuid::Uuid;
@@ -29,10 +30,11 @@ type PgConn = PooledConnection<PgManager>;
 
 pub enum Binary {}
 pub enum CSV {}
+pub enum Cursor {}
 
 pub struct PostgresSource<P> {
     pool: Pool<PgManager>,
-    queries: Vec<String>,
+    queries: Vec<CXQuery<String>>,
     names: Vec<String>,
     schema: Vec<PostgresTypeSystem>,
     buf_size: usize,
@@ -75,23 +77,24 @@ where
         Ok(())
     }
 
-    fn set_queries<Q: AsRef<str>>(&mut self, queries: &[Q]) {
-        self.queries = queries.iter().map(|q| q.as_ref().to_string()).collect();
+    fn set_queries<Q: ToString>(&mut self, queries: &[CXQuery<Q>]) {
+        self.queries = queries.iter().map(|q| q.map(Q::to_string)).collect();
     }
 
     fn fetch_metadata(&mut self) -> Result<()> {
-        assert!(self.queries.len() != 0);
+        assert!(!self.queries.is_empty());
 
         let mut conn = self.pool.get()?;
         let mut success = false;
+        let mut zero_tuple = true;
         let mut error = None;
         for query in &self.queries {
             // assuming all the partition queries yield same schema
-            match conn.query_one(&limit1_query(query)?[..], &[]) {
-                Ok(row) => {
+            match conn.query_opt(limit1_query(query, &PostgreSqlDialect {})?.as_str(), &[]) {
+                Ok(Some(row)) => {
                     let (names, types) = row
                         .columns()
-                        .into_iter()
+                        .iter()
                         .map(|col| {
                             (
                                 col.name().to_string(),
@@ -104,20 +107,37 @@ where
                     self.schema = types;
 
                     success = true;
+                    zero_tuple = false;
                     break;
                 }
+                Ok(None) => {}
                 Err(e) => {
                     debug!("cannot get metadata for '{}', try next query: {}", query, e);
                     error = Some(e);
+                    zero_tuple = false;
                 }
             }
         }
 
         if !success {
-            throw!(anyhow!(
-                "Cannot get metadata for the queries, last error: {:?}",
-                error
-            ))
+            if zero_tuple {
+                // try to use COPY command get the column headers
+                let copy_query = format!("COPY ({}) TO STDOUT WITH CSV HEADER", self.queries[0]);
+                let mut reader = conn.copy_out(&*copy_query)?;
+                let mut buf = String::new();
+                reader.read_line(&mut buf)?;
+                self.names = buf[0..buf.len() - 1] // remove last '\n'
+                    .split(',')
+                    .map(|s| s.to_string())
+                    .collect();
+                // set all columns as string (align with pandas)
+                self.schema = vec![PostgresTypeSystem::Text(false); self.names.len()];
+            } else {
+                throw!(anyhow!(
+                    "Cannot get metadata for the queries, last error: {:?}",
+                    error
+                ))
+            }
         }
 
         Ok(())
@@ -149,7 +169,7 @@ where
 
 pub struct PostgresSourcePartition<P> {
     conn: PgConn,
-    query: String,
+    query: CXQuery<String>,
     schema: Vec<PostgresTypeSystem>,
     nrows: usize,
     ncols: usize,
@@ -158,10 +178,15 @@ pub struct PostgresSourcePartition<P> {
 }
 
 impl<P> PostgresSourcePartition<P> {
-    pub fn new(conn: PgConn, query: &str, schema: &[PostgresTypeSystem], buf_size: usize) -> Self {
+    pub fn new(
+        conn: PgConn,
+        query: &CXQuery<String>,
+        schema: &[PostgresTypeSystem],
+        buf_size: usize,
+    ) -> Self {
         Self {
             conn,
-            query: query.to_string(),
+            query: query.clone(),
             schema: schema.to_vec(),
             nrows: 0,
             ncols: schema.len(),
@@ -176,9 +201,12 @@ impl SourcePartition for PostgresSourcePartition<Binary> {
     type Parser<'a> = PostgresBinarySourcePartitionParser<'a>;
 
     fn prepare(&mut self) -> Result<()> {
-        self.nrows = match get_limit(&self.query)? {
+        let dialect = PostgreSqlDialect {};
+        self.nrows = match get_limit(&self.query, &dialect)? {
             None => {
-                let row = self.conn.query_one(&count_query(&self.query)?[..], &[])?;
+                let row = self
+                    .conn
+                    .query_one(count_query(&self.query, &dialect)?.as_str(), &[])?;
                 row.get::<_, i64>(0) as usize
             }
             Some(n) => n,
@@ -213,7 +241,10 @@ impl SourcePartition for PostgresSourcePartition<CSV> {
     type Parser<'a> = PostgresCSVSourceParser<'a>;
 
     fn prepare(&mut self) -> Result<()> {
-        let row = self.conn.query_one(&count_query(&self.query)?[..], &[])?;
+        let row = self.conn.query_one(
+            count_query(&self.query, &PostgreSqlDialect {})?.as_str(),
+            &[],
+        )?;
         self.nrows = row.get::<_, i64>(0) as usize;
         Ok(())
     }
@@ -242,6 +273,38 @@ impl SourcePartition for PostgresSourcePartition<CSV> {
     }
 }
 
+impl SourcePartition for PostgresSourcePartition<Cursor> {
+    type TypeSystem = PostgresTypeSystem;
+    type Parser<'a> = PostgresRawSourceParser<'a>;
+
+    fn prepare(&mut self) -> Result<()> {
+        let row = self.conn.query_one(
+            count_query(&self.query, &PostgreSqlDialect {})?.as_str(),
+            &[],
+        )?;
+        self.nrows = row.get::<_, i64>(0) as usize;
+        Ok(())
+    }
+
+    fn parser(&mut self) -> Result<Self::Parser<'_>> {
+        let iter = self
+            .conn
+            .query_raw::<_, bool, _>(self.query.as_str(), vec![])?; // unless reading the data, it seems like issue the query is fast
+        Ok(PostgresRawSourceParser::new(
+            iter,
+            &self.schema,
+            self.buf_size,
+        ))
+    }
+
+    fn nrows(&self) -> usize {
+        self.nrows
+    }
+
+    fn ncols(&self) -> usize {
+        self.ncols
+    }
+}
 pub struct PostgresBinarySourcePartitionParser<'a> {
     iter: BinaryCopyOutIter<'a>,
     buf_size: usize,
@@ -602,3 +665,99 @@ impl<'r, 'a> Produce<'r, Option<Value>> for PostgresCSVSourceParser<'a> {
         }
     }
 }
+
+pub struct PostgresRawSourceParser<'a> {
+    iter: RowIter<'a>,
+    buf_size: usize,
+    rowbuf: Vec<Row>,
+    ncols: usize,
+    current_col: usize,
+    current_row: usize,
+}
+
+impl<'a> PostgresRawSourceParser<'a> {
+    pub fn new(iter: RowIter<'a>, schema: &[PostgresTypeSystem], buf_size: usize) -> Self {
+        Self {
+            iter,
+            buf_size,
+            rowbuf: Vec::with_capacity(buf_size),
+            ncols: schema.len(),
+            current_row: 0,
+            current_col: 0,
+        }
+    }
+
+    fn next_loc(&mut self) -> Result<(usize, usize)> {
+        if self.current_row >= self.rowbuf.len() {
+            if !self.rowbuf.is_empty() {
+                self.rowbuf.drain(..);
+            }
+
+            for _ in 0..self.buf_size {
+                if let Some(row) = self.iter.next()? {
+                    self.rowbuf.push(row);
+                } else {
+                    break;
+                }
+            }
+
+            if self.rowbuf.is_empty() {
+                throw!(anyhow!("Postgres EOF"));
+            }
+            self.current_row = 0;
+            self.current_col = 0;
+        }
+
+        let ret = (self.current_row, self.current_col);
+        self.current_row += (self.current_col + 1) / self.ncols;
+        self.current_col = (self.current_col + 1) % self.ncols;
+        Ok(ret)
+    }
+}
+
+impl<'a> PartitionParser<'a> for PostgresRawSourceParser<'a> {
+    type TypeSystem = PostgresTypeSystem;
+}
+
+macro_rules! impl_produce {
+    ($($t: ty,)+) => {
+        $(
+            impl<'r, 'a> Produce<'r, $t> for PostgresRawSourceParser<'a> {
+                fn produce(&'r mut self) -> Result<$t> {
+                    let (ridx, cidx) = self.next_loc()?;
+                    let row = &self.rowbuf[ridx];
+                    let val = row.try_get(cidx)?;
+                    Ok(val)
+                }
+            }
+
+            impl<'r, 'a> Produce<'r, Option<$t>> for PostgresRawSourceParser<'a> {
+                fn produce(&'r mut self) -> Result<Option<$t>> {
+                    let (ridx, cidx) = self.next_loc()?;
+                    let row = &self.rowbuf[ridx];
+                    let val = row.try_get(cidx)?;
+                    Ok(val)
+                }
+            }
+        )+
+    };
+}
+
+impl_produce!(
+    i8,
+    i16,
+    i32,
+    i64,
+    f32,
+    f64,
+    Decimal,
+    bool,
+    &'r str,
+    Vec<u8>,
+    NaiveTime,
+    NaiveDateTime,
+    DateTime<Utc>,
+    NaiveDate,
+    Uuid,
+    Value,
+);

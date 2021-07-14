@@ -10,7 +10,7 @@ pub enum DataOrder {
 /// for producing and writing.
 #[throws(ConnectorAgentError)]
 pub fn coordinate(src: &[DataOrder], dst: &[DataOrder]) -> DataOrder {
-    assert!(0 < src.len() && 0 < dst.len());
+    assert!(!src.is_empty() && !dst.is_empty());
 
     match (src, dst) {
         ([s, ..], [d, ..]) if s == d => *s,

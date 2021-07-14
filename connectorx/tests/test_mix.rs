@@ -1,5 +1,5 @@
 use connectorx::{
-    destinations::memory::MemoryDestination, sources::dummy::DummySource,
+    destinations::memory::MemoryDestination, sources::dummy::DummySource, sql::CXQuery,
     transports::DummyMemoryTransport, DataOrder, Destination, DestinationPartition, Dispatcher,
     DummyTypeSystem, Result, Source,
 };
@@ -144,7 +144,10 @@ fn test_mixed() {
     ];
     let nrows = vec![4, 7];
     let ncols = schema.len();
-    let queries: Vec<String> = nrows.iter().map(|v| format!("{},{}", v, ncols)).collect();
+    let queries: Vec<CXQuery> = nrows
+        .iter()
+        .map(|v| CXQuery::naked(format!("{},{}", v, ncols)))
+        .collect();
 
     let mut destination = MemoryDestination::new();
     let dispatcher = Dispatcher::<_, _, DummyMemoryTransport>::new(

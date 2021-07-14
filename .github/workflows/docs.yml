@@ -1,6 +1,6 @@
 name: docs
 
-on: 
+on:
   push:
     branches:
       - prerelease
@@ -15,10 +15,10 @@ jobs:
       - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly-2021-02-15
+          toolchain: nightly-2021-05-30
           components: rustfmt
           default: true
-          
+
       - name: Build docs
         uses: actions-rs/cargo@v1
         with:

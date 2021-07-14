@@ -2,6 +2,7 @@ use super::{PartitionParser, Produce, Source, SourcePartition};
 use crate::data_order::DataOrder;
 use crate::dummy_typesystem::DummyTypeSystem;
 use crate::errors::{ConnectorAgentError, Result};
+use crate::sql::CXQuery;
 use chrono::{offset, Date, DateTime, Utc};
 use fehler::{throw, throws};
 use num_traits::cast::FromPrimitive;
@@ -9,14 +10,14 @@ use num_traits::cast::FromPrimitive;
 pub struct DummySource {
     names: Vec<String>,
     schema: Vec<DummyTypeSystem>,
-    queries: Vec<String>,
+    queries: Vec<CXQuery<String>>,
 }
 
 impl DummySource {
     pub fn new<S: AsRef<str>>(names: &[S], schema: &[DummyTypeSystem]) -> Self {
         assert_eq!(names.len(), schema.len());
         DummySource {
-            names: names.into_iter().map(|s| s.as_ref().to_string()).collect(),
+            names: names.iter().map(|s| s.as_ref().to_string()).collect(),
             schema: schema.to_vec(),
             queries: vec![],
         }
@@ -36,11 +37,8 @@ impl Source for DummySource {
     }
 
     // query: nrows,ncols
-    fn set_queries<Q: AsRef<str>>(&mut self, queries: &[Q]) {
-        self.queries = queries
-            .into_iter()
-            .map(|q| q.as_ref().to_string())
-            .collect();
+    fn set_queries<Q: ToString>(&mut self, queries: &[CXQuery<Q>]) {
+        self.queries = queries.iter().map(|q| q.map(Q::to_string)).collect();
     }
 
     fn fetch_metadata(&mut self) -> Result<()> {
@@ -56,7 +54,7 @@ impl Source for DummySource {
     }
 
     fn partition(self) -> Result<Vec<Self::Partition>> {
-        assert!(self.queries.len() != 0);
+        assert!(!self.queries.is_empty());
         let queries = self.queries;
         let schema = self.schema;
 
@@ -74,8 +72,8 @@ pub struct DummySourcePartition {
 }
 
 impl DummySourcePartition {
-    pub fn new(_schema: &[DummyTypeSystem], q: &str) -> Self {
-        let v: Vec<usize> = q.split(',').map(|s| s.parse().unwrap()).collect();
+    pub fn new(_schema: &[DummyTypeSystem], q: &CXQuery<String>) -> Self {
+        let v: Vec<usize> = q.as_str().split(',').map(|s| s.parse().unwrap()).collect();
 
         DummySourcePartition {
             nrows: v[0],

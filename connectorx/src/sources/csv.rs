@@ -2,6 +2,7 @@ use super::{PartitionParser, Produce, Source, SourcePartition};
 use crate::data_order::DataOrder;
 use crate::dummy_typesystem::DummyTypeSystem;
 use crate::errors::{ConnectorAgentError, Result};
+use crate::sql::CXQuery;
 use anyhow::anyhow;
 use chrono::{DateTime, Utc};
 use fehler::{throw, throws};
@@ -11,7 +12,7 @@ use std::fs::File;
 
 pub struct CSVSource {
     schema: Vec<DummyTypeSystem>,
-    files: Vec<String>,
+    files: Vec<CXQuery<String>>,
     names: Vec<String>,
 }
 
@@ -36,7 +37,7 @@ impl CSVSource {
         // read max_records rows to infer possible DummyTypeSystems for each field
         let mut reader = csv::ReaderBuilder::new()
             .has_headers(true)
-            .from_reader(File::open(&self.files[0])?);
+            .from_reader(File::open(self.files[0].as_str())?);
 
         let max_records_to_read = 50;
         let num_cols = self.names.len();
@@ -86,7 +87,7 @@ impl CSVSource {
             match possibilities.len() {
                 1 => {
                     for dt in possibilities.iter() {
-                        match dt.clone() {
+                        match *dt {
                             DummyTypeSystem::I64(false) => {
                                 schema.push(DummyTypeSystem::I64(has_nulls));
                             }
@@ -139,22 +140,19 @@ impl Source for CSVSource {
         }
     }
 
-    fn set_queries<Q: AsRef<str>>(&mut self, queries: &[Q]) {
-        self.files = queries
-            .into_iter()
-            .map(|fname| fname.as_ref().to_string())
-            .collect();
+    fn set_queries<Q: ToString>(&mut self, queries: &[CXQuery<Q>]) {
+        self.files = queries.iter().map(|q| q.map(Q::to_string)).collect();
     }
 
     fn fetch_metadata(&mut self) -> Result<()> {
         let mut reader = csv::ReaderBuilder::new()
             .has_headers(true)
-            .from_reader(File::open(&self.files[0])?);
+            .from_reader(File::open(self.files[0].as_str())?);
         let header = reader.headers()?;
 
         self.names = header.iter().map(|s| s.to_string()).collect();
 
-        if self.schema.len() == 0 {
+        if self.schema.is_empty() {
             self.schema = self.infer_schema()?;
         }
 
@@ -175,13 +173,13 @@ impl Source for CSVSource {
         Ok(self
             .files
             .into_iter()
-            .map(|f| CSVSourcePartition::new(&f))
+            .map(|f| CSVSourcePartition::new(f))
             .collect())
     }
 }
 
 pub struct CSVSourcePartition {
-    fname: String,
+    fname: CXQuery<String>,
     records: Vec<csv::StringRecord>,
     counter: usize,
     nrows: usize,
@@ -189,9 +187,9 @@ pub struct CSVSourcePartition {
 }
 
 impl CSVSourcePartition {
-    pub fn new(fname: &str) -> Self {
+    pub fn new(fname: CXQuery<String>) -> Self {
         Self {
-            fname: fname.into(),
+            fname: fname,
             records: Vec::new(),
             counter: 0,
             nrows: 0,
@@ -208,7 +206,7 @@ impl SourcePartition for CSVSourcePartition {
     fn prepare(&mut self) -> Result<()> {
         let reader = csv::ReaderBuilder::new()
             .has_headers(true)
-            .from_reader(File::open(&self.fname)?);
+            .from_reader(File::open(self.fname.as_str())?);
 
         reader.into_records().try_for_each(|v| -> Result<()> {
             self.records.push(v.map_err(|e| anyhow!(e))?);

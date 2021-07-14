@@ -1,10 +1,12 @@
+use crate::constants::SECONDS_IN_DAY;
 use crate::errors::{ConnectorAgentError, Result};
 use arrow::array::{
-    ArrayBuilder, BooleanBuilder, Float64Builder, Int32Builder, Int64Builder, StringBuilder,
+    ArrayBuilder, BooleanBuilder, Date32Builder, Date64Builder, Float32Builder, Float64Builder,
+    Int32Builder, Int64Builder, LargeStringBuilder, UInt32Builder, UInt64Builder,
 };
 use arrow::datatypes::DataType as ArrowDataType;
 use arrow::datatypes::Field;
-use chrono::{Date, DateTime, Utc};
+use chrono::{Date, DateTime, NaiveDate, NaiveDateTime, Utc};
 use fehler::throws;
 
 /// Associate arrow builder with native type
@@ -16,147 +18,94 @@ pub trait ArrowAssoc {
     fn field(header: &str) -> Field;
 }
 
-impl ArrowAssoc for i32 {
-    type Builder = Int32Builder;
+macro_rules! impl_arrow_assoc {
+    ($T:ty, $AT:expr, $B:ty) => {
+        impl ArrowAssoc for $T {
+            type Builder = $B;
 
-    fn builder(nrows: usize) -> Int32Builder {
-        Int32Builder::new(nrows)
-    }
+            fn builder(nrows: usize) -> Self::Builder {
+                Self::Builder::new(nrows)
+            }
 
-    #[throws(ConnectorAgentError)]
-    fn append(builder: &mut Int32Builder, value: i32) {
-        builder.append_value(value)?;
-    }
+            #[throws(ConnectorAgentError)]
+            fn append(builder: &mut Self::Builder, value: Self) {
+                builder.append_value(value)?;
+            }
 
-    fn field(header: &str) -> Field {
-        Field::new(header, ArrowDataType::UInt64, false)
-    }
+            fn field(header: &str) -> Field {
+                Field::new(header, $AT, false)
+            }
+        }
+
+        impl ArrowAssoc for Option<$T> {
+            type Builder = $B;
+
+            fn builder(nrows: usize) -> Self::Builder {
+                Self::Builder::new(nrows)
+            }
+
+            #[throws(ConnectorAgentError)]
+            fn append(builder: &mut Self::Builder, value: Self) {
+                builder.append_option(value)?;
+            }
+
+            fn field(header: &str) -> Field {
+                Field::new(header, $AT, true)
+            }
+        }
+    };
 }
 
-impl ArrowAssoc for Option<i32> {
-    type Builder = Int32Builder;
+impl_arrow_assoc!(u32, ArrowDataType::UInt32, UInt32Builder);
+impl_arrow_assoc!(u64, ArrowDataType::UInt64, UInt64Builder);
+impl_arrow_assoc!(i32, ArrowDataType::Int32, Int32Builder);
+impl_arrow_assoc!(i64, ArrowDataType::Int64, Int64Builder);
+impl_arrow_assoc!(f32, ArrowDataType::Float32, Float32Builder);
+impl_arrow_assoc!(f64, ArrowDataType::Float64, Float64Builder);
+impl_arrow_assoc!(bool, ArrowDataType::Boolean, BooleanBuilder);
 
-    fn builder(nrows: usize) -> Int32Builder {
-        Int32Builder::new(nrows)
-    }
+impl ArrowAssoc for &str {
+    type Builder = LargeStringBuilder;
 
-    #[throws(ConnectorAgentError)]
-    fn append(builder: &mut Int32Builder, value: Option<i32>) {
-        builder.append_option(value)?;
-    }
-
-    fn field(header: &str) -> Field {
-        Field::new(header, ArrowDataType::UInt64, true)
-    }
-}
-
-impl ArrowAssoc for i64 {
-    type Builder = Int64Builder;
-
-    fn builder(nrows: usize) -> Int64Builder {
-        Int64Builder::new(nrows)
-    }
-
-    #[throws(ConnectorAgentError)]
-    fn append(builder: &mut Int64Builder, value: i64) {
-        builder.append_value(value)?;
-    }
-
-    fn field(header: &str) -> Field {
-        Field::new(header, ArrowDataType::Int64, false)
-    }
-}
-
-impl ArrowAssoc for Option<i64> {
-    type Builder = Int64Builder;
-
-    fn builder(nrows: usize) -> Int64Builder {
-        Int64Builder::new(nrows)
-    }
-
-    #[throws(ConnectorAgentError)]
-    fn append(builder: &mut Int64Builder, value: Option<i64>) {
-        builder.append_option(value)?;
-    }
-
-    fn field(header: &str) -> Field {
-        Field::new(header, ArrowDataType::Int64, false)
-    }
-}
-
-impl ArrowAssoc for f64 {
-    type Builder = Float64Builder;
-
-    fn builder(nrows: usize) -> Float64Builder {
-        Float64Builder::new(nrows)
-    }
-
-    #[throws(ConnectorAgentError)]
-    fn append(builder: &mut Self::Builder, value: f64) {
-        builder.append_value(value)?;
-    }
-
-    fn field(header: &str) -> Field {
-        Field::new(header, ArrowDataType::Float64, false)
-    }
-}
-
-impl ArrowAssoc for Option<f64> {
-    type Builder = Float64Builder;
-
-    fn builder(nrows: usize) -> Float64Builder {
-        Float64Builder::new(nrows)
-    }
-
-    #[throws(ConnectorAgentError)]
-    fn append(builder: &mut Self::Builder, value: Option<f64>) {
-        builder.append_option(value)?;
-    }
-
-    fn field(header: &str) -> Field {
-        Field::new(header, ArrowDataType::Float64, true)
-    }
-}
-
-impl ArrowAssoc for bool {
-    type Builder = BooleanBuilder;
-
-    fn builder(nrows: usize) -> BooleanBuilder {
-        BooleanBuilder::new(nrows)
-    }
-
-    #[throws(ConnectorAgentError)]
-    fn append(builder: &mut Self::Builder, value: bool) {
-        builder.append_value(value)?;
-    }
-
-    fn field(header: &str) -> Field {
-        Field::new(header, ArrowDataType::Boolean, false)
-    }
-}
-
-impl ArrowAssoc for Option<bool> {
-    type Builder = BooleanBuilder;
-
-    fn builder(nrows: usize) -> BooleanBuilder {
-        BooleanBuilder::new(nrows)
+    fn builder(nrows: usize) -> Self::Builder {
+        LargeStringBuilder::new(nrows)
     }
 
     #[throws(ConnectorAgentError)]
     fn append(builder: &mut Self::Builder, value: Self) {
-        builder.append_option(value)?;
+        builder.append_value(value)?;
     }
 
     fn field(header: &str) -> Field {
-        Field::new(header, ArrowDataType::Boolean, true)
+        Field::new(header, ArrowDataType::LargeUtf8, false)
+    }
+}
+
+impl ArrowAssoc for Option<&str> {
+    type Builder = LargeStringBuilder;
+
+    fn builder(nrows: usize) -> Self::Builder {
+        LargeStringBuilder::new(nrows)
+    }
+
+    #[throws(ConnectorAgentError)]
+    fn append(builder: &mut Self::Builder, value: Self) {
+        match value {
+            Some(s) => builder.append_value(s)?,
+            None => builder.append_null()?,
+        }
+    }
+
+    fn field(header: &str) -> Field {
+        Field::new(header, ArrowDataType::LargeUtf8, true)
     }
 }
 
 impl ArrowAssoc for String {
-    type Builder = StringBuilder;
+    type Builder = LargeStringBuilder;
 
-    fn builder(nrows: usize) -> StringBuilder {
-        StringBuilder::new(nrows)
+    fn builder(nrows: usize) -> Self::Builder {
+        LargeStringBuilder::new(nrows)
     }
 
     #[throws(ConnectorAgentError)]
@@ -165,15 +114,15 @@ impl ArrowAssoc for String {
     }
 
     fn field(header: &str) -> Field {
-        Field::new(header, ArrowDataType::Utf8, false)
+        Field::new(header, ArrowDataType::LargeUtf8, false)
     }
 }
 
 impl ArrowAssoc for Option<String> {
-    type Builder = StringBuilder;
+    type Builder = LargeStringBuilder;
 
-    fn builder(nrows: usize) -> StringBuilder {
-        StringBuilder::new(nrows)
+    fn builder(nrows: usize) -> Self::Builder {
+        LargeStringBuilder::new(nrows)
     }
 
     #[throws(ConnectorAgentError)]
@@ -185,7 +134,7 @@ impl ArrowAssoc for Option<String> {
     }
 
     fn field(header: &str) -> Field {
-        Field::new(header, ArrowDataType::Utf8, true)
+        Field::new(header, ArrowDataType::LargeUtf8, true)
     }
 }
 
@@ -250,5 +199,81 @@ impl ArrowAssoc for Option<Date<Utc>> {
 
     fn field(_header: &str) -> Field {
         unimplemented!()
+    }
+}
+
+fn naive_date_to_arrow(nd: NaiveDate) -> i32 {
+    (nd.and_hms(0, 0, 0).timestamp() / SECONDS_IN_DAY) as i32
+}
+
+fn naive_datetime_to_arrow(nd: NaiveDateTime) -> i64 {
+    nd.timestamp_millis()
+}
+
+impl ArrowAssoc for Option<NaiveDate> {
+    type Builder = Date32Builder;
+
+    fn builder(nrows: usize) -> Self::Builder {
+        Date32Builder::new(nrows)
+    }
+
+    fn append(builder: &mut Self::Builder, value: Option<NaiveDate>) -> Result<()> {
+        builder.append_option(value.map(naive_date_to_arrow))?;
+        Ok(())
+    }
+
+    fn field(header: &str) -> Field {
+        Field::new(header, ArrowDataType::Date32, true)
+    }
+}
+
+impl ArrowAssoc for NaiveDate {
+    type Builder = Date32Builder;
+
+    fn builder(nrows: usize) -> Self::Builder {
+        Date32Builder::new(nrows)
+    }
+
+    fn append(builder: &mut Self::Builder, value: NaiveDate) -> Result<()> {
+        builder.append_value(naive_date_to_arrow(value))?;
+        Ok(())
+    }
+
+    fn field(header: &str) -> Field {
+        Field::new(header, ArrowDataType::Date32, false)
+    }
+}
+
+impl ArrowAssoc for Option<NaiveDateTime> {
+    type Builder = Date64Builder;
+
+    fn builder(nrows: usize) -> Self::Builder {
+        Date64Builder::new(nrows)
+    }
+
+    fn append(builder: &mut Self::Builder, value: Option<NaiveDateTime>) -> Result<()> {
+        builder.append_option(value.map(naive_datetime_to_arrow))?;
+        Ok(())
+    }
+
+    fn field(header: &str) -> Field {
+        Field::new(header, ArrowDataType::Date64, true)
+    }
+}
+
+impl ArrowAssoc for NaiveDateTime {
+    type Builder = Date64Builder;
+
+    fn builder(nrows: usize) -> Self::Builder {
+        Date64Builder::new(nrows)
+    }
+
+    fn append(builder: &mut Self::Builder, value: NaiveDateTime) -> Result<()> {
+        builder.append_value(naive_datetime_to_arrow(value))?;
+        Ok(())
+    }
+
+    fn field(header: &str) -> Field {
+        Field::new(header, ArrowDataType::Date64, false)
     }
 }

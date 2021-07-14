@@ -1,5 +1,6 @@
 use crate::errors::ConnectorAgentPythonError;
-use connectorx::partition::{pg_get_partition_range, pg_single_col_partition_query};
+use connectorx::source_router::SourceConn;
+use connectorx::sql::CXQuery;
 use dict_derive::FromPyObject;
 use fehler::throw;
 use pyo3::prelude::*;
@@ -7,6 +8,7 @@ use pyo3::{
     exceptions::{PyNotImplementedError, PyValueError},
     PyResult,
 };
+use std::convert::TryFrom;
 
 #[derive(FromPyObject)]
 pub struct PartitionQuery {
@@ -37,8 +39,10 @@ pub fn read_sql<'a>(
     queries: Option<Vec<String>>,
     partition_query: Option<PartitionQuery>,
 ) -> PyResult<&'a PyAny> {
+    let source_conn =
+        SourceConn::try_from(conn).map_err(ConnectorAgentPythonError::ConnectorAgentError)?;
     let queries = match (queries, partition_query) {
-        (Some(queries), None) => queries,
+        (Some(queries), None) => queries.into_iter().map(|q| CXQuery::Naked(q)).collect(),
         (
             None,
             Some(PartitionQuery {
@@ -53,7 +57,9 @@ pub fn read_sql<'a>(
             let num = num as i64;
 
             let (min, max) = match (min, max) {
-                (None, None) => pg_get_partition_range(conn, &query, &col)
+                (None, None) => source_conn
+                    .ty
+                    .get_col_range(conn, &query, &col)
                     .map_err(ConnectorAgentPythonError::ConnectorAgentError)?,
                 (Some(min), Some(max)) => (min, max),
                 _ => throw!(PyValueError::new_err(
@@ -69,7 +75,9 @@ pub fn read_sql<'a>(
                     true => max + 1,
                     false => min + (i + 1) * partition_size,
                 };
-                let partition_query = pg_single_col_partition_query(&query, &col, lower, upper)
+                let partition_query = source_conn
+                    .ty
+                    .get_part_query(&query, &col, lower, upper)
                     .map_err(ConnectorAgentPythonError::ConnectorAgentError)?;
                 queries.push(partition_query);
             }
@@ -83,11 +91,10 @@ pub fn read_sql<'a>(
         )),
     };
 
-    let queries: Vec<_> = queries.iter().map(|s| s.as_str()).collect();
     match return_type {
         "pandas" => Ok(crate::pandas::write_pandas(
             py,
-            conn,
+            &source_conn,
             &queries,
             protocol.unwrap_or("binary"),
         )?),

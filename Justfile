@@ -17,15 +17,21 @@ build-python-extention:
 setup-python: build-python-extention
     cd connectorx-python && poetry run python ../scripts/python-helper.py copy-extension
     
-test-python: setup-python
-    cd connectorx-python && poetry run pytest connectorx/tests -v -s
+test-python +opts="": setup-python
+    cd connectorx-python && poetry run pytest connectorx/tests -v -s {{opts}}
 
 seed-db:
     psql $POSTGRES_URL -f scripts/postgres.sql
+    sqlite3 ${SQLITE_URL#sqlite://} < scripts/sqlite.sql
+    mysql --protocol tcp -h$MYSQL_HOST -P$MYSQL_PORT -u$MYSQL_USER -p$MYSQL_PASSWORD $MYSQL_DB < scripts/mysql.sql
+
+seed-db-more:
+    mysql --protocol tcp -h$CLICKHOUSE_HOST -P$CLICKHOUSE_PORT -u$CLICKHOUSE_USER -p$CLICKHOUSE_PASSWORD $CLICKHOUSE_DB < scripts/clickhouse.sql
+    psql $REDSHIFT_URL -f scripts/redshift.sql
 
 # benches 
-flame-tpch:
-    cd connectorx-python && LD_LIBRARY_PATH=$HOME/.pyenv/versions/3.8.6/lib/ cargo run --no-default-features --features executable --features fptr --release --example flame_tpch
+flame-tpch conn="POSTGRES_URL":
+    cd connectorx-python && PYO3_PYTHON=$HOME/.pyenv/versions/3.8.6/bin/python3.8 PYTHONPATH=$HOME/.pyenv/versions/conn/lib/python3.8/site-packages LD_LIBRARY_PATH=$HOME/.pyenv/versions/3.8.6/lib/ cargo run --no-default-features --features executable --features fptr --release --example flame_tpch {{conn}}
 
 build-tpch:
     cd connectorx-python && cargo build --no-default-features --features executable --features fptr --release --example tpch

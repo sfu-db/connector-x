@@ -1,6 +1,6 @@
 name: release
 
-on: 
+on:
   push:
     branches:
       - prerelease
@@ -12,7 +12,7 @@ jobs:
     container: quay.io/pypa/manylinux2014_x86_64
     strategy:
       matrix:
-        python-version: [ 37, 38, 39 ]
+        python-version: [37, 38, 39]
     steps:
       - uses: actions/checkout@v2
       - name: Set python version
@@ -24,13 +24,13 @@ jobs:
           fi
 
       - name: Check which python we use
-        run: | 
+        run: |
           echo $(which python)
 
       - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly-2021-02-15
+          toolchain: nightly-2021-05-30
           components: rustfmt
           default: true
 
@@ -38,11 +38,14 @@ jobs:
         run: |
           pip install poetry
           cargo install just
-          yum install -y openssl-devel
+          yum install -y openssl11-devel
+          ln -s /usr/lib64/pkgconfig/openssl11.pc /usr/lib64/pkgconfig/openssl.pc
+          ln -s /usr/lib64/pkgconfig/libssl11.pc /usr/lib64/pkgconfig/libssl.pc
 
       - name: Setup project
-        env: 
+        env:
           RUSTFLAGS: "-C link-arg=-s"
+          SQLITE3_STATIC: 1
         run: |
           just bootstrap-python
           just ci-build-python-extention
@@ -60,7 +63,7 @@ jobs:
         with:
           name: "linux-${{ matrix.python-version }}"
           path: connectorx-python/dist/*.whl
-          
+
   win32-and-darwin:
     runs-on: ${{ matrix.os }}
     strategy:
@@ -77,13 +80,13 @@ jobs:
           architecture: x64
 
       - name: Check which python we use
-        run: | 
+        run: |
           echo $(which python)
 
       - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly-2021-02-15
+          toolchain: nightly-2021-05-30
           components: rustfmt
           default: true
 
@@ -99,6 +102,8 @@ jobs:
           just ci-build-python-extention
           echo "Content of the source folder"
           ls connectorx-python/connectorx
+        env:
+          SQLITE3_STATIC: 1
 
       - name: Build wheel
         run: |
@@ -121,8 +126,8 @@ jobs:
 
       - name: Setup environment
         run: |
-            tree .
-            echo "/home/runner/.local/bin" >> $GITHUB_PATH
+          tree .
+          echo "/home/runner/.local/bin" >> $GITHUB_PATH
 
       - name: Install Twine
         run: pip install twine
@@ -136,7 +141,7 @@ jobs:
           do
             twine upload --non-interactive -u __token__ -p $PYPI_TOKEN $file || continue
           done
-          
+
       - name: Upload to PyPI test site
         if: github.ref == 'refs/heads/prerelease'
         env:
@@ -146,5 +151,3 @@ jobs:
           do
             twine upload --non-interactive --repository-url https://test.pypi.org/legacy/ -u __token__ -p $PYPI_TEST_TOKEN $file || continue
           done
-
-      

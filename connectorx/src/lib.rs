@@ -1,21 +1,19 @@
 #![feature(generic_associated_types)]
-#![feature(log_syntax)]
 #![allow(incomplete_features)]
+#![allow(clippy::upper_case_acronyms)]
 
-#[doc(hidden)]
-pub mod pg;
-#[doc(hidden)]
-pub mod s3;
 pub mod typesystem;
 #[macro_use]
 pub mod macros;
+pub(crate) mod constants;
 pub mod data_order;
 pub mod destinations;
 pub mod dispatcher;
 pub mod dummy_typesystem;
 pub mod errors;
-pub mod partition;
+pub mod source_router;
 pub mod sources;
+pub mod sql;
 pub mod transports;
 
 pub use crate::data_order::DataOrder;
