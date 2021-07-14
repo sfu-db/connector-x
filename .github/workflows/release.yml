@@ -43,6 +43,7 @@ jobs:
       - name: Setup project
         env:
           RUSTFLAGS: "-C link-arg=-s"
+          SQLITE3_STATIC: 1
         run: |
           just bootstrap-python
           just ci-build-python-extention
@@ -99,6 +100,8 @@ jobs:
           just ci-build-python-extention
           echo "Content of the source folder"
           ls connectorx-python/connectorx
+        env:
+          SQLITE3_STATIC: 1
 
       - name: Build wheel
         run: |
