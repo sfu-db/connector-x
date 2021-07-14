@@ -287,8 +287,8 @@
     <span class="ident">ArrayBuilder</span>, <span class="ident">BooleanBuilder</span>, <span class="ident">Date32Builder</span>, <span class="ident">Date64Builder</span>, <span class="ident">Float32Builder</span>, <span class="ident">Float64Builder</span>,
     <span class="ident">Int32Builder</span>, <span class="ident">Int64Builder</span>, <span class="ident">LargeStringBuilder</span>, <span class="ident">UInt32Builder</span>, <span class="ident">UInt64Builder</span>,
 };
+<span class="kw">use</span> <span class="ident">arrow::datatypes::DataType</span> <span class="kw">as</span> <span class="ident">ArrowDataType</span>;
 <span class="kw">use</span> <span class="ident">arrow::datatypes::Field</span>;
-<span class="kw">use</span> <span class="ident">arrow::datatypes</span>::{<span class="ident">DataType</span> <span class="kw">as</span> <span class="ident">ArrowDataType</span>, <span class="ident">DateUnit</span>};
 <span class="kw">use</span> <span class="ident">chrono</span>::{<span class="ident">Date</span>, <span class="ident">DateTime</span>, <span class="ident">NaiveDate</span>, <span class="ident">NaiveDateTime</span>, <span class="ident">Utc</span>};
 <span class="kw">use</span> <span class="ident">fehler::throws</span>;
 
@@ -506,7 +506,7 @@
     }
 
     <span class="kw">fn</span> <span class="ident">field</span>(<span class="ident">header</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Field</span> {
-        <span class="ident">Field::new</span>(<span class="ident">header</span>, <span class="ident">ArrowDataType::Date32</span>(<span class="ident">DateUnit::Day</span>), <span class="bool-val">true</span>)
+        <span class="ident">Field::new</span>(<span class="ident">header</span>, <span class="ident">ArrowDataType::Date32</span>, <span class="bool-val">true</span>)
     }
 }
 
@@ -523,7 +523,7 @@
     }
 
     <span class="kw">fn</span> <span class="ident">field</span>(<span class="ident">header</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Field</span> {
-        <span class="ident">Field::new</span>(<span class="ident">header</span>, <span class="ident">ArrowDataType::Date32</span>(<span class="ident">DateUnit::Day</span>), <span class="bool-val">false</span>)
+        <span class="ident">Field::new</span>(<span class="ident">header</span>, <span class="ident">ArrowDataType::Date32</span>, <span class="bool-val">false</span>)
     }
 }
 
@@ -540,7 +540,7 @@
     }
 
     <span class="kw">fn</span> <span class="ident">field</span>(<span class="ident">header</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Field</span> {
-        <span class="ident">Field::new</span>(<span class="ident">header</span>, <span class="ident">ArrowDataType::Date64</span>(<span class="ident">DateUnit::Millisecond</span>), <span class="bool-val">true</span>)
+        <span class="ident">Field::new</span>(<span class="ident">header</span>, <span class="ident">ArrowDataType::Date64</span>, <span class="bool-val">true</span>)
     }
 }
 
@@ -557,7 +557,7 @@
     }
 
     <span class="kw">fn</span> <span class="ident">field</span>(<span class="ident">header</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Field</span> {
-        <span class="ident">Field::new</span>(<span class="ident">header</span>, <span class="ident">ArrowDataType::Date64</span>(<span class="ident">DateUnit::Millisecond</span>), <span class="bool-val">false</span>)
+        <span class="ident">Field::new</span>(<span class="ident">header</span>, <span class="ident">ArrowDataType::Date64</span>, <span class="bool-val">false</span>)
     }
 }
 </pre></div>
