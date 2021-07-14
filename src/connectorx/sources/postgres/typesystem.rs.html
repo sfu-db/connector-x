@@ -1,7 +1,7 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `connectorx/src/sources/postgres/typesystem.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>typesystem.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `connectorx/src/sources/postgres/typesystem.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>typesystem.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../../storage.js"></script><script src="../../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png">
-<link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../../connectorx/index.html'><div class='logo-container rust-logo'><img src='../../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
-                <a id="settings-menu" href="../../../../settings.html"><img src="../../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
+<link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../connectorx/index.html'><div class='logo-container rust-logo'><img src='../../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button">?</button>
+                <a id="settings-menu" href="../../../../settings.html"><img src="../../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -112,12 +112,12 @@
 <span id="109">109</span>
 <span id="110">110</span>
 <span id="111">111</span>
-</pre><div class="example-wrap"><pre class="rust ">
+</pre><pre class="rust">
 <span class="kw">use</span> <span class="ident">chrono</span>::{<span class="ident">DateTime</span>, <span class="ident">NaiveDate</span>, <span class="ident">NaiveDateTime</span>, <span class="ident">NaiveTime</span>, <span class="ident">Utc</span>};
-<span class="kw">use</span> <span class="ident">postgres</span>::<span class="ident">types</span>::<span class="ident">Type</span>;
-<span class="kw">use</span> <span class="ident">rust_decimal</span>::<span class="ident">Decimal</span>;
-<span class="kw">use</span> <span class="ident">serde_json</span>::<span class="ident">Value</span>;
-<span class="kw">use</span> <span class="ident">uuid</span>::<span class="ident">Uuid</span>;
+<span class="kw">use</span> <span class="ident">postgres::types::Type</span>;
+<span class="kw">use</span> <span class="ident">rust_decimal::Decimal</span>;
+<span class="kw">use</span> <span class="ident">serde_json::Value</span>;
+<span class="kw">use</span> <span class="ident">uuid::Uuid</span>;
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">PostgresTypeSystem</span> {
@@ -143,7 +143,7 @@
     <span class="ident">Enum</span>(<span class="ident">bool</span>),
 }
 
-<span class="macro">impl_typesystem</span><span class="macro">!</span> {
+<span class="macro">impl_typesystem!</span> {
     <span class="ident">system</span> <span class="op">=</span> <span class="ident">PostgresTypeSystem</span>,
     <span class="ident">mappings</span> <span class="op">=</span> {
         { <span class="ident">Int2</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i16</span> }
@@ -189,8 +189,8 @@
             <span class="string">&quot;json&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">JSON</span>(<span class="bool-val">true</span>),
             <span class="string">&quot;jsonb&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">JSONB</span>(<span class="bool-val">true</span>),
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">ty</span>.<span class="ident">kind</span>() {
-                <span class="ident">postgres</span>::<span class="ident">types</span>::<span class="ident">Kind</span>::<span class="ident">Enum</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Enum</span>(<span class="bool-val">true</span>),
-                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unimplemented</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">ty</span>.<span class="ident">name</span>()),
+                <span class="ident">postgres::types::Kind::Enum</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Enum</span>(<span class="bool-val">true</span>),
+                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unimplemented!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">ty</span>.<span class="ident">name</span>()),
             },
         }
     }
@@ -201,29 +201,29 @@
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">ty</span>: <span class="ident">PostgresTypeSystem</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Type</span> {
         <span class="kw">use</span> <span class="ident">PostgresTypeSystem</span>::<span class="kw-2">*</span>;
         <span class="kw">match</span> <span class="ident">ty</span> {
-            <span class="ident">Int2</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type</span>::<span class="ident">INT2</span>,
-            <span class="ident">Int4</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type</span>::<span class="ident">INT4</span>,
-            <span class="ident">Int8</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type</span>::<span class="ident">INT8</span>,
-            <span class="ident">Float4</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type</span>::<span class="ident">FLOAT4</span>,
-            <span class="ident">Float8</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type</span>::<span class="ident">FLOAT8</span>,
-            <span class="ident">Numeric</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type</span>::<span class="ident">NUMERIC</span>,
-            <span class="ident">Bool</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type</span>::<span class="ident">BOOL</span>,
-            <span class="ident">Text</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type</span>::<span class="ident">TEXT</span>,
-            <span class="ident">BpChar</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type</span>::<span class="ident">BPCHAR</span>,
-            <span class="ident">VarChar</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type</span>::<span class="ident">VARCHAR</span>,
-            <span class="ident">Char</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type</span>::<span class="ident">CHAR</span>,
-            <span class="ident">ByteA</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type</span>::<span class="ident">BYTEA</span>,
-            <span class="ident">Date</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type</span>::<span class="ident">DATE</span>,
-            <span class="ident">Time</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type</span>::<span class="ident">TIME</span>,
-            <span class="ident">Timestamp</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type</span>::<span class="ident">TIMESTAMP</span>,
-            <span class="ident">TimestampTz</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type</span>::<span class="ident">TIMESTAMPTZ</span>,
-            <span class="ident">UUID</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type</span>::<span class="ident">UUID</span>,
-            <span class="ident">JSON</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type</span>::<span class="ident">JSON</span>,
-            <span class="ident">JSONB</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type</span>::<span class="ident">JSONB</span>,
-            <span class="ident">Enum</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type</span>::<span class="ident">TEXT</span>,
+            <span class="ident">Int2</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type::INT2</span>,
+            <span class="ident">Int4</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type::INT4</span>,
+            <span class="ident">Int8</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type::INT8</span>,
+            <span class="ident">Float4</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type::FLOAT4</span>,
+            <span class="ident">Float8</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type::FLOAT8</span>,
+            <span class="ident">Numeric</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type::NUMERIC</span>,
+            <span class="ident">Bool</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type::BOOL</span>,
+            <span class="ident">Text</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type::TEXT</span>,
+            <span class="ident">BpChar</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type::BPCHAR</span>,
+            <span class="ident">VarChar</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type::VARCHAR</span>,
+            <span class="ident">Char</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type::CHAR</span>,
+            <span class="ident">ByteA</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type::BYTEA</span>,
+            <span class="ident">Date</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type::DATE</span>,
+            <span class="ident">Time</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type::TIME</span>,
+            <span class="ident">Timestamp</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type::TIMESTAMP</span>,
+            <span class="ident">TimestampTz</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type::TIMESTAMPTZ</span>,
+            <span class="ident">UUID</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type::UUID</span>,
+            <span class="ident">JSON</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type::JSON</span>,
+            <span class="ident">JSONB</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type::JSONB</span>,
+            <span class="ident">Enum</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type::TEXT</span>,
         }
     }
 }
 </pre></div>
-</section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="connectorx"></div>
-    <script src="../../../../main.js"></script><script src="../../../../source-script.js"></script><script src="../../../../source-files.js"></script><script defer src="../../../../search-index.js"></script></body></html>
+</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="connectorx" data-search-index-js="../../../../search-index.js" data-search-js="../../../../search.js"></div>
+    <script src="../../../../main.js"></script><script src="../../../../source-script.js"></script><script src="../../../../source-files.js"></script></body></html>
