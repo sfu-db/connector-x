@@ -2,10 +2,6 @@
 #![allow(incomplete_features)]
 #![allow(clippy::upper_case_acronyms)]
 
-#[doc(hidden)]
-pub mod pg;
-#[doc(hidden)]
-pub mod s3;
 pub mod typesystem;
 #[macro_use]
 pub mod macros;
