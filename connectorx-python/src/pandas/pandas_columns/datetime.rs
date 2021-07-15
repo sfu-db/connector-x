@@ -16,7 +16,7 @@ pub struct DateTimeBlock<'a> {
 
 impl<'a> FromPyObject<'a> for DateTimeBlock<'a> {
     fn extract(ob: &'a PyAny) -> PyResult<Self> {
-        check_dtype(ob, "datetime64[ns]")?;
+        check_dtype(ob, "int64")?;
         let array = ob.downcast::<PyArray<i64, Ix2>>()?;
         let data = unsafe { array.as_array_mut() };
         Ok(DateTimeBlock { data })

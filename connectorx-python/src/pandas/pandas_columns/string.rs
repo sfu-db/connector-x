@@ -4,6 +4,7 @@ use anyhow::anyhow;
 use connectorx::ConnectorAgentError;
 use fehler::throws;
 use itertools::Itertools;
+use log::debug;
 use ndarray::{ArrayViewMut2, Axis, Ix2};
 use numpy::PyArray;
 use pyo3::{FromPyObject, PyAny, PyResult, Python};
@@ -266,12 +267,24 @@ impl<'a> StringColumn<'a> {
                         string_infos.push(StringInfo::detect(&self.string_buf[start..end]));
                     }
                     if len != 0 {
+                        debug!(
+                            "not empty! {} {} {}",
+                            self.data.len(),
+                            self.next_write + i,
+                            len
+                        );
+                        let a = string_infos
+                            .last()
+                            .ok_or_else(|| anyhow!("empty string_info vector"))?
+                            .pystring(py);
+                        debug!("a: {:?}", a);
                         unsafe {
-                            *self.data.get_unchecked_mut(self.next_write + i) = string_infos
-                                .last()
-                                .ok_or_else(|| anyhow!("empty string_info vector"))?
-                                .pystring(py)
+                            let b = self.data.get_unchecked_mut(self.next_write + i);
+                            debug!("b: {:?}", b);
+                            *b = a;
+                            // *self.data.get_unchecked_mut(self.next_write + i) = a;
                         };
+                        debug!("ho {} {} end!", self.data.len(), self.next_write);
                     }
                     start = end;
                 }
