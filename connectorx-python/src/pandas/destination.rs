@@ -93,7 +93,8 @@ df = pd.DataFrame(block_manager)"#,
 
     #[throws(ConnectorAgentError)]
     fn allocate_array<T: numpy::Element>(&mut self, dt: PandasBlockType, placement: Vec<usize>) {
-        let data = PyArray2::<T>::new(self.py, [placement.len(), self.nrow], false);
+        // has to use `zeros` instead of `new` for String type initialization
+        let data = PyArray2::<T>::zeros(self.py, [placement.len(), self.nrow], false);
         let block_info = PandasBlockInfo {
             dt,
             cids: placement,
@@ -115,8 +116,8 @@ df = pd.DataFrame(block_manager)"#,
                 cids: vec![pos],
                 idx: self.arr_list.len(),
             };
-            let data = PyArray1::<T>::new(self.py, self.nrow, false);
-            let mask = PyArray1::<bool>::new(self.py, self.nrow, false);
+            let data = PyArray1::<T>::zeros(self.py, self.nrow, false);
+            let mask = PyArray1::<bool>::zeros(self.py, self.nrow, false);
             self.arr_list
                 .append(PyTuple::new(self.py, vec![data.as_ref(), mask.as_ref()]))
                 .map_err(|e| anyhow!(e))?;

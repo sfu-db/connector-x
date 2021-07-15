@@ -638,10 +638,10 @@ impl<'r, 'a> Produce<'r, Vec<u8>> for PostgresCSVSourceParser<'a> {
 impl<'r, 'a> Produce<'r, Option<Vec<u8>>> for PostgresCSVSourceParser<'a> {
     fn produce(&'r mut self) -> Result<Option<Vec<u8>>> {
         let (ridx, cidx) = self.next_loc()?;
-        match &self.rowbuf[ridx][cidx][2..] {
-            // escape \x in the beginning
+        match &self.rowbuf[ridx][cidx] {
+            // escape \x in the beginning, empty if None
             "" => Ok(None),
-            v => Ok(Some(decode(&v)?)),
+            v => Ok(Some(decode(&v[2..])?)),
         }
     }
 }

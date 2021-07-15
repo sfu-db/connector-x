@@ -62,6 +62,12 @@ impl StringInfo {
 }
 
 impl PyString {
+    // get none string converted from none object, otherwise default strings are zeros
+    pub fn get_none(py: Python) -> PyString {
+        let s: &pyo3::types::PyString = unsafe { py.from_borrowed_ptr(ffi::Py_None()) };
+        PyString(s.into())
+    }
+
     // the val should be same as the val used for new
     pub unsafe fn write(&mut self, data: &[u8], info: StringInfo) {
         match info {
