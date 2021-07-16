@@ -4,7 +4,7 @@ mod pystring;
 mod transports;
 mod types;
 
-pub use self::destination::{PandasDestination, PandasPartitionDestination};
+pub use self::destination::{PandasBlockInfo, PandasDestination, PandasPartitionDestination};
 pub use self::transports::{MysqlPandasTransport, PostgresPandasTransport, SqlitePandasTransport};
 pub use self::types::{PandasDType, PandasTypeSystem};
 use crate::errors::ConnectorAgentPythonError;

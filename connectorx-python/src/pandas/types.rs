@@ -24,6 +24,24 @@ pub enum PandasBlockType {
     Bytes,
 }
 
+pub enum PandasArrayType {
+    NumpyArray,
+    IntegerArray,
+    BooleanArray,
+    DatetimeArray,
+}
+
+impl From<PandasBlockType> for PandasArrayType {
+    fn from(ty: PandasBlockType) -> PandasArrayType {
+        match ty {
+            PandasBlockType::Boolean(true) => PandasArrayType::BooleanArray,
+            PandasBlockType::Int64(true) => PandasArrayType::IntegerArray,
+            PandasBlockType::DateTime => PandasArrayType::DatetimeArray,
+            _ => PandasArrayType::NumpyArray,
+        }
+    }
+}
+
 impl From<PandasTypeSystem> for PandasBlockType {
     fn from(ty: PandasTypeSystem) -> PandasBlockType {
         match ty {

@@ -3,7 +3,7 @@ use super::pandas_columns::{
     PandasColumn, PandasColumnObject, PyBytes, StringBlock,
 };
 use super::pystring::PyString;
-use super::types::{PandasBlockType, PandasDType, PandasTypeSystem};
+use super::types::{PandasArrayType, PandasBlockType, PandasTypeSystem};
 use anyhow::anyhow;
 use connectorx::{
     ConnectorAgentError, Consume, DataOrder, Destination, DestinationPartition, Result, TypeAssoc,
@@ -11,26 +11,45 @@ use connectorx::{
 };
 use fehler::{throw, throws};
 use itertools::Itertools;
-use log::debug;
 use numpy::{PyArray1, PyArray2};
 use pyo3::{
-    types::{PyDict, PyList, PyTuple},
-    FromPyObject, PyAny, Python,
+    prelude::{pyclass, pymethods, PyResult},
+    types::{IntoPyDict, PyList, PyTuple},
+    FromPyObject, IntoPy, PyAny, Python,
 };
 use std::collections::HashMap;
 use std::mem::transmute;
 
-struct PandasBlockInfo {
+#[pyclass]
+pub struct PandasBlockInfo {
     dt: PandasBlockType,
+    #[pyo3(get, set)]
     cids: Vec<usize>, // column ids
-    idx: usize,       // index in numpy array list
+    #[pyo3(get, set)]
+    idx: usize, // index in numpy array list
+}
+
+#[pyclass]
+struct PandasBlockInfo2 {
+    #[pyo3(get, set)]
+    cids: Vec<usize>, // column ids
+    #[pyo3(get, set)]
+    idx: usize, // index in numpy array list
+}
+
+#[pymethods]
+impl PandasBlockInfo {
+    #[getter]
+    fn dt(&self) -> PyResult<u32> {
+        Ok(PandasArrayType::from(self.dt) as u32)
+    }
 }
 
 pub struct PandasDestination<'py> {
     py: Python<'py>,
     nrow: usize,
     schema: Vec<PandasTypeSystem>,
-    col_names: String,
+    col_names: &'py PyList,
     arr_list: &'py PyList,
     blocks: Vec<PandasBlockInfo>,
 }
@@ -41,7 +60,7 @@ impl<'a> PandasDestination<'a> {
             py,
             nrow: 0,
             schema: vec![],
-            col_names: String::new(),
+            col_names: PyList::empty(py),
             arr_list: PyList::empty(py),
             blocks: vec![],
         }
@@ -49,46 +68,59 @@ impl<'a> PandasDestination<'a> {
 
     pub fn result(self) -> Result<&'a PyAny> {
         // generate code converting numpy arrays into pd.DataFrame
-        let blocks_code: Vec<String> = self
-            .blocks
-            .iter()
-            .map(|block| match block.dt.is_masked() {
-                true => format!("pd.core.internals.make_block(pd.core.arrays.{}(arr_list[{}][0], arr_list[{}][1]), placement={})", block.dt.array_name(), block.idx, block.idx, block.cids[0]),
-                false => {
-                    match block.dt.array_name() {
-                        "" => format!("pd.core.internals.make_block(arr_list[{}], placement={:?})", block.idx, block.cids),
-                        name => format!("pd.core.internals.make_block(pd.core.arrays.{}(arr_list[{}]), placement={:?})", name, block.idx, block.cids)
-                    }
-                }
-            })
-            .collect();
+        //         let blocks_code: Vec<String> = self
+        //             .blocks
+        //             .iter()
+        //             .map(|block| match block.dt.is_masked() {
+        //                 true => format!("pd.core.internals.make_block(pd.core.arrays.{}(arr_list[{}][0], arr_list[{}][1]), placement={})", block.dt.array_name(), block.idx, block.idx, block.cids[0]),
+        //                 false => {
+        //                     match block.dt.array_name() {
+        //                         "" => format!("pd.core.internals.make_block(arr_list[{}], placement={:?})", block.idx, block.cids),
+        //                         name => format!("pd.core.internals.make_block(pd.core.arrays.{}(arr_list[{}]), placement={:?})", name, block.idx, block.cids)
+        //                     }
+        //                 }
+        //             })
+        //             .collect();
 
-        let code = format!(
-            r#"import pandas as pd
-blocks = [{}]
-block_manager = pd.core.internals.BlockManager(
-    blocks, [pd.Index({}), pd.RangeIndex(start=0, stop={}, step=1)])
-df = pd.DataFrame(block_manager)"#,
-            blocks_code.join(","),
-            self.col_names,
-            self.nrow,
-        );
-        debug!("convert to dataframe:\n {}", code);
+        //         let code = format!(
+        //             r#"import pandas as pd
+        // blocks = [{}]
+        // block_manager = pd.core.internals.BlockManager(
+        //     blocks, [pd.Index({}), pd.RangeIndex(start=0, stop={}, step=1)])
+        // df = pd.DataFrame(block_manager)"#,
+        //             blocks_code.join(","),
+        //             self.col_names,
+        //             self.nrow,
+        //         );
+        //         debug!("convert to dataframe:\n {}", code);
 
         // run python code
-        let locals = PyDict::new(self.py);
-        locals
-            .set_item("arr_list", self.arr_list)
-            .map_err(|e| anyhow!(e))?;
-        self.py
-            .run(code.as_str(), None, Some(locals))
-            .map_err(|e| anyhow!(e))?;
+        // let locals = PyDict::new(self.py);
+        // locals
+        //     .set_item("arr_list", self.arr_list)
+        //     .map_err(|e| anyhow!(e))?;
+        // self.py
+        //     .run(code.as_str(), None, Some(locals))
+        //     .map_err(|e| anyhow!(e))?;
 
         // get pd.DataFrame
-        let df = locals
-            .get_item("df")
-            .ok_or_else(|| anyhow!("cannot get `df` from locals"))?;
-        Ok(df)
+        // let df = locals
+        //     .get_item("df")
+        //     .ok_or_else(|| anyhow!("cannot get `df` from locals"))?;
+
+        let block_infos = PyList::empty(self.py);
+        for b in self.blocks {
+            block_infos
+                .append(b.into_py(self.py))
+                .map_err(|e| anyhow!(e))?;
+        }
+        let result = [
+            ("data", self.arr_list),
+            ("headers", self.col_names),
+            ("block_infos", block_infos),
+        ]
+        .into_py_dict(self.py);
+        Ok(result)
     }
 
     #[throws(ConnectorAgentError)]
@@ -144,9 +176,11 @@ impl<'a> Destination for PandasDestination<'a> {
         }
         self.nrow = nrows;
         self.schema = schema.to_vec();
-        let names: Vec<_> = names.into_iter().map(|s| s.as_ref()).collect();
-        self.col_names = format!("['{}']", names.join("\',\'"));
-
+        for n in names.into_iter() {
+            self.col_names
+                .append(n.as_ref().to_string())
+                .map_err(|e| anyhow!(e))?;
+        }
         let mut block_indices = HashMap::<PandasBlockType, Vec<usize>>::new();
         schema.iter().enumerate().for_each(|(i, dt)| {
             block_indices

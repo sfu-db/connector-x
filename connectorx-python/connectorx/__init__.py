@@ -89,10 +89,27 @@ def read_sql(
     else:
         raise ValueError("query must be either str or a list of str")
 
-    return _read_sql(
+    df_infos = _read_sql(
         conn,
         return_type,
         queries=queries,
         protocol=protocol,
         partition_query=partition_query,
     )
+
+    data = df_infos["data"]
+    nrows = data[0][0].shape[-1] if isinstance(data[0], tuple) else data[0].shape[-1]
+    blocks = []
+    for binfo in df_infos["block_infos"]:
+      if binfo.dt == 0: # NumpyArray
+        blocks.append(pd.core.internals.make_block(data[binfo.idx], placement=binfo.cids))
+      elif binfo.dt == 1: # IntegerArray
+        blocks.append(pd.core.internals.make_block(pd.core.arrays.IntegerArray(data[binfo.idx][0], data[binfo.idx][1]), placement=binfo.cids[0]))
+      elif binfo.dt == 2: # BooleanArray
+        blocks.append(pd.core.internals.make_block(pd.core.arrays.BooleanArray(data[binfo.idx][0], data[binfo.idx][1]), placement=binfo.cids[0]))
+      elif binfo.dt == 3: # DatetimeArray 
+        blocks.append(pd.core.internals.make_block(pd.core.arrays.DatetimeArray(data[binfo.idx]), placement=binfo.cids))
+
+    block_manager = pd.core.internals.BlockManager(blocks, [pd.Index(df_infos["headers"]), pd.RangeIndex(start=0, stop=nrows, step=1)])
+    df = pd.DataFrame(block_manager)
+    return df
