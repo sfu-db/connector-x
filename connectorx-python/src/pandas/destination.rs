@@ -25,16 +25,6 @@ pub struct PandasBlockInfo {
     dt: PandasBlockType,
     #[pyo3(get, set)]
     cids: Vec<usize>, // column ids
-    #[pyo3(get, set)]
-    idx: usize, // index in numpy array list
-}
-
-#[pyclass]
-struct PandasBlockInfo2 {
-    #[pyo3(get, set)]
-    cids: Vec<usize>, // column ids
-    #[pyo3(get, set)]
-    idx: usize, // index in numpy array list
 }
 
 #[pymethods]
@@ -67,47 +57,6 @@ impl<'a> PandasDestination<'a> {
     }
 
     pub fn result(self) -> Result<&'a PyAny> {
-        // generate code converting numpy arrays into pd.DataFrame
-        //         let blocks_code: Vec<String> = self
-        //             .blocks
-        //             .iter()
-        //             .map(|block| match block.dt.is_masked() {
-        //                 true => format!("pd.core.internals.make_block(pd.core.arrays.{}(arr_list[{}][0], arr_list[{}][1]), placement={})", block.dt.array_name(), block.idx, block.idx, block.cids[0]),
-        //                 false => {
-        //                     match block.dt.array_name() {
-        //                         "" => format!("pd.core.internals.make_block(arr_list[{}], placement={:?})", block.idx, block.cids),
-        //                         name => format!("pd.core.internals.make_block(pd.core.arrays.{}(arr_list[{}]), placement={:?})", name, block.idx, block.cids)
-        //                     }
-        //                 }
-        //             })
-        //             .collect();
-
-        //         let code = format!(
-        //             r#"import pandas as pd
-        // blocks = [{}]
-        // block_manager = pd.core.internals.BlockManager(
-        //     blocks, [pd.Index({}), pd.RangeIndex(start=0, stop={}, step=1)])
-        // df = pd.DataFrame(block_manager)"#,
-        //             blocks_code.join(","),
-        //             self.col_names,
-        //             self.nrow,
-        //         );
-        //         debug!("convert to dataframe:\n {}", code);
-
-        // run python code
-        // let locals = PyDict::new(self.py);
-        // locals
-        //     .set_item("arr_list", self.arr_list)
-        //     .map_err(|e| anyhow!(e))?;
-        // self.py
-        //     .run(code.as_str(), None, Some(locals))
-        //     .map_err(|e| anyhow!(e))?;
-
-        // get pd.DataFrame
-        // let df = locals
-        //     .get_item("df")
-        //     .ok_or_else(|| anyhow!("cannot get `df` from locals"))?;
-
         let block_infos = PyList::empty(self.py);
         for b in self.blocks {
             block_infos
@@ -130,7 +79,6 @@ impl<'a> PandasDestination<'a> {
         let block_info = PandasBlockInfo {
             dt,
             cids: placement,
-            idx: self.arr_list.len(),
         };
         self.arr_list.append(data).map_err(|e| anyhow!(e))?;
         self.blocks.push(block_info);
@@ -146,7 +94,6 @@ impl<'a> PandasDestination<'a> {
             let block_info = PandasBlockInfo {
                 dt,
                 cids: vec![pos],
-                idx: self.arr_list.len(),
             };
             let data = PyArray1::<T>::zeros(self.py, self.nrow, false);
             let mask = PyArray1::<bool>::zeros(self.py, self.nrow, false);
@@ -232,8 +179,8 @@ impl<'a> Destination for PandasDestination<'a> {
         let mut partitioned_columns: Vec<Vec<Box<dyn PandasColumnObject>>> =
             (0..self.schema.len()).map(|_| vec![]).collect();
 
-        for block in self.blocks.iter() {
-            let buf = self.arr_list.get_item(block.idx as isize);
+        for (idx, block) in self.blocks.iter().enumerate() {
+            let buf = self.arr_list.get_item(idx as isize);
             match block.dt {
                 PandasBlockType::Boolean(_) => {
                     let bblock = BooleanBlock::extract(buf).map_err(|e| anyhow!(e))?;
