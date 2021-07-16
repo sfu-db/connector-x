@@ -1,5 +1,8 @@
 use connectorx::{
-    sources::{mysql::MysqlSource, Produce, Source},
+    sources::{
+        mysql::{MysqlBinary, MysqlSource},
+        Produce, Source,
+    },
     sql::CXQuery,
     SourcePartition,
 };
@@ -14,7 +17,7 @@ fn load_and_parse() {
     #[derive(Debug, PartialEq)]
     struct Row(i64, f64);
 
-    let mut source = MysqlSource::new(&dburl, 1).unwrap();
+    let mut source = MysqlSource::<MysqlBinary>::new(&dburl, 1).unwrap();
     source.set_queries(&[CXQuery::naked("select * from test_table")]);
     source.fetch_metadata().unwrap();
 
@@ -54,7 +57,7 @@ fn test_types() {
     #[derive(Debug, PartialEq)]
     struct Row(f64, String);
 
-    let mut source = MysqlSource::new(&dburl, 1).unwrap();
+    let mut source = MysqlSource::<MysqlBinary>::new(&dburl, 1).unwrap();
     source.set_queries(&[CXQuery::naked(
         "select test_decimal, test_char from test_types",
     )]);

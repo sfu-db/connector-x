@@ -14,7 +14,7 @@ def clickhouse_url() -> str:
 @pytest.mark.skipif(os.environ.get("TEST_COVER", "main") != "all", reason="Only test main wire protocols unless TEST_COVER=all")
 def test_clickhouse_without_partition(clickhouse_url: str) -> None:
     query = "select * from test_table limit 3"
-    df = read_sql(clickhouse_url, query)
+    df = read_sql(clickhouse_url, query, protocol="text") # clickhouse does not support binary protocol
     # result from clickhouse might have different order each time
     df.sort_values(by="test_int", inplace=True, ignore_index=True)
     expected = pd.DataFrame(
@@ -33,7 +33,8 @@ def test_clickhouse_with_partition(clickhouse_url: str) -> None:
         clickhouse_url,
         query,
         partition_on="test_int",
-        partition_num=3
+        partition_num=3,
+        protocol="text"
     )
     df.sort_values(by="test_int", inplace=True, ignore_index=True)
     expected = pd.DataFrame(
@@ -48,7 +49,7 @@ def test_clickhouse_with_partition(clickhouse_url: str) -> None:
 @pytest.mark.skipif(os.environ.get("TEST_COVER", "main") != "all", reason="Only test main wire protocols unless TEST_COVER=all")
 def test_clickhouse_types(clickhouse_url: str) -> None:
     query = "select * from test_types"
-    df = read_sql(clickhouse_url, query)
+    df = read_sql(clickhouse_url, query, protocol="text")
     df.sort_values(by="test_int", inplace=True, ignore_index=True)
     expected = pd.DataFrame(
         index=range(3),

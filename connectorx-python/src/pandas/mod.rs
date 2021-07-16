@@ -8,14 +8,14 @@ pub use self::destination::{PandasBlockInfo, PandasDestination, PandasPartitionD
 pub use self::transports::{MysqlPandasTransport, PostgresPandasTransport, SqlitePandasTransport};
 pub use self::types::{PandasDType, PandasTypeSystem};
 use crate::errors::ConnectorAgentPythonError;
-use connectorx::source_router::{SourceConn, SourceType};
-use connectorx::sources::mysql::MysqlSource;
-use connectorx::sql::CXQuery;
 use connectorx::{
+    source_router::{SourceConn, SourceType},
     sources::{
+        mysql::{MysqlBinary, MysqlSource, MysqlText},
         postgres::{Binary, Cursor, PostgresSource, CSV},
         sqlite::SqliteSource,
     },
+    sql::CXQuery,
     Dispatcher,
 };
 use fehler::throws;
@@ -80,11 +80,32 @@ pub fn write_pandas<'a>(
             dispatcher.run()?;
         }
         SourceType::Mysql => {
-            let source = MysqlSource::new(&source_conn.conn[..], queries.len())?;
-            let dispatcher =
-                Dispatcher::<_, _, MysqlPandasTransport>::new(source, &mut destination, queries);
-            debug!("Running dispatcher");
-            dispatcher.run()?;
+            debug!("Protocol: {}", protocol);
+            match protocol {
+                "binary" => {
+                    let source =
+                        MysqlSource::<MysqlBinary>::new(&source_conn.conn[..], queries.len())?;
+                    let dispatcher = Dispatcher::<_, _, MysqlPandasTransport<MysqlBinary>>::new(
+                        source,
+                        &mut destination,
+                        queries,
+                    );
+                    debug!("Running dispatcher");
+                    dispatcher.run()?;
+                }
+                "text" => {
+                    let source =
+                        MysqlSource::<MysqlText>::new(&source_conn.conn[..], queries.len())?;
+                    let dispatcher = Dispatcher::<_, _, MysqlPandasTransport<MysqlText>>::new(
+                        source,
+                        &mut destination,
+                        queries,
+                    );
+                    debug!("Running dispatcher");
+                    dispatcher.run()?;
+                }
+                _ => unimplemented!("{} protocol not supported", protocol),
+            }
         }
     }
 
