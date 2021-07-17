@@ -69,7 +69,7 @@ pub struct BytesColumn<'a> {
     data: &'a mut [PyBytes],
     next_write: usize,
     bytes_buf: Vec<u8>,
-    bytes_lengths: Vec<usize>,
+    bytes_lengths: Vec<usize>, // usize::MAX if the string is None
     buf_size: usize,
     mutex: Arc<Mutex<()>>,
 }
@@ -109,7 +109,7 @@ impl<'a> PandasColumn<Option<Vec<u8>>> for BytesColumn<'a> {
                 self.try_flush()?;
             }
             None => {
-                self.bytes_lengths.push(0);
+                self.bytes_lengths.push(usize::MAX);
             }
         }
     }
@@ -160,16 +160,23 @@ impl<'a> BytesColumn<'a> {
                     .map_err(|e| anyhow!("mutex poisoned {}", e))?;
                 let mut start = 0;
                 for (i, &len) in self.bytes_lengths.iter().enumerate() {
-                    let end = start + len;
-                    if len != 0 {
+                    if len != usize::MAX {
+                        let end = start + len;
                         unsafe {
                             // allocate and write in the same time
                             *self.data.get_unchecked_mut(self.next_write + i) = PyBytes(
                                 pyo3::types::PyBytes::new(py, &self.bytes_buf[start..end]).into(),
                             );
                         };
+                        start = end;
+                    } else {
+                        unsafe {
+                            let b: &pyo3::types::PyBytes =
+                                py.from_borrowed_ptr(pyo3::ffi::Py_None());
+
+                            *self.data.get_unchecked_mut(self.next_write + i) = PyBytes(b.into());
+                        }
                     }
-                    start = end;
                 }
             }
 

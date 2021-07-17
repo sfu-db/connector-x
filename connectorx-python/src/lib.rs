@@ -24,6 +24,7 @@ fn connectorx_python(_: Python, m: &PyModule) -> PyResult<()> {
     });
 
     m.add_wrapped(wrap_pyfunction!(read_sql))?;
+    m.add_class::<pandas::PandasBlockInfo>()?;
     Ok(())
 }
 

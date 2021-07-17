@@ -4,7 +4,7 @@ use connectorx::ConnectorAgentError;
 use fehler::throws;
 use ndarray::{ArrayViewMut1, ArrayViewMut2, Axis, Ix2};
 use numpy::{PyArray, PyArray1};
-use pyo3::{FromPyObject, PyAny, PyResult};
+use pyo3::{types::PyTuple, FromPyObject, PyAny, PyResult};
 use std::any::TypeId;
 
 // Boolean
@@ -15,12 +15,17 @@ pub enum BooleanBlock<'a> {
 impl<'a> FromPyObject<'a> for BooleanBlock<'a> {
     fn extract(ob: &'a PyAny) -> PyResult<Self> {
         if let Ok(array) = ob.downcast::<PyArray<bool, Ix2>>() {
+            // if numpy array
             check_dtype(ob, "bool")?;
             let data = unsafe { array.as_array_mut() };
             Ok(BooleanBlock::NumPy(data))
         } else {
-            let data = ob.getattr("_data")?;
-            let mask = ob.getattr("_mask")?;
+            // if extension array
+            let tuple = ob.downcast::<PyTuple>()?;
+            let data = tuple.get_item(0);
+            let mask = tuple.get_item(1);
+            check_dtype(data, "bool")?;
+            check_dtype(mask, "bool")?;
 
             Ok(BooleanBlock::Extention(
                 unsafe { data.downcast::<PyArray1<bool>>()?.as_array_mut() },

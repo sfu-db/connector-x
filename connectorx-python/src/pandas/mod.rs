@@ -4,11 +4,10 @@ mod pystring;
 mod transports;
 mod types;
 
-pub use self::destination::{PandasDestination, PandasPartitionDestination};
+pub use self::destination::{PandasBlockInfo, PandasDestination, PandasPartitionDestination};
 pub use self::transports::{MysqlPandasTransport, PostgresPandasTransport, SqlitePandasTransport};
 pub use self::types::{PandasDType, PandasTypeSystem};
 use crate::errors::ConnectorAgentPythonError;
-use anyhow::anyhow;
 use connectorx::source_router::{SourceConn, SourceType};
 use connectorx::sources::mysql::MysqlSource;
 use connectorx::sql::CXQuery;
@@ -89,7 +88,5 @@ pub fn write_pandas<'a>(
         }
     }
 
-    destination
-        .result()
-        .ok_or_else(|| anyhow!("destination not run"))?
+    destination.result()?
 }
