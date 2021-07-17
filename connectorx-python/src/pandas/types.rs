@@ -14,9 +14,10 @@ pub enum PandasTypeSystem {
     Bytes(bool),
     DateTime(bool),
 }
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum PandasBlockType {
-    Boolean(bool),
+    Boolean(bool), // bool indicates nullablity
     Int64(bool),
     Float64,
     String,

@@ -2,6 +2,7 @@ use bitfield::bitfield;
 use numpy::{npyffi::NPY_TYPES, Element, PyArrayDescr};
 use pyo3::{ffi, Py, Python};
 use std::str::from_utf8_unchecked;
+
 #[derive(Clone, Debug)]
 #[repr(transparent)]
 pub struct PyString(Py<pyo3::types::PyString>);
@@ -63,7 +64,7 @@ impl StringInfo {
 
 impl PyString {
     // get none string converted from none object, otherwise default strings are zeros
-    pub fn get_none(py: Python) -> PyString {
+    pub fn none(py: Python) -> PyString {
         let s: &pyo3::types::PyString = unsafe { py.from_borrowed_ptr(ffi::Py_None()) };
         PyString(s.into())
     }

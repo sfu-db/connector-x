@@ -6,13 +6,16 @@ from .connectorx_python import read_sql as _read_sql
 
 try:
     from importlib.metadata import version
+
     __version__ = version(__name__)
 except:
-  try:
-    from importlib_metadata import version
-    __version__ = version(__name__)
-  except:
-    pass
+    try:
+        from importlib_metadata import version
+
+        __version__ = version(__name__)
+    except:
+        pass
+
 
 def read_sql(
     conn: str,
@@ -98,18 +101,41 @@ def read_sql(
     )
 
     data = df_infos["data"]
+    headers = df_infos["headers"]
+    block_infos = df_infos["block_infos"]
+
     nrows = data[0][0].shape[-1] if isinstance(data[0], tuple) else data[0].shape[-1]
     blocks = []
-    for binfo, array in zip(df_infos["block_infos"], data):
-      if binfo.dt == 0: # NumpyArray
-        blocks.append(pd.core.internals.make_block(array, placement=binfo.cids))
-      elif binfo.dt == 1: # IntegerArray
-        blocks.append(pd.core.internals.make_block(pd.core.arrays.IntegerArray(array[0], array[1]), placement=binfo.cids[0]))
-      elif binfo.dt == 2: # BooleanArray
-        blocks.append(pd.core.internals.make_block(pd.core.arrays.BooleanArray(array[0], array[1]), placement=binfo.cids[0]))
-      elif binfo.dt == 3: # DatetimeArray 
-        blocks.append(pd.core.internals.make_block(pd.core.arrays.DatetimeArray(array), placement=binfo.cids))
+    for binfo, block_data in zip(block_infos, data):
+        if binfo.dt == 0:  # NumpyArray
+            blocks.append(
+                pd.core.internals.make_block(block_data, placement=binfo.cids)
+            )
+        elif binfo.dt == 1:  # IntegerArray
+            blocks.append(
+                pd.core.internals.make_block(
+                    pd.core.arrays.IntegerArray(block_data[0], block_data[1]),
+                    placement=binfo.cids[0],
+                )
+            )
+        elif binfo.dt == 2:  # BooleanArray
+            blocks.append(
+                pd.core.internals.make_block(
+                    pd.core.arrays.BooleanArray(block_data[0], block_data[1]),
+                    placement=binfo.cids[0],
+                )
+            )
+        elif binfo.dt == 3:  # DatetimeArray
+            blocks.append(
+                pd.core.internals.make_block(
+                    pd.core.arrays.DatetimeArray(block_data), placement=binfo.cids
+                )
+            )
+        else:
+            raise ValueError(f"unknown dt: {binfo.dt}")
 
-    block_manager = pd.core.internals.BlockManager(blocks, [pd.Index(df_infos["headers"]), pd.RangeIndex(start=0, stop=nrows, step=1)])
+    block_manager = pd.core.internals.BlockManager(
+        blocks, [pd.Index(headers), pd.RangeIndex(start=0, stop=nrows, step=1)]
+    )
     df = pd.DataFrame(block_manager)
     return df

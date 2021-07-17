@@ -15,13 +15,17 @@ pub enum BooleanBlock<'a> {
 impl<'a> FromPyObject<'a> for BooleanBlock<'a> {
     fn extract(ob: &'a PyAny) -> PyResult<Self> {
         if let Ok(array) = ob.downcast::<PyArray<bool, Ix2>>() {
+            // if numpy array
             check_dtype(ob, "bool")?;
             let data = unsafe { array.as_array_mut() };
             Ok(BooleanBlock::NumPy(data))
         } else {
+            // if extension array
             let tuple = ob.downcast::<PyTuple>()?;
             let data = tuple.get_item(0);
             let mask = tuple.get_item(1);
+            check_dtype(data, "bool")?;
+            check_dtype(mask, "bool")?;
 
             Ok(BooleanBlock::Extention(
                 unsafe { data.downcast::<PyArray1<bool>>()?.as_array_mut() },

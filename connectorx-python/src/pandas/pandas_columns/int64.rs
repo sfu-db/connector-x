@@ -21,6 +21,8 @@ impl<'a> FromPyObject<'a> for Int64Block<'a> {
             let tuple = ob.downcast::<PyTuple>()?;
             let data = tuple.get_item(0);
             let mask = tuple.get_item(1);
+            check_dtype(data, "int64")?;
+            check_dtype(mask, "bool")?;
 
             Ok(Int64Block::Extention(
                 unsafe { data.downcast::<PyArray1<i64>>()?.as_array_mut() },

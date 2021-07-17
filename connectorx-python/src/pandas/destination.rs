@@ -15,7 +15,7 @@ use numpy::{PyArray1, PyArray2};
 use pyo3::{
     prelude::{pyclass, pymethods, PyResult},
     types::{IntoPyDict, PyList, PyTuple},
-    FromPyObject, IntoPy, PyAny, Python,
+    FromPyObject, IntoPy, PyAny, PyObject, Python,
 };
 use std::collections::HashMap;
 use std::mem::transmute;
@@ -39,9 +39,9 @@ pub struct PandasDestination<'py> {
     py: Python<'py>,
     nrow: usize,
     schema: Vec<PandasTypeSystem>,
-    col_names: &'py PyList,
-    arr_list: &'py PyList,
-    blocks: Vec<PandasBlockInfo>,
+    names: Vec<String>,
+    block_datas: Vec<&'py PyAny>, // either 2d array for normal blocks, or two 1d arrays for extension blocks
+    block_infos: Vec<PandasBlockInfo>,
 }
 
 impl<'a> PandasDestination<'a> {
@@ -50,22 +50,27 @@ impl<'a> PandasDestination<'a> {
             py,
             nrow: 0,
             schema: vec![],
-            col_names: PyList::empty(py),
-            arr_list: PyList::empty(py),
-            blocks: vec![],
+            names: vec![],
+            block_datas: vec![],
+            block_infos: vec![],
         }
     }
 
     pub fn result(self) -> Result<&'a PyAny> {
-        let block_infos = PyList::empty(self.py);
-        for b in self.blocks {
-            block_infos
-                .append(b.into_py(self.py))
-                .map_err(|e| anyhow!(e))?;
+        #[throws(ConnectorAgentError)]
+        fn to_list<'py, T: IntoPy<PyObject>>(py: Python<'py>, arr: Vec<T>) -> &'py PyList {
+            let list = PyList::empty(py);
+            for e in arr {
+                list.append(e.into_py(py)).map_err(|e| anyhow!(e))?;
+            }
+            list
         }
+        let block_infos = to_list(self.py, self.block_infos)?;
+        let names = to_list(self.py, self.names)?;
+        let block_datas = to_list(self.py, self.block_datas)?;
         let result = [
-            ("data", self.arr_list),
-            ("headers", self.col_names),
+            ("data", block_datas),
+            ("headers", names),
             ("block_infos", block_infos),
         ]
         .into_py_dict(self.py);
@@ -73,19 +78,23 @@ impl<'a> PandasDestination<'a> {
     }
 
     #[throws(ConnectorAgentError)]
-    fn allocate_array<T: numpy::Element>(&mut self, dt: PandasBlockType, placement: Vec<usize>) {
+    fn allocate_array<T: numpy::Element + 'a>(
+        &mut self,
+        dt: PandasBlockType,
+        placement: Vec<usize>,
+    ) {
         // has to use `zeros` instead of `new` for String type initialization
         let data = PyArray2::<T>::zeros(self.py, [placement.len(), self.nrow], false);
         let block_info = PandasBlockInfo {
             dt,
             cids: placement,
         };
-        self.arr_list.append(data).map_err(|e| anyhow!(e))?;
-        self.blocks.push(block_info);
+        self.block_datas.push(data.into());
+        self.block_infos.push(block_info);
     }
 
     #[throws(ConnectorAgentError)]
-    fn allocate_masked_array<T: numpy::Element>(
+    fn allocate_masked_array<T: numpy::Element + 'a>(
         &mut self,
         dt: PandasBlockType,
         placement: Vec<usize>,
@@ -97,10 +106,9 @@ impl<'a> PandasDestination<'a> {
             };
             let data = PyArray1::<T>::zeros(self.py, self.nrow, false);
             let mask = PyArray1::<bool>::zeros(self.py, self.nrow, false);
-            self.arr_list
-                .append(PyTuple::new(self.py, vec![data.as_ref(), mask.as_ref()]))
-                .map_err(|e| anyhow!(e))?;
-            self.blocks.push(block_info);
+            let obj = PyTuple::new(self.py, vec![data.as_ref(), mask.as_ref()]);
+            self.block_datas.push(obj.into());
+            self.block_infos.push(block_info);
         }
     }
 }
@@ -123,18 +131,18 @@ impl<'a> Destination for PandasDestination<'a> {
         }
         self.nrow = nrows;
         self.schema = schema.to_vec();
-        for n in names.into_iter() {
-            self.col_names
-                .append(n.as_ref().to_string())
-                .map_err(|e| anyhow!(e))?;
-        }
+        self.names.extend(
+            names
+                .into_iter()
+                .map(AsRef::as_ref)
+                .map(ToString::to_string),
+        );
+
         let mut block_indices = HashMap::<PandasBlockType, Vec<usize>>::new();
-        schema.iter().enumerate().for_each(|(i, dt)| {
-            block_indices
-                .entry((*dt).into())
-                .and_modify(|e| e.push(i))
-                .or_insert(vec![i]);
-        });
+        schema
+            .iter()
+            .enumerate()
+            .for_each(|(i, dt)| block_indices.entry((*dt).into()).or_default().push(i));
 
         for (dt, placement) in block_indices {
             match dt {
@@ -179,8 +187,8 @@ impl<'a> Destination for PandasDestination<'a> {
         let mut partitioned_columns: Vec<Vec<Box<dyn PandasColumnObject>>> =
             (0..self.schema.len()).map(|_| vec![]).collect();
 
-        for (idx, block) in self.blocks.iter().enumerate() {
-            let buf = self.arr_list.get_item(idx as isize);
+        for (idx, block) in self.block_infos.iter().enumerate() {
+            let buf = self.block_datas[idx];
             match block.dt {
                 PandasBlockType::Boolean(_) => {
                     let bblock = BooleanBlock::extract(buf).map_err(|e| anyhow!(e))?;

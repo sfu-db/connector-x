@@ -59,7 +59,7 @@ pub struct StringColumn<'a> {
     data: &'a mut [PyString],
     next_write: usize,
     string_buf: Vec<u8>,
-    string_lengths: Vec<isize>,
+    string_lengths: Vec<usize>, // usize::MAX for empty string
     buf_size: usize,
     mutex: Arc<Mutex<()>>,
 }
@@ -84,7 +84,7 @@ impl<'r, 'a> PandasColumn<&'r str> for StringColumn<'a> {
     #[throws(ConnectorAgentError)]
     fn write(&mut self, val: &'r str) {
         let bytes = val.as_bytes();
-        self.string_lengths.push(bytes.len() as isize);
+        self.string_lengths.push(bytes.len());
         self.string_buf.extend_from_slice(bytes);
         self.try_flush()?;
     }
@@ -94,7 +94,7 @@ impl<'a> PandasColumn<Box<str>> for StringColumn<'a> {
     #[throws(ConnectorAgentError)]
     fn write(&mut self, val: Box<str>) {
         let bytes = val.as_bytes();
-        self.string_lengths.push(bytes.len() as isize);
+        self.string_lengths.push(bytes.len());
         self.string_buf.extend_from_slice(bytes);
         self.try_flush()?;
     }
@@ -104,7 +104,7 @@ impl<'a> PandasColumn<String> for StringColumn<'a> {
     #[throws(ConnectorAgentError)]
     fn write(&mut self, val: String) {
         let bytes = val.as_bytes();
-        self.string_lengths.push(bytes.len() as isize);
+        self.string_lengths.push(bytes.len());
         self.string_buf.extend_from_slice(bytes);
         self.try_flush()?;
     }
@@ -115,7 +115,7 @@ impl<'a> PandasColumn<char> for StringColumn<'a> {
     fn write(&mut self, val: char) {
         let mut buffer = [0; 4]; // a char is max to 4 bytes
         let bytes = val.encode_utf8(&mut buffer).as_bytes();
-        self.string_lengths.push(bytes.len() as isize);
+        self.string_lengths.push(bytes.len());
         self.string_buf.extend_from_slice(bytes);
         self.try_flush()?;
     }
@@ -127,12 +127,12 @@ impl<'r, 'a> PandasColumn<Option<&'r str>> for StringColumn<'a> {
         match val {
             Some(b) => {
                 let bytes = b.as_bytes();
-                self.string_lengths.push(bytes.len() as isize);
+                self.string_lengths.push(bytes.len());
                 self.string_buf.extend_from_slice(bytes);
                 self.try_flush()?;
             }
             None => {
-                self.string_lengths.push(-1);
+                self.string_lengths.push(usize::MAX);
             }
         }
     }
@@ -144,12 +144,12 @@ impl<'a> PandasColumn<Option<Box<str>>> for StringColumn<'a> {
         match val {
             Some(b) => {
                 let bytes = b.as_bytes();
-                self.string_lengths.push(bytes.len() as isize);
+                self.string_lengths.push(bytes.len());
                 self.string_buf.extend_from_slice(bytes);
                 self.try_flush()?;
             }
             None => {
-                self.string_lengths.push(-1);
+                self.string_lengths.push(usize::MAX);
             }
         }
     }
@@ -160,12 +160,12 @@ impl<'a> PandasColumn<Option<String>> for StringColumn<'a> {
         match val {
             Some(b) => {
                 let bytes = b.as_bytes();
-                self.string_lengths.push(bytes.len() as isize);
+                self.string_lengths.push(bytes.len());
                 self.string_buf.extend_from_slice(bytes);
                 self.try_flush()?;
             }
             None => {
-                self.string_lengths.push(-1);
+                self.string_lengths.push(usize::MAX);
             }
         }
     }
@@ -178,12 +178,12 @@ impl<'a> PandasColumn<Option<char>> for StringColumn<'a> {
             Some(b) => {
                 let mut buffer = [0; 4]; // a char is max to 4 bytes
                 let bytes = b.encode_utf8(&mut buffer).as_bytes();
-                self.string_lengths.push(bytes.len() as isize);
+                self.string_lengths.push(bytes.len());
                 self.string_buf.extend_from_slice(bytes);
                 self.try_flush()?;
             }
             None => {
-                self.string_lengths.push(-1);
+                self.string_lengths.push(usize::MAX);
             }
         }
     }
@@ -244,91 +244,60 @@ impl<'a> StringColumn<'a> {
     }
 
     #[throws(ConnectorAgentError)]
-    pub fn flush(&mut self, force_flush: bool) {
+    pub fn flush(&mut self, force: bool) {
         let nstrings = self.string_lengths.len();
         if nstrings == 0 {
             return;
         }
 
         let py = unsafe { Python::assume_gil_acquired() };
-        let string_infos = match force_flush {
-            true => {
-                // allocation in python is not thread safe
-                let _guard = self
-                    .mutex
-                    .lock()
-                    .map_err(|e| anyhow!("mutex poisoned {}", e))?;
-                let mut string_infos = Vec::with_capacity(self.string_lengths.len());
-                let mut start = 0 as usize;
-                for (i, &len) in self.string_lengths.iter().enumerate() {
-                    let end = start + 0.max(len) as usize;
-                    unsafe {
-                        string_infos.push(StringInfo::detect(&self.string_buf[start..end]));
-                    }
-                    if len >= 0 {
-                        unsafe {
-                            *self.data.get_unchecked_mut(self.next_write + i) = string_infos
-                                .last()
-                                .ok_or_else(|| anyhow!("empty string_info vector"))?
-                                .pystring(py)
-                        };
-                    } else {
-                        unsafe {
-                            *self.data.get_unchecked_mut(self.next_write + i) =
-                                PyString::get_none(py)
-                        };
-                    }
-                    start = end;
-                }
-                string_infos
+        let _guard = if force {
+            self.mutex
+                .lock()
+                .map_err(|e| anyhow!("mutex poisoned {}", e))?
+        } else {
+            match self.mutex.try_lock() {
+                Ok(guard) => guard,
+                Err(_) => return,
             }
-            false => match self.mutex.try_lock() {
-                Ok(_guard) => {
-                    let mut string_infos = Vec::with_capacity(self.string_lengths.len());
-                    let mut start = 0 as usize;
-                    for (i, &len) in self.string_lengths.iter().enumerate() {
-                        let end = start + 0.max(len) as usize;
-                        unsafe {
-                            string_infos.push(StringInfo::detect(&self.string_buf[start..end]));
-                        }
-                        if len >= 0 {
-                            unsafe {
-                                *self.data.get_unchecked_mut(self.next_write + i) = string_infos
-                                    .last()
-                                    .ok_or_else(|| anyhow!("empty string_info vector"))?
-                                    .pystring(py)
-                            };
-                        } else {
-                            unsafe {
-                                *self.data.get_unchecked_mut(self.next_write + i) =
-                                    PyString::get_none(py)
-                            };
-                        }
-                        start = end;
-                    }
-                    string_infos
-                }
-                Err(_e) => {
-                    vec![]
-                }
-            },
         };
 
+        let mut string_infos = Vec::with_capacity(self.string_lengths.len());
+        let mut start = 0;
+        for (i, &len) in self.string_lengths.iter().enumerate() {
+            if len != usize::MAX {
+                let end = start + len;
+
+                unsafe {
+                    let string_info = StringInfo::detect(&self.string_buf[start..end]);
+                    *self.data.get_unchecked_mut(self.next_write + i) = string_info.pystring(py);
+                    string_infos.push(Some(string_info));
+                };
+
+                start = end;
+            } else {
+                string_infos.push(None);
+
+                unsafe { *self.data.get_unchecked_mut(self.next_write + i) = PyString::none(py) };
+            }
+        }
+
         if string_infos.len() > 0 {
-            let mut start = 0 as usize;
+            let mut start = 0;
             for (i, (len, info)) in self
                 .string_lengths
                 .drain(..)
                 .zip_eq(string_infos)
                 .enumerate()
             {
-                let end = start + 0.max(len) as usize;
-                if len > 0 {
+                if len != usize::MAX {
+                    let end = start + len;
                     unsafe {
-                        self.data[self.next_write + i].write(&self.string_buf[start..end], info)
+                        self.data[self.next_write + i]
+                            .write(&self.string_buf[start..end], info.unwrap())
                     };
+                    start = end;
                 }
-                start = end;
             }
 
             self.string_buf.truncate(0);

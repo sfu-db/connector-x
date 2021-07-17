@@ -69,7 +69,7 @@ pub struct BytesColumn<'a> {
     data: &'a mut [PyBytes],
     next_write: usize,
     bytes_buf: Vec<u8>,
-    bytes_lengths: Vec<isize>,
+    bytes_lengths: Vec<usize>, // usize::MAX if the string is None
     buf_size: usize,
     mutex: Arc<Mutex<()>>,
 }
@@ -93,7 +93,7 @@ impl<'a> PandasColumnObject for BytesColumn<'a> {
 impl<'a> PandasColumn<Vec<u8>> for BytesColumn<'a> {
     #[throws(ConnectorAgentError)]
     fn write(&mut self, val: Vec<u8>) {
-        self.bytes_lengths.push(val.len() as isize);
+        self.bytes_lengths.push(val.len());
         self.bytes_buf.extend_from_slice(&val[..]);
         self.try_flush()?;
     }
@@ -104,12 +104,12 @@ impl<'a> PandasColumn<Option<Vec<u8>>> for BytesColumn<'a> {
     fn write(&mut self, val: Option<Vec<u8>>) {
         match val {
             Some(b) => {
-                self.bytes_lengths.push(b.len() as isize);
+                self.bytes_lengths.push(b.len());
                 self.bytes_buf.extend_from_slice(&b[..]);
                 self.try_flush()?;
             }
             None => {
-                self.bytes_lengths.push(-1);
+                self.bytes_lengths.push(usize::MAX);
             }
         }
     }
@@ -158,10 +158,10 @@ impl<'a> BytesColumn<'a> {
                     .mutex
                     .lock()
                     .map_err(|e| anyhow!("mutex poisoned {}", e))?;
-                let mut start = 0 as usize;
+                let mut start = 0;
                 for (i, &len) in self.bytes_lengths.iter().enumerate() {
-                    if len >= 0 {
-                        let end = start + (len as usize);
+                    if len != usize::MAX {
+                        let end = start + len;
                         unsafe {
                             // allocate and write in the same time
                             *self.data.get_unchecked_mut(self.next_write + i) = PyBytes(
