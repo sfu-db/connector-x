@@ -160,3 +160,7 @@ Run the SQL query, download the data from database into a Pandas dataframe.
 # Next Plan
 
 Checkout our [discussions](https://github.com/sfu-db/connector-x/discussions) to participate in deciding our next plan!
+
+# Historical Benchmark Results
+
+https://sfu-db.github.io/connector-x/dev/bench/
