@@ -49,7 +49,7 @@ jobs:
         if: ${{ github.event_name == 'pull_request'}}
         uses: rhysd/github-action-benchmark@v1
         with:
-          name: ConnectorX TPCH Scale@1 Benchmarks
+          name: "ConnectorX TPCH Scale@1 Benchmarks"
           tool: "pytest"
           output-file-path: benchmark.json
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -57,6 +57,7 @@ jobs:
           save-data-file: false
           fail-threshold: "200%"
           comment-always: true
+          comment-on-alert: true
           fail-on-alert: true
           alert-comment-cc-users: "@dovahcrow"
 
@@ -64,7 +65,7 @@ jobs:
         if: ${{ github.event_name == 'push'}}
         uses: rhysd/github-action-benchmark@v1
         with:
-          name: ConnectorX TPCH Scale@1 Benchmarks
+          name: "ConnectorX TPCH Scale@1 Benchmarks"
           tool: "pytest"
           output-file-path: benchmark.json
           github-token: ${{ secrets.GITHUB_TOKEN }}
