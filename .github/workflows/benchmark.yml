@@ -1,0 +1,74 @@
+name: benchmark
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - prerelease
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  benchmark:
+    runs-on: [self-hosted, linux, x64, connectorx-benchmark]
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install tools
+        run: |
+          apt-get update
+          apt-get install -y curl postgresql-client build-essential python3-dev python3-pip pkg-config libssl-dev git sqlite3 libsqlite3-dev mysql-client
+        env:
+          DEBIAN_FRONTEND: noninteractive
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly-2021-05-30
+          components: rustfmt
+          default: true
+
+      - name: Install other dependent tools
+        run: |
+          pip3 install poetry
+          cargo install just
+
+      - name: Install python dependencies
+        run: just bootstrap-python
+
+      - name: Run benchmarks
+        run: just benchmark-report
+        env:
+          POSTGRES_URL: ${{ secrets.POSTGRES_URL }}
+          MYSQL_URL: ${{ secrets.MYSQL_URL }}
+          TPCH_TABLE: lineitem
+
+      - name: Show benchmark result for pull request
+        if: ${{ github.event_name == 'pull_request'}}
+        uses: rhysd/github-action-benchmark@v1
+        with:
+          name: ConnectorX Benchmarks
+          tool: "pytest"
+          output-file-path: benchmark.json
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          auto-push: false
+          save-data-file: false
+          fail-threshold: "200%"
+          comment-always: true
+          fail-on-alert: true
+
+      - name: Store benchmark result for push operator
+        if: ${{ github.event_name == 'push'}}
+        uses: rhysd/github-action-benchmark@v1
+        with:
+          name: ConnectorX Benchmarks
+          tool: "pytest"
+          output-file-path: benchmark.json
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          auto-push: true
+          alert-threshold: "100%"
+          fail-threshold: "200%"
+          comment-always: true
+          fail-on-alert: true
