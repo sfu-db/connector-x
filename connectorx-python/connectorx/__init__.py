@@ -35,7 +35,7 @@ def read_sql(
     query
       a SQL query or a list of SQL query.
     return_type
-      the return type of this function. Currently only "pandas" is supported.
+      the return type of this function. It can be "arrow", "pandas", "modin", "dask" or "polars".
     partition_on
       the column to partition the result.
     partition_range

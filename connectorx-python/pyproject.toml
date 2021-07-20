@@ -12,7 +12,7 @@ classifiers = [
   "Topic :: Scientific/Engineering",
   "Framework :: IPython",
 ] 
-description = "" 
+description = "Load data from databases to dataframes, the fastest way." 
 include = ["connectorx/*.so", "connectorx/*.pyd"] 
 keywords = ["read_sql"] 
 license = "MIT" 
@@ -31,6 +31,7 @@ pyarrow = {version = "^4", optional = true}
 python = "^3.7.1"
 
 [tool.poetry.extras]
+all = ["dask", "pandas", "modin", "polars", "pyarrow"]
 dask = ["dask", "pandas"]
 modin = ["modin", "pandas"]
 pandas = ["pandas"]

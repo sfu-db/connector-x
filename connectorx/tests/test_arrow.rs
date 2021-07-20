@@ -28,6 +28,7 @@ fn test_arrow() {
         .map(|v| CXQuery::naked(format!("{},{}", v, ncols)))
         .collect();
     let mut destination = ArrowDestination::new();
+
     let dispatcher = Dispatcher::<_, _, DummyArrowTransport>::new(
         DummySource::new(&["a", "b", "c", "d", "e"], &schema),
         &mut destination,
@@ -35,8 +36,7 @@ fn test_arrow() {
     );
     dispatcher.run().expect("run dispatcher");
 
-    let headers: Vec<_> = (0..ncols).map(|c| format!("c{}", c)).collect();
-    let records: Vec<RecordBatch> = destination.finish(headers).unwrap();
+    let records: Vec<RecordBatch> = destination.finish().unwrap();
     assert_eq!(2, records.len());
 
     for col in 0..ncols {
@@ -141,9 +141,8 @@ fn test_postgres_arrow() {
     dispatcher.run().expect("run dispatcher");
 
     let ncols = destination.schema().len();
-    let headers: Vec<_> = (0..ncols).map(|c| format!("c{}", c)).collect();
 
-    let records: Vec<RecordBatch> = destination.finish(headers).unwrap();
+    let records: Vec<RecordBatch> = destination.finish().unwrap();
     assert_eq!(2, records.len());
 
     for col in 0..ncols {
