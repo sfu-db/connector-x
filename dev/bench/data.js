@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1626822634624,
+  "lastUpdate": 1626823341126,
   "repoUrl": "https://github.com/sfu-db/connector-x",
   "entries": {
     "ConnectorX TPC-H Scale@1 Benchmarks": [
@@ -76,6 +76,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 2.775012180857785",
             "extra": "mean: 15.525762653816491 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "youngw@sfu.ca",
+            "name": "Weiyuan Wu",
+            "username": "dovahcrow"
+          },
+          "committer": {
+            "email": "youngw@sfu.ca",
+            "name": "Weiyuan Wu",
+            "username": "dovahcrow"
+          },
+          "distinct": false,
+          "id": "3a3e3f02940cd4c56b438f9d6eccba0354049e4e",
+          "message": "add polars rust test",
+          "timestamp": "2021-07-20T22:54:40Z",
+          "tree_id": "d97ac659a66392e3f5f589bfa791698cc43a52f5",
+          "url": "https://github.com/sfu-db/connector-x/commit/3a3e3f02940cd4c56b438f9d6eccba0354049e4e"
+        },
+        "date": 1626823340071,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_mysql",
+            "value": 0.06506041915055688,
+            "unit": "iter/sec",
+            "range": "stddev: 0.5886551795399168",
+            "extra": "mean: 15.370328274182976 sec\nrounds: 5"
+          },
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_postgres",
+            "value": 0.06385055601593312,
+            "unit": "iter/sec",
+            "range": "stddev: 2.520911337842341",
+            "extra": "mean: 15.661570742633193 sec\nrounds: 5"
           }
         ]
       }
