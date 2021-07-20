@@ -1,6 +1,7 @@
-from typing import Optional, Tuple, Union, List
+from typing import Optional, Tuple, Union, List, Dict, Any
 
 import pandas as pd
+import pyarrow as pa
 
 from .connectorx_python import read_sql as _read_sql
 
@@ -92,7 +93,7 @@ def read_sql(
     else:
         raise ValueError("query must be either str or a list of str")
 
-    df_infos = _read_sql(
+    result = _read_sql(
         conn,
         return_type,
         queries=queries,
@@ -100,6 +101,33 @@ def read_sql(
         partition_query=partition_query,
     )
 
+    if return_type == "pandas":
+        df = reconstruct_pandas(result)
+    elif return_type == "arrow":
+        df = reconstruct_arrow(result)
+    else:
+        raise ValueError(return_type)
+
+    return df
+
+
+def reconstruct_arrow(
+    result: Tuple[List[str], List[List[Tuple[int, int]]]]
+) -> pa.Table:
+    names, ptrs = result
+    rbs = []
+    if len(names) == 0:
+        raise ValueError("Empty result")
+
+    for chunk in ptrs:
+        rb = pa.RecordBatch.from_arrays(
+            [pa.Array._import_from_c(*col_ptr) for col_ptr in chunk], names
+        )
+        rbs.append(rb)
+    return pa.Table.from_batches(rbs)
+
+
+def reconstruct_pandas(df_infos: Dict[str, Any]) -> pd.DataFrame:
     data = df_infos["data"]
     headers = df_infos["headers"]
     block_infos = df_infos["block_infos"]

@@ -4,7 +4,7 @@ use connectorx::{
     destinations::{arrow::ArrowDestination, Destination},
     sources::{
         dummy::DummySource,
-        postgres::{Binary, PostgresSource},
+        postgres::{BinaryProtocol, PostgresSource},
     },
     sql::CXQuery,
     transports::{DummyArrowTransport, PostgresArrowTransport},
@@ -132,7 +132,7 @@ fn test_postgres_arrow() {
     ];
     let builder = PostgresSource::new(&dburl, 2).unwrap();
     let mut destination = ArrowDestination::new();
-    let dispatcher = Dispatcher::<_, _, PostgresArrowTransport<Binary>>::new(
+    let dispatcher = Dispatcher::<_, _, PostgresArrowTransport<BinaryProtocol>>::new(
         builder,
         &mut destination,
         &queries,

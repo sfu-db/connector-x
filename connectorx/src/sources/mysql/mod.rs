@@ -22,8 +22,8 @@ pub use typesystem::MysqlTypeSystem;
 type MysqlManager = MysqlConnectionManager;
 type MysqlConn = PooledConnection<MysqlManager>;
 
-pub enum MysqlBinary {}
-pub enum MysqlText {}
+pub enum BinaryProtocol {}
+pub enum TextProtocol {}
 
 pub struct MysqlSource<P> {
     pool: Pool<MysqlManager>,
@@ -190,7 +190,7 @@ impl<P> MysqlSourcePartition<P> {
     }
 }
 
-impl SourcePartition for MysqlSourcePartition<MysqlBinary> {
+impl SourcePartition for MysqlSourcePartition<BinaryProtocol> {
     type TypeSystem = MysqlTypeSystem;
     type Parser<'a> = MysqlBinarySourceParser<'a>;
 
@@ -229,7 +229,7 @@ impl SourcePartition for MysqlSourcePartition<MysqlBinary> {
     }
 }
 
-impl SourcePartition for MysqlSourcePartition<MysqlText> {
+impl SourcePartition for MysqlSourcePartition<TextProtocol> {
     type TypeSystem = MysqlTypeSystem;
     type Parser<'a> = MysqlTextSourceParser<'a>;
 

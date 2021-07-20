@@ -3,7 +3,9 @@ use crate::pandas::types::PandasTypeSystem;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
 use connectorx::{
     impl_transport,
-    sources::postgres::{Binary, Cursor, PostgresSource, PostgresTypeSystem, CSV},
+    sources::postgres::{
+        BinaryProtocol, CSVProtocol, CursorProtocol, PostgresSource, PostgresTypeSystem,
+    },
     typesystem::TypeConversion,
 };
 use rust_decimal::prelude::*;
@@ -14,9 +16,9 @@ use uuid::Uuid;
 pub struct PostgresPandasTransport<'py, P>(&'py (), PhantomData<P>);
 
 impl_transport!(
-    name = PostgresPandasTransport<'tp, Binary>,
+    name = PostgresPandasTransport<'tp, BinaryProtocol>,
     systems = PostgresTypeSystem => PandasTypeSystem,
-    route = PostgresSource<Binary> => PandasDestination<'tp>,
+    route = PostgresSource<BinaryProtocol> => PandasDestination<'tp>,
     mappings = {
         { Float4[f32]                => F64[f64]                | conversion all }
         { Float8[f64]                => F64[f64]                | conversion all }
@@ -42,9 +44,9 @@ impl_transport!(
 );
 
 impl_transport!(
-    name = PostgresPandasTransport<'tp, CSV>,
+    name = PostgresPandasTransport<'tp, CSVProtocol>,
     systems = PostgresTypeSystem => PandasTypeSystem,
-    route = PostgresSource<CSV> => PandasDestination<'tp>,
+    route = PostgresSource<CSVProtocol> => PandasDestination<'tp>,
     mappings = {
         { Float4[f32]                => F64[f64]                | conversion all }
         { Float8[f64]                => F64[f64]                | conversion all }
@@ -70,9 +72,9 @@ impl_transport!(
 );
 
 impl_transport!(
-    name = PostgresPandasTransport<'tp, Cursor>,
+    name = PostgresPandasTransport<'tp, CursorProtocol>,
     systems = PostgresTypeSystem => PandasTypeSystem,
-    route = PostgresSource<Cursor> => PandasDestination<'tp>,
+    route = PostgresSource<CursorProtocol> => PandasDestination<'tp>,
     mappings = {
         { Float4[f32]                => F64[f64]                | conversion all }
         { Float8[f64]                => F64[f64]                | conversion all }

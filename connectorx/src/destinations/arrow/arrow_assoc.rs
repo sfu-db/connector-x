@@ -2,11 +2,12 @@ use crate::constants::SECONDS_IN_DAY;
 use crate::errors::{ConnectorAgentError, Result};
 use arrow::array::{
     ArrayBuilder, BooleanBuilder, Date32Builder, Date64Builder, Float32Builder, Float64Builder,
-    Int32Builder, Int64Builder, LargeStringBuilder, UInt32Builder, UInt64Builder,
+    Int32Builder, Int64Builder, LargeBinaryBuilder, LargeStringBuilder, Time64NanosecondBuilder,
+    UInt32Builder, UInt64Builder,
 };
-use arrow::datatypes::DataType as ArrowDataType;
 use arrow::datatypes::Field;
-use chrono::{Date, DateTime, NaiveDate, NaiveDateTime, Utc};
+use arrow::datatypes::{DataType as ArrowDataType, TimeUnit};
+use chrono::{Date, DateTime, NaiveDate, NaiveDateTime, NaiveTime, Timelike, Utc};
 use fehler::throws;
 
 /// Associate arrow builder with native type
@@ -275,5 +276,80 @@ impl ArrowAssoc for NaiveDateTime {
 
     fn field(header: &str) -> Field {
         Field::new(header, ArrowDataType::Date64, false)
+    }
+}
+
+impl ArrowAssoc for Option<NaiveTime> {
+    type Builder = Time64NanosecondBuilder;
+
+    fn builder(nrows: usize) -> Self::Builder {
+        Time64NanosecondBuilder::new(nrows)
+    }
+
+    fn append(builder: &mut Self::Builder, value: Option<NaiveTime>) -> Result<()> {
+        builder.append_option(value.map(|t| {
+            t.num_seconds_from_midnight() as i64 * 1000_000_000 + t.nanosecond() as i64
+        }))?;
+        Ok(())
+    }
+
+    fn field(header: &str) -> Field {
+        Field::new(header, ArrowDataType::Time64(TimeUnit::Nanosecond), true)
+    }
+}
+
+impl ArrowAssoc for NaiveTime {
+    type Builder = Time64NanosecondBuilder;
+
+    fn builder(nrows: usize) -> Self::Builder {
+        Time64NanosecondBuilder::new(nrows)
+    }
+
+    fn append(builder: &mut Self::Builder, value: NaiveTime) -> Result<()> {
+        builder.append_value(
+            value.num_seconds_from_midnight() as i64 * 1000_000_000 + value.nanosecond() as i64,
+        )?;
+        Ok(())
+    }
+
+    fn field(header: &str) -> Field {
+        Field::new(header, ArrowDataType::Time64(TimeUnit::Nanosecond), false)
+    }
+}
+
+impl ArrowAssoc for Option<Vec<u8>> {
+    type Builder = LargeBinaryBuilder;
+
+    fn builder(nrows: usize) -> Self::Builder {
+        LargeBinaryBuilder::new(nrows)
+    }
+
+    fn append(builder: &mut Self::Builder, value: Self) -> Result<()> {
+        match value {
+            Some(v) => builder.append_value(v)?,
+            None => builder.append_null()?,
+        };
+        Ok(())
+    }
+
+    fn field(header: &str) -> Field {
+        Field::new(header, ArrowDataType::Time64(TimeUnit::Nanosecond), true)
+    }
+}
+
+impl ArrowAssoc for Vec<u8> {
+    type Builder = LargeBinaryBuilder;
+
+    fn builder(nrows: usize) -> Self::Builder {
+        LargeBinaryBuilder::new(nrows)
+    }
+
+    fn append(builder: &mut Self::Builder, value: Self) -> Result<()> {
+        builder.append_value(value)?;
+        Ok(())
+    }
+
+    fn field(header: &str) -> Field {
+        Field::new(header, ArrowDataType::Time64(TimeUnit::Nanosecond), false)
     }
 }

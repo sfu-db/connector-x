@@ -4,10 +4,7 @@ use connectorx::sql::CXQuery;
 use dict_derive::FromPyObject;
 use fehler::throw;
 use pyo3::prelude::*;
-use pyo3::{
-    exceptions::{PyNotImplementedError, PyValueError},
-    PyResult,
-};
+use pyo3::{exceptions::PyValueError, PyResult};
 use std::convert::TryFrom;
 
 #[derive(FromPyObject)]
@@ -98,9 +95,12 @@ pub fn read_sql<'a>(
             &queries,
             protocol.unwrap_or("binary"),
         )?),
-        "arrow" => Err(PyNotImplementedError::new_err(
-            "arrow return type is not implemented",
-        )),
+        "arrow" => Ok(crate::arrow::write_arrow(
+            py,
+            &source_conn,
+            &queries,
+            protocol.unwrap_or("binary"),
+        )?),
         _ => Err(PyValueError::new_err(format!(
             "return type should be 'pandas' or 'arrow', got '{}'",
             return_type

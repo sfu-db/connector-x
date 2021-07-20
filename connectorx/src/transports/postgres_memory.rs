@@ -1,6 +1,6 @@
 use crate::destinations::memory::MemoryDestination;
 use crate::dummy_typesystem::DummyTypeSystem;
-use crate::sources::postgres::{Binary, PostgresSource, PostgresTypeSystem, CSV};
+use crate::sources::postgres::{BinaryProtocol, CSVProtocol, PostgresSource, PostgresTypeSystem};
 use crate::typesystem::TypeConversion;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
 use std::marker::PhantomData;
@@ -9,9 +9,9 @@ use uuid::Uuid;
 pub struct PostgresMemoryTransport<P>(PhantomData<P>);
 
 impl_transport!(
-    name = PostgresMemoryTransport<CSV>,
+    name = PostgresMemoryTransport<CSVProtocol>,
     systems = PostgresTypeSystem => DummyTypeSystem,
-    route = PostgresSource<CSV> => MemoryDestination,
+    route = PostgresSource<CSVProtocol> => MemoryDestination,
     mappings = {
         { Float4[f32]                => F64[f64]                | conversion all }
         { Float8[f64]                => F64[f64]                | conversion all }
@@ -32,9 +32,9 @@ impl_transport!(
 );
 
 impl_transport!(
-    name = PostgresMemoryTransport<Binary>,
+    name = PostgresMemoryTransport<BinaryProtocol>,
     systems = PostgresTypeSystem => DummyTypeSystem,
-    route = PostgresSource<Binary> => MemoryDestination,
+    route = PostgresSource<BinaryProtocol> => MemoryDestination,
     mappings = {
         { Float4[f32]                => F64[f64]                | conversion all }
         { Float8[f64]                => F64[f64]                | conversion all }

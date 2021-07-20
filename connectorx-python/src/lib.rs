@@ -1,6 +1,7 @@
 #![feature(generic_associated_types)]
 #![allow(incomplete_features)]
 
+pub mod arrow;
 mod errors;
 pub mod pandas;
 pub mod read_sql;

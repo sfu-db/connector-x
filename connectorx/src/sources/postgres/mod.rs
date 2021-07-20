@@ -25,12 +25,17 @@ use std::marker::PhantomData;
 pub use typesystem::PostgresTypeSystem;
 use uuid::Uuid;
 
+/// Protocol - Binary based bulk load
+pub enum BinaryProtocol {}
+
+/// Protocol - CSV based bulk load
+pub enum CSVProtocol {}
+
+/// Protocol - use Cursor
+pub enum CursorProtocol {}
+
 type PgManager = PostgresConnectionManager<NoTls>;
 type PgConn = PooledConnection<PgManager>;
-
-pub enum Binary {}
-pub enum CSV {}
-pub enum Cursor {}
 
 pub struct PostgresSource<P> {
     pool: Pool<PgManager>,
@@ -196,7 +201,7 @@ impl<P> PostgresSourcePartition<P> {
     }
 }
 
-impl SourcePartition for PostgresSourcePartition<Binary> {
+impl SourcePartition for PostgresSourcePartition<BinaryProtocol> {
     type TypeSystem = PostgresTypeSystem;
     type Parser<'a> = PostgresBinarySourcePartitionParser<'a>;
 
@@ -236,7 +241,7 @@ impl SourcePartition for PostgresSourcePartition<Binary> {
     }
 }
 
-impl SourcePartition for PostgresSourcePartition<CSV> {
+impl SourcePartition for PostgresSourcePartition<CSVProtocol> {
     type TypeSystem = PostgresTypeSystem;
     type Parser<'a> = PostgresCSVSourceParser<'a>;
 
@@ -273,7 +278,7 @@ impl SourcePartition for PostgresSourcePartition<CSV> {
     }
 }
 
-impl SourcePartition for PostgresSourcePartition<Cursor> {
+impl SourcePartition for PostgresSourcePartition<CursorProtocol> {
     type TypeSystem = PostgresTypeSystem;
     type Parser<'a> = PostgresRawSourceParser<'a>;
 

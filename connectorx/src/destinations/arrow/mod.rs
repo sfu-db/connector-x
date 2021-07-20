@@ -11,6 +11,7 @@ use anyhow::anyhow;
 use arrow::datatypes::Schema;
 use arrow::record_batch::RecordBatch;
 use arrow_assoc::ArrowAssoc;
+use fehler::throw;
 use fehler::throws;
 use funcs::{FFinishBuilder, FNewBuilder, FNewField};
 use itertools::Itertools;
@@ -23,6 +24,7 @@ type Builders = Vec<Builder>;
 pub struct ArrowDestination {
     nrows: usize,
     schema: Vec<ArrowTypeSystem>,
+    names: Vec<String>,
     builders: Vec<Builders>,
 }
 
@@ -32,6 +34,7 @@ impl Default for ArrowDestination {
             nrows: 0,
             schema: vec![],
             builders: vec![],
+            names: vec![],
         }
     }
 }
@@ -51,13 +54,18 @@ impl Destination for ArrowDestination {
     fn allocate<S: AsRef<str>>(
         &mut self,
         nrows: usize,
-        _names: &[S],
+        names: &[S],
         schema: &[ArrowTypeSystem],
-        _data_order: DataOrder,
+        data_order: DataOrder,
     ) {
-        // cannot really create builders since do not know each partition size here
+        // todo: support colmajor
+        if !matches!(data_order, DataOrder::RowMajor) {
+            throw!(ConnectorAgentError::UnsupportedDataOrder(data_order))
+        }
+        // cannot really create the builders since do not know each partition size here
         self.nrows = nrows;
         self.schema = schema.to_vec();
+        self.names = names.iter().map(|n| n.as_ref().to_string()).collect();
     }
 
     #[throws(ConnectorAgentError)]
@@ -90,11 +98,11 @@ impl Destination for ArrowDestination {
 
 impl ArrowDestination {
     #[throws(ConnectorAgentError)]
-    pub fn finish(self, headers: Vec<String>) -> Vec<RecordBatch> {
+    pub fn finish(self) -> Vec<RecordBatch> {
         let fields = self
             .schema
             .iter()
-            .zip_eq(headers)
+            .zip_eq(self.names)
             .map(|(&dt, h)| Ok(Realize::<FNewField>::realize(dt)?(h.as_str())))
             .collect::<Result<Vec<_>>>()?;
 
