@@ -2,7 +2,7 @@ window.BENCHMARK_DATA = {
   "lastUpdate": 1626762488571,
   "repoUrl": "https://github.com/sfu-db/connector-x",
   "entries": {
-    "ConnectorX TPC-H Scale1 Benchmarks": [
+    "ConnectorX TPC-H Scale@1 Benchmarks": [
       {
         "commit": {
           "author": {
@@ -78,9 +78,7 @@ window.BENCHMARK_DATA = {
             "extra": "mean: 18.050286505836993 sec\nrounds: 5"
           }
         ]
-      }
-    ],
-    "ConnectorX TPCH Scale1 Benchmarks": [
+      },
       {
         "commit": {
           "author": {
