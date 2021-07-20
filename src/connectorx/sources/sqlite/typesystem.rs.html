@@ -77,6 +77,7 @@
 <span id="74">74</span>
 <span id="75">75</span>
 <span id="76">76</span>
+<span id="77">77</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="ident">chrono</span>::{<span class="ident">NaiveDate</span>, <span class="ident">NaiveDateTime</span>, <span class="ident">NaiveTime</span>};
 <span class="kw">use</span> <span class="ident">rusqlite::types::Type</span>;
@@ -118,6 +119,7 @@
             <span class="ident">Type::Integer</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Int8</span>(<span class="bool-val">true</span>),
             <span class="ident">Type::Real</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Real</span>(<span class="bool-val">true</span>),
             <span class="ident">Type::Text</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Text</span>(<span class="bool-val">true</span>),
+            <span class="ident">Type::Blob</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Blob</span>(<span class="bool-val">true</span>),
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unimplemented!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">ty</span>),
         }
     }

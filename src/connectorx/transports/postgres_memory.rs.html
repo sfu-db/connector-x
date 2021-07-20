@@ -89,7 +89,7 @@
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::destinations::memory::MemoryDestination</span>;
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::dummy_typesystem::DummyTypeSystem</span>;
-<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::sources::postgres</span>::{<span class="ident">Binary</span>, <span class="ident">PostgresSource</span>, <span class="ident">PostgresTypeSystem</span>, <span class="ident">CSV</span>};
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::sources::postgres</span>::{<span class="ident">BinaryProtocol</span>, <span class="ident">CSVProtocol</span>, <span class="ident">PostgresSource</span>, <span class="ident">PostgresTypeSystem</span>};
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::typesystem::TypeConversion</span>;
 <span class="kw">use</span> <span class="ident">chrono</span>::{<span class="ident">DateTime</span>, <span class="ident">NaiveDate</span>, <span class="ident">NaiveDateTime</span>, <span class="ident">NaiveTime</span>, <span class="ident">Utc</span>};
 <span class="kw">use</span> <span class="ident">std::marker::PhantomData</span>;
@@ -98,9 +98,9 @@
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PostgresMemoryTransport</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>(<span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>);
 
 <span class="macro">impl_transport!</span>(
-    <span class="ident">name</span> <span class="op">=</span> <span class="ident">PostgresMemoryTransport</span><span class="op">&lt;</span><span class="ident">CSV</span><span class="op">&gt;</span>,
+    <span class="ident">name</span> <span class="op">=</span> <span class="ident">PostgresMemoryTransport</span><span class="op">&lt;</span><span class="ident">CSVProtocol</span><span class="op">&gt;</span>,
     <span class="ident">systems</span> <span class="op">=</span> <span class="ident">PostgresTypeSystem</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">DummyTypeSystem</span>,
-    <span class="ident">route</span> <span class="op">=</span> <span class="ident">PostgresSource</span><span class="op">&lt;</span><span class="ident">CSV</span><span class="op">&gt;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">MemoryDestination</span>,
+    <span class="ident">route</span> <span class="op">=</span> <span class="ident">PostgresSource</span><span class="op">&lt;</span><span class="ident">CSVProtocol</span><span class="op">&gt;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">MemoryDestination</span>,
     <span class="ident">mappings</span> <span class="op">=</span> {
         { <span class="ident">Float4</span>[<span class="ident">f32</span>]                <span class="op">=</span><span class="op">&gt;</span> <span class="ident">F64</span>[<span class="ident">f64</span>]                <span class="op">|</span> <span class="ident">conversion</span> <span class="ident">all</span> }
         { <span class="ident">Float8</span>[<span class="ident">f64</span>]                <span class="op">=</span><span class="op">&gt;</span> <span class="ident">F64</span>[<span class="ident">f64</span>]                <span class="op">|</span> <span class="ident">conversion</span> <span class="ident">all</span> }
@@ -121,9 +121,9 @@
 );
 
 <span class="macro">impl_transport!</span>(
-    <span class="ident">name</span> <span class="op">=</span> <span class="ident">PostgresMemoryTransport</span><span class="op">&lt;</span><span class="ident">Binary</span><span class="op">&gt;</span>,
+    <span class="ident">name</span> <span class="op">=</span> <span class="ident">PostgresMemoryTransport</span><span class="op">&lt;</span><span class="ident">BinaryProtocol</span><span class="op">&gt;</span>,
     <span class="ident">systems</span> <span class="op">=</span> <span class="ident">PostgresTypeSystem</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">DummyTypeSystem</span>,
-    <span class="ident">route</span> <span class="op">=</span> <span class="ident">PostgresSource</span><span class="op">&lt;</span><span class="ident">Binary</span><span class="op">&gt;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">MemoryDestination</span>,
+    <span class="ident">route</span> <span class="op">=</span> <span class="ident">PostgresSource</span><span class="op">&lt;</span><span class="ident">BinaryProtocol</span><span class="op">&gt;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">MemoryDestination</span>,
     <span class="ident">mappings</span> <span class="op">=</span> {
         { <span class="ident">Float4</span>[<span class="ident">f32</span>]                <span class="op">=</span><span class="op">&gt;</span> <span class="ident">F64</span>[<span class="ident">f64</span>]                <span class="op">|</span> <span class="ident">conversion</span> <span class="ident">all</span> }
         { <span class="ident">Float8</span>[<span class="ident">f64</span>]                <span class="op">=</span><span class="op">&gt;</span> <span class="ident">F64</span>[<span class="ident">f64</span>]                <span class="op">|</span> <span class="ident">conversion</span> <span class="ident">all</span> }

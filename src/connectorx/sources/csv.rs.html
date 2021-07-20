@@ -534,7 +534,7 @@
         <span class="prelude-val">Ok</span>(<span class="self">self</span>
             .<span class="ident">files</span>
             .<span class="ident">into_iter</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">f</span><span class="op">|</span> <span class="ident">CSVSourcePartition::new</span>(<span class="ident">f</span>))
+            .<span class="ident">map</span>(<span class="ident">CSVSourcePartition::new</span>)
             .<span class="ident">collect</span>())
     }
 }
@@ -550,7 +550,7 @@
 <span class="kw">impl</span> <span class="ident">CSVSourcePartition</span> {
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">fname</span>: <span class="ident">CXQuery</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
-            <span class="ident">fname</span>: <span class="ident">fname</span>,
+            <span class="ident">fname</span>,
             <span class="ident">records</span>: <span class="ident">Vec::new</span>(),
             <span class="ident">counter</span>: <span class="number">0</span>,
             <span class="ident">nrows</span>: <span class="number">0</span>,

@@ -35,9 +35,13 @@
 <span id="32">32</span>
 <span id="33">33</span>
 <span id="34">34</span>
+<span id="35">35</span>
+<span id="36">36</span>
+<span id="37">37</span>
+<span id="38">38</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::impl_typesystem</span>;
-<span class="kw">use</span> <span class="ident">chrono</span>::{<span class="ident">DateTime</span>, <span class="ident">NaiveDate</span>, <span class="ident">NaiveDateTime</span>, <span class="ident">Utc</span>};
+<span class="kw">use</span> <span class="ident">chrono</span>::{<span class="ident">DateTime</span>, <span class="ident">NaiveDate</span>, <span class="ident">NaiveDateTime</span>, <span class="ident">NaiveTime</span>, <span class="ident">Utc</span>};
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>, <span class="ident">PartialOrd</span>, <span class="ident">Ord</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ArrowTypeSystem</span> {
@@ -48,8 +52,10 @@
     <span class="ident">UInt32</span>(<span class="ident">bool</span>),
     <span class="ident">UInt64</span>(<span class="ident">bool</span>),
     <span class="ident">LargeUtf8</span>(<span class="ident">bool</span>),
+    <span class="ident">LargeBinary</span>(<span class="ident">bool</span>),
     <span class="ident">Date32</span>(<span class="ident">bool</span>),
     <span class="ident">Date64</span>(<span class="ident">bool</span>),
+    <span class="ident">Time64</span>(<span class="ident">bool</span>),
     <span class="ident">Boolean</span>(<span class="ident">bool</span>),
     <span class="ident">DateTimeTz</span>(<span class="ident">bool</span>),
 }
@@ -63,10 +69,12 @@
         { <span class="ident">Int64</span>      <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i64</span>           }
         { <span class="ident">UInt32</span>     <span class="op">=</span><span class="op">&gt;</span> <span class="ident">u32</span>           }
         { <span class="ident">UInt64</span>     <span class="op">=</span><span class="op">&gt;</span> <span class="ident">u64</span>           }
+        { <span class="ident">Boolean</span>    <span class="op">=</span><span class="op">&gt;</span> <span class="ident">bool</span>          }
         { <span class="ident">LargeUtf8</span>  <span class="op">=</span><span class="op">&gt;</span> <span class="ident">String</span>        }
+        { <span class="ident">LargeBinary</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>      }
         { <span class="ident">Date32</span>     <span class="op">=</span><span class="op">&gt;</span> <span class="ident">NaiveDate</span>     }
         { <span class="ident">Date64</span>     <span class="op">=</span><span class="op">&gt;</span> <span class="ident">NaiveDateTime</span> }
-        { <span class="ident">Boolean</span>    <span class="op">=</span><span class="op">&gt;</span> <span class="ident">bool</span>          }
+        { <span class="ident">Time64</span>     <span class="op">=</span><span class="op">&gt;</span> <span class="ident">NaiveTime</span>     }
         { <span class="ident">DateTimeTz</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span> }
     }
 }

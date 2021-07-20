@@ -109,6 +109,9 @@
 <span id="106">106</span>
 <span id="107">107</span>
 <span id="108">108</span>
+<span id="109">109</span>
+<span id="110">110</span>
+<span id="111">111</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::data_order::DataOrder</span>;
 <span class="kw">use</span> <span class="ident">std::any::type_name</span>;
@@ -183,6 +186,9 @@
 
     <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
     <span class="ident">HexError</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">hex::FromHexError</span>),
+
+    <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
+    <span class="ident">PolarsError</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">polars::error::PolarsError</span>),
 
     <span class="doccomment">/// Any other errors that are too trivial to be put here explicitly.</span>
     <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
