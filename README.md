@@ -62,6 +62,9 @@ ConnectorX is written in Rust and follows "zero-copy" principle.
 This allows it to make full use of the CPU by becoming cache and branch predictor friendly. Moreover, the architecture of ConnectorX ensures the data will be copied exactly once, directly from the source to the destination.
 
 # Supported Sources & Destinations
+
+Supported protocols, data types and type mappings can be found [here](Types.md).
+
 ## Sources
 - [x] Postgres
 - [x] Mysql
@@ -90,6 +93,7 @@ Run the SQL query, download the data from database into a Pandas dataframe.
 - **conn**(str): Connection string uri. Currently only PostgreSQL is supported.
 - **query**(string or list of string): SQL query or list of SQL queries for fetching data.
 - **return_type**(string, optional(default `"pandas"`)): The return type of this function. Currently only "pandas" is supported.
+- **protocol**(string, optional(default `"binary"`)): The protocol used to fetch data from source. Check out [here](Types.md) to see more details.
 - **partition_on**(string, optional(default `None`)): The column to partition the result.
 - **partition_range**(tuple of int, optional(default `None`)): The value range of the partition column.
 - **partition_num**(int, optional(default `None`)): The number of partitions to generate.
