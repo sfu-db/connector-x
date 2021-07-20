@@ -14,7 +14,7 @@ bytes = "1"
 chrono = "0.4"
 connectorx = {path = "../connectorx", default-features = false}
 dict_derive = "0.3"
-env_logger = "0.8"
+env_logger = "0.9"
 fehler = "1"
 itertools = "0.10"
 libc = "0.2"
@@ -36,7 +36,7 @@ built = {version = "0.5", features = ["chrono"]}
 criterion = "0.3"
 criterion-macro = "0.3"
 iai = "0.1"
-pprof = {version = "0.4", features = ["flamegraph", "criterion", "protobuf"]}
+pprof = {version = "0.5", features = ["flamegraph", "criterion", "protobuf"]}
 rayon = "1"
 
 [lib]
