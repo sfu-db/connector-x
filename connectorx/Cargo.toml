@@ -49,6 +49,7 @@ name = "connectorx"
 [dev-dependencies]
 criterion = "0.3"
 iai = "0.1"
+polars = "0.14"
 pprof = {version = "0.5", features = ["flamegraph"]}
 
 [features]
