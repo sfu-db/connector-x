@@ -1,8 +1,5 @@
 from typing import Optional, Tuple, Union, List, Dict, Any
 
-import pandas as pd
-import pyarrow as pa
-
 from .connectorx_python import read_sql as _read_sql
 
 try:
@@ -27,7 +24,7 @@ def read_sql(
     partition_on: Optional[str] = None,
     partition_range: Optional[Tuple[int, int]] = None,
     partition_num: Optional[int] = None,
-) -> pd.DataFrame:
+):
     """
     Run the SQL query, download the data from database into a Pandas dataframe.
 
@@ -93,27 +90,62 @@ def read_sql(
     else:
         raise ValueError("query must be either str or a list of str")
 
-    result = _read_sql(
-        conn,
-        return_type,
-        queries=queries,
-        protocol=protocol,
-        partition_query=partition_query,
-    )
+    if return_type in {"modin", "dask", "pandas"}:
+        try:
+            import pandas
+        except ImportError:
+            raise ValueError("You need to install pandas first")
 
-    if return_type == "pandas":
+        result = _read_sql(
+            conn,
+            "pandas",
+            queries=queries,
+            protocol=protocol,
+            partition_query=partition_query,
+        )
         df = reconstruct_pandas(result)
-    elif return_type == "arrow":
+        if return_type == "modin":
+            try:
+                import modin.pandas as mpd
+            except ImportError:
+                raise ValueError("You need to install modin first")
+
+            df = mpd.DataFrame(df)
+        elif return_type == "dask":
+            try:
+                import dask.dataframe as dd
+            except ImportError:
+                raise ValueError("You need to install dask first")
+
+            df = dd.from_pandas(df, npartitions=1)
+
+    elif return_type in {"arrow", "polars"}:
+        try:
+            import pyarrow
+        except ImportError:
+            raise ValueError("You need to install pyarrow first")
+
+        result = _read_sql(
+            conn,
+            "arrow",
+            queries=queries,
+            protocol=protocol,
+            partition_query=partition_query,
+        )
         df = reconstruct_arrow(result)
+        if return_type == "polars":
+            import polars as pl
+
+            df = pl.DataFrame.from_arrow(df)
     else:
         raise ValueError(return_type)
 
     return df
 
 
-def reconstruct_arrow(
-    result: Tuple[List[str], List[List[Tuple[int, int]]]]
-) -> pa.Table:
+def reconstruct_arrow(result: Tuple[List[str], List[List[Tuple[int, int]]]]):
+    import pyarrow as pa
+
     names, ptrs = result
     rbs = []
     if len(names) == 0:
@@ -127,7 +159,9 @@ def reconstruct_arrow(
     return pa.Table.from_batches(rbs)
 
 
-def reconstruct_pandas(df_infos: Dict[str, Any]) -> pd.DataFrame:
+def reconstruct_pandas(df_infos: Dict[str, Any]):
+    import pandas as pd
+
     data = df_infos["data"]
     headers = df_infos["headers"]
     block_infos = df_infos["block_infos"]

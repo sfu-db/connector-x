@@ -8,7 +8,7 @@ version = "0.2.0-alpha.2"
 
 [dependencies]
 anyhow = "1"
-arrow = "5"
+arrow = "4"
 bytes = "1"
 chrono = "0.4"
 csv = "1"
@@ -24,6 +24,7 @@ log = "0.4"
 ndarray = "0.15"
 num-traits = "0.2"
 owning_ref = "0.4"
+polars = "0.14"
 postgres = {version = "0.19", features = ["with-chrono-0_4", "with-uuid-0_8", "with-serde_json-1"]}
 r2d2 = "0.8"
 r2d2_mysql = "18.0"

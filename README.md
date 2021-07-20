@@ -76,8 +76,11 @@ Supported protocols, data types and type mappings can be found [here](Types.md).
 - [ ] ...
 
 ## Destinations
-- [x] Pandas (<1.3 only, WIP for Pandas 1.3)
-- [ ] PyArrow (WIP)
+- [x] Pandas
+- [x] PyArrow
+- [x] Modin
+- [x] Dask
+- [x] Polars
   
 # Detailed Usage and Examples
 
@@ -92,7 +95,7 @@ Run the SQL query, download the data from database into a Pandas dataframe.
 ## Parameters
 - **conn**(str): Connection string uri. Currently only PostgreSQL is supported.
 - **query**(string or list of string): SQL query or list of SQL queries for fetching data.
-- **return_type**(string, optional(default `"pandas"`)): The return type of this function. Currently only "pandas" is supported.
+- **return_type**(string, optional(default `"pandas"`)): The return type of this function. It can be "arrow", "pandas", "modin", "dask" or "polars".
 - **protocol**(string, optional(default `"binary"`)): The protocol used to fetch data from source. Check out [here](Types.md) to see more details.
 - **partition_on**(string, optional(default `None`)): The column to partition the result.
 - **partition_range**(tuple of int, optional(default `None`)): The value range of the partition column.

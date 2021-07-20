@@ -40,9 +40,9 @@ jobs:
           version='${{ github.event.inputs.version }}'
           if [ -z $version ]
           then
-            pip install --index-url ${{ github.event.inputs.indexUrl }} connectorx
+            pip install --index-url ${{ github.event.inputs.indexUrl }} connectorx[pandas,pyarrow,modin,dask,polars]
           else
-            pip install --index-url ${{ github.event.inputs.indexUrl }} connectorx==$version
+            pip install --index-url ${{ github.event.inputs.indexUrl }} connectorx[pandas,pyarrow,modin,dask,polars]==$version
           fi
 
       - name: Install ConnectorX - Windows

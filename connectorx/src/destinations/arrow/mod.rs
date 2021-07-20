@@ -15,7 +15,9 @@ use fehler::throw;
 use fehler::throws;
 use funcs::{FFinishBuilder, FNewBuilder, FNewField};
 use itertools::Itertools;
+use polars::frame::DataFrame;
 use std::any::Any;
+use std::convert::TryFrom;
 use std::sync::Arc;
 
 type Builder = Box<dyn Any + Send>;
@@ -119,6 +121,12 @@ impl ArrowDestination {
                 Ok(RecordBatch::try_new(Arc::clone(&arrow_schema), columns)?)
             })
             .collect::<Result<Vec<_>>>()?
+    }
+
+    #[throws(ConnectorAgentError)]
+    pub fn polars(self) -> DataFrame {
+        let rbs = self.finish()?;
+        DataFrame::try_from(rbs)?
     }
 }
 
