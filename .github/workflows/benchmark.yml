@@ -49,7 +49,7 @@ jobs:
         if: ${{ github.event_name == 'pull_request'}}
         uses: rhysd/github-action-benchmark@v1
         with:
-          name: ConnectorX Benchmarks
+          name: "ConnectorX TPCH Scale1 Benchmarks"
           tool: "pytest"
           output-file-path: benchmark.json
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -63,7 +63,7 @@ jobs:
         if: ${{ github.event_name == 'push'}}
         uses: rhysd/github-action-benchmark@v1
         with:
-          name: ConnectorX Benchmarks
+          name: "ConnectorX TPCH Scale1 Benchmarks"
           tool: "pytest"
           output-file-path: benchmark.json
           github-token: ${{ secrets.GITHUB_TOKEN }}
