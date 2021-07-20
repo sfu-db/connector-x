@@ -30,3 +30,4 @@ jobs:
         with:
           branch: gh-pages # The branch the action should deploy to.
           folder: target/doc # The folder the action should deploy.
+          clean-exclude: dev
