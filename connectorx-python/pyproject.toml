@@ -22,7 +22,7 @@ readme = "README.md" # Markdown files are supported
 version = "0.2.0-alpha.2" 
 
 [tool.poetry.dependencies]
-dask = {version = "^2021", optional = true}
+dask = {version = "^2021", optional = true, extras = ["dataframe"]}
 modin = {version = "^0.10", optional = true}
 numpy = "^1"
 pandas = {version = "^1", optional = true}

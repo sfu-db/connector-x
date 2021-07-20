@@ -288,7 +288,7 @@ impl ArrowAssoc for Option<NaiveTime> {
 
     fn append(builder: &mut Self::Builder, value: Option<NaiveTime>) -> Result<()> {
         builder.append_option(value.map(|t| {
-            t.num_seconds_from_midnight() as i64 * 1000_000_000 + t.nanosecond() as i64
+            t.num_seconds_from_midnight() as i64 * 1_000_000_000 + t.nanosecond() as i64
         }))?;
         Ok(())
     }
@@ -307,7 +307,7 @@ impl ArrowAssoc for NaiveTime {
 
     fn append(builder: &mut Self::Builder, value: NaiveTime) -> Result<()> {
         builder.append_value(
-            value.num_seconds_from_midnight() as i64 * 1000_000_000 + value.nanosecond() as i64,
+            value.num_seconds_from_midnight() as i64 * 1_000_000_000 + value.nanosecond() as i64,
         )?;
         Ok(())
     }
