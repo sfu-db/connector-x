@@ -1,6 +1,7 @@
 #![feature(generic_associated_types)]
 #![allow(incomplete_features)]
 
+pub mod arrow;
 mod errors;
 pub mod pandas;
 pub mod read_sql;
@@ -24,6 +25,7 @@ fn connectorx_python(_: Python, m: &PyModule) -> PyResult<()> {
     });
 
     m.add_wrapped(wrap_pyfunction!(read_sql))?;
+    m.add_class::<pandas::PandasBlockInfo>()?;
     Ok(())
 }
 

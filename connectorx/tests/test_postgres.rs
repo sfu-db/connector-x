@@ -1,7 +1,7 @@
 use connectorx::{
     destinations::memory::MemoryDestination,
     sources::{
-        postgres::{Binary, PostgresSource, CSV},
+        postgres::{BinaryProtocol, CSVProtocol, PostgresSource},
         Produce, Source, SourcePartition,
     },
     sql::CXQuery,
@@ -19,7 +19,7 @@ fn load_and_parse() {
     #[derive(Debug, PartialEq)]
     struct Row(i32, Option<i32>, Option<String>, Option<f64>, Option<bool>);
 
-    let mut source = PostgresSource::<Binary>::new(&dburl, 1).unwrap();
+    let mut source = PostgresSource::<BinaryProtocol>::new(&dburl, 1).unwrap();
     source.set_queries(&[CXQuery::naked("select * from test_table")]);
     source.fetch_metadata().unwrap();
 
@@ -71,7 +71,7 @@ fn test_postgres() {
     ];
     let builder = PostgresSource::new(&dburl, 2).unwrap();
     let mut destination = MemoryDestination::new();
-    let dispatcher = Dispatcher::<_, _, PostgresMemoryTransport<Binary>>::new(
+    let dispatcher = Dispatcher::<_, _, PostgresMemoryTransport<BinaryProtocol>>::new(
         builder,
         &mut destination,
         &queries,
@@ -127,7 +127,7 @@ fn test_postgres_agg() {
     )];
     let builder = PostgresSource::new(&dburl, 1).unwrap();
     let mut destination = MemoryDestination::new();
-    let dispatcher = Dispatcher::<_, _, PostgresMemoryTransport<Binary>>::new(
+    let dispatcher = Dispatcher::<_, _, PostgresMemoryTransport<BinaryProtocol>>::new(
         builder,
         &mut destination,
         &queries,
@@ -152,7 +152,7 @@ fn load_and_parse_csv() {
     #[derive(Debug, PartialEq)]
     struct Row(i32, Option<i32>, Option<String>, Option<f64>, Option<bool>);
 
-    let mut source = PostgresSource::<CSV>::new(&dburl, 1).unwrap();
+    let mut source = PostgresSource::<CSVProtocol>::new(&dburl, 1).unwrap();
     source.set_queries(&[CXQuery::naked("select * from test_table")]);
     source.fetch_metadata().unwrap();
 
@@ -202,10 +202,10 @@ fn test_postgres_csv() {
         CXQuery::naked("select * from test_table where test_int < 2"),
         CXQuery::naked("select * from test_table where test_int >= 2"),
     ];
-    let builder = PostgresSource::<CSV>::new(&dburl, 2).unwrap();
+    let builder = PostgresSource::<CSVProtocol>::new(&dburl, 2).unwrap();
     let mut dst = MemoryDestination::new();
     let dispatcher =
-        Dispatcher::<_, _, PostgresMemoryTransport<CSV>>::new(builder, &mut dst, &queries);
+        Dispatcher::<_, _, PostgresMemoryTransport<CSVProtocol>>::new(builder, &mut dst, &queries);
 
     dispatcher.run().expect("run dispatcher");
     assert_eq!(

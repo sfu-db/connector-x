@@ -2,7 +2,7 @@
 authors = ["Weiyuan Wu <youngw@sfu.ca>"]
 edition = "2018"
 name = "connectorx"
-version = "0.2.0-alpha.2"
+version = "0.2.0-alpha.3"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -14,7 +14,7 @@ chrono = "0.4"
 csv = "1"
 derive_more = "0.99"
 dict_derive = "0.3"
-env_logger = "0.8"
+env_logger = "0.9"
 fallible-streaming-iterator = "0.1"
 fehler = "1"
 futures = "0.3"
@@ -24,6 +24,7 @@ log = "0.4"
 ndarray = "0.15"
 num-traits = "0.2"
 owning_ref = "0.4"
+polars = "0.14"
 postgres = {version = "0.19", features = ["with-chrono-0_4", "with-uuid-0_8", "with-serde_json-1"]}
 r2d2 = "0.8"
 r2d2_mysql = "18.0"
@@ -48,7 +49,8 @@ name = "connectorx"
 [dev-dependencies]
 criterion = "0.3"
 iai = "0.1"
-pprof = {version = "0.4", features = ["flamegraph"]}
+polars = "0.14"
+pprof = {version = "0.5", features = ["flamegraph"]}
 
 [features]
 branch = []

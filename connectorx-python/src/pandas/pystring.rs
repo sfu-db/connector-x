@@ -2,7 +2,8 @@ use bitfield::bitfield;
 use numpy::{npyffi::NPY_TYPES, Element, PyArrayDescr};
 use pyo3::{ffi, Py, Python};
 use std::str::from_utf8_unchecked;
-#[derive(Clone)]
+
+#[derive(Clone, Debug)]
 #[repr(transparent)]
 pub struct PyString(Py<pyo3::types::PyString>);
 
@@ -62,6 +63,12 @@ impl StringInfo {
 }
 
 impl PyString {
+    // get none string converted from none object, otherwise default strings are zeros
+    pub fn none(py: Python) -> PyString {
+        let s: &pyo3::types::PyString = unsafe { py.from_borrowed_ptr(ffi::Py_None()) };
+        PyString(s.into())
+    }
+
     // the val should be same as the val used for new
     pub unsafe fn write(&mut self, data: &[u8], info: StringInfo) {
         match info {

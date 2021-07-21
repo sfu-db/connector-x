@@ -38,6 +38,7 @@ impl From<Type> for SqliteTypeSystem {
             Type::Integer => Int8(true),
             Type::Real => Real(true),
             Type::Text => Text(true),
+            Type::Blob => Blob(true),
             _ => unimplemented!("{}", ty),
         }
     }

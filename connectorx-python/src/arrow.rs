@@ -1,14 +1,7 @@
-mod destination;
-mod pandas_columns;
-mod pystring;
-mod transports;
-mod types;
-
-pub use self::destination::{PandasBlockInfo, PandasDestination, PandasPartitionDestination};
-pub use self::transports::{MysqlPandasTransport, PostgresPandasTransport, SqlitePandasTransport};
-pub use self::types::{PandasDType, PandasTypeSystem};
 use crate::errors::ConnectorAgentPythonError;
+use arrow::record_batch::RecordBatch;
 use connectorx::{
+    destinations::arrow::ArrowDestination,
     source_router::{SourceConn, SourceType},
     sources::{
         mysql::{BinaryProtocol as MySQLBinaryProtocol, MysqlSource, TextProtocol},
@@ -18,20 +11,23 @@ use connectorx::{
         sqlite::SqliteSource,
     },
     sql::CXQuery,
+    transports::{MysqlArrowTransport, PostgresArrowTransport, SqliteArrowTransport},
     Dispatcher,
 };
 use fehler::throws;
+use libc::uintptr_t;
 use log::debug;
+use pyo3::prelude::*;
 use pyo3::{PyAny, Python};
 
 #[throws(ConnectorAgentPythonError)]
-pub fn write_pandas<'a>(
+pub fn write_arrow<'a>(
     py: Python<'a>,
     source_conn: &SourceConn,
     queries: &[CXQuery<String>],
     protocol: &str,
 ) -> &'a PyAny {
-    let mut destination = PandasDestination::new(py);
+    let mut destination = ArrowDestination::new();
 
     // TODO: unlock gil if possible
     match source_conn.ty {
@@ -41,7 +37,7 @@ pub fn write_pandas<'a>(
                 "csv" => {
                     let sb =
                         PostgresSource::<CSVProtocol>::new(&source_conn.conn[..], queries.len())?;
-                    let dispatcher = Dispatcher::<_, _, PostgresPandasTransport<CSVProtocol>>::new(
+                    let dispatcher = Dispatcher::<_, _, PostgresArrowTransport<CSVProtocol>>::new(
                         sb,
                         &mut destination,
                         queries,
@@ -56,7 +52,7 @@ pub fn write_pandas<'a>(
                         queries.len(),
                     )?;
                     let dispatcher =
-                        Dispatcher::<_, _, PostgresPandasTransport<PgBinaryProtocol>>::new(
+                        Dispatcher::<_, _, PostgresArrowTransport<PgBinaryProtocol>>::new(
                             sb,
                             &mut destination,
                             queries,
@@ -71,7 +67,7 @@ pub fn write_pandas<'a>(
                         queries.len(),
                     )?;
                     let dispatcher =
-                        Dispatcher::<_, _, PostgresPandasTransport<CursorProtocol>>::new(
+                        Dispatcher::<_, _, PostgresArrowTransport<CursorProtocol>>::new(
                             sb,
                             &mut destination,
                             queries,
@@ -86,7 +82,7 @@ pub fn write_pandas<'a>(
         SourceType::Sqlite => {
             let source = SqliteSource::new(&source_conn.conn[..], queries.len())?;
             let dispatcher =
-                Dispatcher::<_, _, SqlitePandasTransport>::new(source, &mut destination, queries);
+                Dispatcher::<_, _, SqliteArrowTransport>::new(source, &mut destination, queries);
             debug!("Running dispatcher");
             dispatcher.run()?;
         }
@@ -99,7 +95,7 @@ pub fn write_pandas<'a>(
                         queries.len(),
                     )?;
                     let dispatcher =
-                        Dispatcher::<_, _, MysqlPandasTransport<MySQLBinaryProtocol>>::new(
+                        Dispatcher::<_, _, MysqlArrowTransport<MySQLBinaryProtocol>>::new(
                             source,
                             &mut destination,
                             queries,
@@ -110,7 +106,7 @@ pub fn write_pandas<'a>(
                 "text" => {
                     let source =
                         MysqlSource::<TextProtocol>::new(&source_conn.conn[..], queries.len())?;
-                    let dispatcher = Dispatcher::<_, _, MysqlPandasTransport<TextProtocol>>::new(
+                    let dispatcher = Dispatcher::<_, _, MysqlArrowTransport<TextProtocol>>::new(
                         source,
                         &mut destination,
                         queries,
@@ -123,5 +119,34 @@ pub fn write_pandas<'a>(
         }
     }
 
-    destination.result()?
+    let rbs = destination.finish()?;
+    let ptrs = to_ptrs(rbs);
+    let obj: PyObject = ptrs.into_py(py);
+    obj.into_ref(py)
+}
+
+fn to_ptrs(rbs: Vec<RecordBatch>) -> (Vec<String>, Vec<Vec<(uintptr_t, uintptr_t)>>) {
+    if rbs.is_empty() {
+        return (vec![], vec![]);
+    }
+
+    let mut result = vec![];
+    let names = rbs[0]
+        .schema()
+        .fields()
+        .iter()
+        .map(|f| f.name().clone())
+        .collect();
+
+    for rb in rbs {
+        let mut cols = vec![];
+
+        for array in rb.columns() {
+            let (array_ptr, schema_ptr) = array.to_raw().expect("c ptr");
+            cols.push((array_ptr as uintptr_t, schema_ptr as uintptr_t));
+        }
+
+        result.push(cols);
+    }
+    (names, result)
 }

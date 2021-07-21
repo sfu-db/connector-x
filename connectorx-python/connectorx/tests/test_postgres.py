@@ -266,9 +266,9 @@ def test_read_sql_on_utf8(postgres_url: str) -> None:
     query = "SELECT * FROM test_str"
     df = read_sql(postgres_url, query)
     expected = pd.DataFrame(
-        index=range(8),
+        index=range(9),
         data={
-            "id": pd.Series([0, 1, 2, 3, 4, 5, 6, 7], dtype="Int64"),
+            "id": pd.Series([0, 1, 2, 3, 4, 5, 6, 7, 8], dtype="Int64"),
             "test_language": pd.Series(
                 [
                     "English",
@@ -279,6 +279,7 @@ def test_read_sql_on_utf8(postgres_url: str) -> None:
                     "Latin1",
                     "Extra",
                     "Mixed",
+                    "",
                 ],
                 dtype="object",
             ),
@@ -292,6 +293,7 @@ def test_read_sql_on_utf8(postgres_url: str) -> None:
                     "¥§¤®ð",
                     "y̆",
                     "Ha好ち😁ðy̆",
+                    None,
                 ],
                 dtype="object",
             ),
@@ -307,7 +309,7 @@ def test_types_binary(postgres_url: str) -> None:
         index=range(4),
         data={
             "test_int16": pd.Series([0, 1, 2, 3], dtype="Int64"),
-            "test_char": pd.Series(["a", "b", "c", "d"], dtype="object"),
+            "test_char": pd.Series(["a", "b", None, "d"], dtype="object"),
             "test_uuid": pd.Series(
                 [
                     "86b494cc-96b2-11eb-9298-3e22fbb9fe9d",
@@ -340,9 +342,9 @@ def test_types_binary(postgres_url: str) -> None:
             ),
             "test_bytea": pd.Series(
                 [
-                    b"test",
+                    None,
                     b"\xd0\x97\xd0\xb4\xd1\x80\xd0\xb0\xcc\x81\xd0\xb2\xd1\x81\xd1\x82\xd0\xb2\xd1\x83\xd0\xb9\xd1\x82\xd0\xb5",
-                    b"123bhaf4",
+                    b"",
                     b"\xf0\x9f\x98\x9c",
                 ],
                 dtype="object",
@@ -362,7 +364,7 @@ def test_types_csv(postgres_url: str) -> None:
         index=range(4),
         data={
             "test_int16": pd.Series([0, 1, 2, 3], dtype="Int64"),
-            "test_char": pd.Series(["a", "b", "c", "d"], dtype="object"),
+            "test_char": pd.Series(["a", "b", None, "d"], dtype="object"),
             "test_uuid": pd.Series(
                 [
                     "86b494cc-96b2-11eb-9298-3e22fbb9fe9d",
@@ -395,9 +397,9 @@ def test_types_csv(postgres_url: str) -> None:
             ),
             "test_bytea": pd.Series(
                 [
-                    b"test",
+                    None,
                     b"\xd0\x97\xd0\xb4\xd1\x80\xd0\xb0\xcc\x81\xd0\xb2\xd1\x81\xd1\x82\xd0\xb2\xd1\x83\xd0\xb9\xd1\x82\xd0\xb5",
-                    b"123bhaf4",
+                    b"",
                     b"\xf0\x9f\x98\x9c",
                 ],
                 dtype="object",
@@ -417,7 +419,7 @@ def test_types_cursor(postgres_url: str) -> None:
         index=range(4),
         data={
             "test_int16": pd.Series([0, 1, 2, 3], dtype="Int64"),
-            "test_char": pd.Series(["a", "b", "c", "d"], dtype="object"),
+            "test_char": pd.Series(["a", "b", None, "d"], dtype="object"),
             "test_uuid": pd.Series(
                 [
                     "86b494cc-96b2-11eb-9298-3e22fbb9fe9d",
@@ -450,9 +452,9 @@ def test_types_cursor(postgres_url: str) -> None:
             ),
             "test_bytea": pd.Series(
                 [
-                    b"test",
+                    None,
                     b"\xd0\x97\xd0\xb4\xd1\x80\xd0\xb0\xcc\x81\xd0\xb2\xd1\x81\xd1\x82\xd0\xb2\xd1\x83\xd0\xb9\xd1\x82\xd0\xb5",
-                    b"123bhaf4",
+                    b"",
                     b"\xf0\x9f\x98\x9c",
                 ],
                 dtype="object",

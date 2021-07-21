@@ -72,6 +72,9 @@ pub enum ConnectorAgentError {
     #[error(transparent)]
     HexError(#[from] hex::FromHexError),
 
+    #[error(transparent)]
+    PolarsError(#[from] polars::error::PolarsError),
+
     /// Any other errors that are too trivial to be put here explicitly.
     #[error(transparent)]
     Other(#[from] anyhow::Error),

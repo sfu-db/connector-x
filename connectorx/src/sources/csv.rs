@@ -173,7 +173,7 @@ impl Source for CSVSource {
         Ok(self
             .files
             .into_iter()
-            .map(|f| CSVSourcePartition::new(f))
+            .map(CSVSourcePartition::new)
             .collect())
     }
 }
@@ -189,7 +189,7 @@ pub struct CSVSourcePartition {
 impl CSVSourcePartition {
     pub fn new(fname: CXQuery<String>) -> Self {
         Self {
-            fname: fname,
+            fname,
             records: Vec::new(),
             counter: 0,
             nrows: 0,

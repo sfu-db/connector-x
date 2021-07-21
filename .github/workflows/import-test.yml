@@ -35,7 +35,7 @@ jobs:
       - name: Install ConnectorX - POSIX
         if: ${{ matrix.os != 'windows-latest' }}
         run: |
-          pip install pandas==1.2.3 numpy importlib-metadata
+          pip install numpy importlib-metadata
 
           version='${{ github.event.inputs.version }}'
           if [ -z $version ]
@@ -48,7 +48,7 @@ jobs:
       - name: Install ConnectorX - Windows
         if: ${{ matrix.os == 'windows-latest' }}
         run: |
-          pip install pandas==1.2.3 numpy importlib-metadata
+          pip install numpy importlib-metadata
 
           $version = '${{ github.event.inputs.version }}'
           if ($version) {

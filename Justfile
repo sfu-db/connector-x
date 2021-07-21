@@ -1,5 +1,5 @@
 build-release:
-    cargo build --release
+    cargo build  --release
 
 build-debug:
     cargo build
@@ -49,7 +49,10 @@ python-shell:
     cd connectorx-python && \
     poetry run ipython
 
-
+benchmark-report: setup-python
+    cd connectorx-python && \
+    poetry run pytest connectorx/tests/benchmarks.py --benchmark-json ../benchmark.json
+    
 # releases
 ci-build-python-extention:
     cd connectorx-python && cargo build --release

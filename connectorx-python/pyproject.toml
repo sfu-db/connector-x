@@ -12,33 +12,58 @@ classifiers = [
   "Topic :: Scientific/Engineering",
   "Framework :: IPython",
 ] 
-description = "" 
+description = "Load data from databases to dataframes, the fastest way." 
 include = ["connectorx/*.so", "connectorx/*.pyd"] 
 keywords = ["read_sql"] 
 license = "MIT" 
 maintainers = ["Weiyuan Wu <youngw@sfu.ca>"] 
 name = "connectorx" 
 readme = "README.md" # Markdown files are supported
-version = "0.2.0-alpha.2" 
+version = "0.2.0-alpha.3" 
 
 [tool.poetry.dependencies]
+dask = {version = "^2021", optional = true, extras = ["dataframe"]}
+modin = {version = "^0.10", optional = true}
 numpy = "^1"
-pandas = ">=1,<1.3"
+pandas = {version = "^1", optional = true}
+polars = {version = "^0.8", optional = true}
+pyarrow = {version = "^4", optional = true}
 python = "^3.7.1"
+
+[tool.poetry.extras]
+all = ["dask", "pandas", "modin", "polars", "pyarrow"]
+dask = ["dask", "pandas"]
+modin = ["modin", "pandas"]
+pandas = ["pandas"]
+polars = ["pyarrow", "polars"]
+pyarrow = ["pyarrow"]
 
 [tool.poetry.dev-dependencies]
 PyMySQL = "^1.0.2"
 SQLAlchemy = "^1.3.23"
 black = "^20.8b1"
 contexttimer = "^0.3.3"
-dask = {extras = ["complete"], version = "^2021.3.0"}
+dask = {extras = ["dataframe"], version = "^2021.7.0"}
 docopt = "^0.6.2"
 maturin = "^0.9.4"
-modin = "^0.9.0"
+modin = {extras = ["dask"], version = "^0.10.1"}
+polars = "^0.8"
 psycopg2-binary = "^2.8.6"
-pyarrow = "^3.0.0"
+pyarrow = "^4"
 pytest = "^6.2"
+pytest-benchmark = "^3.4.1"
 twine = "^3.4.1"
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+python_functions = "test_* bench_*"
+# python_files = check_*.py
+# python_classes = Check
+# addopts = "-ra -q"
+# testpaths = [
+#   "tests",
+#   "integration",
+# ]
 
 [build-system]
 build-backend = "poetry.core.masonry.api"
