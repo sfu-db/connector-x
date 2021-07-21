@@ -137,7 +137,7 @@ jobs:
       - name: Install tools
         run: |
           apt-get update
-          apt-get install -y curl postgresql-client build-essential python3-dev python3-pip pkg-config libssl-dev git sqlite3 libsqlite3-dev mysql-client
+          apt-get install -y curl postgresql-client build-essential python3-dev python3-pip pkg-config libssl-dev git sqlite3 libsqlite3-dev mysql-client libmysqlclient-dev
         env:
           DEBIAN_FRONTEND: noninteractive
 

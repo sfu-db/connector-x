@@ -15,6 +15,7 @@ from sqlalchemy import create_engine
 from docopt import docopt
 import pandas as pd
 import sqlite3
+from clickhouse_driver import connect
 
 if __name__ == "__main__":
     args = docopt(__doc__, version="1.0")
@@ -24,8 +25,12 @@ if __name__ == "__main__":
     if conn.startswith("sqlite"):
         conn = sqlite3.connect(conn[9:])
     elif conn.startswith("mysql"):
-        engine = create_engine(f"mysql+py{conn}")
-        conn = engine.connect()
+        if args["--conn"] == "CLICKHOUSE_URL":
+            # clickhouse-driver uses native protocol: 9000
+            conn = connect(f"clickhouse://{os.environ['CLICKHOUSE_USER']}:{os.environ['CLICKHOUSE_PASSWORD']}@{os.environ['CLICKHOUSE_HOST']}:9000/tpch") 
+        else:
+            engine = create_engine(f"mysql+mysqldb:{conn[6:]}")
+            conn = engine.connect()
     else:
         engine = create_engine(conn)
         conn = engine.connect()

@@ -29,7 +29,6 @@ pandas = {version = "^1", optional = true}
 polars = {version = "^0.8", optional = true}
 pyarrow = {version = "^4", optional = true}
 python = "^3.7.1"
-mysqlclient = "^2.0.3"
 
 [tool.poetry.extras]
 all = ["dask", "pandas", "modin", "polars", "pyarrow"]
@@ -54,6 +53,9 @@ pyarrow = "^4"
 pytest = "^6.2"
 pytest-benchmark = "^3.4.1"
 twine = "^3.4.1"
+mysqlclient = "^2.0.3"
+pandahouse = "^0.2.7"
+clickhouse-driver = "^0.2.1"
 
 [tool.pytest.ini_options]
 minversion = "6.0"
