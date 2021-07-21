@@ -29,6 +29,7 @@ pandas = {version = "^1", optional = true}
 polars = {version = "^0.8", optional = true}
 pyarrow = {version = "^4", optional = true}
 python = "^3.7.1"
+mysqlclient = "^2.0.3"
 
 [tool.poetry.extras]
 all = ["dask", "pandas", "modin", "polars", "pyarrow"]
