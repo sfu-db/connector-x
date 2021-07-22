@@ -53,3 +53,17 @@ psql -h localhost -U postgres -d tpch -c "\copy LINEITEM FROM '$YOUR_TPCH_DIR/tp
 ```
 psql -h localhost -U postgres -d tpch -c "CREATE INDEX lineitem_l_orderkey_idx ON LINEITEM USING btree (l_orderkey);"
 ```
+
+## Redshift: Upload TPC-H
+
+Note: For Redshift, AWS has already hosted TPC-H data in public s3. We borrow the uploading script from [amazon-redshift-utils](https://github.com/awslabs/amazon-redshift-utils/blob/master/src/CloudDataWarehouseBenchmark/Cloud-DWB-Derived-from-TPCH/3TB/ddl.sql). We only modified `LINEITEM`'s sortkey from `(l_shipdate,l_orderkey)` to `(l_orderkey)`.
+
+1. Make the following changes in the COPY commands of `script/benchmarks/tpch-reshift.sql`:
+
+   1. Change `credentials` accordingly from Redshift.
+   2. (Optional) Change TPC-H data size in `from` s3 string. Currently it is 10GB (equivilant to TPC-H scale factor 10). It can be change to 3TB.
+ 
+2. Run modified `tpch-reshift.sql` for Redshift:
+```
+psql -h <endpoint> -U <userid> -d <databasename> -p <port> -f tpch-reshift.sql
+```
