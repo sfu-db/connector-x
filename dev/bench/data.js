@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1626994706645,
+  "lastUpdate": 1626996419937,
   "repoUrl": "https://github.com/sfu-db/connector-x",
   "entries": {
     "ConnectorX TPC-H Scale@1 Benchmarks": [
@@ -608,6 +608,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.9772716110646915",
             "extra": "mean: 22.08190782822203 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "quchangbo1990@gmail.com",
+            "name": "CbQu",
+            "username": "CBQu"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "862ad56161bad6bd0fd8724ad3bf9a2ea53c9309",
+          "message": "Update benchmark.md for redshift",
+          "timestamp": "2021-07-22T16:15:28-07:00",
+          "tree_id": "a62f0f8487cb537f0d1b5b609152af63dfd8a4aa",
+          "url": "https://github.com/sfu-db/connector-x/commit/862ad56161bad6bd0fd8724ad3bf9a2ea53c9309"
+        },
+        "date": 1626996418882,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_mysql",
+            "value": 0.06181545069203178,
+            "unit": "iter/sec",
+            "range": "stddev: 0.5626791148787815",
+            "extra": "mean: 16.177185295987876 sec\nrounds: 5"
+          },
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_postgres",
+            "value": 0.05572187318113634,
+            "unit": "iter/sec",
+            "range": "stddev: 6.068503845222284",
+            "extra": "mean: 17.946273929974996 sec\nrounds: 5"
           }
         ]
       }
