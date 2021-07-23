@@ -40,16 +40,25 @@ if __name__ == "__main__":
     args = docopt(__doc__, version="Naval Fate 2.0")
     conn = os.environ[args["--conn"]]
     table = os.environ["TPCH_TABLE"]
+    part_num = int(args["<num>"])
 
     with Timer() as timer:
-        df = cx.read_sql(
-            conn,
-            f"""SELECT * FROM {table}""",
-            partition_on="L_ORDERKEY",
-            partition_num=int(args["<num>"]),
-            protocol=args["--protocol"],
-            return_type=args["--ret"],
-        )
+        if part_num > 1:
+            df = cx.read_sql(
+                conn,
+                f"""SELECT * FROM {table}""",
+                partition_on="L_ORDERKEY",
+                partition_num=int(args["<num>"]),
+                protocol=args["--protocol"],
+                return_type=args["--ret"],
+            )
+        else:
+            df = cx.read_sql(
+                conn,
+                f"""SELECT * FROM {table}""",
+                protocol=args["--protocol"],
+                return_type=args["--ret"],
+            )
     print("time in total:", timer.elapsed)
 
     print(type(df), len(df))
