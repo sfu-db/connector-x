@@ -56,6 +56,7 @@ twine = "^3.4.1"
 mysqlclient = "^2.0.3"
 pandahouse = "^0.2.7"
 clickhouse-driver = "^0.2.1"
+sqlalchemy-redshift = "^0.8.4"
 
 [tool.pytest.ini_options]
 minversion = "6.0"
