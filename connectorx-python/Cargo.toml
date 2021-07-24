@@ -34,7 +34,7 @@ url = "2"
 uuid = "0.8"
 
 [build-dependencies]
-built = {version = "0.5", features = ["chrono"]}
+# built = {version = "0.5", features = ["chrono"]}
 
 [dev-dependencies]
 criterion = "0.3"

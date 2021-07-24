@@ -252,16 +252,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "40e38929add23cdf8a366df9b0e088953150724bcbe5fc330b0d8eb3b328eec8"
 
 [[package]]
-name = "built"
-version = "0.5.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4f346b6890a0dfa7266974910e7df2d5088120dd54721b9b0e5aae1ae5e05715"
-dependencies = [
- "cargo-lock",
- "chrono",
-]
-
-[[package]]
 name = "bumpalo"
 version = "3.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -296,18 +286,6 @@ name = "bytes"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b700ce4376041dcd0a327fd0097c41095743c4c8af8887265942faf1100bd040"
-
-[[package]]
-name = "cargo-lock"
-version = "7.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7fb04b88bd5b2036e30704f95c6ee16f3b5ca3b4ca307da2889d9006648e5c88"
-dependencies = [
- "semver 1.0.3",
- "serde",
- "toml",
- "url",
-]
 
 [[package]]
 name = "cast"
@@ -386,9 +364,11 @@ dependencies = [
  "log",
  "ndarray",
  "num-traits",
+ "openssl",
  "owning_ref",
  "polars",
  "postgres",
+ "postgres-openssl",
  "pprof",
  "r2d2",
  "r2d2_mysql",
@@ -401,6 +381,7 @@ dependencies = [
  "serde_json",
  "sqlparser",
  "thiserror",
+ "url",
  "uuid",
 ]
 
@@ -411,7 +392,6 @@ dependencies = [
  "anyhow",
  "arrow",
  "bitfield",
- "built",
  "bytes 1.0.1",
  "chrono",
  "connectorx",
@@ -2022,6 +2002,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "postgres-openssl"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1de0ea6504e07ca78355a6fb88ad0f36cafe9e696cbc6717f16a207f3a60be72"
+dependencies = [
+ "futures",
+ "openssl",
+ "tokio",
+ "tokio-openssl",
+ "tokio-postgres",
+]
+
+[[package]]
 name = "postgres-protocol"
 version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2631,9 +2624,6 @@ name = "semver"
 version = "1.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5f3aac57ee7f3272d8395c6e4f502f434f0e289fcd62876f70daa008c20dcabe"
-dependencies = [
- "serde",
-]
 
 [[package]]
 name = "semver-parser"
@@ -2655,9 +2645,6 @@ name = "serde"
 version = "1.0.126"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ec7505abeacaec74ae4778d9d9328fe5a5d04253220a85c4ee022239fc996d03"
-dependencies = [
- "serde_derive",
-]
 
 [[package]]
 name = "serde_cbor"
@@ -2975,6 +2962,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "tokio-openssl"
+version = "0.6.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f24cddc8445a4dc8359cdd9e91c19d544fc95f672e32afe8945852b9381a09fe"
+dependencies = [
+ "futures",
+ "openssl",
+ "openssl-sys",
+ "tokio",
+]
+
+[[package]]
 name = "tokio-postgres"
 version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3009,15 +3008,6 @@ dependencies = [
  "log",
  "pin-project-lite",
  "tokio",
-]
-
-[[package]]
-name = "toml"
-version = "0.5.8"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a31142970826733df8241ef35dc040ef98c679ab14d7c3e54d827099b3acecaa"
-dependencies = [
- "serde",
 ]
 
 [[package]]
