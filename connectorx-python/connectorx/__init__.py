@@ -93,7 +93,7 @@ def read_sql(
     if return_type in {"modin", "dask", "pandas"}:
         try:
             import pandas
-        except ImportError:
+        except ModuleNotFoundError:
             raise ValueError("You need to install pandas first")
 
         result = _read_sql(
@@ -107,14 +107,14 @@ def read_sql(
         if return_type == "modin":
             try:
                 import modin.pandas as mpd
-            except ImportError:
+            except ModuleNotFoundError:
                 raise ValueError("You need to install modin first")
 
             df = mpd.DataFrame(df)
         elif return_type == "dask":
             try:
                 import dask.dataframe as dd
-            except ImportError:
+            except ModuleNotFoundError:
                 raise ValueError("You need to install dask first")
 
             df = dd.from_pandas(df, npartitions=1)
@@ -122,7 +122,7 @@ def read_sql(
     elif return_type in {"arrow", "polars"}:
         try:
             import pyarrow
-        except ImportError:
+        except ModuleNotFoundError:
             raise ValueError("You need to install pyarrow first")
 
         result = _read_sql(
@@ -134,7 +134,10 @@ def read_sql(
         )
         df = reconstruct_arrow(result)
         if return_type == "polars":
-            import polars as pl
+            try:
+                import polars as pl
+            except ModuleNotFoundError:
+                raise ValueError("You need to install polars first")
 
             df = pl.DataFrame.from_arrow(df)
     else:
