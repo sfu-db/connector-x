@@ -45,13 +45,13 @@ We compared different solutions in Python that provides the `read_sql` function,
 
 ## Time chart, lower is better.
 
-<p align="center"><img alt="time chart" src="https://raw.githubusercontent.com/sfu-db/connector-agent/main/assets/time.jpg"/></p>
+<p align="center"><img alt="time chart" src="https://raw.githubusercontent.com/sfu-db/connector-agent/main/assets/pg-time.png"/></p>
 
 ## Memory consumption chart, lower is better.
 
-<p align="center"><img alt="memory chart" src="https://raw.githubusercontent.com/sfu-db/connector-agent/main/assets/memory.jpg"/></p>
+<p align="center"><img alt="memory chart" src="https://raw.githubusercontent.com/sfu-db/connector-agent/main/assets/pg-mem.png"/></p>
 
-In conclusion, ConnectorX uses up to **3x** less memory and **11x** less time.
+In conclusion, ConnectorX uses up to **3x** less memory and **21x** less time. More on [here](https://github.com/sfu-db/connector-x/blob/main/Benchmark.md#benchmark-result-on-aws-r54xlarge-with-dbm6g4xlarge-rds).
 
 ## How does ConnectorX achieve a lightening speed while keeping the memory footprint low?
 
