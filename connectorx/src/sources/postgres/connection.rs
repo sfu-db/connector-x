@@ -56,13 +56,14 @@ pub fn strip_bad_opts(url: Url) -> Url {
     url2
 }
 
+// This function adapted primarily from: 
+// https://github.com/sfackler/rust-postgres/pull/774
 pub fn from_tls_config(tls_config: TlsConfig) -> Result<MakeTlsConnector, anyhow::Error> {
     let mut builder = SslConnector::builder(SslMethod::tls_client()).unwrap();
     // The mode dictates whether we verify peer certs and hostnames. By default, Postgres is
     // pretty relaxed and recommends SslMode::VerifyCa or SslMode::VerifyFull for security.
     //
     // For more details, check out Table 33.1. SSL Mode Descriptions in
-    
     // https://postgresql.org/docs/current/libpq-ssl.html#LIBPQ-SSL-PROTECTION.
     let (verify_mode, verify_hostname) = match tls_config.ssl_mode {
         SslMode::Disable | SslMode::Prefer => (SslVerifyMode::NONE, false),
@@ -75,8 +76,9 @@ pub fn from_tls_config(tls_config: TlsConfig) -> Result<MakeTlsConnector, anyhow
             Some(_) => (SslVerifyMode::PEER, false),
             None => (SslVerifyMode::NONE, false),
         },
-        // These two won't work until upstream rust-postgres supports parsing them as part
-        // of the TLS config.
+        // These two modes will not work until upstream rust-postgres supports parsing 
+        // them as part of the TLS config.
+        //
         // SslMode::VerifyCa => (SslVerifyMode::PEER, false),
         // SslMode::VerifyFull => (SslVerifyMode::PEER, true),
         _ => panic!("unexpected sslmode {:?}", tls_config.ssl_mode),
