@@ -1,5 +1,5 @@
 [package]
-authors = ["Weiyuan Wu <youngw@sfu.ca>"]
+authors = ["SFU Database System Lab <dsl.cs.sfu@gmail.com>"]
 description = "Load data from databases to dataframes, the fastest way."
 documentation = "https://docs.rs/connectorx"
 edition = "2018"
