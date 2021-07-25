@@ -1,14 +1,17 @@
 use crate::errors::{ConnectorXPythonError, Result};
 use anyhow::anyhow;
 use connectorx::{
-    sources::{mysql::MySQLTypeSystem, postgres::PostgresTypeSystem},
+    sources::{
+        mysql::MySQLTypeSystem,
+        postgres::{rewrite_tls_args, PostgresTypeSystem},
+    },
     sql::{
         get_partition_range_query, get_partition_range_query_sep, single_col_partition_query,
         CXQuery,
     },
 };
 use fehler::{throw, throws};
-use postgres::{Client, NoTls};
+use postgres::Client;
 use r2d2_mysql::mysql::{prelude::Queryable, Pool, Row};
 use rusqlite::{types::Type, Connection};
 use sqlparser::dialect::MySqlDialect;
@@ -86,7 +89,8 @@ impl SourceType {
 
 #[throws(ConnectorXPythonError)]
 fn pg_get_partition_range(conn: &str, query: &str, col: &str) -> (i64, i64) {
-    let mut client = Client::connect(conn, NoTls)?;
+    let (url, tls) = rewrite_tls_args(conn);
+    let mut client = Client::connect(url.as_str(), tls)?;
     let range_query = get_partition_range_query(query, col, &PostgreSqlDialect {})?;
     let row = client.query_one(range_query.as_str(), &[])?;
 

@@ -11,6 +11,7 @@ use crate::{
 };
 use anyhow::anyhow;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
+pub use connection::rewrite_tls_args;
 use csv::{ReaderBuilder, StringRecord, StringRecordsIntoIter};
 use fehler::{throw, throws};
 use hex::decode;
@@ -27,11 +28,9 @@ use r2d2_postgres::PostgresConnectionManager;
 use rust_decimal::Decimal;
 use serde_json::{from_str, Value};
 use sqlparser::dialect::PostgreSqlDialect;
-use std::collections::HashMap;
 use std::io::BufRead;
 use std::marker::PhantomData;
 pub use typesystem::PostgresTypeSystem;
-use url::Url;
 use uuid::Uuid;
 
 /// Protocol - Binary based bulk load
@@ -58,26 +57,10 @@ pub struct PostgresSource<P> {
 impl<P> PostgresSource<P> {
     #[throws(PostgresSourceError)]
     pub fn new(conn: &str, nconn: usize) -> Self {
-        // parse the config, then strip unsupported SSL opts before calling conn.parse()
-        let parsed_conn_str = Url::parse(conn).unwrap();
+        let (url, tls) = connection::rewrite_tls_args(conn);
+        let c: Config = url.parse()?;
 
-        let params: HashMap<String, String> = connection::get_query_params(parsed_conn_str.clone());
-        let (client_cert, root_cert) = connection::parse_ssl_opts(params);
-
-        let stripped_url = connection::strip_bad_opts(parsed_conn_str.clone());
-
-        let c: Config = stripped_url.as_str().parse()?;
-        let ssl_mode = c.get_ssl_mode();
-
-        let tls_connector = connection::from_tls_config(connection::TlsConfig {
-            ssl_mode,
-            client_cert,
-            root_cert,
-        })
-        .unwrap();
-
-        let manager = PostgresConnectionManager::new(c, tls_connector);
-
+        let manager = PostgresConnectionManager::new(c, tls);
         let pool = Pool::builder().max_size(nconn as u32).build(manager)?;
 
         Self {
