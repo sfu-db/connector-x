@@ -6,9 +6,9 @@ mod int64;
 mod string;
 // TODO: use macro for integers
 
+use crate::errors::Result;
 pub use crate::pandas::pandas_columns::bytes::{BytesBlock, BytesColumn, PyBytes};
 pub use boolean::{BooleanBlock, BooleanColumn};
-use connectorx::Result;
 pub use datetime::{DateTimeBlock, DateTimeColumn};
 use fehler::throw;
 pub use float64::{Float64Block, Float64Column};

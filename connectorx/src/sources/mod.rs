@@ -1,10 +1,14 @@
 // When implementing a data source, be make sure to implement Queryable and
 // Producer for all supported types in crate::types::DataType.
 
+#[cfg(feature = "src_csv")]
 pub mod csv;
 pub mod dummy;
+#[cfg(feature = "src_mysql")]
 pub mod mysql;
+#[cfg(feature = "src_postgres")]
 pub mod postgres;
+#[cfg(feature = "src_sqlite")]
 pub mod sqlite;
 
 use crate::data_order::DataOrder;

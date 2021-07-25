@@ -8,8 +8,8 @@ pub use self::destination::{PandasBlockInfo, PandasDestination, PandasPartitionD
 pub use self::transports::{MysqlPandasTransport, PostgresPandasTransport, SqlitePandasTransport};
 pub use self::types::{PandasDType, PandasTypeSystem};
 use crate::errors::ConnectorAgentPythonError;
+use crate::source_router::{SourceConn, SourceType};
 use connectorx::{
-    source_router::{SourceConn, SourceType},
     sources::{
         mysql::{BinaryProtocol as MySQLBinaryProtocol, MysqlSource, TextProtocol},
         postgres::{

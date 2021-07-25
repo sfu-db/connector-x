@@ -1,4 +1,6 @@
+#[cfg(feature = "dst_arrow")]
 pub mod arrow;
+#[cfg(feature = "dst_memory")]
 pub mod memory;
 
 use crate::data_order::DataOrder;

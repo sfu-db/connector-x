@@ -16,6 +16,18 @@ pub enum ConnectorAgentPythonError {
     PythonError(String),
 
     #[error(transparent)]
+    MysqlError(#[from] r2d2_mysql::mysql::Error),
+
+    #[error(transparent)]
+    SQLiteError(#[from] rusqlite::Error),
+
+    #[error(transparent)]
+    PostgresError(#[from] postgres::Error),
+
+    #[error(transparent)]
+    NdArrayShapeError(#[from] ndarray::ShapeError),
+
+    #[error(transparent)]
     ConnectorAgentError(#[from] connectorx::ConnectorAgentError),
 
     /// Any other errors that are too trivial to be put here explicitly.

@@ -21,12 +21,16 @@ libc = "0.2"
 log = "0.4"
 ndarray = "0.15"
 numpy = "0.14"
+postgres = {version = "0.19", features = ["with-chrono-0_4", "with-uuid-0_8", "with-serde_json-1"]}
 pyo3 = {version = "0.14", default-features = false, features = ["macros"]}
 pyo3-built = "0.4"
+r2d2_mysql = {version = "18.0"}
+rusqlite = {version = "0.25", features = ["column_decltype", "chrono", "bundled"]}
 rust_decimal = {version = "1", features = ["db-postgres"]}
 serde_json = "1"
 sqlparser = "0.9"
 thiserror = "1"
+url = "2"
 uuid = "0.8"
 
 [build-dependencies]
@@ -45,8 +49,10 @@ name = "connectorx_python"
 
 [features]
 branch = ["connectorx/branch"]
-default = ["extension", "fptr", "nbstr"]
+default = ["extension", "fptr", "nbstr", "dsts", "srcs"]
+dsts = ["connectorx/dst_arrow"]
 executable = ["pyo3/auto-initialize"]
 extension = ["pyo3/extension-module"]
 fptr = ["connectorx/fptr"]
 nbstr = []
+srcs = ["connectorx/src_postgres", "connectorx/src_mysql", "connectorx/src_sqlite"]

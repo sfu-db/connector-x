@@ -15,8 +15,10 @@ use fehler::throw;
 use fehler::throws;
 use funcs::{FFinishBuilder, FNewBuilder, FNewField};
 use itertools::Itertools;
+#[cfg(feature = "polars")]
 use polars::frame::DataFrame;
 use std::any::Any;
+#[cfg(feature = "polars")]
 use std::convert::TryFrom;
 use std::sync::Arc;
 
@@ -123,6 +125,7 @@ impl ArrowDestination {
             .collect::<Result<Vec<_>>>()?
     }
 
+    #[cfg(feature = "polars")]
     #[throws(ConnectorAgentError)]
     pub fn polars(self) -> DataFrame {
         let rbs = self.finish()?;

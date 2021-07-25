@@ -5,6 +5,7 @@ pub mod arrow;
 mod errors;
 pub mod pandas;
 pub mod read_sql;
+mod source_router;
 
 use pyo3::prelude::*;
 use pyo3::{wrap_pyfunction, PyResult};

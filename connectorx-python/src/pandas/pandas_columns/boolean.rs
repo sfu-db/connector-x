@@ -1,6 +1,6 @@
 use super::{check_dtype, HasPandasColumn, PandasColumn, PandasColumnObject};
+use crate::errors::ConnectorAgentPythonError;
 use anyhow::anyhow;
-use connectorx::ConnectorAgentError;
 use fehler::throws;
 use ndarray::{ArrayViewMut1, ArrayViewMut2, Axis, Ix2};
 use numpy::{PyArray, PyArray1};
@@ -36,7 +36,7 @@ impl<'a> FromPyObject<'a> for BooleanBlock<'a> {
 }
 
 impl<'a> BooleanBlock<'a> {
-    #[throws(ConnectorAgentError)]
+    #[throws(ConnectorAgentPythonError)]
     pub fn split(self) -> Vec<BooleanColumn<'a>> {
         let mut ret = vec![];
         match self {
@@ -89,7 +89,7 @@ impl<'a> PandasColumnObject for BooleanColumn<'a> {
 }
 
 impl<'a> PandasColumn<bool> for BooleanColumn<'a> {
-    #[throws(ConnectorAgentError)]
+    #[throws(ConnectorAgentPythonError)]
     fn write(&mut self, val: bool) {
         unsafe { *self.data.get_unchecked_mut(self.i) = val };
         if let Some(mask) = self.mask.as_mut() {
@@ -100,7 +100,7 @@ impl<'a> PandasColumn<bool> for BooleanColumn<'a> {
 }
 
 impl<'a> PandasColumn<Option<bool>> for BooleanColumn<'a> {
-    #[throws(ConnectorAgentError)]
+    #[throws(ConnectorAgentPythonError)]
     fn write(&mut self, val: Option<bool>) {
         match val {
             Some(val) => {

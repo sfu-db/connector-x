@@ -11,7 +11,6 @@ pub mod destinations;
 pub mod dispatcher;
 pub mod dummy_typesystem;
 pub mod errors;
-pub mod source_router;
 pub mod sources;
 pub mod sql;
 pub mod transports;

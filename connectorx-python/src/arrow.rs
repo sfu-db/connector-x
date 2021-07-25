@@ -1,8 +1,8 @@
 use crate::errors::ConnectorAgentPythonError;
+use crate::source_router::{SourceConn, SourceType};
 use arrow::record_batch::RecordBatch;
 use connectorx::{
     destinations::arrow::ArrowDestination,
-    source_router::{SourceConn, SourceType},
     sources::{
         mysql::{BinaryProtocol as MySQLBinaryProtocol, MysqlSource, TextProtocol},
         postgres::{

@@ -6,6 +6,7 @@ use crate::sql::CXQuery;
 use anyhow::anyhow;
 use chrono::{DateTime, Utc};
 use fehler::{throw, throws};
+#[cfg(feature = "src_csv")]
 use regex::{Regex, RegexBuilder};
 use std::collections::HashSet;
 use std::fs::File;
