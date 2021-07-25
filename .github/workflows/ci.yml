@@ -74,7 +74,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: clippy
-          args: --features all --all
+          args: --features all
 
       - name: Seed the database
         run: just seed-db
@@ -149,6 +149,12 @@ jobs:
           toolchain: nightly-2021-05-30
           components: rustfmt
           default: true
+
+      - name: Clippy linting
+        uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+          args: --features all --all
 
       - name: Install other dependent tools
         run: |

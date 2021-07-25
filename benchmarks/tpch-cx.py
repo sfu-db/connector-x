@@ -62,4 +62,4 @@ if __name__ == "__main__":
     print("time in total:", timer.elapsed)
 
     print(type(df), len(df))
-    print(describe(df))
+    describe(df)
