@@ -6,13 +6,12 @@ use crate::sources::postgres::{
 use crate::typesystem::TypeConversion;
 use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
 use num_traits::ToPrimitive;
+use postgres::NoTls;
+use postgres_native_tls::MakeTlsConnector;
 use rust_decimal::Decimal;
 use std::marker::PhantomData;
 use thiserror::Error;
 use uuid::Uuid;
-
-use postgres::NoTls;
-use postgres_native_tls::MakeTlsConnector;
 
 #[derive(Error, Debug)]
 pub enum PostgresArrowTransportError {

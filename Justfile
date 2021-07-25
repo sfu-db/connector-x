@@ -7,6 +7,9 @@ build-debug:
 test:
     cargo test --features src_postgres --features src_sqlite --features src_mysql --features src_csv --features dst_arrow --features dst_memory --features dst_polars -- --nocapture
 
+test-all:
+    cargo test --features all
+
 bootstrap-python:
     cp README.md connectorx-python/README.md
     cd connectorx-python && poetry install
