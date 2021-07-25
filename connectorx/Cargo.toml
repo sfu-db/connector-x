@@ -5,7 +5,7 @@ documentation = "https://docs.rs/connectorx"
 edition = "2018"
 license = "MIT"
 name = "connectorx"
-readme = "README.md"
+readme = "../README.md"
 repository = "https://github.com/sfu-db/connector-x"
 version = "0.2.0-alpha.3"
 
@@ -63,3 +63,6 @@ src_dummy = ["num-traits", "chrono"]
 src_mysql = ["r2d2_mysql", "rust_decimal", "num-traits", "chrono", "r2d2"]
 src_postgres = ["postgres", "r2d2_postgres", "csv", "hex", "serde_json", "uuid", "rust_decimal", "num-traits", "chrono", "r2d2"]
 src_sqlite = ["rusqlite", "r2d2_sqlite", "fallible-streaming-iterator", "derive_more", "owning_ref", "chrono", "r2d2"]
+
+[package.metadata.docs.rs]
+features = ["all"]
