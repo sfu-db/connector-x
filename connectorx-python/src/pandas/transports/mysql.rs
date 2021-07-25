@@ -1,5 +1,7 @@
+use crate::errors::ConnectorAgentPythonError;
 use crate::pandas::destination::PandasDestination;
 use crate::pandas::types::PandasTypeSystem;
+use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
 use connectorx::{
     impl_transport,
     sources::mysql::{BinaryProtocol, MysqlSource, MysqlTypeSystem, TextProtocol},
@@ -7,13 +9,12 @@ use connectorx::{
 };
 use rust_decimal::prelude::*;
 use std::marker::PhantomData;
-// use uuid::Uuid;
-use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
 
 pub struct MysqlPandasTransport<'py, P>(&'py (), PhantomData<P>);
 
 impl_transport!(
     name = MysqlPandasTransport<'tp, BinaryProtocol>,
+    error = ConnectorAgentPythonError,
     systems = MysqlTypeSystem => PandasTypeSystem,
     route = MysqlSource<BinaryProtocol> => PandasDestination<'tp>,
     mappings = {
@@ -31,6 +32,7 @@ impl_transport!(
 
 impl_transport!(
     name = MysqlPandasTransport<'tp, TextProtocol>,
+    error = ConnectorAgentPythonError,
     systems = MysqlTypeSystem => PandasTypeSystem,
     route = MysqlSource<TextProtocol> => PandasDestination<'tp>,
     mappings = {

@@ -1,3 +1,4 @@
+use crate::ConnectorAgentError;
 use crate::{
     destinations::arrow::{types::ArrowTypeSystem, ArrowDestination},
     impl_transport,
@@ -13,6 +14,7 @@ pub struct MysqlArrowTransport<P>(PhantomData<P>);
 
 impl_transport!(
     name = MysqlArrowTransport<BinaryProtocol>,
+    error = ConnectorAgentError,
     systems = MysqlTypeSystem => ArrowTypeSystem,
     route = MysqlSource<BinaryProtocol> => ArrowDestination,
     mappings = {
@@ -30,6 +32,7 @@ impl_transport!(
 
 impl_transport!(
     name = MysqlArrowTransport<TextProtocol>,
+    error = ConnectorAgentError,
     systems = MysqlTypeSystem => ArrowTypeSystem,
     route = MysqlSource<TextProtocol> => ArrowDestination,
     mappings = {

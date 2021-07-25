@@ -48,6 +48,7 @@ polars = "0.14"
 pprof = {version = "0.5", features = ["flamegraph"]}
 
 [features]
+all = ["src_sqlite", "src_postgres", "src_mysql", "src_csv", "dst_arrow", "dst_memory", "dst_polars"]
 branch = []
 default = ["fptr"]
 dst_arrow = ["arrow"]

@@ -42,6 +42,7 @@ impl Destination for MemoryDestination {
     const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
     type TypeSystem = DummyTypeSystem;
     type Partition<'a> = MemoryPartitionDestination<'a>;
+    type Error = ConnectorAgentError;
 
     #[throws(ConnectorAgentError)]
     fn allocate<S: AsRef<str>>(
@@ -178,6 +179,7 @@ impl<'a> MemoryPartitionDestination<'a> {
 
 impl<'a> DestinationPartition<'a> for MemoryPartitionDestination<'a> {
     type TypeSystem = DummyTypeSystem;
+    type Error = ConnectorAgentError;
 
     fn nrows(&self) -> usize {
         self.nrows
@@ -192,6 +194,8 @@ impl<'a, T> Consume<T> for MemoryPartitionDestination<'a>
 where
     T: TypeAssoc<<Self as DestinationPartition<'a>>::TypeSystem> + 'static,
 {
+    type Error = ConnectorAgentError;
+
     fn consume(&mut self, value: T) -> Result<()> {
         let (row, col) = self.loc();
         let col_schema = self.schema[col];

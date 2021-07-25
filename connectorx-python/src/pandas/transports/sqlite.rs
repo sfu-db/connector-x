@@ -1,3 +1,4 @@
+use crate::errors::ConnectorAgentPythonError;
 use crate::pandas::destination::PandasDestination;
 use crate::pandas::types::PandasTypeSystem;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
@@ -11,6 +12,7 @@ pub struct SqlitePandasTransport<'py>(&'py ());
 
 impl_transport!(
     name = SqlitePandasTransport<'tp>,
+    error = ConnectorAgentPythonError,
     systems = SqliteTypeSystem => PandasTypeSystem,
     route = SqliteSource => PandasDestination<'tp>,
     mappings = {

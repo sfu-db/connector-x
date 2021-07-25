@@ -88,6 +88,7 @@ macro_rules! impl_typesystem {
 macro_rules! impl_transport {
     (
         name = $TP:ty,
+        error = $ET:ty,
         systems = $TSS:tt => $TSD:tt,
         route = $S:ty => $D:ty,
         mappings = {
@@ -100,16 +101,17 @@ macro_rules! impl_transport {
             impl_transport!(@cvt $TP, $($TOKENS)+);
         )*
 
-        impl_transport!(@transport $TP [$TSS, $TSD] [$S, $D] $([ $($TOKENS)+ ])*);
+        impl_transport!(@transport $TP, $ET [$TSS, $TSD] [$S, $D] $([ $($TOKENS)+ ])*);
     };
 
     // transport
-    (@transport $TP:ty [$TSS:tt, $TSD:tt] [$S:ty, $D:ty] $([ $($TOKENS:tt)+ ])*) => {
+    (@transport $TP:ty, $ET:ty [$TSS:tt, $TSD:tt] [$S:ty, $D:ty] $([ $($TOKENS:tt)+ ])*) => {
         impl <'tp> $crate::Transport for $TP {
             type TSS = $TSS;
             type TSD = $TSD;
             type S = $S;
             type D = $D;
+            type Error = $ET;
 
             impl_transport!(@cvtts [$TSS, $TSD] $([ $($TOKENS)+ ])*);
             impl_transport!(@process [$TSS, $TSD] $([ $($TOKENS)+ ])*);
@@ -138,7 +140,7 @@ macro_rules! impl_transport {
             ts2: Self::TSD,
             src: &'r mut <<Self::S as $crate::Source>::Partition as $crate::SourcePartition>::Parser<'s>,
             dst: &'r mut <Self::D as $crate::Destination>::Partition<'d>,
-        ) -> $crate::Result<()> {
+        ) -> Result<(), Self::Error> {
             match (ts1, ts2) {
                 $(
                     ($TSS::$V1(true), $TSD::$V2(true)) => {
@@ -172,7 +174,7 @@ macro_rules! impl_transport {
             fn(
                 src: &mut <<Self::S as $crate::Source>::Partition as $crate::SourcePartition>::Parser<'s>,
                 dst: &mut <Self::D as $crate::Destination>::Partition<'d>,
-            ) -> $crate::Result<()>,
+            ) -> Result<(), Self::Error>
         > {
             match (ts1, ts2) {
                 $(
@@ -207,12 +209,12 @@ macro_rules! impl_transport {
     };
     (@process_func_branch true $T1:ty, $T2:ty) => {
         Ok(
-            |s: &mut _, d: &mut _| $crate::typesystem::process::<Option<$T1>, Option<$T2>, Self, Self::S, Self::D>(s, d)
+            |s: &mut _, d: &mut _| $crate::typesystem::process::<Option<$T1>, Option<$T2>, Self, Self::S, Self::D, <Self::S as $crate::sources::Source>::Error, <Self::D as $crate::destinations::Destination>::Error, Self::Error>(s, d)
         )
     };
     (@process_func_branch false $T1:ty, $T2:ty) => {
         Ok(
-            |s: &mut _, d: &mut _| $crate::typesystem::process::<$T1, $T2, Self, Self::S, Self::D>(s, d)
+            |s: &mut _, d: &mut _| $crate::typesystem::process::<$T1, $T2, Self, Self::S, Self::D, <Self::S as $crate::sources::Source>::Error, <Self::D as $crate::destinations::Destination>::Error, Self::Error>(s, d)
         )
     };
 

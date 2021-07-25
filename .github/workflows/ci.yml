@@ -90,6 +90,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: test
+          args: --features all
         env:
           POSTGRES_URL: "postgresql://postgres:postgres@postgres:5432/postgres"
           SQLITE_URL: "sqlite:///tmp/test.db"

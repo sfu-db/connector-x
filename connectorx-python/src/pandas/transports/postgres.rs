@@ -1,3 +1,4 @@
+use crate::errors::ConnectorAgentPythonError;
 use crate::pandas::destination::PandasDestination;
 use crate::pandas::types::PandasTypeSystem;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
@@ -17,6 +18,7 @@ pub struct PostgresPandasTransport<'py, P>(&'py (), PhantomData<P>);
 
 impl_transport!(
     name = PostgresPandasTransport<'tp, BinaryProtocol>,
+    error = ConnectorAgentPythonError,
     systems = PostgresTypeSystem => PandasTypeSystem,
     route = PostgresSource<BinaryProtocol> => PandasDestination<'tp>,
     mappings = {
@@ -45,6 +47,7 @@ impl_transport!(
 
 impl_transport!(
     name = PostgresPandasTransport<'tp, CSVProtocol>,
+    error = ConnectorAgentPythonError,
     systems = PostgresTypeSystem => PandasTypeSystem,
     route = PostgresSource<CSVProtocol> => PandasDestination<'tp>,
     mappings = {
@@ -73,6 +76,7 @@ impl_transport!(
 
 impl_transport!(
     name = PostgresPandasTransport<'tp, CursorProtocol>,
+    error = ConnectorAgentPythonError,
     systems = PostgresTypeSystem => PandasTypeSystem,
     route = PostgresSource<CursorProtocol> => PandasDestination<'tp>,
     mappings = {

@@ -58,12 +58,14 @@ impl<P> MysqlSource<P> {
 
 impl<P> Source for MysqlSource<P>
 where
-    MysqlSourcePartition<P>: SourcePartition<TypeSystem = MysqlTypeSystem>,
+    MysqlSourcePartition<P>:
+        SourcePartition<TypeSystem = MysqlTypeSystem, Error = ConnectorAgentError>,
     P: Send,
 {
     const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
     type Partition = MysqlSourcePartition<P>;
     type TypeSystem = MysqlTypeSystem;
+    type Error = ConnectorAgentError;
 
     fn set_data_order(&mut self, data_order: DataOrder) -> Result<()> {
         if !matches!(data_order, DataOrder::RowMajor) {
@@ -193,6 +195,7 @@ impl<P> MysqlSourcePartition<P> {
 impl SourcePartition for MysqlSourcePartition<BinaryProtocol> {
     type TypeSystem = MysqlTypeSystem;
     type Parser<'a> = MysqlBinarySourceParser<'a>;
+    type Error = ConnectorAgentError;
 
     fn prepare(&mut self) -> Result<()> {
         self.nrows = match get_limit(&self.query, &MySqlDialect {})? {
@@ -232,6 +235,7 @@ impl SourcePartition for MysqlSourcePartition<BinaryProtocol> {
 impl SourcePartition for MysqlSourcePartition<TextProtocol> {
     type TypeSystem = MysqlTypeSystem;
     type Parser<'a> = MysqlTextSourceParser<'a>;
+    type Error = ConnectorAgentError;
 
     fn prepare(&mut self) -> Result<()> {
         self.nrows = match get_limit(&self.query, &MySqlDialect {})? {
@@ -322,12 +326,15 @@ impl<'a> MysqlBinarySourceParser<'a> {
 
 impl<'a> PartitionParser<'a> for MysqlBinarySourceParser<'a> {
     type TypeSystem = MysqlTypeSystem;
+    type Error = ConnectorAgentError;
 }
 
 macro_rules! impl_produce_binary {
     ($($t: ty,)+) => {
         $(
             impl<'r, 'a> Produce<'r, $t> for MysqlBinarySourceParser<'a> {
+                type Error = ConnectorAgentError;
+
                 fn produce(&'r mut self) -> Result<$t> {
                     let (ridx, cidx) = self.next_loc()?;
                     let res = self.rowbuf[ridx].take(cidx).ok_or_else(|| anyhow!("mysql get None at position: ({}, {})", ridx, cidx))?;
@@ -336,6 +343,8 @@ macro_rules! impl_produce_binary {
             }
 
             impl<'r, 'a> Produce<'r, Option<$t>> for MysqlBinarySourceParser<'a> {
+                type Error = ConnectorAgentError;
+
                 fn produce(&'r mut self) -> Result<Option<$t>> {
                     let (ridx, cidx) = self.next_loc()?;
                     let res = self.rowbuf[ridx].take(cidx);
@@ -410,12 +419,15 @@ impl<'a> MysqlTextSourceParser<'a> {
 
 impl<'a> PartitionParser<'a> for MysqlTextSourceParser<'a> {
     type TypeSystem = MysqlTypeSystem;
+    type Error = ConnectorAgentError;
 }
 
 macro_rules! impl_produce_text {
     ($($t: ty,)+) => {
         $(
             impl<'r, 'a> Produce<'r, $t> for MysqlTextSourceParser<'a> {
+                type Error = ConnectorAgentError;
+
                 fn produce(&'r mut self) -> Result<$t> {
                     let (ridx, cidx) = self.next_loc()?;
                     let res = self.rowbuf[ridx].take(cidx).ok_or_else(|| anyhow!("mysql get None at position: ({}, {})", ridx, cidx))?;
@@ -424,6 +436,8 @@ macro_rules! impl_produce_text {
             }
 
             impl<'r, 'a> Produce<'r, Option<$t>> for MysqlTextSourceParser<'a> {
+                type Error = ConnectorAgentError;
+
                 fn produce(&'r mut self) -> Result<Option<$t>> {
                     let (ridx, cidx) = self.next_loc()?;
                     let res = self.rowbuf[ridx].take(cidx);

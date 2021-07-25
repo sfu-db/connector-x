@@ -68,12 +68,14 @@ impl<P> PostgresSource<P> {
 
 impl<P> Source for PostgresSource<P>
 where
-    PostgresSourcePartition<P>: SourcePartition<TypeSystem = PostgresTypeSystem>,
+    PostgresSourcePartition<P>:
+        SourcePartition<TypeSystem = PostgresTypeSystem, Error = ConnectorAgentError>,
     P: Send,
 {
     const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
     type Partition = PostgresSourcePartition<P>;
     type TypeSystem = PostgresTypeSystem;
+    type Error = ConnectorAgentError;
 
     fn set_data_order(&mut self, data_order: DataOrder) -> Result<()> {
         if !matches!(data_order, DataOrder::RowMajor) {
@@ -204,6 +206,7 @@ impl<P> PostgresSourcePartition<P> {
 impl SourcePartition for PostgresSourcePartition<BinaryProtocol> {
     type TypeSystem = PostgresTypeSystem;
     type Parser<'a> = PostgresBinarySourcePartitionParser<'a>;
+    type Error = ConnectorAgentError;
 
     fn prepare(&mut self) -> Result<()> {
         let dialect = PostgreSqlDialect {};
@@ -244,6 +247,7 @@ impl SourcePartition for PostgresSourcePartition<BinaryProtocol> {
 impl SourcePartition for PostgresSourcePartition<CSVProtocol> {
     type TypeSystem = PostgresTypeSystem;
     type Parser<'a> = PostgresCSVSourceParser<'a>;
+    type Error = ConnectorAgentError;
 
     fn prepare(&mut self) -> Result<()> {
         let row = self.conn.query_one(
@@ -281,6 +285,7 @@ impl SourcePartition for PostgresSourcePartition<CSVProtocol> {
 impl SourcePartition for PostgresSourcePartition<CursorProtocol> {
     type TypeSystem = PostgresTypeSystem;
     type Parser<'a> = PostgresRawSourceParser<'a>;
+    type Error = ConnectorAgentError;
 
     fn prepare(&mut self) -> Result<()> {
         let row = self.conn.query_one(
@@ -366,12 +371,15 @@ impl<'a> PostgresBinarySourcePartitionParser<'a> {
 
 impl<'a> PartitionParser<'a> for PostgresBinarySourcePartitionParser<'a> {
     type TypeSystem = PostgresTypeSystem;
+    type Error = ConnectorAgentError;
 }
 
 macro_rules! impl_produce {
     ($($t: ty,)+) => {
         $(
             impl<'r, 'a> Produce<'r, $t> for PostgresBinarySourcePartitionParser<'a> {
+                type Error = ConnectorAgentError;
+
                 fn produce(&'r mut self) -> Result<$t> {
                     let (ridx, cidx) = self.next_loc()?;
                     let row = &self.rowbuf[ridx];
@@ -381,6 +389,8 @@ macro_rules! impl_produce {
             }
 
             impl<'r, 'a> Produce<'r, Option<$t>> for PostgresBinarySourcePartitionParser<'a> {
+                type Error = ConnectorAgentError;
+
                 fn produce(&'r mut self) -> Result<Option<$t>> {
                     let (ridx, cidx) = self.next_loc()?;
                     let row = &self.rowbuf[ridx];
@@ -465,6 +475,8 @@ impl<'a> PostgresCSVSourceParser<'a> {
 }
 
 impl<'a> PartitionParser<'a> for PostgresCSVSourceParser<'a> {
+    type Error = ConnectorAgentError;
+
     type TypeSystem = PostgresTypeSystem;
 }
 
@@ -472,6 +484,8 @@ macro_rules! impl_csv_produce {
     ($($t: ty,)+) => {
         $(
             impl<'r, 'a> Produce<'r, $t> for PostgresCSVSourceParser<'a> {
+                type Error = ConnectorAgentError;
+
                 fn produce(&'r mut self) -> Result<$t> {
                     let (ridx, cidx) = self.next_loc()?;
                     self.rowbuf[ridx][cidx].parse().map_err(|_| {
@@ -481,6 +495,8 @@ macro_rules! impl_csv_produce {
             }
 
             impl<'r, 'a> Produce<'r, Option<$t>> for PostgresCSVSourceParser<'a> {
+                type Error = ConnectorAgentError;
+
                 fn produce(&'r mut self) -> Result<Option<$t>> {
                     let (ridx, cidx) = self.next_loc()?;
                     match &self.rowbuf[ridx][cidx][..] {
@@ -498,6 +514,8 @@ macro_rules! impl_csv_produce {
 impl_csv_produce!(i8, i16, i32, i64, f32, f64, Decimal, Uuid,);
 
 impl<'r, 'a> Produce<'r, bool> for PostgresCSVSourceParser<'a> {
+    type Error = ConnectorAgentError;
+
     fn produce(&mut self) -> Result<bool> {
         let (ridx, cidx) = self.next_loc()?;
         let ret = match &self.rowbuf[ridx][cidx][..] {
@@ -512,6 +530,8 @@ impl<'r, 'a> Produce<'r, bool> for PostgresCSVSourceParser<'a> {
 }
 
 impl<'r, 'a> Produce<'r, Option<bool>> for PostgresCSVSourceParser<'a> {
+    type Error = ConnectorAgentError;
+
     fn produce(&mut self) -> Result<Option<bool>> {
         let (ridx, cidx) = self.next_loc()?;
         let ret = match &self.rowbuf[ridx][cidx][..] {
@@ -527,6 +547,8 @@ impl<'r, 'a> Produce<'r, Option<bool>> for PostgresCSVSourceParser<'a> {
 }
 
 impl<'r, 'a> Produce<'r, DateTime<Utc>> for PostgresCSVSourceParser<'a> {
+    type Error = ConnectorAgentError;
+
     fn produce(&mut self) -> Result<DateTime<Utc>> {
         let (ridx, cidx) = self.next_loc()?;
         self.rowbuf[ridx][cidx].parse().map_err(|_| {
@@ -538,6 +560,8 @@ impl<'r, 'a> Produce<'r, DateTime<Utc>> for PostgresCSVSourceParser<'a> {
 }
 
 impl<'r, 'a> Produce<'r, Option<DateTime<Utc>>> for PostgresCSVSourceParser<'a> {
+    type Error = ConnectorAgentError;
+
     fn produce(&mut self) -> Result<Option<DateTime<Utc>>> {
         let (ridx, cidx) = self.next_loc()?;
         match &self.rowbuf[ridx][cidx][..] {
@@ -550,6 +574,8 @@ impl<'r, 'a> Produce<'r, Option<DateTime<Utc>>> for PostgresCSVSourceParser<'a> 
 }
 
 impl<'r, 'a> Produce<'r, NaiveDate> for PostgresCSVSourceParser<'a> {
+    type Error = ConnectorAgentError;
+
     fn produce(&mut self) -> Result<NaiveDate> {
         let (ridx, cidx) = self.next_loc()?;
         NaiveDate::parse_from_str(&self.rowbuf[ridx][cidx], "%Y-%m-%d").map_err(|_| {
@@ -559,6 +585,8 @@ impl<'r, 'a> Produce<'r, NaiveDate> for PostgresCSVSourceParser<'a> {
 }
 
 impl<'r, 'a> Produce<'r, Option<NaiveDate>> for PostgresCSVSourceParser<'a> {
+    type Error = ConnectorAgentError;
+
     fn produce(&mut self) -> Result<Option<NaiveDate>> {
         let (ridx, cidx) = self.next_loc()?;
         match &self.rowbuf[ridx][cidx][..] {
@@ -571,6 +599,8 @@ impl<'r, 'a> Produce<'r, Option<NaiveDate>> for PostgresCSVSourceParser<'a> {
 }
 
 impl<'r, 'a> Produce<'r, NaiveDateTime> for PostgresCSVSourceParser<'a> {
+    type Error = ConnectorAgentError;
+
     fn produce(&mut self) -> Result<NaiveDateTime> {
         let (ridx, cidx) = self.next_loc()?;
         NaiveDateTime::parse_from_str(&self.rowbuf[ridx][cidx], "%Y-%m-%d %H:%M:%S").map_err(|_| {
@@ -582,6 +612,8 @@ impl<'r, 'a> Produce<'r, NaiveDateTime> for PostgresCSVSourceParser<'a> {
 }
 
 impl<'r, 'a> Produce<'r, Option<NaiveDateTime>> for PostgresCSVSourceParser<'a> {
+    type Error = ConnectorAgentError;
+
     fn produce(&mut self) -> Result<Option<NaiveDateTime>> {
         let (ridx, cidx) = self.next_loc()?;
         match &self.rowbuf[ridx][cidx][..] {
@@ -596,6 +628,8 @@ impl<'r, 'a> Produce<'r, Option<NaiveDateTime>> for PostgresCSVSourceParser<'a> 
 }
 
 impl<'r, 'a> Produce<'r, NaiveTime> for PostgresCSVSourceParser<'a> {
+    type Error = ConnectorAgentError;
+
     fn produce(&mut self) -> Result<NaiveTime> {
         let (ridx, cidx) = self.next_loc()?;
         NaiveTime::parse_from_str(&self.rowbuf[ridx][cidx], "%H:%M:%S").map_err(|_| {
@@ -605,6 +639,8 @@ impl<'r, 'a> Produce<'r, NaiveTime> for PostgresCSVSourceParser<'a> {
 }
 
 impl<'r, 'a> Produce<'r, Option<NaiveTime>> for PostgresCSVSourceParser<'a> {
+    type Error = ConnectorAgentError;
+
     fn produce(&mut self) -> Result<Option<NaiveTime>> {
         let (ridx, cidx) = self.next_loc()?;
         match &self.rowbuf[ridx][cidx][..] {
@@ -617,6 +653,8 @@ impl<'r, 'a> Produce<'r, Option<NaiveTime>> for PostgresCSVSourceParser<'a> {
 }
 
 impl<'r, 'a> Produce<'r, &'r str> for PostgresCSVSourceParser<'a> {
+    type Error = ConnectorAgentError;
+
     fn produce(&'r mut self) -> Result<&'r str> {
         let (ridx, cidx) = self.next_loc()?;
         Ok(&self.rowbuf[ridx][cidx])
@@ -624,6 +662,8 @@ impl<'r, 'a> Produce<'r, &'r str> for PostgresCSVSourceParser<'a> {
 }
 
 impl<'r, 'a> Produce<'r, Option<&'r str>> for PostgresCSVSourceParser<'a> {
+    type Error = ConnectorAgentError;
+
     fn produce(&'r mut self) -> Result<Option<&'r str>> {
         let (ridx, cidx) = self.next_loc()?;
         match &self.rowbuf[ridx][cidx][..] {
@@ -634,6 +674,8 @@ impl<'r, 'a> Produce<'r, Option<&'r str>> for PostgresCSVSourceParser<'a> {
 }
 
 impl<'r, 'a> Produce<'r, Vec<u8>> for PostgresCSVSourceParser<'a> {
+    type Error = ConnectorAgentError;
+
     fn produce(&'r mut self) -> Result<Vec<u8>> {
         let (ridx, cidx) = self.next_loc()?;
         Ok(decode(&self.rowbuf[ridx][cidx][2..])?) // escape \x in the beginning
@@ -641,6 +683,8 @@ impl<'r, 'a> Produce<'r, Vec<u8>> for PostgresCSVSourceParser<'a> {
 }
 
 impl<'r, 'a> Produce<'r, Option<Vec<u8>>> for PostgresCSVSourceParser<'a> {
+    type Error = ConnectorAgentError;
+
     fn produce(&'r mut self) -> Result<Option<Vec<u8>>> {
         let (ridx, cidx) = self.next_loc()?;
         match &self.rowbuf[ridx][cidx] {
@@ -652,6 +696,8 @@ impl<'r, 'a> Produce<'r, Option<Vec<u8>>> for PostgresCSVSourceParser<'a> {
 }
 
 impl<'r, 'a> Produce<'r, Value> for PostgresCSVSourceParser<'a> {
+    type Error = ConnectorAgentError;
+
     fn produce(&'r mut self) -> Result<Value> {
         let (ridx, cidx) = self.next_loc()?;
         let v = &self.rowbuf[ridx][cidx];
@@ -660,6 +706,8 @@ impl<'r, 'a> Produce<'r, Value> for PostgresCSVSourceParser<'a> {
 }
 
 impl<'r, 'a> Produce<'r, Option<Value>> for PostgresCSVSourceParser<'a> {
+    type Error = ConnectorAgentError;
+
     fn produce(&'r mut self) -> Result<Option<Value>> {
         let (ridx, cidx) = self.next_loc()?;
 
@@ -722,12 +770,15 @@ impl<'a> PostgresRawSourceParser<'a> {
 
 impl<'a> PartitionParser<'a> for PostgresRawSourceParser<'a> {
     type TypeSystem = PostgresTypeSystem;
+    type Error = ConnectorAgentError;
 }
 
 macro_rules! impl_produce {
     ($($t: ty,)+) => {
         $(
             impl<'r, 'a> Produce<'r, $t> for PostgresRawSourceParser<'a> {
+                type Error = ConnectorAgentError;
+
                 fn produce(&'r mut self) -> Result<$t> {
                     let (ridx, cidx) = self.next_loc()?;
                     let row = &self.rowbuf[ridx];
@@ -737,6 +788,8 @@ macro_rules! impl_produce {
             }
 
             impl<'r, 'a> Produce<'r, Option<$t>> for PostgresRawSourceParser<'a> {
+                type Error = ConnectorAgentError;
+
                 fn produce(&'r mut self) -> Result<Option<$t>> {
                     let (ridx, cidx) = self.next_loc()?;
                     let row = &self.rowbuf[ridx];

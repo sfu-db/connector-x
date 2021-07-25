@@ -1,7 +1,7 @@
 use crate::{
     data_order::{coordinate, DataOrder},
     destinations::{Destination, DestinationPartition},
-    errors::Result,
+    errors::{ConnectorAgentError, Result as CXResult},
     sources::{Source, SourcePartition},
     sql::CXQuery,
     typesystem::{Transport, TypeSystem},
@@ -20,17 +20,22 @@ pub struct Dispatcher<'a, S, W, TP> {
     _phantom: PhantomData<TP>,
 }
 
-impl<'w, S, TSS, W, TSD, TP> Dispatcher<'w, S, W, TP>
+impl<'w, S, TSS, D, TSD, TP, ES, ED, ET> Dispatcher<'w, S, D, TP>
 where
     TSS: TypeSystem,
+    S: Source<TypeSystem = TSS, Error = ES>,
+    ES: From<ConnectorAgentError> + Send,
+
     TSD: TypeSystem,
-    S: Source<TypeSystem = TSS>,
-    W: Destination<TypeSystem = TSD>,
-    TP: Transport<TSS = TSS, TSD = TSD, S = S, D = W>,
+    D: Destination<TypeSystem = TSD, Error = ED>,
+    ED: From<ConnectorAgentError> + Send,
+
+    TP: Transport<TSS = TSS, TSD = TSD, S = S, D = D, Error = ET>,
+    ET: From<ConnectorAgentError> + From<ES> + From<ED> + Send,
 {
     /// Create a new dispatcher by providing a source builder, schema (temporary) and the queries
     /// to be issued to the data source.
-    pub fn new<Q: ToString>(src: S, dst: &'w mut W, queries: &[CXQuery<Q>]) -> Self {
+    pub fn new<Q: ToString>(src: S, dst: &'w mut D, queries: &[CXQuery<Q>]) -> Self {
         Dispatcher {
             src,
             dst,
@@ -41,8 +46,8 @@ where
 
     /// Run the dispatcher by specifying the src, the dispatcher will fetch, parse the data,
     /// and write the data to dst.
-    pub fn run(mut self) -> Result<()> {
-        let dorder = coordinate(S::DATA_ORDERS, W::DATA_ORDERS)?;
+    pub fn run(mut self) -> Result<(), ET> {
+        let dorder = coordinate(S::DATA_ORDERS, D::DATA_ORDERS)?;
         self.src.set_data_order(dorder)?;
         self.src.set_queries(self.queries.as_slice());
         debug!("Fetching metadata");
@@ -51,7 +56,7 @@ where
         let dst_schema = src_schema
             .iter()
             .map(|&s| TP::convert_typesystem(s))
-            .collect::<Result<Vec<_>>>()?;
+            .collect::<CXResult<Vec<_>>>()?;
         let names = self.src.names();
 
         // generate partitions
@@ -60,7 +65,7 @@ where
         // run queries
         src_partitions
             .par_iter_mut()
-            .try_for_each(|partition| -> Result<()> { partition.prepare() })?;
+            .try_for_each(|partition| -> Result<(), ES> { partition.prepare() })?;
 
         // allocate memory and create one partition for each source
         let num_rows: Vec<usize> = src_partitions
@@ -95,13 +100,13 @@ where
             .into_par_iter()
             .zip_eq(src_partitions)
             .enumerate()
-            .try_for_each(|(i, (mut src, mut dst))| -> Result<()> {
+            .try_for_each(|(i, (mut src, mut dst))| -> Result<(), ET> {
                 #[cfg(feature = "fptr")]
                 let f: Vec<_> = src_schema
                     .iter()
                     .zip_eq(&dst_schema)
                     .map(|(&src_ty, &dst_ty)| TP::processor(src_ty, dst_ty))
-                    .collect::<Result<Vec<_>>>()?;
+                    .collect::<CXResult<Vec<_>>>()?;
 
                 let mut parser = dst.parser()?;
 

@@ -2,12 +2,14 @@ use crate::destinations::memory::MemoryDestination;
 use crate::dummy_typesystem::DummyTypeSystem;
 use crate::sources::dummy::DummySource;
 use crate::typesystem::TypeConversion;
+use crate::ConnectorAgentError;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
 
 pub struct DummyMemoryTransport;
 
 impl_transport!(
     name = DummyMemoryTransport,
+    error = ConnectorAgentError,
     systems = DummyTypeSystem => DummyTypeSystem,
     route = DummySource => MemoryDestination,
     mappings = {

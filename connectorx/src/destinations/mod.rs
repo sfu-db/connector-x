@@ -4,7 +4,7 @@ pub mod arrow;
 pub mod memory;
 
 use crate::data_order::DataOrder;
-use crate::errors::Result;
+use crate::errors::ConnectorAgentError;
 use crate::typesystem::{TypeAssoc, TypeSystem};
 
 /// A `Destination` is associated with a `TypeSystem` and a `PartitionDestination`.
@@ -12,7 +12,8 @@ use crate::typesystem::{TypeAssoc, TypeSystem};
 pub trait Destination: Sized {
     const DATA_ORDERS: &'static [DataOrder];
     type TypeSystem: TypeSystem;
-    type Partition<'a>: DestinationPartition<'a, TypeSystem = Self::TypeSystem>;
+    type Partition<'a>: DestinationPartition<'a, TypeSystem = Self::TypeSystem, Error = Self::Error>;
+    type Error: From<ConnectorAgentError> + Send;
 
     /// Construct the `Destination`.
     /// This allocates the memory based on the types of each columns
@@ -23,10 +24,10 @@ pub trait Destination: Sized {
         names: &[S],
         schema: &[Self::TypeSystem],
         data_order: DataOrder,
-    ) -> Result<()>;
+    ) -> Result<(), Self::Error>;
 
     /// Create a bunch of partition destinations, with each write `count` number of rows.
-    fn partition(&mut self, counts: &[usize]) -> Result<Vec<Self::Partition<'_>>>;
+    fn partition(&mut self, counts: &[usize]) -> Result<Vec<Self::Partition<'_>>, Self::Error>;
     /// Return the schema of the destination.
     fn schema(&self) -> &[Self::TypeSystem];
 }
@@ -36,13 +37,14 @@ pub trait Destination: Sized {
 /// the `PartitionDestination` can never live longer than the parent.
 pub trait DestinationPartition<'a>: Send {
     type TypeSystem: TypeSystem;
+    type Error: From<ConnectorAgentError> + Send;
 
     /// Write a value of type T to the location (row, col). If T mismatch with the
     /// schema, `ConnectorAgentError::TypeCheckFailed` will return.
-    fn write<T>(&mut self, value: T) -> Result<()>
+    fn write<T>(&mut self, value: T) -> Result<(), <Self as DestinationPartition<'a>>::Error>
     where
         T: TypeAssoc<Self::TypeSystem>,
-        Self: Consume<T>,
+        Self: Consume<T, Error = <Self as DestinationPartition<'a>>::Error>,
     {
         self.consume(value)
     }
@@ -54,12 +56,13 @@ pub trait DestinationPartition<'a>: Send {
     fn ncols(&self) -> usize;
 
     /// Final clean ups
-    fn finalize(&mut self) -> Result<()> {
+    fn finalize(&mut self) -> Result<(), Self::Error> {
         Ok(())
     }
 }
 
 /// A type implemented `Consume<T>` means that it can consume a value `T` by adding it to it's own buffer.
 pub trait Consume<T> {
-    fn consume(&mut self, value: T) -> Result<()>;
+    type Error: From<ConnectorAgentError> + Send;
+    fn consume(&mut self, value: T) -> Result<(), Self::Error>;
 }

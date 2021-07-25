@@ -2,6 +2,7 @@ use crate::destinations::memory::MemoryDestination;
 use crate::dummy_typesystem::DummyTypeSystem;
 use crate::sources::postgres::{BinaryProtocol, CSVProtocol, PostgresSource, PostgresTypeSystem};
 use crate::typesystem::TypeConversion;
+use crate::ConnectorAgentError;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
 use std::marker::PhantomData;
 use uuid::Uuid;
@@ -10,6 +11,7 @@ pub struct PostgresMemoryTransport<P>(PhantomData<P>);
 
 impl_transport!(
     name = PostgresMemoryTransport<CSVProtocol>,
+    error = ConnectorAgentError,
     systems = PostgresTypeSystem => DummyTypeSystem,
     route = PostgresSource<CSVProtocol> => MemoryDestination,
     mappings = {
@@ -33,6 +35,7 @@ impl_transport!(
 
 impl_transport!(
     name = PostgresMemoryTransport<BinaryProtocol>,
+    error = ConnectorAgentError,
     systems = PostgresTypeSystem => DummyTypeSystem,
     route = PostgresSource<BinaryProtocol> => MemoryDestination,
     mappings = {

@@ -2,12 +2,14 @@ use crate::destinations::memory::MemoryDestination;
 use crate::dummy_typesystem::DummyTypeSystem;
 use crate::sources::csv::CSVSource;
 use crate::typesystem::TypeConversion;
+use crate::ConnectorAgentError;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
 
 pub struct CSVMemoryTransport;
 
 impl_transport!(
     name = CSVMemoryTransport,
+    error = ConnectorAgentError,
     systems = DummyTypeSystem => DummyTypeSystem,
     route = CSVSource => MemoryDestination,
     mappings = {

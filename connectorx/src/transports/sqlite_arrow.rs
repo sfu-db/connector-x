@@ -1,3 +1,4 @@
+use crate::ConnectorAgentError;
 use crate::{
     destinations::arrow::{types::ArrowTypeSystem, ArrowDestination},
     impl_transport,
@@ -10,6 +11,7 @@ pub struct SqliteArrowTransport;
 
 impl_transport!(
     name = SqliteArrowTransport,
+    error = ConnectorAgentError,
     systems = SqliteTypeSystem => ArrowTypeSystem,
     route = SqliteSource => ArrowDestination,
     mappings = {

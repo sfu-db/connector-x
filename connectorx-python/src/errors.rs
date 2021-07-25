@@ -35,6 +35,12 @@ pub enum ConnectorAgentPythonError {
     Other(#[from] anyhow::Error),
 }
 
+// impl From<connectorx::ConnectorAgentError> for ConnectorAgentPythonError {
+//     fn from(e: connectorx::ConnectorAgentError) -> ConnectorAgentPythonError {
+//         ConnectorAgentPythonError::ConnectorAgentError(e)
+//     }
+// }
+
 impl From<ConnectorAgentPythonError> for PyErr {
     fn from(e: ConnectorAgentPythonError) -> PyErr {
         PyRuntimeError::new_err(format!("{}", e))

@@ -69,9 +69,6 @@ pub enum ConnectorAgentError {
     #[error(transparent)]
     RegexError(#[from] regex::Error),
 
-    // #[cfg(feature = "src_memory")]
-    // #[error(transparent)]
-    // NdArrayShapeError(#[from] ndarray::ShapeError),
     #[cfg(feature = "dst_arrow")]
     #[error(transparent)]
     ArrowError(#[from] arrow::error::ArrowError),

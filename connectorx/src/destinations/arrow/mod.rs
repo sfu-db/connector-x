@@ -53,6 +53,7 @@ impl Destination for ArrowDestination {
     const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::ColumnMajor, DataOrder::RowMajor];
     type TypeSystem = ArrowTypeSystem;
     type Partition<'a> = ArrowPartitionWriter<'a>;
+    type Error = ConnectorAgentError;
 
     #[throws(ConnectorAgentError)]
     fn allocate<S: AsRef<str>>(
@@ -153,6 +154,7 @@ impl<'a> ArrowPartitionWriter<'a> {
 
 impl<'a> DestinationPartition<'a> for ArrowPartitionWriter<'a> {
     type TypeSystem = ArrowTypeSystem;
+    type Error = ConnectorAgentError;
 
     fn nrows(&self) -> usize {
         self.nrows
@@ -167,6 +169,8 @@ impl<'a, T> Consume<T> for ArrowPartitionWriter<'a>
 where
     T: TypeAssoc<<Self as DestinationPartition<'a>>::TypeSystem> + ArrowAssoc + 'static,
 {
+    type Error = ConnectorAgentError;
+
     fn consume(&mut self, value: T) -> Result<()> {
         let col = self.current_col;
         self.current_col = (self.current_col + 1) % self.ncols();

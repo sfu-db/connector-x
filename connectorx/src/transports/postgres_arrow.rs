@@ -3,6 +3,7 @@ use crate::sources::postgres::{
     BinaryProtocol, CSVProtocol, CursorProtocol, PostgresSource, PostgresTypeSystem,
 };
 use crate::typesystem::TypeConversion;
+use crate::ConnectorAgentError;
 use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
 use num_traits::ToPrimitive;
 use rust_decimal::Decimal;
@@ -13,6 +14,7 @@ pub struct PostgresArrowTransport<P>(PhantomData<P>);
 
 impl_transport!(
     name = PostgresArrowTransport<BinaryProtocol>,
+    error = ConnectorAgentError,
     systems = PostgresTypeSystem => ArrowTypeSystem,
     route = PostgresSource<BinaryProtocol> => ArrowDestination,
     mappings = {
@@ -36,6 +38,7 @@ impl_transport!(
 
 impl_transport!(
     name = PostgresArrowTransport<CSVProtocol>,
+    error = ConnectorAgentError,
     systems = PostgresTypeSystem => ArrowTypeSystem,
     route = PostgresSource<CSVProtocol> => ArrowDestination,
     mappings = {
@@ -59,6 +62,7 @@ impl_transport!(
 
 impl_transport!(
     name = PostgresArrowTransport<CursorProtocol>,
+    error = ConnectorAgentError,
     systems = PostgresTypeSystem => ArrowTypeSystem,
     route = PostgresSource<CursorProtocol> => ArrowDestination,
     mappings = {

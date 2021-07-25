@@ -51,6 +51,7 @@ where
     const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
     type Partition = SqliteSourcePartition;
     type TypeSystem = SqliteTypeSystem;
+    type Error = ConnectorAgentError;
 
     fn set_data_order(&mut self, data_order: DataOrder) -> Result<()> {
         if !matches!(data_order, DataOrder::RowMajor) {
@@ -180,6 +181,7 @@ impl SqliteSourcePartition {
 impl SourcePartition for SqliteSourcePartition {
     type TypeSystem = SqliteTypeSystem;
     type Parser<'a> = SqliteSourcePartitionParser<'a>;
+    type Error = ConnectorAgentError;
 
     fn prepare(&mut self) -> Result<()> {
         let dialect = SQLiteDialect {};
@@ -251,12 +253,15 @@ impl<'a> SqliteSourcePartitionParser<'a> {
 
 impl<'a> PartitionParser<'a> for SqliteSourcePartitionParser<'a> {
     type TypeSystem = SqliteTypeSystem;
+    type Error = ConnectorAgentError;
 }
 
 macro_rules! impl_produce {
     ($($t: ty,)+) => {
         $(
             impl<'r, 'a> Produce<'r, $t> for SqliteSourcePartitionParser<'a> {
+                type Error = ConnectorAgentError;
+
                 fn produce(&'r mut self) -> Result<$t> {
                     let (row, col) = self.next_loc()?;
                     let val = row.get(col)?;
@@ -265,6 +270,8 @@ macro_rules! impl_produce {
             }
 
             impl<'r, 'a> Produce<'r, Option<$t>> for SqliteSourcePartitionParser<'a> {
+                type Error = ConnectorAgentError;
+
                 fn produce(&'r mut self) -> Result<Option<$t>> {
                     let (row, col) = self.next_loc()?;
                     let val = row.get(col)?;

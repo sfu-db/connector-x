@@ -2,7 +2,7 @@
 // functions to it's native type N based on our defined type T. Remember, T is value and N is a type.
 
 use crate::destinations::{Consume, Destination, DestinationPartition};
-use crate::errors::Result;
+use crate::errors::{ConnectorAgentError, Result as CXResult};
 use crate::sources::{PartitionParser, Produce, Source, SourcePartition};
 
 /// `TypeSystem` describes all the types a source or destination support
@@ -10,14 +10,14 @@ use crate::sources::{PartitionParser, Produce, Source, SourcePartition};
 /// The variant can be used to type check with a static type `T` through the `check` method.
 pub trait TypeSystem: Copy + Clone + Send + Sync {
     /// Check whether T is the same type as defined by self.
-    fn check<T: TypeAssoc<Self>>(self) -> Result<()> {
+    fn check<T: TypeAssoc<Self>>(self) -> CXResult<()> {
         T::check(self)
     }
 }
 
 /// Associate a static type to a TypeSystem
 pub trait TypeAssoc<TS: TypeSystem> {
-    fn check(ts: TS) -> Result<()>;
+    fn check(ts: TS) -> CXResult<()>;
 }
 
 /// Realize means that a TypeSystem can realize a parameterized func F, based on its current variants.
@@ -26,7 +26,7 @@ where
     F: ParameterizedFunc,
 {
     /// realize a parameterized function with the type that self currently is.
-    fn realize(self) -> Result<F::Function>;
+    fn realize(self) -> CXResult<F::Function>;
 }
 
 /// A ParameterizedFunc refers to a function that is parameterized on a type T,
@@ -60,10 +60,11 @@ pub trait Transport {
     type TSD: TypeSystem;
     type S: Source;
     type D: Destination;
+    type Error: From<ConnectorAgentError> + Send;
 
     /// convert_typesystem convert the source type system TSS to the destination
     /// type system TSD.
-    fn convert_typesystem(ts: Self::TSS) -> Result<Self::TSD>;
+    fn convert_typesystem(ts: Self::TSS) -> CXResult<Self::TSD>;
 
     /// convert_type convert the type T1 associated with the source type system
     /// TSS to a type T2 which is associated with the destination type system TSD.
@@ -82,32 +83,39 @@ pub trait Transport {
         ts2: Self::TSD,
         src: &'r mut <<Self::S as Source>::Partition as SourcePartition>::Parser<'s>,
         dst: &'r mut <Self::D as Destination>::Partition<'d>,
-    ) -> Result<()>;
+    ) -> Result<(), Self::Error>;
 
     #[allow(clippy::type_complexity)]
     fn processor<'s, 'd>(
         ts1: Self::TSS,
         ts2: Self::TSD,
-    ) -> Result<
+    ) -> CXResult<
         fn(
             src: &mut <<Self::S as Source>::Partition as SourcePartition>::Parser<'s>,
             dst: &mut <Self::D as Destination>::Partition<'d>,
-        ) -> Result<()>,
+        ) -> Result<(), Self::Error>,
     >;
 }
 
-pub fn process<'s, 'd, 'r, T1, T2, TP, S, D>(
+pub fn process<'s, 'd, 'r, T1, T2, TP, S, D, ES, ED, ET>(
     src: &'r mut <<S as Source>::Partition as SourcePartition>::Parser<'s>,
     dst: &'r mut <D as Destination>::Partition<'d>,
-) -> crate::errors::Result<()>
+) -> Result<(), ET>
 where
     T1: TypeAssoc<<S as Source>::TypeSystem>,
+    S: Source<Error = ES>,
+    <S as Source>::Partition: SourcePartition<Error = ES>,
+
+    <<S as Source>::Partition as SourcePartition>::Parser<'s>: Produce<'r, T1, Error = ES>,
+    ES: From<ConnectorAgentError> + Send,
+
     T2: TypeAssoc<<D as Destination>::TypeSystem>,
+    D: Destination<Error = ED>,
+    <D as Destination>::Partition<'d>: Consume<T2, Error = ED>,
+    ED: From<ConnectorAgentError> + Send,
+
     TP: TypeConversion<T1, T2>,
-    S: Source,
-    D: Destination,
-    <<S as Source>::Partition as SourcePartition>::Parser<'s>: Produce<'r, T1>,
-    <D as Destination>::Partition<'d>: Consume<T2>,
+    ET: From<ES> + From<ED>,
 {
     let val: T1 = PartitionParser::parse(src)?;
     let val: T2 = <TP as TypeConversion<T1, _>>::convert(val);

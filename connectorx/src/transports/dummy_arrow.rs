@@ -3,12 +3,14 @@ use crate::destinations::arrow::ArrowDestination;
 use crate::dummy_typesystem::DummyTypeSystem;
 use crate::sources::dummy::DummySource;
 use crate::typesystem::TypeConversion;
+use crate::ConnectorAgentError;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
 
 pub struct DummyArrowTransport;
 
 impl_transport!(
     name = DummyArrowTransport,
+    error = ConnectorAgentError,
     systems = DummyTypeSystem => ArrowTypeSystem,
     route = DummySource => ArrowDestination,
     mappings = {

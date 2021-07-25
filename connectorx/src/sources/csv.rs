@@ -133,6 +133,7 @@ impl Source for CSVSource {
     const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
     type Partition = CSVSourcePartition;
     type TypeSystem = DummyTypeSystem;
+    type Error = ConnectorAgentError;
 
     #[throws(ConnectorAgentError)]
     fn set_data_order(&mut self, data_order: DataOrder) {
@@ -202,6 +203,7 @@ impl CSVSourcePartition {
 impl SourcePartition for CSVSourcePartition {
     type TypeSystem = DummyTypeSystem;
     type Parser<'a> = CSVSourcePartitionParser<'a>;
+    type Error = ConnectorAgentError;
 
     /// The parameter `query` is the path of the csv file
     fn prepare(&mut self) -> Result<()> {
@@ -254,9 +256,12 @@ impl<'a> CSVSourcePartitionParser<'a> {
 
 impl<'a> PartitionParser<'a> for CSVSourcePartitionParser<'a> {
     type TypeSystem = DummyTypeSystem;
+    type Error = ConnectorAgentError;
 }
 
 impl<'r, 'a> Produce<'r, i64> for CSVSourcePartitionParser<'a> {
+    type Error = ConnectorAgentError;
+
     fn produce(&mut self) -> Result<i64> {
         let v = self.next_val();
         v.parse()
@@ -265,6 +270,8 @@ impl<'r, 'a> Produce<'r, i64> for CSVSourcePartitionParser<'a> {
 }
 
 impl<'r, 'a> Produce<'r, Option<i64>> for CSVSourcePartitionParser<'a> {
+    type Error = ConnectorAgentError;
+
     fn produce(&mut self) -> Result<Option<i64>> {
         let v = self.next_val();
         if v.is_empty() {
@@ -279,6 +286,8 @@ impl<'r, 'a> Produce<'r, Option<i64>> for CSVSourcePartitionParser<'a> {
 }
 
 impl<'r, 'a> Produce<'r, f64> for CSVSourcePartitionParser<'a> {
+    type Error = ConnectorAgentError;
+
     fn produce(&mut self) -> Result<f64> {
         let v = self.next_val();
         v.parse()
@@ -287,6 +296,8 @@ impl<'r, 'a> Produce<'r, f64> for CSVSourcePartitionParser<'a> {
 }
 
 impl<'r, 'a> Produce<'r, Option<f64>> for CSVSourcePartitionParser<'a> {
+    type Error = ConnectorAgentError;
+
     fn produce(&mut self) -> Result<Option<f64>> {
         let v = self.next_val();
         if v.is_empty() {
@@ -301,6 +312,8 @@ impl<'r, 'a> Produce<'r, Option<f64>> for CSVSourcePartitionParser<'a> {
 }
 
 impl<'r, 'a> Produce<'r, bool> for CSVSourcePartitionParser<'a> {
+    type Error = ConnectorAgentError;
+
     fn produce(&mut self) -> Result<bool> {
         let v = self.next_val();
         v.parse()
@@ -309,6 +322,8 @@ impl<'r, 'a> Produce<'r, bool> for CSVSourcePartitionParser<'a> {
 }
 
 impl<'r, 'a> Produce<'r, Option<bool>> for CSVSourcePartitionParser<'a> {
+    type Error = ConnectorAgentError;
+
     fn produce(&mut self) -> Result<Option<bool>> {
         let v = self.next_val();
         if v.is_empty() {
@@ -323,6 +338,8 @@ impl<'r, 'a> Produce<'r, Option<bool>> for CSVSourcePartitionParser<'a> {
 }
 
 impl<'r, 'a> Produce<'r, String> for CSVSourcePartitionParser<'a> {
+    type Error = ConnectorAgentError;
+
     fn produce(&mut self) -> Result<String> {
         let v = self.next_val();
         Ok(String::from(v))
@@ -330,6 +347,8 @@ impl<'r, 'a> Produce<'r, String> for CSVSourcePartitionParser<'a> {
 }
 
 impl<'a, 'r> Produce<'r, Option<String>> for CSVSourcePartitionParser<'a> {
+    type Error = ConnectorAgentError;
+
     fn produce(&'r mut self) -> Result<Option<String>> {
         let v = self.next_val();
         Ok(Some(String::from(v)))
@@ -337,6 +356,8 @@ impl<'a, 'r> Produce<'r, Option<String>> for CSVSourcePartitionParser<'a> {
 }
 
 impl<'r, 'a> Produce<'r, DateTime<Utc>> for CSVSourcePartitionParser<'a> {
+    type Error = ConnectorAgentError;
+
     fn produce(&mut self) -> Result<DateTime<Utc>> {
         let v = self.next_val();
         v.parse()
@@ -345,6 +366,8 @@ impl<'r, 'a> Produce<'r, DateTime<Utc>> for CSVSourcePartitionParser<'a> {
 }
 
 impl<'r, 'a> Produce<'r, Option<DateTime<Utc>>> for CSVSourcePartitionParser<'a> {
+    type Error = ConnectorAgentError;
+
     fn produce(&mut self) -> Result<Option<DateTime<Utc>>> {
         let v = self.next_val();
         if v.is_empty() {
