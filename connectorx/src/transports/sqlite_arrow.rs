@@ -16,7 +16,7 @@ pub enum SQLiteArrowTransportError {
     ArrowDestinationError(#[from] ArrowDestinationError),
 
     #[error(transparent)]
-    ConnectorAgentError(#[from] crate::ConnectorAgentError),
+    ConnectorXError(#[from] crate::ConnectorXError),
 }
 
 pub struct SQLiteArrowTransport;

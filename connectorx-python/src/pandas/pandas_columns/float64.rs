@@ -1,5 +1,5 @@
 use super::{check_dtype, HasPandasColumn, PandasColumn, PandasColumnObject};
-use crate::errors::ConnectorAgentPythonError;
+use crate::errors::ConnectorXPythonError;
 use anyhow::anyhow;
 use fehler::throws;
 use ndarray::{ArrayViewMut2, Axis, Ix2};
@@ -22,7 +22,7 @@ impl<'a> FromPyObject<'a> for Float64Block<'a> {
 }
 
 impl<'a> Float64Block<'a> {
-    #[throws(ConnectorAgentPythonError)]
+    #[throws(ConnectorXPythonError)]
     pub fn split(self) -> Vec<Float64Column<'a>> {
         let mut ret = vec![];
         let mut view = self.data;
@@ -61,7 +61,7 @@ impl<'a> PandasColumnObject for Float64Column<'a> {
 }
 
 impl<'a> PandasColumn<f64> for Float64Column<'a> {
-    #[throws(ConnectorAgentPythonError)]
+    #[throws(ConnectorXPythonError)]
     fn write(&mut self, val: f64) {
         unsafe { *self.data.get_unchecked_mut(self.i) = val };
         self.i += 1;
@@ -69,7 +69,7 @@ impl<'a> PandasColumn<f64> for Float64Column<'a> {
 }
 
 impl<'a> PandasColumn<Option<f64>> for Float64Column<'a> {
-    #[throws(ConnectorAgentPythonError)]
+    #[throws(ConnectorXPythonError)]
     fn write(&mut self, val: Option<f64>) {
         match val {
             None => unsafe { *self.data.get_unchecked_mut(self.i) = f64::NAN },

@@ -1,7 +1,12 @@
 [package]
 authors = ["Weiyuan Wu <youngw@sfu.ca>"]
+description = "Load data from databases to dataframes, the fastest way."
+documentation = "https://docs.rs/connectorx"
 edition = "2018"
+license = "MIT"
 name = "connectorx"
+readme = "README.md"
+repository = "https://github.com/sfu-db/connector-x"
 version = "0.2.0-alpha.3"
 
 [dependencies]

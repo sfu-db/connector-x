@@ -1,4 +1,4 @@
-use crate::errors::ConnectorAgentPythonError;
+use crate::errors::ConnectorXPythonError;
 use crate::source_router::{SourceConn, SourceType};
 use arrow::record_batch::RecordBatch;
 use connectorx::{
@@ -20,7 +20,7 @@ use log::debug;
 use pyo3::prelude::*;
 use pyo3::{PyAny, Python};
 
-#[throws(ConnectorAgentPythonError)]
+#[throws(ConnectorXPythonError)]
 pub fn write_arrow<'a>(
     py: Python<'a>,
     source_conn: &SourceConn,

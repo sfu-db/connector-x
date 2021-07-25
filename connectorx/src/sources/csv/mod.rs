@@ -3,8 +3,7 @@ mod errors;
 pub use self::errors::CSVSourceError;
 use super::{PartitionParser, Produce, Source, SourcePartition};
 use crate::{
-    data_order::DataOrder, dummy_typesystem::DummyTypeSystem, errors::ConnectorAgentError,
-    sql::CXQuery,
+    data_order::DataOrder, dummy_typesystem::DummyTypeSystem, errors::ConnectorXError, sql::CXQuery,
 };
 use anyhow::anyhow;
 use chrono::{DateTime, Utc};
@@ -142,7 +141,7 @@ impl Source for CSVSource {
     #[throws(CSVSourceError)]
     fn set_data_order(&mut self, data_order: DataOrder) {
         if !matches!(data_order, DataOrder::RowMajor) {
-            throw!(ConnectorAgentError::UnsupportedDataOrder(data_order))
+            throw!(ConnectorXError::UnsupportedDataOrder(data_order))
         }
     }
 
@@ -272,7 +271,7 @@ impl<'r, 'a> Produce<'r, i64> for CSVSourcePartitionParser<'a> {
     fn produce(&mut self) -> i64 {
         let v = self.next_val();
         v.parse()
-            .map_err(|_| ConnectorAgentError::cannot_produce::<i64>(Some(v.into())))?
+            .map_err(|_| ConnectorXError::cannot_produce::<i64>(Some(v.into())))?
     }
 }
 
@@ -287,7 +286,7 @@ impl<'r, 'a> Produce<'r, Option<i64>> for CSVSourcePartitionParser<'a> {
         }
         let v = v
             .parse()
-            .map_err(|_| ConnectorAgentError::cannot_produce::<Option<i64>>(Some(v.into())))?;
+            .map_err(|_| ConnectorXError::cannot_produce::<Option<i64>>(Some(v.into())))?;
 
         Some(v)
     }
@@ -300,7 +299,7 @@ impl<'r, 'a> Produce<'r, f64> for CSVSourcePartitionParser<'a> {
     fn produce(&mut self) -> f64 {
         let v = self.next_val();
         v.parse()
-            .map_err(|_| ConnectorAgentError::cannot_produce::<f64>(Some(v.into())))?
+            .map_err(|_| ConnectorXError::cannot_produce::<f64>(Some(v.into())))?
     }
 }
 
@@ -315,7 +314,7 @@ impl<'r, 'a> Produce<'r, Option<f64>> for CSVSourcePartitionParser<'a> {
         }
         let v = v
             .parse()
-            .map_err(|_| ConnectorAgentError::cannot_produce::<Option<f64>>(Some(v.into())))?;
+            .map_err(|_| ConnectorXError::cannot_produce::<Option<f64>>(Some(v.into())))?;
 
         Some(v)
     }
@@ -328,7 +327,7 @@ impl<'r, 'a> Produce<'r, bool> for CSVSourcePartitionParser<'a> {
     fn produce(&mut self) -> bool {
         let v = self.next_val();
         v.parse()
-            .map_err(|_| ConnectorAgentError::cannot_produce::<bool>(Some(v.into())))?
+            .map_err(|_| ConnectorXError::cannot_produce::<bool>(Some(v.into())))?
     }
 }
 
@@ -343,7 +342,7 @@ impl<'r, 'a> Produce<'r, Option<bool>> for CSVSourcePartitionParser<'a> {
         }
         let v = v
             .parse()
-            .map_err(|_| ConnectorAgentError::cannot_produce::<Option<bool>>(Some(v.into())))?;
+            .map_err(|_| ConnectorXError::cannot_produce::<Option<bool>>(Some(v.into())))?;
 
         Some(v)
     }
@@ -377,7 +376,7 @@ impl<'r, 'a> Produce<'r, DateTime<Utc>> for CSVSourcePartitionParser<'a> {
     fn produce(&mut self) -> DateTime<Utc> {
         let v = self.next_val();
         v.parse()
-            .map_err(|_| ConnectorAgentError::cannot_produce::<DateTime<Utc>>(Some(v.into())))?
+            .map_err(|_| ConnectorXError::cannot_produce::<DateTime<Utc>>(Some(v.into())))?
     }
 }
 
@@ -392,7 +391,7 @@ impl<'r, 'a> Produce<'r, Option<DateTime<Utc>>> for CSVSourcePartitionParser<'a>
         }
         let v = v
             .parse()
-            .map_err(|_| ConnectorAgentError::cannot_produce::<DateTime<Utc>>(Some(v.into())))?;
+            .map_err(|_| ConnectorXError::cannot_produce::<DateTime<Utc>>(Some(v.into())))?;
         Some(v)
     }
 }

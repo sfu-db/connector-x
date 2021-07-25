@@ -1,4 +1,4 @@
-use crate::errors::ConnectorAgentPythonError;
+use crate::errors::ConnectorXPythonError;
 use crate::pandas::destination::PandasDestination;
 use crate::pandas::types::PandasTypeSystem;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
@@ -14,7 +14,7 @@ pub struct MysqlPandasTransport<'py, P>(&'py (), PhantomData<P>);
 
 impl_transport!(
     name = MysqlPandasTransport<'tp, BinaryProtocol>,
-    error = ConnectorAgentPythonError,
+    error = ConnectorXPythonError,
     systems = MySQLTypeSystem => PandasTypeSystem,
     route = MySQLSource<BinaryProtocol> => PandasDestination<'tp>,
     mappings = {
@@ -32,7 +32,7 @@ impl_transport!(
 
 impl_transport!(
     name = MysqlPandasTransport<'tp, TextProtocol>,
-    error = ConnectorAgentPythonError,
+    error = ConnectorXPythonError,
     systems = MySQLTypeSystem => PandasTypeSystem,
     route = MySQLSource<TextProtocol> => PandasDestination<'tp>,
     mappings = {

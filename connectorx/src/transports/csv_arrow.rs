@@ -16,7 +16,7 @@ pub enum CSVArrowTransportError {
     ArrowDestinationError(#[from] ArrowDestinationError),
 
     #[error(transparent)]
-    ConnectorAgentError(#[from] crate::ConnectorAgentError),
+    ConnectorXError(#[from] crate::ConnectorXError),
 }
 
 impl_transport!(

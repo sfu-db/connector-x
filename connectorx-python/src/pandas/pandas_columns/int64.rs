@@ -1,5 +1,5 @@
 use super::{check_dtype, HasPandasColumn, PandasColumn, PandasColumnObject};
-use crate::errors::ConnectorAgentPythonError;
+use crate::errors::ConnectorXPythonError;
 use anyhow::anyhow;
 use fehler::throws;
 use ndarray::{ArrayViewMut1, ArrayViewMut2, Axis, Ix2};
@@ -33,7 +33,7 @@ impl<'a> FromPyObject<'a> for Int64Block<'a> {
 }
 
 impl<'a> Int64Block<'a> {
-    #[throws(ConnectorAgentPythonError)]
+    #[throws(ConnectorXPythonError)]
     pub fn split(self) -> Vec<Int64Column<'a>> {
         let mut ret = vec![];
         match self {
@@ -87,7 +87,7 @@ impl<'a> PandasColumnObject for Int64Column<'a> {
 }
 
 impl<'a> PandasColumn<i64> for Int64Column<'a> {
-    #[throws(ConnectorAgentPythonError)]
+    #[throws(ConnectorXPythonError)]
     fn write(&mut self, val: i64) {
         unsafe { *self.data.get_unchecked_mut(self.i) = val };
         if let Some(mask) = self.mask.as_mut() {
@@ -98,7 +98,7 @@ impl<'a> PandasColumn<i64> for Int64Column<'a> {
 }
 
 impl<'a> PandasColumn<Option<i64>> for Int64Column<'a> {
-    #[throws(ConnectorAgentPythonError)]
+    #[throws(ConnectorXPythonError)]
     fn write(&mut self, val: Option<i64>) {
         match val {
             Some(val) => {

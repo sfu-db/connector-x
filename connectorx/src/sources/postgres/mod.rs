@@ -4,7 +4,7 @@ mod typesystem;
 pub use self::errors::PostgresSourceError;
 use crate::{
     data_order::DataOrder,
-    errors::ConnectorAgentError,
+    errors::ConnectorXError,
     sources::{PartitionParser, Produce, Source, SourcePartition},
     sql::{count_query, get_limit, limit1_query, CXQuery},
 };
@@ -85,7 +85,7 @@ where
     #[throws(PostgresSourceError)]
     fn set_data_order(&mut self, data_order: DataOrder) {
         if !matches!(data_order, DataOrder::RowMajor) {
-            throw!(ConnectorAgentError::UnsupportedDataOrder(data_order));
+            throw!(ConnectorXError::UnsupportedDataOrder(data_order));
         }
     }
 
@@ -489,7 +489,7 @@ macro_rules! impl_csv_produce {
                 fn produce(&'r mut self) -> $t {
                     let (ridx, cidx) = self.next_loc()?;
                     self.rowbuf[ridx][cidx].parse().map_err(|_| {
-                        ConnectorAgentError::cannot_produce::<$t>(Some(self.rowbuf[ridx][cidx].into()))
+                        ConnectorXError::cannot_produce::<$t>(Some(self.rowbuf[ridx][cidx].into()))
                     })?
                 }
             }
@@ -503,7 +503,7 @@ macro_rules! impl_csv_produce {
                     match &self.rowbuf[ridx][cidx][..] {
                         "" => None,
                         v => Some(v.parse().map_err(|_| {
-                            ConnectorAgentError::cannot_produce::<$t>(Some(self.rowbuf[ridx][cidx].into()))
+                            ConnectorXError::cannot_produce::<$t>(Some(self.rowbuf[ridx][cidx].into()))
                         })?),
                     }
                 }
@@ -523,7 +523,7 @@ impl<'r, 'a> Produce<'r, bool> for PostgresCSVSourceParser<'a> {
         let ret = match &self.rowbuf[ridx][cidx][..] {
             "t" => true,
             "f" => false,
-            _ => throw!(ConnectorAgentError::cannot_produce::<bool>(Some(
+            _ => throw!(ConnectorXError::cannot_produce::<bool>(Some(
                 self.rowbuf[ridx][cidx].into()
             ))),
         };
@@ -541,7 +541,7 @@ impl<'r, 'a> Produce<'r, Option<bool>> for PostgresCSVSourceParser<'a> {
             "" => None,
             "t" => Some(true),
             "f" => Some(false),
-            _ => throw!(ConnectorAgentError::cannot_produce::<bool>(Some(
+            _ => throw!(ConnectorXError::cannot_produce::<bool>(Some(
                 self.rowbuf[ridx][cidx].into()
             ))),
         };
@@ -556,9 +556,7 @@ impl<'r, 'a> Produce<'r, DateTime<Utc>> for PostgresCSVSourceParser<'a> {
     fn produce(&mut self) -> DateTime<Utc> {
         let (ridx, cidx) = self.next_loc()?;
         self.rowbuf[ridx][cidx].parse().map_err(|_| {
-            ConnectorAgentError::cannot_produce::<DateTime<Utc>>(Some(
-                self.rowbuf[ridx][cidx].into(),
-            ))
+            ConnectorXError::cannot_produce::<DateTime<Utc>>(Some(self.rowbuf[ridx][cidx].into()))
         })?
     }
 }
@@ -571,9 +569,11 @@ impl<'r, 'a> Produce<'r, Option<DateTime<Utc>>> for PostgresCSVSourceParser<'a> 
         let (ridx, cidx) = self.next_loc()?;
         match &self.rowbuf[ridx][cidx][..] {
             "" => None,
-            v => Some(v.parse().map_err(|_| {
-                ConnectorAgentError::cannot_produce::<DateTime<Utc>>(Some(v.into()))
-            })?),
+            v => {
+                Some(v.parse().map_err(|_| {
+                    ConnectorXError::cannot_produce::<DateTime<Utc>>(Some(v.into()))
+                })?)
+            }
         }
     }
 }
@@ -585,7 +585,7 @@ impl<'r, 'a> Produce<'r, NaiveDate> for PostgresCSVSourceParser<'a> {
     fn produce(&mut self) -> NaiveDate {
         let (ridx, cidx) = self.next_loc()?;
         NaiveDate::parse_from_str(&self.rowbuf[ridx][cidx], "%Y-%m-%d").map_err(|_| {
-            ConnectorAgentError::cannot_produce::<NaiveDate>(Some(self.rowbuf[ridx][cidx].into()))
+            ConnectorXError::cannot_produce::<NaiveDate>(Some(self.rowbuf[ridx][cidx].into()))
         })?
     }
 }
@@ -598,11 +598,10 @@ impl<'r, 'a> Produce<'r, Option<NaiveDate>> for PostgresCSVSourceParser<'a> {
         let (ridx, cidx) = self.next_loc()?;
         match &self.rowbuf[ridx][cidx][..] {
             "" => None,
-            v => {
-                Some(NaiveDate::parse_from_str(v, "%Y-%m-%d").map_err(|_| {
-                    ConnectorAgentError::cannot_produce::<NaiveDate>(Some(v.into()))
-                })?)
-            }
+            v => Some(
+                NaiveDate::parse_from_str(v, "%Y-%m-%d")
+                    .map_err(|_| ConnectorXError::cannot_produce::<NaiveDate>(Some(v.into())))?,
+            ),
         }
     }
 }
@@ -615,7 +614,7 @@ impl<'r, 'a> Produce<'r, NaiveDateTime> for PostgresCSVSourceParser<'a> {
         let (ridx, cidx) = self.next_loc()?;
         NaiveDateTime::parse_from_str(&self.rowbuf[ridx][cidx], "%Y-%m-%d %H:%M:%S").map_err(
             |_| {
-                ConnectorAgentError::cannot_produce::<NaiveDateTime>(Some(
+                ConnectorXError::cannot_produce::<NaiveDateTime>(Some(
                     self.rowbuf[ridx][cidx].into(),
                 ))
             },
@@ -633,7 +632,7 @@ impl<'r, 'a> Produce<'r, Option<NaiveDateTime>> for PostgresCSVSourceParser<'a> 
             "" => None,
             v => Some(
                 NaiveDateTime::parse_from_str(v, "%Y-%m-%d %H:%M:%S").map_err(|_| {
-                    ConnectorAgentError::cannot_produce::<NaiveDateTime>(Some(v.into()))
+                    ConnectorXError::cannot_produce::<NaiveDateTime>(Some(v.into()))
                 })?,
             ),
         }
@@ -647,7 +646,7 @@ impl<'r, 'a> Produce<'r, NaiveTime> for PostgresCSVSourceParser<'a> {
     fn produce(&mut self) -> NaiveTime {
         let (ridx, cidx) = self.next_loc()?;
         NaiveTime::parse_from_str(&self.rowbuf[ridx][cidx], "%H:%M:%S").map_err(|_| {
-            ConnectorAgentError::cannot_produce::<NaiveTime>(Some(self.rowbuf[ridx][cidx].into()))
+            ConnectorXError::cannot_produce::<NaiveTime>(Some(self.rowbuf[ridx][cidx].into()))
         })?
     }
 }
@@ -660,11 +659,10 @@ impl<'r, 'a> Produce<'r, Option<NaiveTime>> for PostgresCSVSourceParser<'a> {
         let (ridx, cidx) = self.next_loc()?;
         match &self.rowbuf[ridx][cidx][..] {
             "" => None,
-            v => {
-                Some(NaiveTime::parse_from_str(v, "%H:%M:%S").map_err(|_| {
-                    ConnectorAgentError::cannot_produce::<NaiveTime>(Some(v.into()))
-                })?)
-            }
+            v => Some(
+                NaiveTime::parse_from_str(v, "%H:%M:%S")
+                    .map_err(|_| ConnectorXError::cannot_produce::<NaiveTime>(Some(v.into())))?,
+            ),
         }
     }
 }
@@ -723,7 +721,7 @@ impl<'r, 'a> Produce<'r, Value> for PostgresCSVSourceParser<'a> {
     fn produce(&'r mut self) -> Value {
         let (ridx, cidx) = self.next_loc()?;
         let v = &self.rowbuf[ridx][cidx];
-        from_str(v).map_err(|_| ConnectorAgentError::cannot_produce::<Value>(Some(v.into())))?
+        from_str(v).map_err(|_| ConnectorXError::cannot_produce::<Value>(Some(v.into())))?
     }
 }
 
@@ -736,8 +734,9 @@ impl<'r, 'a> Produce<'r, Option<Value>> for PostgresCSVSourceParser<'a> {
 
         match &self.rowbuf[ridx][cidx][..] {
             "" => None,
-            v => from_str(v)
-                .map_err(|_| ConnectorAgentError::cannot_produce::<Value>(Some(v.into())))?,
+            v => {
+                from_str(v).map_err(|_| ConnectorXError::cannot_produce::<Value>(Some(v.into())))?
+            }
         }
     }
 }

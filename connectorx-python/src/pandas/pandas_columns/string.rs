@@ -1,6 +1,6 @@
 use super::super::pystring::{PyString, StringInfo};
 use super::{check_dtype, HasPandasColumn, PandasColumn, PandasColumnObject};
-use crate::errors::ConnectorAgentPythonError;
+use crate::errors::ConnectorXPythonError;
 use anyhow::anyhow;
 use fehler::throws;
 use itertools::Itertools;
@@ -30,7 +30,7 @@ impl<'a> FromPyObject<'a> for StringBlock<'a> {
 }
 
 impl<'a> StringBlock<'a> {
-    #[throws(ConnectorAgentPythonError)]
+    #[throws(ConnectorXPythonError)]
     pub fn split(self) -> Vec<StringColumn<'a>> {
         let mut ret = vec![];
         let mut view = self.data;
@@ -74,14 +74,14 @@ impl<'a> PandasColumnObject for StringColumn<'a> {
     fn typename(&self) -> &'static str {
         std::any::type_name::<&'static [u8]>()
     }
-    #[throws(ConnectorAgentPythonError)]
+    #[throws(ConnectorXPythonError)]
     fn finalize(&mut self) {
         self.flush(true)?;
     }
 }
 
 impl<'r, 'a> PandasColumn<&'r str> for StringColumn<'a> {
-    #[throws(ConnectorAgentPythonError)]
+    #[throws(ConnectorXPythonError)]
     fn write(&mut self, val: &'r str) {
         let bytes = val.as_bytes();
         self.string_lengths.push(bytes.len());
@@ -91,7 +91,7 @@ impl<'r, 'a> PandasColumn<&'r str> for StringColumn<'a> {
 }
 
 impl<'a> PandasColumn<Box<str>> for StringColumn<'a> {
-    #[throws(ConnectorAgentPythonError)]
+    #[throws(ConnectorXPythonError)]
     fn write(&mut self, val: Box<str>) {
         let bytes = val.as_bytes();
         self.string_lengths.push(bytes.len());
@@ -101,7 +101,7 @@ impl<'a> PandasColumn<Box<str>> for StringColumn<'a> {
 }
 
 impl<'a> PandasColumn<String> for StringColumn<'a> {
-    #[throws(ConnectorAgentPythonError)]
+    #[throws(ConnectorXPythonError)]
     fn write(&mut self, val: String) {
         let bytes = val.as_bytes();
         self.string_lengths.push(bytes.len());
@@ -111,7 +111,7 @@ impl<'a> PandasColumn<String> for StringColumn<'a> {
 }
 
 impl<'a> PandasColumn<char> for StringColumn<'a> {
-    #[throws(ConnectorAgentPythonError)]
+    #[throws(ConnectorXPythonError)]
     fn write(&mut self, val: char) {
         let mut buffer = [0; 4]; // a char is max to 4 bytes
         let bytes = val.encode_utf8(&mut buffer).as_bytes();
@@ -122,7 +122,7 @@ impl<'a> PandasColumn<char> for StringColumn<'a> {
 }
 
 impl<'r, 'a> PandasColumn<Option<&'r str>> for StringColumn<'a> {
-    #[throws(ConnectorAgentPythonError)]
+    #[throws(ConnectorXPythonError)]
     fn write(&mut self, val: Option<&'r str>) {
         match val {
             Some(b) => {
@@ -139,7 +139,7 @@ impl<'r, 'a> PandasColumn<Option<&'r str>> for StringColumn<'a> {
 }
 
 impl<'a> PandasColumn<Option<Box<str>>> for StringColumn<'a> {
-    #[throws(ConnectorAgentPythonError)]
+    #[throws(ConnectorXPythonError)]
     fn write(&mut self, val: Option<Box<str>>) {
         match val {
             Some(b) => {
@@ -155,7 +155,7 @@ impl<'a> PandasColumn<Option<Box<str>>> for StringColumn<'a> {
     }
 }
 impl<'a> PandasColumn<Option<String>> for StringColumn<'a> {
-    #[throws(ConnectorAgentPythonError)]
+    #[throws(ConnectorXPythonError)]
     fn write(&mut self, val: Option<String>) {
         match val {
             Some(b) => {
@@ -172,7 +172,7 @@ impl<'a> PandasColumn<Option<String>> for StringColumn<'a> {
 }
 
 impl<'a> PandasColumn<Option<char>> for StringColumn<'a> {
-    #[throws(ConnectorAgentPythonError)]
+    #[throws(ConnectorXPythonError)]
     fn write(&mut self, val: Option<char>) {
         match val {
             Some(b) => {
@@ -243,7 +243,7 @@ impl<'a> StringColumn<'a> {
         partitions
     }
 
-    #[throws(ConnectorAgentPythonError)]
+    #[throws(ConnectorXPythonError)]
     pub fn flush(&mut self, force: bool) {
         let nstrings = self.string_lengths.len();
         if nstrings == 0 {
@@ -305,7 +305,7 @@ impl<'a> StringColumn<'a> {
         }
     }
 
-    #[throws(ConnectorAgentPythonError)]
+    #[throws(ConnectorXPythonError)]
     pub fn try_flush(&mut self) {
         if self.string_buf.len() >= self.buf_size {
             self.flush(true)?;

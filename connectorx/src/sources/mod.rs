@@ -13,7 +13,7 @@ pub mod postgres;
 pub mod sqlite;
 
 use crate::data_order::DataOrder;
-use crate::errors::ConnectorAgentError;
+use crate::errors::ConnectorXError;
 use crate::sql::CXQuery;
 use crate::typesystem::{TypeAssoc, TypeSystem};
 
@@ -24,7 +24,7 @@ pub trait Source {
     type TypeSystem: TypeSystem;
     // Partition needs to be send to different threads for parallel execution
     type Partition: SourcePartition<TypeSystem = Self::TypeSystem, Error = Self::Error> + Send;
-    type Error: From<ConnectorAgentError>;
+    type Error: From<ConnectorXError>;
 
     fn set_data_order(&mut self, data_order: DataOrder) -> Result<(), Self::Error>;
 
@@ -44,7 +44,7 @@ pub trait Source {
 pub trait SourcePartition: Sized {
     type TypeSystem: TypeSystem;
     type Parser<'a>: PartitionParser<'a, TypeSystem = Self::TypeSystem, Error = Self::Error>;
-    type Error: From<ConnectorAgentError> + Send;
+    type Error: From<ConnectorXError> + Send;
 
     /// Run the query and put the result into Self.
     fn prepare(&mut self) -> Result<(), Self::Error>;
@@ -61,7 +61,7 @@ pub trait SourcePartition: Sized {
 
 pub trait PartitionParser<'a> {
     type TypeSystem: TypeSystem;
-    type Error: From<ConnectorAgentError> + Send;
+    type Error: From<ConnectorXError> + Send;
 
     /// Read a value `T` by calling `Produce<T>::produce`. Usually this function does not need to be
     /// implemented.
@@ -76,7 +76,7 @@ pub trait PartitionParser<'a> {
 
 /// A type implemented `Produce<T>` means that it can produce a value `T` by consuming part of it's raw data buffer.
 pub trait Produce<'r, T> {
-    type Error: From<ConnectorAgentError> + Send;
+    type Error: From<ConnectorXError> + Send;
 
     fn produce(&'r mut self) -> Result<T, Self::Error>;
 }

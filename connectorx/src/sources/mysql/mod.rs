@@ -4,7 +4,7 @@ mod typesystem;
 pub use self::errors::MySQLSourceError;
 use crate::{
     data_order::DataOrder,
-    errors::ConnectorAgentError,
+    errors::ConnectorXError,
     sources::{PartitionParser, Produce, Source, SourcePartition},
     sql::{count_query, get_limit, limit1_query, CXQuery},
 };
@@ -74,7 +74,7 @@ where
     #[throws(MySQLSourceError)]
     fn set_data_order(&mut self, data_order: DataOrder) {
         if !matches!(data_order, DataOrder::RowMajor) {
-            throw!(ConnectorAgentError::UnsupportedDataOrder(data_order));
+            throw!(ConnectorXError::UnsupportedDataOrder(data_order));
         }
     }
 

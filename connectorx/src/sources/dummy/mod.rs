@@ -1,7 +1,7 @@
 use super::{PartitionParser, Produce, Source, SourcePartition};
 use crate::data_order::DataOrder;
 use crate::dummy_typesystem::DummyTypeSystem;
-use crate::errors::{ConnectorAgentError, Result};
+use crate::errors::{ConnectorXError, Result};
 use crate::sql::CXQuery;
 use chrono::{offset, Date, DateTime, Utc};
 use fehler::{throw, throws};
@@ -28,12 +28,12 @@ impl Source for DummySource {
     const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
     type TypeSystem = DummyTypeSystem;
     type Partition = DummySourcePartition;
-    type Error = ConnectorAgentError;
+    type Error = ConnectorXError;
 
-    #[throws(ConnectorAgentError)]
+    #[throws(ConnectorXError)]
     fn set_data_order(&mut self, data_order: DataOrder) {
         if !matches!(data_order, DataOrder::RowMajor) {
-            throw!(ConnectorAgentError::UnsupportedDataOrder(data_order))
+            throw!(ConnectorXError::UnsupportedDataOrder(data_order))
         }
     }
 
@@ -87,7 +87,7 @@ impl DummySourcePartition {
 impl SourcePartition for DummySourcePartition {
     type TypeSystem = DummyTypeSystem;
     type Parser<'a> = DummySourcePartitionParser<'a>;
-    type Error = ConnectorAgentError;
+    type Error = ConnectorXError;
 
     fn prepare(&mut self) -> Result<()> {
         Ok(())
@@ -135,14 +135,14 @@ impl<'a> DummySourcePartitionParser<'a> {
 
 impl<'a> PartitionParser<'a> for DummySourcePartitionParser<'a> {
     type TypeSystem = DummyTypeSystem;
-    type Error = ConnectorAgentError;
+    type Error = ConnectorXError;
 }
 
 macro_rules! numeric_impl {
     ($($t: ty),+) => {
         $(
             impl<'r, 'a> Produce<'r, $t> for DummySourcePartitionParser<'a> {
-                type Error = ConnectorAgentError;
+                type Error = ConnectorXError;
 
                 fn produce(&mut self) -> Result<$t> {
                     let ret = self.next_val();
@@ -151,7 +151,7 @@ macro_rules! numeric_impl {
             }
 
             impl<'r, 'a> Produce<'r, Option<$t>> for DummySourcePartitionParser<'a> {
-                type Error = ConnectorAgentError;
+                type Error = ConnectorXError;
 
                 fn produce(&mut self) -> Result<Option<$t>> {
                     let ret = self.next_val();
@@ -165,7 +165,7 @@ macro_rules! numeric_impl {
 numeric_impl!(u64, i32, i64, f64);
 
 impl<'r, 'a> Produce<'r, String> for DummySourcePartitionParser<'a> {
-    type Error = ConnectorAgentError;
+    type Error = ConnectorXError;
 
     fn produce(&mut self) -> Result<String> {
         let ret = self.next_val().to_string();
@@ -174,7 +174,7 @@ impl<'r, 'a> Produce<'r, String> for DummySourcePartitionParser<'a> {
 }
 
 impl<'r, 'a> Produce<'r, Option<String>> for DummySourcePartitionParser<'a> {
-    type Error = ConnectorAgentError;
+    type Error = ConnectorXError;
 
     fn produce(&mut self) -> Result<Option<String>> {
         let ret = self.next_val().to_string();
@@ -183,7 +183,7 @@ impl<'r, 'a> Produce<'r, Option<String>> for DummySourcePartitionParser<'a> {
 }
 
 impl<'r, 'a> Produce<'r, bool> for DummySourcePartitionParser<'a> {
-    type Error = ConnectorAgentError;
+    type Error = ConnectorXError;
 
     fn produce(&mut self) -> Result<bool> {
         let ret = self.next_val() % 2 == 0;
@@ -192,7 +192,7 @@ impl<'r, 'a> Produce<'r, bool> for DummySourcePartitionParser<'a> {
 }
 
 impl<'r, 'a> Produce<'r, Option<bool>> for DummySourcePartitionParser<'a> {
-    type Error = ConnectorAgentError;
+    type Error = ConnectorXError;
 
     fn produce(&mut self) -> Result<Option<bool>> {
         let ret = match self.next_val() % 3 {
@@ -207,7 +207,7 @@ impl<'r, 'a> Produce<'r, Option<bool>> for DummySourcePartitionParser<'a> {
 }
 
 impl<'r, 'a> Produce<'r, DateTime<Utc>> for DummySourcePartitionParser<'a> {
-    type Error = ConnectorAgentError;
+    type Error = ConnectorXError;
 
     fn produce(&mut self) -> Result<DateTime<Utc>> {
         self.next_val();
@@ -218,7 +218,7 @@ impl<'r, 'a> Produce<'r, DateTime<Utc>> for DummySourcePartitionParser<'a> {
 }
 
 impl<'r, 'a> Produce<'r, Option<DateTime<Utc>>> for DummySourcePartitionParser<'a> {
-    type Error = ConnectorAgentError;
+    type Error = ConnectorXError;
 
     fn produce(&mut self) -> Result<Option<DateTime<Utc>>> {
         self.next_val();
@@ -232,7 +232,7 @@ impl<'r, 'a> Produce<'r, Option<DateTime<Utc>>> for DummySourcePartitionParser<'
 }
 
 impl<'r, 'a> Produce<'r, Date<Utc>> for DummySourcePartitionParser<'a> {
-    type Error = ConnectorAgentError;
+    type Error = ConnectorXError;
 
     fn produce(&mut self) -> Result<Date<Utc>> {
         self.next_val();
@@ -242,7 +242,7 @@ impl<'r, 'a> Produce<'r, Date<Utc>> for DummySourcePartitionParser<'a> {
 }
 
 impl<'r, 'a> Produce<'r, Option<Date<Utc>>> for DummySourcePartitionParser<'a> {
-    type Error = ConnectorAgentError;
+    type Error = ConnectorXError;
 
     fn produce(&mut self) -> Result<Option<Date<Utc>>> {
         self.next_val();

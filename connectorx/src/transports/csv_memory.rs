@@ -16,7 +16,7 @@ pub enum CSVMemoryTransportError {
     MemoryDestinationError(#[from] MemoryDestinationError),
 
     #[error(transparent)]
-    ConnectorAgentError(#[from] crate::ConnectorAgentError),
+    ConnectorXError(#[from] crate::ConnectorXError),
 }
 
 impl_transport!(

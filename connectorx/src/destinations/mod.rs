@@ -4,7 +4,7 @@ pub mod arrow;
 pub mod memory;
 
 use crate::data_order::DataOrder;
-use crate::errors::ConnectorAgentError;
+use crate::errors::ConnectorXError;
 use crate::typesystem::{TypeAssoc, TypeSystem};
 
 /// A `Destination` is associated with a `TypeSystem` and a `PartitionDestination`.
@@ -13,7 +13,7 @@ pub trait Destination: Sized {
     const DATA_ORDERS: &'static [DataOrder];
     type TypeSystem: TypeSystem;
     type Partition<'a>: DestinationPartition<'a, TypeSystem = Self::TypeSystem, Error = Self::Error>;
-    type Error: From<ConnectorAgentError> + Send;
+    type Error: From<ConnectorXError> + Send;
 
     /// Construct the `Destination`.
     /// This allocates the memory based on the types of each columns
@@ -37,10 +37,10 @@ pub trait Destination: Sized {
 /// the `PartitionDestination` can never live longer than the parent.
 pub trait DestinationPartition<'a>: Send {
     type TypeSystem: TypeSystem;
-    type Error: From<ConnectorAgentError> + Send;
+    type Error: From<ConnectorXError> + Send;
 
     /// Write a value of type T to the location (row, col). If T mismatch with the
-    /// schema, `ConnectorAgentError::TypeCheckFailed` will return.
+    /// schema, `ConnectorXError::TypeCheckFailed` will return.
     fn write<T>(&mut self, value: T) -> Result<(), <Self as DestinationPartition<'a>>::Error>
     where
         T: TypeAssoc<Self::TypeSystem>,
@@ -63,6 +63,6 @@ pub trait DestinationPartition<'a>: Send {
 
 /// A type implemented `Consume<T>` means that it can consume a value `T` by adding it to it's own buffer.
 pub trait Consume<T> {
-    type Error: From<ConnectorAgentError> + Send;
+    type Error: From<ConnectorXError> + Send;
     fn consume(&mut self, value: T) -> Result<(), Self::Error>;
 }

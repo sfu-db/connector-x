@@ -4,11 +4,10 @@ use super::pandas_columns::{
 };
 use super::pystring::PyString;
 use super::types::{PandasArrayType, PandasBlockType, PandasTypeSystem};
-use crate::errors::{ConnectorAgentPythonError, Result};
+use crate::errors::{ConnectorXPythonError, Result};
 use anyhow::anyhow;
 use connectorx::{
-    ConnectorAgentError, Consume, DataOrder, Destination, DestinationPartition, TypeAssoc,
-    TypeSystem,
+    ConnectorXError, Consume, DataOrder, Destination, DestinationPartition, TypeAssoc, TypeSystem,
 };
 use fehler::{throw, throws};
 use itertools::Itertools;
@@ -58,7 +57,7 @@ impl<'a> PandasDestination<'a> {
     }
 
     pub fn result(self) -> Result<&'a PyAny> {
-        #[throws(ConnectorAgentPythonError)]
+        #[throws(ConnectorXPythonError)]
         fn to_list<'py, T: IntoPy<PyObject>>(py: Python<'py>, arr: Vec<T>) -> &'py PyList {
             let list = PyList::empty(py);
             for e in arr {
@@ -78,7 +77,7 @@ impl<'a> PandasDestination<'a> {
         Ok(result)
     }
 
-    #[throws(ConnectorAgentPythonError)]
+    #[throws(ConnectorXPythonError)]
     fn allocate_array<T: numpy::Element + 'a>(
         &mut self,
         dt: PandasBlockType,
@@ -94,7 +93,7 @@ impl<'a> PandasDestination<'a> {
         self.block_infos.push(block_info);
     }
 
-    #[throws(ConnectorAgentPythonError)]
+    #[throws(ConnectorXPythonError)]
     fn allocate_masked_array<T: numpy::Element + 'a>(
         &mut self,
         dt: PandasBlockType,
@@ -118,9 +117,9 @@ impl<'a> Destination for PandasDestination<'a> {
     const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
     type TypeSystem = PandasTypeSystem;
     type Partition<'b> = PandasPartitionDestination<'b>;
-    type Error = ConnectorAgentPythonError;
+    type Error = ConnectorXPythonError;
 
-    #[throws(ConnectorAgentPythonError)]
+    #[throws(ConnectorXPythonError)]
     fn allocate<S: AsRef<str>>(
         &mut self,
         nrows: usize,
@@ -129,7 +128,7 @@ impl<'a> Destination for PandasDestination<'a> {
         data_order: DataOrder,
     ) {
         if !matches!(data_order, DataOrder::RowMajor) {
-            throw!(ConnectorAgentError::UnsupportedDataOrder(data_order))
+            throw!(ConnectorXError::UnsupportedDataOrder(data_order))
         }
         self.nrow = nrows;
         self.schema = schema.to_vec();
@@ -176,7 +175,7 @@ impl<'a> Destination for PandasDestination<'a> {
         }
     }
 
-    #[throws(ConnectorAgentPythonError)]
+    #[throws(ConnectorXPythonError)]
     fn partition(&mut self, counts: &[usize]) -> Vec<Self::Partition<'_>> {
         assert_eq!(
             counts.iter().sum::<usize>(),
@@ -318,7 +317,7 @@ impl<'a> PandasPartitionDestination<'a> {
 
 impl<'a> DestinationPartition<'a> for PandasPartitionDestination<'a> {
     type TypeSystem = PandasTypeSystem;
-    type Error = ConnectorAgentPythonError;
+    type Error = ConnectorXPythonError;
 
     fn nrows(&self) -> usize {
         self.nrows
@@ -340,7 +339,7 @@ impl<'a, T> Consume<T> for PandasPartitionDestination<'a>
 where
     T: HasPandasColumn + TypeAssoc<PandasTypeSystem> + std::fmt::Debug,
 {
-    type Error = ConnectorAgentPythonError;
+    type Error = ConnectorXPythonError;
 
     fn consume(&mut self, value: T) -> Result<()> {
         let (_, col) = self.loc();

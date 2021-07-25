@@ -7,7 +7,7 @@ mod types;
 pub use self::destination::{PandasBlockInfo, PandasDestination, PandasPartitionDestination};
 pub use self::transports::{MysqlPandasTransport, PostgresPandasTransport, SqlitePandasTransport};
 pub use self::types::{PandasDType, PandasTypeSystem};
-use crate::errors::ConnectorAgentPythonError;
+use crate::errors::ConnectorXPythonError;
 use crate::source_router::{SourceConn, SourceType};
 use connectorx::{
     sources::{
@@ -24,7 +24,7 @@ use fehler::throws;
 use log::debug;
 use pyo3::{PyAny, Python};
 
-#[throws(ConnectorAgentPythonError)]
+#[throws(ConnectorXPythonError)]
 pub fn write_pandas<'a>(
     py: Python<'a>,
     source_conn: &SourceConn,

@@ -3,11 +3,11 @@ use std::any::type_name;
 use std::fmt;
 use thiserror::Error;
 
-pub type Result<T> = std::result::Result<T, ConnectorAgentError>;
+pub type Result<T> = std::result::Result<T, ConnectorXError>;
 
 /// Errors that can be raised from this library.
 #[derive(Error, Debug)]
-pub enum ConnectorAgentError {
+pub enum ConnectorXError {
     /// The required type does not same as the schema defined.
     #[error("Data type unexpected: {0:?} expected, {1} found.")]
     TypeCheckFailed(String, &'static str),
@@ -35,9 +35,9 @@ pub enum ConnectorAgentError {
     Other(#[from] anyhow::Error),
 }
 
-impl ConnectorAgentError {
+impl ConnectorXError {
     pub fn cannot_produce<T>(context: Option<String>) -> Self {
-        ConnectorAgentError::CannotProduce(type_name::<T>(), context.into())
+        ConnectorXError::CannotProduce(type_name::<T>(), context.into())
     }
 }
 

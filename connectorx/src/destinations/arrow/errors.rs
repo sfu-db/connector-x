@@ -12,7 +12,7 @@ pub enum ArrowDestinationError {
     PolarsError(#[from] polars::error::PolarsError),
 
     #[error(transparent)]
-    ConnectorAgentError(#[from] crate::ConnectorAgentError),
+    ConnectorXError(#[from] crate::ConnectorXError),
 
     /// Any other errors that are too trivial to be put here explicitly.
     #[error(transparent)]

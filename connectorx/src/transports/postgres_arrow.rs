@@ -20,7 +20,7 @@ pub enum PostgresArrowTransportError {
     ArrowDestinationError(#[from] ArrowDestinationError),
 
     #[error(transparent)]
-    ConnectorAgentError(#[from] crate::ConnectorAgentError),
+    ConnectorXError(#[from] crate::ConnectorXError),
 }
 
 pub struct PostgresArrowTransport<P>(PhantomData<P>);

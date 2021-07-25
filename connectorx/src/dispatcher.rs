@@ -1,7 +1,7 @@
 use crate::{
     data_order::{coordinate, DataOrder},
     destinations::{Destination, DestinationPartition},
-    errors::{ConnectorAgentError, Result as CXResult},
+    errors::{ConnectorXError, Result as CXResult},
     sources::{Source, SourcePartition},
     sql::CXQuery,
     typesystem::{Transport, TypeSystem},
@@ -24,14 +24,14 @@ impl<'w, S, TSS, D, TSD, TP, ES, ED, ET> Dispatcher<'w, S, D, TP>
 where
     TSS: TypeSystem,
     S: Source<TypeSystem = TSS, Error = ES>,
-    ES: From<ConnectorAgentError> + Send,
+    ES: From<ConnectorXError> + Send,
 
     TSD: TypeSystem,
     D: Destination<TypeSystem = TSD, Error = ED>,
-    ED: From<ConnectorAgentError> + Send,
+    ED: From<ConnectorXError> + Send,
 
     TP: Transport<TSS = TSS, TSD = TSD, S = S, D = D, Error = ET>,
-    ET: From<ConnectorAgentError> + From<ES> + From<ED> + Send,
+    ET: From<ConnectorXError> + From<ES> + From<ED> + Send,
 {
     /// Create a new dispatcher by providing a source builder, schema (temporary) and the queries
     /// to be issued to the data source.

@@ -2,7 +2,7 @@
 // functions to it's native type N based on our defined type T. Remember, T is value and N is a type.
 
 use crate::destinations::{Consume, Destination, DestinationPartition};
-use crate::errors::{ConnectorAgentError, Result as CXResult};
+use crate::errors::{ConnectorXError, Result as CXResult};
 use crate::sources::{PartitionParser, Produce, Source, SourcePartition};
 
 /// `TypeSystem` describes all the types a source or destination support
@@ -60,7 +60,7 @@ pub trait Transport {
     type TSD: TypeSystem;
     type S: Source;
     type D: Destination;
-    type Error: From<ConnectorAgentError> + Send;
+    type Error: From<ConnectorXError> + Send;
 
     /// convert_typesystem convert the source type system TSS to the destination
     /// type system TSD.
@@ -107,12 +107,12 @@ where
     <S as Source>::Partition: SourcePartition<Error = ES>,
 
     <<S as Source>::Partition as SourcePartition>::Parser<'s>: Produce<'r, T1, Error = ES>,
-    ES: From<ConnectorAgentError> + Send,
+    ES: From<ConnectorXError> + Send,
 
     T2: TypeAssoc<<D as Destination>::TypeSystem>,
     D: Destination<Error = ED>,
     <D as Destination>::Partition<'d>: Consume<T2, Error = ED>,
-    ED: From<ConnectorAgentError> + Send,
+    ED: From<ConnectorXError> + Send,
 
     TP: TypeConversion<T1, T2>,
     ET: From<ES> + From<ED>,

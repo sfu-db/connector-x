@@ -3,11 +3,11 @@ use pyo3::PyErr;
 use thiserror::Error;
 
 #[allow(unused)]
-pub type Result<T> = std::result::Result<T, ConnectorAgentPythonError>;
+pub type Result<T> = std::result::Result<T, ConnectorXPythonError>;
 
 /// Errors that can be raised from this library.
 #[derive(Error, Debug)]
-pub enum ConnectorAgentPythonError {
+pub enum ConnectorXPythonError {
     /// The required type does not same as the schema defined.
     #[error("Unknown pandas data type: {0}.")]
     UnknownPandasType(String),
@@ -28,7 +28,7 @@ pub enum ConnectorAgentPythonError {
     NdArrayShapeError(#[from] ndarray::ShapeError),
 
     #[error(transparent)]
-    ConnectorAgentError(#[from] connectorx::ConnectorAgentError),
+    ConnectorXError(#[from] connectorx::ConnectorXError),
 
     #[error(transparent)]
     PostgresSourceError(#[from] connectorx::sources::postgres::PostgresSourceError),
@@ -56,14 +56,14 @@ pub enum ConnectorAgentPythonError {
     Other(#[from] anyhow::Error),
 }
 
-impl From<ConnectorAgentPythonError> for PyErr {
-    fn from(e: ConnectorAgentPythonError) -> PyErr {
+impl From<ConnectorXPythonError> for PyErr {
+    fn from(e: ConnectorXPythonError) -> PyErr {
         PyRuntimeError::new_err(format!("{}", e))
     }
 }
 
-impl From<PyErr> for ConnectorAgentPythonError {
-    fn from(e: PyErr) -> ConnectorAgentPythonError {
-        ConnectorAgentPythonError::PythonError(format!("{}", e))
+impl From<PyErr> for ConnectorXPythonError {
+    fn from(e: PyErr) -> ConnectorXPythonError {
+        ConnectorXPythonError::PythonError(format!("{}", e))
     }
 }
