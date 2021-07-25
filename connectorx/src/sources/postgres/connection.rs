@@ -1,90 +1,59 @@
-use postgres::config::SslMode;
-use std::path::PathBuf;
-
-use openssl::ssl::{SslConnector, SslFiletype, SslMethod, SslVerifyMode};
-use postgres::Config;
-use postgres_openssl::MakeTlsConnector;
+use crate::sources::postgres::errors::PostgresSourceError;
+use anyhow::anyhow;
+use native_tls::{Certificate, TlsConnector};
+use postgres::{config::SslMode, Config};
+use postgres_native_tls::MakeTlsConnector;
 use std::collections::HashMap;
+use std::convert::TryFrom;
+use std::path::PathBuf;
 use url::Url;
 
+#[derive(Clone, Debug)]
 pub struct TlsConfig {
-    /// SSL mode (`sslmode`).
-    pub ssl_mode: SslMode,
-    /// Location of the client cert and key (`sslcert`, `sslkey`).
-    pub client_cert: Option<(PathBuf, PathBuf)>,
+    /// Postgres config, pg_config.sslmode (`sslmode`).
+    pub pg_config: Config,
     /// Location of the root certificate (`sslrootcert`).
     pub root_cert: Option<PathBuf>,
 }
 
-impl From<TlsConfig> for MakeTlsConnector {
+impl TryFrom<TlsConfig> for MakeTlsConnector {
+    type Error = PostgresSourceError;
     // This function adapted primarily from:
     // https://github.com/sfackler/rust-postgres/pull/774
-    fn from(tls_config: TlsConfig) -> Self {
-        let mut builder = SslConnector::builder(SslMethod::tls_client()).unwrap();
-
-        let (verify_mode, verify_hostname) = match tls_config.ssl_mode {
-            SslMode::Disable | SslMode::Prefer => (SslVerifyMode::NONE, false),
+    fn try_from(tls_config: TlsConfig) -> Result<Self, Self::Error> {
+        let mut builder = TlsConnector::builder();
+        let ssl_mode = tls_config.pg_config.get_ssl_mode();
+        let (verify_ca, verify_hostname) = match ssl_mode {
+            SslMode::Disable | SslMode::Prefer => (false, false),
             SslMode::Require => match tls_config.root_cert {
                 // If a root CA file exists, the behavior of sslmode=require will be the same as
                 // that of verify-ca, meaning the server certificate is validated against the CA.
                 //
                 // For more details, check out the note about backwards compatibility in
                 // https://postgresql.org/docs/current/libpq-ssl.html#LIBQ-SSL-CERTIFICATES.
-                Some(_) => (SslVerifyMode::PEER, false),
-                None => (SslVerifyMode::NONE, false),
+                Some(_) => (true, false),
+                None => (false, false),
             },
             // These two modes will not work until upstream rust-postgres supports parsing
             // them as part of the TLS config.
             //
-            // SslMode::VerifyCa => (SslVerifyMode::PEER, false),
-            // SslMode::VerifyFull => (SslVerifyMode::PEER, true),
-            _ => panic!("unexpected sslmode {:?}", tls_config.ssl_mode),
+            // SslMode::VerifyCa => (true, false),
+            // SslMode::VerifyFull => (true, true),
+            _ => panic!("unexpected sslmode {:?}", ssl_mode),
         };
 
-        // Configure certificates
-        if let Some((cert, key)) = tls_config.client_cert {
-            builder
-                .set_certificate_file(cert, SslFiletype::PEM)
-                .unwrap();
-            builder.set_private_key_file(key, SslFiletype::PEM).unwrap();
-        }
+        builder.danger_accept_invalid_certs(!verify_ca);
+        builder.danger_accept_invalid_hostnames(!verify_hostname);
+
         if let Some(root_cert) = tls_config.root_cert {
-            builder.set_ca_file(root_cert).unwrap();
+            builder
+                .add_root_certificate(Certificate::from_pem(std::fs::read(root_cert)?.as_ref())?);
         }
 
-        let mut tls_connector = MakeTlsConnector::new(builder.build());
+        let tls_connector = MakeTlsConnector::new(builder.build()?);
 
-        // Configure hostname verification
-        match (verify_mode, verify_hostname) {
-            (SslVerifyMode::PEER, false) => tls_connector.set_callback(|connect, _| {
-                connect.set_verify_hostname(false);
-                Ok(())
-            }),
-            _ => {}
-        }
-
-        tls_connector
+        Ok(tls_connector)
     }
-}
-
-pub fn get_query_params(url: Url) -> HashMap<String, String> {
-    url.query_pairs().into_owned().collect()
-}
-
-// Takes the SSL options from the query string, parses and coverts them
-pub fn parse_ssl_opts(
-    params: HashMap<String, String>,
-) -> (Option<(PathBuf, PathBuf)>, Option<PathBuf>) {
-    let sslcert = params.get("sslcert").map(|x| PathBuf::from(x));
-    let sslkey = params.get("sslkey").map(|x| PathBuf::from(x));
-    let sslrootcert = params.get("sslrootcert").map(|x| PathBuf::from(x));
-
-    let opt_client_cert = match (sslcert, sslkey) {
-        (Some(a), Some(b)) => Some((a, b)),
-        _ => None,
-    };
-
-    (opt_client_cert, sslrootcert)
 }
 
 // Strip URL params not accepted by upstream rust-postgres
@@ -92,7 +61,7 @@ pub fn strip_bad_opts(url: Url) -> Url {
     let stripped_query: Vec<(_, _)> = url
         .query_pairs()
         .filter(|p| match &*p.0 {
-            "sslkey" | "sslcert" | "sslrootcert" => false,
+            "sslrootcert" => false,
             _ => true,
         })
         .collect();
@@ -108,28 +77,32 @@ pub fn strip_bad_opts(url: Url) -> Url {
     url2
 }
 
-pub fn rewrite_tls_args(conn: &str) -> (String, MakeTlsConnector) {
+pub fn rewrite_tls_args(
+    conn: &str,
+) -> Result<(Config, Option<MakeTlsConnector>), PostgresSourceError> {
     // We parse the config, then strip unsupported SSL opts and rewrite the URI
     // before calling conn.parse().
     //
     // For more details on this approach, see the conversation here:
     // https://github.com/sfackler/rust-postgres/pull/774#discussion_r641784774
-    let parsed_conn_str = Url::parse(conn).expect("Parsing connection string failed.");
+    let parsed_conn_str = Url::parse(conn).map_err(|e| anyhow!(e))?;
 
-    let params: HashMap<String, String> = get_query_params(parsed_conn_str.clone());
-    let (client_cert, root_cert) = parse_ssl_opts(params);
+    let params: HashMap<String, String> =
+        parsed_conn_str.clone().query_pairs().into_owned().collect();
+    let root_cert = params.get("sslrootcert").map(|x| PathBuf::from(x));
 
     let stripped_url = strip_bad_opts(parsed_conn_str.clone());
+    let pg_config: Config = stripped_url.as_str().parse().unwrap();
 
-    let c: Config = stripped_url.as_str().parse().unwrap();
-    let ssl_mode = c.get_ssl_mode();
-
-    let tls_connector = TlsConfig {
-        ssl_mode,
-        client_cert,
+    let tls_config = TlsConfig {
+        pg_config: pg_config.clone(),
         root_cert,
-    }
-    .into();
+    };
 
-    (stripped_url.as_str().to_owned(), tls_connector)
+    let tls_connector = match pg_config.get_ssl_mode() {
+        SslMode::Disable => None,
+        _ => Some(MakeTlsConnector::try_from(tls_config)?),
+    };
+
+    Ok((pg_config, tls_connector))
 }

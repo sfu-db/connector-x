@@ -32,6 +32,7 @@ sqlparser = "0.9"
 thiserror = "1"
 url = "2"
 uuid = "0.8"
+postgres-native-tls = {version = "0.5"}
 
 [build-dependencies]
 # built = {version = "0.5", features = ["chrono"]}
