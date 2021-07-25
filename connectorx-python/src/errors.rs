@@ -30,16 +30,31 @@ pub enum ConnectorAgentPythonError {
     #[error(transparent)]
     ConnectorAgentError(#[from] connectorx::ConnectorAgentError),
 
+    #[error(transparent)]
+    PostgresSourceError(#[from] connectorx::sources::postgres::PostgresSourceError),
+
+    #[error(transparent)]
+    MySQLSourceError(#[from] connectorx::sources::mysql::MySQLSourceError),
+
+    #[error(transparent)]
+    SQLiteSourceError(#[from] connectorx::sources::sqlite::SQLiteSourceError),
+
+    #[error(transparent)]
+    PostgresArrowTransportError(#[from] connectorx::transports::PostgresArrowTransportError),
+
+    #[error(transparent)]
+    MySQLArrowTransportError(#[from] connectorx::transports::MySQLArrowTransportError),
+
+    #[error(transparent)]
+    SQLiteArrowTransportError(#[from] connectorx::transports::SQLiteArrowTransportError),
+
+    #[error(transparent)]
+    ArrowDestinationError(#[from] connectorx::destinations::arrow::ArrowDestinationError),
+
     /// Any other errors that are too trivial to be put here explicitly.
     #[error(transparent)]
     Other(#[from] anyhow::Error),
 }
-
-// impl From<connectorx::ConnectorAgentError> for ConnectorAgentPythonError {
-//     fn from(e: connectorx::ConnectorAgentError) -> ConnectorAgentPythonError {
-//         ConnectorAgentPythonError::ConnectorAgentError(e)
-//     }
-// }
 
 impl From<ConnectorAgentPythonError> for PyErr {
     fn from(e: ConnectorAgentPythonError) -> PyErr {

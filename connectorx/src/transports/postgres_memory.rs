@@ -1,17 +1,31 @@
-use crate::destinations::memory::MemoryDestination;
+use crate::destinations::memory::{MemoryDestination, MemoryDestinationError};
 use crate::dummy_typesystem::DummyTypeSystem;
-use crate::sources::postgres::{BinaryProtocol, CSVProtocol, PostgresSource, PostgresTypeSystem};
+use crate::sources::postgres::{
+    BinaryProtocol, CSVProtocol, PostgresSource, PostgresSourceError, PostgresTypeSystem,
+};
 use crate::typesystem::TypeConversion;
-use crate::ConnectorAgentError;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
 use std::marker::PhantomData;
+use thiserror::Error;
 use uuid::Uuid;
 
 pub struct PostgresMemoryTransport<P>(PhantomData<P>);
 
+#[derive(Error, Debug)]
+pub enum PostgresMemoryTransportError {
+    #[error(transparent)]
+    PostgresSourceError(#[from] PostgresSourceError),
+
+    #[error(transparent)]
+    MemoryDestinationError(#[from] MemoryDestinationError),
+
+    #[error(transparent)]
+    ConnectorAgentError(#[from] crate::ConnectorAgentError),
+}
+
 impl_transport!(
     name = PostgresMemoryTransport<CSVProtocol>,
-    error = ConnectorAgentError,
+    error = PostgresMemoryTransportError,
     systems = PostgresTypeSystem => DummyTypeSystem,
     route = PostgresSource<CSVProtocol> => MemoryDestination,
     mappings = {
@@ -35,7 +49,7 @@ impl_transport!(
 
 impl_transport!(
     name = PostgresMemoryTransport<BinaryProtocol>,
-    error = ConnectorAgentError,
+    error = PostgresMemoryTransportError,
     systems = PostgresTypeSystem => DummyTypeSystem,
     route = PostgresSource<BinaryProtocol> => MemoryDestination,
     mappings = {

@@ -2,7 +2,7 @@ use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
 use rusqlite::types::Type;
 
 #[derive(Copy, Clone, Debug)]
-pub enum SqliteTypeSystem {
+pub enum SQLiteTypeSystem {
     Bool(bool),
     Int8(bool),
     Int4(bool),
@@ -16,7 +16,7 @@ pub enum SqliteTypeSystem {
 }
 
 impl_typesystem! {
-    system = SqliteTypeSystem,
+    system = SQLiteTypeSystem,
     mappings = {
         { Bool => bool }
         { Int8 => i64 }
@@ -31,9 +31,9 @@ impl_typesystem! {
     }
 }
 
-impl From<Type> for SqliteTypeSystem {
-    fn from(ty: Type) -> SqliteTypeSystem {
-        use SqliteTypeSystem::*;
+impl From<Type> for SQLiteTypeSystem {
+    fn from(ty: Type) -> SQLiteTypeSystem {
+        use SQLiteTypeSystem::*;
         match ty {
             Type::Integer => Int8(true),
             Type::Real => Real(true),
@@ -44,9 +44,9 @@ impl From<Type> for SqliteTypeSystem {
     }
 }
 
-impl From<(Option<&str>, Type)> for SqliteTypeSystem {
-    fn from(types: (Option<&str>, Type)) -> SqliteTypeSystem {
-        use SqliteTypeSystem::*;
+impl From<(Option<&str>, Type)> for SQLiteTypeSystem {
+    fn from(types: (Option<&str>, Type)) -> SQLiteTypeSystem {
+        use SQLiteTypeSystem::*;
         match types {
             // derive from column's declare type, some rules refer to:
             // https://www.sqlite.org/datatype3.html#affname

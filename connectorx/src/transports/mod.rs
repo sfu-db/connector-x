@@ -23,10 +23,10 @@ pub use dummy_arrow::DummyArrowTransport;
 #[cfg(feature = "dst_memory")]
 pub use dummy_memory::DummyMemoryTransport;
 #[cfg(all(feature = "src_mysql", feature = "dst_arrow"))]
-pub use mysql_arrow::MysqlArrowTransport;
+pub use mysql_arrow::{MySQLArrowTransport, MySQLArrowTransportError};
 #[cfg(all(feature = "src_postgres", feature = "dst_arrow"))]
-pub use postgres_arrow::PostgresArrowTransport;
+pub use postgres_arrow::{PostgresArrowTransport, PostgresArrowTransportError};
 #[cfg(all(feature = "src_postgres", feature = "dst_memory"))]
 pub use postgres_memory::PostgresMemoryTransport;
 #[cfg(all(feature = "src_sqlite", feature = "dst_arrow"))]
-pub use sqlite_arrow::SqliteArrowTransport;
+pub use sqlite_arrow::{SQLiteArrowTransport, SQLiteArrowTransportError};

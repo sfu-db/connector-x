@@ -1,7 +1,7 @@
 use connectorx::{
     destinations::memory::MemoryDestination, sources::dummy::DummySource, sql::CXQuery,
     transports::DummyMemoryTransport, DataOrder, Destination, DestinationPartition, Dispatcher,
-    DummyTypeSystem, Result, Source,
+    DummyTypeSystem, Source,
 };
 use ndarray::array;
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
@@ -32,7 +32,7 @@ fn mixed_source_col_major() {
 }
 
 #[test]
-fn write_mixed_array() -> Result<()> {
+fn write_mixed_array() {
     let mut dw = MemoryDestination::new();
     dw.allocate(
         11,
@@ -48,7 +48,7 @@ fn write_mixed_array() -> Result<()> {
         DataOrder::RowMajor,
     )
     .unwrap();
-    let destinations = dw.partition(&[4, 7])?;
+    let destinations = dw.partition(&[4, 7]).unwrap();
 
     destinations.into_par_iter().for_each(|mut destination| {
         for row in 0..destination.nrows() {
@@ -128,7 +128,6 @@ fn write_mixed_array() -> Result<()> {
             _ => unreachable!(),
         }
     }
-    Ok(())
 }
 
 #[test]

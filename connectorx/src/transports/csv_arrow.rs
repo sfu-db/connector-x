@@ -1,15 +1,27 @@
-use crate::destinations::arrow::ArrowDestination;
+use crate::destinations::arrow::{ArrowDestination, ArrowDestinationError};
 use crate::dummy_typesystem::DummyTypeSystem;
-use crate::sources::csv::CSVSource;
+use crate::sources::csv::{CSVSource, CSVSourceError};
 use crate::typesystem::TypeConversion;
-use crate::ConnectorAgentError;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
+use thiserror::Error;
 
 pub struct CSVArrowTransport;
 
+#[derive(Error, Debug)]
+pub enum CSVArrowTransportError {
+    #[error(transparent)]
+    CSVSourceError(#[from] CSVSourceError),
+
+    #[error(transparent)]
+    ArrowDestinationError(#[from] ArrowDestinationError),
+
+    #[error(transparent)]
+    ConnectorAgentError(#[from] crate::ConnectorAgentError),
+}
+
 impl_transport!(
     name = CSVArrowTransport,
-    error = ConnectorAgentError,
+    error = CSVArrowTransportError,
     systems = DummyTypeSystem => DummyTypeSystem,
     route = CSVSource => ArrowDestination,
     mappings = {

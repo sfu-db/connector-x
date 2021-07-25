@@ -4,7 +4,7 @@ use crate::pandas::types::PandasTypeSystem;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
 use connectorx::{
     impl_transport,
-    sources::sqlite::{SqliteSource, SqliteTypeSystem},
+    sources::sqlite::{SQLiteSource, SQLiteTypeSystem},
     typesystem::TypeConversion,
 };
 
@@ -13,8 +13,8 @@ pub struct SqlitePandasTransport<'py>(&'py ());
 impl_transport!(
     name = SqlitePandasTransport<'tp>,
     error = ConnectorAgentPythonError,
-    systems = SqliteTypeSystem => PandasTypeSystem,
-    route = SqliteSource => PandasDestination<'tp>,
+    systems = SQLiteTypeSystem => PandasTypeSystem,
+    route = SQLiteSource => PandasDestination<'tp>,
     mappings = {
         { Bool[bool]                 => Bool[bool]              | conversion all }
         { Int8[i64]                  => I64[i64]                | conversion all }

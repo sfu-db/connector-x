@@ -12,9 +12,6 @@ pub enum ConnectorAgentError {
     #[error("Data type unexpected: {0:?} expected, {1} found.")]
     TypeCheckFailed(String, &'static str),
 
-    #[error("Index operation out of bound.")]
-    OutOfBound,
-
     #[error("Data order not supported {0:?}.")]
     UnsupportedDataOrder(DataOrder),
 
@@ -24,12 +21,6 @@ pub enum ConnectorAgentError {
     #[error("Cannot produce a {0}, context: {1}.")]
     CannotProduce(&'static str, ProduceContext),
 
-    #[error("Allocate is already called.")]
-    DuplicatedAllocation,
-
-    #[error("Destination has not been allocated yet.")]
-    DestinationNotAllocated,
-
     #[error("No conversion rule from {0} to {1}.")]
     NoConversionRule(String, String),
 
@@ -37,49 +28,7 @@ pub enum ConnectorAgentError {
     SqlQueryNotSupported(String),
 
     #[error(transparent)]
-    IOError(#[from] std::io::Error),
-
-    #[error(transparent)]
-    PostgresPoolError(#[from] r2d2::Error),
-
-    #[cfg(feature = "src_postgres")]
-    #[error(transparent)]
-    PostgresError(#[from] postgres::Error),
-
-    #[cfg(feature = "src_mysql")]
-    #[error(transparent)]
-    MysqlError(#[from] r2d2_mysql::mysql::Error),
-
-    #[cfg(feature = "src_mysql")]
-    #[error(transparent)]
-    MysqlUrlError(#[from] r2d2_mysql::mysql::UrlError),
-
-    #[cfg(feature = "src_sqlite")]
-    #[error(transparent)]
-    SQLiteError(#[from] rusqlite::Error),
-
-    #[cfg(any(feature = "src_postgres", feature = "src_csv"))]
-    #[error(transparent)]
-    CSVError(#[from] csv::Error),
-
-    #[error(transparent)]
     SQLParserError(#[from] sqlparser::parser::ParserError),
-
-    #[cfg(feature = "src_csv")]
-    #[error(transparent)]
-    RegexError(#[from] regex::Error),
-
-    #[cfg(feature = "dst_arrow")]
-    #[error(transparent)]
-    ArrowError(#[from] arrow::error::ArrowError),
-
-    #[cfg(feature = "src_postgres")]
-    #[error(transparent)]
-    HexError(#[from] hex::FromHexError),
-
-    #[cfg(feature = "polars")]
-    #[error(transparent)]
-    PolarsError(#[from] polars::error::PolarsError),
 
     /// Any other errors that are too trivial to be put here explicitly.
     #[error(transparent)]

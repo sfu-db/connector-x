@@ -1,7 +1,7 @@
 use crate::errors::{ConnectorAgentPythonError, Result};
 use anyhow::anyhow;
 use connectorx::{
-    sources::{mysql::MysqlTypeSystem, postgres::PostgresTypeSystem},
+    sources::{mysql::MySQLTypeSystem, postgres::PostgresTypeSystem},
     sql::{
         get_partition_range_query, get_partition_range_query_sep, single_col_partition_query,
         CXQuery,
@@ -169,9 +169,9 @@ fn mysql_get_partition_range(conn: &str, query: &str, col: &str) -> (i64, i64) {
         .query_first(range_query)?
         .ok_or_else(|| anyhow!("mysql range: no row returns"))?;
 
-    let col_type = MysqlTypeSystem::from(&row.columns()[0].column_type());
+    let col_type = MySQLTypeSystem::from(&row.columns()[0].column_type());
     let (min_v, max_v) = match col_type {
-        MysqlTypeSystem::Long(_) => {
+        MySQLTypeSystem::Long(_) => {
             let min_v: i64 = row
                 .get(0)
                 .ok_or_else(|| anyhow!("mysql range: cannot get min value"))?;
@@ -180,7 +180,7 @@ fn mysql_get_partition_range(conn: &str, query: &str, col: &str) -> (i64, i64) {
                 .ok_or_else(|| anyhow!("mysql range: cannot get max value"))?;
             (min_v, max_v)
         }
-        MysqlTypeSystem::LongLong(_) => {
+        MySQLTypeSystem::LongLong(_) => {
             let min_v: i64 = row
                 .get(0)
                 .ok_or_else(|| anyhow!("mysql range: cannot get min value"))?;

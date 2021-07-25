@@ -4,7 +4,7 @@ use crate::pandas::types::PandasTypeSystem;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
 use connectorx::{
     impl_transport,
-    sources::mysql::{BinaryProtocol, MysqlSource, MysqlTypeSystem, TextProtocol},
+    sources::mysql::{BinaryProtocol, MySQLSource, MySQLTypeSystem, TextProtocol},
     typesystem::TypeConversion,
 };
 use rust_decimal::prelude::*;
@@ -15,8 +15,8 @@ pub struct MysqlPandasTransport<'py, P>(&'py (), PhantomData<P>);
 impl_transport!(
     name = MysqlPandasTransport<'tp, BinaryProtocol>,
     error = ConnectorAgentPythonError,
-    systems = MysqlTypeSystem => PandasTypeSystem,
-    route = MysqlSource<BinaryProtocol> => PandasDestination<'tp>,
+    systems = MySQLTypeSystem => PandasTypeSystem,
+    route = MySQLSource<BinaryProtocol> => PandasDestination<'tp>,
     mappings = {
         { Double[f64]                => F64[f64]                | conversion all }
         { Long[i64]                  => I64[i64]                | conversion all }
@@ -33,8 +33,8 @@ impl_transport!(
 impl_transport!(
     name = MysqlPandasTransport<'tp, TextProtocol>,
     error = ConnectorAgentPythonError,
-    systems = MysqlTypeSystem => PandasTypeSystem,
-    route = MysqlSource<TextProtocol> => PandasDestination<'tp>,
+    systems = MySQLTypeSystem => PandasTypeSystem,
+    route = MySQLSource<TextProtocol> => PandasDestination<'tp>,
     mappings = {
         { Double[f64]                => F64[f64]                | conversion all }
         { Long[i64]                  => I64[i64]                | conversion all }

@@ -11,11 +11,11 @@ use crate::errors::ConnectorAgentPythonError;
 use crate::source_router::{SourceConn, SourceType};
 use connectorx::{
     sources::{
-        mysql::{BinaryProtocol as MySQLBinaryProtocol, MysqlSource, TextProtocol},
+        mysql::{BinaryProtocol as MySQLBinaryProtocol, MySQLSource, TextProtocol},
         postgres::{
             BinaryProtocol as PgBinaryProtocol, CSVProtocol, CursorProtocol, PostgresSource,
         },
-        sqlite::SqliteSource,
+        sqlite::SQLiteSource,
     },
     sql::CXQuery,
     Dispatcher,
@@ -84,7 +84,7 @@ pub fn write_pandas<'a>(
             }
         }
         SourceType::Sqlite => {
-            let source = SqliteSource::new(&source_conn.conn[..], queries.len())?;
+            let source = SQLiteSource::new(&source_conn.conn[..], queries.len())?;
             let dispatcher =
                 Dispatcher::<_, _, SqlitePandasTransport>::new(source, &mut destination, queries);
             debug!("Running dispatcher");
@@ -94,7 +94,7 @@ pub fn write_pandas<'a>(
             debug!("Protocol: {}", protocol);
             match protocol {
                 "binary" => {
-                    let source = MysqlSource::<MySQLBinaryProtocol>::new(
+                    let source = MySQLSource::<MySQLBinaryProtocol>::new(
                         &source_conn.conn[..],
                         queries.len(),
                     )?;
@@ -109,7 +109,7 @@ pub fn write_pandas<'a>(
                 }
                 "text" => {
                     let source =
-                        MysqlSource::<TextProtocol>::new(&source_conn.conn[..], queries.len())?;
+                        MySQLSource::<TextProtocol>::new(&source_conn.conn[..], queries.len())?;
                     let dispatcher = Dispatcher::<_, _, MysqlPandasTransport<TextProtocol>>::new(
                         source,
                         &mut destination,

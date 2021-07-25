@@ -1,5 +1,5 @@
+use super::errors::{ArrowDestinationError, Result};
 use crate::constants::SECONDS_IN_DAY;
-use crate::errors::{ConnectorAgentError, Result};
 use arrow::array::{
     ArrayBuilder, BooleanBuilder, Date32Builder, Date64Builder, Float32Builder, Float64Builder,
     Int32Builder, Int64Builder, LargeBinaryBuilder, LargeStringBuilder, Time64NanosecondBuilder,
@@ -28,7 +28,7 @@ macro_rules! impl_arrow_assoc {
                 Self::Builder::new(nrows)
             }
 
-            #[throws(ConnectorAgentError)]
+            #[throws(ArrowDestinationError)]
             fn append(builder: &mut Self::Builder, value: Self) {
                 builder.append_value(value)?;
             }
@@ -45,7 +45,7 @@ macro_rules! impl_arrow_assoc {
                 Self::Builder::new(nrows)
             }
 
-            #[throws(ConnectorAgentError)]
+            #[throws(ArrowDestinationError)]
             fn append(builder: &mut Self::Builder, value: Self) {
                 builder.append_option(value)?;
             }
@@ -72,7 +72,7 @@ impl ArrowAssoc for &str {
         LargeStringBuilder::new(nrows)
     }
 
-    #[throws(ConnectorAgentError)]
+    #[throws(ArrowDestinationError)]
     fn append(builder: &mut Self::Builder, value: Self) {
         builder.append_value(value)?;
     }
@@ -89,7 +89,7 @@ impl ArrowAssoc for Option<&str> {
         LargeStringBuilder::new(nrows)
     }
 
-    #[throws(ConnectorAgentError)]
+    #[throws(ArrowDestinationError)]
     fn append(builder: &mut Self::Builder, value: Self) {
         match value {
             Some(s) => builder.append_value(s)?,
@@ -109,7 +109,7 @@ impl ArrowAssoc for String {
         LargeStringBuilder::new(nrows)
     }
 
-    #[throws(ConnectorAgentError)]
+    #[throws(ArrowDestinationError)]
     fn append(builder: &mut Self::Builder, value: String) {
         builder.append_value(value.as_str())?;
     }
@@ -126,7 +126,7 @@ impl ArrowAssoc for Option<String> {
         LargeStringBuilder::new(nrows)
     }
 
-    #[throws(ConnectorAgentError)]
+    #[throws(ArrowDestinationError)]
     fn append(builder: &mut Self::Builder, value: Self) {
         match value {
             Some(s) => builder.append_value(s.as_str())?,

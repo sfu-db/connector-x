@@ -4,14 +4,14 @@ use arrow::record_batch::RecordBatch;
 use connectorx::{
     destinations::arrow::ArrowDestination,
     sources::{
-        mysql::{BinaryProtocol as MySQLBinaryProtocol, MysqlSource, TextProtocol},
+        mysql::{BinaryProtocol as MySQLBinaryProtocol, MySQLSource, TextProtocol},
         postgres::{
             BinaryProtocol as PgBinaryProtocol, CSVProtocol, CursorProtocol, PostgresSource,
         },
-        sqlite::SqliteSource,
+        sqlite::SQLiteSource,
     },
     sql::CXQuery,
-    transports::{MysqlArrowTransport, PostgresArrowTransport, SqliteArrowTransport},
+    transports::{MySQLArrowTransport, PostgresArrowTransport, SQLiteArrowTransport},
     Dispatcher,
 };
 use fehler::throws;
@@ -80,9 +80,9 @@ pub fn write_arrow<'a>(
             }
         }
         SourceType::Sqlite => {
-            let source = SqliteSource::new(&source_conn.conn[..], queries.len())?;
+            let source = SQLiteSource::new(&source_conn.conn[..], queries.len())?;
             let dispatcher =
-                Dispatcher::<_, _, SqliteArrowTransport>::new(source, &mut destination, queries);
+                Dispatcher::<_, _, SQLiteArrowTransport>::new(source, &mut destination, queries);
             debug!("Running dispatcher");
             dispatcher.run()?;
         }
@@ -90,12 +90,12 @@ pub fn write_arrow<'a>(
             debug!("Protocol: {}", protocol);
             match protocol {
                 "binary" => {
-                    let source = MysqlSource::<MySQLBinaryProtocol>::new(
+                    let source = MySQLSource::<MySQLBinaryProtocol>::new(
                         &source_conn.conn[..],
                         queries.len(),
                     )?;
                     let dispatcher =
-                        Dispatcher::<_, _, MysqlArrowTransport<MySQLBinaryProtocol>>::new(
+                        Dispatcher::<_, _, MySQLArrowTransport<MySQLBinaryProtocol>>::new(
                             source,
                             &mut destination,
                             queries,
@@ -105,8 +105,8 @@ pub fn write_arrow<'a>(
                 }
                 "text" => {
                     let source =
-                        MysqlSource::<TextProtocol>::new(&source_conn.conn[..], queries.len())?;
-                    let dispatcher = Dispatcher::<_, _, MysqlArrowTransport<TextProtocol>>::new(
+                        MySQLSource::<TextProtocol>::new(&source_conn.conn[..], queries.len())?;
+                    let dispatcher = Dispatcher::<_, _, MySQLArrowTransport<TextProtocol>>::new(
                         source,
                         &mut destination,
                         queries,

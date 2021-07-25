@@ -1,20 +1,33 @@
-use crate::destinations::arrow::{types::ArrowTypeSystem, ArrowDestination};
+use crate::destinations::arrow::{types::ArrowTypeSystem, ArrowDestination, ArrowDestinationError};
 use crate::sources::postgres::{
-    BinaryProtocol, CSVProtocol, CursorProtocol, PostgresSource, PostgresTypeSystem,
+    BinaryProtocol, CSVProtocol, CursorProtocol, PostgresSource, PostgresSourceError,
+    PostgresTypeSystem,
 };
 use crate::typesystem::TypeConversion;
-use crate::ConnectorAgentError;
 use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
 use num_traits::ToPrimitive;
 use rust_decimal::Decimal;
 use std::marker::PhantomData;
+use thiserror::Error;
 use uuid::Uuid;
+
+#[derive(Error, Debug)]
+pub enum PostgresArrowTransportError {
+    #[error(transparent)]
+    PostgresSourceError(#[from] PostgresSourceError),
+
+    #[error(transparent)]
+    ArrowDestinationError(#[from] ArrowDestinationError),
+
+    #[error(transparent)]
+    ConnectorAgentError(#[from] crate::ConnectorAgentError),
+}
 
 pub struct PostgresArrowTransport<P>(PhantomData<P>);
 
 impl_transport!(
     name = PostgresArrowTransport<BinaryProtocol>,
-    error = ConnectorAgentError,
+    error = PostgresArrowTransportError,
     systems = PostgresTypeSystem => ArrowTypeSystem,
     route = PostgresSource<BinaryProtocol> => ArrowDestination,
     mappings = {
@@ -38,7 +51,7 @@ impl_transport!(
 
 impl_transport!(
     name = PostgresArrowTransport<CSVProtocol>,
-    error = ConnectorAgentError,
+    error = PostgresArrowTransportError,
     systems = PostgresTypeSystem => ArrowTypeSystem,
     route = PostgresSource<CSVProtocol> => ArrowDestination,
     mappings = {
@@ -62,7 +75,7 @@ impl_transport!(
 
 impl_transport!(
     name = PostgresArrowTransport<CursorProtocol>,
-    error = ConnectorAgentError,
+    error = PostgresArrowTransportError,
     systems = PostgresTypeSystem => ArrowTypeSystem,
     route = PostgresSource<CursorProtocol> => ArrowDestination,
     mappings = {

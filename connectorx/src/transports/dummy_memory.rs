@@ -1,15 +1,25 @@
-use crate::destinations::memory::MemoryDestination;
+use crate::destinations::memory::{MemoryDestination, MemoryDestinationError};
 use crate::dummy_typesystem::DummyTypeSystem;
 use crate::sources::dummy::DummySource;
 use crate::typesystem::TypeConversion;
-use crate::ConnectorAgentError;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
+use thiserror::Error;
 
 pub struct DummyMemoryTransport;
 
+/// Errors that can be raised from this library.
+#[derive(Error, Debug)]
+pub enum DummyMemoryTransportError {
+    #[error(transparent)]
+    MemoryDestinationError(#[from] MemoryDestinationError),
+
+    #[error(transparent)]
+    ConnectorAgentError(#[from] crate::ConnectorAgentError),
+}
+
 impl_transport!(
     name = DummyMemoryTransport,
-    error = ConnectorAgentError,
+    error = DummyMemoryTransportError,
     systems = DummyTypeSystem => DummyTypeSystem,
     route = DummySource => MemoryDestination,
     mappings = {
