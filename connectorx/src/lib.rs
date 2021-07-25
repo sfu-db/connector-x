@@ -9,6 +9,7 @@ pub(crate) mod constants;
 pub mod data_order;
 pub mod destinations;
 pub mod dispatcher;
+#[cfg(any(feature = "src_dummy", feature = "dst_memory", feature = "src_csv"))]
 pub mod dummy_typesystem;
 pub mod errors;
 pub mod sources;
@@ -18,6 +19,7 @@ pub mod transports;
 pub use crate::data_order::DataOrder;
 pub use crate::destinations::{Consume, Destination, DestinationPartition};
 pub use crate::dispatcher::Dispatcher;
+#[cfg(any(feature = "src_dummy", feature = "dst_memory", feature = "src_csv"))]
 pub use crate::dummy_typesystem::DummyTypeSystem;
 pub use crate::errors::{ConnectorAgentError, Result};
 pub use crate::sources::{PartitionParser, Source, SourcePartition};

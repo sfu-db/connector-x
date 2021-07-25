@@ -9,7 +9,7 @@ version = "0.2.0-alpha.3"
 [dependencies]
 anyhow = "1"
 arrow = {version = "4", optional = true}
-chrono = "0.4"
+chrono = {version = "0.4", optional = true}
 csv = {version = "1", optional = true}
 derive_more = {version = "0.99", optional = true}
 fallible-streaming-iterator = {version = "0.1", optional = true}
@@ -18,7 +18,7 @@ hex = {version = "0.4", optional = true}
 itertools = "0.10"
 log = "0.4"
 ndarray = {version = "0.15", optional = true}
-num-traits = "0.2"
+num-traits = {version = "0.2", optional = true}
 owning_ref = {version = "0.4", optional = true}
 polars = {version = "0.14", optional = true}
 postgres = {version = "0.19", features = ["with-chrono-0_4", "with-uuid-0_8", "with-serde_json-1"], optional = true}
@@ -29,8 +29,7 @@ r2d2_sqlite = {version = "0.18", optional = true}
 rayon = "1"
 regex = {version = "1", optional = true}
 rusqlite = {version = "0.25", features = ["column_decltype", "chrono", "bundled"], optional = true}
-rust_decimal = {version = "1", features = ["db-postgres"]}
-serde = {version = "1", features = ["derive"]}
+rust_decimal = {version = "1", features = ["db-postgres"], optional = true}
 serde_json = {version = "1", optional = true}
 sqlparser = "0.9"
 thiserror = "1"
@@ -48,14 +47,15 @@ polars = "0.14"
 pprof = {version = "0.5", features = ["flamegraph"]}
 
 [features]
-all = ["src_sqlite", "src_postgres", "src_mysql", "src_csv", "dst_arrow", "dst_memory", "dst_polars"]
+all = ["src_sqlite", "src_postgres", "src_mysql", "src_csv", "src_dummy", "dst_arrow", "dst_memory", "dst_polars"]
 branch = []
 default = ["fptr"]
-dst_arrow = ["arrow"]
+dst_arrow = ["arrow", "chrono"]
 dst_memory = ["ndarray"]
 dst_polars = ["polars", "dst_arrow"]
 fptr = []
-src_csv = ["csv", "regex"]
-src_mysql = ["r2d2_mysql"]
-src_postgres = ["postgres", "r2d2_postgres", "csv", "hex", "serde_json", "uuid"]
-src_sqlite = ["rusqlite", "r2d2_sqlite", "fallible-streaming-iterator", "derive_more", "owning_ref"]
+src_csv = ["csv", "regex", "chrono"]
+src_dummy = ["num-traits", "chrono"]
+src_mysql = ["r2d2_mysql", "rust_decimal", "num-traits", "chrono"]
+src_postgres = ["postgres", "r2d2_postgres", "csv", "hex", "serde_json", "uuid", "rust_decimal", "num-traits", "chrono"]
+src_sqlite = ["rusqlite", "r2d2_sqlite", "fallible-streaming-iterator", "derive_more", "owning_ref", "chrono"]
