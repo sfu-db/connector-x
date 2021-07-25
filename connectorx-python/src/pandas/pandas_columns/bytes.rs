@@ -56,8 +56,8 @@ impl<'a> BytesBlock<'a> {
                     .ok_or_else(|| anyhow!("get None for splitted String data"))?,
                 next_write: 0,
                 bytes_lengths: vec![],
-                bytes_buf: Vec::with_capacity(self.buf_size_mb * 2 << 20 * 11 / 10), // allocate a little bit more memory to avoid Vec growth
-                buf_size: self.buf_size_mb * 2 << 20,
+                bytes_buf: Vec::with_capacity(self.buf_size_mb * (1 << 20) * 11 / 10), // allocate a little bit more memory to avoid Vec growth
+                buf_size: self.buf_size_mb * (1 << 20),
                 mutex: self.mutex.clone(),
             })
         }

@@ -46,8 +46,8 @@ impl<'a> StringBlock<'a> {
                     .ok_or_else(|| anyhow!("get None for splitted String data"))?,
                 next_write: 0,
                 string_lengths: vec![],
-                string_buf: Vec::with_capacity(self.buf_size_mb * 2 << 20 * 11 / 10), // allocate a little bit more memory to avoid Vec growth
-                buf_size: self.buf_size_mb * 2 << 20,
+                string_buf: Vec::with_capacity(self.buf_size_mb * (1 << 20) * 11 / 10), // allocate a little bit more memory to avoid Vec growth
+                buf_size: self.buf_size_mb * (1 << 20),
                 mutex: self.mutex.clone(),
             })
         }
@@ -282,7 +282,7 @@ impl<'a> StringColumn<'a> {
             }
         }
 
-        if string_infos.len() > 0 {
+        if !string_infos.is_empty() {
             let mut start = 0;
             for (i, (len, info)) in self
                 .string_lengths

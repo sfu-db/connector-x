@@ -58,7 +58,7 @@ impl<'a> PandasDestination<'a> {
 
     pub fn result(self) -> Result<&'a PyAny> {
         #[throws(ConnectorXPythonError)]
-        fn to_list<'py, T: IntoPy<PyObject>>(py: Python<'py>, arr: Vec<T>) -> &'py PyList {
+        fn to_list<T: IntoPy<PyObject>>(py: Python<'_>, arr: Vec<T>) -> &'_ PyList {
             let list = PyList::empty(py);
             for e in arr {
                 list.append(e.into_py(py))?;
@@ -132,12 +132,8 @@ impl<'a> Destination for PandasDestination<'a> {
         }
         self.nrow = nrows;
         self.schema = schema.to_vec();
-        self.names.extend(
-            names
-                .into_iter()
-                .map(AsRef::as_ref)
-                .map(ToString::to_string),
-        );
+        self.names
+            .extend(names.iter().map(AsRef::as_ref).map(ToString::to_string));
 
         let mut block_indices = HashMap::<PandasBlockType, Vec<usize>>::new();
         schema
@@ -186,7 +182,7 @@ impl<'a> Destination for PandasDestination<'a> {
         );
 
         let mut partitioned_columns: Vec<Vec<Box<dyn PandasColumnObject>>> =
-            (0..self.schema.len()).map(|_| vec![]).collect();
+            (0..self.schema.len()).map(|_| Vec::new()).collect();
 
         for (idx, block) in self.block_infos.iter().enumerate() {
             let buf = self.block_datas[idx];
@@ -262,7 +258,7 @@ impl<'a> Destination for PandasDestination<'a> {
         }
 
         let mut par_destinations = vec![];
-        for &c in counts.into_iter().rev() {
+        for &c in counts.iter().rev() {
             let mut columns = Vec::with_capacity(partitioned_columns.len());
             for (i, partitions) in partitioned_columns.iter_mut().enumerate() {
                 columns.push(
@@ -350,6 +346,6 @@ where
 
         let (column, _): (&mut T::PandasColumn<'a>, *const ()) =
             unsafe { transmute(&*self.columns[col]) };
-        Ok(column.write(value)?)
+        column.write(value)
     }
 }

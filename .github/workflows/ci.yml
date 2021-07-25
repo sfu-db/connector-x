@@ -74,6 +74,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: clippy
+          args: --features all --all
 
       - name: Seed the database
         run: just seed-db

@@ -37,7 +37,7 @@ pub fn read_sql<'a>(
 ) -> PyResult<&'a PyAny> {
     let source_conn = SourceConn::try_from(conn)?;
     let queries = match (queries, partition_query) {
-        (Some(queries), None) => queries.into_iter().map(|q| CXQuery::Naked(q)).collect(),
+        (Some(queries), None) => queries.into_iter().map(CXQuery::Naked).collect(),
         (
             None,
             Some(PartitionQuery {

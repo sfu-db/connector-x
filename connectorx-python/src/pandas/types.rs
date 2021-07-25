@@ -82,10 +82,10 @@ pub trait PandasDType: Sized {
 
 impl PandasDType for PandasBlockType {
     fn is_masked(&self) -> bool {
-        match *self {
-            PandasBlockType::Boolean(true) | PandasBlockType::Int64(true) => true,
-            _ => false,
-        }
+        matches!(
+            *self,
+            PandasBlockType::Boolean(true) | PandasBlockType::Int64(true)
+        )
     }
 
     fn array_name(&self) -> &'static str {
