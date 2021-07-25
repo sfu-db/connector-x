@@ -1,12 +1,12 @@
 use connectorx::{
     destinations::arrow::ArrowDestination,
+    prelude::*,
     sources::{
         dummy::DummySource,
         postgres::{BinaryProtocol, PostgresSource},
     },
     sql::CXQuery,
     transports::{DummyArrowTransport, PostgresArrowTransport},
-    Dispatcher, DummyTypeSystem,
 };
 use polars::{df, prelude::*};
 use std::env;

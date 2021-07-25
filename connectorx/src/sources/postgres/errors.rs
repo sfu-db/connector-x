@@ -3,7 +3,7 @@ use thiserror::Error;
 #[derive(Error, Debug)]
 pub enum PostgresSourceError {
     #[error(transparent)]
-    ConnectorXError(#[from] crate::ConnectorXError),
+    ConnectorXError(#[from] crate::errors::ConnectorXError),
 
     #[error(transparent)]
     PostgresPoolError(#[from] r2d2::Error),

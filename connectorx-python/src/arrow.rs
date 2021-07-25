@@ -3,6 +3,7 @@ use crate::source_router::{SourceConn, SourceType};
 use arrow::record_batch::RecordBatch;
 use connectorx::{
     destinations::arrow::ArrowDestination,
+    prelude::*,
     sources::{
         mysql::{BinaryProtocol as MySQLBinaryProtocol, MySQLSource, TextProtocol},
         postgres::{
@@ -12,7 +13,6 @@ use connectorx::{
     },
     sql::CXQuery,
     transports::{MySQLArrowTransport, PostgresArrowTransport, SQLiteArrowTransport},
-    Dispatcher,
 };
 use fehler::throws;
 use libc::uintptr_t;

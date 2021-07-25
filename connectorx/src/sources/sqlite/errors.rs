@@ -3,7 +3,7 @@ use thiserror::Error;
 #[derive(Error, Debug)]
 pub enum SQLiteSourceError {
     #[error(transparent)]
-    ConnectorXError(#[from] crate::ConnectorXError),
+    ConnectorXError(#[from] crate::errors::ConnectorXError),
 
     #[error(transparent)]
     SQLiteError(#[from] rusqlite::Error),

@@ -1,12 +1,9 @@
 use connectorx::{
     destinations::memory::MemoryDestination,
-    sources::{
-        postgres::{BinaryProtocol, CSVProtocol, PostgresSource},
-        Produce, Source, SourcePartition,
-    },
+    prelude::*,
+    sources::postgres::{BinaryProtocol, CSVProtocol, PostgresSource},
     sql::CXQuery,
     transports::PostgresMemoryTransport,
-    Dispatcher,
 };
 use ndarray::array;
 use std::env;

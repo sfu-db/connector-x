@@ -28,7 +28,7 @@ pub enum ConnectorXPythonError {
     NdArrayShapeError(#[from] ndarray::ShapeError),
 
     #[error(transparent)]
-    ConnectorXError(#[from] connectorx::ConnectorXError),
+    ConnectorXError(#[from] connectorx::errors::ConnectorXError),
 
     #[error(transparent)]
     PostgresSourceError(#[from] connectorx::sources::postgres::PostgresSourceError),

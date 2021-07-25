@@ -66,7 +66,9 @@ impl Destination for ArrowDestination {
     ) {
         // todo: support colmajor
         if !matches!(data_order, DataOrder::RowMajor) {
-            throw!(crate::ConnectorXError::UnsupportedDataOrder(data_order))
+            throw!(crate::errors::ConnectorXError::UnsupportedDataOrder(
+                data_order
+            ))
         }
         // cannot really create the builders since do not know each partition size here
         self.nrows = nrows;
@@ -121,7 +123,7 @@ impl ArrowDestination {
                     .into_iter()
                     .zip(schema.iter())
                     .map(|(builder, &dt)| Realize::<FFinishBuilder>::realize(dt)?(builder))
-                    .collect::<std::result::Result<Vec<_>, crate::ConnectorXError>>()?;
+                    .collect::<std::result::Result<Vec<_>, crate::errors::ConnectorXError>>()?;
                 Ok(RecordBatch::try_new(Arc::clone(&arrow_schema), columns)?)
             })
             .collect::<Result<Vec<_>>>()?

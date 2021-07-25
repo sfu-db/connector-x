@@ -10,6 +10,7 @@ pub use self::types::{PandasDType, PandasTypeSystem};
 use crate::errors::ConnectorXPythonError;
 use crate::source_router::{SourceConn, SourceType};
 use connectorx::{
+    prelude::*,
     sources::{
         mysql::{BinaryProtocol as MySQLBinaryProtocol, MySQLSource, TextProtocol},
         postgres::{
@@ -18,7 +19,6 @@ use connectorx::{
         sqlite::SQLiteSource,
     },
     sql::CXQuery,
-    Dispatcher,
 };
 use fehler::throws;
 use log::debug;

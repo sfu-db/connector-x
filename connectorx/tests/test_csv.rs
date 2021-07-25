@@ -1,7 +1,8 @@
-use connectorx::sources::{csv::CSVSource, Produce, Source, SourcePartition};
-use connectorx::sql::CXQuery;
-use connectorx::{destinations::memory::MemoryDestination, Destination};
-use connectorx::{transports::CSVMemoryTransport, Dispatcher, DummyTypeSystem};
+use connectorx::prelude::*;
+use connectorx::{
+    destinations::memory::MemoryDestination, sources::csv::CSVSource, sql::CXQuery,
+    transports::CSVMemoryTransport,
+};
 use ndarray::array;
 
 #[test]

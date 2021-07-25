@@ -1,14 +1,14 @@
-use super::pandas_columns::{
-    BooleanBlock, BytesBlock, DateTimeBlock, Float64Block, HasPandasColumn, Int64Block,
-    PandasColumn, PandasColumnObject, PyBytes, StringBlock,
+use super::{
+    pandas_columns::{
+        BooleanBlock, BytesBlock, DateTimeBlock, Float64Block, HasPandasColumn, Int64Block,
+        PandasColumn, PandasColumnObject, PyBytes, StringBlock,
+    },
+    pystring::PyString,
+    types::{PandasArrayType, PandasBlockType, PandasTypeSystem},
 };
-use super::pystring::PyString;
-use super::types::{PandasArrayType, PandasBlockType, PandasTypeSystem};
 use crate::errors::{ConnectorXPythonError, Result};
 use anyhow::anyhow;
-use connectorx::{
-    ConnectorXError, Consume, DataOrder, Destination, DestinationPartition, TypeAssoc, TypeSystem,
-};
+use connectorx::prelude::*;
 use fehler::{throw, throws};
 use itertools::Itertools;
 use numpy::{PyArray1, PyArray2};

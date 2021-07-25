@@ -3,7 +3,7 @@ use thiserror::Error;
 #[derive(Error, Debug)]
 pub enum CSVSourceError {
     #[error(transparent)]
-    ConnectorXError(#[from] crate::ConnectorXError),
+    ConnectorXError(#[from] crate::errors::ConnectorXError),
 
     #[error(transparent)]
     RegexError(#[from] regex::Error),

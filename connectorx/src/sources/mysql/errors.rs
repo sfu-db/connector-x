@@ -3,7 +3,7 @@ use thiserror::Error;
 #[derive(Error, Debug)]
 pub enum MySQLSourceError {
     #[error(transparent)]
-    ConnectorXError(#[from] crate::ConnectorXError),
+    ConnectorXError(#[from] crate::errors::ConnectorXError),
 
     #[error(transparent)]
     MySQLError(#[from] r2d2_mysql::mysql::Error),

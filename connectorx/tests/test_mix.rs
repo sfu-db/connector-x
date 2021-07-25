@@ -1,7 +1,7 @@
+use connectorx::prelude::*;
 use connectorx::{
     destinations::memory::MemoryDestination, sources::dummy::DummySource, sql::CXQuery,
-    transports::DummyMemoryTransport, DataOrder, Destination, DestinationPartition, Dispatcher,
-    DummyTypeSystem, Source,
+    transports::DummyMemoryTransport,
 };
 use ndarray::array;
 use rayon::iter::{IntoParallelIterator, ParallelIterator};

@@ -1,13 +1,9 @@
+use connectorx::prelude::*;
 use connectorx::{
-    sources::{
-        mysql::{BinaryProtocol, MySQLSource},
-        Produce, Source,
-    },
+    sources::mysql::{BinaryProtocol, MySQLSource},
     sql::CXQuery,
-    SourcePartition,
 };
 use std::env;
-// use connectorx::destinations::memory::MemoryDestination;
 
 #[test]
 fn load_and_parse() {

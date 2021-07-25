@@ -6,8 +6,8 @@ use super::{Consume, Destination, DestinationPartition};
 use crate::{
     data_order::DataOrder,
     dummy_typesystem::DummyTypeSystem,
+    errors::ConnectorXError,
     typesystem::{ParameterizedFunc, ParameterizedOn, Realize, TypeAssoc, TypeSystem},
-    ConnectorXError,
 };
 use any_array::{AnyArray, AnyArrayViewMut};
 use anyhow::anyhow;

@@ -1,14 +1,14 @@
 use arrow::array::{BooleanArray, Float64Array, Int32Array, Int64Array, LargeStringArray};
 use arrow::record_batch::RecordBatch;
 use connectorx::{
-    destinations::{arrow::ArrowDestination, Destination},
+    destinations::arrow::ArrowDestination,
+    prelude::*,
     sources::{
         dummy::DummySource,
         postgres::{BinaryProtocol, PostgresSource},
     },
     sql::CXQuery,
     transports::{DummyArrowTransport, PostgresArrowTransport},
-    Dispatcher, DummyTypeSystem,
 };
 use std::env;
 

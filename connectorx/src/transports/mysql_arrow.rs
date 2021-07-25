@@ -21,7 +21,7 @@ pub enum MySQLArrowTransportError {
     ArrowDestinationError(#[from] ArrowDestinationError),
 
     #[error(transparent)]
-    ConnectorXError(#[from] crate::ConnectorXError),
+    ConnectorXError(#[from] crate::errors::ConnectorXError),
 }
 
 pub struct MySQLArrowTransport<P>(PhantomData<P>);
