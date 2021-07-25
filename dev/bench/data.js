@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1627003913718,
+  "lastUpdate": 1627184932588,
   "repoUrl": "https://github.com/sfu-db/connector-x",
   "entries": {
     "ConnectorX TPC-H Scale@1 Benchmarks": [
@@ -684,6 +684,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 4.29685683315079",
             "extra": "mean: 17.19007683941163 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "youngw@sfu.ca",
+            "name": "Weiyuan Wu",
+            "username": "dovahcrow"
+          },
+          "committer": {
+            "email": "youngw@sfu.ca",
+            "name": "Weiyuan Wu",
+            "username": "dovahcrow"
+          },
+          "distinct": true,
+          "id": "e317d9be51fe6d01ddb4a48c0c1e384a4e4554e4",
+          "message": "moving rust dependencies behind feature gates",
+          "timestamp": "2021-07-25T03:39:47Z",
+          "tree_id": "287ad3a4de4b07f54002d3ee3d57f7636131e235",
+          "url": "https://github.com/sfu-db/connector-x/commit/e317d9be51fe6d01ddb4a48c0c1e384a4e4554e4"
+        },
+        "date": 1627184931496,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_mysql",
+            "value": 0.06682051542334197,
+            "unit": "iter/sec",
+            "range": "stddev: 0.34804308096074293",
+            "extra": "mean: 14.965463730180636 sec\nrounds: 5"
+          },
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_postgres",
+            "value": 0.05073767198445093,
+            "unit": "iter/sec",
+            "range": "stddev: 3.3702994603162715",
+            "extra": "mean: 19.70922119379975 sec\nrounds: 5"
           }
         ]
       }
