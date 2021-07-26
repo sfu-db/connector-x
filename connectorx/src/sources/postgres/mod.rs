@@ -3,6 +3,9 @@ mod errors;
 mod typesystem;
 
 pub use self::errors::PostgresSourceError;
+pub use connection::rewrite_tls_args;
+pub use typesystem::PostgresTypeSystem;
+
 use crate::{
     data_order::DataOrder,
     errors::ConnectorXError,
@@ -29,9 +32,6 @@ use sqlparser::dialect::PostgreSqlDialect;
 use std::io::BufRead;
 use std::marker::PhantomData;
 use uuid::Uuid;
-
-pub use connection::rewrite_tls_args;
-pub use typesystem::PostgresTypeSystem;
 
 /// Protocol - Binary based bulk load
 pub enum BinaryProtocol {}
