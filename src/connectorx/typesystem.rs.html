@@ -117,12 +117,20 @@
 <span id="114">114</span>
 <span id="115">115</span>
 <span id="116">116</span>
+<span id="117">117</span>
+<span id="118">118</span>
+<span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
 </pre><pre class="rust">
 <span class="comment">// Why we need to implement Transmit for TypeSystem? This is because only TypeSystem knows how to dispatch</span>
 <span class="comment">// functions to it&#39;s native type N based on our defined type T. Remember, T is value and N is a type.</span>
 
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::destinations</span>::{<span class="ident">Consume</span>, <span class="ident">Destination</span>, <span class="ident">DestinationPartition</span>};
-<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::errors::Result</span>;
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::errors</span>::{<span class="ident">ConnectorXError</span>, <span class="prelude-ty">Result</span> <span class="kw">as</span> <span class="ident">CXResult</span>};
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::sources</span>::{<span class="ident">PartitionParser</span>, <span class="ident">Produce</span>, <span class="ident">Source</span>, <span class="ident">SourcePartition</span>};
 
 <span class="doccomment">/// `TypeSystem` describes all the types a source or destination support</span>
@@ -130,14 +138,14 @@
 <span class="doccomment">/// The variant can be used to type check with a static type `T` through the `check` method.</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">TypeSystem</span>: <span class="ident">Copy</span> <span class="op">+</span> <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> {
     <span class="doccomment">/// Check whether T is the same type as defined by self.</span>
-    <span class="kw">fn</span> <span class="ident">check</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">TypeAssoc</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">check</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">TypeAssoc</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">CXResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="ident">T::check</span>(<span class="self">self</span>)
     }
 }
 
 <span class="doccomment">/// Associate a static type to a TypeSystem</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">TypeAssoc</span><span class="op">&lt;</span><span class="ident">TS</span>: <span class="ident">TypeSystem</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">check</span>(<span class="ident">ts</span>: <span class="ident">TS</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>;
+    <span class="kw">fn</span> <span class="ident">check</span>(<span class="ident">ts</span>: <span class="ident">TS</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">CXResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span>;
 }
 
 <span class="doccomment">/// Realize means that a TypeSystem can realize a parameterized func F, based on its current variants.</span>
@@ -146,7 +154,7 @@
     <span class="ident">F</span>: <span class="ident">ParameterizedFunc</span>,
 {
     <span class="doccomment">/// realize a parameterized function with the type that self currently is.</span>
-    <span class="kw">fn</span> <span class="ident">realize</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">F::Function</span><span class="op">&gt;</span>;
+    <span class="kw">fn</span> <span class="ident">realize</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">CXResult</span><span class="op">&lt;</span><span class="ident">F::Function</span><span class="op">&gt;</span>;
 }
 
 <span class="doccomment">/// A ParameterizedFunc refers to a function that is parameterized on a type T,</span>
@@ -180,10 +188,11 @@
     <span class="kw">type</span> <span class="ident">TSD</span>: <span class="ident">TypeSystem</span>;
     <span class="kw">type</span> <span class="ident">S</span>: <span class="ident">Source</span>;
     <span class="kw">type</span> <span class="ident">D</span>: <span class="ident">Destination</span>;
+    <span class="kw">type</span> <span class="ident">Error</span>: <span class="ident">From</span><span class="op">&lt;</span><span class="ident">ConnectorXError</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span>;
 
     <span class="doccomment">/// convert_typesystem convert the source type system TSS to the destination</span>
     <span class="doccomment">/// type system TSD.</span>
-    <span class="kw">fn</span> <span class="ident">convert_typesystem</span>(<span class="ident">ts</span>: <span class="self">Self</span><span class="ident">::TSS</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::TSD</span><span class="op">&gt;</span>;
+    <span class="kw">fn</span> <span class="ident">convert_typesystem</span>(<span class="ident">ts</span>: <span class="self">Self</span><span class="ident">::TSS</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">CXResult</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::TSD</span><span class="op">&gt;</span>;
 
     <span class="doccomment">/// convert_type convert the type T1 associated with the source type system</span>
     <span class="doccomment">/// TSS to a type T2 which is associated with the destination type system TSD.</span>
@@ -202,32 +211,39 @@
         <span class="ident">ts2</span>: <span class="self">Self</span><span class="ident">::TSD</span>,
         <span class="ident">src</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;r</span> <span class="kw-2">mut</span> <span class="op">&lt;</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::S</span> <span class="kw">as</span> <span class="ident">Source</span><span class="op">&gt;</span><span class="ident">::Partition</span> <span class="kw">as</span> <span class="ident">SourcePartition</span><span class="op">&gt;</span><span class="ident">::Parser</span><span class="op">&lt;</span><span class="lifetime">&#39;s</span><span class="op">&gt;</span>,
         <span class="ident">dst</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;r</span> <span class="kw-2">mut</span> <span class="op">&lt;</span><span class="self">Self</span><span class="ident">::D</span> <span class="kw">as</span> <span class="ident">Destination</span><span class="op">&gt;</span><span class="ident">::Partition</span><span class="op">&lt;</span><span class="lifetime">&#39;d</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>;
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="self">Self</span><span class="ident">::Error</span><span class="op">&gt;</span>;
 
     <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::type_complexity</span>)]</span>
     <span class="kw">fn</span> <span class="ident">processor</span><span class="op">&lt;</span><span class="lifetime">&#39;s</span>, <span class="lifetime">&#39;d</span><span class="op">&gt;</span>(
         <span class="ident">ts1</span>: <span class="self">Self</span><span class="ident">::TSS</span>,
         <span class="ident">ts2</span>: <span class="self">Self</span><span class="ident">::TSD</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">CXResult</span><span class="op">&lt;</span>
         <span class="kw">fn</span>(
             <span class="ident">src</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="op">&lt;</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::S</span> <span class="kw">as</span> <span class="ident">Source</span><span class="op">&gt;</span><span class="ident">::Partition</span> <span class="kw">as</span> <span class="ident">SourcePartition</span><span class="op">&gt;</span><span class="ident">::Parser</span><span class="op">&lt;</span><span class="lifetime">&#39;s</span><span class="op">&gt;</span>,
             <span class="ident">dst</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="op">&lt;</span><span class="self">Self</span><span class="ident">::D</span> <span class="kw">as</span> <span class="ident">Destination</span><span class="op">&gt;</span><span class="ident">::Partition</span><span class="op">&lt;</span><span class="lifetime">&#39;d</span><span class="op">&gt;</span>,
-        ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>,
+        ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="self">Self</span><span class="ident">::Error</span><span class="op">&gt;</span>,
     <span class="op">&gt;</span>;
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">process</span><span class="op">&lt;</span><span class="lifetime">&#39;s</span>, <span class="lifetime">&#39;d</span>, <span class="lifetime">&#39;r</span>, <span class="ident">T1</span>, <span class="ident">T2</span>, <span class="ident">TP</span>, <span class="ident">S</span>, <span class="ident">D</span><span class="op">&gt;</span>(
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">process</span><span class="op">&lt;</span><span class="lifetime">&#39;s</span>, <span class="lifetime">&#39;d</span>, <span class="lifetime">&#39;r</span>, <span class="ident">T1</span>, <span class="ident">T2</span>, <span class="ident">TP</span>, <span class="ident">S</span>, <span class="ident">D</span>, <span class="ident">ES</span>, <span class="ident">ED</span>, <span class="ident">ET</span><span class="op">&gt;</span>(
     <span class="ident">src</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;r</span> <span class="kw-2">mut</span> <span class="op">&lt;</span><span class="op">&lt;</span><span class="ident">S</span> <span class="kw">as</span> <span class="ident">Source</span><span class="op">&gt;</span><span class="ident">::Partition</span> <span class="kw">as</span> <span class="ident">SourcePartition</span><span class="op">&gt;</span><span class="ident">::Parser</span><span class="op">&lt;</span><span class="lifetime">&#39;s</span><span class="op">&gt;</span>,
     <span class="ident">dst</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;r</span> <span class="kw-2">mut</span> <span class="op">&lt;</span><span class="ident">D</span> <span class="kw">as</span> <span class="ident">Destination</span><span class="op">&gt;</span><span class="ident">::Partition</span><span class="op">&lt;</span><span class="lifetime">&#39;d</span><span class="op">&gt;</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::errors::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
+) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">ET</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">T1</span>: <span class="ident">TypeAssoc</span><span class="op">&lt;</span><span class="op">&lt;</span><span class="ident">S</span> <span class="kw">as</span> <span class="ident">Source</span><span class="op">&gt;</span><span class="ident">::TypeSystem</span><span class="op">&gt;</span>,
+    <span class="ident">S</span>: <span class="ident">Source</span><span class="op">&lt;</span><span class="ident">Error</span> <span class="op">=</span> <span class="ident">ES</span><span class="op">&gt;</span>,
+    <span class="op">&lt;</span><span class="ident">S</span> <span class="kw">as</span> <span class="ident">Source</span><span class="op">&gt;</span><span class="ident">::Partition</span>: <span class="ident">SourcePartition</span><span class="op">&lt;</span><span class="ident">Error</span> <span class="op">=</span> <span class="ident">ES</span><span class="op">&gt;</span>,
+
+    <span class="op">&lt;</span><span class="op">&lt;</span><span class="ident">S</span> <span class="kw">as</span> <span class="ident">Source</span><span class="op">&gt;</span><span class="ident">::Partition</span> <span class="kw">as</span> <span class="ident">SourcePartition</span><span class="op">&gt;</span><span class="ident">::Parser</span><span class="op">&lt;</span><span class="lifetime">&#39;s</span><span class="op">&gt;</span>: <span class="ident">Produce</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="ident">T1</span>, <span class="ident">Error</span> <span class="op">=</span> <span class="ident">ES</span><span class="op">&gt;</span>,
+    <span class="ident">ES</span>: <span class="ident">From</span><span class="op">&lt;</span><span class="ident">ConnectorXError</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span>,
+
     <span class="ident">T2</span>: <span class="ident">TypeAssoc</span><span class="op">&lt;</span><span class="op">&lt;</span><span class="ident">D</span> <span class="kw">as</span> <span class="ident">Destination</span><span class="op">&gt;</span><span class="ident">::TypeSystem</span><span class="op">&gt;</span>,
+    <span class="ident">D</span>: <span class="ident">Destination</span><span class="op">&lt;</span><span class="ident">Error</span> <span class="op">=</span> <span class="ident">ED</span><span class="op">&gt;</span>,
+    <span class="op">&lt;</span><span class="ident">D</span> <span class="kw">as</span> <span class="ident">Destination</span><span class="op">&gt;</span><span class="ident">::Partition</span><span class="op">&lt;</span><span class="lifetime">&#39;d</span><span class="op">&gt;</span>: <span class="ident">Consume</span><span class="op">&lt;</span><span class="ident">T2</span>, <span class="ident">Error</span> <span class="op">=</span> <span class="ident">ED</span><span class="op">&gt;</span>,
+    <span class="ident">ED</span>: <span class="ident">From</span><span class="op">&lt;</span><span class="ident">ConnectorXError</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span>,
+
     <span class="ident">TP</span>: <span class="ident">TypeConversion</span><span class="op">&lt;</span><span class="ident">T1</span>, <span class="ident">T2</span><span class="op">&gt;</span>,
-    <span class="ident">S</span>: <span class="ident">Source</span>,
-    <span class="ident">D</span>: <span class="ident">Destination</span>,
-    <span class="op">&lt;</span><span class="op">&lt;</span><span class="ident">S</span> <span class="kw">as</span> <span class="ident">Source</span><span class="op">&gt;</span><span class="ident">::Partition</span> <span class="kw">as</span> <span class="ident">SourcePartition</span><span class="op">&gt;</span><span class="ident">::Parser</span><span class="op">&lt;</span><span class="lifetime">&#39;s</span><span class="op">&gt;</span>: <span class="ident">Produce</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="ident">T1</span><span class="op">&gt;</span>,
-    <span class="op">&lt;</span><span class="ident">D</span> <span class="kw">as</span> <span class="ident">Destination</span><span class="op">&gt;</span><span class="ident">::Partition</span><span class="op">&lt;</span><span class="lifetime">&#39;d</span><span class="op">&gt;</span>: <span class="ident">Consume</span><span class="op">&lt;</span><span class="ident">T2</span><span class="op">&gt;</span>,
+    <span class="ident">ET</span>: <span class="ident">From</span><span class="op">&lt;</span><span class="ident">ES</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">ED</span><span class="op">&gt;</span>,
 {
     <span class="kw">let</span> <span class="ident">val</span>: <span class="ident">T1</span> <span class="op">=</span> <span class="ident">PartitionParser::parse</span>(<span class="ident">src</span>)<span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="ident">val</span>: <span class="ident">T2</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">TP</span> <span class="kw">as</span> <span class="ident">TypeConversion</span><span class="op">&lt;</span><span class="ident">T1</span>, <span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::convert</span>(<span class="ident">val</span>);

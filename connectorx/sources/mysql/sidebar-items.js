@@ -1,1 +1,0 @@
-initSidebarItems({"enum":[["BinaryProtocol",""],["MysqlTypeSystem",""],["TextProtocol",""]],"struct":[["MysqlBinarySourceParser",""],["MysqlSource",""],["MysqlSourcePartition",""],["MysqlTextSourceParser",""]]});

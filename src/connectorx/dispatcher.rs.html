@@ -152,11 +152,16 @@
 <span id="149">149</span>
 <span id="150">150</span>
 <span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">data_order</span>::{<span class="ident">coordinate</span>, <span class="ident">DataOrder</span>},
     <span class="ident">destinations</span>::{<span class="ident">Destination</span>, <span class="ident">DestinationPartition</span>},
-    <span class="ident">errors::Result</span>,
+    <span class="ident">errors</span>::{<span class="ident">ConnectorXError</span>, <span class="prelude-ty">Result</span> <span class="kw">as</span> <span class="ident">CXResult</span>},
     <span class="ident">sources</span>::{<span class="ident">Source</span>, <span class="ident">SourcePartition</span>},
     <span class="ident">sql::CXQuery</span>,
     <span class="ident">typesystem</span>::{<span class="ident">Transport</span>, <span class="ident">TypeSystem</span>},
@@ -175,17 +180,22 @@
     <span class="ident">_phantom</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">TP</span><span class="op">&gt;</span>,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;w</span>, <span class="ident">S</span>, <span class="ident">TSS</span>, <span class="ident">W</span>, <span class="ident">TSD</span>, <span class="ident">TP</span><span class="op">&gt;</span> <span class="ident">Dispatcher</span><span class="op">&lt;</span><span class="lifetime">&#39;w</span>, <span class="ident">S</span>, <span class="ident">W</span>, <span class="ident">TP</span><span class="op">&gt;</span>
+<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;w</span>, <span class="ident">S</span>, <span class="ident">TSS</span>, <span class="ident">D</span>, <span class="ident">TSD</span>, <span class="ident">TP</span>, <span class="ident">ES</span>, <span class="ident">ED</span>, <span class="ident">ET</span><span class="op">&gt;</span> <span class="ident">Dispatcher</span><span class="op">&lt;</span><span class="lifetime">&#39;w</span>, <span class="ident">S</span>, <span class="ident">D</span>, <span class="ident">TP</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">TSS</span>: <span class="ident">TypeSystem</span>,
+    <span class="ident">S</span>: <span class="ident">Source</span><span class="op">&lt;</span><span class="ident">TypeSystem</span> <span class="op">=</span> <span class="ident">TSS</span>, <span class="ident">Error</span> <span class="op">=</span> <span class="ident">ES</span><span class="op">&gt;</span>,
+    <span class="ident">ES</span>: <span class="ident">From</span><span class="op">&lt;</span><span class="ident">ConnectorXError</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span>,
+
     <span class="ident">TSD</span>: <span class="ident">TypeSystem</span>,
-    <span class="ident">S</span>: <span class="ident">Source</span><span class="op">&lt;</span><span class="ident">TypeSystem</span> <span class="op">=</span> <span class="ident">TSS</span><span class="op">&gt;</span>,
-    <span class="ident">W</span>: <span class="ident">Destination</span><span class="op">&lt;</span><span class="ident">TypeSystem</span> <span class="op">=</span> <span class="ident">TSD</span><span class="op">&gt;</span>,
-    <span class="ident">TP</span>: <span class="ident">Transport</span><span class="op">&lt;</span><span class="ident">TSS</span> <span class="op">=</span> <span class="ident">TSS</span>, <span class="ident">TSD</span> <span class="op">=</span> <span class="ident">TSD</span>, <span class="ident">S</span> <span class="op">=</span> <span class="ident">S</span>, <span class="ident">D</span> <span class="op">=</span> <span class="ident">W</span><span class="op">&gt;</span>,
+    <span class="ident">D</span>: <span class="ident">Destination</span><span class="op">&lt;</span><span class="ident">TypeSystem</span> <span class="op">=</span> <span class="ident">TSD</span>, <span class="ident">Error</span> <span class="op">=</span> <span class="ident">ED</span><span class="op">&gt;</span>,
+    <span class="ident">ED</span>: <span class="ident">From</span><span class="op">&lt;</span><span class="ident">ConnectorXError</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span>,
+
+    <span class="ident">TP</span>: <span class="ident">Transport</span><span class="op">&lt;</span><span class="ident">TSS</span> <span class="op">=</span> <span class="ident">TSS</span>, <span class="ident">TSD</span> <span class="op">=</span> <span class="ident">TSD</span>, <span class="ident">S</span> <span class="op">=</span> <span class="ident">S</span>, <span class="ident">D</span> <span class="op">=</span> <span class="ident">D</span>, <span class="ident">Error</span> <span class="op">=</span> <span class="ident">ET</span><span class="op">&gt;</span>,
+    <span class="ident">ET</span>: <span class="ident">From</span><span class="op">&lt;</span><span class="ident">ConnectorXError</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">ES</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">ED</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span>,
 {
     <span class="doccomment">/// Create a new dispatcher by providing a source builder, schema (temporary) and the queries</span>
     <span class="doccomment">/// to be issued to the data source.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span><span class="op">&lt;</span><span class="ident">Q</span>: <span class="ident">ToString</span><span class="op">&gt;</span>(<span class="ident">src</span>: <span class="ident">S</span>, <span class="ident">dst</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;w</span> <span class="kw-2">mut</span> <span class="ident">W</span>, <span class="ident">queries</span>: <span class="kw-2">&amp;</span>[<span class="ident">CXQuery</span><span class="op">&lt;</span><span class="ident">Q</span><span class="op">&gt;</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span><span class="op">&lt;</span><span class="ident">Q</span>: <span class="ident">ToString</span><span class="op">&gt;</span>(<span class="ident">src</span>: <span class="ident">S</span>, <span class="ident">dst</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;w</span> <span class="kw-2">mut</span> <span class="ident">D</span>, <span class="ident">queries</span>: <span class="kw-2">&amp;</span>[<span class="ident">CXQuery</span><span class="op">&lt;</span><span class="ident">Q</span><span class="op">&gt;</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="ident">Dispatcher</span> {
             <span class="ident">src</span>,
             <span class="ident">dst</span>,
@@ -196,8 +206,8 @@
 
     <span class="doccomment">/// Run the dispatcher by specifying the src, the dispatcher will fetch, parse the data,</span>
     <span class="doccomment">/// and write the data to dst.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">run</span>(<span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">dorder</span> <span class="op">=</span> <span class="ident">coordinate</span>(<span class="ident">S::DATA_ORDERS</span>, <span class="ident">W::DATA_ORDERS</span>)<span class="question-mark">?</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">run</span>(<span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">ET</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">dorder</span> <span class="op">=</span> <span class="ident">coordinate</span>(<span class="ident">S::DATA_ORDERS</span>, <span class="ident">D::DATA_ORDERS</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">src</span>.<span class="ident">set_data_order</span>(<span class="ident">dorder</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">src</span>.<span class="ident">set_queries</span>(<span class="self">self</span>.<span class="ident">queries</span>.<span class="ident">as_slice</span>());
         <span class="macro">debug!</span>(<span class="string">&quot;Fetching metadata&quot;</span>);
@@ -206,7 +216,7 @@
         <span class="kw">let</span> <span class="ident">dst_schema</span> <span class="op">=</span> <span class="ident">src_schema</span>
             .<span class="ident">iter</span>()
             .<span class="ident">map</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">s</span><span class="op">|</span> <span class="ident">TP::convert_typesystem</span>(<span class="ident">s</span>))
-            .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
+            .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">CXResult</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">names</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">src</span>.<span class="ident">names</span>();
 
         <span class="comment">// generate partitions</span>
@@ -215,7 +225,7 @@
         <span class="comment">// run queries</span>
         <span class="ident">src_partitions</span>
             .<span class="ident">par_iter_mut</span>()
-            .<span class="ident">try_for_each</span>(<span class="op">|</span><span class="ident">partition</span><span class="op">|</span> <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> { <span class="ident">partition</span>.<span class="ident">prepare</span>() })<span class="question-mark">?</span>;
+            .<span class="ident">try_for_each</span>(<span class="op">|</span><span class="ident">partition</span><span class="op">|</span> <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">ES</span><span class="op">&gt;</span> { <span class="ident">partition</span>.<span class="ident">prepare</span>() })<span class="question-mark">?</span>;
 
         <span class="comment">// allocate memory and create one partition for each source</span>
         <span class="kw">let</span> <span class="ident">num_rows</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">src_partitions</span>
@@ -250,13 +260,13 @@
             .<span class="ident">into_par_iter</span>()
             .<span class="ident">zip_eq</span>(<span class="ident">src_partitions</span>)
             .<span class="ident">enumerate</span>()
-            .<span class="ident">try_for_each</span>(<span class="op">|</span>(<span class="ident">i</span>, (<span class="kw-2">mut</span> <span class="ident">src</span>, <span class="kw-2">mut</span> <span class="ident">dst</span>))<span class="op">|</span> <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+            .<span class="ident">try_for_each</span>(<span class="op">|</span>(<span class="ident">i</span>, (<span class="kw-2">mut</span> <span class="ident">src</span>, <span class="kw-2">mut</span> <span class="ident">dst</span>))<span class="op">|</span> <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">ET</span><span class="op">&gt;</span> {
                 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;fptr&quot;</span>)]</span>
                 <span class="kw">let</span> <span class="ident">f</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">src_schema</span>
                     .<span class="ident">iter</span>()
                     .<span class="ident">zip_eq</span>(<span class="kw-2">&amp;</span><span class="ident">dst_schema</span>)
                     .<span class="ident">map</span>(<span class="op">|</span>(<span class="kw-2">&amp;</span><span class="ident">src_ty</span>, <span class="kw-2">&amp;</span><span class="ident">dst_ty</span>)<span class="op">|</span> <span class="ident">TP::processor</span>(<span class="ident">src_ty</span>, <span class="ident">dst_ty</span>))
-                    .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
+                    .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">CXResult</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
 
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">parser</span> <span class="op">=</span> <span class="ident">dst</span>.<span class="ident">parser</span>()<span class="question-mark">?</span>;
 

@@ -1,1 +1,0 @@
-initSidebarItems({"enum":[["BinaryProtocol","Protocol - Binary based bulk load"],["CSVProtocol","Protocol - CSV based bulk load"],["CursorProtocol","Protocol - use Cursor"],["PostgresTypeSystem",""]],"struct":[["PostgresBinarySourcePartitionParser",""],["PostgresCSVSourceParser",""],["PostgresRawSourceParser",""],["PostgresSource",""],["PostgresSourcePartition",""]]});

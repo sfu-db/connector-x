@@ -1,1 +1,0 @@
-initSidebarItems({"enum":[["SqliteTypeSystem",""]],"struct":[["SqliteSource",""],["SqliteSourcePartition",""],["SqliteSourcePartitionParser",""]]});

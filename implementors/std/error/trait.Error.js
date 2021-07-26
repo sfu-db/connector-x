@@ -1,3 +1,3 @@
 (function() {var implementors = {};
-implementors["connectorx"] = [{"text":"impl <a class=\"trait\" href=\"https://doc.rust-lang.org/nightly/std/error/trait.Error.html\" title=\"trait std::error::Error\">Error</a> for <a class=\"enum\" href=\"connectorx/errors/enum.ConnectorAgentError.html\" title=\"enum connectorx::errors::ConnectorAgentError\">ConnectorAgentError</a>","synthetic":false,"types":["connectorx::errors::ConnectorAgentError"]}];
+implementors["connectorx"] = [{"text":"impl <a class=\"trait\" href=\"https://doc.rust-lang.org/nightly/std/error/trait.Error.html\" title=\"trait std::error::Error\">Error</a> for <a class=\"enum\" href=\"connectorx/errors/enum.ConnectorXError.html\" title=\"enum connectorx::errors::ConnectorXError\">ConnectorXError</a>","synthetic":false,"types":["connectorx::errors::ConnectorXError"]}];
 if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
