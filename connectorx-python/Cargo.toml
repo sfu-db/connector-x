@@ -2,7 +2,7 @@
 authors = ["Weiyuan Wu <youngw@sfu.ca>"]
 edition = "2018"
 name = "connectorx-python"
-version = "0.2.0-alpha.3"
+version = "0.2.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -22,6 +22,7 @@ log = "0.4"
 ndarray = "0.15"
 numpy = "0.14"
 postgres = {version = "0.19", features = ["with-chrono-0_4", "with-uuid-0_8", "with-serde_json-1"]}
+postgres-native-tls = {version = "0.5"}
 pyo3 = {version = "0.14", default-features = false, features = ["macros"]}
 pyo3-built = "0.4"
 r2d2_mysql = {version = "18.0"}
@@ -32,7 +33,6 @@ sqlparser = "0.9"
 thiserror = "1"
 url = "2"
 uuid = "0.8"
-postgres-native-tls = {version = "0.5"}
 
 [build-dependencies]
 built = {version = "0.5", features = ["chrono"]}
