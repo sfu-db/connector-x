@@ -6,6 +6,8 @@ mod csv_memory;
 mod dummy_arrow;
 #[cfg(all(feature = "src_dummy", feature = "dst_memory"))]
 mod dummy_memory;
+#[cfg(all(feature = "src_mssql", feature = "dst_memory"))]
+mod mssql_memory;
 #[cfg(all(feature = "src_mysql", feature = "dst_arrow"))]
 mod mysql_arrow;
 #[cfg(all(feature = "src_postgres", feature = "dst_arrow"))]
@@ -14,6 +16,7 @@ mod postgres_arrow;
 mod postgres_memory;
 #[cfg(all(feature = "src_sqlite", feature = "dst_arrow"))]
 mod sqlite_arrow;
+
 #[cfg(all(feature = "src_csv", feature = "dst_arrow"))]
 pub use csv_arrow::CSVArrowTransport;
 #[cfg(all(feature = "src_csv", feature = "dst_memory"))]
@@ -22,6 +25,8 @@ pub use csv_memory::CSVMemoryTransport;
 pub use dummy_arrow::DummyArrowTransport;
 #[cfg(all(feature = "src_dummy", feature = "dst_memory"))]
 pub use dummy_memory::DummyMemoryTransport;
+#[cfg(all(feature = "src_mssql", feature = "dst_memory"))]
+pub use mssql_memory::{MsSQLMemoryTransport, MsSQLMemoryTransportError};
 #[cfg(all(feature = "src_mysql", feature = "dst_arrow"))]
 pub use mysql_arrow::{MySQLArrowTransport, MySQLArrowTransportError};
 #[cfg(all(feature = "src_postgres", feature = "dst_arrow"))]

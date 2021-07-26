@@ -5,6 +5,8 @@
 pub mod csv;
 #[cfg(feature = "src_dummy")]
 pub mod dummy;
+#[cfg(feature = "src_mssql")]
+pub mod mssql;
 #[cfg(feature = "src_mysql")]
 pub mod mysql;
 #[cfg(feature = "src_postgres")]

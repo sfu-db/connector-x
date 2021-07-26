@@ -4,8 +4,8 @@ build-release:
 build-debug:
     cargo build
 
-test:
-    cargo test --features all -- --nocapture
+test +ARGS="":
+    cargo test --features all {{ARGS}} -- --nocapture
 
 bootstrap-python:
     cp README.md connectorx-python/README.md
@@ -24,6 +24,7 @@ seed-db:
     psql $POSTGRES_URL -f scripts/postgres.sql
     sqlite3 ${SQLITE_URL#sqlite://} < scripts/sqlite.sql
     mysql --protocol tcp -h$MYSQL_HOST -P$MYSQL_PORT -u$MYSQL_USER -p$MYSQL_PASSWORD $MYSQL_DB < scripts/mysql.sql
+    mssql-cli -S$MSSQL_HOST -U$MSSQL_USER -P$MSSQL_PASSWORD -d$MSSQL_DB -i scripts/mssql.sql
 
 seed-db-more:
     mysql --protocol tcp -h$CLICKHOUSE_HOST -P$CLICKHOUSE_PORT -u$CLICKHOUSE_USER -p$CLICKHOUSE_PASSWORD $CLICKHOUSE_DB < scripts/clickhouse.sql
