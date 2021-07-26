@@ -160,7 +160,7 @@ pub fn write_arrow<'a>(
         }
     }
 
-    let rbs = destination.finish()?;
+    let rbs = destination.arrow()?;
     let ptrs = to_ptrs(rbs);
     let obj: PyObject = ptrs.into_py(py);
     obj.into_ref(py)

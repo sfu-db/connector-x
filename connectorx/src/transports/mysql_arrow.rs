@@ -1,5 +1,5 @@
 use crate::{
-    destinations::arrow::{types::ArrowTypeSystem, ArrowDestination, ArrowDestinationError},
+    destinations::arrow::{typesystem::ArrowTypeSystem, ArrowDestination, ArrowDestinationError},
     impl_transport,
     sources::mysql::{
         BinaryProtocol, MySQLSource, MySQLSourceError, MySQLTypeSystem, TextProtocol,

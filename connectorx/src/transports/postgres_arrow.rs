@@ -1,4 +1,6 @@
-use crate::destinations::arrow::{types::ArrowTypeSystem, ArrowDestination, ArrowDestinationError};
+use crate::destinations::arrow::{
+    typesystem::ArrowTypeSystem, ArrowDestination, ArrowDestinationError,
+};
 use crate::sources::postgres::{
     BinaryProtocol, CSVProtocol, CursorProtocol, PostgresSource, PostgresSourceError,
     PostgresTypeSystem,

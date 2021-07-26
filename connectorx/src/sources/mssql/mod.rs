@@ -8,13 +8,13 @@ use crate::{
     errors::ConnectorXError,
     sources::{PartitionParser, Produce, Source, SourcePartition},
     sql::{count_query, get_limit, limit1_query_mssql, CXQuery},
+    utils::DummyBox,
 };
 use anyhow::anyhow;
 use bb8::{Pool, PooledConnection};
 use bb8_tiberius::ConnectionManager;
 use chrono::{DateTime, Utc};
 use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
-use derive_more::{Deref, DerefMut};
 use fehler::{throw, throws};
 use futures::StreamExt;
 use log::debug;
@@ -26,9 +26,6 @@ use tiberius::{AuthMethod, Config, EncryptionLevel, QueryResult, Row};
 use tokio::runtime::{Handle, Runtime};
 use url::Url;
 use uuid::Uuid;
-
-#[derive(Deref, DerefMut)]
-struct DummyBox<T>(T);
 
 type Conn<'a> = PooledConnection<'a, ConnectionManager>;
 
@@ -118,7 +115,7 @@ where
                     };
 
                     let columns = row.columns();
-                    println!("{:?}", columns);
+
                     let (names, types) = columns
                         .iter()
                         .map(|col| {
@@ -149,7 +146,7 @@ where
                 let row = self.rt.block_on(stream.into_row())?.unwrap();
 
                 let columns = row.columns();
-                println!("{:?}", columns);
+
                 let (names, types) = columns
                     .iter()
                     .map(|col| {
@@ -169,8 +166,6 @@ where
                 ))
             }
         }
-        println!("{:?}", self.names);
-        println!("{:?}", self.schema);
     }
 
     fn names(&self) -> Vec<String> {
@@ -238,7 +233,7 @@ impl SourcePartition for MsSQLSourcePartition {
             None => {
                 let mut conn = self.rt.block_on(self.pool.get())?;
                 let cquery = count_query(&self.query, &MsSqlDialect {})?;
-                println!("{:?}", cquery);
+
                 let stream = self.rt.block_on(conn.query(cquery.as_str(), &[]))?;
                 let row = self.rt.block_on(stream.into_row())?.ok_or_else(|| {
                     anyhow!("mysql failed to get the count of query: {}", self.query)

@@ -1,7 +1,5 @@
-use crate::destinations::arrow::types::ArrowTypeSystem;
-use crate::destinations::arrow::{ArrowDestination, ArrowDestinationError};
-use crate::dummy_typesystem::DummyTypeSystem;
-use crate::sources::dummy::DummySource;
+use crate::destinations::arrow::{ArrowDestination, ArrowDestinationError, ArrowTypeSystem};
+use crate::sources::dummy::{DummySource, DummyTypeSystem};
 use crate::typesystem::TypeConversion;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
 use thiserror::Error;
@@ -11,7 +9,7 @@ pub struct DummyArrowTransport;
 #[derive(Error, Debug)]
 pub enum DummyArrowTransportError {
     #[error(transparent)]
-    ArrowDestinationError(#[from] ArrowDestinationError),
+    Destination(#[from] ArrowDestinationError),
 
     #[error(transparent)]
     ConnectorXError(#[from] crate::errors::ConnectorXError),

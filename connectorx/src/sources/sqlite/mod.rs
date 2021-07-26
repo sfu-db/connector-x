@@ -7,10 +7,10 @@ use crate::{
     errors::ConnectorXError,
     sources::{PartitionParser, Produce, Source, SourcePartition},
     sql::{count_query, get_limit, limit1_query, CXQuery},
+    utils::DummyBox,
 };
 use anyhow::anyhow;
 use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
-use derive_more::{Deref, DerefMut};
 use fallible_streaming_iterator::FallibleStreamingIterator;
 use fehler::{throw, throws};
 use log::debug;
@@ -21,8 +21,6 @@ use rusqlite::{Row, Rows, Statement};
 use sqlparser::dialect::SQLiteDialect;
 pub use typesystem::SQLiteTypeSystem;
 
-#[derive(Deref, DerefMut)]
-struct DummyBox<T>(T);
 
 pub struct SQLiteSource {
     pool: Pool<SqliteConnectionManager>,

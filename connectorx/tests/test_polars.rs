@@ -2,7 +2,7 @@ use connectorx::{
     destinations::arrow::ArrowDestination,
     prelude::*,
     sources::{
-        dummy::DummySource,
+        dummy::{DummySource, DummyTypeSystem},
         postgres::{rewrite_tls_args, BinaryProtocol, PostgresSource},
     },
     sql::CXQuery,
