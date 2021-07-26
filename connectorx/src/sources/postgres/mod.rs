@@ -1,4 +1,4 @@
-pub mod connection;
+mod connection;
 mod errors;
 mod typesystem;
 
@@ -11,7 +11,6 @@ use crate::{
 };
 use anyhow::anyhow;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
-pub use connection::rewrite_tls_args;
 use csv::{ReaderBuilder, StringRecord, StringRecordsIntoIter};
 use fehler::{throw, throws};
 use hex::decode;
@@ -29,8 +28,10 @@ use serde_json::{from_str, Value};
 use sqlparser::dialect::PostgreSqlDialect;
 use std::io::BufRead;
 use std::marker::PhantomData;
-pub use typesystem::PostgresTypeSystem;
 use uuid::Uuid;
+
+pub use connection::rewrite_tls_args;
+pub use typesystem::PostgresTypeSystem;
 
 /// Protocol - Binary based bulk load
 pub enum BinaryProtocol {}

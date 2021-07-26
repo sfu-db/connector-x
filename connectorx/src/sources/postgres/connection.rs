@@ -18,8 +18,9 @@ pub struct TlsConfig {
 
 impl TryFrom<TlsConfig> for MakeTlsConnector {
     type Error = PostgresSourceError;
-    // This function adapted primarily from:
+    // The logic of this function adapted primarily from:
     // https://github.com/sfackler/rust-postgres/pull/774
+    // We only support server side authentication (`sslrootcert`) for now
     fn try_from(tls_config: TlsConfig) -> Result<Self, Self::Error> {
         let mut builder = TlsConnector::builder();
         let ssl_mode = tls_config.pg_config.get_ssl_mode();
@@ -57,7 +58,7 @@ impl TryFrom<TlsConfig> for MakeTlsConnector {
 }
 
 // Strip URL params not accepted by upstream rust-postgres
-pub fn strip_bad_opts(url: Url) -> Url {
+fn strip_bad_opts(url: Url) -> Url {
     let stripped_query: Vec<(_, _)> = url
         .query_pairs()
         .filter(|p| match &*p.0 {

@@ -1,7 +1,7 @@
 use connectorx::{
     destinations::memory::MemoryDestination,
     prelude::*,
-    sources::postgres::{connection, BinaryProtocol, CSVProtocol, PostgresSource},
+    sources::postgres::{rewrite_tls_args, BinaryProtocol, CSVProtocol, PostgresSource},
     sql::CXQuery,
     transports::PostgresMemoryTransport,
 };
@@ -17,7 +17,7 @@ fn load_and_parse() {
     #[derive(Debug, PartialEq)]
     struct Row(i32, Option<i32>, Option<String>, Option<f64>, Option<bool>);
 
-    let (config, _tls) = connection::rewrite_tls_args(&dburl).unwrap();
+    let (config, _tls) = rewrite_tls_args(&dburl).unwrap();
     let mut source = PostgresSource::<BinaryProtocol, NoTls>::new(config, NoTls, 1).unwrap();
     source.set_queries(&[CXQuery::naked("select * from test_table")]);
     source.fetch_metadata().unwrap();
@@ -68,7 +68,7 @@ fn test_postgres() {
         CXQuery::naked("select * from test_table where test_int < 2"),
         CXQuery::naked("select * from test_table where test_int >= 2"),
     ];
-    let (config, _tls) = connection::rewrite_tls_args(&dburl).unwrap();
+    let (config, _tls) = rewrite_tls_args(&dburl).unwrap();
     let builder = PostgresSource::<BinaryProtocol, NoTls>::new(config, NoTls, 2).unwrap();
     let mut destination = MemoryDestination::new();
     let dispatcher = Dispatcher::<_, _, PostgresMemoryTransport<BinaryProtocol, NoTls>>::new(
@@ -125,7 +125,7 @@ fn test_postgres_agg() {
     let queries = [CXQuery::naked(
         "SELECT test_bool, SUM(test_float) FROM test_table GROUP BY test_bool",
     )];
-    let (config, _tls) = connection::rewrite_tls_args(&dburl).unwrap();
+    let (config, _tls) = rewrite_tls_args(&dburl).unwrap();
     let builder = PostgresSource::<BinaryProtocol, NoTls>::new(config, NoTls, 1).unwrap();
     let mut destination = MemoryDestination::new();
     let dispatcher = Dispatcher::<_, _, PostgresMemoryTransport<BinaryProtocol, NoTls>>::new(
@@ -153,7 +153,7 @@ fn load_and_parse_csv() {
     #[derive(Debug, PartialEq)]
     struct Row(i32, Option<i32>, Option<String>, Option<f64>, Option<bool>);
 
-    let (config, _tls) = connection::rewrite_tls_args(&dburl).unwrap();
+    let (config, _tls) = rewrite_tls_args(&dburl).unwrap();
     let mut source = PostgresSource::<CSVProtocol, NoTls>::new(config, NoTls, 1).unwrap();
     source.set_queries(&[CXQuery::naked("select * from test_table")]);
     source.fetch_metadata().unwrap();
@@ -204,7 +204,7 @@ fn test_postgres_csv() {
         CXQuery::naked("select * from test_table where test_int < 2"),
         CXQuery::naked("select * from test_table where test_int >= 2"),
     ];
-    let (config, _tls) = connection::rewrite_tls_args(&dburl).unwrap();
+    let (config, _tls) = rewrite_tls_args(&dburl).unwrap();
     let builder = PostgresSource::<CSVProtocol, NoTls>::new(config, NoTls, 2).unwrap();
     let mut dst = MemoryDestination::new();
     let dispatcher = Dispatcher::<_, _, PostgresMemoryTransport<CSVProtocol, NoTls>>::new(

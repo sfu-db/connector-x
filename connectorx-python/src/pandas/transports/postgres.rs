@@ -18,179 +18,45 @@ use uuid::Uuid;
 
 pub struct PostgresPandasTransport<'py, P, C>(&'py (), PhantomData<P>, PhantomData<C>);
 
-impl_transport!(
-    name = PostgresPandasTransport<'tp, BinaryProtocol, NoTls>,
-    error = ConnectorXPythonError,
-    systems = PostgresTypeSystem => PandasTypeSystem,
-    route = PostgresSource<BinaryProtocol, NoTls> => PandasDestination<'tp>,
-    mappings = {
-        { Float4[f32]                => F64[f64]                | conversion all }
-        { Float8[f64]                => F64[f64]                | conversion all }
-        { Numeric[Decimal]           => F64[f64]                | conversion half }
-        { Int2[i16]                  => I64[i64]                | conversion all }
-        { Int4[i32]                  => I64[i64]                | conversion all }
-        { Int8[i64]                  => I64[i64]                | conversion all }
-        { Bool[bool]                 => Bool[bool]              | conversion all }
-        { Char[i8]                   => Char[char]              | conversion half }
-        { Text[&'r str]              => Str[&'r str]            | conversion all }
-        { BpChar[&'r str]            => Str[&'r str]            | conversion none }
-        { VarChar[&'r str]           => Str[&'r str]            | conversion none }
-        { Timestamp[NaiveDateTime]   => DateTime[DateTime<Utc>] | conversion half }
-        { TimestampTz[DateTime<Utc>] => DateTime[DateTime<Utc>] | conversion all }
-        { Date[NaiveDate]            => DateTime[DateTime<Utc>] | conversion half }
-        { UUID[Uuid]                 => String[String]          | conversion half }
-        { JSON[Value]                => String[String]          | conversion half }
-        { JSONB[Value]               => String[String]          | conversion none }
-        { Time[NaiveTime]            => String[String]          | conversion half }
-        { ByteA[Vec<u8>]             => Bytes[Vec<u8>]          | conversion all }
-        { Enum[&'r str]              => Str[&'r str]            | conversion none }
+macro_rules! impl_postgres_transport {
+    ($proto:ty, $tls:ty) => {
+        impl_transport!(
+            name = PostgresPandasTransport<'tp, $proto, $tls>,
+            error = ConnectorXPythonError,
+            systems = PostgresTypeSystem => PandasTypeSystem,
+            route = PostgresSource<$proto, $tls> => PandasDestination<'tp>,
+            mappings = {
+                { Float4[f32]                => F64[f64]                | conversion all }
+                { Float8[f64]                => F64[f64]                | conversion all }
+                { Numeric[Decimal]           => F64[f64]                | conversion half }
+                { Int2[i16]                  => I64[i64]                | conversion all }
+                { Int4[i32]                  => I64[i64]                | conversion all }
+                { Int8[i64]                  => I64[i64]                | conversion all }
+                { Bool[bool]                 => Bool[bool]              | conversion all }
+                { Char[i8]                   => Char[char]              | conversion half }
+                { Text[&'r str]              => Str[&'r str]            | conversion all }
+                { BpChar[&'r str]            => Str[&'r str]            | conversion none }
+                { VarChar[&'r str]           => Str[&'r str]            | conversion none }
+                { Timestamp[NaiveDateTime]   => DateTime[DateTime<Utc>] | conversion half }
+                { TimestampTz[DateTime<Utc>] => DateTime[DateTime<Utc>] | conversion all }
+                { Date[NaiveDate]            => DateTime[DateTime<Utc>] | conversion half }
+                { UUID[Uuid]                 => String[String]          | conversion half }
+                { JSON[Value]                => String[String]          | conversion half }
+                { JSONB[Value]               => String[String]          | conversion none }
+                { Time[NaiveTime]            => String[String]          | conversion half }
+                { ByteA[Vec<u8>]             => Bytes[Vec<u8>]          | conversion all }
+                { Enum[&'r str]              => Str[&'r str]            | conversion none }
+            }
+        );
     }
-);
+}
 
-impl_transport!(
-    name = PostgresPandasTransport<'tp, BinaryProtocol, MakeTlsConnector>,
-    error = ConnectorXPythonError,
-    systems = PostgresTypeSystem => PandasTypeSystem,
-    route = PostgresSource<BinaryProtocol, MakeTlsConnector> => PandasDestination<'tp>,
-    mappings = {
-        { Float4[f32]                => F64[f64]                | conversion all }
-        { Float8[f64]                => F64[f64]                | conversion all }
-        { Numeric[Decimal]           => F64[f64]                | conversion half }
-        { Int2[i16]                  => I64[i64]                | conversion all }
-        { Int4[i32]                  => I64[i64]                | conversion all }
-        { Int8[i64]                  => I64[i64]                | conversion all }
-        { Bool[bool]                 => Bool[bool]              | conversion all }
-        { Char[i8]                   => Char[char]              | conversion half }
-        { Text[&'r str]              => Str[&'r str]            | conversion all }
-        { BpChar[&'r str]            => Str[&'r str]            | conversion none }
-        { VarChar[&'r str]           => Str[&'r str]            | conversion none }
-        { Timestamp[NaiveDateTime]   => DateTime[DateTime<Utc>] | conversion half }
-        { TimestampTz[DateTime<Utc>] => DateTime[DateTime<Utc>] | conversion all }
-        { Date[NaiveDate]            => DateTime[DateTime<Utc>] | conversion half }
-        { UUID[Uuid]                 => String[String]          | conversion half }
-        { JSON[Value]                => String[String]          | conversion half }
-        { JSONB[Value]               => String[String]          | conversion none }
-        { Time[NaiveTime]            => String[String]          | conversion half }
-        { ByteA[Vec<u8>]             => Bytes[Vec<u8>]          | conversion all }
-        { Enum[&'r str]              => Str[&'r str]            | conversion none }
-    }
-);
-
-impl_transport!(
-    name = PostgresPandasTransport<'tp, CSVProtocol, NoTls>,
-    error = ConnectorXPythonError,
-    systems = PostgresTypeSystem => PandasTypeSystem,
-    route = PostgresSource<CSVProtocol, NoTls> => PandasDestination<'tp>,
-    mappings = {
-        { Float4[f32]                => F64[f64]                | conversion all }
-        { Float8[f64]                => F64[f64]                | conversion all }
-        { Numeric[Decimal]           => F64[f64]                | conversion half }
-        { Int2[i16]                  => I64[i64]                | conversion all }
-        { Int4[i32]                  => I64[i64]                | conversion all }
-        { Int8[i64]                  => I64[i64]                | conversion all }
-        { Bool[bool]                 => Bool[bool]              | conversion all }
-        { Char[i8]                   => Char[char]              | conversion half }
-        { Text[&'r str]              => Str[&'r str]            | conversion all }
-        { BpChar[&'r str]            => Str[&'r str]            | conversion none }
-        { VarChar[&'r str]           => Str[&'r str]            | conversion none }
-        { Timestamp[NaiveDateTime]   => DateTime[DateTime<Utc>] | conversion half }
-        { TimestampTz[DateTime<Utc>] => DateTime[DateTime<Utc>] | conversion all }
-        { Date[NaiveDate]            => DateTime[DateTime<Utc>] | conversion half }
-        { UUID[Uuid]                 => String[String]          | conversion half }
-        { JSON[Value]                => String[String]          | conversion half }
-        { JSONB[Value]               => String[String]          | conversion none }
-        { Time[NaiveTime]            => String[String]          | conversion half }
-        { ByteA[Vec<u8>]             => Bytes[Vec<u8>]          | conversion all }
-        { Enum[&'r str]              => Str[&'r str]            | conversion none }
-    }
-);
-
-impl_transport!(
-    name = PostgresPandasTransport<'tp, CSVProtocol, MakeTlsConnector>,
-    error = ConnectorXPythonError,
-    systems = PostgresTypeSystem => PandasTypeSystem,
-    route = PostgresSource<CSVProtocol, MakeTlsConnector> => PandasDestination<'tp>,
-    mappings = {
-        { Float4[f32]                => F64[f64]                | conversion all }
-        { Float8[f64]                => F64[f64]                | conversion all }
-        { Numeric[Decimal]           => F64[f64]                | conversion half }
-        { Int2[i16]                  => I64[i64]                | conversion all }
-        { Int4[i32]                  => I64[i64]                | conversion all }
-        { Int8[i64]                  => I64[i64]                | conversion all }
-        { Bool[bool]                 => Bool[bool]              | conversion all }
-        { Char[i8]                   => Char[char]              | conversion half }
-        { Text[&'r str]              => Str[&'r str]            | conversion all }
-        { BpChar[&'r str]            => Str[&'r str]            | conversion none }
-        { VarChar[&'r str]           => Str[&'r str]            | conversion none }
-        { Timestamp[NaiveDateTime]   => DateTime[DateTime<Utc>] | conversion half }
-        { TimestampTz[DateTime<Utc>] => DateTime[DateTime<Utc>] | conversion all }
-        { Date[NaiveDate]            => DateTime[DateTime<Utc>] | conversion half }
-        { UUID[Uuid]                 => String[String]          | conversion half }
-        { JSON[Value]                => String[String]          | conversion half }
-        { JSONB[Value]               => String[String]          | conversion none }
-        { Time[NaiveTime]            => String[String]          | conversion half }
-        { ByteA[Vec<u8>]             => Bytes[Vec<u8>]          | conversion all }
-        { Enum[&'r str]              => Str[&'r str]            | conversion none }
-    }
-);
-
-impl_transport!(
-    name = PostgresPandasTransport<'tp, CursorProtocol, NoTls>,
-    error = ConnectorXPythonError,
-    systems = PostgresTypeSystem => PandasTypeSystem,
-    route = PostgresSource<CursorProtocol, NoTls> => PandasDestination<'tp>,
-    mappings = {
-        { Float4[f32]                => F64[f64]                | conversion all }
-        { Float8[f64]                => F64[f64]                | conversion all }
-        { Numeric[Decimal]           => F64[f64]                | conversion half }
-        { Int2[i16]                  => I64[i64]                | conversion all }
-        { Int4[i32]                  => I64[i64]                | conversion all }
-        { Int8[i64]                  => I64[i64]                | conversion all }
-        { Bool[bool]                 => Bool[bool]              | conversion all }
-        { Char[i8]                   => Char[char]              | conversion half }
-        { Text[&'r str]              => Str[&'r str]            | conversion all }
-        { BpChar[&'r str]            => Str[&'r str]            | conversion none }
-        { VarChar[&'r str]           => Str[&'r str]            | conversion none }
-        { Timestamp[NaiveDateTime]   => DateTime[DateTime<Utc>] | conversion half }
-        { TimestampTz[DateTime<Utc>] => DateTime[DateTime<Utc>] | conversion all }
-        { Date[NaiveDate]            => DateTime[DateTime<Utc>] | conversion half }
-        { UUID[Uuid]                 => String[String]          | conversion half }
-        { JSON[Value]                => String[String]          | conversion half }
-        { JSONB[Value]               => String[String]          | conversion none }
-        { Time[NaiveTime]            => String[String]          | conversion half }
-        { ByteA[Vec<u8>]             => Bytes[Vec<u8>]          | conversion all }
-        { Enum[&'r str]              => Str[&'r str]            | conversion none }
-    }
-);
-
-impl_transport!(
-    name = PostgresPandasTransport<'tp, CursorProtocol, MakeTlsConnector>,
-    error = ConnectorXPythonError,
-    systems = PostgresTypeSystem => PandasTypeSystem,
-    route = PostgresSource<CursorProtocol, MakeTlsConnector> => PandasDestination<'tp>,
-    mappings = {
-        { Float4[f32]                => F64[f64]                | conversion all }
-        { Float8[f64]                => F64[f64]                | conversion all }
-        { Numeric[Decimal]           => F64[f64]                | conversion half }
-        { Int2[i16]                  => I64[i64]                | conversion all }
-        { Int4[i32]                  => I64[i64]                | conversion all }
-        { Int8[i64]                  => I64[i64]                | conversion all }
-        { Bool[bool]                 => Bool[bool]              | conversion all }
-        { Char[i8]                   => Char[char]              | conversion half }
-        { Text[&'r str]              => Str[&'r str]            | conversion all }
-        { BpChar[&'r str]            => Str[&'r str]            | conversion none }
-        { VarChar[&'r str]           => Str[&'r str]            | conversion none }
-        { Timestamp[NaiveDateTime]   => DateTime[DateTime<Utc>] | conversion half }
-        { TimestampTz[DateTime<Utc>] => DateTime[DateTime<Utc>] | conversion all }
-        { Date[NaiveDate]            => DateTime[DateTime<Utc>] | conversion half }
-        { UUID[Uuid]                 => String[String]          | conversion half }
-        { JSON[Value]                => String[String]          | conversion half }
-        { JSONB[Value]               => String[String]          | conversion none }
-        { Time[NaiveTime]            => String[String]          | conversion half }
-        { ByteA[Vec<u8>]             => Bytes[Vec<u8>]          | conversion all }
-        { Enum[&'r str]              => Str[&'r str]            | conversion none }
-    }
-);
+impl_postgres_transport!(BinaryProtocol, NoTls);
+impl_postgres_transport!(BinaryProtocol, MakeTlsConnector);
+impl_postgres_transport!(CSVProtocol, NoTls);
+impl_postgres_transport!(CSVProtocol, MakeTlsConnector);
+impl_postgres_transport!(CursorProtocol, NoTls);
+impl_postgres_transport!(CursorProtocol, MakeTlsConnector);
 
 impl<'py, P, C> TypeConversion<Decimal, f64> for PostgresPandasTransport<'py, P, C> {
     fn convert(val: Decimal) -> f64 {

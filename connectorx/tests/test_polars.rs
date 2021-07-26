@@ -3,7 +3,7 @@ use connectorx::{
     prelude::*,
     sources::{
         dummy::DummySource,
-        postgres::{connection, BinaryProtocol, PostgresSource},
+        postgres::{rewrite_tls_args, BinaryProtocol, PostgresSource},
     },
     sql::CXQuery,
     transports::{DummyArrowTransport, PostgresArrowTransport},
@@ -59,7 +59,7 @@ fn test_postgres_arrow() {
         CXQuery::naked("select * from test_table where test_int < 2"),
         CXQuery::naked("select * from test_table where test_int >= 2"),
     ];
-    let (config, _tls) = connection::rewrite_tls_args(&dburl).unwrap();
+    let (config, _tls) = rewrite_tls_args(&dburl).unwrap();
     let builder = PostgresSource::<BinaryProtocol, NoTls>::new(config, NoTls, 2).unwrap();
     let mut destination = ArrowDestination::new();
     let dispatcher = Dispatcher::<_, _, PostgresArrowTransport<BinaryProtocol, NoTls>>::new(

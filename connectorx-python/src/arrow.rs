@@ -7,7 +7,7 @@ use connectorx::{
     sources::{
         mysql::{BinaryProtocol as MySQLBinaryProtocol, MySQLSource, TextProtocol},
         postgres::{
-            connection, BinaryProtocol as PgBinaryProtocol, CSVProtocol, CursorProtocol,
+            rewrite_tls_args, BinaryProtocol as PgBinaryProtocol, CSVProtocol, CursorProtocol,
             PostgresSource,
         },
         sqlite::SQLiteSource,
@@ -35,7 +35,7 @@ pub fn write_arrow<'a>(
     // TODO: unlock gil if possible
     match source_conn.ty {
         SourceType::Postgres => {
-            let (config, tls) = connection::rewrite_tls_args(&source_conn.conn[..])?;
+            let (config, tls) = rewrite_tls_args(&source_conn.conn[..])?;
             debug!("Protocol: {}", protocol);
             match (protocol, tls) {
                 ("csv", Some(tls_conn)) => {
