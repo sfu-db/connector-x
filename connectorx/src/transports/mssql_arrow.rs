@@ -2,6 +2,8 @@ use crate::destinations::arrow::{ArrowDestination, ArrowDestinationError, ArrowT
 use crate::sources::mssql::{FloatN, IntN, MsSQLSource, MsSQLSourceError, MsSQLTypeSystem};
 use crate::typesystem::TypeConversion;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
+use num_traits::ToPrimitive;
+use rust_decimal::Decimal;
 use thiserror::Error;
 use uuid::Uuid;
 
@@ -25,38 +27,37 @@ impl_transport!(
     systems = MsSQLTypeSystem => ArrowTypeSystem,
     route = MsSQLSource => ArrowDestination,
     mappings = {
-        { Tinyint[u8]                   => Int32[i32]                | conversion all }
-        { Smallint[i16]                 => Int32[i32]                | conversion all }
-        { Int[i32]                      => Int32[i32]                | conversion all }
-        { Bigint[i64]                   => Int64[i64]                | conversion all }
-        { Intn[IntN]                    => Int64[i64]                | conversion half }
-        { Float24[f32]                  => Float32[f32]              | conversion all }
-        { Float53[f64]                  => Float64[f64]              | conversion all }
-        { Floatn[FloatN]                => Float64[f64]              | conversion half }
-        { Bit[bool]                     => Boolean[bool]             | conversion all  }
-        { Nvarchar[&'r str]             => LargeUtf8[String]         | conversion half }
+        { Tinyint[u8]                   => Int32[i32]                | conversion auto }
+        { Smallint[i16]                 => Int32[i32]                | conversion auto }
+        { Int[i32]                      => Int32[i32]                | conversion auto }
+        { Bigint[i64]                   => Int64[i64]                | conversion auto }
+        { Intn[IntN]                    => Int64[i64]                | conversion option }
+        { Float24[f32]                  => Float32[f32]              | conversion auto }
+        { Float53[f64]                  => Float64[f64]              | conversion auto }
+        { Floatn[FloatN]                => Float64[f64]              | conversion option }
+        { Bit[bool]                     => Boolean[bool]             | conversion auto  }
+        { Nvarchar[&'r str]             => LargeUtf8[String]         | conversion owned }
         { Varchar[&'r str]              => LargeUtf8[String]         | conversion none }
         { Nchar[&'r str]                => LargeUtf8[String]         | conversion none }
         { Char[&'r str]                 => LargeUtf8[String]         | conversion none }
         { Text[&'r str]                 => LargeUtf8[String]         | conversion none }
         { Ntext[&'r str]                => LargeUtf8[String]         | conversion none }
-        { Datetime[NaiveDateTime]       => Date64[NaiveDateTime]     | conversion all }
+        { Binary[&'r [u8]]              => LargeBinary[Vec<u8>]      | conversion owned }
+        { Varbinary[&'r [u8]]           => LargeBinary[Vec<u8>]      | conversion none }
+        { Image[&'r [u8]]               => LargeBinary[Vec<u8>]      | conversion none }
+        { Numeric[Decimal]              => Float64[f64]              | conversion option }
+        { Decimal[Decimal]              => Float64[f64]              | conversion none }
+        { Datetime[NaiveDateTime]       => Date64[NaiveDateTime]     | conversion auto }
         { Datetime2[NaiveDateTime]      => Date64[NaiveDateTime]     | conversion none }
         { Smalldatetime[NaiveDateTime]  => Date64[NaiveDateTime]     | conversion none }
-        { Date[NaiveDate]               => Date32[NaiveDate]         | conversion all }
-        { Datetimeoffset[DateTime<Utc>] => DateTimeTz[DateTime<Utc>] | conversion all }
-        { Uniqueidentifier[Uuid]        => LargeUtf8[String]         | conversion half }
+        { Date[NaiveDate]               => Date32[NaiveDate]         | conversion auto }
+        { Datetimeoffset[DateTime<Utc>] => DateTimeTz[DateTime<Utc>] | conversion auto }
+        { Uniqueidentifier[Uuid]        => LargeUtf8[String]         | conversion option }
     }
 );
 
 impl TypeConversion<Uuid, String> for MsSQLArrowTransport {
     fn convert(val: Uuid) -> String {
-        val.to_string()
-    }
-}
-
-impl<'r> TypeConversion<&'r str, String> for MsSQLArrowTransport {
-    fn convert(val: &'r str) -> String {
         val.to_string()
     }
 }
@@ -70,5 +71,12 @@ impl TypeConversion<IntN, i64> for MsSQLArrowTransport {
 impl TypeConversion<FloatN, f64> for MsSQLArrowTransport {
     fn convert(val: FloatN) -> f64 {
         val.0
+    }
+}
+
+impl TypeConversion<Decimal, f64> for MsSQLArrowTransport {
+    fn convert(val: Decimal) -> f64 {
+        val.to_f64()
+            .unwrap_or_else(|| panic!("cannot convert decimal {:?} to float64", val))
     }
 }

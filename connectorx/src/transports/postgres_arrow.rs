@@ -37,20 +37,20 @@ macro_rules! impl_postgres_transport {
             systems = PostgresTypeSystem => ArrowTypeSystem,
             route = PostgresSource<$proto, $tls> => ArrowDestination,
             mappings = {
-                { Float4[f32]                => Float32[f32]            | conversion all }
-                { Float8[f64]                => Float64[f64]            | conversion all }
-                { Numeric[Decimal]           => Float64[f64]            | conversion half }
-                { Int2[i16]                  => Int32[i32]              | conversion all }
-                { Int4[i32]                  => Int32[i32]              | conversion all }
-                { Int8[i64]                  => Int64[i64]              | conversion all }
-                { Bool[bool]                 => Boolean[bool]           | conversion all  }
-                { Text[&'r str]              => LargeUtf8[String]       | conversion half }
+                { Float4[f32]                => Float32[f32]            | conversion auto }
+                { Float8[f64]                => Float64[f64]            | conversion auto }
+                { Numeric[Decimal]           => Float64[f64]            | conversion option }
+                { Int2[i16]                  => Int32[i32]              | conversion auto }
+                { Int4[i32]                  => Int32[i32]              | conversion auto }
+                { Int8[i64]                  => Int64[i64]              | conversion auto }
+                { Bool[bool]                 => Boolean[bool]           | conversion auto  }
+                { Text[&'r str]              => LargeUtf8[String]       | conversion owned }
                 { BpChar[&'r str]            => LargeUtf8[String]       | conversion none }
                 { VarChar[&'r str]           => LargeUtf8[String]       | conversion none }
-                { Timestamp[NaiveDateTime]   => Date64[NaiveDateTime]   | conversion all }
-                { Date[NaiveDate]            => Date32[NaiveDate]       | conversion all }
-                { Time[NaiveTime]            => Time64[NaiveTime]       | conversion all }
-                { UUID[Uuid]                 => LargeUtf8[String]       | conversion half }
+                { Timestamp[NaiveDateTime]   => Date64[NaiveDateTime]   | conversion auto }
+                { Date[NaiveDate]            => Date32[NaiveDate]       | conversion auto }
+                { Time[NaiveTime]            => Time64[NaiveTime]       | conversion auto }
+                { UUID[Uuid]                 => LargeUtf8[String]       | conversion option }
                 { Char[&'r str]              => LargeUtf8[String]       | conversion none }
             }
         );
@@ -66,12 +66,6 @@ impl_postgres_transport!(CursorProtocol, MakeTlsConnector);
 
 impl<P, C> TypeConversion<Uuid, String> for PostgresArrowTransport<P, C> {
     fn convert(val: Uuid) -> String {
-        val.to_string()
-    }
-}
-
-impl<'r, P, C> TypeConversion<&'r str, String> for PostgresArrowTransport<P, C> {
-    fn convert(val: &'r str) -> String {
         val.to_string()
     }
 }

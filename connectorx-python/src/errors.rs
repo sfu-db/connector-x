@@ -16,6 +16,12 @@ pub enum ConnectorXPythonError {
     PythonError(String),
 
     #[error(transparent)]
+    IOError(#[from] std::io::Error),
+
+    #[error(transparent)]
+    MsSQL(#[from] tiberius::error::Error),
+
+    #[error(transparent)]
     MysqlError(#[from] r2d2_mysql::mysql::Error),
 
     #[error(transparent)]
@@ -31,6 +37,9 @@ pub enum ConnectorXPythonError {
     ConnectorXError(#[from] connectorx::errors::ConnectorXError),
 
     #[error(transparent)]
+    MsSQLSourceError(#[from] connectorx::sources::mssql::MsSQLSourceError),
+
+    #[error(transparent)]
     PostgresSourceError(#[from] connectorx::sources::postgres::PostgresSourceError),
 
     #[error(transparent)]
@@ -38,6 +47,9 @@ pub enum ConnectorXPythonError {
 
     #[error(transparent)]
     SQLiteSourceError(#[from] connectorx::sources::sqlite::SQLiteSourceError),
+
+    #[error(transparent)]
+    ArrowDestinationError(#[from] connectorx::destinations::arrow::ArrowDestinationError),
 
     #[error(transparent)]
     PostgresArrowTransportError(#[from] connectorx::transports::PostgresArrowTransportError),
@@ -49,7 +61,7 @@ pub enum ConnectorXPythonError {
     SQLiteArrowTransportError(#[from] connectorx::transports::SQLiteArrowTransportError),
 
     #[error(transparent)]
-    ArrowDestinationError(#[from] connectorx::destinations::arrow::ArrowDestinationError),
+    MsSQLArrowTransportError(#[from] connectorx::transports::MsSQLArrowTransportError),
 
     /// Any other errors that are too trivial to be put here explicitly.
     #[error(transparent)]

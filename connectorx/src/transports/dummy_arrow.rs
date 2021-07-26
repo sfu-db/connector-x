@@ -21,11 +21,11 @@ impl_transport!(
     systems = DummyTypeSystem => ArrowTypeSystem,
     route = DummySource => ArrowDestination,
     mappings = {
-        { F64[f64]                => Float64[f64]               | conversion all}
-        { I64[i64]                => Int64[i64]                 | conversion all}
-        { Bool[bool]              => Boolean[bool]              | conversion all}
-        { String[String]          => LargeUtf8[String]          | conversion all}
-        { DateTime[DateTime<Utc>] => Date64[NaiveDateTime]      | conversion half}
+        { F64[f64]                => Float64[f64]               | conversion auto}
+        { I64[i64]                => Int64[i64]                 | conversion auto}
+        { Bool[bool]              => Boolean[bool]              | conversion auto}
+        { String[String]          => LargeUtf8[String]          | conversion auto}
+        { DateTime[DateTime<Utc>] => Date64[NaiveDateTime]      | conversion option}
     }
 );
 

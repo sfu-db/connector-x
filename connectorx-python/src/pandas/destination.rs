@@ -4,7 +4,7 @@ use super::{
         PandasColumn, PandasColumnObject, PyBytes, StringBlock,
     },
     pystring::PyString,
-    types::{PandasArrayType, PandasBlockType, PandasTypeSystem},
+    typesystem::{PandasArrayType, PandasBlockType, PandasTypeSystem},
 };
 use crate::errors::{ConnectorXPythonError, Result};
 use anyhow::anyhow;

@@ -27,16 +27,16 @@ impl_transport!(
     systems = SQLiteTypeSystem => ArrowTypeSystem,
     route = SQLiteSource => ArrowDestination,
     mappings = {
-        { Bool[bool]                 => Boolean[bool]           | conversion all }
-        { Int8[i64]                  => Int64[i64]              | conversion all }
-        { Int4[i32]                  => Int64[i64]              | conversion all }
-        { Int2[i16]                  => Int64[i64]              | conversion all }
-        { Real[f64]                  => Float64[f64]            | conversion all }
-        { Text[Box<str>]             => LargeUtf8[String]       | conversion half }
-        { Blob[Vec<u8>]              => LargeBinary[Vec<u8>]    | conversion all }
-        { Date[NaiveDate]            => Date32[NaiveDate]       | conversion all }
-        { Time[NaiveTime]            => Time64[NaiveTime]       | conversion all }
-        { Timestamp[NaiveDateTime]   => Date64[NaiveDateTime]   | conversion all }
+        { Bool[bool]                 => Boolean[bool]           | conversion auto }
+        { Int8[i64]                  => Int64[i64]              | conversion auto }
+        { Int4[i32]                  => Int64[i64]              | conversion auto }
+        { Int2[i16]                  => Int64[i64]              | conversion auto }
+        { Real[f64]                  => Float64[f64]            | conversion auto }
+        { Text[Box<str>]             => LargeUtf8[String]       | conversion option }
+        { Blob[Vec<u8>]              => LargeBinary[Vec<u8>]    | conversion auto }
+        { Date[NaiveDate]            => Date32[NaiveDate]       | conversion auto }
+        { Time[NaiveTime]            => Time64[NaiveTime]       | conversion auto }
+        { Timestamp[NaiveDateTime]   => Date64[NaiveDateTime]   | conversion auto }
     }
 );
 
