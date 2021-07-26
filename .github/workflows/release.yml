@@ -40,8 +40,8 @@ jobs:
           pip install poetry
           cargo install just
           yum install -y openssl11-devel mysql-devel
-          ln -sf /usr/lib64/pkgconfig/openssl11.pc /usr/lib64/pkgconfig/openssl.pc
-          ln -sf /usr/lib64/pkgconfig/libssl11.pc /usr/lib64/pkgconfig/libssl.pc
+          ln -sfn /usr/lib64/pkgconfig/openssl11.pc /usr/lib64/pkgconfig/openssl.pc
+          ln -sfn /usr/lib64/pkgconfig/libssl11.pc /usr/lib64/pkgconfig/libssl.pc
 
       - name: Setup project
         env:
