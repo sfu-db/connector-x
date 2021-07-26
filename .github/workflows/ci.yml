@@ -39,6 +39,18 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+      mssql:
+        image: mcr.microsoft.com/mssql/server:2019-latest
+        env:
+          ACCEPT_EULA: y
+          SA_PASSWORD: mssql!Password
+        ports:
+          - 1433:1433
+        options: >-
+          --health-cmd "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "$$SA_PASSWORD" -Q "SELECT 1" || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
       - uses: actions/checkout@v2
@@ -86,6 +98,11 @@ jobs:
           MYSQL_DB: mysql
           MYSQL_USER: root
           MYSQL_PASSWORD: mysql
+          MSSQL_HOST: mssql
+          MSSQL_PORT: 1433
+          MSSQL_DB: tempdb
+          MSSQL_USER: sa
+          MSSQL_PASSWORD: mssql!Password
 
       - name: Run tests
         uses: actions-rs/cargo@v1
@@ -96,6 +113,7 @@ jobs:
           POSTGRES_URL: "postgresql://postgres:postgres@postgres:5432/postgres"
           SQLITE_URL: "sqlite:///tmp/test.db"
           MYSQL_URL: "mysql://root:mysql@mysql:3306/mysql"
+          MSSQL_URL: "mssql://sa:mssql!Password@mssql:1433/tempdb"
 
       - name: Test build docs
         uses: actions-rs/cargo@v1
@@ -129,6 +147,18 @@ jobs:
           - 3306:3306
         options: >-
           --health-cmd "mysqladmin ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      mssql:
+        image: mcr.microsoft.com/mssql/server:2019-latest
+        env:
+          ACCEPT_EULA: y
+          SA_PASSWORD: mssql!Password
+        ports:
+          - 1433:1433
+        options: >-
+          --health-cmd "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "$$SA_PASSWORD" -Q "SELECT 1" || exit 1"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -174,6 +204,11 @@ jobs:
           MYSQL_DB: mysql
           MYSQL_USER: root
           MYSQL_PASSWORD: mysql
+          MSSQL_HOST: mssql
+          MSSQL_PORT: 1433
+          MSSQL_DB: tempdb
+          MSSQL_USER: sa
+          MSSQL_PASSWORD: mssql!Password
 
       - name: Test python
         run: just test-python
@@ -181,4 +216,5 @@ jobs:
           POSTGRES_URL: "postgresql://postgres:postgres@postgres:5432/postgres"
           SQLITE_URL: "sqlite:///tmp/test.db"
           MYSQL_URL: "mysql://root:mysql@mysql:3306/mysql"
+          MSSQL_URL: "mssql://sa:mssql!Password@mssql:1433/tempdb"
           SQLITE3_STATIC: 1
