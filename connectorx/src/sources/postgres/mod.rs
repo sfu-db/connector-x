@@ -1,7 +1,11 @@
+mod connection;
 mod errors;
 mod typesystem;
 
 pub use self::errors::PostgresSourceError;
+pub use connection::rewrite_tls_args;
+pub use typesystem::PostgresTypeSystem;
+
 use crate::{
     data_order::DataOrder,
     errors::ConnectorXError,
@@ -17,16 +21,16 @@ use log::debug;
 use postgres::{
     binary_copy::{BinaryCopyOutIter, BinaryCopyOutRow},
     fallible_iterator::FallibleIterator,
-    CopyOutReader, Row, RowIter,
+    tls::{MakeTlsConnect, TlsConnect},
+    Config, CopyOutReader, Row, RowIter, Socket,
 };
 use r2d2::{Pool, PooledConnection};
-use r2d2_postgres::{postgres::NoTls, PostgresConnectionManager};
+use r2d2_postgres::PostgresConnectionManager;
 use rust_decimal::Decimal;
 use serde_json::{from_str, Value};
 use sqlparser::dialect::PostgreSqlDialect;
 use std::io::BufRead;
 use std::marker::PhantomData;
-pub use typesystem::PostgresTypeSystem;
 use uuid::Uuid;
 
 /// Protocol - Binary based bulk load
@@ -38,11 +42,17 @@ pub enum CSVProtocol {}
 /// Protocol - use Cursor
 pub enum CursorProtocol {}
 
-type PgManager = PostgresConnectionManager<NoTls>;
-type PgConn = PooledConnection<PgManager>;
+type PgManager<C> = PostgresConnectionManager<C>;
+type PgConn<C> = PooledConnection<PgManager<C>>;
 
-pub struct PostgresSource<P> {
-    pool: Pool<PgManager>,
+pub struct PostgresSource<P, C>
+where
+    C: MakeTlsConnect<Socket> + Clone + 'static + Sync + Send,
+    C::TlsConnect: Send,
+    C::Stream: Send,
+    <C::TlsConnect as TlsConnect<Socket>>::Future: Send,
+{
+    pool: Pool<PgManager<C>>,
     queries: Vec<CXQuery<String>>,
     names: Vec<String>,
     schema: Vec<PostgresTypeSystem>,
@@ -50,10 +60,16 @@ pub struct PostgresSource<P> {
     _protocol: PhantomData<P>,
 }
 
-impl<P> PostgresSource<P> {
+impl<P, C> PostgresSource<P, C>
+where
+    C: MakeTlsConnect<Socket> + Clone + 'static + Sync + Send,
+    C::TlsConnect: Send,
+    C::Stream: Send,
+    <C::TlsConnect as TlsConnect<Socket>>::Future: Send,
+{
     #[throws(PostgresSourceError)]
-    pub fn new(conn: &str, nconn: usize) -> Self {
-        let manager = PostgresConnectionManager::new(conn.parse()?, NoTls);
+    pub fn new(config: Config, tls: C, nconn: usize) -> Self {
+        let manager = PostgresConnectionManager::new(config, tls);
         let pool = Pool::builder().max_size(nconn as u32).build(manager)?;
 
         Self {
@@ -71,14 +87,18 @@ impl<P> PostgresSource<P> {
     }
 }
 
-impl<P> Source for PostgresSource<P>
+impl<P, C> Source for PostgresSource<P, C>
 where
-    PostgresSourcePartition<P>:
+    PostgresSourcePartition<P, C>:
         SourcePartition<TypeSystem = PostgresTypeSystem, Error = PostgresSourceError>,
     P: Send,
+    C: MakeTlsConnect<Socket> + Clone + 'static + Sync + Send,
+    C::TlsConnect: Send,
+    C::Stream: Send,
+    <C::TlsConnect as TlsConnect<Socket>>::Future: Send,
 {
     const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
-    type Partition = PostgresSourcePartition<P>;
+    type Partition = PostgresSourcePartition<P, C>;
     type TypeSystem = PostgresTypeSystem;
     type Error = PostgresSourceError;
 
@@ -168,7 +188,7 @@ where
         for query in self.queries {
             let conn = self.pool.get()?;
 
-            ret.push(PostgresSourcePartition::<P>::new(
+            ret.push(PostgresSourcePartition::<P, C>::new(
                 conn,
                 &query,
                 &self.schema,
@@ -179,8 +199,14 @@ where
     }
 }
 
-pub struct PostgresSourcePartition<P> {
-    conn: PgConn,
+pub struct PostgresSourcePartition<P, C>
+where
+    C: MakeTlsConnect<Socket> + Clone + 'static + Sync + Send,
+    C::TlsConnect: Send,
+    C::Stream: Send,
+    <C::TlsConnect as TlsConnect<Socket>>::Future: Send,
+{
+    conn: PgConn<C>,
     query: CXQuery<String>,
     schema: Vec<PostgresTypeSystem>,
     nrows: usize,
@@ -189,9 +215,15 @@ pub struct PostgresSourcePartition<P> {
     _protocol: PhantomData<P>,
 }
 
-impl<P> PostgresSourcePartition<P> {
+impl<P, C> PostgresSourcePartition<P, C>
+where
+    C: MakeTlsConnect<Socket> + Clone + 'static + Sync + Send,
+    C::TlsConnect: Send,
+    C::Stream: Send,
+    <C::TlsConnect as TlsConnect<Socket>>::Future: Send,
+{
     pub fn new(
-        conn: PgConn,
+        conn: PgConn<C>,
         query: &CXQuery<String>,
         schema: &[PostgresTypeSystem],
         buf_size: usize,
@@ -208,7 +240,13 @@ impl<P> PostgresSourcePartition<P> {
     }
 }
 
-impl SourcePartition for PostgresSourcePartition<BinaryProtocol> {
+impl<C> SourcePartition for PostgresSourcePartition<BinaryProtocol, C>
+where
+    C: MakeTlsConnect<Socket> + Clone + 'static + Sync + Send,
+    C::TlsConnect: Send,
+    C::Stream: Send,
+    <C::TlsConnect as TlsConnect<Socket>>::Future: Send,
+{
     type TypeSystem = PostgresTypeSystem;
     type Parser<'a> = PostgresBinarySourcePartitionParser<'a>;
     type Error = PostgresSourceError;
@@ -246,7 +284,13 @@ impl SourcePartition for PostgresSourcePartition<BinaryProtocol> {
     }
 }
 
-impl SourcePartition for PostgresSourcePartition<CSVProtocol> {
+impl<C> SourcePartition for PostgresSourcePartition<CSVProtocol, C>
+where
+    C: MakeTlsConnect<Socket> + Clone + 'static + Sync + Send,
+    C::TlsConnect: Send,
+    C::Stream: Send,
+    <C::TlsConnect as TlsConnect<Socket>>::Future: Send,
+{
     type TypeSystem = PostgresTypeSystem;
     type Parser<'a> = PostgresCSVSourceParser<'a>;
     type Error = PostgresSourceError;
@@ -281,7 +325,13 @@ impl SourcePartition for PostgresSourcePartition<CSVProtocol> {
     }
 }
 
-impl SourcePartition for PostgresSourcePartition<CursorProtocol> {
+impl<C> SourcePartition for PostgresSourcePartition<CursorProtocol, C>
+where
+    C: MakeTlsConnect<Socket> + Clone + 'static + Sync + Send,
+    C::TlsConnect: Send,
+    C::Stream: Send,
+    <C::TlsConnect as TlsConnect<Socket>>::Future: Send,
+{
     type TypeSystem = PostgresTypeSystem;
     type Parser<'a> = PostgresRawSourceParser<'a>;
     type Error = PostgresSourceError;

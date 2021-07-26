@@ -384,11 +384,13 @@ dependencies = [
  "iai",
  "itertools 0.10.1",
  "log",
+ "native-tls",
  "ndarray",
  "num-traits",
  "owning_ref",
  "polars",
  "postgres",
+ "postgres-native-tls",
  "pprof",
  "r2d2",
  "r2d2_mysql",
@@ -401,6 +403,7 @@ dependencies = [
  "serde_json",
  "sqlparser",
  "thiserror",
+ "url",
  "uuid",
 ]
 
@@ -427,6 +430,7 @@ dependencies = [
  "ndarray",
  "numpy",
  "postgres",
+ "postgres-native-tls",
  "pprof",
  "pyo3",
  "pyo3-built",
@@ -2022,6 +2026,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "postgres-native-tls"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2d442770e2b1e244bb5eb03b31c79b65bb2568f413b899eaba850fa945a65954"
+dependencies = [
+ "futures",
+ "native-tls",
+ "tokio",
+ "tokio-native-tls",
+ "tokio-postgres",
+]
+
+[[package]]
 name = "postgres-protocol"
 version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2972,6 +2989,16 @@ dependencies = [
  "mio",
  "pin-project-lite",
  "winapi",
+]
+
+[[package]]
+name = "tokio-native-tls"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f7d995660bd2b7f8c1568414c1126076c13fbb725c40112dc0120b78eb9b717b"
+dependencies = [
+ "native-tls",
+ "tokio",
 ]
 
 [[package]]

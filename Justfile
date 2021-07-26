@@ -5,7 +5,7 @@ build-debug:
     cargo build
 
 test:
-    cargo test --features src_postgres --features src_sqlite --features src_mysql --features src_csv --features dst_arrow --features dst_memory --features dst_polars -- --nocapture
+    cargo test --features all -- --nocapture
 
 bootstrap-python:
     cp README.md connectorx-python/README.md
