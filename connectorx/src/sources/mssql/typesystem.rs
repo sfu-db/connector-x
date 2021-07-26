@@ -1,6 +1,6 @@
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
 use rust_decimal::Decimal;
-use tiberius::ColumnType;
+use tiberius::{ColumnData, ColumnType, FromSql};
 use uuid::Uuid;
 
 #[derive(Copy, Clone, Debug)]
@@ -9,8 +9,10 @@ pub enum MsSQLTypeSystem {
     Smallint(bool),
     Int(bool),
     Bigint(bool),
+    Intn(bool),
     Float24(bool),
     Float53(bool),
+    Floatn(bool),
     Bit(bool),
     Nvarchar(bool),
     Varchar(bool),
@@ -39,8 +41,10 @@ impl_typesystem! {
         { Smallint => i16 }
         { Int => i32 }
         { Bigint => i64 }
+        { Intn => IntN }
         { Float24 => f32 }
         { Float53 => f64 }
+        { Floatn => FloatN }
         { Bit => bool }
         { Nvarchar | Varchar | Nchar | Char | Text | Ntext => &'r str }
         { Binary | Varbinary | Image => &'r [u8] }
@@ -58,16 +62,16 @@ impl<'a> From<&'a ColumnType> for MsSQLTypeSystem {
         use MsSQLTypeSystem::*;
 
         match ty {
-            ColumnType::Int1 => Tinyint(true),
-            ColumnType::Int2 => Smallint(true),
-            ColumnType::Int4 => Int(true),
-            ColumnType::Int8 => Bigint(true),
-            ColumnType::Intn => Int(true),
-            ColumnType::Float4 => Float24(true),
-            ColumnType::Float8 => Float53(true),
-            ColumnType::Floatn => Float53(true),
+            ColumnType::Int1 => Tinyint(false),
+            ColumnType::Int2 => Smallint(false),
+            ColumnType::Int4 => Int(false),
+            ColumnType::Int8 => Bigint(false),
+            ColumnType::Intn => Intn(true),
+            ColumnType::Float4 => Float24(false),
+            ColumnType::Float8 => Float53(false),
+            ColumnType::Floatn => Floatn(true),
             ColumnType::Bit => Bit(false),
-            ColumnType::Bitn => Bit(true),
+            ColumnType::Bitn => Bit(true), // nullable int, var-length
             ColumnType::NVarchar => Nvarchar(true),
             ColumnType::BigVarChar => Varchar(true),
             ColumnType::NChar => Nchar(true),
@@ -80,8 +84,8 @@ impl<'a> From<&'a ColumnType> for MsSQLTypeSystem {
             ColumnType::Guid => Uniqueidentifier(true),
             ColumnType::Decimaln => Decimal(true),
             ColumnType::Numericn => Numeric(true),
-            ColumnType::Datetime => Smalldatetime(true),
-            ColumnType::Datetime2 => Datetime2(true),
+            ColumnType::Datetime => Smalldatetime(false),
+            ColumnType::Datetime2 => Datetime2(false),
             ColumnType::Datetimen => Datetime(true),
             ColumnType::Daten => Date(true),
             ColumnType::Timen => Time(true),
@@ -100,8 +104,10 @@ impl<'a> From<MsSQLTypeSystem> for ColumnType {
             Smallint(_) => ColumnType::Int2,
             Int(_) => ColumnType::Int4,
             Bigint(_) => ColumnType::Int8,
+            Intn(_) => ColumnType::Intn,
             Float24(_) => ColumnType::Float4,
             Float53(_) => ColumnType::Float8,
+            Floatn(_) => ColumnType::Floatn,
             Bit(_) => ColumnType::Bit,
             Nvarchar(_) => ColumnType::NVarchar,
             Varchar(_) => ColumnType::BigVarChar,
@@ -121,6 +127,39 @@ impl<'a> From<MsSQLTypeSystem> for ColumnType {
             Date(_) => ColumnType::Daten,
             Time(_) => ColumnType::Timen,
             Datetimeoffset(_) => ColumnType::DatetimeOffsetn,
+        }
+    }
+}
+
+pub struct IntN(pub i64);
+impl<'a> FromSql<'a> for IntN {
+    fn from_sql(value: &'a ColumnData<'static>) -> Result<Option<Self>, tiberius::error::Error> {
+        match value {
+            ColumnData::U8(None)
+            | ColumnData::I16(None)
+            | ColumnData::I32(None)
+            | ColumnData::I64(None) => Ok(None),
+            ColumnData::U8(Some(d)) => Ok(Some(IntN(*d as i64))),
+            ColumnData::I16(Some(d)) => Ok(Some(IntN(*d as i64))),
+            ColumnData::I32(Some(d)) => Ok(Some(IntN(*d as i64))),
+            ColumnData::I64(Some(d)) => Ok(Some(IntN(*d as i64))),
+            v => Err(tiberius::error::Error::Conversion(
+                format!("cannot interpret {:?} as a intn value", v).into(),
+            )),
+        }
+    }
+}
+
+pub struct FloatN(pub f64);
+impl<'a> FromSql<'a> for FloatN {
+    fn from_sql(value: &'a ColumnData<'static>) -> Result<Option<Self>, tiberius::error::Error> {
+        match value {
+            ColumnData::F32(None) | ColumnData::F64(None) => Ok(None),
+            ColumnData::F32(Some(d)) => Ok(Some(FloatN(*d as f64))),
+            ColumnData::F64(Some(d)) => Ok(Some(FloatN(*d as f64))),
+            v => Err(tiberius::error::Error::Conversion(
+                format!("cannot interpret {:?} as a floatn value", v).into(),
+            )),
         }
     }
 }

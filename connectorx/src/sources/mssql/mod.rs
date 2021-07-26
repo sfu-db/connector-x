@@ -2,6 +2,7 @@ mod errors;
 mod typesystem;
 
 pub use self::errors::MsSQLSourceError;
+pub use self::typesystem::{FloatN, IntN, MsSQLTypeSystem};
 use crate::{
     data_order::DataOrder,
     errors::ConnectorXError,
@@ -23,7 +24,6 @@ use sqlparser::dialect::MsSqlDialect;
 use std::sync::Arc;
 use tiberius::{AuthMethod, Config, EncryptionLevel, QueryResult, Row};
 use tokio::runtime::{Handle, Runtime};
-pub use typesystem::MsSQLTypeSystem;
 use url::Url;
 use uuid::Uuid;
 
@@ -118,7 +118,7 @@ where
                     };
 
                     let columns = row.columns();
-
+                    println!("{:?}", columns);
                     let (names, types) = columns
                         .iter()
                         .map(|col| {
@@ -149,7 +149,7 @@ where
                 let row = self.rt.block_on(stream.into_row())?.unwrap();
 
                 let columns = row.columns();
-
+                println!("{:?}", columns);
                 let (names, types) = columns
                     .iter()
                     .map(|col| {
@@ -169,6 +169,8 @@ where
                 ))
             }
         }
+        println!("{:?}", self.names);
+        println!("{:?}", self.schema);
     }
 
     fn names(&self) -> Vec<String> {
@@ -235,13 +237,14 @@ impl SourcePartition for MsSQLSourcePartition {
         self.nrows = match get_limit(&self.query, &MsSqlDialect {})? {
             None => {
                 let mut conn = self.rt.block_on(self.pool.get())?;
-                let stream = self.rt.block_on(
-                    conn.query(count_query(&self.query, &MsSqlDialect {})?.as_str(), &[]),
-                )?;
+                let cquery = count_query(&self.query, &MsSqlDialect {})?;
+                println!("{:?}", cquery);
+                let stream = self.rt.block_on(conn.query(cquery.as_str(), &[]))?;
                 let row = self.rt.block_on(stream.into_row())?.ok_or_else(|| {
                     anyhow!("mysql failed to get the count of query: {}", self.query)
                 })?;
-                let row: i64 = row.get(0).unwrap();
+
+                let row: i32 = row.get(0).unwrap(); // the count in mssql is i32
                 row as usize
             }
             Some(n) => n,
@@ -368,8 +371,10 @@ impl_produce!(
     i16,
     i32,
     i64,
+    IntN,
     f32,
     f64,
+    FloatN,
     bool,
     &'r str,
     &'r [u8],

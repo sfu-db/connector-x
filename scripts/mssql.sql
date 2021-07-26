@@ -1,16 +1,21 @@
 DROP TABLE IF EXISTS test_table;
 
 CREATE TABLE test_table(
-    test_int int,
-    test_float 	float(53)
+    test_int INTEGER NOT NULL,
+    test_nullint INTEGER,
+    test_str VARCHAR(128),
+    test_float FLOAT(53),
+    test_bool BIT
 );
 
-INSERT INTO test_table VALUES (1, 1.1);
-INSERT INTO test_table VALUES (2, 2.2);
-INSERT INTO test_table VALUES (3, 3.3);
-INSERT INTO test_table VALUES (4, 4.4);
-INSERT INTO test_table VALUES (5, 5.5);
-INSERT INTO test_table VALUES (6, 6.6);
+
+INSERT INTO test_table VALUES (1, 3, 'str1', NULL, 1);
+INSERT INTO test_table VALUES (2, NULL, 'str2', 2.2, 0);
+INSERT INTO test_table VALUES (0, 5, 'a', 3.1, NULL);
+INSERT INTO test_table VALUES (3, 7, 'b', 3, 0);
+INSERT INTO test_table VALUES (4, 9, 'c', 7.8, NULL);
+INSERT INTO test_table VALUES (1314, 2, NULL, -10, 1);
+
 
 
 DROP TABLE IF EXISTS test_types;

@@ -1,6 +1,6 @@
 use crate::destinations::memory::{MemoryDestination, MemoryDestinationError};
 use crate::dummy_typesystem::DummyTypeSystem;
-use crate::sources::mssql::{MsSQLSource, MsSQLSourceError, MsSQLTypeSystem};
+use crate::sources::mssql::{FloatN, IntN, MsSQLSource, MsSQLSourceError, MsSQLTypeSystem};
 use crate::typesystem::TypeConversion;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
 use thiserror::Error;
@@ -30,8 +30,10 @@ impl_transport!(
         { Smallint[i16]                 => I64[i64]                | conversion all }
         { Int[i32]                      => I64[i64]                | conversion all }
         { Bigint[i64]                   => I64[i64]                | conversion all }
+        { Intn[IntN]                    => I64[i64]                | conversion half }
         { Float24[f32]                  => F64[f64]                | conversion all }
         { Float53[f64]                  => F64[f64]                | conversion all }
+        { Floatn[FloatN]                => F64[f64]                | conversion half }
         { Bit[bool]                     => Bool[bool]              | conversion all  }
         { Nvarchar[&'r str]             => String[String]          | conversion half }
         { Varchar[&'r str]              => String[String]          | conversion none }
@@ -75,5 +77,17 @@ impl TypeConversion<NaiveDateTime, DateTime<Utc>> for MsSQLMemoryTransport {
 impl TypeConversion<NaiveDate, DateTime<Utc>> for MsSQLMemoryTransport {
     fn convert(val: NaiveDate) -> DateTime<Utc> {
         DateTime::from_utc(val.and_hms(0, 0, 0), Utc)
+    }
+}
+
+impl TypeConversion<IntN, i64> for MsSQLMemoryTransport {
+    fn convert(val: IntN) -> i64 {
+        val.0
+    }
+}
+
+impl TypeConversion<FloatN, f64> for MsSQLMemoryTransport {
+    fn convert(val: FloatN) -> f64 {
+        val.0
     }
 }

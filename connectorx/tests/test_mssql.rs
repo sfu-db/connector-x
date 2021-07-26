@@ -76,8 +76,8 @@ fn test_mssql() {
 
     dispatcher.run().expect("run dispatcher");
     assert_eq!(
-        array![Some(1), Some(0), Some(2), Some(3), Some(4), Some(1314)],
-        destination.column_view::<Option<i64>>(0).unwrap()
+        array![1, 0, 2, 3, 4, 1314],
+        destination.column_view::<i64>(0).unwrap()
     );
     assert_eq!(
         array![Some(3), Some(5), None, Some(7), Some(9), Some(2)],
@@ -120,7 +120,7 @@ fn test_mssql_agg() {
     let dburl = env::var("MSSQL_URL").unwrap();
 
     let queries = [CXQuery::naked(
-        "SELECT test_bool, SUM(test_float) FROM test_table GROUP BY test_bool",
+        "SELECT test_bool, SUM(test_float) AS SUM FROM test_table GROUP BY test_bool",
     )];
     let rt = Arc::new(Runtime::new().unwrap());
 
