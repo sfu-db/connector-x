@@ -16,10 +16,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - uses: ankane/setup-mysql@v1
-        with:
-          mysql-version: 8
-
       - name: Set python version
         run: |
           if [[ "${{ matrix.python-version }}" == "37" ]]; then
