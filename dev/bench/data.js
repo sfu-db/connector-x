@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1627238766349,
+  "lastUpdate": 1627338382033,
   "repoUrl": "https://github.com/sfu-db/connector-x",
   "entries": {
     "ConnectorX TPC-H Scale@1 Benchmarks": [
@@ -1026,6 +1026,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 2.41338662225601",
             "extra": "mean: 15.60137257524766 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "youngw@sfu.ca",
+            "name": "Weiyuan Wu",
+            "username": "dovahcrow"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "91858ffd084984e948e14fc50992afb367efd275",
+          "message": "Merge pull request #104 from wseaton/postgres_ssl\n\nAdd SSL/TLS support for Postgres connections",
+          "timestamp": "2021-07-26T15:12:49-07:00",
+          "tree_id": "5ba63ab80206a439d31785ea8cefd636e12575fd",
+          "url": "https://github.com/sfu-db/connector-x/commit/91858ffd084984e948e14fc50992afb367efd275"
+        },
+        "date": 1627338380953,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_mysql",
+            "value": 0.0659949238700004,
+            "unit": "iter/sec",
+            "range": "stddev: 0.5763580434319482",
+            "extra": "mean: 15.152680560247973 sec\nrounds: 5"
+          },
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_postgres",
+            "value": 0.05198368864558919,
+            "unit": "iter/sec",
+            "range": "stddev: 3.1877071617839303",
+            "extra": "mean: 19.236803429201245 sec\nrounds: 5"
           }
         ]
       }
