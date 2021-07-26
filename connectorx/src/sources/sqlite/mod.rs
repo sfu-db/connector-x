@@ -21,7 +21,6 @@ use rusqlite::{Row, Rows, Statement};
 use sqlparser::dialect::SQLiteDialect;
 pub use typesystem::SQLiteTypeSystem;
 
-
 pub struct SQLiteSource {
     pool: Pool<SqliteConnectionManager>,
     queries: Vec<CXQuery<String>>,
