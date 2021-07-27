@@ -15,13 +15,13 @@ use thiserror::Error;
 #[derive(Error, Debug)]
 pub enum MySQLArrowTransportError {
     #[error(transparent)]
-    MySQLSourceError(#[from] MySQLSourceError),
+    Source(#[from] MySQLSourceError),
 
     #[error(transparent)]
-    ArrowDestinationError(#[from] ArrowDestinationError),
+    Destination(#[from] ArrowDestinationError),
 
     #[error(transparent)]
-    ConnectorXError(#[from] crate::errors::ConnectorXError),
+    ConnectorX(#[from] crate::errors::ConnectorXError),
 }
 
 pub struct MySQLArrowTransport<P>(PhantomData<P>);

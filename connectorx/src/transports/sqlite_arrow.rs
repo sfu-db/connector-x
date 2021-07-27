@@ -10,13 +10,13 @@ use thiserror::Error;
 #[derive(Error, Debug)]
 pub enum SQLiteArrowTransportError {
     #[error(transparent)]
-    SQLiteSourceError(#[from] SQLiteSourceError),
+    Source(#[from] SQLiteSourceError),
 
     #[error(transparent)]
-    ArrowDestinationError(#[from] ArrowDestinationError),
+    Destination(#[from] ArrowDestinationError),
 
     #[error(transparent)]
-    ConnectorXError(#[from] crate::errors::ConnectorXError),
+    ConnectorX(#[from] crate::errors::ConnectorXError),
 }
 
 pub struct SQLiteArrowTransport;

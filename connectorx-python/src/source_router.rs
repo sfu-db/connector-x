@@ -136,7 +136,7 @@ fn pg_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
 
 #[throws(ConnectorXPythonError)]
 fn sqlite_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
-    let conn = Connection::open(&conn.as_str()[9..])?;
+    let conn = Connection::open(conn.path())?;
     // SQLite only optimize min max queries when there is only one aggregation
     // https://www.sqlite.org/optoverview.html#minmax
     let (min_query, max_query) = get_partition_range_query_sep(query, col, &SQLiteDialect {})?;

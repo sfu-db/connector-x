@@ -18,13 +18,13 @@ use uuid::Uuid;
 #[derive(Error, Debug)]
 pub enum PostgresArrowTransportError {
     #[error(transparent)]
-    PostgresSourceError(#[from] PostgresSourceError),
+    Source(#[from] PostgresSourceError),
 
     #[error(transparent)]
-    ArrowDestinationError(#[from] ArrowDestinationError),
+    Destination(#[from] ArrowDestinationError),
 
     #[error(transparent)]
-    ConnectorXError(#[from] crate::errors::ConnectorXError),
+    ConnectorX(#[from] crate::errors::ConnectorXError),
 }
 
 pub struct PostgresArrowTransport<P, C>(PhantomData<P>, PhantomData<C>);

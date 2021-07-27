@@ -129,7 +129,7 @@ pub fn write_pandas<'a>(
             }
         }
         SourceType::SQLite => {
-            let source = SQLiteSource::new(&source_conn.conn[..], queries.len())?;
+            let source = SQLiteSource::new(source_conn.conn.path(), queries.len())?;
             let dispatcher =
                 Dispatcher::<_, _, SqlitePandasTransport>::new(source, &mut destination, queries);
             debug!("Running dispatcher");

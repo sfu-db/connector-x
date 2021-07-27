@@ -12,7 +12,7 @@ pub enum DummyArrowTransportError {
     Destination(#[from] ArrowDestinationError),
 
     #[error(transparent)]
-    ConnectorXError(#[from] crate::errors::ConnectorXError),
+    ConnectorX(#[from] crate::errors::ConnectorXError),
 }
 
 impl_transport!(
