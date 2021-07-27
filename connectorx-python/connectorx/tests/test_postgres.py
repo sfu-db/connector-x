@@ -13,6 +13,18 @@ def postgres_url() -> str:
     return conn
 
 
+@pytest.fixture(scope="module")  # type: ignore
+def postgres_url_tls() -> str:
+    conn = os.environ["POSTGRES_URL_TLS"]
+    return conn
+
+
+@pytest.fixture(scope="module")  # type: ignore
+def postgres_rootcert() -> str:
+    cert = os.environ["POSTGRES_ROOTCERT"]
+    return cert
+
+
 @pytest.mark.xfail
 def test_on_non_select(postgres_url: str) -> None:
     query = "CREATE TABLE non_select(id INTEGER NOT NULL)"
@@ -36,7 +48,8 @@ def test_partition_on_aggregation(postgres_url: str) -> None:
     query = (
         "SELECT test_bool, SUM(test_int) AS test_int FROM test_table GROUP BY test_bool"
     )
-    df = read_sql(postgres_url, query, partition_on="test_int", partition_num=2)
+    df = read_sql(postgres_url, query,
+                  partition_on="test_int", partition_num=2)
     expected = pd.DataFrame(
         index=range(3),
         data={
@@ -74,7 +87,8 @@ def test_partition_on_aggregation2(postgres_url: str) -> None:
 
 def test_udf(postgres_url: str) -> None:
     query = "select increment(test_int) as test_int from test_table ORDER BY test_int"
-    df = read_sql(postgres_url, query, partition_on="test_int", partition_num=2)
+    df = read_sql(postgres_url, query,
+                  partition_on="test_int", partition_num=2)
     expected = pd.DataFrame(
         index=range(6),
         data={
@@ -484,7 +498,8 @@ def test_empty_result(postgres_url: str) -> None:
 
 def test_empty_result_on_some_partition(postgres_url: str) -> None:
     query = "SELECT * FROM test_table where test_int < 1"
-    df = read_sql(postgres_url, query, partition_on="test_int", partition_num=3)
+    df = read_sql(postgres_url, query,
+                  partition_on="test_int", partition_num=3)
     expected = pd.DataFrame(
         data={
             "test_int": pd.Series([0], dtype="Int64"),
@@ -495,3 +510,97 @@ def test_empty_result_on_some_partition(postgres_url: str) -> None:
         }
     )
     assert_frame_equal(df, expected, check_names=True)
+
+
+@pytest.mark.skipif(os.environ.get("TEST_COVER", "main") not in ("all", "pgtls"), reason="Do not test TLS unless TEST_COVER=all/pgtls")
+def test_read_sql_tls(postgres_url_tls: str) -> None:
+    query = "SELECT * FROM test_table"
+    df = read_sql(
+        f"{postgres_url_tls}?sslmode=require",
+        query,
+        partition_on="test_int",
+        partition_range=(0, 2000),
+        partition_num=3,
+    )
+    expected = pd.DataFrame(
+        index=range(6),
+        data={
+            "test_int": pd.Series([1, 2, 0, 3, 4, 1314], dtype="Int64"),
+            "test_nullint": pd.Series([3, None, 5, 7, 9, 2], dtype="Int64"),
+            "test_str": pd.Series(
+                ["str1", "str2", "a", "b", "c", None], dtype="object"
+            ),
+            "test_float": pd.Series([None, 2.2, 3.1, 3, 7.8, -10], dtype="float64"),
+            "test_bool": pd.Series(
+                [True, False, None, False, None, True], dtype="boolean"
+            ),
+        },
+    )
+    assert_frame_equal(df, expected, check_names=True)
+
+
+@pytest.mark.skipif(os.environ.get("TEST_COVER", "main") not in ("all", "pgtls"), reason="Do not test TLS unless TEST_COVER=all/pgtls")
+def test_read_sql_tls_with_cert(postgres_url_tls: str, postgres_rootcert: str) -> None:
+    query = "SELECT * FROM test_table"
+    df = read_sql(
+        f"{postgres_url_tls}?sslmode=require&sslrootcert={postgres_rootcert}",
+        query,
+        partition_on="test_int",
+        partition_range=(0, 2000),
+        partition_num=3,
+    )
+    expected = pd.DataFrame(
+        index=range(6),
+        data={
+            "test_int": pd.Series([1, 2, 0, 3, 4, 1314], dtype="Int64"),
+            "test_nullint": pd.Series([3, None, 5, 7, 9, 2], dtype="Int64"),
+            "test_str": pd.Series(
+                ["str1", "str2", "a", "b", "c", None], dtype="object"
+            ),
+            "test_float": pd.Series([None, 2.2, 3.1, 3, 7.8, -10], dtype="float64"),
+            "test_bool": pd.Series(
+                [True, False, None, False, None, True], dtype="boolean"
+            ),
+        },
+    )
+    assert_frame_equal(df, expected, check_names=True)
+
+
+@pytest.mark.skipif(os.environ.get("TEST_COVER", "main") not in ("all", "pgtls"), reason="Do not test TLS unless TEST_COVER=all/pgtls")
+def test_read_sql_tls_disable(postgres_url_tls: str) -> None:
+    query = "SELECT * FROM test_table"
+    df = read_sql(
+        f"{postgres_url_tls}?sslmode=disable",
+        query,
+        partition_on="test_int",
+        partition_range=(0, 2000),
+        partition_num=3,
+    )
+    expected = pd.DataFrame(
+        index=range(6),
+        data={
+            "test_int": pd.Series([1, 2, 0, 3, 4, 1314], dtype="Int64"),
+            "test_nullint": pd.Series([3, None, 5, 7, 9, 2], dtype="Int64"),
+            "test_str": pd.Series(
+                ["str1", "str2", "a", "b", "c", None], dtype="object"
+            ),
+            "test_float": pd.Series([None, 2.2, 3.1, 3, 7.8, -10], dtype="float64"),
+            "test_bool": pd.Series(
+                [True, False, None, False, None, True], dtype="boolean"
+            ),
+        },
+    )
+    assert_frame_equal(df, expected, check_names=True)
+
+
+@pytest.mark.skipif(os.environ.get("TEST_COVER", "main") not in ("all", "pgtls"), reason="Do not test TLS unless TEST_COVER=all/pgtls")
+@pytest.mark.xfail
+def test_read_sql_tls_fail(postgres_url_tls: str) -> None:
+    query = "SELECT * FROM test_table"
+    df = read_sql(
+        f"{postgres_url_tls}?sslmode=require&sslrootcert=fake.cert",
+        query,
+        partition_on="test_int",
+        partition_range=(0, 2000),
+        partition_num=3,
+    )

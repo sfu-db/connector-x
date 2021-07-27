@@ -1,6 +1,6 @@
 use super::{check_dtype, HasPandasColumn, PandasColumn, PandasColumnObject};
+use crate::errors::ConnectorXPythonError;
 use anyhow::anyhow;
-use connectorx::ConnectorAgentError;
 use fehler::throws;
 use ndarray::{ArrayViewMut2, Axis, Ix2};
 use numpy::{npyffi::NPY_TYPES, Element, PyArray, PyArrayDescr};
@@ -40,7 +40,7 @@ impl<'a> FromPyObject<'a> for BytesBlock<'a> {
 }
 
 impl<'a> BytesBlock<'a> {
-    #[throws(ConnectorAgentError)]
+    #[throws(ConnectorXPythonError)]
     pub fn split(self) -> Vec<BytesColumn<'a>> {
         let mut ret = vec![];
         let mut view = self.data;
@@ -56,8 +56,8 @@ impl<'a> BytesBlock<'a> {
                     .ok_or_else(|| anyhow!("get None for splitted String data"))?,
                 next_write: 0,
                 bytes_lengths: vec![],
-                bytes_buf: Vec::with_capacity(self.buf_size_mb * 2 << 20 * 11 / 10), // allocate a little bit more memory to avoid Vec growth
-                buf_size: self.buf_size_mb * 2 << 20,
+                bytes_buf: Vec::with_capacity(self.buf_size_mb * (1 << 20) * 11 / 10), // allocate a little bit more memory to avoid Vec growth
+                buf_size: self.buf_size_mb * (1 << 20),
                 mutex: self.mutex.clone(),
             })
         }
@@ -84,14 +84,14 @@ impl<'a> PandasColumnObject for BytesColumn<'a> {
     fn typename(&self) -> &'static str {
         std::any::type_name::<&'static [u8]>()
     }
-    #[throws(ConnectorAgentError)]
+    #[throws(ConnectorXPythonError)]
     fn finalize(&mut self) {
         self.flush()?;
     }
 }
 
 impl<'a> PandasColumn<Vec<u8>> for BytesColumn<'a> {
-    #[throws(ConnectorAgentError)]
+    #[throws(ConnectorXPythonError)]
     fn write(&mut self, val: Vec<u8>) {
         self.bytes_lengths.push(val.len());
         self.bytes_buf.extend_from_slice(&val[..]);
@@ -100,7 +100,7 @@ impl<'a> PandasColumn<Vec<u8>> for BytesColumn<'a> {
 }
 
 impl<'a> PandasColumn<Option<Vec<u8>>> for BytesColumn<'a> {
-    #[throws(ConnectorAgentError)]
+    #[throws(ConnectorXPythonError)]
     fn write(&mut self, val: Option<Vec<u8>>) {
         match val {
             Some(b) => {
@@ -145,7 +145,7 @@ impl<'a> BytesColumn<'a> {
         partitions
     }
 
-    #[throws(ConnectorAgentError)]
+    #[throws(ConnectorXPythonError)]
     pub fn flush(&mut self) {
         let nstrings = self.bytes_lengths.len();
 
@@ -185,7 +185,7 @@ impl<'a> BytesColumn<'a> {
         }
     }
 
-    #[throws(ConnectorAgentError)]
+    #[throws(ConnectorXPythonError)]
     pub fn try_flush(&mut self) {
         if self.bytes_buf.len() >= self.buf_size {
             self.flush()?;

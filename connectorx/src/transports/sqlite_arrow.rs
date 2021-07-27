@@ -1,17 +1,31 @@
 use crate::{
-    destinations::arrow::{types::ArrowTypeSystem, ArrowDestination},
+    destinations::arrow::{types::ArrowTypeSystem, ArrowDestination, ArrowDestinationError},
     impl_transport,
-    sources::sqlite::{SqliteSource, SqliteTypeSystem},
+    sources::sqlite::{SQLiteSource, SQLiteSourceError, SQLiteTypeSystem},
     typesystem::TypeConversion,
 };
 use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
+use thiserror::Error;
 
-pub struct SqliteArrowTransport;
+#[derive(Error, Debug)]
+pub enum SQLiteArrowTransportError {
+    #[error(transparent)]
+    SQLiteSourceError(#[from] SQLiteSourceError),
+
+    #[error(transparent)]
+    ArrowDestinationError(#[from] ArrowDestinationError),
+
+    #[error(transparent)]
+    ConnectorXError(#[from] crate::errors::ConnectorXError),
+}
+
+pub struct SQLiteArrowTransport;
 
 impl_transport!(
-    name = SqliteArrowTransport,
-    systems = SqliteTypeSystem => ArrowTypeSystem,
-    route = SqliteSource => ArrowDestination,
+    name = SQLiteArrowTransport,
+    error = SQLiteArrowTransportError,
+    systems = SQLiteTypeSystem => ArrowTypeSystem,
+    route = SQLiteSource => ArrowDestination,
     mappings = {
         { Bool[bool]                 => Boolean[bool]           | conversion all }
         { Int8[i64]                  => Int64[i64]              | conversion all }
@@ -26,7 +40,7 @@ impl_transport!(
     }
 );
 
-impl TypeConversion<Box<str>, String> for SqliteArrowTransport {
+impl TypeConversion<Box<str>, String> for SQLiteArrowTransport {
     fn convert(val: Box<str>) -> String {
         val.to_string()
     }

@@ -53,3 +53,66 @@ psql -h localhost -U postgres -d tpch -c "\copy LINEITEM FROM '$YOUR_TPCH_DIR/tp
 ```
 psql -h localhost -U postgres -d tpch -c "CREATE INDEX lineitem_l_orderkey_idx ON LINEITEM USING btree (l_orderkey);"
 ```
+
+## Redshift: Upload TPC-H
+> Note: For Redshift, AWS has already hosted TPC-H data in public s3. We borrow the uploading script from [amazon-redshift-utils](https://github.com/awslabs/amazon-redshift-utils/blob/master/src/CloudDataWarehouseBenchmark/Cloud-DWB-Derived-from-TPCH/3TB/ddl.sql). We only modified `LINEITEM`'s sortkey from `(l_shipdate,l_orderkey)` to `(l_orderkey)`.
+
+1. Make the following changes in the COPY commands of `script/benchmarks/tpch-reshift.sql`:
+
+   1. Change `credentials` accordingly from Redshift.
+   2. (Optional) Change TPC-H data size in `from` s3 string. Currently it is 10GB (equivilant to TPC-H scale factor 10). It can be change to 3TB.
+ 
+2. Run modified `tpch-reshift.sql` for Redshift:
+```
+psql -h <endpoint> -U <userid> -d <databasename> -p <port> -f tpch-reshift.sql
+```
+
+# Benchmark result on AWS r5.4xlarge with db.m6g.4xlarge RDS
+
+We load the lineitem table of TPC-H @ scale=10 into a db.m6g.4xlarge RDS cluster on AWS for each database, and then run ConnectorX to download data from the database
+on an AWS r5.4xlarge, with the following command:
+
+```python
+import connectorx as cx
+
+cx.read_sql("connection string", "SELECT * FROM lineitem", partition_on="l_orderkey", partition_num=4)
+```
+
+## Postgres
+
+## Time chart, lower is better.
+
+<p align="center"><img alt="time chart" src="https://raw.githubusercontent.com/sfu-db/connector-agent/main/assets/pg-time.png"/></p>
+
+## Memory consumption chart, lower is better.
+
+<p align="center"><img alt="memory chart" src="https://raw.githubusercontent.com/sfu-db/connector-agent/main/assets/pg-mem.png"/></p>
+
+In conclusion, ConnectorX uses up to **3.5x** less memory and **21x** less time.
+
+## MySQL
+
+
+## Time chart, lower is better.
+
+<p align="center"><img alt="time chart" src="https://raw.githubusercontent.com/sfu-db/connector-agent/main/assets/mysql-time.png"/></p>
+
+## Memory consumption chart, lower is better.
+
+<p align="center"><img alt="memory chart" src="https://raw.githubusercontent.com/sfu-db/connector-agent/main/assets/mysql-mem.png"/></p>
+
+In conclusion, ConnectorX uses up to **3.5x** less memory and **8.7x** less time.
+
+
+## SQLite
+
+
+## Time chart, lower is better.
+
+<p align="center"><img alt="time chart" src="https://raw.githubusercontent.com/sfu-db/connector-agent/main/assets/sqlite-time.png"/></p>
+
+## Memory consumption chart, lower is better.
+
+<p align="center"><img alt="memory chart" src="https://raw.githubusercontent.com/sfu-db/connector-agent/main/assets/sqlite-mem.png"/></p>
+
+In conclusion, ConnectorX uses up to **3.3x** less memory and **11.2x** less time.

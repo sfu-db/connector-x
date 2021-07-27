@@ -74,6 +74,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: clippy
+          args: --features all
 
       - name: Seed the database
         run: just seed-db
@@ -90,6 +91,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: test
+          args: --features all
         env:
           POSTGRES_URL: "postgresql://postgres:postgres@postgres:5432/postgres"
           SQLITE_URL: "sqlite:///tmp/test.db"
@@ -137,7 +139,7 @@ jobs:
       - name: Install tools
         run: |
           apt-get update
-          apt-get install -y curl postgresql-client build-essential python3-dev python3-pip pkg-config libssl-dev git sqlite3 libsqlite3-dev mysql-client
+          apt-get install -y curl postgresql-client build-essential python3-dev python3-pip pkg-config libssl-dev git sqlite3 libsqlite3-dev mysql-client libmysqlclient-dev
         env:
           DEBIAN_FRONTEND: noninteractive
 
@@ -147,6 +149,12 @@ jobs:
           toolchain: nightly-2021-05-30
           components: rustfmt
           default: true
+
+      - name: Clippy linting
+        uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+          args: --features all --all
 
       - name: Install other dependent tools
         run: |

@@ -1,13 +1,9 @@
+use connectorx::prelude::*;
 use connectorx::{
-    sources::{
-        mysql::{BinaryProtocol, MysqlSource},
-        Produce, Source,
-    },
+    sources::mysql::{BinaryProtocol, MySQLSource},
     sql::CXQuery,
-    SourcePartition,
 };
 use std::env;
-// use connectorx::destinations::memory::MemoryDestination;
 
 #[test]
 fn load_and_parse() {
@@ -17,7 +13,7 @@ fn load_and_parse() {
     #[derive(Debug, PartialEq)]
     struct Row(i64, f64);
 
-    let mut source = MysqlSource::<BinaryProtocol>::new(&dburl, 1).unwrap();
+    let mut source = MySQLSource::<BinaryProtocol>::new(&dburl, 1).unwrap();
     source.set_queries(&[CXQuery::naked("select * from test_table")]);
     source.fetch_metadata().unwrap();
 
@@ -57,7 +53,7 @@ fn test_types() {
     #[derive(Debug, PartialEq)]
     struct Row(f64, String);
 
-    let mut source = MysqlSource::<BinaryProtocol>::new(&dburl, 1).unwrap();
+    let mut source = MySQLSource::<BinaryProtocol>::new(&dburl, 1).unwrap();
     source.set_queries(&[CXQuery::naked(
         "select test_decimal, test_char from test_types",
     )]);

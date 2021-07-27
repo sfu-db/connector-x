@@ -5,7 +5,7 @@ build-debug:
     cargo build
 
 test:
-    cargo test -- --nocapture
+    cargo test --features all -- --nocapture
 
 bootstrap-python:
     cp README.md connectorx-python/README.md

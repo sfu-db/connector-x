@@ -1,14 +1,14 @@
-use super::pandas_columns::{
-    BooleanBlock, BytesBlock, DateTimeBlock, Float64Block, HasPandasColumn, Int64Block,
-    PandasColumn, PandasColumnObject, PyBytes, StringBlock,
+use super::{
+    pandas_columns::{
+        BooleanBlock, BytesBlock, DateTimeBlock, Float64Block, HasPandasColumn, Int64Block,
+        PandasColumn, PandasColumnObject, PyBytes, StringBlock,
+    },
+    pystring::PyString,
+    types::{PandasArrayType, PandasBlockType, PandasTypeSystem},
 };
-use super::pystring::PyString;
-use super::types::{PandasArrayType, PandasBlockType, PandasTypeSystem};
+use crate::errors::{ConnectorXPythonError, Result};
 use anyhow::anyhow;
-use connectorx::{
-    ConnectorAgentError, Consume, DataOrder, Destination, DestinationPartition, Result, TypeAssoc,
-    TypeSystem,
-};
+use connectorx::prelude::*;
 use fehler::{throw, throws};
 use itertools::Itertools;
 use numpy::{PyArray1, PyArray2};
@@ -57,11 +57,11 @@ impl<'a> PandasDestination<'a> {
     }
 
     pub fn result(self) -> Result<&'a PyAny> {
-        #[throws(ConnectorAgentError)]
-        fn to_list<'py, T: IntoPy<PyObject>>(py: Python<'py>, arr: Vec<T>) -> &'py PyList {
+        #[throws(ConnectorXPythonError)]
+        fn to_list<T: IntoPy<PyObject>>(py: Python<'_>, arr: Vec<T>) -> &'_ PyList {
             let list = PyList::empty(py);
             for e in arr {
-                list.append(e.into_py(py)).map_err(|e| anyhow!(e))?;
+                list.append(e.into_py(py))?;
             }
             list
         }
@@ -77,7 +77,7 @@ impl<'a> PandasDestination<'a> {
         Ok(result)
     }
 
-    #[throws(ConnectorAgentError)]
+    #[throws(ConnectorXPythonError)]
     fn allocate_array<T: numpy::Element + 'a>(
         &mut self,
         dt: PandasBlockType,
@@ -93,7 +93,7 @@ impl<'a> PandasDestination<'a> {
         self.block_infos.push(block_info);
     }
 
-    #[throws(ConnectorAgentError)]
+    #[throws(ConnectorXPythonError)]
     fn allocate_masked_array<T: numpy::Element + 'a>(
         &mut self,
         dt: PandasBlockType,
@@ -117,8 +117,9 @@ impl<'a> Destination for PandasDestination<'a> {
     const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
     type TypeSystem = PandasTypeSystem;
     type Partition<'b> = PandasPartitionDestination<'b>;
+    type Error = ConnectorXPythonError;
 
-    #[throws(ConnectorAgentError)]
+    #[throws(ConnectorXPythonError)]
     fn allocate<S: AsRef<str>>(
         &mut self,
         nrows: usize,
@@ -127,16 +128,12 @@ impl<'a> Destination for PandasDestination<'a> {
         data_order: DataOrder,
     ) {
         if !matches!(data_order, DataOrder::RowMajor) {
-            throw!(ConnectorAgentError::UnsupportedDataOrder(data_order))
+            throw!(ConnectorXError::UnsupportedDataOrder(data_order))
         }
         self.nrow = nrows;
         self.schema = schema.to_vec();
-        self.names.extend(
-            names
-                .into_iter()
-                .map(AsRef::as_ref)
-                .map(ToString::to_string),
-        );
+        self.names
+            .extend(names.iter().map(AsRef::as_ref).map(ToString::to_string));
 
         let mut block_indices = HashMap::<PandasBlockType, Vec<usize>>::new();
         schema
@@ -174,7 +171,7 @@ impl<'a> Destination for PandasDestination<'a> {
         }
     }
 
-    #[throws(ConnectorAgentError)]
+    #[throws(ConnectorXPythonError)]
     fn partition(&mut self, counts: &[usize]) -> Vec<Self::Partition<'_>> {
         assert_eq!(
             counts.iter().sum::<usize>(),
@@ -185,13 +182,13 @@ impl<'a> Destination for PandasDestination<'a> {
         );
 
         let mut partitioned_columns: Vec<Vec<Box<dyn PandasColumnObject>>> =
-            (0..self.schema.len()).map(|_| vec![]).collect();
+            (0..self.schema.len()).map(|_| Vec::new()).collect();
 
         for (idx, block) in self.block_infos.iter().enumerate() {
             let buf = self.block_datas[idx];
             match block.dt {
                 PandasBlockType::Boolean(_) => {
-                    let bblock = BooleanBlock::extract(buf).map_err(|e| anyhow!(e))?;
+                    let bblock = BooleanBlock::extract(buf)?;
 
                     let bcols = bblock.split()?;
                     for (&cid, bcol) in block.cids.iter().zip_eq(bcols) {
@@ -203,7 +200,7 @@ impl<'a> Destination for PandasDestination<'a> {
                     }
                 }
                 PandasBlockType::Float64 => {
-                    let fblock = Float64Block::extract(buf).map_err(|e| anyhow!(e))?;
+                    let fblock = Float64Block::extract(buf)?;
                     let fcols = fblock.split()?;
                     for (&cid, fcol) in block.cids.iter().zip_eq(fcols) {
                         partitioned_columns[cid] = fcol
@@ -214,7 +211,7 @@ impl<'a> Destination for PandasDestination<'a> {
                     }
                 }
                 PandasBlockType::Int64(_) => {
-                    let ublock = Int64Block::extract(buf).map_err(|e| anyhow!(e))?;
+                    let ublock = Int64Block::extract(buf)?;
                     let ucols = ublock.split()?;
                     for (&cid, ucol) in block.cids.iter().zip_eq(ucols) {
                         partitioned_columns[cid] = ucol
@@ -225,7 +222,7 @@ impl<'a> Destination for PandasDestination<'a> {
                     }
                 }
                 PandasBlockType::String => {
-                    let sblock = StringBlock::extract(buf).map_err(|e| anyhow!(e))?;
+                    let sblock = StringBlock::extract(buf)?;
                     let scols = sblock.split()?;
                     for (&cid, scol) in block.cids.iter().zip_eq(scols) {
                         partitioned_columns[cid] = scol
@@ -236,7 +233,7 @@ impl<'a> Destination for PandasDestination<'a> {
                     }
                 }
                 PandasBlockType::Bytes => {
-                    let bblock = BytesBlock::extract(buf).map_err(|e| anyhow!(e))?;
+                    let bblock = BytesBlock::extract(buf)?;
                     let bcols = bblock.split()?;
                     for (&cid, bcol) in block.cids.iter().zip_eq(bcols) {
                         partitioned_columns[cid] = bcol
@@ -247,7 +244,7 @@ impl<'a> Destination for PandasDestination<'a> {
                     }
                 }
                 PandasBlockType::DateTime => {
-                    let dblock = DateTimeBlock::extract(buf).map_err(|e| anyhow!(e))?;
+                    let dblock = DateTimeBlock::extract(buf)?;
                     let dcols = dblock.split()?;
                     for (&cid, dcol) in block.cids.iter().zip_eq(dcols) {
                         partitioned_columns[cid] = dcol
@@ -261,7 +258,7 @@ impl<'a> Destination for PandasDestination<'a> {
         }
 
         let mut par_destinations = vec![];
-        for &c in counts.into_iter().rev() {
+        for &c in counts.iter().rev() {
             let mut columns = Vec::with_capacity(partitioned_columns.len());
             for (i, partitions) in partitioned_columns.iter_mut().enumerate() {
                 columns.push(
@@ -316,6 +313,7 @@ impl<'a> PandasPartitionDestination<'a> {
 
 impl<'a> DestinationPartition<'a> for PandasPartitionDestination<'a> {
     type TypeSystem = PandasTypeSystem;
+    type Error = ConnectorXPythonError;
 
     fn nrows(&self) -> usize {
         self.nrows
@@ -337,6 +335,8 @@ impl<'a, T> Consume<T> for PandasPartitionDestination<'a>
 where
     T: HasPandasColumn + TypeAssoc<PandasTypeSystem> + std::fmt::Debug,
 {
+    type Error = ConnectorXPythonError;
+
     fn consume(&mut self, value: T) -> Result<()> {
         let (_, col) = self.loc();
 

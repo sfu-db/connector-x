@@ -1,21 +1,22 @@
+use crate::errors::ConnectorXPythonError;
 use crate::pandas::destination::PandasDestination;
 use crate::pandas::types::PandasTypeSystem;
+use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
 use connectorx::{
     impl_transport,
-    sources::mysql::{BinaryProtocol, MysqlSource, MysqlTypeSystem, TextProtocol},
+    sources::mysql::{BinaryProtocol, MySQLSource, MySQLTypeSystem, TextProtocol},
     typesystem::TypeConversion,
 };
 use rust_decimal::prelude::*;
 use std::marker::PhantomData;
-// use uuid::Uuid;
-use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
 
 pub struct MysqlPandasTransport<'py, P>(&'py (), PhantomData<P>);
 
 impl_transport!(
     name = MysqlPandasTransport<'tp, BinaryProtocol>,
-    systems = MysqlTypeSystem => PandasTypeSystem,
-    route = MysqlSource<BinaryProtocol> => PandasDestination<'tp>,
+    error = ConnectorXPythonError,
+    systems = MySQLTypeSystem => PandasTypeSystem,
+    route = MySQLSource<BinaryProtocol> => PandasDestination<'tp>,
     mappings = {
         { Double[f64]                => F64[f64]                | conversion all }
         { Long[i64]                  => I64[i64]                | conversion all }
@@ -31,8 +32,9 @@ impl_transport!(
 
 impl_transport!(
     name = MysqlPandasTransport<'tp, TextProtocol>,
-    systems = MysqlTypeSystem => PandasTypeSystem,
-    route = MysqlSource<TextProtocol> => PandasDestination<'tp>,
+    error = ConnectorXPythonError,
+    systems = MySQLTypeSystem => PandasTypeSystem,
+    route = MySQLSource<TextProtocol> => PandasDestination<'tp>,
     mappings = {
         { Double[f64]                => F64[f64]                | conversion all }
         { Long[i64]                  => I64[i64]                | conversion all }

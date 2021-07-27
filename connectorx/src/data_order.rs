@@ -1,4 +1,4 @@
-use crate::errors::ConnectorAgentError;
+use crate::errors::ConnectorXError;
 use fehler::{throw, throws};
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
 pub enum DataOrder {
@@ -8,7 +8,7 @@ pub enum DataOrder {
 
 /// Given the supported data order from source and destination, decide the optimal data order
 /// for producing and writing.
-#[throws(ConnectorAgentError)]
+#[throws(ConnectorXError)]
 pub fn coordinate(src: &[DataOrder], dst: &[DataOrder]) -> DataOrder {
     assert!(!src.is_empty() && !dst.is_empty());
 
@@ -16,7 +16,7 @@ pub fn coordinate(src: &[DataOrder], dst: &[DataOrder]) -> DataOrder {
         ([s, ..], [d, ..]) if s == d => *s,
         ([s, ..], [_, d, ..]) if s == d => *s,
         ([_, s, ..], [d, ..]) if s == d => *s,
-        _ => throw!(ConnectorAgentError::CannotResolveDataOrder(
+        _ => throw!(ConnectorXError::CannotResolveDataOrder(
             src.to_vec(),
             dst.to_vec()
         )),

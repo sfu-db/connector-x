@@ -1,16 +1,21 @@
-use crate::errors::{ConnectorAgentError, Result};
-use crate::sources::mysql::MysqlTypeSystem;
-use crate::sources::postgres::PostgresTypeSystem;
-use crate::sql::CXQuery;
-use crate::sql::{
-    get_partition_range_query, get_partition_range_query_sep, single_col_partition_query,
-};
+use crate::errors::{ConnectorXPythonError, Result};
 use anyhow::anyhow;
+use connectorx::{
+    sources::{
+        mysql::MySQLTypeSystem,
+        postgres::{rewrite_tls_args, PostgresTypeSystem},
+    },
+    sql::{
+        get_partition_range_query, get_partition_range_query_sep, single_col_partition_query,
+        CXQuery,
+    },
+};
 use fehler::{throw, throws};
-use postgres::{Client, NoTls};
 use r2d2_mysql::mysql::{prelude::Queryable, Pool, Row};
 use rusqlite::{types::Type, Connection};
-use sqlparser::dialect::{MySqlDialect, PostgreSqlDialect, SQLiteDialect};
+use sqlparser::dialect::MySqlDialect;
+use sqlparser::dialect::PostgreSqlDialect;
+use sqlparser::dialect::SQLiteDialect;
 use std::convert::TryFrom;
 use url::Url;
 
@@ -26,7 +31,7 @@ pub struct SourceConn {
 }
 
 impl TryFrom<&str> for SourceConn {
-    type Error = ConnectorAgentError;
+    type Error = ConnectorXPythonError;
 
     fn try_from(conn: &str) -> Result<SourceConn> {
         let url = Url::parse(conn).map_err(|e| anyhow!("parse error: {}", e))?;
@@ -57,7 +62,7 @@ impl SourceType {
         }
     }
 
-    #[throws(ConnectorAgentError)]
+    #[throws(ConnectorXPythonError)]
     pub fn get_part_query(
         &self,
         query: &str,
@@ -81,9 +86,10 @@ impl SourceType {
     }
 }
 
-#[throws(ConnectorAgentError)]
+#[throws(ConnectorXPythonError)]
 fn pg_get_partition_range(conn: &str, query: &str, col: &str) -> (i64, i64) {
-    let mut client = Client::connect(conn, NoTls)?;
+    let (config, tls) = rewrite_tls_args(conn)?;
+    let mut client = config.connect(tls.unwrap())?;
     let range_query = get_partition_range_query(query, col, &PostgreSqlDialect {})?;
     let row = client.query_one(range_query.as_str(), &[])?;
 
@@ -117,7 +123,7 @@ fn pg_get_partition_range(conn: &str, query: &str, col: &str) -> (i64, i64) {
     (min_v, max_v)
 }
 
-#[throws(ConnectorAgentError)]
+#[throws(ConnectorXPythonError)]
 fn sqlite_get_partition_range(conn: &str, query: &str, col: &str) -> (i64, i64) {
     let conn = Connection::open(&conn[9..])?;
     // SQLite only optimize min max queries when there is only one aggregation
@@ -157,7 +163,7 @@ fn sqlite_get_partition_range(conn: &str, query: &str, col: &str) -> (i64, i64) 
     (min_v, max_v)
 }
 
-#[throws(ConnectorAgentError)]
+#[throws(ConnectorXPythonError)]
 fn mysql_get_partition_range(conn: &str, query: &str, col: &str) -> (i64, i64) {
     let pool = Pool::new(conn)?;
     let mut conn = pool.get_conn()?;
@@ -166,9 +172,9 @@ fn mysql_get_partition_range(conn: &str, query: &str, col: &str) -> (i64, i64) {
         .query_first(range_query)?
         .ok_or_else(|| anyhow!("mysql range: no row returns"))?;
 
-    let col_type = MysqlTypeSystem::from(&row.columns()[0].column_type());
+    let col_type = MySQLTypeSystem::from(&row.columns()[0].column_type());
     let (min_v, max_v) = match col_type {
-        MysqlTypeSystem::Long(_) => {
+        MySQLTypeSystem::Long(_) => {
             let min_v: i64 = row
                 .get(0)
                 .ok_or_else(|| anyhow!("mysql range: cannot get min value"))?;
@@ -177,7 +183,7 @@ fn mysql_get_partition_range(conn: &str, query: &str, col: &str) -> (i64, i64) {
                 .ok_or_else(|| anyhow!("mysql range: cannot get max value"))?;
             (min_v, max_v)
         }
-        MysqlTypeSystem::LongLong(_) => {
+        MySQLTypeSystem::LongLong(_) => {
             let min_v: i64 = row
                 .get(0)
                 .ok_or_else(|| anyhow!("mysql range: cannot get min value"))?;

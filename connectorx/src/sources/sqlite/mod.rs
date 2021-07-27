@@ -1,69 +1,75 @@
+mod errors;
 mod typesystem;
 
-use fallible_streaming_iterator::FallibleStreamingIterator;
-
-use crate::data_order::DataOrder;
-use crate::errors::{ConnectorAgentError, Result};
-use crate::sources::{PartitionParser, Produce, Source, SourcePartition};
-use crate::sql::{count_query, get_limit, limit1_query, CXQuery};
+pub use self::errors::SQLiteSourceError;
+use crate::{
+    data_order::DataOrder,
+    errors::ConnectorXError,
+    sources::{PartitionParser, Produce, Source, SourcePartition},
+    sql::{count_query, get_limit, limit1_query, CXQuery},
+};
 use anyhow::anyhow;
 use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
 use derive_more::{Deref, DerefMut};
-use fehler::throw;
+use fallible_streaming_iterator::FallibleStreamingIterator;
+use fehler::{throw, throws};
 use log::debug;
 use owning_ref::OwningHandle;
 use r2d2::{Pool, PooledConnection};
 use r2d2_sqlite::SqliteConnectionManager;
 use rusqlite::{Row, Rows, Statement};
 use sqlparser::dialect::SQLiteDialect;
-pub use typesystem::SqliteTypeSystem;
+pub use typesystem::SQLiteTypeSystem;
 
 #[derive(Deref, DerefMut)]
 struct DummyBox<T>(T);
 
-pub struct SqliteSource {
+pub struct SQLiteSource {
     pool: Pool<SqliteConnectionManager>,
     queries: Vec<CXQuery<String>>,
     names: Vec<String>,
-    schema: Vec<SqliteTypeSystem>,
+    schema: Vec<SQLiteTypeSystem>,
 }
 
-impl SqliteSource {
-    pub fn new(conn: &str, nconn: usize) -> Result<Self> {
+impl SQLiteSource {
+    #[throws(SQLiteSourceError)]
+    pub fn new(conn: &str, nconn: usize) -> Self {
         let manager = SqliteConnectionManager::file(conn);
         let pool = r2d2::Pool::builder()
             .max_size(nconn as u32)
             .build(manager)?;
 
-        Ok(Self {
+        Self {
             pool,
             queries: vec![],
             names: vec![],
             schema: vec![],
-        })
+        }
     }
 }
 
-impl Source for SqliteSource
+impl Source for SQLiteSource
 where
-    SqliteSourcePartition: SourcePartition<TypeSystem = SqliteTypeSystem>,
+    SQLiteSourcePartition: SourcePartition<TypeSystem = SQLiteTypeSystem>,
 {
     const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
-    type Partition = SqliteSourcePartition;
-    type TypeSystem = SqliteTypeSystem;
+    type Partition = SQLiteSourcePartition;
+    type TypeSystem = SQLiteTypeSystem;
+    type Error = SQLiteSourceError;
 
-    fn set_data_order(&mut self, data_order: DataOrder) -> Result<()> {
+    #[throws(SQLiteSourceError)]
+    fn set_data_order(&mut self, data_order: DataOrder) {
         if !matches!(data_order, DataOrder::RowMajor) {
-            throw!(ConnectorAgentError::UnsupportedDataOrder(data_order));
+            throw!(ConnectorXError::UnsupportedDataOrder(data_order));
         }
-        Ok(())
     }
 
     fn set_queries<Q: ToString>(&mut self, queries: &[CXQuery<Q>]) {
         self.queries = queries.iter().map(|q| q.map(Q::to_string)).collect();
     }
 
-    fn fetch_metadata(&mut self) -> Result<()> {
+    #[throws(SQLiteSourceError)]
+    fn fetch_metadata(&mut self) {
         assert!(!self.queries.is_empty());
         let conn = self.pool.get()?;
         let mut success = false;
@@ -83,7 +89,7 @@ where
                         names.push(col.name().to_string());
                         match row.get_ref(i) {
                             Ok(vr) => types
-                                .push(SqliteTypeSystem::from((col.decl_type(), vr.data_type()))),
+                                .push(SQLiteTypeSystem::from((col.decl_type(), vr.data_type()))),
                             Err(e) => {
                                 debug!("cannot get ref at {} on query: {}", i, query);
                                 error = Some(e);
@@ -121,8 +127,8 @@ where
                 if let Some(cnames) = rows.column_names() {
                     self.names = cnames.into_iter().map(|s| s.to_string()).collect();
                     // set all columns as string (align with pandas)
-                    self.schema = vec![SqliteTypeSystem::Text(false); self.names.len()];
-                    return Ok(());
+                    self.schema = vec![SQLiteTypeSystem::Text(false); self.names.len()];
+                    return;
                 }
             }
             throw!(anyhow!(
@@ -130,8 +136,6 @@ where
                 error
             ))
         }
-
-        Ok(())
     }
 
     fn names(&self) -> Vec<String> {
@@ -142,30 +146,31 @@ where
         self.schema.clone()
     }
 
-    fn partition(self) -> Result<Vec<Self::Partition>> {
+    #[throws(SQLiteSourceError)]
+    fn partition(self) -> Vec<Self::Partition> {
         let mut ret = vec![];
         for query in self.queries {
             let conn = self.pool.get()?;
 
-            ret.push(SqliteSourcePartition::new(conn, &query, &self.schema));
+            ret.push(SQLiteSourcePartition::new(conn, &query, &self.schema));
         }
-        Ok(ret)
+        ret
     }
 }
 
-pub struct SqliteSourcePartition {
+pub struct SQLiteSourcePartition {
     conn: PooledConnection<SqliteConnectionManager>,
     query: CXQuery<String>,
-    schema: Vec<SqliteTypeSystem>,
+    schema: Vec<SQLiteTypeSystem>,
     nrows: usize,
     ncols: usize,
 }
 
-impl SqliteSourcePartition {
+impl SQLiteSourcePartition {
     pub fn new(
         conn: PooledConnection<SqliteConnectionManager>,
         query: &CXQuery<String>,
-        schema: &[SqliteTypeSystem],
+        schema: &[SQLiteTypeSystem],
     ) -> Self {
         Self {
             conn,
@@ -177,11 +182,13 @@ impl SqliteSourcePartition {
     }
 }
 
-impl SourcePartition for SqliteSourcePartition {
-    type TypeSystem = SqliteTypeSystem;
-    type Parser<'a> = SqliteSourcePartitionParser<'a>;
+impl SourcePartition for SQLiteSourcePartition {
+    type TypeSystem = SQLiteTypeSystem;
+    type Parser<'a> = SQLiteSourcePartitionParser<'a>;
+    type Error = SQLiteSourceError;
 
-    fn prepare(&mut self) -> Result<()> {
+    #[throws(SQLiteSourceError)]
+    fn prepare(&mut self) {
         let dialect = SQLiteDialect {};
         self.nrows = match get_limit(&self.query, &dialect)? {
             None => {
@@ -192,11 +199,11 @@ impl SourcePartition for SqliteSourcePartition {
             }
             Some(n) => n,
         };
-        Ok(())
     }
 
-    fn parser(&mut self) -> Result<Self::Parser<'_>> {
-        SqliteSourcePartitionParser::new(&self.conn, self.query.as_str(), &self.schema)
+    #[throws(SQLiteSourceError)]
+    fn parser(&mut self) -> Self::Parser<'_> {
+        SQLiteSourcePartitionParser::new(&self.conn, self.query.as_str(), &self.schema)?
     }
 
     fn nrows(&self) -> usize {
@@ -208,18 +215,19 @@ impl SourcePartition for SqliteSourcePartition {
     }
 }
 
-pub struct SqliteSourcePartitionParser<'a> {
+pub struct SQLiteSourcePartitionParser<'a> {
     rows: OwningHandle<Box<Statement<'a>>, DummyBox<Rows<'a>>>,
     ncols: usize,
     current_col: usize,
 }
 
-impl<'a> SqliteSourcePartitionParser<'a> {
+impl<'a> SQLiteSourcePartitionParser<'a> {
+    #[throws(SQLiteSourceError)]
     pub fn new(
         conn: &'a PooledConnection<SqliteConnectionManager>,
         query: &str,
-        schema: &[SqliteTypeSystem],
-    ) -> Result<Self> {
+        schema: &[SQLiteTypeSystem],
+    ) -> Self {
         let stmt: Statement<'a> = conn.prepare(query)?;
 
         // Safety: DummyBox borrows the on-heap stmt, which is owned by the OwningHandle.
@@ -229,14 +237,15 @@ impl<'a> SqliteSourcePartitionParser<'a> {
             OwningHandle::new_with_fn(Box::new(stmt), |stmt: *const Statement<'a>| unsafe {
                 DummyBox((&mut *(stmt as *mut Statement<'_>)).query([]).unwrap())
             });
-        Ok(Self {
+        Self {
             rows,
             ncols: schema.len(),
             current_col: 0,
-        })
+        }
     }
 
-    fn next_loc(&mut self) -> Result<(&Row, usize)> {
+    #[throws(SQLiteSourceError)]
+    fn next_loc(&mut self) -> (&Row, usize) {
         let row: &Row = match self.current_col {
             0 => (*self.rows).next()?.ok_or_else(|| anyhow!("Sqlite EOF"))?,
             _ => (*self.rows)
@@ -245,30 +254,37 @@ impl<'a> SqliteSourcePartitionParser<'a> {
         };
         let col = self.current_col;
         self.current_col = (self.current_col + 1) % self.ncols;
-        Ok((row, col))
+        (row, col)
     }
 }
 
-impl<'a> PartitionParser<'a> for SqliteSourcePartitionParser<'a> {
-    type TypeSystem = SqliteTypeSystem;
+impl<'a> PartitionParser<'a> for SQLiteSourcePartitionParser<'a> {
+    type TypeSystem = SQLiteTypeSystem;
+    type Error = SQLiteSourceError;
 }
 
 macro_rules! impl_produce {
     ($($t: ty,)+) => {
         $(
-            impl<'r, 'a> Produce<'r, $t> for SqliteSourcePartitionParser<'a> {
-                fn produce(&'r mut self) -> Result<$t> {
+            impl<'r, 'a> Produce<'r, $t> for SQLiteSourcePartitionParser<'a> {
+                type Error = SQLiteSourceError;
+
+                #[throws(SQLiteSourceError)]
+                fn produce(&'r mut self) -> $t {
                     let (row, col) = self.next_loc()?;
                     let val = row.get(col)?;
-                    Ok(val)
+                    val
                 }
             }
 
-            impl<'r, 'a> Produce<'r, Option<$t>> for SqliteSourcePartitionParser<'a> {
-                fn produce(&'r mut self) -> Result<Option<$t>> {
+            impl<'r, 'a> Produce<'r, Option<$t>> for SQLiteSourcePartitionParser<'a> {
+                type Error = SQLiteSourceError;
+
+                #[throws(SQLiteSourceError)]
+                fn produce(&'r mut self) -> Option<$t> {
                     let (row, col) = self.next_loc()?;
                     let val = row.get(col)?;
-                    Ok(val)
+                    val
                 }
             }
         )+

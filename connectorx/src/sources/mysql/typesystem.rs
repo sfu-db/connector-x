@@ -3,7 +3,7 @@ use r2d2_mysql::mysql::consts::ColumnType;
 use rust_decimal::Decimal;
 
 #[derive(Copy, Clone, Debug)]
-pub enum MysqlTypeSystem {
+pub enum MySQLTypeSystem {
     Double(bool),
     Long(bool),
     LongLong(bool),
@@ -16,7 +16,7 @@ pub enum MysqlTypeSystem {
 }
 
 impl_typesystem! {
-    system = MysqlTypeSystem,
+    system = MySQLTypeSystem,
     mappings = {
         { Long | LongLong => i64 }
         { Double => f64 }
@@ -28,9 +28,9 @@ impl_typesystem! {
     }
 }
 
-impl<'a> From<&'a ColumnType> for MysqlTypeSystem {
-    fn from(ty: &'a ColumnType) -> MysqlTypeSystem {
-        use MysqlTypeSystem::*;
+impl<'a> From<&'a ColumnType> for MySQLTypeSystem {
+    fn from(ty: &'a ColumnType) -> MySQLTypeSystem {
+        use MySQLTypeSystem::*;
         match ty {
             ColumnType::MYSQL_TYPE_LONG => Long(true),
             ColumnType::MYSQL_TYPE_LONGLONG => LongLong(true),
@@ -47,9 +47,9 @@ impl<'a> From<&'a ColumnType> for MysqlTypeSystem {
 }
 
 // Link MysqlDTypes back to the one defined by the mysql crate.
-impl<'a> From<MysqlTypeSystem> for ColumnType {
-    fn from(ty: MysqlTypeSystem) -> ColumnType {
-        use MysqlTypeSystem::*;
+impl<'a> From<MySQLTypeSystem> for ColumnType {
+    fn from(ty: MySQLTypeSystem) -> ColumnType {
+        use MySQLTypeSystem::*;
         match ty {
             Long(_) => ColumnType::MYSQL_TYPE_LONG,
             LongLong(_) => ColumnType::MYSQL_TYPE_LONGLONG,

@@ -45,13 +45,13 @@ We compared different solutions in Python that provides the `read_sql` function,
 
 ## Time chart, lower is better.
 
-<p align="center"><img alt="time chart" src="https://raw.githubusercontent.com/sfu-db/connector-agent/main/assets/time.jpg"/></p>
+<p align="center"><img alt="time chart" src="https://raw.githubusercontent.com/sfu-db/connector-agent/main/assets/pg-time.png"/></p>
 
 ## Memory consumption chart, lower is better.
 
-<p align="center"><img alt="memory chart" src="https://raw.githubusercontent.com/sfu-db/connector-agent/main/assets/memory.jpg"/></p>
+<p align="center"><img alt="memory chart" src="https://raw.githubusercontent.com/sfu-db/connector-agent/main/assets/pg-mem.png"/></p>
 
-In conclusion, ConnectorX uses up to **3x** less memory and **11x** less time.
+In conclusion, ConnectorX uses up to **3x** less memory and **21x** less time. More on [here](https://github.com/sfu-db/connector-x/blob/main/Benchmark.md#benchmark-result-on-aws-r54xlarge-with-dbm6g4xlarge-rds).
 
 ## How does ConnectorX achieve a lightening speed while keeping the memory footprint low?
 
@@ -60,6 +60,20 @@ Additionally, implementing a data intensive application in Python brings additio
 
 ConnectorX is written in Rust and follows "zero-copy" principle.
 This allows it to make full use of the CPU by becoming cache and branch predictor friendly. Moreover, the architecture of ConnectorX ensures the data will be copied exactly once, directly from the source to the destination.
+
+## How does ConnectorX download the data?
+
+Upon receiving the query, e.g. `SELECT * FROM lineitem`, ConnectorX will first issue a `LIMIT 1` query `SELECT * FROM lineitem LIMIT 1` to get the schema of the result set.
+Then, if `partition_on` is specified, ConnectorX will issue `SELECT MIN(\$partition_on), MAX(\$partition_on) FROM (SELECT * FROM lineitem)` to know the range of the partition column.
+After that, the original query is split into partitions based on the min/max information, e.g. `SELECT * FROM (SELECT * FROM lineitem) WHERE \$partition_on > 0 AND \$partition_on < 10000`.
+ConnectorX will then run a count query to get the partition size (e.g. `SELECT COUNT(*) FROM (SELECT * FROM lineitem) WHERE \$partition_on > 0 AND \$partition_on < 10000`). If the partition
+is not specified, the count query will be `SELECT * FROM (SELECT * FROM lineitem)`.
+Finally, ConnectorX will use the schema info as well as the count info to allocate memory and download data by executing the queries normally.
+
+Once the downloading begins, there will be one thread for each partition so that the data are downloaded in parallel at the partition level. The thread will issue the query of the corresponding
+partition to the database and then write the returned data to the destination row-wise or column-wise (depends on the database) in a streaming fashion. 
+
+This mechanism implies that having an **index on the partition column** is recommended to make full use of the parallel downloading power provided by ConnectorX.
 
 # Supported Sources & Destinations
 

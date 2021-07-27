@@ -15,6 +15,7 @@ jobs:
         python-version: [37, 38, 39]
     steps:
       - uses: actions/checkout@v2
+
       - name: Set python version
         run: |
           if [[ "${{ matrix.python-version }}" == "37" ]]; then
@@ -38,9 +39,9 @@ jobs:
         run: |
           pip install poetry
           cargo install just
-          yum install -y openssl11-devel
-          ln -s /usr/lib64/pkgconfig/openssl11.pc /usr/lib64/pkgconfig/openssl.pc
-          ln -s /usr/lib64/pkgconfig/libssl11.pc /usr/lib64/pkgconfig/libssl.pc
+          yum install -y openssl11-devel mysql-devel
+          ln -sfn /usr/lib64/pkgconfig/openssl11.pc /usr/lib64/pkgconfig/openssl.pc
+          ln -sfn /usr/lib64/pkgconfig/libssl11.pc /usr/lib64/pkgconfig/libssl.pc
 
       - name: Setup project
         env:
@@ -72,6 +73,10 @@ jobs:
         python-version: ["3.7", "3.8", "3.9"]
     steps:
       - uses: actions/checkout@v2
+
+      - uses: ankane/setup-mysql@v1
+        with:
+          mysql-version: 8
 
       - name: Setup python
         uses: actions/setup-python@v2

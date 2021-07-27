@@ -1,26 +1,29 @@
-use crate::errors::ConnectorAgentPythonError;
+use crate::errors::ConnectorXPythonError;
+use crate::source_router::{SourceConn, SourceType};
 use arrow::record_batch::RecordBatch;
 use connectorx::{
     destinations::arrow::ArrowDestination,
-    source_router::{SourceConn, SourceType},
+    prelude::*,
     sources::{
-        mysql::{BinaryProtocol as MySQLBinaryProtocol, MysqlSource, TextProtocol},
+        mysql::{BinaryProtocol as MySQLBinaryProtocol, MySQLSource, TextProtocol},
         postgres::{
-            BinaryProtocol as PgBinaryProtocol, CSVProtocol, CursorProtocol, PostgresSource,
+            rewrite_tls_args, BinaryProtocol as PgBinaryProtocol, CSVProtocol, CursorProtocol,
+            PostgresSource,
         },
-        sqlite::SqliteSource,
+        sqlite::SQLiteSource,
     },
     sql::CXQuery,
-    transports::{MysqlArrowTransport, PostgresArrowTransport, SqliteArrowTransport},
-    Dispatcher,
+    transports::{MySQLArrowTransport, PostgresArrowTransport, SQLiteArrowTransport},
 };
 use fehler::throws;
 use libc::uintptr_t;
 use log::debug;
+use postgres::NoTls;
+use postgres_native_tls::MakeTlsConnector;
 use pyo3::prelude::*;
 use pyo3::{PyAny, Python};
 
-#[throws(ConnectorAgentPythonError)]
+#[throws(ConnectorXPythonError)]
 pub fn write_arrow<'a>(
     py: Python<'a>,
     source_conn: &SourceConn,
@@ -32,47 +35,85 @@ pub fn write_arrow<'a>(
     // TODO: unlock gil if possible
     match source_conn.ty {
         SourceType::Postgres => {
+            let (config, tls) = rewrite_tls_args(&source_conn.conn[..])?;
             debug!("Protocol: {}", protocol);
-            match protocol {
-                "csv" => {
+            match (protocol, tls) {
+                ("csv", Some(tls_conn)) => {
+                    let sb = PostgresSource::<CSVProtocol, MakeTlsConnector>::new(
+                        config,
+                        tls_conn,
+                        queries.len(),
+                    )?;
+                    let dispatcher = Dispatcher::<
+                        _,
+                        _,
+                        PostgresArrowTransport<CSVProtocol, MakeTlsConnector>,
+                    >::new(sb, &mut destination, queries);
+                    debug!("Running dispatcher");
+                    dispatcher.run()?;
+                }
+                ("csv", None) => {
                     let sb =
-                        PostgresSource::<CSVProtocol>::new(&source_conn.conn[..], queries.len())?;
-                    let dispatcher = Dispatcher::<_, _, PostgresArrowTransport<CSVProtocol>>::new(
-                        sb,
-                        &mut destination,
-                        queries,
-                    );
-
-                    debug!("Running dispatcher");
-                    dispatcher.run()?;
-                }
-                "binary" => {
-                    let sb = PostgresSource::<PgBinaryProtocol>::new(
-                        &source_conn.conn[..],
-                        queries.len(),
-                    )?;
+                        PostgresSource::<CSVProtocol, NoTls>::new(config, NoTls, queries.len())?;
                     let dispatcher =
-                        Dispatcher::<_, _, PostgresArrowTransport<PgBinaryProtocol>>::new(
+                        Dispatcher::<_, _, PostgresArrowTransport<CSVProtocol, NoTls>>::new(
                             sb,
                             &mut destination,
                             queries,
                         );
-
                     debug!("Running dispatcher");
                     dispatcher.run()?;
                 }
-                "cursor" => {
-                    let sb = PostgresSource::<CursorProtocol>::new(
-                        &source_conn.conn[..],
+                ("binary", Some(tls_conn)) => {
+                    let sb = PostgresSource::<PgBinaryProtocol, MakeTlsConnector>::new(
+                        config,
+                        tls_conn,
                         queries.len(),
                     )?;
-                    let dispatcher =
-                        Dispatcher::<_, _, PostgresArrowTransport<CursorProtocol>>::new(
-                            sb,
-                            &mut destination,
-                            queries,
-                        );
-
+                    let dispatcher = Dispatcher::<
+                        _,
+                        _,
+                        PostgresArrowTransport<PgBinaryProtocol, MakeTlsConnector>,
+                    >::new(sb, &mut destination, queries);
+                    debug!("Running dispatcher");
+                    dispatcher.run()?;
+                }
+                ("binary", None) => {
+                    let sb = PostgresSource::<PgBinaryProtocol, NoTls>::new(
+                        config,
+                        NoTls,
+                        queries.len(),
+                    )?;
+                    let dispatcher = Dispatcher::<
+                        _,
+                        _,
+                        PostgresArrowTransport<PgBinaryProtocol, NoTls>,
+                    >::new(sb, &mut destination, queries);
+                    debug!("Running dispatcher");
+                    dispatcher.run()?;
+                }
+                ("cursor", Some(tls_conn)) => {
+                    let sb = PostgresSource::<CursorProtocol, MakeTlsConnector>::new(
+                        config,
+                        tls_conn,
+                        queries.len(),
+                    )?;
+                    let dispatcher = Dispatcher::<
+                        _,
+                        _,
+                        PostgresArrowTransport<CursorProtocol, MakeTlsConnector>,
+                    >::new(sb, &mut destination, queries);
+                    debug!("Running dispatcher");
+                    dispatcher.run()?;
+                }
+                ("cursor", None) => {
+                    let sb =
+                        PostgresSource::<CursorProtocol, NoTls>::new(config, NoTls, queries.len())?;
+                    let dispatcher = Dispatcher::<
+                        _,
+                        _,
+                        PostgresArrowTransport<CursorProtocol, NoTls>,
+                    >::new(sb, &mut destination, queries);
                     debug!("Running dispatcher");
                     dispatcher.run()?;
                 }
@@ -80,9 +121,9 @@ pub fn write_arrow<'a>(
             }
         }
         SourceType::Sqlite => {
-            let source = SqliteSource::new(&source_conn.conn[..], queries.len())?;
+            let source = SQLiteSource::new(&source_conn.conn[..], queries.len())?;
             let dispatcher =
-                Dispatcher::<_, _, SqliteArrowTransport>::new(source, &mut destination, queries);
+                Dispatcher::<_, _, SQLiteArrowTransport>::new(source, &mut destination, queries);
             debug!("Running dispatcher");
             dispatcher.run()?;
         }
@@ -90,12 +131,12 @@ pub fn write_arrow<'a>(
             debug!("Protocol: {}", protocol);
             match protocol {
                 "binary" => {
-                    let source = MysqlSource::<MySQLBinaryProtocol>::new(
+                    let source = MySQLSource::<MySQLBinaryProtocol>::new(
                         &source_conn.conn[..],
                         queries.len(),
                     )?;
                     let dispatcher =
-                        Dispatcher::<_, _, MysqlArrowTransport<MySQLBinaryProtocol>>::new(
+                        Dispatcher::<_, _, MySQLArrowTransport<MySQLBinaryProtocol>>::new(
                             source,
                             &mut destination,
                             queries,
@@ -105,8 +146,8 @@ pub fn write_arrow<'a>(
                 }
                 "text" => {
                     let source =
-                        MysqlSource::<TextProtocol>::new(&source_conn.conn[..], queries.len())?;
-                    let dispatcher = Dispatcher::<_, _, MysqlArrowTransport<TextProtocol>>::new(
+                        MySQLSource::<TextProtocol>::new(&source_conn.conn[..], queries.len())?;
+                    let dispatcher = Dispatcher::<_, _, MySQLArrowTransport<TextProtocol>>::new(
                         source,
                         &mut destination,
                         queries,

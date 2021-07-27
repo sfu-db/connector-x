@@ -1,14 +1,25 @@
 use crate::destinations::arrow::types::ArrowTypeSystem;
-use crate::destinations::arrow::ArrowDestination;
+use crate::destinations::arrow::{ArrowDestination, ArrowDestinationError};
 use crate::dummy_typesystem::DummyTypeSystem;
 use crate::sources::dummy::DummySource;
 use crate::typesystem::TypeConversion;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
+use thiserror::Error;
 
 pub struct DummyArrowTransport;
 
+#[derive(Error, Debug)]
+pub enum DummyArrowTransportError {
+    #[error(transparent)]
+    ArrowDestinationError(#[from] ArrowDestinationError),
+
+    #[error(transparent)]
+    ConnectorXError(#[from] crate::errors::ConnectorXError),
+}
+
 impl_transport!(
     name = DummyArrowTransport,
+    error = DummyArrowTransportError,
     systems = DummyTypeSystem => ArrowTypeSystem,
     route = DummySource => ArrowDestination,
     mappings = {

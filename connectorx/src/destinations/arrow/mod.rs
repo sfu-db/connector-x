@@ -1,11 +1,12 @@
 mod arrow_assoc;
+mod errors;
 mod funcs;
 pub mod types;
 
+pub use self::errors::{ArrowDestinationError, Result};
 use super::{Consume, Destination, DestinationPartition};
 use crate::data_order::DataOrder;
 use crate::destinations::arrow::types::ArrowTypeSystem;
-use crate::errors::{ConnectorAgentError, Result};
 use crate::typesystem::{Realize, TypeAssoc, TypeSystem};
 use anyhow::anyhow;
 use arrow::datatypes::Schema;
@@ -15,8 +16,10 @@ use fehler::throw;
 use fehler::throws;
 use funcs::{FFinishBuilder, FNewBuilder, FNewField};
 use itertools::Itertools;
+#[cfg(feature = "polars")]
 use polars::frame::DataFrame;
 use std::any::Any;
+#[cfg(feature = "polars")]
 use std::convert::TryFrom;
 use std::sync::Arc;
 
@@ -51,8 +54,9 @@ impl Destination for ArrowDestination {
     const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::ColumnMajor, DataOrder::RowMajor];
     type TypeSystem = ArrowTypeSystem;
     type Partition<'a> = ArrowPartitionWriter<'a>;
+    type Error = ArrowDestinationError;
 
-    #[throws(ConnectorAgentError)]
+    #[throws(ArrowDestinationError)]
     fn allocate<S: AsRef<str>>(
         &mut self,
         nrows: usize,
@@ -62,7 +66,9 @@ impl Destination for ArrowDestination {
     ) {
         // todo: support colmajor
         if !matches!(data_order, DataOrder::RowMajor) {
-            throw!(ConnectorAgentError::UnsupportedDataOrder(data_order))
+            throw!(crate::errors::ConnectorXError::UnsupportedDataOrder(
+                data_order
+            ))
         }
         // cannot really create the builders since do not know each partition size here
         self.nrows = nrows;
@@ -70,7 +76,7 @@ impl Destination for ArrowDestination {
         self.names = names.iter().map(|n| n.as_ref().to_string()).collect();
     }
 
-    #[throws(ConnectorAgentError)]
+    #[throws(ArrowDestinationError)]
     fn partition(&mut self, counts: &[usize]) -> Vec<Self::Partition<'_>> {
         assert_eq!(counts.iter().sum::<usize>(), self.nrows);
         assert_eq!(self.builders.len(), 0);
@@ -99,7 +105,7 @@ impl Destination for ArrowDestination {
 }
 
 impl ArrowDestination {
-    #[throws(ConnectorAgentError)]
+    #[throws(ArrowDestinationError)]
     pub fn finish(self) -> Vec<RecordBatch> {
         let fields = self
             .schema
@@ -117,13 +123,14 @@ impl ArrowDestination {
                     .into_iter()
                     .zip(schema.iter())
                     .map(|(builder, &dt)| Realize::<FFinishBuilder>::realize(dt)?(builder))
-                    .collect::<Result<Vec<_>>>()?;
+                    .collect::<std::result::Result<Vec<_>, crate::errors::ConnectorXError>>()?;
                 Ok(RecordBatch::try_new(Arc::clone(&arrow_schema), columns)?)
             })
             .collect::<Result<Vec<_>>>()?
     }
 
-    #[throws(ConnectorAgentError)]
+    #[cfg(feature = "polars")]
+    #[throws(ArrowDestinationError)]
     pub fn polars(self) -> DataFrame {
         let rbs = self.finish()?;
         DataFrame::try_from(rbs)?
@@ -150,6 +157,7 @@ impl<'a> ArrowPartitionWriter<'a> {
 
 impl<'a> DestinationPartition<'a> for ArrowPartitionWriter<'a> {
     type TypeSystem = ArrowTypeSystem;
+    type Error = ArrowDestinationError;
 
     fn nrows(&self) -> usize {
         self.nrows
@@ -164,7 +172,10 @@ impl<'a, T> Consume<T> for ArrowPartitionWriter<'a>
 where
     T: TypeAssoc<<Self as DestinationPartition<'a>>::TypeSystem> + ArrowAssoc + 'static,
 {
-    fn consume(&mut self, value: T) -> Result<()> {
+    type Error = ArrowDestinationError;
+
+    #[throws(ArrowDestinationError)]
+    fn consume(&mut self, value: T) {
         let col = self.current_col;
         self.current_col = (self.current_col + 1) % self.ncols();
 
@@ -176,7 +187,5 @@ where
                 .ok_or_else(|| anyhow!("cannot cast arrow builder for append"))?,
             value,
         )?;
-
-        Ok(())
     }
 }

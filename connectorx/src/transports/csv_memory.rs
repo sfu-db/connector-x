@@ -1,13 +1,27 @@
-use crate::destinations::memory::MemoryDestination;
+use crate::destinations::memory::{MemoryDestination, MemoryDestinationError};
 use crate::dummy_typesystem::DummyTypeSystem;
-use crate::sources::csv::CSVSource;
+use crate::sources::csv::{CSVSource, CSVSourceError};
 use crate::typesystem::TypeConversion;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
+use thiserror::Error;
 
 pub struct CSVMemoryTransport;
 
+#[derive(Error, Debug)]
+pub enum CSVMemoryTransportError {
+    #[error(transparent)]
+    CSVSourceError(#[from] CSVSourceError),
+
+    #[error(transparent)]
+    MemoryDestinationError(#[from] MemoryDestinationError),
+
+    #[error(transparent)]
+    ConnectorXError(#[from] crate::errors::ConnectorXError),
+}
+
 impl_transport!(
     name = CSVMemoryTransport,
+    error = CSVMemoryTransportError,
     systems = DummyTypeSystem => DummyTypeSystem,
     route = CSVSource => MemoryDestination,
     mappings = {

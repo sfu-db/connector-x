@@ -1,10 +1,14 @@
 mod any_array;
+mod errors;
 
+pub use self::errors::MemoryDestinationError;
 use super::{Consume, Destination, DestinationPartition};
-use crate::data_order::DataOrder;
-use crate::dummy_typesystem::DummyTypeSystem;
-use crate::errors::{ConnectorAgentError, Result};
-use crate::typesystem::{ParameterizedFunc, ParameterizedOn, Realize, TypeAssoc, TypeSystem};
+use crate::{
+    data_order::DataOrder,
+    dummy_typesystem::DummyTypeSystem,
+    errors::ConnectorXError,
+    typesystem::{ParameterizedFunc, ParameterizedOn, Realize, TypeAssoc, TypeSystem},
+};
 use any_array::{AnyArray, AnyArrayViewMut};
 use anyhow::anyhow;
 use chrono::{DateTime, NaiveDateTime, Utc};
@@ -13,7 +17,9 @@ use itertools::Itertools;
 use ndarray::{Array2, ArrayView1, ArrayView2, Axis, Ix2};
 use std::any::type_name;
 use std::collections::HashMap;
-/// This `Destination` can support mixed data type.
+
+/// A destination which stores data in memory.
+/// For testing purpose.
 pub struct MemoryDestination {
     nrows: usize,
     schema: Vec<DummyTypeSystem>,
@@ -42,8 +48,9 @@ impl Destination for MemoryDestination {
     const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
     type TypeSystem = DummyTypeSystem;
     type Partition<'a> = MemoryPartitionDestination<'a>;
+    type Error = MemoryDestinationError;
 
-    #[throws(ConnectorAgentError)]
+    #[throws(MemoryDestinationError)]
     fn allocate<S: AsRef<str>>(
         &mut self,
         nrows: usize,
@@ -52,7 +59,7 @@ impl Destination for MemoryDestination {
         data_order: DataOrder,
     ) {
         if !matches!(data_order, DataOrder::RowMajor) {
-            throw!(ConnectorAgentError::UnsupportedDataOrder(data_order))
+            throw!(ConnectorXError::UnsupportedDataOrder(data_order))
         }
 
         self.nrows = nrows;
@@ -84,7 +91,7 @@ impl Destination for MemoryDestination {
         }
     }
 
-    #[throws(ConnectorAgentError)]
+    #[throws(MemoryDestinationError)]
     fn partition(&mut self, counts: &[usize]) -> Vec<Self::Partition<'_>> {
         assert_eq!(counts.iter().sum::<usize>(), self.nrows);
 
@@ -178,6 +185,7 @@ impl<'a> MemoryPartitionDestination<'a> {
 
 impl<'a> DestinationPartition<'a> for MemoryPartitionDestination<'a> {
     type TypeSystem = DummyTypeSystem;
+    type Error = MemoryDestinationError;
 
     fn nrows(&self) -> usize {
         self.nrows
@@ -192,7 +200,10 @@ impl<'a, T> Consume<T> for MemoryPartitionDestination<'a>
 where
     T: TypeAssoc<<Self as DestinationPartition<'a>>::TypeSystem> + 'static,
 {
-    fn consume(&mut self, value: T) -> Result<()> {
+    type Error = MemoryDestinationError;
+
+    #[throws(MemoryDestinationError)]
+    fn consume(&mut self, value: T) {
         let (row, col) = self.loc();
         let col_schema = self.schema[col];
         col_schema.check::<T>()?;
@@ -200,12 +211,11 @@ where
         let &(bid, col) = &self.column_buffer_index[col];
 
         let mut_view = self.buffers[bid].downcast::<T>().ok_or_else(|| {
-            ConnectorAgentError::TypeCheckFailed(format!("{:?}", col_schema), type_name::<T>())
+            ConnectorXError::TypeCheckFailed(format!("{:?}", col_schema), type_name::<T>())
         })?;
         *mut_view
             .get_mut((row, col))
-            .ok_or(ConnectorAgentError::OutOfBound)? = value;
-        Ok(())
+            .ok_or(MemoryDestinationError::OutOfBound)? = value;
     }
 }
 

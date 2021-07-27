@@ -275,9 +275,9 @@ checksum = "e3b5ca7a04898ad4bcd41c90c5285445ff5b791899bb1b0abdd2a2aa791211d7"
 
 [[package]]
 name = "bytemuck"
-version = "1.7.0"
+version = "1.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9966d2ab714d0f785dbac0a0396251a35280aeb42413281617d0209ab4898435"
+checksum = "72957246c41db82b8ef88a5486143830adeb8227ef9837740bdec67724cf2c5b"
 
 [[package]]
 name = "byteorder"
@@ -369,40 +369,37 @@ dependencies = [
 
 [[package]]
 name = "connectorx"
-version = "0.2.0-alpha.3"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "arrow",
- "bytes 1.0.1",
  "chrono",
  "criterion",
  "csv",
  "derive_more",
- "dict_derive",
  "env_logger",
  "fallible-streaming-iterator",
  "fehler",
- "futures",
  "hex",
  "iai",
  "itertools 0.10.1",
  "log",
+ "native-tls",
  "ndarray",
  "num-traits",
  "owning_ref",
  "polars",
  "postgres",
+ "postgres-native-tls",
  "pprof",
  "r2d2",
  "r2d2_mysql",
  "r2d2_postgres",
  "r2d2_sqlite",
- "rand 0.8.4",
  "rayon",
  "regex",
  "rusqlite",
  "rust_decimal",
- "serde",
  "serde_json",
  "sqlparser",
  "thiserror",
@@ -412,7 +409,7 @@ dependencies = [
 
 [[package]]
 name = "connectorx-python"
-version = "0.2.0-alpha.3"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "arrow",
@@ -432,14 +429,19 @@ dependencies = [
  "log",
  "ndarray",
  "numpy",
+ "postgres",
+ "postgres-native-tls",
  "pprof",
  "pyo3",
  "pyo3-built",
+ "r2d2_mysql",
  "rayon",
+ "rusqlite",
  "rust_decimal",
  "serde_json",
  "sqlparser",
  "thiserror",
+ "url",
  "uuid",
 ]
 
@@ -889,9 +891,9 @@ dependencies = [
 
 [[package]]
 name = "futures"
-version = "0.3.15"
+version = "0.3.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0e7e43a803dae2fa37c1f6a8fe121e1f7bf9548b4dfc0522a42f34145dadfc27"
+checksum = "1adc00f486adfc9ce99f77d717836f0c5aa84965eb0b4f051f4e83f7cab53f8b"
 dependencies = [
  "futures-channel",
  "futures-core",
@@ -904,9 +906,9 @@ dependencies = [
 
 [[package]]
 name = "futures-channel"
-version = "0.3.15"
+version = "0.3.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e682a68b29a882df0545c143dc3646daefe80ba479bcdede94d5a703de2871e2"
+checksum = "74ed2411805f6e4e3d9bc904c95d5d423b89b3b25dc0250aa74729de20629ff9"
 dependencies = [
  "futures-core",
  "futures-sink",
@@ -914,15 +916,15 @@ dependencies = [
 
 [[package]]
 name = "futures-core"
-version = "0.3.15"
+version = "0.3.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0402f765d8a89a26043b889b26ce3c4679d268fa6bb22cd7c6aad98340e179d1"
+checksum = "af51b1b4a7fdff033703db39de8802c673eb91855f2e0d47dcf3bf2c0ef01f99"
 
 [[package]]
 name = "futures-executor"
-version = "0.3.15"
+version = "0.3.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "badaa6a909fac9e7236d0620a2f57f7664640c56575b71a7552fbd68deafab79"
+checksum = "4d0d535a57b87e1ae31437b892713aee90cd2d7b0ee48727cd11fc72ef54761c"
 dependencies = [
  "futures-core",
  "futures-task",
@@ -931,15 +933,15 @@ dependencies = [
 
 [[package]]
 name = "futures-io"
-version = "0.3.15"
+version = "0.3.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "acc499defb3b348f8d8f3f66415835a9131856ff7714bf10dadfc4ec4bdb29a1"
+checksum = "0b0e06c393068f3a6ef246c75cdca793d6a46347e75286933e5e75fd2fd11582"
 
 [[package]]
 name = "futures-macro"
-version = "0.3.15"
+version = "0.3.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a4c40298486cdf52cc00cd6d6987892ba502c7656a16a4192a9992b1ccedd121"
+checksum = "c54913bae956fb8df7f4dc6fc90362aa72e69148e3f39041fbe8742d21e0ac57"
 dependencies = [
  "autocfg 1.0.1",
  "proc-macro-hack",
@@ -950,21 +952,21 @@ dependencies = [
 
 [[package]]
 name = "futures-sink"
-version = "0.3.15"
+version = "0.3.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a57bead0ceff0d6dde8f465ecd96c9338121bb7717d3e7b108059531870c4282"
+checksum = "c0f30aaa67363d119812743aa5f33c201a7a66329f97d1a887022971feea4b53"
 
 [[package]]
 name = "futures-task"
-version = "0.3.15"
+version = "0.3.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8a16bef9fc1a4dddb5bee51c989e3fbba26569cbb0e31f5b303c184e3dd33dae"
+checksum = "bbe54a98670017f3be909561f6ad13e810d9a51f3f061b902062ca3da80799f2"
 
 [[package]]
 name = "futures-util"
-version = "0.3.15"
+version = "0.3.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "feb5c238d27e2bf94ffdfd27b2c29e3df4a68c4193bb6427384259e2bf191967"
+checksum = "67eb846bfd58e44a8481a00049e82c43e0ccb5d61f8dc071057cb19249dd4d78"
 dependencies = [
  "autocfg 1.0.1",
  "futures-channel",
@@ -1927,9 +1929,9 @@ dependencies = [
 
 [[package]]
 name = "polars"
-version = "0.14.7"
+version = "0.14.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5c1bf71de63afed8a9262b61a2a7c3a463bf3b2b8dc28a91873621a86ddeb996"
+checksum = "9ed1645f3daba885ecedef8a76839536bfc7263f1e4fc0b67b27282f19325756"
 dependencies = [
  "polars-core",
  "polars-io",
@@ -1938,9 +1940,9 @@ dependencies = [
 
 [[package]]
 name = "polars-arrow"
-version = "0.14.7"
+version = "0.14.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d1d436b455a6ac76f09b7b8127d2c4b21e80e8b7579218edee91ce138281d178"
+checksum = "5943252213fbd21e26b62240f5bb73f5d874e1072ed93234c6860781a4c366f2"
 dependencies = [
  "arrow",
  "num",
@@ -1949,9 +1951,9 @@ dependencies = [
 
 [[package]]
 name = "polars-core"
-version = "0.14.7"
+version = "0.14.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f3e1a74ab0ddbb0cca4f9a79691cf419ec7af63fc1f72206fac6ab45508d6d85"
+checksum = "df43d51c6314623deafdd1266ca9a8431f087d9d345fffc8eeb16508aec69fee"
 dependencies = [
  "ahash 0.7.4",
  "anyhow",
@@ -1972,9 +1974,9 @@ dependencies = [
 
 [[package]]
 name = "polars-io"
-version = "0.14.7"
+version = "0.14.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "54f37bf032736512cc938000e937175b3bbfc27ea72abd07fc03d25145d709a0"
+checksum = "cd998aab494826fb08d9c83763fc2925c9aa4eab2e4b349416bb174b9b300a3a"
 dependencies = [
  "ahash 0.7.4",
  "anyhow",
@@ -1997,9 +1999,9 @@ dependencies = [
 
 [[package]]
 name = "polars-lazy"
-version = "0.14.7"
+version = "0.14.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4c7f767d152af32f2880c02d0e4ead23d5591e066bf92af462ef9d1e4149e7af"
+checksum = "6596b6d1cf1e378976ad9f5d2abe88ba08f112684ca1b67fbe89b97832c9f11d"
 dependencies = [
  "ahash 0.7.4",
  "itertools 0.10.1",
@@ -2020,6 +2022,19 @@ dependencies = [
  "futures",
  "log",
  "tokio",
+ "tokio-postgres",
+]
+
+[[package]]
+name = "postgres-native-tls"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2d442770e2b1e244bb5eb03b31c79b65bb2568f413b899eaba850fa945a65954"
+dependencies = [
+ "futures",
+ "native-tls",
+ "tokio",
+ "tokio-native-tls",
  "tokio-postgres",
 ]
 
@@ -2112,9 +2127,9 @@ checksum = "bc881b2c22681370c6a780e47af9840ef841837bc98118431d4e1868bd0c1086"
 
 [[package]]
 name = "proc-macro2"
-version = "1.0.27"
+version = "1.0.28"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f0d8caf72986c1a598726adc988bb5984792ef84f5ee5aa50209145ee8077038"
+checksum = "5c7ed8b8c7b886ea3ed7dde405212185f423ab44682667c8c6dd14aa1d9f6612"
 dependencies = [
  "unicode-xid",
 ]
@@ -2833,9 +2848,9 @@ dependencies = [
 
 [[package]]
 name = "syn"
-version = "1.0.73"
+version = "1.0.74"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f71489ff30030d2ae598524f61326b902466f72a0fb1a8564c001cc63425bcc7"
+checksum = "1873d832550d4588c3dbc20f01361ab00bfe741048f71e3fecf145a7cc18b29c"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2948,9 +2963,9 @@ dependencies = [
 
 [[package]]
 name = "tinyvec"
-version = "1.3.0"
+version = "1.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4ac2e1d4bd0f75279cfd5a076e0d578bbf02c22b7c39e766c437dd49b3ec43e0"
+checksum = "848a1e1181b9f6753b5e96a092749e29b11d19ede67dfbbd6c7dc7e0f49b5338"
 dependencies = [
  "tinyvec_macros",
 ]
@@ -2963,9 +2978,9 @@ checksum = "cda74da7e1a664f795bb1f8a87ec406fb89a02522cf6e50620d016add6dbbf5c"
 
 [[package]]
 name = "tokio"
-version = "1.8.2"
+version = "1.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c2602b8af3767c285202012822834005f596c811042315fa7e9f5b12b2a43207"
+checksum = "4b7b349f11a7047e6d1276853e612d152f5e8a352c61917887cc2169e2366b4c"
 dependencies = [
  "autocfg 1.0.1",
  "bytes 1.0.1",
@@ -2974,6 +2989,16 @@ dependencies = [
  "mio",
  "pin-project-lite",
  "winapi",
+]
+
+[[package]]
+name = "tokio-native-tls"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f7d995660bd2b7f8c1568414c1126076c13fbb725c40112dc0120b78eb9b717b"
+dependencies = [
+ "native-tls",
+ "tokio",
 ]
 
 [[package]]

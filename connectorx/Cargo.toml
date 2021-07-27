@@ -1,46 +1,46 @@
 [package]
-authors = ["Weiyuan Wu <youngw@sfu.ca>"]
+authors = ["SFU Database System Lab <dsl.cs.sfu@gmail.com>"]
+description = "Load data from databases to dataframes, the fastest way."
+documentation = "https://docs.rs/connectorx"
 edition = "2018"
+license = "MIT"
 name = "connectorx"
-version = "0.2.0-alpha.3"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+readme = "../README.md"
+repository = "https://github.com/sfu-db/connector-x"
+version = "0.2.0"
 
 [dependencies]
 anyhow = "1"
-arrow = "4"
-bytes = "1"
-chrono = "0.4"
-csv = "1"
-derive_more = "0.99"
-dict_derive = "0.3"
-env_logger = "0.9"
-fallible-streaming-iterator = "0.1"
 fehler = "1"
-futures = "0.3"
-hex = "0.4"
 itertools = "0.10"
 log = "0.4"
-ndarray = "0.15"
-num-traits = "0.2"
-owning_ref = "0.4"
-polars = "0.14"
-postgres = {version = "0.19", features = ["with-chrono-0_4", "with-uuid-0_8", "with-serde_json-1"]}
-r2d2 = "0.8"
-r2d2_mysql = "18.0"
-r2d2_postgres = "0.18"
-r2d2_sqlite = "0.18"
-rand = "0.8"
 rayon = "1"
-regex = "1"
-rusqlite = {version = "0.25", features = ["column_decltype", "chrono", "bundled"]}
-rust_decimal = {version = "1", features = ["db-postgres"]}
-serde = {version = "1", features = ["derive"]}
-serde_json = "1"
 sqlparser = "0.9"
 thiserror = "1"
-url = "2.2"
-uuid = "0.8"
+
+arrow = {version = "4", optional = true}
+chrono = {version = "0.4", optional = true}
+csv = {version = "1", optional = true}
+derive_more = {version = "0.99", optional = true}
+fallible-streaming-iterator = {version = "0.1", optional = true}
+hex = {version = "0.4", optional = true}
+native-tls = {version = "0.2", optional = true}
+ndarray = {version = "0.15", optional = true}
+num-traits = {version = "0.2", optional = true}
+owning_ref = {version = "0.4", optional = true}
+polars = {version = "0.14", optional = true}
+postgres = {version = "0.19", features = ["with-chrono-0_4", "with-uuid-0_8", "with-serde_json-1"], optional = true}
+postgres-native-tls = {version = "0.5", optional = true}
+r2d2 = {version = "0.8", optional = true}
+r2d2_mysql = {version = "18.0", optional = true}
+r2d2_postgres = {version = "0.18", optional = true}
+r2d2_sqlite = {version = "0.18", optional = true}
+regex = {version = "1", optional = true}
+rusqlite = {version = "0.25", features = ["column_decltype", "chrono", "bundled"], optional = true}
+rust_decimal = {version = "1", features = ["db-postgres"], optional = true}
+serde_json = {version = "1", optional = true}
+url = {version = "2", optional = true}
+uuid = {version = "0.8", optional = true}
 
 [lib]
 crate-type = ["cdylib", "rlib"]
@@ -48,11 +48,38 @@ name = "connectorx"
 
 [dev-dependencies]
 criterion = "0.3"
+env_logger = "0.9"
 iai = "0.1"
 polars = "0.14"
 pprof = {version = "0.5", features = ["flamegraph"]}
 
 [features]
+all = ["src_sqlite", "src_postgres", "src_mysql", "src_csv", "src_dummy", "dst_arrow", "dst_memory", "dst_polars"]
 branch = []
-default = ["branch"]
+default = ["fptr"]
+dst_arrow = ["arrow", "chrono"]
+dst_memory = ["ndarray"]
+dst_polars = ["polars", "dst_arrow"]
 fptr = []
+src_csv = ["csv", "regex", "chrono"]
+src_dummy = ["num-traits", "chrono"]
+src_mysql = ["r2d2_mysql", "rust_decimal", "num-traits", "chrono", "r2d2"]
+src_postgres = [
+  "postgres",
+  "r2d2_postgres",
+  "postgres-native-tls",
+  "csv",
+  "hex",
+  "serde_json",
+  "uuid",
+  "rust_decimal",
+  "num-traits",
+  "chrono",
+  "r2d2",
+  "url",
+  "native-tls",
+]
+src_sqlite = ["rusqlite", "r2d2_sqlite", "fallible-streaming-iterator", "derive_more", "owning_ref", "chrono", "r2d2"]
+
+[package.metadata.docs.rs]
+features = ["all"]
