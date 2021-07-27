@@ -46,11 +46,11 @@ jobs:
           SA_PASSWORD: mssql!Password
         ports:
           - 1433:1433
-        # options: >-
-        #   --health-cmd "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P '$SA_PASSWORD' -Q 'SELECT 1' || exit 1"
-        #   --health-interval 10s
-        #   --health-timeout 5s
-        #   --health-retries 20
+        options: >-
+          --health-cmd "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P \"$SA_PASSWORD\" -Q 'SELECT 1' || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 20
 
     steps:
       - uses: actions/checkout@v2
@@ -159,11 +159,11 @@ jobs:
           SA_PASSWORD: mssql!Password
         ports:
           - 1433:1433
-        # options: >-
-        #   --health-cmd "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P '$SA_PASSWORD' -Q 'SELECT 1' || exit 1"
-        #   --health-interval 10s
-        #   --health-timeout 5s
-        #   --health-retries 20
+        options: >-
+          --health-cmd "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P \"$SA_PASSWORD\" -Q 'SELECT 1' || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 20
 
     steps:
       - uses: actions/checkout@v2
