@@ -19,6 +19,7 @@ use r2d2::{Pool, PooledConnection};
 use r2d2_sqlite::SqliteConnectionManager;
 use rusqlite::{Row, Rows, Statement};
 use sqlparser::dialect::SQLiteDialect;
+use std::convert::TryFrom;
 pub use typesystem::SQLiteTypeSystem;
 
 pub struct SQLiteSource {
@@ -69,69 +70,70 @@ where
     fn fetch_metadata(&mut self) {
         assert!(!self.queries.is_empty());
         let conn = self.pool.get()?;
-        let mut success = false;
-        let mut zero_tuple = true;
-        let mut error = None;
-        for query in &self.queries {
-            // assuming all the partition queries yield same schema
-            let mut names = vec![];
-            let mut types = vec![];
+        let mut names = vec![];
+        let mut types = vec![];
+        let mut num_empty = 0;
 
+        // assuming all the partition queries yield same schema
+        for (i, query) in self.queries.iter().enumerate() {
             match conn.query_row(
                 &limit1_query(query, &SQLiteDialect {})?.as_str(),
                 [],
                 |row| {
-                    zero_tuple = false;
-                    row.columns().iter().enumerate().for_each(|(i, col)| {
-                        names.push(col.name().to_string());
-                        match row.get_ref(i) {
-                            Ok(vr) => types
-                                .push(SQLiteTypeSystem::from((col.decl_type(), vr.data_type()))),
-                            Err(e) => {
-                                debug!("cannot get ref at {} on query: {}", i, query);
-                                error = Some(e);
-                                types.clear(); // clear types and return directly when error occurs
+                    for (j, col) in row.columns().iter().enumerate() {
+                        if j >= names.len() {
+                            names.push(col.name().to_string());
+                        }
+                        if j >= types.len() {
+                            let vr = row.get_ref(j)?;
+                            match SQLiteTypeSystem::try_from((col.decl_type(), vr.data_type())) {
+                                Ok(t) => types.push(Some(t)),
+                                Err(_) => {
+                                    types.push(None);
+                                }
+                            }
+                        } else if types[j] == None {
+                            let vr = row.get_ref(j)?;
+                            match SQLiteTypeSystem::try_from((col.decl_type(), vr.data_type())) {
+                                Ok(t) => types[j] = Some(t),
+                                Err(_) => {}
                             }
                         }
-                    });
+                    }
                     Ok(())
                 },
             ) {
-                Ok(_) => {}
+                Ok(()) => {
+                    if !types.contains(&None) {
+                        self.names = names;
+                        self.schema = types.into_iter().map(|t| t.unwrap()).collect();
+                        return;
+                    }
+                }
                 Err(e) => {
                     match e {
-                        rusqlite::Error::QueryReturnedNoRows => {}
-                        _ => zero_tuple = false, // erro not caused by zero-tuple result
+                        rusqlite::Error::QueryReturnedNoRows => {
+                            num_empty += 1; // make sure when all partition results are empty, do not throw error
+                        }
+                        _ => {}
                     }
-                    debug!("cannot get metadata for '{}', try next query: {}", query, e);
-                    error = Some(e);
+                    if i == self.queries.len() - 1 && num_empty < self.queries.len() {
+                        // tried the last query but still get an error
+                        debug!("cannot get metadata for '{}', try next query: {}", query, e);
+                        throw!(e)
+                    }
                 }
-            }
-
-            if !names.is_empty() && !types.is_empty() {
-                success = true;
-                self.names = names;
-                self.schema = types;
-                break;
             }
         }
 
-        if !success {
-            if zero_tuple {
-                let mut stmt = conn.prepare(self.queries[0].as_str())?;
-                let rows = stmt.query([])?;
+        // tried all queries but all get empty result set
+        let mut stmt = conn.prepare(self.queries[0].as_str())?;
+        let rows = stmt.query([])?;
 
-                if let Some(cnames) = rows.column_names() {
-                    self.names = cnames.into_iter().map(|s| s.to_string()).collect();
-                    // set all columns as string (align with pandas)
-                    self.schema = vec![SQLiteTypeSystem::Text(false); self.names.len()];
-                    return;
-                }
-            }
-            throw!(anyhow!(
-                "Cannot get metadata for the queries, last error: {:?}",
-                error
-            ))
+        if let Some(cnames) = rows.column_names() {
+            self.names = cnames.into_iter().map(|s| s.to_string()).collect();
+            // set all columns as string (align with pandas)
+            self.schema = vec![SQLiteTypeSystem::Text(false); self.names.len()];
         }
     }
 

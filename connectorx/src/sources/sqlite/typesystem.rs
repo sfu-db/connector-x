@@ -1,7 +1,11 @@
+use crate::sources::sqlite::errors::SQLiteSourceError;
+use anyhow::anyhow;
 use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
+use fehler::{throw, throws};
 use rusqlite::types::Type;
+use std::convert::TryFrom;
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum SQLiteTypeSystem {
     Bool(bool),
     Int8(bool),
@@ -31,21 +35,27 @@ impl_typesystem! {
     }
 }
 
-impl From<Type> for SQLiteTypeSystem {
-    fn from(ty: Type) -> SQLiteTypeSystem {
+impl TryFrom<Type> for SQLiteTypeSystem {
+    type Error = SQLiteSourceError;
+
+    #[throws(SQLiteSourceError)]
+    fn try_from(ty: Type) -> Self {
         use SQLiteTypeSystem::*;
         match ty {
             Type::Integer => Int8(true),
             Type::Real => Real(true),
             Type::Text => Text(true),
             Type::Blob => Blob(true),
-            _ => unimplemented!("{}", ty),
+            Type::Null => throw!(anyhow!("Sqlite cannot infer schema from null")),
         }
     }
 }
 
-impl From<(Option<&str>, Type)> for SQLiteTypeSystem {
-    fn from(types: (Option<&str>, Type)) -> SQLiteTypeSystem {
+impl TryFrom<(Option<&str>, Type)> for SQLiteTypeSystem {
+    type Error = SQLiteSourceError;
+
+    #[throws(SQLiteSourceError)]
+    fn try_from(types: (Option<&str>, Type)) -> Self {
         use SQLiteTypeSystem::*;
         match types {
             // derive from column's declare type, some rules refer to:
@@ -67,11 +77,11 @@ impl From<(Option<&str>, Type)> for SQLiteTypeSystem {
                         Real(true)
                     }
                     _ if s.contains("blob") => Blob(true),
-                    _ => ty.into(),
+                    _ => SQLiteTypeSystem::try_from(ty)?,
                 }
             }
             // derive from value type directly if no declare type available
-            (None, ty) => ty.into(),
+            (None, ty) => SQLiteTypeSystem::try_from(ty)?,
         }
     }
 }
