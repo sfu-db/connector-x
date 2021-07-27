@@ -7,7 +7,7 @@ use crate::{
     data_order::DataOrder,
     errors::ConnectorXError,
     sources::{PartitionParser, Produce, Source, SourcePartition},
-    sql::{count_query, get_limit, limit1_query_mssql, CXQuery},
+    sql::{count_query, get_limit_mssql, limit1_query_mssql, CXQuery},
     utils::DummyBox,
 };
 use anyhow::anyhow;
@@ -218,7 +218,7 @@ impl SourcePartition for MsSQLSourcePartition {
 
     #[throws(MsSQLSourceError)]
     fn prepare(&mut self) {
-        self.nrows = match get_limit(&self.query, &MsSqlDialect {})? {
+        self.nrows = match get_limit_mssql(&self.query)? {
             None => {
                 let mut conn = self.rt.block_on(self.pool.get())?;
                 let cquery = count_query(&self.query, &MsSqlDialect {})?;

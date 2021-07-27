@@ -91,6 +91,34 @@ pub fn get_limit<T: Dialect>(sql: &CXQuery<String>, dialect: &T) -> Option<usize
     None
 }
 
+#[allow(unreachable_code)] // disable it for now, waiting for the new release of fehler
+#[throws(ConnectorXError)]
+pub fn get_limit_mssql(sql: &CXQuery<String>) -> Option<usize> {
+    let ast = Parser::parse_sql(&MsSqlDialect {}, sql.as_str())?;
+    if ast.len() != 1 {
+        throw!(ConnectorXError::SqlQueryNotSupported(sql.to_string()));
+    }
+
+    if let Statement::Query(q) = &ast[0] {
+        if let SetExpr::Select(s) = &q.body {
+            if let Some(Top {
+                quantity: Some(expr),
+                ..
+            }) = &s.top
+            {
+                return Some(
+                    expr.to_string()
+                        .parse()
+                        .map_err(|e: std::num::ParseIntError| anyhow!(e))?,
+                );
+            }
+            return None;
+        }
+    }
+
+    throw!(ConnectorXError::SqlQueryNotSupported(sql.to_string()))
+}
+
 fn wrap_query(
     query: &Query,
     projection: Vec<SelectItem>,
