@@ -100,10 +100,7 @@ where
 
         let mut conn = self.rt.block_on(self.pool.get())?;
 
-        let mut success = false;
-        let mut zero_tuple = true;
-        let mut error = None;
-        for query in &self.queries {
+        for (i, query) in self.queries.iter().enumerate() {
             // assuming all the partition queries yield same schema
             let l1query = limit1_query_mssql(query)?;
 
@@ -127,45 +124,37 @@ where
                         .unzip();
                     self.names = names;
                     self.schema = types;
-                    success = true;
-                    zero_tuple = false;
+                    return;
                 }
-                Err(e) => {
+                Err(e) if i == self.queries.len() - 1 => {
+                    // tried the last query but still get an error
                     debug!("cannot get metadata for '{}', try next query: {}", query, e);
-                    error = Some(e);
-                    zero_tuple = false;
+                    throw!(e);
                 }
+                Err(_) => {}
             }
         }
 
-        if !success {
-            if zero_tuple {
-                let stream = self
-                    .rt
-                    .block_on(conn.query(self.queries[0].as_str(), &[]))?;
-                let row = self.rt.block_on(stream.into_row())?.unwrap();
+        // tried all queries but all get empty result set
+        let stream = self
+            .rt
+            .block_on(conn.query(self.queries[0].as_str(), &[]))?;
+        let row = self.rt.block_on(stream.into_row())?.unwrap();
 
-                let columns = row.columns();
+        let columns = row.columns();
 
-                let (names, types) = columns
-                    .iter()
-                    .map(|col| {
-                        (
-                            col.name().to_string(),
-                            MsSQLTypeSystem::from(&col.column_type()),
-                        )
-                    })
-                    .unzip();
+        let (names, types) = columns
+            .iter()
+            .map(|col| {
+                (
+                    col.name().to_string(),
+                    MsSQLTypeSystem::from(&col.column_type()),
+                )
+            })
+            .unzip();
 
-                self.names = names;
-                self.schema = types;
-            } else {
-                throw!(anyhow!(
-                    "Cannot get metadata for the queries, last error: {:?}",
-                    error
-                ))
-            }
-        }
+        self.names = names;
+        self.schema = types;
     }
 
     fn names(&self) -> Vec<String> {
@@ -236,7 +225,7 @@ impl SourcePartition for MsSQLSourcePartition {
 
                 let stream = self.rt.block_on(conn.query(cquery.as_str(), &[]))?;
                 let row = self.rt.block_on(stream.into_row())?.ok_or_else(|| {
-                    anyhow!("mysql failed to get the count of query: {}", self.query)
+                    anyhow!("MsSQL failed to get the count of query: {}", self.query)
                 })?;
 
                 let row: i32 = row.get(0).unwrap(); // the count in mssql is i32
@@ -316,7 +305,7 @@ impl<'a> MsSQLSourceParser<'a> {
             }
 
             if self.rowbuf.is_empty() {
-                throw!(anyhow!("Mysql EOF"));
+                throw!(anyhow!("MsSQL EOF"));
             }
             self.current_row = 0;
             self.current_col = 0;
@@ -342,7 +331,7 @@ macro_rules! impl_produce {
                 #[throws(MsSQLSourceError)]
                 fn produce(&'r mut self) -> $t {
                     let (ridx, cidx) = self.next_loc()?;
-                    let res = self.rowbuf[ridx].get(cidx).ok_or_else(|| anyhow!("mysql get None at position: ({}, {})", ridx, cidx))?;
+                    let res = self.rowbuf[ridx].get(cidx).ok_or_else(|| anyhow!("MsSQL get None at position: ({}, {})", ridx, cidx))?;
                     res
                 }
             }

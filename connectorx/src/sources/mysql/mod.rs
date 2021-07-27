@@ -87,10 +87,8 @@ where
         assert!(!self.queries.is_empty());
 
         let mut conn = self.pool.get()?;
-        let mut success = false;
-        let mut zero_tuple = true;
-        let mut error = None;
-        for query in &self.queries {
+
+        for (i, query) in self.queries.iter().enumerate() {
             // assuming all the partition queries yield same schema
             match conn.query_first::<Row, _>(limit1_query(query, &MySqlDialect {})?.as_str()) {
                 Ok(Some(row)) => {
@@ -106,41 +104,33 @@ where
                         .unzip();
                     self.names = names;
                     self.schema = types;
-                    success = true;
-                    zero_tuple = false;
+                    return;
                 }
                 Ok(None) => {}
-                Err(e) => {
+                Err(e) if i == self.queries.len() - 1 => {
+                    // tried the last query but still get an error
                     debug!("cannot get metadata for '{}', try next query: {}", query, e);
-                    error = Some(e);
-                    zero_tuple = false;
+                    throw!(e)
                 }
+                Err(_) => {}
             }
         }
 
-        if !success {
-            if zero_tuple {
-                let iter = conn.query_iter(self.queries[0].as_str())?;
-                let (names, types) = iter
-                    .columns()
-                    .as_ref()
-                    .iter()
-                    .map(|col| {
-                        (
-                            col.name_str().to_string(),
-                            MySQLTypeSystem::VarChar(false), // set all columns as string (align with pandas)
-                        )
-                    })
-                    .unzip();
-                self.names = names;
-                self.schema = types;
-            } else {
-                throw!(anyhow!(
-                    "Cannot get metadata for the queries, last error: {:?}",
-                    error
-                ))
-            }
-        }
+        // tried all queries but all get empty result set
+        let iter = conn.query_iter(self.queries[0].as_str())?;
+        let (names, types) = iter
+            .columns()
+            .as_ref()
+            .iter()
+            .map(|col| {
+                (
+                    col.name_str().to_string(),
+                    MySQLTypeSystem::VarChar(false), // set all columns as string (align with pandas)
+                )
+            })
+            .unzip();
+        self.names = names;
+        self.schema = types;
     }
 
     fn names(&self) -> Vec<String> {
