@@ -1,11 +1,11 @@
 # ConnectorX [![status][ci_badge]][ci_page] [![docs][docs_badge]][docs_page]
 
-[ci_badge]: https://github.com/sfu-db/connector-agent/workflows/ci/badge.svg
-[ci_page]: https://github.com/sfu-db/connector-agent/actions
-[docs_badge]: https://github.com/sfu-db/connector-agent/workflows/docs/badge.svg
+[ci_badge]: https://github.com/sfu-db/connector-x/workflows/ci/badge.svg
+[ci_page]: https://github.com/sfu-db/connector-x/actions
+[docs_badge]: https://github.com/sfu-db/connector-x/workflows/docs/badge.svg
 [docs_page]: https://sfu-db.github.io/connector-x/connectorx/
 
-Load data from <img src="https://raw.githubusercontent.com/sfu-db/connector-agent/main/assets/sources.gif" width="6.5%" style="margin-bottom: -2px"/> to <img src="https://raw.githubusercontent.com/sfu-db/connector-agent/main/assets/destinations.gif" width="7%" style="margin-bottom: -2px"/>, the fastest way.
+Load data from <img src="https://raw.githubusercontent.com/sfu-db/connector-x/main/assets/sources.gif" width="6.5%" style="margin-bottom: -2px"/> to <img src="https://raw.githubusercontent.com/sfu-db/connector-x/main/assets/destinations.gif" width="7%" style="margin-bottom: -2px"/>, the fastest way.
 
 For more data sources, please check out our [discussion](https://github.com/sfu-db/connector-x/discussions/61).
 
@@ -45,11 +45,11 @@ We compared different solutions in Python that provides the `read_sql` function,
 
 ## Time chart, lower is better.
 
-<p align="center"><img alt="time chart" src="https://raw.githubusercontent.com/sfu-db/connector-agent/main/assets/pg-time.png"/></p>
+<p align="center"><img alt="time chart" src="https://raw.githubusercontent.com/sfu-db/connector-x/main/assets/pg-time.png"/></p>
 
 ## Memory consumption chart, lower is better.
 
-<p align="center"><img alt="memory chart" src="https://raw.githubusercontent.com/sfu-db/connector-agent/main/assets/pg-mem.png"/></p>
+<p align="center"><img alt="memory chart" src="https://raw.githubusercontent.com/sfu-db/connector-x/main/assets/pg-mem.png"/></p>
 
 In conclusion, ConnectorX uses up to **3x** less memory and **21x** less time. More on [here](https://github.com/sfu-db/connector-x/blob/main/Benchmark.md#benchmark-result-on-aws-r54xlarge-with-dbm6g4xlarge-rds).
 
