@@ -61,10 +61,7 @@ impl TryFrom<TlsConfig> for MakeTlsConnector {
 fn strip_bad_opts(url: Url) -> Url {
     let stripped_query: Vec<(_, _)> = url
         .query_pairs()
-        .filter(|p| match &*p.0 {
-            "sslrootcert" => false,
-            _ => true,
-        })
+        .filter(|p| !matches!(&*p.0, "sslrootcert"))
         .collect();
 
     let mut url2 = url.clone();
@@ -88,11 +85,10 @@ pub fn rewrite_tls_args(
     // https://github.com/sfackler/rust-postgres/pull/774#discussion_r641784774
     let parsed_conn_str = Url::parse(conn).map_err(|e| anyhow!(e))?;
 
-    let params: HashMap<String, String> =
-        parsed_conn_str.clone().query_pairs().into_owned().collect();
-    let root_cert = params.get("sslrootcert").map(|x| PathBuf::from(x));
+    let params: HashMap<String, String> = parsed_conn_str.query_pairs().into_owned().collect();
+    let root_cert = params.get("sslrootcert").map(PathBuf::from);
 
-    let stripped_url = strip_bad_opts(parsed_conn_str.clone());
+    let stripped_url = strip_bad_opts(parsed_conn_str);
     let pg_config: Config = stripped_url.as_str().parse().unwrap();
 
     let tls_config = TlsConfig {

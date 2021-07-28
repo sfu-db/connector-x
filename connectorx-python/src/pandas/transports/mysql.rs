@@ -1,6 +1,6 @@
 use crate::errors::ConnectorXPythonError;
 use crate::pandas::destination::PandasDestination;
-use crate::pandas::types::PandasTypeSystem;
+use crate::pandas::typesystem::PandasTypeSystem;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
 use connectorx::{
     impl_transport,
@@ -18,14 +18,14 @@ impl_transport!(
     systems = MySQLTypeSystem => PandasTypeSystem,
     route = MySQLSource<BinaryProtocol> => PandasDestination<'tp>,
     mappings = {
-        { Double[f64]                => F64[f64]                | conversion all }
-        { Long[i64]                  => I64[i64]                | conversion all }
+        { Double[f64]                => F64[f64]                | conversion auto }
+        { Long[i64]                  => I64[i64]                | conversion auto }
         { LongLong[i64]              => I64[i64]                | conversion none }
-        { Date[NaiveDate]            => DateTime[DateTime<Utc>] | conversion half }
-        { Time[NaiveTime]            => String[String]          | conversion half }
-        { Datetime[NaiveDateTime]    => DateTime[DateTime<Utc>] | conversion half }
-        { Decimal[Decimal]           => F64[f64]                | conversion half }
-        { VarChar[String]            => String[String]          | conversion all }
+        { Date[NaiveDate]            => DateTime[DateTime<Utc>] | conversion option }
+        { Time[NaiveTime]            => String[String]          | conversion option }
+        { Datetime[NaiveDateTime]    => DateTime[DateTime<Utc>] | conversion option }
+        { Decimal[Decimal]           => F64[f64]                | conversion option }
+        { VarChar[String]            => String[String]          | conversion auto }
         { Char[String]               => String[String]          | conversion none }
     }
 );
@@ -36,14 +36,14 @@ impl_transport!(
     systems = MySQLTypeSystem => PandasTypeSystem,
     route = MySQLSource<TextProtocol> => PandasDestination<'tp>,
     mappings = {
-        { Double[f64]                => F64[f64]                | conversion all }
-        { Long[i64]                  => I64[i64]                | conversion all }
+        { Double[f64]                => F64[f64]                | conversion auto }
+        { Long[i64]                  => I64[i64]                | conversion auto }
         { LongLong[i64]              => I64[i64]                | conversion none }
-        { Date[NaiveDate]            => DateTime[DateTime<Utc>] | conversion half }
-        { Time[NaiveTime]            => String[String]          | conversion half }
-        { Datetime[NaiveDateTime]    => DateTime[DateTime<Utc>] | conversion half }
-        { Decimal[Decimal]           => F64[f64]                | conversion half }
-        { VarChar[String]            => String[String]          | conversion all }
+        { Date[NaiveDate]            => DateTime[DateTime<Utc>] | conversion option }
+        { Time[NaiveTime]            => String[String]          | conversion option }
+        { Datetime[NaiveDateTime]    => DateTime[DateTime<Utc>] | conversion option }
+        { Decimal[Decimal]           => F64[f64]                | conversion option }
+        { VarChar[String]            => String[String]          | conversion auto }
         { Char[String]               => String[String]          | conversion none }
     }
 );

@@ -4,9 +4,9 @@ use fehler::{throw, throws};
 use log::{debug, trace};
 use sqlparser::ast::{
     BinaryOperator, Expr, Function, FunctionArg, Ident, ObjectName, Query, Select, SelectItem,
-    SetExpr, Statement, TableAlias, TableFactor, TableWithJoins, Value,
+    SetExpr, Statement, TableAlias, TableFactor, TableWithJoins, Top, Value,
 };
-use sqlparser::dialect::Dialect;
+use sqlparser::dialect::{Dialect, MsSqlDialect};
 use sqlparser::parser::Parser;
 
 #[derive(Debug, Clone)]
@@ -89,6 +89,34 @@ pub fn get_limit<T: Dialect>(sql: &CXQuery<String>, dialect: &T) -> Option<usize
         _ => throw!(ConnectorXError::SqlQueryNotSupported(sql.to_string())),
     };
     None
+}
+
+#[allow(unreachable_code)] // disable it for now, waiting for the new release of fehler
+#[throws(ConnectorXError)]
+pub fn get_limit_mssql(sql: &CXQuery<String>) -> Option<usize> {
+    let ast = Parser::parse_sql(&MsSqlDialect {}, sql.as_str())?;
+    if ast.len() != 1 {
+        throw!(ConnectorXError::SqlQueryNotSupported(sql.to_string()));
+    }
+
+    if let Statement::Query(q) = &ast[0] {
+        if let SetExpr::Select(s) = &q.body {
+            if let Some(Top {
+                quantity: Some(expr),
+                ..
+            }) = &s.top
+            {
+                return Some(
+                    expr.to_string()
+                        .parse()
+                        .map_err(|e: std::num::ParseIntError| anyhow!(e))?,
+                );
+            }
+            return None;
+        }
+    }
+
+    throw!(ConnectorXError::SqlQueryNotSupported(sql.to_string()))
 }
 
 fn wrap_query(
@@ -223,6 +251,36 @@ pub fn limit1_query<T: Dialect>(sql: &CXQuery<String>, dialect: &T) -> CXQuery<S
     match &mut ast[0] {
         Statement::Query(q) => {
             q.limit = Some(Expr::Value(Value::Number("1".to_string(), false)));
+        }
+        _ => throw!(ConnectorXError::SqlQueryNotSupported(sql.to_string())),
+    };
+
+    let sql = format!("{}", ast[0]);
+    debug!("Transformed limit 1 query: {}", sql);
+    CXQuery::Wrapped(sql)
+}
+
+#[throws(ConnectorXError)]
+pub fn limit1_query_mssql(sql: &CXQuery<String>) -> CXQuery<String> {
+    trace!("Incoming query: {}", sql);
+
+    let mut ast = Parser::parse_sql(&MsSqlDialect {}, sql.as_str())?;
+    if ast.len() != 1 {
+        throw!(ConnectorXError::SqlQueryNotSupported(sql.to_string()));
+    }
+
+    match &mut ast[0] {
+        Statement::Query(q) => {
+            match q.body {
+                SetExpr::Select(ref mut s) => {
+                    s.top = Some(Top {
+                        with_ties: false,
+                        percent: false,
+                        quantity: Some(Expr::Value(Value::Number("1".to_string(), false))),
+                    })
+                }
+                _ => throw!(ConnectorXError::SqlQueryNotSupported(sql.to_string())),
+            };
         }
         _ => throw!(ConnectorXError::SqlQueryNotSupported(sql.to_string())),
     };

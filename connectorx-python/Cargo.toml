@@ -31,6 +31,9 @@ rust_decimal = {version = "1", features = ["db-postgres"]}
 serde_json = "1"
 sqlparser = "0.9"
 thiserror = "1"
+tiberius = {version = "0.5"}
+tokio = {version = "1", features = ["rt", "rt-multi-thread", "net"]}
+tokio-util = "0.6"
 url = "2"
 uuid = "0.8"
 
@@ -56,4 +59,4 @@ executable = ["pyo3/auto-initialize"]
 extension = ["pyo3/extension-module"]
 fptr = ["connectorx/fptr"]
 nbstr = []
-srcs = ["connectorx/src_postgres", "connectorx/src_mysql", "connectorx/src_sqlite"]
+srcs = ["connectorx/src_postgres", "connectorx/src_mysql", "connectorx/src_sqlite", "connectorx/src_mssql"]

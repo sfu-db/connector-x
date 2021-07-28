@@ -1,9 +1,11 @@
+use arrow::array::Int64Array;
 use connectorx::prelude::*;
 use connectorx::{
-    destinations::memory::MemoryDestination, sources::csv::CSVSource, sql::CXQuery,
-    transports::CSVMemoryTransport,
+    destinations::arrow::{ArrowDestination, ArrowTypeSystem},
+    sources::csv::{CSVSource, CSVTypeSystem},
+    sql::CXQuery,
+    transports::CSVArrowTransport,
 };
-use ndarray::array;
 
 #[test]
 #[should_panic]
@@ -44,11 +46,11 @@ fn load_and_parse() {
     }
 
     let mut source = CSVSource::new(&[
-        DummyTypeSystem::String(false),
-        DummyTypeSystem::String(false),
-        DummyTypeSystem::I64(false),
-        DummyTypeSystem::F64(false),
-        DummyTypeSystem::F64(false),
+        CSVTypeSystem::String(false),
+        CSVTypeSystem::String(false),
+        CSVTypeSystem::I64(false),
+        CSVTypeSystem::F64(false),
+        CSVTypeSystem::F64(false),
     ]);
     source.set_queries(&[CXQuery::naked("./tests/data/uspop_0.csv")]);
 
@@ -96,34 +98,47 @@ fn load_and_parse() {
 
 #[test]
 fn test_csv() {
-    let schema = [DummyTypeSystem::I64(false); 5];
+    let schema = [CSVTypeSystem::I64(false); 5];
     let files = [
         CXQuery::naked("./tests/data/uint_0.csv"),
         CXQuery::naked("./tests/data/uint_1.csv"),
     ];
     let source = CSVSource::new(&schema);
 
-    let mut destination = MemoryDestination::new();
-    let dispatcher = Dispatcher::<_, _, CSVMemoryTransport>::new(source, &mut destination, &files);
+    let mut destination = ArrowDestination::new();
+    let dispatcher = Dispatcher::<_, _, CSVArrowTransport>::new(source, &mut destination, &files);
 
     dispatcher.run().expect("run dispatcher");
 
-    assert_eq!(
-        array![
-            [0, 1, 2, 3, 4],
-            [5, 6, 7, 8, 9],
-            [10, 11, 12, 13, 14],
-            [15, 16, 17, 18, 19],
-            [20, 21, 22, 23, 24],
-            [25, 26, 27, 28, 29],
-            [30, 31, 32, 33, 34],
-            [35, 36, 37, 38, 39],
-            [40, 41, 42, 43, 44],
-            [45, 46, 47, 48, 49],
-            [50, 51, 52, 53, 54],
-        ],
-        destination.buffer_view::<i64>(0).unwrap()
-    );
+    let mut result = destination.arrow().unwrap();
+
+    assert!(result.len() == 2);
+
+    let rb = result.pop().unwrap();
+    assert!(rb.columns().len() == 5);
+    for i in 0..5 {
+        assert!(rb
+            .column(i)
+            .as_any()
+            .downcast_ref::<Int64Array>()
+            .unwrap()
+            .eq(&Int64Array::from_iter_values(
+                (4i64..=10).map(|v| v * 5 + i as i64),
+            )));
+    }
+
+    let rb = result.pop().unwrap();
+    assert!(rb.columns().len() == 5);
+    for i in 0..5 {
+        assert!(rb
+            .column(i)
+            .as_any()
+            .downcast_ref::<Int64Array>()
+            .unwrap()
+            .eq(&Int64Array::from_iter_values(
+                (0i64..4).map(|v| v * 5 + i as i64),
+            )));
+    }
 }
 
 #[test]
@@ -131,20 +146,20 @@ fn test_csv_infer_schema() {
     let files = [CXQuery::naked("./tests/data/infer_0.csv")];
     let source = CSVSource::new(&[]);
 
-    let mut writer = MemoryDestination::new();
-    let dispatcher = Dispatcher::<_, _, CSVMemoryTransport>::new(source, &mut writer, &files);
+    let mut writer = ArrowDestination::new();
+    let dispatcher = Dispatcher::<_, _, CSVArrowTransport>::new(source, &mut writer, &files);
 
     dispatcher.run().expect("run dispatcher");
 
     let expected_schema = vec![
-        DummyTypeSystem::I64(false),
-        DummyTypeSystem::F64(false),
-        DummyTypeSystem::Bool(true),
-        DummyTypeSystem::String(true),
-        DummyTypeSystem::F64(false),
-        DummyTypeSystem::String(true),
-        DummyTypeSystem::String(false),
-        DummyTypeSystem::String(true),
+        ArrowTypeSystem::Int64(false),
+        ArrowTypeSystem::Float64(false),
+        ArrowTypeSystem::Boolean(true),
+        ArrowTypeSystem::LargeUtf8(true),
+        ArrowTypeSystem::Float64(false),
+        ArrowTypeSystem::LargeUtf8(true),
+        ArrowTypeSystem::LargeUtf8(false),
+        ArrowTypeSystem::LargeUtf8(true),
     ];
 
     assert_eq!(expected_schema, writer.schema());

@@ -1,10 +1,10 @@
 mod errors;
+mod typesystem;
 
 pub use self::errors::CSVSourceError;
+pub use self::typesystem::CSVTypeSystem;
 use super::{PartitionParser, Produce, Source, SourcePartition};
-use crate::{
-    data_order::DataOrder, dummy_typesystem::DummyTypeSystem, errors::ConnectorXError, sql::CXQuery,
-};
+use crate::{data_order::DataOrder, errors::ConnectorXError, sql::CXQuery};
 use anyhow::anyhow;
 use chrono::{DateTime, Utc};
 use fehler::{throw, throws};
@@ -14,13 +14,13 @@ use std::collections::HashSet;
 use std::fs::File;
 
 pub struct CSVSource {
-    schema: Vec<DummyTypeSystem>,
+    schema: Vec<CSVTypeSystem>,
     files: Vec<CXQuery<String>>,
     names: Vec<String>,
 }
 
 impl CSVSource {
-    pub fn new(schema: &[DummyTypeSystem]) -> Self {
+    pub fn new(schema: &[CSVTypeSystem]) -> Self {
         CSVSource {
             schema: schema.to_vec(),
             files: vec![],
@@ -29,8 +29,8 @@ impl CSVSource {
     }
 
     #[throws(CSVSourceError)]
-    pub fn infer_schema(&mut self) -> Vec<DummyTypeSystem> {
-        // regular expressions for infer DummyTypeSystem from string
+    pub fn infer_schema(&mut self) -> Vec<CSVTypeSystem> {
+        // regular expressions for infer CSVTypeSystem from string
         let decimal_re: Regex = Regex::new(r"^-?(\d+\.\d+)$")?;
         let integer_re: Regex = Regex::new(r"^-?(\d+)$")?;
         let boolean_re: Regex = RegexBuilder::new(r"^(true)$|^(false)$")
@@ -38,7 +38,7 @@ impl CSVSource {
             .build()?;
         let datetime_re: Regex = Regex::new(r"^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d$")?;
 
-        // read max_records rows to infer possible DummyTypeSystems for each field
+        // read max_records rows to infer possible CSVTypeSystems for each field
         let mut reader = csv::ReaderBuilder::new()
             .has_headers(true)
             .from_reader(File::open(self.files[0].as_str())?);
@@ -46,7 +46,7 @@ impl CSVSource {
         let max_records_to_read = 50;
         let num_cols = self.names.len();
 
-        let mut column_types: Vec<HashSet<DummyTypeSystem>> = vec![HashSet::new(); num_cols];
+        let mut column_types: Vec<HashSet<CSVTypeSystem>> = vec![HashSet::new(); num_cols];
         let mut nulls: Vec<bool> = vec![false; num_cols];
 
         let mut record = csv::StringRecord::new();
@@ -60,20 +60,20 @@ impl CSVSource {
                     if string.is_empty() {
                         nulls[field_counter] = true;
                     } else {
-                        let dt: DummyTypeSystem;
+                        let dt: CSVTypeSystem;
 
                         if string.starts_with('"') {
-                            dt = DummyTypeSystem::String(false);
+                            dt = CSVTypeSystem::String(false);
                         } else if boolean_re.is_match(string) {
-                            dt = DummyTypeSystem::Bool(false);
+                            dt = CSVTypeSystem::Bool(false);
                         } else if decimal_re.is_match(string) {
-                            dt = DummyTypeSystem::F64(false);
+                            dt = CSVTypeSystem::F64(false);
                         } else if integer_re.is_match(string) {
-                            dt = DummyTypeSystem::I64(false);
+                            dt = CSVTypeSystem::I64(false);
                         } else if datetime_re.is_match(string) {
-                            dt = DummyTypeSystem::DateTime(false);
+                            dt = CSVTypeSystem::DateTime(false);
                         } else {
-                            dt = DummyTypeSystem::String(false);
+                            dt = CSVTypeSystem::String(false);
                         }
                         column_types[field_counter].insert(dt);
                     }
@@ -81,7 +81,7 @@ impl CSVSource {
             }
         }
 
-        // determine DummyTypeSystem based on possible candidates
+        // determine CSVTypeSystem based on possible candidates
         let mut schema = vec![];
 
         for field_counter in 0..num_cols {
@@ -92,39 +92,39 @@ impl CSVSource {
                 1 => {
                     for dt in possibilities.iter() {
                         match *dt {
-                            DummyTypeSystem::I64(false) => {
-                                schema.push(DummyTypeSystem::I64(has_nulls));
+                            CSVTypeSystem::I64(false) => {
+                                schema.push(CSVTypeSystem::I64(has_nulls));
                             }
-                            DummyTypeSystem::F64(false) => {
-                                schema.push(DummyTypeSystem::F64(has_nulls));
+                            CSVTypeSystem::F64(false) => {
+                                schema.push(CSVTypeSystem::F64(has_nulls));
                             }
-                            DummyTypeSystem::Bool(false) => {
-                                schema.push(DummyTypeSystem::Bool(has_nulls));
+                            CSVTypeSystem::Bool(false) => {
+                                schema.push(CSVTypeSystem::Bool(has_nulls));
                             }
-                            DummyTypeSystem::String(false) => {
-                                schema.push(DummyTypeSystem::String(has_nulls));
+                            CSVTypeSystem::String(false) => {
+                                schema.push(CSVTypeSystem::String(has_nulls));
                             }
-                            DummyTypeSystem::DateTime(false) => {
-                                schema.push(DummyTypeSystem::DateTime(has_nulls));
+                            CSVTypeSystem::DateTime(false) => {
+                                schema.push(CSVTypeSystem::DateTime(has_nulls));
                             }
                             _ => {}
                         }
                     }
                 }
                 2 => {
-                    if possibilities.contains(&DummyTypeSystem::I64(false))
-                        && possibilities.contains(&DummyTypeSystem::F64(false))
+                    if possibilities.contains(&CSVTypeSystem::I64(false))
+                        && possibilities.contains(&CSVTypeSystem::F64(false))
                     {
                         // Integer && Float -> Float
-                        schema.push(DummyTypeSystem::F64(has_nulls));
+                        schema.push(CSVTypeSystem::F64(has_nulls));
                     } else {
-                        // Conflicting DummyTypeSystems -> String
-                        schema.push(DummyTypeSystem::String(has_nulls));
+                        // Conflicting CSVTypeSystems -> String
+                        schema.push(CSVTypeSystem::String(has_nulls));
                     }
                 }
                 _ => {
-                    // Conflicting DummyTypeSystems -> String
-                    schema.push(DummyTypeSystem::String(has_nulls));
+                    // Conflicting CSVTypeSystems -> String
+                    schema.push(CSVTypeSystem::String(has_nulls));
                 }
             }
         }
@@ -135,7 +135,7 @@ impl CSVSource {
 impl Source for CSVSource {
     const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
     type Partition = CSVSourcePartition;
-    type TypeSystem = DummyTypeSystem;
+    type TypeSystem = CSVTypeSystem;
     type Error = CSVSourceError;
 
     #[throws(CSVSourceError)]
@@ -203,7 +203,7 @@ impl CSVSourcePartition {
 }
 
 impl SourcePartition for CSVSourcePartition {
-    type TypeSystem = DummyTypeSystem;
+    type TypeSystem = CSVTypeSystem;
     type Parser<'a> = CSVSourcePartitionParser<'a>;
     type Error = CSVSourceError;
 
@@ -260,7 +260,7 @@ impl<'a> CSVSourcePartitionParser<'a> {
 }
 
 impl<'a> PartitionParser<'a> for CSVSourcePartitionParser<'a> {
-    type TypeSystem = DummyTypeSystem;
+    type TypeSystem = CSVTypeSystem;
     type Error = CSVSourceError;
 }
 

@@ -2,6 +2,7 @@ use crate::errors::{ConnectorXPythonError, Result};
 use anyhow::anyhow;
 use connectorx::{
     sources::{
+        mssql::{FloatN, IntN, MsSQLTypeSystem},
         mysql::MySQLTypeSystem,
         postgres::{rewrite_tls_args, PostgresTypeSystem},
     },
@@ -13,21 +14,22 @@ use connectorx::{
 use fehler::{throw, throws};
 use r2d2_mysql::mysql::{prelude::Queryable, Pool, Row};
 use rusqlite::{types::Type, Connection};
-use sqlparser::dialect::MySqlDialect;
-use sqlparser::dialect::PostgreSqlDialect;
-use sqlparser::dialect::SQLiteDialect;
+use sqlparser::dialect::{MsSqlDialect, MySqlDialect, PostgreSqlDialect, SQLiteDialect};
 use std::convert::TryFrom;
+use tokio::net::TcpStream;
+use tokio_util::compat::TokioAsyncWriteCompatExt;
 use url::Url;
 
 pub enum SourceType {
     Postgres,
-    Sqlite,
-    Mysql,
+    SQLite,
+    MySQL,
+    MsSQL,
 }
 
 pub struct SourceConn {
     pub ty: SourceType,
-    pub conn: String,
+    pub conn: Url,
 }
 
 impl TryFrom<&str> for SourceConn {
@@ -38,27 +40,33 @@ impl TryFrom<&str> for SourceConn {
         match url.scheme() {
             "postgres" | "postgresql" => Ok(SourceConn {
                 ty: SourceType::Postgres,
-                conn: conn.into(),
+                conn: url,
             }),
             "sqlite" => Ok(SourceConn {
-                ty: SourceType::Sqlite,
-                conn: conn[9..].into(),
+                ty: SourceType::SQLite,
+                conn: url,
             }),
             "mysql" => Ok(SourceConn {
-                ty: SourceType::Mysql,
-                conn: conn.into(),
+                ty: SourceType::MySQL,
+                conn: url,
             }),
+            "mssql" => Ok(SourceConn {
+                ty: SourceType::MsSQL,
+                conn: url,
+            }),
+
             _ => unimplemented!("Connection: {} not supported!", conn),
         }
     }
 }
 
-impl SourceType {
-    pub fn get_col_range(&self, conn: &str, query: &str, col: &str) -> Result<(i64, i64)> {
-        match self {
-            SourceType::Postgres => pg_get_partition_range(conn, query, col),
-            SourceType::Sqlite => sqlite_get_partition_range(conn, query, col),
-            SourceType::Mysql => mysql_get_partition_range(conn, query, col),
+impl SourceConn {
+    pub fn get_col_range(&self, query: &str, col: &str) -> Result<(i64, i64)> {
+        match self.ty {
+            SourceType::Postgres => pg_get_partition_range(&self.conn, query, col),
+            SourceType::SQLite => sqlite_get_partition_range(&self.conn, query, col),
+            SourceType::MySQL => mysql_get_partition_range(&self.conn, query, col),
+            SourceType::MsSQL => mssql_get_partition_range(&self.conn, query, col),
         }
     }
 
@@ -70,15 +78,18 @@ impl SourceType {
         lower: i64,
         upper: i64,
     ) -> CXQuery<String> {
-        let query = match self {
+        let query = match self.ty {
             SourceType::Postgres => {
                 single_col_partition_query(query, col, lower, upper, &PostgreSqlDialect {})?
             }
-            SourceType::Sqlite => {
+            SourceType::SQLite => {
                 single_col_partition_query(query, col, lower, upper, &SQLiteDialect {})?
             }
-            SourceType::Mysql => {
+            SourceType::MySQL => {
                 single_col_partition_query(query, col, lower, upper, &MySqlDialect {})?
+            }
+            SourceType::MsSQL => {
+                single_col_partition_query(query, col, lower, upper, &MsSqlDialect {})?
             }
         };
 
@@ -87,8 +98,8 @@ impl SourceType {
 }
 
 #[throws(ConnectorXPythonError)]
-fn pg_get_partition_range(conn: &str, query: &str, col: &str) -> (i64, i64) {
-    let (config, tls) = rewrite_tls_args(conn)?;
+fn pg_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
+    let (config, tls) = rewrite_tls_args(conn.as_str())?;
     let mut client = config.connect(tls.unwrap())?;
     let range_query = get_partition_range_query(query, col, &PostgreSqlDialect {})?;
     let row = client.query_one(range_query.as_str(), &[])?;
@@ -124,8 +135,8 @@ fn pg_get_partition_range(conn: &str, query: &str, col: &str) -> (i64, i64) {
 }
 
 #[throws(ConnectorXPythonError)]
-fn sqlite_get_partition_range(conn: &str, query: &str, col: &str) -> (i64, i64) {
-    let conn = Connection::open(&conn[9..])?;
+fn sqlite_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
+    let conn = Connection::open(conn.path())?;
     // SQLite only optimize min max queries when there is only one aggregation
     // https://www.sqlite.org/optoverview.html#minmax
     let (min_query, max_query) = get_partition_range_query_sep(query, col, &SQLiteDialect {})?;
@@ -164,8 +175,8 @@ fn sqlite_get_partition_range(conn: &str, query: &str, col: &str) -> (i64, i64) 
 }
 
 #[throws(ConnectorXPythonError)]
-fn mysql_get_partition_range(conn: &str, query: &str, col: &str) -> (i64, i64) {
-    let pool = Pool::new(conn)?;
+fn mysql_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
+    let pool = Pool::new(conn.as_str())?;
     let mut conn = pool.get_conn()?;
     let range_query = get_partition_range_query(query, col, &MySqlDialect {})?;
     let row: Row = conn
@@ -193,6 +204,82 @@ fn mysql_get_partition_range(conn: &str, query: &str, col: &str) -> (i64, i64) {
             (min_v, max_v)
         }
         _ => throw!(anyhow!("Partition can only be done on int columns")),
+    };
+
+    (min_v, max_v)
+}
+
+#[throws(ConnectorXPythonError)]
+fn mssql_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
+    use tiberius::{AuthMethod, Client, Config, EncryptionLevel};
+    use tokio::runtime::Runtime;
+    let rt = Runtime::new().unwrap();
+    let mut config = Config::new();
+
+    config.host(conn.host_str().unwrap_or("localhost"));
+    config.port(conn.port().unwrap_or(1433));
+    config.authentication(AuthMethod::sql_server(
+        conn.username(),
+        conn.password().unwrap_or(""),
+    ));
+
+    config.database(&conn.path()[1..]); // remove the leading "/"
+    config.encryption(EncryptionLevel::NotSupported);
+
+    let tcp = rt.block_on(TcpStream::connect(config.get_addr()))?;
+    tcp.set_nodelay(true)?;
+
+    let mut client = rt.block_on(Client::connect(config, tcp.compat_write()))?;
+
+    let range_query = get_partition_range_query(query, col, &MsSqlDialect {})?;
+    let query_result = rt.block_on(client.query(range_query.as_str(), &[]))?;
+    let row = rt.block_on(query_result.into_row())?.unwrap();
+
+    let col_type = MsSQLTypeSystem::from(&row.columns()[0].column_type());
+    let (min_v, max_v) = match col_type {
+        MsSQLTypeSystem::Tinyint(_) => {
+            let min_v: u8 = row.get(0).unwrap();
+            let max_v: u8 = row.get(1).unwrap();
+            (min_v as i64, max_v as i64)
+        }
+        MsSQLTypeSystem::Smallint(_) => {
+            let min_v: i16 = row.get(0).unwrap();
+            let max_v: i16 = row.get(1).unwrap();
+            (min_v as i64, max_v as i64)
+        }
+        MsSQLTypeSystem::Int(_) => {
+            let min_v: i32 = row.get(0).unwrap();
+            let max_v: i32 = row.get(1).unwrap();
+            (min_v as i64, max_v as i64)
+        }
+        MsSQLTypeSystem::Bigint(_) => {
+            let min_v: i64 = row.get(0).unwrap();
+            let max_v: i64 = row.get(1).unwrap();
+            (min_v, max_v)
+        }
+        MsSQLTypeSystem::Intn(_) => {
+            let min_v: IntN = row.get(0).unwrap();
+            let max_v: IntN = row.get(1).unwrap();
+            (min_v.0, max_v.0)
+        }
+        MsSQLTypeSystem::Float24(_) => {
+            let min_v: f32 = row.get(0).unwrap();
+            let max_v: f32 = row.get(1).unwrap();
+            (min_v as i64, max_v as i64)
+        }
+        MsSQLTypeSystem::Float53(_) => {
+            let min_v: f64 = row.get(0).unwrap();
+            let max_v: f64 = row.get(1).unwrap();
+            (min_v as i64, max_v as i64)
+        }
+        MsSQLTypeSystem::Floatn(_) => {
+            let min_v: FloatN = row.get(0).unwrap();
+            let max_v: FloatN = row.get(1).unwrap();
+            (min_v.0 as i64, max_v.0 as i64)
+        }
+        _ => throw!(anyhow!(
+            "Partition can only be done on int or float columns"
+        )),
     };
 
     (min_v, max_v)

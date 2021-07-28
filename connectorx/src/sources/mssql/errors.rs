@@ -1,18 +1,21 @@
 use thiserror::Error;
 
 #[derive(Error, Debug)]
-pub enum SQLiteSourceError {
-    #[error("Cannot infer type from null for SQLite")]
-    InferTypeFromNull,
-
+pub enum MsSQLSourceError {
     #[error(transparent)]
     ConnectorXError(#[from] crate::errors::ConnectorXError),
 
     #[error(transparent)]
-    SQLiteError(#[from] rusqlite::Error),
+    MsSQLError(#[from] tiberius::error::Error),
 
     #[error(transparent)]
-    SQLitePoolError(#[from] r2d2::Error),
+    MsSQLRuntimeError(#[from] bb8::RunError<bb8_tiberius::Error>),
+
+    #[error(transparent)]
+    MsSQLPoolError(#[from] bb8_tiberius::Error),
+
+    #[error(transparent)]
+    MsSQLUrlError(#[from] url::ParseError),
 
     /// Any other errors that are too trivial to be put here explicitly.
     #[error(transparent)]

@@ -2,16 +2,19 @@ mod destination;
 mod pandas_columns;
 mod pystring;
 mod transports;
-mod types;
+mod typesystem;
 
 pub use self::destination::{PandasBlockInfo, PandasDestination, PandasPartitionDestination};
-pub use self::transports::{MysqlPandasTransport, PostgresPandasTransport, SqlitePandasTransport};
-pub use self::types::{PandasDType, PandasTypeSystem};
+pub use self::transports::{
+    MsSQLPandasTransport, MysqlPandasTransport, PostgresPandasTransport, SqlitePandasTransport,
+};
+pub use self::typesystem::{PandasDType, PandasTypeSystem};
 use crate::errors::ConnectorXPythonError;
 use crate::source_router::{SourceConn, SourceType};
 use connectorx::{
     prelude::*,
     sources::{
+        mssql::MsSQLSource,
         mysql::{BinaryProtocol as MySQLBinaryProtocol, MySQLSource, TextProtocol},
         postgres::{
             rewrite_tls_args, BinaryProtocol as PgBinaryProtocol, CSVProtocol, CursorProtocol,
@@ -26,6 +29,7 @@ use log::debug;
 use postgres::NoTls;
 use postgres_native_tls::MakeTlsConnector;
 use pyo3::{PyAny, Python};
+use std::sync::Arc;
 
 #[throws(ConnectorXPythonError)]
 pub fn write_pandas<'a>(
@@ -124,14 +128,14 @@ pub fn write_pandas<'a>(
                 _ => unimplemented!("{} protocol not supported", protocol),
             }
         }
-        SourceType::Sqlite => {
-            let source = SQLiteSource::new(&source_conn.conn[..], queries.len())?;
+        SourceType::SQLite => {
+            let source = SQLiteSource::new(source_conn.conn.path(), queries.len())?;
             let dispatcher =
                 Dispatcher::<_, _, SqlitePandasTransport>::new(source, &mut destination, queries);
             debug!("Running dispatcher");
             dispatcher.run()?;
         }
-        SourceType::Mysql => {
+        SourceType::MySQL => {
             debug!("Protocol: {}", protocol);
             match protocol {
                 "binary" => {
@@ -161,6 +165,14 @@ pub fn write_pandas<'a>(
                 }
                 _ => unimplemented!("{} protocol not supported", protocol),
             }
+        }
+        SourceType::MsSQL => {
+            let rt = Arc::new(tokio::runtime::Runtime::new().expect("Failed to create runtime"));
+            let source = MsSQLSource::new(rt, &source_conn.conn[..], queries.len())?;
+            let dispatcher =
+                Dispatcher::<_, _, MsSQLPandasTransport>::new(source, &mut destination, queries);
+            debug!("Running dispatcher");
+            dispatcher.run()?;
         }
     }
 

@@ -222,28 +222,30 @@ macro_rules! impl_transport {
     (@cvt $TP:ty, $V1:tt [$T1:ty] => $V2:tt [$T2:ty] | conversion $HOW:ident) => {
         impl_transport!(@cvt $HOW $TP, $T1, $T2);
     };
-    (@cvt all $TP:ty, $T1:ty, $T2:ty) => {
+    (@cvt auto $TP:ty, $T1:ty, $T2:ty) => {
         impl<'tp, 'r> $crate::typesystem::TypeConversion<$T1, $T2> for $TP {
             fn convert(val: $T1) -> $T2 {
                 val as _
             }
         }
 
+        impl_transport!(@cvt option $TP, $T1, $T2);
+    };
+    (@cvt owned $TP:ty, $T1:ty, $T2:ty) => {
+        impl<'tp, 'r> $crate::typesystem::TypeConversion<$T1, $T2> for $TP {
+            fn convert(val: $T1) -> $T2 {
+                val.to_owned()
+            }
+        }
+
+        impl_transport!(@cvt option $TP, $T1, $T2);
+    };
+    (@cvt option $TP:ty, $T1:ty, $T2:ty) => {
         impl<'tp, 'r> $crate::typesystem::TypeConversion<Option<$T1>, Option<$T2>> for $TP {
             fn convert(val: Option<$T1>) -> Option<$T2> {
                 val.map(Self::convert)
             }
         }
     };
-
-
-    (@cvt half $TP:ty, $T1:ty, $T2:ty) => {
-        impl<'tp, 'r> $crate::typesystem::TypeConversion<Option<$T1>, Option<$T2>> for $TP {
-            fn convert(val: Option<$T1>) -> Option<$T2> {
-                val.map(Self::convert)
-            }
-        }
-    };
-
     (@cvt none $TP:ty, $T1:ty, $T2:ty) => {};
 }

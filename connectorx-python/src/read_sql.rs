@@ -52,7 +52,7 @@ pub fn read_sql<'a>(
             let num = num as i64;
 
             let (min, max) = match (min, max) {
-                (None, None) => source_conn.ty.get_col_range(conn, &query, &col)?,
+                (None, None) => source_conn.get_col_range(&query, &col)?,
                 (Some(min), Some(max)) => (min, max),
                 _ => throw!(PyValueError::new_err(
                     "partition_query range can not be partially specified",
@@ -67,7 +67,7 @@ pub fn read_sql<'a>(
                     true => max + 1,
                     false => min + (i + 1) * partition_size,
                 };
-                let partition_query = source_conn.ty.get_part_query(&query, &col, lower, upper)?;
+                let partition_query = source_conn.get_part_query(&query, &col, lower, upper)?;
                 queries.push(partition_query);
             }
             queries
