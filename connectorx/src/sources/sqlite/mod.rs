@@ -109,6 +109,12 @@ where
                         self.names = names;
                         self.schema = types.into_iter().map(|t| t.unwrap()).collect();
                         return;
+                    } else if i == self.queries.len() - 1 {
+                        debug!(
+                            "cannot get metadata for '{}' due to null value: {:?}",
+                            query, types
+                        );
+                        throw!(SQLiteSourceError::InferTypeFromNull);
                     }
                 }
                 Err(e) => {
@@ -120,7 +126,7 @@ where
                     }
                     if i == self.queries.len() - 1 && num_empty < self.queries.len() {
                         // tried the last query but still get an error
-                        debug!("cannot get metadata for '{}', try next query: {}", query, e);
+                        debug!("cannot get metadata for '{}': {}", query, e);
                         throw!(e)
                     }
                 }
