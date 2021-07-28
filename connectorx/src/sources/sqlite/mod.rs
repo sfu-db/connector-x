@@ -76,33 +76,34 @@ where
 
         // assuming all the partition queries yield same schema
         for (i, query) in self.queries.iter().enumerate() {
-            match conn.query_row(
-                &limit1_query(query, &SQLiteDialect {})?.as_str(),
-                [],
-                |row| {
-                    for (j, col) in row.columns().iter().enumerate() {
-                        if j >= names.len() {
-                            names.push(col.name().to_string());
+            let l1query = limit1_query(query, &SQLiteDialect {})?;
+
+            let is_sucess = conn.query_row(l1query.as_str(), [], |row| {
+                for (j, col) in row.columns().iter().enumerate() {
+                    if j >= names.len() {
+                        names.push(col.name().to_string());
+                    }
+                    if j >= types.len() {
+                        let vr = row.get_ref(j)?;
+                        match SQLiteTypeSystem::try_from((col.decl_type(), vr.data_type())) {
+                            Ok(t) => types.push(Some(t)),
+                            Err(_) => {
+                                types.push(None);
+                            }
                         }
-                        if j >= types.len() {
-                            let vr = row.get_ref(j)?;
-                            match SQLiteTypeSystem::try_from((col.decl_type(), vr.data_type())) {
-                                Ok(t) => types.push(Some(t)),
-                                Err(_) => {
-                                    types.push(None);
-                                }
-                            }
-                        } else if types[j] == None {
-                            let vr = row.get_ref(j)?;
-                            match SQLiteTypeSystem::try_from((col.decl_type(), vr.data_type())) {
-                                Ok(t) => types[j] = Some(t),
-                                Err(_) => {}
-                            }
+                    } else if types[j].is_none() {
+                        // We didn't get the type in the previous round
+                        let vr = row.get_ref(j)?;
+                        if let Ok(t) = SQLiteTypeSystem::try_from((col.decl_type(), vr.data_type()))
+                        {
+                            types[j] = Some(t)
                         }
                     }
-                    Ok(())
-                },
-            ) {
+                }
+                Ok(())
+            });
+
+            match is_sucess {
                 Ok(()) => {
                     if !types.contains(&None) {
                         self.names = names;

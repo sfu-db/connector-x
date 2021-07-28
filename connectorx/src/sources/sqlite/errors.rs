@@ -2,6 +2,9 @@ use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum SQLiteSourceError {
+    #[error("Cannot infer type from null for SQLite")]
+    InferTypeFromNull,
+
     #[error(transparent)]
     ConnectorXError(#[from] crate::errors::ConnectorXError),
 
