@@ -85,7 +85,7 @@ Supported protocols, data types and type mappings can be found [here](Types.md).
 - [x] Sqlite
 - [x] Redshift (through postgres protocol)
 - [x] Clickhouse (through mysql protocol)
-- [x] SQL Server
+- [ ] SQL Server
 - [ ] Oracle
 - [ ] ...
 
@@ -185,3 +185,6 @@ Checkout our [discussions](https://github.com/sfu-db/connector-x/discussions) to
 # Historical Benchmark Results
 
 https://sfu-db.github.io/connector-x/dev/bench/
+
+# Developer's Guide
+Please see [Developer's Guide](https://github.com/sfu-db/connector-x/blob/main/Contribute.md) for information about developing ConnectorX.
