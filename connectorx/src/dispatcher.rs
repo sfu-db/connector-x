@@ -1,6 +1,5 @@
-///! This module provides [`dispatcher::Dispatcher`], the core struct in ConnectorX 
-//! that drives the data loading from a source to a destination.
-
+///! This module provides [`dispatcher::Dispatcher`], the core struct in ConnectorX
+///! that drives the data loading from a source to a destination.
 use crate::{
     data_order::{coordinate, DataOrder},
     destinations::{Destination, DestinationPartition},
