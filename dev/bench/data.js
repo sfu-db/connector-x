@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1627518562632,
+  "lastUpdate": 1627523051035,
   "repoUrl": "https://github.com/sfu-db/connector-x",
   "entries": {
     "ConnectorX TPC-H Scale@1 Benchmarks": [
@@ -1330,6 +1330,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 3.1102545208516417",
             "extra": "mean: 19.64630397320725 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "xiaoying_wang@sfu.ca",
+            "name": "Xiaoying Wang",
+            "username": "wangxiaoying"
+          },
+          "committer": {
+            "email": "xiaoying_wang@sfu.ca",
+            "name": "Xiaoying Wang",
+            "username": "wangxiaoying"
+          },
+          "distinct": true,
+          "id": "ddb69f06a754d6ce1d8197254f45aed0b423338f",
+          "message": "add byte slice to pandas bytes, add test of types for mssql",
+          "timestamp": "2021-07-29T01:34:55Z",
+          "tree_id": "99baede6251cdd4bea42bb799ee496e45383695e",
+          "url": "https://github.com/sfu-db/connector-x/commit/ddb69f06a754d6ce1d8197254f45aed0b423338f"
+        },
+        "date": 1627523049994,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_mysql",
+            "value": 0.06408320432749633,
+            "unit": "iter/sec",
+            "range": "stddev: 0.3313265595951601",
+            "extra": "mean: 15.604712818190455 sec\nrounds: 5"
+          },
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_postgres",
+            "value": 0.06275610871016228,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4842434061813536",
+            "extra": "mean: 15.934703737264499 sec\nrounds: 5"
           }
         ]
       }
