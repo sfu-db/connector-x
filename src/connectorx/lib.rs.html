@@ -155,6 +155,25 @@
 <span id="152">152</span>
 <span id="153">153</span>
 <span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
 </pre><pre class="rust">
 <span class="attribute">#![<span class="ident">feature</span>(<span class="ident">generic_associated_types</span>)]</span>
 <span class="attribute">#![<span class="ident">allow</span>(<span class="ident">incomplete_features</span>)]</span>
@@ -244,16 +263,20 @@
 <span class="doccomment">//!</span>
 <span class="doccomment">//! ## Putting things together</span>
 <span class="doccomment">//!</span>
-<span class="doccomment">//! Say, you decide to load data from SQL Server to Arrow. In ConnectorX we already provided the source for SQL Server as [`sources::mssql::MsSQLSource`], and the</span>
-<span class="doccomment">//! Arrow destination [`destinations::arrow::ArrowDestination`], as well as the transport [`transports::MsSQLArrowTransport`].</span>
+<span class="doccomment">//! Say, you decide to load data from SQL Server to Arrow. In ConnectorX we already provided the source for SQL Server as [`sources::sqlite::SQLiteSource`], and the</span>
+<span class="doccomment">//! Arrow destination [`destinations::arrow::ArrowDestination`], as well as the transport [`transports::SQLiteArrowTransport`].</span>
 <span class="doccomment">//! Given the source, destination and transport already implemented, you can use [`dispatcher::Dispatcher`] to load the data:</span>
 <span class="doccomment">//!</span>
-<span class="doccomment">//! ```ignore</span>
+<span class="doccomment">//! ```no_run</span>
+<span class="doccomment">//! use connectorx::prelude::*;</span>
+<span class="doccomment">//!</span>
 <span class="doccomment">//! let mut destination = ArrowDestination::new();</span>
-<span class="doccomment">//! let source = MsSQLSource::new(...)?;</span>
-<span class="doccomment">//! let queries = &amp;[&quot;query1&quot;, &quot;query2&quot;];</span>
-<span class="doccomment">//! let dispatcher = Dispatcher::&lt;MsSQLSource, ArrowDestination, MsSQLArrowTransport&gt;::new(source, &amp;mut destination, queries);</span>
-<span class="doccomment">//! dispatcher.run()?;</span>
+<span class="doccomment">//! let source = SQLiteSource::new(&quot;sqlite:///path/to/db&quot;, 10).expect(&quot;cannot create the source&quot;);</span>
+<span class="doccomment">//! let queries = &amp;[&quot;SELECT * FROM db WHERE id &lt; 100&quot;, &quot;SELECT * FROM db WHERE id &gt;= 100&quot;];</span>
+<span class="doccomment">//! let dispatcher = Dispatcher::&lt;SQLiteSource, ArrowDestination, SQLiteArrowTransport&gt;::new(source, &amp;mut destination, queries);</span>
+<span class="doccomment">//! dispatcher.run().expect(&quot;run failed&quot;);</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! let data = destination.arrow();</span>
 <span class="doccomment">//! ```</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! ## Need more examples?</span>
@@ -301,10 +324,25 @@
 
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">prelude</span> {
     <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::data_order</span>::{<span class="ident">coordinate</span>, <span class="ident">DataOrder</span>};
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dst_arrow&quot;</span>)]</span>
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::destinations::arrow::ArrowDestination</span>;
     <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::destinations</span>::{<span class="ident">Consume</span>, <span class="ident">Destination</span>, <span class="ident">DestinationPartition</span>};
     <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::dispatcher::Dispatcher</span>;
     <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::errors::ConnectorXError</span>;
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;src_csv&quot;</span>)]</span>
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::sources::csv::CSVSource</span>;
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;src_dummy&quot;</span>)]</span>
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::sources::dummy::DummySource</span>;
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;src_mssql&quot;</span>)]</span>
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::sources::mssql::MsSQLSource</span>;
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;src_mysql&quot;</span>)]</span>
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::sources::mysql::MySQLSource</span>;
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;src_postgres&quot;</span>)]</span>
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::sources::postgres::PostgresSource</span>;
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;src_sqlite&quot;</span>)]</span>
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::sources::sqlite::SQLiteSource</span>;
     <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::sources</span>::{<span class="ident">PartitionParser</span>, <span class="ident">Produce</span>, <span class="ident">Source</span>, <span class="ident">SourcePartition</span>};
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::transports</span>::<span class="kw-2">*</span>;
     <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::typesystem</span>::{
         <span class="ident">ParameterizedFunc</span>, <span class="ident">ParameterizedOn</span>, <span class="ident">Realize</span>, <span class="ident">Transport</span>, <span class="ident">TypeAssoc</span>, <span class="ident">TypeConversion</span>,
         <span class="ident">TypeSystem</span>,

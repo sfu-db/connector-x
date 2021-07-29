@@ -514,6 +514,30 @@
 <span id="511">511</span>
 <span id="512">512</span>
 <span id="513">513</span>
+<span id="514">514</span>
+<span id="515">515</span>
+<span id="516">516</span>
+<span id="517">517</span>
+<span id="518">518</span>
+<span id="519">519</span>
+<span id="520">520</span>
+<span id="521">521</span>
+<span id="522">522</span>
+<span id="523">523</span>
+<span id="524">524</span>
+<span id="525">525</span>
+<span id="526">526</span>
+<span id="527">527</span>
+<span id="528">528</span>
+<span id="529">529</span>
+<span id="530">530</span>
+<span id="531">531</span>
+<span id="532">532</span>
+<span id="533">533</span>
+<span id="534">534</span>
+<span id="535">535</span>
+<span id="536">536</span>
+<span id="537">537</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::errors::ConnectorXError</span>;
 <span class="kw">use</span> <span class="ident">anyhow::anyhow</span>;
@@ -547,6 +571,30 @@
             <span class="ident">CXQuery::Naked</span>(<span class="ident">q</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">q</span>.<span class="ident">as_ref</span>(),
             <span class="ident">CXQuery::Wrapped</span>(<span class="ident">q</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">q</span>.<span class="ident">as_ref</span>(),
         }
+    }
+}
+
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">CXQuery</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">CXQuery</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
+        <span class="ident">CXQuery::Naked</span>(<span class="ident">s</span>.<span class="ident">to_string</span>())
+    }
+}
+
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="op">&amp;&amp;</span><span class="ident">str</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">CXQuery</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">s</span>: <span class="op">&amp;&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">CXQuery</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
+        <span class="ident">CXQuery::Naked</span>(<span class="ident">s</span>.<span class="ident">to_string</span>())
+    }
+}
+
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">CXQuery</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">String</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">CXQuery</span> {
+        <span class="ident">CXQuery::Naked</span>(<span class="ident">s</span>.<span class="ident">clone</span>())
+    }
+}
+
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">CXQuery</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">CXQuery</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">q</span>: <span class="kw-2">&amp;</span><span class="ident">CXQuery</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">CXQuery</span> {
+        <span class="ident">q</span>.<span class="ident">clone</span>()
     }
 }
 
