@@ -3,8 +3,7 @@ name: docs
 on:
   push:
     branches:
-      - prerelease
-      - release
+      - main
 
 jobs:
   docs:
