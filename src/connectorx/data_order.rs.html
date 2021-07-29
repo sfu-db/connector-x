@@ -25,7 +25,13 @@
 <span id="22">22</span>
 <span id="23">23</span>
 <span id="24">24</span>
+<span id="25">25</span>
+<span id="26">26</span>
+<span id="27">27</span>
 </pre><pre class="rust">
+<span class="doccomment">//! This module provides two data orders: row-wise and column-wise for tabular data,</span>
+<span class="doccomment">//! as well as a function to coordinate the data order between source and destination.</span>
+
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::errors::ConnectorXError</span>;
 <span class="kw">use</span> <span class="ident">fehler</span>::{<span class="ident">throw</span>, <span class="ident">throws</span>};
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">Debug</span>)]</span>

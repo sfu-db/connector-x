@@ -250,13 +250,111 @@
 <span id="247">247</span>
 <span id="248">248</span>
 <span id="249">249</span>
+<span id="250">250</span>
+<span id="251">251</span>
+<span id="252">252</span>
+<span id="253">253</span>
+<span id="254">254</span>
+<span id="255">255</span>
+<span id="256">256</span>
+<span id="257">257</span>
+<span id="258">258</span>
+<span id="259">259</span>
+<span id="260">260</span>
+<span id="261">261</span>
+<span id="262">262</span>
+<span id="263">263</span>
+<span id="264">264</span>
+<span id="265">265</span>
+<span id="266">266</span>
+<span id="267">267</span>
+<span id="268">268</span>
+<span id="269">269</span>
+<span id="270">270</span>
+<span id="271">271</span>
+<span id="272">272</span>
+<span id="273">273</span>
+<span id="274">274</span>
+<span id="275">275</span>
+<span id="276">276</span>
+<span id="277">277</span>
+<span id="278">278</span>
+<span id="279">279</span>
+<span id="280">280</span>
+<span id="281">281</span>
+<span id="282">282</span>
+<span id="283">283</span>
+<span id="284">284</span>
+<span id="285">285</span>
+<span id="286">286</span>
+<span id="287">287</span>
+<span id="288">288</span>
+<span id="289">289</span>
+<span id="290">290</span>
+<span id="291">291</span>
+<span id="292">292</span>
+<span id="293">293</span>
+<span id="294">294</span>
+<span id="295">295</span>
+<span id="296">296</span>
+<span id="297">297</span>
+<span id="298">298</span>
+<span id="299">299</span>
+<span id="300">300</span>
+<span id="301">301</span>
+<span id="302">302</span>
+<span id="303">303</span>
+<span id="304">304</span>
+<span id="305">305</span>
+<span id="306">306</span>
+<span id="307">307</span>
+<span id="308">308</span>
+<span id="309">309</span>
+<span id="310">310</span>
+<span id="311">311</span>
+<span id="312">312</span>
 </pre><pre class="rust">
-<span class="doccomment">/// A macro to implement `TypeAssoc` and `Realize` which saves repetitive code.</span>
+<span class="doccomment">/// Associate physical representations to a typesystem.</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// # Example Usage</span>
-<span class="doccomment">/// `impl_typesystem!(DataType, [DataType::F64] =&gt; f64, [DataType::I64] =&gt; i64);`</span>
-<span class="doccomment">/// This means for the type system `DataType`, it&#39;s variant `DataType::F64(false)` is corresponding to the physical type f64 and</span>
-<span class="doccomment">/// `DataType::F64(true)` is corresponding to the physical type Option&lt;f64&gt;. Same for I64 and i64</span>
+<span class="doccomment">/// ```ignore</span>
+<span class="doccomment">/// pub enum ArrowTypeSystem {</span>
+<span class="doccomment">///     Int32(bool),</span>
+<span class="doccomment">///     Int64(bool),</span>
+<span class="doccomment">///     UInt32(bool),</span>
+<span class="doccomment">///     UInt64(bool),</span>
+<span class="doccomment">///     Float32(bool),</span>
+<span class="doccomment">///     Float64(bool),</span>
+<span class="doccomment">///     Boolean(bool),</span>
+<span class="doccomment">///     LargeUtf8(bool),</span>
+<span class="doccomment">///     LargeBinary(bool),</span>
+<span class="doccomment">///     Date32(bool),</span>
+<span class="doccomment">///     Date64(bool),</span>
+<span class="doccomment">///     Time64(bool),</span>
+<span class="doccomment">///     DateTimeTz(bool),</span>
+<span class="doccomment">/// }</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// impl_typesystem! {</span>
+<span class="doccomment">///     system = ArrowTypeSystem,</span>
+<span class="doccomment">///     mappings = {</span>
+<span class="doccomment">///         { Int32      =&gt; i32           }</span>
+<span class="doccomment">///         { Int64      =&gt; i64           }</span>
+<span class="doccomment">///         { UInt32     =&gt; u32           }</span>
+<span class="doccomment">///         { UInt64     =&gt; u64           }</span>
+<span class="doccomment">///         { Float64    =&gt; f64           }</span>
+<span class="doccomment">///         { Float32    =&gt; f32           }</span>
+<span class="doccomment">///         { Boolean    =&gt; bool          }</span>
+<span class="doccomment">///         { LargeUtf8  =&gt; String        }</span>
+<span class="doccomment">///         { LargeBinary =&gt; Vec&lt;u8&gt;      }</span>
+<span class="doccomment">///         { Date32     =&gt; NaiveDate     }</span>
+<span class="doccomment">///         { Date64     =&gt; NaiveDateTime }</span>
+<span class="doccomment">///         { Time64     =&gt; NaiveTime     }</span>
+<span class="doccomment">///         { DateTimeTz =&gt; DateTime&lt;Utc&gt; }</span>
+<span class="doccomment">///     }</span>
+<span class="doccomment">/// }</span>
+<span class="doccomment">/// ```</span>
+<span class="doccomment">/// This means for the type system `ArrowTypeSystem`, it&#39;s variant `ArrowTypeSystem::Int32(false)` is corresponding to the physical type `i32` and</span>
+<span class="doccomment">/// `ArrowTypeSystem::Int32(true)` is corresponding to the physical type `Option&lt;i32&gt;`.</span>
 <span class="attribute">#[<span class="ident">macro_export</span>]</span>
 <span class="macro">macro_rules!</span> <span class="ident">impl_typesystem</span> {
     (
@@ -323,20 +421,46 @@
     };
 }
 
-<span class="doccomment">/// A macro to help define Transport.</span>
+<span class="doccomment">/// A macro to help define a Transport.</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// # Example Usage</span>
 <span class="doccomment">/// ```ignore</span>
-<span class="doccomment">/// impl_transport! {</span>
-<span class="doccomment">///    [&#39;py],</span>
-<span class="doccomment">///    PostgresPandasTransport&lt;&#39;py&gt;,</span>
-<span class="doccomment">///    PostgresDTypes =&gt; PandasTypes,</span>
-<span class="doccomment">///    PostgresSource =&gt; PandasDestination&lt;&#39;py&gt;,</span>
-<span class="doccomment">///    ([PostgresDTypes::Float4], [PandasTypes::F64]) =&gt; (f32, f64) conversion all</span>
-<span class="doccomment">/// }</span>
+<span class="doccomment">/// impl_transport!(</span>
+<span class="doccomment">///     name = MsSQLArrowTransport,</span>
+<span class="doccomment">///     error = MsSQLArrowTransportError,</span>
+<span class="doccomment">///     systems = MsSQLTypeSystem =&gt; ArrowTypeSystem,</span>
+<span class="doccomment">///     route = MsSQLSource =&gt; ArrowDestination,</span>
+<span class="doccomment">///     mappings = {</span>
+<span class="doccomment">///         { Tinyint[u8]                   =&gt; Int32[i32]                | conversion auto }</span>
+<span class="doccomment">///         { Smallint[i16]                 =&gt; Int32[i32]                | conversion auto }</span>
+<span class="doccomment">///         { Int[i32]                      =&gt; Int32[i32]                | conversion auto }</span>
+<span class="doccomment">///         { Bigint[i64]                   =&gt; Int64[i64]                | conversion auto }</span>
+<span class="doccomment">///         { Intn[IntN]                    =&gt; Int64[i64]                | conversion option }</span>
+<span class="doccomment">///         { Float24[f32]                  =&gt; Float32[f32]              | conversion auto }</span>
+<span class="doccomment">///         { Float53[f64]                  =&gt; Float64[f64]              | conversion auto }</span>
+<span class="doccomment">///         { Floatn[FloatN]                =&gt; Float64[f64]              | conversion option }</span>
+<span class="doccomment">///         { Bit[bool]                     =&gt; Boolean[bool]             | conversion auto  }</span>
+<span class="doccomment">///         { Nvarchar[&amp;&#39;r str]             =&gt; LargeUtf8[String]         | conversion owned }</span>
+<span class="doccomment">///         { Varchar[&amp;&#39;r str]              =&gt; LargeUtf8[String]         | conversion none }</span>
+<span class="doccomment">///         { Nchar[&amp;&#39;r str]                =&gt; LargeUtf8[String]         | conversion none }</span>
+<span class="doccomment">///         { Char[&amp;&#39;r str]                 =&gt; LargeUtf8[String]         | conversion none }</span>
+<span class="doccomment">///         { Text[&amp;&#39;r str]                 =&gt; LargeUtf8[String]         | conversion none }</span>
+<span class="doccomment">///         { Ntext[&amp;&#39;r str]                =&gt; LargeUtf8[String]         | conversion none }</span>
+<span class="doccomment">///         { Binary[&amp;&#39;r [u8]]              =&gt; LargeBinary[Vec&lt;u8&gt;]      | conversion owned }</span>
+<span class="doccomment">///         { Varbinary[&amp;&#39;r [u8]]           =&gt; LargeBinary[Vec&lt;u8&gt;]      | conversion none }</span>
+<span class="doccomment">///         { Image[&amp;&#39;r [u8]]               =&gt; LargeBinary[Vec&lt;u8&gt;]      | conversion none }</span>
+<span class="doccomment">///         { Numeric[Decimal]              =&gt; Float64[f64]              | conversion option }</span>
+<span class="doccomment">///         { Decimal[Decimal]              =&gt; Float64[f64]              | conversion none }</span>
+<span class="doccomment">///         { Datetime[NaiveDateTime]       =&gt; Date64[NaiveDateTime]     | conversion auto }</span>
+<span class="doccomment">///         { Datetime2[NaiveDateTime]      =&gt; Date64[NaiveDateTime]     | conversion none }</span>
+<span class="doccomment">///         { Smalldatetime[NaiveDateTime]  =&gt; Date64[NaiveDateTime]     | conversion none }</span>
+<span class="doccomment">///         { Date[NaiveDate]               =&gt; Date32[NaiveDate]         | conversion auto }</span>
+<span class="doccomment">///         { Datetimeoffset[DateTime&lt;Utc&gt;] =&gt; DateTimeTz[DateTime&lt;Utc&gt;] | conversion auto }</span>
+<span class="doccomment">///         { Uniqueidentifier[Uuid]        =&gt; LargeUtf8[String]         | conversion option }</span>
+<span class="doccomment">///     }</span>
+<span class="doccomment">/// );</span>
 <span class="doccomment">/// ```</span>
-<span class="doccomment">/// This implements `Transport` to `PostgresPandasTransport&lt;&#39;py&gt;`.</span>
-<span class="doccomment">/// The lifetime used must be declare in the first argument in the bracket.</span>
+<span class="doccomment">/// This implements a `Transport` called `MsSQLArrowTransport` that can convert types from MsSQL to Arrow.</span>
 <span class="attribute">#[<span class="ident">macro_export</span>]</span>
 <span class="macro">macro_rules!</span> <span class="ident">impl_transport</span> {
     (
@@ -475,29 +599,31 @@
     (@<span class="ident">cvt</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TP</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">V1</span>:<span class="ident">tt</span> [<span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span>:<span class="ident">ty</span>] <span class="op">=</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">V2</span>:<span class="ident">tt</span> [<span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span>:<span class="ident">ty</span>] <span class="op">|</span> <span class="ident">conversion</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">HOW</span>:<span class="ident">ident</span>) <span class="op">=</span><span class="op">&gt;</span> {
         <span class="macro">impl_transport!</span>(@<span class="ident">cvt</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">HOW</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TP</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span>);
     };
-    (@<span class="ident">cvt</span> <span class="ident">all</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TP</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span>:<span class="ident">ty</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    (@<span class="ident">cvt</span> <span class="ident">auto</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TP</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span>:<span class="ident">ty</span>) <span class="op">=</span><span class="op">&gt;</span> {
         <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;tp</span>, <span class="lifetime">&#39;r</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="kw">crate</span><span class="macro-nonterminal">::typesystem::TypeConversion</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TP</span> {
             <span class="kw">fn</span> <span class="ident">convert</span>(<span class="ident">val</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span> {
                 <span class="ident">val</span> <span class="kw">as</span> <span class="kw">_</span>
             }
         }
 
+        <span class="macro">impl_transport!</span>(@<span class="ident">cvt</span> <span class="ident">option</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TP</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span>);
+    };
+    (@<span class="ident">cvt</span> <span class="ident">owned</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TP</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span>:<span class="ident">ty</span>) <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;tp</span>, <span class="lifetime">&#39;r</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="kw">crate</span><span class="macro-nonterminal">::typesystem::TypeConversion</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TP</span> {
+            <span class="kw">fn</span> <span class="ident">convert</span>(<span class="ident">val</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span> {
+                <span class="ident">val</span>.<span class="ident">to_owned</span>()
+            }
+        }
+
+        <span class="macro">impl_transport!</span>(@<span class="ident">cvt</span> <span class="ident">option</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TP</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span>);
+    };
+    (@<span class="ident">cvt</span> <span class="ident">option</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TP</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span>:<span class="ident">ty</span>) <span class="op">=</span><span class="op">&gt;</span> {
         <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;tp</span>, <span class="lifetime">&#39;r</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="kw">crate</span><span class="macro-nonterminal">::typesystem::TypeConversion</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span><span class="op">&gt;</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TP</span> {
             <span class="kw">fn</span> <span class="ident">convert</span>(<span class="ident">val</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span><span class="op">&gt;</span> {
                 <span class="ident">val</span>.<span class="ident">map</span>(<span class="self">Self</span><span class="ident">::convert</span>)
             }
         }
     };
-
-
-    (@<span class="ident">cvt</span> <span class="ident">half</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TP</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span>:<span class="ident">ty</span>) <span class="op">=</span><span class="op">&gt;</span> {
-        <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;tp</span>, <span class="lifetime">&#39;r</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="kw">crate</span><span class="macro-nonterminal">::typesystem::TypeConversion</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span><span class="op">&gt;</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TP</span> {
-            <span class="kw">fn</span> <span class="ident">convert</span>(<span class="ident">val</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span><span class="op">&gt;</span> {
-                <span class="ident">val</span>.<span class="ident">map</span>(<span class="self">Self</span><span class="ident">::convert</span>)
-            }
-        }
-    };
-
     (@<span class="ident">cvt</span> <span class="ident">none</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TP</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span>:<span class="ident">ty</span>) <span class="op">=</span><span class="op">&gt;</span> {};
 }
 </pre></div>

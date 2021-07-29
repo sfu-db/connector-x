@@ -125,14 +125,29 @@
 <span id="122">122</span>
 <span id="123">123</span>
 <span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
 </pre><pre class="rust">
-<span class="comment">// Why we need to implement Transmit for TypeSystem? This is because only TypeSystem knows how to dispatch</span>
-<span class="comment">// functions to it&#39;s native type N based on our defined type T. Remember, T is value and N is a type.</span>
+<span class="doccomment">//! This module defines traits that required to define a typesystem.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! A typesystem is an enum that describes what types can be produced by a source and accepted by a destination.</span>
+<span class="doccomment">//! A typesystem also needs to implement [`TypeAssoc`] to associate the enum variants to the physical representation</span>
+<span class="doccomment">//! of the types in the typesystem.</span>
 
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::destinations</span>::{<span class="ident">Consume</span>, <span class="ident">Destination</span>, <span class="ident">DestinationPartition</span>};
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::errors</span>::{<span class="ident">ConnectorXError</span>, <span class="prelude-ty">Result</span> <span class="kw">as</span> <span class="ident">CXResult</span>};
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::sources</span>::{<span class="ident">PartitionParser</span>, <span class="ident">Produce</span>, <span class="ident">Source</span>, <span class="ident">SourcePartition</span>};
 
+<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
 <span class="doccomment">/// `TypeSystem` describes all the types a source or destination support</span>
 <span class="doccomment">/// using enum variants.</span>
 <span class="doccomment">/// The variant can be used to type check with a static type `T` through the `check` method.</span>
@@ -143,11 +158,13 @@
     }
 }
 
+<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
 <span class="doccomment">/// Associate a static type to a TypeSystem</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">TypeAssoc</span><span class="op">&lt;</span><span class="ident">TS</span>: <span class="ident">TypeSystem</span><span class="op">&gt;</span> {
     <span class="kw">fn</span> <span class="ident">check</span>(<span class="ident">ts</span>: <span class="ident">TS</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">CXResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span>;
 }
 
+<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
 <span class="doccomment">/// Realize means that a TypeSystem can realize a parameterized func F, based on its current variants.</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Realize</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>
 <span class="kw">where</span>
@@ -157,6 +174,7 @@
     <span class="kw">fn</span> <span class="ident">realize</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">CXResult</span><span class="op">&lt;</span><span class="ident">F::Function</span><span class="op">&gt;</span>;
 }
 
+<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
 <span class="doccomment">/// A ParameterizedFunc refers to a function that is parameterized on a type T,</span>
 <span class="doccomment">/// where type T will be dynaically determined by the variant of a TypeSystem.</span>
 <span class="doccomment">/// An example is the `transmit&lt;S,W,T&gt;` function. When piping values from a source</span>
@@ -171,18 +189,21 @@
     }
 }
 
+<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
 <span class="doccomment">/// `ParameterizedOn` indicates a parameterized function `Self`</span>
 <span class="doccomment">/// is parameterized on type `T`</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">ParameterizedOn</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>: <span class="ident">ParameterizedFunc</span> {
     <span class="kw">fn</span> <span class="ident">parameterize</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::Function</span>;
 }
 
+<span class="doccomment">/// Defines a rule to convert a type `T` to a type `U`.</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">TypeConversion</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">U</span><span class="op">&gt;</span> {
     <span class="kw">fn</span> <span class="ident">convert</span>(<span class="ident">val</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">U</span>;
 }
 
-<span class="doccomment">/// Transport defines how to produce a value, do type conversion and then write</span>
-<span class="doccomment">/// the value to a destination.</span>
+<span class="doccomment">/// Transport asks the source to produce a value, do type conversion and then write</span>
+<span class="doccomment">/// the value to a destination. Do not manually implement this trait for types.</span>
+<span class="doccomment">/// Use [`impl_transport!`] to create a struct that implements this trait instead.</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Transport</span> {
     <span class="kw">type</span> <span class="ident">TSS</span>: <span class="ident">TypeSystem</span>;
     <span class="kw">type</span> <span class="ident">TSD</span>: <span class="ident">TypeSystem</span>;
@@ -225,6 +246,7 @@
     <span class="op">&gt;</span>;
 }
 
+<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">process</span><span class="op">&lt;</span><span class="lifetime">&#39;s</span>, <span class="lifetime">&#39;d</span>, <span class="lifetime">&#39;r</span>, <span class="ident">T1</span>, <span class="ident">T2</span>, <span class="ident">TP</span>, <span class="ident">S</span>, <span class="ident">D</span>, <span class="ident">ES</span>, <span class="ident">ED</span>, <span class="ident">ET</span><span class="op">&gt;</span>(
     <span class="ident">src</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;r</span> <span class="kw-2">mut</span> <span class="op">&lt;</span><span class="op">&lt;</span><span class="ident">S</span> <span class="kw">as</span> <span class="ident">Source</span><span class="op">&gt;</span><span class="ident">::Partition</span> <span class="kw">as</span> <span class="ident">SourcePartition</span><span class="op">&gt;</span><span class="ident">::Parser</span><span class="op">&lt;</span><span class="lifetime">&#39;s</span><span class="op">&gt;</span>,
     <span class="ident">dst</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;r</span> <span class="kw-2">mut</span> <span class="op">&lt;</span><span class="ident">D</span> <span class="kw">as</span> <span class="ident">Destination</span><span class="op">&gt;</span><span class="ident">::Partition</span><span class="op">&lt;</span><span class="lifetime">&#39;d</span><span class="op">&gt;</span>,

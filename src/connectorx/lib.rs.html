@@ -1,42 +1,288 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `connectorx/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><script src="../../crates.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../connectorx/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button">?</button>
-                <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1"> 1</span>
-<span id="2"> 2</span>
-<span id="3"> 3</span>
-<span id="4"> 4</span>
-<span id="5"> 5</span>
-<span id="6"> 6</span>
-<span id="7"> 7</span>
-<span id="8"> 8</span>
-<span id="9"> 9</span>
-<span id="10">10</span>
-<span id="11">11</span>
-<span id="12">12</span>
-<span id="13">13</span>
-<span id="14">14</span>
-<span id="15">15</span>
-<span id="16">16</span>
-<span id="17">17</span>
-<span id="18">18</span>
-<span id="19">19</span>
-<span id="20">20</span>
-<span id="21">21</span>
-<span id="22">22</span>
-<span id="23">23</span>
-<span id="24">24</span>
-<span id="25">25</span>
-<span id="26">26</span>
-<span id="27">27</span>
-<span id="28">28</span>
-<span id="29">29</span>
-<span id="30">30</span>
-<span id="31">31</span>
-<span id="32">32</span>
+                <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
+<span id="2">  2</span>
+<span id="3">  3</span>
+<span id="4">  4</span>
+<span id="5">  5</span>
+<span id="6">  6</span>
+<span id="7">  7</span>
+<span id="8">  8</span>
+<span id="9">  9</span>
+<span id="10"> 10</span>
+<span id="11"> 11</span>
+<span id="12"> 12</span>
+<span id="13"> 13</span>
+<span id="14"> 14</span>
+<span id="15"> 15</span>
+<span id="16"> 16</span>
+<span id="17"> 17</span>
+<span id="18"> 18</span>
+<span id="19"> 19</span>
+<span id="20"> 20</span>
+<span id="21"> 21</span>
+<span id="22"> 22</span>
+<span id="23"> 23</span>
+<span id="24"> 24</span>
+<span id="25"> 25</span>
+<span id="26"> 26</span>
+<span id="27"> 27</span>
+<span id="28"> 28</span>
+<span id="29"> 29</span>
+<span id="30"> 30</span>
+<span id="31"> 31</span>
+<span id="32"> 32</span>
+<span id="33"> 33</span>
+<span id="34"> 34</span>
+<span id="35"> 35</span>
+<span id="36"> 36</span>
+<span id="37"> 37</span>
+<span id="38"> 38</span>
+<span id="39"> 39</span>
+<span id="40"> 40</span>
+<span id="41"> 41</span>
+<span id="42"> 42</span>
+<span id="43"> 43</span>
+<span id="44"> 44</span>
+<span id="45"> 45</span>
+<span id="46"> 46</span>
+<span id="47"> 47</span>
+<span id="48"> 48</span>
+<span id="49"> 49</span>
+<span id="50"> 50</span>
+<span id="51"> 51</span>
+<span id="52"> 52</span>
+<span id="53"> 53</span>
+<span id="54"> 54</span>
+<span id="55"> 55</span>
+<span id="56"> 56</span>
+<span id="57"> 57</span>
+<span id="58"> 58</span>
+<span id="59"> 59</span>
+<span id="60"> 60</span>
+<span id="61"> 61</span>
+<span id="62"> 62</span>
+<span id="63"> 63</span>
+<span id="64"> 64</span>
+<span id="65"> 65</span>
+<span id="66"> 66</span>
+<span id="67"> 67</span>
+<span id="68"> 68</span>
+<span id="69"> 69</span>
+<span id="70"> 70</span>
+<span id="71"> 71</span>
+<span id="72"> 72</span>
+<span id="73"> 73</span>
+<span id="74"> 74</span>
+<span id="75"> 75</span>
+<span id="76"> 76</span>
+<span id="77"> 77</span>
+<span id="78"> 78</span>
+<span id="79"> 79</span>
+<span id="80"> 80</span>
+<span id="81"> 81</span>
+<span id="82"> 82</span>
+<span id="83"> 83</span>
+<span id="84"> 84</span>
+<span id="85"> 85</span>
+<span id="86"> 86</span>
+<span id="87"> 87</span>
+<span id="88"> 88</span>
+<span id="89"> 89</span>
+<span id="90"> 90</span>
+<span id="91"> 91</span>
+<span id="92"> 92</span>
+<span id="93"> 93</span>
+<span id="94"> 94</span>
+<span id="95"> 95</span>
+<span id="96"> 96</span>
+<span id="97"> 97</span>
+<span id="98"> 98</span>
+<span id="99"> 99</span>
+<span id="100">100</span>
+<span id="101">101</span>
+<span id="102">102</span>
+<span id="103">103</span>
+<span id="104">104</span>
+<span id="105">105</span>
+<span id="106">106</span>
+<span id="107">107</span>
+<span id="108">108</span>
+<span id="109">109</span>
+<span id="110">110</span>
+<span id="111">111</span>
+<span id="112">112</span>
+<span id="113">113</span>
+<span id="114">114</span>
+<span id="115">115</span>
+<span id="116">116</span>
+<span id="117">117</span>
+<span id="118">118</span>
+<span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
 </pre><pre class="rust">
 <span class="attribute">#![<span class="ident">feature</span>(<span class="ident">generic_associated_types</span>)]</span>
 <span class="attribute">#![<span class="ident">allow</span>(<span class="ident">incomplete_features</span>)]</span>
 <span class="attribute">#![<span class="ident">allow</span>(<span class="ident">clippy::upper_case_acronyms</span>)]</span>
+
+<span class="doccomment">//! # ConnectorX</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! ConnectorX enables you to load data from databases into dataframes in the fastest and most memory efficient way by leveraging</span>
+<span class="doccomment">//! zero-copy and partition-based parallelism.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! Currently, ConnectorX consists of a Rust core library and a python library. This is the documentation for the Rust crate.</span>
+<span class="doccomment">//! For the documentation of the Python library, please refer to our [Github Readme](https://github.com/sfu-db/connector-x).</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! # Design</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! A data loading problem consists of three sub-problems:</span>
+<span class="doccomment">//! 1. How to connect to the data source and read data.</span>
+<span class="doccomment">//! 2. How to connect to the data destination and write data.</span>
+<span class="doccomment">//! 3. How to map the types between the source and destination.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! Additionally, since ConnectorX will partition a query into partitions and execute them in parallel, we also have</span>
+<span class="doccomment">//! 4. How to partition the query and run them in parallel.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! ConnectorX approaches these problems by defining abstractions on sources, destinations, and mapping rules.</span>
+<span class="doccomment">//! For the partition-based parallelism, ConnectorX will partition the query as well as the source and the destination</span>
+<span class="doccomment">//! together and put them into threads.</span>
+<span class="doccomment">//! Each thread will own exactly 1 query, 1 partitioned source, and 1 partitioned destination.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! The following graph depicts the internal mechanism when ConnectorX is downloading the data.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! ```text</span>
+<span class="doccomment">//!                     +------------------------------------------------------------+</span>
+<span class="doccomment">//!                     |                           Thread 1                         |</span>
+<span class="doccomment">//!                     |                                                            |</span>
+<span class="doccomment">//!     +---+           | +-----------------+   +-------------+  +-----------------+ |          +---+</span>
+<span class="doccomment">//!     |   +-----------+&gt;| Partitioned Src +--&gt;| Type Mapper +-&gt;| Partitioned Dst +-+---------&gt;|   |</span>
+<span class="doccomment">//!     |   |           | +-----------------+   +-------------+  +-----------------+ |          |   |</span>
+<span class="doccomment">//!     | D |           |                                                            |          | D |</span>
+<span class="doccomment">//!     | a |           +------------------------------------------------------------+          | a |</span>
+<span class="doccomment">//!     | t |                                          .                                        | t |</span>
+<span class="doccomment">//!     | a |                                          .                                        | a |</span>
+<span class="doccomment">//!     | b |                                          .                                        | f |</span>
+<span class="doccomment">//!     | a |           +------------------------------------------------------------+          | r |</span>
+<span class="doccomment">//!     | s |           |                           Thread n                         |          | a |</span>
+<span class="doccomment">//!     | e |           |                                                            |          | m |</span>
+<span class="doccomment">//!     |   |           | +-----------------+   +-------------+  +-----------------+ |          | e |</span>
+<span class="doccomment">//!     |   +-----------+&gt;| Partitioned Src +--&gt;| Type Mapper +-&gt;| Partitioned Dst +-+---------&gt;|   |</span>
+<span class="doccomment">//!     +---+           | +-----------------+   +-------------+  +-----------------+ |          +---+</span>
+<span class="doccomment">//!                     |                                                            |</span>
+<span class="doccomment">//!                     +------------------------------------------------------------+</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! ```</span>
+<span class="doccomment">//! ## How does ConnectorX download the data?</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! Upon receiving the query, e.g. SELECT * FROM lineitem, ConnectorX will first issue a LIMIT 1 query SELECT * FROM lineitem LIMIT 1 to get the schema of the result set.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! Then, if partition_on is specified, ConnectorX will issue `SELECT MIN($partition_on), MAX($partition_on) FROM (SELECT * FROM lineitem)` to know the range of the partition column.</span>
+<span class="doccomment">//! After that, the original query is split into partitions based on the min/max information, e.g. `SELECT * FROM (SELECT * FROM lineitem) WHERE $partition_on &gt; 0 AND $partition_on &lt; 10000`.</span>
+<span class="doccomment">//! ConnectorX will then run a count query to get the partition size (e.g. `SELECT COUNT(*) FROM (SELECT * FROM lineitem) WHERE $partition_on &gt; 0 AND $partition_on &lt; 10000`).</span>
+<span class="doccomment">//! If the partition is not specified, the count query will be `SELECT * FROM (SELECT * FROM lineitem)`.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! Finally, ConnectorX will use the schema info as well as the count info to allocate memory and download data by executing the queries normally.</span>
+<span class="doccomment">//! Once the downloading begins, there will be one thread for each partition so that the data are downloaded in parallel at the partition level.</span>
+<span class="doccomment">//! The thread will issue the query of the corresponding partition to the database and then write the returned data to the destination row-wise or column-wise (depends on the database) in a streaming fashion.</span>
+<span class="doccomment">//! This mechanism implies that having an index on the partition column is recommended to make full use of the parallel downloading power provided by ConnectorX.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! # Extending ConnectorX</span>
+<span class="doccomment">//! ## Adding a new source</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! To add a new data source, you need to implement [`sources::Source`], [`sources::SourcePartition`], [`sources::PartitionParser`], and [`sources::Produce`] for the source.</span>
+<span class="doccomment">//! In detail, [`sources::Source`] describes how to connect to the database from a connection string, as well as how to do partitioning on the source to produce a list of [`sources::SourcePartition`].</span>
+<span class="doccomment">//! [`sources::SourcePartition`] describes how to get the row count for the specific partition so that the destination can preallocate the memory.</span>
+<span class="doccomment">//! Finally, [`sources::PartitionParser`] and [`sources::Produce`] abstracts away the detail about how does each partition parse different types.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! ## Adding a new destination</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! To add a new data destination, you need to implement [`destinations::Destination`], [`destinations::DestinationPartition`], and [`destinations::Consume`]. Similar to the sources,</span>
+<span class="doccomment">//! [`destinations::Destination`] describes how to allocate the memory of the data destination, as well as how to do partitioning on the destination to produce a list of [`destinations::DestinationPartition`].</span>
+<span class="doccomment">//! [`destinations::DestinationPartition`] and [`destinations::Consume`] abstract away the detail about how does each partition writes different types.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! ## Adding a new transport (type mapping)</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! After having a source and a destination that describes how to read and write the data,</span>
+<span class="doccomment">//! ConnectorX also needs to know how to convert the values with different types from the source to the destination.</span>
+<span class="doccomment">//! For example, Postgres can produce a `uuid` type but there&#39;s no uuid in Arrow. It is the transport&#39;s duty to convert</span>
+<span class="doccomment">//! the `uuid` into an Arrow compatible type, e.g. string. You can use the [`impl_transport!`] macro to define a transport.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! ## Putting things together</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! Say, you decide to load data from SQL Server to Arrow. In ConnectorX we already provided the source for SQL Server as [`sources::mssql::MsSQLSource`], and the</span>
+<span class="doccomment">//! Arrow destination [`destinations::arrow::ArrowDestination`], as well as the transport [`transports::MsSQLArrowTransport`].</span>
+<span class="doccomment">//! Given the source, destination and transport already implemented, you can use [`dispatcher::Dispatcher`] to load the data:</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! ```ignore</span>
+<span class="doccomment">//! let mut destination = ArrowDestination::new();</span>
+<span class="doccomment">//! let source = MsSQLSource::new(...)?;</span>
+<span class="doccomment">//! let queries = &amp;[&quot;query1&quot;, &quot;query2&quot;];</span>
+<span class="doccomment">//! let dispatcher = Dispatcher::&lt;MsSQLSource, ArrowDestination, MsSQLArrowTransport&gt;::new(source, &amp;mut destination, queries);</span>
+<span class="doccomment">//! dispatcher.run()?;</span>
+<span class="doccomment">//! ```</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! ## Need more examples?</span>
+<span class="doccomment">//! You can use the existing implementation as the example.</span>
+<span class="doccomment">//! [MySQL source](https://github.com/sfu-db/connector-x/tree/main/connectorx/src/sources/mysql),</span>
+<span class="doccomment">//! [Arrow destination](https://github.com/sfu-db/connector-x/tree/main/connectorx/src/destinations/arrow),</span>
+<span class="doccomment">//! [MySQL to Arrow transport](https://github.com/sfu-db/connector-x/blob/main/connectorx/src/transports/mysql_arrow.rs).</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! # Sources &amp; Destinations that is implemented in the Rust core.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! ## Sources</span>
+<span class="doccomment">//! - [x] Postgres</span>
+<span class="doccomment">//! - [x] Mysql</span>
+<span class="doccomment">//! - [x] Sqlite</span>
+<span class="doccomment">//! - [x] Redshift (through postgres protocol)</span>
+<span class="doccomment">//! - [x] Clickhouse (through mysql protocol)</span>
+<span class="doccomment">//! - [x] SQL Server</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! ## Destinations</span>
+<span class="doccomment">//! - [x] PyArrow</span>
+<span class="doccomment">//! - [x] Modin</span>
+<span class="doccomment">//! - [x] Dask</span>
+<span class="doccomment">//! - [x] Polars</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! # Feature gates</span>
+<span class="doccomment">//! By default, ConnectorX does not enable any sources / destinations to keep the dependencies minimal.</span>
+<span class="doccomment">//! Instead, we provide following features for you to opt-in: `src_sqlite`, `src_postgres`, `src_mysql`, `src_mssql`, `dst_arrow`, `dst_polars`.</span>
+<span class="doccomment">//! For example, if you&#39;d like to load data from Postgres to Arrow, you can enable `src_postgres` and `dst_arrow` in `Cargo.toml`.</span>
+<span class="doccomment">//! This will enable [`sources::postgres`], [`destinations::arrow`] and [`transports::PostgresArrowTransport`].</span>
 
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">typesystem</span>;
 <span class="attribute">#[<span class="ident">macro_use</span>]</span>
@@ -45,20 +291,18 @@
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">data_order</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">destinations</span>;
 <span class="kw">mod</span> <span class="ident">dispatcher</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;src_dummy&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dst_memory&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;src_csv&quot;</span>))]</span>
-<span class="kw">mod</span> <span class="ident">dummy_typesystem</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">errors</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">sources</span>;
 <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">sql</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">transports</span>;
+<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">utils</span>;
 
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">prelude</span> {
     <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::data_order</span>::{<span class="ident">coordinate</span>, <span class="ident">DataOrder</span>};
     <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::destinations</span>::{<span class="ident">Consume</span>, <span class="ident">Destination</span>, <span class="ident">DestinationPartition</span>};
     <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::dispatcher::Dispatcher</span>;
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;src_dummy&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dst_memory&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;src_csv&quot;</span>))]</span>
-    <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::dummy_typesystem::DummyTypeSystem</span>;
     <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::errors::ConnectorXError</span>;
     <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::sources</span>::{<span class="ident">PartitionParser</span>, <span class="ident">Produce</span>, <span class="ident">Source</span>, <span class="ident">SourcePartition</span>};
     <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::typesystem</span>::{

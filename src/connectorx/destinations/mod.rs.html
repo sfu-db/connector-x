@@ -69,11 +69,13 @@
 <span id="66">66</span>
 <span id="67">67</span>
 <span id="68">68</span>
+<span id="69">69</span>
 </pre><pre class="rust">
+<span class="doccomment">//! This module defines three traits [`Destination`], [`DestinationPartition`], and [`Consume`] to define a destination.</span>
+<span class="doccomment">//! This module also contains destination implementations for various dataframes.</span>
+
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dst_arrow&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">arrow</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dst_memory&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">memory</span>;
 
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::data_order::DataOrder</span>;
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::errors::ConnectorXError</span>;
@@ -105,8 +107,8 @@
 }
 
 <span class="doccomment">/// `PartitionDestination` writes values to its own region. `PartitionDestination` is parameterized</span>
-<span class="doccomment">/// on lifetime `&#39;a`, which is the lifetime of the parent `Destination`. This indicates</span>
-<span class="doccomment">/// the `PartitionDestination` can never live longer than the parent.</span>
+<span class="doccomment">/// on lifetime `&#39;a`, which is the lifetime of the parent `Destination`. Usually,</span>
+<span class="doccomment">/// a `PartitionDestination` can never live longer than the parent.</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">DestinationPartition</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>: <span class="ident">Send</span> {
     <span class="kw">type</span> <span class="ident">TypeSystem</span>: <span class="ident">TypeSystem</span>;
     <span class="kw">type</span> <span class="ident">Error</span>: <span class="ident">From</span><span class="op">&lt;</span><span class="ident">ConnectorXError</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span>;
