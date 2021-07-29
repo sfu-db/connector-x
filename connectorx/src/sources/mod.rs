@@ -1,5 +1,5 @@
-// When implementing a data source, be make sure to implement Queryable and
-// Producer for all supported types in crate::types::DataType.
+//! This module defines four traits [`sources::Source`], [`sources::SourcePartition`], [`sources::PartitionParser`], and [`sources::Produce`]  to define a source.
+//! This module also contains source implementations for various databases.
 
 #[cfg(feature = "src_csv")]
 pub mod csv;

@@ -1,3 +1,5 @@
+//! Destination implementation for Arrow and Polars.
+
 mod arrow_assoc;
 mod errors;
 mod funcs;

@@ -1,3 +1,5 @@
+//! Source implementation for SQLite embedded database.
+
 mod errors;
 mod typesystem;
 

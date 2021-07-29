@@ -1,5 +1,8 @@
-// Why we need to implement Transmit for TypeSystem? This is because only TypeSystem knows how to dispatch
-// functions to it's native type N based on our defined type T. Remember, T is value and N is a type.
+//! This module defines traits that required to define a typesystem.
+//!
+//! A typesystem is an enum that describes what types can be produced by a source and accepted by a destination.
+//! A typesystem also needs to implement [`typesystem::TypeAssoc`] to associate the enum variants to the physical representation
+//! of the types in the typesystem.
 
 use crate::destinations::{Consume, Destination, DestinationPartition};
 use crate::errors::{ConnectorXError, Result as CXResult};

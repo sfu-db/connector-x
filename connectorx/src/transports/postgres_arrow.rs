@@ -1,3 +1,5 @@
+//! Transport from Postgres Source to Arrow Destination.
+
 use crate::destinations::arrow::{
     typesystem::ArrowTypeSystem, ArrowDestination, ArrowDestinationError,
 };

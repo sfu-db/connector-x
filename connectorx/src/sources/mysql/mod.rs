@@ -1,3 +1,5 @@
+//! Source implementation for MySQL database.
+
 mod errors;
 mod typesystem;
 

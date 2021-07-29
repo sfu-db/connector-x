@@ -1,3 +1,5 @@
+//! Transport from Dummy Source to Arrow Destination.
+
 use crate::destinations::arrow::{ArrowDestination, ArrowDestinationError, ArrowTypeSystem};
 use crate::sources::dummy::{DummySource, DummyTypeSystem};
 use crate::typesystem::TypeConversion;

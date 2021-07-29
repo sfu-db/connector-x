@@ -1,3 +1,5 @@
+//! Transport from CSV Source to Arrow Destination.
+
 use crate::destinations::arrow::{ArrowDestination, ArrowDestinationError, ArrowTypeSystem};
 use crate::sources::csv::{CSVSource, CSVSourceError, CSVTypeSystem};
 use crate::typesystem::TypeConversion;

@@ -1,3 +1,5 @@
+//! Source implementation for SQL Server.
+
 mod errors;
 mod typesystem;
 

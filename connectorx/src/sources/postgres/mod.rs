@@ -1,3 +1,5 @@
+//! Source implementation for Postgres database, including the TLS support (client only).
+
 mod connection;
 mod errors;
 mod typesystem;

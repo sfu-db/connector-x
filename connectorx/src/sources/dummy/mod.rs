@@ -1,3 +1,6 @@
+//! A dummy source that generates different values based on an internal counter.
+//! This source is for test purpose.
+
 mod typesystem;
 
 pub use self::typesystem::DummyTypeSystem;

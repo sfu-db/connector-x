@@ -1,3 +1,5 @@
+//! This module contains transport definitions for the sources and destinations implemented in ConnectorX.
+
 #[cfg(all(feature = "src_csv", feature = "dst_arrow"))]
 mod csv_arrow;
 #[cfg(all(feature = "src_dummy", feature = "dst_arrow"))]

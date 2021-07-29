@@ -1,3 +1,5 @@
+//! Transport from MsSQL Source to Arrow Destination.
+
 use crate::destinations::arrow::{ArrowDestination, ArrowDestinationError, ArrowTypeSystem};
 use crate::sources::mssql::{FloatN, IntN, MsSQLSource, MsSQLSourceError, MsSQLTypeSystem};
 use crate::typesystem::TypeConversion;

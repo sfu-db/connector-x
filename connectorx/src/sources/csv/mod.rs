@@ -1,3 +1,5 @@
+//! Source implementation for CSV files.
+
 mod errors;
 mod typesystem;
 

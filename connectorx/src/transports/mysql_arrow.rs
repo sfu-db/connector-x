@@ -1,3 +1,5 @@
+//! Transport from MySQL Source to Arrow Destination.
+
 use crate::{
     destinations::arrow::{typesystem::ArrowTypeSystem, ArrowDestination, ArrowDestinationError},
     impl_transport,
