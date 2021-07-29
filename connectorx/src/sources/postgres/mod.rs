@@ -142,7 +142,7 @@ where
                 Ok(None) => {}
                 Err(e) if i == self.queries.len() - 1 => {
                     // tried the last query but still get an error
-                    debug!("cannot get metadata for '{}', try next query: {}", query, e);
+                    debug!("cannot get metadata for '{}': {}", query, e);
                     throw!(e);
                 }
                 Err(_) => {}

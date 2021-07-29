@@ -119,6 +119,7 @@ pub fn get_limit_mssql(sql: &CXQuery<String>) -> Option<usize> {
     throw!(ConnectorXError::SqlQueryNotSupported(sql.to_string()))
 }
 
+// wrap a query into a derived table
 fn wrap_query(
     query: &Query,
     projection: Vec<SelectItem>,
@@ -310,7 +311,7 @@ pub fn single_col_partition_query<T: Dialect>(
 
     match &mut ast[0] {
         Statement::Query(q) => match &mut q.body {
-            SetExpr::Select(_select) => {
+            SetExpr::Select(select) => {
                 let lb = Expr::BinaryOp {
                     left: Box::new(Expr::Value(Value::Number(lower.to_string(), false))),
                     op: BinaryOperator::LtEq,
@@ -346,6 +347,13 @@ pub fn single_col_partition_query<T: Dialect>(
                     op: BinaryOperator::And,
                     right: Box::new(ub),
                 };
+
+                if q.limit.is_none() && select.top.is_none() && !q.order_by.is_empty() {
+                    // order by in a partition query does not make sense because partition is unordered.
+                    // clear the order by beceause mssql does not support order by in a derived table.
+                    // also order by in the derived table does not make any difference.
+                    q.order_by.clear();
+                }
 
                 ast_part = wrap_query(
                     &q,

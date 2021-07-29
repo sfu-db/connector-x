@@ -2,6 +2,9 @@ use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum MsSQLSourceError {
+    #[error("Cannot get # of rows in the partition")]
+    GetNRowsFailed,
+
     #[error(transparent)]
     ConnectorXError(#[from] crate::errors::ConnectorXError),
 

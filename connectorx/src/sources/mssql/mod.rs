@@ -108,7 +108,7 @@ where
                 Ok(stream) => {
                     let row = match self.rt.block_on(stream.into_row())? {
                         Some(row) => row,
-                        None => continue,
+                        None => continue, // this partition is empty.
                     };
 
                     let columns = row.columns();
@@ -139,9 +139,8 @@ where
         let stream = self
             .rt
             .block_on(conn.query(self.queries[0].as_str(), &[]))?;
-        let row = self.rt.block_on(stream.into_row())?.unwrap();
 
-        let columns = row.columns();
+        let columns = stream.columns().expect("cannot get column information");
 
         let (names, types) = columns
             .iter()
@@ -228,7 +227,7 @@ impl SourcePartition for MsSQLSourcePartition {
                     anyhow!("MsSQL failed to get the count of query: {}", self.query)
                 })?;
 
-                let row: i32 = row.get(0).unwrap(); // the count in mssql is i32
+                let row: i32 = row.get(0).ok_or(MsSQLSourceError::GetNRowsFailed)?; // the count in mssql is i32
                 row as usize
             }
             Some(n) => n,
