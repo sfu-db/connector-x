@@ -69,3 +69,17 @@ MODIN_ENGINE=dask
   * Add the source to writing functions of each destination. Here are examples for [pandas](https://github.com/sfu-db/connector-x/blob/main/connectorx-python/src/pandas/mod.rs) and [arrow](https://github.com/sfu-db/connector-x/blob/main/connectorx-python/src/arrow.rs)
 * Add corresponding unit tests under `connectorx/tests` for Rust and `connectorx-python/connectorx/tests` for Python
 
+**Please check out [here](https://sfu-db.github.io/connector-x/connectorx/#extending-connectorx) for more detailed implementation instructions of how to extend ConnectorX.**
+
+## How to Add a New Destination
+
+* Implement destination related logics, including:
+ * Define the type system of the new destination
+ * Implement data writing logics
+ * Implement the writing interface of destination
+ * Here are examples for [arrow](https://github.com/sfu-db/connector-x/tree/main/connectorx/src/destinations/arrow) and [pandas](https://github.com/sfu-db/connector-x/tree/main/connectorx-python/src/pandas)
+* Define the conversion between existing source and the new destination
+ * Examples can be found [here](https://github.com/sfu-db/connector-x/tree/main/connectorx/src/transports) and [here](https://github.com/sfu-db/connector-x/tree/main/connectorx-python/src/pandas/transports)
+* Add corresponding unit tests under `connectorx/tests` for Rust and `connectorx-python/connectorx/tests` for Python
+
+**Please check out [here](https://sfu-db.github.io/connector-x/connectorx/#extending-connectorx) for more detailed implementation instructions of how to extend ConnectorX.**
