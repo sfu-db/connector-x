@@ -109,7 +109,7 @@ connectorx.read_sql(conn: str, query: Union[List[str], str], *, return_type: str
 Run the SQL query, download the data from database into a Pandas dataframe.
 
 ## Parameters
-- `conn: str`: Connection string uri. Currently only PostgreSQL is supported.
+- `conn: str`: Connection string URI. Supported URI scheme: `(postgres|postgressql|mysql|mssql|sqlite)://username:password@addr:port/dbname`.
 - `query: Union[str, List[str]]`: SQL query or list of SQL queries for fetching data.
 - `return_type: str = "pandas"`: The return type of this function. It can be `arrow`, `pandas`, `modin`, `dask` or `polars`.
 - `protocol: str = "binary"`: The protocol used to fetch data from source, default is `binary`. Check out [here](Types.md) to see more details.
