@@ -88,7 +88,7 @@
 //! Arrow destination [`destinations::arrow::ArrowDestination`], as well as the transport [`transports::MsSQLArrowTransport`].
 //! Given the source, destination and transport already implemented, you can use [`dispatcher::Dispatcher`] to load the data:
 //!
-//! ```rust
+//! ```ignore
 //! let mut destination = ArrowDestination::new();
 //! let source = MsSQLSource::new(...)?;
 //! let queries = &["query1", "query2"];
