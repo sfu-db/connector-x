@@ -85,7 +85,7 @@ Supported protocols, data types and type mappings can be found [here](Types.md).
 - [x] Sqlite
 - [x] Redshift (through postgres protocol)
 - [x] Clickhouse (through mysql protocol)
-- [ ] SQL Server
+- [x] SQL Server
 - [ ] Oracle
 - [ ] ...
 
