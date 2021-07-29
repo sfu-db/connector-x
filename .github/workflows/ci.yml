@@ -121,7 +121,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: doc
-          args: --no-deps
+          args: --no-deps --features all
 
   python:
     runs-on: ubuntu-latest
