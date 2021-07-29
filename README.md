@@ -64,10 +64,12 @@ This allows it to make full use of the CPU by becoming cache and branch predicto
 ## How does ConnectorX download the data?
 
 Upon receiving the query, e.g. `SELECT * FROM lineitem`, ConnectorX will first issue a `LIMIT 1` query `SELECT * FROM lineitem LIMIT 1` to get the schema of the result set.
-Then, if `partition_on` is specified, ConnectorX will issue `SELECT MIN(\$partition_on), MAX(\$partition_on) FROM (SELECT * FROM lineitem)` to know the range of the partition column.
-After that, the original query is split into partitions based on the min/max information, e.g. `SELECT * FROM (SELECT * FROM lineitem) WHERE \$partition_on > 0 AND \$partition_on < 10000`.
-ConnectorX will then run a count query to get the partition size (e.g. `SELECT COUNT(*) FROM (SELECT * FROM lineitem) WHERE \$partition_on > 0 AND \$partition_on < 10000`). If the partition
+
+Then, if `partition_on` is specified, ConnectorX will issue `SELECT MIN($partition_on), MAX($partition_on) FROM (SELECT * FROM lineitem)` to know the range of the partition column.
+After that, the original query is split into partitions based on the min/max information, e.g. `SELECT * FROM (SELECT * FROM lineitem) WHERE $partition_on > 0 AND $partition_on < 10000`.
+ConnectorX will then run a count query to get the partition size (e.g. `SELECT COUNT(*) FROM (SELECT * FROM lineitem) WHERE $partition_on > 0 AND $partition_on < 10000`). If the partition
 is not specified, the count query will be `SELECT * FROM (SELECT * FROM lineitem)`.
+
 Finally, ConnectorX will use the schema info as well as the count info to allocate memory and download data by executing the queries normally.
 
 Once the downloading begins, there will be one thread for each partition so that the data are downloaded in parallel at the partition level. The thread will issue the query of the corresponding
@@ -85,16 +87,16 @@ Supported protocols, data types and type mappings can be found [here](Types.md).
 - [x] Sqlite
 - [x] Redshift (through postgres protocol)
 - [x] Clickhouse (through mysql protocol)
-- [x] SQL Server
+- [x] SQL Server (no encryption support yet)
 - [ ] Oracle
 - [ ] ...
 
 ## Destinations
 - [x] Pandas
 - [x] PyArrow
-- [x] Modin
-- [x] Dask
-- [x] Polars
+- [x] Modin (through Pandas)
+- [x] Dask (through Pandas)
+- [x] Polars (through PyArrow)
   
 # Detailed Usage and Examples
 
