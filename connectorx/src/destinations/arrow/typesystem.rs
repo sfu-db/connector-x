@@ -19,7 +19,7 @@ pub enum ArrowTypeSystem {
 }
 
 impl_typesystem! {
-    system= ArrowTypeSystem,
+    system = ArrowTypeSystem,
     mappings = {
         { Int32      => i32           }
         { Int64      => i64           }

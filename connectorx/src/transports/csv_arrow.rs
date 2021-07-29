@@ -4,6 +4,7 @@ use crate::typesystem::TypeConversion;
 use chrono::{DateTime, Utc};
 use thiserror::Error;
 
+/// Convert CSV data types to Arrow data types.
 pub struct CSVArrowTransport;
 
 #[derive(Error, Debug)]

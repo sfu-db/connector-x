@@ -1,9 +1,44 @@
-/// A macro to implement `TypeAssoc` and `Realize` which saves repetitive code.
+/// Associate physical representations to a typesystem.
 ///
 /// # Example Usage
-/// `impl_typesystem!(DataType, [DataType::F64] => f64, [DataType::I64] => i64);`
-/// This means for the type system `DataType`, it's variant `DataType::F64(false)` is corresponding to the physical type f64 and
-/// `DataType::F64(true)` is corresponding to the physical type Option<f64>. Same for I64 and i64
+/// ```ignore
+/// pub enum ArrowTypeSystem {
+///     Int32(bool),
+///     Int64(bool),
+///     UInt32(bool),
+///     UInt64(bool),
+///     Float32(bool),
+///     Float64(bool),
+///     Boolean(bool),
+///     LargeUtf8(bool),
+///     LargeBinary(bool),
+///     Date32(bool),
+///     Date64(bool),
+///     Time64(bool),
+///     DateTimeTz(bool),
+/// }
+///
+/// impl_typesystem! {
+///     system = ArrowTypeSystem,
+///     mappings = {
+///         { Int32      => i32           }
+///         { Int64      => i64           }
+///         { UInt32     => u32           }
+///         { UInt64     => u64           }
+///         { Float64    => f64           }
+///         { Float32    => f32           }
+///         { Boolean    => bool          }
+///         { LargeUtf8  => String        }
+///         { LargeBinary => Vec<u8>      }
+///         { Date32     => NaiveDate     }
+///         { Date64     => NaiveDateTime }
+///         { Time64     => NaiveTime     }
+///         { DateTimeTz => DateTime<Utc> }
+///     }
+/// }
+/// ```
+/// This means for the type system `ArrowTypeSystem`, it's variant `ArrowTypeSystem::Int32(false)` is corresponding to the physical type `i32` and
+/// `ArrowTypeSystem::Int32(true)` is corresponding to the physical type `Option<i32>`.
 #[macro_export]
 macro_rules! impl_typesystem {
     (
@@ -70,20 +105,46 @@ macro_rules! impl_typesystem {
     };
 }
 
-/// A macro to help define Transport.
+/// A macro to help define a Transport.
 ///
 /// # Example Usage
 /// ```ignore
-/// impl_transport! {
-///    ['py],
-///    PostgresPandasTransport<'py>,
-///    PostgresDTypes => PandasTypes,
-///    PostgresSource => PandasDestination<'py>,
-///    ([PostgresDTypes::Float4], [PandasTypes::F64]) => (f32, f64) conversion all
-/// }
+/// impl_transport!(
+///     name = MsSQLArrowTransport,
+///     error = MsSQLArrowTransportError,
+///     systems = MsSQLTypeSystem => ArrowTypeSystem,
+///     route = MsSQLSource => ArrowDestination,
+///     mappings = {
+///         { Tinyint[u8]                   => Int32[i32]                | conversion auto }
+///         { Smallint[i16]                 => Int32[i32]                | conversion auto }
+///         { Int[i32]                      => Int32[i32]                | conversion auto }
+///         { Bigint[i64]                   => Int64[i64]                | conversion auto }
+///         { Intn[IntN]                    => Int64[i64]                | conversion option }
+///         { Float24[f32]                  => Float32[f32]              | conversion auto }
+///         { Float53[f64]                  => Float64[f64]              | conversion auto }
+///         { Floatn[FloatN]                => Float64[f64]              | conversion option }
+///         { Bit[bool]                     => Boolean[bool]             | conversion auto  }
+///         { Nvarchar[&'r str]             => LargeUtf8[String]         | conversion owned }
+///         { Varchar[&'r str]              => LargeUtf8[String]         | conversion none }
+///         { Nchar[&'r str]                => LargeUtf8[String]         | conversion none }
+///         { Char[&'r str]                 => LargeUtf8[String]         | conversion none }
+///         { Text[&'r str]                 => LargeUtf8[String]         | conversion none }
+///         { Ntext[&'r str]                => LargeUtf8[String]         | conversion none }
+///         { Binary[&'r [u8]]              => LargeBinary[Vec<u8>]      | conversion owned }
+///         { Varbinary[&'r [u8]]           => LargeBinary[Vec<u8>]      | conversion none }
+///         { Image[&'r [u8]]               => LargeBinary[Vec<u8>]      | conversion none }
+///         { Numeric[Decimal]              => Float64[f64]              | conversion option }
+///         { Decimal[Decimal]              => Float64[f64]              | conversion none }
+///         { Datetime[NaiveDateTime]       => Date64[NaiveDateTime]     | conversion auto }
+///         { Datetime2[NaiveDateTime]      => Date64[NaiveDateTime]     | conversion none }
+///         { Smalldatetime[NaiveDateTime]  => Date64[NaiveDateTime]     | conversion none }
+///         { Date[NaiveDate]               => Date32[NaiveDate]         | conversion auto }
+///         { Datetimeoffset[DateTime<Utc>] => DateTimeTz[DateTime<Utc>] | conversion auto }
+///         { Uniqueidentifier[Uuid]        => LargeUtf8[String]         | conversion option }
+///     }
+/// );
 /// ```
-/// This implements `Transport` to `PostgresPandasTransport<'py>`.
-/// The lifetime used must be declare in the first argument in the bracket.
+/// This implements a `Transport` called `MsSQLArrowTransport` that can convert types from MsSQL to Arrow.
 #[macro_export]
 macro_rules! impl_transport {
     (

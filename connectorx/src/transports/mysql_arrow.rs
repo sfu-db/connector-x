@@ -24,6 +24,7 @@ pub enum MySQLArrowTransportError {
     ConnectorX(#[from] crate::errors::ConnectorXError),
 }
 
+/// Convert MySQL data types to Arrow data types.
 pub struct MySQLArrowTransport<P>(PhantomData<P>);
 
 impl_transport!(

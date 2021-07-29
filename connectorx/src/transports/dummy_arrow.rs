@@ -4,6 +4,7 @@ use crate::typesystem::TypeConversion;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
 use thiserror::Error;
 
+/// Convert Dummy data types to Arrow data types.
 pub struct DummyArrowTransport;
 
 #[derive(Error, Debug)]

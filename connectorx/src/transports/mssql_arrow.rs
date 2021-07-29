@@ -7,6 +7,7 @@ use rust_decimal::Decimal;
 use thiserror::Error;
 use uuid::Uuid;
 
+/// Convert MsSQL data types to Arrow data types.
 pub struct MsSQLArrowTransport;
 
 #[derive(Error, Debug)]

@@ -19,6 +19,7 @@ pub enum SQLiteArrowTransportError {
     ConnectorX(#[from] crate::errors::ConnectorXError),
 }
 
+/// Convert SQLite data types to Arrow data types.
 pub struct SQLiteArrowTransport;
 
 impl_transport!(

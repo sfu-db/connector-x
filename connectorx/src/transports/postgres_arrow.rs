@@ -27,6 +27,7 @@ pub enum PostgresArrowTransportError {
     ConnectorX(#[from] crate::errors::ConnectorXError),
 }
 
+/// Convert Postgres data types to Arrow data types.
 pub struct PostgresArrowTransport<P, C>(PhantomData<P>, PhantomData<C>);
 
 macro_rules! impl_postgres_transport {
