@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1627518004866,
+  "lastUpdate": 1627518562632,
   "repoUrl": "https://github.com/sfu-db/connector-x",
   "entries": {
     "ConnectorX TPC-H Scale@1 Benchmarks": [
@@ -1292,6 +1292,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.218364437246045",
             "extra": "mean: 24.258754373760894 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "youngw@sfu.ca",
+            "name": "Weiyuan Wu",
+            "username": "dovahcrow"
+          },
+          "committer": {
+            "email": "youngw@sfu.ca",
+            "name": "Weiyuan Wu",
+            "username": "dovahcrow"
+          },
+          "distinct": true,
+          "id": "f28e73bbcdd11654e6249c4e6b612c52f3e81ad2",
+          "message": "remove tls tests for mssql",
+          "timestamp": "2021-07-29T00:11:27Z",
+          "tree_id": "f2f213df441df708a045a1ae2371b6eaf8392651",
+          "url": "https://github.com/sfu-db/connector-x/commit/f28e73bbcdd11654e6249c4e6b612c52f3e81ad2"
+        },
+        "date": 1627518561619,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_mysql",
+            "value": 0.06857789299418304,
+            "unit": "iter/sec",
+            "range": "stddev: 0.4470793278717916",
+            "extra": "mean: 14.581958650797606 sec\nrounds: 5"
+          },
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_postgres",
+            "value": 0.05090015920367288,
+            "unit": "iter/sec",
+            "range": "stddev: 3.1102545208516417",
+            "extra": "mean: 19.64630397320725 sec\nrounds: 5"
           }
         ]
       }
