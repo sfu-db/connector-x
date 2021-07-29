@@ -1,6 +1,6 @@
 use crate::errors::ConnectorXPythonError;
 use crate::pandas::{destination::PandasDestination, typesystem::PandasTypeSystem};
-use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
+use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
 use connectorx::{
     impl_transport,
     sources::mssql::{FloatN, IntN, MsSQLSource, MsSQLTypeSystem},
@@ -32,9 +32,9 @@ impl_transport!(
         { Char[&'r str]                 => Str[&'r str]            | conversion none }
         { Text[&'r str]                 => Str[&'r str]            | conversion none }
         { Ntext[&'r str]                => Str[&'r str]            | conversion none }
-        { Binary[&'r [u8]]              => Bytes[Vec<u8>]          | conversion owned }
-        { Varbinary[&'r [u8]]           => Bytes[Vec<u8>]          | conversion none }
-        { Image[&'r [u8]]               => Bytes[Vec<u8>]          | conversion none }
+        { Binary[&'r [u8]]              => ByteSlice[&'r [u8]]     | conversion auto }
+        { Varbinary[&'r [u8]]           => ByteSlice[&'r [u8]]     | conversion none }
+        { Image[&'r [u8]]               => ByteSlice[&'r [u8]]     | conversion none }
         { Numeric[Decimal]              => F64[f64]                | conversion option }
         { Decimal[Decimal]              => F64[f64]                | conversion none }
         { Datetime[NaiveDateTime]       => DateTime[DateTime<Utc>] | conversion option }
@@ -43,6 +43,7 @@ impl_transport!(
         { Date[NaiveDate]               => DateTime[DateTime<Utc>] | conversion option }
         { Datetimeoffset[DateTime<Utc>] => DateTime[DateTime<Utc>] | conversion auto }
         { Uniqueidentifier[Uuid]        => String[String]          | conversion option }
+        { Time[NaiveTime]               => String[String]          | conversion option }
     }
 );
 
@@ -80,5 +81,11 @@ impl<'py> TypeConversion<Decimal, f64> for MsSQLPandasTransport<'py> {
     fn convert(val: Decimal) -> f64 {
         val.to_f64()
             .unwrap_or_else(|| panic!("cannot convert decimal {:?} to float64", val))
+    }
+}
+
+impl<'py> TypeConversion<NaiveTime, String> for MsSQLPandasTransport<'py> {
+    fn convert(val: NaiveTime) -> String {
+        val.to_string()
     }
 }
