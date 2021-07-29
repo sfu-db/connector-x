@@ -99,6 +99,15 @@ impl<'a> PandasColumn<Vec<u8>> for BytesColumn<'a> {
     }
 }
 
+impl<'r, 'a> PandasColumn<&'r [u8]> for BytesColumn<'a> {
+    #[throws(ConnectorXPythonError)]
+    fn write(&mut self, val: &'r [u8]) {
+        self.bytes_lengths.push(val.len());
+        self.bytes_buf.extend_from_slice(val);
+        self.try_flush()?;
+    }
+}
+
 impl<'a> PandasColumn<Option<Vec<u8>>> for BytesColumn<'a> {
     #[throws(ConnectorXPythonError)]
     fn write(&mut self, val: Option<Vec<u8>>) {
@@ -115,11 +124,35 @@ impl<'a> PandasColumn<Option<Vec<u8>>> for BytesColumn<'a> {
     }
 }
 
+impl<'r, 'a> PandasColumn<Option<&'r [u8]>> for BytesColumn<'a> {
+    #[throws(ConnectorXPythonError)]
+    fn write(&mut self, val: Option<&'r [u8]>) {
+        match val {
+            Some(b) => {
+                self.bytes_lengths.push(b.len());
+                self.bytes_buf.extend_from_slice(b);
+                self.try_flush()?;
+            }
+            None => {
+                self.bytes_lengths.push(usize::MAX);
+            }
+        }
+    }
+}
+
 impl HasPandasColumn for Vec<u8> {
     type PandasColumn<'a> = BytesColumn<'a>;
 }
 
 impl HasPandasColumn for Option<Vec<u8>> {
+    type PandasColumn<'a> = BytesColumn<'a>;
+}
+
+impl<'r> HasPandasColumn for &'r [u8] {
+    type PandasColumn<'a> = BytesColumn<'a>;
+}
+
+impl<'r> HasPandasColumn for Option<&'r [u8]> {
     type PandasColumn<'a> = BytesColumn<'a>;
 }
 

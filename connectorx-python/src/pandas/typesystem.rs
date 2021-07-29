@@ -12,6 +12,7 @@ pub enum PandasTypeSystem {
     BoxStr(bool),
     String(bool),
     Bytes(bool),
+    ByteSlice(bool),
     DateTime(bool),
 }
 
@@ -53,7 +54,7 @@ impl From<PandasTypeSystem> for PandasBlockType {
             | PandasTypeSystem::BoxStr(_)
             | PandasTypeSystem::Str(_)
             | PandasTypeSystem::Char(_) => PandasBlockType::String,
-            PandasTypeSystem::Bytes(_) => PandasBlockType::Bytes,
+            PandasTypeSystem::Bytes(_) | PandasTypeSystem::ByteSlice(_) => PandasBlockType::Bytes,
             PandasTypeSystem::DateTime(_) => PandasBlockType::DateTime,
         }
     }
@@ -70,6 +71,7 @@ impl_typesystem! {
         { BoxStr => Box<str> }
         { String => String }
         { Bytes => Vec<u8> }
+        { ByteSlice => &'r [u8] }
         { DateTime => DateTime<Utc> }
     }
 }

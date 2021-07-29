@@ -40,15 +40,16 @@ CREATE TABLE test_types(
     test_date DATE,
     test_time TIME,
     test_datetime DATETIMEOFFSET,
-    test_new_decimal NUMERIC,
+    test_new_decimal NUMERIC(5, 2),
     test_decimal DECIMAL,
     test_varchar VARCHAR(15),
-    test_char CHAR(10)
+    test_char CHAR(10),
+    test_binary VARBINARY(10)
 );
 
-INSERT INTO test_types VALUES ('1999-07-25', '00:00:00', '1999-07-25 00:00:00', 1.1, 1, 'varchar1', 'char1');
-INSERT INTO test_types VALUES ('2020-12-31', '23:59:59', '2020-12-31 23:59:59', 2.2, 2, 'varchar2', 'char2');
-INSERT INTO test_types VALUES ('2021-01-28', '12:30:30', '2021-01-28 12:30:30', 3.3, 3, 'varchar3', 'char3');
+INSERT INTO test_types VALUES ('1999-07-25', '00:00:00', '1999-07-25 00:00:00', 1.1, 1, 'varchar1', 'char1', NULL);
+INSERT INTO test_types VALUES ('2020-12-31', '23:59:59', '2020-12-31 23:59:59', 2.2, 2, 'varchar2', 'char2', CONVERT(VARBINARY(10), '1234'));
+INSERT INTO test_types VALUES ('2021-01-28', '12:30:30', '2021-01-28 12:30:30', 3.3, 3, 'varchar3', 'char3', CONVERT(VARBINARY(10), ''));
 
 CREATE FUNCTION increment(@val int)  
 RETURNS int   
