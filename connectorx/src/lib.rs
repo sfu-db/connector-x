@@ -86,16 +86,20 @@
 //!
 //! ## Putting things together
 //!
-//! Say, you decide to load data from SQL Server to Arrow. In ConnectorX we already provided the source for SQL Server as [`sources::mssql::MsSQLSource`], and the
-//! Arrow destination [`destinations::arrow::ArrowDestination`], as well as the transport [`transports::MsSQLArrowTransport`].
+//! Say, you decide to load data from SQL Server to Arrow. In ConnectorX we already provided the source for SQL Server as [`sources::sqlite::SQLiteSource`], and the
+//! Arrow destination [`destinations::arrow::ArrowDestination`], as well as the transport [`transports::SQLiteArrowTransport`].
 //! Given the source, destination and transport already implemented, you can use [`dispatcher::Dispatcher`] to load the data:
 //!
-//! ```ignore
+//! ```no_run
+//! use connectorx::prelude::*;
+//!
 //! let mut destination = ArrowDestination::new();
-//! let source = MsSQLSource::new(...)?;
-//! let queries = &["query1", "query2"];
-//! let dispatcher = Dispatcher::<MsSQLSource, ArrowDestination, MsSQLArrowTransport>::new(source, &mut destination, queries);
-//! dispatcher.run()?;
+//! let source = SQLiteSource::new("sqlite:///path/to/db", 10).expect("cannot create the source");
+//! let queries = &["SELECT * FROM db WHERE id < 100", "SELECT * FROM db WHERE id >= 100"];
+//! let dispatcher = Dispatcher::<SQLiteSource, ArrowDestination, SQLiteArrowTransport>::new(source, &mut destination, queries);
+//! dispatcher.run().expect("run failed");
+//!
+//! let data = destination.arrow();
 //! ```
 //!
 //! ## Need more examples?
@@ -143,10 +147,25 @@ pub mod utils;
 
 pub mod prelude {
     pub use crate::data_order::{coordinate, DataOrder};
+    #[cfg(feature = "dst_arrow")]
+    pub use crate::destinations::arrow::ArrowDestination;
     pub use crate::destinations::{Consume, Destination, DestinationPartition};
     pub use crate::dispatcher::Dispatcher;
     pub use crate::errors::ConnectorXError;
+    #[cfg(feature = "src_csv")]
+    pub use crate::sources::csv::CSVSource;
+    #[cfg(feature = "src_dummy")]
+    pub use crate::sources::dummy::DummySource;
+    #[cfg(feature = "src_mssql")]
+    pub use crate::sources::mssql::MsSQLSource;
+    #[cfg(feature = "src_mysql")]
+    pub use crate::sources::mysql::MySQLSource;
+    #[cfg(feature = "src_postgres")]
+    pub use crate::sources::postgres::PostgresSource;
+    #[cfg(feature = "src_sqlite")]
+    pub use crate::sources::sqlite::SQLiteSource;
     pub use crate::sources::{PartitionParser, Produce, Source, SourcePartition};
+    pub use crate::transports::*;
     pub use crate::typesystem::{
         ParameterizedFunc, ParameterizedOn, Realize, Transport, TypeAssoc, TypeConversion,
         TypeSystem,

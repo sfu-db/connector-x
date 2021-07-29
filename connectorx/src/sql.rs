@@ -33,6 +33,30 @@ impl<Q: AsRef<str>> CXQuery<Q> {
     }
 }
 
+impl From<&str> for CXQuery {
+    fn from(s: &str) -> CXQuery<String> {
+        CXQuery::Naked(s.to_string())
+    }
+}
+
+impl From<&&str> for CXQuery {
+    fn from(s: &&str) -> CXQuery<String> {
+        CXQuery::Naked(s.to_string())
+    }
+}
+
+impl From<&String> for CXQuery {
+    fn from(s: &String) -> CXQuery {
+        CXQuery::Naked(s.clone())
+    }
+}
+
+impl From<&CXQuery> for CXQuery {
+    fn from(q: &CXQuery) -> CXQuery {
+        q.clone()
+    }
+}
+
 impl CXQuery<String> {
     pub fn naked<Q: AsRef<str>>(q: Q) -> Self {
         CXQuery::Naked(q.as_ref().to_string())

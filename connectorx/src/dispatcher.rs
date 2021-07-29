@@ -36,11 +36,14 @@ where
     ET: From<ConnectorXError> + From<ES> + From<ED> + Send,
 {
     /// Create a new dispatcher by providing a source, a destination and the queries.
-    pub fn new<Q: ToString>(src: S, dst: &'w mut D, queries: &[CXQuery<Q>]) -> Self {
+    pub fn new<Q>(src: S, dst: &'w mut D, queries: &[Q]) -> Self
+    where
+        for<'a> &'a Q: Into<CXQuery>,
+    {
         Dispatcher {
             src,
             dst,
-            queries: queries.iter().map(|q| q.map(Q::to_string)).collect(),
+            queries: queries.iter().map(Into::into).collect(),
             _phantom: PhantomData,
         }
     }
