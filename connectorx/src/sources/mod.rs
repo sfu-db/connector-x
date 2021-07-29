@@ -1,4 +1,4 @@
-//! This module defines four traits [`sources::Source`], [`sources::SourcePartition`], [`sources::PartitionParser`], and [`sources::Produce`]  to define a source.
+//! This module defines four traits [`Source`], [`SourcePartition`], [`PartitionParser`], and [`Produce`]  to define a source.
 //! This module also contains source implementations for various databases.
 
 #[cfg(feature = "src_csv")]

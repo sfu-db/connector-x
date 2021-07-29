@@ -1,4 +1,4 @@
-//! This module defines three traits [`destinations::Destination`], [`destinations::DestinationPartition`], and [`destinations::Consume`] to define a destination.
+//! This module defines three traits [`Destination`], [`DestinationPartition`], and [`Consume`] to define a destination.
 //! This module also contains destination implementations for various dataframes.
 
 #[cfg(feature = "dst_arrow")]

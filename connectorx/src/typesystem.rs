@@ -1,7 +1,7 @@
 //! This module defines traits that required to define a typesystem.
 //!
 //! A typesystem is an enum that describes what types can be produced by a source and accepted by a destination.
-//! A typesystem also needs to implement [`typesystem::TypeAssoc`] to associate the enum variants to the physical representation
+//! A typesystem also needs to implement [`TypeAssoc`] to associate the enum variants to the physical representation
 //! of the types in the typesystem.
 
 use crate::destinations::{Consume, Destination, DestinationPartition};
