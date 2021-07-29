@@ -27,6 +27,7 @@
 //!
 //! The following graph depicts the internal mechanism when ConnectorX is downloading the data.
 //!
+//! ```text
 //!                     +------------------------------------------------------------+
 //!                     |                           Thread 1                         |
 //!                     |                                                            |
@@ -47,6 +48,7 @@
 //!                     |                                                            |
 //!                     +------------------------------------------------------------+
 //!
+//! ```
 //! ## How does ConnectorX download the data?
 //!
 //! Upon receiving the query, e.g. SELECT * FROM lineitem, ConnectorX will first issue a LIMIT 1 query SELECT * FROM lineitem LIMIT 1 to get the schema of the result set.
