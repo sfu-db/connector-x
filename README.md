@@ -6,8 +6,6 @@
 
 Load data from <img src="https://raw.githubusercontent.com/sfu-db/connector-x/main/assets/sources.gif" width="6.5%" style="margin-bottom: -2px"/> to <img src="https://raw.githubusercontent.com/sfu-db/connector-x/main/assets/destinations.gif" width="7%" style="margin-bottom: -2px"/>, the fastest way.
 
-For more data sources, please check out our [discussion](https://github.com/sfu-db/connector-x/discussions/61).
-
 ConnectorX enables you to load data from databases into Python in the fastest and most memory efficient way.
 
 What you need is one line of code:
@@ -30,7 +28,7 @@ The function will partition the query by **evenly** splitting the specified colu
 ConnectorX will assign one thread for each partition to load and write data in parallel.
 Currently, we support partitioning on **integer** columns for **SPJA** queries.
 
-Check out more detailed usage and examples [here](#detailed-usage-and-examples).
+Check out more detailed usage and examples [here](#detailed-usage-and-examples). A general introduction of the project can be found in this [blog post](https://towardsdatascience.com/connectorx-the-fastest-way-to-load-data-from-databases-a65d4d4062d5).
 
 # Installation
 
@@ -79,6 +77,7 @@ This mechanism implies that having an **index on the partition column** is recom
 # Supported Sources & Destinations
 
 Supported protocols, data types and type mappings can be found [here](Types.md).
+For more planned data sources, please check out our [discussion](https://github.com/sfu-db/connector-x/discussions/61).
 
 ## Sources
 - [x] Postgres
