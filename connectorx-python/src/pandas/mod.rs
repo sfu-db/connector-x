@@ -44,7 +44,7 @@ pub fn write_pandas<'a>(
     match source_conn.ty {
         SourceType::Postgres => {
             debug!("Protocol: {}", protocol);
-            let (config, tls) = rewrite_tls_args(&source_conn.conn[..])?;
+            let (config, tls) = rewrite_tls_args(&source_conn.conn)?;
             match (protocol, tls) {
                 ("csv", Some(tls_conn)) => {
                     let sb = PostgresSource::<CSVProtocol, MakeTlsConnector>::new(

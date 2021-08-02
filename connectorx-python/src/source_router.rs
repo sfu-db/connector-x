@@ -99,7 +99,7 @@ impl SourceConn {
 
 #[throws(ConnectorXPythonError)]
 fn pg_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
-    let (config, tls) = rewrite_tls_args(conn.as_str())?;
+    let (config, tls) = rewrite_tls_args(conn)?;
     let mut client = config.connect(tls.unwrap())?;
     let range_query = get_partition_range_query(query, col, &PostgreSqlDialect {})?;
     let row = client.query_one(range_query.as_str(), &[])?;
