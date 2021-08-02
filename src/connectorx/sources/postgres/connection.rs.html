@@ -104,11 +104,8 @@
 <span id="101">101</span>
 <span id="102">102</span>
 <span id="103">103</span>
-<span id="104">104</span>
-<span id="105">105</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::sources::postgres::errors::PostgresSourceError</span>;
-<span class="kw">use</span> <span class="ident">anyhow::anyhow</span>;
 <span class="kw">use</span> <span class="ident">native_tls</span>::{<span class="ident">Certificate</span>, <span class="ident">TlsConnector</span>};
 <span class="kw">use</span> <span class="ident">postgres</span>::{<span class="ident">config::SslMode</span>, <span class="ident">Config</span>};
 <span class="kw">use</span> <span class="ident">postgres_native_tls::MakeTlsConnector</span>;
@@ -167,7 +164,7 @@
 }
 
 <span class="comment">// Strip URL params not accepted by upstream rust-postgres</span>
-<span class="kw">fn</span> <span class="ident">strip_bad_opts</span>(<span class="ident">url</span>: <span class="ident">Url</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Url</span> {
+<span class="kw">fn</span> <span class="ident">strip_bad_opts</span>(<span class="ident">url</span>: <span class="kw-2">&amp;</span><span class="ident">Url</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Url</span> {
     <span class="kw">let</span> <span class="ident">stripped_query</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="kw">_</span>, <span class="kw">_</span>)<span class="op">&gt;</span> <span class="op">=</span> <span class="ident">url</span>
         .<span class="ident">query_pairs</span>()
         .<span class="ident">filter</span>(<span class="op">|</span><span class="ident">p</span><span class="op">|</span> <span class="op">!</span><span class="macro">matches!</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">p</span>.<span class="number">0</span>, <span class="string">&quot;sslrootcert&quot;</span>))
@@ -185,19 +182,18 @@
 }
 
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">rewrite_tls_args</span>(
-    <span class="ident">conn</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
+    <span class="ident">conn</span>: <span class="kw-2">&amp;</span><span class="ident">Url</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">Config</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">MakeTlsConnector</span><span class="op">&gt;</span>), <span class="ident">PostgresSourceError</span><span class="op">&gt;</span> {
     <span class="comment">// We parse the config, then strip unsupported SSL opts and rewrite the URI</span>
     <span class="comment">// before calling conn.parse().</span>
     <span class="comment">//</span>
     <span class="comment">// For more details on this approach, see the conversation here:</span>
     <span class="comment">// https://github.com/sfackler/rust-postgres/pull/774#discussion_r641784774</span>
-    <span class="kw">let</span> <span class="ident">parsed_conn_str</span> <span class="op">=</span> <span class="ident">Url::parse</span>(<span class="ident">conn</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">anyhow!</span>(<span class="ident">e</span>))<span class="question-mark">?</span>;
 
-    <span class="kw">let</span> <span class="ident">params</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">String</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">parsed_conn_str</span>.<span class="ident">query_pairs</span>().<span class="ident">into_owned</span>().<span class="ident">collect</span>();
+    <span class="kw">let</span> <span class="ident">params</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">String</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">conn</span>.<span class="ident">query_pairs</span>().<span class="ident">into_owned</span>().<span class="ident">collect</span>();
     <span class="kw">let</span> <span class="ident">root_cert</span> <span class="op">=</span> <span class="ident">params</span>.<span class="ident">get</span>(<span class="string">&quot;sslrootcert&quot;</span>).<span class="ident">map</span>(<span class="ident">PathBuf::from</span>);
 
-    <span class="kw">let</span> <span class="ident">stripped_url</span> <span class="op">=</span> <span class="ident">strip_bad_opts</span>(<span class="ident">parsed_conn_str</span>);
+    <span class="kw">let</span> <span class="ident">stripped_url</span> <span class="op">=</span> <span class="ident">strip_bad_opts</span>(<span class="ident">conn</span>);
     <span class="kw">let</span> <span class="ident">pg_config</span>: <span class="ident">Config</span> <span class="op">=</span> <span class="ident">stripped_url</span>.<span class="ident">as_str</span>().<span class="ident">parse</span>().<span class="ident">unwrap</span>();
 
     <span class="kw">let</span> <span class="ident">tls_config</span> <span class="op">=</span> <span class="ident">TlsConfig</span> {
