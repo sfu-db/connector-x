@@ -46,6 +46,9 @@ python-tpch name +ARGS="": setup-python
     cd connectorx-python && \
     poetry run python ../benchmarks/tpch-{{name}}.py {{ARGS}}
 
+python-tpch-ext name +ARGS="":
+    cd connectorx-python && poetry run python ../benchmarks/tpch-{{name}}.py {{ARGS}}
+
 python-shell:
     cd connectorx-python && \
     poetry run ipython
