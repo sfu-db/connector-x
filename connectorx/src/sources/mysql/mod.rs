@@ -407,6 +407,7 @@ impl<'a> MySQLTextSourceParser<'a> {
         let ret = (self.current_row, self.current_col);
         self.current_row += (self.current_col + 1) / self.ncols;
         self.current_col = (self.current_col + 1) % self.ncols;
+        self.rowbuf[0].get(0)
         ret
     }
 }

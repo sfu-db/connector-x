@@ -14,6 +14,8 @@ pub mod postgres;
 #[cfg(feature = "src_sqlite")]
 pub mod sqlite;
 
+pub mod oracle;
+
 use crate::data_order::DataOrder;
 use crate::errors::ConnectorXError;
 use crate::sql::CXQuery;
