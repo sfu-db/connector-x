@@ -62,6 +62,11 @@ impl_transport!(
         { Decimal[Decimal]           => Float64[f64]            | conversion option }
         { VarChar[String]            => LargeUtf8[String]       | conversion auto }
         { Char[String]               => LargeUtf8[String]       | conversion none }
+        { Enum[&'r str]              => Str[&'r str]            | conversion none }
+        { TinyBlob[Vec<u8>]          => LargeBinary[Vec<u8>]    | conversion auto }
+        { Blob[Vec<u8>]              => LargeBinary[Vec<u8>]    | conversion auto }
+        { MediumBlob[Vec<u8>]        => LargeBinary[Vec<u8>]    | conversion auto }
+        { LongBlob[Vec<u8>]          => LargeBinary[Vec<u8>]    | conversion auto }
     }
 );
 

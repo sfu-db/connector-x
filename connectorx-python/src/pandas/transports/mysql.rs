@@ -9,6 +9,7 @@ use connectorx::{
 };
 use rust_decimal::prelude::*;
 use std::marker::PhantomData;
+use serde_json::{to_string, Value};
 
 pub struct MysqlPandasTransport<'py, P>(&'py (), PhantomData<P>);
 
@@ -18,15 +19,22 @@ impl_transport!(
     systems = MySQLTypeSystem => PandasTypeSystem,
     route = MySQLSource<BinaryProtocol> => PandasDestination<'tp>,
     mappings = {
+        { Float[f32]                 => F64[f64]                | conversion auto }
         { Double[f64]                => F64[f64]                | conversion auto }
         { Long[i64]                  => I64[i64]                | conversion auto }
         { LongLong[i64]              => I64[i64]                | conversion none }
         { Date[NaiveDate]            => DateTime[DateTime<Utc>] | conversion option }
         { Time[NaiveTime]            => String[String]          | conversion option }
         { Datetime[NaiveDateTime]    => DateTime[DateTime<Utc>] | conversion option }
+        { Timestamp[NaiveDateTime]   => DateTime[DateTime<Utc>] | conversion option }
         { Decimal[Decimal]           => F64[f64]                | conversion option }
         { VarChar[String]            => String[String]          | conversion auto }
         { Char[String]               => String[String]          | conversion none }
+        { Enum[&'r str]              => Str[&'r str]            | conversion none }
+        { TinyBlob[Vec<u8>]          => Bytes[Vec<u8>]          | conversion auto }
+        { Blob[Vec<u8>]              => Bytes[Vec<u8>]          | conversion auto }
+        { MediumBlob[Vec<u8>]        => Bytes[Vec<u8>]          | conversion auto }
+        { LongBlob[Vec<u8>]          => Bytes[Vec<u8>]          | conversion auto }
     }
 );
 
@@ -36,15 +44,22 @@ impl_transport!(
     systems = MySQLTypeSystem => PandasTypeSystem,
     route = MySQLSource<TextProtocol> => PandasDestination<'tp>,
     mappings = {
+        { Float[f32]                 => F64[f64]                | conversion auto }
         { Double[f64]                => F64[f64]                | conversion auto }
         { Long[i64]                  => I64[i64]                | conversion auto }
         { LongLong[i64]              => I64[i64]                | conversion none }
         { Date[NaiveDate]            => DateTime[DateTime<Utc>] | conversion option }
         { Time[NaiveTime]            => String[String]          | conversion option }
         { Datetime[NaiveDateTime]    => DateTime[DateTime<Utc>] | conversion option }
+        { Timestamp[NaiveDateTime]   => DateTime[DateTime<Utc>] | conversion option }
         { Decimal[Decimal]           => F64[f64]                | conversion option }
         { VarChar[String]            => String[String]          | conversion auto }
         { Char[String]               => String[String]          | conversion none }
+        { Enum[&'r str]              => Str[&'r str]            | conversion none }
+        { TinyBlob[Vec<u8>]          => Bytes[Vec<u8>]          | conversion auto }
+        { Blob[Vec<u8>]              => Bytes[Vec<u8>]          | conversion auto }
+        { MediumBlob[Vec<u8>]        => Bytes[Vec<u8>]          | conversion auto }
+        { LongBlob[Vec<u8>]          => Bytes[Vec<u8>]          | conversion auto }
     }
 );
 
