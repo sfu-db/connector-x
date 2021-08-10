@@ -22,7 +22,7 @@ use r2d2_mysql::{
 use rust_decimal::Decimal;
 use sqlparser::dialect::MySqlDialect;
 use std::marker::PhantomData;
-use serde_json::{from_str, Value};
+use serde_json::{from_str, Value, from_slice};
 pub use typesystem::MySQLTypeSystem;
 
 type MysqlManager = MysqlConnectionManager;
@@ -361,9 +361,10 @@ impl_produce_binary!(
     NaiveDateTime,
     Decimal,
     String,
-    &'r str,
     Vec<u8>,
+    Value,
 );
+
 
 pub struct MySQLTextSourceParser<'a> {
     iter: QueryResult<'a, 'a, 'a, Text>,
@@ -463,6 +464,6 @@ impl_produce_text!(
     NaiveDateTime,
     Decimal,
     String,
-    &'r str,
     Vec<u8>,
+    Value,
 );

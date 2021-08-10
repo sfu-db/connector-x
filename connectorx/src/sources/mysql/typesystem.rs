@@ -1,6 +1,7 @@
 use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
 use r2d2_mysql::mysql::consts::ColumnType;
 use rust_decimal::Decimal;
+use serde_json::Value;
 
 #[derive(Copy, Clone, Debug)]
 pub enum MySQLTypeSystem {
@@ -9,6 +10,7 @@ pub enum MySQLTypeSystem {
     Tiny(bool),
     Short(bool),
     Long(bool),
+    Int24(bool),
     LongLong(bool),
     Datetime(bool),
     Date(bool),
@@ -23,6 +25,7 @@ pub enum MySQLTypeSystem {
     Blob(bool),
     MediumBlob(bool),
     LongBlob(bool),
+    Json(bool),
 }
 
 impl_typesystem! {
@@ -30,16 +33,17 @@ impl_typesystem! {
     mappings = {
         { Tiny => i8 }
         { Short | Year => i16 }
-        { Long | LongLong => i64 }
+        { Long | Int24 => i32}
+        { LongLong => i64 }
         { Float => f32 }
         { Double => f64 }
         { Datetime | Timestamp => NaiveDateTime }
         { Date => NaiveDate }
         { Time => NaiveTime }
         { Decimal => Decimal }
-        { Char | VarChar => String }
-        { Enum => &'r str }
+        { Char | VarChar | Enum => String }
         { TinyBlob | Blob | MediumBlob | LongBlob => Vec<u8>}
+        { Json => Value }
     }
 }
 
@@ -49,6 +53,7 @@ impl<'a> From<&'a ColumnType> for MySQLTypeSystem {
         match ty {
             ColumnType::MYSQL_TYPE_TINY => Tiny(true),
             ColumnType::MYSQL_TYPE_SHORT => Short(true),
+            ColumnType::MYSQL_TYPE_INT24 => Int24(true),
             ColumnType::MYSQL_TYPE_LONG => Long(true),
             ColumnType::MYSQL_TYPE_LONGLONG => LongLong(true),
             ColumnType::MYSQL_TYPE_FLOAT => Float(true),
@@ -66,7 +71,7 @@ impl<'a> From<&'a ColumnType> for MySQLTypeSystem {
             ColumnType::MYSQL_TYPE_BLOB => Blob(true),
             ColumnType::MYSQL_TYPE_MEDIUM_BLOB => MediumBlob(true),
             ColumnType::MYSQL_TYPE_LONG_BLOB => LongBlob(true),
-            ColumnType::MYSQL_TYPE_JSON
+            ColumnType::MYSQL_TYPE_JSON => Json(true),
             _ => unimplemented!("{}", format!("{:?}", ty)),
         }
     }
@@ -78,8 +83,9 @@ impl<'a> From<MySQLTypeSystem> for ColumnType {
         use MySQLTypeSystem::*;
         match ty {
             Tiny(_) => ColumnType::MYSQL_TYPE_TINY,
-            Short(_) => ColumnType::MYSQL_TYPE_SHORT
+            Short(_) => ColumnType::MYSQL_TYPE_SHORT,
             Long(_) => ColumnType::MYSQL_TYPE_LONG,
+            Int24(_) => ColumnType::MYSQL_TYPE_INT24,
             LongLong(_) => ColumnType::MYSQL_TYPE_LONGLONG,
             Float(_) => ColumnType::MYSQL_TYPE_FLOAT,
             Double(_) => ColumnType::MYSQL_TYPE_DOUBLE,
@@ -92,10 +98,11 @@ impl<'a> From<MySQLTypeSystem> for ColumnType {
             Timestamp(_) => ColumnType::MYSQL_TYPE_TIMESTAMP,
             Year(_) => ColumnType::MYSQL_TYPE_YEAR,
             Enum(_) => ColumnType::MYSQL_TYPE_ENUM,
-            TinyBlob(_) => ColumnType::MYSQL_TYPE_TINY_BLOB
+            TinyBlob(_) => ColumnType::MYSQL_TYPE_TINY_BLOB,
             Blob(_) => ColumnType::MYSQL_TYPE_BLOB,
             MediumBlob(_) => ColumnType::MYSQL_TYPE_MEDIUM_BLOB,
             LongBlob(_) => ColumnType::MYSQL_TYPE_LONG_BLOB,
+            Json(_) => ColumnType::MYSQL_TYPE_JSON,
          }
     }
 }

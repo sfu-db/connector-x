@@ -78,6 +78,25 @@ def test_mysql_types_text(mysql_url: str) -> None:
     )
     assert_frame_equal(df, expected, check_names=True)
 
+
+def test_mysql_more_types(mysql_url: str) -> None:
+    query = "select * from test_more_types"
+    df = read_sql(mysql_url, query)
+    expected = pd.DataFrame(
+        index=range(3),
+        data={
+            "test_tiny": pd.Series([0, 1, 0], dtype="Int64"),
+            "test_short": pd.Series([-28, 128, 725], dtype="Int64"),
+            "test_float": pd.Series([1.1, 2.2, 3.3], dtype="float"),
+            "test_year": pd.Series([1901, 2021, 2155], dtype="Int64"),
+            "test_timestamp": pd.Series(["1990-01-01 00:00:01", "2021-08-05 12:12:12", "2038-01-19 03:14:07"], dtype="datetime64[ns]"),
+            "test_blob": pd.Series([b"blobblobblobblob1", b"blobblobblobblob2", b"blobblobblobblob3"], dtype="object"),
+            "test_enum": pd.Series(["apple", "orange", "mango"], dtype="object"),
+            "test_json": pd.Series(['{"age":1,"name":"piggy"}', '{"age":2,"name":"kitty"}', '{"age":3,"name":"puppy"}'], dtype="object")
+        }
+    )
+    assert_frame_equal(df, expected, check_names=True)
+
 def test_empty_result(mysql_url: str) -> None:
     query = "SELECT * FROM test_table where test_int < -100"
     df = read_sql(mysql_url, query)
