@@ -6,7 +6,7 @@ use sqlparser::ast::{
     BinaryOperator, Expr, Function, FunctionArg, Ident, ObjectName, Query, Select, SelectItem,
     SetExpr, Statement, TableAlias, TableFactor, TableWithJoins, Top, Value,
 };
-use sqlparser::dialect::{Dialect, MsSqlDialect};
+use sqlparser::dialect::{Dialect, MsSqlDialect, GenericDialect};
 use sqlparser::parser::Parser;
 
 #[derive(Debug, Clone)]
@@ -281,6 +281,47 @@ pub fn limit1_query<T: Dialect>(sql: &CXQuery<String>, dialect: &T) -> CXQuery<S
     };
 
     let sql = format!("{}", ast[0]);
+    debug!("Transformed limit 1 query: {}", sql);
+    CXQuery::Wrapped(sql)
+}
+
+#[throws(ConnectorXError)]
+pub fn limit1_query_oracle(sql: &CXQuery<String>) -> CXQuery<String> {
+    trace!("Incoming query: {}", sql);
+
+    let mut ast = Parser::parse_sql(&GenericDialect {}, sql.as_str())?;
+    if ast.len() != 1 {
+        throw!(ConnectorXError::SqlQueryNotSupported(sql.to_string()));
+    }
+    let mut ast_part:Statement;
+    match &mut ast[0] {
+        Statement::Query(q) => {
+            match q.body {
+                SetExpr::Select(ref mut s) => {
+                    let selection = Expr::BinaryOp {
+                        left: Box::new(Expr::CompoundIdentifier(vec![
+                            Ident {
+                                value: "rownum".to_string(),
+                                quote_style: None,
+                            },
+                        ])),
+                        op: BinaryOperator::Eq,
+                        right: Box::new(Expr::Value(Value::Number("1".to_string(), false))),
+                    };
+                    ast_part = wrap_query(
+                        &q,
+                        vec![SelectItem::Wildcard],
+                        Some(selection),
+                        "TMP_TABLE",
+                    );
+                }
+                _ => throw!(ConnectorXError::SqlQueryNotSupported(sql.to_string())),
+            };
+        }
+        _ => throw!(ConnectorXError::SqlQueryNotSupported(sql.to_string())),
+    };
+
+    let sql = format!("{}", ast_part);
     debug!("Transformed limit 1 query: {}", sql);
     CXQuery::Wrapped(sql)
 }
