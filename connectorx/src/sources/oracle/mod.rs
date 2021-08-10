@@ -8,17 +8,19 @@ use crate::{
     sql::{count_query, get_limit, limit1_query, CXQuery},
 };
 use anyhow::anyhow;
-use url::Url;
+use fehler::{throw, throws};
+use log::debug;
 use r2d2::{Pool, PooledConnection};
 use r2d2_oracle::{oracle::Row, OracleConnectionManager};
+use url::Url;
 type OracleManager = OracleConnectionManager;
 type OracleConn = PooledConnection<OracleManager>;
 
 pub use self::errors::OracleSourceError;
+use r2d2_oracle::oracle::ResultSet;
 use sqlparser::dialect::GenericDialect;
 use std::marker::PhantomData;
 pub use typesystem::OracleTypeSystem;
-use r2d2_oracle::oracle::ResultSet;
 
 pub enum TextProtocol {}
 
@@ -85,50 +87,41 @@ where
         assert!(!self.queries.is_empty());
 
         let mut conn = self.pool.get()?;
-        let mut success = false;
-        let mut zero_tuple = true;
-        let mut error = None;
-        for query in &self.queries {
+        for (i, query) in self.queries.iter().enumerate() {
             // assuming all the partition queries yield same schema
-            let mut stmt = conn.prepare(query.as_ref(), &[]).unwrap();
-            match stmt.query(&[]).unwrap() {
+            match conn.query(limit1_query(query, &GenericDialect {})?.as_str(), &[]) {
                 Ok(rows) => {
                     let (names, types) = rows
                         .column_info()
                         .iter()
-                        .map(|col| (col.name(), col.oracle_type()))
+                        .map(|col| {
+                            (
+                                col.name().to_string(),
+                                OracleTypeSystem::from(col.oracle_type())
+                            )
+                        })
                         .unzip();
                     self.names = names;
                     self.schema = types;
-                    success = true;
-                    zero_tuple = false;
+                    return;
                 }
-                Ok(None) => {}
-                Err(e) => {
-                    debug!("cannot get metadata for '{}', try next query: {}", query, e);
-                    error = Some(e);
-                    zero_tuple = false;
+                Err(e) if i == self.queries.len() - 1 => {
+                    // tried the last query but still get an error
+                    debug!("cannot get metadata for '{}': {}", query, e);
+                    throw!(e);
                 }
+                Err(_) => {}
             }
         }
-
-        if !success {
-            if zero_tuple {
-                let iter = conn.query_iter(self.queries[0].as_str())?;
-                let (names, types) = iter
-                    .column_info()
-                    .iter()
-                    .map(|col| (col.name(), string_type))
-                    .unzip();
-                self.names = names;
-                self.schema = types;
-            } else {
-                throw!(anyhow!(
-                    "Cannot get metadata for the queries, last error: {:?}",
-                    error
-                ))
-            }
-        }
+        // tried all queries but all get empty result set
+        let iter = conn.query(self.queries[0].as_str(), &[])?;
+        let (names, types) = iter
+            .column_info()
+            .iter()
+            .map(|col| (col.name().to_string(), OracleTypeSystem::VarChar(false)))
+            .unzip();
+        self.names = names;
+        self.schema = types;
     }
 
     fn names(&self) -> Vec<String> {
@@ -195,14 +188,14 @@ impl SourcePartition for OracleSourcePartition<TextProtocol> {
             None => {
                 let row = self
                     .conn
-                    .query_row_as::<usize>(&count_query(&self.query, &GenericDialect {})?, &[])?;
+                    .query_row_as::<usize>(&count_query(&self.query, &GenericDialect {})?.as_str(), &[])?;
                 row
             }
             Some(n) => n,
         };
     }
 
-    #[throws(MySQLSourceError)]
+    #[throws(OracleSourceError)]
     fn parser(&mut self) -> Self::Parser<'_> {
         let query = self.query.clone();
         let iter = self.conn.query(query.as_str(), &[]).unwrap();
@@ -218,7 +211,7 @@ impl SourcePartition for OracleSourcePartition<TextProtocol> {
     }
 }
 
-pub struct MySQLTextSourceParser<'a> {
+pub struct OracleTextSourceParser<'a> {
     iter: ResultSet<'a, Row>,
     buf_size: usize,
     rowbuf: Vec<Row>,
@@ -227,8 +220,8 @@ pub struct MySQLTextSourceParser<'a> {
     current_row: usize,
 }
 
-impl<'a> MySQLTextSourceParser<'a> {
-    pub fn new(iter: ResultSet<Row>, schema: &[OracleTypeSystem], buf_size: usize) -> Self {
+impl<'a> OracleTextSourceParser<'a> {
+    pub fn new(iter: ResultSet<'a, Row>, schema: &[OracleTypeSystem], buf_size: usize) -> Self {
         Self {
             iter,
             buf_size,
@@ -239,7 +232,7 @@ impl<'a> MySQLTextSourceParser<'a> {
         }
     }
 
-    #[throws(MySQLSourceError)]
+    #[throws(OracleSourceError)]
     fn next_loc(&mut self) -> (usize, usize) {
         if self.current_row >= self.rowbuf.len() {
             if !self.rowbuf.is_empty() {
@@ -255,7 +248,7 @@ impl<'a> MySQLTextSourceParser<'a> {
             }
 
             if self.rowbuf.is_empty() {
-                throw!(anyhow!("Mysql EOF"));
+                throw!(anyhow!("Oracle EOF"));
             }
             self.current_row = 0;
             self.current_col = 0;
@@ -281,7 +274,7 @@ macro_rules! impl_produce_text {
                 #[throws(OracleSourceError)]
                 fn produce(&'r mut self) -> $t {
                     let (ridx, cidx) = self.next_loc()?;
-                    let res = self.rowbuf[ridx].get(cidx).unwrap_or_else(|| anyhow!("oracle get None at position: ({}, {})", ridx, cidx))?;
+                    let res = self.rowbuf[ridx].get(cidx)?;
                     res
                 }
             }
@@ -292,7 +285,7 @@ macro_rules! impl_produce_text {
                 #[throws(OracleSourceError)]
                 fn produce(&'r mut self) -> Option<$t> {
                     let (ridx, cidx) = self.next_loc()?;
-                    let res = self.rowbuf[ridx].get(cidx);
+                    let res = self.rowbuf[ridx].get(cidx)?;
                     res
                 }
             }
@@ -300,6 +293,4 @@ macro_rules! impl_produce_text {
     };
 }
 
-impl_produce_text!(
-    i64,
-);
+impl_produce_text!(i64, f64, String,);

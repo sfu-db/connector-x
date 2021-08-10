@@ -9,12 +9,12 @@ pub mod dummy;
 pub mod mssql;
 #[cfg(feature = "src_mysql")]
 pub mod mysql;
+#[cfg(feature = "src_oracle")]
+pub mod oracle;
 #[cfg(feature = "src_postgres")]
 pub mod postgres;
 #[cfg(feature = "src_sqlite")]
 pub mod sqlite;
-#[cfg(feature = "src_oracle")]
-pub mod oracle;
 
 use crate::data_order::DataOrder;
 use crate::errors::ConnectorXError;

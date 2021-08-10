@@ -1,14 +1,10 @@
 use crate::{
     destinations::arrow::{typesystem::ArrowTypeSystem, ArrowDestination, ArrowDestinationError},
     impl_transport,
-    sources::oracle::{
-        TextProtocol, OracleSource, OracleSourceError, OracleTypeSystem,
-    },
+    sources::oracle::{OracleSource, OracleSourceError, OracleTypeSystem, TextProtocol},
     typesystem::TypeConversion,
 };
-use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
-use num_traits::ToPrimitive;
-use rust_decimal::Decimal;
+// use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
 use std::marker::PhantomData;
 use thiserror::Error;
 
@@ -23,7 +19,6 @@ pub enum OracleArrowTransportError {
     #[error(transparent)]
     ConnectorX(#[from] crate::errors::ConnectorXError),
 }
-
 
 pub struct OracleArrowTransport<P>(PhantomData<P>);
 

@@ -13,9 +13,11 @@ use connectorx::{
 };
 use fehler::{throw, throws};
 use r2d2_mysql::mysql::{prelude::Queryable, Pool, Row};
-use rusqlite::{types::Type, Connection};
 use r2d2_oracle::oracle::Connection as oracle_conn;
-use sqlparser::dialect::{MsSqlDialect, MySqlDialect, PostgreSqlDialect, SQLiteDialect, GenericDialect};
+use rusqlite::{types::Type, Connection};
+use sqlparser::dialect::{
+    GenericDialect, MsSqlDialect, MySqlDialect, PostgreSqlDialect, SQLiteDialect,
+};
 use std::convert::TryFrom;
 use tokio::net::TcpStream;
 use tokio_util::compat::TokioAsyncWriteCompatExt;
@@ -26,7 +28,7 @@ pub enum SourceType {
     SQLite,
     MySQL,
     MsSQL,
-    Oracle
+    Oracle,
 }
 
 pub struct SourceConn {
@@ -56,7 +58,7 @@ impl TryFrom<&str> for SourceConn {
                 ty: SourceType::MsSQL,
                 conn: url,
             }),
-            "oracle" => Ok(SourceConn{
+            "oracle" => Ok(SourceConn {
                 ty: SourceType::Oracle,
                 conn: url,
             }),

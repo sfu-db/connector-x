@@ -8,12 +8,12 @@ mod dummy_arrow;
 mod mssql_arrow;
 #[cfg(all(feature = "src_mysql", feature = "dst_arrow"))]
 mod mysql_arrow;
+#[cfg(all(feature = "src_oracle", feature = "dst_arrow"))]
+mod oracle_arrow;
 #[cfg(all(feature = "src_postgres", feature = "dst_arrow"))]
 mod postgres_arrow;
 #[cfg(all(feature = "src_sqlite", feature = "dst_arrow"))]
 mod sqlite_arrow;
-#[cfg(all(feature = "src_oracle", feature = "dst_arrow"))]
-mod oracle_arrow;
 
 #[cfg(all(feature = "src_csv", feature = "dst_arrow"))]
 pub use csv_arrow::CSVArrowTransport;
@@ -23,9 +23,9 @@ pub use dummy_arrow::DummyArrowTransport;
 pub use mssql_arrow::{MsSQLArrowTransport, MsSQLArrowTransportError};
 #[cfg(all(feature = "src_mysql", feature = "dst_arrow"))]
 pub use mysql_arrow::{MySQLArrowTransport, MySQLArrowTransportError};
+#[cfg(all(feature = "src_oracle", feature = "dst_arrow"))]
+pub use oracle_arrow::{OracleArrowTransport, OracleArrowTransportError};
 #[cfg(all(feature = "src_postgres", feature = "dst_arrow"))]
 pub use postgres_arrow::{PostgresArrowTransport, PostgresArrowTransportError};
 #[cfg(all(feature = "src_sqlite", feature = "dst_arrow"))]
 pub use sqlite_arrow::{SQLiteArrowTransport, SQLiteArrowTransportError};
-#[cfg(all(feature = "src_oracle", feature = "dst_arrow"))]
-pub use oracle_arrow::{OracleArrowTransport, OracleArrowTransportError};

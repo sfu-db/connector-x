@@ -9,9 +9,6 @@ pub enum OracleSourceError {
     OracleError(#[from] r2d2_oracle::oracle::Error),
 
     #[error(transparent)]
-    OracleDbError(#[from] r2d2_oracle::oracle::DbError),
-
-    #[error(transparent)]
     OraclePoolError(#[from] r2d2::Error),
 
     /// Any other errors that are too trivial to be put here explicitly.

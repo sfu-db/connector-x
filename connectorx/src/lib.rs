@@ -160,12 +160,12 @@ pub mod prelude {
     pub use crate::sources::mssql::MsSQLSource;
     #[cfg(feature = "src_mysql")]
     pub use crate::sources::mysql::MySQLSource;
+    #[cfg(feature = "src_oracle")]
+    pub use crate::sources::oracle::OracleSource;
     #[cfg(feature = "src_postgres")]
     pub use crate::sources::postgres::PostgresSource;
     #[cfg(feature = "src_sqlite")]
     pub use crate::sources::sqlite::SQLiteSource;
-    #[cfg(feature = "src_oracle")]
-    pub use crate::sources::oracle::OracleSource;
     pub use crate::sources::{PartitionParser, Produce, Source, SourcePartition};
     pub use crate::transports::*;
     pub use crate::typesystem::{

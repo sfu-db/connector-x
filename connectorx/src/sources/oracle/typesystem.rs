@@ -1,6 +1,6 @@
-use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
+// use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
 use r2d2_oracle::oracle::sql_type::OracleType;
-use rust_decimal::Decimal;
+// use rust_decimal::Decimal;
 
 #[derive(Copy, Clone, Debug)]
 pub enum OracleTypeSystem {
@@ -10,7 +10,7 @@ pub enum OracleTypeSystem {
 }
 
 impl_typesystem! {
-    system = MySQLTypeSystem,
+    system = OracleTypeSystem,
     mappings = {
         { Int => i64 }
         { Float => f64 }
@@ -36,7 +36,7 @@ impl<'a> From<OracleTypeSystem> for OracleType {
         match ty {
             Int(_) => OracleType::Number(38, 0),
             Float(_) => OracleType::Number(38, 127),
-            VarChar(_) => OracleType::Varchar2(10)
+            VarChar(_) => OracleType::Varchar2(10),
         }
     }
 }

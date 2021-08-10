@@ -11,6 +11,7 @@ pub use self::transports::{
 pub use self::typesystem::{PandasDType, PandasTypeSystem};
 use crate::errors::ConnectorXPythonError;
 use crate::source_router::{SourceConn, SourceType};
+use connectorx::sources::oracle::OracleSource;
 use connectorx::{
     prelude::*,
     sources::{
@@ -30,7 +31,6 @@ use postgres::NoTls;
 use postgres_native_tls::MakeTlsConnector;
 use pyo3::{PyAny, Python};
 use std::sync::Arc;
-use connectorx::sources::oracle::OracleSource;
 
 #[throws(ConnectorXPythonError)]
 pub fn write_pandas<'a>(
