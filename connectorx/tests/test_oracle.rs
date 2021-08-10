@@ -8,7 +8,7 @@ fn test_types() {
     let _ = env_logger::builder().is_test(true).try_init();
     let dburl = env::var("ORACLE_URL").unwrap();
     let mut source = OracleSource::<TextProtocol>::new(&dburl, 1).unwrap();
-    source.set_queries(&[CXQuery::naked("select test_int from test_types")]);
+    source.set_queries(&[CXQuery::naked("select test_int from test_table")]);
     source.fetch_metadata().unwrap();
     println!("abccc");
     let mut partitions = source.partition().unwrap();
