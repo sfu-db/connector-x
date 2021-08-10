@@ -20,9 +20,9 @@ use r2d2_mysql::{
     MysqlConnectionManager,
 };
 use rust_decimal::Decimal;
+use serde_json::{from_slice, from_str, Value};
 use sqlparser::dialect::MySqlDialect;
 use std::marker::PhantomData;
-use serde_json::{from_str, Value, from_slice};
 pub use typesystem::MySQLTypeSystem;
 
 type MysqlManager = MysqlConnectionManager;
@@ -364,7 +364,6 @@ impl_produce_binary!(
     Vec<u8>,
     Value,
 );
-
 
 pub struct MySQLTextSourceParser<'a> {
     iter: QueryResult<'a, 'a, 'a, Text>,

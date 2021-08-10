@@ -103,6 +103,6 @@ impl<'a> From<MySQLTypeSystem> for ColumnType {
             MediumBlob(_) => ColumnType::MYSQL_TYPE_MEDIUM_BLOB,
             LongBlob(_) => ColumnType::MYSQL_TYPE_LONG_BLOB,
             Json(_) => ColumnType::MYSQL_TYPE_JSON,
-         }
+        }
     }
 }

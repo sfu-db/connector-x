@@ -8,8 +8,8 @@ use connectorx::{
     typesystem::TypeConversion,
 };
 use rust_decimal::prelude::*;
-use std::marker::PhantomData;
 use serde_json::{to_string, Value};
+use std::marker::PhantomData;
 
 pub struct MysqlPandasTransport<'py, P>(&'py (), PhantomData<P>);
 
