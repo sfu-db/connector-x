@@ -14,7 +14,8 @@ use connectorx::{
 use fehler::{throw, throws};
 use r2d2_mysql::mysql::{prelude::Queryable, Pool, Row};
 use rusqlite::{types::Type, Connection};
-use sqlparser::dialect::{MsSqlDialect, MySqlDialect, PostgreSqlDialect, SQLiteDialect};
+use r2d2_oracle::oracle::Connection as oracle_conn;
+use sqlparser::dialect::{MsSqlDialect, MySqlDialect, PostgreSqlDialect, SQLiteDialect, GenericDialect};
 use std::convert::TryFrom;
 use tokio::net::TcpStream;
 use tokio_util::compat::TokioAsyncWriteCompatExt;
@@ -25,6 +26,7 @@ pub enum SourceType {
     SQLite,
     MySQL,
     MsSQL,
+    Oracle
 }
 
 pub struct SourceConn {
@@ -54,6 +56,10 @@ impl TryFrom<&str> for SourceConn {
                 ty: SourceType::MsSQL,
                 conn: url,
             }),
+            "oracle" => Ok(SourceConn{
+                ty: SourceType::Oracle,
+                conn: url,
+            }),
 
             _ => unimplemented!("Connection: {} not supported!", conn),
         }
@@ -67,6 +73,7 @@ impl SourceConn {
             SourceType::SQLite => sqlite_get_partition_range(&self.conn, query, col),
             SourceType::MySQL => mysql_get_partition_range(&self.conn, query, col),
             SourceType::MsSQL => mssql_get_partition_range(&self.conn, query, col),
+            SourceType::Oracle => oracle_get_partition_range(&self.conn, query, col),
         }
     }
 
@@ -90,6 +97,9 @@ impl SourceConn {
             }
             SourceType::MsSQL => {
                 single_col_partition_query(query, col, lower, upper, &MsSqlDialect {})?
+            }
+            SourceType::Oracle => {
+                single_col_partition_query(query, col, lower, upper, &GenericDialect {})?
             }
         };
 
@@ -283,4 +293,16 @@ fn mssql_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
     };
 
     (min_v, max_v)
+}
+
+#[throws(ConnectorXPythonError)]
+fn oracle_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
+    let conn = Url::parse(conn.as_str())?;
+    let user = conn.username();
+    let password = conn.password().unwrap();
+    let host = "//".to_owned() + conn.host_str().unwrap() + conn.path();
+    let conn = oracle_conn::connect(user, password, host)?;
+    let range_query = get_partition_range_query(query, col, &GenericDialect {})?;
+    let row = conn.query_row_as::<(i64, i64)>(range_query, &[])?;
+    row
 }

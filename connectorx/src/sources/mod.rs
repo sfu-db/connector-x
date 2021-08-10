@@ -13,7 +13,7 @@ pub mod mysql;
 pub mod postgres;
 #[cfg(feature = "src_sqlite")]
 pub mod sqlite;
-
+#[cfg(feature = "src_oracle")]
 pub mod oracle;
 
 use crate::data_order::DataOrder;

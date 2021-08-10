@@ -59,7 +59,7 @@ polars = "0.14"
 pprof = {version = "0.5", features = ["flamegraph"]}
 
 [features]
-all = ["src_sqlite", "src_postgres", "src_mysql", "src_mssql", "src_csv", "src_dummy", "dst_arrow", "dst_polars"]
+all = ["src_sqlite", "src_postgres", "src_mysql", "src_mssql", "src_oracle", "src_csv", "src_dummy", "dst_arrow", "dst_polars"]
 branch = []
 default = ["fptr"]
 dst_arrow = ["arrow", "chrono"]
@@ -85,6 +85,6 @@ src_postgres = [
   "native-tls",
 ]
 src_sqlite = ["rusqlite", "r2d2_sqlite", "fallible-streaming-iterator", "owning_ref", "chrono", "r2d2"]
-
+src_oracle = ["r2d2-oracle", "chrono", "r2d2"]
 [package.metadata.docs.rs]
 features = ["all"]

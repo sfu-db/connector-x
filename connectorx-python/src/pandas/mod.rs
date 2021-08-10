@@ -30,6 +30,7 @@ use postgres::NoTls;
 use postgres_native_tls::MakeTlsConnector;
 use pyo3::{PyAny, Python};
 use std::sync::Arc;
+use connectorx::sources::oracle::OracleSource;
 
 #[throws(ConnectorXPythonError)]
 pub fn write_pandas<'a>(
@@ -173,6 +174,23 @@ pub fn write_pandas<'a>(
                 Dispatcher::<_, _, MsSQLPandasTransport>::new(source, &mut destination, queries);
             debug!("Running dispatcher");
             dispatcher.run()?;
+        }
+        SourceType::Oracle => {
+            debug!("Protocol: {}", protocol);
+            match protocol {
+                "text" => {
+                    let source =
+                        OracleSource::<TextProtocol>::new(&source_conn.conn[..], queries.len())?;
+                    let dispatcher = Dispatcher::<_, _, OraclePandasTransport<TextProtocol>>::new(
+                        source,
+                        &mut destination,
+                        queries,
+                    );
+                    debug!("Running dispatcher");
+                    dispatcher.run()?;
+                }
+                _ => unimplemented!("{} protocol not supported", protocol),
+            }
         }
     }
 
