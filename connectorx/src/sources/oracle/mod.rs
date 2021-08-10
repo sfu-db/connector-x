@@ -5,7 +5,7 @@ use crate::{
     data_order::DataOrder,
     errors::ConnectorXError,
     sources::{PartitionParser, Produce, Source, SourcePartition},
-    sql::{count_query, get_limit, limit1_query, CXQuery},
+    sql::{count_query, get_limit, CXQuery},
 };
 use anyhow::anyhow;
 use fehler::{throw, throws};
@@ -21,6 +21,7 @@ use r2d2_oracle::oracle::ResultSet;
 use sqlparser::dialect::GenericDialect;
 use std::marker::PhantomData;
 pub use typesystem::OracleTypeSystem;
+use crate::sql::limit1_query_oracle;
 
 pub enum TextProtocol {}
 
@@ -89,7 +90,7 @@ where
         let mut conn = self.pool.get()?;
         for (i, query) in self.queries.iter().enumerate() {
             // assuming all the partition queries yield same schema
-            match conn.query(limit1_query(query, &GenericDialect {})?.as_str(), &[]) {
+            match conn.query(limit1_query_oracle(query)?.as_str(), &[]) {
                 Ok(rows) => {
                     let (names, types) = rows
                         .column_info()
