@@ -1,8 +1,6 @@
 use connectorx::prelude::*;
-use connectorx::{
-    sources::oracle::{TextProtocol, OracleSource},
-    sql::CXQuery,
-};
+use connectorx::sources::oracle::{TextProtocol, OracleSource};
+use connectorx::sql::CXQuery;
 use std::env;
 
 fn test_types() {
