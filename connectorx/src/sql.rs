@@ -185,6 +185,40 @@ fn wrap_query(
     }))
 }
 
+fn wrap_query_limit1_oracle(
+    query: &Query,
+    projection: Vec<SelectItem>,
+    selection: Option<Expr>,
+) -> Statement {
+    Statement::Query(Box::new(Query {
+        with: None,
+        body: SetExpr::Select(Box::new(Select {
+            distinct: false,
+            top: None,
+            projection,
+            from: vec![TableWithJoins {
+                relation: TableFactor::Derived {
+                    lateral: false,
+                    subquery: Box::new(query.clone()),
+                    alias: None,
+                },
+                joins: vec![],
+            }],
+            lateral_views: vec![],
+            selection,
+            group_by: vec![],
+            cluster_by: vec![],
+            distribute_by: vec![],
+            sort_by: vec![],
+            having: None,
+        })),
+        order_by: vec![],
+        limit: None,
+        offset: None,
+        fetch: None,
+    }))
+}
+
 trait StatementExt {
     fn as_query(&self) -> Option<&Query>;
 }
@@ -308,11 +342,10 @@ pub fn limit1_query_oracle(sql: &CXQuery<String>) -> CXQuery<String> {
                         op: BinaryOperator::Eq,
                         right: Box::new(Expr::Value(Value::Number("1".to_string(), false))),
                     };
-                    ast_part = wrap_query(
+                    ast_part = wrap_query_limit1_oracle(
                         &q,
                         vec![SelectItem::Wildcard],
                         Some(selection),
-                        "TMP_TABLE",
                     );
                 }
                 _ => throw!(ConnectorXError::SqlQueryNotSupported(sql.to_string())),
