@@ -17,11 +17,11 @@ type OracleManager = OracleConnectionManager;
 type OracleConn = PooledConnection<OracleManager>;
 
 pub use self::errors::OracleSourceError;
+use crate::sql::limit1_query_oracle;
 use r2d2_oracle::oracle::ResultSet;
 use sqlparser::dialect::GenericDialect;
 use std::marker::PhantomData;
 pub use typesystem::OracleTypeSystem;
-use crate::sql::limit1_query_oracle;
 
 pub enum TextProtocol {}
 
@@ -87,7 +87,7 @@ where
     fn fetch_metadata(&mut self) {
         assert!(!self.queries.is_empty());
 
-        let mut conn = self.pool.get()?;
+        let conn = self.pool.get()?;
         for (i, query) in self.queries.iter().enumerate() {
             // assuming all the partition queries yield same schema
             match conn.query(limit1_query_oracle(query)?.as_str(), &[]) {
@@ -98,7 +98,7 @@ where
                         .map(|col| {
                             (
                                 col.name().to_string(),
-                                OracleTypeSystem::from(col.oracle_type())
+                                OracleTypeSystem::from(col.oracle_type()),
                             )
                         })
                         .unzip();
@@ -187,9 +187,10 @@ impl SourcePartition for OracleSourcePartition<TextProtocol> {
     fn prepare(&mut self) {
         self.nrows = match get_limit(&self.query, &GenericDialect {})? {
             None => {
-                let row = self
-                    .conn
-                    .query_row_as::<usize>(&count_query(&self.query, &GenericDialect {})?.as_str(), &[])?;
+                let row = self.conn.query_row_as::<usize>(
+                    &count_query(&self.query, &GenericDialect {})?.as_str(),
+                    &[],
+                )?;
                 row
             }
             Some(n) => n,

@@ -299,7 +299,7 @@ fn mssql_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
 
 #[throws(ConnectorXPythonError)]
 fn oracle_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
-    let conn = Url::parse(conn.as_str())?;
+    let conn = Url::parse(conn.as_str()).map_err(|e| anyhow!("parse error: {}", e))?;
     let user = conn.username();
     let password = conn.password().unwrap();
     let host = "//".to_owned() + conn.host_str().unwrap() + conn.path();

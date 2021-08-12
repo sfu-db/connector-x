@@ -8,7 +8,7 @@ use sqlparser::ast::{
     BinaryOperator, Expr, Function, FunctionArg, Ident, ObjectName, Query, Select, SelectItem,
     SetExpr, Statement, TableAlias, TableFactor, TableWithJoins, Top, Value,
 };
-use sqlparser::dialect::{Dialect, MsSqlDialect, GenericDialect};
+use sqlparser::dialect::{Dialect, GenericDialect, MsSqlDialect};
 use sqlparser::parser::Parser;
 
 #[derive(Debug, Clone)]
@@ -277,10 +277,6 @@ pub fn count_query<T: Dialect>(sql: &CXQuery<String>, dialect: &T) -> CXQuery<St
                 .as_select_mut()
                 .ok_or_else(|| ConnectorXError::SqlQueryNotSupported(sql.to_string()))?;
             select.sort_by = vec![];
-            println!("{:?}", dialect);
-            println!("{:?}", dialect.type_id());
-            println!("{:?}", GenericDialect);
-            println!("{:?}", GenericDialect.type_id());
             if dialect.type_id() == GenericDialect.type_id() {
                 wrap_query_oracle(&query, projection, None)
             } else {
@@ -337,26 +333,20 @@ pub fn limit1_query_oracle(sql: &CXQuery<String>) -> CXQuery<String> {
     if ast.len() != 1 {
         throw!(ConnectorXError::SqlQueryNotSupported(sql.to_string()));
     }
-    let mut ast_part:Statement;
+    let ast_part: Statement;
     match &mut ast[0] {
         Statement::Query(q) => {
             let selection = Expr::BinaryOp {
-                left: Box::new(Expr::CompoundIdentifier(vec![
-                    Ident {
-                        value: "rownum".to_string(),
-                        quote_style: None,
-                    },
-                ])),
+                left: Box::new(Expr::CompoundIdentifier(vec![Ident {
+                    value: "rownum".to_string(),
+                    quote_style: None,
+                }])),
                 op: BinaryOperator::Eq,
                 right: Box::new(Expr::Value(Value::Number("1".to_string(), false))),
             };
-            ast_part = wrap_query_oracle(
-                &q,
-                vec![SelectItem::Wildcard],
-                Some(selection),
-            );
+            ast_part = wrap_query_oracle(&q, vec![SelectItem::Wildcard], Some(selection));
         }
-                
+
         _ => throw!(ConnectorXError::SqlQueryNotSupported(sql.to_string())),
     };
 

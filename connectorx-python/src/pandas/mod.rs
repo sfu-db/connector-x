@@ -6,7 +6,7 @@ mod typesystem;
 
 pub use self::destination::{PandasBlockInfo, PandasDestination, PandasPartitionDestination};
 pub use self::transports::{
-    MsSQLPandasTransport, MysqlPandasTransport, PostgresPandasTransport, SqlitePandasTransport,
+    MsSQLPandasTransport, MysqlPandasTransport, PostgresPandasTransport, SqlitePandasTransport, OraclePandasTransport
 };
 pub use self::typesystem::{PandasDType, PandasTypeSystem};
 use crate::errors::ConnectorXPythonError;

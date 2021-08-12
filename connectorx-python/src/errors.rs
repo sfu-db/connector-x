@@ -49,6 +49,9 @@ pub enum ConnectorXPythonError {
     SQLiteSourceError(#[from] connectorx::sources::sqlite::SQLiteSourceError),
 
     #[error(transparent)]
+    OracleSourceError(#[from] connectorx::sources::oracle::OracleSourceError),
+
+    #[error(transparent)]
     ArrowDestinationError(#[from] connectorx::destinations::arrow::ArrowDestinationError),
 
     #[error(transparent)]
@@ -63,6 +66,8 @@ pub enum ConnectorXPythonError {
     #[error(transparent)]
     MsSQLArrowTransportError(#[from] connectorx::transports::MsSQLArrowTransportError),
 
+    #[error(transparent)]
+    OracleArrowTransportError(#[from] connectorx::transports::OracleArrowTransportError),
     /// Any other errors that are too trivial to be put here explicitly.
     #[error(transparent)]
     Other(#[from] anyhow::Error),
