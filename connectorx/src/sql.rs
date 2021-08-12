@@ -1,3 +1,5 @@
+use std::any::Any;
+
 use crate::errors::ConnectorXError;
 use anyhow::anyhow;
 use fehler::{throw, throws};
@@ -185,7 +187,7 @@ fn wrap_query(
     }))
 }
 
-fn wrap_query_limit1_oracle(
+fn wrap_query_oracle(
     query: &Query,
     projection: Vec<SelectItem>,
     selection: Option<Expr>,
@@ -275,7 +277,15 @@ pub fn count_query<T: Dialect>(sql: &CXQuery<String>, dialect: &T) -> CXQuery<St
                 .as_select_mut()
                 .ok_or_else(|| ConnectorXError::SqlQueryNotSupported(sql.to_string()))?;
             select.sort_by = vec![];
-            wrap_query(&query, projection, None, "CXTMPTAB_COUNT")
+            println!("{:?}", dialect);
+            println!("{:?}", dialect.type_id());
+            println!("{:?}", GenericDialect);
+            println!("{:?}", GenericDialect.type_id());
+            if dialect.type_id() == GenericDialect.type_id() {
+                wrap_query_oracle(&query, projection, None)
+            } else {
+                wrap_query(&query, projection, None, "CXTMPTAB_COUNT")
+            }
         }
         CXQuery::Wrapped(ast) => {
             if ast.len() != 1 {
@@ -330,27 +340,23 @@ pub fn limit1_query_oracle(sql: &CXQuery<String>) -> CXQuery<String> {
     let mut ast_part:Statement;
     match &mut ast[0] {
         Statement::Query(q) => {
-            match q.body {
-                SetExpr::Select(ref mut s) => {
-                    let selection = Expr::BinaryOp {
-                        left: Box::new(Expr::CompoundIdentifier(vec![
-                            Ident {
-                                value: "rownum".to_string(),
-                                quote_style: None,
-                            },
-                        ])),
-                        op: BinaryOperator::Eq,
-                        right: Box::new(Expr::Value(Value::Number("1".to_string(), false))),
-                    };
-                    ast_part = wrap_query_limit1_oracle(
-                        &q,
-                        vec![SelectItem::Wildcard],
-                        Some(selection),
-                    );
-                }
-                _ => throw!(ConnectorXError::SqlQueryNotSupported(sql.to_string())),
+            let selection = Expr::BinaryOp {
+                left: Box::new(Expr::CompoundIdentifier(vec![
+                    Ident {
+                        value: "rownum".to_string(),
+                        quote_style: None,
+                    },
+                ])),
+                op: BinaryOperator::Eq,
+                right: Box::new(Expr::Value(Value::Number("1".to_string(), false))),
             };
+            ast_part = wrap_query_oracle(
+                &q,
+                vec![SelectItem::Wildcard],
+                Some(selection),
+            );
         }
+                
         _ => throw!(ConnectorXError::SqlQueryNotSupported(sql.to_string())),
     };
 
