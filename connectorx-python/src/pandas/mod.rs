@@ -176,21 +176,14 @@ pub fn write_pandas<'a>(
             dispatcher.run()?;
         }
         SourceType::Oracle => {
-            debug!("Protocol: {}", protocol);
-            match protocol {
-                "text" => {
-                    let source =
-                        OracleSource::<TextProtocol>::new(&source_conn.conn[..], queries.len())?;
-                    let dispatcher = Dispatcher::<_, _, OraclePandasTransport<TextProtocol>>::new(
-                        source,
-                        &mut destination,
-                        queries,
-                    );
-                    debug!("Running dispatcher");
-                    dispatcher.run()?;
-                }
-                _ => unimplemented!("{} protocol not supported", protocol),
-            }
+            let source = OracleSource::new(&source_conn.conn[..], queries.len())?;
+            let dispatcher = Dispatcher::<_, _, OraclePandasTransport>::new(
+                source,
+                &mut destination,
+                queries,
+            );
+            debug!("Running dispatcher");
+            dispatcher.run()?;
         }
     }
 

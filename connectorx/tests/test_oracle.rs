@@ -1,5 +1,5 @@
 use connectorx::prelude::*;
-use connectorx::sources::oracle::{OracleSource, TextProtocol};
+use connectorx::sources::oracle::{OracleSource};
 use connectorx::sql::CXQuery;
 use std::env;
 
@@ -7,7 +7,7 @@ use std::env;
 fn test_types() {
     let _ = env_logger::builder().is_test(true).try_init();
     let dburl = env::var("ORACLE_URL").unwrap();
-    let mut source = OracleSource::<TextProtocol>::new(&dburl, 1).unwrap();
+    let mut source = OracleSource::new(&dburl, 1).unwrap();
     #[derive(Debug, PartialEq)]
     struct Row(i64, f64, String);
 

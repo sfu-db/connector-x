@@ -31,6 +31,9 @@ pub enum ConnectorXPythonError {
     PostgresError(#[from] postgres::Error),
 
     #[error(transparent)]
+    OracleError(#[from] r2d2_oracle::oracle::Error),
+
+    #[error(transparent)]
     NdArrayShapeError(#[from] ndarray::ShapeError),
 
     #[error(transparent)]

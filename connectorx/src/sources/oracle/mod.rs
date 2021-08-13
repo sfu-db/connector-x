@@ -20,21 +20,18 @@ pub use self::errors::OracleSourceError;
 use crate::sql::limit1_query_oracle;
 use r2d2_oracle::oracle::ResultSet;
 use sqlparser::dialect::GenericDialect;
-use std::marker::PhantomData;
 pub use typesystem::OracleTypeSystem;
 
-pub enum TextProtocol {}
 
-pub struct OracleSource<P> {
+pub struct OracleSource {
     pool: Pool<OracleManager>,
     queries: Vec<CXQuery<String>>,
     names: Vec<String>,
     schema: Vec<OracleTypeSystem>,
     buf_size: usize,
-    _protocol: PhantomData<P>,
 }
 
-impl<P> OracleSource<P> {
+impl OracleSource {
     #[throws(OracleSourceError)]
     pub fn new(conn: &str, nconn: usize) -> Self {
         let conn = Url::parse(conn).unwrap();
@@ -52,7 +49,6 @@ impl<P> OracleSource<P> {
             names: vec![],
             schema: vec![],
             buf_size: 32,
-            _protocol: PhantomData,
         }
     }
 
@@ -61,14 +57,13 @@ impl<P> OracleSource<P> {
     }
 }
 
-impl<P> Source for OracleSource<P>
+impl Source for OracleSource
 where
-    OracleSourcePartition<P>:
+    OracleSourcePartition:
         SourcePartition<TypeSystem = OracleTypeSystem, Error = OracleSourceError>,
-    P: Send,
 {
     const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
-    type Partition = OracleSourcePartition<P>;
+    type Partition = OracleSourcePartition;
     type TypeSystem = OracleTypeSystem;
     type Error = OracleSourceError;
 
@@ -149,17 +144,16 @@ where
     }
 }
 
-pub struct OracleSourcePartition<P> {
+pub struct OracleSourcePartition {
     conn: OracleConn,
     query: CXQuery<String>,
     schema: Vec<OracleTypeSystem>,
     nrows: usize,
     ncols: usize,
     buf_size: usize,
-    _protocol: PhantomData<P>,
 }
 
-impl<P> OracleSourcePartition<P> {
+impl OracleSourcePartition {
     pub fn new(
         conn: OracleConn,
         query: &CXQuery<String>,
@@ -173,12 +167,11 @@ impl<P> OracleSourcePartition<P> {
             nrows: 0,
             ncols: schema.len(),
             buf_size,
-            _protocol: PhantomData,
         }
     }
 }
 
-impl SourcePartition for OracleSourcePartition<TextProtocol> {
+impl SourcePartition for OracleSourcePartition {
     type TypeSystem = OracleTypeSystem;
     type Parser<'a> = OracleTextSourceParser<'a>;
     type Error = OracleSourceError;

@@ -11,7 +11,7 @@ def oracle_url() -> str:
     conn = os.environ["ORACLE_URL"]
     return conn
 
-def test_oracle_without_partition(mysql_url: str) -> None:
+def test_oracle_without_partition(oracle_url: str) -> None:
     query = "select * from test_types"
     df = read_sql(oracle_url, query)
     expected = pd.DataFrame(

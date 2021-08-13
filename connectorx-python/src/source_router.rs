@@ -305,6 +305,6 @@ fn oracle_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) 
     let host = "//".to_owned() + conn.host_str().unwrap() + conn.path();
     let conn = oracle_conn::connect(user, password, host)?;
     let range_query = get_partition_range_query(query, col, &GenericDialect {})?;
-    let row = conn.query_row_as::<(i64, i64)>(range_query, &[])?;
+    let row = conn.query_row_as::<(i64, i64)>(range_query.as_str(), &[])?;
     row
 }
