@@ -1,7 +1,7 @@
 use crate::errors::ConnectorXPythonError;
 use crate::pandas::destination::PandasDestination;
 use crate::pandas::typesystem::PandasTypeSystem;
-// use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
+use chrono::{DateTime, NaiveDate, Utc};
 use connectorx::{
     impl_transport,
     sources::oracle::{OracleSource, OracleTypeSystem},
@@ -18,6 +18,8 @@ impl_transport!(
     mappings = {
         { Float[f64]                => F64[f64]                | conversion auto }
         { Int[i64]                  => I64[i64]                | conversion auto }
-        { VarChar[String]            => String[String]          | conversion auto }
+        { VarChar[String]           => String[String]          | conversion auto }
+        { Char[String]              => String[String]          | conversion none }
+        { Date[NaiveDate]           => DateTime[DateTime<Utc>] | conversion option }
     }
 );

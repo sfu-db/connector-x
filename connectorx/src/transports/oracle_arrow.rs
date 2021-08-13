@@ -4,7 +4,7 @@ use crate::{
     sources::oracle::{OracleSource, OracleSourceError, OracleTypeSystem},
     typesystem::TypeConversion,
 };
-// use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
+use chrono::{NaiveDate};
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -30,5 +30,8 @@ impl_transport!(
         { Float[f64]                => Float64[f64]            | conversion auto }
         { Int[i64]                  => Int64[i64]              | conversion auto }
         { VarChar[String]           => LargeUtf8[String]       | conversion auto }
+        { Char[String]              => LargeUtf8[String]       | conversion none }
+        { Date[NaiveDate]            => Date32[NaiveDate]      | conversion auto }
+        
     }
 );
