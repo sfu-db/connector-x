@@ -25,6 +25,6 @@ CREATE TABLE IF NOT EXISTS test_types(
     test_char CHAR(10)
 );
 
-INSERT INTO test_types VALUES ('1999-07-25', '00:00:00', '1999-07-25 00:00:00', 1.1, 1, 'varchar1', 'char1');
-INSERT INTO test_types VALUES ('2020-12-31', '23:59:59', '2020-12-31 23:59:59', 2.2, 2, 'varchar2', 'char2');
-INSERT INTO test_types VALUES ('2021-01-28', '12:30:30', '2021-01-28 12:30:30', 3.3, 3, 'varchar3', 'char3');
+INSERT INTO test_types VALUES ('1999-07-25', '00:00:00', '1999-07-25 00:00:00', 1.1, 1, NULL, 'char1');
+INSERT INTO test_types VALUES ('2020-12-31', '23:59:59', '2020-12-31 23:59:59', NULL, 2, 'varchar2', 'char2');
+INSERT INTO test_types VALUES ('2021-01-28', '12:30:30', NULL, 3.3, 3, 'varchar3', 'char3');

@@ -329,7 +329,7 @@ macro_rules! impl_produce_binary {
                 #[throws(MySQLSourceError)]
                 fn produce(&'r mut self) -> $t {
                     let (ridx, cidx) = self.next_loc()?;
-                    let res = self.rowbuf[ridx].take(cidx).ok_or_else(|| anyhow!("mysql get None at position: ({}, {})", ridx, cidx))?;
+                    let res = self.rowbuf[ridx].take(cidx).ok_or_else(|| anyhow!("mysql cannot parse at position: ({}, {})", ridx, cidx))?;
                     res
                 }
             }
@@ -340,7 +340,7 @@ macro_rules! impl_produce_binary {
                 #[throws(MySQLSourceError)]
                 fn produce(&'r mut self) -> Option<$t> {
                     let (ridx, cidx) = self.next_loc()?;
-                    let res = self.rowbuf[ridx].take(cidx);
+                    let res = self.rowbuf[ridx].take(cidx).ok_or_else(|| anyhow!("mysql cannot parse at position: ({}, {})", ridx, cidx))?;
                     res
                 }
             }
@@ -425,7 +425,7 @@ macro_rules! impl_produce_text {
                 #[throws(MySQLSourceError)]
                 fn produce(&'r mut self) -> $t {
                     let (ridx, cidx) = self.next_loc()?;
-                    let res = self.rowbuf[ridx].take(cidx).ok_or_else(|| anyhow!("mysql get None at position: ({}, {})", ridx, cidx))?;
+                    let res = self.rowbuf[ridx].take(cidx).ok_or_else(|| anyhow!("mysql cannot parse at position: ({}, {})", ridx, cidx))?;
                     res
                 }
             }
@@ -436,7 +436,7 @@ macro_rules! impl_produce_text {
                 #[throws(MySQLSourceError)]
                 fn produce(&'r mut self) -> Option<$t> {
                     let (ridx, cidx) = self.next_loc()?;
-                    let res = self.rowbuf[ridx].take(cidx);
+                    let res = self.rowbuf[ridx].take(cidx).ok_or_else(|| anyhow!("mysql cannot parse at position: ({}, {})", ridx, cidx))?;
                     res
                 }
             }
