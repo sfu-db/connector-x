@@ -4,7 +4,7 @@ use crate::{
     sources::oracle::{OracleSource, OracleSourceError, OracleTypeSystem},
     typesystem::TypeConversion,
 };
-use chrono::{NaiveDate};
+use chrono::{NaiveDate, NaiveDateTime};
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -27,11 +27,14 @@ impl_transport!(
     systems = OracleTypeSystem => ArrowTypeSystem,
     route = OracleSource => ArrowDestination,
     mappings = {
-        { Float[f64]                => Float64[f64]            | conversion auto }
-        { Int[i64]                  => Int64[i64]              | conversion auto }
+        { NumFloat[f64]             => Float64[f64]            | conversion auto }
+        { Float[f64]                => Float64[f64]            | conversion none }
+        { NumInt[i64]               => Int64[i64]              | conversion auto }
         { VarChar[String]           => LargeUtf8[String]       | conversion auto }
         { Char[String]              => LargeUtf8[String]       | conversion none }
-        { Date[NaiveDate]            => Date32[NaiveDate]      | conversion auto }
-        
+        { NVarChar[String]          => LargeUtf8[String]       | conversion none }
+        { NChar[String]             => LargeUtf8[String]       | conversion none }
+        { Date[NaiveDate]           => Date32[NaiveDate]       | conversion auto }
+        { Timestamp[NaiveDateTime]  => Date64[NaiveDateTime]   | conversion auto }
     }
 );

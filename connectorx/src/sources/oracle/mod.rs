@@ -10,7 +10,7 @@ use crate::{
 use anyhow::anyhow;
 use fehler::{throw, throws};
 use log::debug;
-use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
+use chrono::{NaiveDate, NaiveDateTime};
 use r2d2::{Pool, PooledConnection};
 use r2d2_oracle::{oracle::Row, OracleConnectionManager};
 use url::Url;
@@ -92,6 +92,7 @@ where
                         .column_info()
                         .iter()
                         .map(|col| {
+                            println!("{:?}", col.oracle_type());
                             (
                                 col.name().to_string(),
                                 OracleTypeSystem::from(col.oracle_type()),
@@ -289,4 +290,4 @@ macro_rules! impl_produce_text {
     };
 }
 
-impl_produce_text!(i64, f64, String, NaiveDate,);
+impl_produce_text!(i64, f64, String, NaiveDate, NaiveDateTime,);
