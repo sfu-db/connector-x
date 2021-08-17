@@ -1,11 +1,16 @@
 use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
 use r2d2_mysql::mysql::consts::ColumnType;
 use rust_decimal::Decimal;
+use serde_json::Value;
 
 #[derive(Copy, Clone, Debug)]
 pub enum MySQLTypeSystem {
+    Float(bool),
     Double(bool),
+    Tiny(bool),
+    Short(bool),
     Long(bool),
+    Int24(bool),
     LongLong(bool),
     Datetime(bool),
     Date(bool),
@@ -13,18 +18,32 @@ pub enum MySQLTypeSystem {
     Decimal(bool),
     Char(bool),
     VarChar(bool),
+    Timestamp(bool),
+    Year(bool),
+    Enum(bool),
+    TinyBlob(bool),
+    Blob(bool),
+    MediumBlob(bool),
+    LongBlob(bool),
+    Json(bool),
 }
 
 impl_typesystem! {
     system = MySQLTypeSystem,
     mappings = {
-        { Long | LongLong => i64 }
+        { Tiny => i8 }
+        { Short | Year => i16 }
+        { Long | Int24 => i32}
+        { LongLong => i64 }
+        { Float => f32 }
         { Double => f64 }
-        { Datetime => NaiveDateTime }
+        { Datetime | Timestamp => NaiveDateTime }
         { Date => NaiveDate }
         { Time => NaiveTime }
         { Decimal => Decimal }
-        { Char | VarChar => String }
+        { Char | VarChar | Enum => String }
+        { TinyBlob | Blob | MediumBlob | LongBlob => Vec<u8>}
+        { Json => Value }
     }
 }
 
@@ -32,8 +51,12 @@ impl<'a> From<&'a ColumnType> for MySQLTypeSystem {
     fn from(ty: &'a ColumnType) -> MySQLTypeSystem {
         use MySQLTypeSystem::*;
         match ty {
+            ColumnType::MYSQL_TYPE_TINY => Tiny(true),
+            ColumnType::MYSQL_TYPE_SHORT => Short(true),
+            ColumnType::MYSQL_TYPE_INT24 => Int24(true),
             ColumnType::MYSQL_TYPE_LONG => Long(true),
             ColumnType::MYSQL_TYPE_LONGLONG => LongLong(true),
+            ColumnType::MYSQL_TYPE_FLOAT => Float(true),
             ColumnType::MYSQL_TYPE_DOUBLE => Double(true),
             ColumnType::MYSQL_TYPE_DATETIME => Datetime(true),
             ColumnType::MYSQL_TYPE_DATE => Date(true),
@@ -41,6 +64,14 @@ impl<'a> From<&'a ColumnType> for MySQLTypeSystem {
             ColumnType::MYSQL_TYPE_NEWDECIMAL => Decimal(true),
             ColumnType::MYSQL_TYPE_STRING => Char(true),
             ColumnType::MYSQL_TYPE_VAR_STRING => VarChar(true),
+            ColumnType::MYSQL_TYPE_TIMESTAMP => Timestamp(true),
+            ColumnType::MYSQL_TYPE_YEAR => Year(true),
+            ColumnType::MYSQL_TYPE_ENUM => Enum(true),
+            ColumnType::MYSQL_TYPE_TINY_BLOB => TinyBlob(true),
+            ColumnType::MYSQL_TYPE_BLOB => Blob(true),
+            ColumnType::MYSQL_TYPE_MEDIUM_BLOB => MediumBlob(true),
+            ColumnType::MYSQL_TYPE_LONG_BLOB => LongBlob(true),
+            ColumnType::MYSQL_TYPE_JSON => Json(true),
             _ => unimplemented!("{}", format!("{:?}", ty)),
         }
     }
@@ -51,8 +82,12 @@ impl<'a> From<MySQLTypeSystem> for ColumnType {
     fn from(ty: MySQLTypeSystem) -> ColumnType {
         use MySQLTypeSystem::*;
         match ty {
+            Tiny(_) => ColumnType::MYSQL_TYPE_TINY,
+            Short(_) => ColumnType::MYSQL_TYPE_SHORT,
             Long(_) => ColumnType::MYSQL_TYPE_LONG,
+            Int24(_) => ColumnType::MYSQL_TYPE_INT24,
             LongLong(_) => ColumnType::MYSQL_TYPE_LONGLONG,
+            Float(_) => ColumnType::MYSQL_TYPE_FLOAT,
             Double(_) => ColumnType::MYSQL_TYPE_DOUBLE,
             Datetime(_) => ColumnType::MYSQL_TYPE_DATETIME,
             Date(_) => ColumnType::MYSQL_TYPE_DATE,
@@ -60,6 +95,14 @@ impl<'a> From<MySQLTypeSystem> for ColumnType {
             Decimal(_) => ColumnType::MYSQL_TYPE_NEWDECIMAL,
             Char(_) => ColumnType::MYSQL_TYPE_STRING,
             VarChar(_) => ColumnType::MYSQL_TYPE_VAR_STRING,
+            Timestamp(_) => ColumnType::MYSQL_TYPE_TIMESTAMP,
+            Year(_) => ColumnType::MYSQL_TYPE_YEAR,
+            Enum(_) => ColumnType::MYSQL_TYPE_ENUM,
+            TinyBlob(_) => ColumnType::MYSQL_TYPE_TINY_BLOB,
+            Blob(_) => ColumnType::MYSQL_TYPE_BLOB,
+            MediumBlob(_) => ColumnType::MYSQL_TYPE_MEDIUM_BLOB,
+            LongBlob(_) => ColumnType::MYSQL_TYPE_LONG_BLOB,
+            Json(_) => ColumnType::MYSQL_TYPE_JSON,
         }
     }
 }

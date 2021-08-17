@@ -36,8 +36,8 @@ impl_transport!(
     route = MySQLSource<BinaryProtocol> => ArrowDestination,
     mappings = {
         { Double[f64]                => Float64[f64]            | conversion auto }
-        { Long[i64]                  => Int64[i64]              | conversion auto }
-        { LongLong[i64]              => Int64[i64]              | conversion none }
+        { Long[i32]                  => Int64[i64]              | conversion auto }
+        { LongLong[i64]              => Int64[i64]              | conversion auto }
         { Date[NaiveDate]            => Date32[NaiveDate]       | conversion auto }
         { Time[NaiveTime]            => Time64[NaiveTime]       | conversion auto }
         { Datetime[NaiveDateTime]    => Date64[NaiveDateTime]   | conversion auto }
@@ -54,8 +54,8 @@ impl_transport!(
     route = MySQLSource<TextProtocol> => ArrowDestination,
     mappings = {
         { Double[f64]                => Float64[f64]            | conversion auto }
-        { Long[i64]                  => Int64[i64]              | conversion auto }
-        { LongLong[i64]              => Int64[i64]              | conversion none }
+        { Long[i32]                  => Int64[i64]              | conversion auto }
+        { LongLong[i64]              => Int64[i64]              | conversion auto }
         { Date[NaiveDate]            => Date32[NaiveDate]       | conversion auto }
         { Time[NaiveTime]            => Time64[NaiveTime]       | conversion auto }
         { Datetime[NaiveDateTime]    => Date64[NaiveDateTime]   | conversion auto }
