@@ -456,6 +456,19 @@
 <span id="453">453</span>
 <span id="454">454</span>
 <span id="455">455</span>
+<span id="456">456</span>
+<span id="457">457</span>
+<span id="458">458</span>
+<span id="459">459</span>
+<span id="460">460</span>
+<span id="461">461</span>
+<span id="462">462</span>
+<span id="463">463</span>
+<span id="464">464</span>
+<span id="465">465</span>
+<span id="466">466</span>
+<span id="467">467</span>
+<span id="468">468</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Source implementation for MySQL database.</span>
 
@@ -479,6 +492,7 @@
     <span class="ident">MysqlConnectionManager</span>,
 };
 <span class="kw">use</span> <span class="ident">rust_decimal::Decimal</span>;
+<span class="kw">use</span> <span class="ident">serde_json</span>::{<span class="ident">from_slice</span>, <span class="ident">from_str</span>, <span class="ident">Value</span>};
 <span class="kw">use</span> <span class="ident">sqlparser::dialect::MySqlDialect</span>;
 <span class="kw">use</span> <span class="ident">std::marker::PhantomData</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">typesystem::MySQLTypeSystem</span>;
@@ -808,13 +822,19 @@
 }
 
 <span class="macro">impl_produce_binary!</span>(
+    <span class="ident">i8</span>,
+    <span class="ident">i16</span>,
+    <span class="ident">i32</span>,
     <span class="ident">i64</span>,
+    <span class="ident">f32</span>,
     <span class="ident">f64</span>,
     <span class="ident">NaiveDate</span>,
     <span class="ident">NaiveTime</span>,
     <span class="ident">NaiveDateTime</span>,
     <span class="ident">Decimal</span>,
     <span class="ident">String</span>,
+    <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
+    <span class="ident">Value</span>,
 );
 
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MySQLTextSourceParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
@@ -904,13 +924,19 @@
 }
 
 <span class="macro">impl_produce_text!</span>(
+    <span class="ident">i8</span>,
+    <span class="ident">i16</span>,
+    <span class="ident">i32</span>,
     <span class="ident">i64</span>,
+    <span class="ident">f32</span>,
     <span class="ident">f64</span>,
     <span class="ident">NaiveDate</span>,
     <span class="ident">NaiveTime</span>,
     <span class="ident">NaiveDateTime</span>,
     <span class="ident">Decimal</span>,
     <span class="ident">String</span>,
+    <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
+    <span class="ident">Value</span>,
 );
 </pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="connectorx" data-search-index-js="../../../../search-index.js" data-search-js="../../../../search.js"></div>
