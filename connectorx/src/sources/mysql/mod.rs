@@ -20,6 +20,7 @@ use r2d2_mysql::{
     MysqlConnectionManager,
 };
 use rust_decimal::Decimal;
+use serde_json::{from_slice, from_str, Value};
 use sqlparser::dialect::MySqlDialect;
 use std::marker::PhantomData;
 pub use typesystem::MySQLTypeSystem;
@@ -349,13 +350,19 @@ macro_rules! impl_produce_binary {
 }
 
 impl_produce_binary!(
+    i8,
+    i16,
+    i32,
     i64,
+    f32,
     f64,
     NaiveDate,
     NaiveTime,
     NaiveDateTime,
     Decimal,
     String,
+    Vec<u8>,
+    Value,
 );
 
 pub struct MySQLTextSourceParser<'a> {
@@ -445,11 +452,17 @@ macro_rules! impl_produce_text {
 }
 
 impl_produce_text!(
+    i8,
+    i16,
+    i32,
     i64,
+    f32,
     f64,
     NaiveDate,
     NaiveTime,
     NaiveDateTime,
     Decimal,
     String,
+    Vec<u8>,
+    Value,
 );
