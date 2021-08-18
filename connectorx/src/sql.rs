@@ -8,7 +8,7 @@ use sqlparser::ast::{
     BinaryOperator, Expr, Function, FunctionArg, Ident, ObjectName, Query, Select, SelectItem,
     SetExpr, Statement, TableAlias, TableFactor, TableWithJoins, Top, Value,
 };
-use sqlparser::dialect::{Dialect, GenericDialect, MsSqlDialect};
+use sqlparser::dialect::{Dialect, AnsiDialect, MsSqlDialect};
 use sqlparser::parser::Parser;
 
 #[derive(Debug, Clone)]
@@ -277,7 +277,7 @@ pub fn count_query<T: Dialect>(sql: &CXQuery<String>, dialect: &T) -> CXQuery<St
                 .as_select_mut()
                 .ok_or_else(|| ConnectorXError::SqlQueryNotSupported(sql.to_string()))?;
             select.sort_by = vec![];
-            if dialect.type_id() == GenericDialect.type_id() {
+            if dialect.type_id() == (AnsiDialect {}.type_id()) {
                 wrap_query_oracle(&query, projection, None)
             } else {
                 wrap_query(&query, projection, None, "CXTMPTAB_COUNT")
@@ -329,7 +329,7 @@ pub fn limit1_query<T: Dialect>(sql: &CXQuery<String>, dialect: &T) -> CXQuery<S
 pub fn limit1_query_oracle(sql: &CXQuery<String>) -> CXQuery<String> {
     trace!("Incoming query: {}", sql);
 
-    let mut ast = Parser::parse_sql(&GenericDialect {}, sql.as_str())?;
+    let mut ast = Parser::parse_sql(&AnsiDialect {}, sql.as_str())?;
     if ast.len() != 1 {
         throw!(ConnectorXError::SqlQueryNotSupported(sql.to_string()));
     }
@@ -467,6 +467,77 @@ pub fn single_col_partition_query<T: Dialect>(
 }
 
 #[throws(ConnectorXError)]
+pub fn single_col_partition_query_oracle<T: Dialect>(
+    query: &str,
+    col: &str,
+    lower: i64,
+    upper: i64,
+    dialect: &T,
+) -> String {
+    trace!("Incoming query: {}", query);
+
+    let mut ast = Parser::parse_sql(dialect, query)?;
+    if ast.len() != 1 {
+        throw!(ConnectorXError::SqlQueryNotSupported(query.to_string()));
+    }
+
+    let ast_part: Statement;
+
+    match &mut ast[0] {
+        Statement::Query(q) => match &mut q.body {
+            SetExpr::Select(select) => {
+                let lb = Expr::BinaryOp {
+                    left: Box::new(Expr::Value(Value::Number(lower.to_string(), false))),
+                    op: BinaryOperator::LtEq,
+                    right: Box::new(Expr::Identifier(
+                        Ident {
+                            value: col.to_string(),
+                            quote_style: None,
+                        },
+                    )),
+                };
+
+                let ub = Expr::BinaryOp {
+                    left: Box::new(Expr::Identifier(
+                        Ident {
+                            value: col.to_string(),
+                            quote_style: None,
+                        },
+                    )),
+                    op: BinaryOperator::Lt,
+                    right: Box::new(Expr::Value(Value::Number(upper.to_string(), false))),
+                };
+
+                let selection = Expr::BinaryOp {
+                    left: Box::new(lb),
+                    op: BinaryOperator::And,
+                    right: Box::new(ub),
+                };
+
+                if q.limit.is_none() && select.top.is_none() && !q.order_by.is_empty() {
+                    // order by in a partition query does not make sense because partition is unordered.
+                    // clear the order by beceause mssql does not support order by in a derived table.
+                    // also order by in the derived table does not make any difference.
+                    q.order_by.clear();
+                }
+
+                ast_part = wrap_query_oracle(
+                    &q,
+                    vec![SelectItem::Wildcard],
+                    Some(selection)
+                );
+            }
+            _ => throw!(ConnectorXError::SqlQueryNotSupported(query.to_string())),
+        },
+        _ => throw!(ConnectorXError::SqlQueryNotSupported(query.to_string())),
+    };
+
+    let sql = format!("{}", ast_part);
+    debug!("Transformed single column partition query: {}", sql);
+    sql
+}
+
+#[throws(ConnectorXError)]
 pub fn get_partition_range_query<T: Dialect>(query: &str, col: &str, dialect: &T) -> String {
     trace!("Incoming query: {}", query);
     const RANGE_TMP_TAB_NAME: &str = "CXTMPTAB_RANGE";
@@ -521,6 +592,63 @@ pub fn get_partition_range_query<T: Dialect>(query: &str, col: &str, dialect: &T
                         })),
                     ];
                     ast_range = wrap_query(&q, projection, None, RANGE_TMP_TAB_NAME);
+                }
+                _ => throw!(ConnectorXError::SqlQueryNotSupported(query.to_string())),
+            }
+        }
+        _ => throw!(ConnectorXError::SqlQueryNotSupported(query.to_string())),
+    };
+    let sql = format!("{}", ast_range);
+    debug!("Transformed partition range query: {}", sql);
+    sql
+}
+
+#[throws(ConnectorXError)]
+pub fn get_partition_range_query_oracle<T: Dialect>(query: &str, col: &str, dialect: &T) -> String {
+    trace!("Incoming query: {}", query);
+    let mut ast = Parser::parse_sql(dialect, query)?;
+    if ast.len() != 1 {
+        throw!(ConnectorXError::SqlQueryNotSupported(query.to_string()));
+    }
+
+    let ast_range: Statement;
+
+    match &mut ast[0] {
+        Statement::Query(q) => {
+            q.order_by = vec![];
+            match &mut q.body {
+                SetExpr::Select(_select) => {
+                    let projection = vec![
+                        SelectItem::UnnamedExpr(Expr::Function(Function {
+                            name: ObjectName(vec![Ident {
+                                value: "min".to_string(),
+                                quote_style: None,
+                            }]),
+                            args: vec![FunctionArg::Unnamed(Expr::Identifier(
+                                Ident {
+                                    value: col.to_string(),
+                                    quote_style: None,
+                                }
+                            ))],
+                            over: None,
+                            distinct: false,
+                        })),
+                        SelectItem::UnnamedExpr(Expr::Function(Function {
+                            name: ObjectName(vec![Ident {
+                                value: "max".to_string(),
+                                quote_style: None,
+                            }]),
+                            args: vec![FunctionArg::Unnamed(Expr::Identifier(
+                                Ident {
+                                    value: col.to_string(),
+                                    quote_style: None,
+                                }
+                            ))],
+                            over: None,
+                            distinct: false,
+                        })),
+                    ];
+                    ast_range = wrap_query_oracle(&q, projection, None);
                 }
                 _ => throw!(ConnectorXError::SqlQueryNotSupported(query.to_string())),
             }

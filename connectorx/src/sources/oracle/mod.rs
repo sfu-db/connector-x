@@ -20,7 +20,7 @@ type OracleConn = PooledConnection<OracleManager>;
 pub use self::errors::OracleSourceError;
 use crate::sql::limit1_query_oracle;
 use r2d2_oracle::oracle::ResultSet;
-use sqlparser::dialect::GenericDialect;
+use sqlparser::dialect::AnsiDialect;
 pub use typesystem::OracleTypeSystem;
 
 
@@ -92,7 +92,6 @@ where
                         .column_info()
                         .iter()
                         .map(|col| {
-                            println!("{:?}", col.oracle_type());
                             (
                                 col.name().to_string(),
                                 OracleTypeSystem::from(col.oracle_type()),
@@ -180,10 +179,10 @@ impl SourcePartition for OracleSourcePartition {
 
     #[throws(OracleSourceError)]
     fn prepare(&mut self) {
-        self.nrows = match get_limit(&self.query, &GenericDialect {})? {
+        self.nrows = match get_limit(&self.query, &AnsiDialect {})? {
             None => {
                 let row = self.conn.query_row_as::<usize>(
-                    &count_query(&self.query, &GenericDialect {})?.as_str(),
+                    &count_query(&self.query, &AnsiDialect {})?.as_str(),
                     &[],
                 )?;
                 row

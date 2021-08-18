@@ -1,22 +1,16 @@
 use crate::errors::{ConnectorXPythonError, Result};
 use anyhow::anyhow;
-use connectorx::{
-    sources::{
+use connectorx::{sources::{
         mssql::{FloatN, IntN, MsSQLTypeSystem},
         mysql::MySQLTypeSystem,
         postgres::{rewrite_tls_args, PostgresTypeSystem},
-    },
-    sql::{
-        get_partition_range_query, get_partition_range_query_sep, single_col_partition_query,
-        CXQuery,
-    },
-};
+    }, sql::{CXQuery, get_partition_range_query, get_partition_range_query_oracle, get_partition_range_query_sep, single_col_partition_query, single_col_partition_query_oracle}};
 use fehler::{throw, throws};
 use r2d2_mysql::mysql::{prelude::Queryable, Pool, Row};
 use r2d2_oracle::oracle::Connection as oracle_conn;
 use rusqlite::{types::Type, Connection};
 use sqlparser::dialect::{
-    GenericDialect, MsSqlDialect, MySqlDialect, PostgreSqlDialect, SQLiteDialect,
+    AnsiDialect, MsSqlDialect, MySqlDialect, PostgreSqlDialect, SQLiteDialect,
 };
 use std::convert::TryFrom;
 use tokio::net::TcpStream;
@@ -101,10 +95,9 @@ impl SourceConn {
                 single_col_partition_query(query, col, lower, upper, &MsSqlDialect {})?
             }
             SourceType::Oracle => {
-                single_col_partition_query(query, col, lower, upper, &GenericDialect {})?
+                single_col_partition_query_oracle(query, col, lower, upper, &AnsiDialect {})?
             }
         };
-
         CXQuery::Wrapped(query)
     }
 }
@@ -304,7 +297,7 @@ fn oracle_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) 
     let password = conn.password().unwrap();
     let host = "//".to_owned() + conn.host_str().unwrap() + conn.path();
     let conn = oracle_conn::connect(user, password, host)?;
-    let range_query = get_partition_range_query(query, col, &GenericDialect {})?;
+    let range_query = get_partition_range_query_oracle(query, col, &AnsiDialect {})?;
     let row = conn.query_row_as::<(i64, i64)>(range_query.as_str(), &[])?;
     row
 }
