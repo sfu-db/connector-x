@@ -34,10 +34,10 @@ pub struct OracleSource {
 impl OracleSource {
     #[throws(OracleSourceError)]
     pub fn new(conn: &str, nconn: usize) -> Self {
-        let conn = Url::parse(conn).unwrap();
+        let conn = Url::parse(conn)?;
         let user = conn.username();
-        let password = conn.password().unwrap();
-        let host = "//".to_owned() + conn.host_str().unwrap() + conn.path();
+        let password = conn.password().unwrap_or("");
+        let host = "//".to_owned() + conn.host_str().unwrap_or("localhost") + conn.path();
         let manager = OracleConnectionManager::new(user, password, host.as_str());
         let pool = r2d2::Pool::builder()
             .max_size(nconn as u32)
@@ -193,7 +193,7 @@ impl SourcePartition for OracleSourcePartition {
     #[throws(OracleSourceError)]
     fn parser(&mut self) -> Self::Parser<'_> {
         let query = self.query.clone();
-        let iter = self.conn.query(query.as_str(), &[]).unwrap();
+        let iter = self.conn.query(query.as_str(), &[])?;
         OracleTextSourceParser::new(iter, &self.schema, self.buf_size)
     }
 

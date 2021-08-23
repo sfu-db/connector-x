@@ -11,6 +11,9 @@ pub enum OracleSourceError {
     #[error(transparent)]
     OraclePoolError(#[from] r2d2::Error),
 
+    #[error(transparent)]
+    OracleUrlError(#[from] url::ParseError),
+
     /// Any other errors that are too trivial to be put here explicitly.
     #[error(transparent)]
     Other(#[from] anyhow::Error),
