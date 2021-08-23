@@ -8,7 +8,7 @@ use sqlparser::ast::{
     BinaryOperator, Expr, Function, FunctionArg, Ident, ObjectName, Query, Select, SelectItem,
     SetExpr, Statement, TableAlias, TableFactor, TableWithJoins, Top, Value,
 };
-use sqlparser::dialect::{Dialect, AnsiDialect, MsSqlDialect};
+use sqlparser::dialect::{AnsiDialect, Dialect, MsSqlDialect};
 use sqlparser::parser::Parser;
 
 #[derive(Debug, Clone)]
@@ -489,21 +489,17 @@ pub fn single_col_partition_query_oracle<T: Dialect>(
                 let lb = Expr::BinaryOp {
                     left: Box::new(Expr::Value(Value::Number(lower.to_string(), false))),
                     op: BinaryOperator::LtEq,
-                    right: Box::new(Expr::Identifier(
-                        Ident {
-                            value: col.to_string(),
-                            quote_style: None,
-                        },
-                    )),
+                    right: Box::new(Expr::Identifier(Ident {
+                        value: col.to_string(),
+                        quote_style: None,
+                    })),
                 };
 
                 let ub = Expr::BinaryOp {
-                    left: Box::new(Expr::Identifier(
-                        Ident {
-                            value: col.to_string(),
-                            quote_style: None,
-                        },
-                    )),
+                    left: Box::new(Expr::Identifier(Ident {
+                        value: col.to_string(),
+                        quote_style: None,
+                    })),
                     op: BinaryOperator::Lt,
                     right: Box::new(Expr::Value(Value::Number(upper.to_string(), false))),
                 };
@@ -521,11 +517,7 @@ pub fn single_col_partition_query_oracle<T: Dialect>(
                     q.order_by.clear();
                 }
 
-                ast_part = wrap_query_oracle(
-                    &q,
-                    vec![SelectItem::Wildcard],
-                    Some(selection)
-                );
+                ast_part = wrap_query_oracle(&q, vec![SelectItem::Wildcard], Some(selection));
             }
             _ => throw!(ConnectorXError::SqlQueryNotSupported(query.to_string())),
         },
@@ -624,12 +616,10 @@ pub fn get_partition_range_query_oracle<T: Dialect>(query: &str, col: &str, dial
                                 value: "min".to_string(),
                                 quote_style: None,
                             }]),
-                            args: vec![FunctionArg::Unnamed(Expr::Identifier(
-                                Ident {
-                                    value: col.to_string(),
-                                    quote_style: None,
-                                }
-                            ))],
+                            args: vec![FunctionArg::Unnamed(Expr::Identifier(Ident {
+                                value: col.to_string(),
+                                quote_style: None,
+                            }))],
                             over: None,
                             distinct: false,
                         })),
@@ -638,12 +628,10 @@ pub fn get_partition_range_query_oracle<T: Dialect>(query: &str, col: &str, dial
                                 value: "max".to_string(),
                                 quote_style: None,
                             }]),
-                            args: vec![FunctionArg::Unnamed(Expr::Identifier(
-                                Ident {
-                                    value: col.to_string(),
-                                    quote_style: None,
-                                }
-                            ))],
+                            args: vec![FunctionArg::Unnamed(Expr::Identifier(Ident {
+                                value: col.to_string(),
+                                quote_style: None,
+                            }))],
                             over: None,
                             distinct: false,
                         })),

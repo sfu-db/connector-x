@@ -1,5 +1,5 @@
 use connectorx::prelude::*;
-use connectorx::sources::oracle::{OracleSource};
+use connectorx::sources::oracle::OracleSource;
 use connectorx::sql::CXQuery;
 use std::env;
 
@@ -24,26 +24,49 @@ fn test_types() {
 
     let mut rows: Vec<Row> = Vec::new();
     for _i in 0..3 {
-        rows.push(
-            Row(
-                parser.produce().unwrap(), 
-                parser.produce().unwrap(), 
-                parser.produce().unwrap(),
-                parser.produce().unwrap(),
-                parser.produce().unwrap(),
-                parser.produce().unwrap(),
-                parser.produce().unwrap(),
-                parser.produce().unwrap(),
-            )
-        );
+        rows.push(Row(
+            parser.produce().unwrap(),
+            parser.produce().unwrap(),
+            parser.produce().unwrap(),
+            parser.produce().unwrap(),
+            parser.produce().unwrap(),
+            parser.produce().unwrap(),
+            parser.produce().unwrap(),
+            parser.produce().unwrap(),
+        ));
     }
-    // rows[0].0
-    // println!("{:?}", rows[0]);
     assert_eq!(
         vec![
-            Row(1, 1, 1.1, 1.1, "varchar1".to_string(), "char1".to_string(), "nvarchar1".to_string(), "nchar1".to_string()),
-            Row(2, 2, 2.2, 2.2, "varchar2".to_string(), "char2".to_string(), "nvarchar2".to_string(), "nchar2".to_string()),
-            Row(3, 3, 3.3, 3.3, "varchar3".to_string(), "char3".to_string(), "nvarchar3".to_string(), "nchar3".to_string())
+            Row(
+                1,
+                1,
+                1.1,
+                1.1,
+                "varchar1".to_string(),
+                "char1".to_string(),
+                "nvarchar1".to_string(),
+                "nchar1".to_string()
+            ),
+            Row(
+                2,
+                2,
+                2.2,
+                2.2,
+                "varchar2".to_string(),
+                "char2".to_string(),
+                "nvarchar2".to_string(),
+                "nchar2".to_string()
+            ),
+            Row(
+                3,
+                3,
+                3.3,
+                3.3,
+                "varchar3".to_string(),
+                "char3".to_string(),
+                "nvarchar3".to_string(),
+                "nchar3".to_string()
+            )
         ],
         rows
     );

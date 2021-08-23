@@ -6,7 +6,8 @@ mod typesystem;
 
 pub use self::destination::{PandasBlockInfo, PandasDestination, PandasPartitionDestination};
 pub use self::transports::{
-    MsSQLPandasTransport, MysqlPandasTransport, PostgresPandasTransport, SqlitePandasTransport, OraclePandasTransport
+    MsSQLPandasTransport, MysqlPandasTransport, OraclePandasTransport, PostgresPandasTransport,
+    SqlitePandasTransport,
 };
 pub use self::typesystem::{PandasDType, PandasTypeSystem};
 use crate::errors::ConnectorXPythonError;
@@ -177,11 +178,8 @@ pub fn write_pandas<'a>(
         }
         SourceType::Oracle => {
             let source = OracleSource::new(&source_conn.conn[..], queries.len())?;
-            let dispatcher = Dispatcher::<_, _, OraclePandasTransport>::new(
-                source,
-                &mut destination,
-                queries,
-            );
+            let dispatcher =
+                Dispatcher::<_, _, OraclePandasTransport>::new(source, &mut destination, queries);
             debug!("Running dispatcher");
             dispatcher.run()?;
         }

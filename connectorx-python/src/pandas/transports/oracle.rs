@@ -34,8 +34,7 @@ impl<'py> TypeConversion<NaiveDate, DateTime<Utc>> for OraclePandasTransport<'py
     }
 }
 
-impl<'py> TypeConversion<NaiveDateTime, DateTime<Utc>> for OraclePandasTransport<'py>
-{
+impl<'py> TypeConversion<NaiveDateTime, DateTime<Utc>> for OraclePandasTransport<'py> {
     fn convert(val: NaiveDateTime) -> DateTime<Utc> {
         DateTime::from_utc(val, Utc)
     }

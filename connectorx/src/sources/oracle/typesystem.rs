@@ -11,7 +11,7 @@ pub enum OracleTypeSystem {
     NVarChar(bool),
     NChar(bool),
     Date(bool),
-    Timestamp(bool)
+    Timestamp(bool),
 }
 
 impl_typesystem! {
@@ -42,4 +42,3 @@ impl<'a> From<&'a OracleType> for OracleTypeSystem {
         }
     }
 }
-

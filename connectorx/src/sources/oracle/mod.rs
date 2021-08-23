@@ -8,9 +8,9 @@ use crate::{
     sql::{count_query, get_limit, CXQuery},
 };
 use anyhow::anyhow;
+use chrono::{NaiveDate, NaiveDateTime};
 use fehler::{throw, throws};
 use log::debug;
-use chrono::{NaiveDate, NaiveDateTime};
 use r2d2::{Pool, PooledConnection};
 use r2d2_oracle::{oracle::Row, OracleConnectionManager};
 use url::Url;
@@ -22,7 +22,6 @@ use crate::sql::limit1_query_oracle;
 use r2d2_oracle::oracle::ResultSet;
 use sqlparser::dialect::AnsiDialect;
 pub use typesystem::OracleTypeSystem;
-
 
 pub struct OracleSource {
     pool: Pool<OracleManager>,

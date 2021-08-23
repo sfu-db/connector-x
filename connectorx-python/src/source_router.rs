@@ -1,10 +1,16 @@
 use crate::errors::{ConnectorXPythonError, Result};
 use anyhow::anyhow;
-use connectorx::{sources::{
+use connectorx::{
+    sources::{
         mssql::{FloatN, IntN, MsSQLTypeSystem},
         mysql::MySQLTypeSystem,
         postgres::{rewrite_tls_args, PostgresTypeSystem},
-    }, sql::{CXQuery, get_partition_range_query, get_partition_range_query_oracle, get_partition_range_query_sep, single_col_partition_query, single_col_partition_query_oracle}};
+    },
+    sql::{
+        get_partition_range_query, get_partition_range_query_oracle, get_partition_range_query_sep,
+        single_col_partition_query, single_col_partition_query_oracle, CXQuery,
+    },
+};
 use fehler::{throw, throws};
 use r2d2_mysql::mysql::{prelude::Queryable, Pool, Row};
 use r2d2_oracle::oracle::Connection as oracle_conn;
@@ -298,6 +304,8 @@ fn oracle_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) 
     let host = "//".to_owned() + conn.host_str().unwrap() + conn.path();
     let conn = oracle_conn::connect(user, password, host)?;
     let range_query = get_partition_range_query_oracle(query, col, &AnsiDialect {})?;
-    let row = conn.query_row_as::<(i64, i64)>(range_query.as_str(), &[])?;
-    row
+    let row = conn.query_row(range_query.as_str(), &[])?;
+    let min_v: i64 = row.get(0).unwrap_or(0);
+    let max_v: i64 = row.get(1).unwrap_or(0);
+    (min_v, max_v)
 }
