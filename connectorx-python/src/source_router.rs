@@ -298,10 +298,10 @@ fn mssql_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
 
 #[throws(ConnectorXPythonError)]
 fn oracle_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
-    let conn = Url::parse(conn.as_str()).map_err(|e| anyhow!("parse error: {}", e))?;
+    let conn = Url::parse(conn.as_str())?;
     let user = conn.username();
-    let password = conn.password().unwrap();
-    let host = "//".to_owned() + conn.host_str().unwrap() + conn.path();
+    let password = conn.password().unwrap_or("");
+    let host = "//".to_owned() + conn.host_str().unwrap_or("localhost") + conn.path();
     let conn = oracle_conn::connect(user, password, host)?;
     let range_query = get_partition_range_query_oracle(query, col, &AnsiDialect {})?;
     let row = conn.query_row(range_query.as_str(), &[])?;

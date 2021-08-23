@@ -22,6 +22,9 @@ pub enum ConnectorXPythonError {
     MsSQL(#[from] tiberius::error::Error),
 
     #[error(transparent)]
+    UrlParseError(#[from] url::ParseError),
+
+    #[error(transparent)]
     MysqlError(#[from] r2d2_mysql::mysql::Error),
 
     #[error(transparent)]
