@@ -4,20 +4,19 @@ use connectorx::{
     sources::{
         mssql::{FloatN, IntN, MsSQLTypeSystem},
         mysql::MySQLTypeSystem,
+        oracle::OracleDialect,
         postgres::{rewrite_tls_args, PostgresTypeSystem},
     },
     sql::{
-        get_partition_range_query, get_partition_range_query_oracle, get_partition_range_query_sep,
-        single_col_partition_query, single_col_partition_query_oracle, CXQuery,
+        get_partition_range_query, get_partition_range_query_sep, single_col_partition_query,
+        CXQuery,
     },
 };
 use fehler::{throw, throws};
 use r2d2_mysql::mysql::{prelude::Queryable, Pool, Row};
 use r2d2_oracle::oracle::Connection as oracle_conn;
 use rusqlite::{types::Type, Connection};
-use sqlparser::dialect::{
-    AnsiDialect, MsSqlDialect, MySqlDialect, PostgreSqlDialect, SQLiteDialect,
-};
+use sqlparser::dialect::{MsSqlDialect, MySqlDialect, PostgreSqlDialect, SQLiteDialect};
 use std::convert::TryFrom;
 use tokio::net::TcpStream;
 use tokio_util::compat::TokioAsyncWriteCompatExt;
@@ -101,9 +100,10 @@ impl SourceConn {
                 single_col_partition_query(query, col, lower, upper, &MsSqlDialect {})?
             }
             SourceType::Oracle => {
-                single_col_partition_query_oracle(query, col, lower, upper, &AnsiDialect {})?
+                single_col_partition_query(query, col, lower, upper, &OracleDialect {})?
             }
         };
+        println!("get partition query: {:?}", query);
         CXQuery::Wrapped(query)
     }
 }
@@ -118,24 +118,24 @@ fn pg_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
     let col_type = PostgresTypeSystem::from(row.columns()[0].type_());
     let (min_v, max_v) = match col_type {
         PostgresTypeSystem::Int4(_) => {
-            let min_v: i32 = row.get(0);
-            let max_v: i32 = row.get(1);
-            (min_v as i64, max_v as i64)
+            let min_v: Option<i32> = row.get(0);
+            let max_v: Option<i32> = row.get(1);
+            (min_v.unwrap_or(0) as i64, max_v.unwrap_or(0) as i64)
         }
         PostgresTypeSystem::Int8(_) => {
-            let min_v: i64 = row.get(0);
-            let max_v: i64 = row.get(1);
-            (min_v, max_v)
+            let min_v: Option<i64> = row.get(0);
+            let max_v: Option<i64> = row.get(1);
+            (min_v.unwrap_or(0), max_v.unwrap_or(0))
         }
         PostgresTypeSystem::Float4(_) => {
-            let min_v: f32 = row.get(0);
-            let max_v: f32 = row.get(1);
-            (min_v as i64, max_v as i64)
+            let min_v: Option<f32> = row.get(0);
+            let max_v: Option<f32> = row.get(1);
+            (min_v.unwrap_or(0.0) as i64, max_v.unwrap_or(0.0) as i64)
         }
         PostgresTypeSystem::Float8(_) => {
-            let min_v: f64 = row.get(0);
-            let max_v: f64 = row.get(1);
-            (min_v as i64, max_v as i64)
+            let min_v: Option<f64> = row.get(0);
+            let max_v: Option<f64> = row.get(1);
+            (min_v.unwrap_or(0.0) as i64, max_v.unwrap_or(0.0) as i64)
         }
         _ => throw!(anyhow!(
             "Partition can only be done on int or float columns"
@@ -157,6 +157,7 @@ fn sqlite_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) 
         let col_type = row.get_ref(0)?.data_type();
         match col_type {
             Type::Integer => row.get(0),
+            Type::Null => Ok(0),
             _ => {
                 error = Some(anyhow!("Partition can only be done on integer columns"));
                 Ok(0)
@@ -171,6 +172,7 @@ fn sqlite_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) 
         let col_type = row.get_ref(0)?.data_type();
         match col_type {
             Type::Integer => row.get(0),
+            Type::Null => Ok(0),
             _ => {
                 error = Some(anyhow!("Partition can only be done on integer columns"));
                 Ok(0)
@@ -197,22 +199,22 @@ fn mysql_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
     let col_type = MySQLTypeSystem::from(&row.columns()[0].column_type());
     let (min_v, max_v) = match col_type {
         MySQLTypeSystem::Long(_) => {
-            let min_v: i64 = row
+            let min_v: Option<i64> = row
                 .get(0)
                 .ok_or_else(|| anyhow!("mysql range: cannot get min value"))?;
-            let max_v: i64 = row
+            let max_v: Option<i64> = row
                 .get(1)
                 .ok_or_else(|| anyhow!("mysql range: cannot get max value"))?;
-            (min_v, max_v)
+            (min_v.unwrap_or(0), max_v.unwrap_or(0))
         }
         MySQLTypeSystem::LongLong(_) => {
-            let min_v: i64 = row
+            let min_v: Option<i64> = row
                 .get(0)
                 .ok_or_else(|| anyhow!("mysql range: cannot get min value"))?;
-            let max_v: i64 = row
+            let max_v: Option<i64> = row
                 .get(1)
                 .ok_or_else(|| anyhow!("mysql range: cannot get max value"))?;
-            (min_v, max_v)
+            (min_v.unwrap_or(0), max_v.unwrap_or(0))
         }
         _ => throw!(anyhow!("Partition can only be done on int columns")),
     };
@@ -249,43 +251,43 @@ fn mssql_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
     let col_type = MsSQLTypeSystem::from(&row.columns()[0].column_type());
     let (min_v, max_v) = match col_type {
         MsSQLTypeSystem::Tinyint(_) => {
-            let min_v: u8 = row.get(0).unwrap();
-            let max_v: u8 = row.get(1).unwrap();
+            let min_v: u8 = row.get(0).unwrap_or(0);
+            let max_v: u8 = row.get(1).unwrap_or(0);
             (min_v as i64, max_v as i64)
         }
         MsSQLTypeSystem::Smallint(_) => {
-            let min_v: i16 = row.get(0).unwrap();
-            let max_v: i16 = row.get(1).unwrap();
+            let min_v: i16 = row.get(0).unwrap_or(0);
+            let max_v: i16 = row.get(1).unwrap_or(0);
             (min_v as i64, max_v as i64)
         }
         MsSQLTypeSystem::Int(_) => {
-            let min_v: i32 = row.get(0).unwrap();
-            let max_v: i32 = row.get(1).unwrap();
+            let min_v: i32 = row.get(0).unwrap_or(0);
+            let max_v: i32 = row.get(1).unwrap_or(0);
             (min_v as i64, max_v as i64)
         }
         MsSQLTypeSystem::Bigint(_) => {
-            let min_v: i64 = row.get(0).unwrap();
-            let max_v: i64 = row.get(1).unwrap();
+            let min_v: i64 = row.get(0).unwrap_or(0);
+            let max_v: i64 = row.get(1).unwrap_or(0);
             (min_v, max_v)
         }
         MsSQLTypeSystem::Intn(_) => {
-            let min_v: IntN = row.get(0).unwrap();
-            let max_v: IntN = row.get(1).unwrap();
+            let min_v: IntN = row.get(0).unwrap_or(IntN(0));
+            let max_v: IntN = row.get(1).unwrap_or(IntN(0));
             (min_v.0, max_v.0)
         }
         MsSQLTypeSystem::Float24(_) => {
-            let min_v: f32 = row.get(0).unwrap();
-            let max_v: f32 = row.get(1).unwrap();
+            let min_v: f32 = row.get(0).unwrap_or(0.0);
+            let max_v: f32 = row.get(1).unwrap_or(0.0);
             (min_v as i64, max_v as i64)
         }
         MsSQLTypeSystem::Float53(_) => {
-            let min_v: f64 = row.get(0).unwrap();
-            let max_v: f64 = row.get(1).unwrap();
+            let min_v: f64 = row.get(0).unwrap_or(0.0);
+            let max_v: f64 = row.get(1).unwrap_or(0.0);
             (min_v as i64, max_v as i64)
         }
         MsSQLTypeSystem::Floatn(_) => {
-            let min_v: FloatN = row.get(0).unwrap();
-            let max_v: FloatN = row.get(1).unwrap();
+            let min_v: FloatN = row.get(0).unwrap_or(FloatN(0.0));
+            let max_v: FloatN = row.get(1).unwrap_or(FloatN(0.0));
             (min_v.0 as i64, max_v.0 as i64)
         }
         _ => throw!(anyhow!(
@@ -303,7 +305,7 @@ fn oracle_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) 
     let password = conn.password().unwrap_or("");
     let host = "//".to_owned() + conn.host_str().unwrap_or("localhost") + conn.path();
     let conn = oracle_conn::connect(user, password, host)?;
-    let range_query = get_partition_range_query_oracle(query, col, &AnsiDialect {})?;
+    let range_query = get_partition_range_query(query, col, &OracleDialect {})?;
     let row = conn.query_row(range_query.as_str(), &[])?;
     let min_v: i64 = row.get(0).unwrap_or(0);
     let max_v: i64 = row.get(1).unwrap_or(0);

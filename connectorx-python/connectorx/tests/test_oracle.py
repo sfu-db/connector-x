@@ -6,12 +6,14 @@ from pandas.testing import assert_frame_equal
 
 from .. import read_sql
 
+
 @pytest.fixture(scope="module")  # type: ignore
 def oracle_url() -> str:
     conn = os.environ["ORACLE_URL"]
     return conn
 
-@pytest.mark.skipif(os.environ.get("TEST_COVER", "main") != "all", reason="Test oracle until we deploy oracle database")
+
+@pytest.mark.skipif(not os.environ.get("ORACLE_URL"), reason="Test oracle until we deploy oracle database")
 def test_oracle_types(oracle_url: str) -> None:
     query = "select * from test_types"
     df = read_sql(oracle_url, query)
@@ -28,7 +30,8 @@ def test_oracle_types(oracle_url: str) -> None:
     )
     assert_frame_equal(df, expected, check_names=True)
 
-@pytest.mark.skipif(os.environ.get("TEST_COVER", "main") != "all", reason="Test oracle until we deploy oracle database")
+
+@pytest.mark.skipif(not os.environ.get("ORACLE_URL"), reason="Test oracle until we deploy oracle database")
 def test_oracle_without_partition(oracle_url: str) -> None:
     query = "select * from test_partition"
     df = read_sql(oracle_url, query)
@@ -41,7 +44,8 @@ def test_oracle_without_partition(oracle_url: str) -> None:
     )
     assert_frame_equal(df, expected, check_names=True)
 
-@pytest.mark.skipif(os.environ.get("TEST_COVER", "main") != "all", reason="Test oracle until we deploy oracle database")
+
+@pytest.mark.skipif(not os.environ.get("ORACLE_URL"), reason="Test oracle until we deploy oracle database")
 def test_oracle_with_partition(oracle_url: str) -> None:
     query = "select * from test_partition"
     df = read_sql(
@@ -59,7 +63,8 @@ def test_oracle_with_partition(oracle_url: str) -> None:
     )
     assert_frame_equal(df, expected, check_names=True)
 
-@pytest.mark.skipif(os.environ.get("TEST_COVER", "main") != "all", reason="Test oracle until we deploy oracle database")
+
+@pytest.mark.skipif(not os.environ.get("ORACLE_URL"), reason="Test oracle until we deploy oracle database")
 def test_oracle_with_partition_and_selection(oracle_url: str) -> None:
     query = "select * from test_partition where 1 = 3 OR 2 = 2"
     df = read_sql(
@@ -77,7 +82,8 @@ def test_oracle_with_partition_and_selection(oracle_url: str) -> None:
     )
     assert_frame_equal(df, expected, check_names=True)
 
-@pytest.mark.skipif(os.environ.get("TEST_COVER", "main") != "all", reason="Test oracle until we deploy oracle database")
+
+@pytest.mark.skipif(not os.environ.get("ORACLE_URL"), reason="Test oracle until we deploy oracle database")
 def test_oracle_with_partition_and_range(oracle_url: str) -> None:
     query = "select * from test_partition"
     df = read_sql(
@@ -85,7 +91,7 @@ def test_oracle_with_partition_and_range(oracle_url: str) -> None:
         query,
         partition_on="TEST_INT",
         partition_num=3,
-        partition_range=(0,10)
+        partition_range=(0, 10)
     )
     expected = pd.DataFrame(
         index=range(6),
@@ -96,8 +102,9 @@ def test_oracle_with_partition_and_range(oracle_url: str) -> None:
     )
     assert_frame_equal(df, expected, check_names=True)
 
-@pytest.mark.skipif(os.environ.get("TEST_COVER", "main") != "all", reason="Test oracle until we deploy oracle database")
-def test_empty_query(oracle_url: str) -> None:
+
+@pytest.mark.skipif(not os.environ.get("ORACLE_URL"), reason="Test oracle until we deploy oracle database")
+def test_empty_result(oracle_url: str) -> None:
     query = "select * from test_partition where TEST_INT < -100"
     df = read_sql(
         oracle_url,
@@ -112,13 +119,33 @@ def test_empty_query(oracle_url: str) -> None:
     )
     assert_frame_equal(df, expected, check_names=True)
 
-@pytest.mark.skipif(os.environ.get("TEST_COVER", "main") != "all", reason="Test oracle until we deploy oracle database")
-def test_empty_query_on_some_partition(oracle_url: str) -> None:
+
+@pytest.mark.skipif(not os.environ.get("ORACLE_URL"), reason="Test oracle until we deploy oracle database")
+def test_empty_result_on_partition(oracle_url: str) -> None:
     query = "select * from test_partition where TEST_INT < -100"
     df = read_sql(
         oracle_url,
         query,
-        partition_on="TEST_INT", 
+        partition_on="TEST_INT",
+        partition_num=3
+    )
+    expected = pd.DataFrame(
+        index=range(0),
+        data={
+            "TEST_INT": pd.Series([], dtype="Int64"),
+            "TEST_FLOAT": pd.Series([], dtype="float64")
+        }
+    )
+    assert_frame_equal(df, expected, check_names=True)
+
+
+@pytest.mark.skipif(not os.environ.get("ORACLE_URL"), reason="Test oracle until we deploy oracle database")
+def test_empty_result_on_some_partition(oracle_url: str) -> None:
+    query = "select * from test_partition where TEST_INT < -100"
+    df = read_sql(
+        oracle_url,
+        query,
+        partition_on="TEST_INT",
         partition_num=3
     )
     expected = pd.DataFrame(

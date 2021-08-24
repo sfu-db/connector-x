@@ -3,7 +3,8 @@ use connectorx::sources::oracle::OracleSource;
 use connectorx::sql::CXQuery;
 use std::env;
 
-// #[test]
+#[test]
+#[ignore]
 fn test_types() {
     let _ = env_logger::builder().is_test(true).try_init();
     let dburl = env::var("ORACLE_URL").unwrap();

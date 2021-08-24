@@ -20,8 +20,25 @@ type OracleConn = PooledConnection<OracleManager>;
 pub use self::errors::OracleSourceError;
 use crate::sql::limit1_query_oracle;
 use r2d2_oracle::oracle::ResultSet;
-use sqlparser::dialect::AnsiDialect;
+use sqlparser::dialect::Dialect;
 pub use typesystem::OracleTypeSystem;
+
+#[derive(Debug)]
+pub struct OracleDialect {}
+
+// implementation copy from AnsiDialect
+impl Dialect for OracleDialect {
+    fn is_identifier_start(&self, ch: char) -> bool {
+        ('a'..='z').contains(&ch) || ('A'..='Z').contains(&ch)
+    }
+
+    fn is_identifier_part(&self, ch: char) -> bool {
+        ('a'..='z').contains(&ch)
+            || ('A'..='Z').contains(&ch)
+            || ('0'..='9').contains(&ch)
+            || ch == '_'
+    }
+}
 
 pub struct OracleSource {
     pool: Pool<OracleManager>,
@@ -178,10 +195,10 @@ impl SourcePartition for OracleSourcePartition {
 
     #[throws(OracleSourceError)]
     fn prepare(&mut self) {
-        self.nrows = match get_limit(&self.query, &AnsiDialect {})? {
+        self.nrows = match get_limit(&self.query, &OracleDialect {})? {
             None => {
                 let row = self.conn.query_row_as::<usize>(
-                    &count_query(&self.query, &AnsiDialect {})?.as_str(),
+                    &count_query(&self.query, &OracleDialect {})?.as_str(),
                     &[],
                 )?;
                 row
