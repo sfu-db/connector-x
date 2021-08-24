@@ -22,6 +22,9 @@ pub enum ConnectorXPythonError {
     MsSQL(#[from] tiberius::error::Error),
 
     #[error(transparent)]
+    UrlParseError(#[from] url::ParseError),
+
+    #[error(transparent)]
     MysqlError(#[from] r2d2_mysql::mysql::Error),
 
     #[error(transparent)]
@@ -29,6 +32,9 @@ pub enum ConnectorXPythonError {
 
     #[error(transparent)]
     PostgresError(#[from] postgres::Error),
+
+    #[error(transparent)]
+    OracleError(#[from] r2d2_oracle::oracle::Error),
 
     #[error(transparent)]
     NdArrayShapeError(#[from] ndarray::ShapeError),
@@ -49,6 +55,9 @@ pub enum ConnectorXPythonError {
     SQLiteSourceError(#[from] connectorx::sources::sqlite::SQLiteSourceError),
 
     #[error(transparent)]
+    OracleSourceError(#[from] connectorx::sources::oracle::OracleSourceError),
+
+    #[error(transparent)]
     ArrowDestinationError(#[from] connectorx::destinations::arrow::ArrowDestinationError),
 
     #[error(transparent)]
@@ -63,6 +72,8 @@ pub enum ConnectorXPythonError {
     #[error(transparent)]
     MsSQLArrowTransportError(#[from] connectorx::transports::MsSQLArrowTransportError),
 
+    #[error(transparent)]
+    OracleArrowTransportError(#[from] connectorx::transports::OracleArrowTransportError),
     /// Any other errors that are too trivial to be put here explicitly.
     #[error(transparent)]
     Other(#[from] anyhow::Error),

@@ -15,7 +15,8 @@ use connectorx::{
     },
     sql::CXQuery,
     transports::{
-        MsSQLArrowTransport, MySQLArrowTransport, PostgresArrowTransport, SQLiteArrowTransport,
+        MsSQLArrowTransport, MySQLArrowTransport, OracleArrowTransport, PostgresArrowTransport,
+        SQLiteArrowTransport,
     },
 };
 use fehler::throws;
@@ -167,6 +168,13 @@ pub fn write_arrow<'a>(
             let source = MsSQLSource::new(rt, &source_conn.conn[..], queries.len())?;
             let dispatcher =
                 Dispatcher::<_, _, MsSQLArrowTransport>::new(source, &mut destination, queries);
+            debug!("Running dispatcher");
+            dispatcher.run()?;
+        }
+        SourceType::Oracle => {
+            let source = OracleSource::new(&source_conn.conn[..], queries.len())?;
+            let dispatcher =
+                Dispatcher::<_, _, OracleArrowTransport>::new(source, &mut destination, queries);
             debug!("Running dispatcher");
             dispatcher.run()?;
         }

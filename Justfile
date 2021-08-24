@@ -29,6 +29,7 @@ seed-db:
 seed-db-more:
     mysql --protocol tcp -h$CLICKHOUSE_HOST -P$CLICKHOUSE_PORT -u$CLICKHOUSE_USER -p$CLICKHOUSE_PASSWORD $CLICKHOUSE_DB < scripts/clickhouse.sql
     psql $REDSHIFT_URL -f scripts/redshift.sql
+    cat scripts/oracle.sql | sqlplus $ORACLE_URL_SCRIPT
 
 # benches 
 flame-tpch conn="POSTGRES_URL":

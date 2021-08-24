@@ -1,4 +1,7 @@
+use std::any::Any;
+
 use crate::errors::ConnectorXError;
+use crate::sources::oracle::OracleDialect;
 use anyhow::anyhow;
 use fehler::{throw, throws};
 use log::{debug, trace};
@@ -259,7 +262,13 @@ pub fn count_query<T: Dialect>(sql: &CXQuery<String>, dialect: &T) -> CXQuery<St
         }
     };
 
-    let sql = format!("{}", ast_count);
+    // HACK: Some dialect (e.g. Oracle) does not support "AS" for alias
+    // Hard code "(subquery) alias" instead of output "(subquery) AS alias"
+    let sql = if dialect.type_id() == (OracleDialect {}.type_id()) {
+        format!("{}", ast_count).replace(" AS", "")
+    } else {
+        format!("{}", ast_count)
+    };
     debug!("Transformed count query: {}", sql);
     CXQuery::Wrapped(sql)
 }
@@ -281,6 +290,36 @@ pub fn limit1_query<T: Dialect>(sql: &CXQuery<String>, dialect: &T) -> CXQuery<S
     };
 
     let sql = format!("{}", ast[0]);
+    debug!("Transformed limit 1 query: {}", sql);
+    CXQuery::Wrapped(sql)
+}
+
+#[throws(ConnectorXError)]
+pub fn limit1_query_oracle(sql: &CXQuery<String>) -> CXQuery<String> {
+    trace!("Incoming oracle query: {}", sql);
+
+    let mut ast = Parser::parse_sql(&OracleDialect {}, sql.as_str())?;
+    if ast.len() != 1 {
+        throw!(ConnectorXError::SqlQueryNotSupported(sql.to_string()));
+    }
+    let ast_part: Statement;
+    match &mut ast[0] {
+        Statement::Query(q) => {
+            let selection = Expr::BinaryOp {
+                left: Box::new(Expr::CompoundIdentifier(vec![Ident {
+                    value: "rownum".to_string(),
+                    quote_style: None,
+                }])),
+                op: BinaryOperator::Eq,
+                right: Box::new(Expr::Value(Value::Number("1".to_string(), false))),
+            };
+            ast_part = wrap_query(&q, vec![SelectItem::Wildcard], Some(selection), "");
+        }
+
+        _ => throw!(ConnectorXError::SqlQueryNotSupported(sql.to_string())),
+    };
+
+    let sql = format!("{}", ast_part).replace(" AS", "");
     debug!("Transformed limit 1 query: {}", sql);
     CXQuery::Wrapped(sql)
 }
@@ -332,7 +371,6 @@ pub fn single_col_partition_query<T: Dialect>(
     }
 
     let ast_part: Statement;
-
     match &mut ast[0] {
         Statement::Query(q) => match &mut q.body {
             SetExpr::Select(select) => {
@@ -391,7 +429,14 @@ pub fn single_col_partition_query<T: Dialect>(
         _ => throw!(ConnectorXError::SqlQueryNotSupported(query.to_string())),
     };
 
-    let sql = format!("{}", ast_part);
+    // HACK: Some dialect (e.g. Oracle) does not support "AS" for alias
+    // Hard code "(subquery) alias" instead of output "(subquery) AS alias"
+    let sql = if dialect.type_id() == (OracleDialect {}.type_id()) {
+        format!("{}", ast_part).replace(" AS", "")
+    } else {
+        format!("{}", ast_part)
+    };
+
     debug!("Transformed single column partition query: {}", sql);
     sql
 }
@@ -457,7 +502,14 @@ pub fn get_partition_range_query<T: Dialect>(query: &str, col: &str, dialect: &T
         }
         _ => throw!(ConnectorXError::SqlQueryNotSupported(query.to_string())),
     };
-    let sql = format!("{}", ast_range);
+
+    // HACK: Some dialect (e.g. Oracle) does not support "AS" for alias
+    // Hard code "(subquery) alias" instead of output "(subquery) AS alias"
+    let sql = if dialect.type_id() == (OracleDialect {}.type_id()) {
+        format!("{}", ast_range).replace(" AS", "")
+    } else {
+        format!("{}", ast_range)
+    };
     debug!("Transformed partition range query: {}", sql);
     sql
 }
