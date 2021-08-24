@@ -28,6 +28,10 @@
 <span id="25">25</span>
 <span id="26">26</span>
 <span id="27">27</span>
+<span id="28">28</span>
+<span id="29">29</span>
+<span id="30">30</span>
+<span id="31">31</span>
 </pre><pre class="rust">
 <span class="doccomment">//! This module contains transport definitions for the sources and destinations implemented in ConnectorX.</span>
 
@@ -39,6 +43,8 @@
 <span class="kw">mod</span> <span class="ident">mssql_arrow</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;src_mysql&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dst_arrow&quot;</span>))]</span>
 <span class="kw">mod</span> <span class="ident">mysql_arrow</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;src_oracle&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dst_arrow&quot;</span>))]</span>
+<span class="kw">mod</span> <span class="ident">oracle_arrow</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;src_postgres&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dst_arrow&quot;</span>))]</span>
 <span class="kw">mod</span> <span class="ident">postgres_arrow</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;src_sqlite&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dst_arrow&quot;</span>))]</span>
@@ -52,6 +58,8 @@
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">mssql_arrow</span>::{<span class="ident">MsSQLArrowTransport</span>, <span class="ident">MsSQLArrowTransportError</span>};
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;src_mysql&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dst_arrow&quot;</span>))]</span>
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">mysql_arrow</span>::{<span class="ident">MySQLArrowTransport</span>, <span class="ident">MySQLArrowTransportError</span>};
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;src_oracle&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dst_arrow&quot;</span>))]</span>
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">oracle_arrow</span>::{<span class="ident">OracleArrowTransport</span>, <span class="ident">OracleArrowTransportError</span>};
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;src_postgres&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dst_arrow&quot;</span>))]</span>
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">postgres_arrow</span>::{<span class="ident">PostgresArrowTransport</span>, <span class="ident">PostgresArrowTransportError</span>};
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;src_sqlite&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dst_arrow&quot;</span>))]</span>
