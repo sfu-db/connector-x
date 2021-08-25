@@ -20,7 +20,7 @@ use r2d2_mysql::{
     MysqlConnectionManager,
 };
 use rust_decimal::Decimal;
-use serde_json::{from_slice, from_str, Value};
+use serde_json::Value;
 use sqlparser::dialect::MySqlDialect;
 use std::marker::PhantomData;
 pub use typesystem::MySQLTypeSystem;

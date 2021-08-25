@@ -111,7 +111,12 @@ impl SourceConn {
 #[throws(ConnectorXPythonError)]
 fn pg_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
     let (config, tls) = rewrite_tls_args(conn)?;
-    let mut client = config.connect(tls.unwrap())?;
+    let mut client = match tls {
+        None => config.connect(postgres::NoTls)?,
+        Some(tls_conn) => config.connect(tls_conn)?,
+    };
+    // let mut client = config.connect(postgres::NoTls)?;
+    // let mut client = config.connect(tls.unwrap_or(postgres::NoTls))?;
     let range_query = get_partition_range_query(query, col, &PostgreSqlDialect {})?;
     let row = client.query_one(range_query.as_str(), &[])?;
 
