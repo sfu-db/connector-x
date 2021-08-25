@@ -55,7 +55,6 @@ python-shell:
     poetry run ipython
 
 benchmark-report: setup-python
-    echo $POSTGRES_URL
     cd connectorx-python && \
     poetry run pytest connectorx/tests/benchmarks.py --benchmark-json ../benchmark.json
     

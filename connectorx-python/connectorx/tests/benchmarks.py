@@ -16,8 +16,11 @@ def read_sql_impl(conn: str, table: str):
 
 
 def bench_mysql(benchmark):
+    print("========", os.environ["POSTGRES_URL"], os.environ["TPCH_TABLE"])
     benchmark(read_sql_impl, os.environ["MYSQL_URL"], os.environ["TPCH_TABLE"])
 
 
 def bench_postgres(benchmark):
-    benchmark(read_sql_impl, os.environ["POSTGRES_URL"], os.environ["TPCH_TABLE"])
+    print("=========", os.environ["POSTGRES_URL"], os.environ["TPCH_TABLE"])
+    benchmark(read_sql_impl,
+              os.environ["POSTGRES_URL"], os.environ["TPCH_TABLE"])
