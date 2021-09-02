@@ -24,6 +24,7 @@ macro_rules! impl_arrow_assoc {
                 Self::Builder::with_capacity(nrows)
             }
 
+            #[inline]
             fn push(builder: &mut Self::Builder, value: Self) {
                 builder.push(Some(value));
             }
@@ -40,6 +41,7 @@ macro_rules! impl_arrow_assoc {
                 Self::Builder::with_capacity(nrows)
             }
 
+            #[inline]
             fn push(builder: &mut Self::Builder, value: Self) {
                 builder.push(value);
             }
@@ -66,6 +68,7 @@ impl ArrowAssoc for &str {
         MutableUtf8Array::<i64>::with_capacity(nrows)
     }
 
+    #[inline]
     fn push(builder: &mut Self::Builder, value: Self) {
         builder.push(Some(value));
     }
@@ -82,6 +85,7 @@ impl ArrowAssoc for Option<&str> {
         MutableUtf8Array::<i64>::with_capacity(nrows)
     }
 
+    #[inline]
     fn push(builder: &mut Self::Builder, value: Self) {
         builder.push(value);
     }
@@ -98,6 +102,7 @@ impl ArrowAssoc for String {
         MutableUtf8Array::<i64>::with_capacity(nrows)
     }
 
+    #[inline]
     fn push(builder: &mut Self::Builder, value: String) {
         builder.push(Some(value));
     }
@@ -114,6 +119,7 @@ impl ArrowAssoc for Option<String> {
         MutableUtf8Array::with_capacity(nrows)
     }
 
+    #[inline]
     fn push(builder: &mut Self::Builder, value: Self) {
         builder.push(value);
     }
@@ -124,71 +130,124 @@ impl ArrowAssoc for Option<String> {
 }
 
 impl ArrowAssoc for DateTime<Utc> {
-    type Builder = MutablePrimitiveArray<f64>;
+    type Builder = MutablePrimitiveArray<i64>;
 
-    fn builder(_nrows: usize) -> Self::Builder {
-        unimplemented!()
+    fn builder(nrows: usize) -> Self::Builder {
+        MutablePrimitiveArray::with_capacity(nrows).to(ArrowDataType::Timestamp(
+            TimeUnit::Nanosecond,
+            Some("UTC".to_string()),
+        ))
     }
 
-    fn push(_builder: &mut Self::Builder, _value: DateTime<Utc>) {
-        unimplemented!()
+    #[inline]
+    fn push(builder: &mut Self::Builder, value: DateTime<Utc>) {
+        builder.push(
+            Some(value)
+                .map(|x| x.naive_utc())
+                .map(naive_datetime_to_timestamp_nanos),
+        );
     }
 
-    fn field(_header: &str) -> Field {
-        unimplemented!()
+    fn field(header: &str) -> Field {
+        Field::new(
+            header,
+            ArrowDataType::Timestamp(TimeUnit::Nanosecond, Some("UTC".to_string())),
+            true,
+        )
     }
 }
 
 impl ArrowAssoc for Option<DateTime<Utc>> {
-    type Builder = MutablePrimitiveArray<f64>;
+    type Builder = MutablePrimitiveArray<i64>;
 
-    fn builder(_nrows: usize) -> Self::Builder {
-        unimplemented!()
+    fn builder(nrows: usize) -> Self::Builder {
+        MutablePrimitiveArray::with_capacity(nrows).to(ArrowDataType::Timestamp(
+            TimeUnit::Nanosecond,
+            Some("UTC".to_string()),
+        ))
     }
 
-    fn push(_builder: &mut Self::Builder, _value: Option<DateTime<Utc>>) {
-        unimplemented!()
+    #[inline]
+    fn push(builder: &mut Self::Builder, value: Option<DateTime<Utc>>) {
+        builder.push(
+            value
+                .map(|x| x.naive_utc())
+                .map(naive_datetime_to_timestamp_nanos),
+        );
     }
 
-    fn field(_header: &str) -> Field {
-        unimplemented!()
+    fn field(header: &str) -> Field {
+        Field::new(
+            header,
+            ArrowDataType::Timestamp(TimeUnit::Nanosecond, Some("UTC".to_string())),
+            false,
+        )
     }
 }
 
 impl ArrowAssoc for Date<Utc> {
-    type Builder = MutablePrimitiveArray<f64>;
+    type Builder = MutablePrimitiveArray<i64>;
 
-    fn builder(_nrows: usize) -> Self::Builder {
-        unimplemented!()
+    fn builder(nrows: usize) -> Self::Builder {
+        MutablePrimitiveArray::with_capacity(nrows).to(ArrowDataType::Timestamp(
+            TimeUnit::Second,
+            Some("UTC".to_string()),
+        ))
     }
 
-    fn push(_builder: &mut Self::Builder, _value: Date<Utc>) {
-        unimplemented!()
+    #[inline]
+    fn push(builder: &mut Self::Builder, value: Date<Utc>) {
+        // time-aware are stored as naive (i64) + offset (on the datatype)
+        builder.push(
+            Some(value)
+                .map(|x| x.naive_utc())
+                .map(naive_date_to_timestamp_seconds),
+        )
     }
 
-    fn field(_header: &str) -> Field {
-        unimplemented!()
+    fn field(header: &str) -> Field {
+        Field::new(
+            header,
+            ArrowDataType::Timestamp(TimeUnit::Second, Some("UTC".to_string())),
+            false,
+        )
     }
 }
 
 impl ArrowAssoc for Option<Date<Utc>> {
-    type Builder = MutablePrimitiveArray<f64>;
+    type Builder = MutablePrimitiveArray<i64>;
 
-    fn builder(_nrows: usize) -> Self::Builder {
-        unimplemented!()
+    fn builder(nrows: usize) -> Self::Builder {
+        MutablePrimitiveArray::with_capacity(nrows).to(ArrowDataType::Timestamp(
+            TimeUnit::Second,
+            Some("UTC".to_string()),
+        ))
     }
 
-    fn push(_builder: &mut Self::Builder, _value: Option<Date<Utc>>) {
-        unimplemented!()
+    fn push(builder: &mut Self::Builder, value: Option<Date<Utc>>) {
+        // time-aware are stored as naive (i64) + offset (on the datatype)
+        builder.push(
+            value
+                .map(|x| x.naive_utc())
+                .map(naive_date_to_timestamp_seconds),
+        )
     }
 
-    fn field(_header: &str) -> Field {
-        unimplemented!()
+    fn field(header: &str) -> Field {
+        Field::new(
+            header,
+            ArrowDataType::Timestamp(TimeUnit::Second, Some("UTC".to_string())),
+            false,
+        )
     }
 }
 
-fn naive_date_to_arrow(nd: NaiveDate) -> i32 {
+fn naive_date_to_date32(nd: NaiveDate) -> i32 {
     (nd.and_hms(0, 0, 0).timestamp() / SECONDS_IN_DAY) as i32
+}
+
+fn naive_date_to_timestamp_seconds(nd: NaiveDate) -> i64 {
+    nd.and_hms(0, 0, 0).timestamp()
 }
 
 fn naive_datetime_to_timestamp_nanos(nd: NaiveDateTime) -> i64 {
@@ -206,8 +265,9 @@ impl ArrowAssoc for Option<NaiveDate> {
         MutablePrimitiveArray::with_capacity(nrows).to(ArrowDataType::Date32)
     }
 
+    #[inline]
     fn push(builder: &mut Self::Builder, value: Option<NaiveDate>) {
-        builder.push(value.map(naive_date_to_arrow));
+        builder.push(value.map(naive_date_to_date32));
     }
 
     fn field(header: &str) -> Field {
@@ -222,8 +282,9 @@ impl ArrowAssoc for NaiveDate {
         MutablePrimitiveArray::with_capacity(nrows).to(ArrowDataType::Date32)
     }
 
+    #[inline]
     fn push(builder: &mut Self::Builder, value: NaiveDate) {
-        builder.push(Some(naive_date_to_arrow(value)));
+        builder.push(Some(naive_date_to_date32(value)));
     }
 
     fn field(header: &str) -> Field {
@@ -240,6 +301,7 @@ impl ArrowAssoc for Option<NaiveDateTime> {
             .to(ArrowDataType::Timestamp(TimeUnit::Nanosecond, None))
     }
 
+    #[inline]
     fn push(builder: &mut Self::Builder, value: Option<NaiveDateTime>) {
         builder.push(value.map(naive_datetime_to_timestamp_nanos));
     }

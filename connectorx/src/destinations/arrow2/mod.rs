@@ -1,31 +1,29 @@
 //! Destination implementation for Arrow2.
 
+use std::sync::Arc;
+
 mod arrow_assoc;
 mod errors;
 mod funcs;
 pub mod typesystem;
 
+use anyhow::anyhow;
+use fehler::throw;
+use fehler::throws;
+
 use arrow2::array::MutableArray;
 use arrow2::datatypes::Schema;
 use arrow2::record_batch::RecordBatch;
 
-pub use self::errors::{ArrowDestinationError, Result};
-pub use self::typesystem::ArrowTypeSystem;
-use super::{Consume, Destination, DestinationPartition};
 use crate::data_order::DataOrder;
 use crate::typesystem::{Realize, TypeAssoc, TypeSystem};
-use anyhow::anyhow;
+
+use super::{Consume, Destination, DestinationPartition};
+
 use arrow_assoc::ArrowAssoc;
-use fehler::throw;
-use fehler::throws;
+pub use errors::{ArrowDestinationError, Result};
 use funcs::{FFinishBuilder, FNewBuilder, FNewField};
-use itertools::Itertools;
-#[cfg(feature = "polars")]
-use polars::frame::DataFrame;
-use std::any::Any;
-#[cfg(feature = "polars")]
-use std::convert::TryFrom;
-use std::sync::Arc;
+pub use typesystem::ArrowTypeSystem;
 
 type Builder = Box<dyn MutableArray + 'static + Send>;
 type Builders = Vec<Builder>;
@@ -111,10 +109,11 @@ impl Destination for ArrowDestination {
 impl ArrowDestination {
     #[throws(ArrowDestinationError)]
     pub fn arrow(self) -> Vec<RecordBatch> {
+        assert_eq!(self.schema.len(), self.names.len());
         let fields = self
             .schema
             .iter()
-            .zip_eq(self.names)
+            .zip(self.names)
             .map(|(&dt, h)| Ok(Realize::<FNewField>::realize(dt)?(h.as_str())))
             .collect::<Result<Vec<_>>>()?;
 
@@ -131,13 +130,6 @@ impl ArrowDestination {
                 Ok(RecordBatch::try_new(Arc::clone(&arrow_schema), columns)?)
             })
             .collect::<Result<Vec<_>>>()?
-    }
-
-    #[cfg(feature = "polars")]
-    #[throws(ArrowDestinationError)]
-    pub fn polars(self) -> DataFrame {
-        let rbs = self.arrow()?;
-        DataFrame::try_from(rbs)?
     }
 }
 
