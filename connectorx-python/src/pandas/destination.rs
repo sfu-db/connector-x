@@ -1,7 +1,7 @@
 use super::{
     pandas_columns::{
-        BooleanBlock, BytesBlock, DateTimeBlock, Float64Block, HasPandasColumn, Int64Block,
-        PandasColumn, PandasColumnObject, PyBytes, StringBlock,
+        BooleanBlock, BytesBlock, DateTimeBlock, Float64Block, FloatArrayBlock, HasPandasColumn,
+        Int64Block, PandasColumn, PandasColumnObject, PyBytes, StringBlock,
     },
     pystring::PyString,
     typesystem::{PandasArrayType, PandasBlockType, PandasTypeSystem},
@@ -158,6 +158,9 @@ impl<'a> Destination for PandasDestination<'a> {
                 PandasBlockType::Float64 => {
                     self.allocate_array::<f64>(dt, placement)?;
                 }
+                PandasBlockType::FloatArray => {
+                    self.allocate_array::<super::pandas_columns::PyList>(dt, placement)?;
+                }
                 PandasBlockType::String => {
                     self.allocate_array::<PyString>(dt, placement)?;
                 }
@@ -201,6 +204,17 @@ impl<'a> Destination for PandasDestination<'a> {
                 }
                 PandasBlockType::Float64 => {
                     let fblock = Float64Block::extract(buf)?;
+                    let fcols = fblock.split()?;
+                    for (&cid, fcol) in block.cids.iter().zip_eq(fcols) {
+                        partitioned_columns[cid] = fcol
+                            .partition(&counts)
+                            .into_iter()
+                            .map(|c| Box::new(c) as _)
+                            .collect()
+                    }
+                }
+                PandasBlockType::FloatArray => {
+                    let fblock = FloatArrayBlock::extract(buf)?;
                     let fcols = fblock.split()?;
                     for (&cid, fcol) in block.cids.iter().zip_eq(fcols) {
                         partitioned_columns[cid] = fcol

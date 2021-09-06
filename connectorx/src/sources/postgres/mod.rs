@@ -450,6 +450,7 @@ impl_produce!(
     i64,
     f32,
     f64,
+    Vec<f64>,
     Decimal,
     bool,
     &'r str,
@@ -555,6 +556,27 @@ macro_rules! impl_csv_produce {
 }
 
 impl_csv_produce!(i8, i16, i32, i64, f32, f64, Decimal, Uuid,);
+
+// TODO: add Vec<f64> for csv protocol
+impl<'r, 'a> Produce<'r, Vec<f64>> for PostgresCSVSourceParser<'a> {
+    type Error = PostgresSourceError;
+
+    #[throws(PostgresSourceError)]
+    fn produce(&mut self) -> Vec<f64> {
+        // let (ridx, cidx) = self.next_loc()?;
+        vec![1.1, 2.2, 3.3]
+    }
+}
+
+impl<'r, 'a> Produce<'r, Option<Vec<f64>>> for PostgresCSVSourceParser<'a> {
+    type Error = PostgresSourceError;
+
+    #[throws(PostgresSourceError)]
+    fn produce(&mut self) -> Option<Vec<f64>> {
+        // let (ridx, cidx) = self.next_loc()?;
+        None
+    }
+}
 
 impl<'r, 'a> Produce<'r, bool> for PostgresCSVSourceParser<'a> {
     type Error = PostgresSourceError;
@@ -875,6 +897,7 @@ impl_produce!(
     i64,
     f32,
     f64,
+    Vec<f64>,
     Decimal,
     bool,
     &'r str,

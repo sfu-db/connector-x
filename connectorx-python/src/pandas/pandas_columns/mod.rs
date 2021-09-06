@@ -2,12 +2,14 @@ mod boolean;
 mod bytes;
 mod datetime;
 mod float64;
+mod floatarray;
 mod int64;
 mod string;
 // TODO: use macro for integers
 
 use crate::errors::Result;
 pub use crate::pandas::pandas_columns::bytes::{BytesBlock, BytesColumn, PyBytes};
+pub use crate::pandas::pandas_columns::floatarray::{FloatArrayBlock, FloatArrayColumn, PyList};
 pub use boolean::{BooleanBlock, BooleanColumn};
 pub use datetime::{DateTimeBlock, DateTimeColumn};
 use fehler::throw;

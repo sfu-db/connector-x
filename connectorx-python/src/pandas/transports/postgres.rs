@@ -27,6 +27,7 @@ macro_rules! impl_postgres_transport {
             mappings = {
                 { Float4[f32]                => F64[f64]                | conversion auto }
                 { Float8[f64]                => F64[f64]                | conversion auto }
+                { Float8Array[Vec<f64>]      => F64Array[Vec<f64>]      | conversion auto }
                 { Numeric[Decimal]           => F64[f64]                | conversion option }
                 { Int2[i16]                  => I64[i64]                | conversion auto }
                 { Int4[i32]                  => I64[i64]                | conversion auto }
