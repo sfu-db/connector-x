@@ -367,9 +367,10 @@ def test_types_binary(postgres_url: str) -> None:
             "test_enum": pd.Series(
                 ["happy", "very happy", "ecstatic", "ecstatic"], dtype="object"
             ),
-            "test_array": pd.Series([[1.1, 2.2, 3.3], None, [0.0123], [0.000234, -12.987654321]], dtype="object"),
+            "test_array": pd.Series([[], None, [0.0123], [0.000234, -12.987654321]], dtype="object"),
         },
     )
+    print(df)
     assert_frame_equal(df, expected, check_names=True)
 
 
@@ -423,7 +424,7 @@ def test_types_csv(postgres_url: str) -> None:
             "test_enum": pd.Series(
                 ["happy", "very happy", "ecstatic", "ecstatic"], dtype="object"
             ),
-            "test_array": pd.Series([[1.1, 2.2, 3.3], None, [0.0123], [0.000234, -12.987654321]], dtype="object"),
+            "test_array": pd.Series([[], None, [0.0123], [0.000234, -12.987654321]], dtype="object"),
         },
     )
     assert_frame_equal(df, expected, check_names=True)
@@ -479,7 +480,7 @@ def test_types_cursor(postgres_url: str) -> None:
             "test_enum": pd.Series(
                 ["happy", "very happy", "ecstatic", "ecstatic"], dtype="object"
             ),
-            "test_array": pd.Series([[1.1, 2.2, 3.3], None, [0.0123], [0.000234, -12.987654321]], dtype="object"),
+            "test_array": pd.Series([[], None, [0.0123], [0.000234, -12.987654321]], dtype="object"),
         },
     )
     assert_frame_equal(df, expected, check_names=True)
