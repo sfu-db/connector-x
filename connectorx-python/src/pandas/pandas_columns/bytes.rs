@@ -33,7 +33,7 @@ impl<'a> FromPyObject<'a> for BytesBlock<'a> {
         let data = unsafe { array.as_array_mut() };
         Ok(BytesBlock {
             data,
-            mutex: Arc::new(Mutex::new(())), // allocate the lock here since only BytesBlock needs to aquire the GIL for now
+            mutex: Arc::new(Mutex::new(())), // allocate the lock here since only a few blocks needs to aquire the GIL for now
             buf_size_mb: 16,                 // in MB
         })
     }
@@ -214,6 +214,7 @@ impl<'a> BytesColumn<'a> {
             }
 
             self.bytes_buf.truncate(0);
+            self.bytes_lengths.truncate(0);
             self.next_write += nstrings;
         }
     }

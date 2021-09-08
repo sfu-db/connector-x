@@ -23,7 +23,7 @@ impl<'a> FromPyObject<'a> for StringBlock<'a> {
         let data = unsafe { array.as_array_mut() };
         Ok(StringBlock {
             data,
-            mutex: Arc::new(Mutex::new(())), // allocate the lock here since only StringBlock needs to aquire the GIL for now
+            mutex: Arc::new(Mutex::new(())), // allocate the lock here since only a few blocks needs to aquire the GIL for now
             buf_size_mb: 4,                  // in MB
         })
     }
