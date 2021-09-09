@@ -70,12 +70,18 @@
 <span id="67">67</span>
 <span id="68">68</span>
 <span id="69">69</span>
+<span id="70">70</span>
+<span id="71">71</span>
+<span id="72">72</span>
 </pre><pre class="rust">
 <span class="doccomment">//! This module defines three traits [`Destination`], [`DestinationPartition`], and [`Consume`] to define a destination.</span>
 <span class="doccomment">//! This module also contains destination implementations for various dataframes.</span>
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dst_arrow&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">arrow</span>;
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dst_arrow2&quot;</span>)]</span>
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">arrow2</span>;
 
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::data_order::DataOrder</span>;
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::errors::ConnectorXError</span>;
