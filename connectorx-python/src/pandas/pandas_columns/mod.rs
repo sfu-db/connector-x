@@ -8,7 +8,7 @@ mod string;
 // TODO: use macro for integers
 
 use crate::errors::Result;
-pub use crate::pandas::pandas_columns::array::{ArrayBlock, FloatArrayColumn, PyList};
+pub use crate::pandas::pandas_columns::array::{ArrayBlock, ArrayColumn, PyList};
 pub use crate::pandas::pandas_columns::bytes::{BytesBlock, BytesColumn, PyBytes};
 pub use boolean::{BooleanBlock, BooleanColumn};
 pub use datetime::{DateTimeBlock, DateTimeColumn};

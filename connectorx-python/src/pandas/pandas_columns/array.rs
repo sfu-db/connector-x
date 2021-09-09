@@ -44,7 +44,7 @@ impl<'a, V> FromPyObject<'a> for ArrayBlock<'a, V> {
 
 impl<'a, V> ArrayBlock<'a, V> {
     #[throws(ConnectorXPythonError)]
-    pub fn split(self) -> Vec<FloatArrayColumn<'a, V>> {
+    pub fn split(self) -> Vec<ArrayColumn<'a, V>> {
         let mut ret = vec![];
         let mut view = self.data;
 
@@ -52,7 +52,7 @@ impl<'a, V> ArrayBlock<'a, V> {
         while view.nrows() > 0 {
             let (col, rest) = view.split_at(Axis(0), 1);
             view = rest;
-            ret.push(FloatArrayColumn::<V> {
+            ret.push(ArrayColumn::<V> {
                 data: col
                     .into_shape(nrows)?
                     .into_slice()
@@ -68,7 +68,7 @@ impl<'a, V> ArrayBlock<'a, V> {
     }
 }
 
-pub struct FloatArrayColumn<'a, V> {
+pub struct ArrayColumn<'a, V> {
     data: &'a mut [PyList],
     next_write: usize,
     buffer: Vec<V>,
@@ -77,7 +77,7 @@ pub struct FloatArrayColumn<'a, V> {
     mutex: Arc<Mutex<()>>,
 }
 
-impl<'a, V> PandasColumnObject for FloatArrayColumn<'a, V>
+impl<'a, V> PandasColumnObject for ArrayColumn<'a, V>
 where
     V: Send + ToPyObject,
 {
@@ -97,7 +97,7 @@ where
     }
 }
 
-impl<'a> PandasColumn<Vec<f64>> for FloatArrayColumn<'a, f64> {
+impl<'a> PandasColumn<Vec<f64>> for ArrayColumn<'a, f64> {
     #[throws(ConnectorXPythonError)]
     fn write(&mut self, val: Vec<f64>) {
         self.lengths.push(val.len());
@@ -106,7 +106,7 @@ impl<'a> PandasColumn<Vec<f64>> for FloatArrayColumn<'a, f64> {
     }
 }
 
-impl<'a> PandasColumn<Option<Vec<f64>>> for FloatArrayColumn<'a, f64> {
+impl<'a> PandasColumn<Option<Vec<f64>>> for ArrayColumn<'a, f64> {
     #[throws(ConnectorXPythonError)]
     fn write(&mut self, val: Option<Vec<f64>>) {
         match val {
@@ -122,7 +122,7 @@ impl<'a> PandasColumn<Option<Vec<f64>>> for FloatArrayColumn<'a, f64> {
     }
 }
 
-impl<'a> PandasColumn<Vec<i64>> for FloatArrayColumn<'a, i64> {
+impl<'a> PandasColumn<Vec<i64>> for ArrayColumn<'a, i64> {
     #[throws(ConnectorXPythonError)]
     fn write(&mut self, val: Vec<i64>) {
         self.lengths.push(val.len());
@@ -131,7 +131,7 @@ impl<'a> PandasColumn<Vec<i64>> for FloatArrayColumn<'a, i64> {
     }
 }
 
-impl<'a> PandasColumn<Option<Vec<i64>>> for FloatArrayColumn<'a, i64> {
+impl<'a> PandasColumn<Option<Vec<i64>>> for ArrayColumn<'a, i64> {
     #[throws(ConnectorXPythonError)]
     fn write(&mut self, val: Option<Vec<i64>>) {
         match val {
@@ -148,32 +148,32 @@ impl<'a> PandasColumn<Option<Vec<i64>>> for FloatArrayColumn<'a, i64> {
 }
 
 impl HasPandasColumn for Vec<f64> {
-    type PandasColumn<'a> = FloatArrayColumn<'a, f64>;
+    type PandasColumn<'a> = ArrayColumn<'a, f64>;
 }
 
 impl HasPandasColumn for Option<Vec<f64>> {
-    type PandasColumn<'a> = FloatArrayColumn<'a, f64>;
+    type PandasColumn<'a> = ArrayColumn<'a, f64>;
 }
 
 impl HasPandasColumn for Vec<i64> {
-    type PandasColumn<'a> = FloatArrayColumn<'a, i64>;
+    type PandasColumn<'a> = ArrayColumn<'a, i64>;
 }
 
 impl HasPandasColumn for Option<Vec<i64>> {
-    type PandasColumn<'a> = FloatArrayColumn<'a, i64>;
+    type PandasColumn<'a> = ArrayColumn<'a, i64>;
 }
-impl<'a, V> FloatArrayColumn<'a, V>
+impl<'a, V> ArrayColumn<'a, V>
 where
     V: Send + ToPyObject,
 {
-    pub fn partition(self, counts: &[usize]) -> Vec<FloatArrayColumn<'a, V>> {
+    pub fn partition(self, counts: &[usize]) -> Vec<ArrayColumn<'a, V>> {
         let mut partitions = vec![];
         let mut data = self.data;
 
         for &c in counts {
             let (splitted, rest) = data.split_at_mut(c);
             data = rest;
-            partitions.push(FloatArrayColumn {
+            partitions.push(ArrayColumn {
                 data: splitted,
                 next_write: 0,
                 lengths: vec![],
