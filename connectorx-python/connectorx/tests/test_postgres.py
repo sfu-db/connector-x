@@ -317,9 +317,21 @@ def test_read_sql_on_utf8(postgres_url: str) -> None:
     assert_frame_equal(df, expected, check_names=True)
 
 
+def test_array(postgres_url: str) -> None:
+    from contexttimer import Timer
+    query = "SELECT * FROM test_array"
+    # df = read_sql(postgres_url, query)
+    with Timer() as timer:
+        df = read_sql(postgres_url, query,
+                      partition_on="test_int", partition_num=4)
+    print(f"take: {timer.elapsed}")
+    print(df)
+
+
 def test_types_binary(postgres_url: str) -> None:
     query = "SELECT test_int16, test_char, test_uuid, test_time, test_json, test_jsonb, test_bytea, test_enum, test_array FROM test_types"
-    df = read_sql(postgres_url, query)
+    df = read_sql(postgres_url, query,
+                  partition_on="test_int16", partition_num=3)
     expected = pd.DataFrame(
         index=range(4),
         data={
@@ -376,7 +388,8 @@ def test_types_binary(postgres_url: str) -> None:
 
 def test_types_csv(postgres_url: str) -> None:
     query = "SELECT test_int16, test_char, test_uuid, test_time, test_json, test_jsonb, test_bytea, test_enum::text, test_array FROM test_types"
-    df = read_sql(postgres_url, query, protocol="csv")
+    df = read_sql(postgres_url, query, protocol="csv",
+                  partition_on="test_int16", partition_num=2)
     expected = pd.DataFrame(
         index=range(4),
         data={
@@ -432,7 +445,8 @@ def test_types_csv(postgres_url: str) -> None:
 
 def test_types_cursor(postgres_url: str) -> None:
     query = "SELECT test_int16, test_char, test_uuid, test_time, test_json, test_jsonb, test_bytea, test_enum::text, test_array FROM test_types"
-    df = read_sql(postgres_url, query, protocol="cursor")
+    df = read_sql(postgres_url, query, protocol="cursor",
+                  partition_on="test_int16", partition_num=4)
     expected = pd.DataFrame(
         index=range(4),
         data={

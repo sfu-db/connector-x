@@ -450,8 +450,14 @@ impl_produce!(
     i64,
     f32,
     f64,
-    Vec<f64>,
     Decimal,
+    Vec<i8>,
+    Vec<i16>,
+    Vec<i32>,
+    Vec<i64>,
+    Vec<f32>,
+    Vec<f64>,
+    Vec<Decimal>,
     bool,
     &'r str,
     Vec<u8>,
@@ -557,26 +563,58 @@ macro_rules! impl_csv_produce {
 
 impl_csv_produce!(i8, i16, i32, i64, f32, f64, Decimal, Uuid,);
 
-// TODO: add Vec<f64> for csv protocol
-impl<'r, 'a> Produce<'r, Vec<f64>> for PostgresCSVSourceParser<'a> {
-    type Error = PostgresSourceError;
+macro_rules! impl_csv_vec_produce {
+    ($($t: ty,)+) => {
+        $(
+            impl<'r, 'a> Produce<'r, Vec<$t>> for PostgresCSVSourceParser<'a> {
+                type Error = PostgresSourceError;
 
-    #[throws(PostgresSourceError)]
-    fn produce(&mut self) -> Vec<f64> {
-        // let (ridx, cidx) = self.next_loc()?;
-        vec![1.1, 2.2, 3.3]
-    }
+                #[throws(PostgresSourceError)]
+                fn produce(&mut self) -> Vec<$t> {
+                    let (ridx, cidx) = self.next_loc()?;
+                    let s = &self.rowbuf[ridx][cidx][..];
+                    match s {
+                        "{}" => vec![],
+                        _ if s.len() < 3 => throw!(ConnectorXError::cannot_produce::<$t>(Some(s.into()))),
+                        s => s[1..s.len() - 1]
+                            .split(",")
+                            .map(|v| {
+                                v.parse()
+                                    .map_err(|_| ConnectorXError::cannot_produce::<$t>(Some(s.into())))
+                            })
+                            .collect::<Result<Vec<$t>, ConnectorXError>>()?,
+                    }
+                }
+            }
+
+            impl<'r, 'a> Produce<'r, Option<Vec<$t>>> for PostgresCSVSourceParser<'a> {
+                type Error = PostgresSourceError;
+
+                #[throws(PostgresSourceError)]
+                fn produce(&mut self) -> Option<Vec<$t>> {
+                    let (ridx, cidx) = self.next_loc()?;
+                    let s = &self.rowbuf[ridx][cidx][..];
+                    match s {
+                        "" => None,
+                        "{}" => Some(vec![]),
+                        _ if s.len() < 3 => throw!(ConnectorXError::cannot_produce::<$t>(Some(s.into()))),
+                        s => Some(
+                            s[1..s.len() - 1]
+                                .split(",")
+                                .map(|v| {
+                                    v.parse()
+                                        .map_err(|_| ConnectorXError::cannot_produce::<$t>(Some(s.into())))
+                                })
+                                .collect::<Result<Vec<$t>, ConnectorXError>>()?,
+                        ),
+                    }
+                }
+            }
+        )+
+    };
 }
 
-impl<'r, 'a> Produce<'r, Option<Vec<f64>>> for PostgresCSVSourceParser<'a> {
-    type Error = PostgresSourceError;
-
-    #[throws(PostgresSourceError)]
-    fn produce(&mut self) -> Option<Vec<f64>> {
-        // let (ridx, cidx) = self.next_loc()?;
-        None
-    }
-}
+impl_csv_vec_produce!(i8, i16, i32, i64, f32, f64, Decimal,);
 
 impl<'r, 'a> Produce<'r, bool> for PostgresCSVSourceParser<'a> {
     type Error = PostgresSourceError;
@@ -897,8 +935,14 @@ impl_produce!(
     i64,
     f32,
     f64,
-    Vec<f64>,
     Decimal,
+    Vec<i8>,
+    Vec<i16>,
+    Vec<i32>,
+    Vec<i64>,
+    Vec<f32>,
+    Vec<f64>,
+    Vec<Decimal>,
     bool,
     &'r str,
     Vec<u8>,

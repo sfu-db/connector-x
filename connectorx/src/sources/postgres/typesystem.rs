@@ -9,11 +9,17 @@ pub enum PostgresTypeSystem {
     Bool(bool),
     Float4(bool),
     Float8(bool),
-    Float8Array(bool),
     Numeric(bool),
     Int2(bool),
     Int4(bool),
     Int8(bool),
+    Float4Array(bool),
+    Float8Array(bool),
+    NumericArray(bool),
+    CharArray(bool),
+    Int2Array(bool),
+    Int4Array(bool),
+    Int8Array(bool),
     Date(bool),
     Char(bool),
     BpChar(bool),
@@ -37,8 +43,14 @@ impl_typesystem! {
         { Int8 => i64 }
         { Float4 => f32 }
         { Float8 => f64 }
-        { Float8Array => Vec<f64> }
         { Numeric => Decimal }
+        { CharArray => Vec<i8> }
+        { Int2Array => Vec<i16> }
+        { Int4Array => Vec<i32> }
+        { Int8Array => Vec<i64> }
+        { Float4Array => Vec<f32> }
+        { Float8Array => Vec<f64> }
+        { NumericArray => Vec<Decimal> }
         { Bool => bool }
         { Char => i8 }
         { Text | BpChar | VarChar | Enum => &'r str }
@@ -61,8 +73,14 @@ impl<'a> From<&'a Type> for PostgresTypeSystem {
             "int8" => Int8(true),
             "float4" => Float4(true),
             "float8" => Float8(true),
-            "_float8" => Float8Array(true),
             "numeric" => Numeric(true),
+            "_char" => CharArray(true),
+            "_int2" => Int2Array(true),
+            "_int4" => Int4Array(true),
+            "_int8" => Int8Array(true),
+            "_float4" => Float4Array(true),
+            "_float8" => Float8Array(true),
+            "_numeric" => NumericArray(true),
             "bool" => Bool(true),
             "char" => Char(true),
             "text" => Text(true),
@@ -94,8 +112,14 @@ impl<'a> From<PostgresTypeSystem> for Type {
             Int8(_) => Type::INT8,
             Float4(_) => Type::FLOAT4,
             Float8(_) => Type::FLOAT8,
-            Float8Array(_) => Type::FLOAT8_ARRAY,
             Numeric(_) => Type::NUMERIC,
+            CharArray(_) => Type::CHAR_ARRAY,
+            Int2Array(_) => Type::INT2_ARRAY,
+            Int4Array(_) => Type::INT4_ARRAY,
+            Int8Array(_) => Type::INT8_ARRAY,
+            Float4Array(_) => Type::FLOAT4_ARRAY,
+            Float8Array(_) => Type::FLOAT8_ARRAY,
+            NumericArray(_) => Type::NUMERIC_ARRAY,
             Bool(_) => Type::BOOL,
             Text(_) => Type::TEXT,
             BpChar(_) => Type::BPCHAR,
