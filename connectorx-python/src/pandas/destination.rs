@@ -1,6 +1,6 @@
 use super::{
     pandas_columns::{
-        BooleanBlock, BytesBlock, DateTimeBlock, Float64Block, FloatArrayBlock, HasPandasColumn,
+        ArrayBlock, BooleanBlock, BytesBlock, DateTimeBlock, Float64Block, HasPandasColumn,
         Int64Block, PandasColumn, PandasColumnObject, PyBytes, StringBlock,
     },
     pystring::PyString,
@@ -158,7 +158,10 @@ impl<'a> Destination for PandasDestination<'a> {
                 PandasBlockType::Float64 => {
                     self.allocate_array::<f64>(dt, placement)?;
                 }
-                PandasBlockType::FloatArray => {
+                PandasBlockType::Float64Array => {
+                    self.allocate_array::<super::pandas_columns::PyList>(dt, placement)?;
+                }
+                PandasBlockType::Int64Array => {
                     self.allocate_array::<super::pandas_columns::PyList>(dt, placement)?;
                 }
                 PandasBlockType::String => {
@@ -213,8 +216,19 @@ impl<'a> Destination for PandasDestination<'a> {
                             .collect()
                     }
                 }
-                PandasBlockType::FloatArray => {
-                    let fblock = FloatArrayBlock::extract(buf)?;
+                PandasBlockType::Float64Array => {
+                    let fblock = ArrayBlock::<f64>::extract(buf)?;
+                    let fcols = fblock.split()?;
+                    for (&cid, fcol) in block.cids.iter().zip_eq(fcols) {
+                        partitioned_columns[cid] = fcol
+                            .partition(&counts)
+                            .into_iter()
+                            .map(|c| Box::new(c) as _)
+                            .collect()
+                    }
+                }
+                PandasBlockType::Int64Array => {
+                    let fblock = ArrayBlock::<i64>::extract(buf)?;
                     let fcols = fblock.split()?;
                     for (&cid, fcol) in block.cids.iter().zip_eq(fcols) {
                         partitioned_columns[cid] = fcol

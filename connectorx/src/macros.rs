@@ -292,6 +292,15 @@ macro_rules! impl_transport {
 
         impl_transport!(@cvt option $TP, $T1, $T2);
     };
+    (@cvt auto_vec $TP:ty, $T1:ty, $T2:ty) => {
+        impl<'tp, 'r> $crate::typesystem::TypeConversion<$T1, $T2> for $TP {
+            fn convert(val: $T1) -> $T2 {
+                val.into_iter().map(|v| v as _).collect()
+            }
+        }
+
+        impl_transport!(@cvt option $TP, $T1, $T2);
+    };
     (@cvt owned $TP:ty, $T1:ty, $T2:ty) => {
         impl<'tp, 'r> $crate::typesystem::TypeConversion<$T1, $T2> for $TP {
             fn convert(val: $T1) -> $T2 {

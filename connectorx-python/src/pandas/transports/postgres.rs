@@ -27,11 +27,17 @@ macro_rules! impl_postgres_transport {
             mappings = {
                 { Float4[f32]                => F64[f64]                | conversion auto }
                 { Float8[f64]                => F64[f64]                | conversion auto }
-                { Float8Array[Vec<f64>]      => F64Array[Vec<f64>]      | conversion auto }
                 { Numeric[Decimal]           => F64[f64]                | conversion option }
                 { Int2[i16]                  => I64[i64]                | conversion auto }
                 { Int4[i32]                  => I64[i64]                | conversion auto }
                 { Int8[i64]                  => I64[i64]                | conversion auto }
+                { CharArray[Vec<i8>]         => I64Array[Vec<i64>]      | conversion auto_vec }
+                { Int2Array[Vec<i16>]        => I64Array[Vec<i64>]      | conversion auto_vec }
+                { Int4Array[Vec<i32>]        => I64Array[Vec<i64>]      | conversion auto_vec }
+                { Int8Array[Vec<i64>]        => I64Array[Vec<i64>]      | conversion auto }
+                { Float4Array[Vec<f32>]      => F64Array[Vec<f64>]      | conversion auto_vec }
+                { Float8Array[Vec<f64>]      => F64Array[Vec<f64>]      | conversion auto }
+                { NumericArray[Vec<Decimal>] => F64Array[Vec<f64>]      | conversion option }
                 { Bool[bool]                 => Bool[bool]              | conversion auto }
                 { Char[i8]                   => Char[char]              | conversion option }
                 { Text[&'r str]              => Str[&'r str]            | conversion auto }
@@ -57,6 +63,17 @@ impl_postgres_transport!(CSVProtocol, NoTls);
 impl_postgres_transport!(CSVProtocol, MakeTlsConnector);
 impl_postgres_transport!(CursorProtocol, NoTls);
 impl_postgres_transport!(CursorProtocol, MakeTlsConnector);
+
+impl<'py, P, C> TypeConversion<Vec<Decimal>, Vec<f64>> for PostgresPandasTransport<'py, P, C> {
+    fn convert(val: Vec<Decimal>) -> Vec<f64> {
+        val.into_iter()
+            .map(|v| {
+                v.to_f64()
+                    .unwrap_or_else(|| panic!("cannot convert decimal {:?} to float64", v))
+            })
+            .collect()
+    }
+}
 
 impl<'py, P, C> TypeConversion<Decimal, f64> for PostgresPandasTransport<'py, P, C> {
     fn convert(val: Decimal) -> f64 {

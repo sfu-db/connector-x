@@ -2,11 +2,11 @@ use super::{check_dtype, HasPandasColumn, PandasColumn, PandasColumnObject};
 use crate::errors::ConnectorXPythonError;
 use anyhow::anyhow;
 use fehler::throws;
-use itertools::Itertools;
 use ndarray::{ArrayViewMut2, Axis, Ix2};
 use numpy::{npyffi::NPY_TYPES, Element, PyArray, PyArrayDescr};
-use pyo3::{FromPyObject, Py, PyAny, PyResult, Python};
+use pyo3::{FromPyObject, Py, PyAny, PyResult, Python, ToPyObject};
 use std::any::TypeId;
+use std::marker::PhantomData;
 use std::sync::{Arc, Mutex};
 
 #[derive(Clone)]
@@ -21,28 +21,30 @@ impl Element for PyList {
     }
 }
 
-pub struct FloatArrayBlock<'a> {
+pub struct ArrayBlock<'a, V> {
     data: ArrayViewMut2<'a, PyList>,
     mutex: Arc<Mutex<()>>,
     buf_size_mb: usize,
+    _value_type: PhantomData<V>,
 }
 
-impl<'a> FromPyObject<'a> for FloatArrayBlock<'a> {
+impl<'a, V> FromPyObject<'a> for ArrayBlock<'a, V> {
     fn extract(ob: &'a PyAny) -> PyResult<Self> {
         check_dtype(ob, "object")?;
         let array = ob.downcast::<PyArray<PyList, Ix2>>()?;
         let data = unsafe { array.as_array_mut() };
-        Ok(FloatArrayBlock {
+        Ok(ArrayBlock::<V> {
             data,
             mutex: Arc::new(Mutex::new(())), // allocate the lock here since only a few blocks needs to aquire the GIL for now
             buf_size_mb: 16,                 // in MB
+            _value_type: PhantomData,
         })
     }
 }
 
-impl<'a> FloatArrayBlock<'a> {
+impl<'a, V> ArrayBlock<'a, V> {
     #[throws(ConnectorXPythonError)]
-    pub fn split(self) -> Vec<FloatArrayColumn<'a>> {
+    pub fn split(self) -> Vec<FloatArrayColumn<'a, V>> {
         let mut ret = vec![];
         let mut view = self.data;
 
@@ -50,7 +52,7 @@ impl<'a> FloatArrayBlock<'a> {
         while view.nrows() > 0 {
             let (col, rest) = view.split_at(Axis(0), 1);
             view = rest;
-            ret.push(FloatArrayColumn {
+            ret.push(FloatArrayColumn::<V> {
                 data: col
                     .into_shape(nrows)?
                     .into_slice()
@@ -66,16 +68,19 @@ impl<'a> FloatArrayBlock<'a> {
     }
 }
 
-pub struct FloatArrayColumn<'a> {
+pub struct FloatArrayColumn<'a, V> {
     data: &'a mut [PyList],
     next_write: usize,
-    buffer: Vec<f64>,
+    buffer: Vec<V>,
     lengths: Vec<usize>, // usize::MAX if the string is None
     buf_size: usize,
     mutex: Arc<Mutex<()>>,
 }
 
-impl<'a> PandasColumnObject for FloatArrayColumn<'a> {
+impl<'a, V> PandasColumnObject for FloatArrayColumn<'a, V>
+where
+    V: Send + ToPyObject,
+{
     fn typecheck(&self, id: TypeId) -> bool {
         id == TypeId::of::<PyList>() || id == TypeId::of::<Option<PyList>>()
     }
@@ -85,9 +90,14 @@ impl<'a> PandasColumnObject for FloatArrayColumn<'a> {
     fn typename(&self) -> &'static str {
         std::any::type_name::<PyList>()
     }
+
+    #[throws(ConnectorXPythonError)]
+    fn finalize(&mut self) {
+        self.flush()?;
+    }
 }
 
-impl<'a> PandasColumn<Vec<f64>> for FloatArrayColumn<'a> {
+impl<'a> PandasColumn<Vec<f64>> for FloatArrayColumn<'a, f64> {
     #[throws(ConnectorXPythonError)]
     fn write(&mut self, val: Vec<f64>) {
         self.lengths.push(val.len());
@@ -96,7 +106,7 @@ impl<'a> PandasColumn<Vec<f64>> for FloatArrayColumn<'a> {
     }
 }
 
-impl<'a> PandasColumn<Option<Vec<f64>>> for FloatArrayColumn<'a> {
+impl<'a> PandasColumn<Option<Vec<f64>>> for FloatArrayColumn<'a, f64> {
     #[throws(ConnectorXPythonError)]
     fn write(&mut self, val: Option<Vec<f64>>) {
         match val {
@@ -112,16 +122,51 @@ impl<'a> PandasColumn<Option<Vec<f64>>> for FloatArrayColumn<'a> {
     }
 }
 
+impl<'a> PandasColumn<Vec<i64>> for FloatArrayColumn<'a, i64> {
+    #[throws(ConnectorXPythonError)]
+    fn write(&mut self, val: Vec<i64>) {
+        self.lengths.push(val.len());
+        self.buffer.extend_from_slice(&val[..]);
+        self.try_flush()?;
+    }
+}
+
+impl<'a> PandasColumn<Option<Vec<i64>>> for FloatArrayColumn<'a, i64> {
+    #[throws(ConnectorXPythonError)]
+    fn write(&mut self, val: Option<Vec<i64>>) {
+        match val {
+            Some(v) => {
+                self.lengths.push(v.len());
+                self.buffer.extend_from_slice(&v[..]);
+                self.try_flush()?;
+            }
+            None => {
+                self.lengths.push(usize::MAX);
+            }
+        }
+    }
+}
+
 impl HasPandasColumn for Vec<f64> {
-    type PandasColumn<'a> = FloatArrayColumn<'a>;
+    type PandasColumn<'a> = FloatArrayColumn<'a, f64>;
 }
 
 impl HasPandasColumn for Option<Vec<f64>> {
-    type PandasColumn<'a> = FloatArrayColumn<'a>;
+    type PandasColumn<'a> = FloatArrayColumn<'a, f64>;
 }
 
-impl<'a> FloatArrayColumn<'a> {
-    pub fn partition(self, counts: &[usize]) -> Vec<FloatArrayColumn<'a>> {
+impl HasPandasColumn for Vec<i64> {
+    type PandasColumn<'a> = FloatArrayColumn<'a, i64>;
+}
+
+impl HasPandasColumn for Option<Vec<i64>> {
+    type PandasColumn<'a> = FloatArrayColumn<'a, i64>;
+}
+impl<'a, V> FloatArrayColumn<'a, V>
+where
+    V: Send + ToPyObject,
+{
+    pub fn partition(self, counts: &[usize]) -> Vec<FloatArrayColumn<'a, V>> {
         let mut partitions = vec![];
         let mut data = self.data;
 
