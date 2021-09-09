@@ -108,6 +108,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "arrow2"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d88028fc4bd0aff3be713e067d0f271d3019122dde59de453059a3818b1bee08"
+dependencies = [
+ "chrono",
+ "hash_hasher",
+ "num-traits",
+]
+
+[[package]]
 name = "async-channel"
 version = "1.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -511,6 +522,7 @@ version = "0.2.0"
 dependencies = [
  "anyhow",
  "arrow",
+ "arrow2",
  "bb8",
  "bb8-tiberius",
  "chrono",
@@ -1253,6 +1265,12 @@ name = "half"
 version = "1.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "62aca2aba2d62b4a7f5b33f3712cb1b0692779a56fb510499d5c0aa594daeaf3"
+
+[[package]]
+name = "hash_hasher"
+version = "2.0.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "74721d007512d0cb3338cd20f0654ac913920061a4c4d0d8708edb3f2a698c0c"
 
 [[package]]
 name = "hashbrown"
