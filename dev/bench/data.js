@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1629871394771,
+  "lastUpdate": 1631163670253,
   "repoUrl": "https://github.com/sfu-db/connector-x",
   "entries": {
     "ConnectorX TPC-H Scale@1 Benchmarks": [
@@ -2014,6 +2014,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 3.1847995663469026",
             "extra": "mean: 21.17339522158727 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "wangxiaoying0369@gmail.com",
+            "name": "Xiaoying Wang",
+            "username": "wangxiaoying"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3102b3b1931f454bcd50d9015a418427f75c0fd0",
+          "message": "Merge pull request #116 from jorgecarleitao/arrow2\n\nAdded support for arrow2",
+          "timestamp": "2021-09-08T21:51:36-07:00",
+          "tree_id": "8fd7d7e83e3c2fa7a9531114623046ddecc39ac5",
+          "url": "https://github.com/sfu-db/connector-x/commit/3102b3b1931f454bcd50d9015a418427f75c0fd0"
+        },
+        "date": 1631163666858,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_mysql",
+            "value": 0.06801328870284223,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3135929479124364",
+            "extra": "mean: 14.703009060025215 sec\nrounds: 5"
+          },
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_postgres",
+            "value": 0.04298495575102168,
+            "unit": "iter/sec",
+            "range": "stddev: 2.4062828004694548",
+            "extra": "mean: 23.263953225687146 sec\nrounds: 5"
           }
         ]
       }
