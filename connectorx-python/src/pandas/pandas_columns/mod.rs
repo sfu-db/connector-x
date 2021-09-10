@@ -17,7 +17,13 @@ pub use float64::{Float64Block, Float64Column};
 pub use int64::{Int64Block, Int64Column};
 use pyo3::{exceptions::PyRuntimeError, PyAny, PyResult};
 use std::any::TypeId;
+use std::sync::Mutex;
 pub use string::{StringBlock, StringColumn};
+
+// A global GIL lock for Python object allocations like string, bytes and list
+lazy_static! {
+    static ref GIL_MUTEX: Mutex<()> = Mutex::new(());
+}
 
 pub trait PandasColumnObject: Send {
     fn typecheck(&self, _: TypeId) -> bool;

@@ -1,5 +1,5 @@
 use super::super::pystring::{PyString, StringInfo};
-use super::{check_dtype, HasPandasColumn, PandasColumn, PandasColumnObject};
+use super::{check_dtype, HasPandasColumn, PandasColumn, PandasColumnObject, GIL_MUTEX};
 use crate::errors::ConnectorXPythonError;
 use anyhow::anyhow;
 use fehler::throws;
@@ -8,11 +8,9 @@ use ndarray::{ArrayViewMut2, Axis, Ix2};
 use numpy::PyArray;
 use pyo3::{FromPyObject, PyAny, PyResult, Python};
 use std::any::TypeId;
-use std::sync::{Arc, Mutex};
 
 pub struct StringBlock<'a> {
     data: ArrayViewMut2<'a, PyString>,
-    mutex: Arc<Mutex<()>>,
     buf_size_mb: usize,
 }
 
@@ -23,8 +21,7 @@ impl<'a> FromPyObject<'a> for StringBlock<'a> {
         let data = unsafe { array.as_array_mut() };
         Ok(StringBlock {
             data,
-            mutex: Arc::new(Mutex::new(())), // allocate the lock here since only a few blocks needs to aquire the GIL for now
-            buf_size_mb: 4,                  // in MB
+            buf_size_mb: 4, // in MB
         })
     }
 }
@@ -48,7 +45,6 @@ impl<'a> StringBlock<'a> {
                 string_lengths: vec![],
                 string_buf: Vec::with_capacity(self.buf_size_mb * (1 << 20) * 11 / 10), // allocate a little bit more memory to avoid Vec growth
                 buf_size: self.buf_size_mb * (1 << 20),
-                mutex: self.mutex.clone(),
             })
         }
         ret
@@ -61,7 +57,6 @@ pub struct StringColumn<'a> {
     string_buf: Vec<u8>,
     string_lengths: Vec<usize>, // usize::MAX for empty string
     buf_size: usize,
-    mutex: Arc<Mutex<()>>,
 }
 
 impl<'a> PandasColumnObject for StringColumn<'a> {
@@ -236,7 +231,6 @@ impl<'a> StringColumn<'a> {
                 string_lengths: vec![],
                 string_buf: Vec::with_capacity(self.buf_size),
                 buf_size: self.buf_size,
-                mutex: self.mutex.clone(),
             });
         }
 
@@ -252,11 +246,11 @@ impl<'a> StringColumn<'a> {
 
         let py = unsafe { Python::assume_gil_acquired() };
         let _guard = if force {
-            self.mutex
+            GIL_MUTEX
                 .lock()
                 .map_err(|e| anyhow!("mutex poisoned {}", e))?
         } else {
-            match self.mutex.try_lock() {
+            match GIL_MUTEX.try_lock() {
                 Ok(guard) => guard,
                 Err(_) => return,
             }
