@@ -318,8 +318,9 @@ def test_read_sql_on_utf8(postgres_url: str) -> None:
 
 
 def test_types_binary(postgres_url: str) -> None:
-    query = "SELECT test_int16, test_char, test_uuid, test_time, test_json, test_jsonb, test_bytea, test_enum FROM test_types"
-    df = read_sql(postgres_url, query)
+    query = "SELECT test_int16, test_char, test_uuid, test_time, test_json, test_jsonb, test_bytea, test_enum, test_farray, test_iarray FROM test_types"
+    df = read_sql(postgres_url, query,
+                  partition_on="test_int16", partition_num=3)
     expected = pd.DataFrame(
         index=range(4),
         data={
@@ -367,14 +368,18 @@ def test_types_binary(postgres_url: str) -> None:
             "test_enum": pd.Series(
                 ["happy", "very happy", "ecstatic", "ecstatic"], dtype="object"
             ),
+            "test_farray": pd.Series([[], None, [0.0123], [0.000234, -12.987654321]], dtype="object"),
+            "test_iarray": pd.Series([[-1, 0, 1123], [], [-324324], None], dtype="object"),
         },
     )
+    print(df)
     assert_frame_equal(df, expected, check_names=True)
 
 
 def test_types_csv(postgres_url: str) -> None:
-    query = "SELECT test_int16, test_char, test_uuid, test_time, test_json, test_jsonb, test_bytea, test_enum::text FROM test_types"
-    df = read_sql(postgres_url, query, protocol="csv")
+    query = "SELECT test_int16, test_char, test_uuid, test_time, test_json, test_jsonb, test_bytea, test_enum::text, test_farray, test_iarray FROM test_types"
+    df = read_sql(postgres_url, query, protocol="csv",
+                  partition_on="test_int16", partition_num=2)
     expected = pd.DataFrame(
         index=range(4),
         data={
@@ -422,14 +427,17 @@ def test_types_csv(postgres_url: str) -> None:
             "test_enum": pd.Series(
                 ["happy", "very happy", "ecstatic", "ecstatic"], dtype="object"
             ),
+            "test_farray": pd.Series([[], None, [0.0123], [0.000234, -12.987654321]], dtype="object"),
+            "test_iarray": pd.Series([[-1, 0, 1123], [], [-324324], None], dtype="object"),
         },
     )
     assert_frame_equal(df, expected, check_names=True)
 
 
 def test_types_cursor(postgres_url: str) -> None:
-    query = "SELECT test_int16, test_char, test_uuid, test_time, test_json, test_jsonb, test_bytea, test_enum::text FROM test_types"
-    df = read_sql(postgres_url, query, protocol="cursor")
+    query = "SELECT test_int16, test_char, test_uuid, test_time, test_json, test_jsonb, test_bytea, test_enum::text, test_farray, test_iarray FROM test_types"
+    df = read_sql(postgres_url, query, protocol="cursor",
+                  partition_on="test_int16", partition_num=4)
     expected = pd.DataFrame(
         index=range(4),
         data={
@@ -477,6 +485,8 @@ def test_types_cursor(postgres_url: str) -> None:
             "test_enum": pd.Series(
                 ["happy", "very happy", "ecstatic", "ecstatic"], dtype="object"
             ),
+            "test_farray": pd.Series([[], None, [0.0123], [0.000234, -12.987654321]], dtype="object"),
+            "test_iarray": pd.Series([[-1, 0, 1123], [], [-324324], None], dtype="object"),
         },
     )
     assert_frame_equal(df, expected, check_names=True)

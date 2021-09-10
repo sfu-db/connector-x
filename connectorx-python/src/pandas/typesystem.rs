@@ -6,6 +6,8 @@ use connectorx::impl_typesystem;
 pub enum PandasTypeSystem {
     F64(bool),
     I64(bool),
+    F64Array(bool),
+    I64Array(bool),
     Bool(bool),
     Char(bool),
     Str(bool),
@@ -21,6 +23,8 @@ pub enum PandasBlockType {
     Boolean(bool), // bool indicates nullablity
     Int64(bool),
     Float64,
+    Int64Array,
+    Float64Array,
     String,
     DateTime,
     Bytes,
@@ -50,6 +54,8 @@ impl From<PandasTypeSystem> for PandasBlockType {
             PandasTypeSystem::Bool(nullable) => PandasBlockType::Boolean(nullable),
             PandasTypeSystem::I64(nullable) => PandasBlockType::Int64(nullable),
             PandasTypeSystem::F64(_) => PandasBlockType::Float64,
+            PandasTypeSystem::F64Array(_) => PandasBlockType::Float64Array,
+            PandasTypeSystem::I64Array(_) => PandasBlockType::Int64Array,
             PandasTypeSystem::String(_)
             | PandasTypeSystem::BoxStr(_)
             | PandasTypeSystem::Str(_)
@@ -65,6 +71,8 @@ impl_typesystem! {
     mappings = {
         { F64 => f64 }
         { I64 => i64 }
+        { F64Array => Vec<f64> }
+        { I64Array => Vec<i64> }
         { Bool => bool }
         { Char => char }
         { Str => &'r str }

@@ -122,6 +122,11 @@ fn pg_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
 
     let col_type = PostgresTypeSystem::from(row.columns()[0].type_());
     let (min_v, max_v) = match col_type {
+        PostgresTypeSystem::Int2(_) => {
+            let min_v: Option<i16> = row.get(0);
+            let max_v: Option<i16> = row.get(1);
+            (min_v.unwrap_or(0) as i64, max_v.unwrap_or(0) as i64)
+        }
         PostgresTypeSystem::Int4(_) => {
             let min_v: Option<i32> = row.get(0);
             let max_v: Option<i32> = row.get(1);

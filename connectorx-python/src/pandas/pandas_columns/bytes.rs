@@ -1,4 +1,4 @@
-use super::{check_dtype, HasPandasColumn, PandasColumn, PandasColumnObject};
+use super::{check_dtype, HasPandasColumn, PandasColumn, PandasColumnObject, GIL_MUTEX};
 use crate::errors::ConnectorXPythonError;
 use anyhow::anyhow;
 use fehler::throws;
@@ -6,7 +6,6 @@ use ndarray::{ArrayViewMut2, Axis, Ix2};
 use numpy::{npyffi::NPY_TYPES, Element, PyArray, PyArrayDescr};
 use pyo3::{FromPyObject, Py, PyAny, PyResult, Python};
 use std::any::TypeId;
-use std::sync::{Arc, Mutex};
 
 #[derive(Clone)]
 #[repr(transparent)]
@@ -22,7 +21,6 @@ impl Element for PyBytes {
 
 pub struct BytesBlock<'a> {
     data: ArrayViewMut2<'a, PyBytes>,
-    mutex: Arc<Mutex<()>>,
     buf_size_mb: usize,
 }
 
@@ -33,8 +31,7 @@ impl<'a> FromPyObject<'a> for BytesBlock<'a> {
         let data = unsafe { array.as_array_mut() };
         Ok(BytesBlock {
             data,
-            mutex: Arc::new(Mutex::new(())), // allocate the lock here since only BytesBlock needs to aquire the GIL for now
-            buf_size_mb: 16,                 // in MB
+            buf_size_mb: 16, // in MB
         })
     }
 }
@@ -58,7 +55,6 @@ impl<'a> BytesBlock<'a> {
                 bytes_lengths: vec![],
                 bytes_buf: Vec::with_capacity(self.buf_size_mb * (1 << 20) * 11 / 10), // allocate a little bit more memory to avoid Vec growth
                 buf_size: self.buf_size_mb * (1 << 20),
-                mutex: self.mutex.clone(),
             })
         }
         ret
@@ -71,7 +67,6 @@ pub struct BytesColumn<'a> {
     bytes_buf: Vec<u8>,
     bytes_lengths: Vec<usize>, // usize::MAX if the string is None
     buf_size: usize,
-    mutex: Arc<Mutex<()>>,
 }
 
 impl<'a> PandasColumnObject for BytesColumn<'a> {
@@ -171,7 +166,6 @@ impl<'a> BytesColumn<'a> {
                 bytes_lengths: vec![],
                 bytes_buf: Vec::with_capacity(self.buf_size),
                 buf_size: self.buf_size,
-                mutex: self.mutex.clone(),
             });
         }
 
@@ -187,8 +181,7 @@ impl<'a> BytesColumn<'a> {
 
             {
                 // allocation in python is not thread safe
-                let _guard = self
-                    .mutex
+                let _guard = GIL_MUTEX
                     .lock()
                     .map_err(|e| anyhow!("mutex poisoned {}", e))?;
                 let mut start = 0;
@@ -214,6 +207,7 @@ impl<'a> BytesColumn<'a> {
             }
 
             self.bytes_buf.truncate(0);
+            self.bytes_lengths.truncate(0);
             self.next_write += nstrings;
         }
     }

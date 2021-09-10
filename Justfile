@@ -1,3 +1,5 @@
+set dotenv-load := true
+
 build-release:
     cargo build  --release
 

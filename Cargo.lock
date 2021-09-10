@@ -580,6 +580,7 @@ dependencies = [
  "fehler",
  "iai",
  "itertools",
+ "lazy_static",
  "libc",
  "log",
  "ndarray",
