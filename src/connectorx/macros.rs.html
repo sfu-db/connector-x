@@ -313,6 +313,15 @@
 <span id="310">310</span>
 <span id="311">311</span>
 <span id="312">312</span>
+<span id="313">313</span>
+<span id="314">314</span>
+<span id="315">315</span>
+<span id="316">316</span>
+<span id="317">317</span>
+<span id="318">318</span>
+<span id="319">319</span>
+<span id="320">320</span>
+<span id="321">321</span>
 </pre><pre class="rust">
 <span class="doccomment">/// Associate physical representations to a typesystem.</span>
 <span class="doccomment">///</span>
@@ -603,6 +612,15 @@
         <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;tp</span>, <span class="lifetime">&#39;r</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="kw">crate</span><span class="macro-nonterminal">::typesystem::TypeConversion</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TP</span> {
             <span class="kw">fn</span> <span class="ident">convert</span>(<span class="ident">val</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span> {
                 <span class="ident">val</span> <span class="kw">as</span> <span class="kw">_</span>
+            }
+        }
+
+        <span class="macro">impl_transport!</span>(@<span class="ident">cvt</span> <span class="ident">option</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TP</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span>);
+    };
+    (@<span class="ident">cvt</span> <span class="ident">auto_vec</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TP</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span>:<span class="ident">ty</span>) <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;tp</span>, <span class="lifetime">&#39;r</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="kw">crate</span><span class="macro-nonterminal">::typesystem::TypeConversion</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TP</span> {
+            <span class="kw">fn</span> <span class="ident">convert</span>(<span class="ident">val</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span> {
+                <span class="ident">val</span>.<span class="ident">into_iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">v</span><span class="op">|</span> <span class="ident">v</span> <span class="kw">as</span> <span class="kw">_</span>).<span class="ident">collect</span>()
             }
         }
 

@@ -112,6 +112,34 @@
 <span id="109">109</span>
 <span id="110">110</span>
 <span id="111">111</span>
+<span id="112">112</span>
+<span id="113">113</span>
+<span id="114">114</span>
+<span id="115">115</span>
+<span id="116">116</span>
+<span id="117">117</span>
+<span id="118">118</span>
+<span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="ident">chrono</span>::{<span class="ident">DateTime</span>, <span class="ident">NaiveDate</span>, <span class="ident">NaiveDateTime</span>, <span class="ident">NaiveTime</span>, <span class="ident">Utc</span>};
 <span class="kw">use</span> <span class="ident">postgres::types::Type</span>;
@@ -128,6 +156,13 @@
     <span class="ident">Int2</span>(<span class="ident">bool</span>),
     <span class="ident">Int4</span>(<span class="ident">bool</span>),
     <span class="ident">Int8</span>(<span class="ident">bool</span>),
+    <span class="ident">Float4Array</span>(<span class="ident">bool</span>),
+    <span class="ident">Float8Array</span>(<span class="ident">bool</span>),
+    <span class="ident">NumericArray</span>(<span class="ident">bool</span>),
+    <span class="ident">CharArray</span>(<span class="ident">bool</span>),
+    <span class="ident">Int2Array</span>(<span class="ident">bool</span>),
+    <span class="ident">Int4Array</span>(<span class="ident">bool</span>),
+    <span class="ident">Int8Array</span>(<span class="ident">bool</span>),
     <span class="ident">Date</span>(<span class="ident">bool</span>),
     <span class="ident">Char</span>(<span class="ident">bool</span>),
     <span class="ident">BpChar</span>(<span class="ident">bool</span>),
@@ -152,6 +187,13 @@
         { <span class="ident">Float4</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f32</span> }
         { <span class="ident">Float8</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f64</span> }
         { <span class="ident">Numeric</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Decimal</span> }
+        { <span class="ident">CharArray</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">i8</span><span class="op">&gt;</span> }
+        { <span class="ident">Int2Array</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">i16</span><span class="op">&gt;</span> }
+        { <span class="ident">Int4Array</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">i32</span><span class="op">&gt;</span> }
+        { <span class="ident">Int8Array</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span> }
+        { <span class="ident">Float4Array</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span> }
+        { <span class="ident">Float8Array</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span> }
+        { <span class="ident">NumericArray</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Decimal</span><span class="op">&gt;</span> }
         { <span class="ident">Bool</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">bool</span> }
         { <span class="ident">Char</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i8</span> }
         { <span class="ident">Text</span> <span class="op">|</span> <span class="ident">BpChar</span> <span class="op">|</span> <span class="ident">VarChar</span> <span class="op">|</span> <span class="ident">Enum</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;r</span> <span class="ident">str</span> }
@@ -175,6 +217,13 @@
             <span class="string">&quot;float4&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Float4</span>(<span class="bool-val">true</span>),
             <span class="string">&quot;float8&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Float8</span>(<span class="bool-val">true</span>),
             <span class="string">&quot;numeric&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Numeric</span>(<span class="bool-val">true</span>),
+            <span class="string">&quot;_char&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">CharArray</span>(<span class="bool-val">true</span>),
+            <span class="string">&quot;_int2&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Int2Array</span>(<span class="bool-val">true</span>),
+            <span class="string">&quot;_int4&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Int4Array</span>(<span class="bool-val">true</span>),
+            <span class="string">&quot;_int8&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Int8Array</span>(<span class="bool-val">true</span>),
+            <span class="string">&quot;_float4&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Float4Array</span>(<span class="bool-val">true</span>),
+            <span class="string">&quot;_float8&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Float8Array</span>(<span class="bool-val">true</span>),
+            <span class="string">&quot;_numeric&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">NumericArray</span>(<span class="bool-val">true</span>),
             <span class="string">&quot;bool&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Bool</span>(<span class="bool-val">true</span>),
             <span class="string">&quot;char&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Char</span>(<span class="bool-val">true</span>),
             <span class="string">&quot;text&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Text</span>(<span class="bool-val">true</span>),
@@ -207,6 +256,13 @@
             <span class="ident">Float4</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type::FLOAT4</span>,
             <span class="ident">Float8</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type::FLOAT8</span>,
             <span class="ident">Numeric</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type::NUMERIC</span>,
+            <span class="ident">CharArray</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type::CHAR_ARRAY</span>,
+            <span class="ident">Int2Array</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type::INT2_ARRAY</span>,
+            <span class="ident">Int4Array</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type::INT4_ARRAY</span>,
+            <span class="ident">Int8Array</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type::INT8_ARRAY</span>,
+            <span class="ident">Float4Array</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type::FLOAT4_ARRAY</span>,
+            <span class="ident">Float8Array</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type::FLOAT8_ARRAY</span>,
+            <span class="ident">NumericArray</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type::NUMERIC_ARRAY</span>,
             <span class="ident">Bool</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type::BOOL</span>,
             <span class="ident">Text</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type::TEXT</span>,
             <span class="ident">BpChar</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type::BPCHAR</span>,
