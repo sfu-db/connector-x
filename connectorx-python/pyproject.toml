@@ -60,6 +60,8 @@ sqlalchemy-redshift = "^0.8.4"
 twine = "^3.4.1"
 presto-python-client = "^0.8.1"
 PyHive = "^0.6.4"
+cx-Oracle = "^8.2.1"
+pymssql = "^2.2.2"
 
 [tool.pytest.ini_options]
 minversion = "6.0"
