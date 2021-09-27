@@ -87,4 +87,51 @@ Since SQLite adopts a [dynamic type system](https://www.sqlite.org/datatype3.htm
 | TIME             | object                      | declared type is "time"            |
 | TIMESTAMP        | datetime64[ns]              | declared type is "datetime" or "timestamp" |
 
+## Oracle
 
+Oracle does not need to specify protocol.
+
+### Oracle-Pandas Type Mapping
+| Oracle Type     |      Pandas Type            |  Comment                           |
+|:---------------:|:---------------------------:|:----------------------------------:|
+| Number(\*,0)    | int64, Int64(nullable)      |                                    |
+| Number(\*,>0)   | float64                     |                                    |
+| Float           | float64                     |                                    |
+| VARCHAR2        | object                      |                                    |
+| CHAR            | object                      |                                    |
+| NCHAR           | object                      |                                    |
+| NVarchar2       | object                      |                                    |
+| DATE            | datetime64[ns]              |                                    |
+| TIMESTAMP       | datetime64[ns]              |                                    |
+
+## SQLServer
+
+SQLServer does not need to specify protocol.
+
+### SQLServer-Pandas Type Mapping
+| SQLServer Type  |      Pandas Type            |  Comment                           |
+|:---------------:|:---------------------------:|:----------------------------------:|
+| TINYINT         | int64, Int64(nullable)      |                                    |
+| SMALLINT        | int64, Int64(nullable)      |                                    |
+| INT             | int64, Int64(nullable)      |                                    |
+| BIGINT          | int64, Int64(nullable)      |                                    |
+| FLOAT           | float64                     |                                    |
+| NUMERIC         | float64                     |                                    |
+| DECIMAL         | float64                     |                                    |
+| BIT             | bool, boolean(nullable)     |                                    |
+| VARCHAR         | object                      |                                    |
+| CHAR            | object                      |                                    |
+| TEXT            | object                      |                                    |
+| NVARCHAR        | object                      |                                    |
+| NCHAR           | object                      |                                    |
+| NTEXT           | object                      |                                    |
+| VARBINARY       | object                      |                                    |
+| BINARY          | object                      |                                    |
+| IMAGE           | object                      |                                    |
+| DATETIME        | datetime64[ns]              |                                    |
+| DATETIME2       | datetime64[ns]              |                                    |
+| SMALLDATETIME   | datetime64[ns]              |                                    |
+| DATE            | datetime64[ns]              |                                    |
+| DATETIMEOFFSET  | datetime64[ns]              |                                    |
+| TIME            | object                      |                                    |
+| UNIQUEIDENTIFIER| object                      |                                    |
