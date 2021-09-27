@@ -119,6 +119,7 @@ In conclusion, ConnectorX uses up to **3.3x** less memory and **11.2x** less tim
 
 ## Oracle (db.r5.4xlarge RDS)
 
+**Modin does not support read_sql on Oracle**
 
 ## Time chart, lower is better.
 
@@ -131,6 +132,8 @@ In conclusion, ConnectorX uses up to **3.3x** less memory and **11.2x** less tim
 In conclusion, ConnectorX uses up to **2.5x** less memory and **3.9x** less time.
 
 ## Mssql (r5.4xlarge RDS)
+
+**Modin does not support read_sql on Mssql**
 
 ## Time chart, lower is better.
 
