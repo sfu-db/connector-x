@@ -518,7 +518,7 @@ dependencies = [
 
 [[package]]
 name = "connectorx"
-version = "0.2.1-alpha.1"
+version = "0.2.1-alpha.2"
 dependencies = [
  "anyhow",
  "arrow",
@@ -564,7 +564,7 @@ dependencies = [
 
 [[package]]
 name = "connectorx-python"
-version = "0.2.1-alpha.1"
+version = "0.2.1-alpha.2"
 dependencies = [
  "anyhow",
  "arrow",
@@ -3022,9 +3022,9 @@ dependencies = [
 
 [[package]]
 name = "sqlparser"
-version = "0.9.0"
+version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4fa863a2dfc4879a35647c51dadf495a2ad53745eaf3723fda27006e745fb0ba"
+checksum = "10e1ce16b71375ad72d28d111131069ce0d5f8603f4f86d8acd3456b41b57a51"
 dependencies = [
  "log",
 ]

@@ -7,7 +7,7 @@ license = "MIT"
 name = "connectorx"
 readme = "../README.md"
 repository = "https://github.com/sfu-db/connector-x"
-version = "0.2.1-alpha.1"
+version = "0.2.1-alpha.2"
 
 [dependencies]
 anyhow = "1"
@@ -15,7 +15,7 @@ fehler = "1"
 itertools = "0.10"
 log = "0.4"
 rayon = "1"
-sqlparser = "0.9"
+sqlparser = "0.11"
 thiserror = "1"
 
 arrow = {version = "4", optional = true}
