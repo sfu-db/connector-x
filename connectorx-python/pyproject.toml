@@ -19,7 +19,7 @@ license = "MIT"
 maintainers = ["Weiyuan Wu <youngw@sfu.ca>"] 
 name = "connectorx" 
 readme = "README.md" # Markdown files are supported
-version = "0.2.0" 
+version = "0.2.1-alpha.1"
 
 [tool.poetry.dependencies]
 dask = {version = "^2021", optional = true, extras = ["dataframe"]}
@@ -58,6 +58,10 @@ pytest = "^6.2"
 pytest-benchmark = "^3.4.1"
 sqlalchemy-redshift = "^0.8.4"
 twine = "^3.4.1"
+presto-python-client = "^0.8.1"
+PyHive = "^0.6.4"
+cx-Oracle = "^8.2.1"
+pymssql = "^2.2.2"
 
 [tool.pytest.ini_options]
 minversion = "6.0"

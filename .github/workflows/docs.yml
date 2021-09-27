@@ -3,8 +3,7 @@ name: docs
 on:
   push:
     branches:
-      - prerelease
-      - release
+      - main
 
 jobs:
   docs:
@@ -23,7 +22,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: doc
-          args: --no-deps
+          args: --no-deps --features all
 
       - name: Deploy Docs 🚀
         uses: JamesIves/github-pages-deploy-action@4.0.0

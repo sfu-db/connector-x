@@ -1,10 +1,10 @@
 use super::{
     pandas_columns::{
-        BooleanBlock, BytesBlock, DateTimeBlock, Float64Block, HasPandasColumn, Int64Block,
-        PandasColumn, PandasColumnObject, PyBytes, StringBlock,
+        ArrayBlock, BooleanBlock, BytesBlock, DateTimeBlock, Float64Block, HasPandasColumn,
+        Int64Block, PandasColumn, PandasColumnObject, PyBytes, StringBlock,
     },
     pystring::PyString,
-    types::{PandasArrayType, PandasBlockType, PandasTypeSystem},
+    typesystem::{PandasArrayType, PandasBlockType, PandasTypeSystem},
 };
 use crate::errors::{ConnectorXPythonError, Result};
 use anyhow::anyhow;
@@ -158,6 +158,12 @@ impl<'a> Destination for PandasDestination<'a> {
                 PandasBlockType::Float64 => {
                     self.allocate_array::<f64>(dt, placement)?;
                 }
+                PandasBlockType::Float64Array => {
+                    self.allocate_array::<super::pandas_columns::PyList>(dt, placement)?;
+                }
+                PandasBlockType::Int64Array => {
+                    self.allocate_array::<super::pandas_columns::PyList>(dt, placement)?;
+                }
                 PandasBlockType::String => {
                     self.allocate_array::<PyString>(dt, placement)?;
                 }
@@ -201,6 +207,28 @@ impl<'a> Destination for PandasDestination<'a> {
                 }
                 PandasBlockType::Float64 => {
                     let fblock = Float64Block::extract(buf)?;
+                    let fcols = fblock.split()?;
+                    for (&cid, fcol) in block.cids.iter().zip_eq(fcols) {
+                        partitioned_columns[cid] = fcol
+                            .partition(&counts)
+                            .into_iter()
+                            .map(|c| Box::new(c) as _)
+                            .collect()
+                    }
+                }
+                PandasBlockType::Float64Array => {
+                    let fblock = ArrayBlock::<f64>::extract(buf)?;
+                    let fcols = fblock.split()?;
+                    for (&cid, fcol) in block.cids.iter().zip_eq(fcols) {
+                        partitioned_columns[cid] = fcol
+                            .partition(&counts)
+                            .into_iter()
+                            .map(|c| Box::new(c) as _)
+                            .collect()
+                    }
+                }
+                PandasBlockType::Int64Array => {
+                    let fblock = ArrayBlock::<i64>::extract(buf)?;
                     let fcols = fblock.split()?;
                     for (&cid, fcol) in block.cids.iter().zip_eq(fcols) {
                         partitioned_columns[cid] = fcol

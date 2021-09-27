@@ -1,7 +1,10 @@
+use super::errors::SQLiteSourceError;
 use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
+use fehler::{throw, throws};
 use rusqlite::types::Type;
+use std::convert::TryFrom;
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum SQLiteTypeSystem {
     Bool(bool),
     Int8(bool),
@@ -31,47 +34,59 @@ impl_typesystem! {
     }
 }
 
-impl From<Type> for SQLiteTypeSystem {
-    fn from(ty: Type) -> SQLiteTypeSystem {
+impl TryFrom<Type> for SQLiteTypeSystem {
+    type Error = SQLiteSourceError;
+
+    #[throws(SQLiteSourceError)]
+    fn try_from(ty: Type) -> Self {
         use SQLiteTypeSystem::*;
         match ty {
             Type::Integer => Int8(true),
             Type::Real => Real(true),
             Type::Text => Text(true),
             Type::Blob => Blob(true),
-            _ => unimplemented!("{}", ty),
+            Type::Null => throw!(SQLiteSourceError::InferTypeFromNull),
         }
     }
 }
 
-impl From<(Option<&str>, Type)> for SQLiteTypeSystem {
-    fn from(types: (Option<&str>, Type)) -> SQLiteTypeSystem {
+impl TryFrom<(Option<&str>, Type)> for SQLiteTypeSystem {
+    type Error = SQLiteSourceError;
+
+    #[throws(SQLiteSourceError)]
+    fn try_from(types: (Option<&str>, Type)) -> Self {
         use SQLiteTypeSystem::*;
         match types {
             // derive from column's declare type, some rules refer to:
             // https://www.sqlite.org/datatype3.html#affname
             (Some(decl_type), ty) => {
-                let s = decl_type.to_lowercase();
-                match s.as_str() {
+                let decl_type = decl_type.to_lowercase();
+                match decl_type.as_str() {
                     "int4" => Int4(true),
                     "int2" => Int2(true),
                     "boolean" | "bool" => Bool(true),
                     "date" => Date(true),
                     "time" => Time(true),
                     "datetime" | "timestamp" => Timestamp(true),
-                    _ if s.contains("int") => Int8(true),
-                    _ if s.contains("char") || s.contains("clob") || s.contains("text") => {
+                    _ if decl_type.contains("int") => Int8(true),
+                    _ if decl_type.contains("char")
+                        || decl_type.contains("clob")
+                        || decl_type.contains("text") =>
+                    {
                         Text(true)
                     }
-                    _ if s.contains("real") || s.contains("floa") || s.contains("doub") => {
+                    _ if decl_type.contains("real")
+                        || decl_type.contains("floa")
+                        || decl_type.contains("doub") =>
+                    {
                         Real(true)
                     }
-                    _ if s.contains("blob") => Blob(true),
-                    _ => ty.into(),
+                    _ if decl_type.contains("blob") => Blob(true),
+                    _ => SQLiteTypeSystem::try_from(ty)?,
                 }
             }
             // derive from value type directly if no declare type available
-            (None, ty) => ty.into(),
+            (None, ty) => SQLiteTypeSystem::try_from(ty)?,
         }
     }
 }

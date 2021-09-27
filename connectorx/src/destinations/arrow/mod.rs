@@ -1,12 +1,14 @@
+//! Destination implementation for Arrow and Polars.
+
 mod arrow_assoc;
 mod errors;
 mod funcs;
-pub mod types;
+pub mod typesystem;
 
 pub use self::errors::{ArrowDestinationError, Result};
+pub use self::typesystem::ArrowTypeSystem;
 use super::{Consume, Destination, DestinationPartition};
 use crate::data_order::DataOrder;
-use crate::destinations::arrow::types::ArrowTypeSystem;
 use crate::typesystem::{Realize, TypeAssoc, TypeSystem};
 use anyhow::anyhow;
 use arrow::datatypes::Schema;
@@ -106,7 +108,7 @@ impl Destination for ArrowDestination {
 
 impl ArrowDestination {
     #[throws(ArrowDestinationError)]
-    pub fn finish(self) -> Vec<RecordBatch> {
+    pub fn arrow(self) -> Vec<RecordBatch> {
         let fields = self
             .schema
             .iter()
@@ -132,7 +134,7 @@ impl ArrowDestination {
     #[cfg(feature = "polars")]
     #[throws(ArrowDestinationError)]
     pub fn polars(self) -> DataFrame {
-        let rbs = self.finish()?;
+        let rbs = self.arrow()?;
         DataFrame::try_from(rbs)?
     }
 }

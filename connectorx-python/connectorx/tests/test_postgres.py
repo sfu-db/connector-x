@@ -95,6 +95,7 @@ def test_udf(postgres_url: str) -> None:
             "test_int": pd.Series([1, 2, 3, 4, 5, 1315], dtype="Int64"),
         },
     )
+    df = df.sort_values("test_int").reset_index(drop=True)
     assert_frame_equal(df, expected, check_names=True)
 
 
@@ -317,8 +318,9 @@ def test_read_sql_on_utf8(postgres_url: str) -> None:
 
 
 def test_types_binary(postgres_url: str) -> None:
-    query = "SELECT test_int16, test_char, test_uuid, test_time, test_json, test_jsonb, test_bytea, test_enum FROM test_types"
-    df = read_sql(postgres_url, query)
+    query = "SELECT test_int16, test_char, test_uuid, test_time, test_json, test_jsonb, test_bytea, test_enum, test_farray, test_iarray FROM test_types"
+    df = read_sql(postgres_url, query,
+                  partition_on="test_int16", partition_num=3)
     expected = pd.DataFrame(
         index=range(4),
         data={
@@ -366,14 +368,18 @@ def test_types_binary(postgres_url: str) -> None:
             "test_enum": pd.Series(
                 ["happy", "very happy", "ecstatic", "ecstatic"], dtype="object"
             ),
+            "test_farray": pd.Series([[], None, [0.0123], [0.000234, -12.987654321]], dtype="object"),
+            "test_iarray": pd.Series([[-1, 0, 1123], [], [-324324], None], dtype="object"),
         },
     )
+    print(df)
     assert_frame_equal(df, expected, check_names=True)
 
 
 def test_types_csv(postgres_url: str) -> None:
-    query = "SELECT test_int16, test_char, test_uuid, test_time, test_json, test_jsonb, test_bytea, test_enum::text FROM test_types"
-    df = read_sql(postgres_url, query, protocol="csv")
+    query = "SELECT test_int16, test_char, test_uuid, test_time, test_json, test_jsonb, test_bytea, test_enum::text, test_farray, test_iarray FROM test_types"
+    df = read_sql(postgres_url, query, protocol="csv",
+                  partition_on="test_int16", partition_num=2)
     expected = pd.DataFrame(
         index=range(4),
         data={
@@ -421,14 +427,17 @@ def test_types_csv(postgres_url: str) -> None:
             "test_enum": pd.Series(
                 ["happy", "very happy", "ecstatic", "ecstatic"], dtype="object"
             ),
+            "test_farray": pd.Series([[], None, [0.0123], [0.000234, -12.987654321]], dtype="object"),
+            "test_iarray": pd.Series([[-1, 0, 1123], [], [-324324], None], dtype="object"),
         },
     )
     assert_frame_equal(df, expected, check_names=True)
 
 
 def test_types_cursor(postgres_url: str) -> None:
-    query = "SELECT test_int16, test_char, test_uuid, test_time, test_json, test_jsonb, test_bytea, test_enum::text FROM test_types"
-    df = read_sql(postgres_url, query, protocol="cursor")
+    query = "SELECT test_int16, test_char, test_uuid, test_time, test_json, test_jsonb, test_bytea, test_enum::text, test_farray, test_iarray FROM test_types"
+    df = read_sql(postgres_url, query, protocol="cursor",
+                  partition_on="test_int16", partition_num=4)
     expected = pd.DataFrame(
         index=range(4),
         data={
@@ -476,6 +485,8 @@ def test_types_cursor(postgres_url: str) -> None:
             "test_enum": pd.Series(
                 ["happy", "very happy", "ecstatic", "ecstatic"], dtype="object"
             ),
+            "test_farray": pd.Series([[], None, [0.0123], [0.000234, -12.987654321]], dtype="object"),
+            "test_iarray": pd.Series([[-1, 0, 1123], [], [-324324], None], dtype="object"),
         },
     )
     assert_frame_equal(df, expected, check_names=True)
@@ -484,6 +495,22 @@ def test_types_cursor(postgres_url: str) -> None:
 def test_empty_result(postgres_url: str) -> None:
     query = "SELECT * FROM test_table where test_int < -100"
     df = read_sql(postgres_url, query)
+    expected = pd.DataFrame(
+        data={
+            "test_int": pd.Series([], dtype="object"),
+            "test_nullint": pd.Series([], dtype="object"),
+            "test_str": pd.Series([], dtype="object"),
+            "test_float": pd.Series([], dtype="object"),
+            "test_bool": pd.Series([], dtype="object"),
+        }
+    )
+    assert_frame_equal(df, expected, check_names=True)
+
+
+def test_empty_result_on_partition(postgres_url: str) -> None:
+    query = "SELECT * FROM test_table where test_int < -100"
+    df = read_sql(postgres_url, query,
+                  partition_on="test_int", partition_num=3)
     expected = pd.DataFrame(
         data={
             "test_int": pd.Series([], dtype="object"),
@@ -512,7 +539,7 @@ def test_empty_result_on_some_partition(postgres_url: str) -> None:
     assert_frame_equal(df, expected, check_names=True)
 
 
-@pytest.mark.skipif(os.environ.get("TEST_COVER", "main") not in ("all", "pgtls"), reason="Do not test TLS unless TEST_COVER=all/pgtls")
+@pytest.mark.skipif(not os.environ.get("POSTGRES_URL_TLS"), reason="Do not test Postgres TLS unless `POSTGRES_URL_TLS` is set")
 def test_read_sql_tls(postgres_url_tls: str) -> None:
     query = "SELECT * FROM test_table"
     df = read_sql(
@@ -539,7 +566,7 @@ def test_read_sql_tls(postgres_url_tls: str) -> None:
     assert_frame_equal(df, expected, check_names=True)
 
 
-@pytest.mark.skipif(os.environ.get("TEST_COVER", "main") not in ("all", "pgtls"), reason="Do not test TLS unless TEST_COVER=all/pgtls")
+@pytest.mark.skipif(not os.environ.get("POSTGRES_URL_TLS"), reason="Do not test Postgres TLS unless `POSTGRES_URL_TLS` is set")
 def test_read_sql_tls_with_cert(postgres_url_tls: str, postgres_rootcert: str) -> None:
     query = "SELECT * FROM test_table"
     df = read_sql(
@@ -566,7 +593,7 @@ def test_read_sql_tls_with_cert(postgres_url_tls: str, postgres_rootcert: str) -
     assert_frame_equal(df, expected, check_names=True)
 
 
-@pytest.mark.skipif(os.environ.get("TEST_COVER", "main") not in ("all", "pgtls"), reason="Do not test TLS unless TEST_COVER=all/pgtls")
+@pytest.mark.skipif(not os.environ.get("POSTGRES_URL_TLS"), reason="Do not test Postgres TLS unless `POSTGRES_URL_TLS` is set")
 def test_read_sql_tls_disable(postgres_url_tls: str) -> None:
     query = "SELECT * FROM test_table"
     df = read_sql(
@@ -593,7 +620,7 @@ def test_read_sql_tls_disable(postgres_url_tls: str) -> None:
     assert_frame_equal(df, expected, check_names=True)
 
 
-@pytest.mark.skipif(os.environ.get("TEST_COVER", "main") not in ("all", "pgtls"), reason="Do not test TLS unless TEST_COVER=all/pgtls")
+@pytest.mark.skipif(not os.environ.get("POSTGRES_URL_TLS"), reason="Do not test Postgres TLS unless `POSTGRES_URL_TLS` is set")
 @pytest.mark.xfail
 def test_read_sql_tls_fail(postgres_url_tls: str) -> None:
     query = "SELECT * FROM test_table"

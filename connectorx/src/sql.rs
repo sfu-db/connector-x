@@ -1,12 +1,15 @@
+use std::any::Any;
+
 use crate::errors::ConnectorXError;
+use crate::sources::oracle::OracleDialect;
 use anyhow::anyhow;
 use fehler::{throw, throws};
 use log::{debug, trace};
 use sqlparser::ast::{
     BinaryOperator, Expr, Function, FunctionArg, Ident, ObjectName, Query, Select, SelectItem,
-    SetExpr, Statement, TableAlias, TableFactor, TableWithJoins, Value,
+    SetExpr, Statement, TableAlias, TableFactor, TableWithJoins, Top, Value,
 };
-use sqlparser::dialect::Dialect;
+use sqlparser::dialect::{Dialect, MsSqlDialect};
 use sqlparser::parser::Parser;
 
 #[derive(Debug, Clone)]
@@ -30,6 +33,30 @@ impl<Q: AsRef<str>> CXQuery<Q> {
             CXQuery::Naked(q) => q.as_ref(),
             CXQuery::Wrapped(q) => q.as_ref(),
         }
+    }
+}
+
+impl From<&str> for CXQuery {
+    fn from(s: &str) -> CXQuery<String> {
+        CXQuery::Naked(s.to_string())
+    }
+}
+
+impl From<&&str> for CXQuery {
+    fn from(s: &&str) -> CXQuery<String> {
+        CXQuery::Naked(s.to_string())
+    }
+}
+
+impl From<&String> for CXQuery {
+    fn from(s: &String) -> CXQuery {
+        CXQuery::Naked(s.clone())
+    }
+}
+
+impl From<&CXQuery> for CXQuery {
+    fn from(q: &CXQuery) -> CXQuery {
+        q.clone()
     }
 }
 
@@ -91,6 +118,35 @@ pub fn get_limit<T: Dialect>(sql: &CXQuery<String>, dialect: &T) -> Option<usize
     None
 }
 
+#[allow(unreachable_code)] // disable it for now, waiting for the new release of fehler
+#[throws(ConnectorXError)]
+pub fn get_limit_mssql(sql: &CXQuery<String>) -> Option<usize> {
+    let ast = Parser::parse_sql(&MsSqlDialect {}, sql.as_str())?;
+    if ast.len() != 1 {
+        throw!(ConnectorXError::SqlQueryNotSupported(sql.to_string()));
+    }
+
+    if let Statement::Query(q) = &ast[0] {
+        if let SetExpr::Select(s) = &q.body {
+            if let Some(Top {
+                quantity: Some(expr),
+                ..
+            }) = &s.top
+            {
+                return Some(
+                    expr.to_string()
+                        .parse()
+                        .map_err(|e: std::num::ParseIntError| anyhow!(e))?,
+                );
+            }
+            return None;
+        }
+    }
+
+    throw!(ConnectorXError::SqlQueryNotSupported(sql.to_string()))
+}
+
+// wrap a query into a derived table
 fn wrap_query(
     query: &Query,
     projection: Vec<SelectItem>,
@@ -206,7 +262,13 @@ pub fn count_query<T: Dialect>(sql: &CXQuery<String>, dialect: &T) -> CXQuery<St
         }
     };
 
-    let sql = format!("{}", ast_count);
+    // HACK: Some dialect (e.g. Oracle) does not support "AS" for alias
+    // Hard code "(subquery) alias" instead of output "(subquery) AS alias"
+    let sql = if dialect.type_id() == (OracleDialect {}.type_id()) {
+        format!("{}", ast_count).replace(" AS", "")
+    } else {
+        format!("{}", ast_count)
+    };
     debug!("Transformed count query: {}", sql);
     CXQuery::Wrapped(sql)
 }
@@ -233,6 +295,66 @@ pub fn limit1_query<T: Dialect>(sql: &CXQuery<String>, dialect: &T) -> CXQuery<S
 }
 
 #[throws(ConnectorXError)]
+pub fn limit1_query_oracle(sql: &CXQuery<String>) -> CXQuery<String> {
+    trace!("Incoming oracle query: {}", sql);
+
+    let mut ast = Parser::parse_sql(&OracleDialect {}, sql.as_str())?;
+    if ast.len() != 1 {
+        throw!(ConnectorXError::SqlQueryNotSupported(sql.to_string()));
+    }
+    let ast_part: Statement;
+    match &mut ast[0] {
+        Statement::Query(q) => {
+            let selection = Expr::BinaryOp {
+                left: Box::new(Expr::CompoundIdentifier(vec![Ident {
+                    value: "rownum".to_string(),
+                    quote_style: None,
+                }])),
+                op: BinaryOperator::Eq,
+                right: Box::new(Expr::Value(Value::Number("1".to_string(), false))),
+            };
+            ast_part = wrap_query(&q, vec![SelectItem::Wildcard], Some(selection), "");
+        }
+
+        _ => throw!(ConnectorXError::SqlQueryNotSupported(sql.to_string())),
+    };
+
+    let sql = format!("{}", ast_part).replace(" AS", "");
+    debug!("Transformed limit 1 query: {}", sql);
+    CXQuery::Wrapped(sql)
+}
+
+#[throws(ConnectorXError)]
+pub fn limit1_query_mssql(sql: &CXQuery<String>) -> CXQuery<String> {
+    trace!("Incoming query: {}", sql);
+
+    let mut ast = Parser::parse_sql(&MsSqlDialect {}, sql.as_str())?;
+    if ast.len() != 1 {
+        throw!(ConnectorXError::SqlQueryNotSupported(sql.to_string()));
+    }
+
+    match &mut ast[0] {
+        Statement::Query(q) => {
+            match q.body {
+                SetExpr::Select(ref mut s) => {
+                    s.top = Some(Top {
+                        with_ties: false,
+                        percent: false,
+                        quantity: Some(Expr::Value(Value::Number("1".to_string(), false))),
+                    })
+                }
+                _ => throw!(ConnectorXError::SqlQueryNotSupported(sql.to_string())),
+            };
+        }
+        _ => throw!(ConnectorXError::SqlQueryNotSupported(sql.to_string())),
+    };
+
+    let sql = format!("{}", ast[0]);
+    debug!("Transformed limit 1 query: {}", sql);
+    CXQuery::Wrapped(sql)
+}
+
+#[throws(ConnectorXError)]
 pub fn single_col_partition_query<T: Dialect>(
     query: &str,
     col: &str,
@@ -249,10 +371,9 @@ pub fn single_col_partition_query<T: Dialect>(
     }
 
     let ast_part: Statement;
-
     match &mut ast[0] {
         Statement::Query(q) => match &mut q.body {
-            SetExpr::Select(_select) => {
+            SetExpr::Select(select) => {
                 let lb = Expr::BinaryOp {
                     left: Box::new(Expr::Value(Value::Number(lower.to_string(), false))),
                     op: BinaryOperator::LtEq,
@@ -289,6 +410,13 @@ pub fn single_col_partition_query<T: Dialect>(
                     right: Box::new(ub),
                 };
 
+                if q.limit.is_none() && select.top.is_none() && !q.order_by.is_empty() {
+                    // order by in a partition query does not make sense because partition is unordered.
+                    // clear the order by beceause mssql does not support order by in a derived table.
+                    // also order by in the derived table does not make any difference.
+                    q.order_by.clear();
+                }
+
                 ast_part = wrap_query(
                     &q,
                     vec![SelectItem::Wildcard],
@@ -301,7 +429,14 @@ pub fn single_col_partition_query<T: Dialect>(
         _ => throw!(ConnectorXError::SqlQueryNotSupported(query.to_string())),
     };
 
-    let sql = format!("{}", ast_part);
+    // HACK: Some dialect (e.g. Oracle) does not support "AS" for alias
+    // Hard code "(subquery) alias" instead of output "(subquery) AS alias"
+    let sql = if dialect.type_id() == (OracleDialect {}.type_id()) {
+        format!("{}", ast_part).replace(" AS", "")
+    } else {
+        format!("{}", ast_part)
+    };
+
     debug!("Transformed single column partition query: {}", sql);
     sql
 }
@@ -367,7 +502,14 @@ pub fn get_partition_range_query<T: Dialect>(query: &str, col: &str, dialect: &T
         }
         _ => throw!(ConnectorXError::SqlQueryNotSupported(query.to_string())),
     };
-    let sql = format!("{}", ast_range);
+
+    // HACK: Some dialect (e.g. Oracle) does not support "AS" for alias
+    // Hard code "(subquery) alias" instead of output "(subquery) AS alias"
+    let sql = if dialect.type_id() == (OracleDialect {}.type_id()) {
+        format!("{}", ast_range).replace(" AS", "")
+    } else {
+        format!("{}", ast_range)
+    };
     debug!("Transformed partition range query: {}", sql);
     sql
 }

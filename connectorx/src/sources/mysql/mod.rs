@@ -1,3 +1,5 @@
+//! Source implementation for MySQL database.
+
 mod errors;
 mod typesystem;
 
@@ -18,6 +20,7 @@ use r2d2_mysql::{
     MysqlConnectionManager,
 };
 use rust_decimal::Decimal;
+use serde_json::Value;
 use sqlparser::dialect::MySqlDialect;
 use std::marker::PhantomData;
 pub use typesystem::MySQLTypeSystem;
@@ -87,10 +90,8 @@ where
         assert!(!self.queries.is_empty());
 
         let mut conn = self.pool.get()?;
-        let mut success = false;
-        let mut zero_tuple = true;
-        let mut error = None;
-        for query in &self.queries {
+
+        for (i, query) in self.queries.iter().enumerate() {
             // assuming all the partition queries yield same schema
             match conn.query_first::<Row, _>(limit1_query(query, &MySqlDialect {})?.as_str()) {
                 Ok(Some(row)) => {
@@ -106,41 +107,33 @@ where
                         .unzip();
                     self.names = names;
                     self.schema = types;
-                    success = true;
-                    zero_tuple = false;
+                    return;
                 }
                 Ok(None) => {}
-                Err(e) => {
+                Err(e) if i == self.queries.len() - 1 => {
+                    // tried the last query but still get an error
                     debug!("cannot get metadata for '{}', try next query: {}", query, e);
-                    error = Some(e);
-                    zero_tuple = false;
+                    throw!(e)
                 }
+                Err(_) => {}
             }
         }
 
-        if !success {
-            if zero_tuple {
-                let iter = conn.query_iter(self.queries[0].as_str())?;
-                let (names, types) = iter
-                    .columns()
-                    .as_ref()
-                    .iter()
-                    .map(|col| {
-                        (
-                            col.name_str().to_string(),
-                            MySQLTypeSystem::VarChar(false), // set all columns as string (align with pandas)
-                        )
-                    })
-                    .unzip();
-                self.names = names;
-                self.schema = types;
-            } else {
-                throw!(anyhow!(
-                    "Cannot get metadata for the queries, last error: {:?}",
-                    error
-                ))
-            }
-        }
+        // tried all queries but all get empty result set
+        let iter = conn.query_iter(self.queries[0].as_str())?;
+        let (names, types) = iter
+            .columns()
+            .as_ref()
+            .iter()
+            .map(|col| {
+                (
+                    col.name_str().to_string(),
+                    MySQLTypeSystem::VarChar(false), // set all columns as string (align with pandas)
+                )
+            })
+            .unzip();
+        self.names = names;
+        self.schema = types;
     }
 
     fn names(&self) -> Vec<String> {
@@ -337,7 +330,7 @@ macro_rules! impl_produce_binary {
                 #[throws(MySQLSourceError)]
                 fn produce(&'r mut self) -> $t {
                     let (ridx, cidx) = self.next_loc()?;
-                    let res = self.rowbuf[ridx].take(cidx).ok_or_else(|| anyhow!("mysql get None at position: ({}, {})", ridx, cidx))?;
+                    let res = self.rowbuf[ridx].take(cidx).ok_or_else(|| anyhow!("mysql cannot parse at position: ({}, {})", ridx, cidx))?;
                     res
                 }
             }
@@ -348,7 +341,7 @@ macro_rules! impl_produce_binary {
                 #[throws(MySQLSourceError)]
                 fn produce(&'r mut self) -> Option<$t> {
                     let (ridx, cidx) = self.next_loc()?;
-                    let res = self.rowbuf[ridx].take(cidx);
+                    let res = self.rowbuf[ridx].take(cidx).ok_or_else(|| anyhow!("mysql cannot parse at position: ({}, {})", ridx, cidx))?;
                     res
                 }
             }
@@ -357,13 +350,19 @@ macro_rules! impl_produce_binary {
 }
 
 impl_produce_binary!(
+    i8,
+    i16,
+    i32,
     i64,
+    f32,
     f64,
     NaiveDate,
     NaiveTime,
     NaiveDateTime,
     Decimal,
     String,
+    Vec<u8>,
+    Value,
 );
 
 pub struct MySQLTextSourceParser<'a> {
@@ -433,7 +432,7 @@ macro_rules! impl_produce_text {
                 #[throws(MySQLSourceError)]
                 fn produce(&'r mut self) -> $t {
                     let (ridx, cidx) = self.next_loc()?;
-                    let res = self.rowbuf[ridx].take(cidx).ok_or_else(|| anyhow!("mysql get None at position: ({}, {})", ridx, cidx))?;
+                    let res = self.rowbuf[ridx].take(cidx).ok_or_else(|| anyhow!("mysql cannot parse at position: ({}, {})", ridx, cidx))?;
                     res
                 }
             }
@@ -444,7 +443,7 @@ macro_rules! impl_produce_text {
                 #[throws(MySQLSourceError)]
                 fn produce(&'r mut self) -> Option<$t> {
                     let (ridx, cidx) = self.next_loc()?;
-                    let res = self.rowbuf[ridx].take(cidx);
+                    let res = self.rowbuf[ridx].take(cidx).ok_or_else(|| anyhow!("mysql cannot parse at position: ({}, {})", ridx, cidx))?;
                     res
                 }
             }
@@ -453,11 +452,17 @@ macro_rules! impl_produce_text {
 }
 
 impl_produce_text!(
+    i8,
+    i16,
+    i32,
     i64,
+    f32,
     f64,
     NaiveDate,
     NaiveTime,
     NaiveDateTime,
     Decimal,
     String,
+    Vec<u8>,
+    Value,
 );

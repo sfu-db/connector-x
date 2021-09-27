@@ -2,7 +2,7 @@ use connectorx::{
     destinations::arrow::ArrowDestination,
     prelude::*,
     sources::{
-        dummy::DummySource,
+        dummy::{DummySource, DummyTypeSystem},
         postgres::{rewrite_tls_args, BinaryProtocol, PostgresSource},
     },
     sql::CXQuery,
@@ -11,6 +11,7 @@ use connectorx::{
 use polars::{df, prelude::*};
 use postgres::NoTls;
 use std::env;
+use url::Url;
 
 #[test]
 fn test_polars() {
@@ -59,7 +60,8 @@ fn test_postgres_arrow() {
         CXQuery::naked("select * from test_table where test_int < 2"),
         CXQuery::naked("select * from test_table where test_int >= 2"),
     ];
-    let (config, _tls) = rewrite_tls_args(&dburl).unwrap();
+    let url = Url::parse(dburl.as_str()).unwrap();
+    let (config, _tls) = rewrite_tls_args(&url).unwrap();
     let builder = PostgresSource::<BinaryProtocol, NoTls>::new(config, NoTls, 2).unwrap();
     let mut destination = ArrowDestination::new();
     let dispatcher = Dispatcher::<_, _, PostgresArrowTransport<BinaryProtocol, NoTls>>::new(

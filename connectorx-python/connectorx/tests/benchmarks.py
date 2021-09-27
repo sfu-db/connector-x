@@ -20,4 +20,5 @@ def bench_mysql(benchmark):
 
 
 def bench_postgres(benchmark):
-    benchmark(read_sql_impl, os.environ["POSTGRES_URL"], os.environ["TPCH_TABLE"])
+    benchmark(read_sql_impl,
+              os.environ["POSTGRES_URL"], os.environ["TPCH_TABLE"])

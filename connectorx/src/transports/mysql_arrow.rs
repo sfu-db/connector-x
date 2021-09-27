@@ -1,5 +1,7 @@
+//! Transport from MySQL Source to Arrow Destination.
+
 use crate::{
-    destinations::arrow::{types::ArrowTypeSystem, ArrowDestination, ArrowDestinationError},
+    destinations::arrow::{typesystem::ArrowTypeSystem, ArrowDestination, ArrowDestinationError},
     impl_transport,
     sources::mysql::{
         BinaryProtocol, MySQLSource, MySQLSourceError, MySQLTypeSystem, TextProtocol,
@@ -15,15 +17,16 @@ use thiserror::Error;
 #[derive(Error, Debug)]
 pub enum MySQLArrowTransportError {
     #[error(transparent)]
-    MySQLSourceError(#[from] MySQLSourceError),
+    Source(#[from] MySQLSourceError),
 
     #[error(transparent)]
-    ArrowDestinationError(#[from] ArrowDestinationError),
+    Destination(#[from] ArrowDestinationError),
 
     #[error(transparent)]
-    ConnectorXError(#[from] crate::errors::ConnectorXError),
+    ConnectorX(#[from] crate::errors::ConnectorXError),
 }
 
+/// Convert MySQL data types to Arrow data types.
 pub struct MySQLArrowTransport<P>(PhantomData<P>);
 
 impl_transport!(
@@ -32,14 +35,14 @@ impl_transport!(
     systems = MySQLTypeSystem => ArrowTypeSystem,
     route = MySQLSource<BinaryProtocol> => ArrowDestination,
     mappings = {
-        { Double[f64]                => Float64[f64]            | conversion all }
-        { Long[i64]                  => Int64[i64]              | conversion all }
-        { LongLong[i64]              => Int64[i64]              | conversion none }
-        { Date[NaiveDate]            => Date32[NaiveDate]       | conversion all }
-        { Time[NaiveTime]            => Time64[NaiveTime]       | conversion all }
-        { Datetime[NaiveDateTime]    => Date64[NaiveDateTime]   | conversion all }
-        { Decimal[Decimal]           => Float64[f64]            | conversion half }
-        { VarChar[String]            => LargeUtf8[String]       | conversion all }
+        { Double[f64]                => Float64[f64]            | conversion auto }
+        { Long[i32]                  => Int64[i64]              | conversion auto }
+        { LongLong[i64]              => Int64[i64]              | conversion auto }
+        { Date[NaiveDate]            => Date32[NaiveDate]       | conversion auto }
+        { Time[NaiveTime]            => Time64[NaiveTime]       | conversion auto }
+        { Datetime[NaiveDateTime]    => Date64[NaiveDateTime]   | conversion auto }
+        { Decimal[Decimal]           => Float64[f64]            | conversion option }
+        { VarChar[String]            => LargeUtf8[String]       | conversion auto }
         { Char[String]               => LargeUtf8[String]       | conversion none }
     }
 );
@@ -50,14 +53,14 @@ impl_transport!(
     systems = MySQLTypeSystem => ArrowTypeSystem,
     route = MySQLSource<TextProtocol> => ArrowDestination,
     mappings = {
-        { Double[f64]                => Float64[f64]            | conversion all }
-        { Long[i64]                  => Int64[i64]              | conversion all }
-        { LongLong[i64]              => Int64[i64]              | conversion none }
-        { Date[NaiveDate]            => Date32[NaiveDate]       | conversion all }
-        { Time[NaiveTime]            => Time64[NaiveTime]       | conversion all }
-        { Datetime[NaiveDateTime]    => Date64[NaiveDateTime]   | conversion all }
-        { Decimal[Decimal]           => Float64[f64]            | conversion half }
-        { VarChar[String]            => LargeUtf8[String]       | conversion all }
+        { Double[f64]                => Float64[f64]            | conversion auto }
+        { Long[i32]                  => Int64[i64]              | conversion auto }
+        { LongLong[i64]              => Int64[i64]              | conversion auto }
+        { Date[NaiveDate]            => Date32[NaiveDate]       | conversion auto }
+        { Time[NaiveTime]            => Time64[NaiveTime]       | conversion auto }
+        { Datetime[NaiveDateTime]    => Date64[NaiveDateTime]   | conversion auto }
+        { Decimal[Decimal]           => Float64[f64]            | conversion option }
+        { VarChar[String]            => LargeUtf8[String]       | conversion auto }
         { Char[String]               => LargeUtf8[String]       | conversion none }
     }
 );

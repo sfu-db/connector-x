@@ -1,3 +1,5 @@
+///! This module provides [`dispatcher::Dispatcher`], the core struct in ConnectorX
+///! that drives the data loading from a source to a destination.
 use crate::{
     data_order::{coordinate, DataOrder},
     destinations::{Destination, DestinationPartition},
@@ -11,11 +13,11 @@ use log::debug;
 use rayon::prelude::*;
 use std::marker::PhantomData;
 
-/// A dispatcher owns a `SourceBuilder` `SB` and a vector of `queries`
-/// `schema` is a temporary input before we implement infer schema or get schema from DB.
-pub struct Dispatcher<'a, S, W, TP> {
+/// A dispatcher takes a `S: Source`, a `D: Destination`, a `TP: Transport` and a vector of `queries` as input to
+/// load data from `S` to `D` using the queries.
+pub struct Dispatcher<'a, S, D, TP> {
     src: S,
-    dst: &'a mut W,
+    dst: &'a mut D,
     queries: Vec<CXQuery<String>>,
     _phantom: PhantomData<TP>,
 }
@@ -33,19 +35,20 @@ where
     TP: Transport<TSS = TSS, TSD = TSD, S = S, D = D, Error = ET>,
     ET: From<ConnectorXError> + From<ES> + From<ED> + Send,
 {
-    /// Create a new dispatcher by providing a source builder, schema (temporary) and the queries
-    /// to be issued to the data source.
-    pub fn new<Q: ToString>(src: S, dst: &'w mut D, queries: &[CXQuery<Q>]) -> Self {
+    /// Create a new dispatcher by providing a source, a destination and the queries.
+    pub fn new<Q>(src: S, dst: &'w mut D, queries: &[Q]) -> Self
+    where
+        for<'a> &'a Q: Into<CXQuery>,
+    {
         Dispatcher {
             src,
             dst,
-            queries: queries.iter().map(|q| q.map(Q::to_string)).collect(),
+            queries: queries.iter().map(Into::into).collect(),
             _phantom: PhantomData,
         }
     }
 
-    /// Run the dispatcher by specifying the src, the dispatcher will fetch, parse the data,
-    /// and write the data to dst.
+    /// Start the data loading process.
     pub fn run(mut self) -> Result<(), ET> {
         let dorder = coordinate(S::DATA_ORDERS, D::DATA_ORDERS)?;
         self.src.set_data_order(dorder)?;

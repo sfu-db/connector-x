@@ -1,6 +1,11 @@
+//! A dummy source that generates different values based on an internal counter.
+//! This source is for test purpose.
+
+mod typesystem;
+
+pub use self::typesystem::DummyTypeSystem;
 use super::{PartitionParser, Produce, Source, SourcePartition};
 use crate::data_order::DataOrder;
-use crate::dummy_typesystem::DummyTypeSystem;
 use crate::errors::{ConnectorXError, Result};
 use crate::sql::CXQuery;
 use chrono::{offset, Date, DateTime, Utc};

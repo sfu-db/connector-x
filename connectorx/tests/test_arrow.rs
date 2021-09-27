@@ -1,10 +1,12 @@
-use arrow::array::{BooleanArray, Float64Array, Int32Array, Int64Array, LargeStringArray};
-use arrow::record_batch::RecordBatch;
+use arrow::{
+    array::{BooleanArray, Float64Array, Int32Array, Int64Array, LargeStringArray},
+    record_batch::RecordBatch,
+};
 use connectorx::{
-    destinations::arrow::ArrowDestination,
+    destinations::arrow::{ArrowDestination, ArrowTypeSystem},
     prelude::*,
     sources::{
-        dummy::DummySource,
+        dummy::{DummySource, DummyTypeSystem},
         postgres::{rewrite_tls_args, BinaryProtocol, PostgresSource},
     },
     sql::CXQuery,
@@ -12,6 +14,25 @@ use connectorx::{
 };
 use postgres::NoTls;
 use std::env;
+use url::Url;
+
+#[test]
+#[should_panic]
+fn arrow_destination_col_major() {
+    let mut dw = ArrowDestination::new();
+    let _ = dw
+        .allocate(
+            11,
+            &["a", "b", "c"],
+            &[
+                ArrowTypeSystem::Int64(false),
+                ArrowTypeSystem::Float64(true),
+                ArrowTypeSystem::LargeUtf8(true),
+            ],
+            DataOrder::ColumnMajor,
+        )
+        .unwrap();
+}
 
 #[test]
 fn test_arrow() {
@@ -37,7 +58,7 @@ fn test_arrow() {
     );
     dispatcher.run().expect("run dispatcher");
 
-    let records: Vec<RecordBatch> = destination.finish().unwrap();
+    let records: Vec<RecordBatch> = destination.arrow().unwrap();
     assert_eq!(2, records.len());
 
     for col in 0..ncols {
@@ -131,7 +152,8 @@ fn test_postgres_arrow() {
         CXQuery::naked("select * from test_table where test_int < 2"),
         CXQuery::naked("select * from test_table where test_int >= 2"),
     ];
-    let (config, _tls) = rewrite_tls_args(&dburl).unwrap();
+    let url = Url::parse(dburl.as_str()).unwrap();
+    let (config, _tls) = rewrite_tls_args(&url).unwrap();
     let builder = PostgresSource::<BinaryProtocol, NoTls>::new(config, NoTls, 2).unwrap();
     let mut destination = ArrowDestination::new();
     let dispatcher = Dispatcher::<_, _, PostgresArrowTransport<BinaryProtocol, NoTls>>::new(
@@ -144,7 +166,7 @@ fn test_postgres_arrow() {
 
     let ncols = destination.schema().len();
 
-    let records: Vec<RecordBatch> = destination.finish().unwrap();
+    let records: Vec<RecordBatch> = destination.arrow().unwrap();
     assert_eq!(2, records.len());
 
     for col in 0..ncols {

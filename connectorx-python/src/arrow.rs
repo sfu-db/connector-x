@@ -5,6 +5,7 @@ use connectorx::{
     destinations::arrow::ArrowDestination,
     prelude::*,
     sources::{
+        mssql::MsSQLSource,
         mysql::{BinaryProtocol as MySQLBinaryProtocol, MySQLSource, TextProtocol},
         postgres::{
             rewrite_tls_args, BinaryProtocol as PgBinaryProtocol, CSVProtocol, CursorProtocol,
@@ -13,7 +14,10 @@ use connectorx::{
         sqlite::SQLiteSource,
     },
     sql::CXQuery,
-    transports::{MySQLArrowTransport, PostgresArrowTransport, SQLiteArrowTransport},
+    transports::{
+        MsSQLArrowTransport, MySQLArrowTransport, OracleArrowTransport, PostgresArrowTransport,
+        SQLiteArrowTransport,
+    },
 };
 use fehler::throws;
 use libc::uintptr_t;
@@ -22,6 +26,7 @@ use postgres::NoTls;
 use postgres_native_tls::MakeTlsConnector;
 use pyo3::prelude::*;
 use pyo3::{PyAny, Python};
+use std::sync::Arc;
 
 #[throws(ConnectorXPythonError)]
 pub fn write_arrow<'a>(
@@ -35,7 +40,7 @@ pub fn write_arrow<'a>(
     // TODO: unlock gil if possible
     match source_conn.ty {
         SourceType::Postgres => {
-            let (config, tls) = rewrite_tls_args(&source_conn.conn[..])?;
+            let (config, tls) = rewrite_tls_args(&source_conn.conn)?;
             debug!("Protocol: {}", protocol);
             match (protocol, tls) {
                 ("csv", Some(tls_conn)) => {
@@ -120,14 +125,14 @@ pub fn write_arrow<'a>(
                 _ => unimplemented!("{} protocol not supported", protocol),
             }
         }
-        SourceType::Sqlite => {
+        SourceType::SQLite => {
             let source = SQLiteSource::new(&source_conn.conn[..], queries.len())?;
             let dispatcher =
                 Dispatcher::<_, _, SQLiteArrowTransport>::new(source, &mut destination, queries);
             debug!("Running dispatcher");
             dispatcher.run()?;
         }
-        SourceType::Mysql => {
+        SourceType::MySQL => {
             debug!("Protocol: {}", protocol);
             match protocol {
                 "binary" => {
@@ -158,9 +163,24 @@ pub fn write_arrow<'a>(
                 _ => unimplemented!("{} protocol not supported", protocol),
             }
         }
+        SourceType::MsSQL => {
+            let rt = Arc::new(tokio::runtime::Runtime::new().expect("Failed to create runtime"));
+            let source = MsSQLSource::new(rt, &source_conn.conn[..], queries.len())?;
+            let dispatcher =
+                Dispatcher::<_, _, MsSQLArrowTransport>::new(source, &mut destination, queries);
+            debug!("Running dispatcher");
+            dispatcher.run()?;
+        }
+        SourceType::Oracle => {
+            let source = OracleSource::new(&source_conn.conn[..], queries.len())?;
+            let dispatcher =
+                Dispatcher::<_, _, OracleArrowTransport>::new(source, &mut destination, queries);
+            debug!("Running dispatcher");
+            dispatcher.run()?;
+        }
     }
 
-    let rbs = destination.finish()?;
+    let rbs = destination.arrow()?;
     let ptrs = to_ptrs(rbs);
     let obj: PyObject = ptrs.into_py(py);
     obj.into_ref(py)

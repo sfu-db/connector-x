@@ -1,10 +1,14 @@
-// Why we need to implement Transmit for TypeSystem? This is because only TypeSystem knows how to dispatch
-// functions to it's native type N based on our defined type T. Remember, T is value and N is a type.
+//! This module defines traits that required to define a typesystem.
+//!
+//! A typesystem is an enum that describes what types can be produced by a source and accepted by a destination.
+//! A typesystem also needs to implement [`TypeAssoc`] to associate the enum variants to the physical representation
+//! of the types in the typesystem.
 
 use crate::destinations::{Consume, Destination, DestinationPartition};
 use crate::errors::{ConnectorXError, Result as CXResult};
 use crate::sources::{PartitionParser, Produce, Source, SourcePartition};
 
+#[doc(hidden)]
 /// `TypeSystem` describes all the types a source or destination support
 /// using enum variants.
 /// The variant can be used to type check with a static type `T` through the `check` method.
@@ -15,11 +19,13 @@ pub trait TypeSystem: Copy + Clone + Send + Sync {
     }
 }
 
+#[doc(hidden)]
 /// Associate a static type to a TypeSystem
 pub trait TypeAssoc<TS: TypeSystem> {
     fn check(ts: TS) -> CXResult<()>;
 }
 
+#[doc(hidden)]
 /// Realize means that a TypeSystem can realize a parameterized func F, based on its current variants.
 pub trait Realize<F>
 where
@@ -29,6 +35,7 @@ where
     fn realize(self) -> CXResult<F::Function>;
 }
 
+#[doc(hidden)]
 /// A ParameterizedFunc refers to a function that is parameterized on a type T,
 /// where type T will be dynaically determined by the variant of a TypeSystem.
 /// An example is the `transmit<S,W,T>` function. When piping values from a source
@@ -43,18 +50,21 @@ pub trait ParameterizedFunc {
     }
 }
 
+#[doc(hidden)]
 /// `ParameterizedOn` indicates a parameterized function `Self`
 /// is parameterized on type `T`
 pub trait ParameterizedOn<T>: ParameterizedFunc {
     fn parameterize() -> Self::Function;
 }
 
+/// Defines a rule to convert a type `T` to a type `U`.
 pub trait TypeConversion<T, U> {
     fn convert(val: T) -> U;
 }
 
-/// Transport defines how to produce a value, do type conversion and then write
-/// the value to a destination.
+/// Transport asks the source to produce a value, do type conversion and then write
+/// the value to a destination. Do not manually implement this trait for types.
+/// Use [`impl_transport!`] to create a struct that implements this trait instead.
 pub trait Transport {
     type TSS: TypeSystem;
     type TSD: TypeSystem;
@@ -97,6 +107,7 @@ pub trait Transport {
     >;
 }
 
+#[doc(hidden)]
 pub fn process<'s, 'd, 'r, T1, T2, TP, S, D, ES, ED, ET>(
     src: &'r mut <<S as Source>::Partition as SourcePartition>::Parser<'s>,
     dst: &'r mut <D as Destination>::Partition<'d>,

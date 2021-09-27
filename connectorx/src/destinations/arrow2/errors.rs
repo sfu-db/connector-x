@@ -1,9 +1,11 @@
 use thiserror::Error;
 
+pub type Result<T> = std::result::Result<T, ArrowDestinationError>;
+
 #[derive(Error, Debug)]
-pub enum MemoryDestinationError {
-    #[error("Index operation out of bound.")]
-    OutOfBound,
+pub enum ArrowDestinationError {
+    #[error(transparent)]
+    ArrowError(#[from] arrow2::error::ArrowError),
 
     #[error(transparent)]
     ConnectorXError(#[from] crate::errors::ConnectorXError),

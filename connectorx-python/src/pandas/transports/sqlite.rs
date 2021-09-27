@@ -1,6 +1,6 @@
 use crate::errors::ConnectorXPythonError;
 use crate::pandas::destination::PandasDestination;
-use crate::pandas::types::PandasTypeSystem;
+use crate::pandas::typesystem::PandasTypeSystem;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
 use connectorx::{
     impl_transport,
@@ -16,16 +16,16 @@ impl_transport!(
     systems = SQLiteTypeSystem => PandasTypeSystem,
     route = SQLiteSource => PandasDestination<'tp>,
     mappings = {
-        { Bool[bool]                 => Bool[bool]              | conversion all }
-        { Int8[i64]                  => I64[i64]                | conversion all }
-        { Int4[i32]                  => I64[i64]                | conversion all }
-        { Int2[i16]                  => I64[i64]                | conversion all }
-        { Real[f64]                  => F64[f64]                | conversion all }
-        { Text[Box<str>]             => BoxStr[Box<str>]        | conversion all }
-        { Date[NaiveDate]            => DateTime[DateTime<Utc>] | conversion half }
-        { Time[NaiveTime]            => String[String]          | conversion half }
-        { Timestamp[NaiveDateTime]   => DateTime[DateTime<Utc>] | conversion half }
-        { Blob[Vec<u8>]              => Bytes[Vec<u8>]          | conversion all }
+        { Bool[bool]                 => Bool[bool]              | conversion auto }
+        { Int8[i64]                  => I64[i64]                | conversion auto }
+        { Int4[i32]                  => I64[i64]                | conversion auto }
+        { Int2[i16]                  => I64[i64]                | conversion auto }
+        { Real[f64]                  => F64[f64]                | conversion auto }
+        { Text[Box<str>]             => BoxStr[Box<str>]        | conversion auto }
+        { Date[NaiveDate]            => DateTime[DateTime<Utc>] | conversion option }
+        { Time[NaiveTime]            => String[String]          | conversion option }
+        { Timestamp[NaiveDateTime]   => DateTime[DateTime<Utc>] | conversion option }
+        { Blob[Vec<u8>]              => Bytes[Vec<u8>]          | conversion auto }
     }
 );
 

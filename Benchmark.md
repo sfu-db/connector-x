@@ -67,7 +67,7 @@ psql -h localhost -U postgres -d tpch -c "CREATE INDEX lineitem_l_orderkey_idx O
 psql -h <endpoint> -U <userid> -d <databasename> -p <port> -f tpch-reshift.sql
 ```
 
-# Benchmark result on AWS r5.4xlarge with db.m6g.4xlarge RDS
+# Benchmark result on AWS r5.4xlarge
 
 We load the lineitem table of TPC-H @ scale=10 into a db.m6g.4xlarge RDS cluster on AWS for each database, and then run ConnectorX to download data from the database
 on an AWS r5.4xlarge, with the following command:
@@ -78,7 +78,7 @@ import connectorx as cx
 cx.read_sql("connection string", "SELECT * FROM lineitem", partition_on="l_orderkey", partition_num=4)
 ```
 
-## Postgres
+## Postgres (db.m6g.4xlarge RDS)
 
 ## Time chart, lower is better.
 
@@ -90,7 +90,7 @@ cx.read_sql("connection string", "SELECT * FROM lineitem", partition_on="l_order
 
 In conclusion, ConnectorX uses up to **3.5x** less memory and **21x** less time.
 
-## MySQL
+## MySQL (db.m6g.4xlarge RDS)
 
 
 ## Time chart, lower is better.
@@ -104,7 +104,7 @@ In conclusion, ConnectorX uses up to **3.5x** less memory and **21x** less time.
 In conclusion, ConnectorX uses up to **3.5x** less memory and **8.7x** less time.
 
 
-## SQLite
+## SQLite (r5.4xlarge EC2 same instance)
 
 
 ## Time chart, lower is better.
@@ -116,3 +116,31 @@ In conclusion, ConnectorX uses up to **3.5x** less memory and **8.7x** less time
 <p align="center"><img alt="memory chart" src="https://raw.githubusercontent.com/sfu-db/connector-agent/main/assets/sqlite-mem.png"/></p>
 
 In conclusion, ConnectorX uses up to **3.3x** less memory and **11.2x** less time.
+
+## Oracle (db.r5.4xlarge RDS)
+
+**Modin does not support read_sql on Oracle**
+
+## Time chart, lower is better.
+
+<p align="center"><img alt="time chart" src="https://raw.githubusercontent.com/sfu-db/connector-x/main/assets/oracle-time.png"/></p>
+
+## Memory consumption chart, lower is better.
+
+<p align="center"><img alt="memory chart" src="https://raw.githubusercontent.com/sfu-db/connector-x/main/assets/oracle-mem.png"/></p>
+
+In conclusion, ConnectorX uses up to **2.5x** less memory and **3.9x** less time.
+
+## Mssql (r5.4xlarge RDS)
+
+**Modin does not support read_sql on Mssql**
+
+## Time chart, lower is better.
+
+<p align="center"><img alt="time chart" src="https://raw.githubusercontent.com/sfu-db/connector-x/main/assets/mssql-time.png"/></p>
+
+## Memory consumption chart, lower is better.
+
+<p align="center"><img alt="memory chart" src="https://raw.githubusercontent.com/sfu-db/connector-x/main/assets/mssql-mem.png"/></p>
+
+In conclusion, ConnectorX uses up to **3.2x** less memory and **11.5x** less time.

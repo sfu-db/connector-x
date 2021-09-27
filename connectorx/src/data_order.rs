@@ -1,3 +1,6 @@
+//! This module provides two data orders: row-wise and column-wise for tabular data,
+//! as well as a function to coordinate the data order between source and destination.
+
 use crate::errors::ConnectorXError;
 use fehler::{throw, throws};
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]

@@ -1,13 +1,10 @@
-# ConnectorX [![status][ci_badge]][ci_page] [![docs][docs_badge]][docs_page]
+# ConnectorX [![status][ci_badge]][ci_page]
 
-[ci_badge]: https://github.com/sfu-db/connector-agent/workflows/ci/badge.svg
-[ci_page]: https://github.com/sfu-db/connector-agent/actions
-[docs_badge]: https://github.com/sfu-db/connector-agent/workflows/docs/badge.svg
-[docs_page]: https://sfu-db.github.io/connector-agent/connector_agent/
+[ci_badge]: https://github.com/sfu-db/connector-x/workflows/ci/badge.svg
+[ci_page]: https://github.com/sfu-db/connector-x/actions
 
-Load data from <img src="https://raw.githubusercontent.com/sfu-db/connector-agent/main/assets/sources.gif" width="6.5%" style="margin-bottom: -2px"/> to <img src="https://raw.githubusercontent.com/sfu-db/connector-agent/main/assets/destinations.gif" width="7%" style="margin-bottom: -2px"/>, the fastest way.
 
-For more data sources, please check out our [discussion](https://github.com/sfu-db/connector-x/discussions/61).
+Load data from <img src="https://raw.githubusercontent.com/sfu-db/connector-x/main/assets/sources.gif" width="6.5%" style="margin-bottom: -2px"/> to <img src="https://raw.githubusercontent.com/sfu-db/connector-x/main/assets/destinations.gif" width="7%" style="margin-bottom: -2px"/>, the fastest way.
 
 ConnectorX enables you to load data from databases into Python in the fastest and most memory efficient way.
 
@@ -31,7 +28,7 @@ The function will partition the query by **evenly** splitting the specified colu
 ConnectorX will assign one thread for each partition to load and write data in parallel.
 Currently, we support partitioning on **integer** columns for **SPJA** queries.
 
-Check out more detailed usage and examples [here](#detailed-usage-and-examples).
+Check out more detailed usage and examples [here](#detailed-usage-and-examples). A general introduction of the project can be found in this [blog post](https://towardsdatascience.com/connectorx-the-fastest-way-to-load-data-from-databases-a65d4d4062d5).
 
 # Installation
 
@@ -45,13 +42,13 @@ We compared different solutions in Python that provides the `read_sql` function,
 
 ## Time chart, lower is better.
 
-<p align="center"><img alt="time chart" src="https://raw.githubusercontent.com/sfu-db/connector-agent/main/assets/pg-time.png"/></p>
+<p align="center"><img alt="time chart" src="https://raw.githubusercontent.com/sfu-db/connector-x/main/assets/pg-time.png"/></p>
 
 ## Memory consumption chart, lower is better.
 
-<p align="center"><img alt="memory chart" src="https://raw.githubusercontent.com/sfu-db/connector-agent/main/assets/pg-mem.png"/></p>
+<p align="center"><img alt="memory chart" src="https://raw.githubusercontent.com/sfu-db/connector-x/main/assets/pg-mem.png"/></p>
 
-In conclusion, ConnectorX uses up to **3x** less memory and **21x** less time. More on [here](https://github.com/sfu-db/connector-x/blob/main/Benchmark.md#benchmark-result-on-aws-r54xlarge-with-dbm6g4xlarge-rds).
+In conclusion, ConnectorX uses up to **3x** less memory and **21x** less time. More on [here](https://github.com/sfu-db/connector-x/blob/main/Benchmark.md#benchmark-result-on-aws-r54xlarge).
 
 ## How does ConnectorX achieve a lightening speed while keeping the memory footprint low?
 
@@ -64,10 +61,12 @@ This allows it to make full use of the CPU by becoming cache and branch predicto
 ## How does ConnectorX download the data?
 
 Upon receiving the query, e.g. `SELECT * FROM lineitem`, ConnectorX will first issue a `LIMIT 1` query `SELECT * FROM lineitem LIMIT 1` to get the schema of the result set.
-Then, if `partition_on` is specified, ConnectorX will issue `SELECT MIN(\$partition_on), MAX(\$partition_on) FROM (SELECT * FROM lineitem)` to know the range of the partition column.
-After that, the original query is split into partitions based on the min/max information, e.g. `SELECT * FROM (SELECT * FROM lineitem) WHERE \$partition_on > 0 AND \$partition_on < 10000`.
-ConnectorX will then run a count query to get the partition size (e.g. `SELECT COUNT(*) FROM (SELECT * FROM lineitem) WHERE \$partition_on > 0 AND \$partition_on < 10000`). If the partition
-is not specified, the count query will be `SELECT * FROM (SELECT * FROM lineitem)`.
+
+Then, if `partition_on` is specified, ConnectorX will issue `SELECT MIN($partition_on), MAX($partition_on) FROM (SELECT * FROM lineitem)` to know the range of the partition column.
+After that, the original query is split into partitions based on the min/max information, e.g. `SELECT * FROM (SELECT * FROM lineitem) WHERE $partition_on > 0 AND $partition_on < 10000`.
+ConnectorX will then run a count query to get the partition size (e.g. `SELECT COUNT(*) FROM (SELECT * FROM lineitem) WHERE $partition_on > 0 AND $partition_on < 10000`). If the partition
+is not specified, the count query will be `SELECT COUNT(*) FROM (SELECT * FROM lineitem)`.
+
 Finally, ConnectorX will use the schema info as well as the count info to allocate memory and download data by executing the queries normally.
 
 Once the downloading begins, there will be one thread for each partition so that the data are downloaded in parallel at the partition level. The thread will issue the query of the corresponding
@@ -78,6 +77,7 @@ This mechanism implies that having an **index on the partition column** is recom
 # Supported Sources & Destinations
 
 Supported protocols, data types and type mappings can be found [here](Types.md).
+For more planned data sources, please check out our [discussion](https://github.com/sfu-db/connector-x/discussions/61).
 
 ## Sources
 - [x] Postgres
@@ -85,18 +85,20 @@ Supported protocols, data types and type mappings can be found [here](Types.md).
 - [x] Sqlite
 - [x] Redshift (through postgres protocol)
 - [x] Clickhouse (through mysql protocol)
-- [ ] SQL Server
-- [ ] Oracle
+- [x] SQL Server (no encryption support yet)
+- [x] Oracle
 - [ ] ...
 
 ## Destinations
 - [x] Pandas
 - [x] PyArrow
-- [x] Modin
-- [x] Dask
-- [x] Polars
+- [x] Modin (through Pandas)
+- [x] Dask (through Pandas)
+- [x] Polars (through PyArrow)
   
 # Detailed Usage and Examples
+
+Rust docs: [stable](https://docs.rs/connectorx) [nightly](https://sfu-db.github.io/connector-x/connectorx/)
 
 ## API
 
@@ -107,7 +109,7 @@ connectorx.read_sql(conn: str, query: Union[List[str], str], *, return_type: str
 Run the SQL query, download the data from database into a Pandas dataframe.
 
 ## Parameters
-- `conn: str`: Connection string uri. Currently only PostgreSQL is supported.
+- `conn: str`: Connection string URI. Supported URI scheme: `(postgres|postgressql|mysql|mssql|sqlite)://username:password@addr:port/dbname`.
 - `query: Union[str, List[str]]`: SQL query or list of SQL queries for fetching data.
 - `return_type: str = "pandas"`: The return type of this function. It can be `arrow`, `pandas`, `modin`, `dask` or `polars`.
 - `protocol: str = "binary"`: The protocol used to fetch data from source, default is `binary`. Check out [here](Types.md) to see more details.
@@ -185,3 +187,6 @@ Checkout our [discussions](https://github.com/sfu-db/connector-x/discussions) to
 # Historical Benchmark Results
 
 https://sfu-db.github.io/connector-x/dev/bench/
+
+# Developer's Guide
+Please see [Developer's Guide](https://github.com/sfu-db/connector-x/blob/main/Contribute.md) for information about developing ConnectorX.

@@ -11,6 +11,9 @@ use pyo3::prelude::*;
 use pyo3::{wrap_pyfunction, PyResult};
 use std::sync::Once;
 
+#[macro_use]
+extern crate lazy_static;
+
 static START: Once = Once::new();
 
 // https://github.com/PyO3/pyo3-built/issues/21

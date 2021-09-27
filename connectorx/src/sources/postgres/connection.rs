@@ -1,5 +1,4 @@
 use crate::sources::postgres::errors::PostgresSourceError;
-use anyhow::anyhow;
 use native_tls::{Certificate, TlsConnector};
 use postgres::{config::SslMode, Config};
 use postgres_native_tls::MakeTlsConnector;
@@ -58,13 +57,10 @@ impl TryFrom<TlsConfig> for MakeTlsConnector {
 }
 
 // Strip URL params not accepted by upstream rust-postgres
-fn strip_bad_opts(url: Url) -> Url {
+fn strip_bad_opts(url: &Url) -> Url {
     let stripped_query: Vec<(_, _)> = url
         .query_pairs()
-        .filter(|p| match &*p.0 {
-            "sslrootcert" => false,
-            _ => true,
-        })
+        .filter(|p| !matches!(&*p.0, "sslrootcert"))
         .collect();
 
     let mut url2 = url.clone();
@@ -79,20 +75,18 @@ fn strip_bad_opts(url: Url) -> Url {
 }
 
 pub fn rewrite_tls_args(
-    conn: &str,
+    conn: &Url,
 ) -> Result<(Config, Option<MakeTlsConnector>), PostgresSourceError> {
     // We parse the config, then strip unsupported SSL opts and rewrite the URI
     // before calling conn.parse().
     //
     // For more details on this approach, see the conversation here:
     // https://github.com/sfackler/rust-postgres/pull/774#discussion_r641784774
-    let parsed_conn_str = Url::parse(conn).map_err(|e| anyhow!(e))?;
 
-    let params: HashMap<String, String> =
-        parsed_conn_str.clone().query_pairs().into_owned().collect();
-    let root_cert = params.get("sslrootcert").map(|x| PathBuf::from(x));
+    let params: HashMap<String, String> = conn.query_pairs().into_owned().collect();
+    let root_cert = params.get("sslrootcert").map(PathBuf::from);
 
-    let stripped_url = strip_bad_opts(parsed_conn_str.clone());
+    let stripped_url = strip_bad_opts(conn);
     let pg_config: Config = stripped_url.as_str().parse().unwrap();
 
     let tls_config = TlsConfig {

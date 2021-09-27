@@ -1,13 +1,17 @@
+use arrow::{
+    array::{BooleanArray, Float64Array, Int32Array, LargeStringArray},
+    record_batch::RecordBatch,
+};
 use connectorx::{
-    destinations::memory::MemoryDestination,
+    destinations::arrow::ArrowDestination,
     prelude::*,
     sources::postgres::{rewrite_tls_args, BinaryProtocol, CSVProtocol, PostgresSource},
     sql::CXQuery,
-    transports::PostgresMemoryTransport,
+    transports::PostgresArrowTransport,
 };
-use ndarray::array;
 use postgres::NoTls;
 use std::env;
+use url::Url;
 
 #[test]
 fn load_and_parse() {
@@ -17,7 +21,8 @@ fn load_and_parse() {
     #[derive(Debug, PartialEq)]
     struct Row(i32, Option<i32>, Option<String>, Option<f64>, Option<bool>);
 
-    let (config, _tls) = rewrite_tls_args(&dburl).unwrap();
+    let url = Url::parse(dburl.as_str()).unwrap();
+    let (config, _tls) = rewrite_tls_args(&url).unwrap();
     let mut source = PostgresSource::<BinaryProtocol, NoTls>::new(config, NoTls, 1).unwrap();
     source.set_queries(&[CXQuery::naked("select * from test_table")]);
     source.fetch_metadata().unwrap();
@@ -68,52 +73,20 @@ fn test_postgres() {
         CXQuery::naked("select * from test_table where test_int < 2"),
         CXQuery::naked("select * from test_table where test_int >= 2"),
     ];
-    let (config, _tls) = rewrite_tls_args(&dburl).unwrap();
+    let url = Url::parse(dburl.as_str()).unwrap();
+    let (config, _tls) = rewrite_tls_args(&url).unwrap();
     let builder = PostgresSource::<BinaryProtocol, NoTls>::new(config, NoTls, 2).unwrap();
-    let mut destination = MemoryDestination::new();
-    let dispatcher = Dispatcher::<_, _, PostgresMemoryTransport<BinaryProtocol, NoTls>>::new(
+    let mut destination = ArrowDestination::new();
+    let dispatcher = Dispatcher::<_, _, PostgresArrowTransport<BinaryProtocol, NoTls>>::new(
         builder,
         &mut destination,
         &queries,
     );
 
     dispatcher.run().expect("run dispatcher");
-    assert_eq!(
-        array![Some(1), Some(0), Some(2), Some(3), Some(4), Some(1314)],
-        destination.column_view::<Option<i64>>(0).unwrap()
-    );
-    assert_eq!(
-        array![Some(3), Some(5), None, Some(7), Some(9), Some(2)],
-        destination.column_view::<Option<i64>>(1).unwrap()
-    );
-    assert_eq!(
-        array![
-            Some("str1".to_string()),
-            Some("a".to_string()),
-            Some("str2".to_string()),
-            Some("b".to_string()),
-            Some("c".to_string()),
-            None
-        ],
-        destination.column_view::<Option<String>>(2).unwrap()
-    );
 
-    assert_eq!(
-        array![
-            None,
-            Some(3.1 as f64),
-            Some(2.2 as f64),
-            Some(3 as f64),
-            Some(7.8 as f64),
-            Some(-10 as f64)
-        ],
-        destination.column_view::<Option<f64>>(3).unwrap()
-    );
-
-    assert_eq!(
-        array![Some(true), None, Some(false), Some(false), None, Some(true)],
-        destination.column_view::<Option<bool>>(4).unwrap()
-    );
+    let result = destination.arrow().unwrap();
+    verify_arrow_results(result);
 }
 
 #[test]
@@ -125,24 +98,41 @@ fn test_postgres_agg() {
     let queries = [CXQuery::naked(
         "SELECT test_bool, SUM(test_float) FROM test_table GROUP BY test_bool",
     )];
-    let (config, _tls) = rewrite_tls_args(&dburl).unwrap();
+
+    let url = Url::parse(dburl.as_str()).unwrap();
+    let (config, _tls) = rewrite_tls_args(&url).unwrap();
     let builder = PostgresSource::<BinaryProtocol, NoTls>::new(config, NoTls, 1).unwrap();
-    let mut destination = MemoryDestination::new();
-    let dispatcher = Dispatcher::<_, _, PostgresMemoryTransport<BinaryProtocol, NoTls>>::new(
+    let mut destination = ArrowDestination::new();
+    let dispatcher = Dispatcher::<_, _, PostgresArrowTransport<BinaryProtocol, NoTls>>::new(
         builder,
         &mut destination,
         &queries,
     );
 
     dispatcher.run().expect("run dispatcher");
-    assert_eq!(
-        array![None, Some(false), Some(true)],
-        destination.column_view::<Option<bool>>(0).unwrap()
-    );
-    assert_eq!(
-        array![Some(10.9), Some(5.2), Some(-10.0)],
-        destination.column_view::<Option<f64>>(1).unwrap()
-    );
+
+    let mut result = destination.arrow().unwrap();
+    assert!(result.len() == 1);
+    let rb = result.pop().unwrap();
+    assert!(rb.columns().len() == 2);
+
+    assert!(rb
+        .column(0)
+        .as_any()
+        .downcast_ref::<BooleanArray>()
+        .unwrap()
+        .eq(&BooleanArray::from(vec![None, Some(false), Some(true)])));
+
+    assert!(rb
+        .column(1)
+        .as_any()
+        .downcast_ref::<Float64Array>()
+        .unwrap()
+        .eq(&Float64Array::from(vec![
+            Some(10.9),
+            Some(5.2),
+            Some(-10.0),
+        ])));
 }
 
 #[test]
@@ -153,7 +143,8 @@ fn load_and_parse_csv() {
     #[derive(Debug, PartialEq)]
     struct Row(i32, Option<i32>, Option<String>, Option<f64>, Option<bool>);
 
-    let (config, _tls) = rewrite_tls_args(&dburl).unwrap();
+    let url = Url::parse(dburl.as_str()).unwrap();
+    let (config, _tls) = rewrite_tls_args(&url).unwrap();
     let mut source = PostgresSource::<CSVProtocol, NoTls>::new(config, NoTls, 1).unwrap();
     source.set_queries(&[CXQuery::naked("select * from test_table")]);
     source.fetch_metadata().unwrap();
@@ -204,48 +195,108 @@ fn test_postgres_csv() {
         CXQuery::naked("select * from test_table where test_int < 2"),
         CXQuery::naked("select * from test_table where test_int >= 2"),
     ];
-    let (config, _tls) = rewrite_tls_args(&dburl).unwrap();
+    let url = Url::parse(dburl.as_str()).unwrap();
+    let (config, _tls) = rewrite_tls_args(&url).unwrap();
     let builder = PostgresSource::<CSVProtocol, NoTls>::new(config, NoTls, 2).unwrap();
-    let mut dst = MemoryDestination::new();
-    let dispatcher = Dispatcher::<_, _, PostgresMemoryTransport<CSVProtocol, NoTls>>::new(
+    let mut dst = ArrowDestination::new();
+    let dispatcher = Dispatcher::<_, _, PostgresArrowTransport<CSVProtocol, NoTls>>::new(
         builder, &mut dst, &queries,
     );
 
     dispatcher.run().expect("run dispatcher");
-    assert_eq!(
-        array![Some(1), Some(0), Some(2), Some(3), Some(4), Some(1314)],
-        dst.column_view::<Option<i64>>(0).unwrap()
-    );
-    assert_eq!(
-        array![Some(3), Some(5), None, Some(7), Some(9), Some(2)],
-        dst.column_view::<Option<i64>>(1).unwrap()
-    );
-    assert_eq!(
-        array![
-            Some("str1".to_string()),
-            Some("a".to_string()),
-            Some("str2".to_string()),
-            Some("b".to_string()),
-            Some("c".to_string()),
-            None
-        ],
-        dst.column_view::<Option<String>>(2).unwrap()
-    );
+    let result = dst.arrow().unwrap();
+    verify_arrow_results(result);
+}
 
-    assert_eq!(
-        array![
+pub fn verify_arrow_results(mut result: Vec<RecordBatch>) {
+    assert!(result.len() == 2);
+
+    let rb = result.remove(0);
+    assert!(rb.columns().len() == 5);
+    assert!(rb
+        .column(0)
+        .as_any()
+        .downcast_ref::<Int32Array>()
+        .unwrap()
+        .eq(&Int32Array::from(vec![1, 0])));
+
+    assert!(rb
+        .column(1)
+        .as_any()
+        .downcast_ref::<Int32Array>()
+        .unwrap()
+        .eq(&Int32Array::from(vec![Some(3), Some(5)])));
+
+    assert!(rb
+        .column(2)
+        .as_any()
+        .downcast_ref::<LargeStringArray>()
+        .unwrap()
+        .eq(&LargeStringArray::from(vec![Some("str1"), Some("a"),])));
+
+    assert!(rb
+        .column(3)
+        .as_any()
+        .downcast_ref::<Float64Array>()
+        .unwrap()
+        .eq(&Float64Array::from(vec![None, Some(3.1 as f64)])));
+
+    assert!(rb
+        .column(4)
+        .as_any()
+        .downcast_ref::<BooleanArray>()
+        .unwrap()
+        .eq(&BooleanArray::from(vec![Some(true), None])));
+
+    let rb = result.pop().unwrap();
+    assert!(rb.columns().len() == 5);
+    assert!(rb
+        .column(0)
+        .as_any()
+        .downcast_ref::<Int32Array>()
+        .unwrap()
+        .eq(&Int32Array::from(vec![2, 3, 4, 1314])));
+
+    assert!(rb
+        .column(1)
+        .as_any()
+        .downcast_ref::<Int32Array>()
+        .unwrap()
+        .eq(&Int32Array::from(vec![None, Some(7), Some(9), Some(2)])));
+
+    assert!(rb
+        .column(2)
+        .as_any()
+        .downcast_ref::<LargeStringArray>()
+        .unwrap()
+        .eq(&LargeStringArray::from(vec![
+            Some("str2"),
+            Some("b"),
+            Some("c"),
             None,
-            Some(3.1 as f64),
+        ])));
+
+    assert!(rb
+        .column(3)
+        .as_any()
+        .downcast_ref::<Float64Array>()
+        .unwrap()
+        .eq(&Float64Array::from(vec![
             Some(2.2 as f64),
             Some(3 as f64),
             Some(7.8 as f64),
-            Some(-10 as f64)
-        ],
-        dst.column_view::<Option<f64>>(3).unwrap()
-    );
+            Some(-10 as f64),
+        ])));
 
-    assert_eq!(
-        array![Some(true), None, Some(false), Some(false), None, Some(true)],
-        dst.column_view::<Option<bool>>(4).unwrap()
-    );
+    assert!(rb
+        .column(4)
+        .as_any()
+        .downcast_ref::<BooleanArray>()
+        .unwrap()
+        .eq(&BooleanArray::from(vec![
+            Some(false),
+            Some(false),
+            None,
+            Some(true),
+        ])));
 }

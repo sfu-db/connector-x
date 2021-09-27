@@ -1,7 +1,11 @@
+//! This module defines three traits [`Destination`], [`DestinationPartition`], and [`Consume`] to define a destination.
+//! This module also contains destination implementations for various dataframes.
+
 #[cfg(feature = "dst_arrow")]
 pub mod arrow;
-#[cfg(feature = "dst_memory")]
-pub mod memory;
+
+#[cfg(feature = "dst_arrow2")]
+pub mod arrow2;
 
 use crate::data_order::DataOrder;
 use crate::errors::ConnectorXError;
@@ -33,8 +37,8 @@ pub trait Destination: Sized {
 }
 
 /// `PartitionDestination` writes values to its own region. `PartitionDestination` is parameterized
-/// on lifetime `'a`, which is the lifetime of the parent `Destination`. This indicates
-/// the `PartitionDestination` can never live longer than the parent.
+/// on lifetime `'a`, which is the lifetime of the parent `Destination`. Usually,
+/// a `PartitionDestination` can never live longer than the parent.
 pub trait DestinationPartition<'a>: Send {
     type TypeSystem: TypeSystem;
     type Error: From<ConnectorXError> + Send;

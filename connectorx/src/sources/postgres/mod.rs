@@ -1,3 +1,5 @@
+//! Source implementation for Postgres database, including the TLS support (client only).
+
 mod connection;
 mod errors;
 mod typesystem;
@@ -118,10 +120,8 @@ where
         assert!(!self.queries.is_empty());
 
         let mut conn = self.pool.get()?;
-        let mut success = false;
-        let mut zero_tuple = true;
-        let mut error = None;
-        for query in &self.queries {
+
+        for (i, query) in self.queries.iter().enumerate() {
             // assuming all the partition queries yield same schema
             match conn.query_opt(limit1_query(query, &PostgreSqlDialect {})?.as_str(), &[]) {
                 Ok(Some(row)) => {
@@ -139,39 +139,31 @@ where
                     self.names = names;
                     self.schema = types;
 
-                    success = true;
-                    zero_tuple = false;
-                    break;
+                    return;
                 }
                 Ok(None) => {}
-                Err(e) => {
-                    debug!("cannot get metadata for '{}', try next query: {}", query, e);
-                    error = Some(e);
-                    zero_tuple = false;
+                Err(e) if i == self.queries.len() - 1 => {
+                    // tried the last query but still get an error
+                    debug!("cannot get metadata for '{}': {}", query, e);
+                    throw!(e);
                 }
+                Err(_) => {}
             }
         }
 
-        if !success {
-            if zero_tuple {
-                // try to use COPY command get the column headers
-                let copy_query = format!("COPY ({}) TO STDOUT WITH CSV HEADER", self.queries[0]);
-                let mut reader = conn.copy_out(&*copy_query)?;
-                let mut buf = String::new();
-                reader.read_line(&mut buf)?;
-                self.names = buf[0..buf.len() - 1] // remove last '\n'
-                    .split(',')
-                    .map(|s| s.to_string())
-                    .collect();
-                // set all columns as string (align with pandas)
-                self.schema = vec![PostgresTypeSystem::Text(false); self.names.len()];
-            } else {
-                throw!(anyhow!(
-                    "Cannot get metadata for the queries, last error: {:?}",
-                    error
-                ))
-            }
-        }
+        // tried all queries but all get empty result set
+
+        // try to use COPY command get the column headers
+        let copy_query = format!("COPY ({}) TO STDOUT WITH CSV HEADER", self.queries[0]);
+        let mut reader = conn.copy_out(&*copy_query)?;
+        let mut buf = String::new();
+        reader.read_line(&mut buf)?;
+        self.names = buf[0..buf.len() - 1] // remove last '\n'
+            .split(',')
+            .map(|s| s.to_string())
+            .collect();
+        // set all columns as string (align with pandas)
+        self.schema = vec![PostgresTypeSystem::Text(false); self.names.len()];
     }
 
     fn names(&self) -> Vec<String> {
@@ -459,6 +451,13 @@ impl_produce!(
     f32,
     f64,
     Decimal,
+    Vec<i8>,
+    Vec<i16>,
+    Vec<i32>,
+    Vec<i64>,
+    Vec<f32>,
+    Vec<f64>,
+    Vec<Decimal>,
     bool,
     &'r str,
     Vec<u8>,
@@ -563,6 +562,59 @@ macro_rules! impl_csv_produce {
 }
 
 impl_csv_produce!(i8, i16, i32, i64, f32, f64, Decimal, Uuid,);
+
+macro_rules! impl_csv_vec_produce {
+    ($($t: ty,)+) => {
+        $(
+            impl<'r, 'a> Produce<'r, Vec<$t>> for PostgresCSVSourceParser<'a> {
+                type Error = PostgresSourceError;
+
+                #[throws(PostgresSourceError)]
+                fn produce(&mut self) -> Vec<$t> {
+                    let (ridx, cidx) = self.next_loc()?;
+                    let s = &self.rowbuf[ridx][cidx][..];
+                    match s {
+                        "{}" => vec![],
+                        _ if s.len() < 3 => throw!(ConnectorXError::cannot_produce::<$t>(Some(s.into()))),
+                        s => s[1..s.len() - 1]
+                            .split(",")
+                            .map(|v| {
+                                v.parse()
+                                    .map_err(|_| ConnectorXError::cannot_produce::<$t>(Some(s.into())))
+                            })
+                            .collect::<Result<Vec<$t>, ConnectorXError>>()?,
+                    }
+                }
+            }
+
+            impl<'r, 'a> Produce<'r, Option<Vec<$t>>> for PostgresCSVSourceParser<'a> {
+                type Error = PostgresSourceError;
+
+                #[throws(PostgresSourceError)]
+                fn produce(&mut self) -> Option<Vec<$t>> {
+                    let (ridx, cidx) = self.next_loc()?;
+                    let s = &self.rowbuf[ridx][cidx][..];
+                    match s {
+                        "" => None,
+                        "{}" => Some(vec![]),
+                        _ if s.len() < 3 => throw!(ConnectorXError::cannot_produce::<$t>(Some(s.into()))),
+                        s => Some(
+                            s[1..s.len() - 1]
+                                .split(",")
+                                .map(|v| {
+                                    v.parse()
+                                        .map_err(|_| ConnectorXError::cannot_produce::<$t>(Some(s.into())))
+                                })
+                                .collect::<Result<Vec<$t>, ConnectorXError>>()?,
+                        ),
+                    }
+                }
+            }
+        )+
+    };
+}
+
+impl_csv_vec_produce!(i8, i16, i32, i64, f32, f64, Decimal,);
 
 impl<'r, 'a> Produce<'r, bool> for PostgresCSVSourceParser<'a> {
     type Error = PostgresSourceError;
@@ -884,6 +936,13 @@ impl_produce!(
     f32,
     f64,
     Decimal,
+    Vec<i8>,
+    Vec<i16>,
+    Vec<i32>,
+    Vec<i64>,
+    Vec<f32>,
+    Vec<f64>,
+    Vec<Decimal>,
     bool,
     &'r str,
     Vec<u8>,
