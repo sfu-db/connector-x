@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1631317151975,
+  "lastUpdate": 1632763205128,
   "repoUrl": "https://github.com/sfu-db/connector-x",
   "entries": {
     "ConnectorX TPC-H Scale@1 Benchmarks": [
@@ -2090,6 +2090,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 2.3596172712687213",
             "extra": "mean: 26.12258404418826 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "xiaoying_wang@sfu.ca",
+            "name": "Xiaoying Wang",
+            "username": "wangxiaoying"
+          },
+          "committer": {
+            "email": "xiaoying_wang@sfu.ca",
+            "name": "Xiaoying Wang",
+            "username": "wangxiaoying"
+          },
+          "distinct": true,
+          "id": "ff45772f903bd5ce7727adc9ddd929812e13d10b",
+          "message": "update cargo lock file",
+          "timestamp": "2021-09-27T17:13:01Z",
+          "tree_id": "745461affa43153b58da61b15bbb7b3807fc83a6",
+          "url": "https://github.com/sfu-db/connector-x/commit/ff45772f903bd5ce7727adc9ddd929812e13d10b"
+        },
+        "date": 1632763203045,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_mysql",
+            "value": 0.0992627524407122,
+            "unit": "iter/sec",
+            "range": "stddev: 0.19485219275913684",
+            "extra": "mean: 10.074272326845676 sec\nrounds: 5"
+          },
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_postgres",
+            "value": 0.07609023396995838,
+            "unit": "iter/sec",
+            "range": "stddev: 1.9483935782117585",
+            "extra": "mean: 13.142291038227267 sec\nrounds: 5"
           }
         ]
       }
