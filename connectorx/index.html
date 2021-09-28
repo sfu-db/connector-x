@@ -113,7 +113,7 @@ Polars</li>
 </ul>
 <h1 id="feature-gates" class="section-header"><a href="#feature-gates">Feature gates</a></h1>
 <p>By default, ConnectorX does not enable any sources / destinations to keep the dependencies minimal.
-Instead, we provide following features for you to opt-in: <code>src_sqlite</code>, <code>src_postgres</code>, <code>src_mysql</code>, <code>src_mssql</code>, <code>dst_arrow</code>, <code>dst_polars</code>.
+Instead, we provide following features for you to opt-in: <code>src_sqlite</code>, <code>src_postgres</code>, <code>src_mysql</code>, <code>src_mssql</code>, <code>src_oracle</code>, <code>dst_arrow</code>, <code>dst_arrow2</code>.
 For example, if you’d like to load data from Postgres to Arrow, you can enable <code>src_postgres</code> and <code>dst_arrow</code> in <code>Cargo.toml</code>.
 This will enable <a href="sources/postgres/index.html" title="sources::postgres"><code>sources::postgres</code></a>, <a href="destinations/arrow/index.html" title="destinations::arrow"><code>destinations::arrow</code></a> and <a href="transports/struct.PostgresArrowTransport.html" title="transports::PostgresArrowTransport"><code>transports::PostgresArrowTransport</code></a>.</p>
 </div></details><h2 id="modules" class="section-header"><a href="#modules">Modules</a></h2>
