@@ -18,11 +18,7 @@ use fehler::throw;
 use fehler::throws;
 use funcs::{FFinishBuilder, FNewBuilder, FNewField};
 use itertools::Itertools;
-#[cfg(feature = "polars")]
-use polars::frame::DataFrame;
 use std::any::Any;
-#[cfg(feature = "polars")]
-use std::convert::TryFrom;
 use std::sync::Arc;
 
 type Builder = Box<dyn Any + Send>;
@@ -129,13 +125,6 @@ impl ArrowDestination {
                 Ok(RecordBatch::try_new(Arc::clone(&arrow_schema), columns)?)
             })
             .collect::<Result<Vec<_>>>()?
-    }
-
-    #[cfg(feature = "polars")]
-    #[throws(ArrowDestinationError)]
-    pub fn polars(self) -> DataFrame {
-        let rbs = self.arrow()?;
-        DataFrame::try_from(rbs)?
     }
 }
 

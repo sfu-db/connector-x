@@ -1,12 +1,12 @@
 use connectorx::{
-    destinations::arrow::ArrowDestination,
+    destinations::arrow2::Arrow2Destination,
     prelude::*,
     sources::{
         dummy::{DummySource, DummyTypeSystem},
         postgres::{rewrite_tls_args, BinaryProtocol, PostgresSource},
     },
     sql::CXQuery,
-    transports::{DummyArrowTransport, PostgresArrowTransport},
+    transports::{DummyArrow2Transport, PostgresArrow2Transport},
 };
 use polars::{df, prelude::*};
 use postgres::NoTls;
@@ -28,9 +28,9 @@ fn test_polars() {
         .iter()
         .map(|v| CXQuery::naked(format!("{},{}", v, ncols)))
         .collect();
-    let mut destination = ArrowDestination::new();
+    let mut destination = Arrow2Destination::new();
 
-    let dispatcher = Dispatcher::<_, _, DummyArrowTransport>::new(
+    let dispatcher = Dispatcher::<_, _, DummyArrow2Transport>::new(
         DummySource::new(&["a", "b", "c", "d", "e"], &schema),
         &mut destination,
         &queries,
@@ -63,8 +63,8 @@ fn test_postgres_arrow() {
     let url = Url::parse(dburl.as_str()).unwrap();
     let (config, _tls) = rewrite_tls_args(&url).unwrap();
     let builder = PostgresSource::<BinaryProtocol, NoTls>::new(config, NoTls, 2).unwrap();
-    let mut destination = ArrowDestination::new();
-    let dispatcher = Dispatcher::<_, _, PostgresArrowTransport<BinaryProtocol, NoTls>>::new(
+    let mut destination = Arrow2Destination::new();
+    let dispatcher = Dispatcher::<_, _, PostgresArrow2Transport<BinaryProtocol, NoTls>>::new(
         builder,
         &mut destination,
         &queries,

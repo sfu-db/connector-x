@@ -3,7 +3,7 @@ use anyhow::anyhow;
 use connectorx::{
     sources::{
         mssql::{FloatN, IntN, MsSQLTypeSystem},
-        mysql::MySQLTypeSystem,
+        mysql::{MySQLSourceError, MySQLTypeSystem},
         oracle::OracleDialect,
         postgres::{rewrite_tls_args, PostgresTypeSystem},
     },
@@ -13,7 +13,7 @@ use connectorx::{
     },
 };
 use fehler::{throw, throws};
-use r2d2_mysql::mysql::{prelude::Queryable, Pool, Row};
+use r2d2_mysql::mysql::{prelude::Queryable, Opts, Pool, Row};
 use r2d2_oracle::oracle::Connection as oracle_conn;
 use rusqlite::{types::Type, Connection};
 use sqlparser::dialect::{MsSqlDialect, MySqlDialect, PostgreSqlDialect, SQLiteDialect};
@@ -199,7 +199,7 @@ fn sqlite_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) 
 
 #[throws(ConnectorXPythonError)]
 fn mysql_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
-    let pool = Pool::new(conn.as_str())?;
+    let pool = Pool::new(Opts::from_url(conn.as_str()).map_err(MySQLSourceError::MySQLUrlError)?)?;
     let mut conn = pool.get_conn()?;
     let range_query = get_partition_range_query(query, col, &MySqlDialect {})?;
     let row: Row = conn

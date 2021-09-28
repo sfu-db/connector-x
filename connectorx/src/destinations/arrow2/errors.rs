@@ -1,11 +1,14 @@
 use thiserror::Error;
 
-pub type Result<T> = std::result::Result<T, ArrowDestinationError>;
+pub type Result<T> = std::result::Result<T, Arrow2DestinationError>;
 
 #[derive(Error, Debug)]
-pub enum ArrowDestinationError {
+pub enum Arrow2DestinationError {
     #[error(transparent)]
     ArrowError(#[from] arrow2::error::ArrowError),
+
+    #[error(transparent)]
+    PolarsError(#[from] polars::error::PolarsError),
 
     #[error(transparent)]
     ConnectorXError(#[from] crate::errors::ConnectorXError),
