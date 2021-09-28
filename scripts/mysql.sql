@@ -2,47 +2,58 @@ DROP TABLE IF EXISTS test_table;
 
 CREATE TABLE IF NOT EXISTS test_table(
     test_int INTEGER,
-    test_float DOUBLE
+    test_float DOUBLE,
+    test_enum ENUM('even', 'odd'),
+    test_null INTEGER
 );
 
-INSERT INTO test_table VALUES (1, 1.1);
-INSERT INTO test_table VALUES (2, 2.2);
-INSERT INTO test_table VALUES (3, 3.3);
-INSERT INTO test_table VALUES (4, 4.4);
-INSERT INTO test_table VALUES (5, 5.5);
-INSERT INTO test_table VALUES (6, 6.6);
+INSERT INTO test_table VALUES (1, 1.1, 'odd', NULL);
+INSERT INTO test_table VALUES (2, 2.2,'even',  NULL);
+INSERT INTO test_table VALUES (3, 3.3, 'odd', NULL);
+INSERT INTO test_table VALUES (4, 4.4, 'even', NULL);
+INSERT INTO test_table VALUES (5, 5.5, 'odd', NULL);
+INSERT INTO test_table VALUES (6, 6.6, 'even', NULL);
+
+
+DROP TABLE IF EXISTS test_table_extra;
+
+CREATE TABLE IF NOT EXISTS test_table_extra(
+    test_int INTEGER,
+    test_str VARCHAR(15)
+);
+
+INSERT INTO test_table_extra VALUES (1, 'Ha好ち😁ðy̆');
+INSERT INTO test_table_extra VALUES (2, 'こんにちは');
+INSERT INTO test_table_extra VALUES (3, 'русский');
 
 
 DROP TABLE IF EXISTS test_types;
 
 CREATE TABLE IF NOT EXISTS test_types(
+    test_timestamp TIMESTAMP,
     test_date DATE,
     test_time TIME,
     test_datetime DATETIME,
     test_new_decimal DECIMAL(15,2),
     test_decimal DECIMAL,
     test_varchar VARCHAR(15),
-    test_char CHAR(10)
-);
-
-INSERT INTO test_types VALUES ('1999-07-25', '00:00:00', '1999-07-25 00:00:00', 1.1, 1, NULL, 'char1');
-INSERT INTO test_types VALUES ('2020-12-31', '23:59:59', '2020-12-31 23:59:59', NULL, 2, 'varchar2', 'char2');
-INSERT INTO test_types VALUES ('2021-01-28', '12:30:30', NULL, 3.3, 3, 'varchar3', 'char3');
-
-
-DROP TABLE IF EXISTS test_more_types;
-
-CREATE TABLE IF NOT EXISTS test_more_types (
+    test_char CHAR(10),
     test_tiny TINYINT,
     test_short SMALLINT,
+    test_int24 MEDIUMINT,
+    test_long INT,
+    test_longlong BIGINT,
     test_float FLOAT,
+    test_double DOUBLE,
     test_year YEAR,
-    test_timestamp TIMESTAMP,
+    test_tinyblob TINYBLOB,
     test_blob BLOB,
+    test_mediumblob MEDIUMBLOB,
+    test_longblob LONGBLOB,
     test_enum ENUM('apple', 'banana', 'orange', 'mango'),
     test_json JSON
 );
 
-INSERT INTO test_more_types VALUES (0, -28, 1.1, 1901, '1990-01-01 00:00:01', 'blobblobblobblob1', 'apple', '{"name": "piggy", "age": 1}');
-INSERT INTO test_more_types VALUES (1, 128, 2.2, 2021, '2021-08-05 12:12:12', 'blobblobblobblob2', 'orange', '{"name": "kitty", "age": 2}');
-INSERT INTO test_more_types VALUES (0, 725, 3.3, 2155, '2038-01-19 03:14:07', 'blobblobblobblob3', 'mango', '{"name": "puppy", "age": 3}');
+INSERT INTO test_types VALUES ('1970-01-01 00:00:01', NULL, '00:00:00', '1970-01-01 00:00:01', 1.1, 1, NULL, 'char1', -128, -32768, -8388608, -2147483648, -9223372036854775808, NULL, -2.2E-308, 1901, NULL, NULL, NULL, NULL, 'apple', '{"name": "piggy", "age": 1}');
+INSERT INTO test_types VALUES ('2038-01-19 00:00:00', '1970-01-01', NULL, '2038-01-19 00:0:00', NULL, 2, 'varchar2', NULL, 127, 32767, 8388607, 2147483647, 9223372036854775807, -1.1E-38, NULL, 2155, 'tinyblob2', 'blobblobblobblob2', 'mediumblob2', 'longblob2', NULL, '{"name": "kitty", "age": 2}');
+INSERT INTO test_types VALUES (NULL, '2038-01-19', '23:59:59', NULL, 3.3, NULL, 'varchar3', 'char3', NULL, NULL, NULL, NULL, NULL, 3.4E38, 1.7E308, NULL, 'tinyblob3', 'blobblobblobblob3', 'mediumblob3', 'longblob3', 'mango', NULL);

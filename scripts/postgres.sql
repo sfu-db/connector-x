@@ -36,23 +36,36 @@ INSERT INTO test_str VALUES (8, '', NULL);
 
 CREATE TYPE happiness AS ENUM ('happy', 'very happy', 'ecstatic');
 CREATE TABLE IF NOT EXISTS test_types(
+    test_date DATE,
+    test_timestamp TIMESTAMP,
+    test_timestamptz TIMESTAMPTZ,
     test_int16 SMALLINT,
+    test_int64 BIGINT,
+    test_float32 REAL,
+    test_numeric NUMERIC(5,2),
+    test_bpchar BPCHAR(5),
     test_char CHAR,
-    test_uuid UUID NOT NULL,
+    test_varchar VARCHAR(10),
+    test_uuid UUID,
     test_time TIME,
     test_interval INTERVAL,
     test_json JSON,
     test_jsonb JSONB,
     test_bytea BYTEA,
     test_enum happiness,
-    test_farray DOUBLE PRECISION[],
-    test_iarray Integer[]
+    test_f4array REAL[],
+    test_f8array DOUBLE PRECISION[],
+    test_narray NUMERIC(5,2)[],
+    test_i2array SMALLINT[],
+    test_i4array Integer[],
+    test_i8array BIGINT[],
+    test_carray _char
 );
 
-INSERT INTO test_types VALUES (0, 'a', '86b494cc-96b2-11eb-9298-3e22fbb9fe9d', '08:12:40', '1 year 2 months 3 days', '{"customer": "John Doe", "items": {"product": "Beer","qty": 6}}', '{"product": "Beer","qty": 6}', NULL, 'happy', '{}', '{-1, 0, 1123}');
-INSERT INTO test_types VALUES (1, 'b', '86b49b84-96b2-11eb-9298-3e22fbb9fe9d', '10:03:00', '2 weeks ago', '{"customer": "Lily Bush", "items": {"product": "Diaper","qty": 24}}', '{"product": "Diaper","qty": 24}', 'Здра́вствуйте', 'very happy', NULL, '{}');
-INSERT INTO test_types VALUES (2, NULL, '86b49c42-96b2-11eb-9298-3e22fbb9fe9d', '23:00:10', '3 months 2 days ago', '{"customer": "Josh William", "items": {"product": "Toy Car","qty": 1}}', '{"product": "Toy Car","qty": 1}', '', 'ecstatic', '{0.0123}', '{-324324}');
-INSERT INTO test_types VALUES (3, 'd', '86b49cce-96b2-11eb-9298-3e22fbb9fe9d', '18:30:00', '3 year', '{"customer": "Mary Clark", "items": {"product": "Toy Train","qty": 2}}', '{"product": "Toy Train","qty": 2}', '😜', 'ecstatic', '{0.000234, -12.987654321}', NULL);
+INSERT INTO test_types VALUES ('1970-01-01', '1970-01-01 00:00:01', '1970-01-01 00:00:01-00', 0, -9223372036854775808, NULL, NULL, 'a', 'a', NULL, '86b494cc-96b2-11eb-9298-3e22fbb9fe9d', '08:12:40', '1 year 2 months 3 days', '{"customer": "John Doe", "items": {"product": "Beer","qty": 6}}', '{"product": "Beer","qty": 6}', NULL, 'happy','{}', '{}', '{}', '{-1, 0, 1}', '{-1, 0, 1123}', '{-9223372036854775808, 9223372036854775807}', '{"a", "b", "c"}');
+INSERT INTO test_types VALUES ('2000-02-28', '2000-02-28 12:00:10', '2000-02-28 12:00:10-04', 1, 0, 3.1415926535, 521.34, 'bb', 'b', 'bb', '86b49b84-96b2-11eb-9298-3e22fbb9fe9d', NULL, '2 weeks ago', '{"customer": "Lily Bush", "items": {"product": "Diaper","qty": 24}}', '{"product": "Diaper","qty": 24}', 'Здра́вствуйте', 'very happy', NULL, NULL, NULL, '{}', '{}', '{}', '{}');
+INSERT INTO test_types VALUES ('2038-01-18', '2038-01-18 23:59:59', '2038-01-18 23:59:59+08', 2, 9223372036854775807, 2.71, 999.99, 'ccc', NULL, 'c', '86b49c42-96b2-11eb-9298-3e22fbb9fe9d', '23:00:10', '3 months 2 days ago', '{"customer": "Josh William", "items": {"product": "Toy Car","qty": 1}}', '{"product": "Toy Car","qty": 1}', '', 'ecstatic', '{123.123}', '{-1e-307, 1e308}', '{521.34}', '{-32768, 32767}', '{-2147483648, 2147483647}', '{0}','{"d"}');
+INSERT INTO test_types VALUES (NULL, NULL, NULL, 3, NULL, 0.00, -1e-37, NULL, 'd', 'defghijklm', NULL, '18:30:00', '3 year', NULL, NULL, '😜', NULL, '{-1e-37, 1e37}', '{0.000234, -12.987654321}', '{0.12, 333.33, 22.22}', NULL, NULL, NULL, NULL);
 
 CREATE OR REPLACE FUNCTION increment(i integer) RETURNS integer AS $$
     BEGIN
