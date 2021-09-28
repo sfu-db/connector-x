@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1632780453327,
+  "lastUpdate": 1632850972217,
   "repoUrl": "https://github.com/sfu-db/connector-x",
   "entries": {
     "ConnectorX TPC-H Scale@1 Benchmarks": [
@@ -2280,6 +2280,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 2.364803475958093",
             "extra": "mean: 14.299237928795629 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "youngw@sfu.ca",
+            "name": "Weiyuan Wu",
+            "username": "dovahcrow"
+          },
+          "committer": {
+            "email": "youngw@sfu.ca",
+            "name": "Weiyuan Wu",
+            "username": "dovahcrow"
+          },
+          "distinct": true,
+          "id": "85d4e3c31036baf61d61aa65d0bf47e826383e0d",
+          "message": "upgrade dependencies, fix arrow2 support",
+          "timestamp": "2021-09-28T17:34:36Z",
+          "tree_id": "d1ade9288926445a9c4dbf62d47dbdf2fe9617b9",
+          "url": "https://github.com/sfu-db/connector-x/commit/85d4e3c31036baf61d61aa65d0bf47e826383e0d"
+        },
+        "date": 1632850970652,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_mysql",
+            "value": 0.07026416156284308,
+            "unit": "iter/sec",
+            "range": "stddev: 0.27864172348572136",
+            "extra": "mean: 14.232006441941484 sec\nrounds: 5"
+          },
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_postgres",
+            "value": 0.06592630781285891,
+            "unit": "iter/sec",
+            "range": "stddev: 1.7790524636920737",
+            "extra": "mean: 15.168451460055076 sec\nrounds: 5"
           }
         ]
       }
