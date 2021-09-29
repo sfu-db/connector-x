@@ -131,7 +131,7 @@ In conclusion, ConnectorX uses up to **3.3x** less memory and **11.2x** less tim
 
 In conclusion, ConnectorX uses up to **2.5x** less memory and **3.9x** less time.
 
-## Mssql (r5.4xlarge RDS)
+## Mssql (r5.4xlarge docker in another EC2 instance)
 
 **Modin does not support read_sql on Mssql**
 

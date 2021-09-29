@@ -7,7 +7,7 @@ license = "MIT"
 name = "connectorx"
 readme = "../README.md"
 repository = "https://github.com/sfu-db/connector-x"
-version = "0.2.1-alpha.1"
+version = "0.2.1-alpha.2"
 
 [dependencies]
 anyhow = "1"
@@ -15,11 +15,11 @@ fehler = "1"
 itertools = "0.10"
 log = "0.4"
 rayon = "1"
-sqlparser = "0.9"
+sqlparser = "0.11"
 thiserror = "1"
 
-arrow = {version = "4", optional = true}
-arrow2 = {version = "0.5", optional = true, no-default-features = true }
+arrow = {version = "5", optional = true}
+arrow2 = {version = "0.5", optional = true, default-features = false}
 bb8 = {version = "0.7", optional = true}
 bb8-tiberius = {version = "0.5", optional = true}
 chrono = {version = "0.4", optional = true}
@@ -31,14 +31,14 @@ native-tls = {version = "0.2", optional = true}
 ndarray = {version = "0.15", optional = true}
 num-traits = {version = "0.2", optional = true}
 owning_ref = {version = "0.4", optional = true}
-polars = {version = "0.14", optional = true}
+polars = {version = "0.16", optional = true}
 postgres = {version = "0.19", features = ["with-chrono-0_4", "with-uuid-0_8", "with-serde_json-1"], optional = true}
 postgres-native-tls = {version = "0.5", optional = true}
 r2d2 = {version = "0.8", optional = true}
-r2d2_mysql = {version = "18.0", optional = true}
+r2d2-oracle = {version = "0.5.0", features = ["chrono"], optional = true}
+r2d2_mysql = {version = "21.0", optional = true}
 r2d2_postgres = {version = "0.18", optional = true}
 r2d2_sqlite = {version = "0.18", optional = true}
-r2d2-oracle = {version = "0.5.0", features = ["chrono"], optional = true}
 regex = {version = "1", optional = true}
 rusqlite = {version = "0.25", features = ["column_decltype", "chrono", "bundled"], optional = true}
 rust_decimal = {version = "1", features = ["db-postgres"], optional = true}
@@ -56,21 +56,20 @@ name = "connectorx"
 criterion = "0.3"
 env_logger = "0.9"
 iai = "0.1"
-polars = "0.14"
 pprof = {version = "0.5", features = ["flamegraph"]}
 
 [features]
-all = ["src_sqlite", "src_postgres", "src_mysql", "src_mssql", "src_oracle", "src_csv", "src_dummy", "dst_arrow", "dst_polars"]
+all = ["src_sqlite", "src_postgres", "src_mysql", "src_mssql", "src_oracle", "src_csv", "src_dummy", "dst_arrow", "dst_arrow2"]
 branch = []
 default = ["fptr"]
 dst_arrow = ["arrow", "chrono"]
-dst_arrow2 = ["arrow2", "chrono"]
-dst_polars = ["polars", "dst_arrow"]
+dst_arrow2 = ["arrow2", "chrono", "polars"]
 fptr = []
 src_csv = ["csv", "regex", "chrono"]
 src_dummy = ["num-traits", "chrono"]
 src_mssql = ["rust_decimal", "chrono", "tiberius", "bb8-tiberius", "bb8", "tokio", "url", "uuid", "owning_ref", "futures"]
 src_mysql = ["r2d2_mysql", "rust_decimal", "num-traits", "chrono", "r2d2"]
+src_oracle = ["r2d2-oracle", "chrono", "r2d2"]
 src_postgres = [
   "postgres",
   "r2d2_postgres",
@@ -87,6 +86,5 @@ src_postgres = [
   "native-tls",
 ]
 src_sqlite = ["rusqlite", "r2d2_sqlite", "fallible-streaming-iterator", "owning_ref", "chrono", "r2d2"]
-src_oracle = ["r2d2-oracle", "chrono", "r2d2"]
 [package.metadata.docs.rs]
 features = ["all"]

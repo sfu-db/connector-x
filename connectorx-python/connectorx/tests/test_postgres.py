@@ -576,6 +576,19 @@ def test_empty_result_on_some_partition(postgres_url: str) -> None:
     assert_frame_equal(df, expected, check_names=True)
 
 
+def test_posix_regex(postgres_url: str) -> None:
+    query = "select test_int, case when test_str ~* 'str.*' then 'convert_str' end as converted_str from test_table"
+    df = read_sql(postgres_url, query,
+                  partition_on="test_int", partition_num=3)
+    expected = pd.DataFrame(
+        data={
+            "test_int": pd.Series([1, 2, 0, 3, 4, 1314], dtype="Int64"),
+            "converted_str": pd.Series(["convert_str", "convert_str", None, None, None, None], dtype="object"),
+        }
+    )
+    assert_frame_equal(df, expected, check_names=True)
+
+
 @pytest.mark.skipif(not os.environ.get("POSTGRES_URL_TLS"), reason="Do not test Postgres TLS unless `POSTGRES_URL_TLS` is set")
 def test_read_sql_tls(postgres_url_tls: str) -> None:
     query = "SELECT * FROM test_table"

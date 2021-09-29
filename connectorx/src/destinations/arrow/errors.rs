@@ -7,10 +7,6 @@ pub enum ArrowDestinationError {
     #[error(transparent)]
     ArrowError(#[from] arrow::error::ArrowError),
 
-    #[cfg(feature = "polars")]
-    #[error(transparent)]
-    PolarsError(#[from] polars::error::PolarsError),
-
     #[error(transparent)]
     ConnectorXError(#[from] crate::errors::ConnectorXError),
 
