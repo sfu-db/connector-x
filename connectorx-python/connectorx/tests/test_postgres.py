@@ -318,7 +318,7 @@ def test_read_sql_on_utf8(postgres_url: str) -> None:
 
 
 def test_types_binary(postgres_url: str) -> None:
-    query = "SELECT test_date, test_timestamp, test_timestamptz, test_int16, test_int64, test_float32, test_numeric, test_bpchar, test_char, test_varchar, test_uuid, test_time, test_json, test_jsonb, test_bytea, test_enum, test_f4array, test_f8array, test_narray, test_i2array, test_i4array, test_i8array, test_carray FROM test_types"
+    query = "SELECT test_date, test_timestamp, test_timestamptz, test_int16, test_int64, test_float32, test_numeric, test_bpchar, test_char, test_varchar, test_uuid, test_time, test_json, test_jsonb, test_bytea, test_enum, test_f4array, test_f8array, test_narray, test_i2array, test_i4array, test_i8array FROM test_types"
     df = read_sql(postgres_url, query,
                   partition_on="test_int16", partition_num=3)
     expected = pd.DataFrame(
@@ -382,7 +382,6 @@ def test_types_binary(postgres_url: str) -> None:
             "test_i2array": pd.Series([[-1, 0, 1], [], [-32768, 32767], None], dtype="object"),
             "test_i4array": pd.Series([[-1, 0, 1123], [], [-2147483648, 2147483647], None], dtype="object"),
             "test_i8array": pd.Series([[-9223372036854775808, 9223372036854775807], [], [0], None], dtype="object"),
-            "test_carray": pd.Series([[97, 98, 99], [], [100], None], dtype="object"),
         },
     )
     print(df)
@@ -459,7 +458,7 @@ def test_types_csv(postgres_url: str) -> None:
 
 
 def test_types_cursor(postgres_url: str) -> None:
-    query = "SELECT test_date, test_timestamp, test_timestamptz, test_int16, test_int64, test_float32, test_numeric, test_bpchar, test_char, test_varchar, test_uuid, test_time, test_json, test_jsonb, test_bytea, test_enum::text, test_f4array, test_f8array, test_narray, test_i2array, test_i4array, test_i8array, test_carray FROM test_types"
+    query = "SELECT test_date, test_timestamp, test_timestamptz, test_int16, test_int64, test_float32, test_numeric, test_bpchar, test_char, test_varchar, test_uuid, test_time, test_json, test_jsonb, test_bytea, test_enum::text, test_f4array, test_f8array, test_narray, test_i2array, test_i4array, test_i8array FROM test_types"
     df = read_sql(postgres_url, query, protocol="cursor",
                   partition_on="test_int16", partition_num=4)
     expected = pd.DataFrame(
@@ -523,7 +522,6 @@ def test_types_cursor(postgres_url: str) -> None:
             "test_i2array": pd.Series([[-1, 0, 1], [], [-32768, 32767], None], dtype="object"),
             "test_i4array": pd.Series([[-1, 0, 1123], [], [-2147483648, 2147483647], None], dtype="object"),
             "test_i8array": pd.Series([[-9223372036854775808, 9223372036854775807], [], [0], None], dtype="object"),
-            "test_carray": pd.Series([[97, 98, 99], [], [100], None], dtype="object"),
         },
     )
     assert_frame_equal(df, expected, check_names=True)
