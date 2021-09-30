@@ -13,7 +13,8 @@ def redshift_url() -> str:
     conn = os.environ["REDSHIFT_URL"]
     return conn
 
-@pytest.mark.skipif(os.environ.get("TEST_COVER", "main") != "all", reason="Only test main wire protocols unless TEST_COVER=all")
+
+@pytest.mark.skipif(not os.environ.get("REDSHIFT_URL"), reason="Do not test Redshift unless `REDSHIFT_URL` is set")
 def test_redshift_without_partition(redshift_url: str) -> None:
     query = "SELECT * FROM test_table"
     df = read_sql(redshift_url, query, protocol="cursor")
@@ -36,7 +37,7 @@ def test_redshift_without_partition(redshift_url: str) -> None:
     assert_frame_equal(df, expected, check_names=True)
 
 
-@pytest.mark.skipif(os.environ.get("TEST_COVER", "main") != "all", reason="Only test main wire protocols unless TEST_COVER=all")
+@pytest.mark.skipif(not os.environ.get("REDSHIFT_URL"), reason="Do not test Redshift unless `REDSHIFT_URL` is set")
 def test_redshift_with_partition(redshift_url: str) -> None:
     query = "SELECT * FROM test_table"
     df = read_sql(
@@ -66,7 +67,7 @@ def test_redshift_with_partition(redshift_url: str) -> None:
     assert_frame_equal(df, expected, check_names=True)
 
 
-@pytest.mark.skipif(os.environ.get("TEST_COVER", "main") != "all", reason="Only test main wire protocols unless TEST_COVER=all")
+@pytest.mark.skipif(not os.environ.get("REDSHIFT_URL"), reason="Do not test Redshift unless `REDSHIFT_URL` is set")
 def test_redshift_types(redshift_url: str) -> None:
     query = "SELECT test_int16, test_char, test_time, test_datetime FROM test_types"
     df = read_sql(redshift_url, query, protocol="cursor")
@@ -94,7 +95,7 @@ def test_redshift_types(redshift_url: str) -> None:
     assert_frame_equal(df, expected, check_names=True)
 
 
-@pytest.mark.skipif(os.environ.get("TEST_COVER", "main") != "all", reason="Only test main wire protocols unless TEST_COVER=all")
+@pytest.mark.skipif(not os.environ.get("REDSHIFT_URL"), reason="Do not test Redshift unless `REDSHIFT_URL` is set")
 def test_read_sql_on_utf8(redshift_url: str) -> None:
     query = "SELECT * FROM test_str"
     df = read_sql(redshift_url, query, protocol="cursor")
