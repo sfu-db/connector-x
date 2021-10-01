@@ -4,7 +4,7 @@ use crate::errors::ConnectorXError;
 use crate::sources::oracle::OracleDialect;
 use anyhow::anyhow;
 use fehler::{throw, throws};
-use log::{debug, trace};
+use log::{debug, trace, warn};
 use sqlparser::ast::{
     BinaryOperator, Expr, Function, FunctionArg, Ident, ObjectName, Query, Select, SelectItem,
     SetExpr, Statement, TableAlias, TableFactor, TableWithJoins, Top, Value,
@@ -98,23 +98,29 @@ impl<Q, E> CXQuery<Result<Q, E>> {
 
 #[throws(ConnectorXError)]
 pub fn get_limit<T: Dialect>(sql: &CXQuery<String>, dialect: &T) -> Option<usize> {
-    let mut ast = Parser::parse_sql(dialect, sql.as_str())?;
-    if ast.len() != 1 {
-        throw!(ConnectorXError::SqlQueryNotSupported(sql.to_string()));
-    }
-
-    match &mut ast[0] {
-        Statement::Query(q) => {
-            if let Some(expr) = &q.limit {
-                return Some(
-                    expr.to_string()
-                        .parse()
-                        .map_err(|e: std::num::ParseIntError| anyhow!(e))?,
-                );
+    match Parser::parse_sql(dialect, sql.as_str()) {
+        Ok(mut ast) => {
+            if ast.len() != 1 {
+                throw!(ConnectorXError::SqlQueryNotSupported(sql.to_string()));
             }
+
+            match &mut ast[0] {
+                Statement::Query(q) => {
+                    if let Some(expr) = &q.limit {
+                        return Some(
+                            expr.to_string()
+                                .parse()
+                                .map_err(|e: std::num::ParseIntError| anyhow!(e))?,
+                        );
+                    }
+                }
+                _ => throw!(ConnectorXError::SqlQueryNotSupported(sql.to_string())),
+            };
         }
-        _ => throw!(ConnectorXError::SqlQueryNotSupported(sql.to_string())),
-    };
+        Err(e) => {
+            warn!("parser error: {:?}, query database for # rows in result", e);
+        }
+    }
     None
 }
 
@@ -218,57 +224,62 @@ impl QueryExt for Query {
 pub fn count_query<T: Dialect>(sql: &CXQuery<String>, dialect: &T) -> CXQuery<String> {
     trace!("Incoming query: {}", sql);
 
-    let projection = vec![SelectItem::UnnamedExpr(Expr::Function(Function {
-        name: ObjectName(vec![Ident {
-            value: "count".to_string(),
-            quote_style: None,
-        }]),
-        args: vec![FunctionArg::Unnamed(Expr::Wildcard)],
-        over: None,
-        distinct: false,
-    }))];
-
-    let ast = sql.map(|sql| Parser::parse_sql(dialect, sql)).result()?;
-
-    let ast_count: Statement = match ast {
-        CXQuery::Naked(ast) => {
-            if ast.len() != 1 {
-                throw!(ConnectorXError::SqlQueryNotSupported(sql.to_string()));
-            }
-            let mut query = ast[0]
-                .as_query()
-                .ok_or_else(|| ConnectorXError::SqlQueryNotSupported(sql.to_string()))?
-                .clone();
-            query.order_by = vec![];
-            let select = query
-                .as_select_mut()
-                .ok_or_else(|| ConnectorXError::SqlQueryNotSupported(sql.to_string()))?;
-            select.sort_by = vec![];
-            wrap_query(&query, projection, None, "CXTMPTAB_COUNT")
+    let mut sql = match sql.map(|sql| Parser::parse_sql(dialect, sql)).result() {
+        Ok(ast) => {
+            let projection = vec![SelectItem::UnnamedExpr(Expr::Function(Function {
+                name: ObjectName(vec![Ident {
+                    value: "count".to_string(),
+                    quote_style: None,
+                }]),
+                args: vec![FunctionArg::Unnamed(Expr::Wildcard)],
+                over: None,
+                distinct: false,
+            }))];
+            let ast_count: Statement = match ast {
+                CXQuery::Naked(ast) => {
+                    if ast.len() != 1 {
+                        throw!(ConnectorXError::SqlQueryNotSupported(sql.to_string()));
+                    }
+                    let mut query = ast[0]
+                        .as_query()
+                        .ok_or_else(|| ConnectorXError::SqlQueryNotSupported(sql.to_string()))?
+                        .clone();
+                    query.order_by = vec![];
+                    let select = query
+                        .as_select_mut()
+                        .ok_or_else(|| ConnectorXError::SqlQueryNotSupported(sql.to_string()))?;
+                    select.sort_by = vec![];
+                    wrap_query(&query, projection, None, "CXTMPTAB_COUNT")
+                }
+                CXQuery::Wrapped(ast) => {
+                    if ast.len() != 1 {
+                        throw!(ConnectorXError::SqlQueryNotSupported(sql.to_string()));
+                    }
+                    let mut query = ast[0]
+                        .as_query()
+                        .ok_or_else(|| ConnectorXError::SqlQueryNotSupported(sql.to_string()))?
+                        .clone();
+                    let select = query
+                        .as_select_mut()
+                        .ok_or_else(|| ConnectorXError::SqlQueryNotSupported(sql.to_string()))?;
+                    select.projection = projection;
+                    Statement::Query(Box::new(query))
+                }
+            };
+            format!("{}", ast_count)
         }
-        CXQuery::Wrapped(ast) => {
-            if ast.len() != 1 {
-                throw!(ConnectorXError::SqlQueryNotSupported(sql.to_string()));
-            }
-            let mut query = ast[0]
-                .as_query()
-                .ok_or_else(|| ConnectorXError::SqlQueryNotSupported(sql.to_string()))?
-                .clone();
-            let select = query
-                .as_select_mut()
-                .ok_or_else(|| ConnectorXError::SqlQueryNotSupported(sql.to_string()))?;
-            select.projection = projection;
-            Statement::Query(Box::new(query))
+        Err(e) => {
+            warn!("parser error: {:?}, manually compose query string", e);
+            format!("SELECT COUNT(*) FROM ({}) as CXTMPTAB_COUNT", sql.as_str())
         }
     };
 
     // HACK: Some dialect (e.g. Oracle) does not support "AS" for alias
     // Hard code "(subquery) alias" instead of output "(subquery) AS alias"
-    let sql = if dialect.type_id() == (OracleDialect {}.type_id()) {
-        format!("{}", ast_count).replace(" AS", "")
-    } else {
-        format!("{}", ast_count)
-    };
+    if dialect.type_id() == (OracleDialect {}.type_id()) {
+        sql = sql.replace(" AS", "");
+    }
+
     debug!("Transformed count query: {}", sql);
     CXQuery::Wrapped(sql)
 }
@@ -277,19 +288,27 @@ pub fn count_query<T: Dialect>(sql: &CXQuery<String>, dialect: &T) -> CXQuery<St
 pub fn limit1_query<T: Dialect>(sql: &CXQuery<String>, dialect: &T) -> CXQuery<String> {
     trace!("Incoming query: {}", sql);
 
-    let mut ast = Parser::parse_sql(dialect, sql.as_str())?;
-    if ast.len() != 1 {
-        throw!(ConnectorXError::SqlQueryNotSupported(sql.to_string()));
-    }
+    let sql = match Parser::parse_sql(dialect, sql.as_str()) {
+        Ok(mut ast) => {
+            if ast.len() != 1 {
+                throw!(ConnectorXError::SqlQueryNotSupported(sql.to_string()));
+            }
 
-    match &mut ast[0] {
-        Statement::Query(q) => {
-            q.limit = Some(Expr::Value(Value::Number("1".to_string(), false)));
+            match &mut ast[0] {
+                Statement::Query(q) => {
+                    q.limit = Some(Expr::Value(Value::Number("1".to_string(), false)));
+                }
+                _ => throw!(ConnectorXError::SqlQueryNotSupported(sql.to_string())),
+            };
+
+            format!("{}", ast[0])
         }
-        _ => throw!(ConnectorXError::SqlQueryNotSupported(sql.to_string())),
+        Err(e) => {
+            warn!("parser error: {:?}, manually compose query string", e);
+            format!("{} LIMIT 1", sql.as_str())
+        }
     };
 
-    let sql = format!("{}", ast[0]);
     debug!("Transformed limit 1 query: {}", sql);
     CXQuery::Wrapped(sql)
 }
@@ -365,77 +384,83 @@ pub fn single_col_partition_query<T: Dialect>(
     trace!("Incoming query: {}", query);
     const PART_TMP_TAB_NAME: &str = "CXTMPTAB_PART";
 
-    let mut ast = Parser::parse_sql(dialect, query)?;
-    if ast.len() != 1 {
-        throw!(ConnectorXError::SqlQueryNotSupported(query.to_string()));
-    }
-
-    let ast_part: Statement;
-    match &mut ast[0] {
-        Statement::Query(q) => match &mut q.body {
-            SetExpr::Select(select) => {
-                let lb = Expr::BinaryOp {
-                    left: Box::new(Expr::Value(Value::Number(lower.to_string(), false))),
-                    op: BinaryOperator::LtEq,
-                    right: Box::new(Expr::CompoundIdentifier(vec![
-                        Ident {
-                            value: PART_TMP_TAB_NAME.to_string(),
-                            quote_style: None,
-                        },
-                        Ident {
-                            value: col.to_string(),
-                            quote_style: None,
-                        },
-                    ])),
-                };
-
-                let ub = Expr::BinaryOp {
-                    left: Box::new(Expr::CompoundIdentifier(vec![
-                        Ident {
-                            value: PART_TMP_TAB_NAME.to_string(),
-                            quote_style: None,
-                        },
-                        Ident {
-                            value: col.to_string(),
-                            quote_style: None,
-                        },
-                    ])),
-                    op: BinaryOperator::Lt,
-                    right: Box::new(Expr::Value(Value::Number(upper.to_string(), false))),
-                };
-
-                let selection = Expr::BinaryOp {
-                    left: Box::new(lb),
-                    op: BinaryOperator::And,
-                    right: Box::new(ub),
-                };
-
-                if q.limit.is_none() && select.top.is_none() && !q.order_by.is_empty() {
-                    // order by in a partition query does not make sense because partition is unordered.
-                    // clear the order by beceause mssql does not support order by in a derived table.
-                    // also order by in the derived table does not make any difference.
-                    q.order_by.clear();
-                }
-
-                ast_part = wrap_query(
-                    &q,
-                    vec![SelectItem::Wildcard],
-                    Some(selection),
-                    PART_TMP_TAB_NAME,
-                );
+    let mut sql = match Parser::parse_sql(dialect, query) {
+        Ok(mut ast) => {
+            if ast.len() != 1 {
+                throw!(ConnectorXError::SqlQueryNotSupported(query.to_string()));
             }
-            _ => throw!(ConnectorXError::SqlQueryNotSupported(query.to_string())),
-        },
-        _ => throw!(ConnectorXError::SqlQueryNotSupported(query.to_string())),
+
+            let ast_part: Statement;
+            match &mut ast[0] {
+                Statement::Query(q) => match &mut q.body {
+                    SetExpr::Select(select) => {
+                        let lb = Expr::BinaryOp {
+                            left: Box::new(Expr::Value(Value::Number(lower.to_string(), false))),
+                            op: BinaryOperator::LtEq,
+                            right: Box::new(Expr::CompoundIdentifier(vec![
+                                Ident {
+                                    value: PART_TMP_TAB_NAME.to_string(),
+                                    quote_style: None,
+                                },
+                                Ident {
+                                    value: col.to_string(),
+                                    quote_style: None,
+                                },
+                            ])),
+                        };
+
+                        let ub = Expr::BinaryOp {
+                            left: Box::new(Expr::CompoundIdentifier(vec![
+                                Ident {
+                                    value: PART_TMP_TAB_NAME.to_string(),
+                                    quote_style: None,
+                                },
+                                Ident {
+                                    value: col.to_string(),
+                                    quote_style: None,
+                                },
+                            ])),
+                            op: BinaryOperator::Lt,
+                            right: Box::new(Expr::Value(Value::Number(upper.to_string(), false))),
+                        };
+
+                        let selection = Expr::BinaryOp {
+                            left: Box::new(lb),
+                            op: BinaryOperator::And,
+                            right: Box::new(ub),
+                        };
+
+                        if q.limit.is_none() && select.top.is_none() && !q.order_by.is_empty() {
+                            // order by in a partition query does not make sense because partition is unordered.
+                            // clear the order by beceause mssql does not support order by in a derived table.
+                            // also order by in the derived table does not make any difference.
+                            q.order_by.clear();
+                        }
+
+                        ast_part = wrap_query(
+                            &q,
+                            vec![SelectItem::Wildcard],
+                            Some(selection),
+                            PART_TMP_TAB_NAME,
+                        );
+                    }
+                    _ => throw!(ConnectorXError::SqlQueryNotSupported(query.to_string())),
+                },
+                _ => throw!(ConnectorXError::SqlQueryNotSupported(query.to_string())),
+            };
+            format!("{}", ast_part)
+        }
+        Err(e) => {
+            warn!("parser error: {:?}, manually compose query string", e);
+            format!("SELECT * FROM ({}) AS CXTMPTAB_PART WHERE CXTMPTAB_PART.{} >= {} AND CXTMPTAB_PART.{} < {}", query, col, lower, col, upper)
+        }
     };
 
     // HACK: Some dialect (e.g. Oracle) does not support "AS" for alias
     // Hard code "(subquery) alias" instead of output "(subquery) AS alias"
-    let sql = if dialect.type_id() == (OracleDialect {}.type_id()) {
-        format!("{}", ast_part).replace(" AS", "")
-    } else {
-        format!("{}", ast_part)
-    };
+    if dialect.type_id() == (OracleDialect {}.type_id()) {
+        sql = sql.replace(" AS", "")
+    }
 
     debug!("Transformed single column partition query: {}", sql);
     sql
@@ -445,71 +470,86 @@ pub fn single_col_partition_query<T: Dialect>(
 pub fn get_partition_range_query<T: Dialect>(query: &str, col: &str, dialect: &T) -> String {
     trace!("Incoming query: {}", query);
     const RANGE_TMP_TAB_NAME: &str = "CXTMPTAB_RANGE";
-    let mut ast = Parser::parse_sql(dialect, query)?;
-    if ast.len() != 1 {
-        throw!(ConnectorXError::SqlQueryNotSupported(query.to_string()));
-    }
 
-    let ast_range: Statement;
+    let mut sql = match Parser::parse_sql(dialect, query) {
+        Ok(mut ast) => {
+            if ast.len() != 1 {
+                throw!(ConnectorXError::SqlQueryNotSupported(query.to_string()));
+            }
 
-    match &mut ast[0] {
-        Statement::Query(q) => {
-            q.order_by = vec![];
-            match &mut q.body {
-                SetExpr::Select(_select) => {
-                    let projection = vec![
-                        SelectItem::UnnamedExpr(Expr::Function(Function {
-                            name: ObjectName(vec![Ident {
-                                value: "min".to_string(),
-                                quote_style: None,
-                            }]),
-                            args: vec![FunctionArg::Unnamed(Expr::CompoundIdentifier(vec![
-                                Ident {
-                                    value: RANGE_TMP_TAB_NAME.to_string(),
-                                    quote_style: None,
-                                },
-                                Ident {
-                                    value: col.to_string(),
-                                    quote_style: None,
-                                },
-                            ]))],
-                            over: None,
-                            distinct: false,
-                        })),
-                        SelectItem::UnnamedExpr(Expr::Function(Function {
-                            name: ObjectName(vec![Ident {
-                                value: "max".to_string(),
-                                quote_style: None,
-                            }]),
-                            args: vec![FunctionArg::Unnamed(Expr::CompoundIdentifier(vec![
-                                Ident {
-                                    value: RANGE_TMP_TAB_NAME.to_string(),
-                                    quote_style: None,
-                                },
-                                Ident {
-                                    value: col.to_string(),
-                                    quote_style: None,
-                                },
-                            ]))],
-                            over: None,
-                            distinct: false,
-                        })),
-                    ];
-                    ast_range = wrap_query(&q, projection, None, RANGE_TMP_TAB_NAME);
+            let ast_range: Statement;
+
+            match &mut ast[0] {
+                Statement::Query(q) => {
+                    q.order_by = vec![];
+                    match &mut q.body {
+                        SetExpr::Select(_select) => {
+                            let projection = vec![
+                                SelectItem::UnnamedExpr(Expr::Function(Function {
+                                    name: ObjectName(vec![Ident {
+                                        value: "min".to_string(),
+                                        quote_style: None,
+                                    }]),
+                                    args: vec![FunctionArg::Unnamed(Expr::CompoundIdentifier(
+                                        vec![
+                                            Ident {
+                                                value: RANGE_TMP_TAB_NAME.to_string(),
+                                                quote_style: None,
+                                            },
+                                            Ident {
+                                                value: col.to_string(),
+                                                quote_style: None,
+                                            },
+                                        ],
+                                    ))],
+                                    over: None,
+                                    distinct: false,
+                                })),
+                                SelectItem::UnnamedExpr(Expr::Function(Function {
+                                    name: ObjectName(vec![Ident {
+                                        value: "max".to_string(),
+                                        quote_style: None,
+                                    }]),
+                                    args: vec![FunctionArg::Unnamed(Expr::CompoundIdentifier(
+                                        vec![
+                                            Ident {
+                                                value: RANGE_TMP_TAB_NAME.to_string(),
+                                                quote_style: None,
+                                            },
+                                            Ident {
+                                                value: col.to_string(),
+                                                quote_style: None,
+                                            },
+                                        ],
+                                    ))],
+                                    over: None,
+                                    distinct: false,
+                                })),
+                            ];
+                            ast_range = wrap_query(&q, projection, None, RANGE_TMP_TAB_NAME);
+                        }
+                        _ => throw!(ConnectorXError::SqlQueryNotSupported(query.to_string())),
+                    }
                 }
                 _ => throw!(ConnectorXError::SqlQueryNotSupported(query.to_string())),
-            }
+            };
+            format!("{}", ast_range)
         }
-        _ => throw!(ConnectorXError::SqlQueryNotSupported(query.to_string())),
+        Err(e) => {
+            warn!("parser error: {:?}, manually compose query string", e);
+            format!(
+                "SELECT MIN({}.{}) as min, MAX({}.{}) as max FROM ({}) AS {}",
+                RANGE_TMP_TAB_NAME, col, RANGE_TMP_TAB_NAME, col, query, RANGE_TMP_TAB_NAME
+            )
+        }
     };
 
     // HACK: Some dialect (e.g. Oracle) does not support "AS" for alias
     // Hard code "(subquery) alias" instead of output "(subquery) AS alias"
-    let sql = if dialect.type_id() == (OracleDialect {}.type_id()) {
-        format!("{}", ast_range).replace(" AS", "")
-    } else {
-        format!("{}", ast_range)
-    };
+    if dialect.type_id() == (OracleDialect {}.type_id()) {
+        sql = sql.replace(" AS", "")
+    }
+
     debug!("Transformed partition range query: {}", sql);
     sql
 }
@@ -522,65 +562,87 @@ pub fn get_partition_range_query_sep<T: Dialect>(
 ) -> (String, String) {
     trace!("Incoming query: {}", query);
     const RANGE_TMP_TAB_NAME: &str = "CXTMPTAB_RANGE";
-    let mut ast = Parser::parse_sql(dialect, query)?;
-    if ast.len() != 1 {
-        throw!(ConnectorXError::SqlQueryNotSupported(query.to_string()));
-    }
 
-    let ast_range_min: Statement;
-    let ast_range_max: Statement;
+    let (sql_min, sql_max) = match Parser::parse_sql(dialect, query) {
+        Ok(mut ast) => {
+            if ast.len() != 1 {
+                throw!(ConnectorXError::SqlQueryNotSupported(query.to_string()));
+            }
 
-    match &mut ast[0] {
-        Statement::Query(q) => {
-            q.order_by = vec![];
-            match &mut q.body {
-                SetExpr::Select(_select) => {
-                    let min_proj = vec![SelectItem::UnnamedExpr(Expr::Function(Function {
-                        name: ObjectName(vec![Ident {
-                            value: "min".to_string(),
-                            quote_style: None,
-                        }]),
-                        args: vec![FunctionArg::Unnamed(Expr::CompoundIdentifier(vec![
-                            Ident {
-                                value: RANGE_TMP_TAB_NAME.to_string(),
-                                quote_style: None,
-                            },
-                            Ident {
-                                value: col.to_string(),
-                                quote_style: None,
-                            },
-                        ]))],
-                        over: None,
-                        distinct: false,
-                    }))];
-                    let max_proj = vec![SelectItem::UnnamedExpr(Expr::Function(Function {
-                        name: ObjectName(vec![Ident {
-                            value: "max".to_string(),
-                            quote_style: None,
-                        }]),
-                        args: vec![FunctionArg::Unnamed(Expr::CompoundIdentifier(vec![
-                            Ident {
-                                value: RANGE_TMP_TAB_NAME.into(),
-                                quote_style: None,
-                            },
-                            Ident {
-                                value: col.into(),
-                                quote_style: None,
-                            },
-                        ]))],
-                        over: None,
-                        distinct: false,
-                    }))];
-                    ast_range_min = wrap_query(&q, min_proj, None, RANGE_TMP_TAB_NAME);
-                    ast_range_max = wrap_query(&q, max_proj, None, RANGE_TMP_TAB_NAME);
+            let ast_range_min: Statement;
+            let ast_range_max: Statement;
+
+            match &mut ast[0] {
+                Statement::Query(q) => {
+                    q.order_by = vec![];
+                    match &mut q.body {
+                        SetExpr::Select(_select) => {
+                            let min_proj =
+                                vec![SelectItem::UnnamedExpr(Expr::Function(Function {
+                                    name: ObjectName(vec![Ident {
+                                        value: "min".to_string(),
+                                        quote_style: None,
+                                    }]),
+                                    args: vec![FunctionArg::Unnamed(Expr::CompoundIdentifier(
+                                        vec![
+                                            Ident {
+                                                value: RANGE_TMP_TAB_NAME.to_string(),
+                                                quote_style: None,
+                                            },
+                                            Ident {
+                                                value: col.to_string(),
+                                                quote_style: None,
+                                            },
+                                        ],
+                                    ))],
+                                    over: None,
+                                    distinct: false,
+                                }))];
+                            let max_proj =
+                                vec![SelectItem::UnnamedExpr(Expr::Function(Function {
+                                    name: ObjectName(vec![Ident {
+                                        value: "max".to_string(),
+                                        quote_style: None,
+                                    }]),
+                                    args: vec![FunctionArg::Unnamed(Expr::CompoundIdentifier(
+                                        vec![
+                                            Ident {
+                                                value: RANGE_TMP_TAB_NAME.into(),
+                                                quote_style: None,
+                                            },
+                                            Ident {
+                                                value: col.into(),
+                                                quote_style: None,
+                                            },
+                                        ],
+                                    ))],
+                                    over: None,
+                                    distinct: false,
+                                }))];
+                            ast_range_min = wrap_query(&q, min_proj, None, RANGE_TMP_TAB_NAME);
+                            ast_range_max = wrap_query(&q, max_proj, None, RANGE_TMP_TAB_NAME);
+                        }
+                        _ => throw!(ConnectorXError::SqlQueryNotSupported(query.to_string())),
+                    }
                 }
                 _ => throw!(ConnectorXError::SqlQueryNotSupported(query.to_string())),
-            }
+            };
+            (format!("{}", ast_range_min), format!("{}", ast_range_max))
         }
-        _ => throw!(ConnectorXError::SqlQueryNotSupported(query.to_string())),
+        Err(e) => {
+            warn!("parser error: {:?}, manually compose query string", e);
+            (
+                format!(
+                    "SELECT MIN({}.{}) as min FROM ({}) AS {}",
+                    RANGE_TMP_TAB_NAME, col, query, RANGE_TMP_TAB_NAME
+                ),
+                format!(
+                    "SELECT MAX({}.{}) as max FROM ({}) AS {}",
+                    RANGE_TMP_TAB_NAME, col, query, RANGE_TMP_TAB_NAME
+                ),
+            )
+        }
     };
-    let sql_min = format!("{}", ast_range_min);
-    let sql_max = format!("{}", ast_range_max);
     debug!(
         "Transformed separated partition range query: {}, {}",
         sql_min, sql_max

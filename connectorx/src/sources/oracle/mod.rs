@@ -8,7 +8,7 @@ use crate::{
     sql::{count_query, get_limit, CXQuery},
 };
 use anyhow::anyhow;
-use chrono::{NaiveDate, NaiveDateTime};
+use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
 use fehler::{throw, throws};
 use log::debug;
 use r2d2::{Pool, PooledConnection};
@@ -305,4 +305,4 @@ macro_rules! impl_produce_text {
     };
 }
 
-impl_produce_text!(i64, f64, String, NaiveDate, NaiveDateTime,);
+impl_produce_text!(i64, f64, String, NaiveDate, NaiveDateTime, DateTime<Utc>,);

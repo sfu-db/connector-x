@@ -18,6 +18,8 @@ impl_transport!(
     mappings = {
         { NumFloat[f64]              => F64[f64]                | conversion auto }
         { Float[f64]                 => F64[f64]                | conversion none }
+        { BinaryFloat[f64]           => F64[f64]                | conversion none }
+        { BinaryDouble[f64]          => F64[f64]                | conversion none }
         { NumInt[i64]                => I64[i64]                | conversion auto }
         { VarChar[String]            => String[String]          | conversion auto }
         { Char[String]               => String[String]          | conversion none }
@@ -25,6 +27,7 @@ impl_transport!(
         { NChar[String]              => String[String]          | conversion none }
         { Date[NaiveDate]            => DateTime[DateTime<Utc>] | conversion option }
         { Timestamp[NaiveDateTime]   => DateTime[DateTime<Utc>] | conversion option }
+        { TimestampTz[DateTime<Utc>] => DateTime[DateTime<Utc>] | conversion auto }
     }
 );
 
