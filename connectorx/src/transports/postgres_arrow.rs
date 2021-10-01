@@ -8,7 +8,7 @@ use crate::sources::postgres::{
     PostgresTypeSystem,
 };
 use crate::typesystem::TypeConversion;
-use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
+use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
 use num_traits::ToPrimitive;
 use postgres::NoTls;
 use postgres_native_tls::MakeTlsConnector;
@@ -40,21 +40,22 @@ macro_rules! impl_postgres_transport {
             systems = PostgresTypeSystem => ArrowTypeSystem,
             route = PostgresSource<$proto, $tls> => ArrowDestination,
             mappings = {
-                { Float4[f32]                => Float32[f32]            | conversion auto }
-                { Float8[f64]                => Float64[f64]            | conversion auto }
-                { Numeric[Decimal]           => Float64[f64]            | conversion option }
-                { Int2[i16]                  => Int32[i32]              | conversion auto }
-                { Int4[i32]                  => Int32[i32]              | conversion auto }
-                { Int8[i64]                  => Int64[i64]              | conversion auto }
-                { Bool[bool]                 => Boolean[bool]           | conversion auto  }
-                { Text[&'r str]              => LargeUtf8[String]       | conversion owned }
-                { BpChar[&'r str]            => LargeUtf8[String]       | conversion none }
-                { VarChar[&'r str]           => LargeUtf8[String]       | conversion none }
-                { Timestamp[NaiveDateTime]   => Date64[NaiveDateTime]   | conversion auto }
-                { Date[NaiveDate]            => Date32[NaiveDate]       | conversion auto }
-                { Time[NaiveTime]            => Time64[NaiveTime]       | conversion auto }
-                { UUID[Uuid]                 => LargeUtf8[String]       | conversion option }
-                { Char[&'r str]              => LargeUtf8[String]       | conversion none }
+                { Float4[f32]                => Float32[f32]              | conversion auto }
+                { Float8[f64]                => Float64[f64]              | conversion auto }
+                { Numeric[Decimal]           => Float64[f64]              | conversion option }
+                { Int2[i16]                  => Int32[i32]                | conversion auto }
+                { Int4[i32]                  => Int32[i32]                | conversion auto }
+                { Int8[i64]                  => Int64[i64]                | conversion auto }
+                { Bool[bool]                 => Boolean[bool]             | conversion auto  }
+                { Text[&'r str]              => LargeUtf8[String]         | conversion owned }
+                { BpChar[&'r str]            => LargeUtf8[String]         | conversion none }
+                { VarChar[&'r str]           => LargeUtf8[String]         | conversion none }
+                { Timestamp[NaiveDateTime]   => Date64[NaiveDateTime]     | conversion auto }
+                { Date[NaiveDate]            => Date32[NaiveDate]         | conversion auto }
+                { Time[NaiveTime]            => Time64[NaiveTime]         | conversion auto }
+                { TimestampTz[DateTime<Utc>] => DateTimeTz[DateTime<Utc>] | conversion auto }
+                { UUID[Uuid]                 => LargeUtf8[String]         | conversion option }
+                { Char[&'r str]              => LargeUtf8[String]         | conversion none }
             }
         );
     }
