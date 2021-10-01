@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1632850972217,
+  "lastUpdate": 1633071730013,
   "repoUrl": "https://github.com/sfu-db/connector-x",
   "entries": {
     "ConnectorX TPC-H Scale@1 Benchmarks": [
@@ -2318,6 +2318,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.7790524636920737",
             "extra": "mean: 15.168451460055076 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "xiaoying_wang@sfu.ca",
+            "name": "Xiaoying Wang",
+            "username": "wangxiaoying"
+          },
+          "committer": {
+            "email": "xiaoying_wang@sfu.ca",
+            "name": "Xiaoying Wang",
+            "username": "wangxiaoying"
+          },
+          "distinct": true,
+          "id": "39dbdfba5610736c47d2860e5832aabadaed8740",
+          "message": "Merge branch 'oracle_types' into main",
+          "timestamp": "2021-10-01T06:53:33Z",
+          "tree_id": "90c245471a0f94816daa782946628b71d8f33e84",
+          "url": "https://github.com/sfu-db/connector-x/commit/39dbdfba5610736c47d2860e5832aabadaed8740"
+        },
+        "date": 1633071728709,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_mysql",
+            "value": 0.059053047596850414,
+            "unit": "iter/sec",
+            "range": "stddev: 0.5331586939120976",
+            "extra": "mean: 16.933927048556505 sec\nrounds: 5"
+          },
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_postgres",
+            "value": 0.06897010580067228,
+            "unit": "iter/sec",
+            "range": "stddev: 3.309147797833932",
+            "extra": "mean: 14.499035319592803 sec\nrounds: 5"
           }
         ]
       }
