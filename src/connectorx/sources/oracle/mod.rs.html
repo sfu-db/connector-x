@@ -320,7 +320,7 @@
     <span class="ident">sql</span>::{<span class="ident">count_query</span>, <span class="ident">get_limit</span>, <span class="ident">CXQuery</span>},
 };
 <span class="kw">use</span> <span class="ident">anyhow::anyhow</span>;
-<span class="kw">use</span> <span class="ident">chrono</span>::{<span class="ident">NaiveDate</span>, <span class="ident">NaiveDateTime</span>};
+<span class="kw">use</span> <span class="ident">chrono</span>::{<span class="ident">DateTime</span>, <span class="ident">NaiveDate</span>, <span class="ident">NaiveDateTime</span>, <span class="ident">Utc</span>};
 <span class="kw">use</span> <span class="ident">fehler</span>::{<span class="ident">throw</span>, <span class="ident">throws</span>};
 <span class="kw">use</span> <span class="ident">log::debug</span>;
 <span class="kw">use</span> <span class="ident">r2d2</span>::{<span class="ident">Pool</span>, <span class="ident">PooledConnection</span>};
@@ -617,7 +617,7 @@
     };
 }
 
-<span class="macro">impl_produce_text!</span>(<span class="ident">i64</span>, <span class="ident">f64</span>, <span class="ident">String</span>, <span class="ident">NaiveDate</span>, <span class="ident">NaiveDateTime</span>,);
+<span class="macro">impl_produce_text!</span>(<span class="ident">i64</span>, <span class="ident">f64</span>, <span class="ident">String</span>, <span class="ident">NaiveDate</span>, <span class="ident">NaiveDateTime</span>, <span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span>,);
 </pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="connectorx" data-search-index-js="../../../../search-index.js" data-search-js="../../../../search.js"></div>
     <script src="../../../../main.js"></script><script src="../../../../source-script.js"></script><script src="../../../../source-files.js"></script></body></html>

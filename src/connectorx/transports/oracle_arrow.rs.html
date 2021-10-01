@@ -41,6 +41,9 @@
 <span id="38">38</span>
 <span id="39">39</span>
 <span id="40">40</span>
+<span id="41">41</span>
+<span id="42">42</span>
+<span id="43">43</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">destinations::arrow</span>::{<span class="ident">typesystem::ArrowTypeSystem</span>, <span class="ident">ArrowDestination</span>, <span class="ident">ArrowDestinationError</span>},
@@ -48,7 +51,7 @@
     <span class="ident">sources::oracle</span>::{<span class="ident">OracleSource</span>, <span class="ident">OracleSourceError</span>, <span class="ident">OracleTypeSystem</span>},
     <span class="ident">typesystem::TypeConversion</span>,
 };
-<span class="kw">use</span> <span class="ident">chrono</span>::{<span class="ident">NaiveDate</span>, <span class="ident">NaiveDateTime</span>};
+<span class="kw">use</span> <span class="ident">chrono</span>::{<span class="ident">DateTime</span>, <span class="ident">NaiveDate</span>, <span class="ident">NaiveDateTime</span>, <span class="ident">Utc</span>};
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Error</span>, <span class="ident">Debug</span>)]</span>
@@ -71,15 +74,18 @@
     <span class="ident">systems</span> <span class="op">=</span> <span class="ident">OracleTypeSystem</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ArrowTypeSystem</span>,
     <span class="ident">route</span> <span class="op">=</span> <span class="ident">OracleSource</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ArrowDestination</span>,
     <span class="ident">mappings</span> <span class="op">=</span> {
-        { <span class="ident">NumFloat</span>[<span class="ident">f64</span>]             <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Float64</span>[<span class="ident">f64</span>]            <span class="op">|</span> <span class="ident">conversion</span> <span class="ident">auto</span> }
-        { <span class="ident">Float</span>[<span class="ident">f64</span>]                <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Float64</span>[<span class="ident">f64</span>]            <span class="op">|</span> <span class="ident">conversion</span> <span class="ident">none</span> }
-        { <span class="ident">NumInt</span>[<span class="ident">i64</span>]               <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Int64</span>[<span class="ident">i64</span>]              <span class="op">|</span> <span class="ident">conversion</span> <span class="ident">auto</span> }
-        { <span class="ident">VarChar</span>[<span class="ident">String</span>]           <span class="op">=</span><span class="op">&gt;</span> <span class="ident">LargeUtf8</span>[<span class="ident">String</span>]       <span class="op">|</span> <span class="ident">conversion</span> <span class="ident">auto</span> }
-        { <span class="ident">Char</span>[<span class="ident">String</span>]              <span class="op">=</span><span class="op">&gt;</span> <span class="ident">LargeUtf8</span>[<span class="ident">String</span>]       <span class="op">|</span> <span class="ident">conversion</span> <span class="ident">none</span> }
-        { <span class="ident">NVarChar</span>[<span class="ident">String</span>]          <span class="op">=</span><span class="op">&gt;</span> <span class="ident">LargeUtf8</span>[<span class="ident">String</span>]       <span class="op">|</span> <span class="ident">conversion</span> <span class="ident">none</span> }
-        { <span class="ident">NChar</span>[<span class="ident">String</span>]             <span class="op">=</span><span class="op">&gt;</span> <span class="ident">LargeUtf8</span>[<span class="ident">String</span>]       <span class="op">|</span> <span class="ident">conversion</span> <span class="ident">none</span> }
-        { <span class="ident">Date</span>[<span class="ident">NaiveDate</span>]           <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Date32</span>[<span class="ident">NaiveDate</span>]       <span class="op">|</span> <span class="ident">conversion</span> <span class="ident">auto</span> }
-        { <span class="ident">Timestamp</span>[<span class="ident">NaiveDateTime</span>]  <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Date64</span>[<span class="ident">NaiveDateTime</span>]   <span class="op">|</span> <span class="ident">conversion</span> <span class="ident">auto</span> }
+        { <span class="ident">NumFloat</span>[<span class="ident">f64</span>]              <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Float64</span>[<span class="ident">f64</span>]               <span class="op">|</span> <span class="ident">conversion</span> <span class="ident">auto</span> }
+        { <span class="ident">Float</span>[<span class="ident">f64</span>]                 <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Float64</span>[<span class="ident">f64</span>]               <span class="op">|</span> <span class="ident">conversion</span> <span class="ident">none</span> }
+        { <span class="ident">BinaryFloat</span>[<span class="ident">f64</span>]           <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Float64</span>[<span class="ident">f64</span>]               <span class="op">|</span> <span class="ident">conversion</span> <span class="ident">none</span> }
+        { <span class="ident">BinaryDouble</span>[<span class="ident">f64</span>]          <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Float64</span>[<span class="ident">f64</span>]               <span class="op">|</span> <span class="ident">conversion</span> <span class="ident">none</span> }
+        { <span class="ident">NumInt</span>[<span class="ident">i64</span>]                <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Int64</span>[<span class="ident">i64</span>]                 <span class="op">|</span> <span class="ident">conversion</span> <span class="ident">auto</span> }
+        { <span class="ident">VarChar</span>[<span class="ident">String</span>]            <span class="op">=</span><span class="op">&gt;</span> <span class="ident">LargeUtf8</span>[<span class="ident">String</span>]          <span class="op">|</span> <span class="ident">conversion</span> <span class="ident">auto</span> }
+        { <span class="ident">Char</span>[<span class="ident">String</span>]               <span class="op">=</span><span class="op">&gt;</span> <span class="ident">LargeUtf8</span>[<span class="ident">String</span>]          <span class="op">|</span> <span class="ident">conversion</span> <span class="ident">none</span> }
+        { <span class="ident">NVarChar</span>[<span class="ident">String</span>]           <span class="op">=</span><span class="op">&gt;</span> <span class="ident">LargeUtf8</span>[<span class="ident">String</span>]          <span class="op">|</span> <span class="ident">conversion</span> <span class="ident">none</span> }
+        { <span class="ident">NChar</span>[<span class="ident">String</span>]              <span class="op">=</span><span class="op">&gt;</span> <span class="ident">LargeUtf8</span>[<span class="ident">String</span>]          <span class="op">|</span> <span class="ident">conversion</span> <span class="ident">none</span> }
+        { <span class="ident">Date</span>[<span class="ident">NaiveDate</span>]            <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Date32</span>[<span class="ident">NaiveDate</span>]          <span class="op">|</span> <span class="ident">conversion</span> <span class="ident">auto</span> }
+        { <span class="ident">Timestamp</span>[<span class="ident">NaiveDateTime</span>]   <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Date64</span>[<span class="ident">NaiveDateTime</span>]      <span class="op">|</span> <span class="ident">conversion</span> <span class="ident">auto</span> }
+        { <span class="ident">TimestampTz</span>[<span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span>] <span class="op">=</span><span class="op">&gt;</span> <span class="ident">DateTimeTz</span>[<span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span>]  <span class="op">|</span> <span class="ident">conversion</span> <span class="ident">auto</span> }
     }
 );
 </pre></div>
