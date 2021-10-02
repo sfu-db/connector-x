@@ -126,7 +126,7 @@
 //!
 //! # Feature gates
 //! By default, ConnectorX does not enable any sources / destinations to keep the dependencies minimal.
-//! Instead, we provide following features for you to opt-in: `src_sqlite`, `src_postgres`, `src_mysql`, `src_mssql`, `dst_arrow`, `dst_polars`.
+//! Instead, we provide following features for you to opt-in: `src_sqlite`, `src_postgres`, `src_mysql`, `src_mssql`, `src_oracle`, `dst_arrow`, `dst_arrow2`.
 //! For example, if you'd like to load data from Postgres to Arrow, you can enable `src_postgres` and `dst_arrow` in `Cargo.toml`.
 //! This will enable [`sources::postgres`], [`destinations::arrow`] and [`transports::PostgresArrowTransport`].
 

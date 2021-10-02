@@ -7,37 +7,35 @@ mod errors;
 mod funcs;
 pub mod typesystem;
 
+use super::{Consume, Destination, DestinationPartition};
+use crate::data_order::DataOrder;
+use crate::typesystem::{Realize, TypeAssoc, TypeSystem};
 use anyhow::anyhow;
-use fehler::throw;
-use fehler::throws;
-
 use arrow2::array::MutableArray;
 use arrow2::datatypes::Schema;
 use arrow2::record_batch::RecordBatch;
-
-use crate::data_order::DataOrder;
-use crate::typesystem::{Realize, TypeAssoc, TypeSystem};
-
-use super::{Consume, Destination, DestinationPartition};
-
 use arrow_assoc::ArrowAssoc;
-pub use errors::{ArrowDestinationError, Result};
+pub use errors::{Arrow2DestinationError, Result};
+use fehler::throw;
+use fehler::throws;
 use funcs::{FFinishBuilder, FNewBuilder, FNewField};
-pub use typesystem::ArrowTypeSystem;
+use polars::frame::DataFrame;
+use std::convert::TryFrom;
+pub use typesystem::Arrow2TypeSystem;
 
 type Builder = Box<dyn MutableArray + 'static + Send>;
 type Builders = Vec<Builder>;
 
-pub struct ArrowDestination {
+pub struct Arrow2Destination {
     nrows: usize,
-    schema: Vec<ArrowTypeSystem>,
+    schema: Vec<Arrow2TypeSystem>,
     names: Vec<String>,
     builders: Vec<Builders>,
 }
 
-impl Default for ArrowDestination {
+impl Default for Arrow2Destination {
     fn default() -> Self {
-        ArrowDestination {
+        Arrow2Destination {
             nrows: 0,
             schema: vec![],
             builders: vec![],
@@ -46,24 +44,24 @@ impl Default for ArrowDestination {
     }
 }
 
-impl ArrowDestination {
+impl Arrow2Destination {
     pub fn new() -> Self {
         Self::default()
     }
 }
 
-impl Destination for ArrowDestination {
+impl Destination for Arrow2Destination {
     const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::ColumnMajor, DataOrder::RowMajor];
-    type TypeSystem = ArrowTypeSystem;
+    type TypeSystem = Arrow2TypeSystem;
     type Partition<'a> = ArrowPartitionWriter<'a>;
-    type Error = ArrowDestinationError;
+    type Error = Arrow2DestinationError;
 
-    #[throws(ArrowDestinationError)]
+    #[throws(Arrow2DestinationError)]
     fn allocate<S: AsRef<str>>(
         &mut self,
         nrows: usize,
         names: &[S],
-        schema: &[ArrowTypeSystem],
+        schema: &[Arrow2TypeSystem],
         data_order: DataOrder,
     ) {
         // todo: support colmajor
@@ -78,7 +76,7 @@ impl Destination for ArrowDestination {
         self.names = names.iter().map(|n| n.as_ref().to_string()).collect();
     }
 
-    #[throws(ArrowDestinationError)]
+    #[throws(Arrow2DestinationError)]
     fn partition(&mut self, counts: &[usize]) -> Vec<Self::Partition<'_>> {
         assert_eq!(counts.iter().sum::<usize>(), self.nrows);
         assert_eq!(self.builders.len(), 0);
@@ -101,13 +99,13 @@ impl Destination for ArrowDestination {
             .collect()
     }
 
-    fn schema(&self) -> &[ArrowTypeSystem] {
+    fn schema(&self) -> &[Arrow2TypeSystem] {
         self.schema.as_slice()
     }
 }
 
-impl ArrowDestination {
-    #[throws(ArrowDestinationError)]
+impl Arrow2Destination {
+    #[throws(Arrow2DestinationError)]
     pub fn arrow(self) -> Vec<RecordBatch> {
         assert_eq!(self.schema.len(), self.names.len());
         let fields = self
@@ -131,17 +129,23 @@ impl ArrowDestination {
             })
             .collect::<Result<Vec<_>>>()?
     }
+
+    #[throws(Arrow2DestinationError)]
+    pub fn polars(self) -> DataFrame {
+        let rbs = self.arrow()?;
+        DataFrame::try_from(rbs)?
+    }
 }
 
 pub struct ArrowPartitionWriter<'a> {
     nrows: usize,
-    schema: Vec<ArrowTypeSystem>,
+    schema: Vec<Arrow2TypeSystem>,
     builders: &'a mut Builders,
     current_col: usize,
 }
 
 impl<'a> ArrowPartitionWriter<'a> {
-    fn new(schema: Vec<ArrowTypeSystem>, builders: &'a mut Builders, nrows: usize) -> Self {
+    fn new(schema: Vec<Arrow2TypeSystem>, builders: &'a mut Builders, nrows: usize) -> Self {
         ArrowPartitionWriter {
             nrows,
             schema,
@@ -152,8 +156,8 @@ impl<'a> ArrowPartitionWriter<'a> {
 }
 
 impl<'a> DestinationPartition<'a> for ArrowPartitionWriter<'a> {
-    type TypeSystem = ArrowTypeSystem;
-    type Error = ArrowDestinationError;
+    type TypeSystem = Arrow2TypeSystem;
+    type Error = Arrow2DestinationError;
 
     fn nrows(&self) -> usize {
         self.nrows
@@ -168,9 +172,9 @@ impl<'a, T> Consume<T> for ArrowPartitionWriter<'a>
 where
     T: TypeAssoc<<Self as DestinationPartition<'a>>::TypeSystem> + ArrowAssoc + 'static,
 {
-    type Error = ArrowDestinationError;
+    type Error = Arrow2DestinationError;
 
-    #[throws(ArrowDestinationError)]
+    #[throws(Arrow2DestinationError)]
     fn consume(&mut self, value: T) {
         let col = self.current_col;
         self.current_col = (self.current_col + 1) % self.ncols();

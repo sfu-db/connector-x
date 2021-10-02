@@ -23,14 +23,17 @@ test-python +opts="": setup-python
     cd connectorx-python && poetry run pytest connectorx/tests -v -s {{opts}}
 
 seed-db:
+    #!/bin/bash
     psql $POSTGRES_URL -f scripts/postgres.sql
     sqlite3 ${SQLITE_URL#sqlite://} < scripts/sqlite.sql
     mysql --protocol tcp -h$MYSQL_HOST -P$MYSQL_PORT -u$MYSQL_USER -p$MYSQL_PASSWORD $MYSQL_DB < scripts/mysql.sql
     mssql-cli -S$MSSQL_HOST -U$MSSQL_USER -P$MSSQL_PASSWORD -d$MSSQL_DB -i scripts/mssql.sql
 
+# dbs not included in ci
 seed-db-more:
     mysql --protocol tcp -h$CLICKHOUSE_HOST -P$CLICKHOUSE_PORT -u$CLICKHOUSE_USER -p$CLICKHOUSE_PASSWORD $CLICKHOUSE_DB < scripts/clickhouse.sql
     psql $REDSHIFT_URL -f scripts/redshift.sql
+    ORACLE_URL_SCRIPT=`echo ${ORACLE_URL#oracle://} | sed "s/:/\//"`
     cat scripts/oracle.sql | sqlplus $ORACLE_URL_SCRIPT
 
 # benches 

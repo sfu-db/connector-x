@@ -1,8 +1,9 @@
-# ConnectorX [![status][ci_badge]][ci_page]
+# ConnectorX [![status][ci_badge]][ci_page] [![discussions][discussion_badge]][discussion_page]
 
 [ci_badge]: https://github.com/sfu-db/connector-x/workflows/ci/badge.svg
 [ci_page]: https://github.com/sfu-db/connector-x/actions
-
+[discussion_badge]: https://img.shields.io/badge/Forum-Github%20Discussions-blue
+[discussion_page]: https://github.com/sfu-db/connector-x/discussions
 
 Load data from <img src="https://raw.githubusercontent.com/sfu-db/connector-x/main/assets/sources.gif" width="6.5%" style="margin-bottom: -2px"/> to <img src="https://raw.githubusercontent.com/sfu-db/connector-x/main/assets/destinations.gif" width="7%" style="margin-bottom: -2px"/>, the fastest way.
 
@@ -182,7 +183,7 @@ Run the SQL query, download the data from database into a Pandas dataframe.
 
 # Next Plan
 
-Checkout our [discussions](https://github.com/sfu-db/connector-x/discussions) to participate in deciding our next plan!
+Checkout our [discussion][discussion_page] to participate in deciding our next plan!
 
 # Historical Benchmark Results
 
@@ -190,3 +191,9 @@ https://sfu-db.github.io/connector-x/dev/bench/
 
 # Developer's Guide
 Please see [Developer's Guide](https://github.com/sfu-db/connector-x/blob/main/Contribute.md) for information about developing ConnectorX.
+
+# Supports
+
+You are always welcomed to:
+1. Ask questions in stackoverflow. Make sure to have #connectorx attached.
+2. Ask questions & propose new ideas in our [forum][discussion_page].

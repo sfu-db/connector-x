@@ -6,15 +6,18 @@ from pandas.testing import assert_frame_equal
 
 from .. import read_sql
 
+
 @pytest.fixture(scope="module")  # type: ignore
 def clickhouse_url() -> str:
     conn = os.environ["CLICKHOUSE_URL"]
     return conn
 
-@pytest.mark.skipif(os.environ.get("TEST_COVER", "main") != "all", reason="Only test main wire protocols unless TEST_COVER=all")
+
+@pytest.mark.skipif(not os.environ.get("CLICKHOUSE_URL"), reason="Do not test Clickhouse unless `CLICKHOUSE_URL` is set")
 def test_clickhouse_without_partition(clickhouse_url: str) -> None:
     query = "select * from test_table limit 3"
-    df = read_sql(clickhouse_url, query, protocol="text") # clickhouse does not support binary protocol
+    # clickhouse does not support binary protocol
+    df = read_sql(clickhouse_url, query, protocol="text")
     # result from clickhouse might have different order each time
     df.sort_values(by="test_int", inplace=True, ignore_index=True)
     expected = pd.DataFrame(
@@ -26,7 +29,8 @@ def test_clickhouse_without_partition(clickhouse_url: str) -> None:
     )
     assert_frame_equal(df, expected, check_names=True)
 
-@pytest.mark.skipif(os.environ.get("TEST_COVER", "main") != "all", reason="Only test main wire protocols unless TEST_COVER=all")
+
+@pytest.mark.skipif(not os.environ.get("CLICKHOUSE_URL"), reason="Do not test Clickhouse unless `CLICKHOUSE_URL` is set")
 def test_clickhouse_with_partition(clickhouse_url: str) -> None:
     query = "select * from test_table"
     df = read_sql(
@@ -46,7 +50,8 @@ def test_clickhouse_with_partition(clickhouse_url: str) -> None:
     )
     assert_frame_equal(df, expected, check_names=True)
 
-@pytest.mark.skipif(os.environ.get("TEST_COVER", "main") != "all", reason="Only test main wire protocols unless TEST_COVER=all")
+
+@pytest.mark.skipif(not os.environ.get("CLICKHOUSE_URL"), reason="Do not test Clickhouse unless `CLICKHOUSE_URL` is set")
 def test_clickhouse_types(clickhouse_url: str) -> None:
     query = "select * from test_types"
     df = read_sql(clickhouse_url, query, protocol="text")
