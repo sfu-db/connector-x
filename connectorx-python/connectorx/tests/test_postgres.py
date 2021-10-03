@@ -388,7 +388,7 @@ def test_types_binary(postgres_url: str) -> None:
 
 
 def test_types_csv(postgres_url: str) -> None:
-    query = "SELECT test_date, test_timestamp, test_int16, test_int64, test_float32, test_numeric, test_bpchar, test_char, test_varchar, test_uuid, test_time, test_json, test_jsonb, test_bytea, test_enum::text, test_f4array, test_f8array, test_narray, test_i2array, test_i4array, test_i8array FROM test_types"
+    query = "SELECT test_date, test_timestamp, test_timestamptz, test_int16, test_int64, test_float32, test_numeric, test_bpchar, test_char, test_varchar, test_uuid, test_time, test_json, test_jsonb, test_bytea, test_enum::text, test_f4array, test_f8array, test_narray, test_i2array, test_i4array, test_i8array FROM test_types"
     df = read_sql(postgres_url, query, protocol="csv",
                   partition_on="test_int16", partition_num=2)
     expected = pd.DataFrame(
@@ -396,6 +396,7 @@ def test_types_csv(postgres_url: str) -> None:
         data={
             "test_date": pd.Series(["1970-01-01", "2000-02-28", "2038-01-18", None], dtype="datetime64[ns]"),
             "test_timestamp": pd.Series(["1970-01-01 00:00:01", "2000-02-28 12:00:10", "2038-01-18 23:59:59", None], dtype="datetime64[ns]"),
+            "test_timestamptz": pd.Series(["1970-01-01 00:00:01", "2000-02-28 16:00:10", "2038-01-18 15:59:59", None], dtype="datetime64[ns]"),
             "test_int16": pd.Series([0, 1, 2, 3], dtype="Int64"),
             "test_int64": pd.Series([-9223372036854775808, 0, 9223372036854775807, None], dtype="Int64"),
             "test_float32": pd.Series([None, 3.1415926535, 2.71, -1e-37], dtype="float64"),
