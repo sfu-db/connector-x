@@ -14,7 +14,9 @@ fn load_and_parse() {
     struct Row(i64, f64);
 
     let mut source = MySQLSource::<BinaryProtocol>::new(&dburl, 1).unwrap();
-    source.set_queries(&[CXQuery::naked("select test_int, test_float from test_table")]);
+    source.set_queries(&[CXQuery::naked(
+        "select test_int, test_float from test_table",
+    )]);
     source.fetch_metadata().unwrap();
 
     let mut partitions = source.partition().unwrap();
