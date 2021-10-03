@@ -384,7 +384,6 @@ def test_types_binary(postgres_url: str) -> None:
             "test_i8array": pd.Series([[-9223372036854775808, 9223372036854775807], [], [0], None], dtype="object"),
         },
     )
-    print(df)
     assert_frame_equal(df, expected, check_names=True)
 
 
