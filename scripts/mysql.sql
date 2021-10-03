@@ -19,7 +19,7 @@ DROP TABLE IF EXISTS test_table_extra;
 
 CREATE TABLE IF NOT EXISTS test_table_extra(
     test_int INTEGER,
-    test_str VARCHAR(15)
+    test_str VARCHAR(30)
 );
 
 INSERT INTO test_table_extra VALUES (1, 'Ha好ち😁ðy̆');
