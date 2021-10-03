@@ -14,7 +14,7 @@ fn load_and_parse() {
     struct Row(i64, f64);
 
     let mut source = MySQLSource::<BinaryProtocol>::new(&dburl, 1).unwrap();
-    source.set_queries(&[CXQuery::naked("select * from test_table")]);
+    source.set_queries(&[CXQuery::naked("select test_int, test_float from test_table")]);
     source.fetch_metadata().unwrap();
 
     let mut partitions = source.partition().unwrap();
@@ -77,8 +77,8 @@ fn test_types() {
     assert_eq!(
         vec![
             Row(1.0, "char1".to_string()),
-            Row(2.0, "char2".to_string()),
-            Row(3.0, "char3".to_string())
+            Row(2.0, None),
+            Row(None, "char3".to_string())
         ],
         rows
     );
