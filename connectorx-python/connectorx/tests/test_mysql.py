@@ -115,7 +115,6 @@ def test_mysql_join(mysql_url: str) -> None:
         partition_on="test_int",
         partition_num=3,
     )
-    print(df)
     expected = pd.DataFrame(
         index=range(3),
         data={
@@ -130,7 +129,6 @@ def test_mysql_join(mysql_url: str) -> None:
 def test_mysql_aggregate(mysql_url: str) -> None:
     query = "select AVG(test_float) as avg_float, SUM(T.test_int) as sum_int, SUM(test_null) as sum_null from test_table as T INNER JOIN test_table_extra as S where T.test_int = S.test_int GROUP BY test_enum ORDER BY sum_int"
     df = read_sql(mysql_url, query)
-    print(df)
     expected = pd.DataFrame(
         index=range(2),
         data={
@@ -178,7 +176,6 @@ def test_mysql_types_binary(mysql_url: str) -> None:
 def test_mysql_types_text(mysql_url: str) -> None:
     query = "select * from test_types"
     df = read_sql(mysql_url, query, protocol="text")
-    print(df)
     expected = pd.DataFrame(
         index=range(3),
         data={
