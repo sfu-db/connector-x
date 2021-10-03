@@ -161,7 +161,6 @@ def test_read_sql_without_partition_and_spa(sqlite_db: str) -> None:
     ORDER BY sum
     """
     df = read_sql(sqlite_db, query)
-    print(df)
     expected = pd.DataFrame(
         index=range(3),
         data={
