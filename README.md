@@ -197,3 +197,4 @@ Please see [Developer's Guide](https://github.com/sfu-db/connector-x/blob/main/C
 You are always welcomed to:
 1. Ask questions in stackoverflow. Make sure to have #connectorx attached.
 2. Ask questions & propose new ideas in our [forum][discussion_page].
+3. Ask questions & join the discussion & send direct messages to us in our [discord](https://discord.gg/xwbkFNk) (under `CONNECTOR` category)
