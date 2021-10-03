@@ -53,7 +53,7 @@ fn test_types() {
 
     let dburl = env::var("MYSQL_URL").unwrap();
     #[derive(Debug, PartialEq)]
-    struct Row(f64, String);
+    struct Row(Option<f64>, Option<String>);
 
     let mut source = MySQLSource::<BinaryProtocol>::new(&dburl, 1).unwrap();
     source.set_queries(&[CXQuery::naked(
@@ -78,9 +78,9 @@ fn test_types() {
 
     assert_eq!(
         vec![
-            Row(1.0, "char1".to_string()),
-            Row(2.0, None),
-            Row(None, "char3".to_string())
+            Row(Some(1.0), Some("char1".to_string())),
+            Row(Some(2.0), None),
+            Row(None, Some("char3".to_string()))
         ],
         rows
     );
