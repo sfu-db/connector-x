@@ -111,11 +111,11 @@ def test_mysql_join(mysql_url: str) -> None:
     query = "SELECT T.test_int, T.test_float, S.test_str FROM test_table T INNER JOIN test_table_extra S ON T.test_int = S.test_int"
     import pymysql
     env_dist = os.environ
-    conn = pymysql.connect(user=env_dist.get('MYSQL_USER'), 
-                           password=env_dist.get('MYSQL_PASSWORD'),
-                           database=env_dist.get('MYSQL_DB'),
-                           port=int(env_dist.get('MYSQL_PORT')),
-                           host=env_dist.get('MYSQL_HOST'))
+    conn = pymysql.connect(user=os.environ["MYSQL_USER"], 
+                           password=os.environ["MYSQL_PASSWORD"],
+                           database=os.environ["MYSQL_DB"],
+                           port=int(os.environ["MYSQL_PORT"]),
+                           host=os.environ["MYSQL_HOST"])
     df_pandas = pd.read_sql(query, conn)
     df = read_sql(
         mysql_url,
