@@ -227,3 +227,8 @@ jobs:
           MYSQL_DB: mysql
           MYSQL_USER: root
           MYSQL_PASSWORD: mysql
+          MSSQL_HOST: mssql
+          MSSQL_PORT: 1433
+          MSSQL_DB: tempdb
+          MSSQL_USER: sa
+          MSSQL_PASSWORD: mssql!Password
