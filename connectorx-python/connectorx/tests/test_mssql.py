@@ -303,14 +303,51 @@ def test_mssql_types(mssql_url: str) -> None:
     expected = pd.DataFrame(
         index=range(3),
         data={
-            "test_date": pd.Series(["1999-07-25", "2020-12-31", "2021-01-28"], dtype="datetime64[ns]"),
-            "test_time": pd.Series(["00:00:00", "23:59:59", "12:30:30"], dtype="object"),
-            "test_datetime": pd.Series(["1999-07-25 00:00:00", "2020-12-31 23:59:59", "2021-01-28 12:30:30"], dtype="datetime64[ns]"),
-            "test_new_decimal": pd.Series([1.1, 2.2, 3.3], dtype="float"),
-            "test_decimal": pd.Series([1, 2, 3], dtype="float"),
-            "test_varchar": pd.Series(["varchar1", "varchar2", "varchar3"], dtype="object"),
-            "test_char": pd.Series(["char1     ", "char2     ", "char3     "], dtype="object"),
-            "test_binary": pd.Series([None, b"1234", b""], dtype="object"),
+            "test_int1": pd.Series([0, 255, None], dtype="Int64"),
+            "test_int2": pd.Series([-32768, 32767, None], dtype="Int64"),
+            "test_int4": pd.Series([-2147483648, 2147483647, None], dtype="Int64"),
+            "test_int8": pd.Series([-9223372036854775808, 9223372036854775807, None], dtype="Int64"),
+            "test_float24": pd.Series([None, 1.18E-38, 3.40E+38], dtype="float"),
+            "test_float53": pd.Series([None, -2.23E-308, 1.79E+308], dtype="float"),
+            "test_floatn": pd.Series([None, 0, 123.1234567], dtype="float"),
+            "test_date": pd.Series(["1999-07-25", None, "2021-01-28"], dtype="datetime64[ns]"),
+            "test_time": pd.Series(["00:00:00", "23:59:59", None], dtype="object"),
+            "test_datetime": pd.Series([None, "2020-12-31 23:59:59", "2021-01-28 10:30:30"], dtype="datetime64[ns]"),
+            "test_smalldatetime": pd.Series(["1990-01-01 10:00:00", None, "2079-06-05 23:00:00"], dtype="datetime64[ns]"),
+            "test_naivedatetime": pd.Series(["1753-01-01 12:00:00", "2038-12-31 01:00:00",  None], dtype="datetime64[ns]"),
+            "test_naivedatetime2": pd.Series(["1900-01-01 12:00:00.12345", "1900-01-01 00:00:00.00000",  "2027-03-18 14:30:30.54321"], dtype="datetime64[ns]"),
+            "test_new_decimal": pd.Series([1.1, 2.2, None], dtype="float"),
+            "test_decimal": pd.Series([1, 2, None], dtype="float"),
+            "test_varchar": pd.Series([None, "varchar2", "varchar3"], dtype="object"),
+            "test_char": pd.Series([None, "char2     ", "char3     "], dtype="object"),
+            "test_varbinary": pd.Series([None, b"1234", b""], dtype="object"),
+            "test_binary": pd.Series([None, b"12\x00\x00\x00", b"\x00\x00\x00\x00\x00"], dtype="object"),
+            "test_nchar": pd.Series(["1234", None, "12  "], dtype="object"),
+            "test_text": pd.Series(["text", "t", None], dtype="object"),
+            "test_ntext": pd.Series(["ntext", "nt", None], dtype="object"),
+            "test_uuid": pd.Series(["86b494cc-96b2-11eb-9298-3e22fbb9fe9d", None, "86b49b84-96b2-11eb-9298-3e22fbb9fe9d"], dtype="object"),
         }
     )
+    assert_frame_equal(df, expected, check_names=True)
+
+
+def test_mssql_unicode(mssql_url: str) -> None:
+    query = "SELECT test_hello FROM test_str where 1 <= id and id <= 4"
+    import pymssql
+    conn = pymssql.connect(user=os.environ["MSSQL_USER"], 
+                           password=os.environ["MSSQL_PASSWORD"],
+                           database=os.environ["MSSQL_DB"],
+                           port=int(os.environ["MSSQL_PORT"]),
+                           host=os.environ["MSSQL_HOST"])
+    df_pandas = pd.read_sql(query, conn)
+    df = read_sql(mssql_url, query)
+    expected = pd.DataFrame(
+        index=range(4),
+        data={
+            "test_hello": pd.Series(["你好", "こんにちは", "Здра́вствуйте", "😁😂😜"], dtype="object"),
+        }
+    )
+    print(df_pandas)
+    print(df)
+    print(expected)
     assert_frame_equal(df, expected, check_names=True)
