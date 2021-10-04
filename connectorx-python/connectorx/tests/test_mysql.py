@@ -110,7 +110,6 @@ def test_mysql_selection_and_projection(mysql_url: str) -> None:
 def test_mysql_join(mysql_url: str) -> None:
     query = "SELECT T.test_int, T.test_float, S.test_str FROM test_table T INNER JOIN test_table_extra S ON T.test_int = S.test_int"
     import pymysql
-    env_dist = os.environ
     conn = pymysql.connect(user=os.environ["MYSQL_USER"], 
                            password=os.environ["MYSQL_PASSWORD"],
                            database=os.environ["MYSQL_DB"],
