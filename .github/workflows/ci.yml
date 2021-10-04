@@ -222,3 +222,8 @@ jobs:
           MYSQL_URL: "mysql://root:mysql@mysql:3306/mysql"
           MSSQL_URL: "mssql://sa:mssql!Password@mssql:1433/tempdb"
           SQLITE3_STATIC: 1
+          MYSQL_HOST: mysql
+          MYSQL_PORT: 3306
+          MYSQL_DB: mysql
+          MYSQL_USER: root
+          MYSQL_PASSWORD: mysql
