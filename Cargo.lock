@@ -583,11 +583,7 @@ dependencies = [
 
 [[package]]
 name = "connectorx-python"
-<<<<<<< HEAD
 version = "0.2.1-alpha.3"
-=======
-version = "0.2.1-alpha.1"
->>>>>>> improved test cases for mysql postgres sqlite
 dependencies = [
  "anyhow",
  "arrow",
