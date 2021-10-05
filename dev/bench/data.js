@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1633237203977,
+  "lastUpdate": 1633475304372,
   "repoUrl": "https://github.com/sfu-db/connector-x",
   "entries": {
     "ConnectorX TPC-H Scale@1 Benchmarks": [
@@ -2546,6 +2546,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 4.120546981732086",
             "extra": "mean: 17.826396008767187 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "youngw@sfu.ca",
+            "name": "Weiyuan Wu",
+            "username": "dovahcrow"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "4aa320d811d29c4035ca690f19f69b0d51903a99",
+          "message": "Merge pull request #128 from wseaton/upgrade-r2d2postgres\n\nupgrade postgres connection pooling lib",
+          "timestamp": "2021-10-05T16:00:24-07:00",
+          "tree_id": "1bb4169fd525ccf75c7f3a0eb4398d9eb854ed59",
+          "url": "https://github.com/sfu-db/connector-x/commit/4aa320d811d29c4035ca690f19f69b0d51903a99"
+        },
+        "date": 1633475302902,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_mysql",
+            "value": 0.06926545753133131,
+            "unit": "iter/sec",
+            "range": "stddev: 0.32009780395767073",
+            "extra": "mean: 14.437210633419454 sec\nrounds: 5"
+          },
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_postgres",
+            "value": 0.06846796168677202,
+            "unit": "iter/sec",
+            "range": "stddev: 2.845097951452993",
+            "extra": "mean: 14.605371262179688 sec\nrounds: 5"
           }
         ]
       }
