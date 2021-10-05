@@ -20,7 +20,7 @@ use connectorx::{
         mysql::{BinaryProtocol as MySQLBinaryProtocol, MySQLSource, TextProtocol},
         postgres::{
             rewrite_tls_args, BinaryProtocol as PgBinaryProtocol, CSVProtocol, CursorProtocol,
-            PostgresSource,
+            PostgresSource, ServerCursorProtocol,
         },
         sqlite::SQLiteSource,
     },
@@ -123,6 +123,34 @@ pub fn write_pandas<'a>(
                         _,
                         _,
                         PostgresPandasTransport<CursorProtocol, NoTls>,
+                    >::new(sb, &mut destination, queries);
+                    debug!("Running dispatcher");
+                    dispatcher.run()?;
+                }
+                ("server_cursor", Some(tls_conn)) => {
+                    let sb = PostgresSource::<ServerCursorProtocol, MakeTlsConnector>::new(
+                        config,
+                        tls_conn,
+                        queries.len(),
+                    )?;
+                    let dispatcher = Dispatcher::<
+                        _,
+                        _,
+                        PostgresPandasTransport<ServerCursorProtocol, MakeTlsConnector>,
+                    >::new(sb, &mut destination, queries);
+                    debug!("Running dispatcher");
+                    dispatcher.run()?;
+                }
+                ("server_cursor", None) => {
+                    let sb = PostgresSource::<ServerCursorProtocol, NoTls>::new(
+                        config,
+                        NoTls,
+                        queries.len(),
+                    )?;
+                    let dispatcher = Dispatcher::<
+                        _,
+                        _,
+                        PostgresPandasTransport<ServerCursorProtocol, NoTls>,
                     >::new(sb, &mut destination, queries);
                     debug!("Running dispatcher");
                     dispatcher.run()?;

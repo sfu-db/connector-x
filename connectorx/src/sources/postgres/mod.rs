@@ -24,7 +24,7 @@ use postgres::{
     binary_copy::{BinaryCopyOutIter, BinaryCopyOutRow},
     fallible_iterator::FallibleIterator,
     tls::{MakeTlsConnect, TlsConnect},
-    Config, CopyOutReader, Row, RowIter, Socket,
+    Config, CopyOutReader, Portal, Row, RowIter, Socket, Transaction,
 };
 use r2d2::{Pool, PooledConnection};
 use r2d2_postgres::PostgresConnectionManager;
@@ -43,6 +43,7 @@ pub enum CSVProtocol {}
 
 /// Protocol - use Cursor
 pub enum CursorProtocol {}
+pub enum ServerCursorProtocol {}
 
 type PgManager<C> = PostgresConnectionManager<C>;
 type PgConn<C> = PooledConnection<PgManager<C>>;
@@ -353,6 +354,43 @@ where
         self.ncols
     }
 }
+
+impl<C> SourcePartition for PostgresSourcePartition<ServerCursorProtocol, C>
+where
+    C: MakeTlsConnect<Socket> + Clone + 'static + Sync + Send,
+    C::TlsConnect: Send,
+    C::Stream: Send,
+    <C::TlsConnect as TlsConnect<Socket>>::Future: Send,
+{
+    type TypeSystem = PostgresTypeSystem;
+    type Parser<'a> = PostgresServerCursorParser<'a>;
+    type Error = PostgresSourceError;
+
+    #[throws(PostgresSourceError)]
+    fn prepare(&mut self) {
+        let row = self.conn.query_one(
+            count_query(&self.query, &PostgreSqlDialect {})?.as_str(),
+            &[],
+        )?;
+        self.nrows = row.get::<_, i64>(0) as usize;
+    }
+
+    #[throws(PostgresSourceError)]
+    fn parser(&mut self) -> Self::Parser<'_> {
+        let mut transaction = self.conn.transaction()?;
+        let portal = transaction.bind(self.query.as_str(), &[])?;
+        PostgresServerCursorParser::new(transaction, portal, &self.schema, self.buf_size)
+    }
+
+    fn nrows(&self) -> usize {
+        self.nrows
+    }
+
+    fn ncols(&self) -> usize {
+        self.ncols
+    }
+}
+
 pub struct PostgresBinarySourcePartitionParser<'a> {
     iter: BinaryCopyOutIter<'a>,
     buf_size: usize,
@@ -914,6 +952,120 @@ macro_rules! impl_produce {
             }
 
             impl<'r, 'a> Produce<'r, Option<$t>> for PostgresRawSourceParser<'a> {
+                type Error = PostgresSourceError;
+
+                #[throws(PostgresSourceError)]
+                fn produce(&'r mut self) -> Option<$t> {
+                    let (ridx, cidx) = self.next_loc()?;
+                    let row = &self.rowbuf[ridx];
+                    let val = row.try_get(cidx)?;
+                    val
+                }
+            }
+        )+
+    };
+}
+
+impl_produce!(
+    i8,
+    i16,
+    i32,
+    i64,
+    f32,
+    f64,
+    Decimal,
+    Vec<i8>,
+    Vec<i16>,
+    Vec<i32>,
+    Vec<i64>,
+    Vec<f32>,
+    Vec<f64>,
+    Vec<Decimal>,
+    bool,
+    &'r str,
+    Vec<u8>,
+    NaiveTime,
+    NaiveDateTime,
+    DateTime<Utc>,
+    NaiveDate,
+    Uuid,
+    Value,
+);
+
+pub struct PostgresServerCursorParser<'a> {
+    transaction: Transaction<'a>,
+    portal: Portal,
+    buf_size: usize,
+    rowbuf: Vec<Row>,
+    ncols: usize,
+    current_col: usize,
+    current_row: usize,
+}
+
+impl<'a> PostgresServerCursorParser<'a> {
+    pub fn new(
+        transaction: Transaction<'a>,
+        portal: Portal,
+        schema: &[PostgresTypeSystem],
+        buf_size: usize,
+    ) -> Self {
+        Self {
+            transaction,
+            portal,
+            buf_size,
+            rowbuf: Vec::with_capacity(buf_size),
+            ncols: schema.len(),
+            current_row: 0,
+            current_col: 0,
+        }
+    }
+
+    #[throws(PostgresSourceError)]
+    fn next_loc(&mut self) -> (usize, usize) {
+        if self.current_row >= self.rowbuf.len() {
+            if !self.rowbuf.is_empty() {
+                self.rowbuf.drain(..);
+            }
+
+            self.rowbuf = self
+                .transaction
+                .query_portal(&self.portal, self.buf_size as i32)?;
+
+            if self.rowbuf.is_empty() {
+                throw!(anyhow!("Postgres EOF"));
+            }
+            self.current_row = 0;
+            self.current_col = 0;
+        }
+
+        let ret = (self.current_row, self.current_col);
+        self.current_row += (self.current_col + 1) / self.ncols;
+        self.current_col = (self.current_col + 1) % self.ncols;
+        ret
+    }
+}
+
+impl<'a> PartitionParser<'a> for PostgresServerCursorParser<'a> {
+    type TypeSystem = PostgresTypeSystem;
+    type Error = PostgresSourceError;
+}
+
+macro_rules! impl_produce {
+    ($($t: ty,)+) => {
+        $(
+            impl<'r, 'a> Produce<'r, $t> for PostgresServerCursorParser<'a> {
+                type Error = PostgresSourceError;
+
+                #[throws(PostgresSourceError)]
+                fn produce(&'r mut self) -> $t {
+                    let (ridx, cidx) = self.next_loc()?;
+                    let row = &self.rowbuf[ridx];
+                    let val = row.try_get(cidx)?;
+                    val
+                }
+            }
+
+            impl<'r, 'a> Produce<'r, Option<$t>> for PostgresServerCursorParser<'a> {
                 type Error = PostgresSourceError;
 
                 #[throws(PostgresSourceError)]

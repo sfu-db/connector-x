@@ -5,6 +5,7 @@ use connectorx::{
     impl_transport,
     sources::postgres::{
         BinaryProtocol, CSVProtocol, CursorProtocol, PostgresSource, PostgresTypeSystem,
+        ServerCursorProtocol,
     },
     typesystem::TypeConversion,
 };
@@ -63,6 +64,8 @@ impl_postgres_transport!(CSVProtocol, NoTls);
 impl_postgres_transport!(CSVProtocol, MakeTlsConnector);
 impl_postgres_transport!(CursorProtocol, NoTls);
 impl_postgres_transport!(CursorProtocol, MakeTlsConnector);
+impl_postgres_transport!(ServerCursorProtocol, NoTls);
+impl_postgres_transport!(ServerCursorProtocol, MakeTlsConnector);
 
 impl<'py, P, C> TypeConversion<Vec<Decimal>, Vec<f64>> for PostgresPandasTransport<'py, P, C> {
     fn convert(val: Vec<Decimal>) -> Vec<f64> {
