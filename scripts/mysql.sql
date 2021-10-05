@@ -1,3 +1,6 @@
+show variables like 'char%';
+SELECT schema_name, DEFAULT_CHARACTER_SET_NAME, DEFAULT_COLLATION_NAME FROM INFORMATION_SCHEMA.SCHEMATA;
+
 DROP TABLE IF EXISTS test_table;
 
 CREATE TABLE IF NOT EXISTS test_table(
@@ -25,7 +28,7 @@ CREATE TABLE IF NOT EXISTS test_table_extra(
 INSERT INTO test_table_extra VALUES (1, 'Ha好ち😁ðy̆');
 INSERT INTO test_table_extra VALUES (2, 'こんにちは');
 INSERT INTO test_table_extra VALUES (3, 'русский');
-
+SELECT * FROM test_table_extra;
 
 DROP TABLE IF EXISTS test_types;
 

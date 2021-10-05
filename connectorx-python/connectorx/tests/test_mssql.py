@@ -315,7 +315,7 @@ def test_mssql_types(mssql_url: str) -> None:
             "test_datetime": pd.Series([None, "2020-12-31 23:59:59", "2021-01-28 10:30:30"], dtype="datetime64[ns]"),
             "test_smalldatetime": pd.Series(["1990-01-01 10:00:00", None, "2079-06-05 23:00:00"], dtype="datetime64[ns]"),
             "test_naivedatetime": pd.Series(["1753-01-01 12:00:00", "2038-12-31 01:00:00",  None], dtype="datetime64[ns]"),
-            "test_naivedatetime2": pd.Series(["1900-01-01 12:00:00.12345", "1900-01-01 00:00:00.00000",  "2027-03-18 14:30:30.54321"], dtype="datetime64[ns]"),
+            "test_naivedatetime2": pd.Series(["1900-01-01 12:00:00.12345", None,  "2027-03-18 14:30:30.54321"], dtype="datetime64[ns]"),
             "test_new_decimal": pd.Series([1.1, 2.2, None], dtype="float"),
             "test_decimal": pd.Series([1, 2, None], dtype="float"),
             "test_varchar": pd.Series([None, "varchar2", "varchar3"], dtype="object"),
@@ -340,6 +340,4 @@ def test_mssql_unicode(mssql_url: str) -> None:
             "test_hello": pd.Series(["你好", "こんにちは", "Здра́вствуйте", "😁😂😜"], dtype="object"),
         }
     )
-    print(df)
-    print(expected)
     assert_frame_equal(df, expected, check_names=True)

@@ -28,19 +28,18 @@ jobs:
           --health-retries 5
       # mysql
       mysql:
-        image: mysql
+        image: ghcr.io/wangxiaoying/mysql:latest
         env:
           MYSQL_DATABASE: mysql
           MYSQL_ROOT_PASSWORD: mysql
+          LANG: C.UTF-8
         ports:
           - 3306:3306
         options: >-
           --health-cmd "mysqladmin ping"
           --health-interval 10s
-          --health-timeout 5s
+          --health-timeout 10s
           --health-retries 5
-          --character-set-server utf8mb4
-          --collation-server utf8mb4_unicode_ci
       mssql:
         image: mcr.microsoft.com/mssql/server:2019-latest
         env:
@@ -53,7 +52,6 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 20
-
     steps:
       - uses: actions/checkout@v2
       - uses: mstachniuk/ci-skip@v1
@@ -80,18 +78,6 @@ jobs:
         run: |
           cargo install just
 
-      - name: Is the code formatted?
-        uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: --all -- --check -q
-
-      - name: Clippy linting
-        uses: actions-rs/cargo@v1
-        with:
-          command: clippy
-          args: --features all
-
       - name: Seed the database
         run: just seed-db
         env:
@@ -107,6 +93,18 @@ jobs:
           MSSQL_DB: tempdb
           MSSQL_USER: sa
           MSSQL_PASSWORD: mssql!Password
+
+      - name: Is the code formatted?
+        uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: --all -- --check -q
+
+      - name: Clippy linting
+        uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+          args: --features all
 
       - name: Run tests
         uses: actions-rs/cargo@v1
@@ -143,19 +141,18 @@ jobs:
           --health-retries 5
       # mysql
       mysql:
-        image: mysql
+        image: ghcr.io/wangxiaoying/mysql:latest
         env:
           MYSQL_DATABASE: mysql
           MYSQL_ROOT_PASSWORD: mysql
+          LANG: C.UTF-8
         ports:
           - 3306:3306
         options: >-
           --health-cmd "mysqladmin ping"
           --health-interval 10s
-          --health-timeout 5s
+          --health-timeout 10s
           --health-retries 5
-          --character-set-server utf8mb4
-          --collation-server utf8mb4_unicode_ci
       mssql:
         image: mcr.microsoft.com/mssql/server:2019-latest
         env:
@@ -181,6 +178,7 @@ jobs:
         env:
           DEBIAN_FRONTEND: noninteractive
 
+
       - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
@@ -188,19 +186,10 @@ jobs:
           components: rustfmt
           default: true
 
-      - name: Clippy linting
-        uses: actions-rs/cargo@v1
-        with:
-          command: clippy
-          args: --features all --all
-
       - name: Install other dependent tools
         run: |
           pip3 install poetry
           cargo install just
-
-      - name: Install python dependencies
-        run: just bootstrap-python
 
       - name: Seed the database
         run: just seed-db
@@ -217,6 +206,15 @@ jobs:
           MSSQL_DB: tempdb
           MSSQL_USER: sa
           MSSQL_PASSWORD: mssql!Password
+
+      - name: Clippy linting
+        uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+          args: --features all --all
+
+      - name: Install python dependencies
+        run: just bootstrap-python
 
       - name: Test python
         run: just test-python
