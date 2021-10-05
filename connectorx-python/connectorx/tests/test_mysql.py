@@ -110,7 +110,7 @@ def test_mysql_selection_and_projection(mysql_url: str) -> None:
 def test_mysql_join(mysql_url: str) -> None:
     query = "SELECT T.test_int, T.test_float, S.test_str FROM test_table T INNER JOIN test_table_extra S ON T.test_int = S.test_int"
     import pymysql
-    conn = pymysql.connect(user=os.environ["MYSQL_USER"], 
+    conn = pymysql.connect(user=os.environ["MYSQL_USER"],
                            password=os.environ["MYSQL_PASSWORD"],
                            database=os.environ["MYSQL_DB"],
                            port=int(os.environ["MYSQL_PORT"]),
@@ -127,7 +127,7 @@ def test_mysql_join(mysql_url: str) -> None:
         data={
             "test_int": pd.Series([1, 2, 3], dtype="Int64"),
             "test_float": pd.Series([1.1, 2.2, 3.3], dtype="float64"),
-            "test_str": pd.Series(["Ha好ち😁ðy̆", "こんにちは", "русский",], dtype="object")
+            "test_str": pd.Series(["Ha好ち😁ðy̆", "こんにちは", "русский", ], dtype="object")
         }
     )
     print(df_pandas)

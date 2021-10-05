@@ -333,13 +333,6 @@ def test_mssql_types(mssql_url: str) -> None:
 
 def test_mssql_unicode(mssql_url: str) -> None:
     query = "SELECT test_hello FROM test_str where 1 <= id and id <= 4"
-    import pymssql
-    conn = pymssql.connect(user=os.environ["MSSQL_USER"], 
-                           password=os.environ["MSSQL_PASSWORD"],
-                           database=os.environ["MSSQL_DB"],
-                           port=int(os.environ["MSSQL_PORT"]),
-                           host=os.environ["MSSQL_HOST"])
-    df_pandas = pd.read_sql(query, conn)
     df = read_sql(mssql_url, query)
     expected = pd.DataFrame(
         index=range(4),
@@ -347,7 +340,6 @@ def test_mssql_unicode(mssql_url: str) -> None:
             "test_hello": pd.Series(["你好", "こんにちは", "Здра́вствуйте", "😁😂😜"], dtype="object"),
         }
     )
-    print(df_pandas)
     print(df)
     print(expected)
     assert_frame_equal(df, expected, check_names=True)

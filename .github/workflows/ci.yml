@@ -39,6 +39,8 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+          --character-set-server utf8mb4
+          --collation-server utf8mb4_unicode_ci
       mssql:
         image: mcr.microsoft.com/mssql/server:2019-latest
         env:
@@ -152,6 +154,8 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+          --character-set-server utf8mb4
+          --collation-server utf8mb4_unicode_ci
       mssql:
         image: mcr.microsoft.com/mssql/server:2019-latest
         env:

@@ -23,14 +23,14 @@ CREATE TABLE test_str(
     test_hello NVARCHAR(max),
 );
 
-INSERT INTO test_str VALUES (0, N'English', 'Hello');
-INSERT INTO test_str VALUES (1, N'中文', '你好');
-INSERT INTO test_str VALUES (2, N'日本語', 'こんにちは');
-INSERT INTO test_str VALUES (3, N'русский', 'Здра́вствуйте');
-INSERT INTO test_str VALUES (4, N'Emoji', '😁😂😜');
-INSERT INTO test_str VALUES (5, N'Latin1', '¥§¤®ð');
-INSERT INTO test_str VALUES (6, N'Extra', 'y̆');
-INSERT INTO test_str VALUES (7, N'Mixed', 'Ha好ち😁ðy̆');
+INSERT INTO test_str VALUES (0, N'English', N'Hello');
+INSERT INTO test_str VALUES (1, N'中文', N'你好');
+INSERT INTO test_str VALUES (2, N'日本語', N'こんにちは');
+INSERT INTO test_str VALUES (3, N'русский', N'Здра́вствуйте');
+INSERT INTO test_str VALUES (4, N'Emoji', N'😁😂😜');
+INSERT INTO test_str VALUES (5, N'Latin1', N'¥§¤®ð');
+INSERT INTO test_str VALUES (6, N'Extra', N'y̆');
+INSERT INTO test_str VALUES (7, N'Mixed', N'Ha好ち😁ðy̆');
 INSERT INTO test_str VALUES (8, N'', NULL);
 
 
