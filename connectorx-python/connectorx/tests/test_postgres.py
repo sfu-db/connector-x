@@ -592,7 +592,7 @@ def test_json(postgres_url: str) -> None:
     df = read_sql(postgres_url, query)
     expected = pd.DataFrame(
         data={
-            "customer": pd.Series(["John Doe", "Lily Bush", "Josh William", "Mary Clark"], dtype="object"),
+            "customer": pd.Series(["John Doe", "Lily Bush", "Josh William", None], dtype="object"),
         }
     )
     assert_frame_equal(df, expected, check_names=True)
@@ -602,11 +602,10 @@ def test_partition_on_json(postgres_url: str) -> None:
     query = "select test_int16, test_jsonb->>'qty' as qty from test_types"
     df = read_sql(postgres_url, query,
                   partition_on="test_int16", partition_num=3)
-    print(df)
     expected = pd.DataFrame(
         data={
             "test_int16": pd.Series([0, 1, 2, 3], dtype="Int64"),
-            "qty": pd.Series(["6", "24", "1", "2"], dtype="object"),
+            "qty": pd.Series(["6", "24", "1", None], dtype="object"),
         }
     )
     assert_frame_equal(df, expected, check_names=True)
