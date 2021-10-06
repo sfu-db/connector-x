@@ -318,32 +318,40 @@ def test_read_sql_on_utf8(postgres_url: str) -> None:
 
 
 def test_types_binary(postgres_url: str) -> None:
-    query = "SELECT test_int16, test_char, test_uuid, test_time, test_json, test_jsonb, test_bytea, test_enum, test_farray, test_iarray FROM test_types"
+    query = "SELECT test_date, test_timestamp, test_timestamptz, test_int16, test_int64, test_float32, test_numeric, test_bpchar, test_char, test_varchar, test_uuid, test_time, test_json, test_jsonb, test_bytea, test_enum, test_f4array, test_f8array, test_narray, test_i2array, test_i4array, test_i8array FROM test_types"
     df = read_sql(postgres_url, query,
                   partition_on="test_int16", partition_num=3)
     expected = pd.DataFrame(
         index=range(4),
         data={
+            "test_date": pd.Series(["1970-01-01", "2000-02-28", "2038-01-18", None], dtype="datetime64[ns]"),
+            "test_timestamp": pd.Series(["1970-01-01 00:00:01", "2000-02-28 12:00:10", "2038-01-18 23:59:59", None], dtype="datetime64[ns]"),
+            "test_timestamptz": pd.Series(["1970-01-01 00:00:01", "2000-02-28 16:00:10", "2038-01-18 15:59:59", None], dtype="datetime64[ns]"),
             "test_int16": pd.Series([0, 1, 2, 3], dtype="Int64"),
+            "test_int64": pd.Series([-9223372036854775808, 0, 9223372036854775807, None], dtype="Int64"),
+            "test_float32": pd.Series([None, 3.1415926535, 2.71, -1e-37], dtype="float64"),
+            "test_numeric": pd.Series([None, 521.34, 999.99, 0.00], dtype="float64"),
+            "test_bpchar": pd.Series(["a    ", "bb   ", "ccc  ", None], dtype="object"),
             "test_char": pd.Series(["a", "b", None, "d"], dtype="object"),
+            "test_varchar": pd.Series([None, "bb", "c", "defghijklm"], dtype="object"),
             "test_uuid": pd.Series(
                 [
                     "86b494cc-96b2-11eb-9298-3e22fbb9fe9d",
                     "86b49b84-96b2-11eb-9298-3e22fbb9fe9d",
                     "86b49c42-96b2-11eb-9298-3e22fbb9fe9d",
-                    "86b49cce-96b2-11eb-9298-3e22fbb9fe9d",
+                    None,
                 ],
                 dtype="object",
             ),
             "test_time": pd.Series(
-                ["08:12:40", "10:03:00", "23:00:10", "18:30:00"], dtype="object"
+                ["08:12:40", None, "23:00:10", "18:30:00"], dtype="object"
             ),
             "test_json": pd.Series(
                 [
                     '{"customer":"John Doe","items":{"product":"Beer","qty":6}}',
                     '{"customer":"Lily Bush","items":{"product":"Diaper","qty":24}}',
                     '{"customer":"Josh William","items":{"product":"Toy Car","qty":1}}',
-                    '{"customer":"Mary Clark","items":{"product":"Toy Train","qty":2}}',
+                    None,
                 ],
                 dtype="object",
             ),
@@ -352,7 +360,7 @@ def test_types_binary(postgres_url: str) -> None:
                     '{"qty":6,"product":"Beer"}',
                     '{"qty":24,"product":"Diaper"}',
                     '{"qty":1,"product":"Toy Car"}',
-                    '{"qty":2,"product":"Toy Train"}',
+                    None,
                 ],
                 dtype="object",
             ),
@@ -366,43 +374,54 @@ def test_types_binary(postgres_url: str) -> None:
                 dtype="object",
             ),
             "test_enum": pd.Series(
-                ["happy", "very happy", "ecstatic", "ecstatic"], dtype="object"
+                ["happy", "very happy", "ecstatic", None], dtype="object"
             ),
-            "test_farray": pd.Series([[], None, [0.0123], [0.000234, -12.987654321]], dtype="object"),
-            "test_iarray": pd.Series([[-1, 0, 1123], [], [-324324], None], dtype="object"),
+            "test_f4array": pd.Series([[], None, [123.123], [-1e-37, 1e+37]], dtype="object"),
+            "test_f8array": pd.Series([[], None, [-1e-307, 1e308], [0.000234, -12.987654321]], dtype="object"),
+            "test_narray": pd.Series([[], None, [521.34], [0.12, 333.33, 22.22]], dtype="object"),
+            "test_i2array": pd.Series([[-1, 0, 1], [], [-32768, 32767], None], dtype="object"),
+            "test_i4array": pd.Series([[-1, 0, 1123], [], [-2147483648, 2147483647], None], dtype="object"),
+            "test_i8array": pd.Series([[-9223372036854775808, 9223372036854775807], [], [0], None], dtype="object"),
         },
     )
-    print(df)
     assert_frame_equal(df, expected, check_names=True)
 
 
 def test_types_csv(postgres_url: str) -> None:
-    query = "SELECT test_int16, test_char, test_uuid, test_time, test_json, test_jsonb, test_bytea, test_enum::text, test_farray, test_iarray FROM test_types"
+    query = "SELECT test_date, test_timestamp, test_timestamptz, test_int16, test_int64, test_float32, test_numeric, test_bpchar, test_char, test_varchar, test_uuid, test_time, test_json, test_jsonb, test_bytea, test_enum::text, test_f4array, test_f8array, test_narray, test_i2array, test_i4array, test_i8array FROM test_types"
     df = read_sql(postgres_url, query, protocol="csv",
                   partition_on="test_int16", partition_num=2)
     expected = pd.DataFrame(
         index=range(4),
         data={
+            "test_date": pd.Series(["1970-01-01", "2000-02-28", "2038-01-18", None], dtype="datetime64[ns]"),
+            "test_timestamp": pd.Series(["1970-01-01 00:00:01", "2000-02-28 12:00:10", "2038-01-18 23:59:59", None], dtype="datetime64[ns]"),
+            "test_timestamptz": pd.Series(["1970-01-01 00:00:01", "2000-02-28 16:00:10", "2038-01-18 15:59:59", None], dtype="datetime64[ns]"),
             "test_int16": pd.Series([0, 1, 2, 3], dtype="Int64"),
+            "test_int64": pd.Series([-9223372036854775808, 0, 9223372036854775807, None], dtype="Int64"),
+            "test_float32": pd.Series([None, 3.1415926535, 2.71, -1e-37], dtype="float64"),
+            "test_numeric": pd.Series([None, 521.34, 999.99, 0.00], dtype="float64"),
+            "test_bpchar": pd.Series(["a    ", "bb   ", "ccc  ", None], dtype="object"),
             "test_char": pd.Series(["a", "b", None, "d"], dtype="object"),
+            "test_varchar": pd.Series([None, "bb", "c", "defghijklm"], dtype="object"),
             "test_uuid": pd.Series(
                 [
                     "86b494cc-96b2-11eb-9298-3e22fbb9fe9d",
                     "86b49b84-96b2-11eb-9298-3e22fbb9fe9d",
                     "86b49c42-96b2-11eb-9298-3e22fbb9fe9d",
-                    "86b49cce-96b2-11eb-9298-3e22fbb9fe9d",
+                    None,
                 ],
                 dtype="object",
             ),
             "test_time": pd.Series(
-                ["08:12:40", "10:03:00", "23:00:10", "18:30:00"], dtype="object"
+                ["08:12:40", None, "23:00:10", "18:30:00"], dtype="object"
             ),
             "test_json": pd.Series(
                 [
                     '{"customer":"John Doe","items":{"product":"Beer","qty":6}}',
                     '{"customer":"Lily Bush","items":{"product":"Diaper","qty":24}}',
                     '{"customer":"Josh William","items":{"product":"Toy Car","qty":1}}',
-                    '{"customer":"Mary Clark","items":{"product":"Toy Train","qty":2}}',
+                    None,
                 ],
                 dtype="object",
             ),
@@ -411,7 +430,7 @@ def test_types_csv(postgres_url: str) -> None:
                     '{"qty":6,"product":"Beer"}',
                     '{"qty":24,"product":"Diaper"}',
                     '{"qty":1,"product":"Toy Car"}',
-                    '{"qty":2,"product":"Toy Train"}',
+                    None,
                 ],
                 dtype="object",
             ),
@@ -425,42 +444,55 @@ def test_types_csv(postgres_url: str) -> None:
                 dtype="object",
             ),
             "test_enum": pd.Series(
-                ["happy", "very happy", "ecstatic", "ecstatic"], dtype="object"
+                ["happy", "very happy", "ecstatic", None], dtype="object"
             ),
-            "test_farray": pd.Series([[], None, [0.0123], [0.000234, -12.987654321]], dtype="object"),
-            "test_iarray": pd.Series([[-1, 0, 1123], [], [-324324], None], dtype="object"),
+            "test_f4array": pd.Series([[], None, [123.123], [-1e-37, 1e+37]], dtype="object"),
+            "test_f8array": pd.Series([[], None, [1e-307, 1e308], [0.000234, -12.987654321]], dtype="object"),
+            "test_narray": pd.Series([[], None, [521.34], [0.12, 333.33, 22.22]], dtype="object"),
+            "test_i2array": pd.Series([[-1, 0, 1], [], [-32768, 32767], None], dtype="object"),
+            "test_i4array": pd.Series([[-1, 0, 1123], [], [-2147483648, 2147483647], None], dtype="object"),
+            "test_i8array": pd.Series([[-9223372036854775808, 9223372036854775807], [], [0], None], dtype="object"),
         },
     )
     assert_frame_equal(df, expected, check_names=True)
 
 
 def test_types_cursor(postgres_url: str) -> None:
-    query = "SELECT test_int16, test_char, test_uuid, test_time, test_json, test_jsonb, test_bytea, test_enum::text, test_farray, test_iarray FROM test_types"
+    query = "SELECT test_date, test_timestamp, test_timestamptz, test_int16, test_int64, test_float32, test_numeric, test_bpchar, test_char, test_varchar, test_uuid, test_time, test_json, test_jsonb, test_bytea, test_enum::text, test_f4array, test_f8array, test_narray, test_i2array, test_i4array, test_i8array FROM test_types"
     df = read_sql(postgres_url, query, protocol="cursor",
                   partition_on="test_int16", partition_num=4)
+    print(df)
     expected = pd.DataFrame(
         index=range(4),
         data={
+            "test_date": pd.Series(["1970-01-01", "2000-02-28", "2038-01-18", None], dtype="datetime64[ns]"),
+            "test_timestamp": pd.Series(["1970-01-01 00:00:01", "2000-02-28 12:00:10", "2038-01-18 23:59:59", None], dtype="datetime64[ns]"),
+            "test_timestamptz": pd.Series(["1970-01-01 00:00:01", "2000-02-28 16:00:10", "2038-01-18 15:59:59", None], dtype="datetime64[ns]"),
             "test_int16": pd.Series([0, 1, 2, 3], dtype="Int64"),
+            "test_int64": pd.Series([-9223372036854775808, 0, 9223372036854775807, None], dtype="Int64"),
+            "test_float32": pd.Series([None, 3.1415926535, 2.71, -1e-37], dtype="float64"),
+            "test_numeric": pd.Series([None, 521.34, 999.99, 0.00], dtype="float64"),
+            "test_bpchar": pd.Series(["a    ", "bb   ", "ccc  ", None], dtype="object"),
             "test_char": pd.Series(["a", "b", None, "d"], dtype="object"),
+            "test_varchar": pd.Series([None, "bb", "c", "defghijklm"], dtype="object"),
             "test_uuid": pd.Series(
                 [
                     "86b494cc-96b2-11eb-9298-3e22fbb9fe9d",
                     "86b49b84-96b2-11eb-9298-3e22fbb9fe9d",
                     "86b49c42-96b2-11eb-9298-3e22fbb9fe9d",
-                    "86b49cce-96b2-11eb-9298-3e22fbb9fe9d",
+                    None,
                 ],
                 dtype="object",
             ),
             "test_time": pd.Series(
-                ["08:12:40", "10:03:00", "23:00:10", "18:30:00"], dtype="object"
+                ["08:12:40", None, "23:00:10", "18:30:00"], dtype="object"
             ),
             "test_json": pd.Series(
                 [
                     '{"customer":"John Doe","items":{"product":"Beer","qty":6}}',
                     '{"customer":"Lily Bush","items":{"product":"Diaper","qty":24}}',
                     '{"customer":"Josh William","items":{"product":"Toy Car","qty":1}}',
-                    '{"customer":"Mary Clark","items":{"product":"Toy Train","qty":2}}',
+                    None,
                 ],
                 dtype="object",
             ),
@@ -469,7 +501,7 @@ def test_types_cursor(postgres_url: str) -> None:
                     '{"qty":6,"product":"Beer"}',
                     '{"qty":24,"product":"Diaper"}',
                     '{"qty":1,"product":"Toy Car"}',
-                    '{"qty":2,"product":"Toy Train"}',
+                    None,
                 ],
                 dtype="object",
             ),
@@ -483,10 +515,14 @@ def test_types_cursor(postgres_url: str) -> None:
                 dtype="object",
             ),
             "test_enum": pd.Series(
-                ["happy", "very happy", "ecstatic", "ecstatic"], dtype="object"
+                ["happy", "very happy", "ecstatic", None], dtype="object"
             ),
-            "test_farray": pd.Series([[], None, [0.0123], [0.000234, -12.987654321]], dtype="object"),
-            "test_iarray": pd.Series([[-1, 0, 1123], [], [-324324], None], dtype="object"),
+            "test_f4array": pd.Series([[], None, [123.123], [-1e-37, 1e+37]], dtype="object"),
+            "test_f8array": pd.Series([[], None, [1e-307, 1e308], [0.000234, -12.987654321]], dtype="object"),
+            "test_narray": pd.Series([[], None, [521.34], [0.12, 333.33, 22.22]], dtype="object"),
+            "test_i2array": pd.Series([[-1, 0, 1], [], [-32768, 32767], None], dtype="object"),
+            "test_i4array": pd.Series([[-1, 0, 1123], [], [-2147483648, 2147483647], None], dtype="object"),
+            "test_i8array": pd.Series([[-9223372036854775808, 9223372036854775807], [], [0], None], dtype="object"),
         },
     )
     assert_frame_equal(df, expected, check_names=True)
@@ -557,7 +593,7 @@ def test_json(postgres_url: str) -> None:
     df = read_sql(postgres_url, query)
     expected = pd.DataFrame(
         data={
-            "customer": pd.Series(["John Doe", "Lily Bush", "Josh William", "Mary Clark"], dtype="object"),
+            "customer": pd.Series(["John Doe", "Lily Bush", "Josh William", None], dtype="object"),
         }
     )
     assert_frame_equal(df, expected, check_names=True)
@@ -567,11 +603,10 @@ def test_partition_on_json(postgres_url: str) -> None:
     query = "select test_int16, test_jsonb->>'qty' as qty from test_types"
     df = read_sql(postgres_url, query,
                   partition_on="test_int16", partition_num=3)
-    print(df)
     expected = pd.DataFrame(
         data={
             "test_int16": pd.Series([0, 1, 2, 3], dtype="Int64"),
-            "qty": pd.Series(["6", "24", "1", "2"], dtype="object"),
+            "qty": pd.Series(["6", "24", "1", None], dtype="object"),
         }
     )
     assert_frame_equal(df, expected, check_names=True)
