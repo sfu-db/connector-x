@@ -136,10 +136,6 @@
 <span id="133">133</span>
 <span id="134">134</span>
 <span id="135">135</span>
-<span id="136">136</span>
-<span id="137">137</span>
-<span id="138">138</span>
-<span id="139">139</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="ident">chrono</span>::{<span class="ident">DateTime</span>, <span class="ident">NaiveDate</span>, <span class="ident">NaiveDateTime</span>, <span class="ident">NaiveTime</span>, <span class="ident">Utc</span>};
 <span class="kw">use</span> <span class="ident">postgres::types::Type</span>;
@@ -159,7 +155,6 @@
     <span class="ident">Float4Array</span>(<span class="ident">bool</span>),
     <span class="ident">Float8Array</span>(<span class="ident">bool</span>),
     <span class="ident">NumericArray</span>(<span class="ident">bool</span>),
-    <span class="ident">CharArray</span>(<span class="ident">bool</span>),
     <span class="ident">Int2Array</span>(<span class="ident">bool</span>),
     <span class="ident">Int4Array</span>(<span class="ident">bool</span>),
     <span class="ident">Int8Array</span>(<span class="ident">bool</span>),
@@ -187,7 +182,6 @@
         { <span class="ident">Float4</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f32</span> }
         { <span class="ident">Float8</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f64</span> }
         { <span class="ident">Numeric</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Decimal</span> }
-        { <span class="ident">CharArray</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">i8</span><span class="op">&gt;</span> }
         { <span class="ident">Int2Array</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">i16</span><span class="op">&gt;</span> }
         { <span class="ident">Int4Array</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">i32</span><span class="op">&gt;</span> }
         { <span class="ident">Int8Array</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span> }
@@ -217,7 +211,6 @@
             <span class="string">&quot;float4&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Float4</span>(<span class="bool-val">true</span>),
             <span class="string">&quot;float8&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Float8</span>(<span class="bool-val">true</span>),
             <span class="string">&quot;numeric&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Numeric</span>(<span class="bool-val">true</span>),
-            <span class="string">&quot;_char&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">CharArray</span>(<span class="bool-val">true</span>),
             <span class="string">&quot;_int2&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Int2Array</span>(<span class="bool-val">true</span>),
             <span class="string">&quot;_int4&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Int4Array</span>(<span class="bool-val">true</span>),
             <span class="string">&quot;_int8&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Int8Array</span>(<span class="bool-val">true</span>),
@@ -256,7 +249,6 @@
             <span class="ident">Float4</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type::FLOAT4</span>,
             <span class="ident">Float8</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type::FLOAT8</span>,
             <span class="ident">Numeric</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type::NUMERIC</span>,
-            <span class="ident">CharArray</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type::CHAR_ARRAY</span>,
             <span class="ident">Int2Array</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type::INT2_ARRAY</span>,
             <span class="ident">Int4Array</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type::INT4_ARRAY</span>,
             <span class="ident">Int8Array</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type::INT8_ARRAY</span>,
