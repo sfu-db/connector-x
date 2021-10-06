@@ -21,6 +21,7 @@ use std::convert::TryFrom;
 use tokio::net::TcpStream;
 use tokio_util::compat::TokioAsyncWriteCompatExt;
 use url::Url;
+use urlencoding::decode;
 
 pub enum SourceType {
     Postgres,
@@ -40,6 +41,7 @@ impl TryFrom<&str> for SourceConn {
 
     fn try_from(conn: &str) -> Result<SourceConn> {
         let url = Url::parse(conn).map_err(|e| anyhow!("parse error: {}", e))?;
+        println!("url: {:?}", url);
         match url.scheme() {
             "postgres" | "postgresql" => Ok(SourceConn {
                 ty: SourceType::Postgres,
@@ -311,10 +313,10 @@ fn mssql_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
 #[throws(ConnectorXPythonError)]
 fn oracle_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
     let conn = Url::parse(conn.as_str())?;
-    let user = conn.username();
-    let password = conn.password().unwrap_or("");
+    let user = decode(conn.username())?.into_owned();
+    let password = decode(conn.password().unwrap_or(""))?.into_owned();
     let host = "//".to_owned() + conn.host_str().unwrap_or("localhost") + conn.path();
-    let conn = oracle_conn::connect(user, password, host)?;
+    let conn = oracle_conn::connect(user.as_str(), password.as_str(), host)?;
     let range_query = get_partition_range_query(query, col, &OracleDialect {})?;
     let row = conn.query_row(range_query.as_str(), &[])?;
     let min_v: i64 = row.get(0).unwrap_or(0);

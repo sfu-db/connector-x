@@ -1,5 +1,6 @@
 use pyo3::exceptions::PyRuntimeError;
 use pyo3::PyErr;
+use std::string::FromUtf8Error;
 use thiserror::Error;
 
 #[allow(unused)]
@@ -74,6 +75,10 @@ pub enum ConnectorXPythonError {
 
     #[error(transparent)]
     OracleArrowTransportError(#[from] connectorx::transports::OracleArrowTransportError),
+
+    #[error(transparent)]
+    UrlDecodeError(#[from] FromUtf8Error),
+
     /// Any other errors that are too trivial to be put here explicitly.
     #[error(transparent)]
     Other(#[from] anyhow::Error),

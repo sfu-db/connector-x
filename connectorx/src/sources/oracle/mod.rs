@@ -22,6 +22,7 @@ use crate::sql::limit1_query_oracle;
 use r2d2_oracle::oracle::ResultSet;
 use sqlparser::dialect::Dialect;
 pub use typesystem::OracleTypeSystem;
+use urlencoding::decode;
 
 #[derive(Debug)]
 pub struct OracleDialect {}
@@ -52,10 +53,10 @@ impl OracleSource {
     #[throws(OracleSourceError)]
     pub fn new(conn: &str, nconn: usize) -> Self {
         let conn = Url::parse(conn)?;
-        let user = conn.username();
-        let password = conn.password().unwrap_or("");
+        let user = decode(conn.username())?.into_owned();
+        let password = decode(conn.password().unwrap_or(""))?.into_owned();
         let host = "//".to_owned() + conn.host_str().unwrap_or("localhost") + conn.path();
-        let manager = OracleConnectionManager::new(user, password, host.as_str());
+        let manager = OracleConnectionManager::new(user.as_str(), password.as_str(), host.as_str());
         let pool = r2d2::Pool::builder()
             .max_size(nconn as u32)
             .build(manager)?;
