@@ -376,7 +376,7 @@ def test_types_binary(postgres_url: str) -> None:
             "test_enum": pd.Series(
                 ["happy", "very happy", "ecstatic", None], dtype="object"
             ),
-            "test_f4array": pd.Series([[], None, [123.12300109863281], [-9.99999991097579e-38, 9.999999933815813e+36]], dtype="object"),
+            "test_f4array": pd.Series([[], None, [123.123], [-1e-37, 1e+37]], dtype="object"),
             "test_f8array": pd.Series([[], None, [-1e-307, 1e308], [0.000234, -12.987654321]], dtype="object"),
             "test_narray": pd.Series([[], None, [521.34], [0.12, 333.33, 22.22]], dtype="object"),
             "test_i2array": pd.Series([[-1, 0, 1], [], [-32768, 32767], None], dtype="object"),
@@ -446,7 +446,7 @@ def test_types_csv(postgres_url: str) -> None:
             "test_enum": pd.Series(
                 ["happy", "very happy", "ecstatic", None], dtype="object"
             ),
-            "test_f4array": pd.Series([[], None, [123.12300109863281], [-9.99999991097579e-38, 9.999999933815813e+36]], dtype="object"),
+            "test_f4array": pd.Series([[], None, [123.123], [-1e-37, 1e+37]], dtype="object"),
             "test_f8array": pd.Series([[], None, [1e-307, 1e308], [0.000234, -12.987654321]], dtype="object"),
             "test_narray": pd.Series([[], None, [521.34], [0.12, 333.33, 22.22]], dtype="object"),
             "test_i2array": pd.Series([[-1, 0, 1], [], [-32768, 32767], None], dtype="object"),
@@ -461,6 +461,7 @@ def test_types_cursor(postgres_url: str) -> None:
     query = "SELECT test_date, test_timestamp, test_timestamptz, test_int16, test_int64, test_float32, test_numeric, test_bpchar, test_char, test_varchar, test_uuid, test_time, test_json, test_jsonb, test_bytea, test_enum::text, test_f4array, test_f8array, test_narray, test_i2array, test_i4array, test_i8array FROM test_types"
     df = read_sql(postgres_url, query, protocol="cursor",
                   partition_on="test_int16", partition_num=4)
+    print(df)
     expected = pd.DataFrame(
         index=range(4),
         data={
@@ -516,7 +517,7 @@ def test_types_cursor(postgres_url: str) -> None:
             "test_enum": pd.Series(
                 ["happy", "very happy", "ecstatic", None], dtype="object"
             ),
-            "test_f4array": pd.Series([[], None, [123.12300109863281], [-9.99999991097579e-38, 9.999999933815813e+36]], dtype="object"),
+            "test_f4array": pd.Series([[], None, [123.123], [-1e-37, 1e+37]], dtype="object"),
             "test_f8array": pd.Series([[], None, [1e-307, 1e308], [0.000234, -12.987654321]], dtype="object"),
             "test_narray": pd.Series([[], None, [521.34], [0.12, 333.33, 22.22]], dtype="object"),
             "test_i2array": pd.Series([[-1, 0, 1], [], [-32768, 32767], None], dtype="object"),
