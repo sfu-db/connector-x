@@ -2,7 +2,7 @@
 authors = ["Weiyuan Wu <youngw@sfu.ca>"]
 edition = "2018"
 name = "connectorx-python"
-version = "0.2.1"
+version = "0.2.1-alpha.4"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -38,6 +38,7 @@ tokio = {version = "1", features = ["rt", "rt-multi-thread", "net"]}
 tokio-util = "0.6"
 url = "2"
 uuid = "0.8"
+urlencoding = "2.1"
 
 [build-dependencies]
 built = {version = "0.5", features = ["chrono"]}
