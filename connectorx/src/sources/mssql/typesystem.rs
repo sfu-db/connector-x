@@ -86,7 +86,7 @@ impl<'a> From<&'a ColumnType> for MsSQLTypeSystem {
             ColumnType::Decimaln => Decimal(true),
             ColumnType::Numericn => Numeric(true),
             ColumnType::Datetime => Datetime(false),
-            ColumnType::Datetime2 => Datetime2(false),
+            ColumnType::Datetime2 => Datetime2(true),
             ColumnType::Datetimen => Datetime(true),
             ColumnType::Daten => Date(true),
             ColumnType::Timen => Time(true),

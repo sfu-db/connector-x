@@ -451,7 +451,6 @@ impl_produce!(
     f32,
     f64,
     Decimal,
-    Vec<i8>,
     Vec<i16>,
     Vec<i32>,
     Vec<i64>,
@@ -657,7 +656,9 @@ impl<'r, 'a> Produce<'r, DateTime<Utc>> for PostgresCSVSourceParser<'a> {
     #[throws(PostgresSourceError)]
     fn produce(&mut self) -> DateTime<Utc> {
         let (ridx, cidx) = self.next_loc()?;
-        self.rowbuf[ridx][cidx].parse().map_err(|_| {
+        let s: &str = &self.rowbuf[ridx][cidx][..];
+        // postgres csv return example: 1970-01-01 00:00:01+00
+        format!("{}:00", s).parse().map_err(|_| {
             ConnectorXError::cannot_produce::<DateTime<Utc>>(Some(self.rowbuf[ridx][cidx].into()))
         })?
     }
@@ -672,7 +673,8 @@ impl<'r, 'a> Produce<'r, Option<DateTime<Utc>>> for PostgresCSVSourceParser<'a> 
         match &self.rowbuf[ridx][cidx][..] {
             "" => None,
             v => {
-                Some(v.parse().map_err(|_| {
+                // postgres csv return example: 1970-01-01 00:00:01+00
+                Some(format!("{}:00", v).parse().map_err(|_| {
                     ConnectorXError::cannot_produce::<DateTime<Utc>>(Some(v.into()))
                 })?)
             }
@@ -936,7 +938,6 @@ impl_produce!(
     f32,
     f64,
     Decimal,
-    Vec<i8>,
     Vec<i16>,
     Vec<i32>,
     Vec<i64>,
