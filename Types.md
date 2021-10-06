@@ -32,7 +32,12 @@
 | JSON            | object                    |                                    |
 | JSONB           | object                    |                                    |
 | ENUM            | object                    | need to convert enum column to text manually (`::text`) when using `csv` and `cursor` protocol |
-
+| INT2[]          | object                    | list of i64                        |
+| INT4[]          | object                    | list of i64                        |
+| INT8[]          | object                    | list of i64                        |
+| FLOAT4[]        | object                    | list of f64                        |
+| FLOAT8[]        | object                    | list of f64                        |
+| NUMERIC[]       | object                    | list of f64                        |
 
 ## MySQL (Clickhouse)
 
@@ -92,17 +97,20 @@ Since SQLite adopts a [dynamic type system](https://www.sqlite.org/datatype3.htm
 Oracle does not need to specify protocol.
 
 ### Oracle-Pandas Type Mapping
-| Oracle Type     |      Pandas Type            |  Comment                           |
-|:---------------:|:---------------------------:|:----------------------------------:|
-| Number(\*,0)    | int64, Int64(nullable)      |                                    |
-| Number(\*,>0)   | float64                     |                                    |
-| Float           | float64                     |                                    |
-| VARCHAR2        | object                      |                                    |
-| CHAR            | object                      |                                    |
-| NCHAR           | object                      |                                    |
-| NVarchar2       | object                      |                                    |
-| DATE            | datetime64[ns]              |                                    |
-| TIMESTAMP       | datetime64[ns]              |                                    |
+| Oracle Type               |      Pandas Type            |  Comment                           |
+|:-------------------------:|:---------------------------:|:----------------------------------:|
+| Number(\*,0)              | int64, Int64(nullable)      |                                    |
+| Number(\*,>0)             | float64                     |                                    |
+| Float                     | float64                     |                                    |
+| BINARY_FLOAT              | float64                     |                                    |
+| BINARY_DOUBLE             | float64                     |                                    |
+| VARCHAR2                  | object                      |                                    |
+| CHAR                      | object                      |                                    |
+| NCHAR                     | object                      |                                    |
+| NVarchar2                 | object                      |                                    |
+| DATE                      | datetime64[ns]              |                                    |
+| TIMESTAMP                 | datetime64[ns]              |                                    |
+| TIMESTAMP WITH TIME ZONE  | datetime64[ns]              |                                    |
 
 ## SQLServer
 
