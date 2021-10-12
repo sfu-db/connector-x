@@ -197,8 +197,8 @@ impl<'a> BytesColumn<'a> {
                         start = end;
                     } else {
                         unsafe {
-                            let b: &pyo3::types::PyBytes =
-                                py.from_borrowed_ptr(pyo3::ffi::Py_None());
+                            let none = py.None();
+                            let b: &pyo3::types::PyBytes = none.cast_as(py).unwrap();
 
                             *self.data.get_unchecked_mut(self.next_write + i) = PyBytes(b.into());
                         }

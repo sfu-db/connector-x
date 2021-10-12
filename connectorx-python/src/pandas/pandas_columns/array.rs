@@ -204,8 +204,8 @@ where
                         start = end;
                     } else {
                         unsafe {
-                            let n: &pyo3::types::PyList =
-                                py.from_borrowed_ptr(pyo3::ffi::Py_None());
+                            let none = py.None();
+                            let n: &pyo3::types::PyList = none.cast_as(py).unwrap();
                             *self.data.get_unchecked_mut(self.next_write + i) = PyList(n.into());
                         }
                     }
