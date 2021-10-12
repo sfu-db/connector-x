@@ -66,9 +66,10 @@ impl StringInfo {
 impl PyString {
     // get none string converted from none object, otherwise default strings are zeros
     pub fn none(py: Python) -> PyString {
-        let none = py.None();
-        let s: &pyo3::types::PyString = none.cast_as(py).unwrap();
-        PyString(s.into())
+        // this is very unsafe because Py_None is not a PyString from Rust's perspective. But it is fine because
+        // later these stuff will all be converted to a python object
+        let s = unsafe { Py::from_borrowed_ptr(py, ffi::Py_None()) };
+        PyString(s)
     }
 
     // the val should be same as the val used for new
