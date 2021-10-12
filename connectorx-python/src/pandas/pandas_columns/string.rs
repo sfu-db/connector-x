@@ -244,7 +244,6 @@ impl<'a> StringColumn<'a> {
             return;
         }
 
-        let py = unsafe { Python::assume_gil_acquired() };
         let _guard = if force {
             GIL_MUTEX
                 .lock()
@@ -255,6 +254,7 @@ impl<'a> StringColumn<'a> {
                 Err(_) => return,
             }
         };
+        let py = unsafe { Python::assume_gil_acquired() };
 
         let mut string_infos = Vec::with_capacity(self.string_lengths.len());
         let mut start = 0;
@@ -290,6 +290,7 @@ impl<'a> StringColumn<'a> {
                         self.data[self.next_write + i]
                             .write(&self.string_buf[start..end], info.unwrap())
                     };
+
                     start = end;
                 }
             }

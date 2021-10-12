@@ -57,23 +57,26 @@ impl StringInfo {
             }
         };
 
-        let s: &pyo3::types::PyString = unsafe { py.from_owned_ptr(objptr) };
-        PyString(s.into())
+        let s: Py<pyo3::types::PyString> = unsafe { Py::from_owned_ptr(py, objptr) };
+
+        PyString(s)
     }
 }
 
 impl PyString {
     // get none string converted from none object, otherwise default strings are zeros
     pub fn none(py: Python) -> PyString {
-        let s: &pyo3::types::PyString = unsafe { py.from_borrowed_ptr(ffi::Py_None()) };
-        PyString(s.into())
+        // this is very unsafe because Py_None is not a PyString from Rust's perspective. But it is fine because
+        // later these stuff will all be converted to a python object
+        let s = unsafe { Py::from_borrowed_ptr(py, ffi::Py_None()) };
+        PyString(s)
     }
 
     // the val should be same as the val used for new
     pub unsafe fn write(&mut self, data: &[u8], info: StringInfo) {
         match info {
             StringInfo::ASCII(len) => {
-                let pyobj = PyASCIIObject::from_owned(self.0.clone());
+                let pyobj = PyASCIIObject::from_mut_ref(&mut self.0);
                 let buf = std::slice::from_raw_parts_mut(
                     (pyobj as *mut PyASCIIObject).offset(1) as *mut u8,
                     len as usize,
@@ -82,7 +85,7 @@ impl PyString {
                 buf.copy_from_slice(data);
             }
             StringInfo::UCS1(len) => {
-                let pyobj = PyCompactUnicodeObject::from_owned(self.0.clone());
+                let pyobj = PyCompactUnicodeObject::from_mut_ref(&mut self.0);
                 let buf = std::slice::from_raw_parts_mut(
                     (pyobj as *mut PyCompactUnicodeObject).offset(1) as *mut u8,
                     len as usize,
@@ -91,7 +94,7 @@ impl PyString {
                 buf.copy_from_slice(&data);
             }
             StringInfo::UCS2(len) => {
-                let pyobj = PyCompactUnicodeObject::from_owned(self.0.clone());
+                let pyobj = PyCompactUnicodeObject::from_mut_ref(&mut self.0);
                 let buf = std::slice::from_raw_parts_mut(
                     (pyobj as *mut PyCompactUnicodeObject).offset(1) as *mut u16,
                     len as usize,
@@ -103,7 +106,7 @@ impl PyString {
                 buf.copy_from_slice(&data);
             }
             StringInfo::UCS4(len) => {
-                let pyobj = PyCompactUnicodeObject::from_owned(self.0.clone());
+                let pyobj = PyCompactUnicodeObject::from_mut_ref(&mut self.0);
                 let buf = std::slice::from_raw_parts_mut(
                     (pyobj as *mut PyCompactUnicodeObject).offset(1) as *mut u32,
                     len as usize,
@@ -139,9 +142,9 @@ pub struct PyASCIIObject {
 }
 
 impl PyASCIIObject {
-    pub unsafe fn from_owned<'a>(obj: Py<pyo3::types::PyString>) -> &'a mut Self {
-        let ascii: &mut PyASCIIObject = std::mem::transmute(obj);
-        ascii
+    pub unsafe fn from_mut_ref<'a>(obj: &'a mut Py<pyo3::types::PyString>) -> &'a mut Self {
+        let ascii: &mut &mut PyASCIIObject = std::mem::transmute(obj);
+        *ascii
     }
 }
 
@@ -155,8 +158,8 @@ pub struct PyCompactUnicodeObject {
 }
 
 impl PyCompactUnicodeObject {
-    pub unsafe fn from_owned<'a>(obj: Py<pyo3::types::PyString>) -> &'a mut Self {
-        let unicode: &mut PyCompactUnicodeObject = std::mem::transmute(obj);
-        unicode
+    pub unsafe fn from_mut_ref<'a>(obj: &'a mut Py<pyo3::types::PyString>) -> &'a mut Self {
+        let unicode: &mut &mut PyCompactUnicodeObject = std::mem::transmute(obj);
+        *unicode
     }
 }

@@ -7,7 +7,7 @@ license = "MIT"
 name = "connectorx"
 readme = "../README.md"
 repository = "https://github.com/sfu-db/connector-x"
-version = "0.2.1-alpha.4"
+version = "0.2.1-alpha.5"
 
 [dependencies]
 anyhow = "1"
@@ -46,9 +46,8 @@ serde_json = {version = "1", optional = true}
 tiberius = {version = "0.5", features = ["rust_decimal", "chrono"], optional = true}
 tokio = {version = "1", features = ["rt", "rt-multi-thread", "net"], optional = true}
 url = {version = "2", optional = true}
+urlencoding = {version = "2.1", optional = true}
 uuid = {version = "0.8", optional = true}
-urlencoding = {version = "2.1", optional=true}
-
 
 [lib]
 crate-type = ["cdylib", "rlib"]

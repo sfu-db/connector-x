@@ -41,7 +41,6 @@ impl TryFrom<&str> for SourceConn {
 
     fn try_from(conn: &str) -> Result<SourceConn> {
         let url = Url::parse(conn).map_err(|e| anyhow!("parse error: {}", e))?;
-        println!("url: {:?}", url);
         match url.scheme() {
             "postgres" | "postgresql" => Ok(SourceConn {
                 ty: SourceType::Postgres,
