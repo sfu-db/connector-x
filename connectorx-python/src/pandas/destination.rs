@@ -89,6 +89,7 @@ impl<'a> PandasDestination<'a> {
             dt,
             cids: placement,
         };
+
         self.block_datas.push(data.into());
         self.block_infos.push(block_info);
     }

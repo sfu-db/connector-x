@@ -204,7 +204,7 @@ where
                         start = end;
                     } else {
                         unsafe {
-                            let n = unsafe { Py::from_borrowed_ptr(py, pyo3::ffi::Py_None()) };
+                            let n = Py::from_owned_ptr(py, pyo3::ffi::Py_None());
                             *self.data.get_unchecked_mut(self.next_write + i) = PyList(n);
                         }
                     }
