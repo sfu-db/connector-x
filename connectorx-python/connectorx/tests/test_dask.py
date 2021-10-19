@@ -39,6 +39,7 @@ def test_dask(postgres_url: str) -> None:
     )
     assert_frame_equal(df.compute(), expected, check_names=True)
 
+
 def test_dask_with_index_col(postgres_url: str) -> None:
     query = "SELECT * FROM test_table"
     df = read_sql(
