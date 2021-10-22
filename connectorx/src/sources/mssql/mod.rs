@@ -27,6 +27,7 @@ use std::sync::Arc;
 use tiberius::{AuthMethod, Config, EncryptionLevel, QueryResult, Row};
 use tokio::runtime::{Handle, Runtime};
 use url::Url;
+use urlencoding::decode;
 use uuid::Uuid;
 
 type Conn<'a> = PooledConnection<'a, ConnectionManager>;
@@ -46,13 +47,13 @@ impl MsSQLSource {
         let mut config = Config::new();
         let url = Url::parse(conn)?;
 
-        config.host(url.host_str().unwrap_or("localhost"));
+        config.host(decode(url.host_str().unwrap_or("localhost"))?.into_owned());
         config.port(url.port().unwrap_or(1433));
 
         // Using SQL Server authentication.
         config.authentication(AuthMethod::sql_server(
-            url.username(),
-            url.password().unwrap_or(""),
+            decode(url.username())?.to_owned(),
+            decode(url.password().unwrap_or(""))?.to_owned(),
         ));
 
         config.database(&url.path()[1..]); // remove the leading "/"
