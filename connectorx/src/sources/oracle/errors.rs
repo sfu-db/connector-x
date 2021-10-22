@@ -16,7 +16,7 @@ pub enum OracleSourceError {
     OracleUrlError(#[from] url::ParseError),
 
     #[error(transparent)]
-    UrlDecodeError(#[from] FromUtf8Error),
+    OracleUrlDecodeError(#[from] FromUtf8Error),
 
     /// Any other errors that are too trivial to be put here explicitly.
     #[error(transparent)]

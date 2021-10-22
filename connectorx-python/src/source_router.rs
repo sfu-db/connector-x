@@ -240,11 +240,11 @@ fn mssql_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
     let rt = Runtime::new().unwrap();
     let mut config = Config::new();
 
-    config.host(conn.host_str().unwrap_or("localhost"));
+    config.host(decode(conn.host_str().unwrap_or("localhost"))?.into_owned());
     config.port(conn.port().unwrap_or(1433));
     config.authentication(AuthMethod::sql_server(
-        conn.username(),
-        conn.password().unwrap_or(""),
+        decode(conn.username())?.into_owned(),
+        decode(conn.password().unwrap_or(""))?.into_owned(),
     ));
 
     config.database(&conn.path()[1..]); // remove the leading "/"
@@ -314,7 +314,11 @@ fn oracle_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) 
     let conn = Url::parse(conn.as_str())?;
     let user = decode(conn.username())?.into_owned();
     let password = decode(conn.password().unwrap_or(""))?.into_owned();
-    let host = "//".to_owned() + conn.host_str().unwrap_or("localhost") + conn.path();
+    let host = "//".to_owned()
+        + decode(conn.host_str().unwrap_or("localhost"))?
+            .into_owned()
+            .as_str()
+        + conn.path();
     let conn = oracle_conn::connect(user.as_str(), password.as_str(), host)?;
     let range_query = get_partition_range_query(query, col, &OracleDialect {})?;
     let row = conn.query_row(range_query.as_str(), &[])?;

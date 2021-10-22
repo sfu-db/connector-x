@@ -55,7 +55,11 @@ impl OracleSource {
         let conn = Url::parse(conn)?;
         let user = decode(conn.username())?.into_owned();
         let password = decode(conn.password().unwrap_or(""))?.into_owned();
-        let host = "//".to_owned() + conn.host_str().unwrap_or("localhost") + conn.path();
+        let host = "//".to_owned()
+            + decode(conn.host_str().unwrap_or("localhost"))?
+                .into_owned()
+                .as_str()
+            + conn.path();
         let manager = OracleConnectionManager::new(user.as_str(), password.as_str(), host.as_str());
         let pool = r2d2::Pool::builder()
             .max_size(nconn as u32)
