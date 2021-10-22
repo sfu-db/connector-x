@@ -310,6 +310,10 @@
 <span id="307">307</span>
 <span id="308">308</span>
 <span id="309">309</span>
+<span id="310">310</span>
+<span id="311">311</span>
+<span id="312">312</span>
+<span id="313">313</span>
 </pre><pre class="rust">
 <span class="kw">mod</span> <span class="ident">errors</span>;
 <span class="kw">mod</span> <span class="ident">typesystem</span>;
@@ -368,7 +372,11 @@
         <span class="kw">let</span> <span class="ident">conn</span> <span class="op">=</span> <span class="ident">Url::parse</span>(<span class="ident">conn</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">user</span> <span class="op">=</span> <span class="ident">decode</span>(<span class="ident">conn</span>.<span class="ident">username</span>())<span class="question-mark">?</span>.<span class="ident">into_owned</span>();
         <span class="kw">let</span> <span class="ident">password</span> <span class="op">=</span> <span class="ident">decode</span>(<span class="ident">conn</span>.<span class="ident">password</span>().<span class="ident">unwrap_or</span>(<span class="string">&quot;&quot;</span>))<span class="question-mark">?</span>.<span class="ident">into_owned</span>();
-        <span class="kw">let</span> <span class="ident">host</span> <span class="op">=</span> <span class="string">&quot;//&quot;</span>.<span class="ident">to_owned</span>() <span class="op">+</span> <span class="ident">conn</span>.<span class="ident">host_str</span>().<span class="ident">unwrap_or</span>(<span class="string">&quot;localhost&quot;</span>) <span class="op">+</span> <span class="ident">conn</span>.<span class="ident">path</span>();
+        <span class="kw">let</span> <span class="ident">host</span> <span class="op">=</span> <span class="string">&quot;//&quot;</span>.<span class="ident">to_owned</span>()
+            <span class="op">+</span> <span class="ident">decode</span>(<span class="ident">conn</span>.<span class="ident">host_str</span>().<span class="ident">unwrap_or</span>(<span class="string">&quot;localhost&quot;</span>))<span class="question-mark">?</span>
+                .<span class="ident">into_owned</span>()
+                .<span class="ident">as_str</span>()
+            <span class="op">+</span> <span class="ident">conn</span>.<span class="ident">path</span>();
         <span class="kw">let</span> <span class="ident">manager</span> <span class="op">=</span> <span class="ident">OracleConnectionManager::new</span>(<span class="ident">user</span>.<span class="ident">as_str</span>(), <span class="ident">password</span>.<span class="ident">as_str</span>(), <span class="ident">host</span>.<span class="ident">as_str</span>());
         <span class="kw">let</span> <span class="ident">pool</span> <span class="op">=</span> <span class="ident">r2d2::Pool::builder</span>()
             .<span class="ident">max_size</span>(<span class="ident">nconn</span> <span class="kw">as</span> <span class="ident">u32</span>)

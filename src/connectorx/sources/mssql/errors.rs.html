@@ -27,7 +27,12 @@
 <span id="24">24</span>
 <span id="25">25</span>
 <span id="26">26</span>
+<span id="27">27</span>
+<span id="28">28</span>
+<span id="29">29</span>
+<span id="30">30</span>
 </pre><pre class="rust">
+<span class="kw">use</span> <span class="ident">std::string::FromUtf8Error</span>;
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Error</span>, <span class="ident">Debug</span>)]</span>
@@ -49,6 +54,9 @@
 
     <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
     <span class="ident">MsSQLUrlError</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">url::ParseError</span>),
+
+    <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
+    <span class="ident">MsSQLUrlDecodeError</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">FromUtf8Error</span>),
 
     <span class="doccomment">/// Any other errors that are too trivial to be put here explicitly.</span>
     <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
