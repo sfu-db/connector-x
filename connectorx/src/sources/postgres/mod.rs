@@ -380,27 +380,6 @@ impl<'a> PostgresBinarySourcePartitionParser<'a> {
 
     #[throws(PostgresSourceError)]
     fn next_loc(&mut self) -> (usize, usize) {
-        if self.current_row >= self.rowbuf.len() {
-            if !self.rowbuf.is_empty() {
-                self.rowbuf.drain(..);
-            }
-
-            for _ in 0..self.buf_size {
-                match self.iter.next()? {
-                    Some(row) => {
-                        self.rowbuf.push(row);
-                    }
-                    None => break,
-                }
-            }
-
-            if self.rowbuf.is_empty() {
-                throw!(anyhow!("Postgres EOF"));
-            }
-            self.current_row = 0;
-            self.current_col = 0;
-        }
-
         let ret = (self.current_row, self.current_col);
         self.current_row += (self.current_col + 1) / self.ncols;
         self.current_col = (self.current_col + 1) % self.ncols;
@@ -411,6 +390,24 @@ impl<'a> PostgresBinarySourcePartitionParser<'a> {
 impl<'a> PartitionParser<'a> for PostgresBinarySourcePartitionParser<'a> {
     type TypeSystem = PostgresTypeSystem;
     type Error = PostgresSourceError;
+
+    #[throws(PostgresSourceError)]
+    fn fetch_next(&mut self, n: usize) -> usize {
+        if !self.rowbuf.is_empty() {
+            self.rowbuf.drain(..);
+        }
+        for _ in 0..n {
+            match self.iter.next()? {
+                Some(row) => {
+                    self.rowbuf.push(row);
+                }
+                None => break,
+            }
+        }
+        self.current_row = 0;
+        self.current_col = 0;
+        self.rowbuf.len()
+    }
 }
 
 macro_rules! impl_produce {

@@ -5,13 +5,7 @@ use fehler::throws;
 use ndarray::{ArrayViewMut2, Axis, Ix2};
 use numpy::PyArray;
 use pyo3::{FromPyObject, PyAny, PyResult};
-use std::{
-    any::TypeId,
-    sync::{
-        atomic::{AtomicUsize, Ordering},
-        Arc,
-    },
-};
+use std::any::TypeId;
 
 // Float
 pub struct Float64Block<'a> {
@@ -43,8 +37,6 @@ impl<'a> Float64Block<'a> {
                     .into_slice()
                     .ok_or_else(|| anyhow!("get None for splitted Float64 data"))?
                     .as_mut_ptr(),
-                len: nrows,
-                i: Arc::new(AtomicUsize::new(0)),
             })
         }
         ret
@@ -53,8 +45,6 @@ impl<'a> Float64Block<'a> {
 
 pub struct Float64Column {
     data: *mut f64,
-    len: usize,
-    i: Arc<AtomicUsize>,
 }
 
 unsafe impl Send for Float64Column {}
@@ -64,9 +54,7 @@ impl<'a> PandasColumnObject for Float64Column {
     fn typecheck(&self, id: TypeId) -> bool {
         id == TypeId::of::<f64>() || id == TypeId::of::<Option<f64>>()
     }
-    fn len(&self) -> usize {
-        self.len
-    }
+
     fn typename(&self) -> &'static str {
         std::any::type_name::<f64>()
     }
@@ -74,19 +62,17 @@ impl<'a> PandasColumnObject for Float64Column {
 
 impl<'a> PandasColumn<f64> for Float64Column {
     #[throws(ConnectorXPythonError)]
-    fn write(&mut self, val: f64) {
-        let pos = self.i.fetch_add(1, Ordering::Relaxed);
-        unsafe { *self.data.add(pos) = val };
+    fn write(&mut self, val: f64, row: usize) {
+        unsafe { *self.data.add(row) = val };
     }
 }
 
 impl<'a> PandasColumn<Option<f64>> for Float64Column {
     #[throws(ConnectorXPythonError)]
-    fn write(&mut self, val: Option<f64>) {
-        let pos = self.i.fetch_add(1, Ordering::Relaxed);
+    fn write(&mut self, val: Option<f64>, row: usize) {
         match val {
-            None => unsafe { *self.data.add(pos) = f64::NAN },
-            Some(val) => unsafe { *self.data.add(pos) = val },
+            None => unsafe { *self.data.add(row) = f64::NAN },
+            Some(val) => unsafe { *self.data.add(row) = val },
         }
     }
 }
@@ -102,16 +88,9 @@ impl HasPandasColumn for Option<f64> {
 impl Float64Column {
     pub fn partition(self, counts: &[usize]) -> Vec<Float64Column> {
         let mut partitions = vec![];
-        // let mut data = self.data;
-
         for _ in counts {
-            partitions.push(Float64Column {
-                data: self.data,
-                len: self.len,
-                i: Arc::clone(&self.i),
-            });
+            partitions.push(Float64Column { data: self.data });
         }
-
         partitions
     }
 }

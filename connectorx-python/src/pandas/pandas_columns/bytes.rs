@@ -38,7 +38,7 @@ impl<'a> FromPyObject<'a> for BytesBlock<'a> {
 
 impl<'a> BytesBlock<'a> {
     #[throws(ConnectorXPythonError)]
-    pub fn split(self) -> Vec<BytesColumn<'a>> {
+    pub fn split(self) -> Vec<BytesColumn> {
         let mut ret = vec![];
         let mut view = self.data;
 
@@ -50,9 +50,10 @@ impl<'a> BytesBlock<'a> {
                 data: col
                     .into_shape(nrows)?
                     .into_slice()
-                    .ok_or_else(|| anyhow!("get None for splitted String data"))?,
-                next_write: 0,
+                    .ok_or_else(|| anyhow!("get None for splitted String data"))?
+                    .as_mut_ptr(),
                 bytes_lengths: vec![],
+                row_idx: vec![],
                 bytes_buf: Vec::with_capacity(self.buf_size_mb * (1 << 20) * 11 / 10), // allocate a little bit more memory to avoid Vec growth
                 buf_size: self.buf_size_mb * (1 << 20),
             })
@@ -61,20 +62,20 @@ impl<'a> BytesBlock<'a> {
     }
 }
 
-pub struct BytesColumn<'a> {
-    data: &'a mut [PyBytes],
-    next_write: usize,
+pub struct BytesColumn {
+    data: *mut PyBytes,
     bytes_buf: Vec<u8>,
     bytes_lengths: Vec<usize>, // usize::MAX if the string is None
+    row_idx: Vec<usize>,
     buf_size: usize,
 }
 
-impl<'a> PandasColumnObject for BytesColumn<'a> {
+unsafe impl Send for BytesColumn {}
+unsafe impl Sync for BytesColumn {}
+
+impl PandasColumnObject for BytesColumn {
     fn typecheck(&self, id: TypeId) -> bool {
         id == TypeId::of::<&'static [u8]>() || id == TypeId::of::<Option<&'static [u8]>>()
-    }
-    fn len(&self) -> usize {
-        self.data.len()
     }
     fn typename(&self) -> &'static str {
         std::any::type_name::<&'static [u8]>()
@@ -85,85 +86,87 @@ impl<'a> PandasColumnObject for BytesColumn<'a> {
     }
 }
 
-impl<'a> PandasColumn<Vec<u8>> for BytesColumn<'a> {
+impl PandasColumn<Vec<u8>> for BytesColumn {
     #[throws(ConnectorXPythonError)]
-    fn write(&mut self, val: Vec<u8>) {
+    fn write(&mut self, val: Vec<u8>, row: usize) {
         self.bytes_lengths.push(val.len());
         self.bytes_buf.extend_from_slice(&val[..]);
+        self.row_idx.push(row);
         self.try_flush()?;
     }
 }
 
-impl<'r, 'a> PandasColumn<&'r [u8]> for BytesColumn<'a> {
+impl<'r> PandasColumn<&'r [u8]> for BytesColumn {
     #[throws(ConnectorXPythonError)]
-    fn write(&mut self, val: &'r [u8]) {
+    fn write(&mut self, val: &'r [u8], row: usize) {
         self.bytes_lengths.push(val.len());
         self.bytes_buf.extend_from_slice(val);
+        self.row_idx.push(row);
         self.try_flush()?;
     }
 }
 
-impl<'a> PandasColumn<Option<Vec<u8>>> for BytesColumn<'a> {
+impl PandasColumn<Option<Vec<u8>>> for BytesColumn {
     #[throws(ConnectorXPythonError)]
-    fn write(&mut self, val: Option<Vec<u8>>) {
+    fn write(&mut self, val: Option<Vec<u8>>, row: usize) {
         match val {
             Some(b) => {
                 self.bytes_lengths.push(b.len());
                 self.bytes_buf.extend_from_slice(&b[..]);
+                self.row_idx.push(row);
                 self.try_flush()?;
             }
             None => {
                 self.bytes_lengths.push(usize::MAX);
+                self.row_idx.push(row);
             }
         }
     }
 }
 
-impl<'r, 'a> PandasColumn<Option<&'r [u8]>> for BytesColumn<'a> {
+impl<'r> PandasColumn<Option<&'r [u8]>> for BytesColumn {
     #[throws(ConnectorXPythonError)]
-    fn write(&mut self, val: Option<&'r [u8]>) {
+    fn write(&mut self, val: Option<&'r [u8]>, row: usize) {
         match val {
             Some(b) => {
                 self.bytes_lengths.push(b.len());
                 self.bytes_buf.extend_from_slice(b);
+                self.row_idx.push(row);
                 self.try_flush()?;
             }
             None => {
                 self.bytes_lengths.push(usize::MAX);
+                self.row_idx.push(row);
             }
         }
     }
 }
 
 impl HasPandasColumn for Vec<u8> {
-    type PandasColumn<'a> = BytesColumn<'a>;
+    type PandasColumn<'a> = BytesColumn;
 }
 
 impl HasPandasColumn for Option<Vec<u8>> {
-    type PandasColumn<'a> = BytesColumn<'a>;
+    type PandasColumn<'a> = BytesColumn;
 }
 
 impl<'r> HasPandasColumn for &'r [u8] {
-    type PandasColumn<'a> = BytesColumn<'a>;
+    type PandasColumn<'a> = BytesColumn;
 }
 
 impl<'r> HasPandasColumn for Option<&'r [u8]> {
-    type PandasColumn<'a> = BytesColumn<'a>;
+    type PandasColumn<'a> = BytesColumn;
 }
 
-impl<'a> BytesColumn<'a> {
-    pub fn partition(self, counts: &[usize]) -> Vec<BytesColumn<'a>> {
+impl BytesColumn {
+    pub fn partition(self, counts: &[usize]) -> Vec<BytesColumn> {
         let mut partitions = vec![];
-        let mut data = self.data;
 
-        for &c in counts {
-            let (splitted_data, rest) = data.split_at_mut(c);
-            data = rest;
-
+        for _ in counts {
             partitions.push(BytesColumn {
-                data: splitted_data,
-                next_write: 0,
+                data: self.data,
                 bytes_lengths: vec![],
+                row_idx: vec![],
                 bytes_buf: Vec::with_capacity(self.buf_size),
                 buf_size: self.buf_size,
             });
@@ -190,7 +193,7 @@ impl<'a> BytesColumn<'a> {
                         let end = start + len;
                         unsafe {
                             // allocate and write in the same time
-                            *self.data.get_unchecked_mut(self.next_write + i) = PyBytes(
+                            *self.data.add(self.row_idx[i]) = PyBytes(
                                 pyo3::types::PyBytes::new(py, &self.bytes_buf[start..end]).into(),
                             );
                         };
@@ -198,7 +201,7 @@ impl<'a> BytesColumn<'a> {
                     } else {
                         unsafe {
                             let b = unsafe { Py::from_borrowed_ptr(py, pyo3::ffi::Py_None()) };
-                            *self.data.get_unchecked_mut(self.next_write + i) = PyBytes(b);
+                            *self.data.add(self.row_idx[i]) = PyBytes(b);
                         }
                     }
                 }
@@ -206,7 +209,7 @@ impl<'a> BytesColumn<'a> {
 
             self.bytes_buf.truncate(0);
             self.bytes_lengths.truncate(0);
-            self.next_write += nstrings;
+            self.row_idx.truncate(0);
         }
     }
 

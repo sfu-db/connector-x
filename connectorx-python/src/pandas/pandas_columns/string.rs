@@ -28,7 +28,7 @@ impl<'a> FromPyObject<'a> for StringBlock<'a> {
 
 impl<'a> StringBlock<'a> {
     #[throws(ConnectorXPythonError)]
-    pub fn split(self) -> Vec<StringColumn<'a>> {
+    pub fn split(self) -> Vec<StringColumn> {
         let mut ret = vec![];
         let mut view = self.data;
 
@@ -40,9 +40,10 @@ impl<'a> StringBlock<'a> {
                 data: col
                     .into_shape(nrows)?
                     .into_slice()
-                    .ok_or_else(|| anyhow!("get None for splitted String data"))?,
-                next_write: 0,
+                    .ok_or_else(|| anyhow!("get None for splitted String data"))?
+                    .as_mut_ptr(),
                 string_lengths: vec![],
+                row_idx: vec![],
                 string_buf: Vec::with_capacity(self.buf_size_mb * (1 << 20) * 11 / 10), // allocate a little bit more memory to avoid Vec growth
                 buf_size: self.buf_size_mb * (1 << 20),
             })
@@ -51,21 +52,22 @@ impl<'a> StringBlock<'a> {
     }
 }
 
-pub struct StringColumn<'a> {
-    data: &'a mut [PyString],
-    next_write: usize,
+pub struct StringColumn {
+    data: *mut PyString,
     string_buf: Vec<u8>,
     string_lengths: Vec<usize>, // usize::MAX for empty string
+    row_idx: Vec<usize>,
     buf_size: usize,
 }
 
-impl<'a> PandasColumnObject for StringColumn<'a> {
+unsafe impl Send for StringColumn {}
+unsafe impl Sync for StringColumn {}
+
+impl PandasColumnObject for StringColumn {
     fn typecheck(&self, id: TypeId) -> bool {
         id == TypeId::of::<&'static [u8]>() || id == TypeId::of::<Option<&'static [u8]>>()
     }
-    fn len(&self) -> usize {
-        self.data.len()
-    }
+
     fn typename(&self) -> &'static str {
         std::any::type_name::<&'static [u8]>()
     }
@@ -75,160 +77,168 @@ impl<'a> PandasColumnObject for StringColumn<'a> {
     }
 }
 
-impl<'r, 'a> PandasColumn<&'r str> for StringColumn<'a> {
+impl<'r> PandasColumn<&'r str> for StringColumn {
     #[throws(ConnectorXPythonError)]
-    fn write(&mut self, val: &'r str) {
+    fn write(&mut self, val: &'r str, row: usize) {
         let bytes = val.as_bytes();
         self.string_lengths.push(bytes.len());
         self.string_buf.extend_from_slice(bytes);
+        self.row_idx.push(row);
         self.try_flush()?;
     }
 }
 
-impl<'a> PandasColumn<Box<str>> for StringColumn<'a> {
+impl PandasColumn<Box<str>> for StringColumn {
     #[throws(ConnectorXPythonError)]
-    fn write(&mut self, val: Box<str>) {
+    fn write(&mut self, val: Box<str>, row: usize) {
         let bytes = val.as_bytes();
         self.string_lengths.push(bytes.len());
         self.string_buf.extend_from_slice(bytes);
+        self.row_idx.push(row);
         self.try_flush()?;
     }
 }
 
-impl<'a> PandasColumn<String> for StringColumn<'a> {
+impl PandasColumn<String> for StringColumn {
     #[throws(ConnectorXPythonError)]
-    fn write(&mut self, val: String) {
+    fn write(&mut self, val: String, row: usize) {
         let bytes = val.as_bytes();
         self.string_lengths.push(bytes.len());
         self.string_buf.extend_from_slice(bytes);
+        self.row_idx.push(row);
         self.try_flush()?;
     }
 }
 
-impl<'a> PandasColumn<char> for StringColumn<'a> {
+impl PandasColumn<char> for StringColumn {
     #[throws(ConnectorXPythonError)]
-    fn write(&mut self, val: char) {
+    fn write(&mut self, val: char, row: usize) {
         let mut buffer = [0; 4]; // a char is max to 4 bytes
         let bytes = val.encode_utf8(&mut buffer).as_bytes();
         self.string_lengths.push(bytes.len());
         self.string_buf.extend_from_slice(bytes);
+        self.row_idx.push(row);
         self.try_flush()?;
     }
 }
 
-impl<'r, 'a> PandasColumn<Option<&'r str>> for StringColumn<'a> {
+impl<'r> PandasColumn<Option<&'r str>> for StringColumn {
     #[throws(ConnectorXPythonError)]
-    fn write(&mut self, val: Option<&'r str>) {
+    fn write(&mut self, val: Option<&'r str>, row: usize) {
         match val {
             Some(b) => {
                 let bytes = b.as_bytes();
                 self.string_lengths.push(bytes.len());
                 self.string_buf.extend_from_slice(bytes);
+                self.row_idx.push(row);
                 self.try_flush()?;
             }
             None => {
                 self.string_lengths.push(usize::MAX);
+                self.row_idx.push(row);
             }
         }
     }
 }
 
-impl<'a> PandasColumn<Option<Box<str>>> for StringColumn<'a> {
+impl PandasColumn<Option<Box<str>>> for StringColumn {
     #[throws(ConnectorXPythonError)]
-    fn write(&mut self, val: Option<Box<str>>) {
+    fn write(&mut self, val: Option<Box<str>>, row: usize) {
         match val {
             Some(b) => {
                 let bytes = b.as_bytes();
                 self.string_lengths.push(bytes.len());
                 self.string_buf.extend_from_slice(bytes);
+                self.row_idx.push(row);
                 self.try_flush()?;
             }
             None => {
                 self.string_lengths.push(usize::MAX);
+                self.row_idx.push(row);
             }
         }
     }
 }
-impl<'a> PandasColumn<Option<String>> for StringColumn<'a> {
+impl PandasColumn<Option<String>> for StringColumn {
     #[throws(ConnectorXPythonError)]
-    fn write(&mut self, val: Option<String>) {
+    fn write(&mut self, val: Option<String>, row: usize) {
         match val {
             Some(b) => {
                 let bytes = b.as_bytes();
                 self.string_lengths.push(bytes.len());
                 self.string_buf.extend_from_slice(bytes);
+                self.row_idx.push(row);
                 self.try_flush()?;
             }
             None => {
                 self.string_lengths.push(usize::MAX);
+                self.row_idx.push(row);
             }
         }
     }
 }
 
-impl<'a> PandasColumn<Option<char>> for StringColumn<'a> {
+impl PandasColumn<Option<char>> for StringColumn {
     #[throws(ConnectorXPythonError)]
-    fn write(&mut self, val: Option<char>) {
+    fn write(&mut self, val: Option<char>, row: usize) {
         match val {
             Some(b) => {
                 let mut buffer = [0; 4]; // a char is max to 4 bytes
                 let bytes = b.encode_utf8(&mut buffer).as_bytes();
                 self.string_lengths.push(bytes.len());
                 self.string_buf.extend_from_slice(bytes);
+                self.row_idx.push(row);
                 self.try_flush()?;
             }
             None => {
                 self.string_lengths.push(usize::MAX);
+                self.row_idx.push(row);
             }
         }
     }
 }
 
 impl<'r> HasPandasColumn for &'r str {
-    type PandasColumn<'a> = StringColumn<'a>;
+    type PandasColumn<'a> = StringColumn;
 }
 
 impl<'r> HasPandasColumn for Option<&'r str> {
-    type PandasColumn<'a> = StringColumn<'a>;
+    type PandasColumn<'a> = StringColumn;
 }
 
 impl HasPandasColumn for String {
-    type PandasColumn<'a> = StringColumn<'a>;
+    type PandasColumn<'a> = StringColumn;
 }
 
 impl HasPandasColumn for Option<String> {
-    type PandasColumn<'a> = StringColumn<'a>;
+    type PandasColumn<'a> = StringColumn;
 }
 
 impl HasPandasColumn for char {
-    type PandasColumn<'a> = StringColumn<'a>;
+    type PandasColumn<'a> = StringColumn;
 }
 
 impl HasPandasColumn for Option<char> {
-    type PandasColumn<'a> = StringColumn<'a>;
+    type PandasColumn<'a> = StringColumn;
 }
 
 impl HasPandasColumn for Box<str> {
-    type PandasColumn<'a> = StringColumn<'a>;
+    type PandasColumn<'a> = StringColumn;
 }
 
 impl HasPandasColumn for Option<Box<str>> {
-    type PandasColumn<'a> = StringColumn<'a>;
+    type PandasColumn<'a> = StringColumn;
 }
 
-impl<'a> StringColumn<'a> {
-    pub fn partition(self, counts: &[usize]) -> Vec<StringColumn<'a>> {
+impl StringColumn {
+    pub fn partition(self, counts: &[usize]) -> Vec<StringColumn> {
         let mut partitions = vec![];
-        let mut data = self.data;
 
-        for &c in counts {
-            let (splitted_data, rest) = data.split_at_mut(c);
-            data = rest;
-
+        for _ in counts {
             partitions.push(StringColumn {
-                data: splitted_data,
-                next_write: 0,
+                data: self.data,
                 string_lengths: vec![],
+                row_idx: vec![],
                 string_buf: Vec::with_capacity(self.buf_size),
                 buf_size: self.buf_size,
             });
@@ -264,7 +274,7 @@ impl<'a> StringColumn<'a> {
 
                 unsafe {
                     let string_info = StringInfo::detect(&self.string_buf[start..end]);
-                    *self.data.get_unchecked_mut(self.next_write + i) = string_info.pystring(py);
+                    *self.data.add(self.row_idx[i]) = string_info.pystring(py);
                     string_infos.push(Some(string_info));
                 };
 
@@ -272,7 +282,7 @@ impl<'a> StringColumn<'a> {
             } else {
                 string_infos.push(None);
 
-                unsafe { *self.data.get_unchecked_mut(self.next_write + i) = PyString::none(py) };
+                unsafe { *self.data.add(self.row_idx[i]) = PyString::none(py) };
             }
         }
 
@@ -287,7 +297,7 @@ impl<'a> StringColumn<'a> {
                 if len != usize::MAX {
                     let end = start + len;
                     unsafe {
-                        self.data[self.next_write + i]
+                        (*self.data.add(self.row_idx[i]))
                             .write(&self.string_buf[start..end], info.unwrap())
                     };
 
@@ -296,7 +306,7 @@ impl<'a> StringColumn<'a> {
             }
 
             self.string_buf.truncate(0);
-            self.next_write += nstrings;
+            self.row_idx.truncate(0);
         }
     }
 

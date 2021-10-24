@@ -63,6 +63,9 @@ pub trait DestinationPartition<'a>: Send {
     fn finalize(&mut self) -> Result<(), Self::Error> {
         Ok(())
     }
+
+    /// Aquire n rows in final destination
+    fn aquire_row(&mut self, _n: usize) {}
 }
 
 /// A type implemented `Consume<T>` means that it can consume a value `T` by adding it to it's own buffer.

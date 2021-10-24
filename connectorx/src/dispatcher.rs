@@ -4,7 +4,7 @@ use crate::{
     data_order::{coordinate, DataOrder},
     destinations::{Destination, DestinationPartition},
     errors::{ConnectorXError, Result as CXResult},
-    sources::{Source, SourcePartition},
+    sources::{PartitionParser, Source, SourcePartition},
     sql::CXQuery,
     typesystem::{Transport, TypeSystem},
 };
@@ -103,7 +103,7 @@ where
             .into_par_iter()
             .zip_eq(src_partitions)
             .enumerate()
-            .try_for_each(|(i, (mut src, mut dst))| -> Result<(), ET> {
+            .try_for_each(|(i, (mut dst, mut src))| -> Result<(), ET> {
                 #[cfg(feature = "fptr")]
                 let f: Vec<_> = src_schema
                     .iter()
@@ -111,20 +111,22 @@ where
                     .map(|(&src_ty, &dst_ty)| TP::processor(src_ty, dst_ty))
                     .collect::<CXResult<Vec<_>>>()?;
 
-                let mut parser = dst.parser()?;
+                let mut parser = src.parser()?;
 
                 match dorder {
                     DataOrder::RowMajor => {
-                        for _ in 0..src.nrows() {
+                        let n = parser.fetch_next(32)?;
+                        dst.aquire_row(n);
+                        for _ in 0..n {
                             #[allow(clippy::needless_range_loop)]
-                            for col in 0..src.ncols() {
+                            for col in 0..dst.ncols() {
                                 #[cfg(feature = "fptr")]
-                                f[col](&mut parser, &mut src)?;
+                                f[col](&mut parser, &mut dst)?;
 
                                 #[cfg(feature = "branch")]
                                 {
                                     let (s1, s2) = schemas[col];
-                                    TP::process(s1, s2, &mut parser, &mut src)?;
+                                    TP::process(s1, s2, &mut parser, &mut dst)?;
                                 }
                             }
                         }
@@ -132,14 +134,14 @@ where
                     DataOrder::ColumnMajor =>
                     {
                         #[allow(clippy::needless_range_loop)]
-                        for col in 0..src.ncols() {
-                            for _ in 0..src.nrows() {
+                        for col in 0..dst.ncols() {
+                            for _ in 0..dst.nrows() {
                                 #[cfg(feature = "fptr")]
-                                f[col](&mut parser, &mut src)?;
+                                f[col](&mut parser, &mut dst)?;
                                 #[cfg(feature = "branch")]
                                 {
                                     let (s1, s2) = schemas[col];
-                                    TP::process(s1, s2, &mut parser, &mut src)?;
+                                    TP::process(s1, s2, &mut parser, &mut dst)?;
                                 }
                             }
                         }
@@ -147,7 +149,7 @@ where
                 }
 
                 debug!("Finalize partition {}", i);
-                src.finalize()?;
+                dst.finalize()?;
                 debug!("Partition {} finished", i);
                 Ok(())
             })?;
