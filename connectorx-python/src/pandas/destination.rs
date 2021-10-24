@@ -17,8 +17,14 @@ use pyo3::{
     types::{IntoPyDict, PyList, PyTuple},
     FromPyObject, IntoPy, PyAny, PyObject, Python,
 };
-use std::collections::HashMap;
-use std::mem::transmute;
+use std::{
+    collections::HashMap,
+    mem::transmute,
+    sync::{
+        atomic::{AtomicUsize, Ordering},
+        Arc,
+    },
+};
 
 #[pyclass]
 pub struct PandasBlockInfo {
@@ -286,6 +292,7 @@ impl<'a> Destination for PandasDestination<'a> {
         }
 
         let mut par_destinations = vec![];
+        let glob_row = Arc::new(AtomicUsize::new(0));
         for &c in counts.iter().rev() {
             let mut columns = Vec::with_capacity(partitioned_columns.len());
             for (i, partitions) in partitioned_columns.iter_mut().enumerate() {
@@ -300,6 +307,7 @@ impl<'a> Destination for PandasDestination<'a> {
                 c,
                 columns,
                 &self.schema[..],
+                Arc::clone(&glob_row),
             ));
         }
 
@@ -316,6 +324,8 @@ pub struct PandasPartitionDestination<'a> {
     columns: Vec<Box<dyn PandasColumnObject + 'a>>,
     schema: &'a [PandasTypeSystem],
     seq: usize,
+    glob_row: Arc<AtomicUsize>,
+    cur_row: usize,
 }
 
 impl<'a> PandasPartitionDestination<'a> {
@@ -323,17 +333,23 @@ impl<'a> PandasPartitionDestination<'a> {
         nrows: usize,
         columns: Vec<Box<dyn PandasColumnObject + 'a>>,
         schema: &'a [PandasTypeSystem],
+        glob_row: Arc<AtomicUsize>,
     ) -> Self {
         Self {
             nrows,
             columns,
             schema,
             seq: 0,
+            glob_row,
+            cur_row: 0,
         }
     }
 
     fn loc(&mut self) -> (usize, usize) {
-        let (row, col) = (self.seq / self.ncols(), self.seq % self.ncols());
+        let (row, col) = (
+            self.cur_row + self.seq / self.ncols(),
+            self.seq % self.ncols(),
+        );
         self.seq += 1;
         (row, col)
     }
@@ -357,6 +373,11 @@ impl<'a> DestinationPartition<'a> for PandasPartitionDestination<'a> {
         }
         Ok(())
     }
+
+    fn aquire_row(&mut self, n: usize) {
+        self.cur_row = self.glob_row.fetch_add(n, Ordering::Relaxed);
+        self.seq = 0;
+    }
 }
 
 impl<'a, T> Consume<T> for PandasPartitionDestination<'a>
@@ -366,7 +387,7 @@ where
     type Error = ConnectorXPythonError;
 
     fn consume(&mut self, value: T) -> Result<()> {
-        let (_, col) = self.loc();
+        let (row, col) = self.loc();
 
         self.schema[col].check::<T>()?;
         // How do we check type id for borrowed types?
@@ -374,6 +395,6 @@ where
 
         let (column, _): (&mut T::PandasColumn<'a>, *const ()) =
             unsafe { transmute(&*self.columns[col]) };
-        column.write(value)
+        column.write(value, row)
     }
 }

@@ -76,6 +76,11 @@ pub trait PartitionParser<'a> {
     {
         self.produce()
     }
+
+    /// Fetch next n rows from database, return actuall number of rows fetched
+    fn fetch_next(&mut self, _n: usize) -> Result<usize, Self::Error> {
+        Ok(usize::MAX)
+    }
 }
 
 /// A type implemented `Produce<T>` means that it can produce a value `T` by consuming part of it's raw data buffer.
