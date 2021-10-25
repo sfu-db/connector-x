@@ -117,6 +117,7 @@ Run the SQL query, download the data from database into a Pandas dataframe.
 - `partition_on: Optional[str]`: The column to partition the result.
 - `partition_range: Optional[Tuple[int, int]]`: The value range of the partition column.
 - `partition_num: Optioinal[int]`: The number of partitions to generate.
+- `index_col: Optioinal[str]`: The index column to set for the result dataframe. Only applicable when `return_type` is `pandas`, `modin` or `dask`. 
 
 ## Examples
 - Read a DataFrame from a SQL using a single thread
