@@ -88,10 +88,10 @@ impl HasPandasColumn for Option<DateTime<Utc>> {
 }
 
 impl DateTimeColumn {
-    pub fn partition(self, counts: &[usize]) -> Vec<DateTimeColumn> {
+    pub fn partition(self, counts: usize) -> Vec<DateTimeColumn> {
         let mut partitions = vec![];
 
-        for _ in counts {
+        for _ in 0..counts {
             partitions.push(DateTimeColumn { data: self.data });
         }
 

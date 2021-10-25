@@ -19,6 +19,7 @@ pub struct Dispatcher<'a, S, D, TP> {
     src: S,
     dst: &'a mut D,
     queries: Vec<CXQuery<String>>,
+    origin_query: Option<String>,
     _phantom: PhantomData<TP>,
 }
 
@@ -36,7 +37,7 @@ where
     ET: From<ConnectorXError> + From<ES> + From<ED> + Send,
 {
     /// Create a new dispatcher by providing a source, a destination and the queries.
-    pub fn new<Q>(src: S, dst: &'w mut D, queries: &[Q]) -> Self
+    pub fn new<Q>(src: S, dst: &'w mut D, queries: &[Q], origin_query: Option<String>) -> Self
     where
         for<'a> &'a Q: Into<CXQuery>,
     {
@@ -44,6 +45,7 @@ where
             src,
             dst,
             queries: queries.iter().map(Into::into).collect(),
+            origin_query,
             _phantom: PhantomData,
         }
     }
@@ -53,6 +55,8 @@ where
         let dorder = coordinate(S::DATA_ORDERS, D::DATA_ORDERS)?;
         self.src.set_data_order(dorder)?;
         self.src.set_queries(self.queries.as_slice());
+        self.src.set_origin_query(self.origin_query);
+
         debug!("Fetching metadata");
         self.src.fetch_metadata()?;
         let src_schema = self.src.schema();
@@ -62,30 +66,34 @@ where
             .collect::<CXResult<Vec<_>>>()?;
         let names = self.src.names();
 
-        // generate partitions
+        // get number of row and partition the source
+        let mut num_rows = self.src.result_rows()?;
         let mut src_partitions: Vec<S::Partition> = self.src.partition()?;
-        debug!("Prepare partitions");
-        // run queries
-        src_partitions
-            .par_iter_mut()
-            .try_for_each(|partition| -> Result<(), ES> { partition.prepare() })?;
+        if num_rows.is_none() {
+            debug!("Manually assigned partition queries, count each and sum up");
+            // run queries
+            src_partitions
+                .par_iter_mut()
+                .try_for_each(|partition| -> Result<(), ES> { partition.prepare() })?;
 
-        // allocate memory and create one partition for each source
-        let num_rows: Vec<usize> = src_partitions
-            .iter()
-            .map(|partition| partition.nrows())
-            .collect();
+            // allocate memory and create one partition for each source
+            let part_rows: Vec<usize> = src_partitions
+                .iter()
+                .map(|partition| partition.nrows())
+                .collect();
+            num_rows = Some(part_rows.iter().sum());
+        }
+        let num_rows = num_rows.unwrap();
 
-        debug!("Allocate destination memory");
-        self.dst
-            .allocate(num_rows.iter().sum(), &names, &dst_schema, dorder)?;
+        debug!(
+            "Allocate destination memory: {}x{}",
+            num_rows,
+            src_schema.len()
+        );
+        self.dst.allocate(num_rows, &names, &dst_schema, dorder)?;
 
         debug!("Create destination partition");
-        let dst_partitions = self.dst.partition(&num_rows)?;
-
-        for (i, p) in dst_partitions.iter().enumerate() {
-            debug!("Partition {}, {}x{}", i, p.nrows(), p.ncols());
-        }
+        let dst_partitions = self.dst.partition(self.queries.len())?;
 
         #[cfg(all(not(feature = "branch"), not(feature = "fptr")))]
         compile_error!("branch or fptr, pick one");
@@ -115,7 +123,7 @@ where
 
                 match dorder {
                     DataOrder::RowMajor => {
-                        let n = parser.fetch_next(32)?;
+                        let n = parser.fetch_next()?;
                         dst.aquire_row(n);
                         for _ in 0..n {
                             #[allow(clippy::needless_range_loop)]
@@ -131,11 +139,12 @@ where
                             }
                         }
                     }
-                    DataOrder::ColumnMajor =>
-                    {
+                    DataOrder::ColumnMajor => {
+                        let n = parser.fetch_next()?;
+                        dst.aquire_row(n);
                         #[allow(clippy::needless_range_loop)]
                         for col in 0..dst.ncols() {
-                            for _ in 0..dst.nrows() {
+                            for _ in 0..n {
                                 #[cfg(feature = "fptr")]
                                 f[col](&mut parser, &mut dst)?;
                                 #[cfg(feature = "branch")]

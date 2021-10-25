@@ -47,6 +47,8 @@ pub enum CursorProtocol {}
 type PgManager<C> = PostgresConnectionManager<C>;
 type PgConn<C> = PooledConnection<PgManager<C>>;
 
+const BUF_SIZE: usize = 32;
+
 pub struct PostgresSource<P, C>
 where
     C: MakeTlsConnect<Socket> + Clone + 'static + Sync + Send,
@@ -55,10 +57,10 @@ where
     <C::TlsConnect as TlsConnect<Socket>>::Future: Send,
 {
     pool: Pool<PgManager<C>>,
+    origin_query: Option<String>,
     queries: Vec<CXQuery<String>>,
     names: Vec<String>,
     schema: Vec<PostgresTypeSystem>,
-    buf_size: usize,
     _protocol: PhantomData<P>,
 }
 
@@ -76,16 +78,12 @@ where
 
         Self {
             pool,
+            origin_query: None,
             queries: vec![],
             names: vec![],
             schema: vec![],
-            buf_size: 32,
             _protocol: PhantomData,
         }
-    }
-
-    pub fn buf_size(&mut self, buf_size: usize) {
-        self.buf_size = buf_size;
     }
 }
 
@@ -113,6 +111,10 @@ where
 
     fn set_queries<Q: ToString>(&mut self, queries: &[CXQuery<Q>]) {
         self.queries = queries.iter().map(|q| q.map(Q::to_string)).collect();
+    }
+
+    fn set_origin_query(&mut self, query: Option<String>) {
+        self.origin_query = query;
     }
 
     #[throws(PostgresSourceError)]
@@ -166,6 +168,26 @@ where
         self.schema = vec![PostgresTypeSystem::Text(false); self.names.len()];
     }
 
+    #[throws(PostgresSourceError)]
+    fn result_rows(&mut self) -> Option<usize> {
+        match &self.origin_query {
+            Some(q) => {
+                let cxq = CXQuery::Wrapped(q.clone());
+                let dialect = PostgreSqlDialect {};
+                let nrows = match get_limit(&cxq, &dialect)? {
+                    None => {
+                        let mut conn = self.pool.get()?;
+                        let row = conn.query_one(count_query(&cxq, &dialect)?.as_str(), &[])?;
+                        row.get::<_, i64>(0) as usize
+                    }
+                    Some(n) => n,
+                };
+                Some(nrows)
+            }
+            None => None,
+        }
+    }
+
     fn names(&self) -> Vec<String> {
         self.names.clone()
     }
@@ -184,7 +206,6 @@ where
                 conn,
                 &query,
                 &self.schema,
-                self.buf_size,
             ));
         }
         ret
@@ -203,7 +224,6 @@ where
     schema: Vec<PostgresTypeSystem>,
     nrows: usize,
     ncols: usize,
-    buf_size: usize,
     _protocol: PhantomData<P>,
 }
 
@@ -214,19 +234,13 @@ where
     C::Stream: Send,
     <C::TlsConnect as TlsConnect<Socket>>::Future: Send,
 {
-    pub fn new(
-        conn: PgConn<C>,
-        query: &CXQuery<String>,
-        schema: &[PostgresTypeSystem],
-        buf_size: usize,
-    ) -> Self {
+    pub fn new(conn: PgConn<C>, query: &CXQuery<String>, schema: &[PostgresTypeSystem]) -> Self {
         Self {
             conn,
             query: query.clone(),
             schema: schema.to_vec(),
             nrows: 0,
             ncols: schema.len(),
-            buf_size,
             _protocol: PhantomData,
         }
     }
@@ -264,7 +278,7 @@ where
         let pg_schema: Vec<_> = self.schema.iter().map(|&dt| dt.into()).collect();
         let iter = BinaryCopyOutIter::new(reader, &pg_schema);
 
-        PostgresBinarySourcePartitionParser::new(iter, &self.schema, self.buf_size)
+        PostgresBinarySourcePartitionParser::new(iter, &self.schema)
     }
 
     fn nrows(&self) -> usize {
@@ -305,7 +319,7 @@ where
             .from_reader(reader)
             .into_records();
 
-        PostgresCSVSourceParser::new(iter, &self.schema, self.buf_size)
+        PostgresCSVSourceParser::new(iter, &self.schema)
     }
 
     fn nrows(&self) -> usize {
@@ -342,7 +356,7 @@ where
         let iter = self
             .conn
             .query_raw::<_, bool, _>(self.query.as_str(), vec![])?; // unless reading the data, it seems like issue the query is fast
-        PostgresRawSourceParser::new(iter, &self.schema, self.buf_size)
+        PostgresRawSourceParser::new(iter, &self.schema)
     }
 
     fn nrows(&self) -> usize {
@@ -355,7 +369,6 @@ where
 }
 pub struct PostgresBinarySourcePartitionParser<'a> {
     iter: BinaryCopyOutIter<'a>,
-    buf_size: usize,
     rowbuf: Vec<BinaryCopyOutRow>,
     ncols: usize,
     current_col: usize,
@@ -363,15 +376,10 @@ pub struct PostgresBinarySourcePartitionParser<'a> {
 }
 
 impl<'a> PostgresBinarySourcePartitionParser<'a> {
-    pub fn new(
-        iter: BinaryCopyOutIter<'a>,
-        schema: &[PostgresTypeSystem],
-        buf_size: usize,
-    ) -> Self {
+    pub fn new(iter: BinaryCopyOutIter<'a>, schema: &[PostgresTypeSystem]) -> Self {
         Self {
             iter,
-            buf_size,
-            rowbuf: Vec::with_capacity(buf_size),
+            rowbuf: Vec::with_capacity(BUF_SIZE),
             ncols: schema.len(),
             current_row: 0,
             current_col: 0,
@@ -392,11 +400,11 @@ impl<'a> PartitionParser<'a> for PostgresBinarySourcePartitionParser<'a> {
     type Error = PostgresSourceError;
 
     #[throws(PostgresSourceError)]
-    fn fetch_next(&mut self, n: usize) -> usize {
+    fn fetch_next(&mut self) -> usize {
         if !self.rowbuf.is_empty() {
             self.rowbuf.drain(..);
         }
-        for _ in 0..n {
+        for _ in 0..BUF_SIZE {
             match self.iter.next()? {
                 Some(row) => {
                     self.rowbuf.push(row);
@@ -467,7 +475,6 @@ impl_produce!(
 
 pub struct PostgresCSVSourceParser<'a> {
     iter: StringRecordsIntoIter<CopyOutReader<'a>>,
-    buf_size: usize,
     rowbuf: Vec<StringRecord>,
     ncols: usize,
     current_col: usize,
@@ -478,12 +485,10 @@ impl<'a> PostgresCSVSourceParser<'a> {
     pub fn new(
         iter: StringRecordsIntoIter<CopyOutReader<'a>>,
         schema: &[PostgresTypeSystem],
-        buf_size: usize,
     ) -> Self {
         Self {
             iter,
-            buf_size,
-            rowbuf: Vec::with_capacity(buf_size),
+            rowbuf: Vec::with_capacity(BUF_SIZE),
             ncols: schema.len(),
             current_row: 0,
             current_col: 0,
@@ -497,7 +502,7 @@ impl<'a> PostgresCSVSourceParser<'a> {
                 self.rowbuf.drain(..);
             }
 
-            for _ in 0..self.buf_size {
+            for _ in 0..BUF_SIZE {
                 if let Some(row) = self.iter.next() {
                     self.rowbuf.push(row?);
                 } else {
@@ -844,7 +849,6 @@ impl<'r, 'a> Produce<'r, Option<Value>> for PostgresCSVSourceParser<'a> {
 
 pub struct PostgresRawSourceParser<'a> {
     iter: RowIter<'a>,
-    buf_size: usize,
     rowbuf: Vec<Row>,
     ncols: usize,
     current_col: usize,
@@ -852,11 +856,10 @@ pub struct PostgresRawSourceParser<'a> {
 }
 
 impl<'a> PostgresRawSourceParser<'a> {
-    pub fn new(iter: RowIter<'a>, schema: &[PostgresTypeSystem], buf_size: usize) -> Self {
+    pub fn new(iter: RowIter<'a>, schema: &[PostgresTypeSystem]) -> Self {
         Self {
             iter,
-            buf_size,
-            rowbuf: Vec::with_capacity(buf_size),
+            rowbuf: Vec::with_capacity(BUF_SIZE),
             ncols: schema.len(),
             current_row: 0,
             current_col: 0,
@@ -870,7 +873,7 @@ impl<'a> PostgresRawSourceParser<'a> {
                 self.rowbuf.drain(..);
             }
 
-            for _ in 0..self.buf_size {
+            for _ in 0..BUF_SIZE {
                 if let Some(row) = self.iter.next()? {
                     self.rowbuf.push(row);
                 } else {

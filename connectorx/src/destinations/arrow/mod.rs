@@ -75,15 +75,14 @@ impl Destination for ArrowDestination {
     }
 
     #[throws(ArrowDestinationError)]
-    fn partition(&mut self, counts: &[usize]) -> Vec<Self::Partition<'_>> {
-        assert_eq!(counts.iter().sum::<usize>(), self.nrows);
+    fn partition(&mut self, counts: usize) -> Vec<Self::Partition<'_>> {
         assert_eq!(self.builders.len(), 0);
 
-        for &c in counts {
+        for _ in 0..counts {
             let builders = self
                 .schema
                 .iter()
-                .map(|&dt| Ok(Realize::<FNewBuilder>::realize(dt)?(c)))
+                .map(|&dt| Ok(Realize::<FNewBuilder>::realize(dt)?(0)))
                 .collect::<Result<Vec<_>>>()?;
 
             self.builders.push(builders);
@@ -92,8 +91,7 @@ impl Destination for ArrowDestination {
         let schema = self.schema.clone();
         self.builders
             .iter_mut()
-            .zip(counts)
-            .map(|(builders, &c)| ArrowPartitionWriter::new(schema.clone(), builders, c))
+            .map(|builders| ArrowPartitionWriter::new(schema.clone(), builders, 0))
             .collect()
     }
 

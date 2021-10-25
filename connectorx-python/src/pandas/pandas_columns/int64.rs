@@ -127,10 +127,10 @@ impl HasPandasColumn for Option<i64> {
 }
 
 impl Int64Column {
-    pub fn partition(self, counts: &[usize]) -> Vec<Int64Column> {
+    pub fn partition(self, counts: usize) -> Vec<Int64Column> {
         let mut partitions = vec![];
 
-        for _ in counts {
+        for _ in 0..counts {
             partitions.push(Int64Column {
                 data: self.data,
                 mask: self.mask,

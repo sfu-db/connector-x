@@ -169,10 +169,10 @@ impl<V> ArrayColumn<V>
 where
     V: Send + ToPyObject,
 {
-    pub fn partition(self, counts: &[usize]) -> Vec<ArrayColumn<V>> {
+    pub fn partition(self, counts: usize) -> Vec<ArrayColumn<V>> {
         let mut partitions = vec![];
 
-        for _ in counts {
+        for _ in 0..counts {
             partitions.push(ArrayColumn {
                 data: self.data,
                 lengths: vec![],
