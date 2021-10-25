@@ -43,6 +43,8 @@ def read_sql(
       the value range of the partition column.
     partition_num
       how many partition to generate.
+    index_col
+      the index column to set.
 
     Examples
     ========
