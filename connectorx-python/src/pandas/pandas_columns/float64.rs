@@ -86,9 +86,9 @@ impl HasPandasColumn for Option<f64> {
 }
 
 impl Float64Column {
-    pub fn partition(self, counts: &[usize]) -> Vec<Float64Column> {
+    pub fn partition(self, counts: usize) -> Vec<Float64Column> {
         let mut partitions = vec![];
-        for _ in counts {
+        for _ in 0..counts {
             partitions.push(Float64Column { data: self.data });
         }
         partitions

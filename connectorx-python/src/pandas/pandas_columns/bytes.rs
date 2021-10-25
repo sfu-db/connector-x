@@ -159,10 +159,10 @@ impl<'r> HasPandasColumn for Option<&'r [u8]> {
 }
 
 impl BytesColumn {
-    pub fn partition(self, counts: &[usize]) -> Vec<BytesColumn> {
+    pub fn partition(self, counts: usize) -> Vec<BytesColumn> {
         let mut partitions = vec![];
 
-        for _ in counts {
+        for _ in 0..counts {
             partitions.push(BytesColumn {
                 data: self.data,
                 bytes_lengths: vec![],

@@ -184,15 +184,7 @@ impl<'a> Destination for PandasDestination<'a> {
     }
 
     #[throws(ConnectorXPythonError)]
-    fn partition(&mut self, counts: &[usize]) -> Vec<Self::Partition<'_>> {
-        assert_eq!(
-            counts.iter().sum::<usize>(),
-            self.nrow,
-            "counts: {} != nrows: {:?}",
-            counts.iter().sum::<usize>(),
-            self.nrow
-        );
-
+    fn partition(&mut self, counts: usize) -> Vec<Self::Partition<'_>> {
         let mut partitioned_columns: Vec<Vec<Box<dyn PandasColumnObject>>> =
             (0..self.schema.len()).map(|_| Vec::new()).collect();
 
@@ -205,7 +197,7 @@ impl<'a> Destination for PandasDestination<'a> {
                     let bcols = bblock.split()?;
                     for (&cid, bcol) in block.cids.iter().zip_eq(bcols) {
                         partitioned_columns[cid] = bcol
-                            .partition(&counts)
+                            .partition(counts)
                             .into_iter()
                             .map(|c| Box::new(c) as _)
                             .collect()
@@ -216,7 +208,7 @@ impl<'a> Destination for PandasDestination<'a> {
                     let fcols = fblock.split()?;
                     for (&cid, fcol) in block.cids.iter().zip_eq(fcols) {
                         partitioned_columns[cid] = fcol
-                            .partition(&counts)
+                            .partition(counts)
                             .into_iter()
                             .map(|c| Box::new(c) as _)
                             .collect()
@@ -227,7 +219,7 @@ impl<'a> Destination for PandasDestination<'a> {
                     let fcols = fblock.split()?;
                     for (&cid, fcol) in block.cids.iter().zip_eq(fcols) {
                         partitioned_columns[cid] = fcol
-                            .partition(&counts)
+                            .partition(counts)
                             .into_iter()
                             .map(|c| Box::new(c) as _)
                             .collect()
@@ -238,7 +230,7 @@ impl<'a> Destination for PandasDestination<'a> {
                     let fcols = fblock.split()?;
                     for (&cid, fcol) in block.cids.iter().zip_eq(fcols) {
                         partitioned_columns[cid] = fcol
-                            .partition(&counts)
+                            .partition(counts)
                             .into_iter()
                             .map(|c| Box::new(c) as _)
                             .collect()
@@ -249,7 +241,7 @@ impl<'a> Destination for PandasDestination<'a> {
                     let ucols = ublock.split()?;
                     for (&cid, ucol) in block.cids.iter().zip_eq(ucols) {
                         partitioned_columns[cid] = ucol
-                            .partition(&counts)
+                            .partition(counts)
                             .into_iter()
                             .map(|c| Box::new(c) as _)
                             .collect()
@@ -260,7 +252,7 @@ impl<'a> Destination for PandasDestination<'a> {
                     let scols = sblock.split()?;
                     for (&cid, scol) in block.cids.iter().zip_eq(scols) {
                         partitioned_columns[cid] = scol
-                            .partition(&counts)
+                            .partition(counts)
                             .into_iter()
                             .map(|c| Box::new(c) as _)
                             .collect()
@@ -271,7 +263,7 @@ impl<'a> Destination for PandasDestination<'a> {
                     let bcols = bblock.split()?;
                     for (&cid, bcol) in block.cids.iter().zip_eq(bcols) {
                         partitioned_columns[cid] = bcol
-                            .partition(&counts)
+                            .partition(counts)
                             .into_iter()
                             .map(|c| Box::new(c) as _)
                             .collect()
@@ -282,7 +274,7 @@ impl<'a> Destination for PandasDestination<'a> {
                     let dcols = dblock.split()?;
                     for (&cid, dcol) in block.cids.iter().zip_eq(dcols) {
                         partitioned_columns[cid] = dcol
-                            .partition(&counts)
+                            .partition(counts)
                             .into_iter()
                             .map(|c| Box::new(c) as _)
                             .collect()
@@ -293,7 +285,7 @@ impl<'a> Destination for PandasDestination<'a> {
 
         let mut par_destinations = vec![];
         let glob_row = Arc::new(AtomicUsize::new(0));
-        for &c in counts.iter().rev() {
+        for _ in 0..counts {
             let mut columns = Vec::with_capacity(partitioned_columns.len());
             for (i, partitions) in partitioned_columns.iter_mut().enumerate() {
                 columns.push(
@@ -304,15 +296,13 @@ impl<'a> Destination for PandasDestination<'a> {
             }
 
             par_destinations.push(PandasPartitionDestination::new(
-                c,
                 columns,
                 &self.schema[..],
                 Arc::clone(&glob_row),
             ));
         }
 
-        // We need to reverse the par_destinations because partitions are poped reversely
-        par_destinations.into_iter().rev().collect()
+        par_destinations
     }
 
     fn schema(&self) -> &[Self::TypeSystem] {
@@ -320,7 +310,6 @@ impl<'a> Destination for PandasDestination<'a> {
     }
 }
 pub struct PandasPartitionDestination<'a> {
-    nrows: usize,
     columns: Vec<Box<dyn PandasColumnObject + 'a>>,
     schema: &'a [PandasTypeSystem],
     seq: usize,
@@ -330,13 +319,11 @@ pub struct PandasPartitionDestination<'a> {
 
 impl<'a> PandasPartitionDestination<'a> {
     fn new(
-        nrows: usize,
         columns: Vec<Box<dyn PandasColumnObject + 'a>>,
         schema: &'a [PandasTypeSystem],
         glob_row: Arc<AtomicUsize>,
     ) -> Self {
         Self {
-            nrows,
             columns,
             schema,
             seq: 0,
@@ -360,7 +347,7 @@ impl<'a> DestinationPartition<'a> for PandasPartitionDestination<'a> {
     type Error = ConnectorXPythonError;
 
     fn nrows(&self) -> usize {
-        self.nrows
+        0
     }
 
     fn ncols(&self) -> usize {

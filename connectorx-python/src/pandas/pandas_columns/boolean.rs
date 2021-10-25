@@ -128,10 +128,10 @@ impl HasPandasColumn for Option<bool> {
 }
 
 impl BooleanColumn {
-    pub fn partition(self, counts: &[usize]) -> Vec<BooleanColumn> {
+    pub fn partition(self, counts: usize) -> Vec<BooleanColumn> {
         let mut partitions = vec![];
 
-        for _ in counts {
+        for _ in 0..counts {
             partitions.push(BooleanColumn {
                 data: self.data,
                 mask: self.mask,

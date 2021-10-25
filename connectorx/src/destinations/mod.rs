@@ -31,7 +31,7 @@ pub trait Destination: Sized {
     ) -> Result<(), Self::Error>;
 
     /// Create a bunch of partition destinations, with each write `count` number of rows.
-    fn partition(&mut self, counts: &[usize]) -> Result<Vec<Self::Partition<'_>>, Self::Error>;
+    fn partition(&mut self, counts: usize) -> Result<Vec<Self::Partition<'_>>, Self::Error>;
     /// Return the schema of the destination.
     fn schema(&self) -> &[Self::TypeSystem];
 }

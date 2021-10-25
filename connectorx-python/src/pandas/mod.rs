@@ -37,6 +37,7 @@ use std::sync::Arc;
 pub fn write_pandas<'a>(
     py: Python<'a>,
     source_conn: &SourceConn,
+    origin_query: Option<String>,
     queries: &[CXQuery<String>],
     protocol: &str,
 ) -> &'a PyAny {
@@ -58,7 +59,9 @@ pub fn write_pandas<'a>(
                         _,
                         _,
                         PostgresPandasTransport<CSVProtocol, MakeTlsConnector>,
-                    >::new(sb, &mut destination, queries);
+                    >::new(
+                        sb, &mut destination, queries, origin_query
+                    );
                     debug!("Running dispatcher");
                     dispatcher.run()?;
                 }
@@ -70,6 +73,7 @@ pub fn write_pandas<'a>(
                             sb,
                             &mut destination,
                             queries,
+                            origin_query,
                         );
                     debug!("Running dispatcher");
                     dispatcher.run()?;
@@ -80,11 +84,12 @@ pub fn write_pandas<'a>(
                         tls_conn,
                         queries.len(),
                     )?;
-                    let dispatcher = Dispatcher::<
-                        _,
-                        _,
-                        PostgresPandasTransport<PgBinaryProtocol, MakeTlsConnector>,
-                    >::new(sb, &mut destination, queries);
+                    let dispatcher =
+                        Dispatcher::<
+                            _,
+                            _,
+                            PostgresPandasTransport<PgBinaryProtocol, MakeTlsConnector>,
+                        >::new(sb, &mut destination, queries, origin_query);
                     debug!("Running dispatcher");
                     dispatcher.run()?;
                 }
@@ -98,7 +103,9 @@ pub fn write_pandas<'a>(
                         _,
                         _,
                         PostgresPandasTransport<PgBinaryProtocol, NoTls>,
-                    >::new(sb, &mut destination, queries);
+                    >::new(
+                        sb, &mut destination, queries, origin_query
+                    );
                     debug!("Running dispatcher");
                     dispatcher.run()?;
                 }
@@ -112,7 +119,9 @@ pub fn write_pandas<'a>(
                         _,
                         _,
                         PostgresPandasTransport<CursorProtocol, MakeTlsConnector>,
-                    >::new(sb, &mut destination, queries);
+                    >::new(
+                        sb, &mut destination, queries, origin_query
+                    );
                     debug!("Running dispatcher");
                     dispatcher.run()?;
                 }
@@ -123,7 +132,9 @@ pub fn write_pandas<'a>(
                         _,
                         _,
                         PostgresPandasTransport<CursorProtocol, NoTls>,
-                    >::new(sb, &mut destination, queries);
+                    >::new(
+                        sb, &mut destination, queries, origin_query
+                    );
                     debug!("Running dispatcher");
                     dispatcher.run()?;
                 }
@@ -132,8 +143,12 @@ pub fn write_pandas<'a>(
         }
         SourceType::SQLite => {
             let source = SQLiteSource::new(source_conn.conn.path(), queries.len())?;
-            let dispatcher =
-                Dispatcher::<_, _, SqlitePandasTransport>::new(source, &mut destination, queries);
+            let dispatcher = Dispatcher::<_, _, SqlitePandasTransport>::new(
+                source,
+                &mut destination,
+                queries,
+                origin_query,
+            );
             debug!("Running dispatcher");
             dispatcher.run()?;
         }
@@ -150,6 +165,7 @@ pub fn write_pandas<'a>(
                             source,
                             &mut destination,
                             queries,
+                            origin_query,
                         );
                     debug!("Running dispatcher");
                     dispatcher.run()?;
@@ -161,6 +177,7 @@ pub fn write_pandas<'a>(
                         source,
                         &mut destination,
                         queries,
+                        origin_query,
                     );
                     debug!("Running dispatcher");
                     dispatcher.run()?;
@@ -171,15 +188,23 @@ pub fn write_pandas<'a>(
         SourceType::MsSQL => {
             let rt = Arc::new(tokio::runtime::Runtime::new().expect("Failed to create runtime"));
             let source = MsSQLSource::new(rt, &source_conn.conn[..], queries.len())?;
-            let dispatcher =
-                Dispatcher::<_, _, MsSQLPandasTransport>::new(source, &mut destination, queries);
+            let dispatcher = Dispatcher::<_, _, MsSQLPandasTransport>::new(
+                source,
+                &mut destination,
+                queries,
+                origin_query,
+            );
             debug!("Running dispatcher");
             dispatcher.run()?;
         }
         SourceType::Oracle => {
             let source = OracleSource::new(&source_conn.conn[..], queries.len())?;
-            let dispatcher =
-                Dispatcher::<_, _, OraclePandasTransport>::new(source, &mut destination, queries);
+            let dispatcher = Dispatcher::<_, _, OraclePandasTransport>::new(
+                source,
+                &mut destination,
+                queries,
+                origin_query,
+            );
             debug!("Running dispatcher");
             dispatcher.run()?;
         }

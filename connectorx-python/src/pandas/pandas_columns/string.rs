@@ -231,10 +231,10 @@ impl HasPandasColumn for Option<Box<str>> {
 }
 
 impl StringColumn {
-    pub fn partition(self, counts: &[usize]) -> Vec<StringColumn> {
+    pub fn partition(self, counts: usize) -> Vec<StringColumn> {
         let mut partitions = vec![];
 
-        for _ in counts {
+        for _ in 0..counts {
             partitions.push(StringColumn {
                 data: self.data,
                 string_lengths: vec![],
