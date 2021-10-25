@@ -122,9 +122,17 @@ where
                 let mut parser = src.parser()?;
 
                 match dorder {
-                    DataOrder::RowMajor => {
-                        let n = parser.fetch_next()?;
+                    DataOrder::RowMajor => loop {
+                        let (n, is_last) = parser.fetch_next()?;
+                        if n == 0 {
+                            break;
+                        }
                         dst.aquire_row(n);
+                        // let m = dst.aquire_row(n);
+                        // debug!(
+                        //     "worker {} is going to write {} rows from position {}",
+                        //     i, n, m
+                        // );
                         for _ in 0..n {
                             #[allow(clippy::needless_range_loop)]
                             for col in 0..dst.ncols() {
@@ -138,9 +146,15 @@ where
                                 }
                             }
                         }
-                    }
-                    DataOrder::ColumnMajor => {
-                        let n = parser.fetch_next()?;
+                        if is_last {
+                            break;
+                        }
+                    },
+                    DataOrder::ColumnMajor => loop {
+                        let (n, is_last) = parser.fetch_next()?;
+                        if n == 0 {
+                            break;
+                        }
                         dst.aquire_row(n);
                         #[allow(clippy::needless_range_loop)]
                         for col in 0..dst.ncols() {
@@ -154,7 +168,10 @@ where
                                 }
                             }
                         }
-                    }
+                        if is_last {
+                            break;
+                        }
+                    },
                 }
 
                 debug!("Finalize partition {}", i);

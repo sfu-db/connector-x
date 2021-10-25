@@ -84,8 +84,8 @@ pub trait PartitionParser<'a> {
     }
 
     /// Fetch next batch of rows from database, return actuall number of rows fetched
-    fn fetch_next(&mut self) -> Result<usize, Self::Error> {
-        Ok(usize::MAX)
+    fn fetch_next(&mut self) -> Result<(usize, bool), Self::Error> {
+        Ok((usize::MAX, true))
     }
 }
 

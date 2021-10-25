@@ -361,9 +361,10 @@ impl<'a> DestinationPartition<'a> for PandasPartitionDestination<'a> {
         Ok(())
     }
 
-    fn aquire_row(&mut self, n: usize) {
+    fn aquire_row(&mut self, n: usize) -> usize {
         self.cur_row = self.glob_row.fetch_add(n, Ordering::Relaxed);
         self.seq = 0;
+        self.cur_row
     }
 }
 

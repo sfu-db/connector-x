@@ -400,7 +400,7 @@ impl<'a> PartitionParser<'a> for PostgresBinarySourcePartitionParser<'a> {
     type Error = PostgresSourceError;
 
     #[throws(PostgresSourceError)]
-    fn fetch_next(&mut self) -> usize {
+    fn fetch_next(&mut self) -> (usize, bool) {
         if !self.rowbuf.is_empty() {
             self.rowbuf.drain(..);
         }
@@ -414,7 +414,7 @@ impl<'a> PartitionParser<'a> for PostgresBinarySourcePartitionParser<'a> {
         }
         self.current_row = 0;
         self.current_col = 0;
-        self.rowbuf.len()
+        (self.rowbuf.len(), self.rowbuf.len() < BUF_SIZE)
     }
 }
 
