@@ -44,7 +44,7 @@ def read_sql(
     partition_num
       how many partition to generate.
     index_col
-      the index column to set.
+      the index column to set, only applicable for return type "pandas", "modin", "dask".
 
     Examples
     ========
