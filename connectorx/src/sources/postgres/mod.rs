@@ -14,7 +14,6 @@ use crate::{
     sources::{PartitionParser, Produce, Source, SourcePartition},
     sql::{count_query, get_limit, limit1_query, CXQuery},
 };
-use anyhow::anyhow;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
 use csv::{ReaderBuilder, StringRecord, StringRecordsIntoIter};
 use fehler::{throw, throws};
@@ -497,26 +496,6 @@ impl<'a> PostgresCSVSourceParser<'a> {
 
     #[throws(PostgresSourceError)]
     fn next_loc(&mut self) -> (usize, usize) {
-        if self.current_row >= self.rowbuf.len() {
-            if !self.rowbuf.is_empty() {
-                self.rowbuf.drain(..);
-            }
-
-            for _ in 0..BUF_SIZE {
-                if let Some(row) = self.iter.next() {
-                    self.rowbuf.push(row?);
-                } else {
-                    break;
-                }
-            }
-
-            if self.rowbuf.is_empty() {
-                throw!(anyhow!("Postgres EOF"));
-            }
-            self.current_row = 0;
-            self.current_col = 0;
-        }
-
         let ret = (self.current_row, self.current_col);
         self.current_row += (self.current_col + 1) / self.ncols;
         self.current_col = (self.current_col + 1) % self.ncols;
@@ -527,6 +506,23 @@ impl<'a> PostgresCSVSourceParser<'a> {
 impl<'a> PartitionParser<'a> for PostgresCSVSourceParser<'a> {
     type Error = PostgresSourceError;
     type TypeSystem = PostgresTypeSystem;
+
+    #[throws(PostgresSourceError)]
+    fn fetch_next(&mut self) -> (usize, bool) {
+        if !self.rowbuf.is_empty() {
+            self.rowbuf.drain(..);
+        }
+        for _ in 0..BUF_SIZE {
+            if let Some(row) = self.iter.next() {
+                self.rowbuf.push(row?);
+            } else {
+                break;
+            }
+        }
+        self.current_row = 0;
+        self.current_col = 0;
+        (self.rowbuf.len(), self.rowbuf.len() < BUF_SIZE)
+    }
 }
 
 macro_rules! impl_csv_produce {
@@ -868,26 +864,6 @@ impl<'a> PostgresRawSourceParser<'a> {
 
     #[throws(PostgresSourceError)]
     fn next_loc(&mut self) -> (usize, usize) {
-        if self.current_row >= self.rowbuf.len() {
-            if !self.rowbuf.is_empty() {
-                self.rowbuf.drain(..);
-            }
-
-            for _ in 0..BUF_SIZE {
-                if let Some(row) = self.iter.next()? {
-                    self.rowbuf.push(row);
-                } else {
-                    break;
-                }
-            }
-
-            if self.rowbuf.is_empty() {
-                throw!(anyhow!("Postgres EOF"));
-            }
-            self.current_row = 0;
-            self.current_col = 0;
-        }
-
         let ret = (self.current_row, self.current_col);
         self.current_row += (self.current_col + 1) / self.ncols;
         self.current_col = (self.current_col + 1) % self.ncols;
@@ -898,6 +874,23 @@ impl<'a> PostgresRawSourceParser<'a> {
 impl<'a> PartitionParser<'a> for PostgresRawSourceParser<'a> {
     type TypeSystem = PostgresTypeSystem;
     type Error = PostgresSourceError;
+
+    #[throws(PostgresSourceError)]
+    fn fetch_next(&mut self) -> (usize, bool) {
+        if !self.rowbuf.is_empty() {
+            self.rowbuf.drain(..);
+        }
+        for _ in 0..BUF_SIZE {
+            if let Some(row) = self.iter.next()? {
+                self.rowbuf.push(row);
+            } else {
+                break;
+            }
+        }
+        self.current_row = 0;
+        self.current_col = 0;
+        (self.rowbuf.len(), self.rowbuf.len() < BUF_SIZE)
+    }
 }
 
 macro_rules! impl_produce {

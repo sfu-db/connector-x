@@ -151,6 +151,8 @@ impl Source for CSVSource {
         self.files = queries.iter().map(|q| q.map(Q::to_string)).collect();
     }
 
+    fn set_origin_query(&mut self, _query: Option<String>) {}
+
     #[throws(CSVSourceError)]
     fn fetch_metadata(&mut self) {
         let mut reader = csv::ReaderBuilder::new()
@@ -165,6 +167,11 @@ impl Source for CSVSource {
         }
 
         assert_eq!(header.len(), self.schema.len());
+    }
+
+    #[throws(CSVSourceError)]
+    fn result_rows(&mut self) -> Option<usize> {
+        None
     }
 
     fn names(&self) -> Vec<String> {
@@ -264,6 +271,11 @@ impl<'a> CSVSourcePartitionParser<'a> {
 impl<'a> PartitionParser<'a> for CSVSourcePartitionParser<'a> {
     type TypeSystem = CSVTypeSystem;
     type Error = CSVSourceError;
+
+    #[throws(CSVSourceError)]
+    fn fetch_next(&mut self) -> (usize, bool) {
+        (self.records.len(), true)
+    }
 }
 
 impl<'r, 'a> Produce<'r, i64> for CSVSourcePartitionParser<'a> {

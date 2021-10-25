@@ -104,7 +104,6 @@ impl SourceConn {
                 single_col_partition_query(query, col, lower, upper, &OracleDialect {})?
             }
         };
-        println!("get partition query: {:?}", query);
         CXQuery::Wrapped(query)
     }
 }
