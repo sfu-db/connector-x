@@ -26,6 +26,7 @@ pub use typesystem::SQLiteTypeSystem;
 
 pub struct SQLiteSource {
     pool: Pool<SqliteConnectionManager>,
+    origin_query: Option<String>,
     queries: Vec<CXQuery<String>>,
     names: Vec<String>,
     schema: Vec<SQLiteTypeSystem>,
@@ -41,6 +42,7 @@ impl SQLiteSource {
 
         Self {
             pool,
+            origin_query: None,
             queries: vec![],
             names: vec![],
             schema: vec![],
@@ -66,6 +68,10 @@ where
 
     fn set_queries<Q: ToString>(&mut self, queries: &[CXQuery<Q>]) {
         self.queries = queries.iter().map(|q| q.map(Q::to_string)).collect();
+    }
+
+    fn set_origin_query(&mut self, query: Option<String>) {
+        self.origin_query = query;
     }
 
     #[throws(SQLiteSourceError)]
@@ -143,6 +149,27 @@ where
             self.names = cnames.into_iter().map(|s| s.to_string()).collect();
             // set all columns as string (align with pandas)
             self.schema = vec![SQLiteTypeSystem::Text(false); self.names.len()];
+        }
+    }
+
+    #[throws(SQLiteSourceError)]
+    fn result_rows(&mut self) -> Option<usize> {
+        match &self.origin_query {
+            Some(q) => {
+                let cxq = CXQuery::Wrapped(q.clone());
+                let dialect = SQLiteDialect {};
+                let nrows = match get_limit(&cxq, &dialect)? {
+                    None => {
+                        let conn = self.pool.get()?;
+                        conn.query_row(count_query(&cxq, &dialect)?.as_str(), [], |row| {
+                            Ok(row.get::<_, i64>(0)? as usize)
+                        })?
+                    }
+                    Some(n) => n,
+                };
+                Some(nrows)
+            }
+            None => None,
         }
     }
 
@@ -254,12 +281,9 @@ impl<'a> SQLiteSourcePartitionParser<'a> {
 
     #[throws(SQLiteSourceError)]
     fn next_loc(&mut self) -> (&Row, usize) {
-        let row: &Row = match self.current_col {
-            0 => (*self.rows).next()?.ok_or_else(|| anyhow!("Sqlite EOF"))?,
-            _ => (*self.rows)
-                .get()
-                .ok_or_else(|| anyhow!("Sqlite empty current row"))?,
-        };
+        let row: &Row = (*self.rows)
+            .get()
+            .ok_or_else(|| anyhow!("Sqlite empty current row"))?;
         let col = self.current_col;
         self.current_col = (self.current_col + 1) % self.ncols;
         (row, col)
@@ -269,6 +293,15 @@ impl<'a> SQLiteSourcePartitionParser<'a> {
 impl<'a> PartitionParser<'a> for SQLiteSourcePartitionParser<'a> {
     type TypeSystem = SQLiteTypeSystem;
     type Error = SQLiteSourceError;
+
+    #[throws(SQLiteSourceError)]
+    fn fetch_next(&mut self) -> (usize, bool) {
+        self.current_col = 0;
+        match (*self.rows).next()? {
+            Some(_) => (1, false),
+            None => (0, true),
+        }
+    }
 }
 
 macro_rules! impl_produce {

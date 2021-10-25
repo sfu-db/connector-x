@@ -34,13 +34,11 @@ pub trait Source {
 
     fn set_queries<Q: ToString>(&mut self, queries: &[CXQuery<Q>]);
 
-    fn set_origin_query(&mut self, _query: Option<String>) {}
+    fn set_origin_query(&mut self, query: Option<String>);
 
     fn fetch_metadata(&mut self) -> Result<(), Self::Error>;
 
-    fn result_rows(&mut self) -> Result<Option<usize>, Self::Error> {
-        Ok(None)
-    }
+    fn result_rows(&mut self) -> Result<Option<usize>, Self::Error>;
 
     fn names(&self) -> Vec<String>;
 
@@ -84,9 +82,7 @@ pub trait PartitionParser<'a> {
     }
 
     /// Fetch next batch of rows from database, return actuall number of rows fetched
-    fn fetch_next(&mut self) -> Result<(usize, bool), Self::Error> {
-        Ok((usize::MAX, true))
-    }
+    fn fetch_next(&mut self) -> Result<(usize, bool), Self::Error>;
 }
 
 /// A type implemented `Produce<T>` means that it can produce a value `T` by consuming part of it's raw data buffer.
