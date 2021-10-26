@@ -193,10 +193,20 @@ jobs:
           components: rustfmt
           default: true
 
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-python-${{ secrets.CACHE_VERSION }}-${{ hashFiles('**/Cargo.lock') }}
+
       - name: Install other dependent tools
         run: |
           pip3 install poetry
-          cargo install just
+          [ ! -f ~/.cargo/bin/just ] && cargo install just
 
       - name: Seed the database
         run: just seed-db
@@ -219,6 +229,12 @@ jobs:
         with:
           command: clippy
           args: --features all --all
+
+      - name: Cache venv
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pypoetry/virtualenvs
+          key: ${{ runner.os }}-venv-${{ secrets.CACHE_VERSION }}-${{ hashFiles('connectorx-python/poetry.lock') }}
 
       - name: Install python dependencies
         run: just bootstrap-python
