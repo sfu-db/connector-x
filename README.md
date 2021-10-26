@@ -27,7 +27,7 @@ cx.read_sql("postgresql://username:password@server:port/database", "SELECT * FRO
 
 The function will partition the query by **evenly** splitting the specified column to the amount of partitions.
 ConnectorX will assign one thread for each partition to load and write data in parallel.
-Currently, we support partitioning on **integer** columns for **SPJA** queries.
+Currently, we support partitioning on **numerical** columns for **SPJA** queries.
 
 Check out more detailed usage and examples [here](#detailed-usage-and-examples). A general introduction of the project can be found in this [blog post](https://towardsdatascience.com/connectorx-the-fastest-way-to-load-data-from-databases-a65d4d4062d5).
 
@@ -73,7 +73,14 @@ Finally, ConnectorX will use the schema info as well as the count info to alloca
 Once the downloading begins, there will be one thread for each partition so that the data are downloaded in parallel at the partition level. The thread will issue the query of the corresponding
 partition to the database and then write the returned data to the destination row-wise or column-wise (depends on the database) in a streaming fashion. 
 
-This mechanism implies that having an **index on the partition column** is recommended to make full use of the parallel downloading power provided by ConnectorX.
+#### How to specify the partition number?
+
+`partition_num` will determine how many queries we are going to split from the original one and issue to the database. Underlying, we use [rayon](https://github.com/rayon-rs/rayon) as our parallel executor, which adopts a pool of threads to handle each partitioned query. The number of threads in the pool equals to the number of logical cores on the machine. It is recommended to set the `partition_num` to the number of available logical cores.
+
+#### How to choose the partition column?
+
+`partition_on` specifies on which column we will do the partition as above procedure. In order to achieve the best performance, it is ideal that each partitioned query will return the same number of rows. And since we partition the column evenly, it is recommended that the numerical `partition_on` column is evenly distributed. Whether a column has index or not might also affect the performance depends on the source database. You can give it a try if you have multiple candidates. Also, you can manually partition the query if our partition method cannot match your need. ConnectorX will still return a whole dataframe with all the results of the list of queries you input.
+
 
 # Supported Sources & Destinations
 
