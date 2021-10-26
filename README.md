@@ -199,3 +199,10 @@ You are always welcomed to:
 1. Ask questions in stackoverflow. Make sure to have #connectorx attached.
 2. Ask questions & propose new ideas in our [forum][discussion_page].
 3. Ask questions & join the discussion & send direct messages to us in our [discord](https://discord.gg/xwbkFNk) (under `CONNECTOR` category)
+
+# Organizations and Projects using ConnectorX
+
+[<img src="https://raw.githubusercontent.com/pola-rs/polars-static/master/logos/polars-logo-dark.svg" height="100" style="margin-bottom: -2px"/>](https://github.com/pola-rs/polars)
+[<img src="https://raw.githubusercontent.com/sfu-db/dataprep/develop/assets/logo.png" height="100" style="margin-bottom: -2px"/>](https://dataprep.ai/)
+
+To add your project/organization here, reply our post [here](https://github.com/sfu-db/connector-x/discussions/146)
