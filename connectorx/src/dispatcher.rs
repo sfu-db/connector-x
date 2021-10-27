@@ -66,31 +66,37 @@ where
             .collect::<CXResult<Vec<_>>>()?;
         let names = self.src.names();
 
-        // get number of row and partition the source
-        let mut num_rows = self.src.result_rows()?;
+        let mut total_rows = if self.dst.needs_count() {
+            // return None if cannot derive total count
+            debug!("Try get row rounts for entire result");
+            self.src.result_rows()?
+        } else {
+            debug!("Do not need counts in advance");
+            Some(0)
+        };
         let mut src_partitions: Vec<S::Partition> = self.src.partition()?;
-        if num_rows.is_none() {
-            debug!("Manually assigned partition queries, count each and sum up");
+        if self.dst.needs_count() && total_rows.is_none() {
+            debug!("Manually count rows of each partitioned query and sum up");
             // run queries
             src_partitions
                 .par_iter_mut()
-                .try_for_each(|partition| -> Result<(), ES> { partition.prepare() })?;
+                .try_for_each(|partition| -> Result<(), ES> { partition.result_rows() })?;
 
-            // allocate memory and create one partition for each source
+            // get number of row of each partition from the source
             let part_rows: Vec<usize> = src_partitions
                 .iter()
                 .map(|partition| partition.nrows())
                 .collect();
-            num_rows = Some(part_rows.iter().sum());
+            total_rows = Some(part_rows.iter().sum());
         }
-        let num_rows = num_rows.unwrap();
+        let total_rows = total_rows.ok_or_else(|| ConnectorXError::CountError())?;
 
         debug!(
             "Allocate destination memory: {}x{}",
-            num_rows,
+            total_rows,
             src_schema.len()
         );
-        self.dst.allocate(num_rows, &names, &dst_schema, dorder)?;
+        self.dst.allocate(total_rows, &names, &dst_schema, dorder)?;
 
         debug!("Create destination partition");
         let dst_partitions = self.dst.partition(self.queries.len())?;
@@ -124,15 +130,7 @@ where
                 match dorder {
                     DataOrder::RowMajor => loop {
                         let (n, is_last) = parser.fetch_next()?;
-                        if n == 0 {
-                            break;
-                        }
-                        dst.aquire_row(n);
-                        // let m = dst.aquire_row(n);
-                        // debug!(
-                        //     "worker {} is going to write {} rows from position {}",
-                        //     i, n, m
-                        // );
+                        dst.aquire_row(n)?;
                         for _ in 0..n {
                             #[allow(clippy::needless_range_loop)]
                             for col in 0..dst.ncols() {
@@ -152,10 +150,7 @@ where
                     },
                     DataOrder::ColumnMajor => loop {
                         let (n, is_last) = parser.fetch_next()?;
-                        if n == 0 {
-                            break;
-                        }
-                        dst.aquire_row(n);
+                        dst.aquire_row(n)?;
                         #[allow(clippy::needless_range_loop)]
                         for col in 0..dst.ncols() {
                             for _ in 0..n {

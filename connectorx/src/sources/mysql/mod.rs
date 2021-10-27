@@ -142,7 +142,7 @@ where
     fn result_rows(&mut self) -> Option<usize> {
         match &self.origin_query {
             Some(q) => {
-                let cxq = CXQuery::Wrapped(q.clone());
+                let cxq = CXQuery::Naked(q.clone());
                 let dialect = MySqlDialect {};
                 let nrows = match get_limit(&cxq, &dialect)? {
                     None => {
@@ -209,7 +209,7 @@ impl SourcePartition for MySQLSourcePartition<BinaryProtocol> {
     type Error = MySQLSourceError;
 
     #[throws(MySQLSourceError)]
-    fn prepare(&mut self) {
+    fn result_rows(&mut self) {
         self.nrows = match get_limit(&self.query, &MySqlDialect {})? {
             None => {
                 let row: usize = self
@@ -246,7 +246,7 @@ impl SourcePartition for MySQLSourcePartition<TextProtocol> {
     type Error = MySQLSourceError;
 
     #[throws(MySQLSourceError)]
-    fn prepare(&mut self) {
+    fn result_rows(&mut self) {
         self.nrows = match get_limit(&self.query, &MySqlDialect {})? {
             None => {
                 let row: usize = self

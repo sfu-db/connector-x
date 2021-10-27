@@ -156,7 +156,7 @@ where
     fn result_rows(&mut self) -> Option<usize> {
         match &self.origin_query {
             Some(q) => {
-                let cxq = CXQuery::Wrapped(q.clone());
+                let cxq = CXQuery::Naked(q.clone());
                 let dialect = SQLiteDialect {};
                 let nrows = match get_limit(&cxq, &dialect)? {
                     None => {
@@ -223,7 +223,7 @@ impl SourcePartition for SQLiteSourcePartition {
     type Error = SQLiteSourceError;
 
     #[throws(SQLiteSourceError)]
-    fn prepare(&mut self) {
+    fn result_rows(&mut self) {
         let dialect = SQLiteDialect {};
         self.nrows = match get_limit(&self.query, &dialect)? {
             None => {

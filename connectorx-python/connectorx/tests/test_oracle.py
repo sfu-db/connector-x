@@ -38,7 +38,6 @@ def test_oracle_aggregation(oracle_url: str) -> None:
 def test_oracle_partition_on_aggregation(oracle_url: str) -> None:
     query = "select sum(test_int) cid, test_char from test_table group by test_char"
     df = read_sql(oracle_url, query, partition_on="cid", partition_num=3)
-    print(df)
     df = df.sort_values("CID").reset_index(drop=True)
     expected = pd.DataFrame(
         index=range(4),
@@ -130,6 +129,7 @@ def test_oracle_with_partition(oracle_url: str) -> None:
             "TEST_FLOAT": pd.Series([1.1, 2.2, -4.44, None, None], dtype="float64"),
         },
     )
+    df.sort_values(by="TEST_INT", inplace=True, ignore_index=True)
     assert_frame_equal(df, expected, check_names=True)
 
 
@@ -151,6 +151,7 @@ def test_oracle_with_partition_without_partition_range(oracle_url: str) -> None:
             "TEST_FLOAT": pd.Series([1.1, 2.2], dtype="float64"),
         },
     )
+    df.sort_values(by="TEST_INT", inplace=True, ignore_index=True)
     assert_frame_equal(df, expected, check_names=True)
 
 
@@ -173,6 +174,7 @@ def test_oracle_with_partition_and_selection(oracle_url: str) -> None:
             "TEST_FLOAT": pd.Series([1.1, 2.2, -4.44, None, None], dtype="float64"),
         },
     )
+    df.sort_values(by="TEST_INT", inplace=True, ignore_index=True)
     assert_frame_equal(df, expected, check_names=True)
 
 
@@ -186,14 +188,14 @@ def test_oracle_with_partition_and_spja(oracle_url: str) -> None:
             "SFLOAT": pd.Series([2.3, -0.2], dtype="float64"),
         },
     )
+    df.sort_values(by="CID", inplace=True, ignore_index=True)
     assert_frame_equal(df, expected, check_names=True)
 
 
 @pytest.mark.skipif(not os.environ.get("ORACLE_URL"), reason="Test oracle only when `ORACLE_URL` is set")
 def test_oracle_types(oracle_url: str) -> None:
     query = "SELECT * FROM test_types"
-    df = read_sql(oracle_url, query,
-                  partition_on="test_int", partition_num=3)
+    df = read_sql(oracle_url, query)
     expected = pd.DataFrame(
         data={
             "TEST_NUM_INT": pd.Series([1, 5, 5, None], dtype="Int64"),
@@ -218,7 +220,6 @@ def test_oracle_types(oracle_url: str) -> None:
 def test_oracle_empty_result(oracle_url: str) -> None:
     query = "SELECT * FROM test_table where test_int < -100"
     df = read_sql(oracle_url, query)
-    print(df)
     expected = pd.DataFrame(
         data={
             "TEST_INT": pd.Series([], dtype="Int64"),

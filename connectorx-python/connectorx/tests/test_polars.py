@@ -26,12 +26,13 @@ def test_modin(postgres_url: str) -> None:
 
     expected = pl.DataFrame(
         {
-            "test_int": [1, 2, 0, 3, 4, 1314],
-            "test_nullint": [3, None, 5, 7, 9, 2],
-            "test_str": ["str1", "str2", "a", "b", "c", None],
-            "test_float": [None, 2.2, 3.1, 3, 7.8, -10],
-            "test_bool": [True, False, None, False, None, True],
+            "test_int": [0, 1, 2, 3, 4, 1314],
+            "test_nullint": [5, 3, None, 7, 9, 2],
+            "test_str": ["a", "str1", "str2", "b", "c", None],
+            "test_float": [3.1, None, 2.2, 3, 7.8, -10],
+            "test_bool": [None, True, False, False, None, True],
         },
     )
 
+    df = df.sort('test_int')
     assert df.frame_equal(expected, null_equal=True)

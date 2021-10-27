@@ -147,7 +147,7 @@ where
     fn result_rows(&mut self) -> Option<usize> {
         match &self.origin_query {
             Some(q) => {
-                let cxq = CXQuery::Wrapped(q.clone());
+                let cxq = CXQuery::Naked(q.clone());
                 let dialect = OracleDialect {};
 
                 let nrows = match get_limit(&cxq, &dialect)? {
@@ -210,7 +210,7 @@ impl SourcePartition for OracleSourcePartition {
     type Error = OracleSourceError;
 
     #[throws(OracleSourceError)]
-    fn prepare(&mut self) {
+    fn result_rows(&mut self) {
         self.nrows = match get_limit(&self.query, &OracleDialect {})? {
             None => {
                 let row = self.conn.query_row_as::<usize>(
