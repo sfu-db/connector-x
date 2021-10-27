@@ -8,36 +8,37 @@ pub mod typesystem;
 pub use self::errors::{ArrowDestinationError, Result};
 pub use self::typesystem::ArrowTypeSystem;
 use super::{Consume, Destination, DestinationPartition};
+use crate::constants::RECORD_BATCH_SIZE;
 use crate::data_order::DataOrder;
 use crate::typesystem::{Realize, TypeAssoc, TypeSystem};
 use anyhow::anyhow;
-use arrow::datatypes::Schema;
-use arrow::record_batch::RecordBatch;
+use arrow::{datatypes::Schema, record_batch::RecordBatch};
 use arrow_assoc::ArrowAssoc;
-use fehler::throw;
-use fehler::throws;
+use fehler::{throw, throws};
 use funcs::{FFinishBuilder, FNewBuilder, FNewField};
 use itertools::Itertools;
-use std::any::Any;
-use std::sync::Arc;
+use std::{
+    any::Any,
+    sync::{Arc, Mutex},
+};
 
 type Builder = Box<dyn Any + Send>;
 type Builders = Vec<Builder>;
 
 pub struct ArrowDestination {
-    nrows: usize,
     schema: Vec<ArrowTypeSystem>,
     names: Vec<String>,
-    builders: Vec<Builders>,
+    data: Arc<Mutex<Vec<RecordBatch>>>,
+    arrow_schema: Arc<Schema>,
 }
 
 impl Default for ArrowDestination {
     fn default() -> Self {
         ArrowDestination {
-            nrows: 0,
             schema: vec![],
-            builders: vec![],
             names: vec![],
+            data: Arc::new(Mutex::new(vec![])),
+            arrow_schema: Arc::new(Schema::empty()),
         }
     }
 }
@@ -51,13 +52,17 @@ impl ArrowDestination {
 impl Destination for ArrowDestination {
     const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::ColumnMajor, DataOrder::RowMajor];
     type TypeSystem = ArrowTypeSystem;
-    type Partition<'a> = ArrowPartitionWriter<'a>;
+    type Partition<'a> = ArrowPartitionWriter;
     type Error = ArrowDestinationError;
+
+    fn needs_count(&self) -> bool {
+        false
+    }
 
     #[throws(ArrowDestinationError)]
     fn allocate<S: AsRef<str>>(
         &mut self,
-        nrows: usize,
+        _nrow: usize,
         names: &[S],
         schema: &[ArrowTypeSystem],
         data_order: DataOrder,
@@ -68,31 +73,30 @@ impl Destination for ArrowDestination {
                 data_order
             ))
         }
-        // cannot really create the builders since do not know each partition size here
-        self.nrows = nrows;
+
+        // parse the metadata
         self.schema = schema.to_vec();
         self.names = names.iter().map(|n| n.as_ref().to_string()).collect();
+        let fields = self
+            .schema
+            .iter()
+            .zip_eq(&self.names)
+            .map(|(&dt, h)| Ok(Realize::<FNewField>::realize(dt)?(h.as_str())))
+            .collect::<Result<Vec<_>>>()?;
+        self.arrow_schema = Arc::new(Schema::new(fields));
     }
 
     #[throws(ArrowDestinationError)]
     fn partition(&mut self, counts: usize) -> Vec<Self::Partition<'_>> {
-        assert_eq!(self.builders.len(), 0);
-
+        let mut partitions = vec![];
         for _ in 0..counts {
-            let builders = self
-                .schema
-                .iter()
-                .map(|&dt| Ok(Realize::<FNewBuilder>::realize(dt)?(0)))
-                .collect::<Result<Vec<_>>>()?;
-
-            self.builders.push(builders);
+            partitions.push(ArrowPartitionWriter::new(
+                self.schema.clone(),
+                Arc::clone(&self.data),
+                Arc::clone(&self.arrow_schema),
+            )?);
         }
-
-        let schema = self.schema.clone();
-        self.builders
-            .iter_mut()
-            .map(|builders| ArrowPartitionWriter::new(schema.clone(), builders, 0))
-            .collect()
+        partitions
     }
 
     fn schema(&self) -> &[ArrowTypeSystem] {
@@ -103,53 +107,80 @@ impl Destination for ArrowDestination {
 impl ArrowDestination {
     #[throws(ArrowDestinationError)]
     pub fn arrow(self) -> Vec<RecordBatch> {
-        let fields = self
-            .schema
+        let lock = Arc::try_unwrap(self.data).map_err(|_| anyhow!("Partitions are not freed"))?;
+        lock.into_inner()
+            .map_err(|e| anyhow!("mutex poisoned {}", e))?
+    }
+}
+
+pub struct ArrowPartitionWriter {
+    schema: Vec<ArrowTypeSystem>,
+    builders: Builders,
+    current_row: usize,
+    current_col: usize,
+    data: Arc<Mutex<Vec<RecordBatch>>>,
+    arrow_schema: Arc<Schema>,
+}
+
+impl ArrowPartitionWriter {
+    #[throws(ArrowDestinationError)]
+    fn new(
+        schema: Vec<ArrowTypeSystem>,
+        data: Arc<Mutex<Vec<RecordBatch>>>,
+        arrow_schema: Arc<Schema>,
+    ) -> Self {
+        let builders = schema
             .iter()
-            .zip_eq(self.names)
-            .map(|(&dt, h)| Ok(Realize::<FNewField>::realize(dt)?(h.as_str())))
+            .map(|dt| Ok(Realize::<FNewBuilder>::realize(*dt)?(RECORD_BATCH_SIZE)))
             .collect::<Result<Vec<_>>>()?;
 
-        let arrow_schema = Arc::new(Schema::new(fields));
-        let schema = self.schema.clone();
-        self.builders
-            .into_iter()
-            .map(|pbuilder| {
-                let columns = pbuilder
-                    .into_iter()
-                    .zip(schema.iter())
-                    .map(|(builder, &dt)| Realize::<FFinishBuilder>::realize(dt)?(builder))
-                    .collect::<std::result::Result<Vec<_>, crate::errors::ConnectorXError>>()?;
-                Ok(RecordBatch::try_new(Arc::clone(&arrow_schema), columns)?)
-            })
-            .collect::<Result<Vec<_>>>()?
-    }
-}
-
-pub struct ArrowPartitionWriter<'a> {
-    nrows: usize,
-    schema: Vec<ArrowTypeSystem>,
-    builders: &'a mut Builders,
-    current_col: usize,
-}
-
-impl<'a> ArrowPartitionWriter<'a> {
-    fn new(schema: Vec<ArrowTypeSystem>, builders: &'a mut Builders, nrows: usize) -> Self {
         ArrowPartitionWriter {
-            nrows,
             schema,
             builders,
+            current_row: 0,
             current_col: 0,
+            data,
+            arrow_schema,
         }
+    }
+
+    #[throws(ArrowDestinationError)]
+    fn flush(&mut self) {
+        let columns = self
+            .builders
+            .iter_mut()
+            .zip(self.schema.iter())
+            .map(|(builder, &dt)| Realize::<FFinishBuilder>::realize(dt)?(builder))
+            .collect::<std::result::Result<Vec<_>, crate::errors::ConnectorXError>>()?;
+        let rb = RecordBatch::try_new(Arc::clone(&self.arrow_schema), columns)?;
+        {
+            let mut guard = self
+                .data
+                .lock()
+                .map_err(|e| anyhow!("mutex poisoned {}", e))?;
+            let inner_data = &mut *guard;
+            inner_data.push(rb);
+        }
+
+        self.current_row = 0;
+        self.current_col = 0;
     }
 }
 
-impl<'a> DestinationPartition<'a> for ArrowPartitionWriter<'a> {
+impl<'a> DestinationPartition<'a> for ArrowPartitionWriter {
     type TypeSystem = ArrowTypeSystem;
     type Error = ArrowDestinationError;
 
-    fn nrows(&self) -> usize {
-        self.nrows
+    #[throws(ArrowDestinationError)]
+    fn finalize(&mut self) {
+        if self.current_row > 0 {
+            self.flush()?;
+        }
+    }
+
+    #[throws(ArrowDestinationError)]
+    fn aquire_row(&mut self, _n: usize) -> usize {
+        self.current_row
     }
 
     fn ncols(&self) -> usize {
@@ -157,7 +188,7 @@ impl<'a> DestinationPartition<'a> for ArrowPartitionWriter<'a> {
     }
 }
 
-impl<'a, T> Consume<T> for ArrowPartitionWriter<'a>
+impl<'a, T> Consume<T> for ArrowPartitionWriter
 where
     T: TypeAssoc<<Self as DestinationPartition<'a>>::TypeSystem> + ArrowAssoc + 'static,
 {
@@ -167,7 +198,6 @@ where
     fn consume(&mut self, value: T) {
         let col = self.current_col;
         self.current_col = (self.current_col + 1) % self.ncols();
-
         self.schema[col].check::<T>()?;
 
         <T as ArrowAssoc>::append(
@@ -176,5 +206,13 @@ where
                 .ok_or_else(|| anyhow!("cannot cast arrow builder for append"))?,
             value,
         )?;
+
+        // flush if exceed batch_size
+        if self.current_col == 0 {
+            self.current_row += 1;
+            if self.current_row >= RECORD_BATCH_SIZE {
+                self.flush()?;
+            }
+        }
     }
 }

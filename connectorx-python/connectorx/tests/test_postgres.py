@@ -57,6 +57,7 @@ def test_partition_on_aggregation(postgres_url: str) -> None:
             "test_int": pd.Series([4, 5, 1315], dtype="Int64"),
         },
     )
+    df.sort_values(by="test_int", inplace=True, ignore_index=True)
     assert_frame_equal(df, expected, check_names=True)
 
 
@@ -111,17 +112,18 @@ def test_manual_partition(postgres_url: str) -> None:
     expected = pd.DataFrame(
         index=range(6),
         data={
-            "test_int": pd.Series([1, 0, 2, 3, 4, 1314], dtype="Int64"),
-            "test_nullint": pd.Series([3, 5, None, 7, 9, 2], dtype="Int64"),
+            "test_int": pd.Series([0, 1, 2, 3, 4, 1314], dtype="Int64"),
+            "test_nullint": pd.Series([5, 3, None, 7, 9, 2], dtype="Int64"),
             "test_str": pd.Series(
-                ["str1", "a", "str2", "b", "c", None], dtype="object"
+                ["a", "str1", "str2", "b", "c", None], dtype="object"
             ),
-            "test_float": pd.Series([None, 3.1, 2.2, 3, 7.8, -10], dtype="float64"),
+            "test_float": pd.Series([3.1, None, 2.2, 3, 7.8, -10], dtype="float64"),
             "test_bool": pd.Series(
-                [True, None, False, False, None, True], dtype="boolean"
+                [None, True, False, False, None, True], dtype="boolean"
             ),
         },
     )
+    df.sort_values(by="test_int", inplace=True, ignore_index=True)
     assert_frame_equal(df, expected, check_names=True)
 
 
@@ -157,17 +159,18 @@ def test_read_sql_with_partition(postgres_url: str) -> None:
     expected = pd.DataFrame(
         index=range(6),
         data={
-            "test_int": pd.Series([1, 2, 0, 3, 4, 1314], dtype="Int64"),
-            "test_nullint": pd.Series([3, None, 5, 7, 9, 2], dtype="Int64"),
+            "test_int": pd.Series([0, 1, 2, 3, 4, 1314], dtype="Int64"),
+            "test_nullint": pd.Series([5, 3, None, 7, 9, 2], dtype="Int64"),
             "test_str": pd.Series(
-                ["str1", "str2", "a", "b", "c", None], dtype="object"
+                ["a", "str1", "str2", "b", "c", None], dtype="object"
             ),
-            "test_float": pd.Series([None, 2.2, 3.1, 3, 7.8, -10], dtype="float64"),
+            "test_float": pd.Series([3.1, None, 2.2, 3, 7.8, -10], dtype="float64"),
             "test_bool": pd.Series(
-                [True, False, None, False, None, True], dtype="boolean"
+                [None, True, False, False, None, True], dtype="boolean"
             ),
         },
     )
+    df.sort_values(by="test_int", inplace=True, ignore_index=True)
     assert_frame_equal(df, expected, check_names=True)
 
 
@@ -190,6 +193,7 @@ def test_read_sql_with_partition_without_partition_range(postgres_url: str) -> N
             "test_bool": pd.Series([None, None], dtype="boolean"),
         },
     )
+    df.sort_values(by="test_int", inplace=True, ignore_index=True)
     assert_frame_equal(df, expected, check_names=True)
 
 
@@ -205,22 +209,23 @@ def test_read_sql_with_partition_and_selection(postgres_url: str) -> None:
     expected = pd.DataFrame(
         index=range(6),
         data={
-            "test_int": pd.Series([1, 2, 0, 3, 4, 1314], dtype="Int64"),
-            "test_nullint": pd.Series([3, None, 5, 7, 9, 2], dtype="Int64"),
+            "test_int": pd.Series([0, 1, 2, 3, 4, 1314], dtype="Int64"),
+            "test_nullint": pd.Series([5, 3, None, 7, 9, 2], dtype="Int64"),
             "test_str": pd.Series(
-                ["str1", "str2", "a", "b", "c", None], dtype="object"
+                ["a", "str1", "str2", "b", "c", None], dtype="object"
             ),
-            "test_float": pd.Series([None, 2.2, 3.1, 3, 7.8, -10], dtype="float64"),
+            "test_float": pd.Series([3.1, None, 2.2, 3, 7.8, -10], dtype="float64"),
             "test_bool": pd.Series(
-                [True, False, None, False, None, True], dtype="boolean"
+                [None, True, False, False, None, True], dtype="boolean"
             ),
         },
     )
+    df.sort_values(by="test_int", inplace=True, ignore_index=True)
     assert_frame_equal(df, expected, check_names=True)
 
 
 def test_read_sql_with_partition_and_projection(postgres_url: str) -> None:
-    query = "SELECT test_int, test_float, test_str FROM test_table"
+    query = "SELECT test_int, test_nullint, test_str FROM test_table"
     df = read_sql(
         postgres_url,
         query,
@@ -231,13 +236,14 @@ def test_read_sql_with_partition_and_projection(postgres_url: str) -> None:
     expected = pd.DataFrame(
         index=range(6),
         data={
-            "test_int": pd.Series([1, 2, 0, 3, 4, 1314], dtype="Int64"),
-            "test_float": pd.Series([None, 2.2, 3.1, 3, 7.8, -10], dtype="float64"),
+            "test_int": pd.Series([0, 1, 2, 3, 4, 1314], dtype="Int64"),
+            "test_nullint": pd.Series([5, 3, None, 7, 9, 2], dtype="Int64"),
             "test_str": pd.Series(
-                ["str1", "str2", "a", "b", "c", None], dtype="object"
+                ["a", "str1", "str2", "b", "c", None], dtype="object"
             ),
         },
     )
+    df.sort_values(by="test_int", inplace=True, ignore_index=True)
     assert_frame_equal(df, expected, check_names=True)
 
 
@@ -260,6 +266,7 @@ def test_read_sql_with_partition_and_join(postgres_url: str) -> None:
             ),
         },
     )
+    df.sort_values(by="test_int", inplace=True, ignore_index=True)
     assert_frame_equal(df, expected, check_names=True)
 
 
@@ -274,6 +281,7 @@ def test_read_sql_with_partition_and_spja(postgres_url: str) -> None:
             "sum": pd.Series([1, 3, 4], dtype="Int64"),
         },
     )
+    df.sort_values(by="sum", inplace=True, ignore_index=True)
     assert_frame_equal(df, expected, check_names=True)
 
 
@@ -339,8 +347,7 @@ def test_read_sql_with_index_col(postgres_url: str) -> None:
 
 def test_types_binary(postgres_url: str) -> None:
     query = "SELECT test_date, test_timestamp, test_timestamptz, test_int16, test_int64, test_float32, test_numeric, test_bpchar, test_char, test_varchar, test_uuid, test_time, test_json, test_jsonb, test_bytea, test_enum, test_f4array, test_f8array, test_narray, test_i2array, test_i4array, test_i8array FROM test_types"
-    df = read_sql(postgres_url, query,
-                  partition_on="test_int16", partition_num=3)
+    df = read_sql(postgres_url, query)
     expected = pd.DataFrame(
         index=range(4),
         data={
@@ -409,8 +416,7 @@ def test_types_binary(postgres_url: str) -> None:
 
 def test_types_csv(postgres_url: str) -> None:
     query = "SELECT test_date, test_timestamp, test_timestamptz, test_int16, test_int64, test_float32, test_numeric, test_bpchar, test_char, test_varchar, test_uuid, test_time, test_json, test_jsonb, test_bytea, test_enum::text, test_f4array, test_f8array, test_narray, test_i2array, test_i4array, test_i8array FROM test_types"
-    df = read_sql(postgres_url, query, protocol="csv",
-                  partition_on="test_int16", partition_num=2)
+    df = read_sql(postgres_url, query, protocol="csv")
     expected = pd.DataFrame(
         index=range(4),
         data={
@@ -479,9 +485,7 @@ def test_types_csv(postgres_url: str) -> None:
 
 def test_types_cursor(postgres_url: str) -> None:
     query = "SELECT test_date, test_timestamp, test_timestamptz, test_int16, test_int64, test_float32, test_numeric, test_bpchar, test_char, test_varchar, test_uuid, test_time, test_json, test_jsonb, test_bytea, test_enum::text, test_f4array, test_f8array, test_narray, test_i2array, test_i4array, test_i8array FROM test_types"
-    df = read_sql(postgres_url, query, protocol="cursor",
-                  partition_on="test_int16", partition_num=4)
-    print(df)
+    df = read_sql(postgres_url, query, protocol="cursor")
     expected = pd.DataFrame(
         index=range(4),
         data={
@@ -597,8 +601,7 @@ def test_empty_result_on_some_partition(postgres_url: str) -> None:
 
 def test_posix_regex(postgres_url: str) -> None:
     query = "select test_int, case when test_str ~* 'str.*' then 'convert_str' end as converted_str from test_table"
-    df = read_sql(postgres_url, query,
-                  partition_on="test_int", partition_num=3)
+    df = read_sql(postgres_url, query)
     expected = pd.DataFrame(
         data={
             "test_int": pd.Series([1, 2, 0, 3, 4, 1314], dtype="Int64"),
@@ -629,6 +632,7 @@ def test_partition_on_json(postgres_url: str) -> None:
             "qty": pd.Series(["6", "24", "1", None], dtype="object"),
         }
     )
+    df.sort_values(by="test_int16", inplace=True, ignore_index=True)
     assert_frame_equal(df, expected, check_names=True)
 
 
@@ -645,17 +649,18 @@ def test_read_sql_tls(postgres_url_tls: str) -> None:
     expected = pd.DataFrame(
         index=range(6),
         data={
-            "test_int": pd.Series([1, 2, 0, 3, 4, 1314], dtype="Int64"),
-            "test_nullint": pd.Series([3, None, 5, 7, 9, 2], dtype="Int64"),
+            "test_int": pd.Series([0, 1, 2, 3, 4, 1314], dtype="Int64"),
+            "test_nullint": pd.Series([5, 3, None, 7, 9, 2], dtype="Int64"),
             "test_str": pd.Series(
-                ["str1", "str2", "a", "b", "c", None], dtype="object"
+                ["a", "str1", "str2", "b", "c", None], dtype="object"
             ),
-            "test_float": pd.Series([None, 2.2, 3.1, 3, 7.8, -10], dtype="float64"),
+            "test_float": pd.Series([3.1, None, 2.2, 3, 7.8, -10], dtype="float64"),
             "test_bool": pd.Series(
-                [True, False, None, False, None, True], dtype="boolean"
+                [None, True, False, False, None, True], dtype="boolean"
             ),
         },
     )
+    df.sort_values(by="test_int", inplace=True, ignore_index=True)
     assert_frame_equal(df, expected, check_names=True)
 
 
@@ -672,17 +677,18 @@ def test_read_sql_tls_with_cert(postgres_url_tls: str, postgres_rootcert: str) -
     expected = pd.DataFrame(
         index=range(6),
         data={
-            "test_int": pd.Series([1, 2, 0, 3, 4, 1314], dtype="Int64"),
-            "test_nullint": pd.Series([3, None, 5, 7, 9, 2], dtype="Int64"),
+            "test_int": pd.Series([0, 1, 2, 3, 4, 1314], dtype="Int64"),
+            "test_nullint": pd.Series([5, 3, None, 7, 9, 2], dtype="Int64"),
             "test_str": pd.Series(
-                ["str1", "str2", "a", "b", "c", None], dtype="object"
+                ["a", "str1", "str2", "b", "c", None], dtype="object"
             ),
-            "test_float": pd.Series([None, 2.2, 3.1, 3, 7.8, -10], dtype="float64"),
+            "test_float": pd.Series([3.1, None, 2.2, 3, 7.8, -10], dtype="float64"),
             "test_bool": pd.Series(
-                [True, False, None, False, None, True], dtype="boolean"
+                [None, True, False, False, None, True], dtype="boolean"
             ),
         },
     )
+    df.sort_values(by="test_int", inplace=True, ignore_index=True)
     assert_frame_equal(df, expected, check_names=True)
 
 
@@ -699,17 +705,18 @@ def test_read_sql_tls_disable(postgres_url_tls: str) -> None:
     expected = pd.DataFrame(
         index=range(6),
         data={
-            "test_int": pd.Series([1, 2, 0, 3, 4, 1314], dtype="Int64"),
-            "test_nullint": pd.Series([3, None, 5, 7, 9, 2], dtype="Int64"),
+            "test_int": pd.Series([0, 1, 2, 3, 4, 1314], dtype="Int64"),
+            "test_nullint": pd.Series([5, 3, None, 7, 9, 2], dtype="Int64"),
             "test_str": pd.Series(
-                ["str1", "str2", "a", "b", "c", None], dtype="object"
+                ["a", "str1", "str2", "b", "c", None], dtype="object"
             ),
-            "test_float": pd.Series([None, 2.2, 3.1, 3, 7.8, -10], dtype="float64"),
+            "test_float": pd.Series([3.1, None, 2.2, 3, 7.8, -10], dtype="float64"),
             "test_bool": pd.Series(
-                [True, False, None, False, None, True], dtype="boolean"
+                [None, True, False, False, None, True], dtype="boolean"
             ),
         },
     )
+    df.sort_values(by="test_int", inplace=True, ignore_index=True)
     assert_frame_equal(df, expected, check_names=True)
 
 

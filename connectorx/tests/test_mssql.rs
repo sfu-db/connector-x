@@ -25,7 +25,7 @@ fn test_mssql() {
     let builder = MsSQLSource::new(rt, &dburl, 2).unwrap();
     let mut destination = ArrowDestination::new();
     let dispatcher =
-        Dispatcher::<_, _, MsSQLArrowTransport>::new(builder, &mut destination, &queries);
+        Dispatcher::<_, _, MsSQLArrowTransport>::new(builder, &mut destination, &queries, None);
     dispatcher.run().unwrap();
 
     let result = destination.arrow().unwrap();
@@ -45,8 +45,14 @@ fn test_mssql_agg() {
 
     let builder = MsSQLSource::new(rt, &dburl, 1).unwrap();
     let mut destination = ArrowDestination::new();
-    let dispatcher =
-        Dispatcher::<_, _, MsSQLArrowTransport>::new(builder, &mut destination, &queries);
+    let dispatcher = Dispatcher::<_, _, MsSQLArrowTransport>::new(
+        builder,
+        &mut destination,
+        &queries,
+        Some(String::from(
+            "SELECT test_bool, SUM(test_float) AS SUM FROM test_table GROUP BY test_bool",
+        )),
+    );
     dispatcher.run().unwrap();
 
     let mut result = destination.arrow().unwrap();
@@ -73,95 +79,100 @@ fn test_mssql_agg() {
         ])));
 }
 
-pub fn verify_arrow_results(mut result: Vec<RecordBatch>) {
+pub fn verify_arrow_results(result: Vec<RecordBatch>) {
     assert!(result.len() == 2);
 
-    let rb = result.remove(0);
-    assert!(rb.columns().len() == 5);
-    assert!(rb
-        .column(0)
-        .as_any()
-        .downcast_ref::<Int32Array>()
-        .unwrap()
-        .eq(&Int32Array::from(vec![1, 0])));
+    for rb in result {
+        assert!(rb.columns().len() == 5);
+        match rb.num_rows() {
+            2 => {
+                assert!(rb
+                    .column(0)
+                    .as_any()
+                    .downcast_ref::<Int32Array>()
+                    .unwrap()
+                    .eq(&Int32Array::from(vec![1, 0])));
 
-    assert!(rb
-        .column(1)
-        .as_any()
-        .downcast_ref::<Int64Array>()
-        .unwrap()
-        .eq(&Int64Array::from(vec![Some(3), Some(5)])));
+                assert!(rb
+                    .column(1)
+                    .as_any()
+                    .downcast_ref::<Int64Array>()
+                    .unwrap()
+                    .eq(&Int64Array::from(vec![Some(3), Some(5)])));
 
-    assert!(rb
-        .column(2)
-        .as_any()
-        .downcast_ref::<LargeStringArray>()
-        .unwrap()
-        .eq(&LargeStringArray::from(vec![Some("str1"), Some("a"),])));
+                assert!(rb
+                    .column(2)
+                    .as_any()
+                    .downcast_ref::<LargeStringArray>()
+                    .unwrap()
+                    .eq(&LargeStringArray::from(vec![Some("str1"), Some("a"),])));
 
-    assert!(rb
-        .column(3)
-        .as_any()
-        .downcast_ref::<Float64Array>()
-        .unwrap()
-        .eq(&Float64Array::from(vec![None, Some(3.1 as f64)])));
+                assert!(rb
+                    .column(3)
+                    .as_any()
+                    .downcast_ref::<Float64Array>()
+                    .unwrap()
+                    .eq(&Float64Array::from(vec![None, Some(3.1 as f64)])));
 
-    assert!(rb
-        .column(4)
-        .as_any()
-        .downcast_ref::<BooleanArray>()
-        .unwrap()
-        .eq(&BooleanArray::from(vec![Some(true), None])));
+                assert!(rb
+                    .column(4)
+                    .as_any()
+                    .downcast_ref::<BooleanArray>()
+                    .unwrap()
+                    .eq(&BooleanArray::from(vec![Some(true), None])));
+            }
+            4 => {
+                assert!(rb
+                    .column(0)
+                    .as_any()
+                    .downcast_ref::<Int32Array>()
+                    .unwrap()
+                    .eq(&Int32Array::from(vec![2, 3, 4, 1314])));
 
-    let rb = result.pop().unwrap();
-    assert!(rb.columns().len() == 5);
-    assert!(rb
-        .column(0)
-        .as_any()
-        .downcast_ref::<Int32Array>()
-        .unwrap()
-        .eq(&Int32Array::from(vec![2, 3, 4, 1314])));
+                assert!(rb
+                    .column(1)
+                    .as_any()
+                    .downcast_ref::<Int64Array>()
+                    .unwrap()
+                    .eq(&Int64Array::from(vec![None, Some(7), Some(9), Some(2)])));
 
-    assert!(rb
-        .column(1)
-        .as_any()
-        .downcast_ref::<Int64Array>()
-        .unwrap()
-        .eq(&Int64Array::from(vec![None, Some(7), Some(9), Some(2)])));
+                assert!(rb
+                    .column(2)
+                    .as_any()
+                    .downcast_ref::<LargeStringArray>()
+                    .unwrap()
+                    .eq(&LargeStringArray::from(vec![
+                        Some("str2"),
+                        Some("b"),
+                        Some("c"),
+                        None,
+                    ])));
 
-    assert!(rb
-        .column(2)
-        .as_any()
-        .downcast_ref::<LargeStringArray>()
-        .unwrap()
-        .eq(&LargeStringArray::from(vec![
-            Some("str2"),
-            Some("b"),
-            Some("c"),
-            None,
-        ])));
+                assert!(rb
+                    .column(3)
+                    .as_any()
+                    .downcast_ref::<Float64Array>()
+                    .unwrap()
+                    .eq(&Float64Array::from(vec![
+                        Some(2.2 as f64),
+                        Some(3 as f64),
+                        Some(7.8 as f64),
+                        Some(-10 as f64),
+                    ])));
 
-    assert!(rb
-        .column(3)
-        .as_any()
-        .downcast_ref::<Float64Array>()
-        .unwrap()
-        .eq(&Float64Array::from(vec![
-            Some(2.2 as f64),
-            Some(3 as f64),
-            Some(7.8 as f64),
-            Some(-10 as f64),
-        ])));
-
-    assert!(rb
-        .column(4)
-        .as_any()
-        .downcast_ref::<BooleanArray>()
-        .unwrap()
-        .eq(&BooleanArray::from(vec![
-            Some(false),
-            Some(false),
-            None,
-            Some(true),
-        ])));
+                assert!(rb
+                    .column(4)
+                    .as_any()
+                    .downcast_ref::<BooleanArray>()
+                    .unwrap()
+                    .eq(&BooleanArray::from(vec![
+                        Some(false),
+                        Some(false),
+                        None,
+                        Some(true),
+                    ])));
+            }
+            _ => unreachable!(),
+        }
+    }
 }

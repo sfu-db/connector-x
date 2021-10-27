@@ -184,15 +184,15 @@ impl Source for CSVSource {
 
     #[throws(CSVSourceError)]
     fn partition(self) -> Vec<Self::Partition> {
-        self.files
-            .into_iter()
-            .map(CSVSourcePartition::new)
-            .collect()
+        let mut partitions = vec![];
+        for file in self.files {
+            partitions.push(CSVSourcePartition::new(file)?);
+        }
+        partitions
     }
 }
 
 pub struct CSVSourcePartition {
-    fname: CXQuery<String>,
     records: Vec<csv::StringRecord>,
     counter: usize,
     nrows: usize,
@@ -200,13 +200,27 @@ pub struct CSVSourcePartition {
 }
 
 impl CSVSourcePartition {
+    #[throws(CSVSourceError)]
     pub fn new(fname: CXQuery<String>) -> Self {
+        let reader = csv::ReaderBuilder::new()
+            .has_headers(true)
+            .from_reader(File::open(fname.as_str())?);
+        let mut records = vec![];
+        reader
+            .into_records()
+            .try_for_each(|v| -> Result<(), CSVSourceError> {
+                records.push(v.map_err(|e| anyhow!(e))?);
+                Ok(())
+            })?;
+
+        let nrows = records.len();
+        let ncols = if nrows > 0 { records[0].len() } else { 0 };
+
         Self {
-            fname,
-            records: Vec::new(),
+            records,
             counter: 0,
-            nrows: 0,
-            ncols: 0,
+            nrows,
+            ncols,
         }
     }
 }
@@ -218,22 +232,7 @@ impl SourcePartition for CSVSourcePartition {
 
     /// The parameter `query` is the path of the csv file
     #[throws(CSVSourceError)]
-    fn prepare(&mut self) {
-        let reader = csv::ReaderBuilder::new()
-            .has_headers(true)
-            .from_reader(File::open(self.fname.as_str())?);
-
-        reader
-            .into_records()
-            .try_for_each(|v| -> Result<(), CSVSourceError> {
-                self.records.push(v.map_err(|e| anyhow!(e))?);
-                Ok(())
-            })?;
-        self.nrows = self.records.len();
-        if self.nrows > 0 {
-            self.ncols = self.records[0].len();
-        }
-    }
+    fn result_rows(&mut self) {}
 
     fn nrows(&self) -> usize {
         self.nrows

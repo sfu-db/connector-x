@@ -100,7 +100,7 @@ impl SourcePartition for DummySourcePartition {
     type Parser<'a> = DummySourcePartitionParser<'a>;
     type Error = ConnectorXError;
 
-    fn prepare(&mut self) -> Result<()> {
+    fn result_rows(&mut self) -> Result<()> {
         Ok(())
     }
 
@@ -149,10 +149,7 @@ impl<'a> PartitionParser<'a> for DummySourcePartitionParser<'a> {
     type Error = ConnectorXError;
 
     fn fetch_next(&mut self) -> Result<(usize, bool)> {
-        if self.counter >= &mut self.nrows {
-            return Ok((0, true));
-        }
-        Ok((1, false))
+        Ok((self.nrows, true))
     }
 }
 

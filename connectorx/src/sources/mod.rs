@@ -37,7 +37,7 @@ pub trait Source {
     fn set_origin_query(&mut self, query: Option<String>);
 
     fn fetch_metadata(&mut self) -> Result<(), Self::Error>;
-
+    /// Get total number of rows if available
     fn result_rows(&mut self) -> Result<Option<usize>, Self::Error>;
 
     fn names(&self) -> Vec<String>;
@@ -54,8 +54,8 @@ pub trait SourcePartition: Sized {
     type Parser<'a>: PartitionParser<'a, TypeSystem = Self::TypeSystem, Error = Self::Error>;
     type Error: From<ConnectorXError> + Send;
 
-    /// Run the query and put the result into Self.
-    fn prepare(&mut self) -> Result<(), Self::Error>;
+    /// Count total number of rows in each partition.
+    fn result_rows(&mut self) -> Result<(), Self::Error>;
 
     fn parser(&mut self) -> Result<Self::Parser<'_>, Self::Error>;
 

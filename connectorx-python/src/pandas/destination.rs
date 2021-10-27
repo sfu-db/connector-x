@@ -125,6 +125,10 @@ impl<'a> Destination for PandasDestination<'a> {
     type Partition<'b> = PandasPartitionDestination<'b>;
     type Error = ConnectorXPythonError;
 
+    fn needs_count(&self) -> bool {
+        true
+    }
+
     #[throws(ConnectorXPythonError)]
     fn allocate<S: AsRef<str>>(
         &mut self,
@@ -346,10 +350,6 @@ impl<'a> DestinationPartition<'a> for PandasPartitionDestination<'a> {
     type TypeSystem = PandasTypeSystem;
     type Error = ConnectorXPythonError;
 
-    fn nrows(&self) -> usize {
-        0
-    }
-
     fn ncols(&self) -> usize {
         self.schema.len()
     }
@@ -361,7 +361,11 @@ impl<'a> DestinationPartition<'a> for PandasPartitionDestination<'a> {
         Ok(())
     }
 
+    #[throws(ConnectorXPythonError)]
     fn aquire_row(&mut self, n: usize) -> usize {
+        if n == 0 {
+            return self.cur_row;
+        }
         self.cur_row = self.glob_row.fetch_add(n, Ordering::Relaxed);
         self.seq = 0;
         self.cur_row

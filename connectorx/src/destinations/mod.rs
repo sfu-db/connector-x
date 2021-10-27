@@ -19,6 +19,10 @@ pub trait Destination: Sized {
     type Partition<'a>: DestinationPartition<'a, TypeSystem = Self::TypeSystem, Error = Self::Error>;
     type Error: From<ConnectorXError> + Send;
 
+    /// Specify whether the destination needs total rows in advance
+    /// in order to pre-allocate the buffer.
+    fn needs_count(&self) -> bool;
+
     /// Construct the `Destination`.
     /// This allocates the memory based on the types of each columns
     /// and the number of rows.
@@ -54,20 +58,13 @@ pub trait DestinationPartition<'a>: Send {
     }
 
     /// Number of rows this `PartitionDestination` controls.
-    fn nrows(&self) -> usize;
-
-    /// Number of rows this `PartitionDestination` controls.
     fn ncols(&self) -> usize;
 
     /// Final clean ups
-    fn finalize(&mut self) -> Result<(), Self::Error> {
-        Ok(())
-    }
+    fn finalize(&mut self) -> Result<(), Self::Error>;
 
     /// Aquire n rows in final destination
-    fn aquire_row(&mut self, _n: usize) -> usize {
-        usize::MAX
-    }
+    fn aquire_row(&mut self, n: usize) -> Result<usize, Self::Error>;
 }
 
 /// A type implemented `Consume<T>` means that it can consume a value `T` by adding it to it's own buffer.

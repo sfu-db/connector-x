@@ -96,7 +96,7 @@
 //! let mut destination = ArrowDestination::new();
 //! let source = SQLiteSource::new("sqlite:///path/to/db", 10).expect("cannot create the source");
 //! let queries = &["SELECT * FROM db WHERE id < 100", "SELECT * FROM db WHERE id >= 100"];
-//! let dispatcher = Dispatcher::<SQLiteSource, ArrowDestination, SQLiteArrowTransport>::new(source, &mut destination, queries);
+//! let dispatcher = Dispatcher::<SQLiteSource, ArrowDestination, SQLiteArrowTransport>::new(source, &mut destination, queries, None);
 //! dispatcher.run().expect("run failed");
 //!
 //! let data = destination.arrow();
@@ -133,7 +133,7 @@
 pub mod typesystem;
 #[macro_use]
 mod macros;
-mod constants;
+pub mod constants;
 pub mod data_order;
 pub mod destinations;
 mod dispatcher;

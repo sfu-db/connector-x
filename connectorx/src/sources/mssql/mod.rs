@@ -165,7 +165,7 @@ where
     fn result_rows(&mut self) -> Option<usize> {
         match &self.origin_query {
             Some(q) => {
-                let cxq = CXQuery::Wrapped(q.clone());
+                let cxq = CXQuery::Naked(q.clone());
                 let dialect = MsSqlDialect {};
                 let nrows = match get_limit_mssql(&cxq)? {
                     None => {
@@ -243,7 +243,7 @@ impl SourcePartition for MsSQLSourcePartition {
     type Error = MsSQLSourceError;
 
     #[throws(MsSQLSourceError)]
-    fn prepare(&mut self) {
+    fn result_rows(&mut self) {
         self.nrows = match get_limit_mssql(&self.query)? {
             None => {
                 let mut conn = self.rt.block_on(self.pool.get())?;

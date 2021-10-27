@@ -171,7 +171,7 @@ where
     fn result_rows(&mut self) -> Option<usize> {
         match &self.origin_query {
             Some(q) => {
-                let cxq = CXQuery::Wrapped(q.clone());
+                let cxq = CXQuery::Naked(q.clone());
                 let dialect = PostgreSqlDialect {};
                 let nrows = match get_limit(&cxq, &dialect)? {
                     None => {
@@ -257,7 +257,7 @@ where
     type Error = PostgresSourceError;
 
     #[throws(PostgresSourceError)]
-    fn prepare(&mut self) -> () {
+    fn result_rows(&mut self) -> () {
         let dialect = PostgreSqlDialect {};
         self.nrows = match get_limit(&self.query, &dialect)? {
             None => {
@@ -301,7 +301,7 @@ where
     type Error = PostgresSourceError;
 
     #[throws(PostgresSourceError)]
-    fn prepare(&mut self) {
+    fn result_rows(&mut self) {
         let row = self.conn.query_one(
             count_query(&self.query, &PostgreSqlDialect {})?.as_str(),
             &[],
@@ -342,7 +342,7 @@ where
     type Error = PostgresSourceError;
 
     #[throws(PostgresSourceError)]
-    fn prepare(&mut self) {
+    fn result_rows(&mut self) {
         let row = self.conn.query_one(
             count_query(&self.query, &PostgreSqlDialect {})?.as_str(),
             &[],
