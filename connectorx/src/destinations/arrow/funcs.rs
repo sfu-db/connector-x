@@ -30,7 +30,7 @@ where
 pub struct FFinishBuilder;
 
 impl ParameterizedFunc for FFinishBuilder {
-    type Function = fn(&mut Builder) -> Result<ArrayRef>;
+    type Function = fn(Builder) -> Result<ArrayRef>;
 }
 
 impl<T> ParameterizedOn<T> for FFinishBuilder
@@ -38,7 +38,7 @@ where
     T: ArrowAssoc,
 {
     fn parameterize() -> Self::Function {
-        fn imp<T>(builder: &mut Builder) -> Result<ArrayRef>
+        fn imp<T>(mut builder: Builder) -> Result<ArrayRef>
         where
             T: ArrowAssoc,
         {
