@@ -17,13 +17,12 @@ type OracleManager = OracleConnectionManager;
 type OracleConn = PooledConnection<OracleManager>;
 
 pub use self::errors::OracleSourceError;
+use crate::constants::DB_BUFFER_SIZE;
 use crate::sql::limit1_query_oracle;
 use r2d2_oracle::oracle::ResultSet;
 use sqlparser::dialect::Dialect;
 pub use typesystem::OracleTypeSystem;
 use urlencoding::decode;
-
-const BUF_SIZE: usize = 32;
 
 #[derive(Debug)]
 pub struct OracleDialect {}
@@ -251,7 +250,7 @@ impl<'a> OracleTextSourceParser<'a> {
     pub fn new(iter: ResultSet<'a, Row>, schema: &[OracleTypeSystem]) -> Self {
         Self {
             iter,
-            rowbuf: Vec::with_capacity(BUF_SIZE),
+            rowbuf: Vec::with_capacity(DB_BUFFER_SIZE),
             ncols: schema.len(),
             current_row: 0,
             current_col: 0,
@@ -276,7 +275,7 @@ impl<'a> PartitionParser<'a> for OracleTextSourceParser<'a> {
         if !self.rowbuf.is_empty() {
             self.rowbuf.drain(..);
         }
-        for _ in 0..BUF_SIZE {
+        for _ in 0..DB_BUFFER_SIZE {
             if let Some(item) = self.iter.next() {
                 self.rowbuf.push(item?);
             } else {
@@ -285,7 +284,7 @@ impl<'a> PartitionParser<'a> for OracleTextSourceParser<'a> {
         }
         self.current_row = 0;
         self.current_col = 0;
-        (self.rowbuf.len(), self.rowbuf.len() < BUF_SIZE)
+        (self.rowbuf.len(), self.rowbuf.len() < DB_BUFFER_SIZE)
     }
 }
 

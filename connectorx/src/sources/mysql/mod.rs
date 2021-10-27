@@ -4,6 +4,7 @@ mod errors;
 mod typesystem;
 
 pub use self::errors::MySQLSourceError;
+use crate::constants::DB_BUFFER_SIZE;
 use crate::{
     data_order::DataOrder,
     errors::ConnectorXError,
@@ -30,8 +31,6 @@ type MysqlConn = PooledConnection<MysqlManager>;
 
 pub enum BinaryProtocol {}
 pub enum TextProtocol {}
-
-const BUF_SIZE: usize = 32;
 
 pub struct MySQLSource<P> {
     pool: Pool<MysqlManager>,
@@ -289,7 +288,7 @@ impl<'a> MySQLBinarySourceParser<'a> {
     pub fn new(iter: QueryResult<'a, 'a, 'a, Binary>, schema: &[MySQLTypeSystem]) -> Self {
         Self {
             iter,
-            rowbuf: Vec::with_capacity(BUF_SIZE),
+            rowbuf: Vec::with_capacity(DB_BUFFER_SIZE),
             ncols: schema.len(),
             current_row: 0,
             current_col: 0,
@@ -315,7 +314,7 @@ impl<'a> PartitionParser<'a> for MySQLBinarySourceParser<'a> {
             self.rowbuf.drain(..);
         }
 
-        for _ in 0..BUF_SIZE {
+        for _ in 0..DB_BUFFER_SIZE {
             if let Some(item) = self.iter.next() {
                 self.rowbuf.push(item?);
             } else {
@@ -325,7 +324,7 @@ impl<'a> PartitionParser<'a> for MySQLBinarySourceParser<'a> {
         self.current_row = 0;
         self.current_col = 0;
 
-        (self.rowbuf.len(), self.rowbuf.len() < BUF_SIZE)
+        (self.rowbuf.len(), self.rowbuf.len() < DB_BUFFER_SIZE)
     }
 }
 
@@ -385,7 +384,7 @@ impl<'a> MySQLTextSourceParser<'a> {
     pub fn new(iter: QueryResult<'a, 'a, 'a, Text>, schema: &[MySQLTypeSystem]) -> Self {
         Self {
             iter,
-            rowbuf: Vec::with_capacity(BUF_SIZE),
+            rowbuf: Vec::with_capacity(DB_BUFFER_SIZE),
             ncols: schema.len(),
             current_row: 0,
             current_col: 0,
@@ -410,7 +409,7 @@ impl<'a> PartitionParser<'a> for MySQLTextSourceParser<'a> {
         if !self.rowbuf.is_empty() {
             self.rowbuf.drain(..);
         }
-        for _ in 0..BUF_SIZE {
+        for _ in 0..DB_BUFFER_SIZE {
             if let Some(item) = self.iter.next() {
                 self.rowbuf.push(item?);
             } else {
@@ -419,7 +418,7 @@ impl<'a> PartitionParser<'a> for MySQLTextSourceParser<'a> {
         }
         self.current_row = 0;
         self.current_col = 0;
-        (self.rowbuf.len(), self.rowbuf.len() < BUF_SIZE)
+        (self.rowbuf.len(), self.rowbuf.len() < DB_BUFFER_SIZE)
     }
 }
 

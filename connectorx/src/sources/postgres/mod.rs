@@ -8,6 +8,7 @@ pub use self::errors::PostgresSourceError;
 pub use connection::rewrite_tls_args;
 pub use typesystem::PostgresTypeSystem;
 
+use crate::constants::DB_BUFFER_SIZE;
 use crate::{
     data_order::DataOrder,
     errors::ConnectorXError,
@@ -45,8 +46,6 @@ pub enum CursorProtocol {}
 
 type PgManager<C> = PostgresConnectionManager<C>;
 type PgConn<C> = PooledConnection<PgManager<C>>;
-
-const BUF_SIZE: usize = 32;
 
 pub struct PostgresSource<P, C>
 where
@@ -378,7 +377,7 @@ impl<'a> PostgresBinarySourcePartitionParser<'a> {
     pub fn new(iter: BinaryCopyOutIter<'a>, schema: &[PostgresTypeSystem]) -> Self {
         Self {
             iter,
-            rowbuf: Vec::with_capacity(BUF_SIZE),
+            rowbuf: Vec::with_capacity(DB_BUFFER_SIZE),
             ncols: schema.len(),
             current_row: 0,
             current_col: 0,
@@ -403,7 +402,7 @@ impl<'a> PartitionParser<'a> for PostgresBinarySourcePartitionParser<'a> {
         if !self.rowbuf.is_empty() {
             self.rowbuf.drain(..);
         }
-        for _ in 0..BUF_SIZE {
+        for _ in 0..DB_BUFFER_SIZE {
             match self.iter.next()? {
                 Some(row) => {
                     self.rowbuf.push(row);
@@ -413,7 +412,7 @@ impl<'a> PartitionParser<'a> for PostgresBinarySourcePartitionParser<'a> {
         }
         self.current_row = 0;
         self.current_col = 0;
-        (self.rowbuf.len(), self.rowbuf.len() < BUF_SIZE)
+        (self.rowbuf.len(), self.rowbuf.len() < DB_BUFFER_SIZE)
     }
 }
 
@@ -487,7 +486,7 @@ impl<'a> PostgresCSVSourceParser<'a> {
     ) -> Self {
         Self {
             iter,
-            rowbuf: Vec::with_capacity(BUF_SIZE),
+            rowbuf: Vec::with_capacity(DB_BUFFER_SIZE),
             ncols: schema.len(),
             current_row: 0,
             current_col: 0,
@@ -512,7 +511,7 @@ impl<'a> PartitionParser<'a> for PostgresCSVSourceParser<'a> {
         if !self.rowbuf.is_empty() {
             self.rowbuf.drain(..);
         }
-        for _ in 0..BUF_SIZE {
+        for _ in 0..DB_BUFFER_SIZE {
             if let Some(row) = self.iter.next() {
                 self.rowbuf.push(row?);
             } else {
@@ -521,7 +520,7 @@ impl<'a> PartitionParser<'a> for PostgresCSVSourceParser<'a> {
         }
         self.current_row = 0;
         self.current_col = 0;
-        (self.rowbuf.len(), self.rowbuf.len() < BUF_SIZE)
+        (self.rowbuf.len(), self.rowbuf.len() < DB_BUFFER_SIZE)
     }
 }
 
@@ -855,7 +854,7 @@ impl<'a> PostgresRawSourceParser<'a> {
     pub fn new(iter: RowIter<'a>, schema: &[PostgresTypeSystem]) -> Self {
         Self {
             iter,
-            rowbuf: Vec::with_capacity(BUF_SIZE),
+            rowbuf: Vec::with_capacity(DB_BUFFER_SIZE),
             ncols: schema.len(),
             current_row: 0,
             current_col: 0,
@@ -880,7 +879,7 @@ impl<'a> PartitionParser<'a> for PostgresRawSourceParser<'a> {
         if !self.rowbuf.is_empty() {
             self.rowbuf.drain(..);
         }
-        for _ in 0..BUF_SIZE {
+        for _ in 0..DB_BUFFER_SIZE {
             if let Some(row) = self.iter.next()? {
                 self.rowbuf.push(row);
             } else {
@@ -889,7 +888,7 @@ impl<'a> PartitionParser<'a> for PostgresRawSourceParser<'a> {
         }
         self.current_row = 0;
         self.current_col = 0;
-        (self.rowbuf.len(), self.rowbuf.len() < BUF_SIZE)
+        (self.rowbuf.len(), self.rowbuf.len() < DB_BUFFER_SIZE)
     }
 }
 
