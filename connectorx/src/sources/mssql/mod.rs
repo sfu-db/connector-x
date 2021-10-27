@@ -5,6 +5,7 @@ mod typesystem;
 
 pub use self::errors::MsSQLSourceError;
 pub use self::typesystem::{FloatN, IntN, MsSQLTypeSystem};
+use crate::constants::DB_BUFFER_SIZE;
 use crate::{
     data_order::DataOrder,
     errors::ConnectorXError,
@@ -31,8 +32,6 @@ use urlencoding::decode;
 use uuid::Uuid;
 
 type Conn<'a> = PooledConnection<'a, ConnectionManager>;
-
-const BUF_SIZE: usize = 32;
 
 pub struct MsSQLSource {
     rt: Arc<Runtime>,
@@ -305,7 +304,7 @@ impl<'a> MsSQLSourceParser<'a> {
         Self {
             rt,
             iter,
-            rowbuf: Vec::with_capacity(BUF_SIZE),
+            rowbuf: Vec::with_capacity(DB_BUFFER_SIZE),
             ncols: schema.len(),
             current_row: 0,
             current_col: 0,
@@ -331,7 +330,7 @@ impl<'a> PartitionParser<'a> for MsSQLSourceParser<'a> {
             self.rowbuf.drain(..);
         }
 
-        for _ in 0..BUF_SIZE {
+        for _ in 0..DB_BUFFER_SIZE {
             if let Some(item) = self.rt.block_on(self.iter.next()) {
                 self.rowbuf.push(item?);
             } else {
@@ -340,7 +339,7 @@ impl<'a> PartitionParser<'a> for MsSQLSourceParser<'a> {
         }
         self.current_row = 0;
         self.current_col = 0;
-        (self.rowbuf.len(), self.rowbuf.len() < BUF_SIZE)
+        (self.rowbuf.len(), self.rowbuf.len() < DB_BUFFER_SIZE)
     }
 }
 
