@@ -115,7 +115,7 @@ impl ArrowDestination {
 
 pub struct ArrowPartitionWriter {
     schema: Vec<ArrowTypeSystem>,
-    builders: Builders,
+    builders: Option<Builders>,
     current_row: usize,
     current_col: usize,
     data: Arc<Mutex<Vec<RecordBatch>>>,
@@ -129,26 +129,36 @@ impl ArrowPartitionWriter {
         data: Arc<Mutex<Vec<RecordBatch>>>,
         arrow_schema: Arc<Schema>,
     ) -> Self {
-        let builders = schema
-            .iter()
-            .map(|dt| Ok(Realize::<FNewBuilder>::realize(*dt)?(RECORD_BATCH_SIZE)))
-            .collect::<Result<Vec<_>>>()?;
-
-        ArrowPartitionWriter {
+        let mut pw = ArrowPartitionWriter {
             schema,
-            builders,
+            builders: None,
             current_row: 0,
             current_col: 0,
             data,
             arrow_schema,
-        }
+        };
+        pw.allocate()?;
+        pw
+    }
+
+    #[throws(ArrowDestinationError)]
+    fn allocate(&mut self) {
+        let builders = self
+            .schema
+            .iter()
+            .map(|dt| Ok(Realize::<FNewBuilder>::realize(*dt)?(RECORD_BATCH_SIZE)))
+            .collect::<Result<Vec<_>>>()?;
+        self.builders.replace(builders);
     }
 
     #[throws(ArrowDestinationError)]
     fn flush(&mut self) {
-        let columns = self
+        let builders = self
             .builders
-            .iter_mut()
+            .take()
+            .unwrap_or_else(|| panic!("arrow builder is none when flush!"));
+        let columns = builders
+            .into_iter()
             .zip(self.schema.iter())
             .map(|(builder, &dt)| Realize::<FFinishBuilder>::realize(dt)?(builder))
             .collect::<std::result::Result<Vec<_>, crate::errors::ConnectorXError>>()?;
@@ -173,7 +183,7 @@ impl<'a> DestinationPartition<'a> for ArrowPartitionWriter {
 
     #[throws(ArrowDestinationError)]
     fn finalize(&mut self) {
-        if self.current_row > 0 {
+        if !self.builders.is_none() {
             self.flush()?;
         }
     }
@@ -200,18 +210,24 @@ where
         self.current_col = (self.current_col + 1) % self.ncols();
         self.schema[col].check::<T>()?;
 
-        <T as ArrowAssoc>::append(
-            self.builders[col]
-                .downcast_mut::<T::Builder>()
-                .ok_or_else(|| anyhow!("cannot cast arrow builder for append"))?,
-            value,
-        )?;
+        match &mut self.builders {
+            Some(builders) => {
+                <T as ArrowAssoc>::append(
+                    builders[col]
+                        .downcast_mut::<T::Builder>()
+                        .ok_or_else(|| anyhow!("cannot cast arrow builder for append"))?,
+                    value,
+                )?;
+            }
+            None => throw!(anyhow!("arrow arrays are empty!")),
+        }
 
         // flush if exceed batch_size
         if self.current_col == 0 {
             self.current_row += 1;
             if self.current_row >= RECORD_BATCH_SIZE {
                 self.flush()?;
+                self.allocate()?;
             }
         }
     }
