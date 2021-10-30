@@ -137,7 +137,7 @@ pub fn write_arrow<'a>(
             }
         }
         SourceType::SQLite => {
-            let source = SQLiteSource::new(&source_conn.conn[..], queries.len())?;
+            let source = SQLiteSource::new(&source_conn.conn.path(), queries.len())?;
             let dispatcher = Dispatcher::<_, _, SQLiteArrowTransport>::new(
                 source,
                 &mut destination,
