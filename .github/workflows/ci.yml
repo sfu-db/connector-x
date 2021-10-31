@@ -54,9 +54,6 @@ jobs:
           --health-retries 20
     steps:
       - uses: actions/checkout@v2
-      - uses: mstachniuk/ci-skip@v1
-        with:
-          fail-fast: true
 
       - name: Install tools
         run: |
@@ -64,6 +61,7 @@ jobs:
           apt-get install -y curl postgresql-client build-essential pkg-config libssl-dev git sqlite3 libsqlite3-dev mysql-client python3 python3-pip libicu66
           pip3 install mssql-cli
           ln -s /usr/bin/python3 /usr/bin/python
+          echo "Cache Version ${{ secrets.CACHE_VERSION }}"
         env:
           DEBIAN_FRONTEND: noninteractive
 
@@ -74,9 +72,19 @@ jobs:
           components: rustfmt
           default: true
 
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ secrets.CACHE_VERSION }}-${{ hashFiles('**/Cargo.lock') }}
+
       - name: Install other dependent tools
         run: |
-          cargo install just
+          [ ! -f ~/.cargo/bin/just ] && cargo install just
 
       - name: Seed the database
         run: just seed-db
@@ -178,7 +186,6 @@ jobs:
         env:
           DEBIAN_FRONTEND: noninteractive
 
-
       - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
@@ -186,10 +193,20 @@ jobs:
           components: rustfmt
           default: true
 
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-python-${{ secrets.CACHE_VERSION }}-${{ hashFiles('**/Cargo.lock') }}
+
       - name: Install other dependent tools
         run: |
           pip3 install poetry
-          cargo install just
+          [ ! -f ~/.cargo/bin/just ] && cargo install just
 
       - name: Seed the database
         run: just seed-db
@@ -212,6 +229,12 @@ jobs:
         with:
           command: clippy
           args: --features all --all
+
+      - name: Cache venv
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pypoetry/virtualenvs
+          key: ${{ runner.os }}-venv-${{ secrets.CACHE_VERSION }}-${{ hashFiles('connectorx-python/poetry.lock') }}
 
       - name: Install python dependencies
         run: just bootstrap-python

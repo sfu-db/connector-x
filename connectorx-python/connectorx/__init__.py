@@ -24,6 +24,7 @@ def read_sql(
     partition_on: Optional[str] = None,
     partition_range: Optional[Tuple[int, int]] = None,
     partition_num: Optional[int] = None,
+    index_col: Optional[str] = None,
 ):
     """
     Run the SQL query, download the data from database into a Pandas dataframe.
@@ -42,6 +43,8 @@ def read_sql(
       the value range of the partition column.
     partition_num
       how many partition to generate.
+    index_col
+      the index column to set, only applicable for return type "pandas", "modin", "dask".
 
     Examples
     ========
@@ -104,6 +107,10 @@ def read_sql(
             partition_query=partition_query,
         )
         df = reconstruct_pandas(result)
+
+        if index_col is not None:
+            df.set_index(index_col, inplace=True)
+            
         if return_type == "modin":
             try:
                 import modin.pandas as mpd
