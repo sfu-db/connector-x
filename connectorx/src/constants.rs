@@ -6,8 +6,8 @@ pub const RECORD_BATCH_SIZE: usize = 64000;
 
 #[cfg(any(
     feature = "src_postgres",
-    feature = "dst_mysql",
-    feature = "dst_oracle",
-    feature = "dst_mssql"
+    feature = "src_mysql",
+    feature = "src_oracle",
+    feature = "src_mssql"
 ))]
 pub const DB_BUFFER_SIZE: usize = 32;
