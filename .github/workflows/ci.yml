@@ -84,7 +84,7 @@ jobs:
 
       - name: Install other dependent tools
         run: |
-          if [ ! -f "~/.cargo/bin/just" ]; then curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to ~/.cargo/bin; fi
+          if [ ! -f "$HOME/.cargo/bin/just" ]; then curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to ~/.cargo/bin; fi
 
       - name: Seed the database
         run: just seed-db
@@ -206,7 +206,7 @@ jobs:
       - name: Install other dependent tools
         run: |
           pip3 install poetry
-          if [ ! -f "~/.cargo/bin/just" ]; then curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to ~/.cargo/bin; fi
+          if [ ! -f "$HOME/.cargo/bin/just" ]; then curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to ~/.cargo/bin; fi
 
       - name: Seed the database
         run: just seed-db
