@@ -22,13 +22,14 @@ if __name__ == "__main__":
     table = os.environ["TPCH_TABLE"]
     driver = args["--driver"]
     ret = args["--ret"]
-    query = f"SELECT * FROM {table}";
+    query = f"SELECT * FROM {table}"
 
     with Timer() as gtimer:
         with Timer() as timer:
             if driver == "MSSQL":
                 options = make_options(prefer_unicode=True)
-                connection = connect(dsn=driver, uid=os.environ["MSSQL_USER"], pwd=os.environ["MSSQL_PASSWORD"], turbodbc_options=options)
+                connection = connect(
+                    dsn=driver, uid=os.environ["MSSQL_USER"], pwd=os.environ["MSSQL_PASSWORD"], turbodbc_options=options)
             else:
                 connection = connect(dsn=driver)
             cursor = connection.cursor()
@@ -48,7 +49,8 @@ if __name__ == "__main__":
                 data = cursor.fetchallarrow()
             print(f"fetchallarrow: {timer.elapsed}")
             with Timer() as timer:
-                df = data.to_pandas()
+                # to be fair with other benchmarks, generate consolidate blocks and convert date
+                df = data.to_pandas(split_blocks=False, date_as_object=False)
             print(f"convert to pandas: {timer.elapsed}")
         else:
             assert ret == "arrow"
