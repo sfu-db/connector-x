@@ -928,35 +928,6 @@
 <span id="925">925</span>
 <span id="926">926</span>
 <span id="927">927</span>
-<span id="928">928</span>
-<span id="929">929</span>
-<span id="930">930</span>
-<span id="931">931</span>
-<span id="932">932</span>
-<span id="933">933</span>
-<span id="934">934</span>
-<span id="935">935</span>
-<span id="936">936</span>
-<span id="937">937</span>
-<span id="938">938</span>
-<span id="939">939</span>
-<span id="940">940</span>
-<span id="941">941</span>
-<span id="942">942</span>
-<span id="943">943</span>
-<span id="944">944</span>
-<span id="945">945</span>
-<span id="946">946</span>
-<span id="947">947</span>
-<span id="948">948</span>
-<span id="949">949</span>
-<span id="950">950</span>
-<span id="951">951</span>
-<span id="952">952</span>
-<span id="953">953</span>
-<span id="954">954</span>
-<span id="955">955</span>
-<span id="956">956</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Source implementation for Postgres database, including the TLS support (client only).</span>
 
@@ -972,14 +943,13 @@
     <span class="ident">data_order::DataOrder</span>,
     <span class="ident">errors::ConnectorXError</span>,
     <span class="ident">sources</span>::{<span class="ident">PartitionParser</span>, <span class="ident">Produce</span>, <span class="ident">Source</span>, <span class="ident">SourcePartition</span>},
-    <span class="ident">sql</span>::{<span class="ident">count_query</span>, <span class="ident">get_limit</span>, <span class="ident">limit1_query</span>, <span class="ident">CXQuery</span>},
+    <span class="ident">sql</span>::{<span class="ident">count_query</span>, <span class="ident">get_limit</span>, <span class="ident">CXQuery</span>},
 };
 <span class="kw">use</span> <span class="ident">anyhow::anyhow</span>;
 <span class="kw">use</span> <span class="ident">chrono</span>::{<span class="ident">DateTime</span>, <span class="ident">NaiveDate</span>, <span class="ident">NaiveDateTime</span>, <span class="ident">NaiveTime</span>, <span class="ident">Utc</span>};
 <span class="kw">use</span> <span class="ident">csv</span>::{<span class="ident">ReaderBuilder</span>, <span class="ident">StringRecord</span>, <span class="ident">StringRecordsIntoIter</span>};
 <span class="kw">use</span> <span class="ident">fehler</span>::{<span class="ident">throw</span>, <span class="ident">throws</span>};
 <span class="kw">use</span> <span class="ident">hex::decode</span>;
-<span class="kw">use</span> <span class="ident">log::debug</span>;
 <span class="kw">use</span> <span class="ident">postgres</span>::{
     <span class="ident">binary_copy</span>::{<span class="ident">BinaryCopyOutIter</span>, <span class="ident">BinaryCopyOutRow</span>},
     <span class="ident">fallible_iterator::FallibleIterator</span>,
@@ -991,7 +961,6 @@
 <span class="kw">use</span> <span class="ident">rust_decimal::Decimal</span>;
 <span class="kw">use</span> <span class="ident">serde_json</span>::{<span class="ident">from_str</span>, <span class="ident">Value</span>};
 <span class="kw">use</span> <span class="ident">sqlparser::dialect::PostgreSqlDialect</span>;
-<span class="kw">use</span> <span class="ident">std::io::BufRead</span>;
 <span class="kw">use</span> <span class="ident">std::marker::PhantomData</span>;
 <span class="kw">use</span> <span class="ident">uuid::Uuid</span>;
 
@@ -1080,50 +1049,23 @@
         <span class="macro">assert!</span>(<span class="op">!</span><span class="self">self</span>.<span class="ident">queries</span>.<span class="ident">is_empty</span>());
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">conn</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">pool</span>.<span class="ident">get</span>()<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">first_query</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">queries</span>[<span class="number">0</span>];
 
-        <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">query</span>) <span class="kw">in</span> <span class="self">self</span>.<span class="ident">queries</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
-            <span class="comment">// assuming all the partition queries yield same schema</span>
-            <span class="kw">match</span> <span class="ident">conn</span>.<span class="ident">query_opt</span>(<span class="ident">limit1_query</span>(<span class="ident">query</span>, <span class="kw-2">&amp;</span><span class="ident">PostgreSqlDialect</span> {})<span class="question-mark">?</span>.<span class="ident">as_str</span>(), <span class="kw-2">&amp;</span>[]) {
-                <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">row</span>)) <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">let</span> (<span class="ident">names</span>, <span class="ident">types</span>) <span class="op">=</span> <span class="ident">row</span>
-                        .<span class="ident">columns</span>()
-                        .<span class="ident">iter</span>()
-                        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">col</span><span class="op">|</span> {
-                            (
-                                <span class="ident">col</span>.<span class="ident">name</span>().<span class="ident">to_string</span>(),
-                                <span class="ident">PostgresTypeSystem::from</span>(<span class="ident">col</span>.<span class="ident">type_</span>()),
-                            )
-                        })
-                        .<span class="ident">unzip</span>();
+        <span class="kw">let</span> <span class="ident">stmt</span> <span class="op">=</span> <span class="ident">conn</span>.<span class="ident">prepare</span>(<span class="ident">first_query</span>.<span class="ident">as_str</span>())<span class="question-mark">?</span>;
 
-                    <span class="self">self</span>.<span class="ident">names</span> <span class="op">=</span> <span class="ident">names</span>;
-                    <span class="self">self</span>.<span class="ident">schema</span> <span class="op">=</span> <span class="ident">types</span>;
+        <span class="kw">let</span> (<span class="ident">names</span>, <span class="ident">types</span>) <span class="op">=</span> <span class="ident">stmt</span>
+            .<span class="ident">columns</span>()
+            .<span class="ident">iter</span>()
+            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">col</span><span class="op">|</span> {
+                (
+                    <span class="ident">col</span>.<span class="ident">name</span>().<span class="ident">to_string</span>(),
+                    <span class="ident">PostgresTypeSystem::from</span>(<span class="ident">col</span>.<span class="ident">type_</span>()),
+                )
+            })
+            .<span class="ident">unzip</span>();
 
-                    <span class="kw">return</span>;
-                }
-                <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> {}
-                <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="kw">if</span> <span class="ident">i</span> <span class="op">=</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">queries</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="comment">// tried the last query but still get an error</span>
-                    <span class="macro">debug!</span>(<span class="string">&quot;cannot get metadata for &#39;{}&#39;: {}&quot;</span>, <span class="ident">query</span>, <span class="ident">e</span>);
-                    <span class="macro">throw!</span>(<span class="ident">e</span>);
-                }
-                <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {}
-            }
-        }
-
-        <span class="comment">// tried all queries but all get empty result set</span>
-
-        <span class="comment">// try to use COPY command get the column headers</span>
-        <span class="kw">let</span> <span class="ident">copy_query</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;COPY ({}) TO STDOUT WITH CSV HEADER&quot;</span>, <span class="self">self</span>.<span class="ident">queries</span>[<span class="number">0</span>]);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">reader</span> <span class="op">=</span> <span class="ident">conn</span>.<span class="ident">copy_out</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">copy_query</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">buf</span> <span class="op">=</span> <span class="ident">String::new</span>();
-        <span class="ident">reader</span>.<span class="ident">read_line</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">buf</span>)<span class="question-mark">?</span>;
-        <span class="self">self</span>.<span class="ident">names</span> <span class="op">=</span> <span class="ident">buf</span>[<span class="number">0</span>..<span class="ident">buf</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="number">1</span>] <span class="comment">// remove last &#39;\n&#39;</span>
-            .<span class="ident">split</span>(<span class="string">&#39;,&#39;</span>)
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">s</span><span class="op">|</span> <span class="ident">s</span>.<span class="ident">to_string</span>())
-            .<span class="ident">collect</span>();
-        <span class="comment">// set all columns as string (align with pandas)</span>
-        <span class="self">self</span>.<span class="ident">schema</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="ident">PostgresTypeSystem::Text</span>(<span class="bool-val">false</span>); <span class="self">self</span>.<span class="ident">names</span>.<span class="ident">len</span>()];
+        <span class="self">self</span>.<span class="ident">names</span> <span class="op">=</span> <span class="ident">names</span>;
+        <span class="self">self</span>.<span class="ident">schema</span> <span class="op">=</span> <span class="ident">types</span>;
     }
 
     <span class="kw">fn</span> <span class="ident">names</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
