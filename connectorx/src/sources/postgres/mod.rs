@@ -202,6 +202,30 @@ where
             _protocol: PhantomData,
         }
     }
+
+    #[throws(PostgresSourceError)]
+    pub fn get_total_rows(&mut self) -> usize {
+        let dialect = PostgreSqlDialect {};
+        let row = self
+            .conn
+            .query_one(count_query(&self.query, &dialect)?.as_str(), &[])?;
+
+        let num_rows = match get_limit(&self.query, &dialect)? {
+            None => {
+                let col_type = PostgresTypeSystem::from(row.columns()[0].type_());
+                match col_type {
+                    PostgresTypeSystem::Int2(_) => convert_row::<i16>(&row) as usize,
+                    PostgresTypeSystem::Int4(_) => convert_row::<i32>(&row) as usize,
+                    PostgresTypeSystem::Int8(_) => convert_row::<i64>(&row) as usize,
+                    _ => throw!(anyhow!(
+                        "The result of the count query was not an int, aborting."
+                    )),
+                }
+            }
+            Some(n) => n,
+        };
+        num_rows
+    }
 }
 
 impl<C> SourcePartition for PostgresSourcePartition<BinaryProtocol, C>
@@ -217,26 +241,7 @@ where
 
     #[throws(PostgresSourceError)]
     fn prepare(&mut self) {
-        let dialect = PostgreSqlDialect {};
-        let row = self.conn.query_one(
-            count_query(&self.query, &dialect)?.as_str(),
-            &[],
-        )?;
-
-        self.nrows = match get_limit(&self.query, &dialect)? {
-            None => {
-                let col_type = PostgresTypeSystem::from(row.columns()[0].type_());
-                match col_type {
-                    PostgresTypeSystem::Int2(_) => convert_row::<i16>(&row) as usize,
-                    PostgresTypeSystem::Int4(_) => convert_row::<i32>(&row) as usize,
-                    PostgresTypeSystem::Int8(_) => convert_row::<i64>(&row) as usize,
-                    _ => throw!(anyhow!(
-                        "The result of the count query was not an int, aborting."
-                    )),
-                }
-            }
-            Some(n) => n,
-        };
+        self.nrows = self.get_total_rows()?;
     }
 
     #[throws(PostgresSourceError)]
@@ -271,26 +276,7 @@ where
 
     #[throws(PostgresSourceError)]
     fn prepare(&mut self) {
-        let dialect = PostgreSqlDialect {};
-        let row = self.conn.query_one(
-            count_query(&self.query, &dialect)?.as_str(),
-            &[],
-        )?;
-
-        self.nrows = match get_limit(&self.query, &dialect)? {
-            None => {
-                let col_type = PostgresTypeSystem::from(row.columns()[0].type_());
-                match col_type {
-                    PostgresTypeSystem::Int2(_) => convert_row::<i16>(&row) as usize,
-                    PostgresTypeSystem::Int4(_) => convert_row::<i32>(&row) as usize,
-                    PostgresTypeSystem::Int8(_) => convert_row::<i64>(&row) as usize,
-                    _ => throw!(anyhow!(
-                        "The result of the count query was not an int, aborting."
-                    )),
-                }
-            }
-            Some(n) => n,
-        };
+        self.nrows = self.get_total_rows()?;
     }
 
     #[throws(PostgresSourceError)]
@@ -333,26 +319,7 @@ where
 
     #[throws(PostgresSourceError)]
     fn prepare(&mut self) {
-        let dialect = PostgreSqlDialect {};
-        let row = self.conn.query_one(
-            count_query(&self.query, &dialect)?.as_str(),
-            &[],
-        )?;
-
-        self.nrows = match get_limit(&self.query, &dialect)? {
-            None => {
-                let col_type = PostgresTypeSystem::from(row.columns()[0].type_());
-                match col_type {
-                    PostgresTypeSystem::Int2(_) => convert_row::<i16>(&row) as usize,
-                    PostgresTypeSystem::Int4(_) => convert_row::<i32>(&row) as usize,
-                    PostgresTypeSystem::Int8(_) => convert_row::<i64>(&row) as usize,
-                    _ => throw!(anyhow!(
-                        "The result of the count query was not an int, aborting."
-                    )),
-                }
-            }
-            Some(n) => n,
-        };
+        self.nrows = self.get_total_rows()?;
     }
 
     #[throws(PostgresSourceError)]
