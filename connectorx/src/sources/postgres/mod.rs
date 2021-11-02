@@ -258,7 +258,7 @@ where
     type TypeSystem = PostgresTypeSystem;
     type Parser<'a> = PostgresCSVSourceParser<'a>;
     type Error = PostgresSourceError;
-    
+
     #[throws(PostgresSourceError)]
     fn prepare(&mut self) {
         let row = self.conn.query_one(
@@ -302,8 +302,7 @@ where
 // take a row and unwrap the interior field from column 0
 fn convert_row<'b, R: TryFrom<usize> + postgres::types::FromSql<'b> + Clone>(row: &'b Row) -> R {
     let nrows: Option<R> = row.get(0);
-    nrows
-        .expect("Could not parse int result from count_query")
+    nrows.expect("Could not parse int result from count_query")
 }
 
 impl<C> SourcePartition for PostgresSourcePartition<CursorProtocol, C>
