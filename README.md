@@ -200,7 +200,7 @@ Checkout our [discussion][discussion_page] to participate in deciding our next p
 https://sfu-db.github.io/connector-x/dev/bench/
 
 # Developer's Guide
-Please see [Developer's Guide](https://github.com/sfu-db/connector-x/blob/main/Contribute.md) for information about developing ConnectorX.
+Please see [Developer's Guide](https://github.com/sfu-db/connector-x/blob/main/CONTRIBUTING.md) for information about developing ConnectorX.
 
 # Supports
 
