@@ -30,6 +30,7 @@ use r2d2_postgres::PostgresConnectionManager;
 use rust_decimal::Decimal;
 use serde_json::{from_str, Value};
 use sqlparser::dialect::PostgreSqlDialect;
+use std::convert::TryFrom;
 use std::marker::PhantomData;
 use uuid::Uuid;
 
@@ -201,6 +202,30 @@ where
             _protocol: PhantomData,
         }
     }
+
+    #[throws(PostgresSourceError)]
+    pub fn get_total_rows(&mut self) -> usize {
+        let dialect = PostgreSqlDialect {};
+        let row = self
+            .conn
+            .query_one(count_query(&self.query, &dialect)?.as_str(), &[])?;
+
+        let num_rows = match get_limit(&self.query, &dialect)? {
+            None => {
+                let col_type = PostgresTypeSystem::from(row.columns()[0].type_());
+                match col_type {
+                    PostgresTypeSystem::Int2(_) => convert_row::<i16>(&row) as usize,
+                    PostgresTypeSystem::Int4(_) => convert_row::<i32>(&row) as usize,
+                    PostgresTypeSystem::Int8(_) => convert_row::<i64>(&row) as usize,
+                    _ => throw!(anyhow!(
+                        "The result of the count query was not an int, aborting."
+                    )),
+                }
+            }
+            Some(n) => n,
+        };
+        num_rows
+    }
 }
 
 impl<C> SourcePartition for PostgresSourcePartition<BinaryProtocol, C>
@@ -215,17 +240,8 @@ where
     type Error = PostgresSourceError;
 
     #[throws(PostgresSourceError)]
-    fn prepare(&mut self) -> () {
-        let dialect = PostgreSqlDialect {};
-        self.nrows = match get_limit(&self.query, &dialect)? {
-            None => {
-                let row = self
-                    .conn
-                    .query_one(count_query(&self.query, &dialect)?.as_str(), &[])?;
-                row.get::<_, i64>(0) as usize
-            }
-            Some(n) => n,
-        };
+    fn prepare(&mut self) {
+        self.nrows = self.get_total_rows()?;
     }
 
     #[throws(PostgresSourceError)]
@@ -260,11 +276,7 @@ where
 
     #[throws(PostgresSourceError)]
     fn prepare(&mut self) {
-        let row = self.conn.query_one(
-            count_query(&self.query, &PostgreSqlDialect {})?.as_str(),
-            &[],
-        )?;
-        self.nrows = row.get::<_, i64>(0) as usize;
+        self.nrows = self.get_total_rows()?;
     }
 
     #[throws(PostgresSourceError)]
@@ -288,6 +300,12 @@ where
     }
 }
 
+// take a row and unwrap the interior field from column 0
+fn convert_row<'b, R: TryFrom<usize> + postgres::types::FromSql<'b> + Clone>(row: &'b Row) -> R {
+    let nrows: Option<R> = row.get(0);
+    nrows.expect("Could not parse int result from count_query")
+}
+
 impl<C> SourcePartition for PostgresSourcePartition<CursorProtocol, C>
 where
     C: MakeTlsConnect<Socket> + Clone + 'static + Sync + Send,
@@ -301,11 +319,7 @@ where
 
     #[throws(PostgresSourceError)]
     fn prepare(&mut self) {
-        let row = self.conn.query_one(
-            count_query(&self.query, &PostgreSqlDialect {})?.as_str(),
-            &[],
-        )?;
-        self.nrows = row.get::<_, i64>(0) as usize;
+        self.nrows = self.get_total_rows()?;
     }
 
     #[throws(PostgresSourceError)]
