@@ -216,14 +216,24 @@ where
     type Error = PostgresSourceError;
 
     #[throws(PostgresSourceError)]
-    fn prepare(&mut self) -> () {
+    fn prepare(&mut self) {
         let dialect = PostgreSqlDialect {};
+        let row = self.conn.query_one(
+            count_query(&self.query, &dialect)?.as_str(),
+            &[],
+        )?;
+
         self.nrows = match get_limit(&self.query, &dialect)? {
             None => {
-                let row = self
-                    .conn
-                    .query_one(count_query(&self.query, &dialect)?.as_str(), &[])?;
-                row.get::<_, i64>(0) as usize
+                let col_type = PostgresTypeSystem::from(row.columns()[0].type_());
+                match col_type {
+                    PostgresTypeSystem::Int2(_) => convert_row::<i16>(&row) as usize,
+                    PostgresTypeSystem::Int4(_) => convert_row::<i32>(&row) as usize,
+                    PostgresTypeSystem::Int8(_) => convert_row::<i64>(&row) as usize,
+                    _ => throw!(anyhow!(
+                        "The result of the count query was not an int, aborting."
+                    )),
+                }
             }
             Some(n) => n,
         };
@@ -261,21 +271,26 @@ where
 
     #[throws(PostgresSourceError)]
     fn prepare(&mut self) {
+        let dialect = PostgreSqlDialect {};
         let row = self.conn.query_one(
-            count_query(&self.query, &PostgreSqlDialect {})?.as_str(),
+            count_query(&self.query, &dialect)?.as_str(),
             &[],
         )?;
-        let col_type = PostgresTypeSystem::from(row.columns()[0].type_());
-        let _nrows = match col_type {
-            PostgresTypeSystem::Int2(_) => convert_row::<i16>(&row) as usize,
-            PostgresTypeSystem::Int4(_) => convert_row::<i32>(&row) as usize,
-            PostgresTypeSystem::Int8(_) => convert_row::<i64>(&row) as usize,
-            _ => throw!(anyhow!(
-                "The result of the count query was not an int, aborting."
-            )),
-        };
 
-        self.nrows = _nrows
+        self.nrows = match get_limit(&self.query, &dialect)? {
+            None => {
+                let col_type = PostgresTypeSystem::from(row.columns()[0].type_());
+                match col_type {
+                    PostgresTypeSystem::Int2(_) => convert_row::<i16>(&row) as usize,
+                    PostgresTypeSystem::Int4(_) => convert_row::<i32>(&row) as usize,
+                    PostgresTypeSystem::Int8(_) => convert_row::<i64>(&row) as usize,
+                    _ => throw!(anyhow!(
+                        "The result of the count query was not an int, aborting."
+                    )),
+                }
+            }
+            Some(n) => n,
+        };
     }
 
     #[throws(PostgresSourceError)]
@@ -318,21 +333,26 @@ where
 
     #[throws(PostgresSourceError)]
     fn prepare(&mut self) {
+        let dialect = PostgreSqlDialect {};
         let row = self.conn.query_one(
-            count_query(&self.query, &PostgreSqlDialect {})?.as_str(),
+            count_query(&self.query, &dialect)?.as_str(),
             &[],
         )?;
-        let col_type = PostgresTypeSystem::from(row.columns()[0].type_());
-        let _nrows = match col_type {
-            PostgresTypeSystem::Int2(_) => convert_row::<i16>(&row) as usize,
-            PostgresTypeSystem::Int4(_) => convert_row::<i32>(&row) as usize,
-            PostgresTypeSystem::Int8(_) => convert_row::<i64>(&row) as usize,
-            _ => throw!(anyhow!(
-                "The result of the count query was not an int, aborting."
-            )),
-        };
 
-        self.nrows = _nrows
+        self.nrows = match get_limit(&self.query, &dialect)? {
+            None => {
+                let col_type = PostgresTypeSystem::from(row.columns()[0].type_());
+                match col_type {
+                    PostgresTypeSystem::Int2(_) => convert_row::<i16>(&row) as usize,
+                    PostgresTypeSystem::Int4(_) => convert_row::<i32>(&row) as usize,
+                    PostgresTypeSystem::Int8(_) => convert_row::<i64>(&row) as usize,
+                    _ => throw!(anyhow!(
+                        "The result of the count query was not an int, aborting."
+                    )),
+                }
+            }
+            Some(n) => n,
+        };
     }
 
     #[throws(PostgresSourceError)]
