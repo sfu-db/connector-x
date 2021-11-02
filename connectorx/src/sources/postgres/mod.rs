@@ -30,6 +30,7 @@ use r2d2_postgres::PostgresConnectionManager;
 use rust_decimal::Decimal;
 use serde_json::{from_str, Value};
 use sqlparser::dialect::PostgreSqlDialect;
+use std::convert::TryFrom;
 use std::marker::PhantomData;
 use uuid::Uuid;
 
@@ -257,14 +258,24 @@ where
     type TypeSystem = PostgresTypeSystem;
     type Parser<'a> = PostgresCSVSourceParser<'a>;
     type Error = PostgresSourceError;
-
+    
     #[throws(PostgresSourceError)]
     fn prepare(&mut self) {
         let row = self.conn.query_one(
             count_query(&self.query, &PostgreSqlDialect {})?.as_str(),
             &[],
         )?;
-        self.nrows = row.get::<_, i64>(0) as usize;
+        let col_type = PostgresTypeSystem::from(row.columns()[0].type_());
+        let _nrows = match col_type {
+            PostgresTypeSystem::Int2(_) => convert_row::<i16>(&row) as usize,
+            PostgresTypeSystem::Int4(_) => convert_row::<i32>(&row) as usize,
+            PostgresTypeSystem::Int8(_) => convert_row::<i64>(&row) as usize,
+            _ => throw!(anyhow!(
+                "The result of the count query was not an int, aborting."
+            )),
+        };
+
+        self.nrows = _nrows
     }
 
     #[throws(PostgresSourceError)]
@@ -288,6 +299,13 @@ where
     }
 }
 
+// take a row and unwrap the interior field from column 0
+fn convert_row<'b, R: TryFrom<usize> + postgres::types::FromSql<'b> + Clone>(row: &'b Row) -> R {
+    let nrows: Option<R> = row.get(0);
+    nrows
+        .expect("Could not parse int result from count_query")
+}
+
 impl<C> SourcePartition for PostgresSourcePartition<CursorProtocol, C>
 where
     C: MakeTlsConnect<Socket> + Clone + 'static + Sync + Send,
@@ -305,7 +323,17 @@ where
             count_query(&self.query, &PostgreSqlDialect {})?.as_str(),
             &[],
         )?;
-        self.nrows = row.get::<_, i64>(0) as usize;
+        let col_type = PostgresTypeSystem::from(row.columns()[0].type_());
+        let _nrows = match col_type {
+            PostgresTypeSystem::Int2(_) => convert_row::<i16>(&row) as usize,
+            PostgresTypeSystem::Int4(_) => convert_row::<i32>(&row) as usize,
+            PostgresTypeSystem::Int8(_) => convert_row::<i64>(&row) as usize,
+            _ => throw!(anyhow!(
+                "The result of the count query was not an int, aborting."
+            )),
+        };
+
+        self.nrows = _nrows
     }
 
     #[throws(PostgresSourceError)]
