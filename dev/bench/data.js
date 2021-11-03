@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1635903992190,
+  "lastUpdate": 1635905232284,
   "repoUrl": "https://github.com/sfu-db/connector-x",
   "entries": {
     "ConnectorX TPC-H Scale@1 Benchmarks": [
@@ -3648,6 +3648,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 3.3245324711602247",
             "extra": "mean: 15.208458002097904 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "wangxiaoying0369@gmail.com",
+            "name": "Xiaoying Wang",
+            "username": "wangxiaoying"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "91c976db01a9767e5f2c15815c54f9cf6f4011ba",
+          "message": "Merge pull request #153 from wseaton/postgres-int-fix\n\nFix for #149",
+          "timestamp": "2021-11-02T16:13:56-07:00",
+          "tree_id": "944a99a99e2afde72208e89f6a1c1a78a5ee1652",
+          "url": "https://github.com/sfu-db/connector-x/commit/91c976db01a9767e5f2c15815c54f9cf6f4011ba"
+        },
+        "date": 1635905231162,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_mysql",
+            "value": 0.0718627286239043,
+            "unit": "iter/sec",
+            "range": "stddev: 0.3161890403486802",
+            "extra": "mean: 13.915419288258999 sec\nrounds: 5"
+          },
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_postgres",
+            "value": 0.0644944659070107,
+            "unit": "iter/sec",
+            "range": "stddev: 4.002856830221902",
+            "extra": "mean: 15.505206314008683 sec\nrounds: 5"
           }
         ]
       }
