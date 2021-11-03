@@ -1,6 +1,5 @@
-use std::any::Any;
-
 use crate::errors::ConnectorXError;
+#[cfg(feature = "src_oracle")]
 use crate::sources::oracle::OracleDialect;
 use anyhow::anyhow;
 use fehler::{throw, throws};
@@ -11,6 +10,8 @@ use sqlparser::ast::{
 };
 use sqlparser::dialect::{Dialect, MsSqlDialect};
 use sqlparser::parser::Parser;
+#[cfg(feature = "src_oracle")]
+use std::any::Any;
 
 #[derive(Debug, Clone)]
 pub enum CXQuery<Q = String> {
@@ -224,6 +225,7 @@ impl QueryExt for Query {
 pub fn count_query<T: Dialect>(sql: &CXQuery<String>, dialect: &T) -> CXQuery<String> {
     trace!("Incoming query: {}", sql);
 
+    #[allow(unused_mut)]
     let mut sql = match sql.map(|sql| Parser::parse_sql(dialect, sql)).result() {
         Ok(ast) => {
             let projection = vec![SelectItem::UnnamedExpr(Expr::Function(Function {
@@ -276,6 +278,7 @@ pub fn count_query<T: Dialect>(sql: &CXQuery<String>, dialect: &T) -> CXQuery<St
 
     // HACK: Some dialect (e.g. Oracle) does not support "AS" for alias
     // Hard code "(subquery) alias" instead of output "(subquery) AS alias"
+    #[cfg(feature = "src_oracle")]
     if dialect.type_id() == (OracleDialect {}.type_id()) {
         sql = sql.replace(" AS", "");
     }
@@ -314,6 +317,7 @@ pub fn limit1_query<T: Dialect>(sql: &CXQuery<String>, dialect: &T) -> CXQuery<S
 }
 
 #[throws(ConnectorXError)]
+#[cfg(feature = "src_oracle")]
 pub fn limit1_query_oracle(sql: &CXQuery<String>) -> CXQuery<String> {
     trace!("Incoming oracle query: {}", sql);
 
@@ -384,6 +388,7 @@ pub fn single_col_partition_query<T: Dialect>(
     trace!("Incoming query: {}", query);
     const PART_TMP_TAB_NAME: &str = "CXTMPTAB_PART";
 
+    #[allow(unused_mut)]
     let mut sql = match Parser::parse_sql(dialect, query) {
         Ok(mut ast) => {
             if ast.len() != 1 {
@@ -458,6 +463,7 @@ pub fn single_col_partition_query<T: Dialect>(
 
     // HACK: Some dialect (e.g. Oracle) does not support "AS" for alias
     // Hard code "(subquery) alias" instead of output "(subquery) AS alias"
+    #[cfg(feature = "src_oracle")]
     if dialect.type_id() == (OracleDialect {}.type_id()) {
         sql = sql.replace(" AS", "")
     }
@@ -471,6 +477,7 @@ pub fn get_partition_range_query<T: Dialect>(query: &str, col: &str, dialect: &T
     trace!("Incoming query: {}", query);
     const RANGE_TMP_TAB_NAME: &str = "CXTMPTAB_RANGE";
 
+    #[allow(unused_mut)]
     let mut sql = match Parser::parse_sql(dialect, query) {
         Ok(mut ast) => {
             if ast.len() != 1 {
@@ -546,6 +553,7 @@ pub fn get_partition_range_query<T: Dialect>(query: &str, col: &str, dialect: &T
 
     // HACK: Some dialect (e.g. Oracle) does not support "AS" for alias
     // Hard code "(subquery) alias" instead of output "(subquery) AS alias"
+    #[cfg(feature = "src_oracle")]
     if dialect.type_id() == (OracleDialect {}.type_id()) {
         sql = sql.replace(" AS", "")
     }

@@ -8,12 +8,11 @@ use crate::{
     data_order::DataOrder,
     errors::ConnectorXError,
     sources::{PartitionParser, Produce, Source, SourcePartition},
-    sql::{count_query, get_limit, limit1_query, CXQuery},
+    sql::{count_query, get_limit, CXQuery},
 };
 use anyhow::anyhow;
 use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
 use fehler::{throw, throws};
-use log::debug;
 use r2d2::{Pool, PooledConnection};
 use r2d2_mysql::{
     mysql::{prelude::Queryable, Binary, Opts, OptsBuilder, QueryResult, Row, Text},
@@ -90,45 +89,16 @@ where
         assert!(!self.queries.is_empty());
 
         let mut conn = self.pool.get()?;
+        let first_query = &self.queries[0];
 
-        for (i, query) in self.queries.iter().enumerate() {
-            // assuming all the partition queries yield same schema
-            match conn.query_first::<Row, _>(limit1_query(query, &MySqlDialect {})?.as_str()) {
-                Ok(Some(row)) => {
-                    let (names, types) = row
-                        .columns_ref()
-                        .iter()
-                        .map(|col| {
-                            (
-                                col.name_str().to_string(),
-                                MySQLTypeSystem::from(&col.column_type()),
-                            )
-                        })
-                        .unzip();
-                    self.names = names;
-                    self.schema = types;
-                    return;
-                }
-                Ok(None) => {}
-                Err(e) if i == self.queries.len() - 1 => {
-                    // tried the last query but still get an error
-                    debug!("cannot get metadata for '{}', try next query: {}", query, e);
-                    throw!(e)
-                }
-                Err(_) => {}
-            }
-        }
-
-        // tried all queries but all get empty result set
-        let iter = conn.query_iter(self.queries[0].as_str())?;
-        let (names, types) = iter
+        let stmt = conn.prep(&*first_query)?;
+        let (names, types) = stmt
             .columns()
-            .as_ref()
             .iter()
             .map(|col| {
                 (
                     col.name_str().to_string(),
-                    MySQLTypeSystem::VarChar(false), // set all columns as string (align with pandas)
+                    MySQLTypeSystem::from(&col.column_type()),
                 )
             })
             .unzip();
