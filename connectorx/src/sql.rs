@@ -1,6 +1,3 @@
-#[cfg(feature = "src_oracle")]
-use std::any::Any;
-
 use crate::errors::ConnectorXError;
 #[cfg(feature = "src_oracle")]
 use crate::sources::oracle::OracleDialect;
@@ -13,6 +10,8 @@ use sqlparser::ast::{
 };
 use sqlparser::dialect::{Dialect, MsSqlDialect};
 use sqlparser::parser::Parser;
+#[cfg(feature = "src_oracle")]
+use std::any::Any;
 
 #[derive(Debug, Clone)]
 pub enum CXQuery<Q = String> {
@@ -277,9 +276,9 @@ pub fn count_query<T: Dialect>(sql: &CXQuery<String>, dialect: &T) -> CXQuery<St
         }
     };
 
-    #[cfg(feature = "src_oracle")]
     // HACK: Some dialect (e.g. Oracle) does not support "AS" for alias
     // Hard code "(subquery) alias" instead of output "(subquery) AS alias"
+    #[cfg(feature = "src_oracle")]
     if dialect.type_id() == (OracleDialect {}.type_id()) {
         sql = sql.replace(" AS", "");
     }
@@ -317,8 +316,8 @@ pub fn limit1_query<T: Dialect>(sql: &CXQuery<String>, dialect: &T) -> CXQuery<S
     CXQuery::Wrapped(sql)
 }
 
-#[cfg(feature = "src_oracle")]
 #[throws(ConnectorXError)]
+#[cfg(feature = "src_oracle")]
 pub fn limit1_query_oracle(sql: &CXQuery<String>) -> CXQuery<String> {
     trace!("Incoming oracle query: {}", sql);
 
@@ -462,9 +461,9 @@ pub fn single_col_partition_query<T: Dialect>(
         }
     };
 
-    #[cfg(feature = "src_oracle")]
     // HACK: Some dialect (e.g. Oracle) does not support "AS" for alias
     // Hard code "(subquery) alias" instead of output "(subquery) AS alias"
+    #[cfg(feature = "src_oracle")]
     if dialect.type_id() == (OracleDialect {}.type_id()) {
         sql = sql.replace(" AS", "")
     }
@@ -552,9 +551,9 @@ pub fn get_partition_range_query<T: Dialect>(query: &str, col: &str, dialect: &T
         }
     };
 
-    #[cfg(feature = "src_oracle")]
     // HACK: Some dialect (e.g. Oracle) does not support "AS" for alias
     // Hard code "(subquery) alias" instead of output "(subquery) AS alias"
+    #[cfg(feature = "src_oracle")]
     if dialect.type_id() == (OracleDialect {}.type_id()) {
         sql = sql.replace(" AS", "")
     }

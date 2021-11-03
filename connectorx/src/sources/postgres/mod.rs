@@ -13,13 +13,13 @@ use crate::{
     data_order::DataOrder,
     errors::ConnectorXError,
     sources::{PartitionParser, Produce, Source, SourcePartition},
-    sql::{count_query, get_limit, limit1_query, CXQuery},
+    sql::{count_query, get_limit, CXQuery},
 };
+use anyhow::anyhow;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
 use csv::{ReaderBuilder, StringRecord, StringRecordsIntoIter};
 use fehler::{throw, throws};
 use hex::decode;
-use log::debug;
 use postgres::{
     binary_copy::{BinaryCopyOutIter, BinaryCopyOutRow},
     fallible_iterator::FallibleIterator,
@@ -31,7 +31,7 @@ use r2d2_postgres::PostgresConnectionManager;
 use rust_decimal::Decimal;
 use serde_json::{from_str, Value};
 use sqlparser::dialect::PostgreSqlDialect;
-use std::io::BufRead;
+use std::convert::TryFrom;
 use std::marker::PhantomData;
 use uuid::Uuid;
 
@@ -46,6 +46,40 @@ pub enum CursorProtocol {}
 
 type PgManager<C> = PostgresConnectionManager<C>;
 type PgConn<C> = PooledConnection<PgManager<C>>;
+
+// take a row and unwrap the interior field from column 0
+fn convert_row<'b, R: TryFrom<usize> + postgres::types::FromSql<'b> + Clone>(row: &'b Row) -> R {
+    let nrows: Option<R> = row.get(0);
+    nrows.expect("Could not parse int result from count_query")
+}
+
+#[throws(PostgresSourceError)]
+fn get_total_rows<C>(conn: &mut PgConn<C>, query: &CXQuery<String>) -> usize
+where
+    C: MakeTlsConnect<Socket> + Clone + 'static + Sync + Send,
+    C::TlsConnect: Send,
+    C::Stream: Send,
+    <C::TlsConnect as TlsConnect<Socket>>::Future: Send,
+{
+    let dialect = PostgreSqlDialect {};
+
+    let num_rows = match get_limit(query, &dialect)? {
+        None => {
+            let row = conn.query_one(count_query(query, &dialect)?.as_str(), &[])?;
+            let col_type = PostgresTypeSystem::from(row.columns()[0].type_());
+            match col_type {
+                PostgresTypeSystem::Int2(_) => convert_row::<i16>(&row) as usize,
+                PostgresTypeSystem::Int4(_) => convert_row::<i32>(&row) as usize,
+                PostgresTypeSystem::Int8(_) => convert_row::<i64>(&row) as usize,
+                _ => throw!(anyhow!(
+                    "The result of the count query was not an int, aborting."
+                )),
+            }
+        }
+        Some(n) => n,
+    };
+    num_rows
+}
 
 pub struct PostgresSource<P, C>
 where
@@ -120,50 +154,23 @@ where
         assert!(!self.queries.is_empty());
 
         let mut conn = self.pool.get()?;
+        let first_query = &self.queries[0];
 
-        for (i, query) in self.queries.iter().enumerate() {
-            // assuming all the partition queries yield same schema
-            match conn.query_opt(limit1_query(query, &PostgreSqlDialect {})?.as_str(), &[]) {
-                Ok(Some(row)) => {
-                    let (names, types) = row
-                        .columns()
-                        .iter()
-                        .map(|col| {
-                            (
-                                col.name().to_string(),
-                                PostgresTypeSystem::from(col.type_()),
-                            )
-                        })
-                        .unzip();
+        let stmt = conn.prepare(first_query.as_str())?;
 
-                    self.names = names;
-                    self.schema = types;
+        let (names, types) = stmt
+            .columns()
+            .iter()
+            .map(|col| {
+                (
+                    col.name().to_string(),
+                    PostgresTypeSystem::from(col.type_()),
+                )
+            })
+            .unzip();
 
-                    return;
-                }
-                Ok(None) => {}
-                Err(e) if i == self.queries.len() - 1 => {
-                    // tried the last query but still get an error
-                    debug!("cannot get metadata for '{}': {}", query, e);
-                    throw!(e);
-                }
-                Err(_) => {}
-            }
-        }
-
-        // tried all queries but all get empty result set
-
-        // try to use COPY command get the column headers
-        let copy_query = format!("COPY ({}) TO STDOUT WITH CSV HEADER", self.queries[0]);
-        let mut reader = conn.copy_out(&*copy_query)?;
-        let mut buf = String::new();
-        reader.read_line(&mut buf)?;
-        self.names = buf[0..buf.len() - 1] // remove last '\n'
-            .split(',')
-            .map(|s| s.to_string())
-            .collect();
-        // set all columns as string (align with pandas)
-        self.schema = vec![PostgresTypeSystem::Text(false); self.names.len()];
+        self.names = names;
+        self.schema = types;
     }
 
     #[throws(PostgresSourceError)]
@@ -171,15 +178,8 @@ where
         match &self.origin_query {
             Some(q) => {
                 let cxq = CXQuery::Naked(q.clone());
-                let dialect = PostgreSqlDialect {};
-                let nrows = match get_limit(&cxq, &dialect)? {
-                    None => {
-                        let mut conn = self.pool.get()?;
-                        let row = conn.query_one(count_query(&cxq, &dialect)?.as_str(), &[])?;
-                        row.get::<_, i64>(0) as usize
-                    }
-                    Some(n) => n,
-                };
+                let mut conn = self.pool.get()?;
+                let nrows = get_total_rows(&mut conn, &cxq)?;
                 Some(nrows)
             }
             None => None,
@@ -257,16 +257,7 @@ where
 
     #[throws(PostgresSourceError)]
     fn result_rows(&mut self) -> () {
-        let dialect = PostgreSqlDialect {};
-        self.nrows = match get_limit(&self.query, &dialect)? {
-            None => {
-                let row = self
-                    .conn
-                    .query_one(count_query(&self.query, &dialect)?.as_str(), &[])?;
-                row.get::<_, i64>(0) as usize
-            }
-            Some(n) => n,
-        };
+        self.nrows = get_total_rows(&mut self.conn, &self.query)?;
     }
 
     #[throws(PostgresSourceError)]
@@ -301,11 +292,7 @@ where
 
     #[throws(PostgresSourceError)]
     fn result_rows(&mut self) {
-        let row = self.conn.query_one(
-            count_query(&self.query, &PostgreSqlDialect {})?.as_str(),
-            &[],
-        )?;
-        self.nrows = row.get::<_, i64>(0) as usize;
+        self.nrows = get_total_rows(&mut self.conn, &self.query)?;
     }
 
     #[throws(PostgresSourceError)]
@@ -342,11 +329,7 @@ where
 
     #[throws(PostgresSourceError)]
     fn result_rows(&mut self) {
-        let row = self.conn.query_one(
-            count_query(&self.query, &PostgreSqlDialect {})?.as_str(),
-            &[],
-        )?;
-        self.nrows = row.get::<_, i64>(0) as usize;
+        self.nrows = get_total_rows(&mut self.conn, &self.query)?;
     }
 
     #[throws(PostgresSourceError)]
