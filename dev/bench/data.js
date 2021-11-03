@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1635906576008,
+  "lastUpdate": 1635968118003,
   "repoUrl": "https://github.com/sfu-db/connector-x",
   "entries": {
     "ConnectorX TPC-H Scale@1 Benchmarks": [
@@ -3762,6 +3762,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 3.4210545015080522",
             "extra": "mean: 13.778845606837422 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "youngw@sfu.ca",
+            "name": "Weiyuan Wu",
+            "username": "dovahcrow"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "4813a79104c8220f37273a3423d57bb712f8f4cc",
+          "message": "Merge pull request #154 from wseaton/upgrade-polars\n\nadd support for polars >= 0.8",
+          "timestamp": "2021-11-03T12:23:51-07:00",
+          "tree_id": "d09ceb4a3f4c743ae676220b0d268cc53ae8150e",
+          "url": "https://github.com/sfu-db/connector-x/commit/4813a79104c8220f37273a3423d57bb712f8f4cc"
+        },
+        "date": 1635968116790,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_mysql",
+            "value": 0.06762590281384843,
+            "unit": "iter/sec",
+            "range": "stddev: 0.06561324523070804",
+            "extra": "mean: 14.787233269959689 sec\nrounds: 5"
+          },
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_postgres",
+            "value": 0.06389584960777255,
+            "unit": "iter/sec",
+            "range": "stddev: 3.530868360322624",
+            "extra": "mean: 15.650468788482248 sec\nrounds: 5"
           }
         ]
       }
