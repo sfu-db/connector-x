@@ -37,7 +37,7 @@ jobs:
 
       - name: Install tools
         run: |
-          yum install wget
+          yum install -y wget
           wget http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm
           rpm -ivh epel-release-6-8.noarch.rpm
           yum install -y freetds-devel
