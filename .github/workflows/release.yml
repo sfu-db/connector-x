@@ -186,7 +186,7 @@ jobs:
 
   upload:
     runs-on: ubuntu-latest
-    needs: [win32-and-darwin, linux]
+    needs: [win32, darwin, linux]
     steps:
       - name: Download all artifacts
         uses: actions/download-artifact@v2
