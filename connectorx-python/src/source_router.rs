@@ -2,7 +2,7 @@ use crate::errors::{ConnectorXPythonError, Result};
 use anyhow::anyhow;
 use connectorx::{
     sources::{
-        mssql::{FloatN, IntN, MsSQLTypeSystem},
+        mssql::{mssql_config, FloatN, IntN, MsSQLTypeSystem},
         mysql::{MySQLSourceError, MySQLTypeSystem},
         oracle::OracleDialect,
         postgres::{rewrite_tls_args, PostgresTypeSystem},
@@ -235,21 +235,10 @@ fn mysql_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
 
 #[throws(ConnectorXPythonError)]
 fn mssql_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
-    use tiberius::{AuthMethod, Client, Config, EncryptionLevel};
+    use tiberius::Client;
     use tokio::runtime::Runtime;
     let rt = Runtime::new().unwrap();
-    let mut config = Config::new();
-
-    config.host(decode(conn.host_str().unwrap_or("localhost"))?.into_owned());
-    config.port(conn.port().unwrap_or(1433));
-    config.authentication(AuthMethod::sql_server(
-        decode(conn.username())?.into_owned(),
-        decode(conn.password().unwrap_or(""))?.into_owned(),
-    ));
-
-    config.database(&conn.path()[1..]); // remove the leading "/"
-    config.encryption(EncryptionLevel::NotSupported);
-
+    let config = mssql_config(conn)?;
     let tcp = rt.block_on(TcpStream::connect(config.get_addr()))?;
     tcp.set_nodelay(true)?;
 
