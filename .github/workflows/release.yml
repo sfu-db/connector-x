@@ -37,9 +37,6 @@ jobs:
 
       - name: Install tools
         run: |
-          yum install -y wget
-          wget https://download-ib01.fedoraproject.org/pub/epel/7/x86_64/Packages/e/epel-release-7-14.noarch.rpm
-          rpm -Uvh epel-release-7-14.noarch.rpm
           yum install -y freetds-devel
 
           pip install poetry
