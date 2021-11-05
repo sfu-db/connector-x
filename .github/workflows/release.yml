@@ -37,6 +37,8 @@ jobs:
 
       - name: Install tools
         run: |
+          wget https://download-ib01.fedoraproject.org/pub/epel/7/x86_64/Packages/e/epel-release-7-14.noarch.rpm
+          rpm -ivh epel-release-7-14.noarch.rpm
           yum install -y freetds-devel
 
           pip install poetry
@@ -67,61 +69,61 @@ jobs:
           name: "linux-${{ matrix.python-version }}"
           path: connectorx-python/dist/*.whl
 
-  win32:
-    runs-on: windows-latest
-    strategy:
-      matrix:
-        python-version: ["3.7", "3.8", "3.9", "3.10"]
-    steps:
-      - uses: actions/checkout@v2
+  # win32:
+  #   runs-on: windows-latest
+  #   strategy:
+  #     matrix:
+  #       python-version: ["3.7", "3.8", "3.9", "3.10"]
+  #   steps:
+  #     - uses: actions/checkout@v2
 
-      - uses: ankane/setup-mysql@v1
-        with:
-          mysql-version: 8
+  #     - uses: ankane/setup-mysql@v1
+  #       with:
+  #         mysql-version: 8
 
-      - name: Setup python
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.python-version }}
-          architecture: x64
+  #     - name: Setup python
+  #       uses: actions/setup-python@v2
+  #       with:
+  #         python-version: ${{ matrix.python-version }}
+  #         architecture: x64
 
-      - name: Check which python we use
-        run: |
-          echo $(which python)
+  #     - name: Check which python we use
+  #       run: |
+  #         echo $(which python)
 
-      - name: Install Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: nightly-2021-05-30
-          components: rustfmt
-          default: true
+  #     - name: Install Rust
+  #       uses: actions-rs/toolchain@v1
+  #       with:
+  #         toolchain: nightly-2021-05-30
+  #         components: rustfmt
+  #         default: true
 
-      - name: Install tools
-        run: |
-          pip install poetry
-          cargo install cargo-quickinstall
-          cargo quickinstall just
+  #     - name: Install tools
+  #       run: |
+  #         pip install poetry
+  #         cargo install cargo-quickinstall
+  #         cargo quickinstall just
 
-      - name: Setup project
-        run: |
-          just bootstrap-python
-          just ci-build-python-extention
-          echo "Content of the source folder"
-          ls connectorx-python/connectorx
-        env:
-          SQLITE3_STATIC: 1
+  #     - name: Setup project
+  #       run: |
+  #         just bootstrap-python
+  #         just ci-build-python-extention
+  #         echo "Content of the source folder"
+  #         ls connectorx-python/connectorx
+  #       env:
+  #         SQLITE3_STATIC: 1
 
-      - name: Build wheel
-        run: |
-          just ci-build-python-wheel ci-rename-wheel
-          echo "Built artifacts"
-          ls connectorx-python/dist
+  #     - name: Build wheel
+  #       run: |
+  #         just ci-build-python-wheel ci-rename-wheel
+  #         echo "Built artifacts"
+  #         ls connectorx-python/dist
 
-      - name: Persist artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          name: "windows-${{ matrix.python-version }}"
-          path: connectorx-python/dist/*.whl
+  #     - name: Persist artifacts
+  #       uses: actions/upload-artifact@v2
+  #       with:
+  #         name: "windows-${{ matrix.python-version }}"
+  #         path: connectorx-python/dist/*.whl
 
   darwin:
     runs-on: macos-10.15
