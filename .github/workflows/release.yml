@@ -39,7 +39,9 @@ jobs:
         run: |
           pip install poetry
           cargo install just
-          yum install -y openssl11-devel mysql-devel
+          wget http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm
+          rpm -ivh epel-release-6-8.noarch.rpm
+          yum install -y openssl11-devel mysql-devel postgresql-devel freetds-devel
           ln -sfn /usr/lib64/pkgconfig/openssl11.pc /usr/lib64/pkgconfig/openssl.pc
           ln -sfn /usr/lib64/pkgconfig/libssl11.pc /usr/lib64/pkgconfig/libssl.pc
 
@@ -65,11 +67,10 @@ jobs:
           name: "linux-${{ matrix.python-version }}"
           path: connectorx-python/dist/*.whl
 
-  win32-and-darwin:
-    runs-on: ${{ matrix.os }}
+  win32:
+    runs-on: windows-latest
     strategy:
       matrix:
-        os: [macos-10.15, windows-latest]
         python-version: ["3.7", "3.8", "3.9", "3.10"]
     steps:
       - uses: actions/checkout@v2
@@ -119,7 +120,68 @@ jobs:
       - name: Persist artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: "${{ matrix.os }}-${{ matrix.python-version }}"
+          name: "windows-${{ matrix.python-version }}"
+          path: connectorx-python/dist/*.whl
+
+  darwin:
+    runs-on: macos-10.15
+    strategy:
+      matrix:
+        python-version: ["3.7", "3.8", "3.9", "3.10"]
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: ankane/setup-mysql@v1
+        with:
+          mysql-version: 8
+      
+      - name: Install brew
+        run: |
+          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+          brew install openssl
+
+      - name: Setup python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+          architecture: x64
+
+      - name: Check which python we use
+        run: |
+          echo $(which python)
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly-2021-05-30
+          components: rustfmt
+          default: true
+
+      - name: Install tools
+        run: |
+          pip install poetry
+          cargo install cargo-quickinstall
+          cargo quickinstall just
+
+      - name: Setup project
+        run: |
+          just bootstrap-python
+          just ci-build-python-extention
+          echo "Content of the source folder"
+          ls connectorx-python/connectorx
+        env:
+          SQLITE3_STATIC: 1
+
+      - name: Build wheel
+        run: |
+          just ci-build-python-wheel ci-rename-wheel
+          echo "Built artifacts"
+          ls connectorx-python/dist
+
+      - name: Persist artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: "macos-${{ matrix.python-version }}"
           path: connectorx-python/dist/*.whl
 
   upload:
