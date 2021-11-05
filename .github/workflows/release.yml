@@ -37,11 +37,14 @@ jobs:
 
       - name: Install tools
         run: |
-          pip install poetry
-          cargo install just
+          yum install wget
           wget http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm
           rpm -ivh epel-release-6-8.noarch.rpm
-          yum install -y openssl11-devel mysql-devel postgresql-devel freetds-devel
+          yum install -y freetds-devel
+
+          pip install poetry
+          cargo install just
+          yum install -y openssl11-devel mysql-devel postgresql-devel
           ln -sfn /usr/lib64/pkgconfig/openssl11.pc /usr/lib64/pkgconfig/openssl.pc
           ln -sfn /usr/lib64/pkgconfig/libssl11.pc /usr/lib64/pkgconfig/libssl.pc
 
@@ -171,6 +174,8 @@ jobs:
           ls connectorx-python/connectorx
         env:
           SQLITE3_STATIC: 1
+          LDFLAGS: "-L/usr/local/opt/openssl@3/lib"
+          CPPFLAGS: "-I/usr/local/opt/openssl@3/include"
 
       - name: Build wheel
         run: |
