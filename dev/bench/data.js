@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1636069092287,
+  "lastUpdate": 1636074462436,
   "repoUrl": "https://github.com/sfu-db/connector-x",
   "entries": {
     "ConnectorX TPC-H Scale@1 Benchmarks": [
@@ -3952,6 +3952,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.4362687751923486",
             "extra": "mean: 14.088314659520984 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "xiaoying_wang@sfu.ca",
+            "name": "Xiaoying Wang",
+            "username": "wangxiaoying"
+          },
+          "committer": {
+            "email": "xiaoying_wang@sfu.ca",
+            "name": "Xiaoying Wang",
+            "username": "wangxiaoying"
+          },
+          "distinct": true,
+          "id": "36d0c034dc378403bfc1ebb263a07739d153c140",
+          "message": "solve dependency issues for python 3.10",
+          "timestamp": "2021-11-05T00:59:28Z",
+          "tree_id": "eea4f81922e4e80f82f82ab5c7eced00bb8ab35c",
+          "url": "https://github.com/sfu-db/connector-x/commit/36d0c034dc378403bfc1ebb263a07739d153c140"
+        },
+        "date": 1636074461362,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_mysql",
+            "value": 0.0706825732653436,
+            "unit": "iter/sec",
+            "range": "stddev: 0.31369804026931075",
+            "extra": "mean: 14.147758829407394 sec\nrounds: 5"
+          },
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_postgres",
+            "value": 0.07419098346451294,
+            "unit": "iter/sec",
+            "range": "stddev: 2.5499639538622967",
+            "extra": "mean: 13.47872683852911 sec\nrounds: 5"
           }
         ]
       }
