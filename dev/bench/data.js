@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1636091934463,
+  "lastUpdate": 1636093311126,
   "repoUrl": "https://github.com/sfu-db/connector-x",
   "entries": {
     "ConnectorX TPC-H Scale@1 Benchmarks": [
@@ -4218,6 +4218,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 2.8564064649330674",
             "extra": "mean: 13.973204770870506 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "xiaoying_wang@sfu.ca",
+            "name": "Xiaoying Wang",
+            "username": "wangxiaoying"
+          },
+          "committer": {
+            "email": "xiaoying_wang@sfu.ca",
+            "name": "Xiaoying Wang",
+            "username": "wangxiaoying"
+          },
+          "distinct": false,
+          "id": "bd665587fa0304aa4b5fe3ab2dcd612997a89d5d",
+          "message": "0.2.2-alpha.3: add mssql instance name",
+          "timestamp": "2021-11-05T05:38:28Z",
+          "tree_id": "a803c9aa4bf8c11615340c14ee7e5a286cb4128b",
+          "url": "https://github.com/sfu-db/connector-x/commit/bd665587fa0304aa4b5fe3ab2dcd612997a89d5d"
+        },
+        "date": 1636093309866,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_mysql",
+            "value": 0.06078909818294486,
+            "unit": "iter/sec",
+            "range": "stddev: 0.11850730366963984",
+            "extra": "mean: 16.450318065099417 sec\nrounds: 5"
+          },
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_postgres",
+            "value": 0.056167765383764584,
+            "unit": "iter/sec",
+            "range": "stddev: 3.117850560349933",
+            "extra": "mean: 17.803806029446424 sec\nrounds: 5"
           }
         ]
       }
