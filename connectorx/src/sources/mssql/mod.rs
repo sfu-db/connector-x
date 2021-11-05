@@ -41,24 +41,38 @@ pub struct MsSQLSource {
     buf_size: usize,
 }
 
+#[throws(MsSQLSourceError)]
+pub fn mssql_config(url: &Url) -> Config {
+    let mut config = Config::new();
+
+    let host = decode(url.host_str().unwrap_or("localhost"))?.into_owned();
+    let hosts: Vec<&str> = host.split('\\').collect();
+    match hosts.len() {
+        1 => config.host(host),
+        2 => {
+            // SQL Server support instance name: `server\instance:port`
+            config.host(hosts[0]);
+            config.instance_name(hosts[1]);
+        }
+        _ => throw!(anyhow!("MsSQL hostname parse error: {}", host)),
+    }
+    config.port(url.port().unwrap_or(1433));
+    // remove the leading "/"
+    config.database(&url.path()[1..]);
+    // Using SQL Server authentication.
+    config.authentication(AuthMethod::sql_server(
+        decode(url.username())?.to_owned(),
+        decode(url.password().unwrap_or(""))?.to_owned(),
+    ));
+    config.encryption(EncryptionLevel::NotSupported);
+    config
+}
+
 impl MsSQLSource {
     #[throws(MsSQLSourceError)]
     pub fn new(rt: Arc<Runtime>, conn: &str, nconn: usize) -> Self {
-        let mut config = Config::new();
         let url = Url::parse(conn)?;
-
-        config.host(decode(url.host_str().unwrap_or("localhost"))?.into_owned());
-        config.port(url.port().unwrap_or(1433));
-
-        // Using SQL Server authentication.
-        config.authentication(AuthMethod::sql_server(
-            decode(url.username())?.to_owned(),
-            decode(url.password().unwrap_or(""))?.to_owned(),
-        ));
-
-        config.database(&url.path()[1..]); // remove the leading "/"
-        config.encryption(EncryptionLevel::NotSupported);
-
+        let config = mssql_config(&url)?;
         let manager = bb8_tiberius::ConnectionManager::new(config);
         let pool = rt.block_on(Pool::builder().max_size(nconn as u32).build(manager))?;
 
