@@ -146,7 +146,11 @@ def read_sql(
             except ModuleNotFoundError:
                 raise ValueError("You need to install polars first")
 
-            df = pl.DataFrame.from_arrow(df)
+            try: 
+                df = pl.DataFrame.from_arrow(df)
+            except AttributeError:
+                # api change for polars >= 0.8.*
+                df = pl.from_arrow(df)
     else:
         raise ValueError(return_type)
 

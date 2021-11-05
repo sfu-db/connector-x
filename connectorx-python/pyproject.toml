@@ -19,15 +19,15 @@ license = "MIT"
 maintainers = ["Weiyuan Wu <youngw@sfu.ca>"] 
 name = "connectorx" 
 readme = "README.md" # Markdown files are supported
-version = "0.2.2-alpha.1" 
+version = "0.2.2-alpha.2" 
 
 [tool.poetry.dependencies]
 dask = {version = "^2021", optional = true, extras = ["dataframe"]}
-modin = {version = "^0.10", optional = true}
+modin = {version = ">=0.10", optional = true}
 numpy = "^1"
 pandas = {version = "^1", optional = true}
-polars = {version = "^0.8", optional = true}
-pyarrow = {version = "^4", optional = true}
+polars = {version = ">=0.8", optional = true}
+pyarrow = {version = ">=4", optional = true}
 python = "^3.7.1"
 
 [tool.poetry.extras]
@@ -50,13 +50,13 @@ dask = {extras = ["dataframe"], version = "^2021.7.0"}
 docopt = "^0.6.2"
 ipython = "^7.25.0"
 maturin = "^0.9.4"
-modin = {extras = ["dask"], version = "^0.10.1"}
+modin = {extras = ["dask"], version = ">=0.10.1"}
 mysqlclient = "^2.0.3"
 pandahouse = "^0.2.7"
-polars = "^0.8"
+polars = ">=0.8"
 presto-python-client = "^0.8.1"
 psycopg2-binary = "^2.8.6"
-pyarrow = "^4"
+pyarrow = ">=4"
 pymssql = "^2.2.2"
 pytest = "^6.2"
 pytest-benchmark = "^3.4.1"
