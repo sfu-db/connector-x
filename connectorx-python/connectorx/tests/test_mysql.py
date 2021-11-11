@@ -298,3 +298,18 @@ def test_empty_result_on_some_partition(mysql_url: str) -> None:
         },
     )
     assert_frame_equal(df, expected, check_names=True)
+
+
+def test_mysql_cte(mysql_url: str) -> None:
+    query = "with test_cte (test_int, test_enum) as (select test_int, test_enum from test_table where test_float > 2) select test_int, test_enum from test_cte"
+    df = read_sql(mysql_url, query,
+                  partition_on="test_int", partition_num=3)
+    df.sort_values(by="test_int", inplace=True, ignore_index=True)
+    expected = pd.DataFrame(
+        index=range(5),
+        data={
+            "test_int": pd.Series([2, 3, 4, 5, 6], dtype="Int64"),
+            "test_enum": pd.Series(["even", "odd", "even", "odd", "even"], dtype="object"),
+        },
+    )
+    assert_frame_equal(df, expected, check_names=True)
