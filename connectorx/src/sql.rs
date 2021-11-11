@@ -615,7 +615,7 @@ pub fn get_partition_range_query_sep<T: Dialect>(
                 over: None,
                 distinct: false,
             }))];
-            ast_range_min = wrap_query(&mut query, min_proj, None, RANGE_TMP_TAB_NAME);
+            ast_range_min = wrap_query(&mut query.clone(), min_proj, None, RANGE_TMP_TAB_NAME);
             ast_range_max = wrap_query(&mut query, max_proj, None, RANGE_TMP_TAB_NAME);
             (format!("{}", ast_range_min), format!("{}", ast_range_max))
         }
