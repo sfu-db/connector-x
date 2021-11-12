@@ -258,3 +258,19 @@ def test_oracle_empty_result_on_some_partition(oracle_url: str) -> None:
         }
     )
     assert_frame_equal(df, expected, check_names=True)
+
+
+@pytest.mark.skipif(not os.environ.get("ORACLE_URL"), reason="Test oracle only when `ORACLE_URL` is set")
+def test_oracle_cte(oracle_url: str) -> None:
+    query = "with test_cte (test_int, test_str) as (select test_int, test_char from test_table where test_float > 0) select test_int, test_str from test_cte"
+    df = read_sql(oracle_url, query,
+                  partition_on="test_int", partition_num=3)
+    df.sort_values(by="TEST_INT", inplace=True, ignore_index=True)
+    expected = pd.DataFrame(
+        index=range(2),
+        data={
+            "TEST_INT": pd.Series([1, 2], dtype="Int64"),
+            "TEST_STR": pd.Series(["str1 ", "str2 "], dtype="object"),
+        },
+    )
+    assert_frame_equal(df, expected, check_names=True)
