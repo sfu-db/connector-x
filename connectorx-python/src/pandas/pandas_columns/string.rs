@@ -244,7 +244,7 @@ impl<'a> StringColumn<'a> {
             return;
         }
 
-        let _guard = if force {
+        let guard = if force {
             GIL_MUTEX
                 .lock()
                 .map_err(|e| anyhow!("mutex poisoned {}", e))?
@@ -275,6 +275,9 @@ impl<'a> StringColumn<'a> {
                 unsafe { *self.data.get_unchecked_mut(self.next_write + i) = PyString::none(py) };
             }
         }
+
+        // unlock GIL
+        std::mem::drop(guard);
 
         if !string_infos.is_empty() {
             let mut start = 0;

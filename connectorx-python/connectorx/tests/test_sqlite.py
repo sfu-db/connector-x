@@ -254,3 +254,18 @@ def test_empty_result_on_some_partition(sqlite_db: str) -> None:
         }
     )
     assert_frame_equal(df, expected, check_names=True)
+
+
+def test_sqlite_cte(sqlite_db: str) -> None:
+    query = "with test_cte (test_int, test_str) as (select test_int, test_str from test_table where test_float > 0) select test_int, test_str from test_cte"
+    df = read_sql(sqlite_db, query,
+                  partition_on="test_int", partition_num=3)
+    df.sort_values(by="test_int", inplace=True, ignore_index=True)
+    expected = pd.DataFrame(
+        index=range(4),
+        data={
+            "test_int": pd.Series([0, 2, 3, 4], dtype="Int64"),
+            "test_str": pd.Series(["こんにちは", "str2", "b", "Ha好ち😁ðy̆"], dtype="object"),
+        },
+    )
+    assert_frame_equal(df, expected, check_names=True)

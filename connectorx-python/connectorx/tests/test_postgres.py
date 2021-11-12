@@ -740,6 +740,21 @@ def test_partition_on_json(postgres_url: str) -> None:
     assert_frame_equal(df, expected, check_names=True)
 
 
+def test_cte(postgres_url: str) -> None:
+    query = "with test_cte (test_int, test_str) as (select test_int, test_str from test_table where test_float > 0) select test_int, test_str from test_cte"
+    df = read_sql(postgres_url, query,
+                  partition_on="test_int", partition_num=3)
+    df.sort_values(by="test_int", inplace=True, ignore_index=True)
+    expected = pd.DataFrame(
+        index=range(4),
+        data={
+            "test_int": pd.Series([0, 2, 3, 4], dtype="Int64"),
+            "test_str": pd.Series(["a", "str2", "b", "c"], dtype="object"),
+        },
+    )
+    assert_frame_equal(df, expected, check_names=True)
+
+
 @pytest.mark.skipif(
     not os.environ.get("POSTGRES_URL_TLS"),
     reason="Do not test Postgres TLS unless `POSTGRES_URL_TLS` is set",
