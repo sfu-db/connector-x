@@ -162,6 +162,17 @@ fn wrap_query(
 ) -> Statement {
     let with = query.with.clone();
     query.with = None;
+    let alias = if tmp_tab_name.is_empty() {
+        None
+    } else {
+        Some(TableAlias {
+            name: Ident {
+                value: tmp_tab_name.into(),
+                quote_style: None,
+            },
+            columns: vec![],
+        })
+    };
     Statement::Query(Box::new(Query {
         with,
         body: SetExpr::Select(Box::new(Select {
@@ -172,13 +183,7 @@ fn wrap_query(
                 relation: TableFactor::Derived {
                     lateral: false,
                     subquery: Box::new(query.clone()),
-                    alias: Some(TableAlias {
-                        name: Ident {
-                            value: tmp_tab_name.into(),
-                            quote_style: None,
-                        },
-                        columns: vec![],
-                    }),
+                    alias,
                 },
                 joins: vec![],
             }],
@@ -227,8 +232,18 @@ impl QueryExt for Query {
 pub fn count_query<T: Dialect>(sql: &CXQuery<String>, dialect: &T) -> CXQuery<String> {
     trace!("Incoming query: {}", sql);
 
+    const COUNT_TMP_TAB_NAME: &str = "CXTMPTAB_COUNT";
+
     #[allow(unused_mut)]
-    let mut sql = match sql.map(|sql| Parser::parse_sql(dialect, sql)).result() {
+    let mut table_alias = COUNT_TMP_TAB_NAME;
+
+    // HACK: Some dialect (e.g. Oracle) does not support "AS" for alias
+    #[cfg(feature = "src_oracle")]
+    if dialect.type_id() == (OracleDialect {}.type_id()) {
+        table_alias = "";
+    }
+
+    let tsql = match sql.map(|sql| Parser::parse_sql(dialect, sql)).result() {
         Ok(ast) => {
             let projection = vec![SelectItem::UnnamedExpr(Expr::Function(Function {
                 name: ObjectName(vec![Ident {
@@ -253,7 +268,7 @@ pub fn count_query<T: Dialect>(sql: &CXQuery<String>, dialect: &T) -> CXQuery<St
                         .as_select_mut()
                         .ok_or_else(|| ConnectorXError::SqlQueryNotSupported(sql.to_string()))?;
                     select.sort_by = vec![];
-                    wrap_query(&mut query, projection, None, "CXTMPTAB_COUNT")
+                    wrap_query(&mut query, projection, None, table_alias)
                 }
                 CXQuery::Wrapped(ast) => {
                     if ast.len() != 1 {
@@ -274,19 +289,16 @@ pub fn count_query<T: Dialect>(sql: &CXQuery<String>, dialect: &T) -> CXQuery<St
         }
         Err(e) => {
             warn!("parser error: {:?}, manually compose query string", e);
-            format!("SELECT COUNT(*) FROM ({}) as CXTMPTAB_COUNT", sql.as_str())
+            format!(
+                "SELECT COUNT(*) FROM ({}) as {}",
+                sql.as_str(),
+                COUNT_TMP_TAB_NAME
+            )
         }
     };
 
-    // HACK: Some dialect (e.g. Oracle) does not support "AS" for alias
-    // Hard code "(subquery) alias" instead of output "(subquery) AS alias"
-    #[cfg(feature = "src_oracle")]
-    if dialect.type_id() == (OracleDialect {}.type_id()) {
-        sql = sql.replace(" AS", "");
-    }
-
-    debug!("Transformed count query: {}", sql);
-    CXQuery::Wrapped(sql)
+    debug!("Transformed count query: {}", tsql);
+    CXQuery::Wrapped(tsql)
 }
 
 #[throws(ConnectorXError)]
@@ -343,9 +355,9 @@ pub fn limit1_query_oracle(sql: &CXQuery<String>) -> CXQuery<String> {
     };
     ast_part = wrap_query(&mut query, vec![SelectItem::Wildcard], Some(selection), "");
 
-    let sql = format!("{}", ast_part).replace(" AS", "");
-    debug!("Transformed limit 1 query: {}", sql);
-    CXQuery::Wrapped(sql)
+    let tsql = format!("{}", ast_part);
+    debug!("Transformed limit 1 query: {}", tsql);
+    CXQuery::Wrapped(tsql)
 }
 
 #[throws(ConnectorXError)]
@@ -390,8 +402,31 @@ pub fn single_col_partition_query<T: Dialect>(
     const PART_TMP_TAB_NAME: &str = "CXTMPTAB_PART";
 
     #[allow(unused_mut)]
-    let mut tsql = match Parser::parse_sql(dialect, sql) {
-        Ok(mut ast) => {
+    let mut table_alias = PART_TMP_TAB_NAME;
+    #[allow(unused_mut)]
+    let mut cid = Box::new(Expr::CompoundIdentifier(vec![
+        Ident {
+            value: PART_TMP_TAB_NAME.to_string(),
+            quote_style: None,
+        },
+        Ident {
+            value: col.to_string(),
+            quote_style: None,
+        },
+    ]));
+
+    // HACK: Some dialect (e.g. Oracle) does not support "AS" for alias
+    #[cfg(feature = "src_oracle")]
+    if dialect.type_id() == (OracleDialect {}.type_id()) {
+        table_alias = "";
+        cid = Box::new(Expr::Identifier(Ident {
+            value: col.to_string(),
+            quote_style: None,
+        }));
+    }
+
+    let tsql = match Parser::parse_sql(dialect, sql) {
+        Ok(ast) => {
             if ast.len() != 1 {
                 throw!(ConnectorXError::SqlQueryNotSupported(sql.to_string()));
             }
@@ -411,29 +446,11 @@ pub fn single_col_partition_query<T: Dialect>(
             let lb = Expr::BinaryOp {
                 left: Box::new(Expr::Value(Value::Number(lower.to_string(), false))),
                 op: BinaryOperator::LtEq,
-                right: Box::new(Expr::CompoundIdentifier(vec![
-                    Ident {
-                        value: PART_TMP_TAB_NAME.to_string(),
-                        quote_style: None,
-                    },
-                    Ident {
-                        value: col.to_string(),
-                        quote_style: None,
-                    },
-                ])),
+                right: cid.clone(),
             };
 
             let ub = Expr::BinaryOp {
-                left: Box::new(Expr::CompoundIdentifier(vec![
-                    Ident {
-                        value: PART_TMP_TAB_NAME.to_string(),
-                        quote_style: None,
-                    },
-                    Ident {
-                        value: col.to_string(),
-                        quote_style: None,
-                    },
-                ])),
+                left: cid,
                 op: BinaryOperator::Lt,
                 right: Box::new(Expr::Value(Value::Number(upper.to_string(), false))),
             };
@@ -455,7 +472,7 @@ pub fn single_col_partition_query<T: Dialect>(
                 &mut query,
                 vec![SelectItem::Wildcard],
                 Some(selection),
-                PART_TMP_TAB_NAME,
+                table_alias,
             );
             format!("{}", ast_part)
         }
@@ -464,13 +481,6 @@ pub fn single_col_partition_query<T: Dialect>(
             format!("SELECT * FROM ({}) AS CXTMPTAB_PART WHERE CXTMPTAB_PART.{} >= {} AND CXTMPTAB_PART.{} < {}", sql, col, lower, col, upper)
         }
     };
-
-    // HACK: Some dialect (e.g. Oracle) does not support "AS" for alias
-    // Hard code "(subquery) alias" instead of output "(subquery) AS alias"
-    #[cfg(feature = "src_oracle")]
-    if dialect.type_id() == (OracleDialect {}.type_id()) {
-        tsql = tsql.replace(" AS", "")
-    }
 
     debug!("Transformed single column partition query: {}", tsql);
     tsql
@@ -482,8 +492,31 @@ pub fn get_partition_range_query<T: Dialect>(sql: &str, col: &str, dialect: &T) 
     const RANGE_TMP_TAB_NAME: &str = "CXTMPTAB_RANGE";
 
     #[allow(unused_mut)]
-    let mut tsql = match Parser::parse_sql(dialect, sql) {
-        Ok(mut ast) => {
+    let mut table_alias = RANGE_TMP_TAB_NAME;
+    #[allow(unused_mut)]
+    let mut args = vec![FunctionArg::Unnamed(Expr::CompoundIdentifier(vec![
+        Ident {
+            value: RANGE_TMP_TAB_NAME.to_string(),
+            quote_style: None,
+        },
+        Ident {
+            value: col.to_string(),
+            quote_style: None,
+        },
+    ]))];
+
+    // HACK: Some dialect (e.g. Oracle) does not support "AS" for alias
+    #[cfg(feature = "src_oracle")]
+    if dialect.type_id() == (OracleDialect {}.type_id()) {
+        table_alias = "";
+        args = vec![FunctionArg::Unnamed(Expr::Identifier(Ident {
+            value: col.to_string(),
+            quote_style: None,
+        }))];
+    }
+
+    let tsql = match Parser::parse_sql(dialect, sql) {
+        Ok(ast) => {
             if ast.len() != 1 {
                 throw!(ConnectorXError::SqlQueryNotSupported(sql.to_string()));
             }
@@ -500,16 +533,7 @@ pub fn get_partition_range_query<T: Dialect>(sql: &str, col: &str, dialect: &T) 
                         value: "min".to_string(),
                         quote_style: None,
                     }]),
-                    args: vec![FunctionArg::Unnamed(Expr::CompoundIdentifier(vec![
-                        Ident {
-                            value: RANGE_TMP_TAB_NAME.to_string(),
-                            quote_style: None,
-                        },
-                        Ident {
-                            value: col.to_string(),
-                            quote_style: None,
-                        },
-                    ]))],
+                    args: args.clone(),
                     over: None,
                     distinct: false,
                 })),
@@ -518,21 +542,12 @@ pub fn get_partition_range_query<T: Dialect>(sql: &str, col: &str, dialect: &T) 
                         value: "max".to_string(),
                         quote_style: None,
                     }]),
-                    args: vec![FunctionArg::Unnamed(Expr::CompoundIdentifier(vec![
-                        Ident {
-                            value: RANGE_TMP_TAB_NAME.to_string(),
-                            quote_style: None,
-                        },
-                        Ident {
-                            value: col.to_string(),
-                            quote_style: None,
-                        },
-                    ]))],
+                    args,
                     over: None,
                     distinct: false,
                 })),
             ];
-            ast_range = wrap_query(&mut query, projection, None, RANGE_TMP_TAB_NAME);
+            ast_range = wrap_query(&mut query, projection, None, table_alias);
             format!("{}", ast_range)
         }
         Err(e) => {
@@ -543,13 +558,6 @@ pub fn get_partition_range_query<T: Dialect>(sql: &str, col: &str, dialect: &T) 
             )
         }
     };
-
-    // HACK: Some dialect (e.g. Oracle) does not support "AS" for alias
-    // Hard code "(subquery) alias" instead of output "(subquery) AS alias"
-    #[cfg(feature = "src_oracle")]
-    if dialect.type_id() == (OracleDialect {}.type_id()) {
-        tsql = tsql.replace(" AS", "")
-    }
 
     debug!("Transformed partition range query: {}", tsql);
     tsql
