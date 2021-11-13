@@ -93,8 +93,9 @@ For more planned data sources, please check out our [discussion](https://github.
 - [x] Sqlite
 - [x] Redshift (through postgres protocol)
 - [x] Clickhouse (through mysql protocol)
-- [x] SQL Server (no encryption support yet)
+- [x] SQL Server (no trusted_connection support yet)
 - [x] Oracle
+- [ ] Big Query - In Progress
 - [ ] ...
 
 ## Destinations
