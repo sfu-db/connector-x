@@ -41,7 +41,7 @@ impl<'a, V> FromPyObject<'a> for ArrayBlock<'a, V> {
 
 impl<'a, V> ArrayBlock<'a, V> {
     #[throws(ConnectorXPythonError)]
-    pub fn split(self) -> Vec<ArrayColumn<'a, V>> {
+    pub fn split(self) -> Vec<ArrayColumn<V>> {
         let mut ret = vec![];
         let mut view = self.data;
 
@@ -53,9 +53,10 @@ impl<'a, V> ArrayBlock<'a, V> {
                 data: col
                     .into_shape(nrows)?
                     .into_slice()
-                    .ok_or_else(|| anyhow!("get None for splitted FloatArray data"))?,
-                next_write: 0,
+                    .ok_or_else(|| anyhow!("get None for splitted FloatArray data"))?
+                    .as_mut_ptr(),
                 lengths: vec![],
+                row_idx: vec![],
                 buffer: Vec::with_capacity(self.buf_size_mb * (1 << 17) * 11 / 10), // allocate a little bit more memory to avoid Vec growth
                 buf_size: self.buf_size_mb * (1 << 17),
             })
@@ -64,24 +65,25 @@ impl<'a, V> ArrayBlock<'a, V> {
     }
 }
 
-pub struct ArrayColumn<'a, V> {
-    data: &'a mut [PyList],
-    next_write: usize,
+pub struct ArrayColumn<V> {
+    data: *mut PyList,
     buffer: Vec<V>,
     lengths: Vec<usize>, // usize::MAX if the string is None
+    row_idx: Vec<usize>,
     buf_size: usize,
 }
 
-impl<'a, V> PandasColumnObject for ArrayColumn<'a, V>
+unsafe impl<V> Send for ArrayColumn<V> {}
+unsafe impl<V> Sync for ArrayColumn<V> {}
+
+impl<V> PandasColumnObject for ArrayColumn<V>
 where
     V: Send + ToPyObject,
 {
     fn typecheck(&self, id: TypeId) -> bool {
         id == TypeId::of::<PyList>() || id == TypeId::of::<Option<PyList>>()
     }
-    fn len(&self) -> usize {
-        self.data.len()
-    }
+
     fn typename(&self) -> &'static str {
         std::any::type_name::<PyList>()
     }
@@ -92,86 +94,89 @@ where
     }
 }
 
-impl<'a> PandasColumn<Vec<f64>> for ArrayColumn<'a, f64> {
+impl PandasColumn<Vec<f64>> for ArrayColumn<f64> {
     #[throws(ConnectorXPythonError)]
-    fn write(&mut self, val: Vec<f64>) {
+    fn write(&mut self, val: Vec<f64>, row: usize) {
         self.lengths.push(val.len());
         self.buffer.extend_from_slice(&val[..]);
+        self.row_idx.push(row);
         self.try_flush()?;
     }
 }
 
-impl<'a> PandasColumn<Option<Vec<f64>>> for ArrayColumn<'a, f64> {
+impl PandasColumn<Option<Vec<f64>>> for ArrayColumn<f64> {
     #[throws(ConnectorXPythonError)]
-    fn write(&mut self, val: Option<Vec<f64>>) {
+    fn write(&mut self, val: Option<Vec<f64>>, row: usize) {
         match val {
             Some(v) => {
                 self.lengths.push(v.len());
                 self.buffer.extend_from_slice(&v[..]);
+                self.row_idx.push(row);
                 self.try_flush()?;
             }
             None => {
                 self.lengths.push(usize::MAX);
+                self.row_idx.push(row);
             }
         }
     }
 }
 
-impl<'a> PandasColumn<Vec<i64>> for ArrayColumn<'a, i64> {
+impl PandasColumn<Vec<i64>> for ArrayColumn<i64> {
     #[throws(ConnectorXPythonError)]
-    fn write(&mut self, val: Vec<i64>) {
+    fn write(&mut self, val: Vec<i64>, row: usize) {
         self.lengths.push(val.len());
         self.buffer.extend_from_slice(&val[..]);
+        self.row_idx.push(row);
         self.try_flush()?;
     }
 }
 
-impl<'a> PandasColumn<Option<Vec<i64>>> for ArrayColumn<'a, i64> {
+impl PandasColumn<Option<Vec<i64>>> for ArrayColumn<i64> {
     #[throws(ConnectorXPythonError)]
-    fn write(&mut self, val: Option<Vec<i64>>) {
+    fn write(&mut self, val: Option<Vec<i64>>, row: usize) {
         match val {
             Some(v) => {
                 self.lengths.push(v.len());
                 self.buffer.extend_from_slice(&v[..]);
+                self.row_idx.push(row);
                 self.try_flush()?;
             }
             None => {
                 self.lengths.push(usize::MAX);
+                self.row_idx.push(row);
             }
         }
     }
 }
 
 impl HasPandasColumn for Vec<f64> {
-    type PandasColumn<'a> = ArrayColumn<'a, f64>;
+    type PandasColumn<'a> = ArrayColumn<f64>;
 }
 
 impl HasPandasColumn for Option<Vec<f64>> {
-    type PandasColumn<'a> = ArrayColumn<'a, f64>;
+    type PandasColumn<'a> = ArrayColumn<f64>;
 }
 
 impl HasPandasColumn for Vec<i64> {
-    type PandasColumn<'a> = ArrayColumn<'a, i64>;
+    type PandasColumn<'a> = ArrayColumn<i64>;
 }
 
 impl HasPandasColumn for Option<Vec<i64>> {
-    type PandasColumn<'a> = ArrayColumn<'a, i64>;
+    type PandasColumn<'a> = ArrayColumn<i64>;
 }
-impl<'a, V> ArrayColumn<'a, V>
+impl<V> ArrayColumn<V>
 where
     V: Send + ToPyObject,
 {
-    pub fn partition(self, counts: &[usize]) -> Vec<ArrayColumn<'a, V>> {
+    pub fn partition(self, counts: usize) -> Vec<ArrayColumn<V>> {
         let mut partitions = vec![];
-        let mut data = self.data;
 
-        for &c in counts {
-            let (splitted, rest) = data.split_at_mut(c);
-            data = rest;
+        for _ in 0..counts {
             partitions.push(ArrayColumn {
-                data: splitted,
-                next_write: 0,
+                data: self.data,
                 lengths: vec![],
+                row_idx: vec![],
                 buffer: Vec::with_capacity(self.buf_size),
                 buf_size: self.buf_size,
             });
@@ -197,7 +202,7 @@ where
                         let end = start + len;
                         unsafe {
                             // allocate and write in the same time
-                            *self.data.get_unchecked_mut(self.next_write + i) = PyList(
+                            *self.data.add(self.row_idx[i]) = PyList(
                                 pyo3::types::PyList::new(py, &self.buffer[start..end]).into(),
                             );
                         };
@@ -205,7 +210,7 @@ where
                     } else {
                         unsafe {
                             let n = unsafe { Py::from_borrowed_ptr(py, pyo3::ffi::Py_None()) };
-                            *self.data.get_unchecked_mut(self.next_write + i) = PyList(n);
+                            *self.data.add(self.row_idx[i]) = PyList(n);
                         }
                     }
                 }
@@ -213,7 +218,7 @@ where
 
             self.buffer.truncate(0);
             self.lengths.truncate(0);
-            self.next_write += nvecs;
+            self.row_idx.truncate(0);
         }
     }
 

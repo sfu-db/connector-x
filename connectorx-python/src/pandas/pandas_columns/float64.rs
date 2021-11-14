@@ -23,7 +23,7 @@ impl<'a> FromPyObject<'a> for Float64Block<'a> {
 
 impl<'a> Float64Block<'a> {
     #[throws(ConnectorXPythonError)]
-    pub fn split(self) -> Vec<Float64Column<'a>> {
+    pub fn split(self) -> Vec<Float64Column> {
         let mut ret = vec![];
         let mut view = self.data;
 
@@ -35,72 +35,62 @@ impl<'a> Float64Block<'a> {
                 data: col
                     .into_shape(nrows)?
                     .into_slice()
-                    .ok_or_else(|| anyhow!("get None for splitted Float64 data"))?,
-                i: 0,
+                    .ok_or_else(|| anyhow!("get None for splitted Float64 data"))?
+                    .as_mut_ptr(),
             })
         }
         ret
     }
 }
 
-pub struct Float64Column<'a> {
-    data: &'a mut [f64],
-    i: usize,
+pub struct Float64Column {
+    data: *mut f64,
 }
 
-impl<'a> PandasColumnObject for Float64Column<'a> {
+unsafe impl Send for Float64Column {}
+unsafe impl Sync for Float64Column {}
+
+impl<'a> PandasColumnObject for Float64Column {
     fn typecheck(&self, id: TypeId) -> bool {
         id == TypeId::of::<f64>() || id == TypeId::of::<Option<f64>>()
     }
-    fn len(&self) -> usize {
-        self.data.len()
-    }
+
     fn typename(&self) -> &'static str {
         std::any::type_name::<f64>()
     }
 }
 
-impl<'a> PandasColumn<f64> for Float64Column<'a> {
+impl<'a> PandasColumn<f64> for Float64Column {
     #[throws(ConnectorXPythonError)]
-    fn write(&mut self, val: f64) {
-        unsafe { *self.data.get_unchecked_mut(self.i) = val };
-        self.i += 1;
+    fn write(&mut self, val: f64, row: usize) {
+        unsafe { *self.data.add(row) = val };
     }
 }
 
-impl<'a> PandasColumn<Option<f64>> for Float64Column<'a> {
+impl<'a> PandasColumn<Option<f64>> for Float64Column {
     #[throws(ConnectorXPythonError)]
-    fn write(&mut self, val: Option<f64>) {
+    fn write(&mut self, val: Option<f64>, row: usize) {
         match val {
-            None => unsafe { *self.data.get_unchecked_mut(self.i) = f64::NAN },
-            Some(val) => unsafe { *self.data.get_unchecked_mut(self.i) = val },
+            None => unsafe { *self.data.add(row) = f64::NAN },
+            Some(val) => unsafe { *self.data.add(row) = val },
         }
-        self.i += 1;
     }
 }
 
 impl HasPandasColumn for f64 {
-    type PandasColumn<'a> = Float64Column<'a>;
+    type PandasColumn<'a> = Float64Column;
 }
 
 impl HasPandasColumn for Option<f64> {
-    type PandasColumn<'a> = Float64Column<'a>;
+    type PandasColumn<'a> = Float64Column;
 }
 
-impl<'a> Float64Column<'a> {
-    pub fn partition(self, counts: &[usize]) -> Vec<Float64Column<'a>> {
+impl Float64Column {
+    pub fn partition(self, counts: usize) -> Vec<Float64Column> {
         let mut partitions = vec![];
-        let mut data = self.data;
-
-        for &c in counts {
-            let (splitted, rest) = data.split_at_mut(c);
-            data = rest;
-            partitions.push(Float64Column {
-                data: splitted,
-                i: 0,
-            });
+        for _ in 0..counts {
+            partitions.push(Float64Column { data: self.data });
         }
-
         partitions
     }
 }

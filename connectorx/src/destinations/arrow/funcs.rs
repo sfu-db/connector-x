@@ -42,11 +42,11 @@ where
         where
             T: ArrowAssoc,
         {
-            Ok(ArrayBuilder::finish(
-                builder
-                    .downcast_mut::<T::Builder>()
-                    .ok_or_else(|| anyhow!("cannot cast arrow builder for finish"))?,
-            ))
+            let t = builder
+                .downcast_mut::<T::Builder>()
+                .ok_or_else(|| anyhow!("cannot cast arrow builder for finish"))?;
+            let a = ArrayBuilder::finish(t);
+            Ok(a)
         }
         imp::<T>
     }

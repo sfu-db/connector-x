@@ -5,6 +5,7 @@ mod typesystem;
 
 pub use self::errors::MsSQLSourceError;
 pub use self::typesystem::{FloatN, IntN, MsSQLTypeSystem};
+use crate::constants::DB_BUFFER_SIZE;
 use crate::{
     data_order::DataOrder,
     errors::ConnectorXError,
@@ -35,10 +36,10 @@ type Conn<'a> = PooledConnection<'a, ConnectionManager>;
 pub struct MsSQLSource {
     rt: Arc<Runtime>,
     pool: Pool<ConnectionManager>,
+    origin_query: Option<String>,
     queries: Vec<CXQuery<String>>,
     names: Vec<String>,
     schema: Vec<MsSQLTypeSystem>,
-    buf_size: usize,
 }
 
 #[throws(MsSQLSourceError)]
@@ -79,15 +80,11 @@ impl MsSQLSource {
         Self {
             rt,
             pool,
+            origin_query: None,
             queries: vec![],
             names: vec![],
             schema: vec![],
-            buf_size: 32,
         }
-    }
-
-    pub fn buf_size(&mut self, buf_size: usize) {
-        self.buf_size = buf_size;
     }
 }
 
@@ -109,6 +106,10 @@ where
 
     fn set_queries<Q: ToString>(&mut self, queries: &[CXQuery<Q>]) {
         self.queries = queries.iter().map(|q| q.map(Q::to_string)).collect();
+    }
+
+    fn set_origin_query(&mut self, query: Option<String>) {
+        self.origin_query = query;
     }
 
     #[throws(MsSQLSourceError)]
@@ -173,6 +174,32 @@ where
         self.schema = types;
     }
 
+    #[throws(MsSQLSourceError)]
+    fn result_rows(&mut self) -> Option<usize> {
+        match &self.origin_query {
+            Some(q) => {
+                let cxq = CXQuery::Naked(q.clone());
+                let dialect = MsSqlDialect {};
+                let nrows = match get_limit_mssql(&cxq)? {
+                    None => {
+                        let mut conn = self.rt.block_on(self.pool.get())?;
+                        let cquery = count_query(&cxq, &dialect)?;
+                        let stream = self.rt.block_on(conn.query(cquery.as_str(), &[]))?;
+                        let row = self.rt.block_on(stream.into_row())?.ok_or_else(|| {
+                            anyhow!("MsSQL failed to get the count of query: {}", q)
+                        })?;
+
+                        let row: i32 = row.get(0).ok_or(MsSQLSourceError::GetNRowsFailed)?; // the count in mssql is i32
+                        row as usize
+                    }
+                    Some(n) => n,
+                };
+                Some(nrows)
+            }
+            None => None,
+        }
+    }
+
     fn names(&self) -> Vec<String> {
         self.names.clone()
     }
@@ -190,7 +217,6 @@ where
                 self.rt.clone(),
                 &query,
                 &self.schema,
-                self.buf_size,
             ));
         }
         ret
@@ -204,7 +230,6 @@ pub struct MsSQLSourcePartition {
     schema: Vec<MsSQLTypeSystem>,
     nrows: usize,
     ncols: usize,
-    buf_size: usize,
 }
 
 impl MsSQLSourcePartition {
@@ -213,7 +238,6 @@ impl MsSQLSourcePartition {
         handle: Arc<Runtime>,
         query: &CXQuery<String>,
         schema: &[MsSQLTypeSystem],
-        buf_size: usize,
     ) -> Self {
         Self {
             rt: handle,
@@ -222,7 +246,6 @@ impl MsSQLSourcePartition {
             schema: schema.to_vec(),
             nrows: 0,
             ncols: schema.len(),
-            buf_size,
         }
     }
 }
@@ -233,7 +256,7 @@ impl SourcePartition for MsSQLSourcePartition {
     type Error = MsSQLSourceError;
 
     #[throws(MsSQLSourceError)]
-    fn prepare(&mut self) {
+    fn result_rows(&mut self) {
         self.nrows = match get_limit_mssql(&self.query)? {
             None => {
                 let mut conn = self.rt.block_on(self.pool.get())?;
@@ -265,7 +288,7 @@ impl SourcePartition for MsSQLSourcePartition {
                 )
             });
 
-        MsSQLSourceParser::new(self.rt.handle(), rows, &self.schema, self.buf_size)
+        MsSQLSourceParser::new(self.rt.handle(), rows, &self.schema)
     }
 
     fn nrows(&self) -> usize {
@@ -280,7 +303,6 @@ impl SourcePartition for MsSQLSourcePartition {
 pub struct MsSQLSourceParser<'a> {
     rt: &'a Handle,
     iter: OwningHandle<Box<Conn<'a>>, DummyBox<QueryResult<'a>>>,
-    buf_size: usize,
     rowbuf: Vec<Row>,
     ncols: usize,
     current_col: usize,
@@ -292,13 +314,11 @@ impl<'a> MsSQLSourceParser<'a> {
         rt: &'a Handle,
         iter: OwningHandle<Box<Conn<'a>>, DummyBox<QueryResult<'a>>>,
         schema: &[MsSQLTypeSystem],
-        buf_size: usize,
     ) -> Self {
         Self {
             rt,
             iter,
-            buf_size,
-            rowbuf: Vec::with_capacity(buf_size),
+            rowbuf: Vec::with_capacity(DB_BUFFER_SIZE),
             ncols: schema.len(),
             current_row: 0,
             current_col: 0,
@@ -307,25 +327,6 @@ impl<'a> MsSQLSourceParser<'a> {
 
     #[throws(MsSQLSourceError)]
     fn next_loc(&mut self) -> (usize, usize) {
-        if self.current_row >= self.rowbuf.len() {
-            if !self.rowbuf.is_empty() {
-                self.rowbuf.drain(..);
-            }
-
-            for _ in 0..self.buf_size {
-                if let Some(item) = self.rt.block_on(self.iter.next()) {
-                    self.rowbuf.push(item?);
-                } else {
-                    break;
-                }
-            }
-
-            if self.rowbuf.is_empty() {
-                throw!(anyhow!("MsSQL EOF"));
-            }
-            self.current_row = 0;
-            self.current_col = 0;
-        }
         let ret = (self.current_row, self.current_col);
         self.current_row += (self.current_col + 1) / self.ncols;
         self.current_col = (self.current_col + 1) % self.ncols;
@@ -336,6 +337,24 @@ impl<'a> MsSQLSourceParser<'a> {
 impl<'a> PartitionParser<'a> for MsSQLSourceParser<'a> {
     type TypeSystem = MsSQLTypeSystem;
     type Error = MsSQLSourceError;
+
+    #[throws(MsSQLSourceError)]
+    fn fetch_next(&mut self) -> (usize, bool) {
+        if !self.rowbuf.is_empty() {
+            self.rowbuf.drain(..);
+        }
+
+        for _ in 0..DB_BUFFER_SIZE {
+            if let Some(item) = self.rt.block_on(self.iter.next()) {
+                self.rowbuf.push(item?);
+            } else {
+                break;
+            }
+        }
+        self.current_row = 0;
+        self.current_col = 0;
+        (self.rowbuf.len(), self.rowbuf.len() < DB_BUFFER_SIZE)
+    }
 }
 
 macro_rules! impl_produce {
