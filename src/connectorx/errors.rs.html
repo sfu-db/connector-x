@@ -67,6 +67,9 @@
 <span id="64">64</span>
 <span id="65">65</span>
 <span id="66">66</span>
+<span id="67">67</span>
+<span id="68">68</span>
+<span id="69">69</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::data_order::DataOrder</span>;
 <span class="kw">use</span> <span class="ident">std::any::type_name</span>;
@@ -96,6 +99,9 @@
 
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Only support single query with SELECT statement, got {0}.&quot;</span>)]</span>
     <span class="ident">SqlQueryNotSupported</span>(<span class="ident">String</span>),
+
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Cannot get total number of rows in advance.&quot;</span>)]</span>
+    <span class="ident">CountError</span>(),
 
     <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
     <span class="ident">SQLParserError</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">sqlparser::parser::ParserError</span>),

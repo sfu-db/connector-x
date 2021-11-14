@@ -932,16 +932,6 @@
 <span id="929">929</span>
 <span id="930">930</span>
 <span id="931">931</span>
-<span id="932">932</span>
-<span id="933">933</span>
-<span id="934">934</span>
-<span id="935">935</span>
-<span id="936">936</span>
-<span id="937">937</span>
-<span id="938">938</span>
-<span id="939">939</span>
-<span id="940">940</span>
-<span id="941">941</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Source implementation for Postgres database, including the TLS support (client only).</span>
 
@@ -953,6 +943,7 @@
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">connection::rewrite_tls_args</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">typesystem::PostgresTypeSystem</span>;
 
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::constants::DB_BUFFER_SIZE</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">data_order::DataOrder</span>,
     <span class="ident">errors::ConnectorXError</span>,
@@ -991,6 +982,40 @@
 <span class="kw">type</span> <span class="ident">PgManager</span><span class="op">&lt;</span><span class="ident">C</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">PostgresConnectionManager</span><span class="op">&lt;</span><span class="ident">C</span><span class="op">&gt;</span>;
 <span class="kw">type</span> <span class="ident">PgConn</span><span class="op">&lt;</span><span class="ident">C</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">PooledConnection</span><span class="op">&lt;</span><span class="ident">PgManager</span><span class="op">&lt;</span><span class="ident">C</span><span class="op">&gt;</span><span class="op">&gt;</span>;
 
+<span class="comment">// take a row and unwrap the interior field from column 0</span>
+<span class="kw">fn</span> <span class="ident">convert_row</span><span class="op">&lt;</span><span class="lifetime">&#39;b</span>, <span class="ident">R</span>: <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">postgres::types::FromSql</span><span class="op">&lt;</span><span class="lifetime">&#39;b</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span><span class="op">&gt;</span>(<span class="ident">row</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;b</span> <span class="ident">Row</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">R</span> {
+    <span class="kw">let</span> <span class="ident">nrows</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">row</span>.<span class="ident">get</span>(<span class="number">0</span>);
+    <span class="ident">nrows</span>.<span class="ident">expect</span>(<span class="string">&quot;Could not parse int result from count_query&quot;</span>)
+}
+
+<span class="attribute">#[<span class="ident">throws</span>(<span class="ident">PostgresSourceError</span>)]</span>
+<span class="kw">fn</span> <span class="ident">get_total_rows</span><span class="op">&lt;</span><span class="ident">C</span><span class="op">&gt;</span>(<span class="ident">conn</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">PgConn</span><span class="op">&lt;</span><span class="ident">C</span><span class="op">&gt;</span>, <span class="ident">query</span>: <span class="kw-2">&amp;</span><span class="ident">CXQuery</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span>
+<span class="kw">where</span>
+    <span class="ident">C</span>: <span class="ident">MakeTlsConnect</span><span class="op">&lt;</span><span class="ident">Socket</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span> <span class="op">+</span> <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="ident">Send</span>,
+    <span class="ident">C::TlsConnect</span>: <span class="ident">Send</span>,
+    <span class="ident">C::Stream</span>: <span class="ident">Send</span>,
+    <span class="op">&lt;</span><span class="ident">C::TlsConnect</span> <span class="kw">as</span> <span class="ident">TlsConnect</span><span class="op">&lt;</span><span class="ident">Socket</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Future</span>: <span class="ident">Send</span>,
+{
+    <span class="kw">let</span> <span class="ident">dialect</span> <span class="op">=</span> <span class="ident">PostgreSqlDialect</span> {};
+
+    <span class="kw">let</span> <span class="ident">num_rows</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">get_limit</span>(<span class="ident">query</span>, <span class="kw-2">&amp;</span><span class="ident">dialect</span>)<span class="question-mark">?</span> {
+        <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="kw">let</span> <span class="ident">row</span> <span class="op">=</span> <span class="ident">conn</span>.<span class="ident">query_one</span>(<span class="ident">count_query</span>(<span class="ident">query</span>, <span class="kw-2">&amp;</span><span class="ident">dialect</span>)<span class="question-mark">?</span>.<span class="ident">as_str</span>(), <span class="kw-2">&amp;</span>[])<span class="question-mark">?</span>;
+            <span class="kw">let</span> <span class="ident">col_type</span> <span class="op">=</span> <span class="ident">PostgresTypeSystem::from</span>(<span class="ident">row</span>.<span class="ident">columns</span>()[<span class="number">0</span>].<span class="ident">type_</span>());
+            <span class="kw">match</span> <span class="ident">col_type</span> {
+                <span class="ident">PostgresTypeSystem::Int2</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">convert_row</span>::<span class="op">&lt;</span><span class="ident">i16</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">row</span>) <span class="kw">as</span> <span class="ident">usize</span>,
+                <span class="ident">PostgresTypeSystem::Int4</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">convert_row</span>::<span class="op">&lt;</span><span class="ident">i32</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">row</span>) <span class="kw">as</span> <span class="ident">usize</span>,
+                <span class="ident">PostgresTypeSystem::Int8</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">convert_row</span>::<span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">row</span>) <span class="kw">as</span> <span class="ident">usize</span>,
+                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">throw!</span>(<span class="macro">anyhow!</span>(
+                    <span class="string">&quot;The result of the count query was not an int, aborting.&quot;</span>
+                )),
+            }
+        }
+        <span class="prelude-val">Some</span>(<span class="ident">n</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">n</span>,
+    };
+    <span class="ident">num_rows</span>
+}
+
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PostgresSource</span><span class="op">&lt;</span><span class="ident">P</span>, <span class="ident">C</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">C</span>: <span class="ident">MakeTlsConnect</span><span class="op">&lt;</span><span class="ident">Socket</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span> <span class="op">+</span> <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="ident">Send</span>,
@@ -999,10 +1024,10 @@
     <span class="op">&lt;</span><span class="ident">C::TlsConnect</span> <span class="kw">as</span> <span class="ident">TlsConnect</span><span class="op">&lt;</span><span class="ident">Socket</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Future</span>: <span class="ident">Send</span>,
 {
     <span class="ident">pool</span>: <span class="ident">Pool</span><span class="op">&lt;</span><span class="ident">PgManager</span><span class="op">&lt;</span><span class="ident">C</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">origin_query</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
     <span class="ident">queries</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">CXQuery</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="ident">names</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
     <span class="ident">schema</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">PostgresTypeSystem</span><span class="op">&gt;</span>,
-    <span class="ident">buf_size</span>: <span class="ident">usize</span>,
     <span class="ident">_protocol</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>,
 }
 
@@ -1020,16 +1045,12 @@
 
         <span class="self">Self</span> {
             <span class="ident">pool</span>,
+            <span class="ident">origin_query</span>: <span class="prelude-val">None</span>,
             <span class="ident">queries</span>: <span class="macro">vec!</span>[],
             <span class="ident">names</span>: <span class="macro">vec!</span>[],
             <span class="ident">schema</span>: <span class="macro">vec!</span>[],
-            <span class="ident">buf_size</span>: <span class="number">32</span>,
             <span class="ident">_protocol</span>: <span class="ident">PhantomData</span>,
         }
-    }
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">buf_size</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">buf_size</span>: <span class="ident">usize</span>) {
-        <span class="self">self</span>.<span class="ident">buf_size</span> <span class="op">=</span> <span class="ident">buf_size</span>;
     }
 }
 
@@ -1059,6 +1080,10 @@
         <span class="self">self</span>.<span class="ident">queries</span> <span class="op">=</span> <span class="ident">queries</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">q</span><span class="op">|</span> <span class="ident">q</span>.<span class="ident">map</span>(<span class="ident">Q::to_string</span>)).<span class="ident">collect</span>();
     }
 
+    <span class="kw">fn</span> <span class="ident">set_origin_query</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">query</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>) {
+        <span class="self">self</span>.<span class="ident">origin_query</span> <span class="op">=</span> <span class="ident">query</span>;
+    }
+
     <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">PostgresSourceError</span>)]</span>
     <span class="kw">fn</span> <span class="ident">fetch_metadata</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
         <span class="macro">assert!</span>(<span class="op">!</span><span class="self">self</span>.<span class="ident">queries</span>.<span class="ident">is_empty</span>());
@@ -1083,6 +1108,19 @@
         <span class="self">self</span>.<span class="ident">schema</span> <span class="op">=</span> <span class="ident">types</span>;
     }
 
+    <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">PostgresSourceError</span>)]</span>
+    <span class="kw">fn</span> <span class="ident">result_rows</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
+        <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">origin_query</span> {
+            <span class="prelude-val">Some</span>(<span class="ident">q</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">let</span> <span class="ident">cxq</span> <span class="op">=</span> <span class="ident">CXQuery::Naked</span>(<span class="ident">q</span>.<span class="ident">clone</span>());
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">conn</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">pool</span>.<span class="ident">get</span>()<span class="question-mark">?</span>;
+                <span class="kw">let</span> <span class="ident">nrows</span> <span class="op">=</span> <span class="ident">get_total_rows</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">conn</span>, <span class="kw-2">&amp;</span><span class="ident">cxq</span>)<span class="question-mark">?</span>;
+                <span class="prelude-val">Some</span>(<span class="ident">nrows</span>)
+            }
+            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
+        }
+    }
+
     <span class="kw">fn</span> <span class="ident">names</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">names</span>.<span class="ident">clone</span>()
     }
@@ -1101,7 +1139,6 @@
                 <span class="ident">conn</span>,
                 <span class="kw-2">&amp;</span><span class="ident">query</span>,
                 <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">schema</span>,
-                <span class="self">self</span>.<span class="ident">buf_size</span>,
             ));
         }
         <span class="ident">ret</span>
@@ -1120,7 +1157,6 @@
     <span class="ident">schema</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">PostgresTypeSystem</span><span class="op">&gt;</span>,
     <span class="ident">nrows</span>: <span class="ident">usize</span>,
     <span class="ident">ncols</span>: <span class="ident">usize</span>,
-    <span class="ident">buf_size</span>: <span class="ident">usize</span>,
     <span class="ident">_protocol</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>,
 }
 
@@ -1131,45 +1167,15 @@
     <span class="ident">C::Stream</span>: <span class="ident">Send</span>,
     <span class="op">&lt;</span><span class="ident">C::TlsConnect</span> <span class="kw">as</span> <span class="ident">TlsConnect</span><span class="op">&lt;</span><span class="ident">Socket</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Future</span>: <span class="ident">Send</span>,
 {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(
-        <span class="ident">conn</span>: <span class="ident">PgConn</span><span class="op">&lt;</span><span class="ident">C</span><span class="op">&gt;</span>,
-        <span class="ident">query</span>: <span class="kw-2">&amp;</span><span class="ident">CXQuery</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
-        <span class="ident">schema</span>: <span class="kw-2">&amp;</span>[<span class="ident">PostgresTypeSystem</span>],
-        <span class="ident">buf_size</span>: <span class="ident">usize</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">conn</span>: <span class="ident">PgConn</span><span class="op">&lt;</span><span class="ident">C</span><span class="op">&gt;</span>, <span class="ident">query</span>: <span class="kw-2">&amp;</span><span class="ident">CXQuery</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>, <span class="ident">schema</span>: <span class="kw-2">&amp;</span>[<span class="ident">PostgresTypeSystem</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">conn</span>,
             <span class="ident">query</span>: <span class="ident">query</span>.<span class="ident">clone</span>(),
             <span class="ident">schema</span>: <span class="ident">schema</span>.<span class="ident">to_vec</span>(),
             <span class="ident">nrows</span>: <span class="number">0</span>,
             <span class="ident">ncols</span>: <span class="ident">schema</span>.<span class="ident">len</span>(),
-            <span class="ident">buf_size</span>,
             <span class="ident">_protocol</span>: <span class="ident">PhantomData</span>,
         }
-    }
-
-    <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">PostgresSourceError</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_total_rows</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
-        <span class="kw">let</span> <span class="ident">dialect</span> <span class="op">=</span> <span class="ident">PostgreSqlDialect</span> {};
-        <span class="kw">let</span> <span class="ident">row</span> <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">conn</span>
-            .<span class="ident">query_one</span>(<span class="ident">count_query</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">query</span>, <span class="kw-2">&amp;</span><span class="ident">dialect</span>)<span class="question-mark">?</span>.<span class="ident">as_str</span>(), <span class="kw-2">&amp;</span>[])<span class="question-mark">?</span>;
-
-        <span class="kw">let</span> <span class="ident">num_rows</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">get_limit</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">query</span>, <span class="kw-2">&amp;</span><span class="ident">dialect</span>)<span class="question-mark">?</span> {
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="ident">col_type</span> <span class="op">=</span> <span class="ident">PostgresTypeSystem::from</span>(<span class="ident">row</span>.<span class="ident">columns</span>()[<span class="number">0</span>].<span class="ident">type_</span>());
-                <span class="kw">match</span> <span class="ident">col_type</span> {
-                    <span class="ident">PostgresTypeSystem::Int2</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">convert_row</span>::<span class="op">&lt;</span><span class="ident">i16</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">row</span>) <span class="kw">as</span> <span class="ident">usize</span>,
-                    <span class="ident">PostgresTypeSystem::Int4</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">convert_row</span>::<span class="op">&lt;</span><span class="ident">i32</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">row</span>) <span class="kw">as</span> <span class="ident">usize</span>,
-                    <span class="ident">PostgresTypeSystem::Int8</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">convert_row</span>::<span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">row</span>) <span class="kw">as</span> <span class="ident">usize</span>,
-                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">throw!</span>(<span class="macro">anyhow!</span>(
-                        <span class="string">&quot;The result of the count query was not an int, aborting.&quot;</span>
-                    )),
-                }
-            }
-            <span class="prelude-val">Some</span>(<span class="ident">n</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">n</span>,
-        };
-        <span class="ident">num_rows</span>
     }
 }
 
@@ -1185,8 +1191,8 @@
     <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">PostgresSourceError</span>;
 
     <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">PostgresSourceError</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">prepare</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
-        <span class="self">self</span>.<span class="ident">nrows</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_total_rows</span>()<span class="question-mark">?</span>;
+    <span class="kw">fn</span> <span class="ident">result_rows</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> () {
+        <span class="self">self</span>.<span class="ident">nrows</span> <span class="op">=</span> <span class="ident">get_total_rows</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">conn</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">query</span>)<span class="question-mark">?</span>;
     }
 
     <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">PostgresSourceError</span>)]</span>
@@ -1196,7 +1202,7 @@
         <span class="kw">let</span> <span class="ident">pg_schema</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">schema</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">dt</span><span class="op">|</span> <span class="ident">dt</span>.<span class="ident">into</span>()).<span class="ident">collect</span>();
         <span class="kw">let</span> <span class="ident">iter</span> <span class="op">=</span> <span class="ident">BinaryCopyOutIter::new</span>(<span class="ident">reader</span>, <span class="kw-2">&amp;</span><span class="ident">pg_schema</span>);
 
-        <span class="ident">PostgresBinarySourcePartitionParser::new</span>(<span class="ident">iter</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">schema</span>, <span class="self">self</span>.<span class="ident">buf_size</span>)
+        <span class="ident">PostgresBinarySourcePartitionParser::new</span>(<span class="ident">iter</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">schema</span>)
     }
 
     <span class="kw">fn</span> <span class="ident">nrows</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
@@ -1220,8 +1226,8 @@
     <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">PostgresSourceError</span>;
 
     <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">PostgresSourceError</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">prepare</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
-        <span class="self">self</span>.<span class="ident">nrows</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_total_rows</span>()<span class="question-mark">?</span>;
+    <span class="kw">fn</span> <span class="ident">result_rows</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
+        <span class="self">self</span>.<span class="ident">nrows</span> <span class="op">=</span> <span class="ident">get_total_rows</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">conn</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">query</span>)<span class="question-mark">?</span>;
     }
 
     <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">PostgresSourceError</span>)]</span>
@@ -1233,7 +1239,7 @@
             .<span class="ident">from_reader</span>(<span class="ident">reader</span>)
             .<span class="ident">into_records</span>();
 
-        <span class="ident">PostgresCSVSourceParser::new</span>(<span class="ident">iter</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">schema</span>, <span class="self">self</span>.<span class="ident">buf_size</span>)
+        <span class="ident">PostgresCSVSourceParser::new</span>(<span class="ident">iter</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">schema</span>)
     }
 
     <span class="kw">fn</span> <span class="ident">nrows</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
@@ -1243,12 +1249,6 @@
     <span class="kw">fn</span> <span class="ident">ncols</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
         <span class="self">self</span>.<span class="ident">ncols</span>
     }
-}
-
-<span class="comment">// take a row and unwrap the interior field from column 0</span>
-<span class="kw">fn</span> <span class="ident">convert_row</span><span class="op">&lt;</span><span class="lifetime">&#39;b</span>, <span class="ident">R</span>: <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">postgres::types::FromSql</span><span class="op">&lt;</span><span class="lifetime">&#39;b</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span><span class="op">&gt;</span>(<span class="ident">row</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;b</span> <span class="ident">Row</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">R</span> {
-    <span class="kw">let</span> <span class="ident">nrows</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">row</span>.<span class="ident">get</span>(<span class="number">0</span>);
-    <span class="ident">nrows</span>.<span class="ident">expect</span>(<span class="string">&quot;Could not parse int result from count_query&quot;</span>)
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">C</span><span class="op">&gt;</span> <span class="ident">SourcePartition</span> <span class="kw">for</span> <span class="ident">PostgresSourcePartition</span><span class="op">&lt;</span><span class="ident">CursorProtocol</span>, <span class="ident">C</span><span class="op">&gt;</span>
@@ -1263,8 +1263,8 @@
     <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">PostgresSourceError</span>;
 
     <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">PostgresSourceError</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">prepare</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
-        <span class="self">self</span>.<span class="ident">nrows</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_total_rows</span>()<span class="question-mark">?</span>;
+    <span class="kw">fn</span> <span class="ident">result_rows</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
+        <span class="self">self</span>.<span class="ident">nrows</span> <span class="op">=</span> <span class="ident">get_total_rows</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">conn</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">query</span>)<span class="question-mark">?</span>;
     }
 
     <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">PostgresSourceError</span>)]</span>
@@ -1272,7 +1272,7 @@
         <span class="kw">let</span> <span class="ident">iter</span> <span class="op">=</span> <span class="self">self</span>
             .<span class="ident">conn</span>
             .<span class="ident">query_raw</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">bool</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="self">self</span>.<span class="ident">query</span>.<span class="ident">as_str</span>(), <span class="macro">vec!</span>[])<span class="question-mark">?</span>; <span class="comment">// unless reading the data, it seems like issue the query is fast</span>
-        <span class="ident">PostgresRawSourceParser::new</span>(<span class="ident">iter</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">schema</span>, <span class="self">self</span>.<span class="ident">buf_size</span>)
+        <span class="ident">PostgresRawSourceParser::new</span>(<span class="ident">iter</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">schema</span>)
     }
 
     <span class="kw">fn</span> <span class="ident">nrows</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
@@ -1285,7 +1285,6 @@
 }
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PostgresBinarySourcePartitionParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="ident">iter</span>: <span class="ident">BinaryCopyOutIter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
-    <span class="ident">buf_size</span>: <span class="ident">usize</span>,
     <span class="ident">rowbuf</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">BinaryCopyOutRow</span><span class="op">&gt;</span>,
     <span class="ident">ncols</span>: <span class="ident">usize</span>,
     <span class="ident">current_col</span>: <span class="ident">usize</span>,
@@ -1293,15 +1292,10 @@
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">PostgresBinarySourcePartitionParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(
-        <span class="ident">iter</span>: <span class="ident">BinaryCopyOutIter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
-        <span class="ident">schema</span>: <span class="kw-2">&amp;</span>[<span class="ident">PostgresTypeSystem</span>],
-        <span class="ident">buf_size</span>: <span class="ident">usize</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">iter</span>: <span class="ident">BinaryCopyOutIter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>, <span class="ident">schema</span>: <span class="kw-2">&amp;</span>[<span class="ident">PostgresTypeSystem</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">iter</span>,
-            <span class="ident">buf_size</span>,
-            <span class="ident">rowbuf</span>: <span class="ident">Vec::with_capacity</span>(<span class="ident">buf_size</span>),
+            <span class="ident">rowbuf</span>: <span class="ident">Vec::with_capacity</span>(<span class="ident">DB_BUFFER_SIZE</span>),
             <span class="ident">ncols</span>: <span class="ident">schema</span>.<span class="ident">len</span>(),
             <span class="ident">current_row</span>: <span class="number">0</span>,
             <span class="ident">current_col</span>: <span class="number">0</span>,
@@ -1310,27 +1304,6 @@
 
     <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">PostgresSourceError</span>)]</span>
     <span class="kw">fn</span> <span class="ident">next_loc</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">usize</span>, <span class="ident">usize</span>) {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">current_row</span> <span class="op">&gt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">rowbuf</span>.<span class="ident">len</span>() {
-            <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">rowbuf</span>.<span class="ident">is_empty</span>() {
-                <span class="self">self</span>.<span class="ident">rowbuf</span>.<span class="ident">drain</span>(..);
-            }
-
-            <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="self">self</span>.<span class="ident">buf_size</span> {
-                <span class="kw">match</span> <span class="self">self</span>.<span class="ident">iter</span>.<span class="ident">next</span>()<span class="question-mark">?</span> {
-                    <span class="prelude-val">Some</span>(<span class="ident">row</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="self">self</span>.<span class="ident">rowbuf</span>.<span class="ident">push</span>(<span class="ident">row</span>);
-                    }
-                    <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">break</span>,
-                }
-            }
-
-            <span class="kw">if</span> <span class="self">self</span>.<span class="ident">rowbuf</span>.<span class="ident">is_empty</span>() {
-                <span class="macro">throw!</span>(<span class="macro">anyhow!</span>(<span class="string">&quot;Postgres EOF&quot;</span>));
-            }
-            <span class="self">self</span>.<span class="ident">current_row</span> <span class="op">=</span> <span class="number">0</span>;
-            <span class="self">self</span>.<span class="ident">current_col</span> <span class="op">=</span> <span class="number">0</span>;
-        }
-
         <span class="kw">let</span> <span class="ident">ret</span> <span class="op">=</span> (<span class="self">self</span>.<span class="ident">current_row</span>, <span class="self">self</span>.<span class="ident">current_col</span>);
         <span class="self">self</span>.<span class="ident">current_row</span> <span class="op">+</span><span class="op">=</span> (<span class="self">self</span>.<span class="ident">current_col</span> <span class="op">+</span> <span class="number">1</span>) <span class="op">/</span> <span class="self">self</span>.<span class="ident">ncols</span>;
         <span class="self">self</span>.<span class="ident">current_col</span> <span class="op">=</span> (<span class="self">self</span>.<span class="ident">current_col</span> <span class="op">+</span> <span class="number">1</span>) <span class="op">%</span> <span class="self">self</span>.<span class="ident">ncols</span>;
@@ -1341,6 +1314,24 @@
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">PartitionParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PostgresBinarySourcePartitionParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="kw">type</span> <span class="ident">TypeSystem</span> <span class="op">=</span> <span class="ident">PostgresTypeSystem</span>;
     <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">PostgresSourceError</span>;
+
+    <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">PostgresSourceError</span>)]</span>
+    <span class="kw">fn</span> <span class="ident">fetch_next</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">usize</span>, <span class="ident">bool</span>) {
+        <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">rowbuf</span>.<span class="ident">is_empty</span>() {
+            <span class="self">self</span>.<span class="ident">rowbuf</span>.<span class="ident">drain</span>(..);
+        }
+        <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">DB_BUFFER_SIZE</span> {
+            <span class="kw">match</span> <span class="self">self</span>.<span class="ident">iter</span>.<span class="ident">next</span>()<span class="question-mark">?</span> {
+                <span class="prelude-val">Some</span>(<span class="ident">row</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="self">self</span>.<span class="ident">rowbuf</span>.<span class="ident">push</span>(<span class="ident">row</span>);
+                }
+                <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">break</span>,
+            }
+        }
+        <span class="self">self</span>.<span class="ident">current_row</span> <span class="op">=</span> <span class="number">0</span>;
+        <span class="self">self</span>.<span class="ident">current_col</span> <span class="op">=</span> <span class="number">0</span>;
+        (<span class="self">self</span>.<span class="ident">rowbuf</span>.<span class="ident">len</span>(), <span class="self">self</span>.<span class="ident">rowbuf</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="ident">DB_BUFFER_SIZE</span>)
+    }
 }
 
 <span class="macro">macro_rules!</span> <span class="ident">impl_produce</span> {
@@ -1400,7 +1391,6 @@
 
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PostgresCSVSourceParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="ident">iter</span>: <span class="ident">StringRecordsIntoIter</span><span class="op">&lt;</span><span class="ident">CopyOutReader</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">buf_size</span>: <span class="ident">usize</span>,
     <span class="ident">rowbuf</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">StringRecord</span><span class="op">&gt;</span>,
     <span class="ident">ncols</span>: <span class="ident">usize</span>,
     <span class="ident">current_col</span>: <span class="ident">usize</span>,
@@ -1411,12 +1401,10 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(
         <span class="ident">iter</span>: <span class="ident">StringRecordsIntoIter</span><span class="op">&lt;</span><span class="ident">CopyOutReader</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span>,
         <span class="ident">schema</span>: <span class="kw-2">&amp;</span>[<span class="ident">PostgresTypeSystem</span>],
-        <span class="ident">buf_size</span>: <span class="ident">usize</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">iter</span>,
-            <span class="ident">buf_size</span>,
-            <span class="ident">rowbuf</span>: <span class="ident">Vec::with_capacity</span>(<span class="ident">buf_size</span>),
+            <span class="ident">rowbuf</span>: <span class="ident">Vec::with_capacity</span>(<span class="ident">DB_BUFFER_SIZE</span>),
             <span class="ident">ncols</span>: <span class="ident">schema</span>.<span class="ident">len</span>(),
             <span class="ident">current_row</span>: <span class="number">0</span>,
             <span class="ident">current_col</span>: <span class="number">0</span>,
@@ -1425,26 +1413,6 @@
 
     <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">PostgresSourceError</span>)]</span>
     <span class="kw">fn</span> <span class="ident">next_loc</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">usize</span>, <span class="ident">usize</span>) {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">current_row</span> <span class="op">&gt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">rowbuf</span>.<span class="ident">len</span>() {
-            <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">rowbuf</span>.<span class="ident">is_empty</span>() {
-                <span class="self">self</span>.<span class="ident">rowbuf</span>.<span class="ident">drain</span>(..);
-            }
-
-            <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="self">self</span>.<span class="ident">buf_size</span> {
-                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">row</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">iter</span>.<span class="ident">next</span>() {
-                    <span class="self">self</span>.<span class="ident">rowbuf</span>.<span class="ident">push</span>(<span class="ident">row</span><span class="question-mark">?</span>);
-                } <span class="kw">else</span> {
-                    <span class="kw">break</span>;
-                }
-            }
-
-            <span class="kw">if</span> <span class="self">self</span>.<span class="ident">rowbuf</span>.<span class="ident">is_empty</span>() {
-                <span class="macro">throw!</span>(<span class="macro">anyhow!</span>(<span class="string">&quot;Postgres EOF&quot;</span>));
-            }
-            <span class="self">self</span>.<span class="ident">current_row</span> <span class="op">=</span> <span class="number">0</span>;
-            <span class="self">self</span>.<span class="ident">current_col</span> <span class="op">=</span> <span class="number">0</span>;
-        }
-
         <span class="kw">let</span> <span class="ident">ret</span> <span class="op">=</span> (<span class="self">self</span>.<span class="ident">current_row</span>, <span class="self">self</span>.<span class="ident">current_col</span>);
         <span class="self">self</span>.<span class="ident">current_row</span> <span class="op">+</span><span class="op">=</span> (<span class="self">self</span>.<span class="ident">current_col</span> <span class="op">+</span> <span class="number">1</span>) <span class="op">/</span> <span class="self">self</span>.<span class="ident">ncols</span>;
         <span class="self">self</span>.<span class="ident">current_col</span> <span class="op">=</span> (<span class="self">self</span>.<span class="ident">current_col</span> <span class="op">+</span> <span class="number">1</span>) <span class="op">%</span> <span class="self">self</span>.<span class="ident">ncols</span>;
@@ -1455,6 +1423,23 @@
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">PartitionParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PostgresCSVSourceParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">PostgresSourceError</span>;
     <span class="kw">type</span> <span class="ident">TypeSystem</span> <span class="op">=</span> <span class="ident">PostgresTypeSystem</span>;
+
+    <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">PostgresSourceError</span>)]</span>
+    <span class="kw">fn</span> <span class="ident">fetch_next</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">usize</span>, <span class="ident">bool</span>) {
+        <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">rowbuf</span>.<span class="ident">is_empty</span>() {
+            <span class="self">self</span>.<span class="ident">rowbuf</span>.<span class="ident">drain</span>(..);
+        }
+        <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">DB_BUFFER_SIZE</span> {
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">row</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">iter</span>.<span class="ident">next</span>() {
+                <span class="self">self</span>.<span class="ident">rowbuf</span>.<span class="ident">push</span>(<span class="ident">row</span><span class="question-mark">?</span>);
+            } <span class="kw">else</span> {
+                <span class="kw">break</span>;
+            }
+        }
+        <span class="self">self</span>.<span class="ident">current_row</span> <span class="op">=</span> <span class="number">0</span>;
+        <span class="self">self</span>.<span class="ident">current_col</span> <span class="op">=</span> <span class="number">0</span>;
+        (<span class="self">self</span>.<span class="ident">rowbuf</span>.<span class="ident">len</span>(), <span class="self">self</span>.<span class="ident">rowbuf</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="ident">DB_BUFFER_SIZE</span>)
+    }
 }
 
 <span class="macro">macro_rules!</span> <span class="ident">impl_csv_produce</span> {
@@ -1777,7 +1762,6 @@
 
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PostgresRawSourceParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="ident">iter</span>: <span class="ident">RowIter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
-    <span class="ident">buf_size</span>: <span class="ident">usize</span>,
     <span class="ident">rowbuf</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Row</span><span class="op">&gt;</span>,
     <span class="ident">ncols</span>: <span class="ident">usize</span>,
     <span class="ident">current_col</span>: <span class="ident">usize</span>,
@@ -1785,11 +1769,10 @@
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">PostgresRawSourceParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">iter</span>: <span class="ident">RowIter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>, <span class="ident">schema</span>: <span class="kw-2">&amp;</span>[<span class="ident">PostgresTypeSystem</span>], <span class="ident">buf_size</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">iter</span>: <span class="ident">RowIter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>, <span class="ident">schema</span>: <span class="kw-2">&amp;</span>[<span class="ident">PostgresTypeSystem</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">iter</span>,
-            <span class="ident">buf_size</span>,
-            <span class="ident">rowbuf</span>: <span class="ident">Vec::with_capacity</span>(<span class="ident">buf_size</span>),
+            <span class="ident">rowbuf</span>: <span class="ident">Vec::with_capacity</span>(<span class="ident">DB_BUFFER_SIZE</span>),
             <span class="ident">ncols</span>: <span class="ident">schema</span>.<span class="ident">len</span>(),
             <span class="ident">current_row</span>: <span class="number">0</span>,
             <span class="ident">current_col</span>: <span class="number">0</span>,
@@ -1798,26 +1781,6 @@
 
     <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">PostgresSourceError</span>)]</span>
     <span class="kw">fn</span> <span class="ident">next_loc</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">usize</span>, <span class="ident">usize</span>) {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">current_row</span> <span class="op">&gt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">rowbuf</span>.<span class="ident">len</span>() {
-            <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">rowbuf</span>.<span class="ident">is_empty</span>() {
-                <span class="self">self</span>.<span class="ident">rowbuf</span>.<span class="ident">drain</span>(..);
-            }
-
-            <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="self">self</span>.<span class="ident">buf_size</span> {
-                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">row</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">iter</span>.<span class="ident">next</span>()<span class="question-mark">?</span> {
-                    <span class="self">self</span>.<span class="ident">rowbuf</span>.<span class="ident">push</span>(<span class="ident">row</span>);
-                } <span class="kw">else</span> {
-                    <span class="kw">break</span>;
-                }
-            }
-
-            <span class="kw">if</span> <span class="self">self</span>.<span class="ident">rowbuf</span>.<span class="ident">is_empty</span>() {
-                <span class="macro">throw!</span>(<span class="macro">anyhow!</span>(<span class="string">&quot;Postgres EOF&quot;</span>));
-            }
-            <span class="self">self</span>.<span class="ident">current_row</span> <span class="op">=</span> <span class="number">0</span>;
-            <span class="self">self</span>.<span class="ident">current_col</span> <span class="op">=</span> <span class="number">0</span>;
-        }
-
         <span class="kw">let</span> <span class="ident">ret</span> <span class="op">=</span> (<span class="self">self</span>.<span class="ident">current_row</span>, <span class="self">self</span>.<span class="ident">current_col</span>);
         <span class="self">self</span>.<span class="ident">current_row</span> <span class="op">+</span><span class="op">=</span> (<span class="self">self</span>.<span class="ident">current_col</span> <span class="op">+</span> <span class="number">1</span>) <span class="op">/</span> <span class="self">self</span>.<span class="ident">ncols</span>;
         <span class="self">self</span>.<span class="ident">current_col</span> <span class="op">=</span> (<span class="self">self</span>.<span class="ident">current_col</span> <span class="op">+</span> <span class="number">1</span>) <span class="op">%</span> <span class="self">self</span>.<span class="ident">ncols</span>;
@@ -1828,6 +1791,23 @@
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">PartitionParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PostgresRawSourceParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="kw">type</span> <span class="ident">TypeSystem</span> <span class="op">=</span> <span class="ident">PostgresTypeSystem</span>;
     <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">PostgresSourceError</span>;
+
+    <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">PostgresSourceError</span>)]</span>
+    <span class="kw">fn</span> <span class="ident">fetch_next</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">usize</span>, <span class="ident">bool</span>) {
+        <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">rowbuf</span>.<span class="ident">is_empty</span>() {
+            <span class="self">self</span>.<span class="ident">rowbuf</span>.<span class="ident">drain</span>(..);
+        }
+        <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">DB_BUFFER_SIZE</span> {
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">row</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">iter</span>.<span class="ident">next</span>()<span class="question-mark">?</span> {
+                <span class="self">self</span>.<span class="ident">rowbuf</span>.<span class="ident">push</span>(<span class="ident">row</span>);
+            } <span class="kw">else</span> {
+                <span class="kw">break</span>;
+            }
+        }
+        <span class="self">self</span>.<span class="ident">current_row</span> <span class="op">=</span> <span class="number">0</span>;
+        <span class="self">self</span>.<span class="ident">current_col</span> <span class="op">=</span> <span class="number">0</span>;
+        (<span class="self">self</span>.<span class="ident">rowbuf</span>.<span class="ident">len</span>(), <span class="self">self</span>.<span class="ident">rowbuf</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="ident">DB_BUFFER_SIZE</span>)
+    }
 }
 
 <span class="macro">macro_rules!</span> <span class="ident">impl_produce</span> {
