@@ -78,6 +78,14 @@ import connectorx as cx
 cx.read_sql("connection string", "SELECT * FROM lineitem", partition_on="l_orderkey", partition_num=4)
 ```
 
+Here are the baselines we compare againt:
+* Pandas
+* Modin
+* Dask
+* Turbodbc
+
+Since Modin and Dask support parallel execution, we use the same number of cores (4) to run them. For Turbodbc, we use the result NumPy arrays to construct the final Pandas.DataFrame for a fair comparison.
+
 ## Postgres (db.m6g.4xlarge RDS)
 
 ## Time chart, lower is better.
@@ -88,7 +96,7 @@ cx.read_sql("connection string", "SELECT * FROM lineitem", partition_on="l_order
 
 <p align="center"><img alt="memory chart" src="https://raw.githubusercontent.com/sfu-db/connector-agent/main/assets/pg-mem.png"/></p>
 
-In conclusion, ConnectorX uses **3x** less memory and **13x** less time compared with pandas.
+In conclusion, ConnectorX uses **3x** less memory and **13x** less time compared with Pandas.
 
 ## MySQL (db.m6g.4xlarge RDS)
 
@@ -101,7 +109,7 @@ In conclusion, ConnectorX uses **3x** less memory and **13x** less time compared
 
 <p align="center"><img alt="memory chart" src="https://raw.githubusercontent.com/sfu-db/connector-agent/main/assets/mysql-mem.png"/></p>
 
-In conclusion, ConnectorX uses **3x** less memory and **8x** less time compared with pandas.
+In conclusion, ConnectorX uses **3x** less memory and **8x** less time compared with Pandas.
 
 
 ## SQLite (r5.4xlarge EC2 same instance)
@@ -116,7 +124,7 @@ In conclusion, ConnectorX uses **3x** less memory and **8x** less time compared 
 
 <p align="center"><img alt="memory chart" src="https://raw.githubusercontent.com/sfu-db/connector-agent/main/assets/sqlite-mem.png"/></p>
 
-In conclusion, ConnectorX uses **2x** less memory and **5x** less time compared with pandas.
+In conclusion, ConnectorX uses **2x** less memory and **5x** less time compared with Pandas.
 
 
 ## Oracle (db.r5.4xlarge RDS)
@@ -131,7 +139,7 @@ In conclusion, ConnectorX uses **2x** less memory and **5x** less time compared 
 
 <p align="center"><img alt="memory chart" src="https://raw.githubusercontent.com/sfu-db/connector-x/main/assets/oracle-mem.png"/></p>
 
-In conclusion, ConnectorX uses **3x** less memory and **3x** less time compared with pandas.
+In conclusion, ConnectorX uses **3x** less memory and **3x** less time compared with Pandas.
 
 
 
@@ -147,4 +155,4 @@ In conclusion, ConnectorX uses **3x** less memory and **3x** less time compared 
 
 <p align="center"><img alt="memory chart" src="https://raw.githubusercontent.com/sfu-db/connector-x/main/assets/mssql-mem.png"/></p>
 
-In conclusion, ConnectorX uses **3x** less memory and **14x** less time compared with pandas.
+In conclusion, ConnectorX uses **3x** less memory and **14x** less time compared with Pandas.
