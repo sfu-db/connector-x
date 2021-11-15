@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1636936952511,
+  "lastUpdate": 1637013759703,
   "repoUrl": "https://github.com/sfu-db/connector-x",
   "entries": {
     "ConnectorX TPC-H Scale@1 Benchmarks": [
@@ -4484,6 +4484,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.1954122694106448",
             "extra": "mean: 14.33443103712052 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "xiaoying_wang@sfu.ca",
+            "name": "Xiaoying Wang",
+            "username": "wangxiaoying"
+          },
+          "committer": {
+            "email": "xiaoying_wang@sfu.ca",
+            "name": "Xiaoying Wang",
+            "username": "wangxiaoying"
+          },
+          "distinct": true,
+          "id": "f5af9184f371d9ac4e95bf7e43a415169eaaaca6",
+          "message": "0.2.2-alpha.5: update mssql fetch schema using prepared statement",
+          "timestamp": "2021-11-15T21:53:08Z",
+          "tree_id": "7b8e75ebd60e2a61d19082bae5164b09a288fe3c",
+          "url": "https://github.com/sfu-db/connector-x/commit/f5af9184f371d9ac4e95bf7e43a415169eaaaca6"
+        },
+        "date": 1637013758145,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_mysql",
+            "value": 0.06608304948595889,
+            "unit": "iter/sec",
+            "range": "stddev: 1.428294570103043",
+            "extra": "mean: 15.132473573461175 sec\nrounds: 5"
+          },
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_postgres",
+            "value": 0.07797221280301844,
+            "unit": "iter/sec",
+            "range": "stddev: 2.0351201355282877",
+            "extra": "mean: 12.825081706047058 sec\nrounds: 5"
           }
         ]
       }
