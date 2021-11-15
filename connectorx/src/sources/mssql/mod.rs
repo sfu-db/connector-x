@@ -10,7 +10,7 @@ use crate::{
     data_order::DataOrder,
     errors::ConnectorXError,
     sources::{PartitionParser, Produce, Source, SourcePartition},
-    sql::{count_query, get_limit_mssql, limit1_query_mssql, CXQuery},
+    sql::{count_query, get_limit_mssql, CXQuery},
     utils::DummyBox,
 };
 use anyhow::anyhow;
@@ -117,58 +117,31 @@ where
         assert!(!self.queries.is_empty());
 
         let mut conn = self.rt.block_on(self.pool.get())?;
-
-        for (i, query) in self.queries.iter().enumerate() {
-            // assuming all the partition queries yield same schema
-            let l1query = limit1_query_mssql(query)?;
-
-            match self.rt.block_on(conn.query(l1query.as_str(), &[])) {
-                Ok(stream) => {
-                    let row = match self.rt.block_on(stream.into_row())? {
-                        Some(row) => row,
-                        None => continue, // this partition is empty.
-                    };
-
-                    let columns = row.columns();
-
-                    let (names, types) = columns
-                        .iter()
-                        .map(|col| {
-                            (
-                                col.name().to_string(),
-                                MsSQLTypeSystem::from(&col.column_type()),
-                            )
-                        })
-                        .unzip();
-                    self.names = names;
-                    self.schema = types;
-                    return;
-                }
-                Err(e) if i == self.queries.len() - 1 => {
-                    // tried the last query but still get an error
-                    debug!("cannot get metadata for '{}', try next query: {}", query, e);
-                    throw!(e);
-                }
-                Err(_) => {}
+        let first_query = &self.queries[0];
+        let (names, types) = match self.rt.block_on(conn.query(first_query.as_str(), &[])) {
+            Ok(stream) => {
+                let columns = stream.columns().ok_or_else(|| {
+                    anyhow!("MsSQL failed to get the columns of query: {}", first_query)
+                })?;
+                columns
+                    .iter()
+                    .map(|col| {
+                        (
+                            col.name().to_string(),
+                            MsSQLTypeSystem::from(&col.column_type()),
+                        )
+                    })
+                    .unzip()
             }
-        }
-
-        // tried all queries but all get empty result set
-        let stream = self
-            .rt
-            .block_on(conn.query(self.queries[0].as_str(), &[]))?;
-
-        let columns = stream.columns().expect("cannot get column information");
-
-        let (names, types) = columns
-            .iter()
-            .map(|col| {
-                (
-                    col.name().to_string(),
-                    MsSQLTypeSystem::from(&col.column_type()),
-                )
-            })
-            .unzip();
+            Err(e) => {
+                // tried the last query but still get an error
+                debug!(
+                    "cannot get metadata for '{}', try next query: {}",
+                    first_query, e
+                );
+                throw!(e);
+            }
+        };
 
         self.names = names;
         self.schema = types;

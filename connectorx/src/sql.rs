@@ -361,36 +361,6 @@ pub fn limit1_query_oracle(sql: &CXQuery<String>) -> CXQuery<String> {
 }
 
 #[throws(ConnectorXError)]
-pub fn limit1_query_mssql(sql: &CXQuery<String>) -> CXQuery<String> {
-    trace!("Incoming query: {}", sql);
-
-    let mut ast = Parser::parse_sql(&MsSqlDialect {}, sql.as_str())?;
-    if ast.len() != 1 {
-        throw!(ConnectorXError::SqlQueryNotSupported(sql.to_string()));
-    }
-
-    match &mut ast[0] {
-        Statement::Query(q) => {
-            match q.body {
-                SetExpr::Select(ref mut s) => {
-                    s.top = Some(Top {
-                        with_ties: false,
-                        percent: false,
-                        quantity: Some(Expr::Value(Value::Number("1".to_string(), false))),
-                    })
-                }
-                _ => throw!(ConnectorXError::SqlQueryNotSupported(sql.to_string())),
-            };
-        }
-        _ => throw!(ConnectorXError::SqlQueryNotSupported(sql.to_string())),
-    };
-
-    let sql = format!("{}", ast[0]);
-    debug!("Transformed limit 1 query: {}", sql);
-    CXQuery::Wrapped(sql)
-}
-
-#[throws(ConnectorXError)]
 pub fn single_col_partition_query<T: Dialect>(
     sql: &str,
     col: &str,
