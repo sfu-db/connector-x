@@ -615,6 +615,7 @@ dependencies = [
  "rayon",
  "rusqlite",
  "rust_decimal",
+ "rust_decimal_macros",
  "serde_json",
  "sqlparser",
  "thiserror",
@@ -2925,6 +2926,16 @@ dependencies = [
  "num-traits",
  "postgres",
  "serde",
+]
+
+[[package]]
+name = "rust_decimal_macros"
+version = "1.16.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5732c6adfbb4bbf262b7625832174ef76ccec1786bf8badfcfd11c494214f1a9"
+dependencies = [
+ "quote",
+ "rust_decimal",
 ]
 
 [[package]]

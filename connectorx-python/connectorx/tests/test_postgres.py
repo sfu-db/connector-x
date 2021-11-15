@@ -790,6 +790,27 @@ def test_read_sql_tls(postgres_url_tls: str) -> None:
     df.sort_values(by="test_int", inplace=True, ignore_index=True)
     assert_frame_equal(df, expected, check_names=True)
 
+def test_partition_on_decimal(postgres_url: str) -> None:
+    # partition column can not have None
+    query = "SELECT * FROM test_table where test_int<>1"
+    df = read_sql(postgres_url, query,
+                  partition_on="test_float", partition_num=3)
+    expected = pd.DataFrame(
+        data={
+            "test_int": pd.Series([0, 2, 3, 4, 1314], dtype="Int64"),
+            "test_nullint": pd.Series([5, None, 7, 9, 2], dtype="Int64"),
+            "test_str": pd.Series(
+                ["a", "str2", "b", "c", None], dtype="object"
+            ),
+            "test_float": pd.Series([3.1, 2.2, 3, 7.8, -10], dtype="float64"),
+            "test_bool": pd.Series(
+                [None, False, False, None, True], dtype="boolean"
+            ),
+        },
+    )
+    df.sort_values(by="test_int", inplace=True, ignore_index=True)
+    assert_frame_equal(df, expected, check_names=True)
+
 
 @pytest.mark.skipif(
     not os.environ.get("POSTGRES_URL_TLS"),

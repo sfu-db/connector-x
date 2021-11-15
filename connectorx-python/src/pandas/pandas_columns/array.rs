@@ -209,7 +209,7 @@ where
                         start = end;
                     } else {
                         unsafe {
-                            let n = unsafe { Py::from_borrowed_ptr(py, pyo3::ffi::Py_None()) };
+                            let n = Py::from_borrowed_ptr(py, pyo3::ffi::Py_None());
                             *self.data.add(self.row_idx[i]) = PyList(n);
                         }
                     }
