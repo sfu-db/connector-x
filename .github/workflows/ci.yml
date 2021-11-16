@@ -115,6 +115,9 @@ jobs:
           command: clippy
           args: --features all
 
+      - name: Check each feature gate
+        run: just test-feature-gate
+
       - name: Run tests
         uses: actions-rs/cargo@v1
         with:

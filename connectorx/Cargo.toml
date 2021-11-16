@@ -69,8 +69,8 @@ fptr = []
 src_csv = ["csv", "regex", "chrono"]
 src_dummy = ["num-traits", "chrono"]
 src_mssql = ["rust_decimal", "num-traits", "chrono", "tiberius", "bb8-tiberius", "bb8", "tokio", "url", "uuid", "owning_ref", "futures", "urlencoding"]
-src_mysql = ["r2d2_mysql", "rust_decimal", "num-traits", "chrono", "r2d2"]
-src_oracle = ["r2d2-oracle", "chrono", "r2d2", "urlencoding"]
+src_mysql = ["r2d2_mysql", "rust_decimal", "num-traits", "chrono", "serde_json", "r2d2"]
+src_oracle = ["r2d2-oracle", "chrono", "r2d2", "urlencoding", "url"]
 src_postgres = [
   "postgres",
   "r2d2_postgres",
