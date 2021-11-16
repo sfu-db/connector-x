@@ -109,9 +109,21 @@
 <span id="106">106</span>
 <span id="107">107</span>
 <span id="108">108</span>
+<span id="109">109</span>
+<span id="110">110</span>
+<span id="111">111</span>
+<span id="112">112</span>
+<span id="113">113</span>
+<span id="114">114</span>
+<span id="115">115</span>
+<span id="116">116</span>
+<span id="117">117</span>
+<span id="118">118</span>
+<span id="119">119</span>
+<span id="120">120</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="ident">chrono</span>::{<span class="ident">NaiveDate</span>, <span class="ident">NaiveDateTime</span>, <span class="ident">NaiveTime</span>};
-<span class="kw">use</span> <span class="ident">r2d2_mysql::mysql::consts::ColumnType</span>;
+<span class="kw">use</span> <span class="ident">r2d2_mysql::mysql::consts</span>::{<span class="ident">ColumnFlags</span>, <span class="ident">ColumnType</span>};
 <span class="kw">use</span> <span class="ident">rust_decimal::Decimal</span>;
 <span class="kw">use</span> <span class="ident">serde_json::Value</span>;
 
@@ -124,6 +136,11 @@
     <span class="ident">Long</span>(<span class="ident">bool</span>),
     <span class="ident">Int24</span>(<span class="ident">bool</span>),
     <span class="ident">LongLong</span>(<span class="ident">bool</span>),
+    <span class="ident">UTiny</span>(<span class="ident">bool</span>),
+    <span class="ident">UShort</span>(<span class="ident">bool</span>),
+    <span class="ident">ULong</span>(<span class="ident">bool</span>),
+    <span class="ident">UInt24</span>(<span class="ident">bool</span>),
+    <span class="ident">ULongLong</span>(<span class="ident">bool</span>),
     <span class="ident">Datetime</span>(<span class="ident">bool</span>),
     <span class="ident">Date</span>(<span class="ident">bool</span>),
     <span class="ident">Time</span>(<span class="ident">bool</span>),
@@ -149,6 +166,10 @@
         { <span class="ident">LongLong</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i64</span> }
         { <span class="ident">Float</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f32</span> }
         { <span class="ident">Double</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f64</span> }
+        { <span class="ident">UTiny</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">u8</span> }
+        { <span class="ident">UShort</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">u16</span> }
+        { <span class="ident">ULong</span> <span class="op">|</span> <span class="ident">UInt24</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">u32</span>}
+        { <span class="ident">ULongLong</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">u64</span> }
         { <span class="ident">Datetime</span> <span class="op">|</span> <span class="ident">Timestamp</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">NaiveDateTime</span> }
         { <span class="ident">Date</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">NaiveDate</span> }
         { <span class="ident">Time</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">NaiveTime</span> }
@@ -159,62 +180,65 @@
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">ColumnType</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">MySQLTypeSystem</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">ty</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">ColumnType</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">MySQLTypeSystem</span> {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">ColumnType</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">ColumnFlags</span>)<span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">MySQLTypeSystem</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">col</span>: (<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">ColumnType</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">ColumnFlags</span>)) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">MySQLTypeSystem</span> {
         <span class="kw">use</span> <span class="ident">MySQLTypeSystem</span>::<span class="kw-2">*</span>;
+        <span class="kw">let</span> (<span class="ident">ty</span>, <span class="ident">flag</span>) <span class="op">=</span> <span class="ident">col</span>;
+        <span class="kw">let</span> <span class="ident">null_ok</span> <span class="op">=</span> <span class="op">!</span><span class="ident">flag</span>.<span class="ident">contains</span>(<span class="ident">ColumnFlags::NOT_NULL_FLAG</span>);
+        <span class="kw">let</span> <span class="ident">unsigned</span> <span class="op">=</span> <span class="ident">flag</span>.<span class="ident">contains</span>(<span class="ident">ColumnFlags::UNSIGNED_FLAG</span>);
         <span class="kw">match</span> <span class="ident">ty</span> {
-            <span class="ident">ColumnType::MYSQL_TYPE_TINY</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tiny</span>(<span class="bool-val">true</span>),
-            <span class="ident">ColumnType::MYSQL_TYPE_SHORT</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Short</span>(<span class="bool-val">true</span>),
-            <span class="ident">ColumnType::MYSQL_TYPE_INT24</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Int24</span>(<span class="bool-val">true</span>),
-            <span class="ident">ColumnType::MYSQL_TYPE_LONG</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Long</span>(<span class="bool-val">true</span>),
-            <span class="ident">ColumnType::MYSQL_TYPE_LONGLONG</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">LongLong</span>(<span class="bool-val">true</span>),
-            <span class="ident">ColumnType::MYSQL_TYPE_FLOAT</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Float</span>(<span class="bool-val">true</span>),
-            <span class="ident">ColumnType::MYSQL_TYPE_DOUBLE</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Double</span>(<span class="bool-val">true</span>),
-            <span class="ident">ColumnType::MYSQL_TYPE_DATETIME</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Datetime</span>(<span class="bool-val">true</span>),
-            <span class="ident">ColumnType::MYSQL_TYPE_DATE</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Date</span>(<span class="bool-val">true</span>),
-            <span class="ident">ColumnType::MYSQL_TYPE_TIME</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Time</span>(<span class="bool-val">true</span>),
-            <span class="ident">ColumnType::MYSQL_TYPE_NEWDECIMAL</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Decimal</span>(<span class="bool-val">true</span>),
-            <span class="ident">ColumnType::MYSQL_TYPE_STRING</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Char</span>(<span class="bool-val">true</span>),
-            <span class="ident">ColumnType::MYSQL_TYPE_VAR_STRING</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">VarChar</span>(<span class="bool-val">true</span>),
-            <span class="ident">ColumnType::MYSQL_TYPE_TIMESTAMP</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Timestamp</span>(<span class="bool-val">true</span>),
-            <span class="ident">ColumnType::MYSQL_TYPE_YEAR</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Year</span>(<span class="bool-val">true</span>),
-            <span class="ident">ColumnType::MYSQL_TYPE_ENUM</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Enum</span>(<span class="bool-val">true</span>),
-            <span class="ident">ColumnType::MYSQL_TYPE_TINY_BLOB</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">TinyBlob</span>(<span class="bool-val">true</span>),
-            <span class="ident">ColumnType::MYSQL_TYPE_BLOB</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Blob</span>(<span class="bool-val">true</span>),
-            <span class="ident">ColumnType::MYSQL_TYPE_MEDIUM_BLOB</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">MediumBlob</span>(<span class="bool-val">true</span>),
-            <span class="ident">ColumnType::MYSQL_TYPE_LONG_BLOB</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">LongBlob</span>(<span class="bool-val">true</span>),
-            <span class="ident">ColumnType::MYSQL_TYPE_JSON</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Json</span>(<span class="bool-val">true</span>),
+            <span class="ident">ColumnType::MYSQL_TYPE_TINY</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">if</span> <span class="ident">unsigned</span> {
+                    <span class="ident">UTiny</span>(<span class="ident">null_ok</span>)
+                } <span class="kw">else</span> {
+                    <span class="ident">Tiny</span>(<span class="ident">null_ok</span>)
+                }
+            }
+            <span class="ident">ColumnType::MYSQL_TYPE_SHORT</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">if</span> <span class="ident">unsigned</span> {
+                    <span class="ident">UShort</span>(<span class="ident">null_ok</span>)
+                } <span class="kw">else</span> {
+                    <span class="ident">Short</span>(<span class="ident">null_ok</span>)
+                }
+            }
+            <span class="ident">ColumnType::MYSQL_TYPE_INT24</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">if</span> <span class="ident">unsigned</span> {
+                    <span class="ident">UInt24</span>(<span class="ident">null_ok</span>)
+                } <span class="kw">else</span> {
+                    <span class="ident">Int24</span>(<span class="ident">null_ok</span>)
+                }
+            }
+            <span class="ident">ColumnType::MYSQL_TYPE_LONG</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">if</span> <span class="ident">unsigned</span> {
+                    <span class="ident">ULong</span>(<span class="ident">null_ok</span>)
+                } <span class="kw">else</span> {
+                    <span class="ident">Long</span>(<span class="ident">null_ok</span>)
+                }
+            }
+            <span class="ident">ColumnType::MYSQL_TYPE_LONGLONG</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">if</span> <span class="ident">unsigned</span> {
+                    <span class="ident">ULongLong</span>(<span class="ident">null_ok</span>)
+                } <span class="kw">else</span> {
+                    <span class="ident">LongLong</span>(<span class="ident">null_ok</span>)
+                }
+            }
+            <span class="ident">ColumnType::MYSQL_TYPE_FLOAT</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Float</span>(<span class="ident">null_ok</span>),
+            <span class="ident">ColumnType::MYSQL_TYPE_DOUBLE</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Double</span>(<span class="ident">null_ok</span>),
+            <span class="ident">ColumnType::MYSQL_TYPE_DATETIME</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Datetime</span>(<span class="ident">null_ok</span>),
+            <span class="ident">ColumnType::MYSQL_TYPE_DATE</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Date</span>(<span class="ident">null_ok</span>),
+            <span class="ident">ColumnType::MYSQL_TYPE_TIME</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Time</span>(<span class="ident">null_ok</span>),
+            <span class="ident">ColumnType::MYSQL_TYPE_NEWDECIMAL</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Decimal</span>(<span class="ident">null_ok</span>),
+            <span class="ident">ColumnType::MYSQL_TYPE_STRING</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Char</span>(<span class="ident">null_ok</span>),
+            <span class="ident">ColumnType::MYSQL_TYPE_VAR_STRING</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">VarChar</span>(<span class="ident">null_ok</span>),
+            <span class="ident">ColumnType::MYSQL_TYPE_TIMESTAMP</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Timestamp</span>(<span class="ident">null_ok</span>),
+            <span class="ident">ColumnType::MYSQL_TYPE_YEAR</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Year</span>(<span class="ident">null_ok</span>),
+            <span class="ident">ColumnType::MYSQL_TYPE_ENUM</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Enum</span>(<span class="ident">null_ok</span>),
+            <span class="ident">ColumnType::MYSQL_TYPE_TINY_BLOB</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">TinyBlob</span>(<span class="ident">null_ok</span>),
+            <span class="ident">ColumnType::MYSQL_TYPE_BLOB</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Blob</span>(<span class="ident">null_ok</span>),
+            <span class="ident">ColumnType::MYSQL_TYPE_MEDIUM_BLOB</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">MediumBlob</span>(<span class="ident">null_ok</span>),
+            <span class="ident">ColumnType::MYSQL_TYPE_LONG_BLOB</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">LongBlob</span>(<span class="ident">null_ok</span>),
+            <span class="ident">ColumnType::MYSQL_TYPE_JSON</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Json</span>(<span class="ident">null_ok</span>),
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unimplemented!</span>(<span class="string">&quot;{}&quot;</span>, <span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">ty</span>)),
-        }
-    }
-}
-
-<span class="comment">// Link MysqlDTypes back to the one defined by the mysql crate.</span>
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">MySQLTypeSystem</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">ColumnType</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">ty</span>: <span class="ident">MySQLTypeSystem</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ColumnType</span> {
-        <span class="kw">use</span> <span class="ident">MySQLTypeSystem</span>::<span class="kw-2">*</span>;
-        <span class="kw">match</span> <span class="ident">ty</span> {
-            <span class="ident">Tiny</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ColumnType::MYSQL_TYPE_TINY</span>,
-            <span class="ident">Short</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ColumnType::MYSQL_TYPE_SHORT</span>,
-            <span class="ident">Long</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ColumnType::MYSQL_TYPE_LONG</span>,
-            <span class="ident">Int24</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ColumnType::MYSQL_TYPE_INT24</span>,
-            <span class="ident">LongLong</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ColumnType::MYSQL_TYPE_LONGLONG</span>,
-            <span class="ident">Float</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ColumnType::MYSQL_TYPE_FLOAT</span>,
-            <span class="ident">Double</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ColumnType::MYSQL_TYPE_DOUBLE</span>,
-            <span class="ident">Datetime</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ColumnType::MYSQL_TYPE_DATETIME</span>,
-            <span class="ident">Date</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ColumnType::MYSQL_TYPE_DATE</span>,
-            <span class="ident">Time</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ColumnType::MYSQL_TYPE_TIME</span>,
-            <span class="ident">Decimal</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ColumnType::MYSQL_TYPE_NEWDECIMAL</span>,
-            <span class="ident">Char</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ColumnType::MYSQL_TYPE_STRING</span>,
-            <span class="ident">VarChar</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ColumnType::MYSQL_TYPE_VAR_STRING</span>,
-            <span class="ident">Timestamp</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ColumnType::MYSQL_TYPE_TIMESTAMP</span>,
-            <span class="ident">Year</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ColumnType::MYSQL_TYPE_YEAR</span>,
-            <span class="ident">Enum</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ColumnType::MYSQL_TYPE_ENUM</span>,
-            <span class="ident">TinyBlob</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ColumnType::MYSQL_TYPE_TINY_BLOB</span>,
-            <span class="ident">Blob</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ColumnType::MYSQL_TYPE_BLOB</span>,
-            <span class="ident">MediumBlob</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ColumnType::MYSQL_TYPE_MEDIUM_BLOB</span>,
-            <span class="ident">LongBlob</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ColumnType::MYSQL_TYPE_LONG_BLOB</span>,
-            <span class="ident">Json</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ColumnType::MYSQL_TYPE_JSON</span>,
         }
     }
 }
