@@ -1,5 +1,6 @@
 use super::super::pystring::{PyString, StringInfo};
 use super::{check_dtype, HasPandasColumn, PandasColumn, PandasColumnObject, GIL_MUTEX};
+use crate::constants::PYSTRING_BUFFER_SIZE;
 use crate::errors::ConnectorXPythonError;
 use anyhow::anyhow;
 use fehler::throws;
@@ -21,7 +22,7 @@ impl<'a> FromPyObject<'a> for StringBlock<'a> {
         let data = unsafe { array.as_array_mut() };
         Ok(StringBlock {
             data,
-            buf_size_mb: 4, // in MB
+            buf_size_mb: PYSTRING_BUFFER_SIZE, // in MB
         })
     }
 }
