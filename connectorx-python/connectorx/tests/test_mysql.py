@@ -255,6 +255,7 @@ def test_mysql_types_binary(mysql_url: str) -> None:
             "test_short_unsigned_notnull": pd.Series([1, 65535, 0], dtype="int64"),
             "test_float": pd.Series([None, -1.1e-38, 3.4e38], dtype="float"),
             "test_double": pd.Series([-2.2e-308, None, 1.7e308], dtype="float"),
+            "test_double_notnull": pd.Series([1.2345, -1.1e-3, 1.7e30], dtype="float"),
             "test_year": pd.Series([1901, 2155, None], dtype="Int64"),
             "test_tinyblob": pd.Series(
                 [None, b"tinyblob2", b"tinyblob3"], dtype="object"
@@ -318,6 +319,7 @@ def test_mysql_types_text(mysql_url: str) -> None:
             "test_short_unsigned_notnull": pd.Series([1, 65535, 0], dtype="int64"),
             "test_float": pd.Series([None, -1.1e-38, 3.4e38], dtype="float"),
             "test_double": pd.Series([-2.2e-308, None, 1.7e308], dtype="float"),
+            "test_double_notnull": pd.Series([1.2345, -1.1e-3, 1.7e30], dtype="float"),
             "test_year": pd.Series([1901, 2155, None], dtype="Int64"),
             "test_tinyblob": pd.Series(
                 [None, b"tinyblob2", b"tinyblob3"], dtype="object"

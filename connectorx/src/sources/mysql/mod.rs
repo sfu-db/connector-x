@@ -97,12 +97,6 @@ where
             .columns()
             .iter()
             .map(|col| {
-                println!(
-                    "{:?}, {:?}, {:?}",
-                    col.name_str(),
-                    col.column_type(),
-                    col.flags()
-                );
                 (
                     col.name_str().to_string(),
                     MySQLTypeSystem::from((&col.column_type(), &col.flags())),
