@@ -47,8 +47,14 @@ impl Source for DummySource {
         self.queries = queries.iter().map(|q| q.map(Q::to_string)).collect();
     }
 
+    fn set_origin_query(&mut self, _query: Option<String>) {}
+
     fn fetch_metadata(&mut self) -> Result<()> {
         Ok(())
+    }
+
+    fn result_rows(&mut self) -> Result<Option<usize>> {
+        Ok(None)
     }
 
     fn names(&self) -> Vec<String> {
@@ -94,7 +100,7 @@ impl SourcePartition for DummySourcePartition {
     type Parser<'a> = DummySourcePartitionParser<'a>;
     type Error = ConnectorXError;
 
-    fn prepare(&mut self) -> Result<()> {
+    fn result_rows(&mut self) -> Result<()> {
         Ok(())
     }
 
@@ -141,6 +147,10 @@ impl<'a> DummySourcePartitionParser<'a> {
 impl<'a> PartitionParser<'a> for DummySourcePartitionParser<'a> {
     type TypeSystem = DummyTypeSystem;
     type Error = ConnectorXError;
+
+    fn fetch_next(&mut self) -> Result<(usize, bool)> {
+        Ok((self.nrows, true))
+    }
 }
 
 macro_rules! numeric_impl {

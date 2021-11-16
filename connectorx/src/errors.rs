@@ -27,6 +27,9 @@ pub enum ConnectorXError {
     #[error("Only support single query with SELECT statement, got {0}.")]
     SqlQueryNotSupported(String),
 
+    #[error("Cannot get total number of rows in advance.")]
+    CountError(),
+
     #[error(transparent)]
     SQLParserError(#[from] sqlparser::parser::ParserError),
 

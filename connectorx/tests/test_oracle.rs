@@ -17,25 +17,32 @@ fn test_types() {
     let mut partitions = source.partition().unwrap();
     assert!(partitions.len() == 1);
     let mut partition = partitions.remove(0);
-    partition.prepare().expect("run query");
+    partition.result_rows().expect("run query");
     assert_eq!(3, partition.nrows());
     assert_eq!(8, partition.ncols());
 
     let mut parser = partition.parser().unwrap();
 
     let mut rows: Vec<Row> = Vec::new();
-    for _i in 0..3 {
-        rows.push(Row(
-            parser.produce().unwrap(),
-            parser.produce().unwrap(),
-            parser.produce().unwrap(),
-            parser.produce().unwrap(),
-            parser.produce().unwrap(),
-            parser.produce().unwrap(),
-            parser.produce().unwrap(),
-            parser.produce().unwrap(),
-        ));
+    loop {
+        let (n, is_last) = parser.fetch_next().unwrap();
+        for _i in 0..n {
+            rows.push(Row(
+                parser.produce().unwrap(),
+                parser.produce().unwrap(),
+                parser.produce().unwrap(),
+                parser.produce().unwrap(),
+                parser.produce().unwrap(),
+                parser.produce().unwrap(),
+                parser.produce().unwrap(),
+                parser.produce().unwrap(),
+            ));
+        }
+        if is_last {
+            break;
+        }
     }
+
     assert_eq!(
         vec![
             Row(

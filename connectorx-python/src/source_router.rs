@@ -16,6 +16,8 @@ use fehler::{throw, throws};
 use r2d2_mysql::mysql::{prelude::Queryable, Opts, Pool, Row};
 use r2d2_oracle::oracle::Connection as oracle_conn;
 use rusqlite::{types::Type, Connection};
+use rust_decimal::{prelude::ToPrimitive, Decimal};
+use rust_decimal_macros::dec;
 use sqlparser::dialect::{MsSqlDialect, MySqlDialect, PostgreSqlDialect, SQLiteDialect};
 use std::convert::TryFrom;
 use tokio::net::TcpStream;
@@ -115,8 +117,6 @@ fn pg_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
         None => config.connect(postgres::NoTls)?,
         Some(tls_conn) => config.connect(tls_conn)?,
     };
-    // let mut client = config.connect(postgres::NoTls)?;
-    // let mut client = config.connect(tls.unwrap_or(postgres::NoTls))?;
     let range_query = get_partition_range_query(query, col, &PostgreSqlDialect {})?;
     let row = client.query_one(range_query.as_str(), &[])?;
 
@@ -146,6 +146,14 @@ fn pg_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
             let min_v: Option<f64> = row.get(0);
             let max_v: Option<f64> = row.get(1);
             (min_v.unwrap_or(0.0) as i64, max_v.unwrap_or(0.0) as i64)
+        }
+        PostgresTypeSystem::Numeric(_) => {
+            let min_v: Option<Decimal> = row.get(0);
+            let max_v: Option<Decimal> = row.get(1);
+            (
+                min_v.unwrap_or(dec!(0.0)).to_i64().unwrap_or(0),
+                max_v.unwrap_or(dec!(0.0)).to_i64().unwrap_or(0),
+            )
         }
         _ => throw!(anyhow!(
             "Partition can only be done on int or float columns"

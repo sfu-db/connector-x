@@ -28,14 +28,13 @@ lazy_static! {
 pub trait PandasColumnObject: Send {
     fn typecheck(&self, _: TypeId) -> bool;
     fn typename(&self) -> &'static str;
-    fn len(&self) -> usize;
     fn finalize(&mut self) -> Result<()> {
         Ok(())
     }
 }
 
 pub trait PandasColumn<V>: Sized + PandasColumnObject {
-    fn write(&mut self, val: V) -> Result<()>;
+    fn write(&mut self, val: V, row: usize) -> Result<()>;
 }
 
 // Indicates a type has an associated pandas column

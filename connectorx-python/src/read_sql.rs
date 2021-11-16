@@ -36,8 +36,8 @@ pub fn read_sql<'a>(
     partition_query: Option<PartitionQuery>,
 ) -> PyResult<&'a PyAny> {
     let source_conn = SourceConn::try_from(conn)?;
-    let queries = match (queries, partition_query) {
-        (Some(queries), None) => queries.into_iter().map(CXQuery::Naked).collect(),
+    let (queries, origin_query) = match (queries, partition_query) {
+        (Some(queries), None) => (queries.into_iter().map(CXQuery::Naked).collect(), None),
         (
             None,
             Some(PartitionQuery {
@@ -49,6 +49,7 @@ pub fn read_sql<'a>(
             }),
         ) => {
             let mut queries = vec![];
+            let origin_query = Some(query.clone());
             let num = num as i64;
 
             let (min, max) = match (min, max) {
@@ -70,7 +71,7 @@ pub fn read_sql<'a>(
                 let partition_query = source_conn.get_part_query(&query, &col, lower, upper)?;
                 queries.push(partition_query);
             }
-            queries
+            (queries, origin_query)
         }
         (Some(_), Some(_)) => throw!(PyValueError::new_err(
             "partition_query and queries cannot be both specified",
@@ -84,12 +85,14 @@ pub fn read_sql<'a>(
         "pandas" => Ok(crate::pandas::write_pandas(
             py,
             &source_conn,
+            origin_query,
             &queries,
             protocol.unwrap_or("binary"),
         )?),
         "arrow" => Ok(crate::arrow::write_arrow(
             py,
             &source_conn,
+            origin_query,
             &queries,
             protocol.unwrap_or("binary"),
         )?),

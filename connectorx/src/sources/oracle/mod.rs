@@ -7,7 +7,6 @@ use crate::{
     sources::{PartitionParser, Produce, Source, SourcePartition},
     sql::{count_query, get_limit, CXQuery},
 };
-use anyhow::anyhow;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
 use fehler::{throw, throws};
 use log::debug;
@@ -18,6 +17,7 @@ type OracleManager = OracleConnectionManager;
 type OracleConn = PooledConnection<OracleManager>;
 
 pub use self::errors::OracleSourceError;
+use crate::constants::DB_BUFFER_SIZE;
 use crate::sql::limit1_query_oracle;
 use r2d2_oracle::oracle::ResultSet;
 use sqlparser::dialect::Dialect;
@@ -43,10 +43,10 @@ impl Dialect for OracleDialect {
 
 pub struct OracleSource {
     pool: Pool<OracleManager>,
+    origin_query: Option<String>,
     queries: Vec<CXQuery<String>>,
     names: Vec<String>,
     schema: Vec<OracleTypeSystem>,
-    buf_size: usize,
 }
 
 impl OracleSource {
@@ -67,15 +67,11 @@ impl OracleSource {
 
         Self {
             pool,
+            origin_query: None,
             queries: vec![],
             names: vec![],
             schema: vec![],
-            buf_size: 32,
         }
-    }
-
-    pub fn buf_size(&mut self, buf_size: usize) {
-        self.buf_size = buf_size;
     }
 }
 
@@ -98,6 +94,10 @@ where
 
     fn set_queries<Q: ToString>(&mut self, queries: &[CXQuery<Q>]) {
         self.queries = queries.iter().map(|q| q.map(Q::to_string)).collect();
+    }
+
+    fn set_origin_query(&mut self, query: Option<String>) {
+        self.origin_query = query;
     }
 
     #[throws(OracleSourceError)]
@@ -142,6 +142,28 @@ where
         self.schema = types;
     }
 
+    #[throws(OracleSourceError)]
+    fn result_rows(&mut self) -> Option<usize> {
+        match &self.origin_query {
+            Some(q) => {
+                let cxq = CXQuery::Naked(q.clone());
+                let dialect = OracleDialect {};
+
+                let nrows = match get_limit(&cxq, &dialect)? {
+                    None => {
+                        let conn = self.pool.get()?;
+                        let row = conn
+                            .query_row_as::<usize>(&count_query(&cxq, &dialect)?.as_str(), &[])?;
+                        row
+                    }
+                    Some(n) => n,
+                };
+                Some(nrows)
+            }
+            None => None,
+        }
+    }
+
     fn names(&self) -> Vec<String> {
         self.names.clone()
     }
@@ -155,12 +177,7 @@ where
         let mut ret = vec![];
         for query in self.queries {
             let conn = self.pool.get()?;
-            ret.push(OracleSourcePartition::new(
-                conn,
-                &query,
-                &self.schema,
-                self.buf_size,
-            ));
+            ret.push(OracleSourcePartition::new(conn, &query, &self.schema));
         }
         ret
     }
@@ -172,23 +189,16 @@ pub struct OracleSourcePartition {
     schema: Vec<OracleTypeSystem>,
     nrows: usize,
     ncols: usize,
-    buf_size: usize,
 }
 
 impl OracleSourcePartition {
-    pub fn new(
-        conn: OracleConn,
-        query: &CXQuery<String>,
-        schema: &[OracleTypeSystem],
-        buf_size: usize,
-    ) -> Self {
+    pub fn new(conn: OracleConn, query: &CXQuery<String>, schema: &[OracleTypeSystem]) -> Self {
         Self {
             conn,
             query: query.clone(),
             schema: schema.to_vec(),
             nrows: 0,
             ncols: schema.len(),
-            buf_size,
         }
     }
 }
@@ -199,7 +209,7 @@ impl SourcePartition for OracleSourcePartition {
     type Error = OracleSourceError;
 
     #[throws(OracleSourceError)]
-    fn prepare(&mut self) {
+    fn result_rows(&mut self) {
         self.nrows = match get_limit(&self.query, &OracleDialect {})? {
             None => {
                 let row = self.conn.query_row_as::<usize>(
@@ -216,7 +226,7 @@ impl SourcePartition for OracleSourcePartition {
     fn parser(&mut self) -> Self::Parser<'_> {
         let query = self.query.clone();
         let iter = self.conn.query(query.as_str(), &[])?;
-        OracleTextSourceParser::new(iter, &self.schema, self.buf_size)
+        OracleTextSourceParser::new(iter, &self.schema)
     }
 
     fn nrows(&self) -> usize {
@@ -230,7 +240,6 @@ impl SourcePartition for OracleSourcePartition {
 
 pub struct OracleTextSourceParser<'a> {
     iter: ResultSet<'a, Row>,
-    buf_size: usize,
     rowbuf: Vec<Row>,
     ncols: usize,
     current_col: usize,
@@ -238,11 +247,10 @@ pub struct OracleTextSourceParser<'a> {
 }
 
 impl<'a> OracleTextSourceParser<'a> {
-    pub fn new(iter: ResultSet<'a, Row>, schema: &[OracleTypeSystem], buf_size: usize) -> Self {
+    pub fn new(iter: ResultSet<'a, Row>, schema: &[OracleTypeSystem]) -> Self {
         Self {
             iter,
-            buf_size,
-            rowbuf: Vec::with_capacity(buf_size),
+            rowbuf: Vec::with_capacity(DB_BUFFER_SIZE),
             ncols: schema.len(),
             current_row: 0,
             current_col: 0,
@@ -251,25 +259,6 @@ impl<'a> OracleTextSourceParser<'a> {
 
     #[throws(OracleSourceError)]
     fn next_loc(&mut self) -> (usize, usize) {
-        if self.current_row >= self.rowbuf.len() {
-            if !self.rowbuf.is_empty() {
-                self.rowbuf.drain(..);
-            }
-
-            for _ in 0..self.buf_size {
-                if let Some(item) = self.iter.next() {
-                    self.rowbuf.push(item?);
-                } else {
-                    break;
-                }
-            }
-
-            if self.rowbuf.is_empty() {
-                throw!(anyhow!("Oracle EOF"));
-            }
-            self.current_row = 0;
-            self.current_col = 0;
-        }
         let ret = (self.current_row, self.current_col);
         self.current_row += (self.current_col + 1) / self.ncols;
         self.current_col = (self.current_col + 1) % self.ncols;
@@ -280,6 +269,23 @@ impl<'a> OracleTextSourceParser<'a> {
 impl<'a> PartitionParser<'a> for OracleTextSourceParser<'a> {
     type TypeSystem = OracleTypeSystem;
     type Error = OracleSourceError;
+
+    #[throws(OracleSourceError)]
+    fn fetch_next(&mut self) -> (usize, bool) {
+        if !self.rowbuf.is_empty() {
+            self.rowbuf.drain(..);
+        }
+        for _ in 0..DB_BUFFER_SIZE {
+            if let Some(item) = self.iter.next() {
+                self.rowbuf.push(item?);
+            } else {
+                break;
+            }
+        }
+        self.current_row = 0;
+        self.current_col = 0;
+        (self.rowbuf.len(), self.rowbuf.len() < DB_BUFFER_SIZE)
+    }
 }
 
 macro_rules! impl_produce_text {
