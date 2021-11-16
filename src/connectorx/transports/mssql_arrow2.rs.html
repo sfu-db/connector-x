@@ -86,13 +86,16 @@
 <span id="83">83</span>
 <span id="84">84</span>
 <span id="85">85</span>
+<span id="86">86</span>
+<span id="87">87</span>
+<span id="88">88</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Transport from MsSQL Source to Arrow2 Destination.</span>
 
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::destinations::arrow2</span>::{<span class="ident">Arrow2Destination</span>, <span class="ident">Arrow2DestinationError</span>, <span class="ident">Arrow2TypeSystem</span>};
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::sources::mssql</span>::{<span class="ident">FloatN</span>, <span class="ident">IntN</span>, <span class="ident">MsSQLSource</span>, <span class="ident">MsSQLSourceError</span>, <span class="ident">MsSQLTypeSystem</span>};
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::typesystem::TypeConversion</span>;
-<span class="kw">use</span> <span class="ident">chrono</span>::{<span class="ident">DateTime</span>, <span class="ident">NaiveDate</span>, <span class="ident">NaiveDateTime</span>, <span class="ident">Utc</span>};
+<span class="kw">use</span> <span class="ident">chrono</span>::{<span class="ident">DateTime</span>, <span class="ident">NaiveDate</span>, <span class="ident">NaiveDateTime</span>, <span class="ident">NaiveTime</span>, <span class="ident">Utc</span>};
 <span class="kw">use</span> <span class="ident">num_traits::ToPrimitive</span>;
 <span class="kw">use</span> <span class="ident">rust_decimal::Decimal</span>;
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
@@ -145,6 +148,9 @@
         { <span class="ident">Date</span>[<span class="ident">NaiveDate</span>]               <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Date32</span>[<span class="ident">NaiveDate</span>]         <span class="op">|</span> <span class="ident">conversion</span> <span class="ident">auto</span> }
         { <span class="ident">Datetimeoffset</span>[<span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span>] <span class="op">=</span><span class="op">&gt;</span> <span class="ident">DateTimeTz</span>[<span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span>] <span class="op">|</span> <span class="ident">conversion</span> <span class="ident">auto</span> }
         { <span class="ident">Uniqueidentifier</span>[<span class="ident">Uuid</span>]        <span class="op">=</span><span class="op">&gt;</span> <span class="ident">LargeUtf8</span>[<span class="ident">String</span>]         <span class="op">|</span> <span class="ident">conversion</span> <span class="ident">option</span> }
+        { <span class="ident">Time</span>[<span class="ident">NaiveTime</span>]               <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Time64</span>[<span class="ident">NaiveTime</span>]         <span class="op">|</span> <span class="ident">conversion</span> <span class="ident">auto</span> }
+        { <span class="ident">SmallMoney</span>[<span class="ident">f32</span>]               <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Float32</span>[<span class="ident">f32</span>]              <span class="op">|</span> <span class="ident">conversion</span> <span class="ident">none</span> }
+        { <span class="ident">Money</span>[<span class="ident">f64</span>]                    <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Float64</span>[<span class="ident">f64</span>]              <span class="op">|</span> <span class="ident">conversion</span> <span class="ident">none</span> }
     }
 );
 
