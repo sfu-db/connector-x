@@ -26,6 +26,11 @@ impl_transport!(
         { Long[i32]                  => I64[i64]                | conversion auto }
         { Int24[i32]                 => I64[i64]                | conversion none }
         { LongLong[i64]              => I64[i64]                | conversion auto }
+        { UTiny[u8]                  => I64[i64]                | conversion auto }
+        { UShort[u16]                => I64[i64]                | conversion auto }
+        { ULong[u32]                 => I64[i64]                | conversion auto }
+        { UInt24[u32]                => I64[i64]                | conversion none }
+        { ULongLong[u64]             => F64[f64]                | conversion auto }
         { Date[NaiveDate]            => DateTime[DateTime<Utc>] | conversion option }
         { Time[NaiveTime]            => String[String]          | conversion option }
         { Year[i16]                  => I64[i64]                | conversion none}
@@ -56,6 +61,11 @@ impl_transport!(
         { Long[i32]                  => I64[i64]                | conversion auto }
         { Int24[i32]                 => I64[i64]                | conversion none }
         { LongLong[i64]              => I64[i64]                | conversion auto }
+        { UTiny[u8]                  => I64[i64]                | conversion auto }
+        { UShort[u16]                => I64[i64]                | conversion auto }
+        { ULong[u32]                 => I64[i64]                | conversion auto }
+        { UInt24[u32]                => I64[i64]                | conversion none }
+        { ULongLong[u64]             => F64[f64]                | conversion auto }
         { Date[NaiveDate]            => DateTime[DateTime<Utc>] | conversion option }
         { Time[NaiveTime]            => String[String]          | conversion option }
         { Datetime[NaiveDateTime]    => DateTime[DateTime<Utc>] | conversion option }

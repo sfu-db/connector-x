@@ -1,5 +1,5 @@
 use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
-use r2d2_mysql::mysql::consts::ColumnType;
+use r2d2_mysql::mysql::consts::{ColumnFlags, ColumnType};
 use rust_decimal::Decimal;
 use serde_json::Value;
 
@@ -12,6 +12,11 @@ pub enum MySQLTypeSystem {
     Long(bool),
     Int24(bool),
     LongLong(bool),
+    UTiny(bool),
+    UShort(bool),
+    ULong(bool),
+    UInt24(bool),
+    ULongLong(bool),
     Datetime(bool),
     Date(bool),
     Time(bool),
@@ -37,6 +42,10 @@ impl_typesystem! {
         { LongLong => i64 }
         { Float => f32 }
         { Double => f64 }
+        { UTiny => u8 }
+        { UShort => u16 }
+        { ULong | UInt24 => u32}
+        { ULongLong => u64 }
         { Datetime | Timestamp => NaiveDateTime }
         { Date => NaiveDate }
         { Time => NaiveTime }
@@ -47,62 +56,65 @@ impl_typesystem! {
     }
 }
 
-impl<'a> From<&'a ColumnType> for MySQLTypeSystem {
-    fn from(ty: &'a ColumnType) -> MySQLTypeSystem {
+impl<'a> From<(&'a ColumnType, &'a ColumnFlags)> for MySQLTypeSystem {
+    fn from(col: (&'a ColumnType, &'a ColumnFlags)) -> MySQLTypeSystem {
         use MySQLTypeSystem::*;
+        let (ty, flag) = col;
+        let null_ok = !flag.contains(ColumnFlags::NOT_NULL_FLAG);
+        let unsigned = flag.contains(ColumnFlags::UNSIGNED_FLAG);
         match ty {
-            ColumnType::MYSQL_TYPE_TINY => Tiny(true),
-            ColumnType::MYSQL_TYPE_SHORT => Short(true),
-            ColumnType::MYSQL_TYPE_INT24 => Int24(true),
-            ColumnType::MYSQL_TYPE_LONG => Long(true),
-            ColumnType::MYSQL_TYPE_LONGLONG => LongLong(true),
-            ColumnType::MYSQL_TYPE_FLOAT => Float(true),
-            ColumnType::MYSQL_TYPE_DOUBLE => Double(true),
-            ColumnType::MYSQL_TYPE_DATETIME => Datetime(true),
-            ColumnType::MYSQL_TYPE_DATE => Date(true),
-            ColumnType::MYSQL_TYPE_TIME => Time(true),
-            ColumnType::MYSQL_TYPE_NEWDECIMAL => Decimal(true),
-            ColumnType::MYSQL_TYPE_STRING => Char(true),
-            ColumnType::MYSQL_TYPE_VAR_STRING => VarChar(true),
-            ColumnType::MYSQL_TYPE_TIMESTAMP => Timestamp(true),
-            ColumnType::MYSQL_TYPE_YEAR => Year(true),
-            ColumnType::MYSQL_TYPE_ENUM => Enum(true),
-            ColumnType::MYSQL_TYPE_TINY_BLOB => TinyBlob(true),
-            ColumnType::MYSQL_TYPE_BLOB => Blob(true),
-            ColumnType::MYSQL_TYPE_MEDIUM_BLOB => MediumBlob(true),
-            ColumnType::MYSQL_TYPE_LONG_BLOB => LongBlob(true),
-            ColumnType::MYSQL_TYPE_JSON => Json(true),
+            ColumnType::MYSQL_TYPE_TINY => {
+                if unsigned {
+                    UTiny(null_ok)
+                } else {
+                    Tiny(null_ok)
+                }
+            }
+            ColumnType::MYSQL_TYPE_SHORT => {
+                if unsigned {
+                    UShort(null_ok)
+                } else {
+                    Short(null_ok)
+                }
+            }
+            ColumnType::MYSQL_TYPE_INT24 => {
+                if unsigned {
+                    UInt24(null_ok)
+                } else {
+                    Int24(null_ok)
+                }
+            }
+            ColumnType::MYSQL_TYPE_LONG => {
+                if unsigned {
+                    ULong(null_ok)
+                } else {
+                    Long(null_ok)
+                }
+            }
+            ColumnType::MYSQL_TYPE_LONGLONG => {
+                if unsigned {
+                    ULongLong(null_ok)
+                } else {
+                    LongLong(null_ok)
+                }
+            }
+            ColumnType::MYSQL_TYPE_FLOAT => Float(null_ok),
+            ColumnType::MYSQL_TYPE_DOUBLE => Double(null_ok),
+            ColumnType::MYSQL_TYPE_DATETIME => Datetime(null_ok),
+            ColumnType::MYSQL_TYPE_DATE => Date(null_ok),
+            ColumnType::MYSQL_TYPE_TIME => Time(null_ok),
+            ColumnType::MYSQL_TYPE_NEWDECIMAL => Decimal(null_ok),
+            ColumnType::MYSQL_TYPE_STRING => Char(null_ok),
+            ColumnType::MYSQL_TYPE_VAR_STRING => VarChar(null_ok),
+            ColumnType::MYSQL_TYPE_TIMESTAMP => Timestamp(null_ok),
+            ColumnType::MYSQL_TYPE_YEAR => Year(null_ok),
+            ColumnType::MYSQL_TYPE_ENUM => Enum(null_ok),
+            ColumnType::MYSQL_TYPE_TINY_BLOB => TinyBlob(null_ok),
+            ColumnType::MYSQL_TYPE_BLOB => Blob(null_ok),
+            ColumnType::MYSQL_TYPE_MEDIUM_BLOB => MediumBlob(null_ok),
+            ColumnType::MYSQL_TYPE_LONG_BLOB => LongBlob(null_ok),
+            ColumnType::MYSQL_TYPE_JSON => Json(null_ok),
             _ => unimplemented!("{}", format!("{:?}", ty)),
-        }
-    }
-}
-
-// Link MysqlDTypes back to the one defined by the mysql crate.
-impl<'a> From<MySQLTypeSystem> for ColumnType {
-    fn from(ty: MySQLTypeSystem) -> ColumnType {
-        use MySQLTypeSystem::*;
-        match ty {
-            Tiny(_) => ColumnType::MYSQL_TYPE_TINY,
-            Short(_) => ColumnType::MYSQL_TYPE_SHORT,
-            Long(_) => ColumnType::MYSQL_TYPE_LONG,
-            Int24(_) => ColumnType::MYSQL_TYPE_INT24,
-            LongLong(_) => ColumnType::MYSQL_TYPE_LONGLONG,
-            Float(_) => ColumnType::MYSQL_TYPE_FLOAT,
-            Double(_) => ColumnType::MYSQL_TYPE_DOUBLE,
-            Datetime(_) => ColumnType::MYSQL_TYPE_DATETIME,
-            Date(_) => ColumnType::MYSQL_TYPE_DATE,
-            Time(_) => ColumnType::MYSQL_TYPE_TIME,
-            Decimal(_) => ColumnType::MYSQL_TYPE_NEWDECIMAL,
-            Char(_) => ColumnType::MYSQL_TYPE_STRING,
-            VarChar(_) => ColumnType::MYSQL_TYPE_VAR_STRING,
-            Timestamp(_) => ColumnType::MYSQL_TYPE_TIMESTAMP,
-            Year(_) => ColumnType::MYSQL_TYPE_YEAR,
-            Enum(_) => ColumnType::MYSQL_TYPE_ENUM,
-            TinyBlob(_) => ColumnType::MYSQL_TYPE_TINY_BLOB,
-            Blob(_) => ColumnType::MYSQL_TYPE_BLOB,
-            MediumBlob(_) => ColumnType::MYSQL_TYPE_MEDIUM_BLOB,
-            LongBlob(_) => ColumnType::MYSQL_TYPE_LONG_BLOB,
-            Json(_) => ColumnType::MYSQL_TYPE_JSON,
         }
     }
 }

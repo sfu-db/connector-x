@@ -97,9 +97,15 @@ where
             .columns()
             .iter()
             .map(|col| {
+                println!(
+                    "{:?}, {:?}, {:?}",
+                    col.name_str(),
+                    col.column_type(),
+                    col.flags()
+                );
                 (
                     col.name_str().to_string(),
-                    MySQLTypeSystem::from(&col.column_type()),
+                    MySQLTypeSystem::from((&col.column_type(), &col.flags())),
                 )
             })
             .unzip();
@@ -331,6 +337,10 @@ impl_produce_binary!(
     i16,
     i32,
     i64,
+    u8,
+    u16,
+    u32,
+    u64,
     f32,
     f64,
     NaiveDate,
@@ -425,6 +435,10 @@ impl_produce_text!(
     i16,
     i32,
     i64,
+    u8,
+    u16,
+    u32,
+    u64,
     f32,
     f64,
     NaiveDate,
