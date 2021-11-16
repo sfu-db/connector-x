@@ -33,6 +33,8 @@ pub enum MsSQLTypeSystem {
     Date(bool),
     Time(bool),
     Datetimeoffset(bool),
+    Money(bool),
+    SmallMoney(bool),
 }
 
 impl_typesystem! {
@@ -43,8 +45,8 @@ impl_typesystem! {
         { Int => i32 }
         { Bigint => i64 }
         { Intn => IntN }
-        { Float24 => f32 }
-        { Float53 => f64 }
+        { Float24 | SmallMoney => f32 }
+        { Float53 | Money => f64 }
         { Floatn => FloatN }
         { Bit => bool }
         { Nvarchar | Varchar | Nchar | Char | Text | Ntext => &'r str }
@@ -91,43 +93,9 @@ impl<'a> From<&'a ColumnType> for MsSQLTypeSystem {
             ColumnType::Daten => Date(true),
             ColumnType::Timen => Time(true),
             ColumnType::DatetimeOffsetn => Datetimeoffset(true),
+            ColumnType::Money => Money(true),
+            ColumnType::Money4 => SmallMoney(true),
             _ => unimplemented!("{}", format!("{:?}", ty)),
-        }
-    }
-}
-
-// Link MsSQLDTypes back to the one defined by the mysql crate.
-impl<'a> From<MsSQLTypeSystem> for ColumnType {
-    fn from(ty: MsSQLTypeSystem) -> ColumnType {
-        use MsSQLTypeSystem::*;
-        match ty {
-            Tinyint(_) => ColumnType::Int1,
-            Smallint(_) => ColumnType::Int2,
-            Int(_) => ColumnType::Int4,
-            Bigint(_) => ColumnType::Int8,
-            Intn(_) => ColumnType::Intn,
-            Float24(_) => ColumnType::Float4,
-            Float53(_) => ColumnType::Float8,
-            Floatn(_) => ColumnType::Floatn,
-            Bit(_) => ColumnType::Bit,
-            Nvarchar(_) => ColumnType::NVarchar,
-            Varchar(_) => ColumnType::BigVarChar,
-            Nchar(_) => ColumnType::NChar,
-            Char(_) => ColumnType::BigChar,
-            Ntext(_) => ColumnType::NText,
-            Text(_) => ColumnType::Text,
-            Binary(_) => ColumnType::BigBinary,
-            Varbinary(_) => ColumnType::BigVarBin,
-            Image(_) => ColumnType::Image,
-            Uniqueidentifier(_) => ColumnType::Guid,
-            Decimal(_) => ColumnType::Decimaln,
-            Numeric(_) => ColumnType::Numericn,
-            Smalldatetime(_) => ColumnType::Datetime,
-            Datetime2(_) => ColumnType::Datetime2,
-            Datetime(_) => ColumnType::Datetime,
-            Date(_) => ColumnType::Daten,
-            Time(_) => ColumnType::Timen,
-            Datetimeoffset(_) => ColumnType::DatetimeOffsetn,
         }
     }
 }
