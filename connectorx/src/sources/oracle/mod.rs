@@ -106,6 +106,9 @@ where
         let conn = self.pool.get()?;
         for (i, query) in self.queries.iter().enumerate() {
             // assuming all the partition queries yield same schema
+            // without rownum = 1, derived type might be wrong
+            // example: select avg(test_int), test_char from test_table group by test_char
+            // -> (NumInt, Char) instead of (NumtFloat, Char)
             match conn.query(limit1_query_oracle(query)?.as_str(), &[]) {
                 Ok(rows) => {
                     let (names, types) = rows
