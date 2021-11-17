@@ -13,7 +13,7 @@ use crate::{
     data_order::DataOrder,
     errors::ConnectorXError,
     sources::{PartitionParser, Produce, Source, SourcePartition},
-    sql::{count_query, get_limit, CXQuery},
+    sql::{count_query, CXQuery},
 };
 use anyhow::anyhow;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
@@ -63,22 +63,16 @@ where
 {
     let dialect = PostgreSqlDialect {};
 
-    let num_rows = match get_limit(query, &dialect)? {
-        None => {
-            let row = conn.query_one(count_query(query, &dialect)?.as_str(), &[])?;
-            let col_type = PostgresTypeSystem::from(row.columns()[0].type_());
-            match col_type {
-                PostgresTypeSystem::Int2(_) => convert_row::<i16>(&row) as usize,
-                PostgresTypeSystem::Int4(_) => convert_row::<i32>(&row) as usize,
-                PostgresTypeSystem::Int8(_) => convert_row::<i64>(&row) as usize,
-                _ => throw!(anyhow!(
-                    "The result of the count query was not an int, aborting."
-                )),
-            }
-        }
-        Some(n) => n,
-    };
-    num_rows
+    let row = conn.query_one(count_query(query, &dialect)?.as_str(), &[])?;
+    let col_type = PostgresTypeSystem::from(row.columns()[0].type_());
+    match col_type {
+        PostgresTypeSystem::Int2(_) => convert_row::<i16>(&row) as usize,
+        PostgresTypeSystem::Int4(_) => convert_row::<i32>(&row) as usize,
+        PostgresTypeSystem::Int8(_) => convert_row::<i64>(&row) as usize,
+        _ => throw!(anyhow!(
+            "The result of the count query was not an int, aborting."
+        )),
+    }
 }
 
 pub struct PostgresSource<P, C>

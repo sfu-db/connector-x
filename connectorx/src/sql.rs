@@ -1,14 +1,13 @@
 use crate::errors::ConnectorXError;
 #[cfg(feature = "src_oracle")]
 use crate::sources::oracle::OracleDialect;
-use anyhow::anyhow;
 use fehler::{throw, throws};
 use log::{debug, trace, warn};
 use sqlparser::ast::{
     BinaryOperator, Expr, Function, FunctionArg, Ident, ObjectName, Query, Select, SelectItem,
-    SetExpr, Statement, TableAlias, TableFactor, TableWithJoins, Top, Value,
+    SetExpr, Statement, TableAlias, TableFactor, TableWithJoins, Value,
 };
-use sqlparser::dialect::{Dialect, MsSqlDialect};
+use sqlparser::dialect::Dialect;
 use sqlparser::parser::Parser;
 #[cfg(feature = "src_oracle")]
 use std::any::Any;
@@ -95,62 +94,6 @@ impl<Q, E> CXQuery<Result<Q, E>> {
             CXQuery::Wrapped(q) => q.map(CXQuery::Wrapped),
         }
     }
-}
-
-#[throws(ConnectorXError)]
-pub fn get_limit<T: Dialect>(sql: &CXQuery<String>, dialect: &T) -> Option<usize> {
-    match Parser::parse_sql(dialect, sql.as_str()) {
-        Ok(mut ast) => {
-            if ast.len() != 1 {
-                throw!(ConnectorXError::SqlQueryNotSupported(sql.to_string()));
-            }
-
-            match &mut ast[0] {
-                Statement::Query(q) => {
-                    if let Some(expr) = &q.limit {
-                        return Some(
-                            expr.to_string()
-                                .parse()
-                                .map_err(|e: std::num::ParseIntError| anyhow!(e))?,
-                        );
-                    }
-                }
-                _ => throw!(ConnectorXError::SqlQueryNotSupported(sql.to_string())),
-            };
-        }
-        Err(e) => {
-            warn!("parser error: {:?}, query database for # rows in result", e);
-        }
-    }
-    None
-}
-
-#[allow(unreachable_code)] // disable it for now, waiting for the new release of fehler
-#[throws(ConnectorXError)]
-pub fn get_limit_mssql(sql: &CXQuery<String>) -> Option<usize> {
-    let ast = Parser::parse_sql(&MsSqlDialect {}, sql.as_str())?;
-    if ast.len() != 1 {
-        throw!(ConnectorXError::SqlQueryNotSupported(sql.to_string()));
-    }
-
-    if let Statement::Query(q) = &ast[0] {
-        if let SetExpr::Select(s) = &q.body {
-            if let Some(Top {
-                quantity: Some(expr),
-                ..
-            }) = &s.top
-            {
-                return Some(
-                    expr.to_string()
-                        .parse()
-                        .map_err(|e: std::num::ParseIntError| anyhow!(e))?,
-                );
-            }
-            return None;
-        }
-    }
-
-    throw!(ConnectorXError::SqlQueryNotSupported(sql.to_string()))
 }
 
 // wrap a query into a derived table

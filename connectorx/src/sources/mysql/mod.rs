@@ -9,7 +9,7 @@ use crate::{
     data_order::DataOrder,
     errors::ConnectorXError,
     sources::{PartitionParser, Produce, Source, SourcePartition},
-    sql::{count_query, get_limit, CXQuery},
+    sql::{count_query, CXQuery},
 };
 use anyhow::anyhow;
 use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
@@ -30,6 +30,12 @@ type MysqlConn = PooledConnection<MysqlManager>;
 
 pub enum BinaryProtocol {}
 pub enum TextProtocol {}
+
+#[throws(MySQLSourceError)]
+fn get_total_rows(conn: &mut MysqlConn, query: &CXQuery<String>) -> usize {
+    conn.query_first(&count_query(query, &MySqlDialect {})?)?
+        .ok_or_else(|| anyhow!("mysql failed to get the count of query: {}", query))?
+}
 
 pub struct MySQLSource<P> {
     pool: Pool<MysqlManager>,
@@ -112,19 +118,8 @@ where
         match &self.origin_query {
             Some(q) => {
                 let cxq = CXQuery::Naked(q.clone());
-                let dialect = MySqlDialect {};
-                let nrows = match get_limit(&cxq, &dialect)? {
-                    None => {
-                        let mut conn = self.pool.get()?;
-                        let row: usize = conn
-                            .query_first(&count_query(&cxq, &dialect)?)?
-                            .ok_or_else(|| {
-                                anyhow!("mysql failed to get the count of query: {}", q)
-                            })?;
-                        row
-                    }
-                    Some(n) => n,
-                };
+                let mut conn = self.pool.get()?;
+                let nrows = get_total_rows(&mut conn, &cxq)?;
                 Some(nrows)
             }
             None => None,
@@ -179,18 +174,7 @@ impl SourcePartition for MySQLSourcePartition<BinaryProtocol> {
 
     #[throws(MySQLSourceError)]
     fn result_rows(&mut self) {
-        self.nrows = match get_limit(&self.query, &MySqlDialect {})? {
-            None => {
-                let row: usize = self
-                    .conn
-                    .query_first(&count_query(&self.query, &MySqlDialect {})?)?
-                    .ok_or_else(|| {
-                        anyhow!("mysql failed to get the count of query: {}", self.query)
-                    })?;
-                row
-            }
-            Some(n) => n,
-        };
+        self.nrows = get_total_rows(&mut self.conn, &self.query)?;
     }
 
     #[throws(MySQLSourceError)]
@@ -216,18 +200,7 @@ impl SourcePartition for MySQLSourcePartition<TextProtocol> {
 
     #[throws(MySQLSourceError)]
     fn result_rows(&mut self) {
-        self.nrows = match get_limit(&self.query, &MySqlDialect {})? {
-            None => {
-                let row: usize = self
-                    .conn
-                    .query_first(&count_query(&self.query, &MySqlDialect {})?)?
-                    .ok_or_else(|| {
-                        anyhow!("mysql failed to get the count of query: {}", self.query)
-                    })?;
-                row
-            }
-            Some(n) => n,
-        };
+        self.nrows = get_total_rows(&mut self.conn, &self.query)?;
     }
 
     #[throws(MySQLSourceError)]

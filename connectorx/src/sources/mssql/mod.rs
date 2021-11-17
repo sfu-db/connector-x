@@ -10,7 +10,7 @@ use crate::{
     data_order::DataOrder,
     errors::ConnectorXError,
     sources::{PartitionParser, Produce, Source, SourcePartition},
-    sql::{count_query, get_limit_mssql, CXQuery},
+    sql::{count_query, CXQuery},
     utils::DummyBox,
 };
 use anyhow::anyhow;
@@ -32,7 +32,6 @@ use urlencoding::decode;
 use uuid::Uuid;
 
 type Conn<'a> = PooledConnection<'a, ConnectionManager>;
-
 pub struct MsSQLSource {
     rt: Arc<Runtime>,
     pool: Pool<ConnectionManager>,
@@ -152,22 +151,17 @@ where
         match &self.origin_query {
             Some(q) => {
                 let cxq = CXQuery::Naked(q.clone());
-                let dialect = MsSqlDialect {};
-                let nrows = match get_limit_mssql(&cxq)? {
-                    None => {
-                        let mut conn = self.rt.block_on(self.pool.get())?;
-                        let cquery = count_query(&cxq, &dialect)?;
-                        let stream = self.rt.block_on(conn.query(cquery.as_str(), &[]))?;
-                        let row = self.rt.block_on(stream.into_row())?.ok_or_else(|| {
-                            anyhow!("MsSQL failed to get the count of query: {}", q)
-                        })?;
+                let cquery = count_query(&cxq, &MsSqlDialect {})?;
+                let mut conn = self.rt.block_on(self.pool.get())?;
 
-                        let row: i32 = row.get(0).ok_or(MsSQLSourceError::GetNRowsFailed)?; // the count in mssql is i32
-                        row as usize
-                    }
-                    Some(n) => n,
-                };
-                Some(nrows)
+                let stream = self.rt.block_on(conn.query(cquery.as_str(), &[]))?;
+                let row = self
+                    .rt
+                    .block_on(stream.into_row())?
+                    .ok_or_else(|| anyhow!("MsSQL failed to get the count of query: {}", q))?;
+
+                let row: i32 = row.get(0).ok_or(MsSQLSourceError::GetNRowsFailed)?; // the count in mssql is i32
+                Some(row as usize)
             }
             None => None,
         }
@@ -230,21 +224,17 @@ impl SourcePartition for MsSQLSourcePartition {
 
     #[throws(MsSQLSourceError)]
     fn result_rows(&mut self) {
-        self.nrows = match get_limit_mssql(&self.query)? {
-            None => {
-                let mut conn = self.rt.block_on(self.pool.get())?;
-                let cquery = count_query(&self.query, &MsSqlDialect {})?;
+        let cquery = count_query(&self.query, &MsSqlDialect {})?;
+        let mut conn = self.rt.block_on(self.pool.get())?;
 
-                let stream = self.rt.block_on(conn.query(cquery.as_str(), &[]))?;
-                let row = self.rt.block_on(stream.into_row())?.ok_or_else(|| {
-                    anyhow!("MsSQL failed to get the count of query: {}", self.query)
-                })?;
+        let stream = self.rt.block_on(conn.query(cquery.as_str(), &[]))?;
+        let row = self
+            .rt
+            .block_on(stream.into_row())?
+            .ok_or_else(|| anyhow!("MsSQL failed to get the count of query: {}", self.query))?;
 
-                let row: i32 = row.get(0).ok_or(MsSQLSourceError::GetNRowsFailed)?; // the count in mssql is i32
-                row as usize
-            }
-            Some(n) => n,
-        };
+        let row: i32 = row.get(0).ok_or(MsSQLSourceError::GetNRowsFailed)?; // the count in mssql is i32
+        self.nrows = row as usize;
     }
 
     #[throws(MsSQLSourceError)]
