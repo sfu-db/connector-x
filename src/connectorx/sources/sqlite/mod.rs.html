@@ -337,16 +337,6 @@
 <span id="334">334</span>
 <span id="335">335</span>
 <span id="336">336</span>
-<span id="337">337</span>
-<span id="338">338</span>
-<span id="339">339</span>
-<span id="340">340</span>
-<span id="341">341</span>
-<span id="342">342</span>
-<span id="343">343</span>
-<span id="344">344</span>
-<span id="345">345</span>
-<span id="346">346</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Source implementation for SQLite embedded database.</span>
 
@@ -358,7 +348,7 @@
     <span class="ident">data_order::DataOrder</span>,
     <span class="ident">errors::ConnectorXError</span>,
     <span class="ident">sources</span>::{<span class="ident">PartitionParser</span>, <span class="ident">Produce</span>, <span class="ident">Source</span>, <span class="ident">SourcePartition</span>},
-    <span class="ident">sql</span>::{<span class="ident">count_query</span>, <span class="ident">get_limit</span>, <span class="ident">limit1_query</span>, <span class="ident">CXQuery</span>},
+    <span class="ident">sql</span>::{<span class="ident">count_query</span>, <span class="ident">limit1_query</span>, <span class="ident">CXQuery</span>},
     <span class="ident">utils::DummyBox</span>,
 };
 <span class="kw">use</span> <span class="ident">anyhow::anyhow</span>;
@@ -507,16 +497,11 @@
         <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">origin_query</span> {
             <span class="prelude-val">Some</span>(<span class="ident">q</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">cxq</span> <span class="op">=</span> <span class="ident">CXQuery::Naked</span>(<span class="ident">q</span>.<span class="ident">clone</span>());
-                <span class="kw">let</span> <span class="ident">dialect</span> <span class="op">=</span> <span class="ident">SQLiteDialect</span> {};
-                <span class="kw">let</span> <span class="ident">nrows</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">get_limit</span>(<span class="kw-2">&amp;</span><span class="ident">cxq</span>, <span class="kw-2">&amp;</span><span class="ident">dialect</span>)<span class="question-mark">?</span> {
-                    <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="kw">let</span> <span class="ident">conn</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">pool</span>.<span class="ident">get</span>()<span class="question-mark">?</span>;
-                        <span class="ident">conn</span>.<span class="ident">query_row</span>(<span class="ident">count_query</span>(<span class="kw-2">&amp;</span><span class="ident">cxq</span>, <span class="kw-2">&amp;</span><span class="ident">dialect</span>)<span class="question-mark">?</span>.<span class="ident">as_str</span>(), [], <span class="op">|</span><span class="ident">row</span><span class="op">|</span> {
-                            <span class="prelude-val">Ok</span>(<span class="ident">row</span>.<span class="ident">get</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">i64</span><span class="op">&gt;</span>(<span class="number">0</span>)<span class="question-mark">?</span> <span class="kw">as</span> <span class="ident">usize</span>)
-                        })<span class="question-mark">?</span>
-                    }
-                    <span class="prelude-val">Some</span>(<span class="ident">n</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">n</span>,
-                };
+                <span class="kw">let</span> <span class="ident">conn</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">pool</span>.<span class="ident">get</span>()<span class="question-mark">?</span>;
+                <span class="kw">let</span> <span class="ident">nrows</span> <span class="op">=</span>
+                    <span class="ident">conn</span>.<span class="ident">query_row</span>(<span class="ident">count_query</span>(<span class="kw-2">&amp;</span><span class="ident">cxq</span>, <span class="kw-2">&amp;</span><span class="ident">SQLiteDialect</span> {})<span class="question-mark">?</span>.<span class="ident">as_str</span>(), [], <span class="op">|</span><span class="ident">row</span><span class="op">|</span> {
+                        <span class="prelude-val">Ok</span>(<span class="ident">row</span>.<span class="ident">get</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">i64</span><span class="op">&gt;</span>(<span class="number">0</span>)<span class="question-mark">?</span> <span class="kw">as</span> <span class="ident">usize</span>)
+                    })<span class="question-mark">?</span>;
                 <span class="prelude-val">Some</span>(<span class="ident">nrows</span>)
             }
             <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
@@ -574,16 +559,11 @@
 
     <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">SQLiteSourceError</span>)]</span>
     <span class="kw">fn</span> <span class="ident">result_rows</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
-        <span class="kw">let</span> <span class="ident">dialect</span> <span class="op">=</span> <span class="ident">SQLiteDialect</span> {};
-        <span class="self">self</span>.<span class="ident">nrows</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">get_limit</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">query</span>, <span class="kw-2">&amp;</span><span class="ident">dialect</span>)<span class="question-mark">?</span> {
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="self">self</span>.<span class="ident">conn</span>
-                    .<span class="ident">query_row</span>(<span class="ident">count_query</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">query</span>, <span class="kw-2">&amp;</span><span class="ident">dialect</span>)<span class="question-mark">?</span>.<span class="ident">as_str</span>(), [], <span class="op">|</span><span class="ident">row</span><span class="op">|</span> {
-                        <span class="prelude-val">Ok</span>(<span class="ident">row</span>.<span class="ident">get</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">i64</span><span class="op">&gt;</span>(<span class="number">0</span>)<span class="question-mark">?</span> <span class="kw">as</span> <span class="ident">usize</span>)
-                    })<span class="question-mark">?</span>
-            }
-            <span class="prelude-val">Some</span>(<span class="ident">n</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">n</span>,
-        };
+        <span class="self">self</span>.<span class="ident">nrows</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">conn</span>.<span class="ident">query_row</span>(
+            <span class="ident">count_query</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">query</span>, <span class="kw-2">&amp;</span><span class="ident">SQLiteDialect</span> {})<span class="question-mark">?</span>.<span class="ident">as_str</span>(),
+            [],
+            <span class="op">|</span><span class="ident">row</span><span class="op">|</span> <span class="prelude-val">Ok</span>(<span class="ident">row</span>.<span class="ident">get</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">i64</span><span class="op">&gt;</span>(<span class="number">0</span>)<span class="question-mark">?</span> <span class="kw">as</span> <span class="ident">usize</span>),
+        )<span class="question-mark">?</span>;
     }
 
     <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">SQLiteSourceError</span>)]</span>

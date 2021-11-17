@@ -305,21 +305,6 @@
 <span id="302">302</span>
 <span id="303">303</span>
 <span id="304">304</span>
-<span id="305">305</span>
-<span id="306">306</span>
-<span id="307">307</span>
-<span id="308">308</span>
-<span id="309">309</span>
-<span id="310">310</span>
-<span id="311">311</span>
-<span id="312">312</span>
-<span id="313">313</span>
-<span id="314">314</span>
-<span id="315">315</span>
-<span id="316">316</span>
-<span id="317">317</span>
-<span id="318">318</span>
-<span id="319">319</span>
 </pre><pre class="rust">
 <span class="kw">mod</span> <span class="ident">errors</span>;
 <span class="kw">mod</span> <span class="ident">typesystem</span>;
@@ -328,7 +313,7 @@
     <span class="ident">data_order::DataOrder</span>,
     <span class="ident">errors::ConnectorXError</span>,
     <span class="ident">sources</span>::{<span class="ident">PartitionParser</span>, <span class="ident">Produce</span>, <span class="ident">Source</span>, <span class="ident">SourcePartition</span>},
-    <span class="ident">sql</span>::{<span class="ident">count_query</span>, <span class="ident">get_limit</span>, <span class="ident">CXQuery</span>},
+    <span class="ident">sql</span>::{<span class="ident">count_query</span>, <span class="ident">limit1_query_oracle</span>, <span class="ident">CXQuery</span>},
 };
 <span class="kw">use</span> <span class="ident">chrono</span>::{<span class="ident">DateTime</span>, <span class="ident">NaiveDate</span>, <span class="ident">NaiveDateTime</span>, <span class="ident">Utc</span>};
 <span class="kw">use</span> <span class="ident">fehler</span>::{<span class="ident">throw</span>, <span class="ident">throws</span>};
@@ -341,7 +326,6 @@
 
 <span class="kw">pub</span> <span class="kw">use</span> <span class="self">self</span><span class="ident">::errors::OracleSourceError</span>;
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::constants::DB_BUFFER_SIZE</span>;
-<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::sql::limit1_query_oracle</span>;
 <span class="kw">use</span> <span class="ident">r2d2_oracle::oracle::ResultSet</span>;
 <span class="kw">use</span> <span class="ident">sqlparser::dialect::Dialect</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">typesystem::OracleTypeSystem</span>;
@@ -470,17 +454,10 @@
         <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">origin_query</span> {
             <span class="prelude-val">Some</span>(<span class="ident">q</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">cxq</span> <span class="op">=</span> <span class="ident">CXQuery::Naked</span>(<span class="ident">q</span>.<span class="ident">clone</span>());
-                <span class="kw">let</span> <span class="ident">dialect</span> <span class="op">=</span> <span class="ident">OracleDialect</span> {};
+                <span class="kw">let</span> <span class="ident">conn</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">pool</span>.<span class="ident">get</span>()<span class="question-mark">?</span>;
 
-                <span class="kw">let</span> <span class="ident">nrows</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">get_limit</span>(<span class="kw-2">&amp;</span><span class="ident">cxq</span>, <span class="kw-2">&amp;</span><span class="ident">dialect</span>)<span class="question-mark">?</span> {
-                    <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="kw">let</span> <span class="ident">conn</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">pool</span>.<span class="ident">get</span>()<span class="question-mark">?</span>;
-                        <span class="kw">let</span> <span class="ident">row</span> <span class="op">=</span> <span class="ident">conn</span>
-                            .<span class="ident">query_row_as</span>::<span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">count_query</span>(<span class="kw-2">&amp;</span><span class="ident">cxq</span>, <span class="kw-2">&amp;</span><span class="ident">dialect</span>)<span class="question-mark">?</span>.<span class="ident">as_str</span>(), <span class="kw-2">&amp;</span>[])<span class="question-mark">?</span>;
-                        <span class="ident">row</span>
-                    }
-                    <span class="prelude-val">Some</span>(<span class="ident">n</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">n</span>,
-                };
+                <span class="kw">let</span> <span class="ident">nrows</span> <span class="op">=</span> <span class="ident">conn</span>
+                    .<span class="ident">query_row_as</span>::<span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">count_query</span>(<span class="kw-2">&amp;</span><span class="ident">cxq</span>, <span class="kw-2">&amp;</span><span class="ident">OracleDialect</span> {})<span class="question-mark">?</span>.<span class="ident">as_str</span>(), <span class="kw-2">&amp;</span>[])<span class="question-mark">?</span>;
                 <span class="prelude-val">Some</span>(<span class="ident">nrows</span>)
             }
             <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
@@ -533,16 +510,9 @@
 
     <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">OracleSourceError</span>)]</span>
     <span class="kw">fn</span> <span class="ident">result_rows</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
-        <span class="self">self</span>.<span class="ident">nrows</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">get_limit</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">query</span>, <span class="kw-2">&amp;</span><span class="ident">OracleDialect</span> {})<span class="question-mark">?</span> {
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="ident">row</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">conn</span>.<span class="ident">query_row_as</span>::<span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>(
-                    <span class="kw-2">&amp;</span><span class="ident">count_query</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">query</span>, <span class="kw-2">&amp;</span><span class="ident">OracleDialect</span> {})<span class="question-mark">?</span>.<span class="ident">as_str</span>(),
-                    <span class="kw-2">&amp;</span>[],
-                )<span class="question-mark">?</span>;
-                <span class="ident">row</span>
-            }
-            <span class="prelude-val">Some</span>(<span class="ident">n</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">n</span>,
-        };
+        <span class="self">self</span>.<span class="ident">nrows</span> <span class="op">=</span> <span class="self">self</span>
+            .<span class="ident">conn</span>
+            .<span class="ident">query_row_as</span>::<span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">count_query</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">query</span>, <span class="kw-2">&amp;</span><span class="ident">OracleDialect</span> {})<span class="question-mark">?</span>.<span class="ident">as_str</span>(), <span class="kw-2">&amp;</span>[])<span class="question-mark">?</span>;
     }
 
     <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">OracleSourceError</span>)]</span>
