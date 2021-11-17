@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1637105521136,
+  "lastUpdate": 1637107654849,
   "repoUrl": "https://github.com/sfu-db/connector-x",
   "entries": {
     "ConnectorX TPC-H Scale@1 Benchmarks": [
@@ -4788,6 +4788,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.8101557775259912",
             "extra": "mean: 10.505659030936659 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "xiaoying_wang@sfu.ca",
+            "name": "Xiaoying Wang",
+            "username": "wangxiaoying"
+          },
+          "committer": {
+            "email": "xiaoying_wang@sfu.ca",
+            "name": "Xiaoying Wang",
+            "username": "wangxiaoying"
+          },
+          "distinct": true,
+          "id": "10415b61e20bdc46923b0ba19e5fccf26d0ff503",
+          "message": "add test feature gate to ci",
+          "timestamp": "2021-11-16T23:59:33Z",
+          "tree_id": "b228cee5323c66dce0bdc172b8dac22dd984aef1",
+          "url": "https://github.com/sfu-db/connector-x/commit/10415b61e20bdc46923b0ba19e5fccf26d0ff503"
+        },
+        "date": 1637107653569,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_mysql",
+            "value": 0.06819506970934554,
+            "unit": "iter/sec",
+            "range": "stddev: 0.4364884711877906",
+            "extra": "mean: 14.663816669769584 sec\nrounds: 5"
+          },
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_postgres",
+            "value": 0.07043234358863822,
+            "unit": "iter/sec",
+            "range": "stddev: 1.7274786927113441",
+            "extra": "mean: 14.198022514209152 sec\nrounds: 5"
           }
         ]
       }
