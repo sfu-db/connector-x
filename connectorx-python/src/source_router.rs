@@ -175,6 +175,10 @@ fn sqlite_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) 
         let col_type = row.get_ref(0)?.data_type();
         match col_type {
             Type::Integer => row.get(0),
+            Type::Real => {
+                let v: f64 = row.get(0)?;
+                Ok(v as i64)
+            }
             Type::Null => Ok(0),
             _ => {
                 error = Some(anyhow!("Partition can only be done on integer columns"));
@@ -190,6 +194,10 @@ fn sqlite_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) 
         let col_type = row.get_ref(0)?.data_type();
         match col_type {
             Type::Integer => row.get(0),
+            Type::Real => {
+                let v: f64 = row.get(0)?;
+                Ok(v as i64)
+            }
             Type::Null => Ok(0),
             _ => {
                 error = Some(anyhow!("Partition can only be done on integer columns"));
