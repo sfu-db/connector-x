@@ -55,6 +55,7 @@ macro_rules! impl_postgres_transport {
                 { Time[NaiveTime]            => Time64[NaiveTime]       | conversion auto }
                 { UUID[Uuid]                 => LargeUtf8[String]       | conversion option }
                 { Char[&'r str]              => LargeUtf8[String]       | conversion none }
+                { ByteA[Vec<u8>]             => LargeBinary[Vec<u8>]    | conversion auto }
             }
         );
     }
