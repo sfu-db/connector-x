@@ -152,8 +152,8 @@ where
                 let nrows = match get_limit(&cxq, &dialect)? {
                     None => {
                         let conn = self.pool.get()?;
-                        let row = conn
-                            .query_row_as::<usize>(&count_query(&cxq, &dialect)?.as_str(), &[])?;
+                        let row =
+                            conn.query_row_as::<usize>(count_query(&cxq, &dialect)?.as_str(), &[])?;
                         row
                     }
                     Some(n) => n,
@@ -213,7 +213,7 @@ impl SourcePartition for OracleSourcePartition {
         self.nrows = match get_limit(&self.query, &OracleDialect {})? {
             None => {
                 let row = self.conn.query_row_as::<usize>(
-                    &count_query(&self.query, &OracleDialect {})?.as_str(),
+                    count_query(&self.query, &OracleDialect {})?.as_str(),
                     &[],
                 )?;
                 row
