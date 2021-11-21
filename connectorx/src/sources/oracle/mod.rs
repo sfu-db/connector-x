@@ -208,7 +208,6 @@ impl SourcePartition for OracleSourcePartition {
         self.nrows = self
             .conn
             .query_row_as::<usize>(count_query(&self.query, &OracleDialect {})?.as_str(), &[])?;
-
     }
 
     #[throws(OracleSourceError)]
