@@ -305,7 +305,6 @@
 <span id="305">305</span>
 <span id="306">306</span>
 <span id="307">307</span>
-<span id="308">308</span>
 </pre><pre class="rust"><code><span class="kw">mod</span> <span class="ident">errors</span>;
 <span class="kw">mod</span> <span class="ident">typesystem</span>;
 
@@ -516,7 +515,6 @@
         <span class="self">self</span>.<span class="ident">nrows</span> <span class="op">=</span> <span class="self">self</span>
             .<span class="ident">conn</span>
             .<span class="ident">query_row_as</span>::<span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>(<span class="ident">count_query</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">query</span>, <span class="kw-2">&amp;</span><span class="ident">OracleDialect</span> {})<span class="question-mark">?</span>.<span class="ident">as_str</span>(), <span class="kw-2">&amp;</span>[])<span class="question-mark">?</span>;
-
     }
 
     <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">OracleSourceError</span>)]</span>
