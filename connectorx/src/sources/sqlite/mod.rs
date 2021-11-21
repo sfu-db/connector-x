@@ -126,11 +126,8 @@ where
                     }
                 }
                 Err(e) => {
-                    match e {
-                        rusqlite::Error::QueryReturnedNoRows => {
-                            num_empty += 1; // make sure when all partition results are empty, do not throw error
-                        }
-                        _ => {}
+                    if let rusqlite::Error::QueryReturnedNoRows = e {
+                        num_empty += 1; // make sure when all partition results are empty, do not throw error
                     }
                     if i == self.queries.len() - 1 && num_empty < self.queries.len() {
                         // tried the last query but still get an error

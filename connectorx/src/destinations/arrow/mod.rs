@@ -183,7 +183,7 @@ impl<'a> DestinationPartition<'a> for ArrowPartitionWriter {
 
     #[throws(ArrowDestinationError)]
     fn finalize(&mut self) {
-        if !self.builders.is_none() {
+        if self.builders.is_some() {
             self.flush()?;
         }
     }
