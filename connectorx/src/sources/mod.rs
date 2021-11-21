@@ -51,7 +51,9 @@ pub trait Source {
 /// a sequence of values of variate types by repetitively calling the function `produce`.
 pub trait SourcePartition: Sized {
     type TypeSystem: TypeSystem;
-    type Parser<'a>: PartitionParser<'a, TypeSystem = Self::TypeSystem, Error = Self::Error>;
+    type Parser<'a>: PartitionParser<'a, TypeSystem = Self::TypeSystem, Error = Self::Error>
+    where
+        Self: 'a;
     type Error: From<ConnectorXError> + Send;
 
     /// Count total number of rows in each partition.

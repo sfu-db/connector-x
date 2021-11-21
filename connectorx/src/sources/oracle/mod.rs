@@ -152,7 +152,7 @@ where
                 let conn = self.pool.get()?;
 
                 let nrows = conn
-                    .query_row_as::<usize>(&count_query(&cxq, &OracleDialect {})?.as_str(), &[])?;
+                    .query_row_as::<usize>(count_query(&cxq, &OracleDialect {})?.as_str(), &[])?;
                 Some(nrows)
             }
             None => None,
@@ -207,7 +207,8 @@ impl SourcePartition for OracleSourcePartition {
     fn result_rows(&mut self) {
         self.nrows = self
             .conn
-            .query_row_as::<usize>(&count_query(&self.query, &OracleDialect {})?.as_str(), &[])?;
+            .query_row_as::<usize>(count_query(&self.query, &OracleDialect {})?.as_str(), &[])?;
+
     }
 
     #[throws(OracleSourceError)]

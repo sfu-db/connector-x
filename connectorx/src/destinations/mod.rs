@@ -16,7 +16,9 @@ use crate::typesystem::{TypeAssoc, TypeSystem};
 pub trait Destination: Sized {
     const DATA_ORDERS: &'static [DataOrder];
     type TypeSystem: TypeSystem;
-    type Partition<'a>: DestinationPartition<'a, TypeSystem = Self::TypeSystem, Error = Self::Error>;
+    type Partition<'a>: DestinationPartition<'a, TypeSystem = Self::TypeSystem, Error = Self::Error>
+    where
+        Self: 'a;
     type Error: From<ConnectorXError> + Send;
 
     /// Specify whether the destination needs total rows in advance
