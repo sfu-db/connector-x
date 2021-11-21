@@ -52,28 +52,7 @@ def test_mysql_with_partition(mysql_url: str) -> None:
     assert_frame_equal(df, expected, check_names=True)
 
 
-def test_manual_partition(mysql_url: str) -> None:
-    queries = [
-        "SELECT * FROM test_table WHERE test_int < 2",
-        "SELECT * FROM test_table WHERE test_int >= 2",
-    ]
-    df = read_sql(mysql_url, query=queries)
-    expected = pd.DataFrame(
-        index=range(6),
-        data={
-            "test_int": pd.Series([1, 2, 3, 4, 5, 6], dtype="Int64"),
-            "test_float": pd.Series([1.1, 2.2, 3.3, 4.4, 5.5, 6.6], dtype="float64"),
-            "test_enum": pd.Series(
-                ["odd", "even", "odd", "even", "odd", "even"], dtype="object"
-            ),
-            "test_null": pd.Series([None, None, None, None, None, None], dtype="Int64"),
-        },
-    )
-    df.sort_values(by="test_int", inplace=True, ignore_index=True)
-    assert_frame_equal(df, expected, check_names=True)
-
-
-def test_read_sql_without_partition(mysql_url: str) -> None:
+def test_mysql_without_partition(mysql_url: str) -> None:
     query = "SELECT * FROM test_table"
     df = read_sql(mysql_url, query)
     expected = pd.DataFrame(
@@ -90,7 +69,39 @@ def test_read_sql_without_partition(mysql_url: str) -> None:
     assert_frame_equal(df, expected, check_names=True)
 
 
-def test_read_sql_with_partition(mysql_url: str) -> None:
+def test_mysql_limit_without_partition(mysql_url: str) -> None:
+    query = "SELECT * FROM test_table limit 3"
+    df = read_sql(mysql_url, query)
+    expected = pd.DataFrame(
+        index=range(3),
+        data={
+            "test_int": pd.Series([1, 2, 3], dtype="Int64"),
+            "test_float": pd.Series([1.1, 2.2, 3.3], dtype="float64"),
+            "test_enum": pd.Series(["odd", "even", "odd"], dtype="object"),
+            "test_null": pd.Series([None, None, None], dtype="Int64"),
+        },
+    )
+    assert_frame_equal(df, expected, check_names=True)
+
+
+def test_mysql_limit_large_without_partition(mysql_url: str) -> None:
+    query = "SELECT * FROM test_table limit 10"
+    df = read_sql(mysql_url, query)
+    expected = pd.DataFrame(
+        index=range(6),
+        data={
+            "test_int": pd.Series([1, 2, 3, 4, 5, 6], dtype="Int64"),
+            "test_float": pd.Series([1.1, 2.2, 3.3, 4.4, 5.5, 6.6], dtype="float64"),
+            "test_enum": pd.Series(
+                ["odd", "even", "odd", "even", "odd", "even"], dtype="object"
+            ),
+            "test_null": pd.Series([None, None, None, None, None, None], dtype="Int64"),
+        },
+    )
+    assert_frame_equal(df, expected, check_names=True)
+
+
+def test_mysql_with_partition(mysql_url: str) -> None:
     query = "SELECT * FROM test_table"
     df = read_sql(
         mysql_url,
@@ -114,7 +125,53 @@ def test_read_sql_with_partition(mysql_url: str) -> None:
     assert_frame_equal(df, expected, check_names=True)
 
 
-def test_read_sql_with_partition_without_partition_range(mysql_url: str) -> None:
+def test_mysql_limit_with_partition(mysql_url: str) -> None:
+    query = "SELECT * FROM test_table limit 3"
+    df = read_sql(
+        mysql_url,
+        query,
+        partition_on="test_int",
+        partition_range=(0, 2000),
+        partition_num=3,
+    )
+    expected = pd.DataFrame(
+        index=range(3),
+        data={
+            "test_int": pd.Series([1, 2, 3], dtype="Int64"),
+            "test_float": pd.Series([1.1, 2.2, 3.3], dtype="float64"),
+            "test_enum": pd.Series(["odd", "even", "odd"], dtype="object"),
+            "test_null": pd.Series([None, None, None], dtype="Int64"),
+        },
+    )
+    df.sort_values(by="test_int", inplace=True, ignore_index=True)
+    assert_frame_equal(df, expected, check_names=True)
+
+
+def test_mysql_limit_large_with_partition(mysql_url: str) -> None:
+    query = "SELECT * FROM test_table limit 10"
+    df = read_sql(
+        mysql_url,
+        query,
+        partition_on="test_int",
+        partition_range=(0, 2000),
+        partition_num=3,
+    )
+    expected = pd.DataFrame(
+        index=range(6),
+        data={
+            "test_int": pd.Series([1, 2, 3, 4, 5, 6], dtype="Int64"),
+            "test_float": pd.Series([1.1, 2.2, 3.3, 4.4, 5.5, 6.6], dtype="float64"),
+            "test_enum": pd.Series(
+                ["odd", "even", "odd", "even", "odd", "even"], dtype="object"
+            ),
+            "test_null": pd.Series([None, None, None, None, None, None], dtype="Int64"),
+        },
+    )
+    df.sort_values(by="test_int", inplace=True, ignore_index=True)
+    assert_frame_equal(df, expected, check_names=True)
+
+
+def test_mysql_with_partition_without_partition_range(mysql_url: str) -> None:
     query = "SELECT * FROM test_table where test_float > 3"
     df = read_sql(
         mysql_url,

@@ -8,7 +8,7 @@ use crate::{
     data_order::DataOrder,
     errors::ConnectorXError,
     sources::{PartitionParser, Produce, Source, SourcePartition},
-    sql::{count_query, get_limit, limit1_query, CXQuery},
+    sql::{count_query, limit1_query, CXQuery},
     utils::DummyBox,
 };
 use anyhow::anyhow;
@@ -154,16 +154,11 @@ where
         match &self.origin_query {
             Some(q) => {
                 let cxq = CXQuery::Naked(q.clone());
-                let dialect = SQLiteDialect {};
-                let nrows = match get_limit(&cxq, &dialect)? {
-                    None => {
-                        let conn = self.pool.get()?;
-                        conn.query_row(count_query(&cxq, &dialect)?.as_str(), [], |row| {
-                            Ok(row.get::<_, i64>(0)? as usize)
-                        })?
-                    }
-                    Some(n) => n,
-                };
+                let conn = self.pool.get()?;
+                let nrows =
+                    conn.query_row(count_query(&cxq, &SQLiteDialect {})?.as_str(), [], |row| {
+                        Ok(row.get::<_, i64>(0)? as usize)
+                    })?;
                 Some(nrows)
             }
             None => None,
@@ -221,16 +216,11 @@ impl SourcePartition for SQLiteSourcePartition {
 
     #[throws(SQLiteSourceError)]
     fn result_rows(&mut self) {
-        let dialect = SQLiteDialect {};
-        self.nrows = match get_limit(&self.query, &dialect)? {
-            None => {
-                self.conn
-                    .query_row(count_query(&self.query, &dialect)?.as_str(), [], |row| {
-                        Ok(row.get::<_, i64>(0)? as usize)
-                    })?
-            }
-            Some(n) => n,
-        };
+        self.nrows = self.conn.query_row(
+            count_query(&self.query, &SQLiteDialect {})?.as_str(),
+            [],
+            |row| Ok(row.get::<_, i64>(0)? as usize),
+        )?;
     }
 
     #[throws(SQLiteSourceError)]

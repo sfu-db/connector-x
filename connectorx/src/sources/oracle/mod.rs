@@ -5,7 +5,7 @@ use crate::{
     data_order::DataOrder,
     errors::ConnectorXError,
     sources::{PartitionParser, Produce, Source, SourcePartition},
-    sql::{count_query, get_limit, CXQuery},
+    sql::{count_query, limit1_query_oracle, CXQuery},
 };
 use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
 use fehler::{throw, throws};
@@ -18,7 +18,6 @@ type OracleConn = PooledConnection<OracleManager>;
 
 pub use self::errors::OracleSourceError;
 use crate::constants::DB_BUFFER_SIZE;
-use crate::sql::limit1_query_oracle;
 use r2d2_oracle::oracle::ResultSet;
 use sqlparser::dialect::Dialect;
 pub use typesystem::OracleTypeSystem;
@@ -107,6 +106,9 @@ where
         let conn = self.pool.get()?;
         for (i, query) in self.queries.iter().enumerate() {
             // assuming all the partition queries yield same schema
+            // without rownum = 1, derived type might be wrong
+            // example: select avg(test_int), test_char from test_table group by test_char
+            // -> (NumInt, Char) instead of (NumtFloat, Char)
             match conn.query(limit1_query_oracle(query)?.as_str(), &[]) {
                 Ok(rows) => {
                     let (names, types) = rows
@@ -147,17 +149,10 @@ where
         match &self.origin_query {
             Some(q) => {
                 let cxq = CXQuery::Naked(q.clone());
-                let dialect = OracleDialect {};
+                let conn = self.pool.get()?;
 
-                let nrows = match get_limit(&cxq, &dialect)? {
-                    None => {
-                        let conn = self.pool.get()?;
-                        let row =
-                            conn.query_row_as::<usize>(count_query(&cxq, &dialect)?.as_str(), &[])?;
-                        row
-                    }
-                    Some(n) => n,
-                };
+                let nrows = conn
+                    .query_row_as::<usize>(count_query(&cxq, &OracleDialect {})?.as_str(), &[])?;
                 Some(nrows)
             }
             None => None,
@@ -210,16 +205,10 @@ impl SourcePartition for OracleSourcePartition {
 
     #[throws(OracleSourceError)]
     fn result_rows(&mut self) {
-        self.nrows = match get_limit(&self.query, &OracleDialect {})? {
-            None => {
-                let row = self.conn.query_row_as::<usize>(
-                    count_query(&self.query, &OracleDialect {})?.as_str(),
-                    &[],
-                )?;
-                row
-            }
-            Some(n) => n,
-        };
+        self.nrows = self
+            .conn
+            .query_row_as::<usize>(count_query(&self.query, &OracleDialect {})?.as_str(), &[])?;
+
     }
 
     #[throws(OracleSourceError)]
