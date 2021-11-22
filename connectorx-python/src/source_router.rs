@@ -31,6 +31,7 @@ pub enum SourceType {
     MySQL,
     MsSQL,
     Oracle,
+    BigQuery,
 }
 
 pub struct SourceConn {
@@ -64,7 +65,10 @@ impl TryFrom<&str> for SourceConn {
                 ty: SourceType::Oracle,
                 conn: url,
             }),
-
+            "bigquery" => Ok(SourceConn {
+                ty: SourceType::BigQuery,
+                conn: url,
+            }),
             _ => unimplemented!("Connection: {} not supported!", conn),
         }
     }
@@ -78,6 +82,7 @@ impl SourceConn {
             SourceType::MySQL => mysql_get_partition_range(&self.conn, query, col),
             SourceType::MsSQL => mssql_get_partition_range(&self.conn, query, col),
             SourceType::Oracle => oracle_get_partition_range(&self.conn, query, col),
+            SourceType::BigQuery => bigquery_get_partition_range(&self.conn, query, col),
         }
     }
 
@@ -421,4 +426,9 @@ fn oracle_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) 
     let min_v: i64 = row.get(0).unwrap_or(0);
     let max_v: i64 = row.get(1).unwrap_or(0);
     (min_v, max_v)
+}
+
+#[throws(ConnectorXPythonError)] // TODO
+fn bigquery_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
+    (0, 1000)
 }
