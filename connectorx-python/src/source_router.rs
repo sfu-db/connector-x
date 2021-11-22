@@ -458,5 +458,5 @@ fn bigquery_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64
     let min_v = query_result.get_i64(0).unwrap()?;
     let max_v = query_result.get_i64(1).unwrap()?;
 
-    (1,1000)
+    (min_v, max_v)
 }
