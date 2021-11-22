@@ -20,6 +20,7 @@ use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
 use csv::{ReaderBuilder, StringRecord, StringRecordsIntoIter};
 use fehler::{throw, throws};
 use hex::decode;
+use log::debug;
 use postgres::{
     binary_copy::{BinaryCopyOutIter, BinaryCopyOutRow},
     fallible_iterator::FallibleIterator,
@@ -148,14 +149,18 @@ where
         assert!(!self.queries.is_empty());
 
         let mut conn = self.pool.get()?;
-        let first_query = &self.queries[0];
-
-        let stmt = conn.prepare(first_query.as_str())?;
+        let stmt = conn.prepare(
+            self.origin_query
+                .as_ref()
+                .expect("origin query is none")
+                .as_str(),
+        )?;
 
         let (names, types) = stmt
             .columns()
             .iter()
             .map(|col| {
+                // debug!("name: {}, type: {}", col.name(), col.type_());
                 (
                     col.name().to_string(),
                     PostgresTypeSystem::from(col.type_()),
@@ -201,6 +206,20 @@ where
             ));
         }
         ret
+    }
+
+    #[throws(PostgresSourceError)]
+    fn prepare(&mut self) {
+        let mut conn = self.pool.get()?;
+        let mut transaction = conn.transaction()?;
+        let query = format!(
+            "DECLARE multi_cursor{} CURSOR FOR {}",
+            self.queries.len(),
+            self.origin_query.as_ref().expect("origin query empty!")
+        );
+        debug!("transaction: {}", query);
+        transaction.execute(query.as_str(), &[])?;
+        transaction.commit()?;
     }
 }
 
@@ -256,8 +275,8 @@ where
 
     #[throws(PostgresSourceError)]
     fn parser(&mut self) -> Self::Parser<'_> {
-        let query = format!("COPY ({}) TO STDOUT WITH BINARY", self.query);
-        let reader = self.conn.copy_out(&*query)?; // unless reading the data, it seems like issue the query is fast
+        assert!(false, "plan partition only works in cursor protocol!");
+        let reader = self.conn.copy_out(self.query.as_str())?; // unless reading the data, it seems like issue the query is fast
         let pg_schema: Vec<_> = self.schema.iter().map(|&dt| dt.into()).collect();
         let iter = BinaryCopyOutIter::new(reader, &pg_schema);
 
@@ -291,6 +310,7 @@ where
 
     #[throws(PostgresSourceError)]
     fn parser(&mut self) -> Self::Parser<'_> {
+        assert!(false, "plan partition only works in cursor protocol!");
         let query = format!("COPY ({}) TO STDOUT WITH CSV", self.query);
         let reader = self.conn.copy_out(&*query)?; // unless reading the data, it seems like issue the query is fast
         let iter = ReaderBuilder::new()
@@ -328,6 +348,7 @@ where
 
     #[throws(PostgresSourceError)]
     fn parser(&mut self) -> Self::Parser<'_> {
+        debug!("partition query: {}", self.query);
         let iter = self
             .conn
             .query_raw::<_, bool, _>(self.query.as_str(), vec![])?; // unless reading the data, it seems like issue the query is fast

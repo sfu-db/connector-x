@@ -78,9 +78,6 @@ def read_sql(
         else:
             partition_query = {
                 "query": query,
-                "column": partition_on,
-                "min": partition_range[0] if partition_range else None,
-                "max": partition_range[1] if partition_range else None,
                 "num": partition_num,
             }
             queries = None
@@ -110,7 +107,7 @@ def read_sql(
 
         if index_col is not None:
             df.set_index(index_col, inplace=True)
-            
+
         if return_type == "modin":
             try:
                 import modin.pandas as mpd
@@ -146,7 +143,7 @@ def read_sql(
             except ModuleNotFoundError:
                 raise ValueError("You need to install polars first")
 
-            try: 
+            try:
                 df = pl.DataFrame.from_arrow(df)
             except AttributeError:
                 # api change for polars >= 0.8.*

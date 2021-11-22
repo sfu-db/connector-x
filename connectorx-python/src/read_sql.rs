@@ -2,6 +2,7 @@ use crate::source_router::SourceConn;
 use connectorx::sql::CXQuery;
 use dict_derive::FromPyObject;
 use fehler::throw;
+use log::debug;
 use pyo3::prelude::*;
 use pyo3::{exceptions::PyValueError, PyResult};
 use std::convert::TryFrom;
@@ -9,19 +10,19 @@ use std::convert::TryFrom;
 #[derive(FromPyObject)]
 pub struct PartitionQuery {
     query: String,
-    column: String,
-    min: Option<i64>,
-    max: Option<i64>,
     num: usize,
 }
 
 impl PartitionQuery {
-    pub fn new(query: &str, column: &str, min: Option<i64>, max: Option<i64>, num: usize) -> Self {
+    pub fn new(
+        query: &str,
+        _column: &str,
+        _min: Option<i64>,
+        _max: Option<i64>,
+        num: usize,
+    ) -> Self {
         Self {
             query: query.into(),
-            column: column.into(),
-            min,
-            max,
             num,
         }
     }
@@ -35,41 +36,17 @@ pub fn read_sql<'a>(
     queries: Option<Vec<String>>,
     partition_query: Option<PartitionQuery>,
 ) -> PyResult<&'a PyAny> {
+    debug!("conn: {}", conn);
     let source_conn = SourceConn::try_from(conn)?;
     let (queries, origin_query) = match (queries, partition_query) {
         (Some(queries), None) => (queries.into_iter().map(CXQuery::Naked).collect(), None),
-        (
-            None,
-            Some(PartitionQuery {
-                query,
-                column: col,
-                min,
-                max,
-                num,
-            }),
-        ) => {
+        (None, Some(PartitionQuery { query, num })) => {
             let mut queries = vec![];
             let origin_query = Some(query.clone());
             let num = num as i64;
 
-            let (min, max) = match (min, max) {
-                (None, None) => source_conn.get_col_range(&query, &col)?,
-                (Some(min), Some(max)) => (min, max),
-                _ => throw!(PyValueError::new_err(
-                    "partition_query range can not be partially specified",
-                )),
-            };
-
-            let partition_size = (max - min + 1) / num;
-
             for i in 0..num {
-                let lower = min + i * partition_size;
-                let upper = match i == num - 1 {
-                    true => max + 1,
-                    false => min + (i + 1) * partition_size,
-                };
-                let partition_query = source_conn.get_part_query(&query, &col, lower, upper)?;
-                queries.push(partition_query);
+                queries.push(CXQuery::Naked(format!("FETCH ALL FROM multi_cursor{}", i)));
             }
             (queries, origin_query)
         }

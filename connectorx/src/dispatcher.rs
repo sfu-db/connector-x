@@ -74,7 +74,14 @@ where
             debug!("Do not need counts in advance");
             Some(0)
         };
+
+        debug!("Prepare");
+        self.src.prepare()?;
+
+        debug!("Partition source");
         let mut src_partitions: Vec<S::Partition> = self.src.partition()?;
+
+        debug!("Count total rows");
         if self.dst.needs_count() && total_rows.is_none() {
             debug!("Manually count rows of each partitioned query and sum up");
             // run queries
@@ -130,6 +137,7 @@ where
                 match dorder {
                     DataOrder::RowMajor => loop {
                         let (n, is_last) = parser.fetch_next()?;
+                        // debug!("fetch next: {}, is_last: {}", n, is_last);
                         dst.aquire_row(n)?;
                         for _ in 0..n {
                             #[allow(clippy::needless_range_loop)]

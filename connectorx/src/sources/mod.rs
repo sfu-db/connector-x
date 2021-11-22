@@ -45,6 +45,10 @@ pub trait Source {
     fn schema(&self) -> Vec<Self::TypeSystem>;
 
     fn partition(self) -> Result<Vec<Self::Partition>, Self::Error>;
+
+    fn prepare(&mut self) -> Result<(), Self::Error> {
+        Ok(())
+    }
 }
 
 /// In general, a `DataSource` abstracts the data source as a stream, which can produce
