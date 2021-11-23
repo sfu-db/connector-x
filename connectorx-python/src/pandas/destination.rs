@@ -123,7 +123,10 @@ impl<'a> PandasDestination<'a> {
 impl<'a> Destination for PandasDestination<'a> {
     const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
     type TypeSystem = PandasTypeSystem;
-    type Partition<'b> = PandasPartitionDestination<'b>;
+    type Partition<'b>
+    where
+        'a: 'b,
+    = PandasPartitionDestination<'b>;
     type Error = ConnectorXPythonError;
 
     fn needs_count(&self) -> bool {

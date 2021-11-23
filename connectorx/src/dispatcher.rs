@@ -89,7 +89,7 @@ where
                 .collect();
             total_rows = Some(part_rows.iter().sum());
         }
-        let total_rows = total_rows.ok_or_else(|| ConnectorXError::CountError())?;
+        let total_rows = total_rows.ok_or_else(ConnectorXError::CountError)?;
 
         debug!(
             "Allocate destination memory: {}x{}",

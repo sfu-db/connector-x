@@ -175,6 +175,10 @@ fn sqlite_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) 
         let col_type = row.get_ref(0)?.data_type();
         match col_type {
             Type::Integer => row.get(0),
+            Type::Real => {
+                let v: f64 = row.get(0)?;
+                Ok(v as i64)
+            }
             Type::Null => Ok(0),
             _ => {
                 error = Some(anyhow!("Partition can only be done on integer columns"));
@@ -190,6 +194,10 @@ fn sqlite_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) 
         let col_type = row.get_ref(0)?.data_type();
         match col_type {
             Type::Integer => row.get(0),
+            Type::Real => {
+                let v: f64 = row.get(0)?;
+                Ok(v as i64)
+            }
             Type::Null => Ok(0),
             _ => {
                 error = Some(anyhow!("Partition can only be done on integer columns"));
@@ -214,8 +222,37 @@ fn mysql_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
         .query_first(range_query)?
         .ok_or_else(|| anyhow!("mysql range: no row returns"))?;
 
-    let col_type = MySQLTypeSystem::from(&row.columns()[0].column_type());
+    let col_type =
+        MySQLTypeSystem::from((&row.columns()[0].column_type(), &row.columns()[0].flags()));
+
     let (min_v, max_v) = match col_type {
+        MySQLTypeSystem::Tiny(_) => {
+            let min_v: Option<i8> = row
+                .get(0)
+                .ok_or_else(|| anyhow!("mysql range: cannot get min value"))?;
+            let max_v: Option<i8> = row
+                .get(1)
+                .ok_or_else(|| anyhow!("mysql range: cannot get max value"))?;
+            (min_v.unwrap_or(0) as i64, max_v.unwrap_or(0) as i64)
+        }
+        MySQLTypeSystem::Short(_) => {
+            let min_v: Option<i16> = row
+                .get(0)
+                .ok_or_else(|| anyhow!("mysql range: cannot get min value"))?;
+            let max_v: Option<i16> = row
+                .get(1)
+                .ok_or_else(|| anyhow!("mysql range: cannot get max value"))?;
+            (min_v.unwrap_or(0) as i64, max_v.unwrap_or(0) as i64)
+        }
+        MySQLTypeSystem::Int24(_) => {
+            let min_v: Option<i32> = row
+                .get(0)
+                .ok_or_else(|| anyhow!("mysql range: cannot get min value"))?;
+            let max_v: Option<i32> = row
+                .get(1)
+                .ok_or_else(|| anyhow!("mysql range: cannot get max value"))?;
+            (min_v.unwrap_or(0) as i64, max_v.unwrap_or(0) as i64)
+        }
         MySQLTypeSystem::Long(_) => {
             let min_v: Option<i64> = row
                 .get(0)
@@ -233,6 +270,69 @@ fn mysql_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
                 .get(1)
                 .ok_or_else(|| anyhow!("mysql range: cannot get max value"))?;
             (min_v.unwrap_or(0), max_v.unwrap_or(0))
+        }
+        MySQLTypeSystem::UTiny(_) => {
+            let min_v: Option<u8> = row
+                .get(0)
+                .ok_or_else(|| anyhow!("mysql range: cannot get min value"))?;
+            let max_v: Option<u8> = row
+                .get(1)
+                .ok_or_else(|| anyhow!("mysql range: cannot get max value"))?;
+            (min_v.unwrap_or(0) as i64, max_v.unwrap_or(0) as i64)
+        }
+        MySQLTypeSystem::UShort(_) => {
+            let min_v: Option<u16> = row
+                .get(0)
+                .ok_or_else(|| anyhow!("mysql range: cannot get min value"))?;
+            let max_v: Option<u16> = row
+                .get(1)
+                .ok_or_else(|| anyhow!("mysql range: cannot get max value"))?;
+            (min_v.unwrap_or(0) as i64, max_v.unwrap_or(0) as i64)
+        }
+        MySQLTypeSystem::UInt24(_) => {
+            let min_v: Option<u32> = row
+                .get(0)
+                .ok_or_else(|| anyhow!("mysql range: cannot get min value"))?;
+            let max_v: Option<u32> = row
+                .get(1)
+                .ok_or_else(|| anyhow!("mysql range: cannot get max value"))?;
+            (min_v.unwrap_or(0) as i64, max_v.unwrap_or(0) as i64)
+        }
+        MySQLTypeSystem::ULong(_) => {
+            let min_v: Option<u32> = row
+                .get(0)
+                .ok_or_else(|| anyhow!("mysql range: cannot get min value"))?;
+            let max_v: Option<u32> = row
+                .get(1)
+                .ok_or_else(|| anyhow!("mysql range: cannot get max value"))?;
+            (min_v.unwrap_or(0) as i64, max_v.unwrap_or(0) as i64)
+        }
+        MySQLTypeSystem::ULongLong(_) => {
+            let min_v: Option<u64> = row
+                .get(0)
+                .ok_or_else(|| anyhow!("mysql range: cannot get min value"))?;
+            let max_v: Option<u64> = row
+                .get(1)
+                .ok_or_else(|| anyhow!("mysql range: cannot get max value"))?;
+            (min_v.unwrap_or(0) as i64, max_v.unwrap_or(0) as i64)
+        }
+        MySQLTypeSystem::Float(_) => {
+            let min_v: Option<f32> = row
+                .get(0)
+                .ok_or_else(|| anyhow!("mysql range: cannot get min value"))?;
+            let max_v: Option<f32> = row
+                .get(1)
+                .ok_or_else(|| anyhow!("mysql range: cannot get max value"))?;
+            (min_v.unwrap_or(0.0) as i64, max_v.unwrap_or(0.0) as i64)
+        }
+        MySQLTypeSystem::Double(_) => {
+            let min_v: Option<f64> = row
+                .get(0)
+                .ok_or_else(|| anyhow!("mysql range: cannot get min value"))?;
+            let max_v: Option<f64> = row
+                .get(1)
+                .ok_or_else(|| anyhow!("mysql range: cannot get max value"))?;
+            (min_v.unwrap_or(0.0) as i64, max_v.unwrap_or(0.0) as i64)
         }
         _ => throw!(anyhow!("Partition can only be done on int columns")),
     };

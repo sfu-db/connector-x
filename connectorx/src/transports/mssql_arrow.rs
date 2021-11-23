@@ -3,7 +3,7 @@
 use crate::destinations::arrow::{ArrowDestination, ArrowDestinationError, ArrowTypeSystem};
 use crate::sources::mssql::{FloatN, IntN, MsSQLSource, MsSQLSourceError, MsSQLTypeSystem};
 use crate::typesystem::TypeConversion;
-use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
+use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
 use num_traits::ToPrimitive;
 use rust_decimal::Decimal;
 use thiserror::Error;
@@ -56,6 +56,9 @@ impl_transport!(
         { Date[NaiveDate]               => Date32[NaiveDate]         | conversion auto }
         { Datetimeoffset[DateTime<Utc>] => DateTimeTz[DateTime<Utc>] | conversion auto }
         { Uniqueidentifier[Uuid]        => LargeUtf8[String]         | conversion option }
+        { Time[NaiveTime]               => Time64[NaiveTime]         | conversion auto }
+        { SmallMoney[f32]               => Float32[f32]              | conversion none }
+        { Money[f64]                    => Float64[f64]              | conversion none }
     }
 );
 

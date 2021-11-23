@@ -44,8 +44,16 @@ CREATE TABLE IF NOT EXISTS test_types(
     test_int24 MEDIUMINT,
     test_long INT,
     test_longlong BIGINT,
+    test_tiny_unsigned TINYINT UNSIGNED,
+    test_short_unsigned SMALLINT UNSIGNED,
+    test_int24_unsigned MEDIUMINT UNSIGNED,
+    test_long_unsigned INT UNSIGNED,
+    test_longlong_unsigned BIGINT UNSIGNED,
+    test_long_notnull INT NOT NULL,
+    test_short_unsigned_notnull SMALLINT UNSIGNED NOT NULL,
     test_float FLOAT,
     test_double DOUBLE,
+    test_double_notnull DOUBLE NOT NULL,
     test_year YEAR,
     test_tinyblob TINYBLOB,
     test_blob BLOB,
@@ -55,6 +63,6 @@ CREATE TABLE IF NOT EXISTS test_types(
     test_json JSON
 );
 
-INSERT INTO test_types VALUES ('1970-01-01 00:00:01', NULL, '00:00:00', '1970-01-01 00:00:01', 1.1, 1, NULL, 'char1', -128, -32768, -8388608, -2147483648, -9223372036854775808, NULL, -2.2E-308, 1901, NULL, NULL, NULL, NULL, 'apple', '{"name": "piggy", "age": 1}');
-INSERT INTO test_types VALUES ('2038-01-19 00:00:00', '1970-01-01', NULL, '2038-01-19 00:0:00', NULL, 2, 'varchar2', NULL, 127, 32767, 8388607, 2147483647, 9223372036854775807, -1.1E-38, NULL, 2155, 'tinyblob2', 'blobblobblobblob2', 'mediumblob2', 'longblob2', NULL, '{"name": "kitty", "age": 2}');
-INSERT INTO test_types VALUES (NULL, '2038-01-19', '23:59:59', NULL, 3.3, NULL, 'varchar3', 'char3', NULL, NULL, NULL, NULL, NULL, 3.4E38, 1.7E308, NULL, 'tinyblob3', 'blobblobblobblob3', 'mediumblob3', 'longblob3', 'mango', NULL);
+INSERT INTO test_types VALUES ('1970-01-01 00:00:01', NULL, '00:00:00', '1970-01-01 00:00:01', 1.1, 1, NULL, 'char1', -128, -32768, -8388608, -2147483648, -9223372036854775808, NULL, NULL, NULL, NULL, NULL, 1, 1, NULL, -2.2E-308, 1.2345, 1901, NULL, NULL, NULL, NULL, 'apple', '{"name": "piggy", "age": 1}');
+INSERT INTO test_types VALUES ('2038-01-19 00:00:00', '1970-01-01', NULL, '2038-01-19 00:0:00', NULL, 2, 'varchar2', NULL, 127, 32767, 8388607, 2147483647, 9223372036854775807, 255, 65535, 16777215, 4294967295, 1.844674407E19, 2147483647, 65535, -1.1E-38, NULL, -1.1E-3, 2155, 'tinyblob2', 'blobblobblobblob2', 'mediumblob2', 'longblob2', NULL, '{"name": "kitty", "age": 2}');
+INSERT INTO test_types VALUES (NULL, '2038-01-19', '23:59:59', NULL, 3.3, NULL, 'varchar3', 'char3', NULL, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0, -2147483648, 0, 3.4E38, 1.7E308, 1.7E30, NULL, 'tinyblob3', 'blobblobblobblob3', 'mediumblob3', 'longblob3', 'mango', NULL);

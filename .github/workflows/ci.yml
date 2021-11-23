@@ -69,7 +69,7 @@ jobs:
       - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly-2021-05-30
+          toolchain: nightly-2021-10-21
           components: rustfmt
           default: true
 
@@ -114,6 +114,9 @@ jobs:
         with:
           command: clippy
           args: --features all
+
+      - name: Check each feature gate
+        run: just test-feature-gate
 
       - name: Run tests
         uses: actions-rs/cargo@v1
@@ -191,7 +194,7 @@ jobs:
       - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly-2021-05-30
+          toolchain: nightly-2021-10-21
           components: rustfmt
           default: true
 
