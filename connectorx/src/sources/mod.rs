@@ -1,6 +1,8 @@
 //! This module defines four traits [`Source`], [`SourcePartition`], [`PartitionParser`], and [`Produce`]  to define a source.
 //! This module also contains source implementations for various databases.
 
+#[cfg(feature = "src_bigquery")]
+pub mod bigquery;
 #[cfg(feature = "src_csv")]
 pub mod csv;
 #[cfg(feature = "src_dummy")]

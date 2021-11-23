@@ -61,7 +61,7 @@ iai = "0.1"
 pprof = {version = "0.5", features = ["flamegraph"]}
 
 [features]
-all = ["src_sqlite", "src_postgres", "src_mysql", "src_mssql", "src_oracle", "src_csv", "src_dummy", "dst_arrow", "dst_arrow2"]
+all = ["src_sqlite", "src_postgres", "src_mysql", "src_mssql", "src_oracle", "src_bigquery", "src_csv", "src_dummy", "dst_arrow", "dst_arrow2"]
 branch = []
 default = ["fptr"]
 dst_arrow = ["arrow", "chrono"]
@@ -88,5 +88,6 @@ src_postgres = [
   "native-tls",
 ]
 src_sqlite = ["rusqlite", "r2d2_sqlite", "fallible-streaming-iterator", "owning_ref", "chrono", "r2d2"]
+src_bigquery = ["gcp-bigquery-client"]
 [package.metadata.docs.rs]
 features = ["all"]
