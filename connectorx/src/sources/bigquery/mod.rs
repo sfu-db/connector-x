@@ -627,3 +627,40 @@ impl<'r, 'a> Produce<'r, Option<DateTime<Utc>>> for BigQuerySourceParser<'a> {
         }
     }
 }
+
+macro_rules! impl_produce {
+    ($($t: ty,)+) => {
+        $(
+            impl<'r, 'a> Produce<'r, $t> for BigQuerySourceParser<'a> {
+                type Error = BigQuerySourceError;
+
+                #[throws(BigQuerySourceError)]
+                fn produce(&'r mut self) -> $t {
+                    let (ridx, cidx) = self.next_loc()?;
+                    let value = self.rowbuf[ridx].columns.as_ref().unwrap().get(cidx).unwrap().value.as_ref().unwrap().as_str().unwrap();
+                    value.parse().map_err(|_| {
+                        ConnectorXError::cannot_produce::<$t>(Some(value.into()))
+                    })?
+                }
+            }
+
+            impl<'r, 'a> Produce<'r, Option<$t>> for BigQuerySourceParser<'a> {
+                type Error = BigQuerySourceError;
+
+                #[throws(BigQuerySourceError)]
+                fn produce(&'r mut self) -> Option<$t> {
+                    let (ridx, cidx) = self.next_loc()?;
+                    let value = self.rowbuf[ridx].columns.as_ref().unwrap().get(cidx).unwrap().value.as_ref().unwrap().as_str().unwrap();
+                    match &value[..] {
+                        "" => None,
+                        v => Some(v.parse().map_err(|_| {
+                            ConnectorXError::cannot_produce::<$t>(Some(value.into()))
+                        })?),
+                    }
+                }
+            }
+        )+
+    };
+}
+
+impl_produce!(i64,);
