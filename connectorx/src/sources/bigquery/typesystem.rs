@@ -1,7 +1,4 @@
-use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
-use r2d2_mysql::mysql::consts::ColumnType;
-use rust_decimal::Decimal;
-use serde_json::Value;
+use chrono::{NaiveDate};
 use gcp_bigquery_client::model::field_type::FieldType;
 
 #[derive(Copy, Clone, Debug)]
@@ -12,7 +9,7 @@ pub enum BigQueryTypeSystem {
 }
 
 impl_typesystem! {
-    system = BigQueryTypeSystem
+    system = BigQueryTypeSystem,
     mappings = {
         { Int64 => i64 }
         { Date => NaiveDate }
@@ -20,7 +17,7 @@ impl_typesystem! {
     }
 }
 
-impl<'a> From<&'a Type> for BigQueryTypeSystem {
+impl<'a> From<&'a FieldType> for BigQueryTypeSystem {
     fn from(ty: &'a FieldType) -> BigQueryTypeSystem {
         use BigQueryTypeSystem::*;
         match ty {

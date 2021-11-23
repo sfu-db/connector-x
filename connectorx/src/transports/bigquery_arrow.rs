@@ -3,7 +3,7 @@
 use crate::{
     destinations::arrow::{typesystem::ArrowTypeSystem, ArrowDestination, ArrowDestinationError},
     impl_transport,
-    sources::sqlite::{BigQuerySource, BigQuerySourceError, BigQueryTypeSystem},
+    sources::bigquery::{BigQuerySource, BigQuerySourceError, BigQueryTypeSystem},
     typesystem::TypeConversion,
 };
 use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
@@ -22,7 +22,7 @@ pub enum BigQueryArrowTransportError {
 }
 
 /// Convert BigQuery data types to Arrow data types.
-pub struct SQLiteArrowTransport;
+pub struct BigQueryArrowTransport;
 
 impl_transport!(
     name = BigQueryArrowTransport,
