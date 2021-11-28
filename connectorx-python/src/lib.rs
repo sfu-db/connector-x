@@ -42,6 +42,15 @@ pub fn read_sql<'a>(
     protocol: Option<&str>,
     queries: Option<Vec<String>>,
     partition_query: Option<read_sql::PartitionQuery>,
+    multi_access_plan: &str,
 ) -> PyResult<&'a PyAny> {
-    read_sql::read_sql(py, conn, return_type, protocol, queries, partition_query)
+    read_sql::read_sql(
+        py,
+        conn,
+        return_type,
+        protocol,
+        queries,
+        partition_query,
+        multi_access_plan,
+    )
 }

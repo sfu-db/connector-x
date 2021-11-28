@@ -25,6 +25,7 @@ def read_sql(
     partition_range: Optional[Tuple[int, int]] = None,
     partition_num: Optional[int] = None,
     index_col: Optional[str] = None,
+    multi_access_plan: str = "default",
 ):
     """
     Run the SQL query, download the data from database into a Pandas dataframe.
@@ -102,6 +103,7 @@ def read_sql(
             queries=queries,
             protocol=protocol,
             partition_query=partition_query,
+            multi_access_plan=multi_access_plan,
         )
         df = reconstruct_pandas(result)
 
@@ -135,6 +137,7 @@ def read_sql(
             queries=queries,
             protocol=protocol,
             partition_query=partition_query,
+            multi_access_plan=multi_access_plan,
         )
         df = reconstruct_arrow(result)
         if return_type == "polars":

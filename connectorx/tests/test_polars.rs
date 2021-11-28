@@ -104,7 +104,8 @@ fn test_postgres_arrow() {
     ];
     let url = Url::parse(dburl.as_str()).unwrap();
     let (config, _tls) = rewrite_tls_args(&url).unwrap();
-    let builder = PostgresSource::<BinaryProtocol, NoTls>::new(config, NoTls, 2).unwrap();
+    let builder =
+        PostgresSource::<BinaryProtocol, NoTls>::new(config, NoTls, 2, "default").unwrap();
     let mut destination = Arrow2Destination::new();
     let dispatcher = Dispatcher::<_, _, PostgresArrow2Transport<BinaryProtocol, NoTls>>::new(
         builder,

@@ -1,11 +1,12 @@
 """
 Usage:
-  tpch-cx.py [--protocol=<protocol>] [--conn=<conn>] [--ret=<ret>] <num>
+  tpch-cx.py [--protocol=<protocol>] [--conn=<conn>] [--ret=<ret>] [--force-parallel] <num>
 
 Options:
   --protocol=<protocol>  The protocol to use [default: binary].
   --conn=<conn>          The connection url to use [default: POSTGRES_URL].
   --ret=<ret>            The return type [default: pandas].
+  --force-parallel       Force parallelism by setting variables
   -h --help              Show this screen.
   --version              Show version.
 """
@@ -42,6 +43,8 @@ if __name__ == "__main__":
     table = os.environ["TPCH_TABLE"]
     part_num = int(args["<num>"])
 
+    multi_access_plan = "force_parallel" if args["--force-parallel"] else "default"
+
     with Timer() as timer:
         if part_num > 1:
             df = cx.read_sql(
@@ -51,6 +54,7 @@ if __name__ == "__main__":
                 partition_num=int(args["<num>"]),
                 protocol=args["--protocol"],
                 return_type=args["--ret"],
+                multi_access_plan=multi_access_plan,
             )
         else:
             df = cx.read_sql(

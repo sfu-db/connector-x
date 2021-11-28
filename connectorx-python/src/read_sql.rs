@@ -35,6 +35,7 @@ pub fn read_sql<'a>(
     protocol: Option<&str>,
     queries: Option<Vec<String>>,
     partition_query: Option<PartitionQuery>,
+    multi_access_plan: &str,
 ) -> PyResult<&'a PyAny> {
     debug!("conn: {}", conn);
     let source_conn = SourceConn::try_from(conn)?;
@@ -65,6 +66,7 @@ pub fn read_sql<'a>(
             origin_query,
             &queries,
             protocol.unwrap_or("binary"),
+            multi_access_plan,
         )?),
         "arrow" => Ok(crate::arrow::write_arrow(
             py,
@@ -72,6 +74,7 @@ pub fn read_sql<'a>(
             origin_query,
             &queries,
             protocol.unwrap_or("binary"),
+            multi_access_plan,
         )?),
         _ => Err(PyValueError::new_err(format!(
             "return type should be 'pandas' or 'arrow', got '{}'",

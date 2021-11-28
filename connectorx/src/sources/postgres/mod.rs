@@ -88,6 +88,7 @@ where
     queries: Vec<CXQuery<String>>,
     names: Vec<String>,
     schema: Vec<PostgresTypeSystem>,
+    multi_access_plan: String,
     _protocol: PhantomData<P>,
 }
 
@@ -99,7 +100,7 @@ where
     <C::TlsConnect as TlsConnect<Socket>>::Future: Send,
 {
     #[throws(PostgresSourceError)]
-    pub fn new(config: Config, tls: C, nconn: usize) -> Self {
+    pub fn new(config: Config, tls: C, nconn: usize, multi_access_plan: &str) -> Self {
         let manager = PostgresConnectionManager::new(config, tls);
         let pool = Pool::builder().max_size(nconn as u32).build(manager)?;
 
@@ -109,6 +110,7 @@ where
             queries: vec![],
             names: vec![],
             schema: vec![],
+            multi_access_plan: multi_access_plan.to_string(),
             _protocol: PhantomData,
         }
     }
@@ -218,6 +220,15 @@ where
             self.origin_query.as_ref().expect("origin query empty!")
         );
         debug!("transaction: {}", query);
+        if self.multi_access_plan == "force_parallel" {
+            debug!("enable parallelism");
+            transaction.execute("set parallel_tuple_cost=0.001", &[])?;
+            transaction.execute("set parallel_setup_cost=10", &[])?;
+            transaction.execute(
+                format!("set max_parallel_workers_per_gather={}", self.queries.len()).as_str(),
+                &[],
+            )?;
+        }
         transaction.execute(query.as_str(), &[])?;
         transaction.commit()?;
     }

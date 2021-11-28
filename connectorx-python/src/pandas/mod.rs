@@ -40,6 +40,7 @@ pub fn write_pandas<'a>(
     origin_query: Option<String>,
     queries: &[CXQuery<String>],
     protocol: &str,
+    multi_access_plan: &str,
 ) -> &'a PyAny {
     let mut destination = PandasDestination::new(py);
 
@@ -54,6 +55,7 @@ pub fn write_pandas<'a>(
                         config,
                         tls_conn,
                         queries.len(),
+                        multi_access_plan,
                     )?;
                     let dispatcher = Dispatcher::<
                         _,
@@ -66,8 +68,12 @@ pub fn write_pandas<'a>(
                     dispatcher.run()?;
                 }
                 ("csv", None) => {
-                    let sb =
-                        PostgresSource::<CSVProtocol, NoTls>::new(config, NoTls, queries.len())?;
+                    let sb = PostgresSource::<CSVProtocol, NoTls>::new(
+                        config,
+                        NoTls,
+                        queries.len(),
+                        multi_access_plan,
+                    )?;
                     let dispatcher =
                         Dispatcher::<_, _, PostgresPandasTransport<CSVProtocol, NoTls>>::new(
                             sb,
@@ -83,6 +89,7 @@ pub fn write_pandas<'a>(
                         config,
                         tls_conn,
                         queries.len(),
+                        multi_access_plan,
                     )?;
                     let dispatcher =
                         Dispatcher::<
@@ -98,6 +105,7 @@ pub fn write_pandas<'a>(
                         config,
                         NoTls,
                         queries.len(),
+                        multi_access_plan,
                     )?;
                     let dispatcher = Dispatcher::<
                         _,
@@ -114,6 +122,7 @@ pub fn write_pandas<'a>(
                         config,
                         tls_conn,
                         queries.len(),
+                        multi_access_plan,
                     )?;
                     let dispatcher = Dispatcher::<
                         _,
@@ -126,8 +135,12 @@ pub fn write_pandas<'a>(
                     dispatcher.run()?;
                 }
                 ("cursor", None) => {
-                    let sb =
-                        PostgresSource::<CursorProtocol, NoTls>::new(config, NoTls, queries.len())?;
+                    let sb = PostgresSource::<CursorProtocol, NoTls>::new(
+                        config,
+                        NoTls,
+                        queries.len(),
+                        multi_access_plan,
+                    )?;
                     let dispatcher = Dispatcher::<
                         _,
                         _,

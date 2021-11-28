@@ -18,6 +18,7 @@ pub fn run(nq: usize, conn: &str) {
             None,
             None,
             Some(PartitionQuery::new(QUERY, "L_ORDERKEY", None, None, nq)),
+            "part_plan",
         )
         .unwrap();
     });
