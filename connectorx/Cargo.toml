@@ -43,8 +43,9 @@ regex = {version = "1", optional = true}
 rusqlite = {version = "0.25", features = ["column_decltype", "chrono", "bundled"], optional = true}
 rust_decimal = {version = "1", features = ["db-postgres"], optional = true}
 serde_json = {version = "1", optional = true}
-tiberius = {version = "0.5", features = ["rust_decimal", "chrono"], optional = true}
+tiberius = {version = "0.5", features = ["rust_decimal", "chrono", "integrated-auth-gssapi"], optional = true}
 tokio = {version = "1", features = ["rt", "rt-multi-thread", "net"], optional = true}
+tokio-util = {version = "0.6", optional = true}
 url = {version = "2", optional = true}
 urlencoding = {version = "2.1", optional = true}
 uuid = {version = "0.8", optional = true}
@@ -68,7 +69,7 @@ dst_arrow2 = ["arrow2", "chrono", "polars"]
 fptr = []
 src_csv = ["csv", "regex", "chrono"]
 src_dummy = ["num-traits", "chrono"]
-src_mssql = ["rust_decimal", "num-traits", "chrono", "tiberius", "bb8-tiberius", "bb8", "tokio", "url", "uuid", "owning_ref", "futures", "urlencoding"]
+src_mssql = ["rust_decimal", "num-traits", "chrono", "tiberius", "bb8-tiberius", "bb8", "tokio", "url", "uuid", "owning_ref", "futures", "urlencoding", "tokio-util"]
 src_mysql = ["r2d2_mysql", "rust_decimal", "num-traits", "chrono", "serde_json", "r2d2"]
 src_oracle = ["r2d2-oracle", "chrono", "r2d2", "urlencoding", "url"]
 src_postgres = [
