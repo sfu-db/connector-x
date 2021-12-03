@@ -576,6 +576,7 @@ dependencies = [
  "thiserror",
  "tiberius",
  "tokio",
+ "tokio-util",
  "url",
  "urlencoding",
  "uuid",

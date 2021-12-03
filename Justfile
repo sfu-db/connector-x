@@ -20,6 +20,9 @@ test-feature-gate:
     cargo c --features dst_arrow
     cargo c --features dst_arrow2
 
+mssql:
+    cargo run --example mssql --features src_mssql --features dst_arrow -- --nocapture
+
 bootstrap-python:
     cp README.md connectorx-python/README.md
     cd connectorx-python && poetry install
