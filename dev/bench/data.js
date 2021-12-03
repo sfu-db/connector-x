@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1638518973334,
+  "lastUpdate": 1638519486776,
   "repoUrl": "https://github.com/sfu-db/connector-x",
   "entries": {
     "ConnectorX TPC-H Scale@1 Benchmarks": [
@@ -5092,6 +5092,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 2.3263843325413895",
             "extra": "mean: 13.843000355362893 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "wangxiaoying0369@gmail.com",
+            "name": "Xiaoying Wang",
+            "username": "wangxiaoying"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "01736efacf98d67f72a1f9b465fae399e26adb03",
+          "message": "Merge pull request #185 from sfu-db/mssql-tc\n\nsupport windows trusted connection",
+          "timestamp": "2021-12-02T22:23:13-08:00",
+          "tree_id": "f115d17db525d793d8b501d07fcb5410761362bd",
+          "url": "https://github.com/sfu-db/connector-x/commit/01736efacf98d67f72a1f9b465fae399e26adb03"
+        },
+        "date": 1638519485616,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_mysql",
+            "value": 0.06359091719376382,
+            "unit": "iter/sec",
+            "range": "stddev: 0.3852710188756765",
+            "extra": "mean: 15.725516223534942 sec\nrounds: 5"
+          },
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_postgres",
+            "value": 0.07074365945800475,
+            "unit": "iter/sec",
+            "range": "stddev: 2.8513708084580776",
+            "extra": "mean: 14.135542431101204 sec\nrounds: 5"
           }
         ]
       }
