@@ -63,11 +63,17 @@ pub fn mssql_config(url: &Url) -> Config {
     // Using SQL Server authentication.
     let params: HashMap<String, String> = url.query_pairs().into_owned().collect();
     match params.get("trusted_connection") {
-        Some(v) if v == "true" => config.authentication(AuthMethod::Integrated),
-        _ => config.authentication(AuthMethod::sql_server(
-            decode(url.username())?.to_owned(),
-            decode(url.password().unwrap_or(""))?.to_owned(),
-        )),
+        Some(v) if v == "true" => {
+            debug!("mssql auth through trusted connection!");
+            config.authentication(AuthMethod::Integrated);
+        }
+        _ => {
+            debug!("mssql auth through sqlserver authentication");
+            config.authentication(AuthMethod::sql_server(
+                decode(url.username())?.to_owned(),
+                decode(url.password().unwrap_or(""))?.to_owned(),
+            ));
+        }
     };
     config.encryption(EncryptionLevel::NotSupported);
     config
