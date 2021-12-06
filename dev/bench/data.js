@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1638562655594,
+  "lastUpdate": 1638813287445,
   "repoUrl": "https://github.com/sfu-db/connector-x",
   "entries": {
     "ConnectorX TPC-H Scale@1 Benchmarks": [
@@ -5206,6 +5206,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 3.291714010854349",
             "extra": "mean: 14.345409304276108 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "wangxiaoying0369@gmail.com",
+            "name": "Xiaoying Wang",
+            "username": "wangxiaoying"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8c95ceda76a5461274717acfaf6fbb19e4435e11",
+          "message": "Merge pull request #187 from alexander-beedie/main\n\nAutomatically select 'cursor' protocol for redshift-prefixed connection strings",
+          "timestamp": "2021-12-06T09:45:58-08:00",
+          "tree_id": "e0c02ebc3c0a432edc489c1d8da3ea687aa9654a",
+          "url": "https://github.com/sfu-db/connector-x/commit/8c95ceda76a5461274717acfaf6fbb19e4435e11"
+        },
+        "date": 1638813286244,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_mysql",
+            "value": 0.06061001406263713,
+            "unit": "iter/sec",
+            "range": "stddev: 0.9310199109541016",
+            "extra": "mean: 16.498923741653563 sec\nrounds: 5"
+          },
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_postgres",
+            "value": 0.08226175366652039,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5710056452711936",
+            "extra": "mean: 12.156317552551627 sec\nrounds: 5"
           }
         ]
       }
