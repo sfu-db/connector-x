@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1638813287445,
+  "lastUpdate": 1638813773542,
   "repoUrl": "https://github.com/sfu-db/connector-x",
   "entries": {
     "ConnectorX TPC-H Scale@1 Benchmarks": [
@@ -5244,6 +5244,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.5710056452711936",
             "extra": "mean: 12.156317552551627 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "xiaoying_wang@sfu.ca",
+            "name": "Xiaoying Wang",
+            "username": "wangxiaoying"
+          },
+          "committer": {
+            "email": "xiaoying_wang@sfu.ca",
+            "name": "Xiaoying Wang",
+            "username": "wangxiaoying"
+          },
+          "distinct": true,
+          "id": "7d193711affb004ebed6966d05f09ff9f722371c",
+          "message": "0.2.3-alpha.2: support redshift scheme in connection uri",
+          "timestamp": "2021-12-06T17:54:12Z",
+          "tree_id": "baaa30aafcbe14f83b6a07e82d6b99e2333d0ed6",
+          "url": "https://github.com/sfu-db/connector-x/commit/7d193711affb004ebed6966d05f09ff9f722371c"
+        },
+        "date": 1638813772162,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_mysql",
+            "value": 0.0710058162487694,
+            "unit": "iter/sec",
+            "range": "stddev: 0.35193543762717894",
+            "extra": "mean: 14.083353348076344 sec\nrounds: 5"
+          },
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_postgres",
+            "value": 0.08243809283884178,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3657940625782536",
+            "extra": "mean: 12.13031458593905 sec\nrounds: 5"
           }
         ]
       }
