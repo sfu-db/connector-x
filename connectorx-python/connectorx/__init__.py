@@ -34,24 +34,24 @@ def read_sql(
     conn
       the connection string.
     query
-      a SQL query or a list of SQL query.
+      a SQL query or a list of SQL queries.
     return_type
-      the return type of this function. It can be "arrow", "pandas", "modin", "dask" or "polars".
+      the return type of this function; one of "arrow", "pandas", "modin", "dask" or "polars".
     protocol
       backend-specific transfer protocol directive; defaults to 'binary' (except for redshift
       connection strings, where 'cursor' will be used instead).
     partition_on
-      the column to partition the result.
+      the column on which to partition the result.
     partition_range
       the value range of the partition column.
     partition_num
-      how many partition to generate.
+      how many partitions to generate.
     index_col
-      the index column to set, only applicable for return type "pandas", "modin", "dask".
+      the index column to set; only applicable for return type "pandas", "modin", "dask".
 
     Examples
     ========
-    Read a DataFrame from a SQL using a single thread:
+    Read a DataFrame from a SQL query using a single thread:
 
     >>> postgres_url = "postgresql://username:password@server:port/database"
     >>> query = "SELECT * FROM lineitem"
@@ -63,7 +63,7 @@ def read_sql(
     >>> query = "SELECT * FROM lineitem"
     >>> read_sql(postgres_url, query, partition_on="partition_col", partition_num=10)
 
-    Read a DataFrame in parallel using 2 threads by manually providing two partition SQLs:
+    Read a DataFrame in parallel using 2 threads by explicitly providing two SQL queries:
 
     >>> postgres_url = "postgresql://username:password@server:port/database"
     >>> queries = ["SELECT * FROM lineitem WHERE partition_col <= 10", "SELECT * FROM lineitem WHERE partition_col > 10"]
