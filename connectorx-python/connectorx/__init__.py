@@ -20,14 +20,14 @@ def read_sql(
     query: Union[List[str], str],
     *,
     return_type: str = "pandas",
-    protocol: str = "binary",
+    protocol: Optional[str] = None,
     partition_on: Optional[str] = None,
     partition_range: Optional[Tuple[int, int]] = None,
     partition_num: Optional[int] = None,
     index_col: Optional[str] = None,
 ):
     """
-    Run the SQL query, download the data from database into a Pandas dataframe.
+    Run the SQL query, download the data from database into a dataframe.
 
     Parameters
     ==========
@@ -37,6 +37,9 @@ def read_sql(
       a SQL query or a list of SQL query.
     return_type
       the return type of this function. It can be "arrow", "pandas", "modin", "dask" or "polars".
+    protocol
+      backend-specific transfer protocol directive; defaults to 'binary' (except for redshift
+      connection strings, where 'cursor' will be used instead).
     partition_on
       the column to partition the result.
     partition_range
@@ -54,13 +57,13 @@ def read_sql(
     >>> query = "SELECT * FROM lineitem"
     >>> read_sql(postgres_url, query)
 
-    Read a DataFrame parallelly using 10 threads by automatically partitioning the provided SQL on the partition column:
+    Read a DataFrame in parallel using 10 threads by automatically partitioning the provided SQL on the partition column:
 
     >>> postgres_url = "postgresql://username:password@server:port/database"
     >>> query = "SELECT * FROM lineitem"
     >>> read_sql(postgres_url, query, partition_on="partition_col", partition_num=10)
 
-    Read a DataFrame parallelly using 2 threads by manually providing two partition SQLs:
+    Read a DataFrame in parallel using 2 threads by manually providing two partition SQLs:
 
     >>> postgres_url = "postgresql://username:password@server:port/database"
     >>> queries = ["SELECT * FROM lineitem WHERE partition_col <= 10", "SELECT * FROM lineitem WHERE partition_col > 10"]
@@ -92,6 +95,16 @@ def read_sql(
             raise ValueError("Partition on multiple queries is not supported.")
     else:
         raise ValueError("query must be either str or a list of str")
+
+    if not protocol:
+        # note: redshift cannot currently use the faster binary/csv protocols.
+        # set compatible protocol ('cursor') and masquerade as postgres.
+        backend, connection_details = conn.split(":",1)
+        if "redshift" in backend:
+            conn = f"postgresql:{connection_details}"
+            protocol = "cursor"
+        else:
+            protocol = "binary"
 
     if return_type in {"modin", "dask", "pandas"}:
         try:
