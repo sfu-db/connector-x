@@ -99,7 +99,7 @@ def read_sql(
     if not protocol:
         # note: redshift/clickhouse are not compatible with the 'binary' protocol, and use other database
         # drivers to connect. set a compatible protocol and masquerade as the appropriate backend.
-        backend, connection_details = conn.split(":",1)
+        backend, connection_details = conn.split(":",1) if conn else ("","")
         if "redshift" in backend:
             conn = f"postgresql:{connection_details}"
             protocol = "cursor"
