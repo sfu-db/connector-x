@@ -97,12 +97,15 @@ def read_sql(
         raise ValueError("query must be either str or a list of str")
 
     if not protocol:
-        # note: redshift cannot currently use the faster binary/csv protocols.
-        # set compatible protocol ('cursor') and masquerade as postgres.
-        backend, connection_details = conn.split(":",1)
+        # note: redshift/clickhouse are not compatible with the 'binary' protocol, and use other database
+        # drivers to connect. set a compatible protocol and masquerade as the appropriate backend.
+        backend, connection_details = conn.split(":",1) if conn else ("","")
         if "redshift" in backend:
             conn = f"postgresql:{connection_details}"
             protocol = "cursor"
+        elif "clickhouse" in backend:
+            conn = f"mysql:{connection_details}"
+            protocol = "text"
         else:
             protocol = "binary"
 
