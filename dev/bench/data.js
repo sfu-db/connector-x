@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1638815738179,
+  "lastUpdate": 1639068995270,
   "repoUrl": "https://github.com/sfu-db/connector-x",
   "entries": {
     "ConnectorX TPC-H Scale@1 Benchmarks": [
@@ -5320,6 +5320,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.7482806712252041",
             "extra": "mean: 11.46914026066661 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "wangxiaoying0369@gmail.com",
+            "name": "Xiaoying Wang",
+            "username": "wangxiaoying"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "ce5e955dbb12e2f2dd571fe1199dd3cd0eefb3e6",
+          "message": "Merge pull request #191 from alexander-beedie/main\n\nAutomatically select 'text' protocol for clickhouse-prefixed connection strings",
+          "timestamp": "2021-12-09T08:46:51-08:00",
+          "tree_id": "dd423da2af5d9e5b25975c374e709449e440fa34",
+          "url": "https://github.com/sfu-db/connector-x/commit/ce5e955dbb12e2f2dd571fe1199dd3cd0eefb3e6"
+        },
+        "date": 1639068993866,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_mysql",
+            "value": 0.06479166565646463,
+            "unit": "iter/sec",
+            "range": "stddev: 0.6409150683664855",
+            "extra": "mean: 15.43408384192735 sec\nrounds: 5"
+          },
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_postgres",
+            "value": 0.05600656283001814,
+            "unit": "iter/sec",
+            "range": "stddev: 3.6043649919483625",
+            "extra": "mean: 17.855050363205372 sec\nrounds: 5"
           }
         ]
       }
