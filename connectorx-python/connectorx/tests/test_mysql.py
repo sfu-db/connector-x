@@ -331,6 +331,9 @@ def test_mysql_types_binary(mysql_url: str) -> None:
                 ['{"age":1,"name":"piggy"}', '{"age":2,"name":"kitty"}', None],
                 dtype="object",
             ),
+            "test_mediumtext": pd.Series(
+                [None, b"", b"medium text!!!!"], dtype="object"
+            ),
         },
     )
     assert_frame_equal(df, expected, check_names=True)
@@ -394,6 +397,9 @@ def test_mysql_types_text(mysql_url: str) -> None:
             "test_json": pd.Series(
                 ['{"age":1,"name":"piggy"}', '{"age":2,"name":"kitty"}', None],
                 dtype="object",
+            ),
+            "test_mediumtext": pd.Series(
+                [None, b"", b"medium text!!!!"], dtype="object"
             ),
         },
     )
