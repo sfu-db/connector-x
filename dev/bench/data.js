@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1639068995270,
+  "lastUpdate": 1639187092574,
   "repoUrl": "https://github.com/sfu-db/connector-x",
   "entries": {
     "ConnectorX TPC-H Scale@1 Benchmarks": [
@@ -5358,6 +5358,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 3.6043649919483625",
             "extra": "mean: 17.855050363205372 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "xiaoying_wang@sfu.ca",
+            "name": "Xiaoying Wang",
+            "username": "wangxiaoying"
+          },
+          "committer": {
+            "email": "xiaoying_wang@sfu.ca",
+            "name": "Xiaoying Wang",
+            "username": "wangxiaoying"
+          },
+          "distinct": true,
+          "id": "fa5fb0c9f2a3e2ff208c14da9fdf98f49b11f1c6",
+          "message": "add mediumtext type test for mysql",
+          "timestamp": "2021-12-11T01:33:34Z",
+          "tree_id": "97218f79c5c2c5bd8a489f78aa55459313096da7",
+          "url": "https://github.com/sfu-db/connector-x/commit/fa5fb0c9f2a3e2ff208c14da9fdf98f49b11f1c6"
+        },
+        "date": 1639187091314,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_mysql",
+            "value": 0.06657255880818372,
+            "unit": "iter/sec",
+            "range": "stddev: 0.953626415781205",
+            "extra": "mean: 15.021204200387 sec\nrounds: 5"
+          },
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_postgres",
+            "value": 0.0637141821307167,
+            "unit": "iter/sec",
+            "range": "stddev: 0.8028905542308876",
+            "extra": "mean: 15.69509278088808 sec\nrounds: 5"
           }
         ]
       }
