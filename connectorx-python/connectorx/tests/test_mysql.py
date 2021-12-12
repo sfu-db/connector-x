@@ -10,6 +10,7 @@ from .. import read_sql
 @pytest.fixture(scope="module")  # type: ignore
 def mysql_url() -> str:
     conn = os.environ["MYSQL_URL"]
+    # conn = os.environ["MARIADB_URL"]
     return conn
 
 
@@ -329,7 +330,12 @@ def test_mysql_types_binary(mysql_url: str) -> None:
             "test_enum": pd.Series(["apple", None, "mango"], dtype="object"),
             "test_json": pd.Series(
                 ['{"age":1,"name":"piggy"}', '{"age":2,"name":"kitty"}', None],
+                # mariadb
+                # [b'{"name": "piggy", "age": 1}', b'{"name": "kitty", "age": 2}', None],
                 dtype="object",
+            ),
+            "test_mediumtext": pd.Series(
+                [None, b"", b"medium text!!!!"], dtype="object"
             ),
         },
     )
@@ -393,7 +399,12 @@ def test_mysql_types_text(mysql_url: str) -> None:
             "test_enum": pd.Series(["apple", None, "mango"], dtype="object"),
             "test_json": pd.Series(
                 ['{"age":1,"name":"piggy"}', '{"age":2,"name":"kitty"}', None],
+                # mariadb
+                # [b'{"name": "piggy", "age": 1}', b'{"name": "kitty", "age": 2}', None],
                 dtype="object",
+            ),
+            "test_mediumtext": pd.Series(
+                [None, b"", b"medium text!!!!"], dtype="object"
             ),
         },
     )

@@ -333,7 +333,7 @@ impl ArrowAssoc for Option<Vec<u8>> {
     }
 
     fn field(header: &str) -> Field {
-        Field::new(header, ArrowDataType::Time64(TimeUnit::Nanosecond), true)
+        Field::new(header, ArrowDataType::LargeBinary, true)
     }
 }
 
@@ -350,6 +350,6 @@ impl ArrowAssoc for Vec<u8> {
     }
 
     fn field(header: &str) -> Field {
-        Field::new(header, ArrowDataType::Time64(TimeUnit::Nanosecond), false)
+        Field::new(header, ArrowDataType::LargeBinary, false)
     }
 }
