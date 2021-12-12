@@ -31,7 +31,7 @@ INSERT INTO test_table_extra VALUES (3, 'русский');
 DROP TABLE IF EXISTS test_types;
 
 CREATE TABLE IF NOT EXISTS test_types(
-    test_timestamp TIMESTAMP,
+    test_timestamp TIMESTAMP NULL,
     test_date DATE,
     test_time TIME,
     test_datetime DATETIME,
