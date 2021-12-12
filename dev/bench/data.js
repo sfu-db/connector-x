@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1639287795009,
+  "lastUpdate": 1639289409861,
   "repoUrl": "https://github.com/sfu-db/connector-x",
   "entries": {
     "ConnectorX TPC-H Scale@1 Benchmarks": [
@@ -5434,6 +5434,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 2.5290849134639033",
             "extra": "mean: 13.18572499472648 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "xiaoying_wang@sfu.ca",
+            "name": "Xiaoying Wang",
+            "username": "wangxiaoying"
+          },
+          "committer": {
+            "email": "xiaoying_wang@sfu.ca",
+            "name": "Xiaoying Wang",
+            "username": "wangxiaoying"
+          },
+          "distinct": false,
+          "id": "ee14fd3ad3a47e5b5a6fb4e3dd70dc78e0b6928d",
+          "message": "update test for mariadb",
+          "timestamp": "2021-12-12T05:58:08Z",
+          "tree_id": "323f7f90b088676bf6be217822fdb576b117fd10",
+          "url": "https://github.com/sfu-db/connector-x/commit/ee14fd3ad3a47e5b5a6fb4e3dd70dc78e0b6928d"
+        },
+        "date": 1639289408720,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_mysql",
+            "value": 0.07323996059916722,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1029546839808853",
+            "extra": "mean: 13.65374847035855 sec\nrounds: 5"
+          },
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_postgres",
+            "value": 0.09430056415609334,
+            "unit": "iter/sec",
+            "range": "stddev: 0.74089618836441",
+            "extra": "mean: 10.604390429146587 sec\nrounds: 5"
           }
         ]
       }
