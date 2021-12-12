@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1639187092574,
+  "lastUpdate": 1639287795009,
   "repoUrl": "https://github.com/sfu-db/connector-x",
   "entries": {
     "ConnectorX TPC-H Scale@1 Benchmarks": [
@@ -5396,6 +5396,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.8028905542308876",
             "extra": "mean: 15.69509278088808 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "xiaoying_wang@sfu.ca",
+            "name": "Xiaoying Wang",
+            "username": "wangxiaoying"
+          },
+          "committer": {
+            "email": "xiaoying_wang@sfu.ca",
+            "name": "Xiaoying Wang",
+            "username": "wangxiaoying"
+          },
+          "distinct": true,
+          "id": "21188b007eff83f6a118307c4ae318d5df7251d8",
+          "message": "0.2.23-alpha.3: fix arrow binary field mapping",
+          "timestamp": "2021-12-12T05:33:32Z",
+          "tree_id": "80689c25572e78994e9b008549c2fa21cd2194a2",
+          "url": "https://github.com/sfu-db/connector-x/commit/21188b007eff83f6a118307c4ae318d5df7251d8"
+        },
+        "date": 1639287793637,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_mysql",
+            "value": 0.05436889806757964,
+            "unit": "iter/sec",
+            "range": "stddev: 2.548062339342976",
+            "extra": "mean: 18.392868635244668 sec\nrounds: 5"
+          },
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_postgres",
+            "value": 0.07583959170996982,
+            "unit": "iter/sec",
+            "range": "stddev: 2.5290849134639033",
+            "extra": "mean: 13.18572499472648 sec\nrounds: 5"
           }
         ]
       }
