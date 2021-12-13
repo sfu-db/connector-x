@@ -598,6 +598,7 @@ dependencies = [
  "dict_derive",
  "env_logger 0.9.0",
  "fehler",
+ "gcp-bigquery-client",
  "iai",
  "itertools",
  "lazy_static",

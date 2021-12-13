@@ -6,6 +6,7 @@ use connectorx::{
         mysql::{MySQLSourceError, MySQLTypeSystem},
         oracle::OracleDialect,
         postgres::{rewrite_tls_args, PostgresTypeSystem},
+        bigquery::BigQueryDialect,
     },
     sql::{
         get_partition_range_query, get_partition_range_query_sep, single_col_partition_query,
@@ -13,6 +14,7 @@ use connectorx::{
     },
 };
 use fehler::{throw, throws};
+use gcp_bigquery_client;
 use r2d2_mysql::mysql::{prelude::Queryable, Opts, Pool, Row};
 use r2d2_oracle::oracle::Connection as oracle_conn;
 use rusqlite::{types::Type, Connection};
@@ -430,5 +432,31 @@ fn oracle_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) 
 
 #[throws(ConnectorXPythonError)] // TODO
 fn bigquery_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
-    (0, 1000)
+    use tokio::runtime::Runtime;
+    let rt = Runtime::new().unwrap();
+    let url = Url::parse(conn.as_str())?;
+    let sa_key_path = url.path();
+    let client = rt.block_on(
+        gcp_bigquery_client::Client::from_service_account_key_file(sa_key_path),
+    );
+    let auth_data = std::fs::read_to_string(sa_key_path)?;
+    let auth_json: serde_json::Value = serde_json::from_str(&auth_data)?;
+    let project_id = auth_json
+        .get("project_id")
+        .unwrap()
+        .as_str()
+        .unwrap()
+        .to_string();
+    let range_query = get_partition_range_query(query, col, &BigQueryDialect {})?;
+    let query_result = rt.block_on(client
+        .job()
+        .query(
+            range_query.as_str(), 
+            &[])
+        )?;
+    query_result.next_row();
+    let min_v = query_result.get_i64(0).unwrap()?;
+    let max_v = query_result.get_i64(1).unwrap()?;
+
+    (1,1000)
 }
