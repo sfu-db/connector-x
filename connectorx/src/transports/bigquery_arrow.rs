@@ -31,7 +31,11 @@ impl_transport!(
     route = BigQuerySource => ArrowDestination,
     mappings = {
         { Int64[i64]                 => Int64[i64]              | conversion auto }
-        { Date[NaiveDate]            => Date32[NaiveDate]       | conversion auto }
+        { Integer[i64]               => Int64[i64]              | conversion none }
+        { Float64[f64]               => Float64[i64]            | conversion auto }
+        { Float[f64]                 => Float64[i64]            | conversion none }
         { String[String]             => LargeUtf8[String]       | conversion auto }
+        { Date[NaiveDate]            => Date32[NaiveDate]       | conversion auto }
+        // { String[String]             => LargeUtf8[String]       | conversion auto }
     }
 );

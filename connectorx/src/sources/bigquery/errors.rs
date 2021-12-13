@@ -1,5 +1,7 @@
-use thiserror::Error;
 use gcp_bigquery_client::error::BQError;
+use thiserror::Error;
+use url;
+
 #[derive(Error, Debug)]
 pub enum BigQuerySourceError {
     #[error(transparent)]
@@ -7,6 +9,15 @@ pub enum BigQuerySourceError {
 
     #[error(transparent)]
     BQError(#[from] BQError),
+
+    #[error(transparent)]
+    BigQueryUrlError(#[from] url::ParseError),
+
+    #[error(transparent)]
+    BigQueryStdError(#[from] std::io::Error),
+
+    #[error(transparent)]
+    BigQueryJsonError(#[from] serde_json::Error),
 
     /// Any other errors that are too trivial to be put here explicitly.
     #[error(transparent)]
