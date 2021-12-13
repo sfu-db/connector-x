@@ -57,3 +57,5 @@ pub use postgres_arrow2::{PostgresArrow2Transport, PostgresArrow2TransportError}
 pub use sqlite_arrow::{SQLiteArrowTransport, SQLiteArrowTransportError};
 #[cfg(all(feature = "src_sqlite", feature = "dst_arrow2"))]
 pub use sqlite_arrow2::{SQLiteArrow2Transport, SQLiteArrow2TransportError};
+// #[cfg(all(feature = "src_bigquery", feature = "dst_arrow"))]
+// pub use bigquery_arrow::{BigQueryArrowTransport, BigQueryArrowTransportError};
