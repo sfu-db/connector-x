@@ -88,6 +88,6 @@ src_postgres = [
   "native-tls",
 ]
 src_sqlite = ["rusqlite", "r2d2_sqlite", "fallible-streaming-iterator", "owning_ref", "chrono", "r2d2"]
-src_bigquery = ["gcp-bigquery-client"]
+src_bigquery = ["gcp-bigquery-client", "serde_json", "url", "tokio"]
 [package.metadata.docs.rs]
 features = ["all"]
