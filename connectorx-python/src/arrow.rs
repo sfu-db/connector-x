@@ -203,6 +203,9 @@ pub fn write_arrow<'a>(
             debug!("Running dispatcher");
             dispatcher.run()?;
         }
+        SourceType::BigQuery => {
+            // TODO
+        }
     }
 
     let rbs = destination.arrow()?;
