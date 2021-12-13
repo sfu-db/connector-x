@@ -90,10 +90,11 @@ For more planned data sources, please check out our [discussion](https://github.
 ## Sources
 - [x] Postgres
 - [x] Mysql
+- [x] Mariadb (through mysql protocol)
 - [x] Sqlite
 - [x] Redshift (through postgres protocol)
 - [x] Clickhouse (through mysql protocol)
-- [x] SQL Server (no trusted_connection support yet)
+- [x] SQL Server
 - [x] Oracle
 - [ ] Big Query - In Progress
 - [ ] ...
@@ -121,6 +122,7 @@ Run the SQL query, download the data from database into a Pandas dataframe.
 - `conn: str`: Connection string URI.
   - General supported URI scheme: `(postgres|postgressql|mysql|mssql)://username:password@addr:port/dbname`.
   - For now sqlite only support absolute path, example: `sqlite:///home/user/path/test.db`.
+  - Please check out [here](Types.md) for more connection uri parameters supported for each database (e.g. trusted_connection for Mssql, sslmode for Postgres)
 - `query: Union[str, List[str]]`: SQL query or list of SQL queries for fetching data.
 - `return_type: str = "pandas"`: The return type of this function. It can be `arrow`, `pandas`, `modin`, `dask` or `polars`.
 - `protocol: str = "binary"`: The protocol used to fetch data from source, default is `binary`. Check out [here](Types.md) to see more details.
