@@ -16,7 +16,7 @@ fn test_bigquery() {
     let dburl = "bigquery:///home/jinze/dataprep-bigquery-d6514e01c1db.json"; // TODO: hard-code
 
     let queries = [CXQuery::naked(
-        "select * from `dataprep-bigquery.dataprep.test_table` order by test_int",
+        "select * from `dataprep-bigquery.dataprep.test_table` where test_int < 2500 order by test_int",
     )];
     let rt = Arc::new(Runtime::new().unwrap());
 
@@ -64,12 +64,4 @@ fn test_bigquery() {
         ],
         rows
     );
-    // let mut destination = ArrowDestination::new();
-
-    // let dispatcher =
-    //     Dispatcher::<_, _, BigQueryArrowTransport>::new(source, &mut destination, &queries, None);
-    // dispatcher.run.unwrap();
-
-    // let result = destination.arrow().unwrap();
-    // TODO: verify result
 }

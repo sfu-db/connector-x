@@ -17,15 +17,17 @@ impl_transport!(
     route = BigQuerySource => PandasDestination<'tp>,
     mappings = {
         { Bool[bool]                 => Bool[bool]              | conversion auto }
+        { Boolean[bool]              => Bool[bool]              | conversion none }
         { Int64[i64]                 => I64[i64]                | conversion auto }
         { Integer[i64]               => I64[i64]                | conversion none }
         { Float64[f64]               => F64[f64]                | conversion auto }
         { Float[f64]                 => F64[f64]                | conversion none }
         { String[String]             => String[String]          | conversion auto }
+        // { Bytes[Vec<u8>]             => Bytes[Vec<u8>]          | conversion auto }
         { Date[NaiveDate]            => DateTime[DateTime<Utc>] | conversion option }
         { Datetime[NaiveDateTime]    => DateTime[DateTime<Utc>] | conversion option }
         { Time[NaiveTime]            => String[String]          | conversion option }
-        { Timestamp[DateTime<Utc>]   => DateTime[DateTime<Utc>] | conversion auto }
+        // { Timestamp[DateTime<Utc>]   => DateTime[DateTime<Utc>] | conversion auto }
     }
 );
 
