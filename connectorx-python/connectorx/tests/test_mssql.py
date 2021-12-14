@@ -10,6 +10,7 @@ from .. import read_sql
 @pytest.fixture(scope="module")  # type: ignore
 def mssql_url() -> str:
     conn = os.environ["MSSQL_URL"]
+    # conn = os.environ["AZURE_MSSQL_URL"]
     return conn
 
 
