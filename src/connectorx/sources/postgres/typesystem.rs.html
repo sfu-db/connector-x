@@ -133,10 +133,16 @@
 <span id="133">133</span>
 <span id="134">134</span>
 <span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">chrono</span>::{<span class="ident">DateTime</span>, <span class="ident">NaiveDate</span>, <span class="ident">NaiveDateTime</span>, <span class="ident">NaiveTime</span>, <span class="ident">Utc</span>};
 <span class="kw">use</span> <span class="ident">postgres::types::Type</span>;
 <span class="kw">use</span> <span class="ident">rust_decimal::Decimal</span>;
 <span class="kw">use</span> <span class="ident">serde_json::Value</span>;
+<span class="kw">use</span> <span class="ident">std::collections::HashMap</span>;
 <span class="kw">use</span> <span class="ident">uuid::Uuid</span>;
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
@@ -167,6 +173,7 @@
     <span class="ident">JSON</span>(<span class="ident">bool</span>),
     <span class="ident">JSONB</span>(<span class="ident">bool</span>),
     <span class="ident">Enum</span>(<span class="ident">bool</span>),
+    <span class="ident">HSTORE</span>(<span class="ident">bool</span>),
 }
 
 <span class="macro">impl_typesystem!</span> {
@@ -194,6 +201,7 @@
         { <span class="ident">Date</span> =&gt; <span class="ident">NaiveDate</span> }
         { <span class="ident">UUID</span> =&gt; <span class="ident">Uuid</span> }
         { <span class="ident">JSON</span> <span class="op">|</span> <span class="ident">JSONB</span> =&gt; <span class="ident">Value</span> }
+        { <span class="ident">HSTORE</span> =&gt; <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span> }
     }
 }
 
@@ -226,6 +234,7 @@
             <span class="string">&quot;uuid&quot;</span> =&gt; <span class="ident">UUID</span>(<span class="bool-val">true</span>),
             <span class="string">&quot;json&quot;</span> =&gt; <span class="ident">JSON</span>(<span class="bool-val">true</span>),
             <span class="string">&quot;jsonb&quot;</span> =&gt; <span class="ident">JSONB</span>(<span class="bool-val">true</span>),
+            <span class="string">&quot;hstore&quot;</span> =&gt; <span class="ident">HSTORE</span>(<span class="bool-val">true</span>),
             <span class="kw">_</span> =&gt; <span class="kw">match</span> <span class="ident">ty</span>.<span class="ident">kind</span>() {
                 <span class="ident">postgres::types::Kind::Enum</span>(<span class="kw">_</span>) =&gt; <span class="ident">Enum</span>(<span class="bool-val">true</span>),
                 <span class="kw">_</span> =&gt; <span class="macro">unimplemented!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">ty</span>.<span class="ident">name</span>()),
@@ -265,6 +274,7 @@
             <span class="ident">JSON</span>(<span class="kw">_</span>) =&gt; <span class="ident">Type::JSON</span>,
             <span class="ident">JSONB</span>(<span class="kw">_</span>) =&gt; <span class="ident">Type::JSONB</span>,
             <span class="ident">Enum</span>(<span class="kw">_</span>) =&gt; <span class="ident">Type::TEXT</span>,
+            <span class="ident">HSTORE</span>(<span class="kw">_</span>) =&gt; <span class="ident">Type::TEXT</span>, <span class="comment">// hstore is not supported in binary protocol (since no corresponding inner TYPE)</span>
         }
     }
 }
