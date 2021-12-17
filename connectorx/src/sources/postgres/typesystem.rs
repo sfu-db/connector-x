@@ -2,6 +2,7 @@ use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
 use postgres::types::Type;
 use rust_decimal::Decimal;
 use serde_json::Value;
+use std::collections::HashMap;
 use uuid::Uuid;
 
 #[derive(Copy, Clone, Debug)]
@@ -32,6 +33,7 @@ pub enum PostgresTypeSystem {
     JSON(bool),
     JSONB(bool),
     Enum(bool),
+    HSTORE(bool),
 }
 
 impl_typesystem! {
@@ -59,6 +61,7 @@ impl_typesystem! {
         { Date => NaiveDate }
         { UUID => Uuid }
         { JSON | JSONB => Value }
+        { HSTORE => HashMap<String, Option<String>> }
     }
 }
 
@@ -91,6 +94,7 @@ impl<'a> From<&'a Type> for PostgresTypeSystem {
             "uuid" => UUID(true),
             "json" => JSON(true),
             "jsonb" => JSONB(true),
+            "hstore" => HSTORE(true),
             _ => match ty.kind() {
                 postgres::types::Kind::Enum(_) => Enum(true),
                 _ => unimplemented!("{}", ty.name()),
@@ -130,6 +134,7 @@ impl<'a> From<PostgresTypeSystem> for Type {
             JSON(_) => Type::JSON,
             JSONB(_) => Type::JSONB,
             Enum(_) => Type::TEXT,
+            HSTORE(_) => Type::TEXT, // hstore is not supported in binary protocol (since no corresponding inner TYPE)
         }
     }
 }
