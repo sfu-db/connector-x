@@ -13,7 +13,7 @@ classifiers = [
   "Framework :: IPython",
 ] 
 description = "Load data from databases to dataframes, the fastest way." 
-include = ["connectorx/*.so", "connectorx/*.pyd"] 
+include = ["connectorx/*.so", "connectorx/*.pyd", "LICENSE"] 
 keywords = ["read_sql"] 
 license = "MIT" 
 maintainers = ["Weiyuan Wu <youngw@sfu.ca>"] 
