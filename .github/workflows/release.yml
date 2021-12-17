@@ -65,6 +65,13 @@ jobs:
           name: "linux-${{ matrix.python-version }}"
           path: connectorx-python/dist/*.whl
 
+      - name: Persist artifacts source code
+        uses: actions/upload-artifact@v2
+        if: matrix.python-version == 39
+        with:
+          name: "linux-${{ matrix.python-version }}"
+          path: connectorx-python/dist/*.tar.gz
+
   win32:
     runs-on: windows-latest
     strategy:
@@ -204,7 +211,7 @@ jobs:
         env:
           PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
         run: |
-          for file in $(ls **/*.whl)
+          for file in $(ls **/*)
           do
             twine upload --non-interactive -u __token__ -p $PYPI_TOKEN $file || continue
           done
@@ -214,7 +221,7 @@ jobs:
         env:
           PYPI_TEST_TOKEN: ${{ secrets.PYPI_TEST_TOKEN }}
         run: |
-          for file in $(ls **/*.whl)
+          for file in $(ls **/*)
           do
             twine upload --non-interactive --repository-url https://test.pypi.org/legacy/ -u __token__ -p $PYPI_TEST_TOKEN $file || continue
           done
