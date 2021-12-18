@@ -25,7 +25,6 @@ test-bigquery:
 
 bootstrap-python:
     cp README.md connectorx-python/README.md
-    cp LICENSE connectorx-python/LICENSE
     cd connectorx-python && poetry install
 
 build-python-extention:
@@ -90,7 +89,6 @@ ci-build-python-extention:
 
 ci-build-python-wheel:
     cp README.md connectorx-python/README.md
-    cp LICENSE connectorx-python/LICENSE
     cd connectorx-python && poetry build
     
 ci-rename-wheel:
