@@ -625,28 +625,11 @@ impl<'r, 'a> Produce<'r, DateTime<Utc>> for BigQuerySourceParser<'a> {
         if cidx == 0 {
             self.iter.next_row();
         }
-        format!(
-            "{}:00",
-            &self
-                .iter
-                .get_json_value(cidx)
-                .unwrap()
-                .unwrap()
-                .as_str()
-                .unwrap()[..]
-        )
-        .parse()
-        .map_err(|_| {
-            ConnectorXError::cannot_produce::<DateTime<Utc>>(Some(
-                self.iter
-                    .get_json_value(cidx)
-                    .unwrap()
-                    .unwrap()
-                    .as_str()
-                    .unwrap()
-                    .into(),
-            ))
-        })?
+        let v = self.iter.get_json_value(cidx)?.unwrap();
+        let timestamp_ns = (v.as_str().unwrap().parse::<f64>()? * 1e9) as i64;
+        let secs =  timestamp_ns / 1000000000;
+        let nsecs = (timestamp_ns % 1000000000) as u32;
+        DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp(secs, nsecs), Utc)
     }
 }
 
@@ -659,19 +642,16 @@ impl<'r, 'a> Produce<'r, Option<DateTime<Utc>>> for BigQuerySourceParser<'a> {
         if cidx == 0 {
             self.iter.next_row();
         }
-        match &self
+        match self
             .iter
-            .get_json_value(cidx)
-            .unwrap()
-            .unwrap()
-            .as_str()
-            .unwrap()[..]
+            .get_json_value(cidx)?
         {
-            "" => None,
-            v => {
-                Some(format!("{}:00", v).parse().map_err(|_| {
-                    ConnectorXError::cannot_produce::<DateTime<Utc>>(Some(v.into()))
-                })?)
+            None => None,
+            Some(v) => {
+                let timestamp_ns = (v.as_str().unwrap().parse::<f64>()? * 1e9) as i64;
+                let secs =  timestamp_ns / 1000000000;
+                let nsecs = (timestamp_ns % 1000000000) as u32;
+                Some(DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp(secs, nsecs), Utc))
             }
         }
     }

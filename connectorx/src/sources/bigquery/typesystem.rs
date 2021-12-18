@@ -9,6 +9,8 @@ pub enum BigQueryTypeSystem {
     Integer(bool),
     Float(bool),
     Float64(bool),
+    Numeric(bool),
+    Bignumeric(bool),
     String(bool),
     Bytes(bool),
     Date(bool),
@@ -22,12 +24,11 @@ impl_typesystem! {
     mappings = {
         { Bool | Boolean => bool }
         { Int64 | Integer  =>  i64 }
-        { Float64 | Float  =>  f64 }
-        { String  =>  String}
-        { Bytes => Vec<u8> }
+        { Float64 | Float | Numeric | Bignumeric  =>  f64 }
+        { String | Bytes  =>  String }
         { Date => NaiveDate }
         { Datetime => NaiveDateTime }
-        { Time => NaiveTime}
+        { Time => NaiveTime }
         { Timestamp => DateTime<Utc> }
     }
 }
@@ -42,6 +43,8 @@ impl<'a> From<&'a FieldType> for BigQueryTypeSystem {
             FieldType::Integer => Integer(true),
             FieldType::Float => Float(true),
             FieldType::Float64 => Float64(true),
+            FieldType::Numeric => Numeric(true),
+            FieldType::Bignumeric => Bignumeric(true),
             FieldType::String => String(true),
             FieldType::Bytes => Bytes(true),
             FieldType::Date => Date(true),
@@ -63,6 +66,8 @@ impl<'a> From<BigQueryTypeSystem> for FieldType {
             Integer(_) => FieldType::Integer,
             Float64(_) => FieldType::Float64,
             Float(_) => FieldType::Float,
+            Numeric(_) => FieldType::Numeric,
+            Bignumeric(_) => FieldType::Bignumeric,
             String(_) => FieldType::String,
             Bytes(_) => FieldType::Bytes,
             Date(_) => FieldType::Date,

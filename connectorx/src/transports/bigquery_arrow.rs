@@ -6,7 +6,7 @@ use crate::{
     sources::bigquery::{BigQuerySource, BigQuerySourceError, BigQueryTypeSystem},
     typesystem::TypeConversion,
 };
-use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
+use chrono::{NaiveDate, NaiveDateTime, NaiveTime, DateTime, Utc};
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -30,17 +30,19 @@ impl_transport!(
     systems = BigQueryTypeSystem => ArrowTypeSystem,
     route = BigQuerySource => ArrowDestination,
     mappings = {
-        { Bool[bool]                 => Boolean[bool]           | conversion auto }
-        { Boolean[bool]              => Boolean[bool]           | conversion none }
-        { Int64[i64]                 => Int64[i64]              | conversion auto }
-        { Integer[i64]               => Int64[i64]              | conversion none }
-        { Float64[f64]               => Float64[i64]            | conversion auto }
-        { Float[f64]                 => Float64[i64]            | conversion none }
-        { String[String]             => LargeUtf8[String]       | conversion auto }
-        // { Bytes[Vec<u8>]             => LargeBinary[Vec<u8>]    | conversion auto }
-        { Date[NaiveDate]            => Date32[NaiveDate]       | conversion auto }
-        { Datetime[NaiveDateTime]    => Date64[NaiveDateTime]   | conversion auto }
-        { Time[NaiveTime]            => Time64[NaiveTime]       | conversion auto }
-        // { Timestamp[NaiveDateTime]   => Date64[NaiveDateTime]   | conversion none }
+        { Bool[bool]                 => Boolean[bool]             | conversion auto }
+        { Boolean[bool]              => Boolean[bool]             | conversion none }
+        { Int64[i64]                 => Int64[i64]                | conversion auto }
+        { Integer[i64]               => Int64[i64]                | conversion none }
+        { Float64[f64]               => Float64[i64]              | conversion auto }
+        { Float[f64]                 => Float64[i64]              | conversion none }
+        { Numeric[f64]               => Float64[i64]              | conversion none }
+        { Bignumeric[f64]            => Float64[i64]              | conversion none }
+        { String[String]             => LargeUtf8[String]         | conversion auto }
+        { Bytes[String]              => LargeUtf8[String]         | conversion none }
+        { Date[NaiveDate]            => Date32[NaiveDate]         | conversion auto }
+        { Datetime[NaiveDateTime]    => Date64[NaiveDateTime]     | conversion auto }
+        { Time[NaiveTime]            => Time64[NaiveTime]         | conversion auto }
+        { Timestamp[DateTime<Utc>]   => DateTimeTz[DateTime<Utc>] | conversion auto }
     }
 );

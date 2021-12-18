@@ -19,6 +19,9 @@ pub enum BigQuerySourceError {
     #[error(transparent)]
     BigQueryJsonError(#[from] serde_json::Error),
 
+    #[error(transparent)]
+    BigQueryParseFloatError(#[from] std::num::ParseFloatError),
+
     /// Any other errors that are too trivial to be put here explicitly.
     #[error(transparent)]
     Other(#[from] anyhow::Error),
