@@ -10,6 +10,10 @@ use crate::{
     sources::{PartitionParser, Produce, Source, SourcePartition},
     sql::{count_query, limit1_query, CXQuery},
 };
+<<<<<<< HEAD
+=======
+use hex::decode;
+>>>>>>> d537310fd4dc103c9651db6f7ee0d0050c6281f9
 use url::Url;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
 use fehler::{throw, throws};
@@ -293,7 +297,11 @@ macro_rules! impl_produce {
                     if cidx == 0 {
                         self.iter.next_row();
                     }
+<<<<<<< HEAD
                     self.iter.get_json_value(cidx).unwrap().unwrap().as_str().unwrap().parse().map_err(|_| {
+=======
+                    self.iter.get_json_value(cidx)?.unwrap().as_str().unwrap().parse().map_err(|_| {
+>>>>>>> d537310fd4dc103c9651db6f7ee0d0050c6281f9
                         ConnectorXError::cannot_produce::<$t>(Some(self.iter.get_json_value(cidx).unwrap().unwrap().as_str().unwrap().into()))
                     })?
                 }
@@ -308,7 +316,11 @@ macro_rules! impl_produce {
                     if cidx == 0 {
                         self.iter.next_row();
                     }
+<<<<<<< HEAD
                     match &self.iter.get_json_value(cidx).unwrap() {
+=======
+                    match &self.iter.get_json_value(cidx)? {
+>>>>>>> d537310fd4dc103c9651db6f7ee0d0050c6281f9
                         None => None,
                         v => Some(v.as_ref().unwrap().as_str().unwrap().parse().map_err(|_| {
                             ConnectorXError::cannot_produce::<$t>(Some(self.iter.get_json_value(cidx).unwrap().unwrap().as_str().unwrap().into()))
@@ -322,6 +334,75 @@ macro_rules! impl_produce {
 
 impl_produce!(i64, f64, String,);
 
+<<<<<<< HEAD
+=======
+
+macro_rules! impl_vec_produce {
+    ($($t: ty,)+) => {
+        $(
+            impl<'r, 'a> Produce<'r, Vec<$t>> for BigQuerySourceParser<'a> {
+                type Error = BigQuerySourceError;
+
+                #[throws(BigQuerySourceError)]
+                fn produce(&mut self) -> Vec<$t> {
+                    let (_, cidx) = self.next_loc()?;
+                    if cidx == 0 {
+                        self.iter.next_row();
+                    }
+                    let value = self.iter.get_json_value(cidx)?.unwrap();
+                    let s = value.as_str().unwrap();
+                    match s {
+                        "{}" => vec![],
+                        _ if s.len() < 3 => throw!(ConnectorXError::cannot_produce::<$t>(Some(s.into()))),
+                        s => s[1..s.len() - 1]
+                            .split(",")
+                            .map(|v| {
+                                v.parse()
+                                    .map_err(|_| ConnectorXError::cannot_produce::<$t>(Some(s.into())))
+                            })
+                            .collect::<Result<Vec<$t>, ConnectorXError>>()?,
+                    }
+                }
+            }
+
+            impl<'r, 'a> Produce<'r, Option<Vec<$t>>> for BigQuerySourceParser<'a> {
+                type Error = BigQuerySourceError;
+
+                #[throws(BigQuerySourceError)]
+                fn produce(&mut self) -> Option<Vec<$t>> {
+                    let (_, cidx) = self.next_loc()?;
+                    if cidx == 0 {
+                        self.iter.next_row();
+                    }
+                    let jsvalue = self.iter.get_json_value(cidx)?;
+                    match jsvalue {
+                        None => None,
+                        Some(value) => {
+                            let s = value.as_str().unwrap();
+                            match s {
+                                "{}" => Some(vec![]),
+                                _ if s.len() < 3 => throw!(ConnectorXError::cannot_produce::<$t>(Some(s.into()))),
+                                s => Some(
+                                    s[1..s.len() - 1]
+                                        .split(",")
+                                        .map(|v| {
+                                            v.parse()
+                                                .map_err(|_| ConnectorXError::cannot_produce::<$t>(Some(s.into())))
+                                        })
+                                        .collect::<Result<Vec<$t>, ConnectorXError>>()?,
+                                ),
+                            }
+                        }
+                    }
+                }
+            }
+        )+
+    };
+}
+
+impl_vec_produce!(i64, f64, );
+
+>>>>>>> d537310fd4dc103c9651db6f7ee0d0050c6281f9
 impl<'r, 'a> Produce<'r, bool> for BigQuerySourceParser<'a> {
     type Error = BigQuerySourceError;
 
@@ -331,6 +412,7 @@ impl<'r, 'a> Produce<'r, bool> for BigQuerySourceParser<'a> {
         if cidx == 0 {
             self.iter.next_row();
         }
+<<<<<<< HEAD
         let ret = match &self
             .iter
             .get_json_value(cidx)
@@ -345,6 +427,17 @@ impl<'r, 'a> Produce<'r, bool> for BigQuerySourceParser<'a> {
                 self.iter
                     .get_json_value(cidx)
                     .unwrap()
+=======
+        let ret = match self.iter.get_json_value(cidx)?
+        .unwrap()
+        .as_str()
+        .unwrap() {
+            "true" => true,
+            "false" => false,
+            _ => throw!(ConnectorXError::cannot_produce::<bool>(Some(
+                self.iter
+                    .get_json_value(cidx)?
+>>>>>>> d537310fd4dc103c9651db6f7ee0d0050c6281f9
                     .unwrap()
                     .as_str()
                     .unwrap()
@@ -364,6 +457,7 @@ impl<'r, 'a> Produce<'r, Option<bool>> for BigQuerySourceParser<'a> {
         if cidx == 0 {
             self.iter.next_row();
         }
+<<<<<<< HEAD
         let ret = match &self
             .iter
             .get_json_value(cidx)
@@ -384,6 +478,29 @@ impl<'r, 'a> Produce<'r, Option<bool>> for BigQuerySourceParser<'a> {
                     .unwrap()
                     .into()
             ))),
+=======
+        let ret = match self
+            .iter
+            .get_json_value(cidx)?
+        {
+            None => None,
+            Some(v) => {
+                match v.as_str().unwrap() {
+                    "true" => Some(true),
+                    "false" => Some(false),
+                    _ => throw!(ConnectorXError::cannot_produce::<bool>(Some(
+                        self.iter
+                            .get_json_value(cidx)
+                            .unwrap()
+                            .unwrap()
+                            .as_str()
+                            .unwrap()
+                            .into()
+                    ))),
+                }
+            }
+            
+>>>>>>> d537310fd4dc103c9651db6f7ee0d0050c6281f9
         };
         ret
     }
@@ -431,6 +548,7 @@ impl<'r, 'a> Produce<'r, Option<NaiveDate>> for BigQuerySourceParser<'a> {
         if cidx == 0 {
             self.iter.next_row();
         }
+<<<<<<< HEAD
         match &self
             .iter
             .get_json_value(cidx)
@@ -443,6 +561,16 @@ impl<'r, 'a> Produce<'r, Option<NaiveDate>> for BigQuerySourceParser<'a> {
             v => Some(
                 NaiveDate::parse_from_str(v, "%Y-%m-%d")
                     .map_err(|_| ConnectorXError::cannot_produce::<NaiveDate>(Some(v.into())))?,
+=======
+        match self
+            .iter
+            .get_json_value(cidx)?
+        {
+            None => None,
+            v => Some(
+                NaiveDate::parse_from_str(v.as_ref().unwrap().as_str().unwrap(), "%Y-%m-%d")
+                    .map_err(|_| ConnectorXError::cannot_produce::<NaiveDate>(Some(v.as_ref().unwrap().as_str().unwrap().into())))?,
+>>>>>>> d537310fd4dc103c9651db6f7ee0d0050c6281f9
             ),
         }
     }
@@ -490,18 +618,14 @@ impl<'r, 'a> Produce<'r, Option<NaiveDateTime>> for BigQuerySourceParser<'a> {
         if cidx == 0 {
             self.iter.next_row();
         }
-        match &self
+        match self
             .iter
-            .get_json_value(cidx)
-            .unwrap()
-            .unwrap()
-            .as_str()
-            .unwrap()[..]
+            .get_json_value(cidx)?
         {
-            "" => None,
+            None => None,
             v => Some(
-                NaiveDateTime::parse_from_str(v, "%Y-%m-%dT%H:%M:%S").map_err(|_| {
-                    ConnectorXError::cannot_produce::<NaiveDateTime>(Some(v.into()))
+                NaiveDateTime::parse_from_str(v.as_ref().unwrap().as_str().unwrap(), "%Y-%m-%dT%H:%M:%S").map_err(|_| {
+                    ConnectorXError::cannot_produce::<NaiveDateTime>(Some(v.as_ref().unwrap().as_str().unwrap().into()))
                 })?,
             ),
         }
@@ -550,18 +674,14 @@ impl<'r, 'a> Produce<'r, Option<NaiveTime>> for BigQuerySourceParser<'a> {
         if cidx == 0 {
             self.iter.next_row();
         }
-        match &self
+        match self
             .iter
-            .get_json_value(cidx)
-            .unwrap()
-            .unwrap()
-            .as_str()
-            .unwrap()[..]
+            .get_json_value(cidx)?
         {
-            "" => None,
+            None => None,
             v => Some(
-                NaiveTime::parse_from_str(v, "%H:%M:%S")
-                    .map_err(|_| ConnectorXError::cannot_produce::<NaiveTime>(Some(v.into())))?,
+                NaiveTime::parse_from_str(v.as_ref().unwrap().as_str().unwrap(), "%H:%M:%S")
+                    .map_err(|_| ConnectorXError::cannot_produce::<NaiveTime>(Some(v.as_ref().unwrap().as_str().unwrap().into())))?,
             ),
         }
     }

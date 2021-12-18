@@ -435,7 +435,6 @@ fn oracle_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) 
 
 #[throws(ConnectorXPythonError)] // TODO
 fn bigquery_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
-<<<<<<< HEAD
     use tokio::runtime::Runtime;
     let rt = Runtime::new().unwrap();
     let url = Url::parse(conn.as_str())?;
@@ -461,10 +460,4 @@ fn bigquery_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64
     let max_v = query_result.get_i64(1)?.unwrap_or(0);
 
     (min_v, max_v)
-<<<<<<< HEAD
-=======
-    (0, 1000)
->>>>>>> debug bigquery partition parser
-=======
->>>>>>> fix errors
 }
