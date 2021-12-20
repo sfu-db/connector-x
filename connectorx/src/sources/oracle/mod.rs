@@ -64,7 +64,7 @@ impl OracleSource {
 
         let mut connector = oracle::Connector::new(user.as_str(), password.as_str(), host.as_str());
 
-        if user.is_empty() && password.is_empty() && host == "localhost" {
+        if user.is_empty() && password.is_empty() && host == "//localhost" {
             debug!("No username or password provided, assuming system auth.");
             connector.external_auth(true);
         }
