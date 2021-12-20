@@ -81,6 +81,10 @@ def test_bigquery_with_partition_without_partition_range(bigquery_url: str) -> N
     assert_frame_equal(df, expected, check_names=True)
 
 
+@pytest.mark.skipif(
+    not os.environ.get("BIGQUERY_URL"),
+    reason="Test bigquery only when `BIGQUERY_URL` is set",
+)
 def test_bigquery_manual_partition(bigquery_url: str) -> None:
     queries = [
         "select * from `dataprep-bigquery.dataprep.test_table` where test_int < 2 order by test_int",
@@ -149,7 +153,7 @@ def test_bigquery_types(bigquery_url: str) -> None:
     expected = pd.DataFrame(
         index=range(3),
         data={
-            "test_int": pd.Series([1, 2,None], dtype="Int64"),
+            "test_int": pd.Series([1, 2, None], dtype="Int64"),
             "test_numeric": pd.Series([1.23, 234.56, None], dtype="float"),
             "test_bool": pd.Series([True, None, False], dtype="boolean"),
             "test_date": pd.Series(
