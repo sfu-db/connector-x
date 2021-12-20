@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["BigQuerySourceError",""],["BigQueryTypeSystem",""]],"struct":[["BigQueryDialect",""],["BigQuerySource",""],["BigQuerySourceParser",""],["BigQuerySourcePartition",""]]});

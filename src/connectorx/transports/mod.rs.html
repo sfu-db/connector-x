@@ -53,8 +53,14 @@
 <span id="53">53</span>
 <span id="54">54</span>
 <span id="55">55</span>
+<span id="56">56</span>
+<span id="57">57</span>
+<span id="58">58</span>
+<span id="59">59</span>
 </pre><pre class="rust"><code><span class="doccomment">//! This module contains transport definitions for the sources and destinations implemented in ConnectorX.</span>
 
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;src_bigquery&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dst_arrow&quot;</span>))]</span>
+<span class="kw">mod</span> <span class="ident">bigquery_arrow</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;src_csv&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dst_arrow&quot;</span>))]</span>
 <span class="kw">mod</span> <span class="ident">csv_arrow</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;src_dummy&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dst_arrow&quot;</span>))]</span>
@@ -82,6 +88,8 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;src_sqlite&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dst_arrow2&quot;</span>))]</span>
 <span class="kw">mod</span> <span class="ident">sqlite_arrow2</span>;
 
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;src_bigquery&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dst_arrow&quot;</span>))]</span>
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">bigquery_arrow</span>::{<span class="ident">BigQueryArrowTransport</span>, <span class="ident">BigQueryArrowTransportError</span>};
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;src_csv&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dst_arrow&quot;</span>))]</span>
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">csv_arrow::CSVArrowTransport</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;src_dummy&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dst_arrow&quot;</span>))]</span>
