@@ -16,6 +16,7 @@ connectorx = {path = "../connectorx", default-features = false}
 dict_derive = "0.4"
 env_logger = "0.9"
 fehler = "1"
+gcp-bigquery-client = {version = "0.10.0"}
 itertools = "0.10"
 lazy_static = "1.4.0"
 libc = "0.2"
@@ -63,4 +64,4 @@ executable = ["pyo3/auto-initialize"]
 extension = ["pyo3/extension-module"]
 fptr = ["connectorx/fptr"]
 nbstr = []
-srcs = ["connectorx/src_postgres", "connectorx/src_mysql", "connectorx/src_sqlite", "connectorx/src_mssql", "connectorx/src_oracle"]
+srcs = ["connectorx/src_postgres", "connectorx/src_mysql", "connectorx/src_sqlite", "connectorx/src_mssql", "connectorx/src_oracle", "connectorx/src_bigquery"]

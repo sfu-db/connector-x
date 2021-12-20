@@ -152,6 +152,8 @@ pub mod prelude {
     pub use crate::destinations::{Consume, Destination, DestinationPartition};
     pub use crate::dispatcher::Dispatcher;
     pub use crate::errors::ConnectorXError;
+    #[cfg(feature = "src_bigquery")]
+    pub use crate::sources::bigquery::BigQuerySource;
     #[cfg(feature = "src_csv")]
     pub use crate::sources::csv::CSVSource;
     #[cfg(feature = "src_dummy")]

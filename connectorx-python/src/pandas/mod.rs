@@ -6,8 +6,8 @@ mod typesystem;
 
 pub use self::destination::{PandasBlockInfo, PandasDestination, PandasPartitionDestination};
 pub use self::transports::{
-    MsSQLPandasTransport, MysqlPandasTransport, OraclePandasTransport, PostgresPandasTransport,
-    SqlitePandasTransport,
+    BigQueryPandasTransport, MsSQLPandasTransport, MysqlPandasTransport, OraclePandasTransport,
+    PostgresPandasTransport, SqlitePandasTransport,
 };
 pub use self::typesystem::{PandasDType, PandasTypeSystem};
 use crate::errors::ConnectorXPythonError;
@@ -16,6 +16,7 @@ use connectorx::sources::oracle::OracleSource;
 use connectorx::{
     prelude::*,
     sources::{
+        bigquery::BigQuerySource,
         mssql::MsSQLSource,
         mysql::{BinaryProtocol as MySQLBinaryProtocol, MySQLSource, TextProtocol},
         postgres::{
@@ -200,6 +201,18 @@ pub fn write_pandas<'a>(
         SourceType::Oracle => {
             let source = OracleSource::new(&source_conn.conn[..], queries.len())?;
             let dispatcher = Dispatcher::<_, _, OraclePandasTransport>::new(
+                source,
+                &mut destination,
+                queries,
+                origin_query,
+            );
+            debug!("Running dispatcher");
+            dispatcher.run()?;
+        }
+        SourceType::BigQuery => {
+            let rt = Arc::new(tokio::runtime::Runtime::new().expect("Failed to create runtime"));
+            let source = BigQuerySource::new(rt, &source_conn.conn[..])?;
+            let dispatcher = Dispatcher::<_, _, BigQueryPandasTransport>::new(
                 source,
                 &mut destination,
                 queries,
