@@ -10,19 +10,18 @@ use crate::{
     sources::{PartitionParser, Produce, Source, SourcePartition},
     sql::{count_query, limit1_query, CXQuery},
 };
-
-use url::Url;
+use anyhow::anyhow;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
 use fehler::{throw, throws};
 use gcp_bigquery_client::{
     model::{query_request::QueryRequest, query_response::ResultSet},
     Client,
 };
-pub use typesystem::BigQueryTypeSystem;
-
 use sqlparser::dialect::Dialect;
 use std::sync::Arc;
-use tokio::runtime::{Handle, Runtime};
+use tokio::runtime::Runtime;
+pub use typesystem::BigQueryTypeSystem;
+use url::Url;
 
 #[derive(Debug)]
 pub struct BigQueryDialect {}
@@ -64,9 +63,9 @@ impl BigQuerySource {
         let auth_json: serde_json::Value = serde_json::from_str(&auth_data)?;
         let project_id = auth_json
             .get("project_id")
-            .unwrap()
+            .ok_or_else(|| anyhow!("Cannot get project_id from auth file"))?
             .as_str()
-            .unwrap()
+            .ok_or_else(|| anyhow!("Cannot get project_id as string from auth file"))?
             .to_string();
         Self {
             rt,
@@ -119,10 +118,10 @@ where
                 .query_response()
                 .schema
                 .as_ref()
-                .unwrap()
+                .ok_or_else(|| anyhow!("TableSchema is none"))?
                 .fields
                 .as_ref()
-                .unwrap()
+                .ok_or_else(|| anyhow!("TableFieldSchema is none"))?
                 .iter()
                 .map(|col| {
                     (
@@ -147,7 +146,9 @@ where
                     job.query(self.project_id.as_str(), QueryRequest::new(cquery.as_str())),
                 )?;
                 rs.next_row();
-                let nrows = rs.get_i64(0)?.unwrap();
+                let nrows = rs
+                    .get_i64(0)?
+                    .ok_or_else(|| anyhow!("cannot get row number"))?;
                 Some(nrows as usize)
             }
             None => None,
@@ -210,7 +211,7 @@ impl BigQuerySourcePartition {
 
 impl SourcePartition for BigQuerySourcePartition {
     type TypeSystem = BigQueryTypeSystem;
-    type Parser<'a> = BigQuerySourceParser<'a>;
+    type Parser<'a> = BigQuerySourceParser;
     type Error = BigQuerySourceError;
 
     #[throws(BigQuerySourceError)]
@@ -221,7 +222,9 @@ impl SourcePartition for BigQuerySourcePartition {
             .rt
             .block_on(job.query(self.project_id.as_str(), QueryRequest::new(cquery.as_str())))?;
         rs.next_row();
-        let nrows = rs.get_i64(0)?.unwrap();
+        let nrows = rs
+            .get_i64(0)?
+            .ok_or_else(|| anyhow!("cannot get row number"))?;
         self.nrows = nrows as usize;
     }
 
@@ -232,7 +235,7 @@ impl SourcePartition for BigQuerySourcePartition {
             self.project_id.as_str(),
             QueryRequest::new(self.query.as_str()),
         ))?;
-        BigQuerySourceParser::new(self.rt.handle(), rs, &self.schema)
+        BigQuerySourceParser::new(rs, &self.schema)
     }
 
     fn nrows(&self) -> usize {
@@ -244,18 +247,16 @@ impl SourcePartition for BigQuerySourcePartition {
     }
 }
 
-pub struct BigQuerySourceParser<'a> {
-    rt: &'a Handle,
+pub struct BigQuerySourceParser {
     iter: ResultSet,
     ncols: usize,
     current_col: usize,
     current_row: usize,
 }
 
-impl<'a> BigQuerySourceParser<'a> {
-    fn new(rt: &'a Handle, iter: ResultSet, schema: &[BigQueryTypeSystem]) -> Self {
+impl<'a> BigQuerySourceParser {
+    fn new(iter: ResultSet, schema: &[BigQueryTypeSystem]) -> Self {
         Self {
-            rt,
             iter,
             ncols: schema.len(),
             current_row: 0,
@@ -272,7 +273,7 @@ impl<'a> BigQuerySourceParser<'a> {
     }
 }
 
-impl<'a> PartitionParser<'a> for BigQuerySourceParser<'a> {
+impl<'a> PartitionParser<'a> for BigQuerySourceParser {
     type TypeSystem = BigQueryTypeSystem;
     type Error = BigQuerySourceError;
 
@@ -285,7 +286,7 @@ impl<'a> PartitionParser<'a> for BigQuerySourceParser<'a> {
 macro_rules! impl_produce {
     ($($t: ty,)+) => {
         $(
-            impl<'r, 'a> Produce<'r, $t> for BigQuerySourceParser<'a> {
+            impl<'r> Produce<'r, $t> for BigQuerySourceParser {
                 type Error = BigQuerySourceError;
 
                 #[throws(BigQuerySourceError)]
@@ -294,13 +295,21 @@ macro_rules! impl_produce {
                     if cidx == 0 {
                         self.iter.next_row();
                     }
-                    self.iter.get_json_value(cidx)?.unwrap().as_str().unwrap().parse().map_err(|_| {
-                        ConnectorXError::cannot_produce::<$t>(Some(self.iter.get_json_value(cidx).unwrap().unwrap().as_str().unwrap().into()))
-                    })?
+                    let v = self.iter
+                                .get_json_value(cidx)?
+                                .ok_or_else(|| anyhow!("cannot get json value"))?;
+                    let s = v
+                        .as_str()
+                        .ok_or_else(|| anyhow!("cannot get str from json value"))?;
+
+                    s.parse()
+                        .map_err(|_| {
+                            ConnectorXError::cannot_produce::<$t>(Some(s.into()))
+                        })?
                 }
             }
 
-            impl<'r, 'a> Produce<'r, Option<$t>> for BigQuerySourceParser<'a> {
+            impl<'r> Produce<'r, Option<$t>> for BigQuerySourceParser {
                 type Error = BigQuerySourceError;
 
                 #[throws(BigQuerySourceError)]
@@ -311,9 +320,11 @@ macro_rules! impl_produce {
                     }
                     match &self.iter.get_json_value(cidx)? {
                         None => None,
-                        v => Some(v.as_ref().unwrap().as_str().unwrap().parse().map_err(|_| {
-                            ConnectorXError::cannot_produce::<$t>(Some(self.iter.get_json_value(cidx).unwrap().unwrap().as_str().unwrap().into()))
-                        })?),
+                        Some(v) => {
+                            let s = v.as_str().ok_or_else(|| anyhow!("cannot get str from json value"))?;
+                            Some(s.parse().map_err(|_| {
+                            ConnectorXError::cannot_produce::<$t>(Some(s.into()))
+                        })?)},
                     }
                 }
             }
@@ -326,7 +337,7 @@ impl_produce!(i64, f64, String,);
 macro_rules! impl_vec_produce {
     ($($t: ty,)+) => {
         $(
-            impl<'r, 'a> Produce<'r, Vec<$t>> for BigQuerySourceParser<'a> {
+            impl<'r, 'a> Produce<'r, Vec<$t>> for BigQuerySourceParser {
                 type Error = BigQuerySourceError;
 
                 #[throws(BigQuerySourceError)]
@@ -335,8 +346,13 @@ macro_rules! impl_vec_produce {
                     if cidx == 0 {
                         self.iter.next_row();
                     }
-                    let value = self.iter.get_json_value(cidx)?.unwrap();
-                    let s = value.as_str().unwrap();
+                    let v = self.iter
+                                .get_json_value(cidx)?
+                                .ok_or_else(|| anyhow!("cannot get json value"))?;
+                    let s = v
+                        .as_str()
+                        .ok_or_else(|| anyhow!("cannot get str from json value"))?;
+
                     match s {
                         "{}" => vec![],
                         _ if s.len() < 3 => throw!(ConnectorXError::cannot_produce::<$t>(Some(s.into()))),
@@ -351,7 +367,7 @@ macro_rules! impl_vec_produce {
                 }
             }
 
-            impl<'r, 'a> Produce<'r, Option<Vec<$t>>> for BigQuerySourceParser<'a> {
+            impl<'r, 'a> Produce<'r, Option<Vec<$t>>> for BigQuerySourceParser {
                 type Error = BigQuerySourceError;
 
                 #[throws(BigQuerySourceError)]
@@ -360,11 +376,14 @@ macro_rules! impl_vec_produce {
                     if cidx == 0 {
                         self.iter.next_row();
                     }
+
                     let jsvalue = self.iter.get_json_value(cidx)?;
                     match jsvalue {
                         None => None,
                         Some(value) => {
-                            let s = value.as_str().unwrap();
+                            let s =value
+                                .as_str()
+                                .ok_or_else(|| anyhow!("cannot get str from json value"))?;
                             match s {
                                 "{}" => Some(vec![]),
                                 _ if s.len() < 3 => throw!(ConnectorXError::cannot_produce::<$t>(Some(s.into()))),
@@ -386,9 +405,9 @@ macro_rules! impl_vec_produce {
     };
 }
 
-impl_vec_produce!(i64, f64, );
+impl_vec_produce!(i64, f64,);
 
-impl<'r, 'a> Produce<'r, bool> for BigQuerySourceParser<'a> {
+impl<'r, 'a> Produce<'r, bool> for BigQuerySourceParser {
     type Error = BigQuerySourceError;
 
     #[throws(BigQuerySourceError)]
@@ -397,26 +416,25 @@ impl<'r, 'a> Produce<'r, bool> for BigQuerySourceParser<'a> {
         if cidx == 0 {
             self.iter.next_row();
         }
-        let ret = match self.iter.get_json_value(cidx)?
-        .unwrap()
-        .as_str()
-        .unwrap() {
+
+        let v = self
+            .iter
+            .get_json_value(cidx)?
+            .ok_or_else(|| anyhow!("cannot get json value"))?;
+        let s = v
+            .as_str()
+            .ok_or_else(|| anyhow!("cannot get str from json value"))?;
+
+        let ret = match s {
             "true" => true,
             "false" => false,
-            _ => throw!(ConnectorXError::cannot_produce::<bool>(Some(
-                self.iter
-                    .get_json_value(cidx)?
-                    .unwrap()
-                    .as_str()
-                    .unwrap()
-                    .into()
-            ))),
+            _ => throw!(ConnectorXError::cannot_produce::<bool>(Some(s.into()))),
         };
         ret
     }
 }
 
-impl<'r, 'a> Produce<'r, Option<bool>> for BigQuerySourceParser<'a> {
+impl<'r, 'a> Produce<'r, Option<bool>> for BigQuerySourceParser {
     type Error = BigQuerySourceError;
 
     #[throws(BigQuerySourceError)]
@@ -425,24 +443,16 @@ impl<'r, 'a> Produce<'r, Option<bool>> for BigQuerySourceParser<'a> {
         if cidx == 0 {
             self.iter.next_row();
         }
-        let ret = match self
-            .iter
-            .get_json_value(cidx)?
-        {
+        let ret = match self.iter.get_json_value(cidx)? {
             None => None,
             Some(v) => {
-                match v.as_str().unwrap() {
+                let s = v
+                    .as_str()
+                    .ok_or_else(|| anyhow!("cannot get str from json value"))?;
+                match s {
                     "true" => Some(true),
                     "false" => Some(false),
-                    _ => throw!(ConnectorXError::cannot_produce::<bool>(Some(
-                        self.iter
-                            .get_json_value(cidx)
-                            .unwrap()
-                            .unwrap()
-                            .as_str()
-                            .unwrap()
-                            .into()
-                    ))),
+                    _ => throw!(ConnectorXError::cannot_produce::<bool>(Some(s.into()))),
                 }
             }
         };
@@ -450,7 +460,7 @@ impl<'r, 'a> Produce<'r, Option<bool>> for BigQuerySourceParser<'a> {
     }
 }
 
-impl<'r, 'a> Produce<'r, NaiveDate> for BigQuerySourceParser<'a> {
+impl<'r, 'a> Produce<'r, NaiveDate> for BigQuerySourceParser {
     type Error = BigQuerySourceError;
 
     #[throws(BigQuerySourceError)]
@@ -459,31 +469,19 @@ impl<'r, 'a> Produce<'r, NaiveDate> for BigQuerySourceParser<'a> {
         if cidx == 0 {
             self.iter.next_row();
         }
-        NaiveDate::parse_from_str(
-            &self
-                .iter
-                .get_json_value(cidx)
-                .unwrap()
-                .unwrap()
-                .as_str()
-                .unwrap(),
-            "%Y-%m-%d",
-        )
-        .map_err(|_| {
-            ConnectorXError::cannot_produce::<NaiveDate>(Some(
-                self.iter
-                    .get_json_value(cidx)
-                    .unwrap()
-                    .unwrap()
-                    .as_str()
-                    .unwrap()
-                    .into(),
-            ))
-        })?
+        let v = self
+            .iter
+            .get_json_value(cidx)?
+            .ok_or_else(|| anyhow!("cannot get json value"))?;
+        let s = v
+            .as_str()
+            .ok_or_else(|| anyhow!("cannot get str from json value"))?;
+        NaiveDate::parse_from_str(s, "%Y-%m-%d")
+            .map_err(|_| ConnectorXError::cannot_produce::<NaiveDate>(Some(s.into())))?
     }
 }
 
-impl<'r, 'a> Produce<'r, Option<NaiveDate>> for BigQuerySourceParser<'a> {
+impl<'r, 'a> Produce<'r, Option<NaiveDate>> for BigQuerySourceParser {
     type Error = BigQuerySourceError;
 
     #[throws(BigQuerySourceError)]
@@ -492,20 +490,23 @@ impl<'r, 'a> Produce<'r, Option<NaiveDate>> for BigQuerySourceParser<'a> {
         if cidx == 0 {
             self.iter.next_row();
         }
-        match self
-            .iter
-            .get_json_value(cidx)?
-        {
+        match self.iter.get_json_value(cidx)? {
             None => None,
-            v => Some(
-                NaiveDate::parse_from_str(v.as_ref().unwrap().as_str().unwrap(), "%Y-%m-%d")
-                    .map_err(|_| ConnectorXError::cannot_produce::<NaiveDate>(Some(v.as_ref().unwrap().as_str().unwrap().into())))?,
-            ),
+            Some(v) => {
+                let s = v
+                    .as_str()
+                    .ok_or_else(|| anyhow!("cannot get str from json value"))?;
+                Some(
+                    NaiveDate::parse_from_str(s, "%Y-%m-%d").map_err(|_| {
+                        ConnectorXError::cannot_produce::<NaiveDate>(Some(s.into()))
+                    })?,
+                )
+            }
         }
     }
 }
 
-impl<'r, 'a> Produce<'r, NaiveDateTime> for BigQuerySourceParser<'a> {
+impl<'r, 'a> Produce<'r, NaiveDateTime> for BigQuerySourceParser {
     type Error = BigQuerySourceError;
 
     #[throws(BigQuerySourceError)]
@@ -514,31 +515,19 @@ impl<'r, 'a> Produce<'r, NaiveDateTime> for BigQuerySourceParser<'a> {
         if cidx == 0 {
             self.iter.next_row();
         }
-        NaiveDateTime::parse_from_str(
-            &self
-                .iter
-                .get_json_value(cidx)
-                .unwrap()
-                .unwrap()
-                .as_str()
-                .unwrap(),
-            "%Y-%m-%dT%H:%M:%S",
-        )
-        .map_err(|_| {
-            ConnectorXError::cannot_produce::<NaiveDateTime>(Some(
-                self.iter
-                    .get_json_value(cidx)
-                    .unwrap()
-                    .unwrap()
-                    .as_str()
-                    .unwrap()
-                    .into(),
-            ))
-        })?
+        let v = self
+            .iter
+            .get_json_value(cidx)?
+            .ok_or_else(|| anyhow!("cannot get json value"))?;
+        let s = v
+            .as_str()
+            .ok_or_else(|| anyhow!("cannot get str from json value"))?;
+        NaiveDateTime::parse_from_str(s, "%Y-%m-%dT%H:%M:%S")
+            .map_err(|_| ConnectorXError::cannot_produce::<NaiveDateTime>(Some(s.into())))?
     }
 }
 
-impl<'r, 'a> Produce<'r, Option<NaiveDateTime>> for BigQuerySourceParser<'a> {
+impl<'r, 'a> Produce<'r, Option<NaiveDateTime>> for BigQuerySourceParser {
     type Error = BigQuerySourceError;
 
     #[throws(BigQuerySourceError)]
@@ -547,21 +536,23 @@ impl<'r, 'a> Produce<'r, Option<NaiveDateTime>> for BigQuerySourceParser<'a> {
         if cidx == 0 {
             self.iter.next_row();
         }
-        match self
-            .iter
-            .get_json_value(cidx)?
-        {
+        match self.iter.get_json_value(cidx)? {
             None => None,
-            v => Some(
-                NaiveDateTime::parse_from_str(v.as_ref().unwrap().as_str().unwrap(), "%Y-%m-%dT%H:%M:%S").map_err(|_| {
-                    ConnectorXError::cannot_produce::<NaiveDateTime>(Some(v.as_ref().unwrap().as_str().unwrap().into()))
-                })?,
-            ),
+            Some(v) => {
+                let s = v
+                    .as_str()
+                    .ok_or_else(|| anyhow!("cannot get str from json value"))?;
+                Some(
+                    NaiveDateTime::parse_from_str(s, "%Y-%m-%dT%H:%M:%S").map_err(|_| {
+                        ConnectorXError::cannot_produce::<NaiveDateTime>(Some(s.into()))
+                    })?,
+                )
+            }
         }
     }
 }
 
-impl<'r, 'a> Produce<'r, NaiveTime> for BigQuerySourceParser<'a> {
+impl<'r, 'a> Produce<'r, NaiveTime> for BigQuerySourceParser {
     type Error = BigQuerySourceError;
 
     #[throws(BigQuerySourceError)]
@@ -570,31 +561,20 @@ impl<'r, 'a> Produce<'r, NaiveTime> for BigQuerySourceParser<'a> {
         if cidx == 0 {
             self.iter.next_row();
         }
-        NaiveTime::parse_from_str(
-            &self
-                .iter
-                .get_json_value(cidx)
-                .unwrap()
-                .unwrap()
-                .as_str()
-                .unwrap(),
-            "%H:%M:%S",
-        )
-        .map_err(|_| {
-            ConnectorXError::cannot_produce::<NaiveTime>(Some(
-                self.iter
-                    .get_json_value(cidx)
-                    .unwrap()
-                    .unwrap()
-                    .as_str()
-                    .unwrap()
-                    .into(),
-            ))
-        })?
+
+        let v = self
+            .iter
+            .get_json_value(cidx)?
+            .ok_or_else(|| anyhow!("cannot get json value"))?;
+        let s = v
+            .as_str()
+            .ok_or_else(|| anyhow!("cannot get str from json value"))?;
+        NaiveTime::parse_from_str(s, "%H:%M:%S")
+            .map_err(|_| ConnectorXError::cannot_produce::<NaiveTime>(Some(s.into())))?
     }
 }
 
-impl<'r, 'a> Produce<'r, Option<NaiveTime>> for BigQuerySourceParser<'a> {
+impl<'r, 'a> Produce<'r, Option<NaiveTime>> for BigQuerySourceParser {
     type Error = BigQuerySourceError;
 
     #[throws(BigQuerySourceError)]
@@ -603,20 +583,23 @@ impl<'r, 'a> Produce<'r, Option<NaiveTime>> for BigQuerySourceParser<'a> {
         if cidx == 0 {
             self.iter.next_row();
         }
-        match self
-            .iter
-            .get_json_value(cidx)?
-        {
+        match self.iter.get_json_value(cidx)? {
             None => None,
-            v => Some(
-                NaiveTime::parse_from_str(v.as_ref().unwrap().as_str().unwrap(), "%H:%M:%S")
-                    .map_err(|_| ConnectorXError::cannot_produce::<NaiveTime>(Some(v.as_ref().unwrap().as_str().unwrap().into())))?,
-            ),
+            Some(v) => {
+                let s = v
+                    .as_str()
+                    .ok_or_else(|| anyhow!("cannot get str from json value"))?;
+                Some(
+                    NaiveTime::parse_from_str(s, "%H:%M:%S").map_err(|_| {
+                        ConnectorXError::cannot_produce::<NaiveTime>(Some(s.into()))
+                    })?,
+                )
+            }
         }
     }
 }
 
-impl<'r, 'a> Produce<'r, DateTime<Utc>> for BigQuerySourceParser<'a> {
+impl<'r, 'a> Produce<'r, DateTime<Utc>> for BigQuerySourceParser {
     type Error = BigQuerySourceError;
 
     #[throws(BigQuerySourceError)]
@@ -625,15 +608,22 @@ impl<'r, 'a> Produce<'r, DateTime<Utc>> for BigQuerySourceParser<'a> {
         if cidx == 0 {
             self.iter.next_row();
         }
-        let v = self.iter.get_json_value(cidx)?.unwrap();
-        let timestamp_ns = (v.as_str().unwrap().parse::<f64>()? * 1e9) as i64;
-        let secs =  timestamp_ns / 1000000000;
+        let v = self
+            .iter
+            .get_json_value(cidx)?
+            .ok_or_else(|| anyhow!("cannot get json value"))?;
+        let timestamp_ns = (v
+            .as_str()
+            .ok_or_else(|| anyhow!("cannot get str from json value"))?
+            .parse::<f64>()?
+            * 1e9) as i64;
+        let secs = timestamp_ns / 1000000000;
         let nsecs = (timestamp_ns % 1000000000) as u32;
         DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp(secs, nsecs), Utc)
     }
 }
 
-impl<'r, 'a> Produce<'r, Option<DateTime<Utc>>> for BigQuerySourceParser<'a> {
+impl<'r, 'a> Produce<'r, Option<DateTime<Utc>>> for BigQuerySourceParser {
     type Error = BigQuerySourceError;
 
     #[throws(BigQuerySourceError)]
@@ -642,16 +632,20 @@ impl<'r, 'a> Produce<'r, Option<DateTime<Utc>>> for BigQuerySourceParser<'a> {
         if cidx == 0 {
             self.iter.next_row();
         }
-        match self
-            .iter
-            .get_json_value(cidx)?
-        {
+        match self.iter.get_json_value(cidx)? {
             None => None,
             Some(v) => {
-                let timestamp_ns = (v.as_str().unwrap().parse::<f64>()? * 1e9) as i64;
-                let secs =  timestamp_ns / 1000000000;
+                let timestamp_ns = (v
+                    .as_str()
+                    .ok_or_else(|| anyhow!("cannot get str from json value"))?
+                    .parse::<f64>()?
+                    * 1e9) as i64;
+                let secs = timestamp_ns / 1000000000;
                 let nsecs = (timestamp_ns % 1000000000) as u32;
-                Some(DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp(secs, nsecs), Utc))
+                Some(DateTime::<Utc>::from_utc(
+                    NaiveDateTime::from_timestamp(secs, nsecs),
+                    Utc,
+                ))
             }
         }
     }

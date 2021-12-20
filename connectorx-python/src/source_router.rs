@@ -22,7 +22,9 @@ use rust_decimal::{prelude::ToPrimitive, Decimal};
 use rust_decimal_macros::dec;
 use sqlparser::dialect::{MsSqlDialect, MySqlDialect, PostgreSqlDialect, SQLiteDialect};
 use std::convert::TryFrom;
+use tiberius::Client;
 use tokio::net::TcpStream;
+use tokio::runtime::Runtime;
 use tokio_util::compat::TokioAsyncWriteCompatExt;
 use url::Url;
 use urlencoding::decode;
@@ -352,9 +354,7 @@ fn mysql_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
 
 #[throws(ConnectorXPythonError)]
 fn mssql_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
-    use tiberius::Client;
-    use tokio::runtime::Runtime;
-    let rt = Runtime::new().unwrap();
+    let rt = Runtime::new().expect("Failed to create runtime");
     let config = mssql_config(conn)?;
     let tcp = rt.block_on(TcpStream::connect(config.get_addr()))?;
     tcp.set_nodelay(true)?;
@@ -435,24 +435,24 @@ fn oracle_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) 
 
 #[throws(ConnectorXPythonError)] // TODO
 fn bigquery_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
-    use tokio::runtime::Runtime;
-    let rt = Runtime::new().unwrap();
+    let rt = Runtime::new().expect("Failed to create runtime");
     let url = Url::parse(conn.as_str())?;
     let sa_key_path = url.path();
     let client = rt.block_on(gcp_bigquery_client::Client::from_service_account_key_file(
         sa_key_path,
     ));
+
     let auth_data = std::fs::read_to_string(sa_key_path)?;
     let auth_json: serde_json::Value = serde_json::from_str(&auth_data)?;
     let project_id = auth_json
         .get("project_id")
-        .unwrap()
+        .ok_or_else(|| anyhow!("Cannot get project_id from auth file"))?
         .as_str()
-        .unwrap()
-        .to_string();
+        .ok_or_else(|| anyhow!("Cannot get project_id as string from auth file"))?;
     let range_query = get_partition_range_query(query, col, &BigQueryDialect {})?;
+
     let mut query_result = rt.block_on(client.job().query(
-        project_id.as_str(),
+        project_id,
         gcp_bigquery_client::model::query_request::QueryRequest::new(range_query.as_str()),
     ))?;
     query_result.next_row();

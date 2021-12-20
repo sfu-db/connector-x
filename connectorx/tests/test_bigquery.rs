@@ -1,10 +1,5 @@
-// use arrow::{
-//     array::{BooleanArray, Float64Array, Int32Array, LargeStringArray},
-//     record_batch::RecordBatch,
-// };
 use connectorx::{
-    destinations::arrow::ArrowDestination, prelude::*, sources::bigquery::BigQuerySource,
-    sources::PartitionParser, sql::CXQuery, transports::BigQueryArrowTransport,
+    prelude::*, sources::bigquery::BigQuerySource, sources::PartitionParser, sql::CXQuery,
 };
 use std::env;
 use std::sync::Arc;
@@ -13,7 +8,7 @@ use tokio::runtime::Runtime;
 #[test]
 fn test_bigquery() {
     let _ = env_logger::builder().is_test(true).try_init();
-    let dburl = "bigquery:///home/jinze/dataprep-bigquery-d6514e01c1db.json"; // TODO: hard-code
+    let dburl = env::var("BIGQUERY_URL").unwrap(); // TODO: hard-code
 
     let queries = [CXQuery::naked(
         "select * from `dataprep-bigquery.dataprep.test_table` where test_int < 2500 order by test_int",

@@ -211,7 +211,6 @@ pub fn write_pandas<'a>(
         }
         SourceType::BigQuery => {
             let rt = Arc::new(tokio::runtime::Runtime::new().expect("Failed to create runtime"));
-            // let source = BigQuerySource::new(rt, &source_conn.conn[..], queries.len())?;
             let source = BigQuerySource::new(rt, &source_conn.conn[..])?;
             let dispatcher = Dispatcher::<_, _, BigQueryPandasTransport>::new(
                 source,

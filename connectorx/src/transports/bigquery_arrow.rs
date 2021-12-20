@@ -6,7 +6,7 @@ use crate::{
     sources::bigquery::{BigQuerySource, BigQuerySourceError, BigQueryTypeSystem},
     typesystem::TypeConversion,
 };
-use chrono::{NaiveDate, NaiveDateTime, NaiveTime, DateTime, Utc};
+use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
 use thiserror::Error;
 
 #[derive(Error, Debug)]
