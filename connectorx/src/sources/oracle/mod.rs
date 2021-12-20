@@ -54,7 +54,7 @@ impl OracleSource {
     #[throws(OracleSourceError)]
     pub fn new(conn: &str, nconn: usize) -> Self {
         let conn = Url::parse(conn)?;
-        let user = decode(conn.username())?.into_owned();
+        let user = decode(conn.username().unwrap_or(""))?.into_owned();
         let password = decode(conn.password().unwrap_or(""))?.into_owned();
         let host = "//".to_owned()
             + decode(conn.host_str().unwrap_or("localhost"))?
@@ -64,7 +64,8 @@ impl OracleSource {
 
         let mut connector = oracle::Connector::new(user.as_str(), password.as_str(), host.as_str());
 
-        if env::var("CONNECTORX_ORCALE_SYSTEM_AUTH").is_ok() {
+        if user.is_empty() && password.is_empty() && host == "localhost" {
+            debug!("No username or password provided, assuming system auth.");
             connector.external_auth(true);
         }
 
