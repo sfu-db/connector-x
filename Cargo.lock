@@ -558,6 +558,7 @@ dependencies = [
  "native-tls",
  "ndarray",
  "num-traits",
+ "oracle",
  "owning_ref",
  "polars",
  "postgres",

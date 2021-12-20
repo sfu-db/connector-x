@@ -31,6 +31,7 @@ native-tls = {version = "0.2", optional = true}
 ndarray = {version = "0.15", optional = true}
 num-traits = {version = "0.2", optional = true}
 owning_ref = {version = "0.4", optional = true}
+oracle = {version = "0.5", optional = true}
 polars = {version = "0.16", optional = true}
 postgres = {version = "0.19", features = ["with-chrono-0_4", "with-uuid-0_8", "with-serde_json-1"], optional = true}
 postgres-native-tls = {version = "0.5", optional = true}
@@ -70,7 +71,7 @@ src_csv = ["csv", "regex", "chrono"]
 src_dummy = ["num-traits", "chrono"]
 src_mssql = ["rust_decimal", "num-traits", "chrono", "tiberius", "bb8-tiberius", "bb8", "tokio", "url", "uuid", "owning_ref", "futures", "urlencoding"]
 src_mysql = ["r2d2_mysql", "rust_decimal", "num-traits", "chrono", "r2d2"]
-src_oracle = ["r2d2-oracle", "chrono", "r2d2", "urlencoding"]
+src_oracle = ["oracle", "r2d2-oracle", "chrono", "r2d2", "urlencoding"]
 src_postgres = [
   "postgres",
   "r2d2_postgres",

@@ -21,6 +21,7 @@ pub use self::errors::OracleSourceError;
 use crate::sql::limit1_query_oracle;
 use r2d2_oracle::oracle::ResultSet;
 use sqlparser::dialect::Dialect;
+use std::env;
 pub use typesystem::OracleTypeSystem;
 use urlencoding::decode;
 
@@ -60,7 +61,14 @@ impl OracleSource {
                 .into_owned()
                 .as_str()
             + conn.path();
-        let manager = OracleConnectionManager::new(user.as_str(), password.as_str(), host.as_str());
+
+        let mut connector = oracle::Connector::new(user.as_str(), password.as_str(), host.as_str());
+
+        if env::var("CONNECTORX_ORCALE_SYSTEM_AUTH").is_ok() {
+            connector.external_auth(true);
+        }
+
+        let manager = OracleConnectionManager::from_connector(connector);
         let pool = r2d2::Pool::builder()
             .max_size(nconn as u32)
             .build(manager)?;
