@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1640113378309,
+  "lastUpdate": 1640120868302,
   "repoUrl": "https://github.com/sfu-db/connector-x",
   "entries": {
     "ConnectorX TPC-H Scale@1 Benchmarks": [
@@ -5928,6 +5928,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 3.4300804893820227",
             "extra": "mean: 15.357910327427089 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "wangxiaoying0369@gmail.com",
+            "name": "Xiaoying Wang",
+            "username": "wangxiaoying"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f115478027b606aef2f7230d6a6feef8056b533a",
+          "message": "Merge pull request #203 from wseaton/feature/orcale_system_auth\n\ndraft: enable system auth for oracle based connections - merge for test",
+          "timestamp": "2021-12-21T12:57:35-08:00",
+          "tree_id": "e3283ad8e738ac128a87b93bc381bd19b40aecc5",
+          "url": "https://github.com/sfu-db/connector-x/commit/f115478027b606aef2f7230d6a6feef8056b533a"
+        },
+        "date": 1640120866920,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_mysql",
+            "value": 0.06532279616701098,
+            "unit": "iter/sec",
+            "range": "stddev: 0.5225099249487745",
+            "extra": "mean: 15.308591466955841 sec\nrounds: 5"
+          },
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_postgres",
+            "value": 0.0587378471811647,
+            "unit": "iter/sec",
+            "range": "stddev: 1.6957420682840336",
+            "extra": "mean: 17.024798285774885 sec\nrounds: 5"
           }
         ]
       }
