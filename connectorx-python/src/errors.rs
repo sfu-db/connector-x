@@ -38,6 +38,9 @@ pub enum ConnectorXPythonError {
     OracleError(#[from] r2d2_oracle::oracle::Error),
 
     #[error(transparent)]
+    BQError(#[from] gcp_bigquery_client::error::BQError),
+
+    #[error(transparent)]
     NdArrayShapeError(#[from] ndarray::ShapeError),
 
     #[error(transparent)]
@@ -59,6 +62,9 @@ pub enum ConnectorXPythonError {
     OracleSourceError(#[from] connectorx::sources::oracle::OracleSourceError),
 
     #[error(transparent)]
+    BigQuerySourceError(#[from] connectorx::sources::bigquery::BigQuerySourceError),
+
+    #[error(transparent)]
     ArrowDestinationError(#[from] connectorx::destinations::arrow::ArrowDestinationError),
 
     #[error(transparent)]
@@ -78,6 +84,9 @@ pub enum ConnectorXPythonError {
 
     #[error(transparent)]
     UrlDecodeError(#[from] FromUtf8Error),
+
+    #[error(transparent)]
+    JsonError(#[from] serde_json::Error),
 
     /// Any other errors that are too trivial to be put here explicitly.
     #[error(transparent)]
