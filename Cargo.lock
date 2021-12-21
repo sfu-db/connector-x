@@ -536,7 +536,7 @@ dependencies = [
 
 [[package]]
 name = "connectorx"
-version = "0.2.3"
+version = "0.2.4-alpha.1"
 dependencies = [
  "anyhow",
  "arrow",
@@ -558,6 +558,7 @@ dependencies = [
  "native-tls",
  "ndarray",
  "num-traits",
+ "oracle",
  "owning_ref",
  "polars",
  "postgres",
@@ -584,7 +585,7 @@ dependencies = [
 
 [[package]]
 name = "connectorx-python"
-version = "0.2.3"
+version = "0.2.4-alpha.1"
 dependencies = [
  "anyhow",
  "arrow",

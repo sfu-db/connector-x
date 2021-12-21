@@ -20,6 +20,7 @@ pub use self::errors::OracleSourceError;
 use crate::constants::DB_BUFFER_SIZE;
 use r2d2_oracle::oracle::ResultSet;
 use sqlparser::dialect::Dialect;
+use std::env;
 pub use typesystem::OracleTypeSystem;
 use urlencoding::decode;
 
@@ -59,7 +60,15 @@ impl OracleSource {
                 .into_owned()
                 .as_str()
             + conn.path();
-        let manager = OracleConnectionManager::new(user.as_str(), password.as_str(), host.as_str());
+
+        let mut connector = oracle::Connector::new(user.as_str(), password.as_str(), host.as_str());
+
+        if user.is_empty() && password.is_empty() && host == "//localhost" {
+            debug!("No username or password provided, assuming system auth.");
+            connector.external_auth(true);
+        }
+
+        let manager = OracleConnectionManager::from_connector(connector);
         let pool = r2d2::Pool::builder()
             .max_size(nconn as u32)
             .build(manager)?;
