@@ -9,6 +9,7 @@ readme = "../README.md"
 repository = "https://github.com/sfu-db/connector-x"
 version = "0.2.4-alpha.1"
 
+
 [dependencies]
 anyhow = "1"
 fehler = "1"
