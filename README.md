@@ -97,7 +97,7 @@ For more planned data sources, please check out our [discussion](https://github.
 - [x] SQL Server
 - [x] Azure SQL Database (through mssql protocol)
 - [x] Oracle
-- [ ] Big Query - In Progress
+- [x] Big Query - Experimental: need docs and benchmark (also more tests)
 - [ ] ...
 
 ## Destinations
