@@ -32,6 +32,7 @@ use std::sync::Arc;
 pub fn write_arrow<'a>(
     py: Python<'a>,
     source_conn: &SourceConn,
+    origin_query: Option<String>,
     queries: &[CXQuery<String>],
     protocol: &str,
 ) -> &'a PyAny {
@@ -53,7 +54,9 @@ pub fn write_arrow<'a>(
                         _,
                         _,
                         PostgresArrowTransport<CSVProtocol, MakeTlsConnector>,
-                    >::new(sb, &mut destination, queries);
+                    >::new(
+                        sb, &mut destination, queries, origin_query
+                    );
                     debug!("Running dispatcher");
                     dispatcher.run()?;
                 }
@@ -65,6 +68,7 @@ pub fn write_arrow<'a>(
                             sb,
                             &mut destination,
                             queries,
+                            origin_query,
                         );
                     debug!("Running dispatcher");
                     dispatcher.run()?;
@@ -75,11 +79,12 @@ pub fn write_arrow<'a>(
                         tls_conn,
                         queries.len(),
                     )?;
-                    let dispatcher = Dispatcher::<
-                        _,
-                        _,
-                        PostgresArrowTransport<PgBinaryProtocol, MakeTlsConnector>,
-                    >::new(sb, &mut destination, queries);
+                    let dispatcher =
+                        Dispatcher::<
+                            _,
+                            _,
+                            PostgresArrowTransport<PgBinaryProtocol, MakeTlsConnector>,
+                        >::new(sb, &mut destination, queries, origin_query);
                     debug!("Running dispatcher");
                     dispatcher.run()?;
                 }
@@ -93,7 +98,9 @@ pub fn write_arrow<'a>(
                         _,
                         _,
                         PostgresArrowTransport<PgBinaryProtocol, NoTls>,
-                    >::new(sb, &mut destination, queries);
+                    >::new(
+                        sb, &mut destination, queries, origin_query
+                    );
                     debug!("Running dispatcher");
                     dispatcher.run()?;
                 }
@@ -107,7 +114,9 @@ pub fn write_arrow<'a>(
                         _,
                         _,
                         PostgresArrowTransport<CursorProtocol, MakeTlsConnector>,
-                    >::new(sb, &mut destination, queries);
+                    >::new(
+                        sb, &mut destination, queries, origin_query
+                    );
                     debug!("Running dispatcher");
                     dispatcher.run()?;
                 }
@@ -118,7 +127,9 @@ pub fn write_arrow<'a>(
                         _,
                         _,
                         PostgresArrowTransport<CursorProtocol, NoTls>,
-                    >::new(sb, &mut destination, queries);
+                    >::new(
+                        sb, &mut destination, queries, origin_query
+                    );
                     debug!("Running dispatcher");
                     dispatcher.run()?;
                 }
@@ -126,9 +137,13 @@ pub fn write_arrow<'a>(
             }
         }
         SourceType::SQLite => {
-            let source = SQLiteSource::new(&source_conn.conn[..], queries.len())?;
-            let dispatcher =
-                Dispatcher::<_, _, SQLiteArrowTransport>::new(source, &mut destination, queries);
+            let source = SQLiteSource::new(source_conn.conn.path(), queries.len())?;
+            let dispatcher = Dispatcher::<_, _, SQLiteArrowTransport>::new(
+                source,
+                &mut destination,
+                queries,
+                origin_query,
+            );
             debug!("Running dispatcher");
             dispatcher.run()?;
         }
@@ -145,6 +160,7 @@ pub fn write_arrow<'a>(
                             source,
                             &mut destination,
                             queries,
+                            origin_query,
                         );
                     debug!("Running dispatcher");
                     dispatcher.run()?;
@@ -156,6 +172,7 @@ pub fn write_arrow<'a>(
                         source,
                         &mut destination,
                         queries,
+                        origin_query,
                     );
                     debug!("Running dispatcher");
                     dispatcher.run()?;
@@ -166,17 +183,28 @@ pub fn write_arrow<'a>(
         SourceType::MsSQL => {
             let rt = Arc::new(tokio::runtime::Runtime::new().expect("Failed to create runtime"));
             let source = MsSQLSource::new(rt, &source_conn.conn[..], queries.len())?;
-            let dispatcher =
-                Dispatcher::<_, _, MsSQLArrowTransport>::new(source, &mut destination, queries);
+            let dispatcher = Dispatcher::<_, _, MsSQLArrowTransport>::new(
+                source,
+                &mut destination,
+                queries,
+                origin_query,
+            );
             debug!("Running dispatcher");
             dispatcher.run()?;
         }
         SourceType::Oracle => {
             let source = OracleSource::new(&source_conn.conn[..], queries.len())?;
-            let dispatcher =
-                Dispatcher::<_, _, OracleArrowTransport>::new(source, &mut destination, queries);
+            let dispatcher = Dispatcher::<_, _, OracleArrowTransport>::new(
+                source,
+                &mut destination,
+                queries,
+                origin_query,
+            );
             debug!("Running dispatcher");
             dispatcher.run()?;
+        }
+        SourceType::BigQuery => {
+            // TODO
         }
     }
 

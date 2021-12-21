@@ -44,6 +44,8 @@ impl_transport!(
         { Datetimeoffset[DateTime<Utc>] => DateTime[DateTime<Utc>] | conversion auto }
         { Uniqueidentifier[Uuid]        => String[String]          | conversion option }
         { Time[NaiveTime]               => String[String]          | conversion option }
+        { SmallMoney[f32]               => F64[f64]                | conversion none }
+        { Money[f64]                    => F64[f64]                | conversion none }
     }
 );
 

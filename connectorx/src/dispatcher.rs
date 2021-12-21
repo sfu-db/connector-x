@@ -4,7 +4,7 @@ use crate::{
     data_order::{coordinate, DataOrder},
     destinations::{Destination, DestinationPartition},
     errors::{ConnectorXError, Result as CXResult},
-    sources::{Source, SourcePartition},
+    sources::{PartitionParser, Source, SourcePartition},
     sql::CXQuery,
     typesystem::{Transport, TypeSystem},
 };
@@ -19,6 +19,7 @@ pub struct Dispatcher<'a, S, D, TP> {
     src: S,
     dst: &'a mut D,
     queries: Vec<CXQuery<String>>,
+    origin_query: Option<String>,
     _phantom: PhantomData<TP>,
 }
 
@@ -36,7 +37,7 @@ where
     ET: From<ConnectorXError> + From<ES> + From<ED> + Send,
 {
     /// Create a new dispatcher by providing a source, a destination and the queries.
-    pub fn new<Q>(src: S, dst: &'w mut D, queries: &[Q]) -> Self
+    pub fn new<Q>(src: S, dst: &'w mut D, queries: &[Q], origin_query: Option<String>) -> Self
     where
         for<'a> &'a Q: Into<CXQuery>,
     {
@@ -44,6 +45,7 @@ where
             src,
             dst,
             queries: queries.iter().map(Into::into).collect(),
+            origin_query,
             _phantom: PhantomData,
         }
     }
@@ -53,6 +55,8 @@ where
         let dorder = coordinate(S::DATA_ORDERS, D::DATA_ORDERS)?;
         self.src.set_data_order(dorder)?;
         self.src.set_queries(self.queries.as_slice());
+        self.src.set_origin_query(self.origin_query);
+
         debug!("Fetching metadata");
         self.src.fetch_metadata()?;
         let src_schema = self.src.schema();
@@ -62,30 +66,40 @@ where
             .collect::<CXResult<Vec<_>>>()?;
         let names = self.src.names();
 
-        // generate partitions
+        let mut total_rows = if self.dst.needs_count() {
+            // return None if cannot derive total count
+            debug!("Try get row rounts for entire result");
+            self.src.result_rows()?
+        } else {
+            debug!("Do not need counts in advance");
+            Some(0)
+        };
         let mut src_partitions: Vec<S::Partition> = self.src.partition()?;
-        debug!("Prepare partitions");
-        // run queries
-        src_partitions
-            .par_iter_mut()
-            .try_for_each(|partition| -> Result<(), ES> { partition.prepare() })?;
+        if self.dst.needs_count() && total_rows.is_none() {
+            debug!("Manually count rows of each partitioned query and sum up");
+            // run queries
+            src_partitions
+                .par_iter_mut()
+                .try_for_each(|partition| -> Result<(), ES> { partition.result_rows() })?;
 
-        // allocate memory and create one partition for each source
-        let num_rows: Vec<usize> = src_partitions
-            .iter()
-            .map(|partition| partition.nrows())
-            .collect();
+            // get number of row of each partition from the source
+            let part_rows: Vec<usize> = src_partitions
+                .iter()
+                .map(|partition| partition.nrows())
+                .collect();
+            total_rows = Some(part_rows.iter().sum());
+        }
+        let total_rows = total_rows.ok_or_else(ConnectorXError::CountError)?;
 
-        debug!("Allocate destination memory");
-        self.dst
-            .allocate(num_rows.iter().sum(), &names, &dst_schema, dorder)?;
+        debug!(
+            "Allocate destination memory: {}x{}",
+            total_rows,
+            src_schema.len()
+        );
+        self.dst.allocate(total_rows, &names, &dst_schema, dorder)?;
 
         debug!("Create destination partition");
-        let dst_partitions = self.dst.partition(&num_rows)?;
-
-        for (i, p) in dst_partitions.iter().enumerate() {
-            debug!("Partition {}, {}x{}", i, p.nrows(), p.ncols());
-        }
+        let dst_partitions = self.dst.partition(self.queries.len())?;
 
         #[cfg(all(not(feature = "branch"), not(feature = "fptr")))]
         compile_error!("branch or fptr, pick one");
@@ -103,7 +117,7 @@ where
             .into_par_iter()
             .zip_eq(src_partitions)
             .enumerate()
-            .try_for_each(|(i, (mut src, mut dst))| -> Result<(), ET> {
+            .try_for_each(|(i, (mut dst, mut src))| -> Result<(), ET> {
                 #[cfg(feature = "fptr")]
                 let f: Vec<_> = src_schema
                     .iter()
@@ -111,43 +125,52 @@ where
                     .map(|(&src_ty, &dst_ty)| TP::processor(src_ty, dst_ty))
                     .collect::<CXResult<Vec<_>>>()?;
 
-                let mut parser = dst.parser()?;
+                let mut parser = src.parser()?;
 
                 match dorder {
-                    DataOrder::RowMajor => {
-                        for _ in 0..src.nrows() {
+                    DataOrder::RowMajor => loop {
+                        let (n, is_last) = parser.fetch_next()?;
+                        dst.aquire_row(n)?;
+                        for _ in 0..n {
                             #[allow(clippy::needless_range_loop)]
-                            for col in 0..src.ncols() {
+                            for col in 0..dst.ncols() {
                                 #[cfg(feature = "fptr")]
-                                f[col](&mut parser, &mut src)?;
+                                f[col](&mut parser, &mut dst)?;
 
                                 #[cfg(feature = "branch")]
                                 {
                                     let (s1, s2) = schemas[col];
-                                    TP::process(s1, s2, &mut parser, &mut src)?;
+                                    TP::process(s1, s2, &mut parser, &mut dst)?;
                                 }
                             }
                         }
-                    }
-                    DataOrder::ColumnMajor =>
-                    {
+                        if is_last {
+                            break;
+                        }
+                    },
+                    DataOrder::ColumnMajor => loop {
+                        let (n, is_last) = parser.fetch_next()?;
+                        dst.aquire_row(n)?;
                         #[allow(clippy::needless_range_loop)]
-                        for col in 0..src.ncols() {
-                            for _ in 0..src.nrows() {
+                        for col in 0..dst.ncols() {
+                            for _ in 0..n {
                                 #[cfg(feature = "fptr")]
-                                f[col](&mut parser, &mut src)?;
+                                f[col](&mut parser, &mut dst)?;
                                 #[cfg(feature = "branch")]
                                 {
                                     let (s1, s2) = schemas[col];
-                                    TP::process(s1, s2, &mut parser, &mut src)?;
+                                    TP::process(s1, s2, &mut parser, &mut dst)?;
                                 }
                             }
                         }
-                    }
+                        if is_last {
+                            break;
+                        }
+                    },
                 }
 
                 debug!("Finalize partition {}", i);
-                src.finalize()?;
+                dst.finalize()?;
                 debug!("Partition {} finished", i);
                 Ok(())
             })?;

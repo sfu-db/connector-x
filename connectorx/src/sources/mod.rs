@@ -1,6 +1,8 @@
 //! This module defines four traits [`Source`], [`SourcePartition`], [`PartitionParser`], and [`Produce`]  to define a source.
 //! This module also contains source implementations for various databases.
 
+#[cfg(feature = "src_bigquery")]
+pub mod bigquery;
 #[cfg(feature = "src_csv")]
 pub mod csv;
 #[cfg(feature = "src_dummy")]
@@ -34,7 +36,11 @@ pub trait Source {
 
     fn set_queries<Q: ToString>(&mut self, queries: &[CXQuery<Q>]);
 
+    fn set_origin_query(&mut self, query: Option<String>);
+
     fn fetch_metadata(&mut self) -> Result<(), Self::Error>;
+    /// Get total number of rows if available
+    fn result_rows(&mut self) -> Result<Option<usize>, Self::Error>;
 
     fn names(&self) -> Vec<String>;
 
@@ -47,11 +53,13 @@ pub trait Source {
 /// a sequence of values of variate types by repetitively calling the function `produce`.
 pub trait SourcePartition: Sized {
     type TypeSystem: TypeSystem;
-    type Parser<'a>: PartitionParser<'a, TypeSystem = Self::TypeSystem, Error = Self::Error>;
+    type Parser<'a>: PartitionParser<'a, TypeSystem = Self::TypeSystem, Error = Self::Error>
+    where
+        Self: 'a;
     type Error: From<ConnectorXError> + Send;
 
-    /// Run the query and put the result into Self.
-    fn prepare(&mut self) -> Result<(), Self::Error>;
+    /// Count total number of rows in each partition.
+    fn result_rows(&mut self) -> Result<(), Self::Error>;
 
     fn parser(&mut self) -> Result<Self::Parser<'_>, Self::Error>;
 
@@ -76,6 +84,9 @@ pub trait PartitionParser<'a> {
     {
         self.produce()
     }
+
+    /// Fetch next batch of rows from database, return actuall number of rows fetched
+    fn fetch_next(&mut self) -> Result<(usize, bool), Self::Error>;
 }
 
 /// A type implemented `Produce<T>` means that it can produce a value `T` by consuming part of it's raw data buffer.

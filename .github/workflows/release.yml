@@ -12,7 +12,7 @@ jobs:
     container: quay.io/pypa/manylinux2014_x86_64
     strategy:
       matrix:
-        python-version: [37, 38, 39]
+        python-version: [37, 38, 39, 310]
     steps:
       - uses: actions/checkout@v2
 
@@ -31,7 +31,7 @@ jobs:
       - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly-2021-05-30
+          toolchain: nightly-2021-10-21
           components: rustfmt
           default: true
 
@@ -39,7 +39,7 @@ jobs:
         run: |
           pip install poetry
           cargo install just
-          yum install -y openssl11-devel mysql-devel
+          yum install -y openssl11-devel mysql-devel postgresql-devel freetds-devel
           ln -sfn /usr/lib64/pkgconfig/openssl11.pc /usr/lib64/pkgconfig/openssl.pc
           ln -sfn /usr/lib64/pkgconfig/libssl11.pc /usr/lib64/pkgconfig/libssl.pc
 
@@ -65,12 +65,18 @@ jobs:
           name: "linux-${{ matrix.python-version }}"
           path: connectorx-python/dist/*.whl
 
-  win32-and-darwin:
-    runs-on: ${{ matrix.os }}
+      - name: Persist artifacts source code
+        uses: actions/upload-artifact@v2
+        if: matrix.python-version == 39
+        with:
+          name: "linux-${{ matrix.python-version }}"
+          path: connectorx-python/dist/*.tar.gz
+
+  win32:
+    runs-on: windows-latest
     strategy:
       matrix:
-        os: [macos-10.15, windows-latest]
-        python-version: ["3.7", "3.8", "3.9"]
+        python-version: ["3.7", "3.8", "3.9", "3.10"]
     steps:
       - uses: actions/checkout@v2
 
@@ -91,7 +97,7 @@ jobs:
       - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly-2021-05-30
+          toolchain: nightly-2021-10-21
           components: rustfmt
           default: true
 
@@ -119,12 +125,75 @@ jobs:
       - name: Persist artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: "${{ matrix.os }}-${{ matrix.python-version }}"
+          name: "windows-${{ matrix.python-version }}"
+          path: connectorx-python/dist/*.whl
+
+  darwin:
+    runs-on: macos-10.15
+    strategy:
+      matrix:
+        python-version: ["3.7", "3.8", "3.9", "3.10"]
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: ankane/setup-mysql@v1
+        with:
+          mysql-version: 8
+      
+      - name: Install brew
+        run: |
+          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+          brew install openssl
+
+      - name: Setup python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+          architecture: x64
+
+      - name: Check which python we use
+        run: |
+          echo $(which python)
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly-2021-10-21
+          components: rustfmt
+          default: true
+
+      - name: Install tools
+        run: |
+          pip install poetry
+          cargo install cargo-quickinstall
+          cargo quickinstall just
+
+      - name: Setup project
+        run: |
+          just bootstrap-python
+          just ci-build-python-extention
+          echo "Content of the source folder"
+          ls connectorx-python/connectorx
+        env:
+          SQLITE3_STATIC: 1
+          LDFLAGS: "-L/usr/local/opt/openssl@3/lib"
+          CPPFLAGS: "-I/usr/local/opt/openssl@3/include"
+
+      - name: Build wheel
+        run: |
+          just ci-build-python-wheel ci-rename-wheel
+          echo "Built artifacts"
+          ls connectorx-python/dist
+
+      - name: Persist artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: "macos-${{ matrix.python-version }}"
           path: connectorx-python/dist/*.whl
 
   upload:
     runs-on: ubuntu-latest
-    needs: [win32-and-darwin, linux]
+    needs: [win32, darwin, linux]
     steps:
       - name: Download all artifacts
         uses: actions/download-artifact@v2
@@ -142,7 +211,7 @@ jobs:
         env:
           PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
         run: |
-          for file in $(ls **/*.whl)
+          for file in $(ls **/*)
           do
             twine upload --non-interactive -u __token__ -p $PYPI_TOKEN $file || continue
           done
@@ -152,7 +221,7 @@ jobs:
         env:
           PYPI_TEST_TOKEN: ${{ secrets.PYPI_TEST_TOKEN }}
         run: |
-          for file in $(ls **/*.whl)
+          for file in $(ls **/*)
           do
             twine upload --non-interactive --repository-url https://test.pypi.org/legacy/ -u __token__ -p $PYPI_TEST_TOKEN $file || continue
           done

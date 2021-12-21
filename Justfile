@@ -9,6 +9,20 @@ build-debug:
 test +ARGS="":
     cargo test --features all {{ARGS}} -- --nocapture
 
+test-feature-gate:
+    cargo c --features src_postgres
+    cargo c --features src_mysql
+    cargo c --features src_mssql
+    cargo c --features src_sqlite
+    cargo c --features src_oracle
+    cargo c --features src_csv
+    cargo c --features src_dummy
+    cargo c --features dst_arrow
+    cargo c --features dst_arrow2
+
+test-bigquery:
+    cargo test --test test_bigquery --features src_bigquery --features dst_arrow -- --nocapture
+
 bootstrap-python:
     cp README.md connectorx-python/README.md
     cd connectorx-python && poetry install
@@ -20,6 +34,9 @@ setup-python: build-python-extention
     cd connectorx-python && poetry run python ../scripts/python-helper.py copy-extension
     
 test-python +opts="": setup-python
+    cd connectorx-python && poetry run pytest connectorx/tests -v -s {{opts}}
+
+test-python-s +opts="":
     cd connectorx-python && poetry run pytest connectorx/tests -v -s {{opts}}
 
 seed-db:
@@ -35,6 +52,7 @@ seed-db-more:
     psql $REDSHIFT_URL -f scripts/redshift.sql
     ORACLE_URL_SCRIPT=`echo ${ORACLE_URL#oracle://} | sed "s/:/\//"`
     cat scripts/oracle.sql | sqlplus $ORACLE_URL_SCRIPT
+    mysql --protocol tcp -h$MARIADB_HOST -P$MARIADB_PORT -u$MARIADB_USER -p$MARIADB_PASSWORD $MARIADB_DB < scripts/mysql.sql
 
 # benches 
 flame-tpch conn="POSTGRES_URL":

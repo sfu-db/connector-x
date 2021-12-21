@@ -9,6 +9,8 @@
 * `csv`: [Postgres CSV COPY protocol](https://www.postgresql.org/docs/current/sql-copy.html), recommend to use when network is slow (`csv` usually results in smaller size than `binary`).
 * `cursor`: Conventional wire protocol (slowest one), recommend to use only when `binary` and `csv` is not supported by the source (e.g. Redshift).
 
+Adding `sslmode=require` to connection uri parameter force SSL connection. Example: `postgresql://username:password@host:port/db?sslmode=require`. `sslmode=disable` to disable SSL connection.
+
 ### Postgres-Pandas Type Mapping
 | Postgres Type   |      Pandas Type          |  Comment                           |
 |:---------------:|:-------------------------:|:----------------------------------:|
@@ -115,6 +117,8 @@ Oracle does not need to specify protocol.
 ## SQLServer
 
 SQLServer does not need to specify protocol.
+
+By adding `trusted_connection=true` to connection uri parameter, windows authentication will be enabled. Example: `mssql://host:port/db?trusted_connection=true`
 
 ### SQLServer-Pandas Type Mapping
 | SQLServer Type  |      Pandas Type            |  Comment                           |

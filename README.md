@@ -27,7 +27,7 @@ cx.read_sql("postgresql://username:password@server:port/database", "SELECT * FRO
 
 The function will partition the query by **evenly** splitting the specified column to the amount of partitions.
 ConnectorX will assign one thread for each partition to load and write data in parallel.
-Currently, we support partitioning on **numerical** columns for **SPJA** queries.
+Currently, we support partitioning on **numerical** columns (**cannot contain NULL**) for **SPJA** queries. 
 
 Check out more detailed usage and examples [here](#detailed-usage-and-examples). A general introduction of the project can be found in this [blog post](https://towardsdatascience.com/connectorx-the-fastest-way-to-load-data-from-databases-a65d4d4062d5).
 
@@ -49,7 +49,7 @@ We compared different solutions in Python that provides the `read_sql` function,
 
 <p align="center"><img alt="memory chart" src="https://raw.githubusercontent.com/sfu-db/connector-x/main/assets/pg-mem.png"/></p>
 
-In conclusion, ConnectorX uses up to **3x** less memory and **21x** less time. More on [here](https://github.com/sfu-db/connector-x/blob/main/Benchmark.md#benchmark-result-on-aws-r54xlarge).
+In conclusion, ConnectorX uses up to **3x** less memory and **21x** less time (**3x** less memory and **13x** less time compared with Pandas.). More on [here](https://github.com/sfu-db/connector-x/blob/main/Benchmark.md#benchmark-result-on-aws-r54xlarge).
 
 ## How does ConnectorX achieve a lightening speed while keeping the memory footprint low?
 
@@ -90,11 +90,14 @@ For more planned data sources, please check out our [discussion](https://github.
 ## Sources
 - [x] Postgres
 - [x] Mysql
+- [x] Mariadb (through mysql protocol)
 - [x] Sqlite
 - [x] Redshift (through postgres protocol)
 - [x] Clickhouse (through mysql protocol)
-- [x] SQL Server (no encryption support yet)
+- [x] SQL Server
+- [x] Azure SQL Database (through mssql protocol)
 - [x] Oracle
+- [ ] Big Query - In Progress
 - [ ] ...
 
 ## Destinations
@@ -120,6 +123,7 @@ Run the SQL query, download the data from database into a Pandas dataframe.
 - `conn: str`: Connection string URI.
   - General supported URI scheme: `(postgres|postgressql|mysql|mssql)://username:password@addr:port/dbname`.
   - For now sqlite only support absolute path, example: `sqlite:///home/user/path/test.db`.
+  - Please check out [here](Types.md) for more connection uri parameters supported for each database (e.g. trusted_connection for Mssql, sslmode for Postgres)
 - `query: Union[str, List[str]]`: SQL query or list of SQL queries for fetching data.
 - `return_type: str = "pandas"`: The return type of this function. It can be `arrow`, `pandas`, `modin`, `dask` or `polars`.
 - `protocol: str = "binary"`: The protocol used to fetch data from source, default is `binary`. Check out [here](Types.md) to see more details.

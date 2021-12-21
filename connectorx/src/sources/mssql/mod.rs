@@ -5,11 +5,12 @@ mod typesystem;
 
 pub use self::errors::MsSQLSourceError;
 pub use self::typesystem::{FloatN, IntN, MsSQLTypeSystem};
+use crate::constants::DB_BUFFER_SIZE;
 use crate::{
     data_order::DataOrder,
     errors::ConnectorXError,
     sources::{PartitionParser, Produce, Source, SourcePartition},
-    sql::{count_query, get_limit_mssql, limit1_query_mssql, CXQuery},
+    sql::{count_query, CXQuery},
     utils::DummyBox,
 };
 use anyhow::anyhow;
@@ -23,6 +24,7 @@ use log::debug;
 use owning_ref::OwningHandle;
 use rust_decimal::Decimal;
 use sqlparser::dialect::MsSqlDialect;
+use std::collections::HashMap;
 use std::sync::Arc;
 use tiberius::{AuthMethod, Config, EncryptionLevel, QueryResult, Row};
 use tokio::runtime::{Handle, Runtime};
@@ -31,49 +33,76 @@ use urlencoding::decode;
 use uuid::Uuid;
 
 type Conn<'a> = PooledConnection<'a, ConnectionManager>;
-
 pub struct MsSQLSource {
     rt: Arc<Runtime>,
     pool: Pool<ConnectionManager>,
+    origin_query: Option<String>,
     queries: Vec<CXQuery<String>>,
     names: Vec<String>,
     schema: Vec<MsSQLTypeSystem>,
-    buf_size: usize,
+}
+
+#[throws(MsSQLSourceError)]
+pub fn mssql_config(url: &Url) -> Config {
+    let mut config = Config::new();
+
+    let host = decode(url.host_str().unwrap_or("localhost"))?.into_owned();
+    let hosts: Vec<&str> = host.split('\\').collect();
+    match hosts.len() {
+        1 => config.host(host),
+        2 => {
+            // SQL Server support instance name: `server\instance:port`
+            config.host(hosts[0]);
+            config.instance_name(hosts[1]);
+        }
+        _ => throw!(anyhow!("MsSQL hostname parse error: {}", host)),
+    }
+    config.port(url.port().unwrap_or(1433));
+    // remove the leading "/"
+    config.database(&url.path()[1..]);
+    // Using SQL Server authentication.
+    #[allow(unused)]
+    let params: HashMap<String, String> = url.query_pairs().into_owned().collect();
+    #[cfg(windows)]
+    match params.get("trusted_connection") {
+        // pefer trusted_connection if set to true
+        Some(v) if v == "true" => {
+            debug!("mssql auth through trusted connection!");
+            config.authentication(AuthMethod::Integrated);
+        }
+        _ => {
+            debug!("mssql auth through sqlserver authentication");
+            config.authentication(AuthMethod::sql_server(
+                decode(url.username())?.to_owned(),
+                decode(url.password().unwrap_or(""))?.to_owned(),
+            ));
+        }
+    };
+    #[cfg(not(windows))]
+    config.authentication(AuthMethod::sql_server(
+        decode(url.username())?.to_owned(),
+        decode(url.password().unwrap_or(""))?.to_owned(),
+    ));
+    config.encryption(EncryptionLevel::NotSupported);
+    config
 }
 
 impl MsSQLSource {
     #[throws(MsSQLSourceError)]
     pub fn new(rt: Arc<Runtime>, conn: &str, nconn: usize) -> Self {
-        let mut config = Config::new();
         let url = Url::parse(conn)?;
-
-        config.host(decode(url.host_str().unwrap_or("localhost"))?.into_owned());
-        config.port(url.port().unwrap_or(1433));
-
-        // Using SQL Server authentication.
-        config.authentication(AuthMethod::sql_server(
-            decode(url.username())?.to_owned(),
-            decode(url.password().unwrap_or(""))?.to_owned(),
-        ));
-
-        config.database(&url.path()[1..]); // remove the leading "/"
-        config.encryption(EncryptionLevel::NotSupported);
-
+        let config = mssql_config(&url)?;
         let manager = bb8_tiberius::ConnectionManager::new(config);
         let pool = rt.block_on(Pool::builder().max_size(nconn as u32).build(manager))?;
 
         Self {
             rt,
             pool,
+            origin_query: None,
             queries: vec![],
             names: vec![],
             schema: vec![],
-            buf_size: 32,
         }
-    }
-
-    pub fn buf_size(&mut self, buf_size: usize) {
-        self.buf_size = buf_size;
     }
 }
 
@@ -97,66 +126,64 @@ where
         self.queries = queries.iter().map(|q| q.map(Q::to_string)).collect();
     }
 
+    fn set_origin_query(&mut self, query: Option<String>) {
+        self.origin_query = query;
+    }
+
     #[throws(MsSQLSourceError)]
     fn fetch_metadata(&mut self) {
         assert!(!self.queries.is_empty());
 
         let mut conn = self.rt.block_on(self.pool.get())?;
-
-        for (i, query) in self.queries.iter().enumerate() {
-            // assuming all the partition queries yield same schema
-            let l1query = limit1_query_mssql(query)?;
-
-            match self.rt.block_on(conn.query(l1query.as_str(), &[])) {
-                Ok(stream) => {
-                    let row = match self.rt.block_on(stream.into_row())? {
-                        Some(row) => row,
-                        None => continue, // this partition is empty.
-                    };
-
-                    let columns = row.columns();
-
-                    let (names, types) = columns
-                        .iter()
-                        .map(|col| {
-                            (
-                                col.name().to_string(),
-                                MsSQLTypeSystem::from(&col.column_type()),
-                            )
-                        })
-                        .unzip();
-                    self.names = names;
-                    self.schema = types;
-                    return;
-                }
-                Err(e) if i == self.queries.len() - 1 => {
-                    // tried the last query but still get an error
-                    debug!("cannot get metadata for '{}', try next query: {}", query, e);
-                    throw!(e);
-                }
-                Err(_) => {}
+        let first_query = &self.queries[0];
+        let (names, types) = match self.rt.block_on(conn.query(first_query.as_str(), &[])) {
+            Ok(stream) => {
+                let columns = stream.columns().ok_or_else(|| {
+                    anyhow!("MsSQL failed to get the columns of query: {}", first_query)
+                })?;
+                columns
+                    .iter()
+                    .map(|col| {
+                        (
+                            col.name().to_string(),
+                            MsSQLTypeSystem::from(&col.column_type()),
+                        )
+                    })
+                    .unzip()
             }
-        }
-
-        // tried all queries but all get empty result set
-        let stream = self
-            .rt
-            .block_on(conn.query(self.queries[0].as_str(), &[]))?;
-
-        let columns = stream.columns().expect("cannot get column information");
-
-        let (names, types) = columns
-            .iter()
-            .map(|col| {
-                (
-                    col.name().to_string(),
-                    MsSQLTypeSystem::from(&col.column_type()),
-                )
-            })
-            .unzip();
+            Err(e) => {
+                // tried the last query but still get an error
+                debug!(
+                    "cannot get metadata for '{}', try next query: {}",
+                    first_query, e
+                );
+                throw!(e);
+            }
+        };
 
         self.names = names;
         self.schema = types;
+    }
+
+    #[throws(MsSQLSourceError)]
+    fn result_rows(&mut self) -> Option<usize> {
+        match &self.origin_query {
+            Some(q) => {
+                let cxq = CXQuery::Naked(q.clone());
+                let cquery = count_query(&cxq, &MsSqlDialect {})?;
+                let mut conn = self.rt.block_on(self.pool.get())?;
+
+                let stream = self.rt.block_on(conn.query(cquery.as_str(), &[]))?;
+                let row = self
+                    .rt
+                    .block_on(stream.into_row())?
+                    .ok_or_else(|| anyhow!("MsSQL failed to get the count of query: {}", q))?;
+
+                let row: i32 = row.get(0).ok_or(MsSQLSourceError::GetNRowsFailed)?; // the count in mssql is i32
+                Some(row as usize)
+            }
+            None => None,
+        }
     }
 
     fn names(&self) -> Vec<String> {
@@ -176,7 +203,6 @@ where
                 self.rt.clone(),
                 &query,
                 &self.schema,
-                self.buf_size,
             ));
         }
         ret
@@ -190,7 +216,6 @@ pub struct MsSQLSourcePartition {
     schema: Vec<MsSQLTypeSystem>,
     nrows: usize,
     ncols: usize,
-    buf_size: usize,
 }
 
 impl MsSQLSourcePartition {
@@ -199,7 +224,6 @@ impl MsSQLSourcePartition {
         handle: Arc<Runtime>,
         query: &CXQuery<String>,
         schema: &[MsSQLTypeSystem],
-        buf_size: usize,
     ) -> Self {
         Self {
             rt: handle,
@@ -208,7 +232,6 @@ impl MsSQLSourcePartition {
             schema: schema.to_vec(),
             nrows: 0,
             ncols: schema.len(),
-            buf_size,
         }
     }
 }
@@ -219,22 +242,18 @@ impl SourcePartition for MsSQLSourcePartition {
     type Error = MsSQLSourceError;
 
     #[throws(MsSQLSourceError)]
-    fn prepare(&mut self) {
-        self.nrows = match get_limit_mssql(&self.query)? {
-            None => {
-                let mut conn = self.rt.block_on(self.pool.get())?;
-                let cquery = count_query(&self.query, &MsSqlDialect {})?;
+    fn result_rows(&mut self) {
+        let cquery = count_query(&self.query, &MsSqlDialect {})?;
+        let mut conn = self.rt.block_on(self.pool.get())?;
 
-                let stream = self.rt.block_on(conn.query(cquery.as_str(), &[]))?;
-                let row = self.rt.block_on(stream.into_row())?.ok_or_else(|| {
-                    anyhow!("MsSQL failed to get the count of query: {}", self.query)
-                })?;
+        let stream = self.rt.block_on(conn.query(cquery.as_str(), &[]))?;
+        let row = self
+            .rt
+            .block_on(stream.into_row())?
+            .ok_or_else(|| anyhow!("MsSQL failed to get the count of query: {}", self.query))?;
 
-                let row: i32 = row.get(0).ok_or(MsSQLSourceError::GetNRowsFailed)?; // the count in mssql is i32
-                row as usize
-            }
-            Some(n) => n,
-        };
+        let row: i32 = row.get(0).ok_or(MsSQLSourceError::GetNRowsFailed)?; // the count in mssql is i32
+        self.nrows = row as usize;
     }
 
     #[throws(MsSQLSourceError)]
@@ -251,7 +270,7 @@ impl SourcePartition for MsSQLSourcePartition {
                 )
             });
 
-        MsSQLSourceParser::new(self.rt.handle(), rows, &self.schema, self.buf_size)
+        MsSQLSourceParser::new(self.rt.handle(), rows, &self.schema)
     }
 
     fn nrows(&self) -> usize {
@@ -266,7 +285,6 @@ impl SourcePartition for MsSQLSourcePartition {
 pub struct MsSQLSourceParser<'a> {
     rt: &'a Handle,
     iter: OwningHandle<Box<Conn<'a>>, DummyBox<QueryResult<'a>>>,
-    buf_size: usize,
     rowbuf: Vec<Row>,
     ncols: usize,
     current_col: usize,
@@ -278,13 +296,11 @@ impl<'a> MsSQLSourceParser<'a> {
         rt: &'a Handle,
         iter: OwningHandle<Box<Conn<'a>>, DummyBox<QueryResult<'a>>>,
         schema: &[MsSQLTypeSystem],
-        buf_size: usize,
     ) -> Self {
         Self {
             rt,
             iter,
-            buf_size,
-            rowbuf: Vec::with_capacity(buf_size),
+            rowbuf: Vec::with_capacity(DB_BUFFER_SIZE),
             ncols: schema.len(),
             current_row: 0,
             current_col: 0,
@@ -293,25 +309,6 @@ impl<'a> MsSQLSourceParser<'a> {
 
     #[throws(MsSQLSourceError)]
     fn next_loc(&mut self) -> (usize, usize) {
-        if self.current_row >= self.rowbuf.len() {
-            if !self.rowbuf.is_empty() {
-                self.rowbuf.drain(..);
-            }
-
-            for _ in 0..self.buf_size {
-                if let Some(item) = self.rt.block_on(self.iter.next()) {
-                    self.rowbuf.push(item?);
-                } else {
-                    break;
-                }
-            }
-
-            if self.rowbuf.is_empty() {
-                throw!(anyhow!("MsSQL EOF"));
-            }
-            self.current_row = 0;
-            self.current_col = 0;
-        }
         let ret = (self.current_row, self.current_col);
         self.current_row += (self.current_col + 1) / self.ncols;
         self.current_col = (self.current_col + 1) % self.ncols;
@@ -322,6 +319,24 @@ impl<'a> MsSQLSourceParser<'a> {
 impl<'a> PartitionParser<'a> for MsSQLSourceParser<'a> {
     type TypeSystem = MsSQLTypeSystem;
     type Error = MsSQLSourceError;
+
+    #[throws(MsSQLSourceError)]
+    fn fetch_next(&mut self) -> (usize, bool) {
+        if !self.rowbuf.is_empty() {
+            self.rowbuf.drain(..);
+        }
+
+        for _ in 0..DB_BUFFER_SIZE {
+            if let Some(item) = self.rt.block_on(self.iter.next()) {
+                self.rowbuf.push(item?);
+            } else {
+                break;
+            }
+        }
+        self.current_row = 0;
+        self.current_col = 0;
+        (self.rowbuf.len(), self.rowbuf.len() < DB_BUFFER_SIZE)
+    }
 }
 
 macro_rules! impl_produce {

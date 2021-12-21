@@ -10,6 +10,7 @@ from .. import read_sql
 @pytest.fixture(scope="module")  # type: ignore
 def mysql_url() -> str:
     conn = os.environ["MYSQL_URL"]
+    # conn = os.environ["MARIADB_URL"]
     return conn
 
 
@@ -48,10 +49,130 @@ def test_mysql_with_partition(mysql_url: str) -> None:
             "test_null": pd.Series([None, None, None, None, None, None], dtype="Int64"),
         },
     )
+    df.sort_values(by="test_int", inplace=True, ignore_index=True)
     assert_frame_equal(df, expected, check_names=True)
 
 
-def test_read_sql_with_partition_without_partition_range(mysql_url: str) -> None:
+def test_mysql_without_partition(mysql_url: str) -> None:
+    query = "SELECT * FROM test_table"
+    df = read_sql(mysql_url, query)
+    expected = pd.DataFrame(
+        index=range(6),
+        data={
+            "test_int": pd.Series([1, 2, 3, 4, 5, 6], dtype="Int64"),
+            "test_float": pd.Series([1.1, 2.2, 3.3, 4.4, 5.5, 6.6], dtype="float64"),
+            "test_enum": pd.Series(
+                ["odd", "even", "odd", "even", "odd", "even"], dtype="object"
+            ),
+            "test_null": pd.Series([None, None, None, None, None, None], dtype="Int64"),
+        },
+    )
+    assert_frame_equal(df, expected, check_names=True)
+
+
+def test_mysql_limit_without_partition(mysql_url: str) -> None:
+    query = "SELECT * FROM test_table limit 3"
+    df = read_sql(mysql_url, query)
+    expected = pd.DataFrame(
+        index=range(3),
+        data={
+            "test_int": pd.Series([1, 2, 3], dtype="Int64"),
+            "test_float": pd.Series([1.1, 2.2, 3.3], dtype="float64"),
+            "test_enum": pd.Series(["odd", "even", "odd"], dtype="object"),
+            "test_null": pd.Series([None, None, None], dtype="Int64"),
+        },
+    )
+    assert_frame_equal(df, expected, check_names=True)
+
+
+def test_mysql_limit_large_without_partition(mysql_url: str) -> None:
+    query = "SELECT * FROM test_table limit 10"
+    df = read_sql(mysql_url, query)
+    expected = pd.DataFrame(
+        index=range(6),
+        data={
+            "test_int": pd.Series([1, 2, 3, 4, 5, 6], dtype="Int64"),
+            "test_float": pd.Series([1.1, 2.2, 3.3, 4.4, 5.5, 6.6], dtype="float64"),
+            "test_enum": pd.Series(
+                ["odd", "even", "odd", "even", "odd", "even"], dtype="object"
+            ),
+            "test_null": pd.Series([None, None, None, None, None, None], dtype="Int64"),
+        },
+    )
+    assert_frame_equal(df, expected, check_names=True)
+
+
+def test_mysql_with_partition(mysql_url: str) -> None:
+    query = "SELECT * FROM test_table"
+    df = read_sql(
+        mysql_url,
+        query,
+        partition_on="test_int",
+        partition_range=(0, 2000),
+        partition_num=3,
+    )
+    expected = pd.DataFrame(
+        index=range(6),
+        data={
+            "test_int": pd.Series([1, 2, 3, 4, 5, 6], dtype="Int64"),
+            "test_float": pd.Series([1.1, 2.2, 3.3, 4.4, 5.5, 6.6], dtype="float64"),
+            "test_enum": pd.Series(
+                ["odd", "even", "odd", "even", "odd", "even"], dtype="object"
+            ),
+            "test_null": pd.Series([None, None, None, None, None, None], dtype="Int64"),
+        },
+    )
+    df.sort_values(by="test_int", inplace=True, ignore_index=True)
+    assert_frame_equal(df, expected, check_names=True)
+
+
+def test_mysql_limit_with_partition(mysql_url: str) -> None:
+    query = "SELECT * FROM test_table limit 3"
+    df = read_sql(
+        mysql_url,
+        query,
+        partition_on="test_int",
+        partition_range=(0, 2000),
+        partition_num=3,
+    )
+    expected = pd.DataFrame(
+        index=range(3),
+        data={
+            "test_int": pd.Series([1, 2, 3], dtype="Int64"),
+            "test_float": pd.Series([1.1, 2.2, 3.3], dtype="float64"),
+            "test_enum": pd.Series(["odd", "even", "odd"], dtype="object"),
+            "test_null": pd.Series([None, None, None], dtype="Int64"),
+        },
+    )
+    df.sort_values(by="test_int", inplace=True, ignore_index=True)
+    assert_frame_equal(df, expected, check_names=True)
+
+
+def test_mysql_limit_large_with_partition(mysql_url: str) -> None:
+    query = "SELECT * FROM test_table limit 10"
+    df = read_sql(
+        mysql_url,
+        query,
+        partition_on="test_int",
+        partition_range=(0, 2000),
+        partition_num=3,
+    )
+    expected = pd.DataFrame(
+        index=range(6),
+        data={
+            "test_int": pd.Series([1, 2, 3, 4, 5, 6], dtype="Int64"),
+            "test_float": pd.Series([1.1, 2.2, 3.3, 4.4, 5.5, 6.6], dtype="float64"),
+            "test_enum": pd.Series(
+                ["odd", "even", "odd", "even", "odd", "even"], dtype="object"
+            ),
+            "test_null": pd.Series([None, None, None, None, None, None], dtype="Int64"),
+        },
+    )
+    df.sort_values(by="test_int", inplace=True, ignore_index=True)
+    assert_frame_equal(df, expected, check_names=True)
+
+
+def test_mysql_with_partition_without_partition_range(mysql_url: str) -> None:
     query = "SELECT * FROM test_table where test_float > 3"
     df = read_sql(
         mysql_url,
@@ -59,7 +180,6 @@ def test_read_sql_with_partition_without_partition_range(mysql_url: str) -> None
         partition_on="test_int",
         partition_num=3,
     )
-
     expected = pd.DataFrame(
         index=range(4),
         data={
@@ -69,6 +189,7 @@ def test_read_sql_with_partition_without_partition_range(mysql_url: str) -> None
             "test_null": pd.Series([None, None, None, None], dtype="Int64"),
         },
     )
+    df.sort_values(by="test_int", inplace=True, ignore_index=True)
     assert_frame_equal(df, expected, check_names=True)
 
 
@@ -89,6 +210,7 @@ def test_mysql_manual_partition(mysql_url: str) -> None:
             "test_null": pd.Series([None, None, None, None, None, None], dtype="Int64"),
         },
     )
+    df.sort_values(by="test_int", inplace=True, ignore_index=True)
     assert_frame_equal(df, expected, check_names=True)
 
 
@@ -106,6 +228,7 @@ def test_mysql_selection_and_projection(mysql_url: str) -> None:
             "test_int": pd.Series([1, 2, 3, 4], dtype="Int64"),
         },
     )
+    df.sort_values(by="test_int", inplace=True, ignore_index=True)
     assert_frame_equal(df, expected, check_names=True)
 
 
@@ -132,6 +255,7 @@ def test_mysql_join(mysql_url: str) -> None:
             ),
         },
     )
+    df.sort_values(by="test_int", inplace=True, ignore_index=True)
     assert_frame_equal(df, expected, check_names=True)
 
 
@@ -178,8 +302,18 @@ def test_mysql_types_binary(mysql_url: str) -> None:
             "test_longlong": pd.Series(
                 [-9223372036854775808, 9223372036854775807, None], dtype="Int64"
             ),
+            "test_tiny_unsigned": pd.Series([None, 255, 0], dtype="Int64"),
+            "test_short_unsigned": pd.Series([None, 65535, 0], dtype="Int64"),
+            "test_int24_unsigned": pd.Series([None, 16777215, 0], dtype="Int64"),
+            "test_long_unsigned": pd.Series([None, 4294967295, 0], dtype="Int64"),
+            "test_longlong_unsigned": pd.Series(
+                [None, 18446744070000001024.0, 0.0], dtype="float"
+            ),
+            "test_long_notnull": pd.Series([1, 2147483647, -2147483648], dtype="int64"),
+            "test_short_unsigned_notnull": pd.Series([1, 65535, 0], dtype="int64"),
             "test_float": pd.Series([None, -1.1e-38, 3.4e38], dtype="float"),
             "test_double": pd.Series([-2.2e-308, None, 1.7e308], dtype="float"),
+            "test_double_notnull": pd.Series([1.2345, -1.1e-3, 1.7e30], dtype="float"),
             "test_year": pd.Series([1901, 2155, None], dtype="Int64"),
             "test_tinyblob": pd.Series(
                 [None, b"tinyblob2", b"tinyblob3"], dtype="object"
@@ -196,7 +330,12 @@ def test_mysql_types_binary(mysql_url: str) -> None:
             "test_enum": pd.Series(["apple", None, "mango"], dtype="object"),
             "test_json": pd.Series(
                 ['{"age":1,"name":"piggy"}', '{"age":2,"name":"kitty"}', None],
+                # mariadb
+                # [b'{"name": "piggy", "age": 1}', b'{"name": "kitty", "age": 2}', None],
                 dtype="object",
+            ),
+            "test_mediumtext": pd.Series(
+                [None, b"", b"medium text!!!!"], dtype="object"
             ),
         },
     )
@@ -232,8 +371,18 @@ def test_mysql_types_text(mysql_url: str) -> None:
             "test_longlong": pd.Series(
                 [-9223372036854775808, 9223372036854775807, None], dtype="Int64"
             ),
+            "test_tiny_unsigned": pd.Series([None, 255, 0], dtype="Int64"),
+            "test_short_unsigned": pd.Series([None, 65535, 0], dtype="Int64"),
+            "test_int24_unsigned": pd.Series([None, 16777215, 0], dtype="Int64"),
+            "test_long_unsigned": pd.Series([None, 4294967295, 0], dtype="Int64"),
+            "test_longlong_unsigned": pd.Series(
+                [None, 18446744070000001024.0, 0.0], dtype="float"
+            ),
+            "test_long_notnull": pd.Series([1, 2147483647, -2147483648], dtype="int64"),
+            "test_short_unsigned_notnull": pd.Series([1, 65535, 0], dtype="int64"),
             "test_float": pd.Series([None, -1.1e-38, 3.4e38], dtype="float"),
             "test_double": pd.Series([-2.2e-308, None, 1.7e308], dtype="float"),
+            "test_double_notnull": pd.Series([1.2345, -1.1e-3, 1.7e30], dtype="float"),
             "test_year": pd.Series([1901, 2155, None], dtype="Int64"),
             "test_tinyblob": pd.Series(
                 [None, b"tinyblob2", b"tinyblob3"], dtype="object"
@@ -250,7 +399,12 @@ def test_mysql_types_text(mysql_url: str) -> None:
             "test_enum": pd.Series(["apple", None, "mango"], dtype="object"),
             "test_json": pd.Series(
                 ['{"age":1,"name":"piggy"}', '{"age":2,"name":"kitty"}', None],
+                # mariadb
+                # [b'{"name": "piggy", "age": 1}', b'{"name": "kitty", "age": 2}', None],
                 dtype="object",
+            ),
+            "test_mediumtext": pd.Series(
+                [None, b"", b"medium text!!!!"], dtype="object"
             ),
         },
     )
@@ -295,6 +449,22 @@ def test_empty_result_on_some_partition(mysql_url: str) -> None:
             "test_float": pd.Series([6.6], dtype="float64"),
             "test_enum": pd.Series(["even"], dtype="object"),
             "test_null": pd.Series([None], dtype="Int64"),
+        },
+    )
+    assert_frame_equal(df, expected, check_names=True)
+
+
+def test_mysql_cte(mysql_url: str) -> None:
+    query = "with test_cte (test_int, test_enum) as (select test_int, test_enum from test_table where test_float > 2) select test_int, test_enum from test_cte"
+    df = read_sql(mysql_url, query, partition_on="test_int", partition_num=3)
+    df.sort_values(by="test_int", inplace=True, ignore_index=True)
+    expected = pd.DataFrame(
+        index=range(5),
+        data={
+            "test_int": pd.Series([2, 3, 4, 5, 6], dtype="Int64"),
+            "test_enum": pd.Series(
+                ["even", "odd", "even", "odd", "even"], dtype="object"
+            ),
         },
     )
     assert_frame_equal(df, expected, check_names=True)

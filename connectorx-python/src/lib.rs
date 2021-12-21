@@ -2,6 +2,7 @@
 #![allow(incomplete_features)]
 
 pub mod arrow;
+pub mod constants;
 mod errors;
 pub mod pandas;
 pub mod read_sql;

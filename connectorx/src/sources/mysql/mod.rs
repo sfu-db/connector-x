@@ -4,11 +4,12 @@ mod errors;
 mod typesystem;
 
 pub use self::errors::MySQLSourceError;
+use crate::constants::DB_BUFFER_SIZE;
 use crate::{
     data_order::DataOrder,
     errors::ConnectorXError,
     sources::{PartitionParser, Produce, Source, SourcePartition},
-    sql::{count_query, get_limit, CXQuery},
+    sql::{count_query, CXQuery},
 };
 use anyhow::anyhow;
 use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
@@ -30,35 +31,37 @@ type MysqlConn = PooledConnection<MysqlManager>;
 pub enum BinaryProtocol {}
 pub enum TextProtocol {}
 
+#[throws(MySQLSourceError)]
+fn get_total_rows(conn: &mut MysqlConn, query: &CXQuery<String>) -> usize {
+    conn.query_first(&count_query(query, &MySqlDialect {})?)?
+        .ok_or_else(|| anyhow!("mysql failed to get the count of query: {}", query))?
+}
+
 pub struct MySQLSource<P> {
     pool: Pool<MysqlManager>,
+    origin_query: Option<String>,
     queries: Vec<CXQuery<String>>,
     names: Vec<String>,
     schema: Vec<MySQLTypeSystem>,
-    buf_size: usize,
     _protocol: PhantomData<P>,
 }
 
 impl<P> MySQLSource<P> {
     #[throws(MySQLSourceError)]
     pub fn new(conn: &str, nconn: usize) -> Self {
-        let manager = MysqlConnectionManager::new(OptsBuilder::from_opts(Opts::from_url(&conn)?));
+        let manager = MysqlConnectionManager::new(OptsBuilder::from_opts(Opts::from_url(conn)?));
         let pool = r2d2::Pool::builder()
             .max_size(nconn as u32)
             .build(manager)?;
 
         Self {
             pool,
+            origin_query: None,
             queries: vec![],
             names: vec![],
             schema: vec![],
-            buf_size: 32,
             _protocol: PhantomData,
         }
-    }
-
-    pub fn buf_size(&mut self, buf_size: usize) {
-        self.buf_size = buf_size;
     }
 }
 
@@ -84,6 +87,10 @@ where
         self.queries = queries.iter().map(|q| q.map(Q::to_string)).collect();
     }
 
+    fn set_origin_query(&mut self, query: Option<String>) {
+        self.origin_query = query;
+    }
+
     #[throws(MySQLSourceError)]
     fn fetch_metadata(&mut self) {
         assert!(!self.queries.is_empty());
@@ -98,12 +105,25 @@ where
             .map(|col| {
                 (
                     col.name_str().to_string(),
-                    MySQLTypeSystem::from(&col.column_type()),
+                    MySQLTypeSystem::from((&col.column_type(), &col.flags())),
                 )
             })
             .unzip();
         self.names = names;
         self.schema = types;
+    }
+
+    #[throws(MySQLSourceError)]
+    fn result_rows(&mut self) -> Option<usize> {
+        match &self.origin_query {
+            Some(q) => {
+                let cxq = CXQuery::Naked(q.clone());
+                let mut conn = self.pool.get()?;
+                let nrows = get_total_rows(&mut conn, &cxq)?;
+                Some(nrows)
+            }
+            None => None,
+        }
     }
 
     fn names(&self) -> Vec<String> {
@@ -119,12 +139,7 @@ where
         let mut ret = vec![];
         for query in self.queries {
             let conn = self.pool.get()?;
-            ret.push(MySQLSourcePartition::new(
-                conn,
-                &query,
-                &self.schema,
-                self.buf_size,
-            ));
+            ret.push(MySQLSourcePartition::new(conn, &query, &self.schema));
         }
         ret
     }
@@ -136,24 +151,17 @@ pub struct MySQLSourcePartition<P> {
     schema: Vec<MySQLTypeSystem>,
     nrows: usize,
     ncols: usize,
-    buf_size: usize,
     _protocol: PhantomData<P>,
 }
 
 impl<P> MySQLSourcePartition<P> {
-    pub fn new(
-        conn: MysqlConn,
-        query: &CXQuery<String>,
-        schema: &[MySQLTypeSystem],
-        buf_size: usize,
-    ) -> Self {
+    pub fn new(conn: MysqlConn, query: &CXQuery<String>, schema: &[MySQLTypeSystem]) -> Self {
         Self {
             conn,
             query: query.clone(),
             schema: schema.to_vec(),
             nrows: 0,
             ncols: schema.len(),
-            buf_size,
             _protocol: PhantomData,
         }
     }
@@ -165,26 +173,15 @@ impl SourcePartition for MySQLSourcePartition<BinaryProtocol> {
     type Error = MySQLSourceError;
 
     #[throws(MySQLSourceError)]
-    fn prepare(&mut self) {
-        self.nrows = match get_limit(&self.query, &MySqlDialect {})? {
-            None => {
-                let row: usize = self
-                    .conn
-                    .query_first(&count_query(&self.query, &MySqlDialect {})?)?
-                    .ok_or_else(|| {
-                        anyhow!("mysql failed to get the count of query: {}", self.query)
-                    })?;
-                row
-            }
-            Some(n) => n,
-        };
+    fn result_rows(&mut self) {
+        self.nrows = get_total_rows(&mut self.conn, &self.query)?;
     }
 
     #[throws(MySQLSourceError)]
     fn parser(&mut self) -> Self::Parser<'_> {
         let stmt = self.conn.prep(self.query.as_str())?;
         let iter = self.conn.exec_iter(stmt, ())?;
-        MySQLBinarySourceParser::new(iter, &self.schema, self.buf_size)
+        MySQLBinarySourceParser::new(iter, &self.schema)
     }
 
     fn nrows(&self) -> usize {
@@ -202,26 +199,15 @@ impl SourcePartition for MySQLSourcePartition<TextProtocol> {
     type Error = MySQLSourceError;
 
     #[throws(MySQLSourceError)]
-    fn prepare(&mut self) {
-        self.nrows = match get_limit(&self.query, &MySqlDialect {})? {
-            None => {
-                let row: usize = self
-                    .conn
-                    .query_first(&count_query(&self.query, &MySqlDialect {})?)?
-                    .ok_or_else(|| {
-                        anyhow!("mysql failed to get the count of query: {}", self.query)
-                    })?;
-                row
-            }
-            Some(n) => n,
-        };
+    fn result_rows(&mut self) {
+        self.nrows = get_total_rows(&mut self.conn, &self.query)?;
     }
 
     #[throws(MySQLSourceError)]
     fn parser(&mut self) -> Self::Parser<'_> {
         let query = self.query.clone();
         let iter = self.conn.query_iter(query)?;
-        MySQLTextSourceParser::new(iter, &self.schema, self.buf_size)
+        MySQLTextSourceParser::new(iter, &self.schema)
     }
 
     fn nrows(&self) -> usize {
@@ -235,7 +221,6 @@ impl SourcePartition for MySQLSourcePartition<TextProtocol> {
 
 pub struct MySQLBinarySourceParser<'a> {
     iter: QueryResult<'a, 'a, 'a, Binary>,
-    buf_size: usize,
     rowbuf: Vec<Row>,
     ncols: usize,
     current_col: usize,
@@ -243,15 +228,10 @@ pub struct MySQLBinarySourceParser<'a> {
 }
 
 impl<'a> MySQLBinarySourceParser<'a> {
-    pub fn new(
-        iter: QueryResult<'a, 'a, 'a, Binary>,
-        schema: &[MySQLTypeSystem],
-        buf_size: usize,
-    ) -> Self {
+    pub fn new(iter: QueryResult<'a, 'a, 'a, Binary>, schema: &[MySQLTypeSystem]) -> Self {
         Self {
             iter,
-            buf_size,
-            rowbuf: Vec::with_capacity(buf_size),
+            rowbuf: Vec::with_capacity(DB_BUFFER_SIZE),
             ncols: schema.len(),
             current_row: 0,
             current_col: 0,
@@ -260,25 +240,6 @@ impl<'a> MySQLBinarySourceParser<'a> {
 
     #[throws(MySQLSourceError)]
     fn next_loc(&mut self) -> (usize, usize) {
-        if self.current_row >= self.rowbuf.len() {
-            if !self.rowbuf.is_empty() {
-                self.rowbuf.drain(..);
-            }
-
-            for _ in 0..self.buf_size {
-                if let Some(item) = self.iter.next() {
-                    self.rowbuf.push(item?);
-                } else {
-                    break;
-                }
-            }
-
-            if self.rowbuf.is_empty() {
-                throw!(anyhow!("Mysql EOF"));
-            }
-            self.current_row = 0;
-            self.current_col = 0;
-        }
         let ret = (self.current_row, self.current_col);
         self.current_row += (self.current_col + 1) / self.ncols;
         self.current_col = (self.current_col + 1) % self.ncols;
@@ -289,6 +250,25 @@ impl<'a> MySQLBinarySourceParser<'a> {
 impl<'a> PartitionParser<'a> for MySQLBinarySourceParser<'a> {
     type TypeSystem = MySQLTypeSystem;
     type Error = MySQLSourceError;
+
+    #[throws(MySQLSourceError)]
+    fn fetch_next(&mut self) -> (usize, bool) {
+        if !self.rowbuf.is_empty() {
+            self.rowbuf.drain(..);
+        }
+
+        for _ in 0..DB_BUFFER_SIZE {
+            if let Some(item) = self.iter.next() {
+                self.rowbuf.push(item?);
+            } else {
+                break;
+            }
+        }
+        self.current_row = 0;
+        self.current_col = 0;
+
+        (self.rowbuf.len(), self.rowbuf.len() < DB_BUFFER_SIZE)
+    }
 }
 
 macro_rules! impl_produce_binary {
@@ -324,6 +304,10 @@ impl_produce_binary!(
     i16,
     i32,
     i64,
+    u8,
+    u16,
+    u32,
+    u64,
     f32,
     f64,
     NaiveDate,
@@ -337,7 +321,6 @@ impl_produce_binary!(
 
 pub struct MySQLTextSourceParser<'a> {
     iter: QueryResult<'a, 'a, 'a, Text>,
-    buf_size: usize,
     rowbuf: Vec<Row>,
     ncols: usize,
     current_col: usize,
@@ -345,15 +328,10 @@ pub struct MySQLTextSourceParser<'a> {
 }
 
 impl<'a> MySQLTextSourceParser<'a> {
-    pub fn new(
-        iter: QueryResult<'a, 'a, 'a, Text>,
-        schema: &[MySQLTypeSystem],
-        buf_size: usize,
-    ) -> Self {
+    pub fn new(iter: QueryResult<'a, 'a, 'a, Text>, schema: &[MySQLTypeSystem]) -> Self {
         Self {
             iter,
-            buf_size,
-            rowbuf: Vec::with_capacity(buf_size),
+            rowbuf: Vec::with_capacity(DB_BUFFER_SIZE),
             ncols: schema.len(),
             current_row: 0,
             current_col: 0,
@@ -362,25 +340,6 @@ impl<'a> MySQLTextSourceParser<'a> {
 
     #[throws(MySQLSourceError)]
     fn next_loc(&mut self) -> (usize, usize) {
-        if self.current_row >= self.rowbuf.len() {
-            if !self.rowbuf.is_empty() {
-                self.rowbuf.drain(..);
-            }
-
-            for _ in 0..self.buf_size {
-                if let Some(item) = self.iter.next() {
-                    self.rowbuf.push(item?);
-                } else {
-                    break;
-                }
-            }
-
-            if self.rowbuf.is_empty() {
-                throw!(anyhow!("Mysql EOF"));
-            }
-            self.current_row = 0;
-            self.current_col = 0;
-        }
         let ret = (self.current_row, self.current_col);
         self.current_row += (self.current_col + 1) / self.ncols;
         self.current_col = (self.current_col + 1) % self.ncols;
@@ -391,6 +350,23 @@ impl<'a> MySQLTextSourceParser<'a> {
 impl<'a> PartitionParser<'a> for MySQLTextSourceParser<'a> {
     type TypeSystem = MySQLTypeSystem;
     type Error = MySQLSourceError;
+
+    #[throws(MySQLSourceError)]
+    fn fetch_next(&mut self) -> (usize, bool) {
+        if !self.rowbuf.is_empty() {
+            self.rowbuf.drain(..);
+        }
+        for _ in 0..DB_BUFFER_SIZE {
+            if let Some(item) = self.iter.next() {
+                self.rowbuf.push(item?);
+            } else {
+                break;
+            }
+        }
+        self.current_row = 0;
+        self.current_col = 0;
+        (self.rowbuf.len(), self.rowbuf.len() < DB_BUFFER_SIZE)
+    }
 }
 
 macro_rules! impl_produce_text {
@@ -426,6 +402,10 @@ impl_produce_text!(
     i16,
     i32,
     i64,
+    u8,
+    u16,
+    u32,
+    u64,
     f32,
     f64,
     NaiveDate,

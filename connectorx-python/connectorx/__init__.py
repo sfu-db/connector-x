@@ -20,47 +20,50 @@ def read_sql(
     query: Union[List[str], str],
     *,
     return_type: str = "pandas",
-    protocol: str = "binary",
+    protocol: Optional[str] = None,
     partition_on: Optional[str] = None,
     partition_range: Optional[Tuple[int, int]] = None,
     partition_num: Optional[int] = None,
     index_col: Optional[str] = None,
 ):
     """
-    Run the SQL query, download the data from database into a Pandas dataframe.
+    Run the SQL query, download the data from database into a dataframe.
 
     Parameters
     ==========
     conn
       the connection string.
     query
-      a SQL query or a list of SQL query.
+      a SQL query or a list of SQL queries.
     return_type
-      the return type of this function. It can be "arrow", "pandas", "modin", "dask" or "polars".
+      the return type of this function; one of "arrow", "pandas", "modin", "dask" or "polars".
+    protocol
+      backend-specific transfer protocol directive; defaults to 'binary' (except for redshift
+      connection strings, where 'cursor' will be used instead).
     partition_on
-      the column to partition the result.
+      the column on which to partition the result.
     partition_range
       the value range of the partition column.
     partition_num
-      how many partition to generate.
+      how many partitions to generate.
     index_col
-      the index column to set, only applicable for return type "pandas", "modin", "dask".
+      the index column to set; only applicable for return type "pandas", "modin", "dask".
 
     Examples
     ========
-    Read a DataFrame from a SQL using a single thread:
+    Read a DataFrame from a SQL query using a single thread:
 
     >>> postgres_url = "postgresql://username:password@server:port/database"
     >>> query = "SELECT * FROM lineitem"
     >>> read_sql(postgres_url, query)
 
-    Read a DataFrame parallelly using 10 threads by automatically partitioning the provided SQL on the partition column:
+    Read a DataFrame in parallel using 10 threads by automatically partitioning the provided SQL on the partition column:
 
     >>> postgres_url = "postgresql://username:password@server:port/database"
     >>> query = "SELECT * FROM lineitem"
     >>> read_sql(postgres_url, query, partition_on="partition_col", partition_num=10)
 
-    Read a DataFrame parallelly using 2 threads by manually providing two partition SQLs:
+    Read a DataFrame in parallel using 2 threads by explicitly providing two SQL queries:
 
     >>> postgres_url = "postgresql://username:password@server:port/database"
     >>> queries = ["SELECT * FROM lineitem WHERE partition_col <= 10", "SELECT * FROM lineitem WHERE partition_col > 10"]
@@ -92,6 +95,19 @@ def read_sql(
             raise ValueError("Partition on multiple queries is not supported.")
     else:
         raise ValueError("query must be either str or a list of str")
+
+    if not protocol:
+        # note: redshift/clickhouse are not compatible with the 'binary' protocol, and use other database
+        # drivers to connect. set a compatible protocol and masquerade as the appropriate backend.
+        backend, connection_details = conn.split(":",1) if conn else ("","")
+        if "redshift" in backend:
+            conn = f"postgresql:{connection_details}"
+            protocol = "cursor"
+        elif "clickhouse" in backend:
+            conn = f"mysql:{connection_details}"
+            protocol = "text"
+        else:
+            protocol = "binary"
 
     if return_type in {"modin", "dask", "pandas"}:
         try:
@@ -146,7 +162,11 @@ def read_sql(
             except ModuleNotFoundError:
                 raise ValueError("You need to install polars first")
 
-            df = pl.DataFrame.from_arrow(df)
+            try: 
+                df = pl.DataFrame.from_arrow(df)
+            except AttributeError:
+                # api change for polars >= 0.8.*
+                df = pl.from_arrow(df)
     else:
         raise ValueError(return_type)
 

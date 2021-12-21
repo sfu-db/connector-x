@@ -16,8 +16,14 @@ use crate::typesystem::{TypeAssoc, TypeSystem};
 pub trait Destination: Sized {
     const DATA_ORDERS: &'static [DataOrder];
     type TypeSystem: TypeSystem;
-    type Partition<'a>: DestinationPartition<'a, TypeSystem = Self::TypeSystem, Error = Self::Error>;
+    type Partition<'a>: DestinationPartition<'a, TypeSystem = Self::TypeSystem, Error = Self::Error>
+    where
+        Self: 'a;
     type Error: From<ConnectorXError> + Send;
+
+    /// Specify whether the destination needs total rows in advance
+    /// in order to pre-allocate the buffer.
+    fn needs_count(&self) -> bool;
 
     /// Construct the `Destination`.
     /// This allocates the memory based on the types of each columns
@@ -31,7 +37,7 @@ pub trait Destination: Sized {
     ) -> Result<(), Self::Error>;
 
     /// Create a bunch of partition destinations, with each write `count` number of rows.
-    fn partition(&mut self, counts: &[usize]) -> Result<Vec<Self::Partition<'_>>, Self::Error>;
+    fn partition(&mut self, counts: usize) -> Result<Vec<Self::Partition<'_>>, Self::Error>;
     /// Return the schema of the destination.
     fn schema(&self) -> &[Self::TypeSystem];
 }
@@ -54,15 +60,13 @@ pub trait DestinationPartition<'a>: Send {
     }
 
     /// Number of rows this `PartitionDestination` controls.
-    fn nrows(&self) -> usize;
-
-    /// Number of rows this `PartitionDestination` controls.
     fn ncols(&self) -> usize;
 
     /// Final clean ups
-    fn finalize(&mut self) -> Result<(), Self::Error> {
-        Ok(())
-    }
+    fn finalize(&mut self) -> Result<(), Self::Error>;
+
+    /// Aquire n rows in final destination
+    fn aquire_row(&mut self, n: usize) -> Result<usize, Self::Error>;
 }
 
 /// A type implemented `Consume<T>` means that it can consume a value `T` by adding it to it's own buffer.
