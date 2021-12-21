@@ -53,7 +53,7 @@ impl OracleSource {
     #[throws(OracleSourceError)]
     pub fn new(conn: &str, nconn: usize) -> Self {
         let conn = Url::parse(conn)?;
-        let user = decode(conn.username().unwrap_or(""))?.into_owned();
+        let user = decode(conn.username())?.into_owned();
         let password = decode(conn.password().unwrap_or(""))?.into_owned();
         let host = "//".to_owned()
             + decode(conn.host_str().unwrap_or("localhost"))?
