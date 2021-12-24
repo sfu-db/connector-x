@@ -1,9 +1,12 @@
-# ConnectorX [![status][ci_badge]][ci_page] [![discussions][discussion_badge]][discussion_page]
+# ConnectorX [![status][ci_badge]][ci_page] [![discussions][discussion_badge]][discussion_page] [![Downloads][download_badge]][download_page]
 
 [ci_badge]: https://github.com/sfu-db/connector-x/workflows/ci/badge.svg
 [ci_page]: https://github.com/sfu-db/connector-x/actions
 [discussion_badge]: https://img.shields.io/badge/Forum-Github%20Discussions-blue
 [discussion_page]: https://github.com/sfu-db/connector-x/discussions
+[download_badge]: https://pepy.tech/badge/connectorx
+[download_page]: https://pepy.tech/project/connectorx
+
 
 Load data from <img src="https://raw.githubusercontent.com/sfu-db/connector-x/main/assets/sources.gif" width="6.5%" style="margin-bottom: -2px"/> to <img src="https://raw.githubusercontent.com/sfu-db/connector-x/main/assets/destinations.gif" width="7%" style="margin-bottom: -2px"/>, the fastest way.
 

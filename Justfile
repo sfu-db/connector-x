@@ -20,9 +20,6 @@ test-feature-gate:
     cargo c --features dst_arrow
     cargo c --features dst_arrow2
 
-test-bigquery:
-    cargo test --test test_bigquery --features src_bigquery --features dst_arrow -- --nocapture
-
 bootstrap-python:
     cp README.md connectorx-python/README.md
     cd connectorx-python && poetry install
