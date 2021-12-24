@@ -5,7 +5,7 @@ use connectorx::{
         bigquery::BigQueryDialect,
         mssql::{mssql_config, FloatN, IntN, MsSQLTypeSystem},
         mysql::{MySQLSourceError, MySQLTypeSystem},
-        oracle::OracleDialect,
+        oracle::{connect_oracle, OracleDialect},
         postgres::{rewrite_tls_args, PostgresTypeSystem},
     },
     sql::{
@@ -16,7 +16,6 @@ use connectorx::{
 use fehler::{throw, throws};
 use gcp_bigquery_client;
 use r2d2_mysql::mysql::{prelude::Queryable, Opts, Pool, Row};
-use r2d2_oracle::oracle::Connection as oracle_conn;
 use rusqlite::{types::Type, Connection};
 use rust_decimal::{prelude::ToPrimitive, Decimal};
 use rust_decimal_macros::dec;
@@ -27,7 +26,6 @@ use tokio::net::TcpStream;
 use tokio::runtime::Runtime;
 use tokio_util::compat::TokioAsyncWriteCompatExt;
 use url::Url;
-use urlencoding::decode;
 
 pub enum SourceType {
     Postgres,
@@ -417,15 +415,8 @@ fn mssql_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
 
 #[throws(ConnectorXPythonError)]
 fn oracle_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
-    let conn = Url::parse(conn.as_str())?;
-    let user = decode(conn.username())?.into_owned();
-    let password = decode(conn.password().unwrap_or(""))?.into_owned();
-    let host = "//".to_owned()
-        + decode(conn.host_str().unwrap_or("localhost"))?
-            .into_owned()
-            .as_str()
-        + conn.path();
-    let conn = oracle_conn::connect(user.as_str(), password.as_str(), host)?;
+    let connector = connect_oracle(conn)?;
+    let conn = connector.connect()?;
     let range_query = get_partition_range_query(query, col, &OracleDialect {})?;
     let row = conn.query_row(range_query.as_str(), &[])?;
     let min_v: i64 = row.get(0).unwrap_or(0);

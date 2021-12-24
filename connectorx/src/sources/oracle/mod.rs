@@ -11,7 +11,10 @@ use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
 use fehler::{throw, throws};
 use log::debug;
 use r2d2::{Pool, PooledConnection};
-use r2d2_oracle::{oracle::Row, OracleConnectionManager};
+use r2d2_oracle::{
+    oracle::{Connector, Row},
+    OracleConnectionManager,
+};
 use url::Url;
 type OracleManager = OracleConnectionManager;
 type OracleConn = PooledConnection<OracleManager>;
@@ -20,7 +23,6 @@ pub use self::errors::OracleSourceError;
 use crate::constants::DB_BUFFER_SIZE;
 use r2d2_oracle::oracle::ResultSet;
 use sqlparser::dialect::Dialect;
-use std::env;
 pub use typesystem::OracleTypeSystem;
 use urlencoding::decode;
 
@@ -49,25 +51,28 @@ pub struct OracleSource {
     schema: Vec<OracleTypeSystem>,
 }
 
+#[throws(OracleSourceError)]
+pub fn connect_oracle(conn: &Url) -> Connector {
+    let user = decode(conn.username())?.into_owned();
+    let password = decode(conn.password().unwrap_or(""))?.into_owned();
+    let host = decode(conn.host_str().unwrap_or("localhost"))?.into_owned();
+    let port = conn.port().unwrap_or(1521);
+    let path = decode(conn.path())?.into_owned();
+
+    let conn_str = format!("//{}:{}{}", host, port, path);
+    let mut connector = oracle::Connector::new(user.as_str(), password.as_str(), conn_str.as_str());
+    if user.is_empty() && password.is_empty() && host == "localhost" {
+        debug!("No username or password provided, assuming system auth.");
+        connector.external_auth(true);
+    }
+    connector
+}
+
 impl OracleSource {
     #[throws(OracleSourceError)]
     pub fn new(conn: &str, nconn: usize) -> Self {
         let conn = Url::parse(conn)?;
-        let user = decode(conn.username())?.into_owned();
-        let password = decode(conn.password().unwrap_or(""))?.into_owned();
-        let host = "//".to_owned()
-            + decode(conn.host_str().unwrap_or("localhost"))?
-                .into_owned()
-                .as_str()
-            + conn.path();
-
-        let mut connector = oracle::Connector::new(user.as_str(), password.as_str(), host.as_str());
-
-        if user.is_empty() && password.is_empty() && host == "//localhost" {
-            debug!("No username or password provided, assuming system auth.");
-            connector.external_auth(true);
-        }
-
+        let connector = connect_oracle(&conn)?;
         let manager = OracleConnectionManager::from_connector(connector);
         let pool = r2d2::Pool::builder()
             .max_size(nconn as u32)
