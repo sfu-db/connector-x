@@ -149,6 +149,8 @@ pub mod prelude {
     pub use crate::data_order::{coordinate, DataOrder};
     #[cfg(feature = "dst_arrow")]
     pub use crate::destinations::arrow::ArrowDestination;
+    #[cfg(feature = "dst_arrow2")]
+    pub use crate::destinations::arrow2::Arrow2Destination;
     pub use crate::destinations::{Consume, Destination, DestinationPartition};
     pub use crate::dispatcher::Dispatcher;
     pub use crate::errors::ConnectorXError;

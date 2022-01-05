@@ -1,8 +1,8 @@
 use crate::errors::ConnectorXPythonError;
 use crate::source_router::{SourceConn, SourceType};
-use arrow::record_batch::RecordBatch;
+use arrow2::{datatypes::Field, ffi, record_batch::RecordBatch};
 use connectorx::{
-    destinations::arrow::ArrowDestination,
+    destinations::arrow2::Arrow2Destination as ArrowDestination,
     prelude::*,
     sources::{
         mssql::MsSQLSource,
@@ -15,8 +15,10 @@ use connectorx::{
     },
     sql::CXQuery,
     transports::{
-        MsSQLArrowTransport, MySQLArrowTransport, OracleArrowTransport, PostgresArrowTransport,
-        SQLiteArrowTransport,
+        MsSQLArrow2Transport as MsSQLArrowTransport, MySQLArrow2Transport as MySQLArrowTransport,
+        OracleArrow2Transport as OracleArrowTransport,
+        PostgresArrow2Transport as PostgresArrowTransport,
+        SQLiteArrow2Transport as SQLiteArrowTransport,
     },
 };
 use fehler::throws;
@@ -232,7 +234,18 @@ fn to_ptrs(rbs: Vec<RecordBatch>) -> (Vec<String>, Vec<Vec<(uintptr_t, uintptr_t
         let mut cols = vec![];
 
         for array in rb.columns() {
-            let (array_ptr, schema_ptr) = array.to_raw().expect("c ptr");
+            // let (array_ptr, schema_ptr) = array.to_raw().expect("c ptr");
+            let array_ptr = Box::new(ffi::Ffi_ArrowArray::empty());
+            let schema_ptr = Box::new(ffi::Ffi_ArrowSchema::empty());
+            let array_ptr = Box::into_raw(array_ptr);
+            let schema_ptr = Box::into_raw(schema_ptr);
+            unsafe {
+                ffi::export_field_to_c(
+                    &Field::new("", array.data_type().clone(), true),
+                    schema_ptr,
+                );
+                ffi::export_array_to_c(array.clone(), array_ptr);
+            };
             cols.push((array_ptr as uintptr_t, schema_ptr as uintptr_t));
         }
 
