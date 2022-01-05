@@ -1,8 +1,10 @@
 #[cfg(any(feature = "dst_arrow", feature = "dst_arrow2"))]
 pub(crate) const SECONDS_IN_DAY: i64 = 86_400;
 
+const KILO: usize = 1 << 10;
+
 #[cfg(any(feature = "dst_arrow", feature = "dst_arrow2"))]
-pub const RECORD_BATCH_SIZE: usize = 64000;
+pub const RECORD_BATCH_SIZE: usize = 64 * KILO;
 
 #[cfg(any(
     feature = "src_postgres",

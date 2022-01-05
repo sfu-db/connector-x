@@ -2,13 +2,14 @@
 authors = ["Weiyuan Wu <youngw@sfu.ca>"]
 edition = "2018"
 name = "connectorx-python"
-version = "0.2.4-alpha.2"
+version = "0.2.4-alpha.3"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 anyhow = "1"
 arrow = "5"
+arrow2 = "0.8"
 bitfield = "0.13"
 bytes = "1"
 chrono = "0.4"
@@ -59,7 +60,7 @@ name = "connectorx_python"
 [features]
 branch = ["connectorx/branch"]
 default = ["extension", "fptr", "nbstr", "dsts", "srcs"]
-dsts = ["connectorx/dst_arrow"]
+dsts = ["connectorx/dst_arrow", "connectorx/dst_arrow2"]
 executable = ["pyo3/auto-initialize"]
 extension = ["pyo3/extension-module"]
 fptr = ["connectorx/fptr"]

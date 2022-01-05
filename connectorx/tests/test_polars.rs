@@ -116,21 +116,22 @@ fn test_postgres_arrow() {
     dispatcher.run().expect("run dispatcher");
 
     let df: DataFrame = destination.polars().unwrap();
+
     let expected = df!(
-        "a" => &[1, 0, 2, 3, 4, 1314],
-        "b" => &[Some(3), Some(5), None, Some(7), Some(9), Some(2)],
-        "c" => &[Some("str1"), Some("a"), Some("str2"), Some("b"), Some("c"), None],
-        "d" => &[None, Some(3.1), Some(2.2), Some(3.), Some(7.8), Some(-10.)],
-        "e" => &[Some(true), None, Some(false), Some(false), None, Some(true)]
+        "test_int" => &[1, 0, 2, 3, 4, 1314],
+        "test_nullint" => &[Some(3), Some(5), None, Some(7), Some(9), Some(2)],
+        "test_str" => &[Some("str1"), Some("a"), Some("str2"), Some("b"), Some("c"), None],
+        "test_float" => &[None, Some(3.1), Some(2.2), Some(3.), Some(7.8), Some(-10.)],
+        "test_bool" => &[Some(true), None, Some(false), Some(false), None, Some(true)]
     )
     .unwrap();
 
     let expected2 = df!(
-        "a" => &[2, 3, 4, 1314, 1, 0],
-        "b" => &[None, Some(7), Some(9), Some(2), Some(3), Some(5)],
-        "c" => &[Some("str2"), Some("b"), Some("c"), None, Some("str1"), Some("a")],
-        "d" => &[Some(2.2), Some(3.), Some(7.8), Some(-10.), None, Some(3.1)],
-        "e" => &[Some(false), Some(false), None, Some(true), Some(true), None]
+        "test_int" => &[2, 3, 4, 1314, 1, 0],
+        "test_nullint" => &[None, Some(7), Some(9), Some(2), Some(3), Some(5)],
+        "test_str" => &[Some("str2"), Some("b"), Some("c"), None, Some("str1"), Some("a")],
+        "test_float" => &[Some(2.2), Some(3.), Some(7.8), Some(-10.), None, Some(3.1)],
+        "test_bool" => &[Some(false), Some(false), None, Some(true), Some(true), None]
     )
     .unwrap();
 
