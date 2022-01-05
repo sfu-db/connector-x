@@ -42,6 +42,7 @@ where
         where
             T: ArrowAssoc,
         {
+            builder.shrink_to_fit();
             Ok(MutableArray::as_arc(
                 builder
                     .as_mut_any()

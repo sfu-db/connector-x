@@ -99,7 +99,7 @@ def read_sql(
     if not protocol:
         # note: redshift/clickhouse are not compatible with the 'binary' protocol, and use other database
         # drivers to connect. set a compatible protocol and masquerade as the appropriate backend.
-        backend, connection_details = conn.split(":",1) if conn else ("","")
+        backend, connection_details = conn.split(":", 1) if conn else ("", "")
         if "redshift" in backend:
             conn = f"postgresql:{connection_details}"
             protocol = "cursor"
@@ -126,7 +126,7 @@ def read_sql(
 
         if index_col is not None:
             df.set_index(index_col, inplace=True)
-            
+
         if return_type == "modin":
             try:
                 import modin.pandas as mpd
@@ -142,7 +142,7 @@ def read_sql(
 
             df = dd.from_pandas(df, npartitions=1)
 
-    elif return_type in {"arrow", "polars"}:
+    elif return_type in {"arrow", "arrow2", "polars"}:
         try:
             import pyarrow
         except ModuleNotFoundError:
@@ -150,7 +150,7 @@ def read_sql(
 
         result = _read_sql(
             conn,
-            "arrow",
+            "arrow" if return_type in {"arrow", "polars"} else "arrow2",
             queries=queries,
             protocol=protocol,
             partition_query=partition_query,
@@ -162,7 +162,7 @@ def read_sql(
             except ModuleNotFoundError:
                 raise ValueError("You need to install polars first")
 
-            try: 
+            try:
                 df = pl.DataFrame.from_arrow(df)
             except AttributeError:
                 # api change for polars >= 0.8.*
