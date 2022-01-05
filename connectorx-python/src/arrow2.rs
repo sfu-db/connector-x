@@ -234,7 +234,6 @@ fn to_ptrs(rbs: Vec<RecordBatch>) -> (Vec<String>, Vec<Vec<(uintptr_t, uintptr_t
         let mut cols = vec![];
 
         for array in rb.columns() {
-            // let (array_ptr, schema_ptr) = array.to_raw().expect("c ptr");
             let array_ptr = Box::new(ffi::Ffi_ArrowArray::empty());
             let schema_ptr = Box::new(ffi::Ffi_ArrowSchema::empty());
             let array_ptr = Box::into_raw(array_ptr);

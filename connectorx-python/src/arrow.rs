@@ -211,7 +211,6 @@ pub fn write_arrow<'a>(
     let rbs = destination.arrow()?;
     let ptrs = to_ptrs(rbs);
     let obj: PyObject = ptrs.into_py(py);
-    println!("obj refcount: {}", obj.get_refcnt(py));
     obj.into_ref(py)
 }
 
