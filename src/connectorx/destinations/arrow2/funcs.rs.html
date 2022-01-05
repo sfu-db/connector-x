@@ -73,6 +73,7 @@
 <span id="73">73</span>
 <span id="74">74</span>
 <span id="75">75</span>
+<span id="76">76</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">super</span>::arrow_assoc::ArrowAssoc</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::Builder</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::errors::Result</span>;
@@ -117,6 +118,7 @@
         <span class="kw">where</span>
             <span class="ident">T</span>: <span class="ident">ArrowAssoc</span>,
         {
+            <span class="ident">builder</span>.<span class="ident">shrink_to_fit</span>();
             <span class="prelude-val">Ok</span>(<span class="ident">MutableArray::as_arc</span>(
                 <span class="ident">builder</span>
                     .<span class="ident">as_mut_any</span>()

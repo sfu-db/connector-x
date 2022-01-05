@@ -11,11 +11,15 @@
 <span id="11">11</span>
 <span id="12">12</span>
 <span id="13">13</span>
+<span id="14">14</span>
+<span id="15">15</span>
 </pre><pre class="rust"><code><span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dst_arrow&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dst_arrow2&quot;</span>))]</span>
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const</span> <span class="ident">SECONDS_IN_DAY</span>: <span class="ident">i64</span> <span class="op">=</span> <span class="number">86_400</span>;
 
+<span class="kw">const</span> <span class="ident">KILO</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">10</span>;
+
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dst_arrow&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dst_arrow2&quot;</span>))]</span>
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">RECORD_BATCH_SIZE</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">64000</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">RECORD_BATCH_SIZE</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">64</span> <span class="op">*</span> <span class="ident">KILO</span>;
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(
     <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;src_postgres&quot;</span>,
