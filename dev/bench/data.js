@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1641368852933,
+  "lastUpdate": 1641447979718,
   "repoUrl": "https://github.com/sfu-db/connector-x",
   "entries": {
     "ConnectorX TPC-H Scale@1 Benchmarks": [
@@ -6460,6 +6460,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.9112720223571078",
             "extra": "mean: 14.230516650900245 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "xiaoying_wang@sfu.ca",
+            "name": "Xiaoying Wang",
+            "username": "wangxiaoying"
+          },
+          "committer": {
+            "email": "xiaoying_wang@sfu.ca",
+            "name": "Xiaoying Wang",
+            "username": "wangxiaoying"
+          },
+          "distinct": true,
+          "id": "4daa1b3f896256fff0cdb054df47aadc205ea1bf",
+          "message": "remove debug message, update psycopg2-binary for cp310",
+          "timestamp": "2022-01-06T05:33:35Z",
+          "tree_id": "2222300be2f024644a598d41f14b6028550a7700",
+          "url": "https://github.com/sfu-db/connector-x/commit/4daa1b3f896256fff0cdb054df47aadc205ea1bf"
+        },
+        "date": 1641447978529,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_mysql",
+            "value": 0.0656165342562776,
+            "unit": "iter/sec",
+            "range": "stddev: 0.6334774830523306",
+            "extra": "mean: 15.24006123356521 sec\nrounds: 5"
+          },
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_postgres",
+            "value": 0.07484942513939677,
+            "unit": "iter/sec",
+            "range": "stddev: 2.2029067364192674",
+            "extra": "mean: 13.360156048461794 sec\nrounds: 5"
           }
         ]
       }
