@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1641447979718,
+  "lastUpdate": 1641705038716,
   "repoUrl": "https://github.com/sfu-db/connector-x",
   "entries": {
     "ConnectorX TPC-H Scale@1 Benchmarks": [
@@ -6498,6 +6498,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 2.2029067364192674",
             "extra": "mean: 13.360156048461794 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "xiaoying_wang@sfu.ca",
+            "name": "Xiaoying Wang",
+            "username": "wangxiaoying"
+          },
+          "committer": {
+            "email": "xiaoying_wang@sfu.ca",
+            "name": "Xiaoying Wang",
+            "username": "wangxiaoying"
+          },
+          "distinct": true,
+          "id": "076062f783537b62f904a4b91c311ded10dcca40",
+          "message": "0.2.4-alpha.4: fix deallocating None issue",
+          "timestamp": "2022-01-09T04:57:52Z",
+          "tree_id": "fe47a29c7a2887d02536d5788996d6b649e75245",
+          "url": "https://github.com/sfu-db/connector-x/commit/076062f783537b62f904a4b91c311ded10dcca40"
+        },
+        "date": 1641705037291,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_mysql",
+            "value": 0.06528750890631647,
+            "unit": "iter/sec",
+            "range": "stddev: 0.40291681889261405",
+            "extra": "mean: 15.316865611076356 sec\nrounds: 5"
+          },
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_postgres",
+            "value": 0.0765330059004782,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3787367509138893",
+            "extra": "mean: 13.06625799201429 sec\nrounds: 5"
           }
         ]
       }
