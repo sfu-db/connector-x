@@ -68,7 +68,7 @@ impl PyString {
     pub fn none(py: Python) -> PyString {
         // this is very unsafe because Py_None is not a PyString from Rust's perspective. But it is fine because
         // later these stuff will all be converted to a python object
-        let s = unsafe { Py::from_owned_ptr(py, ffi::Py_None()) };
+        let s = unsafe { Py::from_borrowed_ptr(py, ffi::Py_None()) };
         PyString(s)
     }
 
