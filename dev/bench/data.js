@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1641876973506,
+  "lastUpdate": 1641878486896,
   "repoUrl": "https://github.com/sfu-db/connector-x",
   "entries": {
     "ConnectorX TPC-H Scale@1 Benchmarks": [
@@ -6612,6 +6612,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 2.7704397578092337",
             "extra": "mean: 12.7771535217762 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "xiaoying_wang@sfu.ca",
+            "name": "Xiaoying Wang",
+            "username": "wangxiaoying"
+          },
+          "committer": {
+            "email": "xiaoying_wang@sfu.ca",
+            "name": "Xiaoying Wang",
+            "username": "wangxiaoying"
+          },
+          "distinct": false,
+          "id": "39c654da876ed48a5b28f8af82a6a280f937b795",
+          "message": "0.2.4-alpha.5: add license back to source file",
+          "timestamp": "2022-01-11T04:43:08Z",
+          "tree_id": "c8bae53c909f15162c82c07040b60cb10795052b",
+          "url": "https://github.com/sfu-db/connector-x/commit/39c654da876ed48a5b28f8af82a6a280f937b795"
+        },
+        "date": 1641878485688,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_mysql",
+            "value": 0.041651575035001526,
+            "unit": "iter/sec",
+            "range": "stddev: 14.539400863193883",
+            "extra": "mean: 24.00869592949748 sec\nrounds: 5"
+          },
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_postgres",
+            "value": 0.06128130799657212,
+            "unit": "iter/sec",
+            "range": "stddev: 10.108518986148503",
+            "extra": "mean: 16.318189553916454 sec\nrounds: 5"
           }
         ]
       }
