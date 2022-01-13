@@ -50,8 +50,18 @@ if __name__ == "__main__":
             index_col,
             npartitions=npartition,
             limits=(0, 60000000),
+            parse_dates=[
+                "l_shipdate",
+                "l_commitdate",
+                "l_receiptdate",
+                "L_SHIPDATE",
+                "L_COMMITDATE",
+                "L_RECEIPTDATE",
+            ],
         ).compute()
 
     print(f"[Total] {timer.elapsed:.2f}s")
 
     print(df.head())
+    print(len(df))
+    print(df.dtypes)

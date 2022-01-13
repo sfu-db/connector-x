@@ -66,6 +66,16 @@ python-tpch name +ARGS="": setup-python
 python-tpch-ext name +ARGS="":
     cd connectorx-python && poetry run python ../benchmarks/tpch-{{name}}.py {{ARGS}}
 
+python-ddos name +ARGS="": setup-python
+    #!/bin/bash
+    export PYTHONPATH=$PWD/connectorx-python
+    cd connectorx-python && \
+    poetry run python ../benchmarks/ddos-{{name}}.py {{ARGS}}
+
+python-ddos-ext name +ARGS="":
+    cd connectorx-python && poetry run python ../benchmarks/ddos-{{name}}.py {{ARGS}}
+
+
 python-shell:
     cd connectorx-python && \
     poetry run ipython

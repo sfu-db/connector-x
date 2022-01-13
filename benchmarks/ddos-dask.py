@@ -1,9 +1,11 @@
 """
 Usage:
-  tpch-modin.py <num> [--conn=<conn>] [--driver=<driver>]
+  tpch-dask.py <num> [--conn=<conn>] [--table=<table>] [--index=<idx>] [--driver=<driver>]
 
 Options:
   --conn=<conn>          The connection url to use [default: POSTGRES_URL].
+  --table=<table>          The connection url to use [default: DDOS].
+  --index=<idx>          The connection url to use [default: id].
   --driver=<driver>         The driver to use using sqlalchemy: https://docs.sqlalchemy.org/en/14/core/engines.html.
   -h --help     Show this screen.
   --version     Show version.
@@ -16,26 +18,22 @@ Drivers:
 
 import os
 
-import modin.config as config
-import modin.pandas as pd
+import dask.dataframe as dd
 from contexttimer import Timer
 from docopt import docopt
 from dask.distributed import Client, LocalCluster
 from sqlalchemy.engine.url import make_url
 
-# modin adopts the fastest mysqlclient connector for mysql
-
 if __name__ == "__main__":
-    args = docopt(__doc__, version="1.0")
+    args = docopt(__doc__, version="Naval Fate 2.0")
+    index_col = args["--index"]
     conn = os.environ[args["--conn"]]
     conn = make_url(conn)
-    table = os.environ["TPCH_TABLE"]
+    table = args["--table"]
     driver = args.get("--driver", None)
+    npartition = int(args["<num>"])
 
-    partitions = int(args["<num>"])
-    config.NPartitions.put(partitions)
-
-    cluster = LocalCluster(n_workers=partitions, scheduler_port=0, memory_limit="230G")
+    cluster = LocalCluster(n_workers=npartition, scheduler_port=0, memory_limit="230G")
     client = Client(cluster)
 
     # https://docs.sqlalchemy.org/en/13/core/engines.html#sqlite
@@ -47,20 +45,15 @@ if __name__ == "__main__":
     print(f"conn url: {conn}")
 
     with Timer() as timer:
-        df = pd.read_sql(
-            f"SELECT * FROM {table}",
+        df = dd.read_sql_table(
+            table,
             str(conn),
-            parse_dates=[
-                "l_shipdate",
-                "l_commitdate",
-                "l_receiptdate",
-                "L_SHIPDATE",
-                "L_COMMITDATE",
-                "L_RECEIPTDATE",
-            ],
-        )
+            index_col,
+            npartitions=npartition,
+            limits=(0, 7902474),
+        ).compute()
+
     print(f"[Total] {timer.elapsed:.2f}s")
 
-    print(df.head())
-    print(len(df))
-    print(df.dtypes)
+    print(df)
+    print([(c, df[c].dtype) for c in df.columns])
