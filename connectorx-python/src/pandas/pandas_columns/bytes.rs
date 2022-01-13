@@ -200,7 +200,7 @@ impl BytesColumn {
                         start = end;
                     } else {
                         unsafe {
-                            let b = Py::from_owned_ptr(py, pyo3::ffi::Py_None());
+                            let b = Py::from_borrowed_ptr(py, pyo3::ffi::Py_None());
                             *self.data.add(self.row_idx[i]) = PyBytes(b);
                         }
                     }

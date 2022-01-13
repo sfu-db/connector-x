@@ -38,6 +38,9 @@ pub enum ConnectorXPythonError {
     OracleError(#[from] r2d2_oracle::oracle::Error),
 
     #[error(transparent)]
+    BQError(#[from] gcp_bigquery_client::error::BQError),
+
+    #[error(transparent)]
     NdArrayShapeError(#[from] ndarray::ShapeError),
 
     #[error(transparent)]
@@ -59,6 +62,9 @@ pub enum ConnectorXPythonError {
     OracleSourceError(#[from] connectorx::sources::oracle::OracleSourceError),
 
     #[error(transparent)]
+    BigQuerySourceError(#[from] connectorx::sources::bigquery::BigQuerySourceError),
+
+    #[error(transparent)]
     ArrowDestinationError(#[from] connectorx::destinations::arrow::ArrowDestinationError),
 
     #[error(transparent)]
@@ -77,7 +83,28 @@ pub enum ConnectorXPythonError {
     OracleArrowTransportError(#[from] connectorx::transports::OracleArrowTransportError),
 
     #[error(transparent)]
+    Arrow2DestinationError(#[from] connectorx::destinations::arrow2::Arrow2DestinationError),
+
+    #[error(transparent)]
+    PostgresArrow2TransportError(#[from] connectorx::transports::PostgresArrow2TransportError),
+
+    #[error(transparent)]
+    MySQLArrow2TransportError(#[from] connectorx::transports::MySQLArrow2TransportError),
+
+    #[error(transparent)]
+    SQLiteArrow2TransportError(#[from] connectorx::transports::SQLiteArrow2TransportError),
+
+    #[error(transparent)]
+    MsSQLArrow2TransportError(#[from] connectorx::transports::MsSQLArrow2TransportError),
+
+    #[error(transparent)]
+    OracleArrow2TransportError(#[from] connectorx::transports::OracleArrow2TransportError),
+
+    #[error(transparent)]
     UrlDecodeError(#[from] FromUtf8Error),
+
+    #[error(transparent)]
+    JsonError(#[from] serde_json::Error),
 
     /// Any other errors that are too trivial to be put here explicitly.
     #[error(transparent)]

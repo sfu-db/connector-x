@@ -2,9 +2,10 @@ use crate::errors::{ConnectorXPythonError, Result};
 use anyhow::anyhow;
 use connectorx::{
     sources::{
+        bigquery::BigQueryDialect,
         mssql::{mssql_config, FloatN, IntN, MsSQLTypeSystem},
         mysql::{MySQLSourceError, MySQLTypeSystem},
-        oracle::OracleDialect,
+        oracle::{connect_oracle, OracleDialect},
         postgres::{rewrite_tls_args, PostgresTypeSystem},
     },
     sql::{
@@ -13,17 +14,18 @@ use connectorx::{
     },
 };
 use fehler::{throw, throws};
+use gcp_bigquery_client;
 use r2d2_mysql::mysql::{prelude::Queryable, Opts, Pool, Row};
-use r2d2_oracle::oracle::Connection as oracle_conn;
 use rusqlite::{types::Type, Connection};
 use rust_decimal::{prelude::ToPrimitive, Decimal};
 use rust_decimal_macros::dec;
 use sqlparser::dialect::{MsSqlDialect, MySqlDialect, PostgreSqlDialect, SQLiteDialect};
 use std::convert::TryFrom;
+use tiberius::Client;
 use tokio::net::TcpStream;
+use tokio::runtime::Runtime;
 use tokio_util::compat::TokioAsyncWriteCompatExt;
 use url::Url;
-use urlencoding::decode;
 
 pub enum SourceType {
     Postgres,
@@ -31,6 +33,7 @@ pub enum SourceType {
     MySQL,
     MsSQL,
     Oracle,
+    BigQuery,
 }
 
 pub struct SourceConn {
@@ -64,7 +67,10 @@ impl TryFrom<&str> for SourceConn {
                 ty: SourceType::Oracle,
                 conn: url,
             }),
-
+            "bigquery" => Ok(SourceConn {
+                ty: SourceType::BigQuery,
+                conn: url,
+            }),
             _ => unimplemented!("Connection: {} not supported!", conn),
         }
     }
@@ -78,6 +84,7 @@ impl SourceConn {
             SourceType::MySQL => mysql_get_partition_range(&self.conn, query, col),
             SourceType::MsSQL => mssql_get_partition_range(&self.conn, query, col),
             SourceType::Oracle => oracle_get_partition_range(&self.conn, query, col),
+            SourceType::BigQuery => bigquery_get_partition_range(&self.conn, query, col),
         }
     }
 
@@ -104,6 +111,9 @@ impl SourceConn {
             }
             SourceType::Oracle => {
                 single_col_partition_query(query, col, lower, upper, &OracleDialect {})?
+            }
+            SourceType::BigQuery => {
+                single_col_partition_query(query, col, lower, upper, &BigQueryDialect {})?
             }
         };
         CXQuery::Wrapped(query)
@@ -342,9 +352,7 @@ fn mysql_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
 
 #[throws(ConnectorXPythonError)]
 fn mssql_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
-    use tiberius::Client;
-    use tokio::runtime::Runtime;
-    let rt = Runtime::new().unwrap();
+    let rt = Runtime::new().expect("Failed to create runtime");
     let config = mssql_config(conn)?;
     let tcp = rt.block_on(TcpStream::connect(config.get_addr()))?;
     tcp.set_nodelay(true)?;
@@ -407,18 +415,40 @@ fn mssql_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
 
 #[throws(ConnectorXPythonError)]
 fn oracle_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
-    let conn = Url::parse(conn.as_str())?;
-    let user = decode(conn.username())?.into_owned();
-    let password = decode(conn.password().unwrap_or(""))?.into_owned();
-    let host = "//".to_owned()
-        + decode(conn.host_str().unwrap_or("localhost"))?
-            .into_owned()
-            .as_str()
-        + conn.path();
-    let conn = oracle_conn::connect(user.as_str(), password.as_str(), host)?;
+    let connector = connect_oracle(conn)?;
+    let conn = connector.connect()?;
     let range_query = get_partition_range_query(query, col, &OracleDialect {})?;
     let row = conn.query_row(range_query.as_str(), &[])?;
     let min_v: i64 = row.get(0).unwrap_or(0);
     let max_v: i64 = row.get(1).unwrap_or(0);
+    (min_v, max_v)
+}
+
+#[throws(ConnectorXPythonError)] // TODO
+fn bigquery_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
+    let rt = Runtime::new().expect("Failed to create runtime");
+    let url = Url::parse(conn.as_str())?;
+    let sa_key_path = url.path();
+    let client = rt.block_on(gcp_bigquery_client::Client::from_service_account_key_file(
+        sa_key_path,
+    ));
+
+    let auth_data = std::fs::read_to_string(sa_key_path)?;
+    let auth_json: serde_json::Value = serde_json::from_str(&auth_data)?;
+    let project_id = auth_json
+        .get("project_id")
+        .ok_or_else(|| anyhow!("Cannot get project_id from auth file"))?
+        .as_str()
+        .ok_or_else(|| anyhow!("Cannot get project_id as string from auth file"))?;
+    let range_query = get_partition_range_query(query, col, &BigQueryDialect {})?;
+
+    let mut query_result = rt.block_on(client.job().query(
+        project_id,
+        gcp_bigquery_client::model::query_request::QueryRequest::new(range_query.as_str()),
+    ))?;
+    query_result.next_row();
+    let min_v = query_result.get_i64(0)?.unwrap_or(0);
+    let max_v = query_result.get_i64(1)?.unwrap_or(0);
+
     (min_v, max_v)
 }

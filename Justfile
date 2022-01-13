@@ -22,6 +22,7 @@ test-feature-gate:
 
 bootstrap-python:
     cp README.md connectorx-python/README.md
+    cp LICENSE connectorx-python/LICENSE
     cd connectorx-python && poetry install
 
 build-python-extention:
@@ -31,6 +32,9 @@ setup-python: build-python-extention
     cd connectorx-python && poetry run python ../scripts/python-helper.py copy-extension
     
 test-python +opts="": setup-python
+    cd connectorx-python && poetry run pytest connectorx/tests -v -s {{opts}}
+
+test-python-s +opts="":
     cd connectorx-python && poetry run pytest connectorx/tests -v -s {{opts}}
 
 seed-db:
@@ -46,6 +50,7 @@ seed-db-more:
     psql $REDSHIFT_URL -f scripts/redshift.sql
     ORACLE_URL_SCRIPT=`echo ${ORACLE_URL#oracle://} | sed "s/:/\//"`
     cat scripts/oracle.sql | sqlplus $ORACLE_URL_SCRIPT
+    mysql --protocol tcp -h$MARIADB_HOST -P$MARIADB_PORT -u$MARIADB_USER -p$MARIADB_PASSWORD $MARIADB_DB < scripts/mysql.sql
 
 # benches 
 flame-tpch conn="POSTGRES_URL":
@@ -92,6 +97,7 @@ ci-build-python-extention:
 
 ci-build-python-wheel:
     cp README.md connectorx-python/README.md
+    cp LICENSE connectorx-python/LICENSE
     cd connectorx-python && poetry build
     
 ci-rename-wheel:

@@ -2,6 +2,7 @@
 #![allow(incomplete_features)]
 
 pub mod arrow;
+pub mod arrow2;
 pub mod constants;
 mod errors;
 pub mod pandas;

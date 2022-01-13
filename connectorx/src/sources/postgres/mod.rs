@@ -31,6 +31,7 @@ use r2d2_postgres::PostgresConnectionManager;
 use rust_decimal::Decimal;
 use serde_json::{from_str, Value};
 use sqlparser::dialect::PostgreSqlDialect;
+use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::marker::PhantomData;
 use uuid::Uuid;
@@ -448,6 +449,26 @@ impl_produce!(
     Value,
 );
 
+impl<'r, 'a> Produce<'r, HashMap<String, Option<String>>>
+    for PostgresBinarySourcePartitionParser<'a>
+{
+    type Error = PostgresSourceError;
+    #[throws(PostgresSourceError)]
+    fn produce(&mut self) -> HashMap<String, Option<String>> {
+        unimplemented!("Please use `cursor` protocol for hstore type");
+    }
+}
+
+impl<'r, 'a> Produce<'r, Option<HashMap<String, Option<String>>>>
+    for PostgresBinarySourcePartitionParser<'a>
+{
+    type Error = PostgresSourceError;
+    #[throws(PostgresSourceError)]
+    fn produce(&mut self) -> Option<HashMap<String, Option<String>>> {
+        unimplemented!("Please use `cursor` protocol for hstore type");
+    }
+}
+
 pub struct PostgresCSVSourceParser<'a> {
     iter: StringRecordsIntoIter<CopyOutReader<'a>>,
     rowbuf: Vec<StringRecord>,
@@ -588,6 +609,22 @@ macro_rules! impl_csv_vec_produce {
 }
 
 impl_csv_vec_produce!(i8, i16, i32, i64, f32, f64, Decimal,);
+
+impl<'r, 'a> Produce<'r, HashMap<String, Option<String>>> for PostgresCSVSourceParser<'a> {
+    type Error = PostgresSourceError;
+    #[throws(PostgresSourceError)]
+    fn produce(&mut self) -> HashMap<String, Option<String>> {
+        unimplemented!("Please use `cursor` protocol for hstore type");
+    }
+}
+
+impl<'r, 'a> Produce<'r, Option<HashMap<String, Option<String>>>> for PostgresCSVSourceParser<'a> {
+    type Error = PostgresSourceError;
+    #[throws(PostgresSourceError)]
+    fn produce(&mut self) -> Option<HashMap<String, Option<String>>> {
+        unimplemented!("Please use `cursor` protocol for hstore type");
+    }
+}
 
 impl<'r, 'a> Produce<'r, bool> for PostgresCSVSourceParser<'a> {
     type Error = PostgresSourceError;
@@ -922,4 +959,5 @@ impl_produce!(
     NaiveDate,
     Uuid,
     Value,
+    HashMap<String, Option<String>>,
 );

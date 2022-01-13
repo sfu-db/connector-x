@@ -1,5 +1,7 @@
 //! This module contains transport definitions for the sources and destinations implemented in ConnectorX.
 
+#[cfg(all(feature = "src_bigquery", feature = "dst_arrow"))]
+mod bigquery_arrow;
 #[cfg(all(feature = "src_csv", feature = "dst_arrow"))]
 mod csv_arrow;
 #[cfg(all(feature = "src_dummy", feature = "dst_arrow"))]
@@ -27,6 +29,8 @@ mod sqlite_arrow;
 #[cfg(all(feature = "src_sqlite", feature = "dst_arrow2"))]
 mod sqlite_arrow2;
 
+#[cfg(all(feature = "src_bigquery", feature = "dst_arrow"))]
+pub use bigquery_arrow::{BigQueryArrowTransport, BigQueryArrowTransportError};
 #[cfg(all(feature = "src_csv", feature = "dst_arrow"))]
 pub use csv_arrow::CSVArrowTransport;
 #[cfg(all(feature = "src_dummy", feature = "dst_arrow"))]
