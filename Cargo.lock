@@ -75,9 +75,9 @@ checksum = "23b62fc65de8e4e7f52534fb52b0f3ed04746ae267519eef2a83941e8085068b"
 
 [[package]]
 name = "arrow"
-version = "5.5.0"
+version = "6.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2678e86fcfd8084e23310a1ded1d4b355663d78b5e79561b014c3a66cc211231"
+checksum = "216c6846a292bdd93c2b93c1baab58c32ff50e2ab5e8d50db333ab518535dd8b"
 dependencies = [
  "bitflags",
  "chrono",
@@ -86,7 +86,7 @@ dependencies = [
  "hex",
  "indexmap",
  "lazy_static",
- "lexical-core 0.7.6",
+ "lexical-core 0.8.2",
  "multiversion",
  "num",
  "rand 0.8.4",
