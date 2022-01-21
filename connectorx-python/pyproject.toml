@@ -47,7 +47,7 @@ contexttimer = "^0.3.3"
 cx-Oracle = "^8.2.1"
 dask = {extras = ["dataframe"], version = "^2021.7.0"}
 docopt = "^0.6.2"
-ipython = "^7.25.0"
+ipython = "^7.31.1"
 maturin = "^0.9.4"
 modin = {extras = ["dask"], version = ">=0.10.1"}
 mysqlclient = "^2.0.3"
