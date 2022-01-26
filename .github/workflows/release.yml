@@ -65,12 +65,12 @@ jobs:
           name: "linux-${{ matrix.python-version }}"
           path: connectorx-python/dist/*.whl
 
-      - name: Persist artifacts source code
-        uses: actions/upload-artifact@v2
-        if: matrix.python-version == 39
-        with:
-          name: "linux-${{ matrix.python-version }}"
-          path: connectorx-python/dist/*.tar.gz
+      # - name: Persist artifacts source code
+      #   uses: actions/upload-artifact@v2
+      #   if: matrix.python-version == 39
+      #   with:
+      #     name: "linux-${{ matrix.python-version }}"
+      #     path: connectorx-python/dist/*.tar.gz
 
   win32:
     runs-on: windows-latest

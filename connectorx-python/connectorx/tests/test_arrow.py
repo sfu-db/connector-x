@@ -71,3 +71,8 @@ def test_arrow2(postgres_url: str) -> None:
     df = df.to_pandas()
     df.sort_values(by="test_int", inplace=True, ignore_index=True)
     assert_frame_equal(df, expected, check_names=True)
+
+
+def test_arrow_type(postgres_url: str) -> None:
+    query = "SELECT test_date, test_timestamp, test_timestamptz, test_int16, test_int64, test_float32, test_numeric, test_bpchar, test_char, test_varchar, test_uuid, test_time, test_bytea FROM test_types"
+    read_sql(postgres_url, query, return_type="arrow2")

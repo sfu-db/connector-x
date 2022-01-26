@@ -29,7 +29,7 @@ if __name__ == "__main__":
     args = docopt(__doc__, version="1.0")
     conn = os.environ[args["--conn"]]
     conn = make_url(conn)
-    table = os.environ["TPCH_TABLE"]
+    table = "DDOS"
     driver = args.get("--driver", None)
 
     partitions = int(args["<num>"])
@@ -50,17 +50,8 @@ if __name__ == "__main__":
         df = pd.read_sql(
             f"SELECT * FROM {table}",
             str(conn),
-            parse_dates=[
-                "l_shipdate",
-                "l_commitdate",
-                "l_receiptdate",
-                "L_SHIPDATE",
-                "L_COMMITDATE",
-                "L_RECEIPTDATE",
-            ],
         )
     print(f"[Total] {timer.elapsed:.2f}s")
 
-    print(df.head())
-    print(len(df))
-    print(df.dtypes)
+    print(df)
+    print([(c, df[c].dtype) for c in df.columns])

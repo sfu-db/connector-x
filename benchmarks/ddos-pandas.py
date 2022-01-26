@@ -27,7 +27,7 @@ from sqlalchemy.engine.url import make_url
 
 if __name__ == "__main__":
     args = docopt(__doc__, version="1.0")
-    table = os.environ["TPCH_TABLE"]
+    table = "DDOS"
     driver = args.get("--driver", None)
     conn = os.environ[args["--conn"]]
     conn = make_url(conn)
@@ -49,19 +49,9 @@ if __name__ == "__main__":
         df = pd.read_sql(
             f"SELECT * FROM {table}",
             conn,
-            parse_dates=[
-                "l_shipdate",
-                "l_commitdate",
-                "l_receiptdate",
-                "L_SHIPDATE",
-                "L_COMMITDATE",
-                "L_RECEIPTDATE",
-            ],
         )
     print(f"[Total] {timer.elapsed:.2f}s")
     conn.close()
 
-    print(df.head())
-    print(df.tail())
-    print(len(df))
-    print(df.dtypes)
+    print(df)
+    print([(c, df[c].dtype) for c in df.columns])
