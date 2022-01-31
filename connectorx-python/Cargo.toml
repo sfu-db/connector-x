@@ -8,7 +8,7 @@ version = "0.2.4-alpha.5"
 
 [dependencies]
 anyhow = "1"
-arrow = "5"
+arrow = "6.4.0"
 arrow2 = "0.8"
 bitfield = "0.13"
 bytes = "1"
