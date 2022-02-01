@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1643599726750,
+  "lastUpdate": 1643741203082,
   "repoUrl": "https://github.com/sfu-db/connector-x",
   "entries": {
     "ConnectorX TPC-H Scale@1 Benchmarks": [
@@ -6954,6 +6954,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 3.5644933824386036",
             "extra": "mean: 17.248538378253578 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "xiaoying_wang@sfu.ca",
+            "name": "Xiaoying Wang",
+            "username": "wangxiaoying"
+          },
+          "committer": {
+            "email": "xiaoying_wang@sfu.ca",
+            "name": "Xiaoying Wang",
+            "username": "wangxiaoying"
+          },
+          "distinct": true,
+          "id": "77a9756cee0e21465a022850d34221571dcb15ee",
+          "message": "0.2.4-alpha.6: arrow2 add conversion rule for TimestampTz arrow2",
+          "timestamp": "2022-02-01T18:25:57Z",
+          "tree_id": "34ae4aca0ac570c63a6f0c69c59b99d835bf85d7",
+          "url": "https://github.com/sfu-db/connector-x/commit/77a9756cee0e21465a022850d34221571dcb15ee"
+        },
+        "date": 1643741201089,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_mysql",
+            "value": 0.05940079065671635,
+            "unit": "iter/sec",
+            "range": "stddev: 0.39964933960735427",
+            "extra": "mean: 16.834792751818895 sec\nrounds: 5"
+          },
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_postgres",
+            "value": 0.06648909067035289,
+            "unit": "iter/sec",
+            "range": "stddev: 3.754076364758727",
+            "extra": "mean: 15.040061308071017 sec\nrounds: 5"
           }
         ]
       }
