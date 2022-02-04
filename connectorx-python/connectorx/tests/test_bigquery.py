@@ -1,4 +1,5 @@
 import os
+from pickle import TRUE
 
 import pandas as pd
 import pytest
@@ -28,6 +29,7 @@ def test_bigquery_without_partition(bigquery_url: str) -> None:
                 ["str1", "str2", None, "str05", None], dtype="object"
             ),
             "test_float": pd.Series([1.10, 2.20, -4.44, None, None], dtype="float64"),
+            "test_bool": pd.Series([True, False, False, None, True], dtype="boolean"),
         },
     )
     assert_frame_equal(df, expected, check_names=True)
@@ -55,6 +57,7 @@ def test_bigquery_with_partition(bigquery_url: str) -> None:
                 ["str1", "str2", None, "str05", None], dtype="object"
             ),
             "test_float": pd.Series([1.10, 2.20, -4.44, None, None], dtype="float64"),
+            "test_bool": pd.Series([True, False, False, None, True], dtype="boolean"),
         },
     )
     assert_frame_equal(df, expected, check_names=True)
@@ -76,6 +79,7 @@ def test_bigquery_with_partition_without_partition_range(bigquery_url: str) -> N
                 ["str1", "str2", None, "str05", None], dtype="object"
             ),
             "test_float": pd.Series([1.10, 2.20, -4.44, None, None], dtype="float64"),
+            "test_bool": pd.Series([True, False, False, None, True], dtype="boolean"),
         },
     )
     assert_frame_equal(df, expected, check_names=True)
@@ -100,6 +104,28 @@ def test_bigquery_manual_partition(bigquery_url: str) -> None:
                 ["str1", "str2", None, "str05", None], dtype="object"
             ),
             "test_float": pd.Series([1.10, 2.20, -4.44, None, None], dtype="float64"),
+            "test_bool": pd.Series([True, False, False, None, True], dtype="boolean"),
+        },
+    )
+    assert_frame_equal(df, expected, check_names=True)
+
+
+@pytest.mark.skipif(
+    not os.environ.get("BIGQUERY_URL"),
+    reason="Test bigquery only when `BIGQUERY_URL` is set",
+)
+def test_bigquery_some_empty_partition(bigquery_url: str) -> None:
+    query = "select * from `dataprep-bigquery.dataprep.test_table` where test_int=1"
+    df = read_sql(bigquery_url, query, partition_on="test_int", partition_num=3)
+    expected = pd.DataFrame(
+        index=range(1),
+        data={
+            "test_int": pd.Series([1], dtype="Int64"),
+            "test_string": pd.Series(
+                ["str1"], dtype="object"
+            ),
+            "test_float": pd.Series([1.10], dtype="float64"),
+            "test_bool": pd.Series([True], dtype="boolean"),
         },
     )
     assert_frame_equal(df, expected, check_names=True)
@@ -110,6 +136,40 @@ def test_bigquery_manual_partition(bigquery_url: str) -> None:
     reason="Test bigquery only when `BIGQUERY_URL` is set",
 )
 def test_bigquery_join(bigquery_url: str) -> None:
+    query = "SELECT T.test_int, T.test_string, S.test_str FROM `dataprep-bigquery.dataprep.test_table` T INNER JOIN `dataprep-bigquery.dataprep.test_types` S ON T.test_int = S.test_int"
+    df = read_sql(
+        bigquery_url,
+        query
+    )
+    expected = pd.DataFrame(
+        index=range(2),
+        data={
+            "test_int": pd.Series([1, 2], dtype="Int64"),
+            "test_string": pd.Series(
+                [
+                    "str1",
+                    "str2",
+                ],
+                dtype="object"
+            ),
+            "test_str": pd.Series(
+                [
+                    "😁😂😜",
+                    "こんにちはЗдра́в",
+                ],
+                dtype="object"
+            ),
+        },
+    )
+    df.sort_values(by="test_int", inplace=True, ignore_index=True)
+    assert_frame_equal(df, expected, check_names=True)
+
+
+@pytest.mark.skipif(
+    not os.environ.get("BIGQUERY_URL"),
+    reason="Test bigquery only when `BIGQUERY_URL` is set",
+)
+def test_bigquery_join_with_partition(bigquery_url: str) -> None:
     query = "SELECT T.test_int, T.test_string, S.test_str FROM `dataprep-bigquery.dataprep.test_table` T INNER JOIN `dataprep-bigquery.dataprep.test_types` S ON T.test_int = S.test_int"
     df = read_sql(
         bigquery_url,
@@ -126,18 +186,138 @@ def test_bigquery_join(bigquery_url: str) -> None:
                     "str1",
                     "str2",
                 ],
-                dtype="object",
+                dtype="object"
             ),
             "test_str": pd.Series(
                 [
                     "😁😂😜",
                     "こんにちはЗдра́в",
                 ],
-                dtype="object",
+                dtype="object"
             ),
         },
     )
     df.sort_values(by="test_int", inplace=True, ignore_index=True)
+    assert_frame_equal(df, expected, check_names=True)
+
+
+
+@pytest.mark.skipif(
+    not os.environ.get("BIGQUERY_URL"),
+    reason="Test bigquery only when `BIGQUERY_URL` is set",
+)
+def test_bigquery_aggregation1(bigquery_url: str) -> None:
+    query = "SELECT test_bool, SUM(test_int) as sum_int, SUM(test_float) as sum_float FROM `dataprep-bigquery.dataprep.test_table` GROUP BY test_bool"
+    df = read_sql(bigquery_url, query)
+    expected = pd.DataFrame(
+        index=range(3),
+        data={
+            "test_bool": pd.Series([False, None, True], dtype="boolean"),
+            "sum_int": pd.Series([6, 5, 2334], dtype="Int64"),
+            "sum_float": pd.Series([-2.24, None, 1.10], dtype="float64"),
+        },
+    )
+    assert_frame_equal(df, expected, check_names=True)
+
+
+@pytest.mark.skipif(
+    not os.environ.get("BIGQUERY_URL"),
+    reason="Test bigquery only when `BIGQUERY_URL` is set",
+)
+def test_bigquery_aggregation2(bigquery_url: str) -> None:
+    query = "select MAX(test_int) as max_int, MIN(test_int) min_int from `dataprep-bigquery.dataprep.test_table`"
+    df = read_sql(bigquery_url, query)
+    expected = pd.DataFrame(
+        index=range(1),
+        data={
+            "max_int": pd.Series([2333], dtype="Int64"),
+            "min_int": pd.Series([1], dtype="Int64"),
+        },
+    )
+    assert_frame_equal(df, expected, check_names=True)
+
+
+@pytest.mark.skipif(
+    not os.environ.get("BIGQUERY_URL"),
+    reason="Test bigquery only when `BIGQUERY_URL` is set",
+)
+def test_bigquery_aggregation1_with_partition(bigquery_url: str) -> None:
+    query = "SELECT test_bool, SUM(test_int) as sum_int, SUM(test_float) as sum_float FROM `dataprep-bigquery.dataprep.test_table` GROUP BY test_bool"
+    df = read_sql(bigquery_url, query, partition_on="sum_int", partition_num=2)
+    df.sort_values(by="sum_int", inplace=True, ignore_index=True)
+    expected = pd.DataFrame(
+        index=range(3),
+        data={
+            "test_bool": pd.Series([None, False, True], dtype="boolean"),
+            "sum_int": pd.Series([5, 6, 2334], dtype="Int64"),
+            "sum_float": pd.Series([None, -2.24, 1.10], dtype="float64"),
+        },
+    )
+    assert_frame_equal(df, expected, check_names=True)
+
+
+@pytest.mark.skipif(
+    not os.environ.get("BIGQUERY_URL"),
+    reason="Test bigquery only when `BIGQUERY_URL` is set",
+)
+def test_bigquery_aggregation2_with_partition(bigquery_url: str) -> None:
+    query = "select MAX(test_int) as max_int, MIN(test_int) min_int from `dataprep-bigquery.dataprep.test_table`"
+    df = read_sql(bigquery_url, query, partition_on="max_int", partition_num=2)
+    expected = pd.DataFrame(
+        index=range(1),
+        data={
+            "max_int": pd.Series([2333], dtype="Int64"),
+            "min_int": pd.Series([1], dtype="Int64"),
+        },
+    )
+    assert_frame_equal(df, expected, check_names=True)
+
+
+@pytest.mark.skipif(
+    not os.environ.get("BIGQUERY_URL"),
+    reason="Test bigquery only when `BIGQUERY_URL` is set",
+)
+def test_bigquery_limit(bigquery_url: str) -> None:
+    query = "SELECT * FROM `dataprep-bigquery.dataprep.test_table` limit 3"
+    df = read_sql(
+        bigquery_url,
+        query,
+    )
+    expected = pd.DataFrame(
+        index=range(3),
+        data={
+            "test_int": pd.Series([1, 4, 2333], dtype="Int64"),
+            "test_string": pd.Series(["str1", None, None], dtype="object"),
+            "test_float": pd.Series([1.1, -4.44, None], dtype="float64"),
+            "test_bool": pd.Series([True, False, True], dtype="boolean"),
+        },
+    )
+    assert_frame_equal(df, expected, check_names=True)
+
+
+@pytest.mark.skipif(
+    not os.environ.get("BIGQUERY_URL"),
+    reason="Test bigquery only when `BIGQUERY_URL` is set",
+)
+def test_bigquery_limit_with_partition(bigquery_url: str) -> None:
+    query = "SELECT * FROM `dataprep-bigquery.dataprep.test_table` limit 3"
+    df = read_sql(
+        bigquery_url,
+        query,
+        partition_on="test_int",
+        partition_range=(0, 2000),
+        partition_num=3,
+    )
+    print(df)
+    expected = pd.DataFrame(
+        index=range(3),
+        data={
+            "test_int": pd.Series([4, 5, 2], dtype="Int64"),
+            "test_string": pd.Series([ None, "str05", "str2"], dtype="object"),
+            "test_float": pd.Series([-4.44, None, 2.20], dtype="float64"),
+            "test_bool": pd.Series([False, None, False], dtype="boolean"),
+        },
+    )
     assert_frame_equal(df, expected, check_names=True)
 
 
@@ -149,7 +329,6 @@ def test_bigquery_types(bigquery_url: str) -> None:
     query = "select * from `dataprep-bigquery.dataprep.test_types`"
     df = read_sql(bigquery_url, query)
     df.sort_values(by="test_int", inplace=True, ignore_index=True)
-    print(df)
     expected = pd.DataFrame(
         index=range(3),
         data={
