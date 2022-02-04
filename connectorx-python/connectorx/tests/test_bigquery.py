@@ -308,7 +308,6 @@ def test_bigquery_limit_with_partition(bigquery_url: str) -> None:
         partition_range=(0, 2000),
         partition_num=3,
     )
-    print(df)
     expected = pd.DataFrame(
         index=range(3),
         data={
