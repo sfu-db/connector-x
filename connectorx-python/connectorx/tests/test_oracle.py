@@ -19,9 +19,12 @@ def oracle_url() -> str:
 )
 def test_on_non_select(oracle_url: str) -> None:
     query = "CREATE TABLE non_select(id INTEGER NOT NULL)"
-    df = read_sql(oracle_url, query)
+    read_sql(oracle_url, query)
 
 
+@pytest.mark.skipif(
+    not os.environ.get("ORACLE_URL"), reason="Test oracle only when `ORACLE_URL` is set"
+)
 def test_oracle_complex_join(oracle_url: str) -> None:
     query = "SELECT a.test_int, b.test_date, c.test_num_int FROM test_table a left join test_types b on a.test_int = b.test_num_int cross join (select test_num_int from test_types) c where c.test_num_int < 3"
     df = read_sql(oracle_url, query)
