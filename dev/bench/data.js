@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1644123654105,
+  "lastUpdate": 1644124356734,
   "repoUrl": "https://github.com/sfu-db/connector-x",
   "entries": {
     "ConnectorX TPC-H Scale@1 Benchmarks": [
@@ -7068,6 +7068,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.9793447991738284",
             "extra": "mean: 12.862821482494473 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "xiaoying_wang@sfu.ca",
+            "name": "Xiaoying Wang",
+            "username": "wangxiaoying"
+          },
+          "committer": {
+            "email": "xiaoying_wang@sfu.ca",
+            "name": "Xiaoying Wang",
+            "username": "wangxiaoying"
+          },
+          "distinct": true,
+          "id": "4ea9b5117293a841676ffcfa34113805f6012e84",
+          "message": "0.2.4-alpha.8: hard code sql generation for oracle",
+          "timestamp": "2022-02-06T04:48:26Z",
+          "tree_id": "1be1c214752fe7cfc42f7fea78c517580f0c9144",
+          "url": "https://github.com/sfu-db/connector-x/commit/4ea9b5117293a841676ffcfa34113805f6012e84"
+        },
+        "date": 1644124355426,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_mysql",
+            "value": 0.06303718773794736,
+            "unit": "iter/sec",
+            "range": "stddev: 0.43252083179081624",
+            "extra": "mean: 15.863651851937174 sec\nrounds: 5"
+          },
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_postgres",
+            "value": 0.07903540581649361,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2303352161203587",
+            "extra": "mean: 12.652557289600372 sec\nrounds: 5"
           }
         ]
       }
