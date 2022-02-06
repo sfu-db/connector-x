@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1643741203082,
+  "lastUpdate": 1644118580343,
   "repoUrl": "https://github.com/sfu-db/connector-x",
   "entries": {
     "ConnectorX TPC-H Scale@1 Benchmarks": [
@@ -6992,6 +6992,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 3.754076364758727",
             "extra": "mean: 15.040061308071017 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "xiaoying_wang@sfu.ca",
+            "name": "Xiaoying Wang",
+            "username": "wangxiaoying"
+          },
+          "committer": {
+            "email": "xiaoying_wang@sfu.ca",
+            "name": "Xiaoying Wang",
+            "username": "wangxiaoying"
+          },
+          "distinct": false,
+          "id": "3cca3a341f71661eb8187b7f11b12709fd196e78",
+          "message": "0.2.4-alpha.7:mysql schema support both prepared statement and limit1 for clickhouse",
+          "timestamp": "2022-02-06T03:17:51Z",
+          "tree_id": "bda0160ae69818a5948bf4b7b7386898906dad6e",
+          "url": "https://github.com/sfu-db/connector-x/commit/3cca3a341f71661eb8187b7f11b12709fd196e78"
+        },
+        "date": 1644118578566,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_mysql",
+            "value": 0.059815731573919693,
+            "unit": "iter/sec",
+            "range": "stddev: 0.5188622276705526",
+            "extra": "mean: 16.718010023236275 sec\nrounds: 5"
+          },
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_postgres",
+            "value": 0.07491853303522988,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2378584682642602",
+            "extra": "mean: 13.34783209823072 sec\nrounds: 5"
           }
         ]
       }
