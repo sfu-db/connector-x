@@ -19,7 +19,7 @@ license = "MIT"
 maintainers = ["Weiyuan Wu <youngw@sfu.ca>"] 
 name = "connectorx" 
 readme = "README.md" # Markdown files are supported
-version = "0.2.4-alpha.7" 
+version = "0.2.4-alpha.8" 
 
 [tool.poetry.dependencies]
 dask = {version = "^2021", optional = true, extras = ["dataframe"]}
@@ -39,27 +39,16 @@ polars = ["pyarrow", "polars"]
 pyarrow = ["pyarrow"]
 
 [tool.poetry.dev-dependencies]
-PyHive = "^0.6.4"
-PyMySQL = "^1.0.2"
-SQLAlchemy = "^1.3.23"
-clickhouse-driver = "^0.2.1"
 contexttimer = "^0.3.3"
-cx-Oracle = "^8.2.1"
 dask = {extras = ["dataframe"], version = "^2021.7.0"}
 docopt = "^0.6.2"
 ipython = "^7.31.1"
 maturin = "^0.9.4"
 modin = {extras = ["dask"], version = ">=0.10.1"}
-mysqlclient = "^2.0.3"
-pandahouse = "^0.2.7"
 polars = ">=0.8"
-presto-python-client = "^0.8.1"
-psycopg2-binary = "^2.8.6"
 pyarrow = ">=4"
-pymssql = "^2.2.2"
 pytest = "^6.2"
 pytest-benchmark = "^3.4.1"
-sqlalchemy-redshift = "^0.8.4"
 twine = "^3.4.1"
 black = "^21.4b0"
 

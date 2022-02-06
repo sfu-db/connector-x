@@ -19,7 +19,27 @@ def oracle_url() -> str:
 )
 def test_on_non_select(oracle_url: str) -> None:
     query = "CREATE TABLE non_select(id INTEGER NOT NULL)"
+    read_sql(oracle_url, query)
+
+
+@pytest.mark.skipif(
+    not os.environ.get("ORACLE_URL"), reason="Test oracle only when `ORACLE_URL` is set"
+)
+def test_oracle_complex_join(oracle_url: str) -> None:
+    query = "SELECT a.test_int, b.test_date, c.test_num_int FROM test_table a left join test_types b on a.test_int = b.test_num_int cross join (select test_num_int from test_types) c where c.test_num_int < 3"
     df = read_sql(oracle_url, query)
+    df = df.sort_values("TEST_INT").reset_index(drop=True)
+    expected = pd.DataFrame(
+        data={
+            "TEST_INT": pd.Series([1, 2, 4, 5, 5, 2333], dtype="Int64"),
+            "TEST_DATE": pd.Series(
+                ["2019-05-21", None, None, "2020-05-21", "2020-05-21", None],
+                dtype="datetime64[ns]",
+            ),
+            "TEST_NUM_INT": pd.Series([1, 1, 1, 1, 1, 1], dtype="Int64"),
+        }
+    )
+    assert_frame_equal(df, expected, check_names=True)
 
 
 @pytest.mark.skipif(
@@ -234,7 +254,7 @@ def test_oracle_with_partition_and_selection(oracle_url: str) -> None:
     not os.environ.get("ORACLE_URL"), reason="Test oracle only when `ORACLE_URL` is set"
 )
 def test_oracle_with_partition_and_spja(oracle_url: str) -> None:
-    query = "select test_table.test_int cid, SUM(test_types.test_num_float) sfloat from test_table, test_types where test_table.test_int=test_types.test_num_int group by test_table.test_int;"
+    query = "select test_table.test_int cid, SUM(test_types.test_num_float) sfloat from test_table, test_types where test_table.test_int=test_types.test_num_int group by test_table.test_int"
     df = read_sql(oracle_url, query, partition_on="cid", partition_num=2)
     expected = pd.DataFrame(
         data={
