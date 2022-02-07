@@ -13,3 +13,6 @@ pub const RECORD_BATCH_SIZE: usize = 64 * KILO;
     feature = "src_mssql"
 ))]
 pub const DB_BUFFER_SIZE: usize = 32;
+
+#[cfg(any(feature = "src_oracle"))]
+pub const ORACLE_ARRAY_SIZE: u32 = 1024;
