@@ -1,5 +1,4 @@
 import os
-from pickle import TRUE
 
 import pandas as pd
 import pytest
@@ -117,6 +116,7 @@ def test_bigquery_manual_partition(bigquery_url: str) -> None:
 def test_bigquery_some_empty_partition(bigquery_url: str) -> None:
     query = "select * from `dataprep-bigquery.dataprep.test_table` where test_int=1"
     df = read_sql(bigquery_url, query, partition_on="test_int", partition_num=3)
+    df = df.sort_values("test_int").reset_index(drop=True)
     expected = pd.DataFrame(
         index=range(1),
         data={
@@ -141,6 +141,7 @@ def test_bigquery_join(bigquery_url: str) -> None:
         bigquery_url,
         query
     )
+    df = df.sort_values("test_int").reset_index(drop=True)
     expected = pd.DataFrame(
         index=range(2),
         data={
@@ -177,6 +178,7 @@ def test_bigquery_join_with_partition(bigquery_url: str) -> None:
         partition_on="test_int",
         partition_num=3,
     )
+    df = df.sort_values("test_int").reset_index(drop=True)
     expected = pd.DataFrame(
         index=range(2),
         data={
@@ -209,12 +211,13 @@ def test_bigquery_join_with_partition(bigquery_url: str) -> None:
 def test_bigquery_aggregation1(bigquery_url: str) -> None:
     query = "SELECT test_bool, SUM(test_int) as sum_int, SUM(test_float) as sum_float FROM `dataprep-bigquery.dataprep.test_table` GROUP BY test_bool"
     df = read_sql(bigquery_url, query)
+    df = df.sort_values("sum_int").reset_index(drop=True)
     expected = pd.DataFrame(
         index=range(3),
         data={
-            "test_bool": pd.Series([False, None, True], dtype="boolean"),
-            "sum_int": pd.Series([6, 5, 2334], dtype="Int64"),
-            "sum_float": pd.Series([-2.24, None, 1.10], dtype="float64"),
+            "test_bool": pd.Series([None, False, True], dtype="boolean"),
+            "sum_int": pd.Series([5, 6, 2334], dtype="Int64"),
+            "sum_float": pd.Series([None, -2.24, 1.10], dtype="float64"),
         },
     )
     assert_frame_equal(df, expected, check_names=True)
@@ -268,53 +271,6 @@ def test_bigquery_aggregation2_with_partition(bigquery_url: str) -> None:
         data={
             "max_int": pd.Series([2333], dtype="Int64"),
             "min_int": pd.Series([1], dtype="Int64"),
-        },
-    )
-    assert_frame_equal(df, expected, check_names=True)
-
-
-@pytest.mark.skipif(
-    not os.environ.get("BIGQUERY_URL"),
-    reason="Test bigquery only when `BIGQUERY_URL` is set",
-)
-def test_bigquery_limit(bigquery_url: str) -> None:
-    query = "SELECT * FROM `dataprep-bigquery.dataprep.test_table` limit 3"
-    df = read_sql(
-        bigquery_url,
-        query,
-    )
-    expected = pd.DataFrame(
-        index=range(3),
-        data={
-            "test_int": pd.Series([1, 4, 2333], dtype="Int64"),
-            "test_string": pd.Series(["str1", None, None], dtype="object"),
-            "test_float": pd.Series([1.1, -4.44, None], dtype="float64"),
-            "test_bool": pd.Series([True, False, True], dtype="boolean"),
-        },
-    )
-    assert_frame_equal(df, expected, check_names=True)
-
-
-@pytest.mark.skipif(
-    not os.environ.get("BIGQUERY_URL"),
-    reason="Test bigquery only when `BIGQUERY_URL` is set",
-)
-def test_bigquery_limit_with_partition(bigquery_url: str) -> None:
-    query = "SELECT * FROM `dataprep-bigquery.dataprep.test_table` limit 3"
-    df = read_sql(
-        bigquery_url,
-        query,
-        partition_on="test_int",
-        partition_range=(0, 2000),
-        partition_num=3,
-    )
-    expected = pd.DataFrame(
-        index=range(3),
-        data={
-            "test_int": pd.Series([4, 5, 2], dtype="Int64"),
-            "test_string": pd.Series([ None, "str05", "str2"], dtype="object"),
-            "test_float": pd.Series([-4.44, None, 2.20], dtype="float64"),
-            "test_bool": pd.Series([False, None, False], dtype="boolean"),
         },
     )
     assert_frame_equal(df, expected, check_names=True)
