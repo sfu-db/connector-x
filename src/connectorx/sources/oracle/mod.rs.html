@@ -319,33 +319,49 @@
 <span id="319">319</span>
 <span id="320">320</span>
 <span id="321">321</span>
+<span id="322">322</span>
+<span id="323">323</span>
+<span id="324">324</span>
+<span id="325">325</span>
+<span id="326">326</span>
+<span id="327">327</span>
+<span id="328">328</span>
+<span id="329">329</span>
+<span id="330">330</span>
+<span id="331">331</span>
+<span id="332">332</span>
+<span id="333">333</span>
+<span id="334">334</span>
+<span id="335">335</span>
 </pre><pre class="rust"><code><span class="kw">mod</span> <span class="ident">errors</span>;
 <span class="kw">mod</span> <span class="ident">typesystem</span>;
 
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::errors::OracleSourceError</span>;
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::typesystem::OracleTypeSystem</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::constants</span>::{<span class="ident">DB_BUFFER_SIZE</span>, <span class="ident">ORACLE_ARRAY_SIZE</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">data_order::DataOrder</span>,
     <span class="ident">errors::ConnectorXError</span>,
     <span class="ident">sources</span>::{<span class="ident">PartitionParser</span>, <span class="ident">Produce</span>, <span class="ident">Source</span>, <span class="ident">SourcePartition</span>},
     <span class="ident">sql</span>::{<span class="ident">count_query</span>, <span class="ident">limit1_query_oracle</span>, <span class="ident">CXQuery</span>},
+    <span class="ident">utils::DummyBox</span>,
 };
 <span class="kw">use</span> <span class="ident">chrono</span>::{<span class="ident">DateTime</span>, <span class="ident">NaiveDate</span>, <span class="ident">NaiveDateTime</span>, <span class="ident">Utc</span>};
 <span class="kw">use</span> <span class="ident">fehler</span>::{<span class="ident">throw</span>, <span class="ident">throws</span>};
 <span class="kw">use</span> <span class="ident">log::debug</span>;
+<span class="kw">use</span> <span class="ident">owning_ref::OwningHandle</span>;
 <span class="kw">use</span> <span class="ident">r2d2</span>::{<span class="ident">Pool</span>, <span class="ident">PooledConnection</span>};
+<span class="kw">use</span> <span class="ident">r2d2_oracle::oracle::ResultSet</span>;
 <span class="kw">use</span> <span class="ident">r2d2_oracle</span>::{
-    <span class="ident">oracle</span>::{<span class="ident">Connector</span>, <span class="ident">Row</span>},
+    <span class="ident">oracle</span>::{<span class="ident">Connector</span>, <span class="ident">Row</span>, <span class="ident">Statement</span>},
     <span class="ident">OracleConnectionManager</span>,
 };
+<span class="kw">use</span> <span class="ident">sqlparser::dialect::Dialect</span>;
 <span class="kw">use</span> <span class="ident">url::Url</span>;
+<span class="kw">use</span> <span class="ident">urlencoding::decode</span>;
+
 <span class="kw">type</span> <span class="ident">OracleManager</span> <span class="op">=</span> <span class="ident">OracleConnectionManager</span>;
 <span class="kw">type</span> <span class="ident">OracleConn</span> <span class="op">=</span> <span class="ident">PooledConnection</span><span class="op">&lt;</span><span class="ident">OracleManager</span><span class="op">&gt;</span>;
-
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::errors::OracleSourceError</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::constants::DB_BUFFER_SIZE</span>;
-<span class="kw">use</span> <span class="ident">r2d2_oracle::oracle::ResultSet</span>;
-<span class="kw">use</span> <span class="ident">sqlparser::dialect::Dialect</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">typesystem::OracleTypeSystem</span>;
-<span class="kw">use</span> <span class="ident">urlencoding::decode</span>;
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">OracleDialect</span> {}
@@ -548,8 +564,9 @@
     <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">OracleSourceError</span>)]</span>
     <span class="kw">fn</span> <span class="ident">parser</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="ident"><span class="self">Self</span>::Parser</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">query</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">query</span>.<span class="ident">clone</span>();
-        <span class="kw">let</span> <span class="ident">iter</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">conn</span>.<span class="ident">query</span>(<span class="ident">query</span>.<span class="ident">as_str</span>(), <span class="kw-2">&amp;</span>[])<span class="question-mark">?</span>;
-        <span class="ident">OracleTextSourceParser::new</span>(<span class="ident">iter</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">schema</span>)
+
+        <span class="comment">// let iter = self.conn.query(query.as_str(), &amp;[])?;</span>
+        <span class="ident">OracleTextSourceParser::new</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">conn</span>, <span class="ident">query</span>.<span class="ident">as_str</span>(), <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">schema</span>)<span class="question-mark">?</span>
     }
 
     <span class="kw">fn</span> <span class="ident">nrows</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
@@ -562,7 +579,7 @@
 }
 
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">OracleTextSourceParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="ident">iter</span>: <span class="ident">ResultSet</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">Row</span><span class="op">&gt;</span>,
+    <span class="ident">rows</span>: <span class="ident">OwningHandle</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Statement</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">DummyBox</span><span class="op">&lt;</span><span class="ident">ResultSet</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">Row</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="ident">rowbuf</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Row</span><span class="op">&gt;</span>,
     <span class="ident">ncols</span>: <span class="ident">usize</span>,
     <span class="ident">current_col</span>: <span class="ident">usize</span>,
@@ -570,9 +587,20 @@
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">OracleTextSourceParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">iter</span>: <span class="ident">ResultSet</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">Row</span><span class="op">&gt;</span>, <span class="ident">schema</span>: <span class="kw-2">&amp;</span>[<span class="ident">OracleTypeSystem</span>]) -&gt; <span class="self">Self</span> {
+    <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">OracleSourceError</span>)]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">conn</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">OracleConn</span>, <span class="ident">query</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">schema</span>: <span class="kw-2">&amp;</span>[<span class="ident">OracleTypeSystem</span>]) -&gt; <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="ident">stmt</span> <span class="op">=</span> <span class="ident">conn</span>
+            .<span class="ident">statement</span>(<span class="ident">query</span>)
+            .<span class="ident">prefetch_rows</span>(<span class="ident">ORACLE_ARRAY_SIZE</span>)
+            .<span class="ident">fetch_array_size</span>(<span class="ident">ORACLE_ARRAY_SIZE</span>)
+            .<span class="ident">build</span>()<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">rows</span>: <span class="ident">OwningHandle</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Statement</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">DummyBox</span><span class="op">&lt;</span><span class="ident">ResultSet</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">Row</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span>
+            <span class="ident">OwningHandle::new_with_fn</span>(<span class="ident">Box::new</span>(<span class="ident">stmt</span>), <span class="op">|</span><span class="ident">stmt</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">Statement</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">|</span> <span class="kw">unsafe</span> {
+                <span class="ident">DummyBox</span>((<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span>(<span class="ident">stmt</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">Statement</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>)).<span class="ident">query</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">unwrap</span>())
+            });
+
         <span class="self">Self</span> {
-            <span class="ident">iter</span>,
+            <span class="ident">rows</span>,
             <span class="ident">rowbuf</span>: <span class="ident">Vec::with_capacity</span>(<span class="ident">DB_BUFFER_SIZE</span>),
             <span class="ident">ncols</span>: <span class="ident">schema</span>.<span class="ident">len</span>(),
             <span class="ident">current_row</span>: <span class="number">0</span>,
@@ -599,7 +627,7 @@
             <span class="self">self</span>.<span class="ident">rowbuf</span>.<span class="ident">drain</span>(..);
         }
         <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">DB_BUFFER_SIZE</span> {
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">item</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">iter</span>.<span class="ident">next</span>() {
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">item</span>) <span class="op">=</span> (<span class="kw-2">*</span><span class="self">self</span>.<span class="ident">rows</span>).<span class="ident">next</span>() {
                 <span class="self">self</span>.<span class="ident">rowbuf</span>.<span class="ident">push</span>(<span class="ident">item</span><span class="question-mark">?</span>);
             } <span class="kw">else</span> {
                 <span class="kw">break</span>;

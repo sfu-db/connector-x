@@ -13,9 +13,14 @@
 <span id="13">13</span>
 <span id="14">14</span>
 <span id="15">15</span>
+<span id="16">16</span>
+<span id="17">17</span>
+<span id="18">18</span>
+<span id="19">19</span>
 </pre><pre class="rust"><code><span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dst_arrow&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dst_arrow2&quot;</span>))]</span>
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const</span> <span class="ident">SECONDS_IN_DAY</span>: <span class="ident">i64</span> <span class="op">=</span> <span class="number">86_400</span>;
 
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
 <span class="kw">const</span> <span class="ident">KILO</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">10</span>;
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dst_arrow&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dst_arrow2&quot;</span>))]</span>
@@ -28,6 +33,9 @@
     <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;src_mssql&quot;</span>
 ))]</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DB_BUFFER_SIZE</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">32</span>;
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;src_oracle&quot;</span>))]</span>
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ORACLE_ARRAY_SIZE</span>: <span class="ident">u32</span> <span class="op">=</span> (<span class="number">1</span> <span class="op">*</span> <span class="ident">KILO</span>) <span class="kw">as</span> <span class="ident">u32</span>;
 </code></pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="connectorx" data-search-index-js="../../search-index.js" data-search-js="../../search.js"></div>
     <script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script>

@@ -1,1 +1,1 @@
-initSidebarItems({"constant":[["DB_BUFFER_SIZE",""],["RECORD_BATCH_SIZE",""]]});
+initSidebarItems({"constant":[["DB_BUFFER_SIZE",""],["ORACLE_ARRAY_SIZE",""],["RECORD_BATCH_SIZE",""]]});
