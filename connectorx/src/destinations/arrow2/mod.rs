@@ -20,7 +20,7 @@ pub use errors::{Arrow2DestinationError, Result};
 use fehler::throw;
 use fehler::throws;
 use funcs::{FFinishBuilder, FNewBuilder, FNewField};
-use polars::frame::DataFrame;
+use polars::prelude::DataFrame;
 use std::convert::TryFrom;
 use std::sync::{Arc, Mutex};
 pub use typesystem::Arrow2TypeSystem;
