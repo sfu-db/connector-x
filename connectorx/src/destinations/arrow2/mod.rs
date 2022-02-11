@@ -11,6 +11,7 @@ use crate::data_order::DataOrder;
 use crate::typesystem::{Realize, TypeAssoc, TypeSystem};
 use anyhow::anyhow;
 use arrow2::array::Array;
+use arrow2::array::ArrayRef;
 use arrow2::array::MutableArray;
 use arrow2::datatypes::Schema;
 use arrow2::chunk::Chunk;
@@ -116,10 +117,12 @@ impl Arrow2Destination {
 
     #[throws(Arrow2DestinationError)]
     pub fn polars(self) -> DataFrame {
-        let rbs = self.arrow()?;
-        let chunk: &[Arc<&dyn arrow2::array::Array>] = rbs[0].arrays();
-        let fields: &[arrow2::datatypes::Field] = self.arrow_schema.fields.as_slice();
-        DataFrame::try_from((chunk, fields)).unwrap()
+        let schema = &self.arrow_schema.clone();
+        let fields: &[arrow2::datatypes::Field] = schema.fields.as_slice();
+        let rbs: Vec<Chunk<ArrayRef>> = self.arrow()?;
+        let rb: Chunk<ArrayRef> = rbs[0].clone();
+        
+        DataFrame::try_from((rb, fields)).unwrap()
     }
 }
 
