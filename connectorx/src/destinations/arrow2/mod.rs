@@ -121,7 +121,6 @@ impl Arrow2Destination {
         let fields: &[arrow2::datatypes::Field] = schema.fields.as_slice();
         let rbs: Vec<Chunk<ArrayRef>> = self.arrow()?;
         let rb: Chunk<ArrayRef> = rbs[0].clone();
-        
         DataFrame::try_from((rb, fields)).unwrap()
     }
 }
