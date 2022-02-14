@@ -96,7 +96,6 @@ impl Destination for Arrow2Destination {
             partitions.push(ArrowPartitionWriter::new(
                 self.schema.clone(),
                 Arc::clone(&self.data),
-                Arc::clone(&self.arrow_schema),
             )?);
         }
         partitions
@@ -109,17 +108,20 @@ impl Destination for Arrow2Destination {
 
 impl Arrow2Destination {
     #[throws(Arrow2DestinationError)]
-    pub fn arrow(self) -> Vec<Chunk<Arc<dyn Array>>> {
+    pub fn arrow(self) -> (Vec<Chunk<Arc<dyn Array>>>, Arc<Schema>) {
         let lock = Arc::try_unwrap(self.data).map_err(|_| anyhow!("Partitions are not freed"))?;
-        lock.into_inner()
-            .map_err(|e| anyhow!("mutex poisoned {}", e))?
+        (
+            lock.into_inner()
+                .map_err(|e| anyhow!("mutex poisoned {}", e))?,
+            self.arrow_schema,
+        )
     }
 
     #[throws(Arrow2DestinationError)]
     pub fn polars(self) -> DataFrame {
-        let schema = &self.arrow_schema.clone();
+        // let schema = &self.arrow_schema.clone();
+        let (rbs, schema): (Vec<Chunk<ArrayRef>>, Arc<Schema>) = self.arrow()?;
         let fields: &[arrow2::datatypes::Field] = schema.fields.as_slice();
-        let rbs: Vec<Chunk<ArrayRef>> = self.arrow()?;
         let rb: Chunk<ArrayRef> = rbs[0].clone();
         DataFrame::try_from((rb, fields)).unwrap()
     }
@@ -131,23 +133,17 @@ pub struct ArrowPartitionWriter {
     current_row: usize,
     current_col: usize,
     data: Arc<Mutex<Vec<Chunk<Arc<dyn Array>>>>>,
-    arrow_schema: Arc<Schema>,
 }
 
 impl ArrowPartitionWriter {
     #[throws(Arrow2DestinationError)]
-    fn new(
-        schema: Vec<Arrow2TypeSystem>,
-        data: Arc<Mutex<Vec<Chunk<Arc<dyn Array>>>>>,
-        arrow_schema: Arc<Schema>,
-    ) -> Self {
+    fn new(schema: Vec<Arrow2TypeSystem>, data: Arc<Mutex<Vec<Chunk<Arc<dyn Array>>>>>) -> Self {
         let mut pw = ArrowPartitionWriter {
             schema,
             builders: None,
             current_row: 0,
             current_col: 0,
             data,
-            arrow_schema,
         };
         pw.allocate()?;
         pw
