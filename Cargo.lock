@@ -99,19 +99,6 @@ dependencies = [
 [[package]]
 name = "arrow2"
 version = "0.9.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "aea88c49c98db9de8c72ccaa0470182857e70faa635f32fc4aa3c9e1a1dfefea"
-dependencies = [
- "bytemuck",
- "chrono",
- "hash_hasher",
- "num-traits",
- "simdutf8",
-]
-
-[[package]]
-name = "arrow2"
-version = "0.9.1"
 source = "git+https://github.com/jorgecarleitao/arrow2?rev=394a699c106651c7b79d4cc62bb8d258c60d3911#394a699c106651c7b79d4cc62bb8d258c60d3911"
 dependencies = [
  "bytemuck",
@@ -568,7 +555,7 @@ version = "0.2.4-alpha.8"
 dependencies = [
  "anyhow",
  "arrow",
- "arrow2 0.9.1 (git+https://github.com/jorgecarleitao/arrow2?rev=394a699c106651c7b79d4cc62bb8d258c60d3911)",
+ "arrow2",
  "bb8",
  "bb8-tiberius",
  "chrono",
@@ -617,7 +604,7 @@ version = "0.2.4-alpha.8"
 dependencies = [
  "anyhow",
  "arrow",
- "arrow2 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "arrow2",
  "bitfield",
  "built",
  "bytes",
@@ -2512,7 +2499,7 @@ name = "polars-arrow"
 version = "0.19.1"
 source = "git+https://github.com/pola-rs/polars#5de6940a171bec9a1608da66a00b11e1220475bb"
 dependencies = [
- "arrow2 0.9.1 (git+https://github.com/jorgecarleitao/arrow2?rev=394a699c106651c7b79d4cc62bb8d258c60d3911)",
+ "arrow2",
  "hashbrown 0.12.0",
  "num",
  "thiserror",
@@ -2525,7 +2512,7 @@ source = "git+https://github.com/pola-rs/polars#5de6940a171bec9a1608da66a00b11e1
 dependencies = [
  "ahash",
  "anyhow",
- "arrow2 0.9.1 (git+https://github.com/jorgecarleitao/arrow2?rev=394a699c106651c7b79d4cc62bb8d258c60d3911)",
+ "arrow2",
  "chrono",
  "hashbrown 0.12.0",
  "lazy_static",
@@ -2546,7 +2533,7 @@ source = "git+https://github.com/pola-rs/polars#5de6940a171bec9a1608da66a00b11e1
 dependencies = [
  "ahash",
  "anyhow",
- "arrow2 0.9.1 (git+https://github.com/jorgecarleitao/arrow2?rev=394a699c106651c7b79d4cc62bb8d258c60d3911)",
+ "arrow2",
  "csv-core",
  "dirs 4.0.0",
  "lazy_static",

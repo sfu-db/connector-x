@@ -146,6 +146,7 @@ impl Arrow2Destination {
                         let name = col.name().to_string();
                         series.push(Series::new(&name, col));
                     }
+                    continue;
                 }
 
                 for (i, col) in columns.into_iter().enumerate() {
