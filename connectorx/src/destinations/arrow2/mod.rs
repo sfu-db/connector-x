@@ -20,7 +20,7 @@ pub use errors::{Arrow2DestinationError, Result};
 use fehler::throw;
 use fehler::throws;
 use funcs::{FFinishBuilder, FNewBuilder, FNewField};
-use polars::prelude::DataFrame;
+use polars::prelude::{ArrowField, DataFrame, PolarsError, Series};
 use std::convert::TryFrom;
 use std::sync::{Arc, Mutex};
 pub use typesystem::Arrow2TypeSystem;
@@ -119,11 +119,44 @@ impl Arrow2Destination {
 
     #[throws(Arrow2DestinationError)]
     pub fn polars(self) -> DataFrame {
-        // let schema = &self.arrow_schema.clone();
         let (rbs, schema): (Vec<Chunk<ArrayRef>>, Arc<Schema>) = self.arrow()?;
         let fields: &[arrow2::datatypes::Field] = schema.fields.as_slice();
-        let rb: Chunk<ArrayRef> = rbs[0].clone();
-        DataFrame::try_from((rb, fields)).unwrap()
+
+        // This should be in polars but their version needs updating.
+        // Whave placed this here contained in an inner function until the fix is merged upstream
+        fn try_from(
+            chunks: (&[Chunk<ArrayRef>], &[ArrowField]),
+        ) -> std::result::Result<DataFrame, PolarsError> {
+            use polars::prelude::NamedFrom;
+
+            let mut series: Vec<Series> = vec![];
+
+            for chunk in chunks.0.iter() {
+                let columns_results: std::result::Result<Vec<Series>, PolarsError> = chunk
+                    .columns()
+                    .iter()
+                    .zip(chunks.1)
+                    .map(|(arr, field)| Series::try_from((field.name.as_ref(), arr.clone())))
+                    .collect();
+
+                let columns = columns_results?;
+
+                if series.is_empty() {
+                    for col in columns.iter() {
+                        let name = col.name().to_string();
+                        series.push(Series::new(&name, col));
+                    }
+                }
+
+                for (i, col) in columns.into_iter().enumerate() {
+                    series[i].append(&col)?;
+                }
+            }
+
+            DataFrame::new(series)
+        }
+
+        try_from((&rbs, fields)).unwrap()
     }
 }
 
