@@ -9,7 +9,7 @@ version = "0.2.4-alpha.8"
 [dependencies]
 anyhow = "1"
 arrow = "6.4.0"
-arrow2 = "0.8"
+arrow2 = {git = "https://github.com/jorgecarleitao/arrow2", rev = "dc516495a5a49ae41d3c68caab4e33dd57337640", default-features = false}
 bitfield = "0.13"
 bytes = "1"
 chrono = "0.4"
