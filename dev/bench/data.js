@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1644431651949,
+  "lastUpdate": 1644969924719,
   "repoUrl": "https://github.com/sfu-db/connector-x",
   "entries": {
     "ConnectorX TPC-H Scale@1 Benchmarks": [
@@ -7296,6 +7296,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 4.165416679804586",
             "extra": "mean: 18.86208946891129 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "xiaoying_wang@sfu.ca",
+            "name": "Xiaoying Wang",
+            "username": "wangxiaoying"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "e79490d25da1d2802cac1a218f9a3958c652435a",
+          "message": "Merge pull request #234 from glennpierce/main\n\nUpdate to use polars 0.19.1 and arrow2 0.9",
+          "timestamp": "2022-02-15T15:52:03-08:00",
+          "tree_id": "038c5cf9fb80c2eab3f9430567a8fb3908f619a1",
+          "url": "https://github.com/sfu-db/connector-x/commit/e79490d25da1d2802cac1a218f9a3958c652435a"
+        },
+        "date": 1644969921918,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_mysql",
+            "value": 0.05232794441994736,
+            "unit": "iter/sec",
+            "range": "stddev: 3.2258842015531553",
+            "extra": "mean: 19.110248091816903 sec\nrounds: 5"
+          },
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_postgres",
+            "value": 0.07115280412422666,
+            "unit": "iter/sec",
+            "range": "stddev: 3.477015195854756",
+            "extra": "mean: 14.054259875044227 sec\nrounds: 5"
           }
         ]
       }
