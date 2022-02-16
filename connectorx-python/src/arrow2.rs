@@ -1,6 +1,11 @@
 use crate::errors::ConnectorXPythonError;
 use crate::source_router::{SourceConn, SourceType};
-use arrow2::{datatypes::Field, ffi, record_batch::RecordBatch};
+use arrow2::{
+    array::ArrayRef,
+    chunk::Chunk,
+    datatypes::{Field, Schema},
+    ffi,
+};
 use connectorx::{
     destinations::arrow2::Arrow2Destination as ArrowDestination,
     prelude::*,
@@ -210,24 +215,22 @@ pub fn write_arrow<'a>(
         }
     }
 
-    let rbs = destination.arrow()?;
-    let ptrs = to_ptrs(rbs);
+    let (rbs, schema) = destination.arrow()?;
+    let ptrs = to_ptrs(rbs, schema);
     let obj: PyObject = ptrs.into_py(py);
     obj.into_ref(py)
 }
 
-fn to_ptrs(rbs: Vec<RecordBatch>) -> (Vec<String>, Vec<Vec<(uintptr_t, uintptr_t)>>) {
+fn to_ptrs(
+    rbs: Vec<Chunk<ArrayRef>>,
+    schema: Arc<Schema>,
+) -> (Vec<String>, Vec<Vec<(uintptr_t, uintptr_t)>>) {
     if rbs.is_empty() {
         return (vec![], vec![]);
     }
 
     let mut result = vec![];
-    let names = rbs[0]
-        .schema()
-        .fields()
-        .iter()
-        .map(|f| f.name().clone())
-        .collect();
+    let names = schema.fields.iter().map(|f| f.name.clone()).collect();
 
     for rb in rbs {
         let mut cols = vec![];

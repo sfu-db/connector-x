@@ -98,12 +98,13 @@ dependencies = [
 
 [[package]]
 name = "arrow2"
-version = "0.8.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d3452b2ae9727464a31a726c07ffec0c0da3b87831610d9ac99fc691c78b3a44"
+version = "0.9.1"
+source = "git+https://github.com/jorgecarleitao/arrow2?rev=dc516495a5a49ae41d3c68caab4e33dd57337640#dc516495a5a49ae41d3c68caab4e33dd57337640"
 dependencies = [
+ "bytemuck",
  "chrono",
  "csv",
+ "either",
  "hash_hasher",
  "lexical-core 0.8.2",
  "multiversion",
@@ -400,6 +401,20 @@ name = "bytemuck"
 version = "1.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "72957246c41db82b8ef88a5486143830adeb8227ef9837740bdec67724cf2c5b"
+dependencies = [
+ "bytemuck_derive",
+]
+
+[[package]]
+name = "bytemuck_derive"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8e215f8c2f9f79cb53c8335e687ffd07d5bfcb6fe5fc80723762d0be46e7cc54"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
 
 [[package]]
 name = "byteorder"
@@ -536,7 +551,7 @@ dependencies = [
 
 [[package]]
 name = "connectorx"
-version = "0.2.4-alpha.8"
+version = "0.2.4-alpha.9"
 dependencies = [
  "anyhow",
  "arrow",
@@ -585,7 +600,7 @@ dependencies = [
 
 [[package]]
 name = "connectorx-python"
-version = "0.2.4-alpha.8"
+version = "0.2.4-alpha.9"
 dependencies = [
  "anyhow",
  "arrow",
@@ -1388,6 +1403,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ab5ef0d4909ef3724cc8cce6ccc8572c5c817592e9285f5464f8e86f8bd3726e"
 dependencies = [
  "ahash",
+]
+
+[[package]]
+name = "hashbrown"
+version = "0.12.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8c21d40587b92fa6a6c6e3c1bdbf87d75511db5672f9c93175574b3a00df1758"
+dependencies = [
+ "ahash",
  "rayon",
 ]
 
@@ -1397,7 +1421,7 @@ version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7249a3129cbc1ffccd74857f81464a323a152173cdb134e0fd81bc803b29facf"
 dependencies = [
- "hashbrown",
+ "hashbrown 0.11.2",
 ]
 
 [[package]]
@@ -1539,7 +1563,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bc633605454125dec4b66843673f01c7df2b89479b32e0ed634e43a91cff62a5"
 dependencies = [
  "autocfg",
- "hashbrown",
+ "hashbrown 0.11.2",
 ]
 
 [[package]]
@@ -1804,7 +1828,7 @@ version = "0.6.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7ea2d928b485416e8908cff2d97d621db22b27f7b3b6729e438bcf42c671ba91"
 dependencies = [
- "hashbrown",
+ "hashbrown 0.11.2",
 ]
 
 [[package]]
@@ -1863,9 +1887,9 @@ dependencies = [
 
 [[package]]
 name = "memmap2"
-version = "0.5.0"
+version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4647a11b578fead29cdbb34d4adef8dd3dc35b876c9c6d5240d83f205abfe96e"
+checksum = "057a3db23999c867821a7a59feb06a578fcb03685e983dff90daf9e7d24ac08f"
 dependencies = [
  "libc",
 ]
@@ -2461,38 +2485,36 @@ dependencies = [
 
 [[package]]
 name = "polars"
-version = "0.18.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3e9211d1bb8d2d81541e4ab80ce9148a8e2a987d6412c2a48017fbbe24231ea1"
+version = "0.19.1"
+source = "git+https://github.com/pola-rs/polars?rev=d7bc52e1d9b984e521094bc926e214b8fef417c8#d7bc52e1d9b984e521094bc926e214b8fef417c8"
 dependencies = [
  "polars-core",
  "polars-io",
  "polars-lazy",
+ "polars-time",
 ]
 
 [[package]]
 name = "polars-arrow"
-version = "0.18.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fa5ee9c385bf6643893f98efa80ff5a07169b50f65962c7843c0a13e12f0b0cf"
+version = "0.19.1"
+source = "git+https://github.com/pola-rs/polars?rev=d7bc52e1d9b984e521094bc926e214b8fef417c8#d7bc52e1d9b984e521094bc926e214b8fef417c8"
 dependencies = [
  "arrow2",
+ "hashbrown 0.12.0",
  "num",
  "thiserror",
 ]
 
 [[package]]
 name = "polars-core"
-version = "0.18.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3cb1de44e479ce2764a7a3ad057e16f434efa334feb993284e1a48bb8888c6d1"
+version = "0.19.1"
+source = "git+https://github.com/pola-rs/polars?rev=d7bc52e1d9b984e521094bc926e214b8fef417c8#d7bc52e1d9b984e521094bc926e214b8fef417c8"
 dependencies = [
  "ahash",
  "anyhow",
  "arrow2",
  "chrono",
- "hashbrown",
- "itertools",
+ "hashbrown 0.12.0",
  "lazy_static",
  "num",
  "num_cpus",
@@ -2506,9 +2528,8 @@ dependencies = [
 
 [[package]]
 name = "polars-io"
-version = "0.18.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8bcb74f52ee9ff84863ae01de6ba25db092a9880302db4bf8f351f65b3ff0d12"
+version = "0.19.1"
+source = "git+https://github.com/pola-rs/polars?rev=d7bc52e1d9b984e521094bc926e214b8fef417c8#d7bc52e1d9b984e521094bc926e214b8fef417c8"
 dependencies = [
  "ahash",
  "anyhow",
@@ -2530,15 +2551,35 @@ dependencies = [
 
 [[package]]
 name = "polars-lazy"
-version = "0.18.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "43f91022ba6463df71ad6eb80ac2307884578d9959e85e1fe9dac18988291d46"
+version = "0.19.1"
+source = "git+https://github.com/pola-rs/polars?rev=d7bc52e1d9b984e521094bc926e214b8fef417c8#d7bc52e1d9b984e521094bc926e214b8fef417c8"
 dependencies = [
  "ahash",
- "itertools",
+ "glob",
  "polars-arrow",
  "polars-core",
  "polars-io",
+ "polars-time",
+ "polars-utils",
+ "rayon",
+]
+
+[[package]]
+name = "polars-time"
+version = "0.1.1"
+source = "git+https://github.com/pola-rs/polars?rev=d7bc52e1d9b984e521094bc926e214b8fef417c8#d7bc52e1d9b984e521094bc926e214b8fef417c8"
+dependencies = [
+ "chrono",
+ "polars-arrow",
+ "polars-core",
+]
+
+[[package]]
+name = "polars-utils"
+version = "0.1.0"
+source = "git+https://github.com/pola-rs/polars?rev=d7bc52e1d9b984e521094bc926e214b8fef417c8#d7bc52e1d9b984e521094bc926e214b8fef417c8"
+dependencies = [
+ "parking_lot",
  "rayon",
 ]
 

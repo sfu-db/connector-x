@@ -1,30 +1,32 @@
 mod errors;
 mod typesystem;
 
+pub use self::errors::OracleSourceError;
+pub use self::typesystem::OracleTypeSystem;
+use crate::constants::{DB_BUFFER_SIZE, ORACLE_ARRAY_SIZE};
 use crate::{
     data_order::DataOrder,
     errors::ConnectorXError,
     sources::{PartitionParser, Produce, Source, SourcePartition},
     sql::{count_query, limit1_query_oracle, CXQuery},
+    utils::DummyBox,
 };
 use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
 use fehler::{throw, throws};
 use log::debug;
+use owning_ref::OwningHandle;
 use r2d2::{Pool, PooledConnection};
+use r2d2_oracle::oracle::ResultSet;
 use r2d2_oracle::{
-    oracle::{Connector, Row},
+    oracle::{Connector, Row, Statement},
     OracleConnectionManager,
 };
+use sqlparser::dialect::Dialect;
 use url::Url;
+use urlencoding::decode;
+
 type OracleManager = OracleConnectionManager;
 type OracleConn = PooledConnection<OracleManager>;
-
-pub use self::errors::OracleSourceError;
-use crate::constants::DB_BUFFER_SIZE;
-use r2d2_oracle::oracle::ResultSet;
-use sqlparser::dialect::Dialect;
-pub use typesystem::OracleTypeSystem;
-use urlencoding::decode;
 
 #[derive(Debug)]
 pub struct OracleDialect {}
@@ -227,8 +229,9 @@ impl SourcePartition for OracleSourcePartition {
     #[throws(OracleSourceError)]
     fn parser(&mut self) -> Self::Parser<'_> {
         let query = self.query.clone();
-        let iter = self.conn.query(query.as_str(), &[])?;
-        OracleTextSourceParser::new(iter, &self.schema)
+
+        // let iter = self.conn.query(query.as_str(), &[])?;
+        OracleTextSourceParser::new(&self.conn, query.as_str(), &self.schema)?
     }
 
     fn nrows(&self) -> usize {
@@ -241,7 +244,7 @@ impl SourcePartition for OracleSourcePartition {
 }
 
 pub struct OracleTextSourceParser<'a> {
-    iter: ResultSet<'a, Row>,
+    rows: OwningHandle<Box<Statement<'a>>, DummyBox<ResultSet<'a, Row>>>,
     rowbuf: Vec<Row>,
     ncols: usize,
     current_col: usize,
@@ -249,9 +252,20 @@ pub struct OracleTextSourceParser<'a> {
 }
 
 impl<'a> OracleTextSourceParser<'a> {
-    pub fn new(iter: ResultSet<'a, Row>, schema: &[OracleTypeSystem]) -> Self {
+    #[throws(OracleSourceError)]
+    pub fn new(conn: &'a OracleConn, query: &str, schema: &[OracleTypeSystem]) -> Self {
+        let stmt = conn
+            .statement(query)
+            .prefetch_rows(ORACLE_ARRAY_SIZE)
+            .fetch_array_size(ORACLE_ARRAY_SIZE)
+            .build()?;
+        let rows: OwningHandle<Box<Statement<'a>>, DummyBox<ResultSet<'a, Row>>> =
+            OwningHandle::new_with_fn(Box::new(stmt), |stmt: *const Statement<'a>| unsafe {
+                DummyBox((&mut *(stmt as *mut Statement<'_>)).query(&[]).unwrap())
+            });
+
         Self {
-            iter,
+            rows,
             rowbuf: Vec::with_capacity(DB_BUFFER_SIZE),
             ncols: schema.len(),
             current_row: 0,
@@ -278,7 +292,7 @@ impl<'a> PartitionParser<'a> for OracleTextSourceParser<'a> {
             self.rowbuf.drain(..);
         }
         for _ in 0..DB_BUFFER_SIZE {
-            if let Some(item) = self.iter.next() {
+            if let Some(item) = (*self.rows).next() {
                 self.rowbuf.push(item?);
             } else {
                 break;
