@@ -26,7 +26,7 @@ def test_clickhouse_without_partition(clickhouse_url: str) -> None:
     expected = pd.DataFrame(
         index=range(3),
         data={
-            "test_int": pd.Series([1, 2, 3], dtype="Int64"),
+            "test_int": pd.Series([1, 2, 3], dtype="float64"),
             "test_str": pd.Series(["abc", "defg", "hijkl"], dtype="object"),
         },
     )
@@ -46,7 +46,7 @@ def test_clickhouse_with_partition(clickhouse_url: str) -> None:
     expected = pd.DataFrame(
         index=range(6),
         data={
-            "test_int": pd.Series([1, 2, 3, 4, 5, 6], dtype="Int64"),
+            "test_int": pd.Series([1, 2, 3, 4, 5, 6], dtype="float64"),
             "test_str": pd.Series(
                 ["abc", "defg", "hijkl", "mnopqr", "st", "u"], dtype="object"
             ),
