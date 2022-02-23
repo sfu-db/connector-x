@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1645597537935,
+  "lastUpdate": 1645599832375,
   "repoUrl": "https://github.com/sfu-db/connector-x",
   "entries": {
     "ConnectorX TPC-H Scale@1 Benchmarks": [
@@ -7448,6 +7448,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.8261236420754562",
             "extra": "mean: 10.658570406585932 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "wangxiaoying0369@gmail.com",
+            "name": "wangxiaoying",
+            "username": "wangxiaoying"
+          },
+          "committer": {
+            "email": "wangxiaoying0369@gmail.com",
+            "name": "wangxiaoying",
+            "username": "wangxiaoying"
+          },
+          "distinct": true,
+          "id": "d6b2299542c0275a04acc75e97e3f422a7a80f9d",
+          "message": "0.2.4-alpha.10: switch to maturin for wheel building",
+          "timestamp": "2022-02-23T06:53:16Z",
+          "tree_id": "8a6ca6df628c256626749a954ca8a8ef91d4f284",
+          "url": "https://github.com/sfu-db/connector-x/commit/d6b2299542c0275a04acc75e97e3f422a7a80f9d"
+        },
+        "date": 1645599829794,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_mysql",
+            "value": 0.06857529800976005,
+            "unit": "iter/sec",
+            "range": "stddev: 0.91938798066769",
+            "extra": "mean: 14.582510452345014 sec\nrounds: 5"
+          },
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_postgres",
+            "value": 0.07283743612244797,
+            "unit": "iter/sec",
+            "range": "stddev: 2.381005933999852",
+            "extra": "mean: 13.729203734174371 sec\nrounds: 5"
           }
         ]
       }
