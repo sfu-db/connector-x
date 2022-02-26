@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1645814835963,
+  "lastUpdate": 1645842344333,
   "repoUrl": "https://github.com/sfu-db/connector-x",
   "entries": {
     "ConnectorX TPC-H Scale@1 Benchmarks": [
@@ -7676,6 +7676,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 4.58315491736793",
             "extra": "mean: 84.54339955672621 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "wangxiaoying0369@gmail.com",
+            "name": "wangxiaoying",
+            "username": "wangxiaoying"
+          },
+          "committer": {
+            "email": "wangxiaoying0369@gmail.com",
+            "name": "wangxiaoying",
+            "username": "wangxiaoying"
+          },
+          "distinct": true,
+          "id": "fd7a61d910110310d521df66e90f0465942ccd2e",
+          "message": "update: manylinux:2014 for build arm wheel on linux",
+          "timestamp": "2022-02-26T02:01:09Z",
+          "tree_id": "fd122b33ce52e750afa3390644b76f01e80ed4c3",
+          "url": "https://github.com/sfu-db/connector-x/commit/fd7a61d910110310d521df66e90f0465942ccd2e"
+        },
+        "date": 1645842342804,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_mysql",
+            "value": 0.015456462865382128,
+            "unit": "iter/sec",
+            "range": "stddev: 3.315480536473377",
+            "extra": "mean: 64.69785543493927 sec\nrounds: 5"
+          },
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_postgres",
+            "value": 0.010782103394930189,
+            "unit": "iter/sec",
+            "range": "stddev: 4.4735908715486765",
+            "extra": "mean: 92.74628181271255 sec\nrounds: 5"
           }
         ]
       }
