@@ -18,15 +18,31 @@ jobs:
           components: rustfmt
           default: true
 
-      - name: Build docs
+      - name: Intall Python
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.7
+      
+      - name: Install dependencies
+        run: |
+          pip install -r docs/requirements.txt
+
+      - name: Build the book
+        run: |
+          jupyter-book build docs
+
+      - name: Build Rust Docs
         uses: actions-rs/cargo@v1
         with:
           command: doc
           args: --no-deps --features all
 
+      - name: Move the rust doc into jupyter book
+        run: mv target/doc ./docs/_build/html/rust-docs
+
       - name: Deploy Docs 🚀
         uses: JamesIves/github-pages-deploy-action@4.0.0
         with:
           branch: gh-pages # The branch the action should deploy to.
-          folder: target/doc # The folder the action should deploy.
+          folder: ./docs/_build/html # The folder the action should deploy.
           clean-exclude: dev
