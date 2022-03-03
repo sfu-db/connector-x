@@ -244,9 +244,21 @@ const thebe_selector_output = ".output, .cell_output"
   </a>
  </li>
  <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#mysql-connection">
+   MySQL Connection
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
   <a class="reference internal nav-link" href="#mysql-pandas-type-mapping">
    MySQL-Pandas Type Mapping
   </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#performance-db-m6g-4xlarge-rds">
+     Performance (db.m6g.4xlarge RDS)
+    </a>
+   </li>
+  </ul>
  </li>
 </ul>
 
@@ -274,9 +286,21 @@ const thebe_selector_output = ".output, .cell_output"
   </a>
  </li>
  <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#mysql-connection">
+   MySQL Connection
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
   <a class="reference internal nav-link" href="#mysql-pandas-type-mapping">
    MySQL-Pandas Type Mapping
   </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#performance-db-m6g-4xlarge-rds">
+     Performance (db.m6g.4xlarge RDS)
+    </a>
+   </li>
+  </ul>
  </li>
 </ul>
 
@@ -295,6 +319,15 @@ const thebe_selector_output = ".output, .cell_output"
 <li><p><code class="docutils literal notranslate"><span class="pre">binary</span></code>: <a class="reference external" href="https://github.com/blackbeam/rust-mysql-simple">MySQL Binary protocol</a>, recommend to use in general.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">text</span></code>: <a class="reference external" href="https://github.com/blackbeam/rust-mysql-simple">MySQL Text protocol</a>, slower than <code class="docutils literal notranslate"><span class="pre">binary</span></code>, recommend to use only when <code class="docutils literal notranslate"><span class="pre">binary</span></code> protocol is not supported by the source (e.g. Clickhouse).</p></li>
 </ul>
+</div>
+<div class="section" id="mysql-connection">
+<h2>MySQL Connection<a class="headerlink" href="#mysql-connection" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">connectorx</span> <span class="k">as</span> <span class="nn">cx</span>
+<span class="n">conn</span> <span class="o">=</span> <span class="s1">&#39;mysql://username:password@server:port/database&#39;</span>         <span class="c1"># connection token</span>
+<span class="n">query</span> <span class="o">=</span> <span class="s1">&#39;SELECT * FROM table&#39;</span>                                   <span class="c1"># query string</span>
+<span class="n">cx</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">query</span><span class="p">)</span>                                        <span class="c1"># read data from BigQuery</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="mysql-pandas-type-mapping">
 <h2>MySQL-Pandas Type Mapping<a class="headerlink" href="#mysql-pandas-type-mapping" title="Permalink to this headline">¶</a></h2>
@@ -392,6 +425,18 @@ const thebe_selector_output = ".output, .cell_output"
 </tr>
 </tbody>
 </table>
+<div class="section" id="performance-db-m6g-4xlarge-rds">
+<h3>Performance (db.m6g.4xlarge RDS)<a class="headerlink" href="#performance-db-m6g-4xlarge-rds" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Time chart, lower is better.</p></li>
+</ul>
+<p align="center"><img alt="time chart" src="https://raw.githubusercontent.com/sfu-db/connector-agent/main/assets/mysql-time.png"/></p>
+<ul class="simple">
+<li><p>Memory consumption chart, lower is better.</p></li>
+</ul>
+<p align="center"><img alt="memory chart" src="https://raw.githubusercontent.com/sfu-db/connector-agent/main/assets/mysql-mem.png"/></p>
+<p>In conclusion, ConnectorX uses <strong>3x</strong> less memory and <strong>8x</strong> less time compared with Pandas.</p>
+</div>
 </div>
 </div>
 

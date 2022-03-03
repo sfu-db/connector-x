@@ -239,8 +239,18 @@ const thebe_selector_output = ".output, .cell_output"
             <nav id="bd-toc-nav" aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
  <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#sqlite-connection">
+   SQLite Connection
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
   <a class="reference internal nav-link" href="#oracle-pandas-type-mapping">
    Oracle-Pandas Type Mapping
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#performance-db-r5-4xlarge-rds">
+   Performance (db.r5.4xlarge RDS)
   </a>
  </li>
 </ul>
@@ -264,8 +274,18 @@ const thebe_selector_output = ".output, .cell_output"
                         <nav aria-label="Page">
                             <ul class="visible nav section-nav flex-column">
  <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#sqlite-connection">
+   SQLite Connection
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
   <a class="reference internal nav-link" href="#oracle-pandas-type-mapping">
    Oracle-Pandas Type Mapping
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#performance-db-r5-4xlarge-rds">
+   Performance (db.r5.4xlarge RDS)
   </a>
  </li>
 </ul>
@@ -279,7 +299,15 @@ const thebe_selector_output = ".output, .cell_output"
                 
   <div class="tex2jax_ignore mathjax_ignore section" id="oracle">
 <h1>Oracle<a class="headerlink" href="#oracle" title="Permalink to this headline">¶</a></h1>
-<p>Oracle does not need to specify protocol.</p>
+<div class="section" id="sqlite-connection">
+<h2>SQLite Connection<a class="headerlink" href="#sqlite-connection" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">connectorx</span> <span class="k">as</span> <span class="nn">cx</span>
+<span class="n">conn</span> <span class="o">=</span> <span class="s1">&#39;oracle://username:password@server:port/database&#39;</span>        <span class="c1"># connection token</span>
+<span class="n">query</span> <span class="o">=</span> <span class="s1">&#39;SELECT * FROM table&#39;</span>                                   <span class="c1"># query string</span>
+<span class="n">cx</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">query</span><span class="p">)</span>                                        <span class="c1"># read data from BigQuery</span>
+</pre></div>
+</div>
+</div>
 <div class="section" id="oracle-pandas-type-mapping">
 <h2>Oracle-Pandas Type Mapping<a class="headerlink" href="#oracle-pandas-type-mapping" title="Permalink to this headline">¶</a></h2>
 <table class="colwidths-auto table">
@@ -340,6 +368,19 @@ const thebe_selector_output = ".output, .cell_output"
 </tr>
 </tbody>
 </table>
+</div>
+<div class="section" id="performance-db-r5-4xlarge-rds">
+<h2>Performance (db.r5.4xlarge RDS)<a class="headerlink" href="#performance-db-r5-4xlarge-rds" title="Permalink to this headline">¶</a></h2>
+<p><strong>Modin and Turbodbc does not support read_sql on Oracle</strong></p>
+<ul class="simple">
+<li><p>Time chart, lower is better.</p></li>
+</ul>
+<p align="center"><img alt="time chart" src="https://raw.githubusercontent.com/sfu-db/connector-x/main/assets/oracle-time.png"/></p>
+<ul class="simple">
+<li><p>Memory consumption chart, lower is better.</p></li>
+</ul>
+<p align="center"><img alt="memory chart" src="https://raw.githubusercontent.com/sfu-db/connector-x/main/assets/oracle-mem.png"/></p>
+<p>In conclusion, ConnectorX uses <strong>3x</strong> less memory and <strong>3x</strong> less time compared with Pandas.</p>
 </div>
 </div>
 

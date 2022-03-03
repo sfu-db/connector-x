@@ -239,6 +239,11 @@ const thebe_selector_output = ".output, .cell_output"
             <nav id="bd-toc-nav" aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
  <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#bigquery-connection">
+   BigQuery Connection
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
   <a class="reference internal nav-link" href="#bigquery-pandas-type-mapping">
    BigQuery-Pandas Type Mapping
   </a>
@@ -264,6 +269,11 @@ const thebe_selector_output = ".output, .cell_output"
                         <nav aria-label="Page">
                             <ul class="visible nav section-nav flex-column">
  <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#bigquery-connection">
+   BigQuery Connection
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
   <a class="reference internal nav-link" href="#bigquery-pandas-type-mapping">
    BigQuery-Pandas Type Mapping
   </a>
@@ -279,7 +289,21 @@ const thebe_selector_output = ".output, .cell_output"
                 
   <div class="tex2jax_ignore mathjax_ignore section" id="bigquery">
 <h1>BigQuery<a class="headerlink" href="#bigquery" title="Permalink to this headline">¶</a></h1>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
 <p>BigQuery does not need to specify protocol.</p>
+</div>
+<div class="section" id="bigquery-connection">
+<h2>BigQuery Connection<a class="headerlink" href="#bigquery-connection" title="Permalink to this headline">¶</a></h2>
+<p><strong>Authentication File:</strong> BigQuery connection need an authentication json file from Google Cloud Platform. If you do not have an authentication json file, you can create your BigQuery authentication <a class="reference external" href="https://cloud.google.com/docs/authentication/getting-started">here</a>.</p>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">connectorx</span> <span class="k">as</span> <span class="nn">cx</span>
+<span class="n">authentication_file_path</span> <span class="o">=</span> <span class="s1">&#39;/home/user/path/auth.json&#39;</span>      <span class="c1"># path to your authentication json file</span>
+<span class="n">conn</span> <span class="o">=</span> <span class="s1">&#39;bigquery://&#39;</span> <span class="o">+</span> <span class="n">authentication_file_path</span>             <span class="c1"># connection token</span>
+<span class="n">query</span> <span class="o">=</span> <span class="s1">&#39;SELECT * FROM `database.dataset.table`&#39;</span>            <span class="c1"># query string</span>
+<span class="n">cx</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">query</span><span class="p">)</span>                                    <span class="c1"># read data from BigQuery</span>
+</pre></div>
+</div>
+</div>
 <div class="section" id="bigquery-pandas-type-mapping">
 <h2>BigQuery-Pandas Type Mapping<a class="headerlink" href="#bigquery-pandas-type-mapping" title="Permalink to this headline">¶</a></h2>
 <table class="colwidths-auto table">

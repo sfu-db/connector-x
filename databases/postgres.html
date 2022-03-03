@@ -239,8 +239,13 @@ const thebe_selector_output = ".output, .cell_output"
             <nav id="bd-toc-nav" aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
  <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#authentication">
-   Authentication
+  <a class="reference internal nav-link" href="#protocols">
+   Protocols
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#postgres-connection">
+   Postgres Connection
   </a>
  </li>
  <li class="toc-h2 nav-item toc-entry">
@@ -252,18 +257,6 @@ const thebe_selector_output = ".output, .cell_output"
   <a class="reference internal nav-link" href="#performance-db-m6g-4xlarge-rds">
    Performance (db.m6g.4xlarge RDS)
   </a>
-  <ul class="nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#time-chart-lower-is-better">
-     Time chart, lower is better.
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#memory-consumption-chart-lower-is-better">
-     Memory consumption chart, lower is better.
-    </a>
-   </li>
-  </ul>
  </li>
 </ul>
 
@@ -286,8 +279,13 @@ const thebe_selector_output = ".output, .cell_output"
                         <nav aria-label="Page">
                             <ul class="visible nav section-nav flex-column">
  <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#authentication">
-   Authentication
+  <a class="reference internal nav-link" href="#protocols">
+   Protocols
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#postgres-connection">
+   Postgres Connection
   </a>
  </li>
  <li class="toc-h2 nav-item toc-entry">
@@ -299,18 +297,6 @@ const thebe_selector_output = ".output, .cell_output"
   <a class="reference internal nav-link" href="#performance-db-m6g-4xlarge-rds">
    Performance (db.m6g.4xlarge RDS)
   </a>
-  <ul class="nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#time-chart-lower-is-better">
-     Time chart, lower is better.
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#memory-consumption-chart-lower-is-better">
-     Memory consumption chart, lower is better.
-    </a>
-   </li>
-  </ul>
  </li>
 </ul>
 
@@ -323,11 +309,24 @@ const thebe_selector_output = ".output, .cell_output"
                 
   <div class="tex2jax_ignore mathjax_ignore section" id="postgres">
 <h1>Postgres<a class="headerlink" href="#postgres" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="authentication">
-<h2>Authentication<a class="headerlink" href="#authentication" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">connectorx</span> <span class="k">as</span> <span class="nn">cx</span>
-
-<span class="n">cx</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="s2">&quot;postgresql://username:password@server:port/database&quot;</span><span class="p">,</span> <span class="s2">&quot;SELECT * FROM lineitem&quot;</span><span class="p">,</span> <span class="n">partition_on</span><span class="o">=</span><span class="s2">&quot;l_orderkey&quot;</span><span class="p">,</span> <span class="n">partition_num</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<div class="section" id="protocols">
+<h2>Protocols<a class="headerlink" href="#protocols" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">binary</span></code>: <a class="reference external" href="https://www.postgresql.org/docs/current/sql-copy.html">Postgres Binary COPY protocol</a>, recommend to use in general since fast data parsing speed.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">csv</span></code>: <a class="reference external" href="https://www.postgresql.org/docs/current/sql-copy.html">Postgres CSV COPY protocol</a>, recommend to use when network is slow (<code class="docutils literal notranslate"><span class="pre">csv</span></code> usually results in smaller size than <code class="docutils literal notranslate"><span class="pre">binary</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cursor</span></code>: Conventional wire protocol (slowest one), recommend to use only when <code class="docutils literal notranslate"><span class="pre">binary</span></code> and <code class="docutils literal notranslate"><span class="pre">csv</span></code> is not supported by the source (e.g. Redshift).</p></li>
+</ul>
+</div>
+<div class="section" id="postgres-connection">
+<h2>Postgres Connection<a class="headerlink" href="#postgres-connection" title="Permalink to this headline">¶</a></h2>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>Adding <code class="docutils literal notranslate"><span class="pre">sslmode=require</span></code> to connection uri parameter force SSL connection. Example: <code class="docutils literal notranslate"><span class="pre">postgresql://username:password&#64;host:port/db?sslmode=require</span></code>. <code class="docutils literal notranslate"><span class="pre">sslmode=disable</span></code> to disable SSL connection.</p>
+</div>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">connectorx</span> <span class="k">as</span> <span class="nn">cx</span>
+<span class="n">conn</span> <span class="o">=</span> <span class="s1">&#39;postgres://username:password@server:port/database&#39;</span>         <span class="c1"># connection token</span>
+<span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;SELECT * FROM table&quot;</span>                                   <span class="c1"># query string</span>
+<span class="n">cx</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">query</span><span class="p">)</span>                                        <span class="c1"># read data from BigQuery</span>
 </pre></div>
 </div>
 </div>
@@ -450,15 +449,15 @@ const thebe_selector_output = ".output, .cell_output"
 </div>
 <div class="section" id="performance-db-m6g-4xlarge-rds">
 <h2>Performance (db.m6g.4xlarge RDS)<a class="headerlink" href="#performance-db-m6g-4xlarge-rds" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="time-chart-lower-is-better">
-<h3>Time chart, lower is better.<a class="headerlink" href="#time-chart-lower-is-better" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Time chart, lower is better.</p></li>
+</ul>
 <p align="center"><img alt="time chart" src="https://raw.githubusercontent.com/sfu-db/connector-agent/main/assets/pg-time.png"/></p>
-</div>
-<div class="section" id="memory-consumption-chart-lower-is-better">
-<h3>Memory consumption chart, lower is better.<a class="headerlink" href="#memory-consumption-chart-lower-is-better" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Memory consumption chart, lower is better.</p></li>
+</ul>
 <p align="center"><img alt="memory chart" src="https://raw.githubusercontent.com/sfu-db/connector-agent/main/assets/pg-mem.png"/></p>
 <p>In conclusion, ConnectorX uses <strong>3x</strong> less memory and <strong>13x</strong> less time compared with Pandas.</p>
-</div>
 </div>
 </div>
 

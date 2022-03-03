@@ -304,26 +304,9 @@ const thebe_selector_output = ".output, .cell_output"
   </ul>
  </li>
  <li class="toc-h1 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#detailed-usage-and-examples">
-   Detailed Usage and Examples
+  <a class="reference internal nav-link" href="#rust-documentation">
+   Rust Documentation
   </a>
-  <ul class="visible nav section-nav flex-column">
-   <li class="toc-h2 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#api">
-     API
-    </a>
-   </li>
-   <li class="toc-h2 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#parameters">
-     Parameters
-    </a>
-   </li>
-   <li class="toc-h2 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#examples">
-     Examples
-    </a>
-   </li>
-  </ul>
  </li>
  <li class="toc-h1 nav-item toc-entry">
   <a class="reference internal nav-link" href="#next-plan">
@@ -437,26 +420,9 @@ const thebe_selector_output = ".output, .cell_output"
   </ul>
  </li>
  <li class="toc-h1 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#detailed-usage-and-examples">
-   Detailed Usage and Examples
+  <a class="reference internal nav-link" href="#rust-documentation">
+   Rust Documentation
   </a>
-  <ul class="visible nav section-nav flex-column">
-   <li class="toc-h2 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#api">
-     API
-    </a>
-   </li>
-   <li class="toc-h2 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#parameters">
-     Parameters
-    </a>
-   </li>
-   <li class="toc-h2 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#examples">
-     Examples
-    </a>
-   </li>
-  </ul>
  </li>
  <li class="toc-h1 nav-item toc-entry">
   <a class="reference internal nav-link" href="#next-plan">
@@ -498,8 +464,7 @@ const thebe_selector_output = ".output, .cell_output"
 <div class="tex2jax_ignore mathjax_ignore section" id="connectorx-status-discussions-downloads">
 <h1>ConnectorX <a class="reference external" href="https://github.com/sfu-db/connector-x/actions"><img alt="status" src="https://github.com/sfu-db/connector-x/workflows/ci/badge.svg" /></a> <a class="reference external" href="https://github.com/sfu-db/connector-x/discussions"><img alt="discussions" src="https://img.shields.io/badge/Forum-Github%20Discussions-blue" /></a> <a class="reference external" href="https://pepy.tech/project/connectorx"><img alt="Downloads" src="https://pepy.tech/badge/connectorx" /></a><a class="headerlink" href="#connectorx-status-discussions-downloads" title="Permalink to this headline">¶</a></h1>
 <p>Load data from <img src="https://raw.githubusercontent.com/sfu-db/connector-x/main/assets/sources.gif" width="6.5%" style="margin-bottom: -2px"/> to <img src="https://raw.githubusercontent.com/sfu-db/connector-x/main/assets/destinations.gif" width="7%" style="margin-bottom: -2px"/>, the fastest way.</p>
-<p>ConnectorX enables you to load data from databases into Python in the fastest and most memory efficient way. It is a Python package that provides a high-level interface to the popular database connectors. Here is our rust documentation:</p>
-<p><span class="xref myst">rust-docs</span>.</p>
+<p>ConnectorX enables you to load data from databases into Python in the fastest and most memory efficient way. It is a Python package that provides a high-level interface to the popular database connectors. Here is our rust documentation: <a class="reference external" href="https://sfu-db.github.io/connector-x/rust-docs/connectorx/">rust-docs</a>.</p>
 <p>What you need is one line of code:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">connectorx</span> <span class="k">as</span> <span class="nn">cx</span>
 
@@ -515,7 +480,7 @@ const thebe_selector_output = ".output, .cell_output"
 <p>The function will partition the query by <strong>evenly</strong> splitting the specified column to the amount of partitions.
 ConnectorX will assign one thread for each partition to load and write data in parallel.
 Currently, we support partitioning on <strong>numerical</strong> columns (<strong>cannot contain NULL</strong>) for <strong>SPJA</strong> queries.</p>
-<p>Check out more detailed usage and examples <a class="reference external" href="#detailed-usage-and-examples">here</a>. A general introduction of the project can be found in this <a class="reference external" href="https://towardsdatascience.com/connectorx-the-fastest-way-to-load-data-from-databases-a65d4d4062d5">blog post</a>.</p>
+<p>Check out more detailed usage and examples <a class="reference internal" href="install.html"><span class="doc std std-doc">here</span></a>. A general introduction of the project can be found in this <a class="reference external" href="https://towardsdatascience.com/connectorx-the-fastest-way-to-load-data-from-databases-a65d4d4062d5">blog post</a>.</p>
 </div>
 <div class="tex2jax_ignore mathjax_ignore section" id="performance">
 <h1>Performance<a class="headerlink" href="#performance" title="Permalink to this headline">¶</a></h1>
@@ -587,98 +552,9 @@ For more planned data sources, please check out our <a class="reference external
 </ul>
 </div>
 </div>
-<div class="tex2jax_ignore mathjax_ignore section" id="detailed-usage-and-examples">
-<h1>Detailed Usage and Examples<a class="headerlink" href="#detailed-usage-and-examples" title="Permalink to this headline">¶</a></h1>
-<p>Rust docs: <a class="reference external" href="https://docs.rs/connectorx">stable</a> <a class="reference external" href="https://sfu-db.github.io/connector-x/connectorx/">nightly</a></p>
-<div class="section" id="api">
-<h2>API<a class="headerlink" href="#api" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">connectorx</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">conn</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">query</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">str</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">return_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;pandas&quot;</span><span class="p">,</span> <span class="n">protocol</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;binary&quot;</span><span class="p">,</span> <span class="n">partition_on</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">partition_range</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">partition_num</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>Run the SQL query, download the data from database into a Pandas dataframe.</p>
-</div>
-<div class="section" id="parameters">
-<h2>Parameters<a class="headerlink" href="#parameters" title="Permalink to this headline">¶</a></h2>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">conn:</span> <span class="pre">str</span></code>: Connection string URI.</p>
-<ul>
-<li><p>General supported URI scheme: <code class="docutils literal notranslate"><span class="pre">(postgres|postgressql|mysql|mssql)://username:password&#64;addr:port/dbname</span></code>.</p></li>
-<li><p>For now sqlite only support absolute path, example: <code class="docutils literal notranslate"><span class="pre">sqlite:///home/user/path/test.db</span></code>.</p></li>
-<li><p>Please check out <span class="xref myst">here</span> for more connection uri parameters supported for each database (e.g. trusted_connection for Mssql, sslmode for Postgres)</p></li>
-</ul>
-</li>
-<li><p><code class="docutils literal notranslate"><span class="pre">query:</span> <span class="pre">Union[str,</span> <span class="pre">List[str]]</span></code>: SQL query or list of SQL queries for fetching data.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">return_type:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">&quot;pandas&quot;</span></code>: The return type of this function. It can be <code class="docutils literal notranslate"><span class="pre">arrow</span></code>, <code class="docutils literal notranslate"><span class="pre">pandas</span></code>, <code class="docutils literal notranslate"><span class="pre">modin</span></code>, <code class="docutils literal notranslate"><span class="pre">dask</span></code> or <code class="docutils literal notranslate"><span class="pre">polars</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">protocol:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">&quot;binary&quot;</span></code>: The protocol used to fetch data from source, default is <code class="docutils literal notranslate"><span class="pre">binary</span></code>. Check out <span class="xref myst">here</span> to see more details.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">partition_on:</span> <span class="pre">Optional[str]</span></code>: The column to partition the result.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">partition_range:</span> <span class="pre">Optional[Tuple[int,</span> <span class="pre">int]]</span></code>: The value range of the partition column.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">partition_num:</span> <span class="pre">Optioinal[int]</span></code>: The number of partitions to generate.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">index_col:</span> <span class="pre">Optioinal[str]</span></code>: The index column to set for the result dataframe. Only applicable when <code class="docutils literal notranslate"><span class="pre">return_type</span></code> is <code class="docutils literal notranslate"><span class="pre">pandas</span></code>, <code class="docutils literal notranslate"><span class="pre">modin</span></code> or <code class="docutils literal notranslate"><span class="pre">dask</span></code>.</p></li>
-</ul>
-</div>
-<div class="section" id="examples">
-<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
-<ul>
-<li><p>Read a DataFrame from a SQL using a single thread</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">connectorx</span> <span class="k">as</span> <span class="nn">cx</span>
-
-<span class="n">postgres_url</span> <span class="o">=</span> <span class="s2">&quot;postgresql://username:password@server:port/database&quot;</span>
-<span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;SELECT * FROM lineitem&quot;</span>
-
-<span class="n">cx</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">postgres_url</span><span class="p">,</span> <span class="n">query</span><span class="p">)</span>
-</pre></div>
-</div>
-</li>
-<li><p>Read a DataFrame parallelly using 10 threads by automatically partitioning the provided SQL on the partition column (<code class="docutils literal notranslate"><span class="pre">partition_range</span></code> will be automatically  queried if not given)</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">connectorx</span> <span class="k">as</span> <span class="nn">cx</span>
-
-<span class="n">postgres_url</span> <span class="o">=</span> <span class="s2">&quot;postgresql://username:password@server:port/database&quot;</span>
-<span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;SELECT * FROM lineitem&quot;</span>
-
-<span class="n">cx</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">postgres_url</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">partition_on</span><span class="o">=</span><span class="s2">&quot;l_orderkey&quot;</span><span class="p">,</span> <span class="n">partition_num</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
-</pre></div>
-</div>
-</li>
-<li><p>Read a DataFrame parallelly using 2 threads by manually providing two partition SQLs (the schemas of all the query results should be same)</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">connectorx</span> <span class="k">as</span> <span class="nn">cx</span>
-
-<span class="n">postgres_url</span> <span class="o">=</span> <span class="s2">&quot;postgresql://username:password@server:port/database&quot;</span>
-<span class="n">queries</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;SELECT * FROM lineitem WHERE l_orderkey &lt;= 30000000&quot;</span><span class="p">,</span> <span class="s2">&quot;SELECT * FROM lineitem WHERE l_orderkey &gt; 30000000&quot;</span><span class="p">]</span>
-
-<span class="n">cx</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">postgres_url</span><span class="p">,</span> <span class="n">queries</span><span class="p">)</span>
-
-</pre></div>
-</div>
-</li>
-<li><p>Read a DataFrame parallelly using 4 threads from a more complex query</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">connectorx</span> <span class="k">as</span> <span class="nn">cx</span>
-
-<span class="n">postgres_url</span> <span class="o">=</span> <span class="s2">&quot;postgresql://username:password@server:port/database&quot;</span>
-<span class="n">query</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">SELECT l_orderkey,</span>
-<span class="s2">       SUM(l_extendedprice * ( 1 - l_discount )) AS revenue,</span>
-<span class="s2">       o_orderdate,</span>
-<span class="s2">       o_shippriority</span>
-<span class="s2">FROM   customer,</span>
-<span class="s2">       orders,</span>
-<span class="s2">       lineitem</span>
-<span class="s2">WHERE  c_mktsegment = &#39;BUILDING&#39;</span>
-<span class="s2">       AND c_custkey = o_custkey</span>
-<span class="s2">       AND l_orderkey = o_orderkey</span>
-<span class="s2">       AND o_orderdate &lt; DATE &#39;1995-03-15&#39;</span>
-<span class="s2">       AND l_shipdate &gt; DATE &#39;1995-03-15&#39;</span>
-<span class="s2">GROUP  BY l_orderkey,</span>
-<span class="s2">          o_orderdate,</span>
-<span class="s2">          o_shippriority </span>
-<span class="s2">&quot;&quot;&quot;</span>
-
-<span class="n">cx</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">postgres_url</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">partition_on</span><span class="o">=</span><span class="s2">&quot;l_orderkey&quot;</span><span class="p">,</span> <span class="n">partition_num</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
-
-</pre></div>
-</div>
-</li>
-</ul>
-</div>
+<div class="tex2jax_ignore mathjax_ignore section" id="rust-documentation">
+<h1>Rust Documentation<a class="headerlink" href="#rust-documentation" title="Permalink to this headline">¶</a></h1>
+<p>Rust docs: <a class="reference external" href="https://docs.rs/connectorx">stable</a>, <a class="reference external" href="https://sfu-db.github.io/connector-x/connectorx/">nightly</a></p>
 </div>
 <div class="tex2jax_ignore mathjax_ignore section" id="next-plan">
 <h1>Next Plan<a class="headerlink" href="#next-plan" title="Permalink to this headline">¶</a></h1>

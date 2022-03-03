@@ -233,6 +233,29 @@ const thebe_selector_output = ".output, .cell_output"
         <!-- Table of contents -->
         <div class="d-none d-md-block col-md-2 bd-toc show noprint">
             
+            <div class="tocsection onthispage pt-5 pb-3">
+                <i class="fas fa-list"></i> Contents
+            </div>
+            <nav id="bd-toc-nav" aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#sqlite-connection">
+   SQLite Connection
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#sqlite-type-mapping">
+   SQLite Type Mapping
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#performance-r5-4xlarge-ec2-same-instance">
+   Performance (r5.4xlarge EC2 same instance)
+  </a>
+ </li>
+</ul>
+
+            </nav>
         </div>
     </div>
 </div>
@@ -245,6 +268,29 @@ const thebe_selector_output = ".output, .cell_output"
                 <div id="print-main-content">
                     <div id="jb-print-toc">
                         
+                        <div>
+                            <h2> Contents </h2>
+                        </div>
+                        <nav aria-label="Page">
+                            <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#sqlite-connection">
+   SQLite Connection
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#sqlite-type-mapping">
+   SQLite Type Mapping
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#performance-r5-4xlarge-ec2-same-instance">
+   Performance (r5.4xlarge EC2 same instance)
+  </a>
+ </li>
+</ul>
+
+                        </nav>
                     </div>
                 </div>
             </div>
@@ -256,12 +302,21 @@ const thebe_selector_output = ".output, .cell_output"
 <p>Since SQLite adopts a <a class="reference external" href="https://www.sqlite.org/datatype3.html">dynamic type system</a>, we infer type as follow:</p>
 <ul class="simple">
 <li><p>If there is a declared type of the column, we derive the type using <a class="reference external" href="https://www.sqlite.org/datatype3.html#affname">column affinity rules</a>, code can be found <a class="reference external" href="https://github.com/sfu-db/connector-x/blob/main/connectorx/src/sources/sqlite/typesystem.rs#L47">here</a>.</p></li>
-<li><p>Otherwise we directly adopt the value’s type in the first row of the result (in each partition), which results in INTEGER, REAL, TEXT and BLOB.</p>
-<ul>
+<li><p>Otherwise we directly adopt the value’s type in the first row of the result (in each partition), which results in INTEGER, REAL, TEXT and BLOB.</p></li>
 <li><p>If the first row of the result is NULL in the partition, try next partition. Throw an error if first rows of all partitions are NULL for a column.</p></li>
 </ul>
-</li>
-</ul>
+<div class="section" id="sqlite-connection">
+<h2>SQLite Connection<a class="headerlink" href="#sqlite-connection" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">connectorx</span> <span class="k">as</span> <span class="nn">cx</span>
+<span class="n">db_path</span> <span class="o">=</span> <span class="s1">&#39;/home/user/path/test.db&#39;</span>                         <span class="c1"># path to your SQLite database</span>
+<span class="n">conn</span> <span class="o">=</span> <span class="s1">&#39;sqlite://&#39;</span> <span class="o">+</span> <span class="n">db_path</span>                                <span class="c1"># connection token</span>
+<span class="n">query</span> <span class="o">=</span> <span class="s1">&#39;SELECT * FROM `database.dataset.table`&#39;</span>            <span class="c1"># query string</span>
+<span class="n">cx</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">query</span><span class="p">)</span>                                    <span class="c1"># read data from BigQuery</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="sqlite-type-mapping">
+<h2>SQLite Type Mapping<a class="headerlink" href="#sqlite-type-mapping" title="Permalink to this headline">¶</a></h2>
 <table class="colwidths-auto table">
 <thead>
 <tr class="row-odd"><th class="text-align:center head"><p>SQLite Type</p></th>
@@ -304,6 +359,20 @@ const thebe_selector_output = ".output, .cell_output"
 </tr>
 </tbody>
 </table>
+</div>
+<div class="section" id="performance-r5-4xlarge-ec2-same-instance">
+<h2>Performance (r5.4xlarge EC2 same instance)<a class="headerlink" href="#performance-r5-4xlarge-ec2-same-instance" title="Permalink to this headline">¶</a></h2>
+<p><strong>Turbodbc does not support read_sql on SQLite</strong></p>
+<ul class="simple">
+<li><p>Time chart, lower is better.</p></li>
+</ul>
+<p align="center"><img alt="time chart" src="https://raw.githubusercontent.com/sfu-db/connector-agent/main/assets/sqlite-time.png"/></p>
+<ul class="simple">
+<li><p>Memory consumption chart, lower is better.</p></li>
+</ul>
+<p align="center"><img alt="memory chart" src="https://raw.githubusercontent.com/sfu-db/connector-agent/main/assets/sqlite-mem.png"/></p>
+<p>In conclusion, ConnectorX uses <strong>2x</strong> less memory and <strong>5x</strong> less time compared with Pandas.</p>
+</div>
 </div>
 
     <script type="text/x-thebe-config">

@@ -4,6 +4,14 @@
 * `binary`: [MySQL Binary protocol](https://github.com/blackbeam/rust-mysql-simple), recommend to use in general.
 * `text`: [MySQL Text protocol](https://github.com/blackbeam/rust-mysql-simple), slower than `binary`, recommend to use only when `binary` protocol is not supported by the source (e.g. Clickhouse).
 
+## MySQL Connection
+```py
+import connectorx as cx
+conn = 'mysql://username:password@server:port/database'         # connection token
+query = 'SELECT * FROM table'                                   # query string
+cx.read_sql(conn, query)                                        # read data from BigQuery
+```
+
 ## MySQL-Pandas Type Mapping
 | MySQL Type      |      Pandas Type            |  Comment                           |
 |:---------------:|:---------------------------:|:----------------------------------:|
@@ -28,3 +36,16 @@
 | LONGBLOB        | object                      |                                    |
 | JSON            | object                      |                                    |
 | ENUM            | object                      |                                    |
+
+
+### Performance (db.m6g.4xlarge RDS)
+
+- Time chart, lower is better.
+
+<p align="center"><img alt="time chart" src="https://raw.githubusercontent.com/sfu-db/connector-agent/main/assets/mysql-time.png"/></p>
+
+- Memory consumption chart, lower is better.
+
+<p align="center"><img alt="memory chart" src="https://raw.githubusercontent.com/sfu-db/connector-agent/main/assets/mysql-mem.png"/></p>
+
+In conclusion, ConnectorX uses **3x** less memory and **8x** less time compared with Pandas.

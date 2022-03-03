@@ -239,8 +239,18 @@ const thebe_selector_output = ".output, .cell_output"
             <nav id="bd-toc-nav" aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
  <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#mssql-connection">
+   MsSQL Connection
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
   <a class="reference internal nav-link" href="#sqlserver-pandas-type-mapping">
    SQLServer-Pandas Type Mapping
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#performance-r5-4xlarge-docker-in-another-ec2-instance">
+   Performance (r5.4xlarge docker in another EC2 instance)
   </a>
  </li>
 </ul>
@@ -264,8 +274,18 @@ const thebe_selector_output = ".output, .cell_output"
                         <nav aria-label="Page">
                             <ul class="visible nav section-nav flex-column">
  <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#mssql-connection">
+   MsSQL Connection
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
   <a class="reference internal nav-link" href="#sqlserver-pandas-type-mapping">
    SQLServer-Pandas Type Mapping
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#performance-r5-4xlarge-docker-in-another-ec2-instance">
+   Performance (r5.4xlarge docker in another EC2 instance)
   </a>
  </li>
 </ul>
@@ -279,8 +299,23 @@ const thebe_selector_output = ".output, .cell_output"
                 
   <div class="tex2jax_ignore mathjax_ignore section" id="mssql">
 <h1>MsSQL<a class="headerlink" href="#mssql" title="Permalink to this headline">¶</a></h1>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
 <p>SQLServer does not need to specify protocol.</p>
+</div>
+<div class="section" id="mssql-connection">
+<h2>MsSQL Connection<a class="headerlink" href="#mssql-connection" title="Permalink to this headline">¶</a></h2>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
 <p>By adding <code class="docutils literal notranslate"><span class="pre">trusted_connection=true</span></code> to connection uri parameter, windows authentication will be enabled. Example: <code class="docutils literal notranslate"><span class="pre">mssql://host:port/db?trusted_connection=true</span></code></p>
+</div>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">connectorx</span> <span class="k">as</span> <span class="nn">cx</span>
+<span class="n">conn</span> <span class="o">=</span> <span class="s1">&#39;mssql://username:password@server:port/database&#39;</span>         <span class="c1"># connection token</span>
+<span class="n">query</span> <span class="o">=</span> <span class="s1">&#39;SELECT * FROM table&#39;</span>                                   <span class="c1"># query string</span>
+<span class="n">cx</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">query</span><span class="p">)</span>                                        <span class="c1"># read data from BigQuery</span>
+</pre></div>
+</div>
+</div>
 <div class="section" id="sqlserver-pandas-type-mapping">
 <h2>SQLServer-Pandas Type Mapping<a class="headerlink" href="#sqlserver-pandas-type-mapping" title="Permalink to this headline">¶</a></h2>
 <table class="colwidths-auto table">
@@ -389,6 +424,19 @@ const thebe_selector_output = ".output, .cell_output"
 </tr>
 </tbody>
 </table>
+</div>
+<div class="section" id="performance-r5-4xlarge-docker-in-another-ec2-instance">
+<h2>Performance (r5.4xlarge docker in another EC2 instance)<a class="headerlink" href="#performance-r5-4xlarge-docker-in-another-ec2-instance" title="Permalink to this headline">¶</a></h2>
+<p><strong>Modin does not support read_sql on Mssql</strong></p>
+<ul class="simple">
+<li><p>Time chart, lower is better.</p></li>
+</ul>
+<p align="center"><img alt="time chart" src="https://raw.githubusercontent.com/sfu-db/connector-x/main/assets/mssql-time.png"/></p>
+<ul class="simple">
+<li><p>Memory consumption chart, lower is better.</p></li>
+</ul>
+<p align="center"><img alt="memory chart" src="https://raw.githubusercontent.com/sfu-db/connector-x/main/assets/mssql-mem.png"/></p>
+<p>In conclusion, ConnectorX uses <strong>3x</strong> less memory and <strong>14x</strong> less time compared with Pandas.</p>
 </div>
 </div>
 
