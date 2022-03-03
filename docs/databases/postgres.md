@@ -1,10 +1,20 @@
 # Postgres
 
-## Authentication
-```python
-import connectorx as cx
+### Protocols
+* `binary`: [Postgres Binary COPY protocol](https://www.postgresql.org/docs/current/sql-copy.html), recommend to use in general since fast data parsing speed.
+* `csv`: [Postgres CSV COPY protocol](https://www.postgresql.org/docs/current/sql-copy.html), recommend to use when network is slow (`csv` usually results in smaller size than `binary`).
+* `cursor`: Conventional wire protocol (slowest one), recommend to use only when `binary` and `csv` is not supported by the source (e.g. Redshift).
 
-cx.read_sql("postgresql://username:password@server:port/database", "SELECT * FROM lineitem", partition_on="l_orderkey", partition_num=10)
+## Postgres Connection
+```{hint}
+Adding `sslmode=require` to connection uri parameter force SSL connection. Example: `postgresql://username:password@host:port/db?sslmode=require`. `sslmode=disable` to disable SSL connection.
+```
+
+```py
+import connectorx as cx
+conn = 'postgres://username:password@server:port/database'         # connection token
+query = "SELECT * FROM table"                                   # query string
+cx.read_sql(conn, query)                                        # read data from BigQuery
 ```
 
 ## Postgres-Pandas Type Mapping
@@ -40,11 +50,11 @@ cx.read_sql("postgresql://username:password@server:port/database", "SELECT * FRO
 
 ## Performance (db.m6g.4xlarge RDS)
 
-### Time chart, lower is better.
+- Time chart, lower is better.
 
 <p align="center"><img alt="time chart" src="https://raw.githubusercontent.com/sfu-db/connector-agent/main/assets/pg-time.png"/></p>
 
-### Memory consumption chart, lower is better.
+- Memory consumption chart, lower is better.
 
 <p align="center"><img alt="memory chart" src="https://raw.githubusercontent.com/sfu-db/connector-agent/main/assets/pg-mem.png"/></p>
 
