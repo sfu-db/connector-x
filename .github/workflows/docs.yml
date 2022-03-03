@@ -39,7 +39,10 @@ jobs:
 
       - name: Move the rust doc into jupyter book
         run: mv target/doc ./docs/_build/html/rust-docs
-
+      
+      - name: Add .nojekyll
+        run: touch ./docs/_build/html/.nojekyll
+        
       - name: Deploy Docs 🚀
         uses: JamesIves/github-pages-deploy-action@4.0.0
         with:
