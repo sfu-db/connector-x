@@ -12,10 +12,6 @@ def oracle_url() -> str:
     conn = os.environ["ORACLE_URL"]
     return conn
 
-def test_oracle_round(oracle_url: str) -> None:
-    query = "select id ,round(value*1000,2) value from sometable where id = 1000"
-    df = read_sql(oracle_url, query)
-
 @pytest.mark.xfail
 @pytest.mark.skipif(
     not os.environ.get("ORACLE_URL"), reason="Test oracle only when `ORACLE_URL` is set"
