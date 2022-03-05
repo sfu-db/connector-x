@@ -18,7 +18,12 @@
 <span id="18">18</span>
 <span id="19">19</span>
 <span id="20">20</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">thiserror::Error</span>;
+<span id="21">21</span>
+<span id="22">22</span>
+<span id="23">23</span>
+<span id="24">24</span>
+</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::string::FromUtf8Error</span>;
+<span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Error</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">SQLiteSourceError</span> {
@@ -33,6 +38,9 @@
 
     <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
     <span class="ident">SQLitePoolError</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">r2d2::Error</span>),
+
+    <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
+    <span class="ident">SQLiteUrlDecodeError</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">FromUtf8Error</span>),
 
     <span class="doccomment">/// Any other errors that are too trivial to be put here explicitly.</span>
     <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
