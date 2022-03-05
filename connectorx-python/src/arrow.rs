@@ -137,7 +137,9 @@ pub fn write_arrow<'a>(
             }
         }
         SourceType::SQLite => {
-            let source = SQLiteSource::new(source_conn.conn.path(), queries.len())?;
+            // remove the first "sqlite://" manually since url.path is not correct for windows
+            let path = &source_conn.conn.as_str()[9..];
+            let source = SQLiteSource::new(path, queries.len())?;
             let dispatcher = Dispatcher::<_, _, SQLiteArrowTransport>::new(
                 source,
                 &mut destination,

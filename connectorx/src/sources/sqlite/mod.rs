@@ -23,6 +23,7 @@ use rusqlite::{Row, Rows, Statement};
 use sqlparser::dialect::SQLiteDialect;
 use std::convert::TryFrom;
 pub use typesystem::SQLiteTypeSystem;
+use urlencoding::decode;
 
 pub struct SQLiteSource {
     pool: Pool<SqliteConnectionManager>,
@@ -35,7 +36,9 @@ pub struct SQLiteSource {
 impl SQLiteSource {
     #[throws(SQLiteSourceError)]
     pub fn new(conn: &str, nconn: usize) -> Self {
-        let manager = SqliteConnectionManager::file(conn);
+        let decoded_conn = decode(conn)?.into_owned();
+        debug!("decoded conn: {}", decoded_conn);
+        let manager = SqliteConnectionManager::file(decoded_conn);
         let pool = r2d2::Pool::builder()
             .max_size(nconn as u32)
             .build(manager)?;

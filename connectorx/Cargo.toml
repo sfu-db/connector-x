@@ -7,7 +7,7 @@ license = "MIT"
 name = "connectorx"
 readme = "../README.md"
 repository = "https://github.com/sfu-db/connector-x"
-version = "0.2.4"
+version = "0.2.5-alpha.1"
 
 
 [dependencies]
@@ -89,7 +89,7 @@ src_postgres = [
   "url",
   "native-tls",
 ]
-src_sqlite = ["rusqlite", "r2d2_sqlite", "fallible-streaming-iterator", "owning_ref", "chrono", "r2d2"]
+src_sqlite = ["rusqlite", "r2d2_sqlite", "fallible-streaming-iterator", "owning_ref", "chrono", "r2d2", "urlencoding"]
 src_bigquery = ["gcp-bigquery-client", "serde_json", "url", "tokio"]
 [package.metadata.docs.rs]
 features = ["all"]

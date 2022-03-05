@@ -12,7 +12,6 @@ def oracle_url() -> str:
     conn = os.environ["ORACLE_URL"]
     return conn
 
-
 @pytest.mark.xfail
 @pytest.mark.skipif(
     not os.environ.get("ORACLE_URL"), reason="Test oracle only when `ORACLE_URL` is set"
