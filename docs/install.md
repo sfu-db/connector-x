@@ -8,20 +8,36 @@ called **MyST Markdown**.
 
 ## Pip
 
-### Linux and OSX
-
-To install ConnectorX on Linux and OSX, use the following command:
+To install ConnectorX using pip, use the following command:
 
 ```bash
 pip install connectorx
 ```
-### Windows
 
-To install ConnectorX on Windows, use the following command:
+## Build from source code
 
+* Step 1: Fresh clone of source
 ```bash
-pip install connectorx
+git clone https://github.com/sfu-db/connector-x.git
 ```
+
+* Step 2: Install rust nightly (please refer [here](https://github.com/sfu-db/connector-x/blob/main/.github/workflows/release.yml#L34) for the latest using version)
+```bash
+rustup install nightly-2021-11-18
+```
+
+* Step 3: Override default project toolchain
+```base
+rustup default nightly-2021-11-18
+rustup override set nightly-2021-11-18
+```
+
+* Step 4: Build
+```bash
+just bootstrap-python
+just ci-build-python-extention ci-build-python-wheel ci-rename-wheel
+```
+
 
 # Basic usage
 ConnectorX enables you to run the SQL query, load data from databases into a Pandas Dataframe in the fastest and most memory efficient way.
