@@ -271,18 +271,6 @@ const thebe_selector_output = ".output, .cell_output"
     <a class="reference internal nav-link" href="#how-does-connectorx-download-the-data">
      How does ConnectorX download the data?
     </a>
-    <ul class="nav section-nav flex-column">
-     <li class="toc-h3 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#how-to-specify-the-partition-number">
-       How to specify the partition number?
-      </a>
-     </li>
-     <li class="toc-h3 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#how-to-choose-the-partition-column">
-       How to choose the partition column?
-      </a>
-     </li>
-    </ul>
    </li>
   </ul>
  </li>
@@ -387,18 +375,6 @@ const thebe_selector_output = ".output, .cell_output"
     <a class="reference internal nav-link" href="#how-does-connectorx-download-the-data">
      How does ConnectorX download the data?
     </a>
-    <ul class="nav section-nav flex-column">
-     <li class="toc-h3 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#how-to-specify-the-partition-number">
-       How to specify the partition number?
-      </a>
-     </li>
-     <li class="toc-h3 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#how-to-choose-the-partition-column">
-       How to choose the partition column?
-      </a>
-     </li>
-    </ul>
    </li>
   </ul>
  </li>
@@ -511,14 +487,6 @@ is not specified, the count query will be <code class="docutils literal notransl
 <p>Finally, ConnectorX will use the schema info as well as the count info to allocate memory and download data by executing the queries normally.</p>
 <p>Once the downloading begins, there will be one thread for each partition so that the data are downloaded in parallel at the partition level. The thread will issue the query of the corresponding
 partition to the database and then write the returned data to the destination row-wise or column-wise (depends on the database) in a streaming fashion.</p>
-<div class="section" id="how-to-specify-the-partition-number">
-<h3>How to specify the partition number?<a class="headerlink" href="#how-to-specify-the-partition-number" title="Permalink to this headline">¶</a></h3>
-<p><code class="docutils literal notranslate"><span class="pre">partition_num</span></code> will determine how many queries we are going to split from the original one and issue to the database. Underlying, we use <a class="reference external" href="https://github.com/rayon-rs/rayon">rayon</a> as our parallel executor, which adopts a pool of threads to handle each partitioned query. The number of threads in the pool equals to the number of logical cores on the machine. It is recommended to set the <code class="docutils literal notranslate"><span class="pre">partition_num</span></code> to the number of available logical cores.</p>
-</div>
-<div class="section" id="how-to-choose-the-partition-column">
-<h3>How to choose the partition column?<a class="headerlink" href="#how-to-choose-the-partition-column" title="Permalink to this headline">¶</a></h3>
-<p><code class="docutils literal notranslate"><span class="pre">partition_on</span></code> specifies on which column we will do the partition as above procedure. In order to achieve the best performance, it is ideal that each partitioned query will return the same number of rows. And since we partition the column evenly, it is recommended that the numerical <code class="docutils literal notranslate"><span class="pre">partition_on</span></code> column is evenly distributed. Whether a column has index or not might also affect the performance depends on the source database. You can give it a try if you have multiple candidates. Also, you can manually partition the query if our partition method cannot match your need. ConnectorX will still return a whole dataframe with all the results of the list of queries you input.</p>
-</div>
 </div>
 </div>
 <div class="tex2jax_ignore mathjax_ignore section" id="supported-sources-destinations">

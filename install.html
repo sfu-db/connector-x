@@ -252,18 +252,11 @@ const thebe_selector_output = ".output, .cell_output"
     <a class="reference internal nav-link" href="#pip">
      Pip
     </a>
-    <ul class="nav section-nav flex-column">
-     <li class="toc-h3 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#linux-and-osx">
-       Linux and OSX
-      </a>
-     </li>
-     <li class="toc-h3 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#windows">
-       Windows
-      </a>
-     </li>
-    </ul>
+   </li>
+   <li class="toc-h2 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#build-from-source-code">
+     Build from source code
+    </a>
    </li>
   </ul>
  </li>
@@ -323,18 +316,11 @@ const thebe_selector_output = ".output, .cell_output"
     <a class="reference internal nav-link" href="#pip">
      Pip
     </a>
-    <ul class="nav section-nav flex-column">
-     <li class="toc-h3 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#linux-and-osx">
-       Linux and OSX
-      </a>
-     </li>
-     <li class="toc-h3 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#windows">
-       Windows
-      </a>
-     </li>
-    </ul>
+   </li>
+   <li class="toc-h2 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#build-from-source-code">
+     Build from source code
+    </a>
    </li>
   </ul>
  </li>
@@ -379,19 +365,38 @@ called <strong>MyST Markdown</strong>.</p>
 <h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="pip">
 <h2>Pip<a class="headerlink" href="#pip" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="linux-and-osx">
-<h3>Linux and OSX<a class="headerlink" href="#linux-and-osx" title="Permalink to this headline">¶</a></h3>
-<p>To install ConnectorX on Linux and OSX, use the following command:</p>
+<p>To install ConnectorX using pip, use the following command:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip install connectorx
 </pre></div>
 </div>
 </div>
-<div class="section" id="windows">
-<h3>Windows<a class="headerlink" href="#windows" title="Permalink to this headline">¶</a></h3>
-<p>To install ConnectorX on Windows, use the following command:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip install connectorx
+<div class="section" id="build-from-source-code">
+<h2>Build from source code<a class="headerlink" href="#build-from-source-code" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Step 1: Fresh clone of source</p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git clone https://github.com/sfu-db/connector-x.git
 </pre></div>
 </div>
+<ul class="simple">
+<li><p>Step 2: Install rust nightly (please refer <a class="reference external" href="https://github.com/sfu-db/connector-x/blob/main/.github/workflows/release.yml#L34">here</a> for the latest using version)</p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rustup install nightly-2021-11-18
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Step 3: Override default project toolchain</p></li>
+</ul>
+<div class="highlight-base notranslate"><div class="highlight"><pre><span></span>rustup default nightly-2021-11-18
+rustup override set nightly-2021-11-18
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Step 4: Build</p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>just bootstrap-python
+just ci-build-python-extention ci-build-python-wheel ci-rename-wheel
+</pre></div>
 </div>
 </div>
 </div>

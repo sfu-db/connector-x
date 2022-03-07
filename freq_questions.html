@@ -252,11 +252,6 @@ const thebe_selector_output = ".output, .cell_output"
    How to print log in Python?
   </a>
  </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#how-to-build-connectorx-locally">
-   How to build ConnectorX locally?
-  </a>
- </li>
 </ul>
 
             </nav>
@@ -292,11 +287,6 @@ const thebe_selector_output = ".output, .cell_output"
    How to print log in Python?
   </a>
  </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#how-to-build-connectorx-locally">
-   How to build ConnectorX locally?
-  </a>
- </li>
 </ul>
 
                         </nav>
@@ -324,56 +314,6 @@ const thebe_selector_output = ".output, .cell_output"
 <span class="kn">import</span> <span class="nn">connectorx</span> <span class="k">as</span> <span class="nn">cx</span>
 
 <span class="n">df</span> <span class="o">=</span> <span class="n">cx</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">query</span><span class="p">)</span> <span class="o">//</span> <span class="n">It</span> <span class="n">will</span> <span class="n">be</span> <span class="n">more</span> <span class="n">clear</span> <span class="n">to</span> <span class="n">test</span> <span class="n">when</span> <span class="n">no</span> <span class="n">partitioning</span> <span class="n">first</span>
-</pre></div>
-</div>
-</div>
-<div class="section" id="how-to-build-connectorx-locally">
-<h2>How to build ConnectorX locally?<a class="headerlink" href="#how-to-build-connectorx-locally" title="Permalink to this headline">¶</a></h2>
-<ul class="simple">
-<li><p>Step 1: Fresh clone of source</p></li>
-</ul>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git clone https://github.com/sfu-db/connector-x.git
-</pre></div>
-</div>
-<ul class="simple">
-<li><p>Step 2: Install nightly-2021-10-21</p></li>
-</ul>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ rustup install nightly-2021-10-21
-info: syncing channel updates <span class="k">for</span> <span class="s1">&#39;nightly-2021-10-21-aarch64-apple-darwin&#39;</span>
-
-  nightly-2021-10-21-aarch64-apple-darwin unchanged - rustc <span class="m">1</span>.58.0-nightly <span class="o">(</span>efd048394 <span class="m">2021</span>-10-20<span class="o">)</span>
-
-info: checking <span class="k">for</span> self-updates
-</pre></div>
-</div>
-<ul class="simple">
-<li><p>Step 3: Override default project toolchain</p></li>
-</ul>
-<div class="highlight-base notranslate"><div class="highlight"><pre><span></span>$ rustup default nightly-2021-10-21
-$ rustup override set nightly-2021-10-21
-$ rustup show
-Default host: aarch64-apple-darwin
-rustup home:  /Users/user/.rustup
-
-installed toolchains
---------------------
-
-stable-aarch64-apple-darwin
-nightly-2021-10-21-aarch64-apple-darwin (default)
-nightly-aarch64-apple-darwin
-
-active toolchain
-----------------
-
-nightly-2021-10-21-aarch64-apple-darwin (default)
-rustc 1.58.0-nightly (efd048394 2021-10-20)
-</pre></div>
-</div>
-<ul class="simple">
-<li><p>Step 4: Build</p></li>
-</ul>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ just bootstrap-python
-$ just ci-build-python-extention ci-build-python-wheel ci-rename-wheel
 </pre></div>
 </div>
 </div>
