@@ -19,3 +19,19 @@ import connectorx as cx
 df = cx.read_sql(conn, query) // It will be more clear to test when no partitioning first
 ```
 
+## Why is my query slow on ConnectorX?
+
+ConnectorX is mainly targeting on the large query result fetching scenario. It speeds up the process by optimizing the client-side execution and saturating both network and machine resource through parallelism. When query execution on the database server is the bottleneck (for example when the result size is small, and/or the query is very complex), there will be overhead coming from metadata fetching. In ConnectorX, there are up to three info that will be fetched before issue the query to database:
+
+* MIN, MAX query for partition range (if partition is enabled and `partition_range` is not given)
+* COUNT query (if `return_type="pandas"`)
+* schema fetching query, which gets type and name for each column in the result
+
+For users who want to have pandas.DataFrame as final result. In order to avoid the costly COUNT query, one workaround is to use Arrow as an intermediate destination from ConnectorX and convert it into Pandas using Arrow’s [to_pandas API](https://arrow.apache.org/docs/python/generated/pyarrow.Table.html?pyarrow.Table.to_pandas). For example:
+
+```Python
+import connectorx as cx
+
+table = cx.read_sql(db_uri, query, return_type="arrow") # or arrow2 https://github.com/jorgecarleitao/arrow2
+df = table.to_pandas(split_blocks=False, date_as_object=False)
+```

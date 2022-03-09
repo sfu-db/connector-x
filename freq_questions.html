@@ -252,6 +252,11 @@ const thebe_selector_output = ".output, .cell_output"
    How to print log in Python?
   </a>
  </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#why-is-my-query-slow-on-connectorx">
+   Why is my query slow on ConnectorX?
+  </a>
+ </li>
 </ul>
 
             </nav>
@@ -287,6 +292,11 @@ const thebe_selector_output = ".output, .cell_output"
    How to print log in Python?
   </a>
  </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#why-is-my-query-slow-on-connectorx">
+   Why is my query slow on ConnectorX?
+  </a>
+ </li>
 </ul>
 
                         </nav>
@@ -314,6 +324,22 @@ const thebe_selector_output = ".output, .cell_output"
 <span class="kn">import</span> <span class="nn">connectorx</span> <span class="k">as</span> <span class="nn">cx</span>
 
 <span class="n">df</span> <span class="o">=</span> <span class="n">cx</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">query</span><span class="p">)</span> <span class="o">//</span> <span class="n">It</span> <span class="n">will</span> <span class="n">be</span> <span class="n">more</span> <span class="n">clear</span> <span class="n">to</span> <span class="n">test</span> <span class="n">when</span> <span class="n">no</span> <span class="n">partitioning</span> <span class="n">first</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="why-is-my-query-slow-on-connectorx">
+<h2>Why is my query slow on ConnectorX?<a class="headerlink" href="#why-is-my-query-slow-on-connectorx" title="Permalink to this headline">¶</a></h2>
+<p>ConnectorX is mainly targeting on the large query result fetching scenario. It speeds up the process by optimizing the client-side execution and saturating both network and machine resource through parallelism. When query execution on the database server is the bottleneck (for example when the result size is small, and/or the query is very complex), there will be overhead coming from metadata fetching. In ConnectorX, there are up to three info that will be fetched before issue the query to database:</p>
+<ul class="simple">
+<li><p>MIN, MAX query for partition range (if partition is enabled and <code class="docutils literal notranslate"><span class="pre">partition_range</span></code> is not given)</p></li>
+<li><p>COUNT query (if <code class="docutils literal notranslate"><span class="pre">return_type=&quot;pandas&quot;</span></code>)</p></li>
+<li><p>schema fetching query, which gets type and name for each column in the result</p></li>
+</ul>
+<p>For users who want to have pandas.DataFrame as final result. In order to avoid the costly COUNT query, one workaround is to use Arrow as an intermediate destination from ConnectorX and convert it into Pandas using Arrow’s <a class="reference external" href="https://arrow.apache.org/docs/python/generated/pyarrow.Table.html?pyarrow.Table.to_pandas">to_pandas API</a>. For example:</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">connectorx</span> <span class="k">as</span> <span class="nn">cx</span>
+
+<span class="n">table</span> <span class="o">=</span> <span class="n">cx</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">db_uri</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">return_type</span><span class="o">=</span><span class="s2">&quot;arrow&quot;</span><span class="p">)</span> <span class="c1"># or arrow2 https://github.com/jorgecarleitao/arrow2</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">to_pandas</span><span class="p">(</span><span class="n">split_blocks</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">date_as_object</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
