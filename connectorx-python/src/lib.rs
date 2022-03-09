@@ -11,6 +11,7 @@ mod source_router;
 
 use pyo3::prelude::*;
 use pyo3::{wrap_pyfunction, PyResult};
+use std::convert::TryFrom;
 use std::sync::Once;
 
 #[macro_use]
@@ -31,6 +32,7 @@ fn connectorx_python(_: Python, m: &PyModule) -> PyResult<()> {
     });
 
     m.add_wrapped(wrap_pyfunction!(read_sql))?;
+    m.add_wrapped(wrap_pyfunction!(partition_sql))?;
     m.add_class::<pandas::PandasBlockInfo>()?;
     Ok(())
 }
@@ -45,4 +47,14 @@ pub fn read_sql<'a>(
     partition_query: Option<read_sql::PartitionQuery>,
 ) -> PyResult<&'a PyAny> {
     read_sql::read_sql(py, conn, return_type, protocol, queries, partition_query)
+}
+
+#[pyfunction]
+pub fn partition_sql(
+    conn: &str,
+    partition_query: read_sql::PartitionQuery,
+) -> PyResult<Vec<String>> {
+    let source_conn = source_router::SourceConn::try_from(conn)?;
+    let queries = read_sql::partition(&partition_query, &source_conn)?;
+    Ok(queries.into_iter().map(|q| q.to_string()).collect())
 }
