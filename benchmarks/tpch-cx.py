@@ -55,11 +55,12 @@ if __name__ == "__main__":
         else:
             df = cx.read_sql(
                 conn,
-                f"""SELECT * FROM {table}""",
+                f"""SELECT * FROM {table} limit 21878""",
                 protocol=args["--protocol"],
                 return_type=args["--ret"],
             )
     print("time in total:", timer.elapsed)
 
-    print(type(df), len(df))
-    describe(df)
+    # print(type(df), len(df))
+    # describe(df)
+    print(df)

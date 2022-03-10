@@ -24,6 +24,7 @@ import pandas as pd
 import sqlite3
 from clickhouse_driver import connect
 from sqlalchemy.engine.url import make_url
+from google.oauth2 import service_account
 
 if __name__ == "__main__":
     args = docopt(__doc__, version="1.0")
@@ -34,6 +35,8 @@ if __name__ == "__main__":
 
     if conn.drivername == "sqlite":
         conn = sqlite3.connect(str(conn)[9:])
+    elif conn.drivername == "bigquery":
+        pass
     elif driver == "clickhouse":
         # clickhouse-driver uses native protocol: 9000
         conn = conn.set(drivername=driver, port=9000)
@@ -45,23 +48,29 @@ if __name__ == "__main__":
         engine = create_engine(conn)
         conn = engine.connect()
 
-    with Timer() as timer:
-        df = pd.read_sql(
-            f"SELECT * FROM {table}",
-            conn,
-            parse_dates=[
-                "l_shipdate",
-                "l_commitdate",
-                "l_receiptdate",
-                "L_SHIPDATE",
-                "L_COMMITDATE",
-                "L_RECEIPTDATE",
-            ],
-        )
-    print(f"[Total] {timer.elapsed:.2f}s")
-    conn.close()
 
-    print(df.head())
-    print(df.tail())
-    print(len(df))
-    print(df.dtypes)
+    with Timer() as timer:
+        if conn.drivername == "bigquery":
+            credentials = service_account.Credentials.from_service_account_file('/'+conn.database)
+            df = pd.read_gbq(
+                query=f"SELECT * FROM {table} limit 100",
+                project_id="dataprep-bigquery",
+                credentials=credentials
+            )
+            print(df)
+        else:
+            df = pd.read_sql(
+                f"SELECT * FROM {table}",
+                conn,
+                parse_dates=[
+                    "l_shipdate",
+                    "l_commitdate",
+                    "l_receiptdate",
+                    "L_SHIPDATE",
+                    "L_COMMITDATE",
+                    "L_RECEIPTDATE",
+                ],
+            )
+            conn.close()
+    print(f"[Total] {timer.elapsed:.2f}s")
+    

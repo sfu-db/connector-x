@@ -54,6 +54,12 @@ pyarrow = ">=4"
 pytest = "^6.2"
 pytest-benchmark = "^3.4.1"
 twine = "^3.4.1"
+black = "^21.4b0"
+google-cloud-bigquery = "^2.32.0"
+google-auth = "^1.18.0"
+pandas-gbq = "^0.17.0"
+
+protobuf = "^3.19.4"
 
 [tool.pytest.ini_options]
 minversion = "6.0"
