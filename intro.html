@@ -243,11 +243,6 @@ const thebe_selector_output = ".output, .cell_output"
   </a>
  </li>
  <li class="toc-h1 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#connectorx-status-discussions-downloads">
-   ConnectorX
-  </a>
- </li>
- <li class="toc-h1 nav-item toc-entry">
   <a class="reference internal nav-link" href="#performance">
    Performance
   </a>
@@ -299,11 +294,6 @@ const thebe_selector_output = ".output, .cell_output"
  <li class="toc-h1 nav-item toc-entry">
   <a class="reference internal nav-link" href="#next-plan">
    Next Plan
-  </a>
- </li>
- <li class="toc-h1 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#historical-benchmark-results">
-   Historical Benchmark Results
   </a>
  </li>
  <li class="toc-h1 nav-item toc-entry">
@@ -347,11 +337,6 @@ const thebe_selector_output = ".output, .cell_output"
   </a>
  </li>
  <li class="toc-h1 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#connectorx-status-discussions-downloads">
-   ConnectorX
-  </a>
- </li>
- <li class="toc-h1 nav-item toc-entry">
   <a class="reference internal nav-link" href="#performance">
    Performance
   </a>
@@ -406,11 +391,6 @@ const thebe_selector_output = ".output, .cell_output"
   </a>
  </li>
  <li class="toc-h1 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#historical-benchmark-results">
-   Historical Benchmark Results
-  </a>
- </li>
- <li class="toc-h1 nav-item toc-entry">
   <a class="reference internal nav-link" href="#developer-s-guide">
    Developer’s Guide
   </a>
@@ -436,9 +416,6 @@ const thebe_selector_output = ".output, .cell_output"
                 
   <div class="tex2jax_ignore mathjax_ignore section" id="introduction">
 <h1>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h1>
-</div>
-<div class="tex2jax_ignore mathjax_ignore section" id="connectorx-status-discussions-downloads">
-<h1>ConnectorX <a class="reference external" href="https://github.com/sfu-db/connector-x/actions"><img alt="status" src="https://github.com/sfu-db/connector-x/workflows/ci/badge.svg" /></a> <a class="reference external" href="https://github.com/sfu-db/connector-x/discussions"><img alt="discussions" src="https://img.shields.io/badge/Forum-Github%20Discussions-blue" /></a> <a class="reference external" href="https://pepy.tech/project/connectorx"><img alt="Downloads" src="https://pepy.tech/badge/connectorx" /></a><a class="headerlink" href="#connectorx-status-discussions-downloads" title="Permalink to this headline">¶</a></h1>
 <p>Load data from <img src="https://raw.githubusercontent.com/sfu-db/connector-x/main/assets/sources.gif" width="6.5%" style="margin-bottom: -2px"/> to <img src="https://raw.githubusercontent.com/sfu-db/connector-x/main/assets/destinations.gif" width="7%" style="margin-bottom: -2px"/>, the fastest way.</p>
 <p>ConnectorX enables you to load data from databases into Python in the fastest and most memory efficient way. It is a Python package that provides a high-level interface to the popular database connectors. Here is our rust documentation: <a class="reference external" href="https://sfu-db.github.io/connector-x/rust-docs/connectorx/">rust-docs</a>.</p>
 <p>What you need is one line of code:</p>
@@ -456,7 +433,7 @@ const thebe_selector_output = ".output, .cell_output"
 <p>The function will partition the query by <strong>evenly</strong> splitting the specified column to the amount of partitions.
 ConnectorX will assign one thread for each partition to load and write data in parallel.
 Currently, we support partitioning on <strong>numerical</strong> columns (<strong>cannot contain NULL</strong>) for <strong>SPJA</strong> queries.</p>
-<p>Check out more detailed usage and examples <a class="reference internal" href="install.html"><span class="doc std std-doc">here</span></a>. A general introduction of the project can be found in this <a class="reference external" href="https://towardsdatascience.com/connectorx-the-fastest-way-to-load-data-from-databases-a65d4d4062d5">blog post</a>.</p>
+<p>Check out more detailed usage and examples <a class="reference external" href="https://sfu-db.github.io/connector-x/install.html#examples">here</a>. A general introduction of the project can be found in this <a class="reference external" href="https://towardsdatascience.com/connectorx-the-fastest-way-to-load-data-from-databases-a65d4d4062d5">blog post</a>.</p>
 </div>
 <div class="tex2jax_ignore mathjax_ignore section" id="performance">
 <h1>Performance<a class="headerlink" href="#performance" title="Permalink to this headline">¶</a></h1>
@@ -468,7 +445,7 @@ Currently, we support partitioning on <strong>numerical</strong> columns (<stron
 <div class="section" id="memory-consumption-chart-lower-is-better">
 <h2>Memory consumption chart, lower is better.<a class="headerlink" href="#memory-consumption-chart-lower-is-better" title="Permalink to this headline">¶</a></h2>
 <p align="center"><img alt="memory chart" src="https://raw.githubusercontent.com/sfu-db/connector-x/main/assets/pg-mem.png"/></p>
-<p>In conclusion, ConnectorX uses up to <strong>3x</strong> less memory and <strong>21x</strong> less time (<strong>3x</strong> less memory and <strong>13x</strong> less time compared with Pandas.). More on <a class="reference external" href="https://github.com/sfu-db/connector-x/blob/main/Benchmark.md#benchmark-result-on-aws-r54xlarge">here</a>.</p>
+<p>In conclusion, ConnectorX uses up to <strong>3x</strong> less memory and <strong>21x</strong> less time (<strong>3x</strong> less memory and <strong>13x</strong> less time compared with Pandas.). More benchmark result can be found under each database pages <a class="reference external" href="https://sfu-db.github.io/connector-x/databases.html">here</a>.</p>
 </div>
 <div class="section" id="how-does-connectorx-achieve-a-lightening-speed-while-keeping-the-memory-footprint-low">
 <h2>How does ConnectorX achieve a lightening speed while keeping the memory footprint low?<a class="headerlink" href="#how-does-connectorx-achieve-a-lightening-speed-while-keeping-the-memory-footprint-low" title="Permalink to this headline">¶</a></h2>
@@ -506,6 +483,7 @@ For more planned data sources, please check out our <a class="reference external
 <li class="task-list-item"><p><input class="task-list-item-checkbox" checked="checked" disabled="disabled" type="checkbox"> Azure SQL Database (through mssql protocol)</p></li>
 <li class="task-list-item"><p><input class="task-list-item-checkbox" checked="checked" disabled="disabled" type="checkbox"> Oracle</p></li>
 <li class="task-list-item"><p><input class="task-list-item-checkbox" checked="checked" disabled="disabled" type="checkbox"> Big Query - Experimental: need docs and benchmark (also more tests)</p></li>
+<li class="task-list-item"><p><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"> ODBC (WIP)</p></li>
 <li class="task-list-item"><p><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"> …</p></li>
 </ul>
 </div>
@@ -526,11 +504,7 @@ For more planned data sources, please check out our <a class="reference external
 </div>
 <div class="tex2jax_ignore mathjax_ignore section" id="next-plan">
 <h1>Next Plan<a class="headerlink" href="#next-plan" title="Permalink to this headline">¶</a></h1>
-<p>Checkout our <a class="reference external" href="https://github.com/sfu-db/connector-x/discussions">discussion</a> to participate in deciding our next plan!</p>
-</div>
-<div class="tex2jax_ignore mathjax_ignore section" id="historical-benchmark-results">
-<h1>Historical Benchmark Results<a class="headerlink" href="#historical-benchmark-results" title="Permalink to this headline">¶</a></h1>
-<p><a class="reference external" href="https://sfu-db.github.io/connector-x/dev/bench/">https://sfu-db.github.io/connector-x/dev/bench/</a></p>
+<p>Checkout our [discussion][discussion_page] to participate in deciding our next plan!</p>
 </div>
 <div class="tex2jax_ignore mathjax_ignore section" id="developer-s-guide">
 <h1>Developer’s Guide<a class="headerlink" href="#developer-s-guide" title="Permalink to this headline">¶</a></h1>
@@ -541,8 +515,7 @@ For more planned data sources, please check out our <a class="reference external
 <p>You are always welcomed to:</p>
 <ol class="simple">
 <li><p>Ask questions in stackoverflow. Make sure to have #connectorx attached.</p></li>
-<li><p>Ask questions &amp; propose new ideas in our <a class="reference external" href="https://github.com/sfu-db/connector-x/discussions">forum</a>.</p></li>
-<li><p>Ask questions &amp; join the discussion &amp; send direct messages to us in our <a class="reference external" href="https://discord.gg/xwbkFNk">discord</a> (under <code class="docutils literal notranslate"><span class="pre">CONNECTOR</span></code> category)</p></li>
+<li><p>Ask questions &amp; propose new ideas in our [forum][discussion_page].</p></li>
 </ol>
 </div>
 <div class="tex2jax_ignore mathjax_ignore section" id="organizations-and-projects-using-connectorx">

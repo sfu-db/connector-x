@@ -1,14 +1,5 @@
 # Introduction
 
-# ConnectorX [![status][ci_badge]][ci_page] [![discussions][discussion_badge]][discussion_page] [![Downloads][download_badge]][download_page]
-
-[ci_badge]: https://github.com/sfu-db/connector-x/workflows/ci/badge.svg
-[ci_page]: https://github.com/sfu-db/connector-x/actions
-[discussion_badge]: https://img.shields.io/badge/Forum-Github%20Discussions-blue
-[discussion_page]: https://github.com/sfu-db/connector-x/discussions
-[download_badge]: https://pepy.tech/badge/connectorx
-[download_page]: https://pepy.tech/project/connectorx
-
 Load data from <img src="https://raw.githubusercontent.com/sfu-db/connector-x/main/assets/sources.gif" width="6.5%" style="margin-bottom: -2px"/> to <img src="https://raw.githubusercontent.com/sfu-db/connector-x/main/assets/destinations.gif" width="7%" style="margin-bottom: -2px"/>, the fastest way.
 
 ConnectorX enables you to load data from databases into Python in the fastest and most memory efficient way. It is a Python package that provides a high-level interface to the popular database connectors. Here is our rust documentation: [rust-docs](https://sfu-db.github.io/connector-x/rust-docs/connectorx/).
@@ -33,9 +24,7 @@ The function will partition the query by **evenly** splitting the specified colu
 ConnectorX will assign one thread for each partition to load and write data in parallel.
 Currently, we support partitioning on **numerical** columns (**cannot contain NULL**) for **SPJA** queries. 
 
-Check out more detailed usage and examples [here](./install). A general introduction of the project can be found in this [blog post](https://towardsdatascience.com/connectorx-the-fastest-way-to-load-data-from-databases-a65d4d4062d5).
-
-
+Check out more detailed usage and examples [here](https://sfu-db.github.io/connector-x/install.html#examples). A general introduction of the project can be found in this [blog post](https://towardsdatascience.com/connectorx-the-fastest-way-to-load-data-from-databases-a65d4d4062d5).
 
 # Performance
 
@@ -49,7 +38,7 @@ We compared different solutions in Python that provides the `read_sql` function,
 
 <p align="center"><img alt="memory chart" src="https://raw.githubusercontent.com/sfu-db/connector-x/main/assets/pg-mem.png"/></p>
 
-In conclusion, ConnectorX uses up to **3x** less memory and **21x** less time (**3x** less memory and **13x** less time compared with Pandas.). More on [here](https://github.com/sfu-db/connector-x/blob/main/Benchmark.md#benchmark-result-on-aws-r54xlarge).
+In conclusion, ConnectorX uses up to **3x** less memory and **21x** less time (**3x** less memory and **13x** less time compared with Pandas.). More benchmark result can be found under each database pages [here](https://sfu-db.github.io/connector-x/databases.html).
 
 ## How does ConnectorX achieve a lightening speed while keeping the memory footprint low?
 
@@ -89,6 +78,7 @@ For more planned data sources, please check out our [discussion](https://github.
 - [x] Azure SQL Database (through mssql protocol)
 - [x] Oracle
 - [x] Big Query - Experimental: need docs and benchmark (also more tests)
+- [ ] ODBC (WIP)
 - [ ] ...
 
 ## Destinations
@@ -106,10 +96,6 @@ Rust docs: [stable](https://docs.rs/connectorx), [nightly](https://sfu-db.github
 
 Checkout our [discussion][discussion_page] to participate in deciding our next plan!
 
-# Historical Benchmark Results
-
-https://sfu-db.github.io/connector-x/dev/bench/
-
 # Developer's Guide
 Please see [Developer's Guide](https://github.com/sfu-db/connector-x/blob/main/CONTRIBUTING.md) for information about developing ConnectorX.
 
@@ -118,7 +104,6 @@ Please see [Developer's Guide](https://github.com/sfu-db/connector-x/blob/main/C
 You are always welcomed to:
 1. Ask questions in stackoverflow. Make sure to have #connectorx attached.
 2. Ask questions & propose new ideas in our [forum][discussion_page].
-3. Ask questions & join the discussion & send direct messages to us in our [discord](https://discord.gg/xwbkFNk) (under `CONNECTOR` category)
 
 # Organizations and Projects using ConnectorX
 
