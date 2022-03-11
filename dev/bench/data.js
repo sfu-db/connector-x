@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1646962555535,
+  "lastUpdate": 1646963968218,
   "repoUrl": "https://github.com/sfu-db/connector-x",
   "entries": {
     "ConnectorX TPC-H Scale@1 Benchmarks": [
@@ -8284,6 +8284,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.1530928077770903",
             "extra": "mean: 74.63727021701634 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "youngw@sfu.ca",
+            "name": "Weiyuan Wu",
+            "username": "dovahcrow"
+          },
+          "committer": {
+            "email": "youngw@sfu.ca",
+            "name": "Weiyuan Wu",
+            "username": "dovahcrow"
+          },
+          "distinct": true,
+          "id": "c8284631966b92584c286e468875ab18c224a476",
+          "message": "add linux arm and apple_arm",
+          "timestamp": "2022-03-11T01:39:23Z",
+          "tree_id": "9ad40b42a0b9d6b60eb7433fdbaf31873ac7a881",
+          "url": "https://github.com/sfu-db/connector-x/commit/c8284631966b92584c286e468875ab18c224a476"
+        },
+        "date": 1646963966875,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_mysql",
+            "value": 0.018453236349973205,
+            "unit": "iter/sec",
+            "range": "stddev: 0.7229941355456787",
+            "extra": "mean: 54.19103625155985 sec\nrounds: 5"
+          },
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_postgres",
+            "value": 0.0134619416668967,
+            "unit": "iter/sec",
+            "range": "stddev: 0.6310094735825149",
+            "extra": "mean: 74.28348931707441 sec\nrounds: 5"
           }
         ]
       }
