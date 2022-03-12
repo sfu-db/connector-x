@@ -1,6 +1,6 @@
 [workspace]
 default-members = ["connectorx"]
-members = ["connectorx", "connectorx-python"]
+members = ["connectorx"]
 
 [profile.release]
 debug = true

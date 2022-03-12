@@ -12,68 +12,113 @@ jobs:
     container: quay.io/pypa/manylinux2014_x86_64
     strategy:
       matrix:
-        python-version: [37, 38, 39, 310]
+        python-version: [[37, "3.7"], [38, "3.8"], [39, "3.9"], [310, "3.10"]]
     steps:
       - uses: actions/checkout@v2
 
       - name: Set python version
         run: |
-          if [[ "${{ matrix.python-version }}" == "37" ]]; then
+          if [[ "${{ matrix.python-version[0] }}" == "37" ]]; then
             echo "/opt/python/cp37-cp37m/bin" >> $GITHUB_PATH
           else
-            echo "/opt/python/cp${{ matrix.python-version }}-cp${{ matrix.python-version }}/bin" >> $GITHUB_PATH
+            echo "/opt/python/cp${{ matrix.python-version[0] }}-cp${{ matrix.python-version[0] }}/bin" >> $GITHUB_PATH
           fi
 
-      - name: Check which python we use
-        run: |
-          echo $(which python)
-
-      - name: Install Rust
-        uses: actions-rs/toolchain@v1
+      - uses: actions-rs/toolchain@v1
         with:
           toolchain: nightly-2021-11-18
           components: rustfmt
+          target: aarch64-unknown-linux-gnu
           default: true
+
+      - uses: extractions/setup-just@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: Gr1N/setup-poetry@v7
 
       - name: Install tools
         run: |
-          pip install poetry
-          cargo install just
-          yum install -y openssl11-devel mysql-devel postgresql-devel freetds-devel
-          ln -sfn /usr/lib64/pkgconfig/openssl11.pc /usr/lib64/pkgconfig/openssl.pc
-          ln -sfn /usr/lib64/pkgconfig/libssl11.pc /usr/lib64/pkgconfig/libssl.pc
+          yum install -y mysql-devel postgresql-devel freetds-devel
 
       - name: Setup project
-        env:
-          RUSTFLAGS: "-C link-arg=-s"
-          SQLITE3_STATIC: 1
         run: |
           just bootstrap-python
-          just ci-build-python-extention
-          echo "Content of the source folder"
-          ls connectorx-python/connectorx
+          cp README.md connectorx-python/README.md
+          cp LICENSE connectorx-python/LICENSE
 
-      - name: Build wheel
-        run: |
-          just ci-build-python-wheel ci-rename-wheel
-          echo "Built artifacts"
-          ls connectorx-python/dist
-
-      - name: Persist artifacts
-        uses: actions/upload-artifact@v2
+      - uses: messense/maturin-action@v1
         with:
-          name: "linux-${{ matrix.python-version }}"
-          path: connectorx-python/dist/*.whl
+          maturin-version: v0.12.1
+          command: build
+          args: -m connectorx-python/Cargo.toml -i python --no-sdist --release --manylinux 2014
+        env:
+          SQLITE3_STATIC: 1
 
-      # - name: Persist artifacts source code
-      #   uses: actions/upload-artifact@v2
-      #   if: matrix.python-version == 39
+      # - uses: messense/maturin-action@v1
       #   with:
-      #     name: "linux-${{ matrix.python-version }}"
-      #     path: connectorx-python/dist/*.tar.gz
+      #     maturin-version: v0.12.1
+      #     command: build
+      #     args: -m connectorx-python/Cargo.toml --target aarch64-unknown-linux-gnu -i python --no-sdist --release --manylinux 2014
+      #   env:
+      #     SQLITE3_STATIC: 1
 
-  win32:
-    runs-on: windows-latest
+      - uses: actions/upload-artifact@v3
+        with:
+          name: "ubuntu-latest-${{ matrix.python-version[1] }}"
+          path: connectorx-python/target/wheels/*.whl
+
+  mac-and-win:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: ["windows-latest", "macos-10.15"]
+        python-version: ["3.7", "3.8", "3.9", "3.10"]
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: ankane/setup-mysql@v1
+        with:
+          mysql-version: 8
+
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+          architecture: x64
+
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly-2021-11-18
+          components: rustfmt
+          default: true
+
+      - uses: extractions/setup-just@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: Gr1N/setup-poetry@v7
+
+      - name: Setup project
+        run: |
+          just bootstrap-python
+          cp README.md connectorx-python/README.md
+          cp LICENSE connectorx-python/LICENSE
+
+      - uses: messense/maturin-action@v1
+        with:
+          maturin-version: v0.12.1
+          command: build
+          args: -m connectorx-python/Cargo.toml -i python --no-sdist --release
+        env:
+          SQLITE3_STATIC: 1
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: "${{ matrix.os }}-${{ matrix.python-version }}"
+          path: connectorx-python/target/wheels/*.whl
+
+  apple-arm:
+    runs-on: macos-latest
     strategy:
       matrix:
         python-version: ["3.7", "3.8", "3.9", "3.10"]
@@ -84,116 +129,68 @@ jobs:
         with:
           mysql-version: 8
 
-      - name: Setup python
-        uses: actions/setup-python@v2
+      - uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
-          architecture: x64
 
-      - name: Check which python we use
-        run: |
-          echo $(which python)
-
-      - name: Install Rust
-        uses: actions-rs/toolchain@v1
+      - uses: actions-rs/toolchain@v1
         with:
           toolchain: nightly-2021-11-18
           components: rustfmt
+          target: aarch64-apple-darwin
           default: true
 
-      - name: Install tools
-        run: |
-          pip install poetry
-          cargo install cargo-quickinstall
-          cargo quickinstall just
+      - uses: extractions/setup-just@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: Gr1N/setup-poetry@v7
 
       - name: Setup project
         run: |
           just bootstrap-python
-          just ci-build-python-extention
-          echo "Content of the source folder"
-          ls connectorx-python/connectorx
+          cp README.md connectorx-python/README.md
+          cp LICENSE connectorx-python/LICENSE
+
+      - uses: messense/maturin-action@v1
+        with:
+          maturin-version: v0.12.1
+          command: build
+          args: -m connectorx-python/Cargo.toml --target aarch64-apple-darwin -i python --no-sdist --release
         env:
           SQLITE3_STATIC: 1
 
-      - name: Build wheel
-        run: |
-          just ci-build-python-wheel ci-rename-wheel
-          echo "Built artifacts"
-          ls connectorx-python/dist
-
-      - name: Persist artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          name: "windows-${{ matrix.python-version }}"
-          path: connectorx-python/dist/*.whl
-
-  darwin:
-    runs-on: macos-10.15
-    strategy:
-      matrix:
-        python-version: ["3.7", "3.8", "3.9", "3.10"]
-    steps:
-      - uses: actions/checkout@v2
-
-      - uses: ankane/setup-mysql@v1
-        with:
-          mysql-version: 8
-      
-      - name: Install brew
-        run: |
-          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-          brew install openssl
-
-      - name: Setup python
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.python-version }}
-          architecture: x64
-
-      - name: Check which python we use
-        run: |
-          echo $(which python)
-
-      - name: Install Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: nightly-2021-11-18
-          components: rustfmt
-          default: true
-
-      - name: Install tools
-        run: |
-          pip install poetry
-          cargo install cargo-quickinstall
-          cargo quickinstall just
-
-      - name: Setup project
-        run: |
-          just bootstrap-python
-          just ci-build-python-extention
-          echo "Content of the source folder"
-          ls connectorx-python/connectorx
-        env:
-          SQLITE3_STATIC: 1
-          LDFLAGS: "-L/usr/local/opt/openssl@3/lib"
-          CPPFLAGS: "-I/usr/local/opt/openssl@3/include"
-
-      - name: Build wheel
-        run: |
-          just ci-build-python-wheel ci-rename-wheel
-          echo "Built artifacts"
-          ls connectorx-python/dist
-
-      - name: Persist artifacts
-        uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v2
         with:
           name: "macos-${{ matrix.python-version }}"
-          path: connectorx-python/dist/*.whl
+          path: connectorx-python/target/wheels/*.whl
+
+  verify:
+    runs-on: ${{ matrix.os }}
+    needs: [mac-and-win, linux]
+    strategy:
+      matrix:
+        python-version: ["3.7", "3.8", "3.9", "3.10"]
+        os: [macos-10.15, ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+          architecture: x64
+
+      - uses: actions/download-artifact@v3
+        with:
+          name: "${{ matrix.os }}-${{ matrix.python-version }}"
+
+      - run: |
+          pip install *.whl
+          python -c "import connectorx"
 
   upload:
     runs-on: ubuntu-latest
-    needs: [win32, darwin, linux]
+    needs: [verify]
     steps:
       - name: Download all artifacts
         uses: actions/download-artifact@v2

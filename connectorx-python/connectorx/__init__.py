@@ -1,6 +1,6 @@
 from typing import Optional, Tuple, Union, List, Dict, Any
 
-from .connectorx_python import read_sql as _read_sql
+from .connectorx import read_sql as _read_sql, partition_sql as _partition_sql
 
 try:
     from importlib.metadata import version
@@ -13,6 +13,39 @@ except:
         __version__ = version(__name__)
     except:
         pass
+
+
+def partition_sql(
+    conn: str,
+    query: str,
+    partition_on: str,
+    partition_num: int,
+    partition_range: Optional[Tuple[int, int]] = None,
+):
+    """
+    Partition the sql query
+
+    Parameters
+    ==========
+    conn
+      the connection string.
+    query
+      a SQL query or a list of SQL queries.
+    partition_on
+      the column on which to partition the result.
+    partition_num
+      how many partitions to generate.
+    partition_range
+      the value range of the partition column.
+    """
+    partition_query = {
+        "query": query,
+        "column": partition_on,
+        "min": partition_range[0] if partition_range else None,
+        "max": partition_range[1] if partition_range else None,
+        "num": partition_num,
+    }
+    return _partition_sql(conn, partition_query)
 
 
 def read_sql(
