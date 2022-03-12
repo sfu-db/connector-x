@@ -567,7 +567,7 @@ dependencies = [
 
 [[package]]
 name = "connectorx"
-version = "0.2.4-alpha.12"
+version = "0.2.5-alpha.2"
 dependencies = [
  "anyhow",
  "arrow",
@@ -610,7 +610,7 @@ dependencies = [
 
 [[package]]
 name = "connectorx-python"
-version = "0.2.4-alpha.12"
+version = "0.2.5-alpha.2"
 dependencies = [
  "anyhow",
  "arrow",
