@@ -4,26 +4,11 @@ use std::env;
 
 const QUERY: &'static str = r#"
 SELECT 
-    l_orderkey,
-    l_partkey,
-    l_suppkey,
-    l_linenumber,
-    l_quantity::float8,
-    l_extendedprice::float8,
-    l_discount::float8,
-    l_tax::float8,
-    l_returnflag,
-    l_linestatus,
-    l_shipdate,
-    l_commitdate,
-    l_receiptdate,
-    l_shipinstruct,
-    l_shipmode,
-    l_comment 
-FROM lineitem"#;
+    *
+FROM LINEITEM"#;
 
-pub fn run(nq: usize) {
-    let conn = env::var("POSTGRES_URL").unwrap();
+pub fn run(nq: usize, conn: &str) {
+    let conn = env::var(conn).unwrap();
 
     Python::with_gil(|py| {
         read_sql(
@@ -32,12 +17,12 @@ pub fn run(nq: usize) {
             "pandas",
             None,
             None,
-            Some(PartitionQuery::new(QUERY, "l_orderkey", None, None, nq)),
+            Some(PartitionQuery::new(QUERY, "L_ORDERKEY", None, None, nq)),
         )
         .unwrap();
     });
 }
 
 fn main() {
-    run(1);
+    run(1, "POSTGRES_URL");
 }

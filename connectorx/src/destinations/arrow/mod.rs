@@ -1,135 +1,196 @@
-use super::{Consume, Destination, DestinationPartition};
-use crate::data_order::DataOrder;
-use crate::dummy_typesystem::DummyTypeSystem;
-use crate::errors::{ConnectorAgentError, Result};
-use crate::typesystem::{Realize, TypeAssoc, TypeSystem};
-use anyhow::anyhow;
-use arrow::datatypes::Schema;
-use arrow::record_batch::RecordBatch;
-use arrow_assoc::ArrowAssoc;
-use fehler::throws;
-use funcs::{FFinishBuilder, FNewBuilder, FNewField};
-use itertools::Itertools;
-use std::any::Any;
-use std::sync::Arc;
+//! Destination implementation for Arrow and Polars.
 
 mod arrow_assoc;
+mod errors;
 mod funcs;
+pub mod typesystem;
+
+pub use self::errors::{ArrowDestinationError, Result};
+pub use self::typesystem::ArrowTypeSystem;
+use super::{Consume, Destination, DestinationPartition};
+use crate::constants::RECORD_BATCH_SIZE;
+use crate::data_order::DataOrder;
+use crate::typesystem::{Realize, TypeAssoc, TypeSystem};
+use anyhow::anyhow;
+use arrow::{datatypes::Schema, record_batch::RecordBatch};
+use arrow_assoc::ArrowAssoc;
+use fehler::{throw, throws};
+use funcs::{FFinishBuilder, FNewBuilder, FNewField};
+use itertools::Itertools;
+use std::{
+    any::Any,
+    sync::{Arc, Mutex},
+};
 
 type Builder = Box<dyn Any + Send>;
 type Builders = Vec<Builder>;
 
 pub struct ArrowDestination {
-    nrows: usize,
-    schema: Vec<DummyTypeSystem>,
-    builders: Vec<Builders>,
+    schema: Vec<ArrowTypeSystem>,
+    names: Vec<String>,
+    data: Arc<Mutex<Vec<RecordBatch>>>,
+    arrow_schema: Arc<Schema>,
+}
+
+impl Default for ArrowDestination {
+    fn default() -> Self {
+        ArrowDestination {
+            schema: vec![],
+            names: vec![],
+            data: Arc::new(Mutex::new(vec![])),
+            arrow_schema: Arc::new(Schema::empty()),
+        }
+    }
 }
 
 impl ArrowDestination {
     pub fn new() -> Self {
-        ArrowDestination {
-            nrows: 0,
-            schema: vec![],
-            builders: vec![],
-        }
+        Self::default()
     }
 }
 
 impl Destination for ArrowDestination {
     const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::ColumnMajor, DataOrder::RowMajor];
-    type TypeSystem = DummyTypeSystem;
-    type Partition<'a> = ArrowPartitionWriter<'a>;
+    type TypeSystem = ArrowTypeSystem;
+    type Partition<'a> = ArrowPartitionWriter;
+    type Error = ArrowDestinationError;
 
-    #[throws(ConnectorAgentError)]
+    fn needs_count(&self) -> bool {
+        false
+    }
+
+    #[throws(ArrowDestinationError)]
     fn allocate<S: AsRef<str>>(
         &mut self,
-        nrows: usize,
-        _names: &[S],
-        schema: &[DummyTypeSystem],
-        _data_order: DataOrder,
+        _nrow: usize,
+        names: &[S],
+        schema: &[ArrowTypeSystem],
+        data_order: DataOrder,
     ) {
-        // cannot really create builders since do not know each partition size here
-        self.nrows = nrows;
-        self.schema = schema.to_vec();
-    }
-
-    #[throws(ConnectorAgentError)]
-    fn partition(&mut self, counts: &[usize]) -> Vec<Self::Partition<'_>> {
-        assert_eq!(counts.iter().sum::<usize>(), self.nrows);
-        assert_eq!(self.builders.len(), 0);
-
-        for &c in counts {
-            let builders = self
-                .schema
-                .iter()
-                .map(|&dt| Ok(Realize::<FNewBuilder>::realize(dt)?(c)))
-                .collect::<Result<Vec<_>>>()?;
-
-            self.builders.push(builders);
+        // todo: support colmajor
+        if !matches!(data_order, DataOrder::RowMajor) {
+            throw!(crate::errors::ConnectorXError::UnsupportedDataOrder(
+                data_order
+            ))
         }
 
-        let schema = self.schema.clone();
-        self.builders
-            .iter_mut()
-            .zip(counts)
-            .map(|(builders, &c)| ArrowPartitionWriter::new(schema.clone(), builders, c))
-            .collect()
+        // parse the metadata
+        self.schema = schema.to_vec();
+        self.names = names.iter().map(|n| n.as_ref().to_string()).collect();
+        let fields = self
+            .schema
+            .iter()
+            .zip_eq(&self.names)
+            .map(|(&dt, h)| Ok(Realize::<FNewField>::realize(dt)?(h.as_str())))
+            .collect::<Result<Vec<_>>>()?;
+        self.arrow_schema = Arc::new(Schema::new(fields));
     }
 
-    fn schema(&self) -> &[DummyTypeSystem] {
+    #[throws(ArrowDestinationError)]
+    fn partition(&mut self, counts: usize) -> Vec<Self::Partition<'_>> {
+        let mut partitions = vec![];
+        for _ in 0..counts {
+            partitions.push(ArrowPartitionWriter::new(
+                self.schema.clone(),
+                Arc::clone(&self.data),
+                Arc::clone(&self.arrow_schema),
+            )?);
+        }
+        partitions
+    }
+
+    fn schema(&self) -> &[ArrowTypeSystem] {
         self.schema.as_slice()
     }
 }
 
 impl ArrowDestination {
-    #[throws(ConnectorAgentError)]
-    pub fn finish(self, headers: Vec<String>) -> Vec<RecordBatch> {
-        let fields = self
+    #[throws(ArrowDestinationError)]
+    pub fn arrow(self) -> Vec<RecordBatch> {
+        let lock = Arc::try_unwrap(self.data).map_err(|_| anyhow!("Partitions are not freed"))?;
+        lock.into_inner()
+            .map_err(|e| anyhow!("mutex poisoned {}", e))?
+    }
+}
+
+pub struct ArrowPartitionWriter {
+    schema: Vec<ArrowTypeSystem>,
+    builders: Option<Builders>,
+    current_row: usize,
+    current_col: usize,
+    data: Arc<Mutex<Vec<RecordBatch>>>,
+    arrow_schema: Arc<Schema>,
+}
+
+impl ArrowPartitionWriter {
+    #[throws(ArrowDestinationError)]
+    fn new(
+        schema: Vec<ArrowTypeSystem>,
+        data: Arc<Mutex<Vec<RecordBatch>>>,
+        arrow_schema: Arc<Schema>,
+    ) -> Self {
+        let mut pw = ArrowPartitionWriter {
+            schema,
+            builders: None,
+            current_row: 0,
+            current_col: 0,
+            data,
+            arrow_schema,
+        };
+        pw.allocate()?;
+        pw
+    }
+
+    #[throws(ArrowDestinationError)]
+    fn allocate(&mut self) {
+        let builders = self
             .schema
             .iter()
-            .zip_eq(headers)
-            .map(|(&dt, h)| Ok(Realize::<FNewField>::realize(dt)?(h.as_str())))
+            .map(|dt| Ok(Realize::<FNewBuilder>::realize(*dt)?(RECORD_BATCH_SIZE)))
             .collect::<Result<Vec<_>>>()?;
+        self.builders.replace(builders);
+    }
 
-        let arrow_schema = Arc::new(Schema::new(fields));
-        let schema = self.schema.clone();
-        self.builders
+    #[throws(ArrowDestinationError)]
+    fn flush(&mut self) {
+        let builders = self
+            .builders
+            .take()
+            .unwrap_or_else(|| panic!("arrow builder is none when flush!"));
+        let columns = builders
             .into_iter()
-            .map(|pbuilder| {
-                let columns = pbuilder
-                    .into_iter()
-                    .zip(schema.iter())
-                    .map(|(builder, &dt)| Ok(Realize::<FFinishBuilder>::realize(dt)?(builder)?))
-                    .collect::<Result<Vec<_>>>()?;
-                Ok(RecordBatch::try_new(Arc::clone(&arrow_schema), columns)?)
-            })
-            .collect::<Result<Vec<_>>>()?
+            .zip(self.schema.iter())
+            .map(|(builder, &dt)| Realize::<FFinishBuilder>::realize(dt)?(builder))
+            .collect::<std::result::Result<Vec<_>, crate::errors::ConnectorXError>>()?;
+        let rb = RecordBatch::try_new(Arc::clone(&self.arrow_schema), columns)?;
+        {
+            let mut guard = self
+                .data
+                .lock()
+                .map_err(|e| anyhow!("mutex poisoned {}", e))?;
+            let inner_data = &mut *guard;
+            inner_data.push(rb);
+        }
+
+        self.current_row = 0;
+        self.current_col = 0;
     }
 }
 
-pub struct ArrowPartitionWriter<'a> {
-    nrows: usize,
-    schema: Vec<DummyTypeSystem>,
-    builders: &'a mut Builders,
-    current_col: usize,
-}
+impl<'a> DestinationPartition<'a> for ArrowPartitionWriter {
+    type TypeSystem = ArrowTypeSystem;
+    type Error = ArrowDestinationError;
 
-impl<'a> ArrowPartitionWriter<'a> {
-    fn new(schema: Vec<DummyTypeSystem>, builders: &'a mut Builders, nrows: usize) -> Self {
-        ArrowPartitionWriter {
-            nrows,
-            schema,
-            builders,
-            current_col: 0,
+    #[throws(ArrowDestinationError)]
+    fn finalize(&mut self) {
+        if self.builders.is_some() {
+            self.flush()?;
         }
     }
-}
 
-impl<'a> DestinationPartition<'a> for ArrowPartitionWriter<'a> {
-    type TypeSystem = DummyTypeSystem;
-
-    fn nrows(&self) -> usize {
-        self.nrows
+    #[throws(ArrowDestinationError)]
+    fn aquire_row(&mut self, _n: usize) -> usize {
+        self.current_row
     }
 
     fn ncols(&self) -> usize {
@@ -137,23 +198,37 @@ impl<'a> DestinationPartition<'a> for ArrowPartitionWriter<'a> {
     }
 }
 
-impl<'a, T> Consume<T> for ArrowPartitionWriter<'a>
+impl<'a, T> Consume<T> for ArrowPartitionWriter
 where
     T: TypeAssoc<<Self as DestinationPartition<'a>>::TypeSystem> + ArrowAssoc + 'static,
 {
-    fn consume(&mut self, value: T) -> Result<()> {
+    type Error = ArrowDestinationError;
+
+    #[throws(ArrowDestinationError)]
+    fn consume(&mut self, value: T) {
         let col = self.current_col;
         self.current_col = (self.current_col + 1) % self.ncols();
-
         self.schema[col].check::<T>()?;
 
-        <T as ArrowAssoc>::append(
-            self.builders[col]
-                .downcast_mut::<T::Builder>()
-                .ok_or_else(|| anyhow!("cannot cast arrow builder for append"))?,
-            value,
-        )?;
+        match &mut self.builders {
+            Some(builders) => {
+                <T as ArrowAssoc>::append(
+                    builders[col]
+                        .downcast_mut::<T::Builder>()
+                        .ok_or_else(|| anyhow!("cannot cast arrow builder for append"))?,
+                    value,
+                )?;
+            }
+            None => throw!(anyhow!("arrow arrays are empty!")),
+        }
 
-        Ok(())
+        // flush if exceed batch_size
+        if self.current_col == 0 {
+            self.current_row += 1;
+            if self.current_row >= RECORD_BATCH_SIZE {
+                self.flush()?;
+                self.allocate()?;
+            }
+        }
     }
 }

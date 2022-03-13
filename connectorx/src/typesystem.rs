@@ -1,34 +1,41 @@
-// Why we need to implement Transmit for TypeSystem? This is because only TypeSystem knows how to dispatch
-// functions to it's native type N based on our defined type T. Remember, T is value and N is a type.
+//! This module defines traits that required to define a typesystem.
+//!
+//! A typesystem is an enum that describes what types can be produced by a source and accepted by a destination.
+//! A typesystem also needs to implement [`TypeAssoc`] to associate the enum variants to the physical representation
+//! of the types in the typesystem.
 
 use crate::destinations::{Consume, Destination, DestinationPartition};
-use crate::errors::Result;
+use crate::errors::{ConnectorXError, Result as CXResult};
 use crate::sources::{PartitionParser, Produce, Source, SourcePartition};
 
+#[doc(hidden)]
 /// `TypeSystem` describes all the types a source or destination support
 /// using enum variants.
 /// The variant can be used to type check with a static type `T` through the `check` method.
 pub trait TypeSystem: Copy + Clone + Send + Sync {
     /// Check whether T is the same type as defined by self.
-    fn check<T: TypeAssoc<Self>>(self) -> Result<()> {
+    fn check<T: TypeAssoc<Self>>(self) -> CXResult<()> {
         T::check(self)
     }
 }
 
+#[doc(hidden)]
 /// Associate a static type to a TypeSystem
 pub trait TypeAssoc<TS: TypeSystem> {
-    fn check(ts: TS) -> Result<()>;
+    fn check(ts: TS) -> CXResult<()>;
 }
 
+#[doc(hidden)]
 /// Realize means that a TypeSystem can realize a parameterized func F, based on its current variants.
 pub trait Realize<F>
 where
     F: ParameterizedFunc,
 {
     /// realize a parameterized function with the type that self currently is.
-    fn realize(self) -> Result<F::Function>;
+    fn realize(self) -> CXResult<F::Function>;
 }
 
+#[doc(hidden)]
 /// A ParameterizedFunc refers to a function that is parameterized on a type T,
 /// where type T will be dynaically determined by the variant of a TypeSystem.
 /// An example is the `transmit<S,W,T>` function. When piping values from a source
@@ -43,27 +50,31 @@ pub trait ParameterizedFunc {
     }
 }
 
+#[doc(hidden)]
 /// `ParameterizedOn` indicates a parameterized function `Self`
 /// is parameterized on type `T`
 pub trait ParameterizedOn<T>: ParameterizedFunc {
     fn parameterize() -> Self::Function;
 }
 
+/// Defines a rule to convert a type `T` to a type `U`.
 pub trait TypeConversion<T, U> {
     fn convert(val: T) -> U;
 }
 
-/// Transport defines how to produce a value, do type conversion and then write
-/// the value to a destination.
+/// Transport asks the source to produce a value, do type conversion and then write
+/// the value to a destination. Do not manually implement this trait for types.
+/// Use [`impl_transport!`] to create a struct that implements this trait instead.
 pub trait Transport {
     type TSS: TypeSystem;
     type TSD: TypeSystem;
     type S: Source;
     type D: Destination;
+    type Error: From<ConnectorXError> + Send;
 
     /// convert_typesystem convert the source type system TSS to the destination
     /// type system TSD.
-    fn convert_typesystem(ts: Self::TSS) -> Result<Self::TSD>;
+    fn convert_typesystem(ts: Self::TSS) -> CXResult<Self::TSD>;
 
     /// convert_type convert the type T1 associated with the source type system
     /// TSS to a type T2 which is associated with the destination type system TSD.
@@ -82,31 +93,40 @@ pub trait Transport {
         ts2: Self::TSD,
         src: &'r mut <<Self::S as Source>::Partition as SourcePartition>::Parser<'s>,
         dst: &'r mut <Self::D as Destination>::Partition<'d>,
-    ) -> Result<()>;
+    ) -> Result<(), Self::Error>;
 
+    #[allow(clippy::type_complexity)]
     fn processor<'s, 'd>(
         ts1: Self::TSS,
         ts2: Self::TSD,
-    ) -> Result<
+    ) -> CXResult<
         fn(
             src: &mut <<Self::S as Source>::Partition as SourcePartition>::Parser<'s>,
             dst: &mut <Self::D as Destination>::Partition<'d>,
-        ) -> Result<()>,
+        ) -> Result<(), Self::Error>,
     >;
 }
 
-pub fn process<'s, 'd, 'r, T1, T2, TP, S, D>(
+#[doc(hidden)]
+pub fn process<'s, 'd, 'r, T1, T2, TP, S, D, ES, ED, ET>(
     src: &'r mut <<S as Source>::Partition as SourcePartition>::Parser<'s>,
     dst: &'r mut <D as Destination>::Partition<'d>,
-) -> crate::errors::Result<()>
+) -> Result<(), ET>
 where
     T1: TypeAssoc<<S as Source>::TypeSystem>,
+    S: Source<Error = ES>,
+    <S as Source>::Partition: SourcePartition<Error = ES>,
+
+    <<S as Source>::Partition as SourcePartition>::Parser<'s>: Produce<'r, T1, Error = ES>,
+    ES: From<ConnectorXError> + Send,
+
     T2: TypeAssoc<<D as Destination>::TypeSystem>,
+    D: Destination<Error = ED>,
+    <D as Destination>::Partition<'d>: Consume<T2, Error = ED>,
+    ED: From<ConnectorXError> + Send,
+
     TP: TypeConversion<T1, T2>,
-    S: Source,
-    D: Destination,
-    <<S as Source>::Partition as SourcePartition>::Parser<'s>: Produce<'r, T1>,
-    <D as Destination>::Partition<'d>: Consume<T2>,
+    ET: From<ES> + From<ED>,
 {
     let val: T1 = PartitionParser::parse(src)?;
     let val: T2 = <TP as TypeConversion<T1, _>>::convert(val);

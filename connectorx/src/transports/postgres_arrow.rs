@@ -1,61 +1,83 @@
-use crate::destinations::arrow::ArrowDestination;
-use crate::dummy_typesystem::DummyTypeSystem;
-use crate::sources::postgres::{Binary, PostgresSource, PostgresTypeSystem};
+//! Transport from Postgres Source to Arrow Destination.
+
+use crate::destinations::arrow::{
+    typesystem::ArrowTypeSystem, ArrowDestination, ArrowDestinationError,
+};
+use crate::sources::postgres::{
+    BinaryProtocol, CSVProtocol, CursorProtocol, PostgresSource, PostgresSourceError,
+    PostgresTypeSystem,
+};
 use crate::typesystem::TypeConversion;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
+use num_traits::ToPrimitive;
+use postgres::NoTls;
+use postgres_native_tls::MakeTlsConnector;
+use rust_decimal::Decimal;
+use std::marker::PhantomData;
+use thiserror::Error;
 use uuid::Uuid;
 
-pub struct PostgresArrowTransport;
+#[derive(Error, Debug)]
+pub enum PostgresArrowTransportError {
+    #[error(transparent)]
+    Source(#[from] PostgresSourceError),
 
-impl_transport!(
-    name = PostgresArrowTransport,
-    systems = PostgresTypeSystem => DummyTypeSystem,
-    route = PostgresSource<Binary> => ArrowDestination,
-    mappings = {
-        { Float4[f32]                => F64[f64]                | conversion all }
-        { Float8[f64]                => F64[f64]                | conversion all }
-        { Int2[i16]                  => I64[i64]                | conversion all }
-        { Int4[i32]                  => I64[i64]                | conversion all }
-        { Int8[i64]                  => I64[i64]                | conversion all }
-        { Bool[bool]                 => Bool[bool]              | conversion all  }
-        { Text[&'r str]              => String[String]          | conversion half }
-        { BpChar[&'r str]            => String[String]          | conversion none }
-        { VarChar[&'r str]           => String[String]          | conversion none }
-        { Timestamp[NaiveDateTime]   => DateTime[DateTime<Utc>] | conversion half }
-        { TimestampTz[DateTime<Utc>] => DateTime[DateTime<Utc>] | conversion all }
-        { Date[NaiveDate]            => DateTime[DateTime<Utc>] | conversion half }
-        { UUID[Uuid]                 => String[String]          | conversion half }
-        { Char[&'r str]              => String[String]          | conversion none}
-        // { Time[NaiveTime]            => String[String]          | conversion half }
+    #[error(transparent)]
+    Destination(#[from] ArrowDestinationError),
+
+    #[error(transparent)]
+    ConnectorX(#[from] crate::errors::ConnectorXError),
+}
+
+/// Convert Postgres data types to Arrow data types.
+pub struct PostgresArrowTransport<P, C>(PhantomData<P>, PhantomData<C>);
+
+macro_rules! impl_postgres_transport {
+    ($proto:ty, $tls:ty) => {
+        impl_transport!(
+            name = PostgresArrowTransport<$proto, $tls>,
+            error = PostgresArrowTransportError,
+            systems = PostgresTypeSystem => ArrowTypeSystem,
+            route = PostgresSource<$proto, $tls> => ArrowDestination,
+            mappings = {
+                { Float4[f32]                => Float32[f32]              | conversion auto }
+                { Float8[f64]                => Float64[f64]              | conversion auto }
+                { Numeric[Decimal]           => Float64[f64]              | conversion option }
+                { Int2[i16]                  => Int32[i32]                | conversion auto }
+                { Int4[i32]                  => Int32[i32]                | conversion auto }
+                { Int8[i64]                  => Int64[i64]                | conversion auto }
+                { Bool[bool]                 => Boolean[bool]             | conversion auto  }
+                { Text[&'r str]              => LargeUtf8[String]         | conversion owned }
+                { BpChar[&'r str]            => LargeUtf8[String]         | conversion none }
+                { VarChar[&'r str]           => LargeUtf8[String]         | conversion none }
+                { Timestamp[NaiveDateTime]   => Date64[NaiveDateTime]     | conversion auto }
+                { Date[NaiveDate]            => Date32[NaiveDate]         | conversion auto }
+                { Time[NaiveTime]            => Time64[NaiveTime]         | conversion auto }
+                { TimestampTz[DateTime<Utc>] => DateTimeTz[DateTime<Utc>] | conversion auto }
+                { UUID[Uuid]                 => LargeUtf8[String]         | conversion option }
+                { Char[&'r str]              => LargeUtf8[String]         | conversion none }
+                { ByteA[Vec<u8>]             => LargeBinary[Vec<u8>]      | conversion auto }
+            }
+        );
     }
-);
+}
 
-impl TypeConversion<Uuid, String> for PostgresArrowTransport {
+impl_postgres_transport!(BinaryProtocol, NoTls);
+impl_postgres_transport!(BinaryProtocol, MakeTlsConnector);
+impl_postgres_transport!(CSVProtocol, NoTls);
+impl_postgres_transport!(CSVProtocol, MakeTlsConnector);
+impl_postgres_transport!(CursorProtocol, NoTls);
+impl_postgres_transport!(CursorProtocol, MakeTlsConnector);
+
+impl<P, C> TypeConversion<Uuid, String> for PostgresArrowTransport<P, C> {
     fn convert(val: Uuid) -> String {
         val.to_string()
     }
 }
 
-impl TypeConversion<NaiveTime, String> for PostgresArrowTransport {
-    fn convert(val: NaiveTime) -> String {
-        val.to_string()
-    }
-}
-
-impl<'r> TypeConversion<&'r str, String> for PostgresArrowTransport {
-    fn convert(val: &'r str) -> String {
-        val.to_string()
-    }
-}
-
-impl TypeConversion<NaiveDateTime, DateTime<Utc>> for PostgresArrowTransport {
-    fn convert(val: NaiveDateTime) -> DateTime<Utc> {
-        DateTime::from_utc(val, Utc)
-    }
-}
-
-impl TypeConversion<NaiveDate, DateTime<Utc>> for PostgresArrowTransport {
-    fn convert(val: NaiveDate) -> DateTime<Utc> {
-        DateTime::from_utc(val.and_hms(0, 0, 0), Utc)
+impl<P, C> TypeConversion<Decimal, f64> for PostgresArrowTransport<P, C> {
+    fn convert(val: Decimal) -> f64 {
+        val.to_f64()
+            .unwrap_or_else(|| panic!("cannot convert decimal {:?} to float64", val))
     }
 }

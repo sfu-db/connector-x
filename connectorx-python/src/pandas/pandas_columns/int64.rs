@@ -1,10 +1,10 @@
 use super::{check_dtype, HasPandasColumn, PandasColumn, PandasColumnObject};
+use crate::errors::ConnectorXPythonError;
 use anyhow::anyhow;
-use connectorx::ConnectorAgentError;
 use fehler::throws;
 use ndarray::{ArrayViewMut1, ArrayViewMut2, Axis, Ix2};
 use numpy::{PyArray, PyArray1};
-use pyo3::{FromPyObject, PyAny, PyResult};
+use pyo3::{types::PyTuple, FromPyObject, PyAny, PyResult};
 use std::any::TypeId;
 
 pub enum Int64Block<'a> {
@@ -18,8 +18,11 @@ impl<'a> FromPyObject<'a> for Int64Block<'a> {
             let data = unsafe { array.as_array_mut() };
             Ok(Int64Block::NumPy(data))
         } else {
-            let data = ob.getattr("_data")?;
-            let mask = ob.getattr("_mask")?;
+            let tuple = ob.downcast::<PyTuple>()?;
+            let data = tuple.get_item(0);
+            let mask = tuple.get_item(1);
+            check_dtype(data, "int64")?;
+            check_dtype(mask, "bool")?;
 
             Ok(Int64Block::Extention(
                 unsafe { data.downcast::<PyArray1<i64>>()?.as_array_mut() },
@@ -30,19 +33,20 @@ impl<'a> FromPyObject<'a> for Int64Block<'a> {
 }
 
 impl<'a> Int64Block<'a> {
-    #[throws(ConnectorAgentError)]
-    pub fn split(self) -> Vec<Int64Column<'a>> {
+    #[throws(ConnectorXPythonError)]
+    pub fn split(self) -> Vec<Int64Column> {
         let mut ret = vec![];
         match self {
             Int64Block::Extention(data, mask) => ret.push(Int64Column {
                 data: data
                     .into_slice()
-                    .ok_or_else(|| anyhow!("get None for Int64 data"))?,
+                    .ok_or_else(|| anyhow!("get None for Int64 data"))?
+                    .as_mut_ptr(),
                 mask: Some(
                     mask.into_slice()
-                        .ok_or_else(|| anyhow!("get None for Int64 mask"))?,
+                        .ok_or_else(|| anyhow!("get None for Int64 mask"))?
+                        .as_mut_ptr(),
                 ),
-                i: 0,
             }),
             Int64Block::NumPy(mut view) => {
                 let nrows = view.ncols();
@@ -53,9 +57,9 @@ impl<'a> Int64Block<'a> {
                         data: col
                             .into_shape(nrows)?
                             .into_slice()
-                            .ok_or_else(|| anyhow!("get None for splitted Int64 data"))?,
+                            .ok_or_else(|| anyhow!("get None for splitted Int64 data"))?
+                            .as_mut_ptr(),
                         mask: None,
-                        i: 0,
                     })
                 }
             }
@@ -65,88 +69,71 @@ impl<'a> Int64Block<'a> {
 }
 
 // for uint64 and Int64
-pub struct Int64Column<'a> {
-    data: &'a mut [i64],
-    mask: Option<&'a mut [bool]>,
-    i: usize,
+pub struct Int64Column {
+    data: *mut i64,
+    mask: Option<*mut bool>,
 }
 
-impl<'a> PandasColumnObject for Int64Column<'a> {
+unsafe impl Send for Int64Column {}
+unsafe impl Sync for Int64Column {}
+
+impl PandasColumnObject for Int64Column {
     fn typecheck(&self, id: TypeId) -> bool {
         id == TypeId::of::<i64>() || id == TypeId::of::<Option<i64>>()
     }
-    fn len(&self) -> usize {
-        self.data.len()
-    }
+
     fn typename(&self) -> &'static str {
         std::any::type_name::<i64>()
     }
 }
 
-impl<'a> PandasColumn<i64> for Int64Column<'a> {
-    #[throws(ConnectorAgentError)]
-    fn write(&mut self, val: i64) {
-        unsafe { *self.data.get_unchecked_mut(self.i) = val };
+impl PandasColumn<i64> for Int64Column {
+    #[throws(ConnectorXPythonError)]
+    fn write(&mut self, val: i64, row: usize) {
+        unsafe { *self.data.add(row) = val };
         if let Some(mask) = self.mask.as_mut() {
-            unsafe { *mask.get_unchecked_mut(self.i) = false };
+            unsafe { *mask.add(row) = false };
         }
-        self.i += 1;
     }
 }
 
-impl<'a> PandasColumn<Option<i64>> for Int64Column<'a> {
-    #[throws(ConnectorAgentError)]
-    fn write(&mut self, val: Option<i64>) {
+impl PandasColumn<Option<i64>> for Int64Column {
+    #[throws(ConnectorXPythonError)]
+    fn write(&mut self, val: Option<i64>, row: usize) {
         match val {
             Some(val) => {
-                unsafe { *self.data.get_unchecked_mut(self.i) = val };
+                unsafe { *self.data.add(row) = val };
                 if let Some(mask) = self.mask.as_mut() {
-                    unsafe { *mask.get_unchecked_mut(self.i) = false };
+                    unsafe { *mask.add(row) = false };
                 }
             }
             None => {
                 if let Some(mask) = self.mask.as_mut() {
-                    unsafe { *mask.get_unchecked_mut(self.i) = true };
+                    unsafe { *mask.add(row) = true };
                 } else {
                     panic!("Writing null i64 to not null pandas array")
                 }
             }
         }
-        self.i += 1;
     }
 }
 
 impl HasPandasColumn for i64 {
-    type PandasColumn<'a> = Int64Column<'a>;
+    type PandasColumn<'a> = Int64Column;
 }
 
 impl HasPandasColumn for Option<i64> {
-    type PandasColumn<'a> = Int64Column<'a>;
+    type PandasColumn<'a> = Int64Column;
 }
 
-impl<'a> Int64Column<'a> {
-    pub fn partition(self, counts: &[usize]) -> Vec<Int64Column<'a>> {
+impl Int64Column {
+    pub fn partition(self, counts: usize) -> Vec<Int64Column> {
         let mut partitions = vec![];
-        let mut data = self.data;
-        let mut mask = self.mask;
 
-        for &c in counts {
-            let (splitted_data, rest) = data.split_at_mut(c);
-            data = rest;
-            let (splitted_mask, rest) = match mask {
-                Some(mask) => {
-                    let (a, b) = mask.split_at_mut(c);
-                    (Some(a), Some(b))
-                }
-                None => (None, None),
-            };
-
-            mask = rest;
-
+        for _ in 0..counts {
             partitions.push(Int64Column {
-                data: splitted_data,
-                mask: splitted_mask,
-                i: 0,
+                data: self.data,
+                mask: self.mask,
             });
         }
 

@@ -3,17 +3,14 @@ use std::any::type_name;
 use std::fmt;
 use thiserror::Error;
 
-pub type Result<T> = std::result::Result<T, ConnectorAgentError>;
+pub type Result<T> = std::result::Result<T, ConnectorXError>;
 
 /// Errors that can be raised from this library.
 #[derive(Error, Debug)]
-pub enum ConnectorAgentError {
+pub enum ConnectorXError {
     /// The required type does not same as the schema defined.
     #[error("Data type unexpected: {0:?} expected, {1} found.")]
     TypeCheckFailed(String, &'static str),
-
-    #[error("Index operation out of bound.")]
-    OutOfBound,
 
     #[error("Data order not supported {0:?}.")]
     UnsupportedDataOrder(DataOrder),
@@ -24,56 +21,26 @@ pub enum ConnectorAgentError {
     #[error("Cannot produce a {0}, context: {1}.")]
     CannotProduce(&'static str, ProduceContext),
 
-    #[error("Allocate is already called.")]
-    DuplicatedAllocation,
-
-    #[error("Destination has not been allocated yet.")]
-    DestinationNotAllocated,
-
     #[error("No conversion rule from {0} to {1}.")]
     NoConversionRule(String, String),
 
     #[error("Only support single query with SELECT statement, got {0}.")]
-    SQLQueryNotSupported(String),
+    SqlQueryNotSupported(String),
 
-    #[error("Only support partition on SPJ query, got {0}.")]
-    SQLQueryPartitionNotSupported(String),
-
-    #[error(transparent)]
-    IOError(#[from] std::io::Error),
-
-    #[error(transparent)]
-    PostgresPoolError(#[from] r2d2::Error),
-
-    #[error(transparent)]
-    PostgresError(#[from] postgres::Error),
-
-    #[error(transparent)]
-    CSVError(#[from] csv::Error),
+    #[error("Cannot get total number of rows in advance.")]
+    CountError(),
 
     #[error(transparent)]
     SQLParserError(#[from] sqlparser::parser::ParserError),
-
-    #[error(transparent)]
-    RegexError(#[from] regex::Error),
-
-    #[error(transparent)]
-    NdArrayShapeError(#[from] ndarray::ShapeError),
-
-    #[error(transparent)]
-    ArrowError(#[from] arrow::error::ArrowError),
-
-    #[error(transparent)]
-    HexError(#[from] hex::FromHexError),
 
     /// Any other errors that are too trivial to be put here explicitly.
     #[error(transparent)]
     Other(#[from] anyhow::Error),
 }
 
-impl ConnectorAgentError {
+impl ConnectorXError {
     pub fn cannot_produce<T>(context: Option<String>) -> Self {
-        ConnectorAgentError::CannotProduce(type_name::<T>(), context.into())
+        ConnectorXError::CannotProduce(type_name::<T>(), context.into())
     }
 }
 

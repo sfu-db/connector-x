@@ -1,12 +1,10 @@
-use crate::errors::ConnectorAgentPythonError;
-use connectorx::partition::{pg_get_partition_range, pg_single_col_partition_query};
+use crate::source_router::SourceConn;
+use connectorx::sql::CXQuery;
 use dict_derive::FromPyObject;
 use fehler::throw;
 use pyo3::prelude::*;
-use pyo3::{
-    exceptions::{PyNotImplementedError, PyValueError},
-    PyResult,
-};
+use pyo3::{exceptions::PyValueError, PyResult};
+use std::convert::TryFrom;
 
 #[derive(FromPyObject)]
 pub struct PartitionQuery {
@@ -37,8 +35,9 @@ pub fn read_sql<'a>(
     queries: Option<Vec<String>>,
     partition_query: Option<PartitionQuery>,
 ) -> PyResult<&'a PyAny> {
-    let queries = match (queries, partition_query) {
-        (Some(queries), None) => queries,
+    let source_conn = SourceConn::try_from(conn)?;
+    let (queries, origin_query) = match (queries, partition_query) {
+        (Some(queries), None) => (queries.into_iter().map(CXQuery::Naked).collect(), None),
         (
             None,
             Some(PartitionQuery {
@@ -50,11 +49,11 @@ pub fn read_sql<'a>(
             }),
         ) => {
             let mut queries = vec![];
+            let origin_query = Some(query.clone());
             let num = num as i64;
 
             let (min, max) = match (min, max) {
-                (None, None) => pg_get_partition_range(conn, &query, &col)
-                    .map_err(ConnectorAgentPythonError::ConnectorAgentError)?,
+                (None, None) => source_conn.get_col_range(&query, &col)?,
                 (Some(min), Some(max)) => (min, max),
                 _ => throw!(PyValueError::new_err(
                     "partition_query range can not be partially specified",
@@ -69,11 +68,10 @@ pub fn read_sql<'a>(
                     true => max + 1,
                     false => min + (i + 1) * partition_size,
                 };
-                let partition_query = pg_single_col_partition_query(&query, &col, lower, upper)
-                    .map_err(ConnectorAgentPythonError::ConnectorAgentError)?;
+                let partition_query = source_conn.get_part_query(&query, &col, lower, upper)?;
                 queries.push(partition_query);
             }
-            queries
+            (queries, origin_query)
         }
         (Some(_), Some(_)) => throw!(PyValueError::new_err(
             "partition_query and queries cannot be both specified",
@@ -83,17 +81,28 @@ pub fn read_sql<'a>(
         )),
     };
 
-    let queries: Vec<_> = queries.iter().map(|s| s.as_str()).collect();
     match return_type {
         "pandas" => Ok(crate::pandas::write_pandas(
             py,
-            conn,
+            &source_conn,
+            origin_query,
             &queries,
             protocol.unwrap_or("binary"),
         )?),
-        "arrow" => Err(PyNotImplementedError::new_err(
-            "arrow return type is not implemented",
-        )),
+        "arrow" => Ok(crate::arrow::write_arrow(
+            py,
+            &source_conn,
+            origin_query,
+            &queries,
+            protocol.unwrap_or("binary"),
+        )?),
+        "arrow2" => Ok(crate::arrow2::write_arrow(
+            py,
+            &source_conn,
+            origin_query,
+            &queries,
+            protocol.unwrap_or("binary"),
+        )?),
         _ => Err(PyValueError::new_err(format!(
             "return type should be 'pandas' or 'arrow', got '{}'",
             return_type

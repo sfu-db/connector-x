@@ -1,10 +1,10 @@
 use super::{check_dtype, HasPandasColumn, PandasColumn, PandasColumnObject};
+use crate::errors::ConnectorXPythonError;
 use anyhow::anyhow;
-use connectorx::ConnectorAgentError;
 use fehler::throws;
 use ndarray::{ArrayViewMut1, ArrayViewMut2, Axis, Ix2};
 use numpy::{PyArray, PyArray1};
-use pyo3::{FromPyObject, PyAny, PyResult};
+use pyo3::{types::PyTuple, FromPyObject, PyAny, PyResult};
 use std::any::TypeId;
 
 // Boolean
@@ -15,12 +15,17 @@ pub enum BooleanBlock<'a> {
 impl<'a> FromPyObject<'a> for BooleanBlock<'a> {
     fn extract(ob: &'a PyAny) -> PyResult<Self> {
         if let Ok(array) = ob.downcast::<PyArray<bool, Ix2>>() {
+            // if numpy array
             check_dtype(ob, "bool")?;
             let data = unsafe { array.as_array_mut() };
             Ok(BooleanBlock::NumPy(data))
         } else {
-            let data = ob.getattr("_data")?;
-            let mask = ob.getattr("_mask")?;
+            // if extension array
+            let tuple = ob.downcast::<PyTuple>()?;
+            let data = tuple.get_item(0);
+            let mask = tuple.get_item(1);
+            check_dtype(data, "bool")?;
+            check_dtype(mask, "bool")?;
 
             Ok(BooleanBlock::Extention(
                 unsafe { data.downcast::<PyArray1<bool>>()?.as_array_mut() },
@@ -31,19 +36,20 @@ impl<'a> FromPyObject<'a> for BooleanBlock<'a> {
 }
 
 impl<'a> BooleanBlock<'a> {
-    #[throws(ConnectorAgentError)]
-    pub fn split(self) -> Vec<BooleanColumn<'a>> {
+    #[throws(ConnectorXPythonError)]
+    pub fn split(self) -> Vec<BooleanColumn> {
         let mut ret = vec![];
         match self {
             BooleanBlock::Extention(data, mask) => ret.push(BooleanColumn {
                 data: data
                     .into_slice()
-                    .ok_or_else(|| anyhow!("get None for Boolean data"))?,
+                    .ok_or_else(|| anyhow!("get None for Boolean data"))?
+                    .as_mut_ptr(),
                 mask: Some(
                     mask.into_slice()
-                        .ok_or_else(|| anyhow!("get None for Boolean mask"))?,
+                        .ok_or_else(|| anyhow!("get None for Boolean mask"))?
+                        .as_mut_ptr(),
                 ),
-                i: 0,
             }),
             BooleanBlock::NumPy(mut view) => {
                 let nrows = view.ncols();
@@ -54,9 +60,9 @@ impl<'a> BooleanBlock<'a> {
                         data: col
                             .into_shape(nrows)?
                             .into_slice()
-                            .ok_or_else(|| anyhow!("get None for splitted Boolean data"))?,
+                            .ok_or_else(|| anyhow!("get None for splitted Boolean data"))?
+                            .as_mut_ptr(),
                         mask: None,
-                        i: 0,
                     })
                 }
             }
@@ -65,88 +71,70 @@ impl<'a> BooleanBlock<'a> {
     }
 }
 
-pub struct BooleanColumn<'a> {
-    data: &'a mut [bool],
-    mask: Option<&'a mut [bool]>,
-    i: usize,
+pub struct BooleanColumn {
+    data: *mut bool,
+    mask: Option<*mut bool>,
 }
 
-impl<'a> PandasColumnObject for BooleanColumn<'a> {
+unsafe impl Send for BooleanColumn {}
+unsafe impl Sync for BooleanColumn {}
+
+impl PandasColumnObject for BooleanColumn {
     fn typecheck(&self, id: TypeId) -> bool {
         id == TypeId::of::<bool>() || id == TypeId::of::<Option<bool>>()
-    }
-    fn len(&self) -> usize {
-        self.data.len()
     }
     fn typename(&self) -> &'static str {
         std::any::type_name::<bool>()
     }
 }
 
-impl<'a> PandasColumn<bool> for BooleanColumn<'a> {
-    #[throws(ConnectorAgentError)]
-    fn write(&mut self, val: bool) {
-        unsafe { *self.data.get_unchecked_mut(self.i) = val };
+impl PandasColumn<bool> for BooleanColumn {
+    #[throws(ConnectorXPythonError)]
+    fn write(&mut self, val: bool, row: usize) {
+        unsafe { *self.data.add(row) = val };
         if let Some(mask) = self.mask.as_mut() {
-            unsafe { *mask.get_unchecked_mut(self.i) = false };
+            unsafe { *mask.add(row) = false };
         }
-        self.i += 1;
     }
 }
 
-impl<'a> PandasColumn<Option<bool>> for BooleanColumn<'a> {
-    #[throws(ConnectorAgentError)]
-    fn write(&mut self, val: Option<bool>) {
+impl PandasColumn<Option<bool>> for BooleanColumn {
+    #[throws(ConnectorXPythonError)]
+    fn write(&mut self, val: Option<bool>, row: usize) {
         match val {
             Some(val) => {
-                unsafe { *self.data.get_unchecked_mut(self.i) = val };
+                unsafe { *self.data.add(row) = val };
                 if let Some(mask) = self.mask.as_mut() {
-                    unsafe { *mask.get_unchecked_mut(self.i) = false };
+                    unsafe { *mask.add(row) = false };
                 }
             }
             None => {
                 if let Some(mask) = self.mask.as_mut() {
-                    unsafe { *mask.get_unchecked_mut(self.i) = true };
+                    unsafe { *mask.add(row) = true };
                 } else {
                     panic!("Writing null u64 to not null pandas array")
                 }
             }
         }
-        self.i += 1;
     }
 }
 
 impl HasPandasColumn for bool {
-    type PandasColumn<'a> = BooleanColumn<'a>;
+    type PandasColumn<'a> = BooleanColumn;
 }
 
 impl HasPandasColumn for Option<bool> {
-    type PandasColumn<'a> = BooleanColumn<'a>;
+    type PandasColumn<'a> = BooleanColumn;
 }
 
-impl<'a> BooleanColumn<'a> {
-    pub fn partition(self, counts: &[usize]) -> Vec<BooleanColumn<'a>> {
+impl BooleanColumn {
+    pub fn partition(self, counts: usize) -> Vec<BooleanColumn> {
         let mut partitions = vec![];
-        let mut data = self.data;
-        let mut mask = self.mask;
 
-        for &c in counts {
-            let (splitted_data, rest) = data.split_at_mut(c);
-            data = rest;
-            let (splitted_mask, rest) = match mask {
-                Some(mask) => {
-                    let (a, b) = mask.split_at_mut(c);
-                    (Some(a), Some(b))
-                }
-                None => (None, None),
-            };
-
-            mask = rest;
-
+        for _ in 0..counts {
             partitions.push(BooleanColumn {
-                data: splitted_data,
-                mask: splitted_mask,
-                i: 0,
+                data: self.data,
+                mask: self.mask,
             });
         }
 

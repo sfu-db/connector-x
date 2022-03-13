@@ -14,3 +14,7 @@ profile.pb
 dask-worker-space
 dist
 connectorx-python/README.md
+connectorx-python/LICENSE
+*.db
+benchmark.json
+docs/_build

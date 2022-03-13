@@ -1,7 +1,7 @@
 use super::{check_dtype, HasPandasColumn, PandasColumn, PandasColumnObject};
+use crate::errors::ConnectorXPythonError;
 use anyhow::anyhow;
 use chrono::{DateTime, Utc};
-use connectorx::ConnectorAgentError;
 use fehler::throws;
 use ndarray::{ArrayViewMut2, Axis, Ix2};
 use numpy::PyArray;
@@ -16,7 +16,7 @@ pub struct DateTimeBlock<'a> {
 
 impl<'a> FromPyObject<'a> for DateTimeBlock<'a> {
     fn extract(ob: &'a PyAny) -> PyResult<Self> {
-        check_dtype(ob, "datetime64[ns]")?;
+        check_dtype(ob, "int64")?;
         let array = ob.downcast::<PyArray<i64, Ix2>>()?;
         let data = unsafe { array.as_array_mut() };
         Ok(DateTimeBlock { data })
@@ -24,8 +24,8 @@ impl<'a> FromPyObject<'a> for DateTimeBlock<'a> {
 }
 
 impl<'a> DateTimeBlock<'a> {
-    #[throws(ConnectorAgentError)]
-    pub fn split(self) -> Vec<DateTimeColumn<'a>> {
+    #[throws(ConnectorXPythonError)]
+    pub fn split(self) -> Vec<DateTimeColumn> {
         let mut ret = vec![];
         let mut view = self.data;
 
@@ -37,72 +37,62 @@ impl<'a> DateTimeBlock<'a> {
                 data: col
                     .into_shape(nrows)?
                     .into_slice()
-                    .ok_or_else(|| anyhow!("get None for splitted DateTime data"))?,
-                i: 0,
+                    .ok_or_else(|| anyhow!("get None for splitted DateTime data"))?
+                    .as_mut_ptr(),
             })
         }
         ret
     }
 }
 
-pub struct DateTimeColumn<'a> {
-    data: &'a mut [i64],
-    i: usize,
+pub struct DateTimeColumn {
+    data: *mut i64,
 }
 
-impl<'a> PandasColumnObject for DateTimeColumn<'a> {
+unsafe impl Send for DateTimeColumn {}
+unsafe impl Sync for DateTimeColumn {}
+
+impl PandasColumnObject for DateTimeColumn {
     fn typecheck(&self, id: TypeId) -> bool {
         id == TypeId::of::<DateTime<Utc>>() || id == TypeId::of::<Option<DateTime<Utc>>>()
     }
-    fn len(&self) -> usize {
-        self.data.len()
-    }
+
     fn typename(&self) -> &'static str {
         std::any::type_name::<DateTime<Utc>>()
     }
 }
 
-impl<'a> PandasColumn<DateTime<Utc>> for DateTimeColumn<'a> {
-    #[throws(ConnectorAgentError)]
-    fn write(&mut self, val: DateTime<Utc>) {
-        unsafe { *self.data.get_unchecked_mut(self.i) = val.timestamp_nanos() };
-        self.i += 1;
+impl PandasColumn<DateTime<Utc>> for DateTimeColumn {
+    #[throws(ConnectorXPythonError)]
+    fn write(&mut self, val: DateTime<Utc>, row: usize) {
+        unsafe { *self.data.add(row) = val.timestamp_nanos() };
     }
 }
 
-impl<'a> PandasColumn<Option<DateTime<Utc>>> for DateTimeColumn<'a> {
-    #[throws(ConnectorAgentError)]
-    fn write(&mut self, val: Option<DateTime<Utc>>) {
+impl PandasColumn<Option<DateTime<Utc>>> for DateTimeColumn {
+    #[throws(ConnectorXPythonError)]
+    fn write(&mut self, val: Option<DateTime<Utc>>, row: usize) {
         // numpy use i64::MIN as NaT
         unsafe {
-            *self.data.get_unchecked_mut(self.i) =
-                val.map(|t| t.timestamp_nanos()).unwrap_or(i64::MIN);
+            *self.data.add(row) = val.map(|t| t.timestamp_nanos()).unwrap_or(i64::MIN);
         };
-        self.i += 1;
     }
 }
 
 impl HasPandasColumn for DateTime<Utc> {
-    type PandasColumn<'a> = DateTimeColumn<'a>;
+    type PandasColumn<'a> = DateTimeColumn;
 }
 
 impl HasPandasColumn for Option<DateTime<Utc>> {
-    type PandasColumn<'a> = DateTimeColumn<'a>;
+    type PandasColumn<'a> = DateTimeColumn;
 }
 
-impl<'a> DateTimeColumn<'a> {
-    pub fn partition(self, counts: &[usize]) -> Vec<DateTimeColumn<'a>> {
+impl DateTimeColumn {
+    pub fn partition(self, counts: usize) -> Vec<DateTimeColumn> {
         let mut partitions = vec![];
-        let mut data = self.data;
 
-        for &c in counts {
-            let (splitted_data, rest) = data.split_at_mut(c);
-            data = rest;
-
-            partitions.push(DateTimeColumn {
-                data: splitted_data,
-                i: 0,
-            });
+        for _ in 0..counts {
+            partitions.push(DateTimeColumn { data: self.data });
         }
 
         partitions

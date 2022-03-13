@@ -1,0 +1,18 @@
+# Table of contents
+# Learn more at https://jupyterbook.org/customize/toc.html
+
+format: jb-book
+root: intro
+
+chapters:
+  - file: install
+  # - title: Databases
+  - file: databases
+    sections:
+    - file: databases/bigquery
+    - file: databases/mssql
+    - file: databases/mysql
+    - file: databases/oracle
+    - file: databases/postgres
+    - file: databases/sqlite
+  - file: freq_questions
