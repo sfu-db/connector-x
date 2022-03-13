@@ -21,6 +21,9 @@ name = "connectorx"
 readme = "README.md" # Markdown files are supported
 version = "0.2.5-alpha.2" 
 
+[project]
+name = "connectorx" # Target file name of maturin build
+
 [tool.poetry.dependencies]
 dask = {version = "^2021", optional = true, extras = ["dataframe"]}
 modin = {version = ">=0.10", optional = true}
