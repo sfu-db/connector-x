@@ -23,7 +23,7 @@ impl TryFrom<TlsConfig> for MakeTlsConnector {
     // https://github.com/sfackler/rust-postgres/pull/774
     // We only support server side authentication (`sslrootcert`) for now
     fn try_from(tls_config: TlsConfig) -> Result<Self, Self::Error> {
-        let mut builder = SslConnector::builder(SslMethod::tls())?; 
+        let mut builder = SslConnector::builder(SslMethod::tls_client())?;
         let ssl_mode = tls_config.pg_config.get_ssl_mode();
         let (verify_ca, verify_hostname) = match ssl_mode {
             SslMode::Disable | SslMode::Prefer => (false, false),
@@ -43,7 +43,7 @@ impl TryFrom<TlsConfig> for MakeTlsConnector {
             // SslMode::VerifyFull => (true, true),
             _ => panic!("unexpected sslmode {:?}", ssl_mode),
         };
-        
+
         if let Some((cert, key)) = tls_config.client_cert {
             builder.set_certificate_file(cert, SslFiletype::PEM)?;
             builder.set_private_key_file(key, SslFiletype::PEM)?;
@@ -56,7 +56,7 @@ impl TryFrom<TlsConfig> for MakeTlsConnector {
         let mut tls_connector = MakeTlsConnector::new(builder.build());
 
         match (verify_ca, verify_hostname) {
-            (true, false) => tls_connector.set_callback( |connect, _| {
+            (true, false) => tls_connector.set_callback(|connect, _| {
                 connect.set_verify_hostname(false);
                 Ok(())
             }),
@@ -98,7 +98,7 @@ pub fn rewrite_tls_args(
     // https://github.com/sfackler/rust-postgres/pull/774#discussion_r641784774
 
     let params: HashMap<String, String> = conn.query_pairs().into_owned().collect();
-    
+
     let sslcert = params.get("sslcert").map(PathBuf::from);
     let sslkey = params.get("sslkey").map(PathBuf::from);
     let root_cert = params.get("sslrootcert").map(PathBuf::from);
@@ -112,8 +112,8 @@ pub fn rewrite_tls_args(
 
     let tls_config = TlsConfig {
         pg_config: pg_config.clone(),
-        client_cert,
-        root_cert,
+        client_cert: client_cert,
+        root_cert: root_cert,
     };
 
     let tls_connector = match pg_config.get_ssl_mode() {
