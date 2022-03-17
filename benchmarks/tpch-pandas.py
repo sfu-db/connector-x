@@ -53,7 +53,7 @@ if __name__ == "__main__":
         if conn.drivername == "bigquery":
             credentials = service_account.Credentials.from_service_account_file('/'+conn.database)
             df = pd.read_gbq(
-                query=f"SELECT * FROM {table} limit 100",
+                query=f"SELECT * FROM {table}",
                 project_id="dataprep-bigquery",
                 credentials=credentials
             )
