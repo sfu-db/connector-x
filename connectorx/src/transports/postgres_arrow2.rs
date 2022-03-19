@@ -11,7 +11,7 @@ use crate::typesystem::TypeConversion;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
 use num_traits::ToPrimitive;
 use postgres::NoTls;
-use postgres_native_tls::MakeTlsConnector;
+use postgres_openssl::MakeTlsConnector;
 use rust_decimal::Decimal;
 use serde_json::Value;
 use std::marker::PhantomData;

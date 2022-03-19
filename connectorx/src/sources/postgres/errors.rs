@@ -21,7 +21,7 @@ pub enum PostgresSourceError {
     IOError(#[from] std::io::Error),
 
     #[error(transparent)]
-    TlsError(#[from] native_tls::Error),
+    TlsError(#[from] openssl::error::ErrorStack),
 
     /// Any other errors that are too trivial to be put here explicitly.
     #[error(transparent)]

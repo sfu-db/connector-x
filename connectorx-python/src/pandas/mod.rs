@@ -30,7 +30,7 @@ use connectorx::{
 use fehler::throws;
 use log::debug;
 use postgres::NoTls;
-use postgres_native_tls::MakeTlsConnector;
+use postgres_openssl::MakeTlsConnector;
 use pyo3::{PyAny, Python};
 use std::sync::Arc;
 
