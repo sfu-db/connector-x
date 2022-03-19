@@ -1,53 +1,49 @@
 # Getting Started
 
-Whether you write your book's content in Jupyter Notebooks (`.ipynb`) or
-in regular markdown files (`.md`), you'll write in the same flavor of markdown
-called **MyST Markdown**.
+## Installation
 
-# Installation
+### Pip
 
-## Pip
-
-To install ConnectorX using pip, use the following command:
+The easiest way to install ConnectorX is using pip, with the following command:
 
 ```bash
 pip install connectorx
 ```
 
-## Build from source code
+### Build from source code
 
 * Step 1: Fresh clone of source
 ```bash
 git clone https://github.com/sfu-db/connector-x.git
 ```
 
-* Step 2: Install rust nightly (please refer [here](https://github.com/sfu-db/connector-x/blob/main/.github/workflows/release.yml#L34) for the latest using version)
+* Step 2: Install rust nightly (please refer [this file](https://github.com/sfu-db/connector-x/blob/main/.github/workflows/release.yml) and search for `Install Rust` for the latest using version)
 ```bash
-rustup install nightly-2021-11-18
+rustup install nightly-{version}
 ```
 
 * Step 3: Override default project toolchain
 ```base
-rustup default nightly-2021-11-18
-rustup override set nightly-2021-11-18
+rustup default nightly-{version}
+rustup override set nightly-{version}
 ```
 
 * Step 4: Build
 ```bash
 just bootstrap-python
-just ci-build-python-extention ci-build-python-wheel ci-rename-wheel
+just ci-build-python-wheel
 ```
 
 
-# Basic usage
+## Basic usage
 ConnectorX enables you to run the SQL query, load data from databases into a Pandas Dataframe in the fastest and most memory efficient way.
 
-## API
+### API
 ```python
 connectorx.read_sql(conn: str, query: Union[List[str], str], *, return_type: str = "pandas", protocol: str = "binary", partition_on: Optional[str] = None, partition_range: Optional[Tuple[int, int]] = None, partition_num: Optional[int] = None)
 ```
 
-## Parameters
+### Parameters
 - `conn: str`: Connection string URI.
   - General supported URI scheme: `(postgres|postgressql|mysql|mssql)://username:password@addr:port/dbname`.
   - For now sqlite only support absolute path, example: `sqlite:///home/user/path/test.db`.
@@ -62,7 +58,7 @@ connectorx.read_sql(conn: str, query: Union[List[str], str], *, return_type: str
 - `index_col: Optioinal[str]`: The index column to set for the result dataframe. Only applicable when `return_type` is `pandas`, `modin` or `dask`. 
 
 
-## Examples
+### Examples
 - Read a DataFrame from a SQL using a single thread
 
   ```python

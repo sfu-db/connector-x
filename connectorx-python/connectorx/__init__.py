@@ -1,6 +1,6 @@
 from typing import Optional, Tuple, Union, List, Dict, Any
 
-from .connectorx_python import read_sql as _read_sql, partition_sql as _partition_sql
+from .connectorx import read_sql as _read_sql, partition_sql as _partition_sql
 
 try:
     from importlib.metadata import version
