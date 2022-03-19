@@ -50,7 +50,7 @@
     <span class="ident">IOError</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">std::io::Error</span>),
 
     <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
-    <span class="ident">TlsError</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">native_tls::Error</span>),
+    <span class="ident">TlsError</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">openssl::error::ErrorStack</span>),
 
     <span class="doccomment">/// Any other errors that are too trivial to be put here explicitly.</span>
     <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
