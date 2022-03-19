@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1647142043812,
+  "lastUpdate": 1647707816640,
   "repoUrl": "https://github.com/sfu-db/connector-x",
   "entries": {
     "ConnectorX TPC-H Scale@1 Benchmarks": [
@@ -8854,6 +8854,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 3.629220077620966",
             "extra": "mean: 11.74019816033542 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "xiaoying_wang@sfu.ca",
+            "name": "Xiaoying Wang",
+            "username": "wangxiaoying"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f6854d16d831a1113dbde90e9a3fd6c9317f752b",
+          "message": "Merge pull request #254 from sfu-db/postgres_auth\n\nPostgres auth",
+          "timestamp": "2022-03-19T09:27:16-07:00",
+          "tree_id": "6e4a0d03f211d7f22e751c22d65fc7d7231d07e2",
+          "url": "https://github.com/sfu-db/connector-x/commit/f6854d16d831a1113dbde90e9a3fd6c9317f752b"
+        },
+        "date": 1647707813654,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_mysql",
+            "value": 0.06478602181146967,
+            "unit": "iter/sec",
+            "range": "stddev: 0.9172257681331225",
+            "extra": "mean: 15.435428384691477 sec\nrounds: 5"
+          },
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_postgres",
+            "value": 0.06485026653539049,
+            "unit": "iter/sec",
+            "range": "stddev: 2.7068955377432546",
+            "extra": "mean: 15.42013708539307 sec\nrounds: 5"
           }
         ]
       }
