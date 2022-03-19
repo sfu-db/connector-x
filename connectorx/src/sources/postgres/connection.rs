@@ -1,5 +1,5 @@
 use crate::sources::postgres::errors::PostgresSourceError;
-use openssl::ssl::{SslConnector, SslFiletype, SslMethod};
+use openssl::ssl::{SslConnector, SslFiletype, SslMethod, SslVerifyMode};
 use postgres::{config::SslMode, Config};
 use postgres_openssl::MakeTlsConnector;
 use std::collections::HashMap;
@@ -52,15 +52,18 @@ impl TryFrom<TlsConfig> for MakeTlsConnector {
         if let Some(root_cert) = tls_config.root_cert {
             builder.set_ca_file(root_cert)?;
         }
-        
+
+        if !verify_ca {
+            builder.set_verify(SslVerifyMode::NONE); // do not verify CA
+        }
+
         let mut tls_connector = MakeTlsConnector::new(builder.build());
 
-        match (verify_ca, verify_hostname) {
-            (true, false) => tls_connector.set_callback(|connect, _| {
+        if !verify_hostname {
+            tls_connector.set_callback(|connect, _| {
                 connect.set_verify_hostname(false);
                 Ok(())
-            }),
-            _ => {}
+            });
         }
 
         Ok(tls_connector)
