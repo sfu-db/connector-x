@@ -50,6 +50,7 @@ tokio = {version = "1", features = ["rt", "rt-multi-thread", "net"], optional = 
 url = {version = "2", optional = true}
 urlencoding = {version = "2.1", optional = true}
 uuid = {version = "0.8", optional = true}
+j4rs = "0.13"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
