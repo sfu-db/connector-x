@@ -6,10 +6,10 @@ use connectorx::{
 };
 use j4rs::{ClasspathEntry, InvocationArg, Jvm, JvmBuilder};
 use postgres::NoTls;
-use pretty;
 use std::convert::TryFrom;
 use std::env;
 use std::fs;
+use std::iter::Iterator;
 use url::Url;
 
 fn main() {
@@ -18,7 +18,7 @@ fn main() {
     let entry = ClasspathEntry::new(path.to_str().unwrap());
     let jvm: Jvm = JvmBuilder::new().classpath_entry(entry).build().unwrap();
 
-    let sql = "select n_nationkey, n_name, n_regionkey from nation";
+    let sql = env::var("TEST_SQL").unwrap();
     println!("input sql: {}", sql);
     let sql = InvocationArg::try_from(sql).unwrap();
     let rewrite_sql = jvm
@@ -45,5 +45,11 @@ fn main() {
     println!("run dispatcher");
     dispatcher.run().unwrap();
     let result = destination.arrow().unwrap();
-    println!("result: {:?}", result);
+    let counts = result
+        .iter()
+        .map(|rb| rb.num_rows())
+        .collect::<Vec<usize>>();
+
+    println!("result rows: {}", counts.iter().sum::<usize>());
+    println!("result columns: {}", result[0].schema())
 }
