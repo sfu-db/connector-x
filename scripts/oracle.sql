@@ -1,5 +1,6 @@
 DROP TABLE test_table;
 DROP TABLE test_types;
+DROP TABLE test_issue;
 
 CREATE TABLE test_table(
     test_int NUMBER(7),
@@ -12,6 +13,15 @@ INSERT INTO test_table VALUES (2, 'str2', 2.2);
 INSERT INTO test_table VALUES (2333, NULL, NULL);
 INSERT INTO test_table VALUES (4, NULL, -4.44);
 INSERT INTO test_table VALUES (5, 'str05', NULL);
+
+CREATE TABLE test_issue(
+    v BINARY_FLOAT
+);
+
+INSERT INTO test_issue VALUES (1.111);
+INSERT INTO test_issue VALUES (2.222);
+INSERT INTO test_issue VALUES (3.333);
+
 
 CREATE TABLE test_types(
     test_num_int NUMBER(8),
