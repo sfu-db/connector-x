@@ -180,6 +180,23 @@
 <span id="180">180</span>
 <span id="181">181</span>
 <span id="182">182</span>
+<span id="183">183</span>
+<span id="184">184</span>
+<span id="185">185</span>
+<span id="186">186</span>
+<span id="187">187</span>
+<span id="188">188</span>
+<span id="189">189</span>
+<span id="190">190</span>
+<span id="191">191</span>
+<span id="192">192</span>
+<span id="193">193</span>
+<span id="194">194</span>
+<span id="195">195</span>
+<span id="196">196</span>
+<span id="197">197</span>
+<span id="198">198</span>
+<span id="199">199</span>
 </pre><pre class="rust"><code><span class="doccomment">///! This module provides [`dispatcher::Dispatcher`], the core struct in ConnectorX</span>
 <span class="doccomment">///! that drives the data loading from a source to a destination.</span>
 <span class="kw">use</span> <span class="kw">crate</span>::{
@@ -359,6 +376,23 @@
 
         <span class="macro">debug!</span>(<span class="string">&quot;Writing finished&quot;</span>);
 
+        <span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="doccomment">/// Only fetch the metadata (header) of the destination.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_meta</span>(<span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">ET</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">dorder</span> <span class="op">=</span> <span class="ident">coordinate</span>(<span class="ident">S::DATA_ORDERS</span>, <span class="ident">D::DATA_ORDERS</span>)<span class="question-mark">?</span>;
+        <span class="self">self</span>.<span class="ident">src</span>.<span class="ident">set_data_order</span>(<span class="ident">dorder</span>)<span class="question-mark">?</span>;
+        <span class="self">self</span>.<span class="ident">src</span>.<span class="ident">set_queries</span>(<span class="self">self</span>.<span class="ident">queries</span>.<span class="ident">as_slice</span>());
+        <span class="self">self</span>.<span class="ident">src</span>.<span class="ident">set_origin_query</span>(<span class="self">self</span>.<span class="ident">origin_query</span>);
+        <span class="self">self</span>.<span class="ident">src</span>.<span class="ident">fetch_metadata</span>()<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">src_schema</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">src</span>.<span class="ident">schema</span>();
+        <span class="kw">let</span> <span class="ident">dst_schema</span> <span class="op">=</span> <span class="ident">src_schema</span>
+            .<span class="ident">iter</span>()
+            .<span class="ident">map</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">s</span><span class="op">|</span> <span class="ident">TP::convert_typesystem</span>(<span class="ident">s</span>))
+            .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">CXResult</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">names</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">src</span>.<span class="ident">names</span>();
+        <span class="self">self</span>.<span class="ident">dst</span>.<span class="ident">allocate</span>(<span class="number">0</span>, <span class="kw-2">&amp;</span><span class="ident">names</span>, <span class="kw-2">&amp;</span><span class="ident">dst_schema</span>, <span class="ident">dorder</span>)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
     }
 }
