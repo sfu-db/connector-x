@@ -49,6 +49,7 @@
 <span id="49">49</span>
 <span id="50">50</span>
 <span id="51">51</span>
+<span id="52">52</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">chrono</span>::{<span class="ident">DateTime</span>, <span class="ident">NaiveDate</span>, <span class="ident">NaiveDateTime</span>, <span class="ident">Utc</span>};
 <span class="kw">use</span> <span class="ident">r2d2_oracle::oracle::sql_type::OracleType</span>;
 
@@ -84,6 +85,7 @@
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">ty</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">OracleType</span>) -&gt; <span class="ident">OracleTypeSystem</span> {
         <span class="kw">use</span> <span class="ident">OracleTypeSystem</span>::<span class="kw-2">*</span>;
         <span class="kw">match</span> <span class="ident">ty</span> {
+            <span class="ident">OracleType::Number</span>(<span class="number">0</span>, <span class="number">0</span>) =&gt; <span class="ident">NumFloat</span>(<span class="bool-val">false</span>),
             <span class="ident">OracleType::Number</span>(<span class="kw">_</span>, <span class="number">0</span>) =&gt; <span class="ident">NumInt</span>(<span class="bool-val">true</span>),
             <span class="ident">OracleType::Number</span>(<span class="kw">_</span>, <span class="kw">_</span>) =&gt; <span class="ident">NumFloat</span>(<span class="bool-val">true</span>),
             <span class="ident">OracleType::Float</span>(<span class="kw">_</span>) =&gt; <span class="ident">Float</span>(<span class="bool-val">true</span>),
