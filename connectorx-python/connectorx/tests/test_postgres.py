@@ -25,6 +25,18 @@ def postgres_rootcert() -> str:
     return cert
 
 
+@pytest.fixture(scope="module")  # type: ignore
+def postgres_sslcert() -> str:
+    cert = os.environ["POSTGRES_SSLCERT"]
+    return cert
+
+
+@pytest.fixture(scope="module")  # type: ignore
+def postgres_sslkey() -> str:
+    key = os.environ["POSTGRES_SSLKEY"]
+    return key
+
+
 @pytest.mark.xfail
 def test_on_non_select(postgres_url: str) -> None:
     query = "CREATE TABLE non_select(id INTEGER NOT NULL)"
@@ -904,6 +916,39 @@ def test_postgres_tls_with_cert(postgres_url_tls: str, postgres_rootcert: str) -
     query = "SELECT * FROM test_table"
     df = read_sql(
         f"{postgres_url_tls}?sslmode=require&sslrootcert={postgres_rootcert}",
+        query,
+        partition_on="test_int",
+        partition_range=(0, 2000),
+        partition_num=3,
+    )
+    expected = pd.DataFrame(
+        index=range(6),
+        data={
+            "test_int": pd.Series([0, 1, 2, 3, 4, 1314], dtype="Int64"),
+            "test_nullint": pd.Series([5, 3, None, 7, 9, 2], dtype="Int64"),
+            "test_str": pd.Series(
+                ["a", "str1", "str2", "b", "c", None], dtype="object"
+            ),
+            "test_float": pd.Series([3.1, None, 2.2, 3, 7.8, -10], dtype="float64"),
+            "test_bool": pd.Series(
+                [None, True, False, False, None, True], dtype="boolean"
+            ),
+        },
+    )
+    df.sort_values(by="test_int", inplace=True, ignore_index=True)
+    assert_frame_equal(df, expected, check_names=True)
+
+
+@pytest.mark.skipif(
+    not os.environ.get("POSTGRES_URL_TLS"),
+    reason="Do not test Postgres TLS unless `POSTGRES_URL_TLS` is set",
+)
+def test_postgres_tls_client_auth(
+    postgres_url_tls: str, postgres_rootcert: str, postgres_sslcert: str, postgres_sslkey: str
+) -> None:
+    query = "SELECT * FROM test_table"
+    df = read_sql(
+        f"{postgres_url_tls}?sslmode=require&sslrootcert={postgres_rootcert}&sslcert={postgres_sslcert}&sslkey={postgres_sslkey}",
         query,
         partition_on="test_int",
         partition_range=(0, 2000),

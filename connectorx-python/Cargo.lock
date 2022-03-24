@@ -585,11 +585,13 @@ dependencies = [
  "log",
  "native-tls",
  "num-traits",
+ "openssl",
  "oracle",
  "owning_ref",
  "polars",
  "postgres",
  "postgres-native-tls",
+ "postgres-openssl",
  "r2d2",
  "r2d2-oracle",
  "r2d2_mysql",
@@ -636,6 +638,7 @@ dependencies = [
  "openssl",
  "postgres",
  "postgres-native-tls",
+ "postgres-openssl",
  "pprof",
  "pyo3",
  "pyo3-built",
@@ -2676,6 +2679,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "postgres-openssl"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1de0ea6504e07ca78355a6fb88ad0f36cafe9e696cbc6717f16a207f3a60be72"
+dependencies = [
+ "futures",
+ "openssl",
+ "tokio",
+ "tokio-openssl",
+ "tokio-postgres",
+]
+
+[[package]]
 name = "postgres-protocol"
 version = "0.6.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3942,6 +3958,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f7d995660bd2b7f8c1568414c1126076c13fbb725c40112dc0120b78eb9b717b"
 dependencies = [
  "native-tls",
+ "tokio",
+]
+
+[[package]]
+name = "tokio-openssl"
+version = "0.6.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c08f9ffb7809f1b20c1b398d92acf4cc719874b3b2b2d9ea2f09b4a80350878a"
+dependencies = [
+ "futures-util",
+ "openssl",
+ "openssl-sys",
  "tokio",
 ]
 

@@ -30,6 +30,7 @@ numpy = "0.14"
 openssl = {version = "0.10", features = ["vendored"]}
 postgres = {version = "0.19", features = ["with-chrono-0_4", "with-uuid-0_8", "with-serde_json-1"]}
 postgres-native-tls = {version = "0.5"}
+postgres-openssl = {version = "0.5.0"}
 pyo3 = {version = "0.14", default-features = false, features = ["macros"]}
 pyo3-built = "0.4"
 r2d2-oracle = {version = "0.5.0", features = ["chrono"]}
