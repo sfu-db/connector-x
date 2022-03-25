@@ -7,7 +7,7 @@ license = "MIT"
 name = "connectorx"
 readme = "../README.md"
 repository = "https://github.com/sfu-db/connector-x"
-version = "0.2.5-alpha.2"
+version = "0.2.5-alpha.3"
 
 [dependencies]
 anyhow = "1"
@@ -31,11 +31,13 @@ hex = {version = "0.4", optional = true}
 native-tls = {version = "0.2", optional = true}
 ndarray = {version = "0.15", optional = true}
 num-traits = {version = "0.2", optional = true}
+openssl = {version = "0.10", optional = true}
 oracle = {version = "0.5", optional = true}
 owning_ref = {version = "0.4", optional = true}
 polars = {git = "https://github.com/pola-rs/polars", rev = "d7bc52e1d9b984e521094bc926e214b8fef417c8", optional = true}
 postgres = {version = "0.19", features = ["with-chrono-0_4", "with-uuid-0_8", "with-serde_json-1"], optional = true}
 postgres-native-tls = {version = "0.5", optional = true}
+postgres-openssl = {version = "0.5", optional = true}
 r2d2 = {version = "0.8", optional = true}
 r2d2-oracle = {version = "0.5.0", features = ["chrono"], optional = true}
 r2d2_mysql = {version = "21.0", optional = true}
@@ -88,6 +90,8 @@ src_postgres = [
   "r2d2",
   "url",
   "native-tls",
+  "openssl",
+  "postgres-openssl",
 ]
 src_sqlite = ["rusqlite", "r2d2_sqlite", "fallible-streaming-iterator", "owning_ref", "chrono", "r2d2", "urlencoding"]
 [package.metadata.docs.rs]

@@ -33,6 +33,7 @@ fn connectorx(_: Python, m: &PyModule) -> PyResult<()> {
 
     m.add_wrapped(wrap_pyfunction!(read_sql))?;
     m.add_wrapped(wrap_pyfunction!(partition_sql))?;
+    m.add_wrapped(wrap_pyfunction!(get_meta))?;
     m.add_class::<pandas::PandasBlockInfo>()?;
     Ok(())
 }
@@ -57,4 +58,15 @@ pub fn partition_sql(
     let source_conn = source_router::SourceConn::try_from(conn)?;
     let queries = read_sql::partition(&partition_query, &source_conn)?;
     Ok(queries.into_iter().map(|q| q.to_string()).collect())
+}
+
+#[pyfunction]
+pub fn get_meta<'a>(
+    py: Python<'a>,
+    conn: &str,
+    protocol: Option<&str>,
+    query: String,
+) -> PyResult<&'a PyAny> {
+    pandas::get_meta::get_meta(py, conn, protocol.unwrap_or("binary"), query)
+        .map_err(|e| From::from(e))
 }

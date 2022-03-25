@@ -119,9 +119,10 @@ def test_oracle_aggregation2(oracle_url: str) -> None:
     df = read_sql(oracle_url, query)
     expected = pd.DataFrame(
         data={
-            "TEST_CHAR": pd.Series(["str2 ", "str05", None, "str1 "], dtype="object"),
+            "TEST_CHAR": pd.Series(["str05", "str1 ", "str2 ", None], dtype="object"),
         },
     )
+    df.sort_values(by="TEST_CHAR", inplace=True, ignore_index=True)
     assert_frame_equal(df, expected, check_names=True)
 
 
@@ -152,13 +153,14 @@ def test_oracle_manual_partition(oracle_url: str) -> None:
     df = read_sql(oracle_url, query=queries)
     expected = pd.DataFrame(
         data={
-            "TEST_INT": pd.Series([1, 2, 2333, 4, 5], dtype="Int64"),
+            "TEST_INT": pd.Series([1, 2, 4, 5, 2333], dtype="Int64"),
             "TEST_CHAR": pd.Series(
-                ["str1 ", "str2 ", None, None, "str05"], dtype="object"
+                ["str1 ", "str2 ", None, "str05", None], dtype="object"
             ),
-            "TEST_FLOAT": pd.Series([1.1, 2.2, None, -4.44, None], dtype="float64"),
+            "TEST_FLOAT": pd.Series([1.1, 2.2, -4.44, None, None], dtype="float64"),
         },
     )
+    df.sort_values(by="TEST_INT", inplace=True, ignore_index=True)
     assert_frame_equal(df, expected, check_names=True)
 
 
@@ -418,5 +420,18 @@ def test_oracle_cte(oracle_url: str) -> None:
             "TEST_INT": pd.Series([1, 2], dtype="Int64"),
             "TEST_STR": pd.Series(["str1 ", "str2 "], dtype="object"),
         },
+    )
+    assert_frame_equal(df, expected, check_names=True)
+
+@pytest.mark.skipif(
+    not os.environ.get("ORACLE_URL"), reason="Test oracle only when `ORACLE_URL` is set"
+)
+def test_oracle_round_function(oracle_url: str) -> None:
+    query = "SELECT round(v,2) TEST_ROUND FROM test_issue"
+    df = read_sql(oracle_url, query)
+    expected = pd.DataFrame(
+        data={
+            "TEST_ROUND": pd.Series([1.11, 2.22, 3.33], dtype="float64"),
+        }
     )
     assert_frame_equal(df, expected, check_names=True)
