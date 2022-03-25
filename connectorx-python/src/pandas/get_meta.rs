@@ -1,19 +1,12 @@
-mod destination;
-pub mod get_meta;
-mod pandas_columns;
-mod pystring;
-mod transports;
-mod typesystem;
-
-pub use self::destination::{PandasBlockInfo, PandasDestination, PandasPartitionDestination};
-pub use self::transports::{
-    BigQueryPandasTransport, MsSQLPandasTransport, MysqlPandasTransport, OraclePandasTransport,
-    PostgresPandasTransport, SqlitePandasTransport,
+use super::{
+    destination::PandasDestination,
+    transports::{
+        BigQueryPandasTransport, MsSQLPandasTransport, MysqlPandasTransport, OraclePandasTransport,
+        PostgresPandasTransport, SqlitePandasTransport,
+    },
 };
-pub use self::typesystem::{PandasDType, PandasTypeSystem};
 use crate::errors::ConnectorXPythonError;
 use crate::source_router::{SourceConn, SourceType};
-use connectorx::sources::oracle::OracleSource;
 use connectorx::{
     prelude::*,
     sources::{
@@ -32,113 +25,87 @@ use fehler::throws;
 use log::debug;
 use postgres::NoTls;
 use postgres_openssl::MakeTlsConnector;
-use pyo3::{PyAny, Python};
+use pyo3::prelude::*;
+use std::convert::TryFrom;
 use std::sync::Arc;
 
 #[throws(ConnectorXPythonError)]
-pub fn write_pandas<'a>(
-    py: Python<'a>,
-    source_conn: &SourceConn,
-    origin_query: Option<String>,
-    queries: &[CXQuery<String>],
-    protocol: &str,
-) -> &'a PyAny {
+pub fn get_meta<'a>(py: Python<'a>, conn: &str, protocol: &str, query: String) -> &'a PyAny {
+    let source_conn = SourceConn::try_from(conn)?;
     let mut destination = PandasDestination::new(py);
+    let queries = &[CXQuery::Naked(query)];
 
-    // TODO: unlock gil if possible
     match source_conn.ty {
         SourceType::Postgres => {
             debug!("Protocol: {}", protocol);
             let (config, tls) = rewrite_tls_args(&source_conn.conn)?;
             match (protocol, tls) {
                 ("csv", Some(tls_conn)) => {
-                    let sb = PostgresSource::<CSVProtocol, MakeTlsConnector>::new(
-                        config,
-                        tls_conn,
-                        queries.len(),
-                    )?;
+                    let sb =
+                        PostgresSource::<CSVProtocol, MakeTlsConnector>::new(config, tls_conn, 1)?;
                     let dispatcher = Dispatcher::<
                         _,
                         _,
                         PostgresPandasTransport<CSVProtocol, MakeTlsConnector>,
-                    >::new(
-                        sb, &mut destination, queries, origin_query
-                    );
+                    >::new(sb, &mut destination, queries, None);
                     debug!("Running dispatcher");
-                    dispatcher.run()?;
+                    dispatcher.get_meta()?;
                 }
                 ("csv", None) => {
-                    let sb =
-                        PostgresSource::<CSVProtocol, NoTls>::new(config, NoTls, queries.len())?;
+                    let sb = PostgresSource::<CSVProtocol, NoTls>::new(config, NoTls, 1)?;
                     let dispatcher =
                         Dispatcher::<_, _, PostgresPandasTransport<CSVProtocol, NoTls>>::new(
                             sb,
                             &mut destination,
                             queries,
-                            origin_query,
+                            None,
                         );
                     debug!("Running dispatcher");
-                    dispatcher.run()?;
+                    dispatcher.get_meta()?;
                 }
                 ("binary", Some(tls_conn)) => {
                     let sb = PostgresSource::<PgBinaryProtocol, MakeTlsConnector>::new(
-                        config,
-                        tls_conn,
-                        queries.len(),
-                    )?;
-                    let dispatcher =
-                        Dispatcher::<
-                            _,
-                            _,
-                            PostgresPandasTransport<PgBinaryProtocol, MakeTlsConnector>,
-                        >::new(sb, &mut destination, queries, origin_query);
-                    debug!("Running dispatcher");
-                    dispatcher.run()?;
-                }
-                ("binary", None) => {
-                    let sb = PostgresSource::<PgBinaryProtocol, NoTls>::new(
-                        config,
-                        NoTls,
-                        queries.len(),
+                        config, tls_conn, 1,
                     )?;
                     let dispatcher = Dispatcher::<
                         _,
                         _,
-                        PostgresPandasTransport<PgBinaryProtocol, NoTls>,
-                    >::new(
-                        sb, &mut destination, queries, origin_query
-                    );
+                        PostgresPandasTransport<PgBinaryProtocol, MakeTlsConnector>,
+                    >::new(sb, &mut destination, queries, None);
                     debug!("Running dispatcher");
-                    dispatcher.run()?;
+                    dispatcher.get_meta()?;
+                }
+                ("binary", None) => {
+                    let sb = PostgresSource::<PgBinaryProtocol, NoTls>::new(config, NoTls, 1)?;
+                    let dispatcher = Dispatcher::<
+                        _,
+                        _,
+                        PostgresPandasTransport<PgBinaryProtocol, NoTls>,
+                    >::new(sb, &mut destination, queries, None);
+                    debug!("Running dispatcher");
+                    dispatcher.get_meta()?;
                 }
                 ("cursor", Some(tls_conn)) => {
                     let sb = PostgresSource::<CursorProtocol, MakeTlsConnector>::new(
-                        config,
-                        tls_conn,
-                        queries.len(),
+                        config, tls_conn, 1,
                     )?;
                     let dispatcher = Dispatcher::<
                         _,
                         _,
                         PostgresPandasTransport<CursorProtocol, MakeTlsConnector>,
-                    >::new(
-                        sb, &mut destination, queries, origin_query
-                    );
+                    >::new(sb, &mut destination, queries, None);
                     debug!("Running dispatcher");
-                    dispatcher.run()?;
+                    dispatcher.get_meta()?;
                 }
                 ("cursor", None) => {
-                    let sb =
-                        PostgresSource::<CursorProtocol, NoTls>::new(config, NoTls, queries.len())?;
+                    let sb = PostgresSource::<CursorProtocol, NoTls>::new(config, NoTls, 1)?;
                     let dispatcher = Dispatcher::<
                         _,
                         _,
                         PostgresPandasTransport<CursorProtocol, NoTls>,
-                    >::new(
-                        sb, &mut destination, queries, origin_query
-                    );
+                    >::new(sb, &mut destination, queries, None);
                     debug!("Running dispatcher");
-                    dispatcher.run()?;
+                    dispatcher.get_meta()?;
                 }
                 _ => unimplemented!("{} protocol not supported", protocol),
             }
@@ -146,71 +113,67 @@ pub fn write_pandas<'a>(
         SourceType::SQLite => {
             // remove the first "sqlite://" manually since url.path is not correct for windows
             let path = &source_conn.conn.as_str()[9..];
-            let source = SQLiteSource::new(path, queries.len())?;
+            let source = SQLiteSource::new(path, 1)?;
             let dispatcher = Dispatcher::<_, _, SqlitePandasTransport>::new(
                 source,
                 &mut destination,
                 queries,
-                origin_query,
+                None,
             );
             debug!("Running dispatcher");
-            dispatcher.run()?;
+            dispatcher.get_meta()?;
         }
         SourceType::MySQL => {
             debug!("Protocol: {}", protocol);
             match protocol {
                 "binary" => {
-                    let source = MySQLSource::<MySQLBinaryProtocol>::new(
-                        &source_conn.conn[..],
-                        queries.len(),
-                    )?;
+                    let source = MySQLSource::<MySQLBinaryProtocol>::new(&source_conn.conn[..], 1)?;
                     let dispatcher =
                         Dispatcher::<_, _, MysqlPandasTransport<MySQLBinaryProtocol>>::new(
                             source,
                             &mut destination,
                             queries,
-                            origin_query,
+                            None,
                         );
                     debug!("Running dispatcher");
-                    dispatcher.run()?;
+                    dispatcher.get_meta()?;
                 }
                 "text" => {
-                    let source =
-                        MySQLSource::<TextProtocol>::new(&source_conn.conn[..], queries.len())?;
+                    let source = MySQLSource::<TextProtocol>::new(&source_conn.conn[..], 1)?;
                     let dispatcher = Dispatcher::<_, _, MysqlPandasTransport<TextProtocol>>::new(
                         source,
                         &mut destination,
                         queries,
-                        origin_query,
+                        None,
                     );
                     debug!("Running dispatcher");
-                    dispatcher.run()?;
+                    dispatcher.get_meta()?;
                 }
                 _ => unimplemented!("{} protocol not supported", protocol),
             }
         }
         SourceType::MsSQL => {
             let rt = Arc::new(tokio::runtime::Runtime::new().expect("Failed to create runtime"));
-            let source = MsSQLSource::new(rt, &source_conn.conn[..], queries.len())?;
+            let source = MsSQLSource::new(rt, &source_conn.conn[..], 1)?;
             let dispatcher = Dispatcher::<_, _, MsSQLPandasTransport>::new(
                 source,
                 &mut destination,
                 queries,
-                origin_query,
+                None,
             );
             debug!("Running dispatcher");
-            dispatcher.run()?;
+            dispatcher.get_meta()?;
         }
         SourceType::Oracle => {
-            let source = OracleSource::new(&source_conn.conn[..], queries.len())?;
+            let source = OracleSource::new(&source_conn.conn[..], 1)?;
             let dispatcher = Dispatcher::<_, _, OraclePandasTransport>::new(
                 source,
                 &mut destination,
                 queries,
-                origin_query,
+                None,
             );
             debug!("Running dispatcher");
-            dispatcher.run()?;
+            dispatcher.get_meta()?;
         }
         SourceType::BigQuery => {
             let rt = Arc::new(tokio::runtime::Runtime::new().expect("Failed to create runtime"));
@@ -219,10 +182,10 @@ pub fn write_pandas<'a>(
                 source,
                 &mut destination,
                 queries,
-                origin_query,
+                None,
             );
             debug!("Running dispatcher");
-            dispatcher.run()?;
+            dispatcher.get_meta()?;
         }
     }
 

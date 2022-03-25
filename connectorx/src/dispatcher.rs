@@ -179,4 +179,21 @@ where
 
         Ok(())
     }
+
+    /// Only fetch the metadata (header) of the destination.
+    pub fn get_meta(mut self) -> Result<(), ET> {
+        let dorder = coordinate(S::DATA_ORDERS, D::DATA_ORDERS)?;
+        self.src.set_data_order(dorder)?;
+        self.src.set_queries(self.queries.as_slice());
+        self.src.set_origin_query(self.origin_query);
+        self.src.fetch_metadata()?;
+        let src_schema = self.src.schema();
+        let dst_schema = src_schema
+            .iter()
+            .map(|&s| TP::convert_typesystem(s))
+            .collect::<CXResult<Vec<_>>>()?;
+        let names = self.src.names();
+        self.dst.allocate(0, &names, &dst_schema, dorder)?;
+        Ok(())
+    }
 }
