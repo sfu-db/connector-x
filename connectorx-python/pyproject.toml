@@ -19,16 +19,19 @@ license = "MIT"
 maintainers = ["Weiyuan Wu <youngw@sfu.ca>"] 
 name = "connectorx" 
 readme = "README.md" # Markdown files are supported
-version = "0.2.4-alpha.9" 
+version = "0.2.5-alpha.2" 
+
+[project]
+name = "connectorx" # Target file name of maturin build
 
 [tool.poetry.dependencies]
 dask = {version = "^2021", optional = true, extras = ["dataframe"]}
 modin = {version = ">=0.10", optional = true}
+numpy = ">=1.21.5"
 pandas = {version = "^1", optional = true}
 polars = {version = ">=0.8", optional = true}
 pyarrow = {version = ">=4", optional = true}
 python = ">=3.7.1,<3.11"
-numpy = ">=1.21.5"
 
 [tool.poetry.extras]
 all = ["dask", "pandas", "modin", "polars", "pyarrow"]
@@ -39,18 +42,18 @@ polars = ["pyarrow", "polars"]
 pyarrow = ["pyarrow"]
 
 [tool.poetry.dev-dependencies]
+black = "^21.4b0"
 contexttimer = "^0.3.3"
 dask = {extras = ["dataframe"], version = "^2021.7.0"}
 docopt = "^0.6.2"
 ipython = "^7.31.1"
-maturin = "^0.9.4"
+maturin = ">=0.12,<0.13"
 modin = {extras = ["dask"], version = ">=0.10.1"}
 polars = ">=0.8"
 pyarrow = ">=4"
 pytest = "^6.2"
 pytest-benchmark = "^3.4.1"
 twine = "^3.4.1"
-black = "^21.4b0"
 
 [tool.pytest.ini_options]
 minversion = "6.0"
@@ -64,5 +67,5 @@ python_functions = "test_* bench_*"
 # ]
 
 [build-system]
-build-backend = "poetry.core.masonry.api"
-requires = ["poetry_core>=1.0.0"]
+build-backend = "maturin"
+requires = ["maturin>=0.12,<0.13"]

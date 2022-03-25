@@ -25,11 +25,8 @@ bootstrap-python:
     cp LICENSE connectorx-python/LICENSE
     cd connectorx-python && poetry install
 
-build-python-extention:
-    cd connectorx-python && cargo build --release
-
-setup-python: build-python-extention
-    cd connectorx-python && poetry run python ../scripts/python-helper.py copy-extension
+setup-python:
+    cd connectorx-python && poetry run maturin develop --release
     
 test-python +opts="": setup-python
     cd connectorx-python && poetry run pytest connectorx/tests -v -s {{opts}}
@@ -90,15 +87,7 @@ benchmark-report: setup-python
     poetry run pytest connectorx/tests/benchmarks.py --benchmark-json ../benchmark.json
     
 # releases
-ci-build-python-extention:
-    cd connectorx-python && cargo build --release
-    ls target/release
-    cd connectorx-python && poetry run python ../scripts/python-helper.py copy-extension
-
 ci-build-python-wheel:
     cp README.md connectorx-python/README.md
     cp LICENSE connectorx-python/LICENSE
-    cd connectorx-python && poetry build
-    
-ci-rename-wheel:
-    cd connectorx-python && poetry run python ../scripts/python-helper.py rename-wheel
+    cd connectorx-python && maturin build --release

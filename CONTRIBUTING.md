@@ -86,6 +86,4 @@ MODIN_ENGINE=dask
 
 ## How to manually build ConnectorX
 
-You can build the wheel file in your own environment if the pre-built ones do not fit your instance. The steps are simple:
-1. Configure environment. Follow the instructions in [Install tools and dependencies](#install-tools-and-dependencies).
-2. Build connectorx. Run command `just ci-build-python-extention ci-build-python-wheel ci-rename-wheel` to generate a wheel file under directory `connectorx-python/dist/`.
+Please check out [here](https://sfu-db.github.io/connector-x/install.html#build-from-source-code)

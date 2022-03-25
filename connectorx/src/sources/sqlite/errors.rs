@@ -1,3 +1,4 @@
+use std::string::FromUtf8Error;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -13,6 +14,9 @@ pub enum SQLiteSourceError {
 
     #[error(transparent)]
     SQLitePoolError(#[from] r2d2::Error),
+
+    #[error(transparent)]
+    SQLiteUrlDecodeError(#[from] FromUtf8Error),
 
     /// Any other errors that are too trivial to be put here explicitly.
     #[error(transparent)]

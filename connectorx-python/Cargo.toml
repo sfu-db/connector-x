@@ -2,7 +2,10 @@
 authors = ["Weiyuan Wu <youngw@sfu.ca>"]
 edition = "2018"
 name = "connectorx-python"
-version = "0.2.4-alpha.9"
+version = "0.2.5-alpha.2"
+
+[workspace]
+# prevents package from thinking it's in the workspace
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -24,6 +27,7 @@ libc = "0.2"
 log = "0.4"
 ndarray = "0.15"
 numpy = "0.14"
+openssl = {version = "0.10", features = ["vendored"]}
 postgres = {version = "0.19", features = ["with-chrono-0_4", "with-uuid-0_8", "with-serde_json-1"]}
 postgres-native-tls = {version = "0.5"}
 pyo3 = {version = "0.14", default-features = false, features = ["macros"]}
@@ -54,8 +58,8 @@ pprof = {version = "0.5", features = ["flamegraph", "criterion", "protobuf"]}
 rayon = "1"
 
 [lib]
-crate-type = ["rlib", "cdylib"]
-name = "connectorx_python"
+crate-type = ["cdylib"]
+name = "connectorx"
 
 [features]
 branch = ["connectorx/branch"]
@@ -65,4 +69,11 @@ executable = ["pyo3/auto-initialize"]
 extension = ["pyo3/extension-module"]
 fptr = ["connectorx/fptr"]
 nbstr = []
-srcs = ["connectorx/src_postgres", "connectorx/src_mysql", "connectorx/src_sqlite", "connectorx/src_mssql", "connectorx/src_oracle", "connectorx/src_bigquery"]
+srcs = [
+  "connectorx/src_postgres",
+  "connectorx/src_mysql",
+  "connectorx/src_sqlite",
+  "connectorx/src_mssql",
+  "connectorx/src_oracle",
+  "connectorx/src_bigquery",
+]
