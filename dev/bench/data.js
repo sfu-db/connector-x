@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1648166314083,
+  "lastUpdate": 1648167378739,
   "repoUrl": "https://github.com/sfu-db/connector-x",
   "entries": {
     "ConnectorX TPC-H Scale@1 Benchmarks": [
@@ -8968,6 +8968,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 3.455719856371344",
             "extra": "mean: 16.52380694001913 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "xiaoying_wang@sfu.ca",
+            "name": "Xiaoying Wang",
+            "username": "wangxiaoying"
+          },
+          "committer": {
+            "email": "xiaoying_wang@sfu.ca",
+            "name": "Xiaoying Wang",
+            "username": "wangxiaoying"
+          },
+          "distinct": true,
+          "id": "2e1ed6afa359065ecd5d8fbecab1682beb9665e8",
+          "message": "0.2.5-alpha.3: oracle bug fix + postgres client auth",
+          "timestamp": "2022-03-25T00:03:25Z",
+          "tree_id": "e4079a1788874d1eb7686374539fe37a88fd6271",
+          "url": "https://github.com/sfu-db/connector-x/commit/2e1ed6afa359065ecd5d8fbecab1682beb9665e8"
+        },
+        "date": 1648167375763,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_mysql",
+            "value": 0.05645740401195163,
+            "unit": "iter/sec",
+            "range": "stddev: 0.16877093992308173",
+            "extra": "mean: 17.71246867440641 sec\nrounds: 5"
+          },
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_postgres",
+            "value": 0.07798928577478563,
+            "unit": "iter/sec",
+            "range": "stddev: 0.37825892871521377",
+            "extra": "mean: 12.822274111956357 sec\nrounds: 5"
           }
         ]
       }
