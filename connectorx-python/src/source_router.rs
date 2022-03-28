@@ -46,7 +46,9 @@ impl TryFrom<&str> for SourceConn {
 
     fn try_from(conn: &str) -> Result<SourceConn> {
         let url = Url::parse(conn).map_err(|e| anyhow!("parse error: {}", e))?;
-        match url.scheme() {
+        // users from sqlalchemy may set engine in connection url (e.g. mssql+pymssql://...)
+        // only for compatablility, we don't use the same engine
+        match url.scheme().split('+').collect::<Vec<&str>>()[0] {
             "postgres" | "postgresql" => Ok(SourceConn {
                 ty: SourceType::Postgres,
                 conn: url,
