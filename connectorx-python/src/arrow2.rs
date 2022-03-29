@@ -238,8 +238,8 @@ fn to_ptrs(
         let mut cols = vec![];
 
         for array in rb.columns() {
-            let array_ptr = Box::new(ffi::Ffi_ArrowArray::empty());
-            let schema_ptr = Box::new(ffi::Ffi_ArrowSchema::empty());
+            let array_ptr = Box::new(ffi::ArrowArray::empty());
+            let schema_ptr = Box::new(ffi::ArrowSchema::empty());
             let array_ptr = Box::into_raw(array_ptr);
             let schema_ptr = Box::into_raw(schema_ptr);
             unsafe {
