@@ -2,7 +2,7 @@
 authors = ["Weiyuan Wu <youngw@sfu.ca>"]
 edition = "2018"
 name = "connectorx-python"
-version = "0.2.5-alpha.3"
+version = "0.2.5"
 
 [workspace]
 # prevents package from thinking it's in the workspace
@@ -12,7 +12,7 @@ version = "0.2.5-alpha.3"
 [dependencies]
 anyhow = "1"
 arrow = "9.0.0"
-arrow2 = {git = "https://github.com/jorgecarleitao/arrow2", rev = "dc516495a5a49ae41d3c68caab4e33dd57337640", default-features = false}
+arrow2 = {version = "0.10", default-features = false}
 bitfield = "0.13"
 bytes = "1"
 chrono = "0.4"
