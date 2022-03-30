@@ -18,7 +18,9 @@ fn main() {
     let entry = ClasspathEntry::new(path.to_str().unwrap());
     let jvm: Jvm = JvmBuilder::new().classpath_entry(entry).build().unwrap();
 
-    let sql = env::var("TEST_SQL").unwrap();
+    let args: Vec<String> = env::args().collect();
+    let file = &args[1];
+    let sql = fs::read_to_string(file).unwrap();
     println!("input sql: {}", sql);
     let sql = InvocationArg::try_from(sql).unwrap();
     let rewrite_sql = jvm
