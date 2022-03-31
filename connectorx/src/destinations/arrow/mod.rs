@@ -111,6 +111,10 @@ impl ArrowDestination {
         lock.into_inner()
             .map_err(|e| anyhow!("mutex poisoned {}", e))?
     }
+
+    pub fn arrow_schema(&self) -> Arc<Schema> {
+        self.arrow_schema.clone()
+    }
 }
 
 pub struct ArrowPartitionWriter {
