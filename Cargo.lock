@@ -69,9 +69,9 @@ checksum = "23b62fc65de8e4e7f52534fb52b0f3ed04746ae267519eef2a83941e8085068b"
 
 [[package]]
 name = "arrow"
-version = "9.1.0"
+version = "11.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9864ca2fdcd3d4883259495b4517879877c5991d9928cc9713794d8076d3e78b"
+checksum = "db922bcac0aa9f3b6e191d73b0b5df925c2c10ab4893f7416359f289e5d23489"
 dependencies = [
  "bitflags",
  "chrono",
@@ -978,9 +978,9 @@ dependencies = [
 
 [[package]]
 name = "flatbuffers"
-version = "2.0.0"
+version = "2.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ef4c5738bcd7fad10315029c50026f83c9da5e4a21f8ed66826f43e0e2bde5f6"
+checksum = "6ea97b4fe4b84e2f2765449bcea21cbdb3ee28cecb88afbf38a0c2e1639f5eb5"
 dependencies = [
  "bitflags",
  "smallvec",
@@ -3425,18 +3425,18 @@ dependencies = [
 
 [[package]]
 name = "thiserror"
-version = "1.0.29"
+version = "1.0.30"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "602eca064b2d83369e2b2f34b09c70b605402801927c65c11071ac911d299b88"
+checksum = "854babe52e4df1653706b98fcfc05843010039b406875930a70e4d9644e5c417"
 dependencies = [
  "thiserror-impl",
 ]
 
 [[package]]
 name = "thiserror-impl"
-version = "1.0.29"
+version = "1.0.30"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bad553cc2c78e8de258400763a647e80e6d1b31ee237275d756f6836d204494c"
+checksum = "aa32fd3f627f367fe16f893e2597ae3c05020f8bba2666a4e6ea73d377e5714b"
 dependencies = [
  "proc-macro2",
  "quote",

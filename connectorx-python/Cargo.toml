@@ -11,7 +11,7 @@ version = "0.2.5"
 
 [dependencies]
 anyhow = "1"
-arrow = "9.0.0"
+arrow = "11.0.0"
 arrow2 = {version = "0.10", default-features = false}
 bitfield = "0.13"
 bytes = "1"
