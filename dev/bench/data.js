@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1648526611021,
+  "lastUpdate": 1648757057560,
   "repoUrl": "https://github.com/sfu-db/connector-x",
   "entries": {
     "ConnectorX TPC-H Scale@1 Benchmarks": [
@@ -9272,6 +9272,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 2.391214722673938",
             "extra": "mean: 15.910900274664163 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "xiaoying_wang@sfu.ca",
+            "name": "Xiaoying Wang",
+            "username": "wangxiaoying"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "d87f37f434cc286d3e7c22cd0b5714d13452fbb0",
+          "message": "Merge pull request #259 from zemelLeong/main\n\nUpgrade `arrow` and export `arrow_schema`",
+          "timestamp": "2022-03-31T12:55:55-07:00",
+          "tree_id": "ad6d0fe4f7e6902e434b3fd770e0e297a313b843",
+          "url": "https://github.com/sfu-db/connector-x/commit/d87f37f434cc286d3e7c22cd0b5714d13452fbb0"
+        },
+        "date": 1648757054400,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_mysql",
+            "value": 0.06420049636552345,
+            "unit": "iter/sec",
+            "range": "stddev: 0.25989658678709976",
+            "extra": "mean: 15.576203559339046 sec\nrounds: 5"
+          },
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_postgres",
+            "value": 0.09647749902588243,
+            "unit": "iter/sec",
+            "range": "stddev: 1.404128993854811",
+            "extra": "mean: 10.36511114090681 sec\nrounds: 5"
           }
         ]
       }
