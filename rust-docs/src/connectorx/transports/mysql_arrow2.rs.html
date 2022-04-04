@@ -106,6 +106,14 @@
 <span id="106">106</span>
 <span id="107">107</span>
 <span id="108">108</span>
+<span id="109">109</span>
+<span id="110">110</span>
+<span id="111">111</span>
+<span id="112">112</span>
+<span id="113">113</span>
+<span id="114">114</span>
+<span id="115">115</span>
+<span id="116">116</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Transport from MySQL Source to Arrow2 Destination.</span>
 
 <span class="kw">use</span> <span class="kw">crate</span>::{
@@ -168,6 +176,10 @@
         { <span class="ident">Char</span>[<span class="ident">String</span>]               =&gt; <span class="ident">LargeUtf8</span>[<span class="ident">String</span>]       <span class="op">|</span> <span class="ident">conversion</span> <span class="ident">none</span> }
         { <span class="ident">Enum</span>[<span class="ident">String</span>]               =&gt; <span class="ident">LargeUtf8</span>[<span class="ident">String</span>]       <span class="op">|</span> <span class="ident">conversion</span> <span class="ident">none</span> }
         { <span class="ident">Json</span>[<span class="ident">Value</span>]                =&gt; <span class="ident">LargeUtf8</span>[<span class="ident">String</span>]       <span class="op">|</span> <span class="ident">conversion</span> <span class="ident">option</span> }
+        { <span class="ident">TinyBlob</span>[<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>]          =&gt; <span class="ident">LargeBinary</span>[<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>]    <span class="op">|</span> <span class="ident">conversion</span> <span class="ident">auto</span> }
+        { <span class="ident">Blob</span>[<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>]              =&gt; <span class="ident">LargeBinary</span>[<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>]    <span class="op">|</span> <span class="ident">conversion</span> <span class="ident">none</span> }
+        { <span class="ident">MediumBlob</span>[<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>]        =&gt; <span class="ident">LargeBinary</span>[<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>]    <span class="op">|</span> <span class="ident">conversion</span> <span class="ident">none</span> }
+        { <span class="ident">LongBlob</span>[<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>]          =&gt; <span class="ident">LargeBinary</span>[<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>]    <span class="op">|</span> <span class="ident">conversion</span> <span class="ident">none</span> }
     }
 );
 
@@ -199,6 +211,10 @@
         { <span class="ident">Char</span>[<span class="ident">String</span>]               =&gt; <span class="ident">LargeUtf8</span>[<span class="ident">String</span>]       <span class="op">|</span> <span class="ident">conversion</span> <span class="ident">none</span> }
         { <span class="ident">Enum</span>[<span class="ident">String</span>]               =&gt; <span class="ident">LargeUtf8</span>[<span class="ident">String</span>]       <span class="op">|</span> <span class="ident">conversion</span> <span class="ident">none</span> }
         { <span class="ident">Json</span>[<span class="ident">Value</span>]                =&gt; <span class="ident">LargeUtf8</span>[<span class="ident">String</span>]       <span class="op">|</span> <span class="ident">conversion</span> <span class="ident">option</span> }
+        { <span class="ident">TinyBlob</span>[<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>]          =&gt; <span class="ident">LargeBinary</span>[<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>]    <span class="op">|</span> <span class="ident">conversion</span> <span class="ident">auto</span> }
+        { <span class="ident">Blob</span>[<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>]              =&gt; <span class="ident">LargeBinary</span>[<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>]    <span class="op">|</span> <span class="ident">conversion</span> <span class="ident">none</span> }
+        { <span class="ident">MediumBlob</span>[<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>]        =&gt; <span class="ident">LargeBinary</span>[<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>]    <span class="op">|</span> <span class="ident">conversion</span> <span class="ident">none</span> }
+        { <span class="ident">LongBlob</span>[<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>]          =&gt; <span class="ident">LargeBinary</span>[<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>]    <span class="op">|</span> <span class="ident">conversion</span> <span class="ident">none</span> }
     }
 );
 

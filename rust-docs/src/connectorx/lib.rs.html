@@ -273,7 +273,7 @@
 <span class="doccomment">//! use connectorx::prelude::*;</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! let mut destination = ArrowDestination::new();</span>
-<span class="doccomment">//! let source = SQLiteSource::new(&quot;sqlite:///path/to/db&quot;, 10).expect(&quot;cannot create the source&quot;);</span>
+<span class="doccomment">//! let source = SQLiteSource::new(&quot;/path/to/db&quot;, 10).expect(&quot;cannot create the source&quot;);</span>
 <span class="doccomment">//! let queries = &amp;[&quot;SELECT * FROM db WHERE id &lt; 100&quot;, &quot;SELECT * FROM db WHERE id &gt;= 100&quot;];</span>
 <span class="doccomment">//! let dispatcher = Dispatcher::&lt;SQLiteSource, ArrowDestination, SQLiteArrowTransport&gt;::new(source, &amp;mut destination, queries, None);</span>
 <span class="doccomment">//! dispatcher.run().expect(&quot;run failed&quot;);</span>
