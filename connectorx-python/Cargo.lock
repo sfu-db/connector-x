@@ -75,9 +75,9 @@ checksum = "8da52d66c7071e2e3fa2a1e5c6d088fec47b593032b254f5e980de8ea54454d6"
 
 [[package]]
 name = "arrow"
-version = "9.1.0"
+version = "11.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9864ca2fdcd3d4883259495b4517879877c5991d9928cc9713794d8076d3e78b"
+checksum = "db922bcac0aa9f3b6e191d73b0b5df925c2c10ab4893f7416359f289e5d23489"
 dependencies = [
  "bitflags",
  "chrono",
@@ -1118,9 +1118,9 @@ checksum = "37ab347416e802de484e4d03c7316c48f1ecb56574dfd4a46a80f173ce1de04d"
 
 [[package]]
 name = "flatbuffers"
-version = "2.0.0"
+version = "2.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ef4c5738bcd7fad10315029c50026f83c9da5e4a21f8ed66826f43e0e2bde5f6"
+checksum = "6ea97b4fe4b84e2f2765449bcea21cbdb3ee28cecb88afbf38a0c2e1639f5eb5"
 dependencies = [
  "bitflags",
  "smallvec",
