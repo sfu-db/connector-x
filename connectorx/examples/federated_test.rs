@@ -20,7 +20,7 @@ use std::sync::Arc;
 use url::Url;
 
 fn main() {
-    let db_map = HashMap::from([("DB1", "POSTGRES"), ("DB2", "MYSQL"), ("LOCAL", "LOCAL")]);
+    let db_map = HashMap::from([("db1", "POSTGRES"), ("db2", "MYSQL"), ("LOCAL", "LOCAL")]);
 
     let path = fs::canonicalize("./federated-rewriter.jar").unwrap();
     println!("path: {:?}", path);
@@ -45,16 +45,33 @@ fn main() {
     let mut ctx = ExecutionContext::new();
     let mut local_sql = String::new();
     for i in 0..count {
+        println!("{i}");
+
         let db = jvm
-            .invoke(&plan, "getDBName", &[InvocationArg::try_from(i).unwrap()])
+            .invoke(
+                &plan,
+                "getDBName",
+                &[InvocationArg::try_from(i)
+                    .unwrap()
+                    .into_primitive()
+                    .unwrap()],
+            )
             .unwrap();
         let db: String = jvm.to_rust(db).unwrap();
 
         let rewrite_sql = jvm
-            .invoke(&plan, "getSql", &[InvocationArg::try_from(i).unwrap()])
+            .invoke(
+                &plan,
+                "getSql",
+                &[InvocationArg::try_from(i)
+                    .unwrap()
+                    .into_primitive()
+                    .unwrap()],
+            )
             .unwrap();
         let rewrite_sql: String = jvm.to_rust(rewrite_sql).unwrap();
-        println!("rewrite sql: {}", rewrite_sql);
+
+        println!("db: {}, rewrite sql: {}", db, rewrite_sql);
 
         if db == "LOCAL" {
             local_sql = rewrite_sql;
@@ -99,6 +116,10 @@ fn main() {
             ctx.register_table(db.as_str(), Arc::new(provider)).unwrap();
         }
     }
+
+    local_sql = local_sql.replace("\"", "");
+    // local_sql =
+    // String::from("SELECT * FROM \"db1\" INNER JOIN \"db2\" ON \"db1\".\"n_regionkey\" = \"db2\".\"r_regionkey\"");
 
     let rt = Arc::new(tokio::runtime::Runtime::new().expect("Failed to create runtime"));
     let df = rt.block_on(ctx.sql(local_sql.as_str())).unwrap();
