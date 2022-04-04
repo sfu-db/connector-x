@@ -2,7 +2,7 @@
 authors = ["Weiyuan Wu <youngw@sfu.ca>"]
 edition = "2018"
 name = "connectorx-python"
-version = "0.2.5"
+version = "0.2.6-alpha.1"
 
 [workspace]
 # prevents package from thinking it's in the workspace
@@ -11,7 +11,7 @@ version = "0.2.5"
 
 [dependencies]
 anyhow = "1"
-arrow = "9.0.0"
+arrow = "11.0.0"
 arrow2 = {version = "0.10", default-features = false}
 bitfield = "0.13"
 bytes = "1"
