@@ -514,7 +514,7 @@ dependencies = [
 
 [[package]]
 name = "connectorx"
-version = "0.2.5"
+version = "0.2.6-alpha.1"
 dependencies = [
  "anyhow",
  "arrow",

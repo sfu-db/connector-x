@@ -60,6 +60,10 @@ impl_transport!(
         { Char[String]               => LargeUtf8[String]       | conversion none }
         { Enum[String]               => LargeUtf8[String]       | conversion none }
         { Json[Value]                => LargeUtf8[String]       | conversion option }
+        { TinyBlob[Vec<u8>]          => LargeBinary[Vec<u8>]    | conversion auto }
+        { Blob[Vec<u8>]              => LargeBinary[Vec<u8>]    | conversion none }
+        { MediumBlob[Vec<u8>]        => LargeBinary[Vec<u8>]    | conversion none }
+        { LongBlob[Vec<u8>]          => LargeBinary[Vec<u8>]    | conversion none }
     }
 );
 
@@ -91,6 +95,10 @@ impl_transport!(
         { Char[String]               => LargeUtf8[String]       | conversion none }
         { Enum[String]               => LargeUtf8[String]       | conversion none }
         { Json[Value]                => LargeUtf8[String]       | conversion option }
+        { TinyBlob[Vec<u8>]          => LargeBinary[Vec<u8>]    | conversion auto }
+        { Blob[Vec<u8>]              => LargeBinary[Vec<u8>]    | conversion none }
+        { MediumBlob[Vec<u8>]        => LargeBinary[Vec<u8>]    | conversion none }
+        { LongBlob[Vec<u8>]          => LargeBinary[Vec<u8>]    | conversion none }
     }
 );
 
