@@ -90,6 +90,7 @@ impl<'a> From<&'a ColumnType> for MsSQLTypeSystem {
             ColumnType::Datetime => Datetime(false),
             ColumnType::Datetime2 => Datetime2(true),
             ColumnType::Datetimen => Datetime(true),
+            ColumnType::Datetime4 => Datetime(false),
             ColumnType::Daten => Date(true),
             ColumnType::Timen => Time(true),
             ColumnType::DatetimeOffsetn => Datetimeoffset(true),
