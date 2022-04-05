@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1649041052963,
+  "lastUpdate": 1649131064915,
   "repoUrl": "https://github.com/sfu-db/connector-x",
   "entries": {
     "ConnectorX TPC-H Scale@1 Benchmarks": [
@@ -9386,6 +9386,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 2.004784124277917",
             "extra": "mean: 16.175664956867696 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "xiaoying_wang@sfu.ca",
+            "name": "Xiaoying Wang",
+            "username": "wangxiaoying"
+          },
+          "committer": {
+            "email": "xiaoying_wang@sfu.ca",
+            "name": "Xiaoying Wang",
+            "username": "wangxiaoying"
+          },
+          "distinct": true,
+          "id": "94032b3c3ebb1a0717fb9e841f0c7724c2e5916b",
+          "message": "0.2.6-alpha.2: mssql smalldatetime not null bug fix",
+          "timestamp": "2022-04-05T03:42:50Z",
+          "tree_id": "c2a8862c5aca28936fe5e3849480fb9018323319",
+          "url": "https://github.com/sfu-db/connector-x/commit/94032b3c3ebb1a0717fb9e841f0c7724c2e5916b"
+        },
+        "date": 1649131062170,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_mysql",
+            "value": 0.06547830326234805,
+            "unit": "iter/sec",
+            "range": "stddev: 0.2163855315945231",
+            "extra": "mean: 15.27223446816206 sec\nrounds: 5"
+          },
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_postgres",
+            "value": 0.09651349090159794,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5762395526729167",
+            "extra": "mean: 10.361245776712895 sec\nrounds: 5"
           }
         ]
       }
