@@ -132,6 +132,7 @@
 <span id="132">132</span>
 <span id="133">133</span>
 <span id="134">134</span>
+<span id="135">135</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">chrono</span>::{<span class="ident">DateTime</span>, <span class="ident">NaiveDate</span>, <span class="ident">NaiveDateTime</span>, <span class="ident">NaiveTime</span>, <span class="ident">Utc</span>};
 <span class="kw">use</span> <span class="ident">rust_decimal::Decimal</span>;
 <span class="kw">use</span> <span class="ident">tiberius</span>::{<span class="ident">ColumnData</span>, <span class="ident">ColumnType</span>, <span class="ident">FromSql</span>};
@@ -224,6 +225,7 @@
             <span class="ident">ColumnType::Datetime</span> =&gt; <span class="ident">Datetime</span>(<span class="bool-val">false</span>),
             <span class="ident">ColumnType::Datetime2</span> =&gt; <span class="ident">Datetime2</span>(<span class="bool-val">true</span>),
             <span class="ident">ColumnType::Datetimen</span> =&gt; <span class="ident">Datetime</span>(<span class="bool-val">true</span>),
+            <span class="ident">ColumnType::Datetime4</span> =&gt; <span class="ident">Datetime</span>(<span class="bool-val">false</span>),
             <span class="ident">ColumnType::Daten</span> =&gt; <span class="ident">Date</span>(<span class="bool-val">true</span>),
             <span class="ident">ColumnType::Timen</span> =&gt; <span class="ident">Time</span>(<span class="bool-val">true</span>),
             <span class="ident">ColumnType::DatetimeOffsetn</span> =&gt; <span class="ident">Datetimeoffset</span>(<span class="bool-val">true</span>),
