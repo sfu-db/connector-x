@@ -9,7 +9,7 @@ use connectorx::{
 };
 use datafusion::datasource::MemTable;
 use datafusion::prelude::*;
-use j4rs::{ClasspathEntry, InvocationArg, Jvm, JvmBuilder};
+use j4rs::{ClasspathEntry, InvocationArg, JavaOpt, Jvm, JvmBuilder};
 use postgres::NoTls;
 use std::collections::HashMap;
 use std::convert::TryFrom;
@@ -45,7 +45,7 @@ fn main() {
     let mut ctx = ExecutionContext::new();
     let mut local_sql = String::new();
     for i in 0..count {
-        println!("{i}");
+        println!("query {i}:");
 
         let db = jvm
             .invoke(
@@ -69,8 +69,8 @@ fn main() {
                     .unwrap()],
             )
             .unwrap();
-        let rewrite_sql: String = jvm.to_rust(rewrite_sql).unwrap();
-
+        let mut rewrite_sql: String = jvm.to_rust(rewrite_sql).unwrap();
+        rewrite_sql = rewrite_sql.replace("$f", "f");
         println!("db: {}, rewrite sql: {}", db, rewrite_sql);
 
         if db == "LOCAL" {
@@ -112,14 +112,14 @@ fn main() {
                 _ => {}
             };
             let rbs = destination.arrow().unwrap();
+            println!("schema: {}", rbs[0].schema());
             let provider = MemTable::try_new(rbs[0].schema(), vec![rbs]).unwrap();
             ctx.register_table(db.as_str(), Arc::new(provider)).unwrap();
         }
     }
 
+    // until datafusion fix the bug
     local_sql = local_sql.replace("\"", "");
-    // local_sql =
-    // String::from("SELECT * FROM \"db1\" INNER JOIN \"db2\" ON \"db1\".\"n_regionkey\" = \"db2\".\"r_regionkey\"");
 
     let rt = Arc::new(tokio::runtime::Runtime::new().expect("Failed to create runtime"));
     let df = rt.block_on(ctx.sql(local_sql.as_str())).unwrap();
