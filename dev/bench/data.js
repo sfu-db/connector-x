@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1649365553350,
+  "lastUpdate": 1649367398473,
   "repoUrl": "https://github.com/sfu-db/connector-x",
   "entries": {
     "ConnectorX TPC-H Scale@1 Benchmarks": [
@@ -9500,6 +9500,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.6869845791788711",
             "extra": "mean: 9.812424673885108 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "wangxiaoying0369@gmail.com",
+            "name": "wangxiaoying",
+            "username": "wangxiaoying"
+          },
+          "committer": {
+            "email": "wangxiaoying0369@gmail.com",
+            "name": "wangxiaoying",
+            "username": "wangxiaoying"
+          },
+          "distinct": true,
+          "id": "15766ae3f5f997bd123bdf992b6ca628267e5a05",
+          "message": "0.2.6-alpha.3: add encryption option for mssql for azure",
+          "timestamp": "2022-04-07T21:28:05Z",
+          "tree_id": "c735420c215729e1911116d0d04c693bd106316f",
+          "url": "https://github.com/sfu-db/connector-x/commit/15766ae3f5f997bd123bdf992b6ca628267e5a05"
+        },
+        "date": 1649367395316,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_mysql",
+            "value": 0.06629474294128014,
+            "unit": "iter/sec",
+            "range": "stddev: 0.5495981039794798",
+            "extra": "mean: 15.084152311831712 sec\nrounds: 5"
+          },
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_postgres",
+            "value": 0.08475515313189953,
+            "unit": "iter/sec",
+            "range": "stddev: 2.956388082728527",
+            "extra": "mean: 11.7986926227808 sec\nrounds: 5"
           }
         ]
       }
