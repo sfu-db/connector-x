@@ -34,10 +34,10 @@ impl_transport!(
         { Boolean[bool]              => Boolean[bool]             | conversion none }
         { Int64[i64]                 => Int64[i64]                | conversion auto }
         { Integer[i64]               => Int64[i64]                | conversion none }
-        { Float64[f64]               => Float64[i64]              | conversion auto }
-        { Float[f64]                 => Float64[i64]              | conversion none }
-        { Numeric[f64]               => Float64[i64]              | conversion none }
-        { Bignumeric[f64]            => Float64[i64]              | conversion none }
+        { Float64[f64]               => Float64[f64]              | conversion auto }
+        { Float[f64]                 => Float64[f64]              | conversion none }
+        { Numeric[f64]               => Float64[f64]              | conversion none }
+        { Bignumeric[f64]            => Float64[f64]              | conversion none }
         { String[String]             => LargeUtf8[String]         | conversion auto }
         { Bytes[String]              => LargeUtf8[String]         | conversion none }
         { Date[NaiveDate]            => Date32[NaiveDate]         | conversion auto }
