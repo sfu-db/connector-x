@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1649131558388,
+  "lastUpdate": 1649365553350,
   "repoUrl": "https://github.com/sfu-db/connector-x",
   "entries": {
     "ConnectorX TPC-H Scale@1 Benchmarks": [
@@ -9462,6 +9462,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.729449470616921",
             "extra": "mean: 10.378487084805965 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "xiaoying_wang@sfu.ca",
+            "name": "Xiaoying Wang",
+            "username": "wangxiaoying"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "5fbd84cc5e32819b9e73c082cd8780d4f203a558",
+          "message": "Merge pull request #265 from sfu-db/mssql-auth\n\nFix mssql encryption issue and update doc",
+          "timestamp": "2022-04-07T13:57:08-07:00",
+          "tree_id": "cea891097950544c5bbd1d8b7737bf0a53e49391",
+          "url": "https://github.com/sfu-db/connector-x/commit/5fbd84cc5e32819b9e73c082cd8780d4f203a558"
+        },
+        "date": 1649365550212,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_mysql",
+            "value": 0.06285683563124704,
+            "unit": "iter/sec",
+            "range": "stddev: 2.437390275405887",
+            "extra": "mean: 15.909168668091297 sec\nrounds: 5"
+          },
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_postgres",
+            "value": 0.10191161035471802,
+            "unit": "iter/sec",
+            "range": "stddev: 1.6869845791788711",
+            "extra": "mean: 9.812424673885108 sec\nrounds: 5"
           }
         ]
       }
