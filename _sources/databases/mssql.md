@@ -7,10 +7,12 @@ SQLServer does not need to specify protocol.
 ### MsSQL Connection
 ```{hint} 
 By adding `trusted_connection=true` to connection uri parameter, windows authentication will be enabled. Example: `mssql://host:port/db?trusted_connection=true`
+By adding `encrypt=true` to connection uri parameter, SQLServer will use SSL encryption. Example: `mssql://host:port/db?encrypt=true&trusted_connection=true`
 ```
+
 ```py
 import connectorx as cx
-conn = 'mssql://username:password@server:port/database'         # connection token
+conn = 'mssql://username:password@server:port/database?encrypt=true&trusted_connection=true'         # connection token
 query = 'SELECT * FROM table'                                   # query string
 cx.read_sql(conn, query)                                        # read data from BigQuery
 ```

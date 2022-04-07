@@ -307,10 +307,11 @@ const thebe_selector_output = ".output, .cell_output"
 <h2>MsSQL Connection<a class="headerlink" href="#mssql-connection" title="Permalink to this headline">¶</a></h2>
 <div class="admonition hint">
 <p class="admonition-title">Hint</p>
-<p>By adding <code class="docutils literal notranslate"><span class="pre">trusted_connection=true</span></code> to connection uri parameter, windows authentication will be enabled. Example: <code class="docutils literal notranslate"><span class="pre">mssql://host:port/db?trusted_connection=true</span></code></p>
+<p>By adding <code class="docutils literal notranslate"><span class="pre">trusted_connection=true</span></code> to connection uri parameter, windows authentication will be enabled. Example: <code class="docutils literal notranslate"><span class="pre">mssql://host:port/db?trusted_connection=true</span></code>
+By adding <code class="docutils literal notranslate"><span class="pre">encrypt=true</span></code> to connection uri parameter, SQLServer will use SSL encryption. Example: <code class="docutils literal notranslate"><span class="pre">mssql://host:port/db?encrypt=true&amp;trusted_connection=true</span></code></p>
 </div>
 <div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">connectorx</span> <span class="k">as</span> <span class="nn">cx</span>
-<span class="n">conn</span> <span class="o">=</span> <span class="s1">&#39;mssql://username:password@server:port/database&#39;</span>         <span class="c1"># connection token</span>
+<span class="n">conn</span> <span class="o">=</span> <span class="s1">&#39;mssql://username:password@server:port/database?encrypt=true&amp;trusted_connection=true&#39;</span>         <span class="c1"># connection token</span>
 <span class="n">query</span> <span class="o">=</span> <span class="s1">&#39;SELECT * FROM table&#39;</span>                                   <span class="c1"># query string</span>
 <span class="n">cx</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">query</span><span class="p">)</span>                                        <span class="c1"># read data from BigQuery</span>
 </pre></div>
