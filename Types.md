@@ -119,6 +119,7 @@ Oracle does not need to specify protocol.
 SQLServer does not need to specify protocol.
 
 By adding `trusted_connection=true` to connection uri parameter, windows authentication will be enabled. Example: `mssql://host:port/db?trusted_connection=true`
+By adding `encrypt=true` to connection uri parameter, SQLServer will use SSL encryption. Example: `mssql://host:port/db?encrypt=true&trusted_connection=true`
 
 ### SQLServer-Pandas Type Mapping
 | SQLServer Type  |      Pandas Type            |  Comment                           |

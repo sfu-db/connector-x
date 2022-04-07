@@ -83,7 +83,11 @@ pub fn mssql_config(url: &Url) -> Config {
         decode(url.username())?.to_owned(),
         decode(url.password().unwrap_or(""))?.to_owned(),
     ));
-    config.encryption(EncryptionLevel::NotSupported);
+
+    match params.get("encrypt") {
+        Some(v) if v.to_lowercase() == "true" => config.encryption(EncryptionLevel::Required),
+        _ => config.encryption(EncryptionLevel::NotSupported),
+    };
     config
 }
 
