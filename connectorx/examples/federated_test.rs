@@ -9,7 +9,7 @@ use connectorx::{
 };
 use datafusion::datasource::MemTable;
 use datafusion::prelude::*;
-use j4rs::{ClasspathEntry, InvocationArg, JavaOpt, Jvm, JvmBuilder};
+use j4rs::{ClasspathEntry, InvocationArg, Jvm, JvmBuilder};
 use postgres::NoTls;
 use std::collections::HashMap;
 use std::convert::TryFrom;
@@ -33,11 +33,59 @@ fn main() {
     println!("input sql: {}", sql);
     let sql = InvocationArg::try_from(sql).unwrap();
 
+    let ds1 = jvm
+        .invoke_static(
+            "org.apache.calcite.adapter.jdbc.JdbcSchema",
+            "dataSource",
+            &[
+                InvocationArg::try_from("jdbc:postgresql://127.0.0.1:5432/tpchsf1").unwrap(),
+                InvocationArg::try_from("org.postgresql.Driver").unwrap(),
+                InvocationArg::try_from("postgres").unwrap(),
+                InvocationArg::try_from("postgres").unwrap(),
+            ],
+        )
+        .unwrap();
+
+    let ds2 = jvm
+        .invoke_static(
+            "org.apache.calcite.adapter.jdbc.JdbcSchema",
+            "dataSource",
+            &[
+                InvocationArg::try_from("jdbc:mysql://127.0.0.1:3306/tpchsf1").unwrap(),
+                InvocationArg::try_from("com.mysql.cj.jdbc.Driver").unwrap(),
+                InvocationArg::try_from("root").unwrap(),
+                InvocationArg::try_from("mysql").unwrap(),
+            ],
+        )
+        .unwrap();
+
+    let db_conns = jvm.create_instance("java.util.HashMap", &[]).unwrap();
+    jvm.invoke(
+        &db_conns,
+        "put",
+        &[
+            InvocationArg::try_from("db1").unwrap(),
+            InvocationArg::try_from(ds1).unwrap(),
+        ],
+    )
+    .unwrap();
+    jvm.invoke(
+        &db_conns,
+        "put",
+        &[
+            InvocationArg::try_from("db2").unwrap(),
+            InvocationArg::try_from(ds2).unwrap(),
+        ],
+    )
+    .unwrap();
+
+    let db_conns = InvocationArg::try_from(db_conns).unwrap();
+
     let rewriter = jvm
         .create_instance("ai.dataprep.federated.FederatedQueryRewriter", &[])
         .unwrap();
 
-    let plan = jvm.invoke(&rewriter, "rewrite", &[sql]).unwrap();
+    let plan = jvm.invoke(&rewriter, "rewrite", &[db_conns, sql]).unwrap();
 
     let count = jvm.invoke(&plan, "getCount", &[]).unwrap();
     let count: i32 = jvm.to_rust(count).unwrap();
@@ -58,6 +106,18 @@ fn main() {
             )
             .unwrap();
         let db: String = jvm.to_rust(db).unwrap();
+
+        let alias_db = jvm
+            .invoke(
+                &plan,
+                "getAliasDBName",
+                &[InvocationArg::try_from(i)
+                    .unwrap()
+                    .into_primitive()
+                    .unwrap()],
+            )
+            .unwrap();
+        let alias_db: String = jvm.to_rust(alias_db).unwrap();
 
         let rewrite_sql = jvm
             .invoke(
@@ -114,7 +174,8 @@ fn main() {
             let rbs = destination.arrow().unwrap();
             println!("schema: {}", rbs[0].schema());
             let provider = MemTable::try_new(rbs[0].schema(), vec![rbs]).unwrap();
-            ctx.register_table(db.as_str(), Arc::new(provider)).unwrap();
+            ctx.register_table(alias_db.as_str(), Arc::new(provider))
+                .unwrap();
         }
     }
 
