@@ -305,7 +305,12 @@ impl<'a> PartitionParser<'a> for BigQuerySourceParser {
 
     #[throws(BigQuerySourceError)]
     fn fetch_next(&mut self) -> (usize, bool) {
-        let total_rows = self.response.total_rows.as_ref().ok_or_else(|| anyhow!("total_rows is none"))?.parse::<usize>()?;
+        let total_rows = self
+            .response
+            .total_rows
+            .as_ref()
+            .ok_or_else(|| anyhow!("total_rows is none"))?
+            .parse::<usize>()?;
         (total_rows, true)
         // let job = self.client.job();
         // let job_info = self.response.job_reference.as_ref().ok_or_else(|| anyhow!("job_reference is none"))?;
@@ -410,23 +415,61 @@ impl<'r, 'a> Produce<'r, bool> for BigQuerySourceParser {
     #[throws(BigQuerySourceError)]
     fn produce(&mut self) -> bool {
         let (mut ridx, cidx) = self.next_loc()?;
-        if ridx == (self.response.rows.as_ref().ok_or_else(|| anyhow!("rows is none"))?.len()) {
+        if ridx
+            == (self
+                .response
+                .rows
+                .as_ref()
+                .ok_or_else(|| anyhow!("rows is none"))?
+                .len())
+        {
             let job = self.client.job();
-            let job_info = self.response.job_reference.as_ref().ok_or_else(|| anyhow!("job_reference is none"))?;
-            let params = GetQueryResultsParameters { format_options: None, location: None, max_results: None, page_token: self.response.page_token.clone(), start_index: None, timeout_ms: None };
+            let job_info = self
+                .response
+                .job_reference
+                .as_ref()
+                .ok_or_else(|| anyhow!("job_reference is none"))?;
+            let params = GetQueryResultsParameters {
+                format_options: None,
+                location: None,
+                max_results: None,
+                page_token: self.response.page_token.clone(),
+                start_index: None,
+                timeout_ms: None,
+            };
             self.response = self.rt.block_on(
                 job.get_query_results(
-                    job_info.project_id.as_ref().ok_or_else(|| anyhow!("project_id is none"))?.as_str(),
-                    job_info.job_id.as_ref().ok_or_else(|| anyhow!("job_id is none"))?.as_str(),
+                    job_info
+                        .project_id
+                        .as_ref()
+                        .ok_or_else(|| anyhow!("project_id is none"))?
+                        .as_str(),
+                    job_info
+                        .job_id
+                        .as_ref()
+                        .ok_or_else(|| anyhow!("job_id is none"))?
+                        .as_str(),
                     params,
                 ),
             )?;
             self.current_row = 0;
             ridx = 0;
         }
-        let rows = self.response.rows.as_ref().ok_or_else(|| anyhow!("rows is none"))?;
-        let columns = rows[ridx].columns.as_ref().ok_or_else(|| anyhow!("columns is none"))?;
-        let v = columns.get(cidx).ok_or_else(|| anyhow!("Table Cell is none"))?.value.as_ref().ok_or_else(|| anyhow!("value is none"))?;
+        let rows = self
+            .response
+            .rows
+            .as_ref()
+            .ok_or_else(|| anyhow!("rows is none"))?;
+        let columns = rows[ridx]
+            .columns
+            .as_ref()
+            .ok_or_else(|| anyhow!("columns is none"))?;
+        let v = columns
+            .get(cidx)
+            .ok_or_else(|| anyhow!("Table Cell is none"))?
+            .value
+            .as_ref()
+            .ok_or_else(|| anyhow!("value is none"))?;
         let s = v
             .as_str()
             .ok_or_else(|| anyhow!("cannot get str from json value"))?;
@@ -446,23 +489,60 @@ impl<'r, 'a> Produce<'r, Option<bool>> for BigQuerySourceParser {
     #[throws(BigQuerySourceError)]
     fn produce(&mut self) -> Option<bool> {
         let (mut ridx, cidx) = self.next_loc()?;
-        if ridx == (self.response.rows.as_ref().ok_or_else(|| anyhow!("rows is none"))?.len()) {
+        if ridx
+            == (self
+                .response
+                .rows
+                .as_ref()
+                .ok_or_else(|| anyhow!("rows is none"))?
+                .len())
+        {
             let job = self.client.job();
-            let job_info = self.response.job_reference.as_ref().ok_or_else(|| anyhow!("job_reference is none"))?;
-            let params = GetQueryResultsParameters { format_options: None, location: None, max_results: None, page_token: self.response.page_token.clone(), start_index: None, timeout_ms: None };
+            let job_info = self
+                .response
+                .job_reference
+                .as_ref()
+                .ok_or_else(|| anyhow!("job_reference is none"))?;
+            let params = GetQueryResultsParameters {
+                format_options: None,
+                location: None,
+                max_results: None,
+                page_token: self.response.page_token.clone(),
+                start_index: None,
+                timeout_ms: None,
+            };
             self.response = self.rt.block_on(
                 job.get_query_results(
-                    job_info.project_id.as_ref().ok_or_else(|| anyhow!("project_id is none"))?.as_str(),
-                    job_info.job_id.as_ref().ok_or_else(|| anyhow!("job_id is none"))?.as_str(),
+                    job_info
+                        .project_id
+                        .as_ref()
+                        .ok_or_else(|| anyhow!("project_id is none"))?
+                        .as_str(),
+                    job_info
+                        .job_id
+                        .as_ref()
+                        .ok_or_else(|| anyhow!("job_id is none"))?
+                        .as_str(),
                     params,
                 ),
             )?;
             self.current_row = 0;
             ridx = 0;
         }
-        let rows = self.response.rows.as_ref().ok_or_else(|| anyhow!("rows is none"))?;
-        let columns = rows[ridx].columns.as_ref().ok_or_else(|| anyhow!("columns is none"))?;
-        let ret = match &columns.get(cidx).ok_or_else(|| anyhow!("Table Cell is none"))?.value {
+        let rows = self
+            .response
+            .rows
+            .as_ref()
+            .ok_or_else(|| anyhow!("rows is none"))?;
+        let columns = rows[ridx]
+            .columns
+            .as_ref()
+            .ok_or_else(|| anyhow!("columns is none"))?;
+        let ret = match &columns
+            .get(cidx)
+            .ok_or_else(|| anyhow!("Table Cell is none"))?
+            .value
+        {
             None => None,
             Some(v) => {
                 let s = v
@@ -485,23 +565,61 @@ impl<'r, 'a> Produce<'r, NaiveDate> for BigQuerySourceParser {
     #[throws(BigQuerySourceError)]
     fn produce(&mut self) -> NaiveDate {
         let (mut ridx, cidx) = self.next_loc()?;
-        if ridx == (self.response.rows.as_ref().ok_or_else(|| anyhow!("rows is none"))?.len()) {
+        if ridx
+            == (self
+                .response
+                .rows
+                .as_ref()
+                .ok_or_else(|| anyhow!("rows is none"))?
+                .len())
+        {
             let job = self.client.job();
-            let job_info = self.response.job_reference.as_ref().ok_or_else(|| anyhow!("job_reference is none"))?;
-            let params = GetQueryResultsParameters { format_options: None, location: None, max_results: None, page_token: self.response.page_token.clone(), start_index: None, timeout_ms: None };
+            let job_info = self
+                .response
+                .job_reference
+                .as_ref()
+                .ok_or_else(|| anyhow!("job_reference is none"))?;
+            let params = GetQueryResultsParameters {
+                format_options: None,
+                location: None,
+                max_results: None,
+                page_token: self.response.page_token.clone(),
+                start_index: None,
+                timeout_ms: None,
+            };
             self.response = self.rt.block_on(
                 job.get_query_results(
-                    job_info.project_id.as_ref().ok_or_else(|| anyhow!("project_id is none"))?.as_str(),
-                    job_info.job_id.as_ref().ok_or_else(|| anyhow!("job_id is none"))?.as_str(),
+                    job_info
+                        .project_id
+                        .as_ref()
+                        .ok_or_else(|| anyhow!("project_id is none"))?
+                        .as_str(),
+                    job_info
+                        .job_id
+                        .as_ref()
+                        .ok_or_else(|| anyhow!("job_id is none"))?
+                        .as_str(),
                     params,
                 ),
             )?;
             self.current_row = 0;
             ridx = 0;
         }
-        let rows = self.response.rows.as_ref().ok_or_else(|| anyhow!("rows is none"))?;
-        let columns = rows[ridx].columns.as_ref().ok_or_else(|| anyhow!("columns is none"))?;
-        let v = columns.get(cidx).ok_or_else(|| anyhow!("Table Cell is none"))?.value.as_ref().ok_or_else(|| anyhow!("value is none"))?;
+        let rows = self
+            .response
+            .rows
+            .as_ref()
+            .ok_or_else(|| anyhow!("rows is none"))?;
+        let columns = rows[ridx]
+            .columns
+            .as_ref()
+            .ok_or_else(|| anyhow!("columns is none"))?;
+        let v = columns
+            .get(cidx)
+            .ok_or_else(|| anyhow!("Table Cell is none"))?
+            .value
+            .as_ref()
+            .ok_or_else(|| anyhow!("value is none"))?;
         let s = v
             .as_str()
             .ok_or_else(|| anyhow!("cannot get str from json value"))?;
@@ -516,23 +634,60 @@ impl<'r, 'a> Produce<'r, Option<NaiveDate>> for BigQuerySourceParser {
     #[throws(BigQuerySourceError)]
     fn produce(&mut self) -> Option<NaiveDate> {
         let (mut ridx, cidx) = self.next_loc()?;
-        if ridx == (self.response.rows.as_ref().ok_or_else(|| anyhow!("rows is none"))?.len()) {
+        if ridx
+            == (self
+                .response
+                .rows
+                .as_ref()
+                .ok_or_else(|| anyhow!("rows is none"))?
+                .len())
+        {
             let job = self.client.job();
-            let job_info = self.response.job_reference.as_ref().ok_or_else(|| anyhow!("job_reference is none"))?;
-            let params = GetQueryResultsParameters { format_options: None, location: None, max_results: None, page_token: self.response.page_token.clone(), start_index: None, timeout_ms: None };
+            let job_info = self
+                .response
+                .job_reference
+                .as_ref()
+                .ok_or_else(|| anyhow!("job_reference is none"))?;
+            let params = GetQueryResultsParameters {
+                format_options: None,
+                location: None,
+                max_results: None,
+                page_token: self.response.page_token.clone(),
+                start_index: None,
+                timeout_ms: None,
+            };
             self.response = self.rt.block_on(
                 job.get_query_results(
-                    job_info.project_id.as_ref().ok_or_else(|| anyhow!("project_id is none"))?.as_str(),
-                    job_info.job_id.as_ref().ok_or_else(|| anyhow!("job_id is none"))?.as_str(),
+                    job_info
+                        .project_id
+                        .as_ref()
+                        .ok_or_else(|| anyhow!("project_id is none"))?
+                        .as_str(),
+                    job_info
+                        .job_id
+                        .as_ref()
+                        .ok_or_else(|| anyhow!("job_id is none"))?
+                        .as_str(),
                     params,
                 ),
             )?;
             self.current_row = 0;
             ridx = 0;
         }
-        let rows = self.response.rows.as_ref().ok_or_else(|| anyhow!("rows is none"))?;
-        let columns = rows[ridx].columns.as_ref().ok_or_else(|| anyhow!("columns is none"))?;
-        match &columns.get(cidx).ok_or_else(|| anyhow!("Table Cell is none"))?.value {
+        let rows = self
+            .response
+            .rows
+            .as_ref()
+            .ok_or_else(|| anyhow!("rows is none"))?;
+        let columns = rows[ridx]
+            .columns
+            .as_ref()
+            .ok_or_else(|| anyhow!("columns is none"))?;
+        match &columns
+            .get(cidx)
+            .ok_or_else(|| anyhow!("Table Cell is none"))?
+            .value
+        {
             None => None,
             Some(v) => {
                 let s = v
@@ -554,23 +709,61 @@ impl<'r, 'a> Produce<'r, NaiveDateTime> for BigQuerySourceParser {
     #[throws(BigQuerySourceError)]
     fn produce(&mut self) -> NaiveDateTime {
         let (mut ridx, cidx) = self.next_loc()?;
-        if ridx == (self.response.rows.as_ref().ok_or_else(|| anyhow!("rows is none"))?.len()) {
+        if ridx
+            == (self
+                .response
+                .rows
+                .as_ref()
+                .ok_or_else(|| anyhow!("rows is none"))?
+                .len())
+        {
             let job = self.client.job();
-            let job_info = self.response.job_reference.as_ref().ok_or_else(|| anyhow!("job_reference is none"))?;
-            let params = GetQueryResultsParameters { format_options: None, location: None, max_results: None, page_token: self.response.page_token.clone(), start_index: None, timeout_ms: None };
+            let job_info = self
+                .response
+                .job_reference
+                .as_ref()
+                .ok_or_else(|| anyhow!("job_reference is none"))?;
+            let params = GetQueryResultsParameters {
+                format_options: None,
+                location: None,
+                max_results: None,
+                page_token: self.response.page_token.clone(),
+                start_index: None,
+                timeout_ms: None,
+            };
             self.response = self.rt.block_on(
                 job.get_query_results(
-                    job_info.project_id.as_ref().ok_or_else(|| anyhow!("project_id is none"))?.as_str(),
-                    job_info.job_id.as_ref().ok_or_else(|| anyhow!("job_id is none"))?.as_str(),
+                    job_info
+                        .project_id
+                        .as_ref()
+                        .ok_or_else(|| anyhow!("project_id is none"))?
+                        .as_str(),
+                    job_info
+                        .job_id
+                        .as_ref()
+                        .ok_or_else(|| anyhow!("job_id is none"))?
+                        .as_str(),
                     params,
                 ),
             )?;
             self.current_row = 0;
             ridx = 0;
         }
-        let rows = self.response.rows.as_ref().ok_or_else(|| anyhow!("rows is none"))?;
-        let columns = rows[ridx].columns.as_ref().ok_or_else(|| anyhow!("columns is none"))?;
-        let v = columns.get(cidx).ok_or_else(|| anyhow!("Table Cell is none"))?.value.as_ref().ok_or_else(|| anyhow!("value is none"))?;
+        let rows = self
+            .response
+            .rows
+            .as_ref()
+            .ok_or_else(|| anyhow!("rows is none"))?;
+        let columns = rows[ridx]
+            .columns
+            .as_ref()
+            .ok_or_else(|| anyhow!("columns is none"))?;
+        let v = columns
+            .get(cidx)
+            .ok_or_else(|| anyhow!("Table Cell is none"))?
+            .value
+            .as_ref()
+            .ok_or_else(|| anyhow!("value is none"))?;
         let s = v
             .as_str()
             .ok_or_else(|| anyhow!("cannot get str from json value"))?;
@@ -585,23 +778,60 @@ impl<'r, 'a> Produce<'r, Option<NaiveDateTime>> for BigQuerySourceParser {
     #[throws(BigQuerySourceError)]
     fn produce(&mut self) -> Option<NaiveDateTime> {
         let (mut ridx, cidx) = self.next_loc()?;
-        if ridx == (self.response.rows.as_ref().ok_or_else(|| anyhow!("rows is none"))?.len()) {
+        if ridx
+            == (self
+                .response
+                .rows
+                .as_ref()
+                .ok_or_else(|| anyhow!("rows is none"))?
+                .len())
+        {
             let job = self.client.job();
-            let job_info = self.response.job_reference.as_ref().ok_or_else(|| anyhow!("job_reference is none"))?;
-            let params = GetQueryResultsParameters { format_options: None, location: None, max_results: None, page_token: self.response.page_token.clone(), start_index: None, timeout_ms: None };
+            let job_info = self
+                .response
+                .job_reference
+                .as_ref()
+                .ok_or_else(|| anyhow!("job_reference is none"))?;
+            let params = GetQueryResultsParameters {
+                format_options: None,
+                location: None,
+                max_results: None,
+                page_token: self.response.page_token.clone(),
+                start_index: None,
+                timeout_ms: None,
+            };
             self.response = self.rt.block_on(
                 job.get_query_results(
-                    job_info.project_id.as_ref().ok_or_else(|| anyhow!("project_id is none"))?.as_str(),
-                    job_info.job_id.as_ref().ok_or_else(|| anyhow!("job_id is none"))?.as_str(),
+                    job_info
+                        .project_id
+                        .as_ref()
+                        .ok_or_else(|| anyhow!("project_id is none"))?
+                        .as_str(),
+                    job_info
+                        .job_id
+                        .as_ref()
+                        .ok_or_else(|| anyhow!("job_id is none"))?
+                        .as_str(),
                     params,
                 ),
             )?;
             self.current_row = 0;
             ridx = 0;
         }
-        let rows = self.response.rows.as_ref().ok_or_else(|| anyhow!("rows is none"))?;
-        let columns = rows[ridx].columns.as_ref().ok_or_else(|| anyhow!("columns is none"))?;
-        match &columns.get(cidx).ok_or_else(|| anyhow!("Table Cell is none"))?.value {
+        let rows = self
+            .response
+            .rows
+            .as_ref()
+            .ok_or_else(|| anyhow!("rows is none"))?;
+        let columns = rows[ridx]
+            .columns
+            .as_ref()
+            .ok_or_else(|| anyhow!("columns is none"))?;
+        match &columns
+            .get(cidx)
+            .ok_or_else(|| anyhow!("Table Cell is none"))?
+            .value
+        {
             None => None,
             Some(v) => {
                 let s = v
@@ -623,23 +853,61 @@ impl<'r, 'a> Produce<'r, NaiveTime> for BigQuerySourceParser {
     #[throws(BigQuerySourceError)]
     fn produce(&mut self) -> NaiveTime {
         let (mut ridx, cidx) = self.next_loc()?;
-        if ridx == (self.response.rows.as_ref().ok_or_else(|| anyhow!("rows is none"))?.len()) {
+        if ridx
+            == (self
+                .response
+                .rows
+                .as_ref()
+                .ok_or_else(|| anyhow!("rows is none"))?
+                .len())
+        {
             let job = self.client.job();
-            let job_info = self.response.job_reference.as_ref().ok_or_else(|| anyhow!("job_reference is none"))?;
-            let params = GetQueryResultsParameters { format_options: None, location: None, max_results: None, page_token: self.response.page_token.clone(), start_index: None, timeout_ms: None };
+            let job_info = self
+                .response
+                .job_reference
+                .as_ref()
+                .ok_or_else(|| anyhow!("job_reference is none"))?;
+            let params = GetQueryResultsParameters {
+                format_options: None,
+                location: None,
+                max_results: None,
+                page_token: self.response.page_token.clone(),
+                start_index: None,
+                timeout_ms: None,
+            };
             self.response = self.rt.block_on(
                 job.get_query_results(
-                    job_info.project_id.as_ref().ok_or_else(|| anyhow!("project_id is none"))?.as_str(),
-                    job_info.job_id.as_ref().ok_or_else(|| anyhow!("job_id is none"))?.as_str(),
+                    job_info
+                        .project_id
+                        .as_ref()
+                        .ok_or_else(|| anyhow!("project_id is none"))?
+                        .as_str(),
+                    job_info
+                        .job_id
+                        .as_ref()
+                        .ok_or_else(|| anyhow!("job_id is none"))?
+                        .as_str(),
                     params,
                 ),
             )?;
             self.current_row = 0;
             ridx = 0;
         }
-        let rows = self.response.rows.as_ref().ok_or_else(|| anyhow!("rows is none"))?;
-        let columns = rows[ridx].columns.as_ref().ok_or_else(|| anyhow!("columns is none"))?;
-        let v = columns.get(cidx).ok_or_else(|| anyhow!("Table Cell is none"))?.value.as_ref().ok_or_else(|| anyhow!("value is none"))?;
+        let rows = self
+            .response
+            .rows
+            .as_ref()
+            .ok_or_else(|| anyhow!("rows is none"))?;
+        let columns = rows[ridx]
+            .columns
+            .as_ref()
+            .ok_or_else(|| anyhow!("columns is none"))?;
+        let v = columns
+            .get(cidx)
+            .ok_or_else(|| anyhow!("Table Cell is none"))?
+            .value
+            .as_ref()
+            .ok_or_else(|| anyhow!("value is none"))?;
         let s = v
             .as_str()
             .ok_or_else(|| anyhow!("cannot get str from json value"))?;
@@ -654,23 +922,60 @@ impl<'r, 'a> Produce<'r, Option<NaiveTime>> for BigQuerySourceParser {
     #[throws(BigQuerySourceError)]
     fn produce(&mut self) -> Option<NaiveTime> {
         let (mut ridx, cidx) = self.next_loc()?;
-        if ridx == (self.response.rows.as_ref().ok_or_else(|| anyhow!("rows is none"))?.len()) {
+        if ridx
+            == (self
+                .response
+                .rows
+                .as_ref()
+                .ok_or_else(|| anyhow!("rows is none"))?
+                .len())
+        {
             let job = self.client.job();
-            let job_info = self.response.job_reference.as_ref().ok_or_else(|| anyhow!("job_reference is none"))?;
-            let params = GetQueryResultsParameters { format_options: None, location: None, max_results: None, page_token: self.response.page_token.clone(), start_index: None, timeout_ms: None };
+            let job_info = self
+                .response
+                .job_reference
+                .as_ref()
+                .ok_or_else(|| anyhow!("job_reference is none"))?;
+            let params = GetQueryResultsParameters {
+                format_options: None,
+                location: None,
+                max_results: None,
+                page_token: self.response.page_token.clone(),
+                start_index: None,
+                timeout_ms: None,
+            };
             self.response = self.rt.block_on(
                 job.get_query_results(
-                    job_info.project_id.as_ref().ok_or_else(|| anyhow!("project_id is none"))?.as_str(),
-                    job_info.job_id.as_ref().ok_or_else(|| anyhow!("job_id is none"))?.as_str(),
+                    job_info
+                        .project_id
+                        .as_ref()
+                        .ok_or_else(|| anyhow!("project_id is none"))?
+                        .as_str(),
+                    job_info
+                        .job_id
+                        .as_ref()
+                        .ok_or_else(|| anyhow!("job_id is none"))?
+                        .as_str(),
                     params,
                 ),
             )?;
             self.current_row = 0;
             ridx = 0;
         }
-        let rows = self.response.rows.as_ref().ok_or_else(|| anyhow!("rows is none"))?;
-        let columns = rows[ridx].columns.as_ref().ok_or_else(|| anyhow!("columns is none"))?;
-        match &columns.get(cidx).ok_or_else(|| anyhow!("Table Cell is none"))?.value {
+        let rows = self
+            .response
+            .rows
+            .as_ref()
+            .ok_or_else(|| anyhow!("rows is none"))?;
+        let columns = rows[ridx]
+            .columns
+            .as_ref()
+            .ok_or_else(|| anyhow!("columns is none"))?;
+        match &columns
+            .get(cidx)
+            .ok_or_else(|| anyhow!("Table Cell is none"))?
+            .value
+        {
             None => None,
             Some(v) => {
                 let s = v
@@ -692,23 +997,61 @@ impl<'r, 'a> Produce<'r, DateTime<Utc>> for BigQuerySourceParser {
     #[throws(BigQuerySourceError)]
     fn produce(&mut self) -> DateTime<Utc> {
         let (mut ridx, cidx) = self.next_loc()?;
-        if ridx == (self.response.rows.as_ref().ok_or_else(|| anyhow!("rows is none"))?.len()) {
+        if ridx
+            == (self
+                .response
+                .rows
+                .as_ref()
+                .ok_or_else(|| anyhow!("rows is none"))?
+                .len())
+        {
             let job = self.client.job();
-            let job_info = self.response.job_reference.as_ref().ok_or_else(|| anyhow!("job_reference is none"))?;
-            let params = GetQueryResultsParameters { format_options: None, location: None, max_results: None, page_token: self.response.page_token.clone(), start_index: None, timeout_ms: None };
+            let job_info = self
+                .response
+                .job_reference
+                .as_ref()
+                .ok_or_else(|| anyhow!("job_reference is none"))?;
+            let params = GetQueryResultsParameters {
+                format_options: None,
+                location: None,
+                max_results: None,
+                page_token: self.response.page_token.clone(),
+                start_index: None,
+                timeout_ms: None,
+            };
             self.response = self.rt.block_on(
                 job.get_query_results(
-                    job_info.project_id.as_ref().ok_or_else(|| anyhow!("project_id is none"))?.as_str(),
-                    job_info.job_id.as_ref().ok_or_else(|| anyhow!("job_id is none"))?.as_str(),
+                    job_info
+                        .project_id
+                        .as_ref()
+                        .ok_or_else(|| anyhow!("project_id is none"))?
+                        .as_str(),
+                    job_info
+                        .job_id
+                        .as_ref()
+                        .ok_or_else(|| anyhow!("job_id is none"))?
+                        .as_str(),
                     params,
                 ),
             )?;
             self.current_row = 0;
             ridx = 0;
         }
-        let rows = self.response.rows.as_ref().ok_or_else(|| anyhow!("rows is none"))?;
-        let columns = rows[ridx].columns.as_ref().ok_or_else(|| anyhow!("columns is none"))?;
-        let v = columns.get(cidx).ok_or_else(|| anyhow!("Table Cell is none"))?.value.as_ref().ok_or_else(|| anyhow!("value is none"))?;
+        let rows = self
+            .response
+            .rows
+            .as_ref()
+            .ok_or_else(|| anyhow!("rows is none"))?;
+        let columns = rows[ridx]
+            .columns
+            .as_ref()
+            .ok_or_else(|| anyhow!("columns is none"))?;
+        let v = columns
+            .get(cidx)
+            .ok_or_else(|| anyhow!("Table Cell is none"))?
+            .value
+            .as_ref()
+            .ok_or_else(|| anyhow!("value is none"))?;
         let timestamp_ns = (v
             .as_str()
             .ok_or_else(|| anyhow!("cannot get str from json value"))?
@@ -726,23 +1069,60 @@ impl<'r, 'a> Produce<'r, Option<DateTime<Utc>>> for BigQuerySourceParser {
     #[throws(BigQuerySourceError)]
     fn produce(&mut self) -> Option<DateTime<Utc>> {
         let (mut ridx, cidx) = self.next_loc()?;
-        if ridx == (self.response.rows.as_ref().ok_or_else(|| anyhow!("rows is none"))?.len()) {
+        if ridx
+            == (self
+                .response
+                .rows
+                .as_ref()
+                .ok_or_else(|| anyhow!("rows is none"))?
+                .len())
+        {
             let job = self.client.job();
-            let job_info = self.response.job_reference.as_ref().ok_or_else(|| anyhow!("job_reference is none"))?;
-            let params = GetQueryResultsParameters { format_options: None, location: None, max_results: None, page_token: self.response.page_token.clone(), start_index: None, timeout_ms: None };
+            let job_info = self
+                .response
+                .job_reference
+                .as_ref()
+                .ok_or_else(|| anyhow!("job_reference is none"))?;
+            let params = GetQueryResultsParameters {
+                format_options: None,
+                location: None,
+                max_results: None,
+                page_token: self.response.page_token.clone(),
+                start_index: None,
+                timeout_ms: None,
+            };
             self.response = self.rt.block_on(
                 job.get_query_results(
-                    job_info.project_id.as_ref().ok_or_else(|| anyhow!("project_id is none"))?.as_str(),
-                    job_info.job_id.as_ref().ok_or_else(|| anyhow!("job_id is none"))?.as_str(),
+                    job_info
+                        .project_id
+                        .as_ref()
+                        .ok_or_else(|| anyhow!("project_id is none"))?
+                        .as_str(),
+                    job_info
+                        .job_id
+                        .as_ref()
+                        .ok_or_else(|| anyhow!("job_id is none"))?
+                        .as_str(),
                     params,
                 ),
             )?;
             self.current_row = 0;
             ridx = 0;
         }
-        let rows = self.response.rows.as_ref().ok_or_else(|| anyhow!("rows is none"))?;
-        let columns = rows[ridx].columns.as_ref().ok_or_else(|| anyhow!("columns is none"))?;
-        match &columns.get(cidx).ok_or_else(|| anyhow!("Table Cell is none"))?.value {
+        let rows = self
+            .response
+            .rows
+            .as_ref()
+            .ok_or_else(|| anyhow!("rows is none"))?;
+        let columns = rows[ridx]
+            .columns
+            .as_ref()
+            .ok_or_else(|| anyhow!("columns is none"))?;
+        match &columns
+            .get(cidx)
+            .ok_or_else(|| anyhow!("Table Cell is none"))?
+            .value
+        {
             None => None,
             Some(v) => {
                 let timestamp_ns = (v
