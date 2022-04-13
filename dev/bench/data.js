@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1649736461193,
+  "lastUpdate": 1649829253791,
   "repoUrl": "https://github.com/sfu-db/connector-x",
   "entries": {
     "ConnectorX TPC-H Scale@1 Benchmarks": [
@@ -9614,6 +9614,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 3.183603343095641",
             "extra": "mean: 10.604545464366675 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "wangxiaoying0369@gmail.com",
+            "name": "wangxiaoying",
+            "username": "wangxiaoying"
+          },
+          "committer": {
+            "email": "wangxiaoying0369@gmail.com",
+            "name": "wangxiaoying",
+            "username": "wangxiaoying"
+          },
+          "distinct": true,
+          "id": "9f32e4d4668d0f9446a413a2e82ab48691c3d7af",
+          "message": "0.2.6-alpha.4: bug fix for mssql count query construction (do not remove order by)",
+          "timestamp": "2022-04-13T05:40:46Z",
+          "tree_id": "e1497eedcca94a70cc00f7546a0cc11869d7452b",
+          "url": "https://github.com/sfu-db/connector-x/commit/9f32e4d4668d0f9446a413a2e82ab48691c3d7af"
+        },
+        "date": 1649829250227,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_mysql",
+            "value": 0.03894686705912402,
+            "unit": "iter/sec",
+            "range": "stddev: 7.469529996047076",
+            "extra": "mean: 25.676006197929382 sec\nrounds: 5"
+          },
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_postgres",
+            "value": 0.07930176870479656,
+            "unit": "iter/sec",
+            "range": "stddev: 0.33911034308882754",
+            "extra": "mean: 12.610059224814176 sec\nrounds: 5"
           }
         ]
       }
