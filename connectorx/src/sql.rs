@@ -211,7 +211,7 @@ pub fn count_query<T: Dialect>(sql: &CXQuery<String>, dialect: &T) -> CXQuery<St
                         .as_query()
                         .ok_or_else(|| ConnectorXError::SqlQueryNotSupported(sql.to_string()))?
                         .clone();
-                    query.order_by = vec![];
+                    // query.order_by = vec![]; mssql offset may appear with order by
                     let select = query
                         .as_select_mut()
                         .ok_or_else(|| ConnectorXError::SqlQueryNotSupported(sql.to_string()))?;
