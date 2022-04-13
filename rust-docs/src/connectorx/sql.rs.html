@@ -785,7 +785,7 @@
                         .<span class="ident">as_query</span>()
                         .<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">ConnectorXError::SqlQueryNotSupported</span>(<span class="ident">sql</span>.<span class="ident">to_string</span>()))<span class="question-mark">?</span>
                         .<span class="ident">clone</span>();
-                    <span class="ident">query</span>.<span class="ident">order_by</span> <span class="op">=</span> <span class="macro">vec!</span>[];
+                    <span class="comment">// query.order_by = vec![]; mssql offset may appear with order by</span>
                     <span class="kw">let</span> <span class="ident">select</span> <span class="op">=</span> <span class="ident">query</span>
                         .<span class="ident">as_select_mut</span>()
                         .<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">ConnectorXError::SqlQueryNotSupported</span>(<span class="ident">sql</span>.<span class="ident">to_string</span>()))<span class="question-mark">?</span>;
