@@ -572,6 +572,8 @@
 <span id="572">572</span>
 <span id="573">573</span>
 <span id="574">574</span>
+<span id="575">575</span>
+<span id="576">576</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::errors::ConnectorXError</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;src_oracle&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::sources::oracle::OracleDialect</span>;
@@ -785,7 +787,9 @@
                         .<span class="ident">as_query</span>()
                         .<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">ConnectorXError::SqlQueryNotSupported</span>(<span class="ident">sql</span>.<span class="ident">to_string</span>()))<span class="question-mark">?</span>
                         .<span class="ident">clone</span>();
-                    <span class="comment">// query.order_by = vec![]; mssql offset may appear with order by</span>
+                    <span class="kw">if</span> <span class="ident">query</span>.<span class="ident">offset</span>.<span class="ident">is_none</span>() {
+                        <span class="ident">query</span>.<span class="ident">order_by</span> <span class="op">=</span> <span class="macro">vec!</span>[]; <span class="comment">// mssql offset must appear with order by</span>
+                    }
                     <span class="kw">let</span> <span class="ident">select</span> <span class="op">=</span> <span class="ident">query</span>
                         .<span class="ident">as_select_mut</span>()
                         .<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">ConnectorXError::SqlQueryNotSupported</span>(<span class="ident">sql</span>.<span class="ident">to_string</span>()))<span class="question-mark">?</span>;
