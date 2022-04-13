@@ -481,3 +481,19 @@ def test_mssql_cte(mssql_url: str) -> None:
         },
     )
     assert_frame_equal(df, expected, check_names=True)
+
+
+def test_mssql_offset(mssql_url: str) -> None:
+    query = "SELECT * FROM (SELECT * FROM test_table) AS _ ORDER BY(SELECT NULL) OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY"
+    df = read_sql(mssql_url, query)
+    print(df)
+    expected = pd.DataFrame(
+        data={
+            "test_int": pd.Series([1], dtype="int64"),
+            "test_nullint": pd.Series([3], dtype="Int64"),
+            "test_str": pd.Series(["str1"], dtype="object"),
+            "test_float": pd.Series([None], dtype="float"),
+            "test_bool": pd.Series([True], dtype="boolean"),
+        }
+    )
+    assert_frame_equal(df, expected, check_names=True)
