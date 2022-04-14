@@ -19,3 +19,4 @@ connectorx-python/LICENSE
 benchmark.json
 docs/_build
 *.jar
+connectorx/examples/test.rs
