@@ -20,10 +20,9 @@ use std::sync::Arc;
 use url::Url;
 
 fn main() {
-    let db_map = HashMap::from([("db1", "POSTGRES"), ("db2", "MYSQL"), ("LOCAL", "LOCAL")]);
+    let db_map = HashMap::from([("db1", "POSTGRES"), ("db2", "POSTGRES"), ("LOCAL", "LOCAL")]);
 
     let path = fs::canonicalize("./federated-rewriter.jar").unwrap();
-    println!("path: {:?}", path);
     let entry = ClasspathEntry::new(path.to_str().unwrap());
     let jvm: Jvm = JvmBuilder::new().classpath_entry(entry).build().unwrap();
 
@@ -51,13 +50,26 @@ fn main() {
             "org.apache.calcite.adapter.jdbc.JdbcSchema",
             "dataSource",
             &[
-                InvocationArg::try_from("jdbc:mysql://127.0.0.1:3306/tpchsf1").unwrap(),
-                InvocationArg::try_from("com.mysql.cj.jdbc.Driver").unwrap(),
-                InvocationArg::try_from("root").unwrap(),
-                InvocationArg::try_from("mysql").unwrap(),
+                InvocationArg::try_from("jdbc:postgresql://127.0.0.1:5433/tpchsf1").unwrap(),
+                InvocationArg::try_from("org.postgresql.Driver").unwrap(),
+                InvocationArg::try_from("postgres").unwrap(),
+                InvocationArg::try_from("postgres").unwrap(),
             ],
         )
         .unwrap();
+
+    // let ds2 = jvm
+    //     .invoke_static(
+    //         "org.apache.calcite.adapter.jdbc.JdbcSchema",
+    //         "dataSource",
+    //         &[
+    //             InvocationArg::try_from("jdbc:mysql://127.0.0.1:3306/tpchsf1").unwrap(),
+    //             InvocationArg::try_from("com.mysql.cj.jdbc.Driver").unwrap(),
+    //             InvocationArg::try_from("root").unwrap(),
+    //             InvocationArg::try_from("mysql").unwrap(),
+    //         ],
+    //     )
+    //     .unwrap();
 
     let db_conns = jvm.create_instance("java.util.HashMap", &[]).unwrap();
     jvm.invoke(
@@ -92,8 +104,9 @@ fn main() {
 
     let mut ctx = ExecutionContext::new();
     let mut local_sql = String::new();
+    let mut alias_names = vec![];
     for i in 0..count {
-        println!("query {i}:");
+        println!("\nquery {i}:");
 
         let db = jvm
             .invoke(
@@ -129,8 +142,7 @@ fn main() {
                     .unwrap()],
             )
             .unwrap();
-        let mut rewrite_sql: String = jvm.to_rust(rewrite_sql).unwrap();
-        rewrite_sql = rewrite_sql.replace("$f", "f");
+        let rewrite_sql: String = jvm.to_rust(rewrite_sql).unwrap();
         println!("db: {}, rewrite sql: {}", db, rewrite_sql);
 
         if db == "LOCAL" {
@@ -154,7 +166,7 @@ fn main() {
                     >::new(
                         sb, &mut destination, &queries, None
                     );
-                    println!("run dispatcher");
+                    // println!("run dispatcher");
                     dispatcher.run().unwrap();
                 }
                 "MYSQL" => {
@@ -172,17 +184,33 @@ fn main() {
                 _ => {}
             };
             let rbs = destination.arrow().unwrap();
-            println!("schema: {}", rbs[0].schema());
+            // println!("schema: {}", rbs[0].schema());
+            // arrow::util::pretty::print_batches(&rbs).unwrap();
             let provider = MemTable::try_new(rbs[0].schema(), vec![rbs]).unwrap();
             ctx.register_table(alias_db.as_str(), Arc::new(provider))
                 .unwrap();
+            alias_names.push(alias_db);
         }
     }
 
-    // until datafusion fix the bug
-    local_sql = local_sql.replace("\"", "");
-
+    println!("\nquery final:");
     let rt = Arc::new(tokio::runtime::Runtime::new().expect("Failed to create runtime"));
+    // until datafusion fix the bug
+    for alias in alias_names {
+        local_sql = local_sql.replace(format!("\"{}\"", alias).as_str(), alias.as_str());
+    }
+
+    // let sql1 = "SELECT * FROM db1 CROSS JOIN db2 WHERE db1.n_name = 'ALGERIA                  ' AND db2.n_name = 'EGYPT                    ' OR db1.n_name = 'EGYPT                    ' AND db2.n_name = 'ALGERIA                  '";
+    // // let sql1 = "SELECT * FROM db1 INNER JOIN db2 ON (db1.n_name = 'ALGERIA                  ' AND db2.n_name = 'EGYPT                    ' OR db1.n_name = 'EGYPT                    ' AND db2.n_name = 'ALGERIA                  ')";
+
+    // println!("==== run sql 1 ====");
+    // let t = rt.block_on(ctx.sql(sql1)).unwrap();
+    // rt.block_on(t.limit(5).unwrap().show()).unwrap();
+
+    // println!("==== run sql 2 ====");
+    // let sql2 = "SELECT t.n_name AS SUPP_NATION, t.n_name0 AS CUST_NATION FROM db1 INNER JOIN t ON db1.s_nationkey = t.n_nationkey";
+    // let df = rt.block_on(ctx.sql(sql2)).unwrap();
+
     let df = rt.block_on(ctx.sql(local_sql.as_str())).unwrap();
 
     rt.block_on(df.limit(5).unwrap().show()).unwrap();
