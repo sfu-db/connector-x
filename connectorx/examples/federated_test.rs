@@ -37,10 +37,10 @@ fn main() {
             "org.apache.calcite.adapter.jdbc.JdbcSchema",
             "dataSource",
             &[
-                InvocationArg::try_from("jdbc:postgresql://127.0.0.1:5432/tpchsf1").unwrap(),
-                InvocationArg::try_from("org.postgresql.Driver").unwrap(),
-                InvocationArg::try_from("postgres").unwrap(),
-                InvocationArg::try_from("postgres").unwrap(),
+                InvocationArg::try_from(env::var("DB1_JDBC_URL").unwrap()).unwrap(),
+                InvocationArg::try_from(env::var("DB1_JDBC_DRIVER").unwrap()).unwrap(),
+                InvocationArg::try_from(env::var("DB1_USER").unwrap()).unwrap(),
+                InvocationArg::try_from(env::var("DB1_PASSWORD").unwrap()).unwrap(),
             ],
         )
         .unwrap();
@@ -50,26 +50,13 @@ fn main() {
             "org.apache.calcite.adapter.jdbc.JdbcSchema",
             "dataSource",
             &[
-                InvocationArg::try_from("jdbc:postgresql://127.0.0.1:5433/tpchsf1").unwrap(),
-                InvocationArg::try_from("org.postgresql.Driver").unwrap(),
-                InvocationArg::try_from("postgres").unwrap(),
-                InvocationArg::try_from("postgres").unwrap(),
+                InvocationArg::try_from(env::var("DB2_JDBC_URL").unwrap()).unwrap(),
+                InvocationArg::try_from(env::var("DB2_JDBC_DRIVER").unwrap()).unwrap(),
+                InvocationArg::try_from(env::var("DB2_USER").unwrap()).unwrap(),
+                InvocationArg::try_from(env::var("DB2_PASSWORD").unwrap()).unwrap(),
             ],
         )
         .unwrap();
-
-    // let ds2 = jvm
-    //     .invoke_static(
-    //         "org.apache.calcite.adapter.jdbc.JdbcSchema",
-    //         "dataSource",
-    //         &[
-    //             InvocationArg::try_from("jdbc:mysql://127.0.0.1:3306/tpchsf1").unwrap(),
-    //             InvocationArg::try_from("com.mysql.cj.jdbc.Driver").unwrap(),
-    //             InvocationArg::try_from("root").unwrap(),
-    //             InvocationArg::try_from("mysql").unwrap(),
-    //         ],
-    //     )
-    //     .unwrap();
 
     let db_conns = jvm.create_instance("java.util.HashMap", &[]).unwrap();
     jvm.invoke(
@@ -151,9 +138,14 @@ fn main() {
             let mut destination = ArrowDestination::new();
             let queries = [CXQuery::naked(rewrite_sql)];
 
+            let conn = match db.as_str() {
+                "db1" => env::var("DB1").unwrap(),
+                "db2" => env::var("DB2").unwrap(),
+                _ => unimplemented!(),
+            };
+
             match db_map[db.as_str()] {
                 "POSTGRES" => {
-                    let conn = env::var("POSTGRES_URL").unwrap();
                     let url = Url::parse(&conn).unwrap();
                     let (config, _) = rewrite_tls_args(&url).unwrap();
 
@@ -170,7 +162,6 @@ fn main() {
                     dispatcher.run().unwrap();
                 }
                 "MYSQL" => {
-                    let conn = env::var("MYSQL_URL").unwrap();
                     let source = MySQLSource::<MYSQLBinaryProtocol>::new(conn.as_str(), 1).unwrap();
                     let dispatcher =
                         Dispatcher::<_, _, MySQLArrowTransport<MYSQLBinaryProtocol>>::new(
