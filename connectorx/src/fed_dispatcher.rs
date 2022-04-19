@@ -1,37 +1,38 @@
-use connectorx::{
+use crate::{
     prelude::*,
-    sources::{
-        mysql::BinaryProtocol as MYSQLBinaryProtocol,
-        postgres::{rewrite_tls_args, BinaryProtocol, PostgresSource},
-    },
+    sources::postgres::{rewrite_tls_args, BinaryProtocol, PostgresSource},
     sql::CXQuery,
     transports::PostgresArrowTransport,
 };
+use arrow::record_batch::RecordBatch;
 use datafusion::datasource::MemTable;
 use datafusion::prelude::*;
+use fehler::throws;
 use j4rs::{ClasspathEntry, InvocationArg, Jvm, JvmBuilder};
+use log::debug;
 use postgres::NoTls;
 use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::env;
 use std::fs;
-use std::iter::Iterator;
 use std::sync::Arc;
 use url::Url;
 
-fn main() {
-    let db_map = HashMap::from([("db1", "POSTGRES"), ("db2", "POSTGRES"), ("LOCAL", "LOCAL")]);
+#[throws(ConnectorXError)]
+pub fn run(sql: String, db_map: HashMap<String, String>) -> Vec<RecordBatch> {
+    debug!("federated input sql: {}", sql);
 
+    let base = fs::canonicalize("./target/release").unwrap();
     let path = fs::canonicalize("./federated-rewriter.jar").unwrap();
     let entry = ClasspathEntry::new(path.to_str().unwrap());
-    let jvm: Jvm = JvmBuilder::new().classpath_entry(entry).build().unwrap();
+    // let jvm: Jvm = JvmBuilder::new().classpath_entry(entry).build().unwrap();
+    let jvm: Jvm = JvmBuilder::new()
+        .classpath_entry(entry)
+        .with_base_path(base.to_str().unwrap())
+        .build()
+        .unwrap();
 
-    let args: Vec<String> = env::args().collect();
-    let file = &args[1];
-    let sql = fs::read_to_string(file).unwrap();
-    println!("input sql: {}", sql);
     let sql = InvocationArg::try_from(sql).unwrap();
-
     let ds1 = jvm
         .invoke_static(
             "org.apache.calcite.adapter.jdbc.JdbcSchema",
@@ -88,12 +89,14 @@ fn main() {
 
     let count = jvm.invoke(&plan, "getCount", &[]).unwrap();
     let count: i32 = jvm.to_rust(count).unwrap();
+    debug!("rewrite finished, got {} queries", count);
 
-    let ctx = SessionContext::new();
+    // let ctx = SessionContext::new();
+    let mut ctx = ExecutionContext::new();
     let mut local_sql = String::new();
     let mut alias_names = vec![];
     for i in 0..count {
-        println!("\nquery {i}:");
+        debug!("\nquery {i}:");
 
         let db = jvm
             .invoke(
@@ -130,7 +133,7 @@ fn main() {
             )
             .unwrap();
         let rewrite_sql: String = jvm.to_rust(rewrite_sql).unwrap();
-        println!("db: {}, rewrite sql: {}", db, rewrite_sql);
+        debug!("db: {}, rewrite sql: {}", db, rewrite_sql);
 
         if db == "LOCAL" {
             local_sql = rewrite_sql;
@@ -138,45 +141,21 @@ fn main() {
             let mut destination = ArrowDestination::new();
             let queries = [CXQuery::naked(rewrite_sql)];
 
-            let conn = match db.as_str() {
-                "db1" => env::var("DB1").unwrap(),
-                "db2" => env::var("DB2").unwrap(),
-                _ => unimplemented!(),
-            };
+            let conn = &db_map[db.as_str()];
 
-            match db_map[db.as_str()] {
-                "POSTGRES" => {
-                    let url = Url::parse(&conn).unwrap();
-                    let (config, _) = rewrite_tls_args(&url).unwrap();
+            let url = Url::parse(conn).unwrap();
+            let (config, _) = rewrite_tls_args(&url).unwrap();
 
-                    let sb =
-                        PostgresSource::<BinaryProtocol, NoTls>::new(config, NoTls, 1).unwrap();
-                    let dispatcher = Dispatcher::<
-                        _,
-                        _,
-                        PostgresArrowTransport<BinaryProtocol, NoTls>,
-                    >::new(
-                        sb, &mut destination, &queries, None
-                    );
-                    // println!("run dispatcher");
-                    dispatcher.run().unwrap();
-                }
-                "MYSQL" => {
-                    let source = MySQLSource::<MYSQLBinaryProtocol>::new(conn.as_str(), 1).unwrap();
-                    let dispatcher =
-                        Dispatcher::<_, _, MySQLArrowTransport<MYSQLBinaryProtocol>>::new(
-                            source,
-                            &mut destination,
-                            &queries,
-                            None,
-                        );
-                    dispatcher.run().unwrap();
-                }
-                _ => {}
-            };
+            let sb = PostgresSource::<BinaryProtocol, NoTls>::new(config, NoTls, 1).unwrap();
+            let dispatcher = Dispatcher::<_, _, PostgresArrowTransport<BinaryProtocol, NoTls>>::new(
+                sb,
+                &mut destination,
+                &queries,
+                None,
+            );
+
+            dispatcher.run().unwrap();
             let rbs = destination.arrow().unwrap();
-            // println!("schema: {}", rbs[0].schema());
-            // arrow::util::pretty::print_batches(&rbs).unwrap();
             let provider = MemTable::try_new(rbs[0].schema(), vec![rbs]).unwrap();
             ctx.register_table(alias_db.as_str(), Arc::new(provider))
                 .unwrap();
@@ -184,29 +163,13 @@ fn main() {
         }
     }
 
-    println!("\nquery final:");
+    debug!("\nexecute query final:");
     let rt = Arc::new(tokio::runtime::Runtime::new().expect("Failed to create runtime"));
     // until datafusion fix the bug
     for alias in alias_names {
         local_sql = local_sql.replace(format!("\"{}\"", alias).as_str(), alias.as_str());
     }
-    println!("{}", local_sql);
-
-    // let sql1 = "SELECT * FROM db2 INNER JOIN db1 ON db2.\"p_partkey\" = db1.\"l_partkey\" AND db2.\"EXPR$0\" AND (db2.\"EXPR$1\" AND db1.\"EXPR$1\") AND (db1.\"EXPR$2\" AND db2.\"EXPR$2\" AND (db1.\"EXPR$3\" AND db1.\"EXPR$4\"))";
-    // println!("==== run sql 1 ====");
-    // let t = rt.block_on(ctx.sql(sql1)).unwrap();
-    // // rt.block_on(t.limit(5).unwrap().show()).unwrap();
-    // let rbs1 = rt.block_on(t.collect()).unwrap();
-    // arrow::util::pretty::print_batches(&rbs1).unwrap();
-    // println!("==== run sql 2 ====");
 
     let df = rt.block_on(ctx.sql(local_sql.as_str())).unwrap();
-    rt.block_on(df.limit(5).unwrap().show()).unwrap();
-    let num_rows = rt
-        .block_on(df.collect())
-        .unwrap()
-        .into_iter()
-        .map(|rb| rb.num_rows())
-        .sum::<usize>();
-    println!("Final # rows: {}", num_rows);
+    rt.block_on(df.collect()).unwrap()
 }

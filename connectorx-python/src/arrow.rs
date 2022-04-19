@@ -216,7 +216,7 @@ pub fn write_arrow<'a>(
     obj.into_ref(py)
 }
 
-fn to_ptrs(rbs: Vec<RecordBatch>) -> (Vec<String>, Vec<Vec<(uintptr_t, uintptr_t)>>) {
+pub fn to_ptrs(rbs: Vec<RecordBatch>) -> (Vec<String>, Vec<Vec<(uintptr_t, uintptr_t)>>) {
     if rbs.is_empty() {
         return (vec![], vec![]);
     }

@@ -1,6 +1,10 @@
 from typing import Optional, Tuple, Union, List, Dict, Any
 
-from .connectorx import read_sql as _read_sql, partition_sql as _partition_sql
+from .connectorx import (
+    read_sql as _read_sql,
+    partition_sql as _partition_sql,
+    read_sql2 as _read_sql2,
+)
 
 try:
     from importlib.metadata import version
@@ -13,6 +17,16 @@ except:
         __version__ = version(__name__)
     except:
         pass
+
+
+def read_sql2(
+    sql: str,
+    db_map: Dict[str, str],
+):
+    result = _read_sql2(sql, db_map)
+    df = reconstruct_arrow(result)
+    df = df.to_pandas(date_as_object=False, split_blocks=False)
+    return df
 
 
 def partition_sql(
