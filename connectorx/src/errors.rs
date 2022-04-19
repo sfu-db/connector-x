@@ -33,6 +33,29 @@ pub enum ConnectorXError {
     #[error(transparent)]
     SQLParserError(#[from] sqlparser::parser::ParserError),
 
+    #[error(transparent)]
+    StdIOError(#[from] std::io::Error),
+
+    #[error(transparent)]
+    J4RSError(#[from] j4rs::errors::J4RsError),
+
+    #[error(transparent)]
+    StdVarError(#[from] std::env::VarError),
+
+    #[error(transparent)]
+    DataFusionError(#[from] datafusion::error::DataFusionError),
+
+    #[error(transparent)]
+    UrlParseError(#[from] url::ParseError),
+
+    // #[error(transparent)]
+    // PostgresError(#[from] crate::source::postgres::Error),
+
+    // #[error(transparent)]
+    // ArrowError(#[from] crate::destination::arrow::ArrowDestinationError),
+
+    // #[error(transparent)]
+    // PostgresArrowTransportError(#[from] crate::transports::PostgresArrowTransportError),
     /// Any other errors that are too trivial to be put here explicitly.
     #[error(transparent)]
     Other(#[from] anyhow::Error),

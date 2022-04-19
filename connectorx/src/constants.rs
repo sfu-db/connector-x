@@ -17,3 +17,9 @@ pub const DB_BUFFER_SIZE: usize = 32;
 
 #[cfg(any(feature = "src_oracle"))]
 pub const ORACLE_ARRAY_SIZE: u32 = (1 * KILO) as u32;
+
+#[cfg(not(debug_assertions))]
+pub const J4RS_BASE_PATH: &str = "../target/release";
+#[cfg(debug_assertions)]
+pub const J4RS_BASE_PATH: &str = "../target/debug";
+pub const POSTGRES_JDBC_DRIVER: &str = "org.postgresql.Driver";

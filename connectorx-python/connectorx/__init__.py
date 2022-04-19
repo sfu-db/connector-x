@@ -22,10 +22,12 @@ except:
 def read_sql2(
     sql: str,
     db_map: Dict[str, str],
+    return_type: str = "pandas",
 ):
     result = _read_sql2(sql, db_map)
     df = reconstruct_arrow(result)
-    df = df.to_pandas(date_as_object=False, split_blocks=False)
+    if return_type == "pandas":
+        df = df.to_pandas(date_as_object=False, split_blocks=False)
     return df
 
 

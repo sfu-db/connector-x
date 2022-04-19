@@ -16,6 +16,7 @@ use pyo3::{wrap_pyfunction, PyResult};
 use std::convert::TryFrom;
 use std::sync::Once;
 use std::collections::HashMap;
+use crate::constants::J4RS_BASE_PATH;
 
 #[macro_use]
 extern crate lazy_static;
@@ -69,7 +70,7 @@ pub fn read_sql2<'a>(
     sql: &str,
     db_map: HashMap<String, String>,
 ) -> PyResult<&'a PyAny> {
-    let rbs = run(sql.to_string(), db_map).unwrap();
+    let rbs = run(sql.to_string(), db_map, Some(J4RS_BASE_PATH)).unwrap();
     let ptrs = arrow::to_ptrs(rbs);
     let obj: PyObject = ptrs.into_py(py);
     Ok(obj.into_ref(py))
