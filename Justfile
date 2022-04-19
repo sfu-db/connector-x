@@ -6,7 +6,7 @@ build-release:
 build-debug:
     cargo build
 
-test +ARGS="":
+test +ARGS="": setup-java 
     cargo test --features all {{ARGS}} -- --nocapture
 
 test-feature-gate:
@@ -25,14 +25,24 @@ bootstrap-python:
     cp LICENSE connectorx-python/LICENSE
     cd connectorx-python && poetry install
 
+setup-java:
+    cd federated-query/rewriter && mvn package -Dmaven.test.skip=true
+    cp -f federated-query/rewriter/target/federated-rewriter-1.0-SNAPSHOT-jar-with-dependencies.jar ./federated-rewriter.jar
+
 setup-python:
     cd connectorx-python && poetry run maturin develop --release
     
-test-python +opts="": setup-python
+test-python +opts="": setup-python setup-java
     cd connectorx-python && poetry run pytest connectorx/tests -v -s {{opts}}
 
 test-python-s +opts="":
     cd connectorx-python && poetry run pytest connectorx/tests -v -s {{opts}}
+
+test-fed file="3.sql":
+    cd connectorx && cargo run --features src_postgres --features src_mysql --features dst_arrow --features federation --example federated_test "./federated-query/test-queries/{{file}}"
+
+test-datafusion:
+    cd connectorx && cargo run --features src_postgres --features src_mysql --features dst_arrow --features federation --example test
 
 seed-db:
     #!/bin/bash
@@ -59,7 +69,7 @@ build-tpch:
 cachegrind-tpch: build-tpch
     valgrind --tool=cachegrind target/release/examples/tpch
 
-python-tpch name +ARGS="": setup-python
+python-tpch name +ARGS="": setup-python setup-java
     #!/bin/bash
     export PYTHONPATH=$PWD/connectorx-python
     cd connectorx-python && \
@@ -68,7 +78,7 @@ python-tpch name +ARGS="": setup-python
 python-tpch-ext name +ARGS="":
     cd connectorx-python && poetry run python ../benchmarks/tpch-{{name}}.py {{ARGS}}
 
-python-ddos name +ARGS="": setup-python
+python-ddos name +ARGS="": setup-python setup-java
     #!/bin/bash
     export PYTHONPATH=$PWD/connectorx-python
     cd connectorx-python && \
