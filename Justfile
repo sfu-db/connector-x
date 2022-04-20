@@ -103,14 +103,15 @@ ci-build-python-wheel:
     cd connectorx-python && maturin build --release
 
 bench-fed path:
-    just python-tpch fed --file {{path}}/q3.sql
-    just python-tpch-ext fed --file {{path}}/q5.sql
-    just python-tpch-ext fed --file {{path}}/q7.sql
-    just python-tpch-ext fed --file {{path}}/q8.sql
-    just python-tpch-ext fed --file {{path}}/q9.sql
-    just python-tpch-ext fed --file {{path}}/q10.sql
-    just python-tpch-ext fed --file {{path}}/q11.sql
-    just python-tpch-ext fed --file {{path}}/q12.sql
-    just python-tpch-ext fed --file {{path}}/q13.sql
-    just python-tpch-ext fed --file {{path}}/q14.sql
-    just python-tpch-ext fed --file {{path}}/q18.sql
+    # just python-tpch fed --file {{path}}/q3.sql
+    # just python-tpch-ext fed --file {{path}}/q5.sql
+    # just python-tpch-ext fed --file {{path}}/q7.sql
+    # just python-tpch-ext fed --file {{path}}/q8.sql
+    # just python-tpch-ext fed --file {{path}}/q9.sql
+    # just python-tpch-ext fed --file {{path}}/q10.sql
+    # just python-tpch-ext fed --file {{path}}/q11.sql
+    # just python-tpch-ext fed --file {{path}}/q12.sql
+    # just python-tpch-ext fed --file {{path}}/q13.sql
+    # just python-tpch-ext fed --file {{path}}/q14.sql
+    # just python-tpch-ext fed --file {{path}}/q18.sql
+    just python-tpch-ext fed --file {{path}}/q19.sql
