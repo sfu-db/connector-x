@@ -12,9 +12,11 @@ use fehler::throws;
 use j4rs::{ClasspathEntry, InvocationArg, Jvm, JvmBuilder};
 use log::debug;
 use postgres::NoTls;
+use rayon::prelude::*;
 use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::fs;
+use std::sync::mpsc::channel;
 use std::sync::Arc;
 use url::Url;
 
@@ -131,35 +133,64 @@ pub fn run(
 
     let fed_plan = rewrite_sql(&jvm, sql.as_str(), &db_url_map)?;
 
+    debug!("fetch queries from remote");
+    let (sender, receiver) = channel();
+    fed_plan.into_par_iter().enumerate().try_for_each_with(
+        sender,
+        |s, (i, p)| -> Result<(), ConnectorXError> {
+            match p.db_name.as_str() {
+                "LOCAL" => {
+                    s.send((p.sql, None)).expect("send error local");
+                }
+                _ => {
+                    debug!("start query {}: {}", i, p.sql);
+                    let mut destination = ArrowDestination::new();
+                    let queries = [CXQuery::naked(p.sql)];
+                    let url = &db_url_map[p.db_name.as_str()];
+                    let (config, _) =
+                        rewrite_tls_args(&url).expect(&format!("{} postgres config error", i));
+                    let sb = PostgresSource::<BinaryProtocol, NoTls>::new(config, NoTls, 1)
+                        .expect(&format!("{} postgres init error", i));
+                    let dispatcher = Dispatcher::<
+                        _,
+                        _,
+                        PostgresArrowTransport<BinaryProtocol, NoTls>,
+                    >::new(
+                        sb, &mut destination, &queries, None
+                    );
+                    dispatcher
+                        .run()
+                        .expect(&format!("run dispatcher fails {}", i));
+                    let rbs = destination
+                        .arrow()
+                        .expect(&format!("get arrow fails {}", i));
+                    let provider = MemTable::try_new(rbs[0].schema(), vec![rbs])?;
+                    s.send((p.db_alias, Some(Arc::new(provider))))
+                        .expect(&format!("send error {}", i));
+                    debug!("query {} finished", i);
+                }
+            }
+            Ok(())
+        },
+    )?;
+
     // let ctx = SessionContext::new();
     let mut ctx = ExecutionContext::new();
+    let mut alias_names: Vec<String> = vec![];
     let mut local_sql = String::new();
-    let mut alias_names = vec![];
-    for p in fed_plan {
-        match p.db_name.as_str() {
-            "LOCAL" => local_sql = p.sql,
-            _ => {
-                let mut destination = ArrowDestination::new();
-                let queries = [CXQuery::naked(p.sql)];
-                let url = &db_url_map[p.db_name.as_str()];
-                let (config, _) = rewrite_tls_args(&url).expect("postgres config error");
-                let sb = PostgresSource::<BinaryProtocol, NoTls>::new(config, NoTls, 1)
-                    .expect("postgres init error");
-                let dispatcher =
-                    Dispatcher::<_, _, PostgresArrowTransport<BinaryProtocol, NoTls>>::new(
-                        sb,
-                        &mut destination,
-                        &queries,
-                        None,
-                    );
-                dispatcher.run().expect("run dispatcher fails");
-                let rbs = destination.arrow().expect("get arrow fails");
-                let provider = MemTable::try_new(rbs[0].schema(), vec![rbs])?;
-                ctx.register_table(p.db_alias.as_str(), Arc::new(provider))?;
-                alias_names.push(p.db_alias);
+    receiver
+        .iter()
+        .try_for_each(|(alias, provider)| -> Result<(), ConnectorXError> {
+            match provider {
+                Some(p) => {
+                    ctx.register_table(alias.as_str(), p)?;
+                    alias_names.push(alias);
+                }
+                None => local_sql = alias,
             }
-        }
-    }
+
+            Ok(())
+        })?;
 
     debug!("\nexecute query final:");
     let rt = Arc::new(tokio::runtime::Runtime::new().expect("Failed to create runtime"));
