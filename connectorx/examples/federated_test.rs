@@ -202,6 +202,7 @@ fn main() {
     // println!("==== run sql 2 ====");
 
     let df = rt.block_on(ctx.sql(local_sql.as_str())).unwrap();
+    rt.block_on(df.explain(false, false).unwrap().show()).unwrap();
     rt.block_on(df.limit(5).unwrap().show()).unwrap();
     let num_rows = rt
         .block_on(df.collect())
