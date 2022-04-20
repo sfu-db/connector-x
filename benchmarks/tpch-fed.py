@@ -23,6 +23,7 @@ if __name__ == "__main__":
         "db1": os.environ["DB1"],
         "db2": os.environ["DB2"],
     }
+    print(f"dbs: {db_map}")
 
     with open(query_file, "r") as f:
         sql = f.read()
