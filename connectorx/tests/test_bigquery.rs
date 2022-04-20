@@ -11,9 +11,9 @@ use std::sync::Arc;
 use tokio::runtime::Runtime;
 
 #[test]
-
+#[ignore]
 fn test_source() {
-    let dburl = "bigquery:///home/jinze/dataprep-bigquery-d6514e01c1db.json";
+    let dburl = env::var("BIGQUERY_URL").unwrap();
     let rt = Arc::new(Runtime::new().unwrap());
     let mut source = BigQuerySource::new(rt, &dburl).unwrap();
     source.set_queries(&[
@@ -24,8 +24,9 @@ fn test_source() {
 }
 
 #[test]
+#[ignore]
 fn test_bigquery_partition() {
-    let dburl = "bigquery:///home/jinze/dataprep-bigquery-d6514e01c1db.json";
+    let dburl = env::var("BIGQUERY_URL").unwrap();
     let rt = Arc::new(Runtime::new().unwrap());
     let mut source = BigQuerySource::new(rt, &dburl).unwrap();
     let queries = [
