@@ -39,7 +39,7 @@ test-python-s +opts="":
     cd connectorx-python && poetry run pytest connectorx/tests -v -s {{opts}}
 
 test-fed file="3.sql":
-    cd connectorx && cargo run --features src_postgres --features src_mysql --features dst_arrow --features federation --example federated_test "./federated-query/test-queries/{{file}}"
+    cd connectorx && cargo run --features src_postgres --features src_mysql --features dst_arrow --features federation --example federated_test "../federated-query/test-queries/{{file}}"
 
 test-datafusion:
     cd connectorx && cargo run --features src_postgres --features src_mysql --features dst_arrow --features federation --example test

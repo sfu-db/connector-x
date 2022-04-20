@@ -22,7 +22,7 @@ use url::Url;
 fn main() {
     let db_map = HashMap::from([("db1", "POSTGRES"), ("db2", "POSTGRES"), ("LOCAL", "LOCAL")]);
 
-    let path = fs::canonicalize("./federated-rewriter.jar").unwrap();
+    let path = fs::canonicalize("../federated-rewriter.jar").unwrap();
     let entry = ClasspathEntry::new(path.to_str().unwrap());
     let jvm: Jvm = JvmBuilder::new().classpath_entry(entry).build().unwrap();
 
@@ -89,7 +89,8 @@ fn main() {
     let count = jvm.invoke(&plan, "getCount", &[]).unwrap();
     let count: i32 = jvm.to_rust(count).unwrap();
 
-    let ctx = SessionContext::new();
+    // let ctx = SessionContext::new();
+    let mut ctx = ExecutionContext::new();
     let mut local_sql = String::new();
     let mut alias_names = vec![];
     for i in 0..count {
