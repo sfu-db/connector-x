@@ -4,6 +4,12 @@
 BigQuery does not need to specify protocol.
 ```
 
+```{warning}
+Currently, BigQuery does not support to apply paritition on Query with limit clause. 
+For example, `cx.read_sql(conn, 'select * from table limit 10', parition_num=3, partition_on='int')` will fail.
+If you want to fetch result from query with limit clause, please do not use partitioning.
+```
+
 ### BigQuery Connection
 
 **Authentication File:** BigQuery connection need an authentication json file from Google Cloud Platform. If you do not have an authentication json file, you can create your BigQuery authentication [here](https://cloud.google.com/docs/authentication/getting-started).
