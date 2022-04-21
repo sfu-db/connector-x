@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1649867145769,
+  "lastUpdate": 1650522778958,
   "repoUrl": "https://github.com/sfu-db/connector-x",
   "entries": {
     "ConnectorX TPC-H Scale@1 Benchmarks": [
@@ -9766,6 +9766,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.464902777953516",
             "extra": "mean: 10.209103555977345 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "xiaoying_wang@sfu.ca",
+            "name": "Xiaoying Wang",
+            "username": "wangxiaoying"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "0ecdd480562bc5a013817e4445f7318ae84b6919",
+          "message": "Merge pull request #266 from sfu-db/bigquery_tpch\n\nFixed BigQuery multiple pages loading bug",
+          "timestamp": "2022-04-20T23:24:44-07:00",
+          "tree_id": "c424a8f78df5737e11a032c9075e761b335b625c",
+          "url": "https://github.com/sfu-db/connector-x/commit/0ecdd480562bc5a013817e4445f7318ae84b6919"
+        },
+        "date": 1650522775812,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_mysql",
+            "value": 0.07164486662925007,
+            "unit": "iter/sec",
+            "range": "stddev: 0.43761145483302794",
+            "extra": "mean: 13.9577341273427 sec\nrounds: 5"
+          },
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_postgres",
+            "value": 0.11203513992181438,
+            "unit": "iter/sec",
+            "range": "stddev: 1.6911665362054333",
+            "extra": "mean: 8.92577097415924 sec\nrounds: 5"
           }
         ]
       }
