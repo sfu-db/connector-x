@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1650522778958,
+  "lastUpdate": 1650559013351,
   "repoUrl": "https://github.com/sfu-db/connector-x",
   "entries": {
     "ConnectorX TPC-H Scale@1 Benchmarks": [
@@ -9804,6 +9804,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.6911665362054333",
             "extra": "mean: 8.92577097415924 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "xiaoying_wang@sfu.ca",
+            "name": "Xiaoying Wang",
+            "username": "wangxiaoying"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8ddf5d566376c7ae75deef37bd69a7053c8f4bff",
+          "message": "Merge pull request #271 from kayhoogland/fix/typos-type-hints-readme\n\nFIX - Typo in type hints in Readme",
+          "timestamp": "2022-04-21T09:24:03-07:00",
+          "tree_id": "fa6d06bed84580b32da7c268150f6acf34b036b5",
+          "url": "https://github.com/sfu-db/connector-x/commit/8ddf5d566376c7ae75deef37bd69a7053c8f4bff"
+        },
+        "date": 1650559009496,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_mysql",
+            "value": 0.06623559559028373,
+            "unit": "iter/sec",
+            "range": "stddev: 0.47111204846072996",
+            "extra": "mean: 15.097622223943471 sec\nrounds: 5"
+          },
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_postgres",
+            "value": 0.1009075154490918,
+            "unit": "iter/sec",
+            "range": "stddev: 1.729504779782704",
+            "extra": "mean: 9.910064632445573 sec\nrounds: 5"
           }
         ]
       }
