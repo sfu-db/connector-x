@@ -312,26 +312,6 @@ impl<'a> PartitionParser<'a> for BigQuerySourceParser {
             .ok_or_else(|| anyhow!("total_rows is none"))?
             .parse::<usize>()?;
         (total_rows, true)
-        // let job = self.client.job();
-        // let job_info = self.response.job_reference.as_ref().ok_or_else(|| anyhow!("job_reference is none"))?;
-        // let params = GetQueryResultsParameters { format_options: None, location: None, max_results: None, page_token: self.response.page_token.clone(), start_index: None, timeout_ms: None };
-        // self.response = self.rt.block_on(
-        //     job.get_query_results(
-        //         job_info.project_id.as_ref().ok_or_else(|| anyhow!("project_id is none"))?.as_str(),
-        //         job_info.job_id.as_ref().ok_or_else(|| anyhow!("job_id is none"))?.as_str(),
-        //         params,
-        //     ),
-        // )?;
-        // self.current_row = 0;
-        // self.current_col = 0;
-
-        // let page_rows = match &self.response.rows {
-        //     None => 0,
-        //     Some(rows) => rows.len(),
-        // };
-        // let is_last = self.response.page_token.is_none();
-
-        // (page_rows, is_last)
     }
 }
 
