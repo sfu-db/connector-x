@@ -293,6 +293,12 @@ const thebe_selector_output = ".output, .cell_output"
 <p class="admonition-title">Note</p>
 <p>BigQuery does not need to specify protocol.</p>
 </div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Currently, BigQuery does not support to apply paritition on Query with limit clause.
+For example, <code class="docutils literal notranslate"><span class="pre">cx.read_sql(conn,</span> <span class="pre">'select</span> <span class="pre">*</span> <span class="pre">from</span> <span class="pre">table</span> <span class="pre">limit</span> <span class="pre">10',</span> <span class="pre">parition_num=3,</span> <span class="pre">partition_on='int')</span></code> will fail.
+If you want to fetch result from query with limit clause, please do not use partitioning.</p>
+</div>
 <div class="section" id="bigquery-connection">
 <h2>BigQuery Connection<a class="headerlink" href="#bigquery-connection" title="Permalink to this headline">¶</a></h2>
 <p><strong>Authentication File:</strong> BigQuery connection need an authentication json file from Google Cloud Platform. If you do not have an authentication json file, you can create your BigQuery authentication <a class="reference external" href="https://cloud.google.com/docs/authentication/getting-started">here</a>.</p>
