@@ -26,7 +26,7 @@ jobs:
 
       - uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly-2021-11-18
+          toolchain: nightly-2022-04-17
           components: rustfmt
           target: aarch64-unknown-linux-gnu
           default: true
@@ -88,7 +88,7 @@ jobs:
 
       - uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly-2021-11-18
+          toolchain: nightly-2022-04-17
           components: rustfmt
           default: true
 
@@ -135,7 +135,7 @@ jobs:
 
       - uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly-2021-11-18
+          toolchain: nightly-2022-04-17
           components: rustfmt
           target: aarch64-apple-darwin
           default: true
