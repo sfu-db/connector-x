@@ -115,6 +115,7 @@ bench-fed path:
     just python-tpch-ext fed --file {{path}}/q12.sql
     just python-tpch-ext fed --file {{path}}/q13.sql
     just python-tpch-ext fed --file {{path}}/q14.sql
+    just python-tpch-ext fed --file {{path}}/q16.sql
     just python-tpch-ext fed --file {{path}}/q17.sql
     just python-tpch-ext fed --file {{path}}/q18.sql
     just python-tpch-ext fed --file {{path}}/q19.sql

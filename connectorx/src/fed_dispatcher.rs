@@ -174,8 +174,7 @@ pub fn run(
         },
     )?;
 
-    // let ctx = SessionContext::new();
-    let mut ctx = ExecutionContext::new();
+    let ctx = SessionContext::new();
     let mut alias_names: Vec<String> = vec![];
     let mut local_sql = String::new();
     receiver

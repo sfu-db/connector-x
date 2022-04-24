@@ -1,5 +1,5 @@
 **/target
-/.vscode
+.vscode
 connectorx-python/connectorx/*.so
 __pycache__
 .python-version

@@ -30,7 +30,7 @@ if __name__ == "__main__":
     print(f"file: {query_file}")
 
     with Timer() as timer:
-        df = cx.read_sql2(sql, db_map, return_type="pandas")
+        df = cx.read_sql(db_map, sql, return_type="pandas")
     print("time in total:", timer.elapsed)
 
     print(df)

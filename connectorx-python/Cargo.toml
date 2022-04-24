@@ -11,7 +11,7 @@ version = "0.2.5-alpha.2"
 
 [dependencies]
 anyhow = "1"
-arrow = "9.1.0"
+arrow = "12"
 arrow2 = {git = "https://github.com/jorgecarleitao/arrow2", rev = "dc516495a5a49ae41d3c68caab4e33dd57337640", default-features = false}
 bitfield = "0.13"
 bytes = "1"

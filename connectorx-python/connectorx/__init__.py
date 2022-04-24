@@ -19,18 +19,6 @@ except:
         pass
 
 
-def read_sql2(
-    sql: str,
-    db_map: Dict[str, str],
-    return_type: str = "pandas",
-):
-    result = _read_sql2(sql, db_map)
-    df = reconstruct_arrow(result)
-    if return_type == "pandas":
-        df = df.to_pandas(date_as_object=False, split_blocks=False)
-    return df
-
-
 def partition_sql(
     conn: str,
     query: str,
@@ -65,7 +53,7 @@ def partition_sql(
 
 
 def read_sql(
-    conn: str,
+    conn: Union[str,Dict[str, str]],
     query: Union[List[str], str],
     *,
     return_type: str = "pandas",
@@ -81,7 +69,7 @@ def read_sql(
     Parameters
     ==========
     conn
-      the connection string.
+      the connection string, or dict of connection string mapping for federated query.
     query
       a SQL query or a list of SQL queries.
     return_type
@@ -119,9 +107,28 @@ def read_sql(
     >>> read_sql(postgres_url, queries)
 
     """
-
     if isinstance(query, list) and len(query) == 1:
         query = query[0]
+
+    if isinstance(conn, dict):
+        assert partition_on is None and isinstance(query, str), "Federated query does not support query partitioning for now"
+        assert protocol is None, "Federated query does not support specifying protocol for now"
+        result = _read_sql2(query, conn)
+        df = reconstruct_arrow(result)
+        if return_type == "pandas":
+            df = df.to_pandas(date_as_object=False, split_blocks=False)
+        if return_type == "polars":
+            try:
+                import polars as pl
+            except ModuleNotFoundError:
+                raise ValueError("You need to install polars first")
+
+            try:
+                df = pl.DataFrame.from_arrow(df)
+            except AttributeError:
+                # api change for polars >= 0.8.*
+                df = pl.from_arrow(df)
+        return df
 
     if isinstance(query, str):
         if partition_on is None:
