@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1650559013351,
+  "lastUpdate": 1651255895582,
   "repoUrl": "https://github.com/sfu-db/connector-x",
   "entries": {
     "ConnectorX TPC-H Scale@1 Benchmarks": [
@@ -9842,6 +9842,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.729504779782704",
             "extra": "mean: 9.910064632445573 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "xiaoying_wang@sfu.ca",
+            "name": "Xiaoying Wang",
+            "username": "wangxiaoying"
+          },
+          "committer": {
+            "email": "xiaoying_wang@sfu.ca",
+            "name": "Xiaoying Wang",
+            "username": "wangxiaoying"
+          },
+          "distinct": true,
+          "id": "283529f9ca07ec49dd22a28d10df4e4029d5c8c5",
+          "message": "0.2.6-alpha.5: add binaryfloat binarydouble to oracle for arrow2",
+          "timestamp": "2022-04-29T18:02:09Z",
+          "tree_id": "7b665479de0210e9baf5ba0bdc8bf8c0d24b0fcc",
+          "url": "https://github.com/sfu-db/connector-x/commit/283529f9ca07ec49dd22a28d10df4e4029d5c8c5"
+        },
+        "date": 1651255892456,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_mysql",
+            "value": 0.06981676857038158,
+            "unit": "iter/sec",
+            "range": "stddev: 0.8068253121826648",
+            "extra": "mean: 14.323206594586372 sec\nrounds: 5"
+          },
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_postgres",
+            "value": 0.11664487779161443,
+            "unit": "iter/sec",
+            "range": "stddev: 0.984827592891421",
+            "extra": "mean: 8.573029685765505 sec\nrounds: 5"
           }
         ]
       }
