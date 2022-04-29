@@ -134,8 +134,8 @@ Run the SQL query, download the data from database into a Pandas dataframe.
 - `protocol: str = "binary"`: The protocol used to fetch data from source, default is `binary`. Check out [here](Types.md) to see more details.
 - `partition_on: Optional[str]`: The column to partition the result.
 - `partition_range: Optional[Tuple[int, int]]`: The value range of the partition column.
-- `partition_num: Optioinal[int]`: The number of partitions to generate.
-- `index_col: Optioinal[str]`: The index column to set for the result dataframe. Only applicable when `return_type` is `pandas`, `modin` or `dask`. 
+- `partition_num: Optional[int]`: The number of partitions to generate.
+- `index_col: Optional[str]`: The index column to set for the result dataframe. Only applicable when `return_type` is `pandas`, `modin` or `dask`. 
 
 ## Examples
 - Read a DataFrame from a SQL using a single thread

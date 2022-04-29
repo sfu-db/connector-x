@@ -60,6 +60,6 @@ if __name__ == "__main__":
                 return_type=args["--ret"],
             )
     print("time in total:", timer.elapsed)
-
+    
     print(type(df), len(df))
     describe(df)

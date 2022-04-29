@@ -22,6 +22,9 @@ pub enum BigQuerySourceError {
     #[error(transparent)]
     BigQueryParseFloatError(#[from] std::num::ParseFloatError),
 
+    #[error(transparent)]
+    BigQueryParseIntError(#[from] std::num::ParseIntError),
+
     /// Any other errors that are too trivial to be put here explicitly.
     #[error(transparent)]
     Other(#[from] anyhow::Error),

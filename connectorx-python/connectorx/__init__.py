@@ -209,7 +209,7 @@ def read_sql(
 
             df = dd.from_pandas(df, npartitions=1)
 
-    elif return_type in {"arrow", "arrow2", "polars"}:
+    elif return_type in {"arrow", "arrow2", "polars", "polars2"}:
         try:
             import pyarrow
         except ModuleNotFoundError:
@@ -223,7 +223,7 @@ def read_sql(
             partition_query=partition_query,
         )
         df = reconstruct_arrow(result)
-        if return_type == "polars":
+        if return_type in {"polars", "polars2"}:
             try:
                 import polars as pl
             except ModuleNotFoundError:
