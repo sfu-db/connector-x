@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1651256381579,
+  "lastUpdate": 1651257617179,
   "repoUrl": "https://github.com/sfu-db/connector-x",
   "entries": {
     "ConnectorX TPC-H Scale@1 Benchmarks": [
@@ -9918,6 +9918,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.8381967376061736",
             "extra": "mean: 9.941748639196158 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "xiaoying_wang@sfu.ca",
+            "name": "Xiaoying Wang",
+            "username": "wangxiaoying"
+          },
+          "committer": {
+            "email": "xiaoying_wang@sfu.ca",
+            "name": "Xiaoying Wang",
+            "username": "wangxiaoying"
+          },
+          "distinct": true,
+          "id": "7cc4302fb832bac8177745204b58f2ee18285f55",
+          "message": "remove libicu66 from ci",
+          "timestamp": "2022-04-29T18:32:02Z",
+          "tree_id": "3b47d040f1d99bc08bfc921e9f646c920ef555cd",
+          "url": "https://github.com/sfu-db/connector-x/commit/7cc4302fb832bac8177745204b58f2ee18285f55"
+        },
+        "date": 1651257614353,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_mysql",
+            "value": 0.07095933453894783,
+            "unit": "iter/sec",
+            "range": "stddev: 0.3241606286373033",
+            "extra": "mean: 14.09257860854268 sec\nrounds: 5"
+          },
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_postgres",
+            "value": 0.09362101075967948,
+            "unit": "iter/sec",
+            "range": "stddev: 2.2636162500188393",
+            "extra": "mean: 10.68136299625039 sec\nrounds: 5"
           }
         ]
       }
