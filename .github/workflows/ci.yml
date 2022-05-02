@@ -11,8 +11,8 @@ on:
 
 jobs:
   rust:
-    runs-on: ubuntu-20.04
-    container: ubuntu
+    runs-on: ubuntu-latest
+    container: ubuntu:20.04
     services:
       # Label used to access the service container
       postgres:
@@ -136,8 +136,8 @@ jobs:
           args: --no-deps --features all
 
   python:
-    runs-on: ubuntu-20.04
-    container: ubuntu
+    runs-on: ubuntu-latest
+    container: ubuntu:20.04
     services:
       # Label used to access the service container
       postgres:
