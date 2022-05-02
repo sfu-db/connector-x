@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1651260314220,
+  "lastUpdate": 1651511088865,
   "repoUrl": "https://github.com/sfu-db/connector-x",
   "entries": {
     "ConnectorX TPC-H Scale@1 Benchmarks": [
@@ -10032,6 +10032,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.4735207749369097",
             "extra": "mean: 8.665885472297669 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "xiaoying_wang@sfu.ca",
+            "name": "Xiaoying Wang",
+            "username": "wangxiaoying"
+          },
+          "committer": {
+            "email": "xiaoying_wang@sfu.ca",
+            "name": "Xiaoying Wang",
+            "username": "wangxiaoying"
+          },
+          "distinct": true,
+          "id": "c76d5934d5c4eda3d2958621e97e6a32f6665a77",
+          "message": "update ci ubuntu-latest to ubuntu-20.04",
+          "timestamp": "2022-05-02T16:55:17Z",
+          "tree_id": "97bd29401009737057fa658bca03cbb161b561be",
+          "url": "https://github.com/sfu-db/connector-x/commit/c76d5934d5c4eda3d2958621e97e6a32f6665a77"
+        },
+        "date": 1651511085825,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_mysql",
+            "value": 0.0691034886177441,
+            "unit": "iter/sec",
+            "range": "stddev: 0.7185162013475638",
+            "extra": "mean: 14.471049436181783 sec\nrounds: 5"
+          },
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_postgres",
+            "value": 0.0809513350500448,
+            "unit": "iter/sec",
+            "range": "stddev: 2.9753573122407384",
+            "extra": "mean: 12.35310077816248 sec\nrounds: 5"
           }
         ]
       }
