@@ -6,7 +6,7 @@ build-release:
 build-debug:
     cargo build
 
-test +ARGS="": setup-java 
+test +ARGS="": 
     cargo test --features all {{ARGS}} -- --nocapture
 
 test-feature-gate:
@@ -27,13 +27,12 @@ bootstrap-python:
 
 setup-java:
     cd federated-query/rewriter && mvn package -Dmaven.test.skip=true
-    mkdir -p connectorx-python/connectorx/jars
     cp -f ./federated-query/rewriter/target/federated-rewriter-1.0-SNAPSHOT-jar-with-dependencies.jar connectorx-python/connectorx/jars/federated-rewriter.jar
 
 setup-python:
     cd connectorx-python && poetry run maturin develop --release
     
-test-python +opts="": setup-python setup-java
+test-python +opts="": setup-python
     cd connectorx-python && poetry run pytest connectorx/tests -v -s {{opts}}
 
 test-python-s +opts="":
@@ -70,7 +69,7 @@ build-tpch:
 cachegrind-tpch: build-tpch
     valgrind --tool=cachegrind target/release/examples/tpch
 
-python-tpch name +ARGS="": setup-python setup-java
+python-tpch name +ARGS="": setup-python
     #!/bin/bash
     export PYTHONPATH=$PWD/connectorx-python
     cd connectorx-python && \
@@ -79,7 +78,7 @@ python-tpch name +ARGS="": setup-python setup-java
 python-tpch-ext name +ARGS="":
     cd connectorx-python && poetry run python ../benchmarks/tpch-{{name}}.py {{ARGS}}
 
-python-ddos name +ARGS="": setup-python setup-java
+python-ddos name +ARGS="": setup-python
     #!/bin/bash
     export PYTHONPATH=$PWD/connectorx-python
     cd connectorx-python && \
@@ -98,13 +97,13 @@ benchmark-report: setup-python
     poetry run pytest connectorx/tests/benchmarks.py --benchmark-json ../benchmark.json
     
 # releases
-ci-build-python-wheel: setup-java
+ci-build-python-wheel:
     # need to get the j4rs dependency first
     cd connectorx-python && maturin build --release -i python --no-sdist
     # copy files
     mkdir -p connectorx-python/connectorx/jars/deps
     cp -rf connectorx-python/target/release/jassets connectorx-python/connectorx/jars
-    cp -f connectorx-python/target/release/deps/libj4rs-72cef4b2743335bf.dylib connectorx-python/connectorx/jars/deps
+    cp -f connectorx-python/target/release/deps/libj4rs*.{dylib,so,dll} connectorx-python/connectorx/jars/deps
     cp README.md connectorx-python/README.md
     cp LICENSE connectorx-python/LICENSE
     # build final wheel
