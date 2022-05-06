@@ -1,5 +1,5 @@
 use crate::{
-    constants::{J4RS_BASE_PATH, POSTGRES_JDBC_DRIVER},
+    constants::{CX_REWRITER_PATH, J4RS_BASE_PATH, POSTGRES_JDBC_DRIVER},
     prelude::*,
     sources::postgres::{rewrite_tls_args, BinaryProtocol, PostgresSource},
     sql::CXQuery,
@@ -15,9 +15,8 @@ use postgres::NoTls;
 use rayon::prelude::*;
 use std::collections::HashMap;
 use std::convert::TryFrom;
-use std::fs;
-use std::sync::mpsc::channel;
-use std::sync::Arc;
+use std::sync::{mpsc::channel, Arc};
+use std::{env, fs};
 use url::Url;
 
 struct Plan {
@@ -32,7 +31,11 @@ fn init_jvm(j4rs_base: Option<&str>) -> Jvm {
         Some(path) => fs::canonicalize(path)?,
         None => fs::canonicalize(J4RS_BASE_PATH)?,
     };
-    let path = fs::canonicalize("../federated-rewriter.jar")?;
+    let path =
+        fs::canonicalize(env::var("CX_REWRITER_PATH").unwrap_or(CX_REWRITER_PATH.to_string()))?;
+
+    debug!("j4rs base path: {:?}\nrewriter path: {:?}", base, path);
+
     let entry = ClasspathEntry::new(path.to_str().unwrap());
     JvmBuilder::new()
         .classpath_entry(entry)

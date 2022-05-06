@@ -27,7 +27,8 @@ bootstrap-python:
 
 setup-java:
     cd federated-query/rewriter && mvn package -Dmaven.test.skip=true
-    cp -f federated-query/rewriter/target/federated-rewriter-1.0-SNAPSHOT-jar-with-dependencies.jar ./federated-rewriter.jar
+    mkdir -p connectorx-python/connectorx/jars
+    cp -f ./federated-query/rewriter/target/federated-rewriter-1.0-SNAPSHOT-jar-with-dependencies.jar connectorx-python/connectorx/jars/federated-rewriter.jar
 
 setup-python:
     cd connectorx-python && poetry run maturin develop --release
@@ -97,10 +98,17 @@ benchmark-report: setup-python
     poetry run pytest connectorx/tests/benchmarks.py --benchmark-json ../benchmark.json
     
 # releases
-ci-build-python-wheel:
+ci-build-python-wheel: setup-java
+    # need to get the j4rs dependency first
+    cd connectorx-python && maturin build --release -i python --no-sdist
+    # copy files
+    mkdir -p connectorx-python/connectorx/jars/deps
+    cp -rf connectorx-python/target/release/jassets connectorx-python/connectorx/jars
+    cp -f connectorx-python/target/release/deps/libj4rs-72cef4b2743335bf.dylib connectorx-python/connectorx/jars/deps
     cp README.md connectorx-python/README.md
     cp LICENSE connectorx-python/LICENSE
-    cd connectorx-python && maturin build --release
+    # build final wheel
+    cd connectorx-python && maturin build --release -i python --no-sdist
 
 bench-fed path:
     just python-tpch fed --file {{path}}/q2.sql

@@ -18,6 +18,20 @@ except:
     except:
         pass
 
+import os
+
+dir_path = os.path.dirname(os.path.realpath(__file__))
+# check whether it is in development env or installed
+if os.path.basename(os.path.join(dir_path, "..")) == "connectorx-python":
+    if "J4RS_BASE_PATH" not in os.environ:
+        os.environ["J4RS_BASE_PATH"] = os.path.join(dir_path, "jars")
+    if "CX_REWRITER_PATH" not in os.environ:
+        os.environ["CX_REWRITER_PATH"] = os.path.join(
+            dir_path, "jars/federated-rewriter.jar"
+        )
+# print("j4rs path:", os.environ["J4RS_BASE_PATH"])
+# print("rewriter path:", os.environ["J4RS_BASE_PATH"])
+
 
 def partition_sql(
     conn: str,
@@ -53,7 +67,7 @@ def partition_sql(
 
 
 def read_sql(
-    conn: Union[str,Dict[str, str]],
+    conn: Union[str, Dict[str, str]],
     query: Union[List[str], str],
     *,
     return_type: str = "pandas",
@@ -111,8 +125,12 @@ def read_sql(
         query = query[0]
 
     if isinstance(conn, dict):
-        assert partition_on is None and isinstance(query, str), "Federated query does not support query partitioning for now"
-        assert protocol is None, "Federated query does not support specifying protocol for now"
+        assert partition_on is None and isinstance(
+            query, str
+        ), "Federated query does not support query partitioning for now"
+        assert (
+            protocol is None
+        ), "Federated query does not support specifying protocol for now"
         result = _read_sql2(query, conn)
         df = reconstruct_arrow(result)
         if return_type == "pandas":
