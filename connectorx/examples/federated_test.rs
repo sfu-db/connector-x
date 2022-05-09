@@ -89,8 +89,7 @@ fn main() {
     let count = jvm.invoke(&plan, "getCount", &[]).unwrap();
     let count: i32 = jvm.to_rust(count).unwrap();
 
-    // let ctx = SessionContext::new();
-    let mut ctx = ExecutionContext::new();
+    let ctx = SessionContext::new();
     let mut local_sql = String::new();
     let mut alias_names = vec![];
     for i in 0..count {
@@ -202,7 +201,8 @@ fn main() {
     // println!("==== run sql 2 ====");
 
     let df = rt.block_on(ctx.sql(local_sql.as_str())).unwrap();
-    rt.block_on(df.explain(false, false).unwrap().show()).unwrap();
+    rt.block_on(df.explain(false, false).unwrap().show())
+        .unwrap();
     rt.block_on(df.limit(5).unwrap().show()).unwrap();
     let num_rows = rt
         .block_on(df.collect())
