@@ -30,7 +30,7 @@ use fehler::throws;
 use libc::uintptr_t;
 use log::debug;
 use postgres::NoTls;
-use postgres_native_tls::MakeTlsConnector;
+use postgres_openssl::MakeTlsConnector;
 use pyo3::prelude::*;
 use pyo3::{PyAny, Python};
 use std::sync::Arc;
@@ -238,8 +238,8 @@ fn to_ptrs(
         let mut cols = vec![];
 
         for array in rb.columns() {
-            let array_ptr = Box::new(ffi::Ffi_ArrowArray::empty());
-            let schema_ptr = Box::new(ffi::Ffi_ArrowSchema::empty());
+            let array_ptr = Box::new(ffi::ArrowArray::empty());
+            let schema_ptr = Box::new(ffi::ArrowSchema::empty());
             let array_ptr = Box::into_raw(array_ptr);
             let schema_ptr = Box::into_raw(schema_ptr);
             unsafe {

@@ -9,7 +9,7 @@ use connectorx::{
     typesystem::TypeConversion,
 };
 use postgres::NoTls;
-use postgres_native_tls::MakeTlsConnector;
+use postgres_openssl::MakeTlsConnector;
 use rust_decimal::prelude::*;
 use serde_json::{to_string, Value};
 use std::collections::HashMap;

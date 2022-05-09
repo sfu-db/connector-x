@@ -12,7 +12,7 @@ on:
 jobs:
   rust:
     runs-on: ubuntu-latest
-    container: ubuntu
+    container: ubuntu:20.04
     services:
       # Label used to access the service container
       postgres:
@@ -137,7 +137,7 @@ jobs:
 
   python:
     runs-on: ubuntu-latest
-    container: ubuntu
+    container: ubuntu:20.04
     services:
       # Label used to access the service container
       postgres:
@@ -251,4 +251,6 @@ jobs:
           SQLITE_URL: "sqlite:///tmp/test.db"
           MYSQL_URL: "mysql://root:mysql@mysql:3306/mysql"
           MSSQL_URL: "mssql://sa:mssql!Password@mssql:1433/tempdb"
+          DB1: "postgresql://postgres:postgres@postgres:5432/postgres"
+          DB2: "postgresql://postgres:postgres@postgres:5432/postgres"
           SQLITE3_STATIC: 1

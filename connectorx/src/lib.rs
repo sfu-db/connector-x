@@ -94,7 +94,7 @@
 //! use connectorx::prelude::*;
 //!
 //! let mut destination = ArrowDestination::new();
-//! let source = SQLiteSource::new("sqlite:///path/to/db", 10).expect("cannot create the source");
+//! let source = SQLiteSource::new("/path/to/db", 10).expect("cannot create the source");
 //! let queries = &["SELECT * FROM db WHERE id < 100", "SELECT * FROM db WHERE id >= 100"];
 //! let dispatcher = Dispatcher::<SQLiteSource, ArrowDestination, SQLiteArrowTransport>::new(source, &mut destination, queries, None);
 //! dispatcher.run().expect("run failed");

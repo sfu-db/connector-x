@@ -4,6 +4,7 @@ from .connectorx import (
     read_sql as _read_sql,
     partition_sql as _partition_sql,
     read_sql2 as _read_sql2,
+    get_meta as _get_meta,
 )
 
 try:
@@ -33,6 +34,47 @@ if "CX_REWRITER_PATH" not in os.environ:
     os.environ["CX_REWRITER_PATH"] = os.path.join(
         dir_path, "dependencies/federated-rewriter.jar"
     )
+
+
+def rewrite_conn(conn: str, protocol: Optional[str] = None):
+    if not protocol:
+        # note: redshift/clickhouse are not compatible with the 'binary' protocol, and use other database
+        # drivers to connect. set a compatible protocol and masquerade as the appropriate backend.
+        backend, connection_details = conn.split(":", 1) if conn else ("", "")
+        if "redshift" in backend:
+            conn = f"postgresql:{connection_details}"
+            protocol = "cursor"
+        elif "clickhouse" in backend:
+            conn = f"mysql:{connection_details}"
+            protocol = "text"
+        else:
+            protocol = "binary"
+    return conn, protocol
+
+
+def get_meta(
+    conn: str,
+    query: str,
+    protocol: Optional[str] = None,
+):
+    """
+    Get metadata (header) of the given query (only for pandas)
+
+    Parameters
+    ==========
+    conn
+      the connection string.
+    query
+      a SQL query or a list of SQL queries.
+    protocol
+      backend-specific transfer protocol directive; defaults to 'binary' (except for redshift
+      connection strings, where 'cursor' will be used instead).
+
+    """
+    conn, protocol = rewrite_conn(conn, protocol)
+    result = _get_meta(conn, protocol, query)
+    df = reconstruct_pandas(result)
+    return df
 
 
 def partition_sql(
@@ -172,18 +214,7 @@ def read_sql(
     else:
         raise ValueError("query must be either str or a list of str")
 
-    if not protocol:
-        # note: redshift/clickhouse are not compatible with the 'binary' protocol, and use other database
-        # drivers to connect. set a compatible protocol and masquerade as the appropriate backend.
-        backend, connection_details = conn.split(":", 1) if conn else ("", "")
-        if "redshift" in backend:
-            conn = f"postgresql:{connection_details}"
-            protocol = "cursor"
-        elif "clickhouse" in backend:
-            conn = f"mysql:{connection_details}"
-            protocol = "text"
-        else:
-            protocol = "binary"
+    conn, protocol = rewrite_conn(conn, protocol)
 
     if return_type in {"modin", "dask", "pandas"}:
         try:
@@ -218,7 +249,7 @@ def read_sql(
 
             df = dd.from_pandas(df, npartitions=1)
 
-    elif return_type in {"arrow", "arrow2", "polars"}:
+    elif return_type in {"arrow", "arrow2", "polars", "polars2"}:
         try:
             import pyarrow
         except ModuleNotFoundError:
@@ -232,7 +263,7 @@ def read_sql(
             partition_query=partition_query,
         )
         df = reconstruct_arrow(result)
-        if return_type == "polars":
+        if return_type in {"polars", "polars2"}:
             try:
                 import polars as pl
             except ModuleNotFoundError:

@@ -2,7 +2,7 @@
 authors = ["Weiyuan Wu <youngw@sfu.ca>"]
 edition = "2018"
 name = "connectorx-python"
-version = "0.2.5-alpha.2"
+version = "0.2.6-alpha.5"
 
 [workspace]
 # prevents package from thinking it's in the workspace
@@ -12,7 +12,7 @@ version = "0.2.5-alpha.2"
 [dependencies]
 anyhow = "1"
 arrow = "12"
-arrow2 = {git = "https://github.com/jorgecarleitao/arrow2", rev = "dc516495a5a49ae41d3c68caab4e33dd57337640", default-features = false}
+arrow2 = {version = "0.10", default-features = false}
 bitfield = "0.13"
 bytes = "1"
 chrono = "0.4"
@@ -30,6 +30,7 @@ numpy = "0.14"
 openssl = {version = "0.10", features = ["vendored"]}
 postgres = {version = "0.19", features = ["with-chrono-0_4", "with-uuid-0_8", "with-serde_json-1"]}
 postgres-native-tls = {version = "0.5"}
+postgres-openssl = {version = "0.5.0"}
 pyo3 = {version = "0.14", default-features = false, features = ["macros"]}
 pyo3-built = "0.4"
 r2d2-oracle = {version = "0.5.0", features = ["chrono"]}

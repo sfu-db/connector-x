@@ -39,6 +39,7 @@ fn connectorx(_: Python, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(read_sql))?;
     m.add_wrapped(wrap_pyfunction!(read_sql2))?;
     m.add_wrapped(wrap_pyfunction!(partition_sql))?;
+    m.add_wrapped(wrap_pyfunction!(get_meta))?;
     m.add_class::<pandas::PandasBlockInfo>()?;
     Ok(())
 }
@@ -84,4 +85,15 @@ pub fn read_sql2<'a>(
     let ptrs = arrow::to_ptrs(rbs);
     let obj: PyObject = ptrs.into_py(py);
     Ok(obj.into_ref(py))
+}
+
+#[pyfunction]
+pub fn get_meta<'a>(
+    py: Python<'a>,
+    conn: &str,
+    protocol: Option<&str>,
+    query: String,
+) -> PyResult<&'a PyAny> {
+    pandas::get_meta::get_meta(py, conn, protocol.unwrap_or("binary"), query)
+        .map_err(|e| From::from(e))
 }

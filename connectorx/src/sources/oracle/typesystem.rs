@@ -33,6 +33,7 @@ impl<'a> From<&'a OracleType> for OracleTypeSystem {
     fn from(ty: &'a OracleType) -> OracleTypeSystem {
         use OracleTypeSystem::*;
         match ty {
+            OracleType::Number(0, 0) => NumFloat(false),
             OracleType::Number(_, 0) => NumInt(true),
             OracleType::Number(_, _) => NumFloat(true),
             OracleType::Float(_) => Float(true),
