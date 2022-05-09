@@ -39,15 +39,18 @@ pub enum ConnectorXError {
     #[error(transparent)]
     StdIOError(#[from] std::io::Error),
 
+    #[cfg(feature = "federation")]
     #[error(transparent)]
     J4RSError(#[from] j4rs::errors::J4RsError),
 
     #[error(transparent)]
     StdVarError(#[from] std::env::VarError),
 
+    #[cfg(feature = "federation")]
     #[error(transparent)]
     DataFusionError(#[from] datafusion::error::DataFusionError),
 
+    #[cfg(feature = "federation")]
     #[error(transparent)]
     UrlParseError(#[from] url::ParseError),
 

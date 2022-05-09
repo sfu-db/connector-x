@@ -198,6 +198,11 @@ jobs:
           components: rustfmt
           default: true
 
+      - uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '8'
+
       - uses: actions/cache@v2
         with:
           path: |

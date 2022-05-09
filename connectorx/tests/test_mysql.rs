@@ -1,5 +1,5 @@
 use arrow::{
-    array::{Float64Array, Int64Array, LargeStringArray},
+    array::{Float64Array, Int64Array, StringArray},
     record_batch::RecordBatch,
 };
 use connectorx::{
@@ -82,9 +82,9 @@ pub fn verify_arrow_results(result: Vec<RecordBatch>) {
                 assert!(r
                     .column(2)
                     .as_any()
-                    .downcast_ref::<LargeStringArray>()
+                    .downcast_ref::<StringArray>()
                     .unwrap()
-                    .eq(&LargeStringArray::from(vec!["odd", "even"])));
+                    .eq(&StringArray::from(vec!["odd", "even"])));
                 assert!(r
                     .column(3)
                     .as_any()
@@ -108,9 +108,9 @@ pub fn verify_arrow_results(result: Vec<RecordBatch>) {
                 assert!(r
                     .column(2)
                     .as_any()
-                    .downcast_ref::<LargeStringArray>()
+                    .downcast_ref::<StringArray>()
                     .unwrap()
-                    .eq(&LargeStringArray::from(vec!["odd", "even", "odd", "even"])));
+                    .eq(&StringArray::from(vec!["odd", "even", "odd", "even"])));
                 assert!(r
                     .column(3)
                     .as_any()

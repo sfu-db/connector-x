@@ -138,6 +138,7 @@ pub mod data_order;
 pub mod destinations;
 mod dispatcher;
 pub mod errors;
+#[cfg(feature = "federation")]
 pub mod fed_dispatcher;
 pub mod sources;
 #[doc(hidden)]

@@ -30,9 +30,9 @@ impl_transport!(
     systems = MsSQLTypeSystem => ArrowTypeSystem,
     route = MsSQLSource => ArrowDestination,
     mappings = {
-        { Tinyint[u8]                   => Int32[i32]                | conversion auto }
-        { Smallint[i16]                 => Int32[i32]                | conversion auto }
-        { Int[i32]                      => Int32[i32]                | conversion auto }
+        { Tinyint[u8]                   => Int64[i64]                | conversion auto }
+        { Smallint[i16]                 => Int64[i64]                | conversion auto }
+        { Int[i32]                      => Int64[i64]                | conversion auto }
         { Bigint[i64]                   => Int64[i64]                | conversion auto }
         { Intn[IntN]                    => Int64[i64]                | conversion option }
         { Float24[f32]                  => Float32[f32]              | conversion auto }
