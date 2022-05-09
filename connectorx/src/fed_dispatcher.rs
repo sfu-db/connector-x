@@ -28,13 +28,18 @@ struct Plan {
 #[throws(ConnectorXError)]
 fn init_jvm(j4rs_base: Option<&str>) -> Jvm {
     let base = match j4rs_base {
-        Some(path) => fs::canonicalize(path)?,
-        None => fs::canonicalize(J4RS_BASE_PATH)?,
+        Some(path) => fs::canonicalize(path)
+            .map_err(|_| ConnectorXError::FileNotFoundError(path.to_string()))?,
+        None => fs::canonicalize(J4RS_BASE_PATH)
+            .map_err(|_| ConnectorXError::FileNotFoundError(J4RS_BASE_PATH.to_string()))?,
     };
-    let path =
-        fs::canonicalize(env::var("CX_REWRITER_PATH").unwrap_or(CX_REWRITER_PATH.to_string()))?;
+    debug!("j4rs base path: {:?}", base);
 
-    debug!("j4rs base path: {:?}\nrewriter path: {:?}", base, path);
+    let rewriter_path = env::var("CX_REWRITER_PATH").unwrap_or(CX_REWRITER_PATH.to_string());
+    let path = fs::canonicalize(rewriter_path.as_str())
+        .map_err(|_| ConnectorXError::FileNotFoundError(rewriter_path))?;
+
+    debug!("rewriter path: {:?}", path);
 
     let entry = ClasspathEntry::new(path.to_str().unwrap());
     JvmBuilder::new()
@@ -128,6 +133,7 @@ pub fn run(
     debug!("federated input sql: {}", sql);
 
     let jvm = init_jvm(j4rs_base)?;
+    debug!("init jvm successfully!");
 
     let mut db_url_map: HashMap<String, Url> = HashMap::new();
     for (k, v) in db_map.into_iter() {

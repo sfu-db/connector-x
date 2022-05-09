@@ -30,6 +30,9 @@ pub enum ConnectorXError {
     #[error("Cannot get total number of rows in advance.")]
     CountError(),
 
+    #[error("File {0} not found.")]
+    FileNotFoundError(String),
+
     #[error(transparent)]
     SQLParserError(#[from] sqlparser::parser::ParserError),
 

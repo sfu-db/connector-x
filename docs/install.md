@@ -31,7 +31,7 @@ rustup override set nightly-{version}
 * Step 4: Build
 ```bash
 just bootstrap-python
-just ci-build-python-wheel
+just build-python-wheel
 ```
 
 

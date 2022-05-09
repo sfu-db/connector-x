@@ -25,7 +25,8 @@ pub const J4RS_BASE_PATH: &str = "../target/release";
 pub const J4RS_BASE_PATH: &str = "../target/debug";
 
 #[cfg(feature = "federation")]
-pub const CX_REWRITER_PATH: &str = "../connectorx-python/connectorx/jars/federated-rewriter.jar";
+pub const CX_REWRITER_PATH: &str =
+    "../connectorx-python/connectorx/dependencies/federated-rewriter.jar";
 
 #[cfg(any(feature = "federation", feature = "src_postgres"))]
 pub const POSTGRES_JDBC_DRIVER: &str = "org.postgresql.Driver";

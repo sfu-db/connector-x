@@ -22,15 +22,17 @@ import os
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 # check whether it is in development env or installed
-if os.path.basename(os.path.join(dir_path, "..")) == "connectorx-python":
+if (
+    not os.path.basename(os.path.abspath(os.path.join(dir_path, "..")))
+    == "connectorx-python"
+):
+    print("haha", dir_path, "lala", os.path.basename(os.path.join(dir_path, "..")))
     if "J4RS_BASE_PATH" not in os.environ:
-        os.environ["J4RS_BASE_PATH"] = os.path.join(dir_path, "jars")
-    if "CX_REWRITER_PATH" not in os.environ:
-        os.environ["CX_REWRITER_PATH"] = os.path.join(
-            dir_path, "jars/federated-rewriter.jar"
-        )
-# print("j4rs path:", os.environ["J4RS_BASE_PATH"])
-# print("rewriter path:", os.environ["J4RS_BASE_PATH"])
+        os.environ["J4RS_BASE_PATH"] = os.path.join(dir_path, "dependencies")
+if "CX_REWRITER_PATH" not in os.environ:
+    os.environ["CX_REWRITER_PATH"] = os.path.join(
+        dir_path, "dependencies/federated-rewriter.jar"
+    )
 
 
 def partition_sql(

@@ -27,7 +27,7 @@ bootstrap-python:
 
 setup-java:
     cd federated-query/rewriter && mvn package -Dmaven.test.skip=true
-    cp -f ./federated-query/rewriter/target/federated-rewriter-1.0-SNAPSHOT-jar-with-dependencies.jar connectorx-python/connectorx/jars/federated-rewriter.jar
+    cp -f ./federated-query/rewriter/target/federated-rewriter-1.0-SNAPSHOT-jar-with-dependencies.jar connectorx-python/connectorx/dependencies/federated-rewriter.jar
 
 setup-python:
     cd connectorx-python && poetry run maturin develop --release
@@ -97,13 +97,13 @@ benchmark-report: setup-python
     poetry run pytest connectorx/tests/benchmarks.py --benchmark-json ../benchmark.json
     
 # releases
-ci-build-python-wheel:
+build-python-wheel:
     # need to get the j4rs dependency first
     cd connectorx-python && maturin build --release -i python --no-sdist
     # copy files
-    mkdir -p connectorx-python/connectorx/jars/deps
-    cp -rf connectorx-python/target/release/jassets connectorx-python/connectorx/jars
-    cp -f connectorx-python/target/release/deps/libj4rs*.{dylib,so,dll} connectorx-python/connectorx/jars/deps
+    mkdir -p connectorx-python/connectorx/dependencies/deps
+    cp -rf connectorx-python/target/release/jassets connectorx-python/connectorx/dependencies
+    cp -f connectorx-python/target/release/deps/libj4rs*.{dylib,so,dll} connectorx-python/connectorx/dependencies/deps 2>/dev/null || :
     cp README.md connectorx-python/README.md
     cp LICENSE connectorx-python/LICENSE
     # build final wheel
