@@ -101,9 +101,7 @@ build-python-wheel:
     # need to get the j4rs dependency first
     cd connectorx-python && maturin build --release -i python --no-sdist
     # copy files
-    mkdir -p connectorx-python/connectorx/dependencies/deps
     cp -rf connectorx-python/target/release/jassets connectorx-python/connectorx/dependencies
-    cp -f connectorx-python/target/release/deps/libj4rs*.{dylib,so,dll} connectorx-python/connectorx/dependencies/deps 2>/dev/null || :
     cp README.md connectorx-python/README.md
     cp LICENSE connectorx-python/LICENSE
     # build final wheel

@@ -57,9 +57,7 @@ jobs:
 
       - name: Copy j4rs dependencies into dist
         run: |
-          mkdir -p connectorx-python/connectorx/dependencies/deps
           cp -rf connectorx-python/target/release/jassets connectorx-python/connectorx/dependencies
-          cp -f connectorx-python/target/release/deps/libj4rs*.so connectorx-python/connectorx/dependencies/deps
 
       # rebuild the wheel to incorporate j4rs dependencies
       - uses: messense/maturin-action@v1
@@ -83,7 +81,7 @@ jobs:
           name: "ubuntu-latest-${{ matrix.python-version[1] }}"
           path: connectorx-python/target/wheels/*.whl
 
-  mac-and-win:
+  win-and-mac:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -129,9 +127,7 @@ jobs:
 
       - name: Copy j4rs dependencies into dist
         run: |
-          mkdir -p connectorx-python/connectorx/dependencies/deps
-          cp -rf connectorx-python/target/release/jassets connectorx-python/connectorx/dependencies
-          cp -f connectorx-python/target/release/deps/libj4rs*.{dylib,dll} connectorx-python/connectorx/dependencies/deps 2>/dev/null || :
+          cp -r connectorx-python/target/release/jassets connectorx-python/connectorx/dependencies
 
       # rebuild the wheel to incorporate j4rs dependencies
       - uses: messense/maturin-action@v1
@@ -192,9 +188,7 @@ jobs:
 
       - name: Copy j4rs dependencies into dist
         run: |
-          mkdir -p connectorx-python/connectorx/dependencies/deps
-          cp -rf connectorx-python/target/release/jassets connectorx-python/connectorx/dependencies
-          cp -f connectorx-python/target/release/deps/libj4rs*.dylib connectorx-python/connectorx/dependencies/deps
+          cp -rf connectorx-python/target/aarch64-apple-darwin/release/jassets connectorx-python/connectorx/dependencies
 
       # rebuild the wheel to incorporate j4rs dependencies
       - uses: messense/maturin-action@v1
@@ -212,7 +206,7 @@ jobs:
 
   verify:
     runs-on: ${{ matrix.os }}
-    needs: [mac-and-win, linux, apple-arm]
+    needs: [win-and-mac, linux, apple-arm]
     strategy:
       matrix:
         python-version: ["3.7", "3.8", "3.9", "3.10"]

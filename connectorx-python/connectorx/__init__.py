@@ -27,7 +27,6 @@ if (
     not os.path.basename(os.path.abspath(os.path.join(dir_path, "..")))
     == "connectorx-python"
 ):
-    print("haha", dir_path, "lala", os.path.basename(os.path.join(dir_path, "..")))
     if "J4RS_BASE_PATH" not in os.environ:
         os.environ["J4RS_BASE_PATH"] = os.path.join(dir_path, "dependencies")
 if "CX_REWRITER_PATH" not in os.environ:
