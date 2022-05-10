@@ -2,7 +2,7 @@
 authors = ["Weiyuan Wu <youngw@sfu.ca>"]
 edition = "2018"
 name = "connectorx-python"
-version = "0.2.6-alpha.5"
+version = "0.2.6-alpha.6"
 
 [workspace]
 # prevents package from thinking it's in the workspace
@@ -11,7 +11,7 @@ version = "0.2.6-alpha.5"
 
 [dependencies]
 anyhow = "1"
-arrow = "11.0.0"
+arrow = "12"
 arrow2 = {version = "0.10", default-features = false}
 bitfield = "0.13"
 bytes = "1"
@@ -64,11 +64,12 @@ name = "connectorx"
 
 [features]
 branch = ["connectorx/branch"]
-default = ["extension", "fptr", "nbstr", "dsts", "srcs"]
+default = ["extension", "fptr", "nbstr", "dsts", "srcs", "federation"]
 dsts = ["connectorx/dst_arrow", "connectorx/dst_arrow2"]
 executable = ["pyo3/auto-initialize"]
 extension = ["pyo3/extension-module"]
 fptr = ["connectorx/fptr"]
+federation = ["connectorx/federation"]
 nbstr = []
 srcs = [
   "connectorx/src_postgres",

@@ -40,11 +40,11 @@ macro_rules! impl_postgres_transport {
             systems = PostgresTypeSystem => ArrowTypeSystem,
             route = PostgresSource<$proto, $tls> => ArrowDestination,
             mappings = {
-                { Float4[f32]                => Float32[f32]              | conversion auto }
+                { Float4[f32]                => Float64[f64]              | conversion auto }
                 { Float8[f64]                => Float64[f64]              | conversion auto }
                 { Numeric[Decimal]           => Float64[f64]              | conversion option }
-                { Int2[i16]                  => Int32[i32]                | conversion auto }
-                { Int4[i32]                  => Int32[i32]                | conversion auto }
+                { Int2[i16]                  => Int64[i64]                | conversion auto }
+                { Int4[i32]                  => Int64[i64]                | conversion auto }
                 { Int8[i64]                  => Int64[i64]                | conversion auto }
                 { Bool[bool]                 => Boolean[bool]             | conversion auto  }
                 { Text[&'r str]              => LargeUtf8[String]         | conversion owned }

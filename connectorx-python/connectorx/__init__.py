@@ -3,6 +3,7 @@ from typing import Optional, Tuple, Union, List, Dict, Any
 from .connectorx import (
     read_sql as _read_sql,
     partition_sql as _partition_sql,
+    read_sql2 as _read_sql2,
     get_meta as _get_meta,
 )
 
@@ -17,6 +18,21 @@ except:
         __version__ = version(__name__)
     except:
         pass
+
+import os
+
+dir_path = os.path.dirname(os.path.realpath(__file__))
+# check whether it is in development env or installed
+if (
+    not os.path.basename(os.path.abspath(os.path.join(dir_path, "..")))
+    == "connectorx-python"
+):
+    if "J4RS_BASE_PATH" not in os.environ:
+        os.environ["J4RS_BASE_PATH"] = os.path.join(dir_path, "dependencies")
+if "CX_REWRITER_PATH" not in os.environ:
+    os.environ["CX_REWRITER_PATH"] = os.path.join(
+        dir_path, "dependencies/federated-rewriter.jar"
+    )
 
 
 def rewrite_conn(conn: str, protocol: Optional[str] = None):
@@ -94,7 +110,7 @@ def partition_sql(
 
 
 def read_sql(
-    conn: str,
+    conn: Union[str, Dict[str, str]],
     query: Union[List[str], str],
     *,
     return_type: str = "pandas",
@@ -110,7 +126,7 @@ def read_sql(
     Parameters
     ==========
     conn
-      the connection string.
+      the connection string, or dict of connection string mapping for federated query.
     query
       a SQL query or a list of SQL queries.
     return_type
@@ -148,9 +164,32 @@ def read_sql(
     >>> read_sql(postgres_url, queries)
 
     """
-
     if isinstance(query, list) and len(query) == 1:
         query = query[0]
+
+    if isinstance(conn, dict):
+        assert partition_on is None and isinstance(
+            query, str
+        ), "Federated query does not support query partitioning for now"
+        assert (
+            protocol is None
+        ), "Federated query does not support specifying protocol for now"
+        result = _read_sql2(query, conn)
+        df = reconstruct_arrow(result)
+        if return_type == "pandas":
+            df = df.to_pandas(date_as_object=False, split_blocks=False)
+        if return_type == "polars":
+            try:
+                import polars as pl
+            except ModuleNotFoundError:
+                raise ValueError("You need to install polars first")
+
+            try:
+                df = pl.DataFrame.from_arrow(df)
+            except AttributeError:
+                # api change for polars >= 0.8.*
+                df = pl.from_arrow(df)
+        return df
 
     if isinstance(query, str):
         if partition_on is None:

@@ -26,7 +26,7 @@ jobs:
 
       - uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly-2021-11-18
+          toolchain: nightly-2022-04-17
           components: rustfmt
           target: aarch64-unknown-linux-gnu
           default: true
@@ -55,6 +55,19 @@ jobs:
         env:
           SQLITE3_STATIC: 1
 
+      - name: Copy j4rs dependencies into dist
+        run: |
+          cp -rf connectorx-python/target/release/jassets connectorx-python/connectorx/dependencies
+
+      # rebuild the wheel to incorporate j4rs dependencies
+      - uses: messense/maturin-action@v1
+        with:
+          maturin-version: v0.12.1
+          command: build
+          args: -m connectorx-python/Cargo.toml -i python --no-sdist --release --manylinux 2014
+        env:
+          SQLITE3_STATIC: 1
+
       # - uses: messense/maturin-action@v1
       #   with:
       #     maturin-version: v0.12.1
@@ -68,7 +81,7 @@ jobs:
           name: "ubuntu-latest-${{ matrix.python-version[1] }}"
           path: connectorx-python/target/wheels/*.whl
 
-  mac-and-win:
+  win-and-mac:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -88,7 +101,7 @@ jobs:
 
       - uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly-2021-11-18
+          toolchain: nightly-2022-04-17
           components: rustfmt
           default: true
 
@@ -104,6 +117,19 @@ jobs:
           cp README.md connectorx-python/README.md
           cp LICENSE connectorx-python/LICENSE
 
+      - uses: messense/maturin-action@v1
+        with:
+          maturin-version: v0.12.1
+          command: build
+          args: -m connectorx-python/Cargo.toml -i python --no-sdist --release
+        env:
+          SQLITE3_STATIC: 1
+
+      - name: Copy j4rs dependencies into dist
+        run: |
+          cp -r connectorx-python/target/release/jassets connectorx-python/connectorx/dependencies
+
+      # rebuild the wheel to incorporate j4rs dependencies
       - uses: messense/maturin-action@v1
         with:
           maturin-version: v0.12.1
@@ -135,7 +161,7 @@ jobs:
 
       - uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly-2021-11-18
+          toolchain: nightly-2022-04-17
           components: rustfmt
           target: aarch64-apple-darwin
           default: true
@@ -160,6 +186,19 @@ jobs:
         env:
           SQLITE3_STATIC: 1
 
+      - name: Copy j4rs dependencies into dist
+        run: |
+          cp -rf connectorx-python/target/aarch64-apple-darwin/release/jassets connectorx-python/connectorx/dependencies
+
+      # rebuild the wheel to incorporate j4rs dependencies
+      - uses: messense/maturin-action@v1
+        with:
+          maturin-version: v0.12.1
+          command: build
+          args: -m connectorx-python/Cargo.toml --target aarch64-apple-darwin -i python --no-sdist --release
+        env:
+          SQLITE3_STATIC: 1
+
       - uses: actions/upload-artifact@v2
         with:
           name: "macos-${{ matrix.python-version }}"
@@ -167,7 +206,7 @@ jobs:
 
   verify:
     runs-on: ${{ matrix.os }}
-    needs: [mac-and-win, linux, apple-arm]
+    needs: [win-and-mac, linux, apple-arm]
     strategy:
       matrix:
         python-version: ["3.7", "3.8", "3.9", "3.10"]

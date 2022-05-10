@@ -2,7 +2,7 @@ use super::errors::{ArrowDestinationError, Result};
 use crate::constants::SECONDS_IN_DAY;
 use arrow::array::{
     ArrayBuilder, BooleanBuilder, Date32Builder, Date64Builder, Float32Builder, Float64Builder,
-    Int32Builder, Int64Builder, LargeBinaryBuilder, LargeStringBuilder, Time64NanosecondBuilder,
+    Int32Builder, Int64Builder, LargeBinaryBuilder, StringBuilder, Time64NanosecondBuilder,
     UInt32Builder, UInt64Builder,
 };
 use arrow::datatypes::Field;
@@ -66,10 +66,10 @@ impl_arrow_assoc!(f64, ArrowDataType::Float64, Float64Builder);
 impl_arrow_assoc!(bool, ArrowDataType::Boolean, BooleanBuilder);
 
 impl ArrowAssoc for &str {
-    type Builder = LargeStringBuilder;
+    type Builder = StringBuilder;
 
     fn builder(nrows: usize) -> Self::Builder {
-        LargeStringBuilder::new(nrows)
+        StringBuilder::new(nrows)
     }
 
     #[throws(ArrowDestinationError)]
@@ -78,15 +78,15 @@ impl ArrowAssoc for &str {
     }
 
     fn field(header: &str) -> Field {
-        Field::new(header, ArrowDataType::LargeUtf8, false)
+        Field::new(header, ArrowDataType::Utf8, false)
     }
 }
 
 impl ArrowAssoc for Option<&str> {
-    type Builder = LargeStringBuilder;
+    type Builder = StringBuilder;
 
     fn builder(nrows: usize) -> Self::Builder {
-        LargeStringBuilder::new(nrows)
+        StringBuilder::new(nrows)
     }
 
     #[throws(ArrowDestinationError)]
@@ -98,15 +98,15 @@ impl ArrowAssoc for Option<&str> {
     }
 
     fn field(header: &str) -> Field {
-        Field::new(header, ArrowDataType::LargeUtf8, true)
+        Field::new(header, ArrowDataType::Utf8, true)
     }
 }
 
 impl ArrowAssoc for String {
-    type Builder = LargeStringBuilder;
+    type Builder = StringBuilder;
 
     fn builder(nrows: usize) -> Self::Builder {
-        LargeStringBuilder::new(nrows)
+        StringBuilder::new(nrows)
     }
 
     #[throws(ArrowDestinationError)]
@@ -115,15 +115,15 @@ impl ArrowAssoc for String {
     }
 
     fn field(header: &str) -> Field {
-        Field::new(header, ArrowDataType::LargeUtf8, false)
+        Field::new(header, ArrowDataType::Utf8, false)
     }
 }
 
 impl ArrowAssoc for Option<String> {
-    type Builder = LargeStringBuilder;
+    type Builder = StringBuilder;
 
     fn builder(nrows: usize) -> Self::Builder {
-        LargeStringBuilder::new(nrows)
+        StringBuilder::new(nrows)
     }
 
     #[throws(ArrowDestinationError)]
@@ -135,7 +135,7 @@ impl ArrowAssoc for Option<String> {
     }
 
     fn field(header: &str) -> Field {
-        Field::new(header, ArrowDataType::LargeUtf8, true)
+        Field::new(header, ArrowDataType::Utf8, true)
     }
 }
 

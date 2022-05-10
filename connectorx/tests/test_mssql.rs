@@ -1,5 +1,5 @@
 use arrow::{
-    array::{BooleanArray, Float64Array, Int32Array, Int64Array, LargeStringArray},
+    array::{BooleanArray, Float64Array, Int64Array, StringArray},
     record_batch::RecordBatch,
 };
 use connectorx::{
@@ -89,9 +89,9 @@ pub fn verify_arrow_results(result: Vec<RecordBatch>) {
                 assert!(rb
                     .column(0)
                     .as_any()
-                    .downcast_ref::<Int32Array>()
+                    .downcast_ref::<Int64Array>()
                     .unwrap()
-                    .eq(&Int32Array::from(vec![1, 0])));
+                    .eq(&Int64Array::from(vec![1, 0])));
 
                 assert!(rb
                     .column(1)
@@ -103,9 +103,9 @@ pub fn verify_arrow_results(result: Vec<RecordBatch>) {
                 assert!(rb
                     .column(2)
                     .as_any()
-                    .downcast_ref::<LargeStringArray>()
+                    .downcast_ref::<StringArray>()
                     .unwrap()
-                    .eq(&LargeStringArray::from(vec![Some("str1"), Some("a"),])));
+                    .eq(&StringArray::from(vec![Some("str1"), Some("a"),])));
 
                 assert!(rb
                     .column(3)
@@ -125,9 +125,9 @@ pub fn verify_arrow_results(result: Vec<RecordBatch>) {
                 assert!(rb
                     .column(0)
                     .as_any()
-                    .downcast_ref::<Int32Array>()
+                    .downcast_ref::<Int64Array>()
                     .unwrap()
-                    .eq(&Int32Array::from(vec![2, 3, 4, 1314])));
+                    .eq(&Int64Array::from(vec![2, 3, 4, 1314])));
 
                 assert!(rb
                     .column(1)
@@ -139,9 +139,9 @@ pub fn verify_arrow_results(result: Vec<RecordBatch>) {
                 assert!(rb
                     .column(2)
                     .as_any()
-                    .downcast_ref::<LargeStringArray>()
+                    .downcast_ref::<StringArray>()
                     .unwrap()
-                    .eq(&LargeStringArray::from(vec![
+                    .eq(&StringArray::from(vec![
                         Some("str2"),
                         Some("b"),
                         Some("c"),
