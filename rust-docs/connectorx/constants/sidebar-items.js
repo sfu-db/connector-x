@@ -1,1 +1,1 @@
-initSidebarItems({"constant":[["DB_BUFFER_SIZE",""],["ORACLE_ARRAY_SIZE",""],["RECORD_BATCH_SIZE",""]]});
+initSidebarItems({"constant":[["CX_REWRITER_PATH",""],["DB_BUFFER_SIZE",""],["J4RS_BASE_PATH",""],["ORACLE_ARRAY_SIZE",""],["POSTGRES_JDBC_DRIVER",""],["RECORD_BATCH_SIZE",""]]});
