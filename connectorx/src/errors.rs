@@ -30,9 +30,38 @@ pub enum ConnectorXError {
     #[error("Cannot get total number of rows in advance.")]
     CountError(),
 
+    #[error("File {0} not found.")]
+    FileNotFoundError(String),
+
     #[error(transparent)]
     SQLParserError(#[from] sqlparser::parser::ParserError),
 
+    #[error(transparent)]
+    StdIOError(#[from] std::io::Error),
+
+    #[cfg(feature = "federation")]
+    #[error(transparent)]
+    J4RSError(#[from] j4rs::errors::J4RsError),
+
+    #[error(transparent)]
+    StdVarError(#[from] std::env::VarError),
+
+    #[cfg(feature = "federation")]
+    #[error(transparent)]
+    DataFusionError(#[from] datafusion::error::DataFusionError),
+
+    #[cfg(feature = "federation")]
+    #[error(transparent)]
+    UrlParseError(#[from] url::ParseError),
+
+    // #[error(transparent)]
+    // PostgresError(#[from] crate::source::postgres::Error),
+
+    // #[error(transparent)]
+    // ArrowError(#[from] crate::destination::arrow::ArrowDestinationError),
+
+    // #[error(transparent)]
+    // PostgresArrowTransportError(#[from] crate::transports::PostgresArrowTransportError),
     /// Any other errors that are too trivial to be put here explicitly.
     #[error(transparent)]
     Other(#[from] anyhow::Error),

@@ -69,7 +69,7 @@ jobs:
       - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly-2021-11-18
+          toolchain: nightly-2022-04-17
           components: rustfmt
           default: true
 
@@ -194,9 +194,14 @@ jobs:
       - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly-2021-11-18
+          toolchain: nightly-2022-04-17
           components: rustfmt
           default: true
+
+      - uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '8'
 
       - uses: actions/cache@v2
         with:
@@ -251,4 +256,6 @@ jobs:
           SQLITE_URL: "sqlite:///tmp/test.db"
           MYSQL_URL: "mysql://root:mysql@mysql:3306/mysql"
           MSSQL_URL: "mssql://sa:mssql!Password@mssql:1433/tempdb"
+          DB1: "postgresql://postgres:postgres@postgres:5432/postgres"
+          DB2: "postgresql://postgres:postgres@postgres:5432/postgres"
           SQLITE3_STATIC: 1

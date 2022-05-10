@@ -13,7 +13,6 @@ classifiers = [
   "Framework :: IPython",
 ] 
 description = "Load data from databases to dataframes, the fastest way." 
-include = ["connectorx/*.so", "connectorx/*.pyd", "LICENSE"] 
 keywords = ["read_sql"] 
 license = "MIT" 
 maintainers = ["Weiyuan Wu <youngw@sfu.ca>"] 
@@ -69,3 +68,6 @@ python_functions = "test_* bench_*"
 [build-system]
 build-backend = "maturin"
 requires = ["maturin>=0.12,<0.13"]
+
+[tool.maturin]
+sdist-include = ["connectorx/*.so", "connectorx/*.pyd", "connectorx/dependencies/", "LICENSE"]

@@ -17,3 +17,16 @@ pub const DB_BUFFER_SIZE: usize = 32;
 
 #[cfg(any(feature = "src_oracle"))]
 pub const ORACLE_ARRAY_SIZE: u32 = (1 * KILO) as u32;
+
+#[cfg(all(not(debug_assertions), feature = "federation"))]
+pub const J4RS_BASE_PATH: &str = "../target/release";
+
+#[cfg(all(debug_assertions, feature = "federation"))]
+pub const J4RS_BASE_PATH: &str = "../target/debug";
+
+#[cfg(feature = "federation")]
+pub const CX_REWRITER_PATH: &str =
+    "../connectorx-python/connectorx/dependencies/federated-rewriter.jar";
+
+#[cfg(any(feature = "federation", feature = "src_postgres"))]
+pub const POSTGRES_JDBC_DRIVER: &str = "org.postgresql.Driver";

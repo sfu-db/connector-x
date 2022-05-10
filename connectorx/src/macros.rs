@@ -201,7 +201,7 @@ macro_rules! impl_transport {
             ts2: Self::TSD,
             src: &'r mut <<Self::S as $crate::sources::Source>::Partition as $crate::sources::SourcePartition>::Parser<'s>,
             dst: &'r mut <Self::D as $crate::destinations::Destination>::Partition<'d>,
-        ) -> Result<(), Self::Error> {
+        ) -> Result<(), Self::Error> where Self: 'd {
             match (ts1, ts2) {
                 $(
                     ($TSS::$V1(true), $TSD::$V2(true)) => {
@@ -236,7 +236,7 @@ macro_rules! impl_transport {
                 src: &mut <<Self::S as $crate::sources::Source>::Partition as $crate::sources::SourcePartition>::Parser<'s>,
                 dst: &mut <Self::D as $crate::destinations::Destination>::Partition<'d>,
             ) -> Result<(), Self::Error>
-        > {
+        > where Self: 'd {
             match (ts1, ts2) {
                 $(
                     ($TSS::$V1(true), $TSD::$V2(true)) => {

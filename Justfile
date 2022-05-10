@@ -6,7 +6,7 @@ build-release:
 build-debug:
     cargo build
 
-test +ARGS="":
+test +ARGS="": 
     cargo test --features all {{ARGS}} -- --nocapture
 
 test-feature-gate:
@@ -25,6 +25,10 @@ bootstrap-python:
     cp LICENSE connectorx-python/LICENSE
     cd connectorx-python && poetry install
 
+setup-java:
+    cd federated-query/rewriter && mvn package -Dmaven.test.skip=true
+    cp -f ./federated-query/rewriter/target/federated-rewriter-1.0-SNAPSHOT-jar-with-dependencies.jar connectorx-python/connectorx/dependencies/federated-rewriter.jar
+
 setup-python:
     cd connectorx-python && poetry run maturin develop --release
     
@@ -33,6 +37,12 @@ test-python +opts="": setup-python
 
 test-python-s +opts="":
     cd connectorx-python && poetry run pytest connectorx/tests -v -s {{opts}}
+
+test-fed file="3.sql":
+    cd connectorx && cargo run --features src_postgres --features src_mysql --features dst_arrow --features federation --example federated_test "../federated-query/test-queries/{{file}}"
+
+test-datafusion:
+    cd connectorx && cargo run --features src_postgres --features src_mysql --features dst_arrow --features federation --example test
 
 seed-db:
     #!/bin/bash
@@ -87,7 +97,34 @@ benchmark-report: setup-python
     poetry run pytest connectorx/tests/benchmarks.py --benchmark-json ../benchmark.json
     
 # releases
-ci-build-python-wheel:
+build-python-wheel:
+    # need to get the j4rs dependency first
+    cd connectorx-python && maturin build --release -i python --no-sdist
+    # copy files
+    mkdir -p connectorx-python/connectorx/dependencies/deps
+    cp -rf connectorx-python/target/release/jassets connectorx-python/connectorx/dependencies
+    cp -f connectorx-python/target/release/deps/libj4rs*.{dylib,so,dll} connectorx-python/connectorx/dependencies/deps 2>/dev/null || :
     cp README.md connectorx-python/README.md
     cp LICENSE connectorx-python/LICENSE
-    cd connectorx-python && maturin build --release
+    # build final wheel
+    cd connectorx-python && maturin build --release -i python --no-sdist
+
+bench-fed path:
+    just python-tpch fed --file {{path}}/q2.sql
+    just python-tpch-ext fed --file {{path}}/q3.sql
+    just python-tpch-ext fed --file {{path}}/q4.sql
+    just python-tpch-ext fed --file {{path}}/q5.sql
+    just python-tpch-ext fed --file {{path}}/q7.sql
+    just python-tpch-ext fed --file {{path}}/q8.sql
+    just python-tpch-ext fed --file {{path}}/q9.sql
+    just python-tpch-ext fed --file {{path}}/q10.sql
+    just python-tpch-ext fed --file {{path}}/q11.sql
+    just python-tpch-ext fed --file {{path}}/q12.sql
+    just python-tpch-ext fed --file {{path}}/q13.sql
+    just python-tpch-ext fed --file {{path}}/q14.sql
+    just python-tpch-ext fed --file {{path}}/q16.sql
+    just python-tpch-ext fed --file {{path}}/q17.sql
+    just python-tpch-ext fed --file {{path}}/q18.sql
+    just python-tpch-ext fed --file {{path}}/q19.sql
+    just python-tpch-ext fed --file {{path}}/q20.sql
+    just python-tpch-ext fed --file {{path}}/q22.sql
