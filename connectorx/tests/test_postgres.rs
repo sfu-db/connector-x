@@ -1,5 +1,5 @@
 use arrow::{
-    array::{BooleanArray, Float64Array, Int32Array, LargeStringArray},
+    array::{BooleanArray, Float64Array, Int64Array, StringArray},
     record_batch::RecordBatch,
 };
 use connectorx::{
@@ -230,21 +230,21 @@ pub fn verify_arrow_results(result: Vec<RecordBatch>) {
                 assert!(r
                     .column(0)
                     .as_any()
-                    .downcast_ref::<Int32Array>()
+                    .downcast_ref::<Int64Array>()
                     .unwrap()
-                    .eq(&Int32Array::from(vec![1, 0])));
+                    .eq(&Int64Array::from(vec![1, 0])));
                 assert!(r
                     .column(1)
                     .as_any()
-                    .downcast_ref::<Int32Array>()
+                    .downcast_ref::<Int64Array>()
                     .unwrap()
-                    .eq(&Int32Array::from(vec![3, 5])));
+                    .eq(&Int64Array::from(vec![3, 5])));
                 assert!(r
                     .column(2)
                     .as_any()
-                    .downcast_ref::<LargeStringArray>()
+                    .downcast_ref::<StringArray>()
                     .unwrap()
-                    .eq(&LargeStringArray::from(vec!["str1", "a"])));
+                    .eq(&StringArray::from(vec!["str1", "a"])));
                 assert!(r
                     .column(3)
                     .as_any()
@@ -262,21 +262,21 @@ pub fn verify_arrow_results(result: Vec<RecordBatch>) {
                 assert!(r
                     .column(0)
                     .as_any()
-                    .downcast_ref::<Int32Array>()
+                    .downcast_ref::<Int64Array>()
                     .unwrap()
-                    .eq(&Int32Array::from(vec![2, 3, 4, 1314])));
+                    .eq(&Int64Array::from(vec![2, 3, 4, 1314])));
                 assert!(r
                     .column(1)
                     .as_any()
-                    .downcast_ref::<Int32Array>()
+                    .downcast_ref::<Int64Array>()
                     .unwrap()
-                    .eq(&Int32Array::from(vec![None, Some(7), Some(9), Some(2)])));
+                    .eq(&Int64Array::from(vec![None, Some(7), Some(9), Some(2)])));
                 assert!(r
                     .column(2)
                     .as_any()
-                    .downcast_ref::<LargeStringArray>()
+                    .downcast_ref::<StringArray>()
                     .unwrap()
-                    .eq(&LargeStringArray::from(vec![
+                    .eq(&StringArray::from(vec![
                         Some("str2"),
                         Some("b"),
                         Some("c"),

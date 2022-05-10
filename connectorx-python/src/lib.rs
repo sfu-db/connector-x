@@ -1,4 +1,5 @@
 #![feature(generic_associated_types)]
+#![feature(fmt_internals)]
 #![allow(incomplete_features)]
 
 pub mod arrow;
@@ -9,9 +10,13 @@ pub mod pandas;
 pub mod read_sql;
 mod source_router;
 
+use crate::constants::J4RS_BASE_PATH;
+use connectorx::fed_dispatcher::run;
 use pyo3::prelude::*;
 use pyo3::{wrap_pyfunction, PyResult};
+use std::collections::HashMap;
 use std::convert::TryFrom;
+use std::env;
 use std::sync::Once;
 
 #[macro_use]
@@ -32,6 +37,7 @@ fn connectorx(_: Python, m: &PyModule) -> PyResult<()> {
     });
 
     m.add_wrapped(wrap_pyfunction!(read_sql))?;
+    m.add_wrapped(wrap_pyfunction!(read_sql2))?;
     m.add_wrapped(wrap_pyfunction!(partition_sql))?;
     m.add_wrapped(wrap_pyfunction!(get_meta))?;
     m.add_class::<pandas::PandasBlockInfo>()?;
@@ -58,6 +64,27 @@ pub fn partition_sql(
     let source_conn = source_router::SourceConn::try_from(conn)?;
     let queries = read_sql::partition(&partition_query, &source_conn)?;
     Ok(queries.into_iter().map(|q| q.to_string()).collect())
+}
+
+#[pyfunction]
+pub fn read_sql2<'a>(
+    py: Python<'a>,
+    sql: &str,
+    db_map: HashMap<String, String>,
+) -> PyResult<&'a PyAny> {
+    let rbs = run(
+        sql.to_string(),
+        db_map,
+        Some(
+            env::var("J4RS_BASE_PATH")
+                .unwrap_or(J4RS_BASE_PATH.to_string())
+                .as_str(),
+        ),
+    )
+    .unwrap();
+    let ptrs = arrow::to_ptrs(rbs);
+    let obj: PyObject = ptrs.into_py(py);
+    Ok(obj.into_ref(py))
 }
 
 #[pyfunction]

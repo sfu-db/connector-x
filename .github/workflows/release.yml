@@ -26,7 +26,7 @@ jobs:
 
       - uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly-2021-11-18
+          toolchain: nightly-2022-04-17
           components: rustfmt
           target: aarch64-unknown-linux-gnu
           default: true
@@ -47,6 +47,21 @@ jobs:
           cp README.md connectorx-python/README.md
           cp LICENSE connectorx-python/LICENSE
 
+      - uses: messense/maturin-action@v1
+        with:
+          maturin-version: v0.12.1
+          command: build
+          args: -m connectorx-python/Cargo.toml -i python --no-sdist --release --manylinux 2014
+        env:
+          SQLITE3_STATIC: 1
+
+      - name: Copy j4rs dependencies into dist
+        run: |
+          mkdir -p connectorx-python/connectorx/dependencies/deps
+          cp -rf connectorx-python/target/release/jassets connectorx-python/connectorx/dependencies
+          cp -f connectorx-python/target/release/deps/libj4rs*.so connectorx-python/connectorx/dependencies/deps
+
+      # rebuild the wheel to incorporate j4rs dependencies
       - uses: messense/maturin-action@v1
         with:
           maturin-version: v0.12.1
@@ -88,7 +103,7 @@ jobs:
 
       - uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly-2021-11-18
+          toolchain: nightly-2022-04-17
           components: rustfmt
           default: true
 
@@ -104,6 +119,21 @@ jobs:
           cp README.md connectorx-python/README.md
           cp LICENSE connectorx-python/LICENSE
 
+      - uses: messense/maturin-action@v1
+        with:
+          maturin-version: v0.12.1
+          command: build
+          args: -m connectorx-python/Cargo.toml -i python --no-sdist --release
+        env:
+          SQLITE3_STATIC: 1
+
+      - name: Copy j4rs dependencies into dist
+        run: |
+          mkdir -p connectorx-python/connectorx/dependencies/deps
+          cp -rf connectorx-python/target/release/jassets connectorx-python/connectorx/dependencies
+          cp -f connectorx-python/target/release/deps/libj4rs*.{dylib,dll} connectorx-python/connectorx/dependencies/deps 2>/dev/null || :
+
+      # rebuild the wheel to incorporate j4rs dependencies
       - uses: messense/maturin-action@v1
         with:
           maturin-version: v0.12.1
@@ -135,7 +165,7 @@ jobs:
 
       - uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly-2021-11-18
+          toolchain: nightly-2022-04-17
           components: rustfmt
           target: aarch64-apple-darwin
           default: true
@@ -152,6 +182,21 @@ jobs:
           cp README.md connectorx-python/README.md
           cp LICENSE connectorx-python/LICENSE
 
+      - uses: messense/maturin-action@v1
+        with:
+          maturin-version: v0.12.1
+          command: build
+          args: -m connectorx-python/Cargo.toml --target aarch64-apple-darwin -i python --no-sdist --release
+        env:
+          SQLITE3_STATIC: 1
+
+      - name: Copy j4rs dependencies into dist
+        run: |
+          mkdir -p connectorx-python/connectorx/dependencies/deps
+          cp -rf connectorx-python/target/release/jassets connectorx-python/connectorx/dependencies
+          cp -f connectorx-python/target/release/deps/libj4rs*.dylib connectorx-python/connectorx/dependencies/deps
+
+      # rebuild the wheel to incorporate j4rs dependencies
       - uses: messense/maturin-action@v1
         with:
           maturin-version: v0.12.1

@@ -27,7 +27,7 @@ def test_arrow(postgres_url: str) -> None:
     expected = pd.DataFrame(
         index=range(6),
         data={
-            "test_int": pd.Series([0, 1, 2, 3, 4, 1314], dtype="int32"),
+            "test_int": pd.Series([0, 1, 2, 3, 4, 1314], dtype="int64"),
             "test_nullint": pd.Series([5, 3, None, 7, 9, 2], dtype="float64"),
             "test_str": pd.Series(
                 ["a", "str1", "str2", "b", "c", None], dtype="object"
