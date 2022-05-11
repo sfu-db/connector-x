@@ -6,7 +6,7 @@ root: intro
 
 chapters:
   - file: install
-  # - title: Databases
+  - file: api
   - file: databases
     sections:
     - file: databases/bigquery

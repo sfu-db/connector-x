@@ -2,7 +2,7 @@
 authors = ["Weiyuan Wu <youngw@sfu.ca>"]
 edition = "2018"
 name = "connectorx-python"
-version = "0.2.6-alpha.6"
+version = "0.3.0"
 
 [workspace]
 # prevents package from thinking it's in the workspace
