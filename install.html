@@ -53,7 +53,7 @@ const thebe_selector_output = ".output, .cell_output"
     <script async="async" src="_static/sphinx-thebe.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Databases configuration and performance" href="databases.html" />
+    <link rel="next" title="Basic usage" href="api.html" />
     <link rel="prev" title="Introduction" href="intro.html" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="docsearch:language" content="None">
@@ -102,6 +102,11 @@ const thebe_selector_output = ".output, .cell_output"
  <li class="toctree-l1 current active">
   <a class="current reference internal" href="#">
    Getting Started
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="api.html">
+   Basic usage
   </a>
  </li>
  <li class="toctree-l1 has-children">
@@ -255,28 +260,6 @@ const thebe_selector_output = ".output, .cell_output"
    </li>
   </ul>
  </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#basic-usage">
-   Basic usage
-  </a>
-  <ul class="nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#api">
-     API
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#parameters">
-     Parameters
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#examples">
-     Examples
-    </a>
-   </li>
-  </ul>
- </li>
 </ul>
 
             </nav>
@@ -314,28 +297,6 @@ const thebe_selector_output = ".output, .cell_output"
    </li>
   </ul>
  </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#basic-usage">
-   Basic usage
-  </a>
-  <ul class="nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#api">
-     API
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#parameters">
-     Parameters
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#examples">
-     Examples
-    </a>
-   </li>
-  </ul>
- </li>
 </ul>
 
                         </nav>
@@ -365,118 +326,26 @@ const thebe_selector_output = ".output, .cell_output"
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>Step 2: Install rust nightly (please refer <a class="reference external" href="https://github.com/sfu-db/connector-x/blob/main/.github/workflows/release.yml">this file</a> and search for <code class="docutils literal notranslate"><span class="pre">Install</span> <span class="pre">Rust</span></code> for the latest using version)</p></li>
+<li><p>Step 2: Install and switch to rust nightly (please refer <a class="reference external" href="https://github.com/sfu-db/connector-x/blob/main/.github/workflows/release.yml">this file</a> and search for <code class="docutils literal notranslate"><span class="pre">Install</span> <span class="pre">Rust</span></code> for the latest using version)</p></li>
 </ul>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rustup install nightly-<span class="o">{</span>version<span class="o">}</span>
+rustup default nightly-<span class="o">{</span>version<span class="o">}</span>
+rustup override <span class="nb">set</span> nightly-<span class="o">{</span>version<span class="o">}</span>
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>Step 3: Override default project toolchain</p></li>
-</ul>
-<div class="highlight-base notranslate"><div class="highlight"><pre><span></span>rustup default nightly-{version}
-rustup override set nightly-{version}
-</pre></div>
-</div>
-<ul class="simple">
-<li><p>Step 4: Build</p></li>
+<li><p>Step 3: Install dependencies</p></li>
 </ul>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>just bootstrap-python
-just build-python-wheel
 </pre></div>
 </div>
-</div>
-</div>
-<div class="section" id="basic-usage">
-<h2>Basic usage<a class="headerlink" href="#basic-usage" title="Permalink to this headline">¶</a></h2>
-<p>ConnectorX enables you to run the SQL query, load data from databases into a Pandas Dataframe in the fastest and most memory efficient way.</p>
-<div class="section" id="api">
-<h3>API<a class="headerlink" href="#api" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">connectorx</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">conn</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">query</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">str</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">return_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;pandas&quot;</span><span class="p">,</span> <span class="n">protocol</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;binary&quot;</span><span class="p">,</span> <span class="n">partition_on</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">partition_range</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">partition_num</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="section" id="parameters">
-<h3>Parameters<a class="headerlink" href="#parameters" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">conn:</span> <span class="pre">str</span></code>: Connection string URI.</p>
-<ul>
-<li><p>General supported URI scheme: <code class="docutils literal notranslate"><span class="pre">(postgres|postgressql|mysql|mssql)://username:password&#64;addr:port/dbname</span></code>.</p></li>
-<li><p>For now sqlite only support absolute path, example: <code class="docutils literal notranslate"><span class="pre">sqlite:///home/user/path/test.db</span></code>.</p></li>
-<li><p>Google BigQuery requires absolute path of the authentication JSON file, example: <code class="docutils literal notranslate"><span class="pre">bigquery:///home/user/path/auth.json</span></code></p></li>
-<li><p>Please check out <span class="xref myst">here</span> for more connection uri parameters supported for each database (e.g. trusted_connection for Mssql, sslmode for Postgres)</p></li>
+<li><p>Step 4: Build wheel</p></li>
 </ul>
-</li>
-<li><p><code class="docutils literal notranslate"><span class="pre">query:</span> <span class="pre">Union[str,</span> <span class="pre">List[str]]</span></code>: SQL query or list of SQL queries for fetching data.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">return_type:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">&quot;pandas&quot;</span></code>: The return type of this function. It can be <code class="docutils literal notranslate"><span class="pre">arrow</span></code>, <code class="docutils literal notranslate"><span class="pre">pandas</span></code>, <code class="docutils literal notranslate"><span class="pre">modin</span></code>, <code class="docutils literal notranslate"><span class="pre">dask</span></code> or <code class="docutils literal notranslate"><span class="pre">polars</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">protocol:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">&quot;binary&quot;</span></code>: The protocol used to fetch data from source, default is <code class="docutils literal notranslate"><span class="pre">binary</span></code>. Check out <a class="reference internal" href="databases.html"><span class="doc std std-doc">here</span></a> to see more details.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">partition_on:</span> <span class="pre">Optional[str]</span></code>: The column to partition the result.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">partition_range:</span> <span class="pre">Optional[Tuple[int,</span> <span class="pre">int]]</span></code>: The value range of the partition column.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">partition_num:</span> <span class="pre">Optioinal[int]</span></code>: The number of partitions to generate.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">index_col:</span> <span class="pre">Optioinal[str]</span></code>: The index column to set for the result dataframe. Only applicable when <code class="docutils literal notranslate"><span class="pre">return_type</span></code> is <code class="docutils literal notranslate"><span class="pre">pandas</span></code>, <code class="docutils literal notranslate"><span class="pre">modin</span></code> or <code class="docutils literal notranslate"><span class="pre">dask</span></code>.</p></li>
-</ul>
-</div>
-<div class="section" id="examples">
-<h3>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h3>
-<ul>
-<li><p>Read a DataFrame from a SQL using a single thread</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">connectorx</span> <span class="k">as</span> <span class="nn">cx</span>
-
-<span class="n">postgres_url</span> <span class="o">=</span> <span class="s2">&quot;postgresql://username:password@server:port/database&quot;</span>
-<span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;SELECT * FROM lineitem&quot;</span>
-
-<span class="n">cx</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">postgres_url</span><span class="p">,</span> <span class="n">query</span><span class="p">)</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>just build-python-wheel
 </pre></div>
 </div>
-</li>
-<li><p>Read a DataFrame parallelly using 10 threads by automatically partitioning the provided SQL on the partition column (<code class="docutils literal notranslate"><span class="pre">partition_range</span></code> will be automatically  queried if not given)</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">connectorx</span> <span class="k">as</span> <span class="nn">cx</span>
-
-<span class="n">postgres_url</span> <span class="o">=</span> <span class="s2">&quot;postgresql://username:password@server:port/database&quot;</span>
-<span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;SELECT * FROM lineitem&quot;</span>
-
-<span class="n">cx</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">postgres_url</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">partition_on</span><span class="o">=</span><span class="s2">&quot;l_orderkey&quot;</span><span class="p">,</span> <span class="n">partition_num</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
-</pre></div>
-</div>
-</li>
-<li><p>Read a DataFrame parallelly using 2 threads by manually providing two partition SQLs (the schemas of all the query results should be same)</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">connectorx</span> <span class="k">as</span> <span class="nn">cx</span>
-
-<span class="n">postgres_url</span> <span class="o">=</span> <span class="s2">&quot;postgresql://username:password@server:port/database&quot;</span>
-<span class="n">queries</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;SELECT * FROM lineitem WHERE l_orderkey &lt;= 30000000&quot;</span><span class="p">,</span> <span class="s2">&quot;SELECT * FROM lineitem WHERE l_orderkey &gt; 30000000&quot;</span><span class="p">]</span>
-
-<span class="n">cx</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">postgres_url</span><span class="p">,</span> <span class="n">queries</span><span class="p">)</span>
-
-</pre></div>
-</div>
-</li>
-<li><p>Read a DataFrame parallelly using 4 threads from a more complex query</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">connectorx</span> <span class="k">as</span> <span class="nn">cx</span>
-
-<span class="n">postgres_url</span> <span class="o">=</span> <span class="s2">&quot;postgresql://username:password@server:port/database&quot;</span>
-<span class="n">query</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">SELECT l_orderkey,</span>
-<span class="s2">       SUM(l_extendedprice * ( 1 - l_discount )) AS revenue,</span>
-<span class="s2">       o_orderdate,</span>
-<span class="s2">       o_shippriority</span>
-<span class="s2">FROM   customer,</span>
-<span class="s2">       orders,</span>
-<span class="s2">       lineitem</span>
-<span class="s2">WHERE  c_mktsegment = &#39;BUILDING&#39;</span>
-<span class="s2">       AND c_custkey = o_custkey</span>
-<span class="s2">       AND l_orderkey = o_orderkey</span>
-<span class="s2">       AND o_orderdate &lt; DATE &#39;1995-03-15&#39;</span>
-<span class="s2">       AND l_shipdate &gt; DATE &#39;1995-03-15&#39;</span>
-<span class="s2">GROUP  BY l_orderkey,</span>
-<span class="s2">          o_orderdate,</span>
-<span class="s2">          o_shippriority </span>
-<span class="s2">&quot;&quot;&quot;</span>
-
-<span class="n">cx</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">postgres_url</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">partition_on</span><span class="o">=</span><span class="s2">&quot;l_orderkey&quot;</span><span class="p">,</span> <span class="n">partition_num</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
-
-</pre></div>
-</div>
-</li>
-</ul>
+<p>NOTE: <code class="docutils literal notranslate"><span class="pre">OPENSSL_NO_VENDOR=1</span></code> might required to compile for windows users.</p>
 </div>
 </div>
 </div>
@@ -513,10 +382,10 @@ just build-python-wheel
             <p class="prev-next-title">Introduction</p>
         </div>
     </a>
-    <a class='right-next' id="next-link" href="databases.html" title="next page">
+    <a class='right-next' id="next-link" href="api.html" title="next page">
     <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Databases configuration and performance</p>
+        <p class="prev-next-title">Basic usage</p>
     </div>
     <i class="fas fa-angle-right"></i>
     </a>
