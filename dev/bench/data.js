@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1652203427059,
+  "lastUpdate": 1652227598109,
   "repoUrl": "https://github.com/sfu-db/connector-x",
   "entries": {
     "ConnectorX TPC-H Scale@1 Benchmarks": [
@@ -10298,6 +10298,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.5038647801666094",
             "extra": "mean: 9.799648632854224 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "xiaoying_wang@sfu.ca",
+            "name": "Xiaoying Wang",
+            "username": "wangxiaoying"
+          },
+          "committer": {
+            "email": "xiaoying_wang@sfu.ca",
+            "name": "Xiaoying Wang",
+            "username": "wangxiaoying"
+          },
+          "distinct": false,
+          "id": "34033a263dc9f1c78b35c5eb3ad5368b3ecad7cc",
+          "message": "skip loading dynamic library for j4rs",
+          "timestamp": "2022-05-10T10:14:51-07:00",
+          "tree_id": "d24c89d8701add0377ad599d320e4bd9ebc145cc",
+          "url": "https://github.com/sfu-db/connector-x/commit/34033a263dc9f1c78b35c5eb3ad5368b3ecad7cc"
+        },
+        "date": 1652227595059,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_mysql",
+            "value": 0.06594294341207285,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4088949349998596",
+            "extra": "mean: 15.164624875038863 sec\nrounds: 5"
+          },
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_postgres",
+            "value": 0.06940890208274254,
+            "unit": "iter/sec",
+            "range": "stddev: 1.8384923751107873",
+            "extra": "mean: 14.40737383812666 sec\nrounds: 5"
           }
         ]
       }
