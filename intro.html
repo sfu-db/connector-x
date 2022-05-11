@@ -292,18 +292,8 @@ const thebe_selector_output = ".output, .cell_output"
   </ul>
  </li>
  <li class="toc-h1 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#rust-documentation">
-   Rust Documentation
-  </a>
- </li>
- <li class="toc-h1 nav-item toc-entry">
   <a class="reference internal nav-link" href="#next-plan">
    Next Plan
-  </a>
- </li>
- <li class="toc-h1 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#developer-s-guide">
-   Developer’s Guide
   </a>
  </li>
  <li class="toc-h1 nav-item toc-entry">
@@ -386,18 +376,8 @@ const thebe_selector_output = ".output, .cell_output"
   </ul>
  </li>
  <li class="toc-h1 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#rust-documentation">
-   Rust Documentation
-  </a>
- </li>
- <li class="toc-h1 nav-item toc-entry">
   <a class="reference internal nav-link" href="#next-plan">
    Next Plan
-  </a>
- </li>
- <li class="toc-h1 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#developer-s-guide">
-   Developer’s Guide
   </a>
  </li>
  <li class="toc-h1 nav-item toc-entry">
@@ -438,7 +418,16 @@ const thebe_selector_output = ".output, .cell_output"
 <p>The function will partition the query by <strong>evenly</strong> splitting the specified column to the amount of partitions.
 ConnectorX will assign one thread for each partition to load and write data in parallel.
 Currently, we support partitioning on <strong>numerical</strong> columns (<strong>cannot contain NULL</strong>) for <strong>SPJA</strong> queries.</p>
-<p>Check out more detailed usage and examples <a class="reference external" href="https://sfu-db.github.io/connector-x/install.html#examples">here</a>. A general introduction of the project can be found in this <a class="reference external" href="https://towardsdatascience.com/connectorx-the-fastest-way-to-load-data-from-databases-a65d4d4062d5">blog post</a>.</p>
+<p>We are now providing federated query support (experimental, PostgreSQL only and do not support partition for now), you can write a single query to join tables from two or more databases. JRE (Java Runtime Environment) is required.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">connectorx</span> <span class="k">as</span> <span class="nn">cx</span>
+
+<span class="n">db1</span> <span class="o">=</span> <span class="s2">&quot;postgresql://username1:password1@server1:port1/database1&quot;</span>
+<span class="n">db2</span> <span class="o">=</span> <span class="s2">&quot;postgresql://username2:password2@server2:port2/database2&quot;</span>
+
+<span class="n">cx</span><span class="o">.</span><span class="n">read_sql</span><span class="p">({</span><span class="s2">&quot;db1&quot;</span><span class="p">:</span> <span class="n">db1</span><span class="p">,</span> <span class="s2">&quot;db2&quot;</span><span class="p">:</span> <span class="n">db2</span><span class="p">},</span> <span class="s2">&quot;SELECT * FROM db1.nation n, db2.region r where n.n_regionkey = r.r_regionkey&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Check out more detailed usage and examples <a class="reference external" href="https://sfu-db.github.io/connector-x/api.html">here</a>. A general introduction of the project can be found in this <a class="reference external" href="https://towardsdatascience.com/connectorx-the-fastest-way-to-load-data-from-databases-a65d4d4062d5">blog post</a>.</p>
 </div>
 <div class="tex2jax_ignore mathjax_ignore section" id="performance">
 <h1>Performance<a class="headerlink" href="#performance" title="Permalink to this headline">¶</a></h1>
@@ -473,8 +462,8 @@ partition to the database and then write the returned data to the destination ro
 </div>
 <div class="tex2jax_ignore mathjax_ignore section" id="supported-sources-destinations">
 <h1>Supported Sources &amp; Destinations<a class="headerlink" href="#supported-sources-destinations" title="Permalink to this headline">¶</a></h1>
-<p>Supported protocols, data types and type mappings can be found <span class="xref myst">here</span>.
-For more planned data sources, please check out our <a class="reference external" href="https://github.com/sfu-db/connector-x/discussions/61">discussion</a>.</p>
+<p>Example connection string, supported protocols and data types for each data source can be found <a class="reference external" href="https://sfu-db.github.io/connector-x/databases.html">here</a>.</p>
+<p>For more planned data sources, please check out our <a class="reference external" href="https://github.com/sfu-db/connector-x/discussions/61">discussion</a>.</p>
 <div class="section" id="sources">
 <h2>Sources<a class="headerlink" href="#sources" title="Permalink to this headline">¶</a></h2>
 <ul class="contains-task-list simple">
@@ -487,7 +476,7 @@ For more planned data sources, please check out our <a class="reference external
 <li class="task-list-item"><p><input class="task-list-item-checkbox" checked="checked" disabled="disabled" type="checkbox"> SQL Server</p></li>
 <li class="task-list-item"><p><input class="task-list-item-checkbox" checked="checked" disabled="disabled" type="checkbox"> Azure SQL Database (through mssql protocol)</p></li>
 <li class="task-list-item"><p><input class="task-list-item-checkbox" checked="checked" disabled="disabled" type="checkbox"> Oracle</p></li>
-<li class="task-list-item"><p><input class="task-list-item-checkbox" checked="checked" disabled="disabled" type="checkbox"> Big Query - Experimental: need docs and benchmark (also more tests)</p></li>
+<li class="task-list-item"><p><input class="task-list-item-checkbox" checked="checked" disabled="disabled" type="checkbox"> Big Query</p></li>
 <li class="task-list-item"><p><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"> ODBC (WIP)</p></li>
 <li class="task-list-item"><p><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"> …</p></li>
 </ul>
@@ -503,17 +492,9 @@ For more planned data sources, please check out our <a class="reference external
 </ul>
 </div>
 </div>
-<div class="tex2jax_ignore mathjax_ignore section" id="rust-documentation">
-<h1>Rust Documentation<a class="headerlink" href="#rust-documentation" title="Permalink to this headline">¶</a></h1>
-<p>Rust docs: <a class="reference external" href="https://docs.rs/connectorx">stable</a>, <a class="reference external" href="https://sfu-db.github.io/connector-x/connectorx/">nightly</a></p>
-</div>
 <div class="tex2jax_ignore mathjax_ignore section" id="next-plan">
 <h1>Next Plan<a class="headerlink" href="#next-plan" title="Permalink to this headline">¶</a></h1>
 <p>Checkout our [discussion][discussion_page] to participate in deciding our next plan!</p>
-</div>
-<div class="tex2jax_ignore mathjax_ignore section" id="developer-s-guide">
-<h1>Developer’s Guide<a class="headerlink" href="#developer-s-guide" title="Permalink to this headline">¶</a></h1>
-<p>Please see <a class="reference external" href="https://github.com/sfu-db/connector-x/blob/main/CONTRIBUTING.md">Developer’s Guide</a> for information about developing ConnectorX.</p>
 </div>
 <div class="tex2jax_ignore mathjax_ignore section" id="supports">
 <h1>Supports<a class="headerlink" href="#supports" title="Permalink to this headline">¶</a></h1>
