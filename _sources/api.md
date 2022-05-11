@@ -86,8 +86,6 @@ connectorx.read_sql(conn: Union[str, Dict[str, str]], query: Union[List[str], st
   ```python
   import connectorx as cx
 
-  import connectorx as cx
-
   db1 = "postgresql://username1:password1@server1:port1/database1"
   db2 = "postgresql://username2:password2@server2:port2/database2"
   query = "SELECT * FROM db1.nation n, db2.region r where n.n_regionkey = r.r_regionkey"
