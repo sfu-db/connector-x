@@ -94,6 +94,7 @@ partition to the database and then write the returned data to the destination ro
 # Supported Sources & Destinations
 
 Example connection string, supported protocols and data types for each data source can be found [here](https://sfu-db.github.io/connector-x/databases.html).
+
 For more planned data sources, please check out our [discussion](https://github.com/sfu-db/connector-x/discussions/61).
 
 ## Sources
