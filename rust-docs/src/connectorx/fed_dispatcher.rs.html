@@ -215,6 +215,7 @@
 <span id="210">210</span>
 <span id="211">211</span>
 <span id="212">212</span>
+<span id="213">213</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">constants</span>::{<span class="ident">CX_REWRITER_PATH</span>, <span class="ident">J4RS_BASE_PATH</span>, <span class="ident">POSTGRES_JDBC_DRIVER</span>},
     <span class="ident">prelude</span>::<span class="kw-2">*</span>,
@@ -260,6 +261,7 @@
 
     <span class="kw">let</span> <span class="ident">entry</span> <span class="op">=</span> <span class="ident">ClasspathEntry::new</span>(<span class="ident">path</span>.<span class="ident">to_str</span>().<span class="ident">unwrap</span>());
     <span class="ident">JvmBuilder::new</span>()
+        .<span class="ident">skip_setting_native_lib</span>()
         .<span class="ident">classpath_entry</span>(<span class="ident">entry</span>)
         .<span class="ident">with_base_path</span>(<span class="ident">base</span>.<span class="ident">to_str</span>().<span class="ident">unwrap</span>())
         .<span class="ident">build</span>()<span class="question-mark">?</span>
