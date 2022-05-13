@@ -353,6 +353,12 @@ def test_oracle_types(oracle_url: str) -> None:
                 ],
                 dtype="datetime64[ns]",
             ),
+            "TEST_CLOB": pd.Series(
+                ["13ab", "13ab", "13ab", None], dtype="object"
+            ),
+            "TEST_BLOB": pd.Series(
+                [ b'9\xaf', b'9\xaf', b'9\xaf', None], dtype="object"
+            ),
         }
     )
     assert_frame_equal(df, expected, check_names=True)

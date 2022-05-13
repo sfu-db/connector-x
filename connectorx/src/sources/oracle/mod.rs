@@ -332,4 +332,12 @@ macro_rules! impl_produce_text {
     };
 }
 
-impl_produce_text!(i64, f64, String, NaiveDate, NaiveDateTime, DateTime<Utc>,);
+impl_produce_text!(
+    i64,
+    f64,
+    String,
+    NaiveDate,
+    NaiveDateTime,
+    DateTime<Utc>,
+    Vec<u8>,
+);

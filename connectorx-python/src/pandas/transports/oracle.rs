@@ -21,7 +21,7 @@ impl_transport!(
         { BinaryFloat[f64]           => F64[f64]                | conversion none }
         { BinaryDouble[f64]          => F64[f64]                | conversion none }
         { NumInt[i64]                => I64[i64]                | conversion auto }
-        { Blob[Vec<u8>]              => LargeBinary[Vec<u8>]    | conversion none }
+        { Blob[Vec<u8>]              => Bytes[Vec<u8>]          | conversion auto }
         { Clob[String]               => String[String]          | conversion none }
         { VarChar[String]            => String[String]          | conversion auto }
         { Char[String]               => String[String]          | conversion none }
