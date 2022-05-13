@@ -33,7 +33,7 @@ ConnectorX will assign one thread for each partition to load and write data in p
 Currently, we support partitioning on **numerical** columns (**cannot contain NULL**) for **SPJA** queries. 
 
 
-We are now providing federated query support (experimental, PostgreSQL only and do not support partition for now), you can write a single query to join tables from two or more databases. JRE (Java Runtime Environment) is required.
+**Experimental**: We are now providing federated query support (PostgreSQL only and do not support partition for now), you can write a single query to join tables from two or more databases. JRE (Java Runtime Environment) is required.
 
 ```python
 import connectorx as cx
