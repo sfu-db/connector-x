@@ -46,6 +46,8 @@
 <span id="41">41</span>
 <span id="42">42</span>
 <span id="43">43</span>
+<span id="44">44</span>
+<span id="45">45</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">destinations::arrow</span>::{<span class="ident">typesystem::ArrowTypeSystem</span>, <span class="ident">ArrowDestination</span>, <span class="ident">ArrowDestinationError</span>},
     <span class="ident">impl_transport</span>,
@@ -80,6 +82,8 @@
         { <span class="ident">BinaryFloat</span>[<span class="ident">f64</span>]           =&gt; <span class="ident">Float64</span>[<span class="ident">f64</span>]               <span class="op">|</span> <span class="ident">conversion</span> <span class="ident">none</span> }
         { <span class="ident">BinaryDouble</span>[<span class="ident">f64</span>]          =&gt; <span class="ident">Float64</span>[<span class="ident">f64</span>]               <span class="op">|</span> <span class="ident">conversion</span> <span class="ident">none</span> }
         { <span class="ident">NumInt</span>[<span class="ident">i64</span>]                =&gt; <span class="ident">Int64</span>[<span class="ident">i64</span>]                 <span class="op">|</span> <span class="ident">conversion</span> <span class="ident">auto</span> }
+        { <span class="ident">Blob</span>[<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>]              =&gt; <span class="ident">LargeBinary</span>[<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>]       <span class="op">|</span> <span class="ident">conversion</span> <span class="ident">auto</span> }
+        { <span class="ident">Clob</span>[<span class="ident">String</span>]               =&gt; <span class="ident">LargeUtf8</span>[<span class="ident">String</span>]          <span class="op">|</span> <span class="ident">conversion</span> <span class="ident">none</span> }
         { <span class="ident">VarChar</span>[<span class="ident">String</span>]            =&gt; <span class="ident">LargeUtf8</span>[<span class="ident">String</span>]          <span class="op">|</span> <span class="ident">conversion</span> <span class="ident">auto</span> }
         { <span class="ident">Char</span>[<span class="ident">String</span>]               =&gt; <span class="ident">LargeUtf8</span>[<span class="ident">String</span>]          <span class="op">|</span> <span class="ident">conversion</span> <span class="ident">none</span> }
         { <span class="ident">NVarChar</span>[<span class="ident">String</span>]           =&gt; <span class="ident">LargeUtf8</span>[<span class="ident">String</span>]          <span class="op">|</span> <span class="ident">conversion</span> <span class="ident">none</span> }
