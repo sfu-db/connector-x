@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1652495009786,
+  "lastUpdate": 1652496274872,
   "repoUrl": "https://github.com/sfu-db/connector-x",
   "entries": {
     "ConnectorX TPC-H Scale@1 Benchmarks": [
@@ -10526,6 +10526,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.5271408227328773",
             "extra": "mean: 11.1106570340693 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "xiaoying_wang@sfu.ca",
+            "name": "wangxiaoying",
+            "username": "wangxiaoying"
+          },
+          "committer": {
+            "email": "xiaoying_wang@sfu.ca",
+            "name": "wangxiaoying",
+            "username": "wangxiaoying"
+          },
+          "distinct": false,
+          "id": "07167e0cb6a82d9e0f3b389373fe1949a24a1e15",
+          "message": "0.3.1-alpha.1: oracle add clob and blob",
+          "timestamp": "2022-05-14T02:12:56Z",
+          "tree_id": "b758f2906369622cde8bcf7ccf9d62d4f096d2ec",
+          "url": "https://github.com/sfu-db/connector-x/commit/07167e0cb6a82d9e0f3b389373fe1949a24a1e15"
+        },
+        "date": 1652496273596,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_mysql",
+            "value": 0.06624443886647811,
+            "unit": "iter/sec",
+            "range": "stddev: 0.24744707832190704",
+            "extra": "mean: 15.095606772601604 sec\nrounds: 5"
+          },
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_postgres",
+            "value": 0.10976850113962014,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2382227133591097",
+            "extra": "mean: 9.110081577301026 sec\nrounds: 5"
           }
         ]
       }
