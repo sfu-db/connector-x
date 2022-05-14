@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1652248089792,
+  "lastUpdate": 1652494498586,
   "repoUrl": "https://github.com/sfu-db/connector-x",
   "entries": {
     "ConnectorX TPC-H Scale@1 Benchmarks": [
@@ -10450,6 +10450,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.41547150999700455",
             "extra": "mean: 8.279190211743117 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "xiaoying_wang@sfu.ca",
+            "name": "Xiaoying Wang",
+            "username": "wangxiaoying"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "58a48e6990ffbeaf5da0b5d171354b478cd3b645",
+          "message": "Merge pull request #287 from wKollendorf/patch-4\n\nUpdate oracle.rs",
+          "timestamp": "2022-05-13T19:06:36-07:00",
+          "tree_id": "6c501329e6dc9d1e1007d5be705666be7054a0fa",
+          "url": "https://github.com/sfu-db/connector-x/commit/58a48e6990ffbeaf5da0b5d171354b478cd3b645"
+        },
+        "date": 1652494495511,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_mysql",
+            "value": 0.06660881435894186,
+            "unit": "iter/sec",
+            "range": "stddev: 0.3039919511137814",
+            "extra": "mean: 15.013028074800967 sec\nrounds: 5"
+          },
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_postgres",
+            "value": 0.11433369931872997,
+            "unit": "iter/sec",
+            "range": "stddev: 0.7125454793514469",
+            "extra": "mean: 8.74632768779993 sec\nrounds: 5"
           }
         ]
       }
