@@ -33,7 +33,7 @@ ConnectorX will assign one thread for each partition to load and write data in p
 Currently, we support partitioning on **numerical** columns (**cannot contain NULL**) for **SPJA** queries. 
 
 
-We are now providing federated query support (experimental, PostgreSQL only and do not support partition for now), you can write a single query to join tables from two or more databases. JRE (Java Runtime Environment) is required.
+**Experimental**: We are now providing federated query support (PostgreSQL only and do not support partition for now), you can write a single query to join tables from two or more databases. JRE (Java Runtime Environment) is required.
 
 ```python
 import connectorx as cx
@@ -94,6 +94,7 @@ partition to the database and then write the returned data to the destination ro
 # Supported Sources & Destinations
 
 Example connection string, supported protocols and data types for each data source can be found [here](https://sfu-db.github.io/connector-x/databases.html).
+
 For more planned data sources, please check out our [discussion](https://github.com/sfu-db/connector-x/discussions/61).
 
 ## Sources

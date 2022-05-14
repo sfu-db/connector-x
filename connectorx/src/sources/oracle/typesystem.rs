@@ -8,6 +8,8 @@ pub enum OracleTypeSystem {
     NumFloat(bool),
     BinaryFloat(bool),
     BinaryDouble(bool),
+    Blob(bool),
+    Clob(bool),
     VarChar(bool),
     Char(bool),
     NVarChar(bool),
@@ -22,7 +24,8 @@ impl_typesystem! {
     mappings = {
         { NumInt => i64 }
         { Float | NumFloat | BinaryFloat | BinaryDouble => f64 }
-        { VarChar | Char | NVarChar | NChar => String }
+        { Blob => Vec<u8>}
+        { Clob | VarChar | Char | NVarChar | NChar => String }
         { Date => NaiveDate }
         { Timestamp => NaiveDateTime }
         { TimestampTz => DateTime<Utc> }
@@ -39,6 +42,8 @@ impl<'a> From<&'a OracleType> for OracleTypeSystem {
             OracleType::Float(_) => Float(true),
             OracleType::BinaryFloat => BinaryFloat(true),
             OracleType::BinaryDouble => BinaryDouble(true),
+            OracleType::BLOB => Blob(true),
+            OracleType::CLOB => Clob(true),
             OracleType::Char(_) => Char(true),
             OracleType::NChar(_) => NChar(true),
             OracleType::Varchar2(_) => VarChar(true),
