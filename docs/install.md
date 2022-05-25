@@ -12,6 +12,11 @@ pip install connectorx
 
 ### Build from source code
 
+* Step 0: Install tools
+    * Install Rust: `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`
+    * Install [just](https://github.com/casey/just): `cargo install just`
+    * Install [Poetry](https://python-poetry.org/docs/): `pip3 install poetry`
+
 * Step 1: Fresh clone of source
 ```bash
 git clone https://github.com/sfu-db/connector-x.git
@@ -24,7 +29,7 @@ rustup default nightly-{version}
 rustup override set nightly-{version}
 ```
 
-* Step 3: Install dependencies
+* Step 3: Install python dependencies
 ```bash
 just bootstrap-python
 ```
