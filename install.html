@@ -320,6 +320,13 @@ const thebe_selector_output = ".output, .cell_output"
 <div class="section" id="build-from-source-code">
 <h3>Build from source code<a class="headerlink" href="#build-from-source-code" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
+<li><p>Step 0: Install tools</p>
+<ul>
+<li><p>Install Rust: <code class="docutils literal notranslate"><span class="pre">curl</span> <span class="pre">--proto</span> <span class="pre">'=https'</span> <span class="pre">--tlsv1.2</span> <span class="pre">-sSf</span> <span class="pre">https://sh.rustup.rs</span> <span class="pre">|</span> <span class="pre">sh</span></code></p></li>
+<li><p>Install <a class="reference external" href="https://github.com/casey/just">just</a>: <code class="docutils literal notranslate"><span class="pre">cargo</span> <span class="pre">install</span> <span class="pre">just</span></code></p></li>
+<li><p>Install <a class="reference external" href="https://python-poetry.org/docs/">Poetry</a>: <code class="docutils literal notranslate"><span class="pre">pip3</span> <span class="pre">install</span> <span class="pre">poetry</span></code></p></li>
+</ul>
+</li>
 <li><p>Step 1: Fresh clone of source</p></li>
 </ul>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git clone https://github.com/sfu-db/connector-x.git
@@ -334,7 +341,7 @@ rustup override <span class="nb">set</span> nightly-<span class="o">{</span>vers
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>Step 3: Install dependencies</p></li>
+<li><p>Step 3: Install python dependencies</p></li>
 </ul>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>just bootstrap-python
 </pre></div>
