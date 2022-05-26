@@ -292,11 +292,6 @@ const thebe_selector_output = ".output, .cell_output"
   </ul>
  </li>
  <li class="toc-h1 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#next-plan">
-   Next Plan
-  </a>
- </li>
- <li class="toc-h1 nav-item toc-entry">
   <a class="reference internal nav-link" href="#supports">
    Supports
   </a>
@@ -376,11 +371,6 @@ const thebe_selector_output = ".output, .cell_output"
   </ul>
  </li>
  <li class="toc-h1 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#next-plan">
-   Next Plan
-  </a>
- </li>
- <li class="toc-h1 nav-item toc-entry">
   <a class="reference internal nav-link" href="#supports">
    Supports
   </a>
@@ -418,7 +408,7 @@ const thebe_selector_output = ".output, .cell_output"
 <p>The function will partition the query by <strong>evenly</strong> splitting the specified column to the amount of partitions.
 ConnectorX will assign one thread for each partition to load and write data in parallel.
 Currently, we support partitioning on <strong>numerical</strong> columns (<strong>cannot contain NULL</strong>) for <strong>SPJA</strong> queries.</p>
-<p>We are now providing federated query support (experimental, PostgreSQL only and do not support partition for now), you can write a single query to join tables from two or more databases. JRE (Java Runtime Environment) is required.</p>
+<p><strong>Experimental: We are now providing federated query support (PostgreSQL only and do not support partition for now), you can write a single query to join tables from two or more databases! (JRE &gt;= 1.8 is required)</strong></p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">connectorx</span> <span class="k">as</span> <span class="nn">cx</span>
 
 <span class="n">db1</span> <span class="o">=</span> <span class="s2">&quot;postgresql://username1:password1@server1:port1/database1&quot;</span>
@@ -492,16 +482,13 @@ partition to the database and then write the returned data to the destination ro
 </ul>
 </div>
 </div>
-<div class="tex2jax_ignore mathjax_ignore section" id="next-plan">
-<h1>Next Plan<a class="headerlink" href="#next-plan" title="Permalink to this headline">¶</a></h1>
-<p>Checkout our [discussion][discussion_page] to participate in deciding our next plan!</p>
-</div>
 <div class="tex2jax_ignore mathjax_ignore section" id="supports">
 <h1>Supports<a class="headerlink" href="#supports" title="Permalink to this headline">¶</a></h1>
 <p>You are always welcomed to:</p>
 <ol class="simple">
 <li><p>Ask questions in stackoverflow. Make sure to have #connectorx attached.</p></li>
 <li><p>Ask questions &amp; propose new ideas in our [forum][discussion_page].</p></li>
+<li><p>Help us developing this project (adding databases and dataframes), please check out this <a class="reference external" href="https://github.com/sfu-db/connector-x/blob/main/CONTRIBUTING.md">guide</a>.</p></li>
 </ol>
 </div>
 <div class="tex2jax_ignore mathjax_ignore section" id="organizations-and-projects-using-connectorx">
