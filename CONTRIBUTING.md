@@ -6,11 +6,7 @@ This doc describes how you can get started at developing ConnectorX.
 
 ### Install tools and dependencies
 
-* Install Rust: `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`
-* Switch to nightly (under project directory): `rustup toolchain install nightly && rustup override set nightly`
-* Install [just](https://github.com/casey/just): `cargo install just`
-* Install [Poetry](https://python-poetry.org/docs/): `pip3 install poetry`
-* Install Python dependencies: `just bootstrap-python`
+Please check out [here](https://sfu-db.github.io/connector-x/install.html#build-from-source-code)
 
 
 ### Run tests
@@ -50,7 +46,7 @@ MODIN_ENGINE=dask
 
 * Seed database: `just seed-db`
 * Run Rust tests: `just test`
-* Run Python tests: `just test-python`
+* Run Python tests: `just test-python [-k {test case keyword}]`
 
 ### Other commands
 
@@ -83,7 +79,3 @@ MODIN_ENGINE=dask
 * Add corresponding unit tests under `connectorx/tests` for Rust and `connectorx-python/connectorx/tests` for Python
 
 **Please check out [here](https://sfu-db.github.io/connector-x/connectorx/#extending-connectorx) for more detailed implementation instructions of how to extend ConnectorX.**
-
-## How to manually build ConnectorX
-
-Please check out [here](https://sfu-db.github.io/connector-x/install.html#build-from-source-code)
