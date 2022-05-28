@@ -1,3 +1,4 @@
 [submodule "federated-query"]
 	path = federated-query
-	url = git@github.com:sfu-db/federated-query.git
+	url = https://github.com/sfu-db/federated-query.git
+	branch = main
