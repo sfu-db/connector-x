@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1653894488920,
+  "lastUpdate": 1653895994455,
   "repoUrl": "https://github.com/sfu-db/connector-x",
   "entries": {
     "ConnectorX TPC-H Scale@1 Benchmarks": [
@@ -10716,6 +10716,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.3276919144882149",
             "extra": "mean: 9.249457278102636 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "dave2008713@gmail.com",
+            "name": "Qingping Hou",
+            "username": "houqp"
+          },
+          "committer": {
+            "email": "dave2008713@gmail.com",
+            "name": "Qingping Hou",
+            "username": "houqp"
+          },
+          "distinct": true,
+          "id": "75eec159605ac62c9efbd1e60e1082c67a977c27",
+          "message": "pin git submodule using https protocol\n\nUsing git/ssh protocl for submodule repo prevents us from pulling\nconnectorx as a cargo dependency by a specific git commit.",
+          "timestamp": "2022-05-28T16:51:12-07:00",
+          "tree_id": "cdf917ec43a70fc5589b4370adae636b19e7e442",
+          "url": "https://github.com/sfu-db/connector-x/commit/75eec159605ac62c9efbd1e60e1082c67a977c27"
+        },
+        "date": 1653895991401,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_mysql",
+            "value": 0.08575551145796889,
+            "unit": "iter/sec",
+            "range": "stddev: 0.6071757695998322",
+            "extra": "mean: 11.661058082431556 sec\nrounds: 5"
+          },
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_postgres",
+            "value": 0.10671761437506617,
+            "unit": "iter/sec",
+            "range": "stddev: 1.551088067362256",
+            "extra": "mean: 9.370524311810732 sec\nrounds: 5"
           }
         ]
       }
