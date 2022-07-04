@@ -108,7 +108,8 @@ You are always welcomed to:
 
 # Organizations and Projects using ConnectorX
 
-[<img src="https://raw.githubusercontent.com/pola-rs/polars-static/master/logos/polars-logo-dark.svg" height="100" style="margin-bottom: -2px"/>](https://github.com/pola-rs/polars)
-[<img src="https://raw.githubusercontent.com/sfu-db/dataprep/develop/assets/logo.png" height="100" style="margin-bottom: -2px"/>](https://dataprep.ai/)
+[<img src="https://raw.githubusercontent.com/pola-rs/polars-static/master/logos/polars-logo-dark.svg" height="60" style="margin-bottom: -2px"/>](https://github.com/pola-rs/polars)
+[<img src="https://raw.githubusercontent.com/sfu-db/dataprep/develop/assets/logo.png" height="60" style="margin-bottom: -2px"/>](https://dataprep.ai/)
+[<img src="https://github.com/modin-project/modin/blob/3d6368edf311995ad231ec5342a51cd9e4e3dc20/docs/img/MODIN_ver2_hrz.png?raw=true" height="60" style="margin-bottom: -2px"/>](https://modin.readthedocs.io)
 
 To add your project/organization here, reply our post [here](https://github.com/sfu-db/connector-x/discussions/146)
