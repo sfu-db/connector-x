@@ -44,8 +44,6 @@ jobs:
       - name: Setup project
         run: |
           just bootstrap-python
-          cp README.md connectorx-python/README.md
-          cp LICENSE connectorx-python/LICENSE
 
       - uses: messense/maturin-action@v1
         with:
@@ -114,8 +112,6 @@ jobs:
       - name: Setup project
         run: |
           just bootstrap-python
-          cp README.md connectorx-python/README.md
-          cp LICENSE connectorx-python/LICENSE
 
       - uses: messense/maturin-action@v1
         with:
@@ -175,8 +171,6 @@ jobs:
       - name: Setup project
         run: |
           just bootstrap-python
-          cp README.md connectorx-python/README.md
-          cp LICENSE connectorx-python/LICENSE
 
       - uses: messense/maturin-action@v1
         with:
