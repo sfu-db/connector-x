@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1657247818742,
+  "lastUpdate": 1657248318353,
   "repoUrl": "https://github.com/sfu-db/connector-x",
   "entries": {
     "ConnectorX TPC-H Scale@1 Benchmarks": [
@@ -11058,6 +11058,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.8409743581855198",
             "extra": "mean: 8.874832689017058 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "xiaoying_wang@sfu.ca",
+            "name": "Xiaoying Wang",
+            "username": "wangxiaoying"
+          },
+          "committer": {
+            "email": "xiaoying_wang@sfu.ca",
+            "name": "Xiaoying Wang",
+            "username": "wangxiaoying"
+          },
+          "distinct": false,
+          "id": "e241731123cac64336e90ba0d880f412da14f841",
+          "message": "0.3.1-alpha.2: add license to pypi",
+          "timestamp": "2022-07-07T17:37:50-07:00",
+          "tree_id": "68b16c9bca3a4c68d585e9066c2b5706d5e604a5",
+          "url": "https://github.com/sfu-db/connector-x/commit/e241731123cac64336e90ba0d880f412da14f841"
+        },
+        "date": 1657248316912,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_mysql",
+            "value": 0.07418022520756563,
+            "unit": "iter/sec",
+            "range": "stddev: 0.34085171967785577",
+            "extra": "mean: 13.480681639909744 sec\nrounds: 5"
+          },
+          {
+            "name": "connectorx/tests/benchmarks.py::bench_postgres",
+            "value": 0.1087087022828208,
+            "unit": "iter/sec",
+            "range": "stddev: 1.31182226193756",
+            "extra": "mean: 9.198895571380854 sec\nrounds: 5"
           }
         ]
       }
