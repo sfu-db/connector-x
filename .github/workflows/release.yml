@@ -47,6 +47,7 @@ jobs:
 
       - uses: messense/maturin-action@v1
         with:
+          rust-toolchain: nightly-2022-04-17
           maturin-version: v0.12.1
           command: build
           args: -m connectorx-python/Cargo.toml -i python --no-sdist --release --manylinux 2014
@@ -60,6 +61,7 @@ jobs:
       # rebuild the wheel to incorporate j4rs dependencies
       - uses: messense/maturin-action@v1
         with:
+          rust-toolchain: nightly-2022-04-17
           maturin-version: v0.12.1
           command: build
           args: -m connectorx-python/Cargo.toml -i python --no-sdist --release --manylinux 2014
@@ -115,6 +117,7 @@ jobs:
 
       - uses: messense/maturin-action@v1
         with:
+          rust-toolchain: nightly-2022-04-17
           maturin-version: v0.12.1
           command: build
           args: -m connectorx-python/Cargo.toml -i python --no-sdist --release
@@ -128,6 +131,7 @@ jobs:
       # rebuild the wheel to incorporate j4rs dependencies
       - uses: messense/maturin-action@v1
         with:
+          rust-toolchain: nightly-2022-04-17
           maturin-version: v0.12.1
           command: build
           args: -m connectorx-python/Cargo.toml -i python --no-sdist --release
@@ -174,6 +178,7 @@ jobs:
 
       - uses: messense/maturin-action@v1
         with:
+          rust-toolchain: nightly-2022-04-17
           maturin-version: v0.12.1
           command: build
           args: -m connectorx-python/Cargo.toml --target aarch64-apple-darwin -i python --no-sdist --release
@@ -187,6 +192,7 @@ jobs:
       # rebuild the wheel to incorporate j4rs dependencies
       - uses: messense/maturin-action@v1
         with:
+          rust-toolchain: nightly-2022-04-17
           maturin-version: v0.12.1
           command: build
           args: -m connectorx-python/Cargo.toml --target aarch64-apple-darwin -i python --no-sdist --release
