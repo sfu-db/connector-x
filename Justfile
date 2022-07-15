@@ -21,8 +21,6 @@ test-feature-gate:
     cargo c --features dst_arrow2
 
 bootstrap-python:
-    cp README.md connectorx-python/README.md
-    cp LICENSE connectorx-python/LICENSE
     cd connectorx-python && poetry install
 
 setup-java:
@@ -102,8 +100,6 @@ build-python-wheel:
     cd connectorx-python && maturin build --release -i python --no-sdist
     # copy files
     cp -rf connectorx-python/target/release/jassets connectorx-python/connectorx/dependencies
-    cp README.md connectorx-python/README.md
-    cp LICENSE connectorx-python/LICENSE
     # build final wheel
     cd connectorx-python && maturin build --release -i python --no-sdist
 

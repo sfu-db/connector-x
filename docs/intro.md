@@ -24,8 +24,7 @@ The function will partition the query by **evenly** splitting the specified colu
 ConnectorX will assign one thread for each partition to load and write data in parallel.
 Currently, we support partitioning on **numerical** columns (**cannot contain NULL**) for **SPJA** queries. 
 
-We are now providing federated query support (experimental, PostgreSQL only and do not support partition for now), you can write a single query to join tables from two or more databases. JRE (Java Runtime Environment) is required.
-
+**Experimental: We are now providing federated query support (PostgreSQL only and do not support partition for now), you can write a single query to join tables from two or more databases! (JRE >= 1.8 is required)**
 ```python
 import connectorx as cx
 
@@ -100,19 +99,17 @@ For more planned data sources, please check out our [discussion](https://github.
 - [x] Dask (through Pandas)
 - [x] Polars (through PyArrow)
 
-# Next Plan
-
-Checkout our [discussion][discussion_page] to participate in deciding our next plan!
-
 # Supports
 
 You are always welcomed to:
 1. Ask questions in stackoverflow. Make sure to have #connectorx attached.
 2. Ask questions & propose new ideas in our [forum][discussion_page].
+3. Help us developing this project (adding databases and dataframes), please check out this [guide](https://github.com/sfu-db/connector-x/blob/main/CONTRIBUTING.md).
 
 # Organizations and Projects using ConnectorX
 
-[<img src="https://raw.githubusercontent.com/pola-rs/polars-static/master/logos/polars-logo-dark.svg" height="100" style="margin-bottom: -2px"/>](https://github.com/pola-rs/polars)
-[<img src="https://raw.githubusercontent.com/sfu-db/dataprep/develop/assets/logo.png" height="100" style="margin-bottom: -2px"/>](https://dataprep.ai/)
+[<img src="https://raw.githubusercontent.com/pola-rs/polars-static/master/logos/polars-logo-dark.svg" height="60" style="margin-bottom: -2px"/>](https://github.com/pola-rs/polars)
+[<img src="https://raw.githubusercontent.com/sfu-db/dataprep/develop/assets/logo.png" height="60" style="margin-bottom: -2px"/>](https://dataprep.ai/)
+[<img src="https://github.com/modin-project/modin/blob/3d6368edf311995ad231ec5342a51cd9e4e3dc20/docs/img/MODIN_ver2_hrz.png?raw=true" height="60" style="margin-bottom: -2px"/>](https://modin.readthedocs.io)
 
 To add your project/organization here, reply our post [here](https://github.com/sfu-db/connector-x/discussions/146)

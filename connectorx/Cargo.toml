@@ -7,7 +7,7 @@ license = "MIT"
 name = "connectorx"
 readme = "../README.md"
 repository = "https://github.com/sfu-db/connector-x"
-version = "0.3.1-alpha.1"
+version = "0.3.1-alpha.3"
 
 [dependencies]
 anyhow = "1"
@@ -54,6 +54,7 @@ urlencoding = {version = "2.1", optional = true}
 uuid = {version = "0.8", optional = true}
 j4rs = {version = "0.13", optional = true}
 datafusion = {git = "https://github.com/apache/arrow-datafusion", rev = "93a7054b837cec2418adc427a6505dcea92e6755", optional = true}
+# datafusion = {version = "8.0.0", optional = true}
 
 [lib]
 crate-type = ["cdylib", "rlib"]
