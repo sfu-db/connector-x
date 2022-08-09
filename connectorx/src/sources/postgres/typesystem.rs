@@ -103,7 +103,7 @@ impl<'a> From<&'a Type> for PostgresTypeSystem {
     }
 }
 
-// Link PostgresDTypes back to the one defiend by the postgres crate.
+// Link PostgresDTypes back to the one defined by the postgres crate.
 impl<'a> From<PostgresTypeSystem> for Type {
     fn from(ty: PostgresTypeSystem) -> Type {
         use PostgresTypeSystem::*;

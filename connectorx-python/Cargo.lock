@@ -687,6 +687,7 @@ dependencies = [
  "postgres",
  "postgres-native-tls",
  "postgres-openssl",
+ "postgres_array",
  "r2d2",
  "r2d2-oracle",
  "r2d2_mysql",
@@ -3074,6 +3075,18 @@ dependencies = [
  "serde",
  "serde_json",
  "uuid 0.8.2",
+]
+
+[[package]]
+name = "postgres_array"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0cf05a6ba564431fe9deaefbe02fe4da9e4f3aa879549f09a8d091afc3b39a80"
+dependencies = [
+ "bytes",
+ "fallible-iterator",
+ "postgres-protocol",
+ "postgres-types",
 ]
 
 [[package]]
