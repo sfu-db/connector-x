@@ -760,23 +760,6 @@ def test_types_cursor(postgres_url: str) -> None:
     )
     assert_frame_equal(df, expected, check_names=True)
 
-def test_types_simple(postgres_url: str) -> None:
-    query = "SELECT test_char, test_i2array FROM test_types"
-    df = read_sql(postgres_url, query, protocol="simple")
-    for col in df.columns:
-        print("=====")
-        print(col)
-        print(df[col])
-        print("======")
-
-    query = "SELECT test_language, test_hello FROM test_str"
-    df = read_sql(postgres_url, query, protocol="simple")
-    for col in df.columns:
-        print("=====")
-        print(col)
-        print(df[col])
-        print("======")
-
 def test_empty_result(postgres_url: str) -> None:
     query = "SELECT * FROM test_table where test_int < -100"
     df = read_sql(postgres_url, query)
