@@ -1113,14 +1113,13 @@ macro_rules! impl_simple_produce {
     };
 }
 
-impl_simple_produce!(i8, i16, i32, i64, f32, f64, Decimal, Uuid,);
+impl_simple_produce!(i8, i16, i32, i64, f32, f64, Decimal, Uuid, bool,);
 impl_simple_produce_unimplemented!(Vec<i16>,
     Vec<i32>,
     Vec<i64>,
     Vec<f32>,
     Vec<f64>,
     Vec<Decimal>,
-    bool,
     &'r str,
     Vec<u8>,
     NaiveTime,

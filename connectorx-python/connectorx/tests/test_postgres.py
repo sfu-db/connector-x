@@ -761,7 +761,7 @@ def test_types_cursor(postgres_url: str) -> None:
     assert_frame_equal(df, expected, check_names=True)
 
 def test_types_simple(postgres_url: str) -> None:
-    query = "SELECT test_date, test_timestamp, test_timestamptz, test_int16, test_int64, test_float32, test_numeric, test_bpchar, test_char, test_varchar, test_uuid, test_time, test_json, test_jsonb, test_bytea, test_enum::text, test_f4array, test_f8array, test_narray, test_i2array, test_i4array, test_i8array FROM test_types"
+    query = "SELECT test_bool FROM test_table"
     df = read_sql(postgres_url, query, protocol="simple")
     for col in df.columns:
         print("=====")
