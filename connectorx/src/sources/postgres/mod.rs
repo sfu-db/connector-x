@@ -1117,10 +1117,7 @@ macro_rules! impl_simple_produce {
 
 // }
 impl_simple_produce!(i8, i16, i32, i64, f32, f64, Decimal, Uuid, bool, );
-impl_simple_produce_unimplemented!(NaiveTime,
-    NaiveDateTime,
-    DateTime<Utc>,
-    NaiveDate,
+impl_simple_produce_unimplemented!(DateTime<Utc>,
     Value,
     HashMap<String, Option<String>>,);
 
@@ -1541,50 +1538,143 @@ impl<'r, 'a> Produce<'r,Option<Vec<Decimal>>> for PostgresSimpleSourceParser {
     }
 }
 
-// impl<'r> Produce<'r, NaiveDate> for PostgresSimpleSourceParser {
-//     type Error = PostgresSourceError;
+impl<'r> Produce<'r, NaiveDate> for PostgresSimpleSourceParser {
+    type Error = PostgresSourceError;
 
-//     #[throws(PostgresSourceError)]
-//     fn produce(&'r mut self) -> NaiveDate {
-//         let (ridx, cidx) = self.next_loc()?;
-//         let val = match &self.rows[ridx] {
-//             SimpleQueryMessage::Row(row) => match row.try_get(cidx)? {
-//                 Some(s) => NaiveDate::parse_from_str(s, "%Y-%m-%d")
-//                     .map_err(|_| ConnectorXError::cannot_produce::<NaiveDate>(Some(s.into())))?,
-//                 None => panic!("get NULL for non-NULL column"),
-//             },
-//             SimpleQueryMessage::CommandComplete(c) => {
-//                 panic!("get command: {}", c);
-//             }
-//             _ => {
-//                 panic!("what?");
-//             }
-//         };
-//         val
-//     }
-// }
+    #[throws(PostgresSourceError)]
+    fn produce(&'r mut self) -> NaiveDate {
+        let (ridx, cidx) = self.next_loc()?;
+        let val = match &self.rows[ridx] {
+            SimpleQueryMessage::Row(row) => match row.try_get(cidx)? {
+                Some(s) => NaiveDate::parse_from_str(s, "%Y-%m-%d")
+                    .map_err(|_| ConnectorXError::cannot_produce::<NaiveDate>(Some(s.into())))?,
+                None => panic!("get NULL for non-NULL column"),
+            },
+            SimpleQueryMessage::CommandComplete(c) => {
+                panic!("get command: {}", c);
+            }
+            _ => {
+                panic!("what?");
+            }
+        };
+        val
+    }
+}
 
-// impl<'r> Produce<'r, Option<NaiveDate>> for PostgresSimpleSourceParser {
-//     type Error = PostgresSourceError;
+impl<'r> Produce<'r, Option<NaiveDate>> for PostgresSimpleSourceParser {
+    type Error = PostgresSourceError;
 
-//     #[throws(PostgresSourceError)]
-//     fn produce(&'r mut self) -> Option<NaiveDate> {
-//         let (ridx, cidx) = self.next_loc()?;
-//         let val = match &self.rows[ridx] {
-//             SimpleQueryMessage::Row(row) => match row.try_get(cidx)? {
-//                 Some(s) => Some(NaiveDate::parse_from_str(s, "%Y-%m-%d").map_err(|_| {
-//                     ConnectorXError::cannot_produce::<Option<NaiveDate>>(Some(s.into()))
-//                 })?),
-//                 None => None,
-//             },
-//             SimpleQueryMessage::CommandComplete(c) => {
-//                 panic!("get command: {}", c);
-//             }
-//             _ => {
-//                 panic!("what?");
-//             }
-//         };
-//         val
-//     }
-// }
+    #[throws(PostgresSourceError)]
+    fn produce(&'r mut self) -> Option<NaiveDate> {
+        let (ridx, cidx) = self.next_loc()?;
+        let val = match &self.rows[ridx] {
+            SimpleQueryMessage::Row(row) => match row.try_get(cidx)? {
+                Some(s) => Some(NaiveDate::parse_from_str(s, "%Y-%m-%d").map_err(|_| {
+                    ConnectorXError::cannot_produce::<Option<NaiveDate>>(Some(s.into()))
+                })?),
+                None => None,
+            },
+            SimpleQueryMessage::CommandComplete(c) => {
+                panic!("get command: {}", c);
+            }
+            _ => {
+                panic!("what?");
+            }
+        };
+        val
+    }
+}
 
+impl<'r> Produce<'r, NaiveTime> for PostgresSimpleSourceParser {
+    type Error = PostgresSourceError;
+
+    #[throws(PostgresSourceError)]
+    fn produce(&'r mut self) -> NaiveTime {
+        let (ridx, cidx) = self.next_loc()?;
+        let val = match &self.rows[ridx] {
+            SimpleQueryMessage::Row(row) => match row.try_get(cidx)? {
+                Some(s) => NaiveTime::parse_from_str(s, "%H:%M:%S")
+                    .map_err(|_| ConnectorXError::cannot_produce::<NaiveTime>(Some(s.into())))?,
+                None => panic!("get NULL for non-NULL column"),
+            },
+            SimpleQueryMessage::CommandComplete(c) => {
+                panic!("get command: {}", c);
+            }
+            _ => {
+                panic!("what?");
+            }
+        };
+        val
+    }
+}
+
+impl<'r> Produce<'r, Option<NaiveTime>> for PostgresSimpleSourceParser {
+    type Error = PostgresSourceError;
+
+    #[throws(PostgresSourceError)]
+    fn produce(&'r mut self) -> Option<NaiveTime> {
+        let (ridx, cidx) = self.next_loc()?;
+        let val = match &self.rows[ridx] {
+            SimpleQueryMessage::Row(row) => match row.try_get(cidx)? {
+                Some(s) => Some(NaiveTime::parse_from_str(s, "%H:%M:%S").map_err(|_| {
+                    ConnectorXError::cannot_produce::<Option<NaiveTime>>(Some(s.into()))
+                })?),
+                None => None,
+            },
+            SimpleQueryMessage::CommandComplete(c) => {
+                panic!("get command: {}", c);
+            }
+            _ => {
+                panic!("what?");
+            }
+        };
+        val
+    }
+}
+
+impl<'r> Produce<'r, NaiveDateTime> for PostgresSimpleSourceParser {
+    type Error = PostgresSourceError;
+
+    #[throws(PostgresSourceError)]
+    fn produce(&'r mut self) -> NaiveDateTime {
+        let (ridx, cidx) = self.next_loc()?;
+        let val = match &self.rows[ridx] {
+            SimpleQueryMessage::Row(row) => match row.try_get(cidx)? {
+                Some(s) => NaiveDateTime::parse_from_str(s, "%Y-%m-%d %H:%M:%S")
+                    .map_err(|_| ConnectorXError::cannot_produce::<NaiveDateTime>(Some(s.into())))?,
+                None => panic!("get NULL for non-NULL column"),
+            },
+            SimpleQueryMessage::CommandComplete(c) => {
+                panic!("get command: {}", c);
+            }
+            _ => {
+                panic!("what?");
+            }
+        };
+        val
+    }
+}
+
+impl<'r> Produce<'r, Option<NaiveDateTime>> for PostgresSimpleSourceParser {
+    type Error = PostgresSourceError;
+
+    #[throws(PostgresSourceError)]
+    fn produce(&'r mut self) -> Option<NaiveTime> {
+        let (ridx, cidx) = self.next_loc()?;
+        let val = match &self.rows[ridx] {
+            SimpleQueryMessage::Row(row) => match row.try_get(cidx)? {
+                Some(s) => Some(NaiveTime::parse_from_str(s, "%Y-%m-%d %H:%M:%S").map_err(|_| {
+                    ConnectorXError::cannot_produce::<Option<NaiveTime>>(Some(s.into()))
+                })?),
+                None => None,
+            },
+            SimpleQueryMessage::CommandComplete(c) => {
+                panic!("get command: {}", c);
+            }
+            _ => {
+                panic!("what?");
+            }
+        };
+        val
+    }
+}
