@@ -14,7 +14,7 @@ Adding `sslmode=require` to connection uri parameter force SSL connection. Examp
 import connectorx as cx
 conn = 'postgres://username:password@server:port/database'         # connection token
 query = "SELECT * FROM table"                                   # query string
-cx.read_sql(conn, query)                                        # read data from BigQuery
+cx.read_sql(conn, query)                                        # read data from Postgres
 ```
 
 ## Postgres-Pandas Type Mapping
