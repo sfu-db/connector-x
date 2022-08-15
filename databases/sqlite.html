@@ -421,7 +421,7 @@ title="Print to PDF"
 <span class="n">db_path</span> <span class="o">=</span> <span class="s1">&#39;/home/user/path/test.db&#39;</span>                         <span class="c1"># path to your SQLite database</span>
 <span class="n">conn</span> <span class="o">=</span> <span class="s1">&#39;sqlite://&#39;</span> <span class="o">+</span> <span class="n">db_path</span>                                <span class="c1"># connection token</span>
 <span class="n">query</span> <span class="o">=</span> <span class="s1">&#39;SELECT * FROM `database.dataset.table`&#39;</span>            <span class="c1"># query string</span>
-<span class="n">cx</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">query</span><span class="p">)</span>                                    <span class="c1"># read data from BigQuery</span>
+<span class="n">cx</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">query</span><span class="p">)</span>                                    <span class="c1"># read data from SQLite</span>
 </pre></div>
 </div>
 </section>
