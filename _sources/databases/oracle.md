@@ -1,12 +1,12 @@
 # Oracle
 
 
-### Oracle Connection
+### SQLite Connection
 ```py
 import connectorx as cx
 conn = 'oracle://username:password@server:port/database'        # connection token
 query = 'SELECT * FROM table'                                   # query string
-cx.read_sql(conn, query)                                        # read data from Oracle
+cx.read_sql(conn, query)                                        # read data from BigQuery
 ```
 
 ### Oracle-Pandas Type Mapping
