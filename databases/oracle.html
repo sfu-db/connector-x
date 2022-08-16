@@ -349,8 +349,8 @@ title="Print to PDF"
     <nav id="bd-toc-nav" aria-label="Page">
         <ul class="visible nav section-nav flex-column">
  <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#sqlite-connection">
-   SQLite Connection
+  <a class="reference internal nav-link" href="#oracle-connection">
+   Oracle Connection
   </a>
  </li>
  <li class="toc-h2 nav-item toc-entry">
@@ -383,8 +383,8 @@ title="Print to PDF"
                         <nav aria-label="Page">
                             <ul class="visible nav section-nav flex-column">
  <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#sqlite-connection">
-   SQLite Connection
+  <a class="reference internal nav-link" href="#oracle-connection">
+   Oracle Connection
   </a>
  </li>
  <li class="toc-h2 nav-item toc-entry">
@@ -409,12 +409,12 @@ title="Print to PDF"
                 
   <section class="tex2jax_ignore mathjax_ignore" id="oracle">
 <h1>Oracle<a class="headerlink" href="#oracle" title="Permalink to this headline">#</a></h1>
-<section id="sqlite-connection">
-<h2>SQLite Connection<a class="headerlink" href="#sqlite-connection" title="Permalink to this headline">#</a></h2>
+<section id="oracle-connection">
+<h2>Oracle Connection<a class="headerlink" href="#oracle-connection" title="Permalink to this headline">#</a></h2>
 <div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">connectorx</span> <span class="k">as</span> <span class="nn">cx</span>
 <span class="n">conn</span> <span class="o">=</span> <span class="s1">&#39;oracle://username:password@server:port/database&#39;</span>        <span class="c1"># connection token</span>
 <span class="n">query</span> <span class="o">=</span> <span class="s1">&#39;SELECT * FROM table&#39;</span>                                   <span class="c1"># query string</span>
-<span class="n">cx</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">query</span><span class="p">)</span>                                        <span class="c1"># read data from BigQuery</span>
+<span class="n">cx</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">query</span><span class="p">)</span>                                        <span class="c1"># read data from Oracle</span>
 </pre></div>
 </div>
 </section>
