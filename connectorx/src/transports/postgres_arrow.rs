@@ -4,8 +4,8 @@ use crate::destinations::arrow::{
     typesystem::ArrowTypeSystem, ArrowDestination, ArrowDestinationError,
 };
 use crate::sources::postgres::{
-    BinaryProtocol, CSVProtocol, CursorProtocol, SimpleProtocol, PostgresSource, PostgresSourceError,
-    PostgresTypeSystem,
+    BinaryProtocol, CSVProtocol, CursorProtocol, PostgresSource, PostgresSourceError,
+    PostgresTypeSystem, SimpleProtocol,
 };
 use crate::typesystem::TypeConversion;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
