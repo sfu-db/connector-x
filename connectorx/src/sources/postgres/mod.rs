@@ -1112,9 +1112,7 @@ macro_rules! impl_simple_produce {
         )+
     };
 }
-// macro_rules! impl_simple_vec_produce {
 
-// }
 impl_simple_produce!(i8, i16, i32, i64, f32, f64, Decimal, Uuid, bool,);
 impl_simple_produce_unimplemented!(
     Value,
