@@ -98,7 +98,7 @@
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">ty</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">OracleType</span>) -&gt; <span class="ident">OracleTypeSystem</span> {
         <span class="kw">use</span> <span class="ident">OracleTypeSystem</span>::<span class="kw-2">*</span>;
         <span class="kw">match</span> <span class="ident">ty</span> {
-            <span class="ident">OracleType::Number</span>(<span class="number">0</span>, <span class="number">0</span>) =&gt; <span class="ident">NumFloat</span>(<span class="bool-val">false</span>),
+            <span class="ident">OracleType::Number</span>(<span class="number">0</span>, <span class="number">0</span>) =&gt; <span class="ident">NumFloat</span>(<span class="bool-val">true</span>),
             <span class="ident">OracleType::Number</span>(<span class="kw">_</span>, <span class="number">0</span>) =&gt; <span class="ident">NumInt</span>(<span class="bool-val">true</span>),
             <span class="ident">OracleType::Number</span>(<span class="kw">_</span>, <span class="kw">_</span>) =&gt; <span class="ident">NumFloat</span>(<span class="bool-val">true</span>),
             <span class="ident">OracleType::Float</span>(<span class="kw">_</span>) =&gt; <span class="ident">Float</span>(<span class="bool-val">true</span>),
@@ -113,7 +113,7 @@
             <span class="ident">OracleType::Date</span> =&gt; <span class="ident">Date</span>(<span class="bool-val">true</span>),
             <span class="ident">OracleType::Timestamp</span>(<span class="kw">_</span>) =&gt; <span class="ident">Timestamp</span>(<span class="bool-val">true</span>),
             <span class="ident">OracleType::TimestampTZ</span>(<span class="kw">_</span>) =&gt; <span class="ident">TimestampTz</span>(<span class="bool-val">true</span>),
-            <span class="kw">_</span> =&gt; <span class="macro">unimplemented!</span>(<span class="string">&quot;{}&quot;</span>, <span class="macro">format!</span>(<span class="string">&quot;hahaha {:?}&quot;</span>, <span class="ident">ty</span>)),
+            <span class="kw">_</span> =&gt; <span class="macro">unimplemented!</span>(<span class="string">&quot;{}&quot;</span>, <span class="macro">format!</span>(<span class="string">&quot;Type {:?} not implemented for oracle!&quot;</span>, <span class="ident">ty</span>)),
         }
     }
 }
