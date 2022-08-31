@@ -47,7 +47,7 @@ regex = {version = "1", optional = true}
 rusqlite = {version = "0.25", features = ["column_decltype", "chrono", "bundled"], optional = true}
 rust_decimal = {version = "1", features = ["db-postgres"], optional = true}
 serde_json = {version = "1", optional = true}
-tiberius = {version = "0.5", features = ["rust_decimal", "chrono"], optional = true}
+tiberius = {version = "0.5", features = ["rust_decimal", "chrono", "integrated-auth-gssapi"], optional = true}
 tokio = {version = "1", features = ["rt", "rt-multi-thread", "net"], optional = true}
 url = {version = "2", optional = true}
 urlencoding = {version = "2.1", optional = true}
