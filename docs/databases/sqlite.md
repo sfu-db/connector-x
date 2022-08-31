@@ -10,7 +10,7 @@ import connectorx as cx
 db_path = '/home/user/path/test.db'                         # path to your SQLite database
 conn = 'sqlite://' + db_path                                # connection token
 query = 'SELECT * FROM `database.dataset.table`'            # query string
-cx.read_sql(conn, query)                                    # read data from BigQuery
+cx.read_sql(conn, query)                                    # read data from SQLite
 ```
 
 ### SQLite Type Mapping

@@ -21,6 +21,7 @@ CREATE TABLE test_issue(
 INSERT INTO test_issue VALUES (1.111);
 INSERT INTO test_issue VALUES (2.222);
 INSERT INTO test_issue VALUES (3.333);
+INSERT INTO test_issue VALUES (NULL);
 
 
 CREATE TABLE test_types(

@@ -14,7 +14,7 @@ By adding `encrypt=true` to connection uri parameter, SQLServer will use SSL enc
 import connectorx as cx
 conn = 'mssql://username:password@server:port/database?encrypt=true&trusted_connection=true'         # connection token
 query = 'SELECT * FROM table'                                   # query string
-cx.read_sql(conn, query)                                        # read data from BigQuery
+cx.read_sql(conn, query)                                        # read data from MsSQL
 ```
 
 ### SQLServer-Pandas Type Mapping

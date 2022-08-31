@@ -163,7 +163,6 @@ def test_oracle_manual_partition(oracle_url: str) -> None:
     df.sort_values(by="TEST_INT", inplace=True, ignore_index=True)
     assert_frame_equal(df, expected, check_names=True)
 
-
 @pytest.mark.skipif(
     not os.environ.get("ORACLE_URL"), reason="Test oracle only when `ORACLE_URL` is set"
 )
@@ -310,6 +309,7 @@ def test_oracle_with_partition_and_spja(oracle_url: str) -> None:
 def test_oracle_types(oracle_url: str) -> None:
     query = "SELECT * FROM test_types"
     df = read_sql(oracle_url, query)
+    print(df)
     expected = pd.DataFrame(
         data={
             "TEST_NUM_INT": pd.Series([1, 5, 5, None], dtype="Int64"),
@@ -437,7 +437,7 @@ def test_oracle_round_function(oracle_url: str) -> None:
     df = read_sql(oracle_url, query)
     expected = pd.DataFrame(
         data={
-            "TEST_ROUND": pd.Series([1.11, 2.22, 3.33], dtype="float64"),
+            "TEST_ROUND": pd.Series([1.11, 2.22, 3.33, None], dtype="float64"),
         }
     )
     assert_frame_equal(df, expected, check_names=True)

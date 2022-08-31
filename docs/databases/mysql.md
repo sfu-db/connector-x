@@ -9,7 +9,7 @@
 import connectorx as cx
 conn = 'mysql://username:password@server:port/database'         # connection token
 query = 'SELECT * FROM table'                                   # query string
-cx.read_sql(conn, query)                                        # read data from BigQuery
+cx.read_sql(conn, query)                                        # read data from MySQL
 ```
 
 ## MySQL-Pandas Type Mapping
