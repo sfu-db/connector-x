@@ -36,7 +36,7 @@ impl<'a> From<&'a OracleType> for OracleTypeSystem {
     fn from(ty: &'a OracleType) -> OracleTypeSystem {
         use OracleTypeSystem::*;
         match ty {
-            OracleType::Number(0, 0) => NumFloat(false),
+            OracleType::Number(0, 0) => NumFloat(true),
             OracleType::Number(_, 0) => NumInt(true),
             OracleType::Number(_, _) => NumFloat(true),
             OracleType::Float(_) => Float(true),
@@ -51,7 +51,7 @@ impl<'a> From<&'a OracleType> for OracleTypeSystem {
             OracleType::Date => Date(true),
             OracleType::Timestamp(_) => Timestamp(true),
             OracleType::TimestampTZ(_) => TimestampTz(true),
-            _ => unimplemented!("{}", format!("hahaha {:?}", ty)),
+            _ => unimplemented!("{}", format!("Type {:?} not implemented for oracle!", ty)),
         }
     }
 }
