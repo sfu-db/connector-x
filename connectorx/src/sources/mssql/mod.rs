@@ -88,6 +88,12 @@ pub fn mssql_config(url: &Url) -> Config {
         Some(v) if v.to_lowercase() == "true" => config.encryption(EncryptionLevel::Required),
         _ => config.encryption(EncryptionLevel::NotSupported),
     };
+
+    match params.get("appname") {
+        Some(appname) => config.application_name(decode(appname)?.to_owned()),
+        _ => {}
+    };
+
     config
 }
 
