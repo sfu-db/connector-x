@@ -238,18 +238,19 @@ impl SourcePartition for BigQuerySourcePartition {
             self.project_id.as_str(),
             QueryRequest::new(self.query.as_str()),
         ))?;
+        let job_info = qry.query_response()
+                          .job_reference
+                          .as_ref()
+                          .ok_or_else(|| anyhow!("job_reference is none"))?;
+        let params = GetQueryResultsParameters { format_options: None, location: job_info.location.clone(), max_results: None, page_token: None, start_index: None, timeout_ms: None };
         let rs = self.rt.block_on(
             job.get_query_results(
                 self.project_id.as_str(),
-                qry.query_response()
-                    .job_reference
-                    .as_ref()
-                    .ok_or_else(|| anyhow!("JobReferencce is none"))?
-                    .job_id
+                job_info.job_id
                     .as_ref()
                     .ok_or_else(|| anyhow!("job_id is none"))?
                     .as_str(),
-                GetQueryResultsParameters::default(),
+                params,
             ),
         )?;
         BigQuerySourceParser::new(self.rt.clone(), self.client.clone(), rs, &self.schema)
@@ -327,7 +328,7 @@ macro_rules! impl_produce {
                     if ridx == (self.response.rows.as_ref().ok_or_else(|| anyhow!("rows is none"))?.len()) {
                         let job = self.client.job();
                         let job_info = self.response.job_reference.as_ref().ok_or_else(|| anyhow!("job_reference is none"))?;
-                        let params = GetQueryResultsParameters { format_options: None, location: None, max_results: None, page_token: self.response.page_token.clone(), start_index: None, timeout_ms: None };
+                        let params = GetQueryResultsParameters { format_options: None, location: job_info.location.clone(), max_results: None, page_token: self.response.page_token.clone(), start_index: None, timeout_ms: None };
                         self.response = self.rt.block_on(
                             job.get_query_results(
                                 job_info.project_id.as_ref().ok_or_else(|| anyhow!("project_id is none"))?.as_str(),
@@ -360,7 +361,7 @@ macro_rules! impl_produce {
                     if ridx == (self.response.rows.as_ref().ok_or_else(|| anyhow!("rows is none"))?.len()) {
                         let job = self.client.job();
                         let job_info = self.response.job_reference.as_ref().ok_or_else(|| anyhow!("job_reference is none"))?;
-                        let params = GetQueryResultsParameters { format_options: None, location: None, max_results: None, page_token: self.response.page_token.clone(), start_index: None, timeout_ms: None };
+                        let params = GetQueryResultsParameters { format_options: None, location: job_info.location.clone(), max_results: None, page_token: self.response.page_token.clone(), start_index: None, timeout_ms: None };
                         self.response = self.rt.block_on(
                             job.get_query_results(
                                 job_info.project_id.as_ref().ok_or_else(|| anyhow!("project_id is none"))?.as_str(),
@@ -411,7 +412,7 @@ impl<'r, 'a> Produce<'r, bool> for BigQuerySourceParser {
                 .ok_or_else(|| anyhow!("job_reference is none"))?;
             let params = GetQueryResultsParameters {
                 format_options: None,
-                location: None,
+                location: job_info.location.clone(),
                 max_results: None,
                 page_token: self.response.page_token.clone(),
                 start_index: None,
@@ -485,7 +486,7 @@ impl<'r, 'a> Produce<'r, Option<bool>> for BigQuerySourceParser {
                 .ok_or_else(|| anyhow!("job_reference is none"))?;
             let params = GetQueryResultsParameters {
                 format_options: None,
-                location: None,
+                location: job_info.location.clone(),
                 max_results: None,
                 page_token: self.response.page_token.clone(),
                 start_index: None,
@@ -561,7 +562,7 @@ impl<'r, 'a> Produce<'r, NaiveDate> for BigQuerySourceParser {
                 .ok_or_else(|| anyhow!("job_reference is none"))?;
             let params = GetQueryResultsParameters {
                 format_options: None,
-                location: None,
+                location: job_info.location.clone(),
                 max_results: None,
                 page_token: self.response.page_token.clone(),
                 start_index: None,
@@ -630,7 +631,7 @@ impl<'r, 'a> Produce<'r, Option<NaiveDate>> for BigQuerySourceParser {
                 .ok_or_else(|| anyhow!("job_reference is none"))?;
             let params = GetQueryResultsParameters {
                 format_options: None,
-                location: None,
+                location: job_info.location.clone(),
                 max_results: None,
                 page_token: self.response.page_token.clone(),
                 start_index: None,
@@ -705,7 +706,7 @@ impl<'r, 'a> Produce<'r, NaiveDateTime> for BigQuerySourceParser {
                 .ok_or_else(|| anyhow!("job_reference is none"))?;
             let params = GetQueryResultsParameters {
                 format_options: None,
-                location: None,
+                location: job_info.location.clone(),
                 max_results: None,
                 page_token: self.response.page_token.clone(),
                 start_index: None,
@@ -774,7 +775,7 @@ impl<'r, 'a> Produce<'r, Option<NaiveDateTime>> for BigQuerySourceParser {
                 .ok_or_else(|| anyhow!("job_reference is none"))?;
             let params = GetQueryResultsParameters {
                 format_options: None,
-                location: None,
+                location: job_info.location.clone(),
                 max_results: None,
                 page_token: self.response.page_token.clone(),
                 start_index: None,
@@ -849,7 +850,7 @@ impl<'r, 'a> Produce<'r, NaiveTime> for BigQuerySourceParser {
                 .ok_or_else(|| anyhow!("job_reference is none"))?;
             let params = GetQueryResultsParameters {
                 format_options: None,
-                location: None,
+                location: job_info.location.clone(),
                 max_results: None,
                 page_token: self.response.page_token.clone(),
                 start_index: None,
@@ -918,7 +919,7 @@ impl<'r, 'a> Produce<'r, Option<NaiveTime>> for BigQuerySourceParser {
                 .ok_or_else(|| anyhow!("job_reference is none"))?;
             let params = GetQueryResultsParameters {
                 format_options: None,
-                location: None,
+                location: job_info.location.clone(),
                 max_results: None,
                 page_token: self.response.page_token.clone(),
                 start_index: None,
@@ -993,7 +994,7 @@ impl<'r, 'a> Produce<'r, DateTime<Utc>> for BigQuerySourceParser {
                 .ok_or_else(|| anyhow!("job_reference is none"))?;
             let params = GetQueryResultsParameters {
                 format_options: None,
-                location: None,
+                location: job_info.location.clone(),
                 max_results: None,
                 page_token: self.response.page_token.clone(),
                 start_index: None,
@@ -1065,7 +1066,7 @@ impl<'r, 'a> Produce<'r, Option<DateTime<Utc>>> for BigQuerySourceParser {
                 .ok_or_else(|| anyhow!("job_reference is none"))?;
             let params = GetQueryResultsParameters {
                 format_options: None,
-                location: None,
+                location: job_info.location.clone(),
                 max_results: None,
                 page_token: self.response.page_token.clone(),
                 start_index: None,
