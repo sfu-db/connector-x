@@ -101,7 +101,7 @@
 //!
 //! let data = destination.arrow();
 //! ```
-//! 
+//!
 //! NOTE: the pool size parameter `nconn` used in initializing the source should be larger than or equal to the number of partitioned queries input later.
 //!
 //! ## Need more examples?
