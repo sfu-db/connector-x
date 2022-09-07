@@ -238,15 +238,24 @@ impl SourcePartition for BigQuerySourcePartition {
             self.project_id.as_str(),
             QueryRequest::new(self.query.as_str()),
         ))?;
-        let job_info = qry.query_response()
-                          .job_reference
-                          .as_ref()
-                          .ok_or_else(|| anyhow!("job_reference is none"))?;
-        let params = GetQueryResultsParameters { format_options: None, location: job_info.location.clone(), max_results: None, page_token: None, start_index: None, timeout_ms: None };
+        let job_info = qry
+            .query_response()
+            .job_reference
+            .as_ref()
+            .ok_or_else(|| anyhow!("job_reference is none"))?;
+        let params = GetQueryResultsParameters {
+            format_options: None,
+            location: job_info.location.clone(),
+            max_results: None,
+            page_token: None,
+            start_index: None,
+            timeout_ms: None,
+        };
         let rs = self.rt.block_on(
             job.get_query_results(
                 self.project_id.as_str(),
-                job_info.job_id
+                job_info
+                    .job_id
                     .as_ref()
                     .ok_or_else(|| anyhow!("job_id is none"))?
                     .as_str(),
