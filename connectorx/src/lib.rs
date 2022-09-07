@@ -102,6 +102,8 @@
 //! let data = destination.arrow();
 //! ```
 //!
+//! NOTE: the pool size parameter `nconn` used in initializing the source should be larger than or equal to the number of partitioned queries input later.
+//!
 //! ## Need more examples?
 //! You can use the existing implementation as the example.
 //! [MySQL source](https://github.com/sfu-db/connector-x/tree/main/connectorx/src/sources/mysql),
