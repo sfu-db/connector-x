@@ -1125,6 +1125,16 @@
 <span id="1120">1120</span>
 <span id="1121">1121</span>
 <span id="1122">1122</span>
+<span id="1123">1123</span>
+<span id="1124">1124</span>
+<span id="1125">1125</span>
+<span id="1126">1126</span>
+<span id="1127">1127</span>
+<span id="1128">1128</span>
+<span id="1129">1129</span>
+<span id="1130">1130</span>
+<span id="1131">1131</span>
+<span id="1132">1132</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Source implementation for Google BigQuery</span>
 
 <span class="kw">mod</span> <span class="ident">errors</span>;
@@ -1365,18 +1375,28 @@
             <span class="self">self</span>.<span class="ident">project_id</span>.<span class="ident">as_str</span>(),
             <span class="ident">QueryRequest::new</span>(<span class="self">self</span>.<span class="ident">query</span>.<span class="ident">as_str</span>()),
         ))<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">job_info</span> <span class="op">=</span> <span class="ident">qry</span>
+            .<span class="ident">query_response</span>()
+            .<span class="ident">job_reference</span>
+            .<span class="ident">as_ref</span>()
+            .<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="macro">anyhow!</span>(<span class="string">&quot;job_reference is none&quot;</span>))<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">params</span> <span class="op">=</span> <span class="ident">GetQueryResultsParameters</span> {
+            <span class="ident">format_options</span>: <span class="prelude-val">None</span>,
+            <span class="ident">location</span>: <span class="ident">job_info</span>.<span class="ident">location</span>.<span class="ident">clone</span>(),
+            <span class="ident">max_results</span>: <span class="prelude-val">None</span>,
+            <span class="ident">page_token</span>: <span class="prelude-val">None</span>,
+            <span class="ident">start_index</span>: <span class="prelude-val">None</span>,
+            <span class="ident">timeout_ms</span>: <span class="prelude-val">None</span>,
+        };
         <span class="kw">let</span> <span class="ident">rs</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">rt</span>.<span class="ident">block_on</span>(
             <span class="ident">job</span>.<span class="ident">get_query_results</span>(
                 <span class="self">self</span>.<span class="ident">project_id</span>.<span class="ident">as_str</span>(),
-                <span class="ident">qry</span>.<span class="ident">query_response</span>()
-                    .<span class="ident">job_reference</span>
-                    .<span class="ident">as_ref</span>()
-                    .<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="macro">anyhow!</span>(<span class="string">&quot;JobReferencce is none&quot;</span>))<span class="question-mark">?</span>
+                <span class="ident">job_info</span>
                     .<span class="ident">job_id</span>
                     .<span class="ident">as_ref</span>()
                     .<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="macro">anyhow!</span>(<span class="string">&quot;job_id is none&quot;</span>))<span class="question-mark">?</span>
                     .<span class="ident">as_str</span>(),
-                <span class="ident">GetQueryResultsParameters::default</span>(),
+                <span class="ident">params</span>,
             ),
         )<span class="question-mark">?</span>;
         <span class="ident">BigQuerySourceParser::new</span>(<span class="self">self</span>.<span class="ident">rt</span>.<span class="ident">clone</span>(), <span class="self">self</span>.<span class="ident">client</span>.<span class="ident">clone</span>(), <span class="ident">rs</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">schema</span>)
@@ -1454,7 +1474,7 @@
                     <span class="kw">if</span> <span class="ident">ridx</span> <span class="op">==</span> (<span class="self">self</span>.<span class="ident">response</span>.<span class="ident">rows</span>.<span class="ident">as_ref</span>().<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="macro">anyhow!</span>(<span class="string">&quot;rows is none&quot;</span>))<span class="question-mark">?</span>.<span class="ident">len</span>()) {
                         <span class="kw">let</span> <span class="ident">job</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">client</span>.<span class="ident">job</span>();
                         <span class="kw">let</span> <span class="ident">job_info</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">response</span>.<span class="ident">job_reference</span>.<span class="ident">as_ref</span>().<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="macro">anyhow!</span>(<span class="string">&quot;job_reference is none&quot;</span>))<span class="question-mark">?</span>;
-                        <span class="kw">let</span> <span class="ident">params</span> <span class="op">=</span> <span class="ident">GetQueryResultsParameters</span> { <span class="ident">format_options</span>: <span class="prelude-val">None</span>, <span class="ident">location</span>: <span class="prelude-val">None</span>, <span class="ident">max_results</span>: <span class="prelude-val">None</span>, <span class="ident">page_token</span>: <span class="self">self</span>.<span class="ident">response</span>.<span class="ident">page_token</span>.<span class="ident">clone</span>(), <span class="ident">start_index</span>: <span class="prelude-val">None</span>, <span class="ident">timeout_ms</span>: <span class="prelude-val">None</span> };
+                        <span class="kw">let</span> <span class="ident">params</span> <span class="op">=</span> <span class="ident">GetQueryResultsParameters</span> { <span class="ident">format_options</span>: <span class="prelude-val">None</span>, <span class="ident">location</span>: <span class="ident">job_info</span>.<span class="ident">location</span>.<span class="ident">clone</span>(), <span class="ident">max_results</span>: <span class="prelude-val">None</span>, <span class="ident">page_token</span>: <span class="self">self</span>.<span class="ident">response</span>.<span class="ident">page_token</span>.<span class="ident">clone</span>(), <span class="ident">start_index</span>: <span class="prelude-val">None</span>, <span class="ident">timeout_ms</span>: <span class="prelude-val">None</span> };
                         <span class="self">self</span>.<span class="ident">response</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">rt</span>.<span class="ident">block_on</span>(
                             <span class="ident">job</span>.<span class="ident">get_query_results</span>(
                                 <span class="ident">job_info</span>.<span class="ident">project_id</span>.<span class="ident">as_ref</span>().<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="macro">anyhow!</span>(<span class="string">&quot;project_id is none&quot;</span>))<span class="question-mark">?</span>.<span class="ident">as_str</span>(),
@@ -1487,7 +1507,7 @@
                     <span class="kw">if</span> <span class="ident">ridx</span> <span class="op">==</span> (<span class="self">self</span>.<span class="ident">response</span>.<span class="ident">rows</span>.<span class="ident">as_ref</span>().<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="macro">anyhow!</span>(<span class="string">&quot;rows is none&quot;</span>))<span class="question-mark">?</span>.<span class="ident">len</span>()) {
                         <span class="kw">let</span> <span class="ident">job</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">client</span>.<span class="ident">job</span>();
                         <span class="kw">let</span> <span class="ident">job_info</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">response</span>.<span class="ident">job_reference</span>.<span class="ident">as_ref</span>().<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="macro">anyhow!</span>(<span class="string">&quot;job_reference is none&quot;</span>))<span class="question-mark">?</span>;
-                        <span class="kw">let</span> <span class="ident">params</span> <span class="op">=</span> <span class="ident">GetQueryResultsParameters</span> { <span class="ident">format_options</span>: <span class="prelude-val">None</span>, <span class="ident">location</span>: <span class="prelude-val">None</span>, <span class="ident">max_results</span>: <span class="prelude-val">None</span>, <span class="ident">page_token</span>: <span class="self">self</span>.<span class="ident">response</span>.<span class="ident">page_token</span>.<span class="ident">clone</span>(), <span class="ident">start_index</span>: <span class="prelude-val">None</span>, <span class="ident">timeout_ms</span>: <span class="prelude-val">None</span> };
+                        <span class="kw">let</span> <span class="ident">params</span> <span class="op">=</span> <span class="ident">GetQueryResultsParameters</span> { <span class="ident">format_options</span>: <span class="prelude-val">None</span>, <span class="ident">location</span>: <span class="ident">job_info</span>.<span class="ident">location</span>.<span class="ident">clone</span>(), <span class="ident">max_results</span>: <span class="prelude-val">None</span>, <span class="ident">page_token</span>: <span class="self">self</span>.<span class="ident">response</span>.<span class="ident">page_token</span>.<span class="ident">clone</span>(), <span class="ident">start_index</span>: <span class="prelude-val">None</span>, <span class="ident">timeout_ms</span>: <span class="prelude-val">None</span> };
                         <span class="self">self</span>.<span class="ident">response</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">rt</span>.<span class="ident">block_on</span>(
                             <span class="ident">job</span>.<span class="ident">get_query_results</span>(
                                 <span class="ident">job_info</span>.<span class="ident">project_id</span>.<span class="ident">as_ref</span>().<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="macro">anyhow!</span>(<span class="string">&quot;project_id is none&quot;</span>))<span class="question-mark">?</span>.<span class="ident">as_str</span>(),
@@ -1538,7 +1558,7 @@
                 .<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="macro">anyhow!</span>(<span class="string">&quot;job_reference is none&quot;</span>))<span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="ident">params</span> <span class="op">=</span> <span class="ident">GetQueryResultsParameters</span> {
                 <span class="ident">format_options</span>: <span class="prelude-val">None</span>,
-                <span class="ident">location</span>: <span class="prelude-val">None</span>,
+                <span class="ident">location</span>: <span class="ident">job_info</span>.<span class="ident">location</span>.<span class="ident">clone</span>(),
                 <span class="ident">max_results</span>: <span class="prelude-val">None</span>,
                 <span class="ident">page_token</span>: <span class="self">self</span>.<span class="ident">response</span>.<span class="ident">page_token</span>.<span class="ident">clone</span>(),
                 <span class="ident">start_index</span>: <span class="prelude-val">None</span>,
@@ -1612,7 +1632,7 @@
                 .<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="macro">anyhow!</span>(<span class="string">&quot;job_reference is none&quot;</span>))<span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="ident">params</span> <span class="op">=</span> <span class="ident">GetQueryResultsParameters</span> {
                 <span class="ident">format_options</span>: <span class="prelude-val">None</span>,
-                <span class="ident">location</span>: <span class="prelude-val">None</span>,
+                <span class="ident">location</span>: <span class="ident">job_info</span>.<span class="ident">location</span>.<span class="ident">clone</span>(),
                 <span class="ident">max_results</span>: <span class="prelude-val">None</span>,
                 <span class="ident">page_token</span>: <span class="self">self</span>.<span class="ident">response</span>.<span class="ident">page_token</span>.<span class="ident">clone</span>(),
                 <span class="ident">start_index</span>: <span class="prelude-val">None</span>,
@@ -1688,7 +1708,7 @@
                 .<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="macro">anyhow!</span>(<span class="string">&quot;job_reference is none&quot;</span>))<span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="ident">params</span> <span class="op">=</span> <span class="ident">GetQueryResultsParameters</span> {
                 <span class="ident">format_options</span>: <span class="prelude-val">None</span>,
-                <span class="ident">location</span>: <span class="prelude-val">None</span>,
+                <span class="ident">location</span>: <span class="ident">job_info</span>.<span class="ident">location</span>.<span class="ident">clone</span>(),
                 <span class="ident">max_results</span>: <span class="prelude-val">None</span>,
                 <span class="ident">page_token</span>: <span class="self">self</span>.<span class="ident">response</span>.<span class="ident">page_token</span>.<span class="ident">clone</span>(),
                 <span class="ident">start_index</span>: <span class="prelude-val">None</span>,
@@ -1757,7 +1777,7 @@
                 .<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="macro">anyhow!</span>(<span class="string">&quot;job_reference is none&quot;</span>))<span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="ident">params</span> <span class="op">=</span> <span class="ident">GetQueryResultsParameters</span> {
                 <span class="ident">format_options</span>: <span class="prelude-val">None</span>,
-                <span class="ident">location</span>: <span class="prelude-val">None</span>,
+                <span class="ident">location</span>: <span class="ident">job_info</span>.<span class="ident">location</span>.<span class="ident">clone</span>(),
                 <span class="ident">max_results</span>: <span class="prelude-val">None</span>,
                 <span class="ident">page_token</span>: <span class="self">self</span>.<span class="ident">response</span>.<span class="ident">page_token</span>.<span class="ident">clone</span>(),
                 <span class="ident">start_index</span>: <span class="prelude-val">None</span>,
@@ -1832,7 +1852,7 @@
                 .<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="macro">anyhow!</span>(<span class="string">&quot;job_reference is none&quot;</span>))<span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="ident">params</span> <span class="op">=</span> <span class="ident">GetQueryResultsParameters</span> {
                 <span class="ident">format_options</span>: <span class="prelude-val">None</span>,
-                <span class="ident">location</span>: <span class="prelude-val">None</span>,
+                <span class="ident">location</span>: <span class="ident">job_info</span>.<span class="ident">location</span>.<span class="ident">clone</span>(),
                 <span class="ident">max_results</span>: <span class="prelude-val">None</span>,
                 <span class="ident">page_token</span>: <span class="self">self</span>.<span class="ident">response</span>.<span class="ident">page_token</span>.<span class="ident">clone</span>(),
                 <span class="ident">start_index</span>: <span class="prelude-val">None</span>,
@@ -1901,7 +1921,7 @@
                 .<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="macro">anyhow!</span>(<span class="string">&quot;job_reference is none&quot;</span>))<span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="ident">params</span> <span class="op">=</span> <span class="ident">GetQueryResultsParameters</span> {
                 <span class="ident">format_options</span>: <span class="prelude-val">None</span>,
-                <span class="ident">location</span>: <span class="prelude-val">None</span>,
+                <span class="ident">location</span>: <span class="ident">job_info</span>.<span class="ident">location</span>.<span class="ident">clone</span>(),
                 <span class="ident">max_results</span>: <span class="prelude-val">None</span>,
                 <span class="ident">page_token</span>: <span class="self">self</span>.<span class="ident">response</span>.<span class="ident">page_token</span>.<span class="ident">clone</span>(),
                 <span class="ident">start_index</span>: <span class="prelude-val">None</span>,
@@ -1976,7 +1996,7 @@
                 .<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="macro">anyhow!</span>(<span class="string">&quot;job_reference is none&quot;</span>))<span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="ident">params</span> <span class="op">=</span> <span class="ident">GetQueryResultsParameters</span> {
                 <span class="ident">format_options</span>: <span class="prelude-val">None</span>,
-                <span class="ident">location</span>: <span class="prelude-val">None</span>,
+                <span class="ident">location</span>: <span class="ident">job_info</span>.<span class="ident">location</span>.<span class="ident">clone</span>(),
                 <span class="ident">max_results</span>: <span class="prelude-val">None</span>,
                 <span class="ident">page_token</span>: <span class="self">self</span>.<span class="ident">response</span>.<span class="ident">page_token</span>.<span class="ident">clone</span>(),
                 <span class="ident">start_index</span>: <span class="prelude-val">None</span>,
@@ -2045,7 +2065,7 @@
                 .<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="macro">anyhow!</span>(<span class="string">&quot;job_reference is none&quot;</span>))<span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="ident">params</span> <span class="op">=</span> <span class="ident">GetQueryResultsParameters</span> {
                 <span class="ident">format_options</span>: <span class="prelude-val">None</span>,
-                <span class="ident">location</span>: <span class="prelude-val">None</span>,
+                <span class="ident">location</span>: <span class="ident">job_info</span>.<span class="ident">location</span>.<span class="ident">clone</span>(),
                 <span class="ident">max_results</span>: <span class="prelude-val">None</span>,
                 <span class="ident">page_token</span>: <span class="self">self</span>.<span class="ident">response</span>.<span class="ident">page_token</span>.<span class="ident">clone</span>(),
                 <span class="ident">start_index</span>: <span class="prelude-val">None</span>,
@@ -2120,7 +2140,7 @@
                 .<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="macro">anyhow!</span>(<span class="string">&quot;job_reference is none&quot;</span>))<span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="ident">params</span> <span class="op">=</span> <span class="ident">GetQueryResultsParameters</span> {
                 <span class="ident">format_options</span>: <span class="prelude-val">None</span>,
-                <span class="ident">location</span>: <span class="prelude-val">None</span>,
+                <span class="ident">location</span>: <span class="ident">job_info</span>.<span class="ident">location</span>.<span class="ident">clone</span>(),
                 <span class="ident">max_results</span>: <span class="prelude-val">None</span>,
                 <span class="ident">page_token</span>: <span class="self">self</span>.<span class="ident">response</span>.<span class="ident">page_token</span>.<span class="ident">clone</span>(),
                 <span class="ident">start_index</span>: <span class="prelude-val">None</span>,
@@ -2192,7 +2212,7 @@
                 .<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="macro">anyhow!</span>(<span class="string">&quot;job_reference is none&quot;</span>))<span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="ident">params</span> <span class="op">=</span> <span class="ident">GetQueryResultsParameters</span> {
                 <span class="ident">format_options</span>: <span class="prelude-val">None</span>,
-                <span class="ident">location</span>: <span class="prelude-val">None</span>,
+                <span class="ident">location</span>: <span class="ident">job_info</span>.<span class="ident">location</span>.<span class="ident">clone</span>(),
                 <span class="ident">max_results</span>: <span class="prelude-val">None</span>,
                 <span class="ident">page_token</span>: <span class="self">self</span>.<span class="ident">response</span>.<span class="ident">page_token</span>.<span class="ident">clone</span>(),
                 <span class="ident">start_index</span>: <span class="prelude-val">None</span>,
