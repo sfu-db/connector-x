@@ -30,3 +30,6 @@ pub const CX_REWRITER_PATH: &str =
 
 #[cfg(any(feature = "federation", feature = "src_postgres"))]
 pub const POSTGRES_JDBC_DRIVER: &str = "org.postgresql.Driver";
+
+#[cfg(any(feature = "federation", feature = "src_mysql"))]
+pub const MYSQL_JDBC_DRIVER: &str = "com.mysql.cj.jdbc.Driver";
