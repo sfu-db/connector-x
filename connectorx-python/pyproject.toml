@@ -23,7 +23,7 @@ version = "0.3.1-alpha.6"
 [project]
 name = "connectorx" # Target file name of maturin build
 readme = "README.md"
-license = "MIT" 
+license = { text = "LICENSE" }
 
 [tool.poetry.dependencies]
 dask = {version = "^2021", optional = true, extras = ["dataframe"]}
