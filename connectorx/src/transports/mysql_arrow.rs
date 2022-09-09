@@ -38,7 +38,7 @@ impl_transport!(
     mappings = {
         { Float[f32]                 => Float64[f64]            | conversion auto }
         { Double[f64]                => Float64[f64]            | conversion auto }
-        { Tiny[i8]                   => Int64[i64]              | conversion auto }
+        { Tiny[i8]                   => Boolean[bool]           | conversion option }
         { Short[i16]                 => Int64[i64]              | conversion auto }
         { Int24[i32]                 => Int64[i64]              | conversion none }
         { Long[i32]                  => Int64[i64]              | conversion auto }
@@ -73,7 +73,7 @@ impl_transport!(
     mappings = {
         { Float[f32]                 => Float64[f64]            | conversion auto }
         { Double[f64]                => Float64[f64]            | conversion auto }
-        { Tiny[i8]                   => Int64[i64]              | conversion auto }
+        { Tiny[i8]                   => Boolean[bool]           | conversion option }
         { Short[i16]                 => Int64[i64]              | conversion auto }
         { Int24[i32]                 => Int64[i64]              | conversion none }
         { Long[i32]                  => Int64[i64]              | conversion auto }
@@ -110,5 +110,11 @@ impl<P> TypeConversion<Decimal, f64> for MySQLArrowTransport<P> {
 impl<P> TypeConversion<Value, String> for MySQLArrowTransport<P> {
     fn convert(val: Value) -> String {
         to_string(&val).unwrap()
+    }
+}
+
+impl<P> TypeConversion<i8, bool> for MySQLArrowTransport<P> {
+    fn convert(val: i8) -> bool {
+        val != 0
     }
 }
