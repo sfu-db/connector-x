@@ -259,5 +259,5 @@ jobs:
         run: |
           for file in $(ls **/*)
           do
-            twine upload --non-interactive --repository-url https://test.pypi.org/legacy/ -u __token__ -p $PYPI_TEST_TOKEN $file || continue
+            twine upload --non-interactive --repository-url https://test.pypi.org/legacy/ -u __token__ -p $PYPI_TEST_TOKEN $file --verbose || continue
           done
