@@ -1,9 +1,12 @@
 use crate::{
-    constants::{CX_REWRITER_PATH, J4RS_BASE_PATH, POSTGRES_JDBC_DRIVER},
+    constants::{CX_REWRITER_PATH, J4RS_BASE_PATH, MYSQL_JDBC_DRIVER, POSTGRES_JDBC_DRIVER},
     prelude::*,
-    sources::postgres::{rewrite_tls_args, BinaryProtocol, PostgresSource},
+    sources::{
+        mysql::{BinaryProtocol as MySQLBinaryProtocol, MySQLSource},
+        postgres::{rewrite_tls_args, BinaryProtocol, PostgresSource},
+    },
     sql::CXQuery,
-    transports::PostgresArrowTransport,
+    transports::{MySQLArrowTransport, PostgresArrowTransport},
 };
 use arrow::record_batch::RecordBatch;
 use datafusion::datasource::MemTable;
@@ -55,22 +58,41 @@ fn rewrite_sql(jvm: &Jvm, sql: &str, db_map: &HashMap<String, Url>) -> Vec<Plan>
     let db_conns = jvm.create_instance("java.util.HashMap", &[])?;
     for (db_name, url) in db_map.iter() {
         debug!("url: {:?}", url);
-        let ds = jvm.invoke_static(
-            "org.apache.calcite.adapter.jdbc.JdbcSchema",
-            "dataSource",
-            &[
-                InvocationArg::try_from(format!(
-                    "jdbc:postgresql://{}:{}{}",
-                    url.host_str().unwrap_or("localhost"),
-                    url.port().unwrap_or(5432),
-                    url.path()
-                ))
-                .unwrap(),
-                InvocationArg::try_from(POSTGRES_JDBC_DRIVER).unwrap(),
-                InvocationArg::try_from(url.username()).unwrap(),
-                InvocationArg::try_from(url.password().unwrap_or("")).unwrap(),
-            ],
-        )?;
+        let ds = match url.scheme().split('+').collect::<Vec<&str>>()[0] {
+            "postgres" | "postgresql" => jvm.invoke_static(
+                "org.apache.calcite.adapter.jdbc.JdbcSchema",
+                "dataSource",
+                &[
+                    InvocationArg::try_from(format!(
+                        "jdbc:postgresql://{}:{}{}",
+                        url.host_str().unwrap_or("localhost"),
+                        url.port().unwrap_or(5432),
+                        url.path()
+                    ))
+                    .unwrap(),
+                    InvocationArg::try_from(POSTGRES_JDBC_DRIVER).unwrap(),
+                    InvocationArg::try_from(url.username()).unwrap(),
+                    InvocationArg::try_from(url.password().unwrap_or("")).unwrap(),
+                ],
+            )?,
+            "mysql" => jvm.invoke_static(
+                "org.apache.calcite.adapter.jdbc.JdbcSchema",
+                "dataSource",
+                &[
+                    InvocationArg::try_from(format!(
+                        "jdbc:mysql://{}:{}{}",
+                        url.host_str().unwrap_or("localhost"),
+                        url.port().unwrap_or(3306),
+                        url.path()
+                    ))
+                    .unwrap(),
+                    InvocationArg::try_from(MYSQL_JDBC_DRIVER).unwrap(),
+                    InvocationArg::try_from(url.username()).unwrap(),
+                    InvocationArg::try_from(url.password().unwrap_or("")).unwrap(),
+                ],
+            )?,
+            _ => unimplemented!("Connection: {:?} not supported!", url),
+        };
 
         jvm.invoke(
             &db_conns,
@@ -157,23 +179,47 @@ pub fn run(
                     let mut destination = ArrowDestination::new();
                     let queries = [CXQuery::naked(p.sql)];
                     let url = &db_url_map[p.db_name.as_str()];
-                    let (config, _) =
-                        rewrite_tls_args(&url).expect(&format!("{} postgres config error", i));
-                    let sb = PostgresSource::<BinaryProtocol, NoTls>::new(config, NoTls, 1)
-                        .expect(&format!("{} postgres init error", i));
-                    let dispatcher = Dispatcher::<
-                        _,
-                        _,
-                        PostgresArrowTransport<BinaryProtocol, NoTls>,
-                    >::new(
-                        sb, &mut destination, &queries, None
-                    );
-                    dispatcher
-                        .run()
-                        .expect(&format!("run dispatcher fails {}", i));
-                    let rbs = destination
-                        .arrow()
-                        .expect(&format!("get arrow fails {}", i));
+
+                    let rbs = match url.scheme().split('+').collect::<Vec<&str>>()[0] {
+                        "postgres" | "postgresql" => {
+                            let (config, _) = rewrite_tls_args(&url)
+                                .expect(&format!("{} postgres config error", i));
+                            let sb = PostgresSource::<BinaryProtocol, NoTls>::new(config, NoTls, 1)
+                                .expect(&format!("{} postgres init error", i));
+                            let dispatcher = Dispatcher::<
+                                _,
+                                _,
+                                PostgresArrowTransport<BinaryProtocol, NoTls>,
+                            >::new(
+                                sb, &mut destination, &queries, None
+                            );
+                            dispatcher
+                                .run()
+                                .expect(&format!("run dispatcher fails {}", i));
+                            destination
+                                .arrow()
+                                .expect(&format!("get arrow fails {}", i))
+                        }
+                        "mysql" => {
+                            let sb = MySQLSource::<MySQLBinaryProtocol>::new(url.as_str(), 1)
+                                .expect(&format!("{} mysql init error", i));
+                            let dispatcher = Dispatcher::<
+                                _,
+                                _,
+                                MySQLArrowTransport<MySQLBinaryProtocol>,
+                            >::new(
+                                sb, &mut destination, &queries, None
+                            );
+                            dispatcher
+                                .run()
+                                .expect(&format!("run dispatcher fails {}", i));
+                            destination
+                                .arrow()
+                                .expect(&format!("get arrow fails {}", i))
+                        }
+                        _ => unimplemented!("Connection: {:?} not supported!", url),
+                    };
+
                     let provider = MemTable::try_new(rbs[0].schema(), vec![rbs])?;
                     s.send((p.db_alias, Some(Arc::new(provider))))
                         .expect(&format!("send error {}", i));
