@@ -12,7 +12,7 @@ pub use self::transports::{
 };
 pub use self::typesystem::{PandasDType, PandasTypeSystem};
 use crate::errors::ConnectorXPythonError;
-use crate::source_router::{SourceConn, SourceType};
+use connectorx::source_router::{SourceConn, SourceType};
 use connectorx::sources::oracle::OracleSource;
 use connectorx::{
     prelude::*,

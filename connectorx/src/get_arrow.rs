@@ -1,56 +1,36 @@
-use crate::errors::ConnectorXPythonError;
-use arrow2::{
-    array::ArrayRef,
-    chunk::Chunk,
-    datatypes::{Field, Schema},
-    ffi,
-};
-use connectorx::source_router::{SourceConn, SourceType};
-use connectorx::{
-    destinations::arrow2::Arrow2Destination as ArrowDestination,
+use crate::{
     prelude::*,
     sources::{
-        mssql::MsSQLSource,
         mysql::{BinaryProtocol as MySQLBinaryProtocol, MySQLSource, TextProtocol},
         postgres::{
             rewrite_tls_args, BinaryProtocol as PgBinaryProtocol, CSVProtocol, CursorProtocol,
             PostgresSource,
         },
-        sqlite::SQLiteSource,
     },
     sql::CXQuery,
-    transports::{
-        MsSQLArrow2Transport as MsSQLArrowTransport, MySQLArrow2Transport as MySQLArrowTransport,
-        OracleArrow2Transport as OracleArrowTransport,
-        PostgresArrow2Transport as PostgresArrowTransport,
-        SQLiteArrow2Transport as SQLiteArrowTransport,
-    },
+    transports::{MySQLArrowTransport, PostgresArrowTransport},
 };
 use fehler::throws;
-use libc::uintptr_t;
 use log::debug;
 use postgres::NoTls;
 use postgres_openssl::MakeTlsConnector;
-use pyo3::prelude::*;
-use pyo3::{PyAny, Python};
 use std::sync::Arc;
 
-#[throws(ConnectorXPythonError)]
-pub fn write_arrow<'a>(
-    py: Python<'a>,
+#[throws(ConnectorXOutError)]
+pub fn get_arrow(
     source_conn: &SourceConn,
     origin_query: Option<String>,
     queries: &[CXQuery<String>],
-    protocol: &str,
-) -> &'a PyAny {
+) -> ArrowDestination {
     let mut destination = ArrowDestination::new();
+    let protocol = source_conn.get_protocol();
+    debug!("Protocol: {}", protocol);
 
     // TODO: unlock gil if possible
     match source_conn.ty {
         SourceType::Postgres => {
             let (config, tls) = rewrite_tls_args(&source_conn.conn)?;
-            debug!("Protocol: {}", protocol);
-            match (protocol, tls) {
+            match (protocol.as_str(), tls) {
                 ("csv", Some(tls_conn)) => {
                     let sb = PostgresSource::<CSVProtocol, MakeTlsConnector>::new(
                         config,
@@ -64,7 +44,6 @@ pub fn write_arrow<'a>(
                     >::new(
                         sb, &mut destination, queries, origin_query
                     );
-                    debug!("Running dispatcher");
                     dispatcher.run()?;
                 }
                 ("csv", None) => {
@@ -77,7 +56,6 @@ pub fn write_arrow<'a>(
                             queries,
                             origin_query,
                         );
-                    debug!("Running dispatcher");
                     dispatcher.run()?;
                 }
                 ("binary", Some(tls_conn)) => {
@@ -92,7 +70,6 @@ pub fn write_arrow<'a>(
                             _,
                             PostgresArrowTransport<PgBinaryProtocol, MakeTlsConnector>,
                         >::new(sb, &mut destination, queries, origin_query);
-                    debug!("Running dispatcher");
                     dispatcher.run()?;
                 }
                 ("binary", None) => {
@@ -108,7 +85,6 @@ pub fn write_arrow<'a>(
                     >::new(
                         sb, &mut destination, queries, origin_query
                     );
-                    debug!("Running dispatcher");
                     dispatcher.run()?;
                 }
                 ("cursor", Some(tls_conn)) => {
@@ -124,7 +100,6 @@ pub fn write_arrow<'a>(
                     >::new(
                         sb, &mut destination, queries, origin_query
                     );
-                    debug!("Running dispatcher");
                     dispatcher.run()?;
                 }
                 ("cursor", None) => {
@@ -137,12 +112,37 @@ pub fn write_arrow<'a>(
                     >::new(
                         sb, &mut destination, queries, origin_query
                     );
-                    debug!("Running dispatcher");
                     dispatcher.run()?;
                 }
                 _ => unimplemented!("{} protocol not supported", protocol),
             }
         }
+
+        SourceType::MySQL => match protocol.as_str() {
+            "binary" => {
+                let source =
+                    MySQLSource::<MySQLBinaryProtocol>::new(&source_conn.conn[..], queries.len())?;
+                let dispatcher = Dispatcher::<_, _, MySQLArrowTransport<MySQLBinaryProtocol>>::new(
+                    source,
+                    &mut destination,
+                    queries,
+                    origin_query,
+                );
+                dispatcher.run()?;
+            }
+            "text" => {
+                let source =
+                    MySQLSource::<TextProtocol>::new(&source_conn.conn[..], queries.len())?;
+                let dispatcher = Dispatcher::<_, _, MySQLArrowTransport<TextProtocol>>::new(
+                    source,
+                    &mut destination,
+                    queries,
+                    origin_query,
+                );
+                dispatcher.run()?;
+            }
+            _ => unimplemented!("{} protocol not supported", protocol),
+        },
         SourceType::SQLite => {
             // remove the first "sqlite://" manually since url.path is not correct for windows
             let path = &source_conn.conn.as_str()[9..];
@@ -155,39 +155,6 @@ pub fn write_arrow<'a>(
             );
             debug!("Running dispatcher");
             dispatcher.run()?;
-        }
-        SourceType::MySQL => {
-            debug!("Protocol: {}", protocol);
-            match protocol {
-                "binary" => {
-                    let source = MySQLSource::<MySQLBinaryProtocol>::new(
-                        &source_conn.conn[..],
-                        queries.len(),
-                    )?;
-                    let dispatcher =
-                        Dispatcher::<_, _, MySQLArrowTransport<MySQLBinaryProtocol>>::new(
-                            source,
-                            &mut destination,
-                            queries,
-                            origin_query,
-                        );
-                    debug!("Running dispatcher");
-                    dispatcher.run()?;
-                }
-                "text" => {
-                    let source =
-                        MySQLSource::<TextProtocol>::new(&source_conn.conn[..], queries.len())?;
-                    let dispatcher = Dispatcher::<_, _, MySQLArrowTransport<TextProtocol>>::new(
-                        source,
-                        &mut destination,
-                        queries,
-                        origin_query,
-                    );
-                    debug!("Running dispatcher");
-                    dispatcher.run()?;
-                }
-                _ => unimplemented!("{} protocol not supported", protocol),
-            }
         }
         SourceType::MsSQL => {
             let rt = Arc::new(tokio::runtime::Runtime::new().expect("Failed to create runtime"));
@@ -217,42 +184,7 @@ pub fn write_arrow<'a>(
         }
     }
 
-    let (rbs, schema) = destination.arrow()?;
-    let ptrs = to_ptrs(rbs, schema);
-    let obj: PyObject = ptrs.into_py(py);
-    obj.into_ref(py)
-}
+    // let a = destination.arrow()?;
 
-fn to_ptrs(
-    rbs: Vec<Chunk<ArrayRef>>,
-    schema: Arc<Schema>,
-) -> (Vec<String>, Vec<Vec<(uintptr_t, uintptr_t)>>) {
-    if rbs.is_empty() {
-        return (vec![], vec![]);
-    }
-
-    let mut result = vec![];
-    let names = schema.fields.iter().map(|f| f.name.clone()).collect();
-
-    for rb in rbs {
-        let mut cols = vec![];
-
-        for array in rb.columns() {
-            let array_ptr = Box::new(ffi::ArrowArray::empty());
-            let schema_ptr = Box::new(ffi::ArrowSchema::empty());
-            let array_ptr = Box::into_raw(array_ptr);
-            let schema_ptr = Box::into_raw(schema_ptr);
-            unsafe {
-                ffi::export_field_to_c(
-                    &Field::new("", array.data_type().clone(), true),
-                    schema_ptr,
-                );
-                ffi::export_array_to_c(array.clone(), array_ptr);
-            };
-            cols.push((array_ptr as uintptr_t, schema_ptr as uintptr_t));
-        }
-
-        result.push(cols);
-    }
-    (names, result)
+    destination
 }

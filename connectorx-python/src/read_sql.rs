@@ -1,10 +1,9 @@
-use crate::source_router::SourceConn;
-use connectorx::sql::CXQuery;
+use crate::source_router::{get_col_range, get_part_query, parse_source};
+use connectorx::{source_router::SourceConn, sql::CXQuery};
 use dict_derive::FromPyObject;
 use fehler::throw;
 use pyo3::prelude::*;
 use pyo3::{exceptions::PyValueError, PyResult};
-use std::convert::TryFrom;
 
 #[derive(FromPyObject)]
 pub struct PartitionQuery {
@@ -31,7 +30,7 @@ pub fn partition(part: &PartitionQuery, source_conn: &SourceConn) -> PyResult<Ve
     let mut queries = vec![];
     let num = part.num as i64;
     let (min, max) = match (part.min, part.max) {
-        (None, None) => source_conn.get_col_range(&part.query, &part.column)?,
+        (None, None) => get_col_range(source_conn, &part.query, &part.column)?,
         (Some(min), Some(max)) => (min, max),
         _ => throw!(PyValueError::new_err(
             "partition_query range can not be partially specified",
@@ -46,8 +45,7 @@ pub fn partition(part: &PartitionQuery, source_conn: &SourceConn) -> PyResult<Ve
             true => max + 1,
             false => min + (i + 1) * partition_size,
         };
-        let partition_query =
-            source_conn.get_part_query(&part.query, &part.column, lower, upper)?;
+        let partition_query = get_part_query(source_conn, &part.query, &part.column, lower, upper)?;
         queries.push(partition_query);
     }
     Ok(queries)
@@ -61,7 +59,7 @@ pub fn read_sql<'a>(
     queries: Option<Vec<String>>,
     partition_query: Option<PartitionQuery>,
 ) -> PyResult<&'a PyAny> {
-    let source_conn = SourceConn::try_from(conn)?;
+    let source_conn = parse_source(conn, protocol)?;
     let (queries, origin_query) = match (queries, partition_query) {
         (Some(queries), None) => (queries.into_iter().map(CXQuery::Naked).collect(), None),
         (None, Some(part)) => {
@@ -90,7 +88,6 @@ pub fn read_sql<'a>(
             &source_conn,
             origin_query,
             &queries,
-            protocol.unwrap_or("binary"),
         )?),
         "arrow2" => Ok(crate::arrow2::write_arrow(
             py,

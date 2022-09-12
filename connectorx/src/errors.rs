@@ -4,6 +4,64 @@ use std::fmt;
 use thiserror::Error;
 
 pub type Result<T> = std::result::Result<T, ConnectorXError>;
+pub type OutResult<T> = std::result::Result<T, ConnectorXOutError>;
+
+#[derive(Error, Debug)]
+pub enum ConnectorXOutError {
+    #[error("File {0} not found.")]
+    FileNotFoundError(String),
+
+    #[cfg(feature = "federation")]
+    #[error(transparent)]
+    J4RSError(#[from] j4rs::errors::J4RsError),
+
+    #[cfg(feature = "federation")]
+    #[error(transparent)]
+    DataFusionError(#[from] datafusion::error::DataFusionError),
+
+    #[cfg(feature = "federation")]
+    #[error(transparent)]
+    UrlParseError(#[from] url::ParseError),
+
+    #[error(transparent)]
+    ConnectorXInternalError(#[from] ConnectorXError),
+
+    #[error(transparent)]
+    PostgresError(#[from] crate::sources::postgres::PostgresSourceError),
+
+    #[error(transparent)]
+    MySQLError(#[from] crate::sources::mysql::MySQLSourceError),
+
+    #[error(transparent)]
+    MsSQLSourceError(#[from] crate::sources::mssql::MsSQLSourceError),
+
+    #[error(transparent)]
+    SQLiteSourceError(#[from] crate::sources::sqlite::SQLiteSourceError),
+
+    #[error(transparent)]
+    OracleSourceError(#[from] crate::sources::oracle::OracleSourceError),
+
+    #[error(transparent)]
+    BigQuerySourceError(#[from] crate::sources::bigquery::BigQuerySourceError),
+
+    #[error(transparent)]
+    ArrowError(#[from] crate::destinations::arrow::ArrowDestinationError),
+
+    #[error(transparent)]
+    PostgresArrowTransportError(#[from] crate::transports::PostgresArrowTransportError),
+
+    #[error(transparent)]
+    MySQLArrowTransportError(#[from] crate::transports::MySQLArrowTransportError),
+
+    #[error(transparent)]
+    SQLiteArrowTransportError(#[from] crate::transports::SQLiteArrowTransportError),
+
+    #[error(transparent)]
+    MsSQLArrowTransportError(#[from] crate::transports::MsSQLArrowTransportError),
+
+    #[error(transparent)]
+    OracleArrowTransportError(#[from] crate::transports::OracleArrowTransportError),
+}
 
 /// Errors that can be raised from this library.
 #[derive(Error, Debug)]
@@ -30,39 +88,15 @@ pub enum ConnectorXError {
     #[error("Cannot get total number of rows in advance.")]
     CountError(),
 
-    #[error("File {0} not found.")]
-    FileNotFoundError(String),
-
     #[error(transparent)]
     SQLParserError(#[from] sqlparser::parser::ParserError),
 
     #[error(transparent)]
     StdIOError(#[from] std::io::Error),
 
-    #[cfg(feature = "federation")]
-    #[error(transparent)]
-    J4RSError(#[from] j4rs::errors::J4RsError),
-
     #[error(transparent)]
     StdVarError(#[from] std::env::VarError),
 
-    #[cfg(feature = "federation")]
-    #[error(transparent)]
-    DataFusionError(#[from] datafusion::error::DataFusionError),
-
-    #[cfg(feature = "federation")]
-    #[error(transparent)]
-    UrlParseError(#[from] url::ParseError),
-
-    // #[error(transparent)]
-    // PostgresError(#[from] crate::source::postgres::Error),
-
-    // #[error(transparent)]
-    // ArrowError(#[from] crate::destination::arrow::ArrowDestinationError),
-
-    // #[error(transparent)]
-    // PostgresArrowTransportError(#[from] crate::transports::PostgresArrowTransportError),
-    /// Any other errors that are too trivial to be put here explicitly.
     #[error(transparent)]
     Other(#[from] anyhow::Error),
 }

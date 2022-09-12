@@ -6,7 +6,7 @@ use super::{
     },
 };
 use crate::errors::ConnectorXPythonError;
-use crate::source_router::{SourceConn, SourceType};
+use connectorx::source_router::{SourceConn, SourceType};
 use connectorx::{
     prelude::*,
     sources::{

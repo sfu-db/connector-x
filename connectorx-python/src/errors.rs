@@ -47,6 +47,9 @@ pub enum ConnectorXPythonError {
     ConnectorXError(#[from] connectorx::errors::ConnectorXError),
 
     #[error(transparent)]
+    ConnectorXOutError(#[from] connectorx::errors::ConnectorXOutError),
+
+    #[error(transparent)]
     MsSQLSourceError(#[from] connectorx::sources::mssql::MsSQLSourceError),
 
     #[error(transparent)]
