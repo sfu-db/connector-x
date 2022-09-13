@@ -202,6 +202,7 @@
 <span id="197">197</span>
 <span id="198">198</span>
 <span id="199">199</span>
+<span id="200">200</span>
 </pre><pre class="rust"><code><span class="doccomment">///! This module provides [`dispatcher::Dispatcher`], the core struct in ConnectorX</span>
 <span class="doccomment">///! that drives the data loading from a source to a destination.</span>
 <span class="kw">use</span> <span class="kw">crate</span>::{
@@ -256,6 +257,7 @@
 
     <span class="doccomment">/// Start the data loading process.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">run</span>(<span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">ET</span><span class="op">&gt;</span> {
+        <span class="macro">debug!</span>(<span class="string">&quot;Run dispatcher&quot;</span>);
         <span class="kw">let</span> <span class="ident">dorder</span> <span class="op">=</span> <span class="ident">coordinate</span>(<span class="ident">S::DATA_ORDERS</span>, <span class="ident">D::DATA_ORDERS</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">src</span>.<span class="ident">set_data_order</span>(<span class="ident">dorder</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">src</span>.<span class="ident">set_queries</span>(<span class="self">self</span>.<span class="ident">queries</span>.<span class="ident">as_slice</span>());
