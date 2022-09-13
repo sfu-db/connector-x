@@ -4,6 +4,111 @@ use std::fmt;
 use thiserror::Error;
 
 pub type Result<T> = std::result::Result<T, ConnectorXError>;
+pub type OutResult<T> = std::result::Result<T, ConnectorXOutError>;
+
+#[derive(Error, Debug)]
+pub enum ConnectorXOutError {
+    #[error("File {0} not found.")]
+    FileNotFoundError(String),
+
+    #[error("Source {0} not supported.")]
+    SourceNotSupport(String),
+
+    #[cfg(feature = "federation")]
+    #[error(transparent)]
+    J4RSError(#[from] j4rs::errors::J4RsError),
+
+    #[cfg(feature = "federation")]
+    #[error(transparent)]
+    DataFusionError(#[from] datafusion::error::DataFusionError),
+
+    #[cfg(feature = "federation")]
+    #[error(transparent)]
+    UrlParseError(#[from] url::ParseError),
+
+    #[error(transparent)]
+    ConnectorXInternalError(#[from] ConnectorXError),
+
+    #[cfg(feature = "src_postgres")]
+    #[error(transparent)]
+    PostgresError(#[from] crate::sources::postgres::PostgresSourceError),
+
+    #[cfg(feature = "src_mysql")]
+    #[error(transparent)]
+    MySQLError(#[from] crate::sources::mysql::MySQLSourceError),
+
+    #[cfg(feature = "src_mssql")]
+    #[error(transparent)]
+    MsSQLSourceError(#[from] crate::sources::mssql::MsSQLSourceError),
+
+    #[cfg(feature = "src_sqlite")]
+    #[error(transparent)]
+    SQLiteSourceError(#[from] crate::sources::sqlite::SQLiteSourceError),
+
+    #[cfg(feature = "src_oracle")]
+    #[error(transparent)]
+    OracleSourceError(#[from] crate::sources::oracle::OracleSourceError),
+
+    #[cfg(feature = "src_bigquery")]
+    #[error(transparent)]
+    BigQuerySourceError(#[from] crate::sources::bigquery::BigQuerySourceError),
+
+    #[cfg(feature = "dst_arrow")]
+    #[error(transparent)]
+    ArrowError(#[from] crate::destinations::arrow::ArrowDestinationError),
+
+    #[cfg(feature = "dst_arrow2")]
+    #[error(transparent)]
+    Arrow2Error(#[from] crate::destinations::arrow2::Arrow2DestinationError),
+
+    #[cfg(all(feature = "src_postgres", feature = "dst_arrow"))]
+    #[error(transparent)]
+    PostgresArrowTransportError(#[from] crate::transports::PostgresArrowTransportError),
+
+    #[cfg(all(feature = "src_postgres", feature = "dst_arrow2"))]
+    #[error(transparent)]
+    PostgresArrow2TransportError(#[from] crate::transports::PostgresArrow2TransportError),
+
+    #[cfg(all(feature = "src_mysql", feature = "dst_arrow"))]
+    #[error(transparent)]
+    MySQLArrowTransportError(#[from] crate::transports::MySQLArrowTransportError),
+
+    #[cfg(all(feature = "src_mysql", feature = "dst_arrow2"))]
+    #[error(transparent)]
+    MySQLArrow2TransportError(#[from] crate::transports::MySQLArrow2TransportError),
+
+    #[cfg(all(feature = "src_sqlite", feature = "dst_arrow"))]
+    #[error(transparent)]
+    SQLiteArrowTransportError(#[from] crate::transports::SQLiteArrowTransportError),
+
+    #[cfg(all(feature = "src_sqlite", feature = "dst_arrow2"))]
+    #[error(transparent)]
+    SQLiteArrow2TransportError(#[from] crate::transports::SQLiteArrow2TransportError),
+
+    #[cfg(all(feature = "src_mssql", feature = "dst_arrow"))]
+    #[error(transparent)]
+    MsSQLArrowTransportError(#[from] crate::transports::MsSQLArrowTransportError),
+
+    #[cfg(all(feature = "src_mssql", feature = "dst_arrow2"))]
+    #[error(transparent)]
+    MsSQLArrow2TransportError(#[from] crate::transports::MsSQLArrow2TransportError),
+
+    #[cfg(all(feature = "src_oracle", feature = "dst_arrow"))]
+    #[error(transparent)]
+    OracleArrowTransportError(#[from] crate::transports::OracleArrowTransportError),
+
+    #[cfg(all(feature = "src_oracle", feature = "dst_arrow2"))]
+    #[error(transparent)]
+    OracleArrow2TransportError(#[from] crate::transports::OracleArrow2TransportError),
+
+    #[cfg(all(feature = "src_bigquery", feature = "dst_arrow"))]
+    #[error(transparent)]
+    BigqueryArrowTransportError(#[from] crate::transports::BigQueryArrowTransportError),
+
+    #[cfg(all(feature = "src_bigquery", feature = "dst_arrow2"))]
+    #[error(transparent)]
+    BigqueryArrow2TransportError(#[from] crate::transports::BigQueryArrow2TransportError),
+}
 
 /// Errors that can be raised from this library.
 #[derive(Error, Debug)]
@@ -30,39 +135,15 @@ pub enum ConnectorXError {
     #[error("Cannot get total number of rows in advance.")]
     CountError(),
 
-    #[error("File {0} not found.")]
-    FileNotFoundError(String),
-
     #[error(transparent)]
     SQLParserError(#[from] sqlparser::parser::ParserError),
 
     #[error(transparent)]
     StdIOError(#[from] std::io::Error),
 
-    #[cfg(feature = "federation")]
-    #[error(transparent)]
-    J4RSError(#[from] j4rs::errors::J4RsError),
-
     #[error(transparent)]
     StdVarError(#[from] std::env::VarError),
 
-    #[cfg(feature = "federation")]
-    #[error(transparent)]
-    DataFusionError(#[from] datafusion::error::DataFusionError),
-
-    #[cfg(feature = "federation")]
-    #[error(transparent)]
-    UrlParseError(#[from] url::ParseError),
-
-    // #[error(transparent)]
-    // PostgresError(#[from] crate::source::postgres::Error),
-
-    // #[error(transparent)]
-    // ArrowError(#[from] crate::destination::arrow::ArrowDestinationError),
-
-    // #[error(transparent)]
-    // PostgresArrowTransportError(#[from] crate::transports::PostgresArrowTransportError),
-    /// Any other errors that are too trivial to be put here explicitly.
     #[error(transparent)]
     Other(#[from] anyhow::Error),
 }

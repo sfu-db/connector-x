@@ -12,10 +12,10 @@ mod source_router;
 
 use crate::constants::J4RS_BASE_PATH;
 use connectorx::fed_dispatcher::run;
+use pyo3::exceptions::PyRuntimeError;
 use pyo3::prelude::*;
 use pyo3::{wrap_pyfunction, PyResult};
 use std::collections::HashMap;
-use std::convert::TryFrom;
 use std::env;
 use std::sync::Once;
 
@@ -61,7 +61,7 @@ pub fn partition_sql(
     conn: &str,
     partition_query: read_sql::PartitionQuery,
 ) -> PyResult<Vec<String>> {
-    let source_conn = source_router::SourceConn::try_from(conn)?;
+    let source_conn = source_router::parse_source(conn, None)?;
     let queries = read_sql::partition(&partition_query, &source_conn)?;
     Ok(queries.into_iter().map(|q| q.to_string()).collect())
 }
@@ -81,7 +81,7 @@ pub fn read_sql2<'a>(
                 .as_str(),
         ),
     )
-    .unwrap();
+    .map_err(|e| PyRuntimeError::new_err(format!("{}", e)))?;
     let ptrs = arrow::to_ptrs(rbs);
     let obj: PyObject = ptrs.into_py(py);
     Ok(obj.into_ref(py))

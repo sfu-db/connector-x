@@ -33,3 +33,5 @@ pub const POSTGRES_JDBC_DRIVER: &str = "org.postgresql.Driver";
 
 #[cfg(any(feature = "federation", feature = "src_mysql"))]
 pub const MYSQL_JDBC_DRIVER: &str = "com.mysql.cj.jdbc.Driver";
+
+pub const CONNECTORX_PROTOCOL: &str = "cxprotocol";
