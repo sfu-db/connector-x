@@ -1,4 +1,3 @@
-use crate::constants::CONNECTORX_PROTOCOL;
 use crate::sources::postgres::errors::PostgresSourceError;
 use openssl::ssl::{SslConnector, SslFiletype, SslMethod, SslVerifyMode};
 use postgres::{config::SslMode, Config};
@@ -76,7 +75,7 @@ fn strip_bad_opts(url: &Url) -> Url {
     let stripped_query: Vec<(_, _)> = url
         .query_pairs()
         .filter(|p| match &*p.0 {
-            "sslkey" | "sslcert" | "sslrootcert" | CONNECTORX_PROTOCOL => false,
+            "sslkey" | "sslcert" | "sslrootcert" => false,
             _ => true,
         })
         .collect();

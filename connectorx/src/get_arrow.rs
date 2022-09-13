@@ -23,14 +23,14 @@ pub fn get_arrow(
     queries: &[CXQuery<String>],
 ) -> ArrowDestination {
     let mut destination = ArrowDestination::new();
-    let protocol = source_conn.get_protocol();
+    let protocol = source_conn.proto.as_str();
     debug!("Protocol: {}", protocol);
 
     // TODO: unlock gil if possible
     match source_conn.ty {
         SourceType::Postgres => {
             let (config, tls) = rewrite_tls_args(&source_conn.conn)?;
-            match (protocol.as_str(), tls) {
+            match (protocol, tls) {
                 ("csv", Some(tls_conn)) => {
                     let sb = PostgresSource::<CSVProtocol, MakeTlsConnector>::new(
                         config,
@@ -118,7 +118,7 @@ pub fn get_arrow(
             }
         }
 
-        SourceType::MySQL => match protocol.as_str() {
+        SourceType::MySQL => match protocol {
             "binary" => {
                 let source =
                     MySQLSource::<MySQLBinaryProtocol>::new(&source_conn.conn[..], queries.len())?;
