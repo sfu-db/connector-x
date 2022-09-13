@@ -17,6 +17,7 @@ log = "0.4"
 rayon = "1"
 sqlparser = "0.11"
 thiserror = "1"
+url = "2"
 
 arrow = {version = "12", optional = true, features = ["prettyprint"]}
 arrow2 = {version = "0.10", default-features = false, optional = true}
@@ -49,7 +50,6 @@ rust_decimal = {version = "1", features = ["db-postgres"], optional = true}
 serde_json = {version = "1", optional = true}
 tiberius = {version = "0.5", features = ["rust_decimal", "chrono"], optional = true}
 tokio = {version = "1", features = ["rt", "rt-multi-thread", "net"], optional = true}
-url = {version = "2"}
 urlencoding = {version = "2.1", optional = true}
 uuid = {version = "0.8", optional = true}
 j4rs = {version = "0.13", optional = true}
