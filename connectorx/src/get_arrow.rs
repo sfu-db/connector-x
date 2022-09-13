@@ -1,19 +1,20 @@
-use crate::{
-    prelude::*,
-    sources::{
-        mysql::{BinaryProtocol as MySQLBinaryProtocol, TextProtocol},
-        postgres::{
-            rewrite_tls_args, BinaryProtocol as PgBinaryProtocol, CSVProtocol, CursorProtocol,
-        },
-    },
-    sql::CXQuery,
+#[cfg(feature = "src_mysql")]
+use crate::sources::mysql::{BinaryProtocol as MySQLBinaryProtocol, TextProtocol};
+#[cfg(feature = "src_postgres")]
+use crate::sources::postgres::{
+    rewrite_tls_args, BinaryProtocol as PgBinaryProtocol, CSVProtocol, CursorProtocol,
 };
-use fehler::throws;
+use crate::{prelude::*, sql::CXQuery};
+use fehler::{throw, throws};
 use log::debug;
+#[cfg(feature = "src_postgres")]
 use postgres::NoTls;
+#[cfg(feature = "src_postgres")]
 use postgres_openssl::MakeTlsConnector;
+#[allow(unused_imports)]
 use std::sync::Arc;
 
+#[allow(unreachable_code, unreachable_patterns, unused_variables, unused_mut)]
 #[throws(ConnectorXOutError)]
 pub fn get_arrow(
     source_conn: &SourceConn,
@@ -26,6 +27,7 @@ pub fn get_arrow(
 
     // TODO: unlock gil if possible
     match source_conn.ty {
+        #[cfg(feature = "src_postgres")]
         SourceType::Postgres => {
             let (config, tls) = rewrite_tls_args(&source_conn.conn)?;
             match (protocol, tls) {
@@ -115,7 +117,7 @@ pub fn get_arrow(
                 _ => unimplemented!("{} protocol not supported", protocol),
             }
         }
-
+        #[cfg(feature = "src_mysql")]
         SourceType::MySQL => match protocol {
             "binary" => {
                 let source =
@@ -141,6 +143,7 @@ pub fn get_arrow(
             }
             _ => unimplemented!("{} protocol not supported", protocol),
         },
+        #[cfg(feature = "src_sqlite")]
         SourceType::SQLite => {
             // remove the first "sqlite://" manually since url.path is not correct for windows
             let path = &source_conn.conn.as_str()[9..];
@@ -153,6 +156,7 @@ pub fn get_arrow(
             );
             dispatcher.run()?;
         }
+        #[cfg(feature = "src_mssql")]
         SourceType::MsSQL => {
             let rt = Arc::new(tokio::runtime::Runtime::new().expect("Failed to create runtime"));
             let source = MsSQLSource::new(rt, &source_conn.conn[..], queries.len())?;
@@ -164,6 +168,7 @@ pub fn get_arrow(
             );
             dispatcher.run()?;
         }
+        #[cfg(feature = "src_oracle")]
         SourceType::Oracle => {
             let source = OracleSource::new(&source_conn.conn[..], queries.len())?;
             let dispatcher = Dispatcher::<_, _, OracleArrowTransport>::new(
@@ -174,6 +179,7 @@ pub fn get_arrow(
             );
             dispatcher.run()?;
         }
+        #[cfg(feature = "src_bigquery")]
         SourceType::BigQuery => {
             let rt = Arc::new(tokio::runtime::Runtime::new().expect("Failed to create runtime"));
             let source = BigQuerySource::new(rt, &source_conn.conn[..])?;
@@ -185,6 +191,10 @@ pub fn get_arrow(
             );
             dispatcher.run()?;
         }
+        _ => throw!(ConnectorXOutError::SourceNotSupport(format!(
+            "{:?}",
+            source_conn.ty
+        ))),
     }
 
     destination

@@ -142,7 +142,9 @@ mod dispatcher;
 pub mod errors;
 #[cfg(feature = "federation")]
 pub mod fed_dispatcher;
+#[cfg(feature = "dst_arrow")]
 pub mod get_arrow;
+#[cfg(feature = "dst_arrow2")]
 pub mod get_arrow2;
 pub mod source_router;
 pub mod sources;
@@ -161,7 +163,9 @@ pub mod prelude {
     pub use crate::destinations::{Consume, Destination, DestinationPartition};
     pub use crate::dispatcher::Dispatcher;
     pub use crate::errors::{ConnectorXError, ConnectorXOutError};
+    #[cfg(feature = "dst_arrow")]
     pub use crate::get_arrow::get_arrow;
+    #[cfg(feature = "dst_arrow2")]
     pub use crate::get_arrow2::get_arrow2;
     pub use crate::source_router::*;
     #[cfg(feature = "src_bigquery")]

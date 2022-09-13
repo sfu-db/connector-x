@@ -4,6 +4,7 @@ use anyhow::anyhow;
 use std::convert::TryFrom;
 use url::Url;
 
+#[derive(Debug)]
 pub enum SourceType {
     Postgres,
     SQLite,

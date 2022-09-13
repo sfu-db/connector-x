@@ -203,7 +203,7 @@ pub fn run(
             Ok(())
         })?;
 
-    debug!("\nexecute query final:");
+    debug!("\nexecute query final...");
     let rt = Arc::new(tokio::runtime::Runtime::new().expect("Failed to create runtime"));
     // until datafusion fix the bug: https://github.com/apache/arrow-datafusion/issues/2147
     for alias in alias_names {
