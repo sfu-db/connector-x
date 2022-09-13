@@ -15,12 +15,12 @@ use postgres_openssl::MakeTlsConnector;
 use std::sync::Arc;
 
 #[throws(ConnectorXOutError)]
-pub fn get_arrow(
+pub fn get_arrow2(
     source_conn: &SourceConn,
     origin_query: Option<String>,
     queries: &[CXQuery<String>],
-) -> ArrowDestination {
-    let mut destination = ArrowDestination::new();
+) -> Arrow2Destination {
+    let mut destination = Arrow2Destination::new();
     let protocol = source_conn.proto.as_str();
     debug!("Protocol: {}", protocol);
 
@@ -38,7 +38,7 @@ pub fn get_arrow(
                     let dispatcher = Dispatcher::<
                         _,
                         _,
-                        PostgresArrowTransport<CSVProtocol, MakeTlsConnector>,
+                        PostgresArrow2Transport<CSVProtocol, MakeTlsConnector>,
                     >::new(
                         sb, &mut destination, queries, origin_query
                     );
@@ -48,7 +48,7 @@ pub fn get_arrow(
                     let sb =
                         PostgresSource::<CSVProtocol, NoTls>::new(config, NoTls, queries.len())?;
                     let dispatcher =
-                        Dispatcher::<_, _, PostgresArrowTransport<CSVProtocol, NoTls>>::new(
+                        Dispatcher::<_, _, PostgresArrow2Transport<CSVProtocol, NoTls>>::new(
                             sb,
                             &mut destination,
                             queries,
@@ -66,7 +66,7 @@ pub fn get_arrow(
                         Dispatcher::<
                             _,
                             _,
-                            PostgresArrowTransport<PgBinaryProtocol, MakeTlsConnector>,
+                            PostgresArrow2Transport<PgBinaryProtocol, MakeTlsConnector>,
                         >::new(sb, &mut destination, queries, origin_query);
                     dispatcher.run()?;
                 }
@@ -79,7 +79,7 @@ pub fn get_arrow(
                     let dispatcher = Dispatcher::<
                         _,
                         _,
-                        PostgresArrowTransport<PgBinaryProtocol, NoTls>,
+                        PostgresArrow2Transport<PgBinaryProtocol, NoTls>,
                     >::new(
                         sb, &mut destination, queries, origin_query
                     );
@@ -94,7 +94,7 @@ pub fn get_arrow(
                     let dispatcher = Dispatcher::<
                         _,
                         _,
-                        PostgresArrowTransport<CursorProtocol, MakeTlsConnector>,
+                        PostgresArrow2Transport<CursorProtocol, MakeTlsConnector>,
                     >::new(
                         sb, &mut destination, queries, origin_query
                     );
@@ -106,7 +106,7 @@ pub fn get_arrow(
                     let dispatcher = Dispatcher::<
                         _,
                         _,
-                        PostgresArrowTransport<CursorProtocol, NoTls>,
+                        PostgresArrow2Transport<CursorProtocol, NoTls>,
                     >::new(
                         sb, &mut destination, queries, origin_query
                     );
@@ -120,7 +120,7 @@ pub fn get_arrow(
             "binary" => {
                 let source =
                     MySQLSource::<MySQLBinaryProtocol>::new(&source_conn.conn[..], queries.len())?;
-                let dispatcher = Dispatcher::<_, _, MySQLArrowTransport<MySQLBinaryProtocol>>::new(
+                let dispatcher = Dispatcher::<_, _, MySQLArrow2Transport<MySQLBinaryProtocol>>::new(
                     source,
                     &mut destination,
                     queries,
@@ -131,7 +131,7 @@ pub fn get_arrow(
             "text" => {
                 let source =
                     MySQLSource::<TextProtocol>::new(&source_conn.conn[..], queries.len())?;
-                let dispatcher = Dispatcher::<_, _, MySQLArrowTransport<TextProtocol>>::new(
+                let dispatcher = Dispatcher::<_, _, MySQLArrow2Transport<TextProtocol>>::new(
                     source,
                     &mut destination,
                     queries,
@@ -145,7 +145,7 @@ pub fn get_arrow(
             // remove the first "sqlite://" manually since url.path is not correct for windows
             let path = &source_conn.conn.as_str()[9..];
             let source = SQLiteSource::new(path, queries.len())?;
-            let dispatcher = Dispatcher::<_, _, SQLiteArrowTransport>::new(
+            let dispatcher = Dispatcher::<_, _, SQLiteArrow2Transport>::new(
                 source,
                 &mut destination,
                 queries,
@@ -156,7 +156,7 @@ pub fn get_arrow(
         SourceType::MsSQL => {
             let rt = Arc::new(tokio::runtime::Runtime::new().expect("Failed to create runtime"));
             let source = MsSQLSource::new(rt, &source_conn.conn[..], queries.len())?;
-            let dispatcher = Dispatcher::<_, _, MsSQLArrowTransport>::new(
+            let dispatcher = Dispatcher::<_, _, MsSQLArrow2Transport>::new(
                 source,
                 &mut destination,
                 queries,
@@ -166,7 +166,7 @@ pub fn get_arrow(
         }
         SourceType::Oracle => {
             let source = OracleSource::new(&source_conn.conn[..], queries.len())?;
-            let dispatcher = Dispatcher::<_, _, OracleArrowTransport>::new(
+            let dispatcher = Dispatcher::<_, _, OracleArrow2Transport>::new(
                 source,
                 &mut destination,
                 queries,
@@ -177,7 +177,7 @@ pub fn get_arrow(
         SourceType::BigQuery => {
             let rt = Arc::new(tokio::runtime::Runtime::new().expect("Failed to create runtime"));
             let source = BigQuerySource::new(rt, &source_conn.conn[..])?;
-            let dispatcher = Dispatcher::<_, _, BigQueryArrowTransport>::new(
+            let dispatcher = Dispatcher::<_, _, BigQueryArrow2Transport>::new(
                 source,
                 &mut destination,
                 queries,

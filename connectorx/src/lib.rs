@@ -143,6 +143,7 @@ pub mod errors;
 #[cfg(feature = "federation")]
 pub mod fed_dispatcher;
 pub mod get_arrow;
+pub mod get_arrow2;
 pub mod source_router;
 pub mod sources;
 #[doc(hidden)]
@@ -161,6 +162,7 @@ pub mod prelude {
     pub use crate::dispatcher::Dispatcher;
     pub use crate::errors::{ConnectorXError, ConnectorXOutError};
     pub use crate::get_arrow::get_arrow;
+    pub use crate::get_arrow2::get_arrow2;
     pub use crate::source_router::*;
     #[cfg(feature = "src_bigquery")]
     pub use crate::sources::bigquery::BigQuerySource;

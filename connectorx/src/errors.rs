@@ -48,19 +48,43 @@ pub enum ConnectorXOutError {
     ArrowError(#[from] crate::destinations::arrow::ArrowDestinationError),
 
     #[error(transparent)]
+    Arrow2Error(#[from] crate::destinations::arrow2::Arrow2DestinationError),
+
+    #[error(transparent)]
     PostgresArrowTransportError(#[from] crate::transports::PostgresArrowTransportError),
+
+    #[error(transparent)]
+    PostgresArrow2TransportError(#[from] crate::transports::PostgresArrow2TransportError),
 
     #[error(transparent)]
     MySQLArrowTransportError(#[from] crate::transports::MySQLArrowTransportError),
 
     #[error(transparent)]
+    MySQLArrow2TransportError(#[from] crate::transports::MySQLArrow2TransportError),
+
+    #[error(transparent)]
     SQLiteArrowTransportError(#[from] crate::transports::SQLiteArrowTransportError),
+
+    #[error(transparent)]
+    SQLiteArrow2TransportError(#[from] crate::transports::SQLiteArrow2TransportError),
 
     #[error(transparent)]
     MsSQLArrowTransportError(#[from] crate::transports::MsSQLArrowTransportError),
 
     #[error(transparent)]
+    MsSQLArrow2TransportError(#[from] crate::transports::MsSQLArrow2TransportError),
+
+    #[error(transparent)]
     OracleArrowTransportError(#[from] crate::transports::OracleArrowTransportError),
+
+    #[error(transparent)]
+    OracleArrow2TransportError(#[from] crate::transports::OracleArrow2TransportError),
+
+    #[error(transparent)]
+    BigqueryArrowTransportError(#[from] crate::transports::BigQueryArrowTransportError),
+
+    #[error(transparent)]
+    BigqueryArrow2TransportError(#[from] crate::transports::BigQueryArrow2TransportError),
 }
 
 /// Errors that can be raised from this library.

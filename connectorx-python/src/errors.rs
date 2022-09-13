@@ -71,37 +71,7 @@ pub enum ConnectorXPythonError {
     ArrowDestinationError(#[from] connectorx::destinations::arrow::ArrowDestinationError),
 
     #[error(transparent)]
-    PostgresArrowTransportError(#[from] connectorx::transports::PostgresArrowTransportError),
-
-    #[error(transparent)]
-    MySQLArrowTransportError(#[from] connectorx::transports::MySQLArrowTransportError),
-
-    #[error(transparent)]
-    SQLiteArrowTransportError(#[from] connectorx::transports::SQLiteArrowTransportError),
-
-    #[error(transparent)]
-    MsSQLArrowTransportError(#[from] connectorx::transports::MsSQLArrowTransportError),
-
-    #[error(transparent)]
-    OracleArrowTransportError(#[from] connectorx::transports::OracleArrowTransportError),
-
-    #[error(transparent)]
     Arrow2DestinationError(#[from] connectorx::destinations::arrow2::Arrow2DestinationError),
-
-    #[error(transparent)]
-    PostgresArrow2TransportError(#[from] connectorx::transports::PostgresArrow2TransportError),
-
-    #[error(transparent)]
-    MySQLArrow2TransportError(#[from] connectorx::transports::MySQLArrow2TransportError),
-
-    #[error(transparent)]
-    SQLiteArrow2TransportError(#[from] connectorx::transports::SQLiteArrow2TransportError),
-
-    #[error(transparent)]
-    MsSQLArrow2TransportError(#[from] connectorx::transports::MsSQLArrow2TransportError),
-
-    #[error(transparent)]
-    OracleArrow2TransportError(#[from] connectorx::transports::OracleArrow2TransportError),
 
     #[error(transparent)]
     UrlDecodeError(#[from] FromUtf8Error),

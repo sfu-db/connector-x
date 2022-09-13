@@ -52,6 +52,7 @@ where
 
     /// Start the data loading process.
     pub fn run(mut self) -> Result<(), ET> {
+        debug!("Run dispatcher");
         let dorder = coordinate(S::DATA_ORDERS, D::DATA_ORDERS)?;
         self.src.set_data_order(dorder)?;
         self.src.set_queries(self.queries.as_slice());

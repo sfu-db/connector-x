@@ -81,7 +81,6 @@ pub fn read_sql<'a>(
             &source_conn,
             origin_query,
             &queries,
-            protocol.unwrap_or("binary"),
         )?),
         "arrow" => Ok(crate::arrow::write_arrow(
             py,
@@ -94,7 +93,6 @@ pub fn read_sql<'a>(
             &source_conn,
             origin_query,
             &queries,
-            protocol.unwrap_or("binary"),
         )?),
         _ => Err(PyValueError::new_err(format!(
             "return type should be 'pandas' or 'arrow', got '{}'",
