@@ -119,7 +119,7 @@ jobs:
         run: just test-feature-gate
 
       - name: Run tests
-        run: just test
+        run: cargo clean && just test
         env:
           POSTGRES_URL: "postgresql://postgres:postgres@postgres:5432/postgres"
           SQLITE_URL: "sqlite:///tmp/test.db"
