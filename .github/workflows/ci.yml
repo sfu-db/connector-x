@@ -103,23 +103,23 @@ jobs:
           MSSQL_USER: sa
           MSSQL_PASSWORD: mssql!Password
 
-      # - name: Is the code formatted?
-      #   uses: actions-rs/cargo@v1
-      #   with:
-      #     command: fmt
-      #     args: --all -- --check -q
+      - name: Is the code formatted?
+        uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: --all -- --check -q
 
-      # - name: Clippy linting
-      #   uses: actions-rs/cargo@v1
-      #   with:
-      #     command: clippy
-      #     args: --features all
+      - name: Clippy linting
+        uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+          args: --features all
 
-      # - name: Check each feature gate
-      #   run: just test-feature-gate
+      - name: Check each feature gate
+        run: just test-feature-gate
 
       - name: Run tests
-        run: cargo clean && just test
+        run: just test
         env:
           POSTGRES_URL: "postgresql://postgres:postgres@postgres:5432/postgres"
           SQLITE_URL: "sqlite:///tmp/test.db"
@@ -132,127 +132,127 @@ jobs:
           command: doc
           args: --no-deps --features all
 
-  # python:
-  #   runs-on: ubuntu-latest
-  #   container: ubuntu:20.04
-  #   services:
-  #     # Label used to access the service container
-  #     postgres:
-  #       # Docker Hub image
-  #       image: postgres
-  #       env:
-  #         POSTGRES_PASSWORD: postgres
-  #       # Set health checks to wait until postgres has started
-  #       options: >-
-  #         --health-cmd pg_isready
-  #         --health-interval 10s
-  #         --health-timeout 5s
-  #         --health-retries 5
-  #     # mysql
-  #     mysql:
-  #       image: ghcr.io/wangxiaoying/mysql:latest
-  #       env:
-  #         MYSQL_DATABASE: mysql
-  #         MYSQL_ROOT_PASSWORD: mysql
-  #         LANG: C.UTF-8
-  #       ports:
-  #         - 3306:3306
-  #       options: >-
-  #         --health-cmd "mysqladmin ping"
-  #         --health-interval 10s
-  #         --health-timeout 10s
-  #         --health-retries 5
-  #     mssql:
-  #       image: mcr.microsoft.com/mssql/server:2019-latest
-  #       env:
-  #         ACCEPT_EULA: y
-  #         SA_PASSWORD: mssql!Password
-  #       ports:
-  #         - 1433:1433
-  #       options: >-
-  #         --health-cmd "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P \"$SA_PASSWORD\" -Q 'SELECT 1' || exit 1"
-  #         --health-interval 10s
-  #         --health-timeout 5s
-  #         --health-retries 20
+  python:
+    runs-on: ubuntu-latest
+    container: ubuntu:20.04
+    services:
+      # Label used to access the service container
+      postgres:
+        # Docker Hub image
+        image: postgres
+        env:
+          POSTGRES_PASSWORD: postgres
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      # mysql
+      mysql:
+        image: ghcr.io/wangxiaoying/mysql:latest
+        env:
+          MYSQL_DATABASE: mysql
+          MYSQL_ROOT_PASSWORD: mysql
+          LANG: C.UTF-8
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd "mysqladmin ping"
+          --health-interval 10s
+          --health-timeout 10s
+          --health-retries 5
+      mssql:
+        image: mcr.microsoft.com/mssql/server:2019-latest
+        env:
+          ACCEPT_EULA: y
+          SA_PASSWORD: mssql!Password
+        ports:
+          - 1433:1433
+        options: >-
+          --health-cmd "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P \"$SA_PASSWORD\" -Q 'SELECT 1' || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 20
 
-  #   steps:
-  #     - uses: actions/checkout@v2
+    steps:
+      - uses: actions/checkout@v2
 
-  #     - name: Install tools
-  #       run: |
-  #         apt-get update
-  #         apt-get install -y curl postgresql-client build-essential python3-dev python3-pip pkg-config libssl-dev git sqlite3 libsqlite3-dev mysql-client libmysqlclient-dev python3 python3-pip libicu66
-  #         pip3 install mssql-cli
-  #         pip3 install cli-helpers==2.2.0
-  #         ln -s /usr/bin/python3 /usr/bin/python
-  #       env:
-  #         DEBIAN_FRONTEND: noninteractive
+      - name: Install tools
+        run: |
+          apt-get update
+          apt-get install -y curl postgresql-client build-essential python3-dev python3-pip pkg-config libssl-dev git sqlite3 libsqlite3-dev mysql-client libmysqlclient-dev python3 python3-pip libicu66
+          pip3 install mssql-cli
+          pip3 install cli-helpers==2.2.0
+          ln -s /usr/bin/python3 /usr/bin/python
+        env:
+          DEBIAN_FRONTEND: noninteractive
 
-  #     - name: Install Rust
-  #       uses: actions-rs/toolchain@v1
-  #       with:
-  #         toolchain: nightly-2022-04-17
-  #         components: rustfmt
-  #         default: true
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly-2022-04-17
+          components: rustfmt
+          default: true
 
-  #     - uses: actions/setup-java@v3
-  #       with:
-  #         distribution: 'temurin'
-  #         java-version: '8'
+      - uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '8'
 
-  #     - uses: actions/cache@v2
-  #       with:
-  #         path: |
-  #           ~/.cargo/bin/
-  #           ~/.cargo/registry/index/
-  #           ~/.cargo/registry/cache/
-  #           ~/.cargo/git/db/
-  #           target/
-  #         key: ${{ runner.os }}-cargo-python-${{ secrets.CACHE_VERSION }}-${{ hashFiles('**/Cargo.lock') }}
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-python-${{ secrets.CACHE_VERSION }}-${{ hashFiles('**/Cargo.lock') }}
 
-  #     - name: Install other dependent tools
-  #       run: |
-  #         pip3 install poetry
-  #         if [ ! -f "$HOME/.cargo/bin/just" ]; then curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to ~/.cargo/bin; fi
+      - name: Install other dependent tools
+        run: |
+          pip3 install poetry
+          if [ ! -f "$HOME/.cargo/bin/just" ]; then curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to ~/.cargo/bin; fi
 
-  #     - name: Seed the database
-  #       run: just seed-db
-  #       env:
-  #         POSTGRES_URL: "postgresql://postgres:postgres@postgres:5432/postgres"
-  #         SQLITE_URL: "sqlite:///tmp/test.db"
-  #         MYSQL_HOST: mysql
-  #         MYSQL_PORT: 3306
-  #         MYSQL_DB: mysql
-  #         MYSQL_USER: root
-  #         MYSQL_PASSWORD: mysql
-  #         MSSQL_HOST: mssql
-  #         MSSQL_PORT: 1433
-  #         MSSQL_DB: tempdb
-  #         MSSQL_USER: sa
-  #         MSSQL_PASSWORD: mssql!Password
+      - name: Seed the database
+        run: just seed-db
+        env:
+          POSTGRES_URL: "postgresql://postgres:postgres@postgres:5432/postgres"
+          SQLITE_URL: "sqlite:///tmp/test.db"
+          MYSQL_HOST: mysql
+          MYSQL_PORT: 3306
+          MYSQL_DB: mysql
+          MYSQL_USER: root
+          MYSQL_PASSWORD: mysql
+          MSSQL_HOST: mssql
+          MSSQL_PORT: 1433
+          MSSQL_DB: tempdb
+          MSSQL_USER: sa
+          MSSQL_PASSWORD: mssql!Password
 
-  #     - name: Clippy linting
-  #       uses: actions-rs/cargo@v1
-  #       with:
-  #         command: clippy
-  #         args: --features all --all
+      - name: Clippy linting
+        uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+          args: --features all --all
 
-  #     - name: Cache venv
-  #       uses: actions/cache@v2
-  #       with:
-  #         path: ~/.cache/pypoetry/virtualenvs
-  #         key: ${{ runner.os }}-venv-${{ secrets.CACHE_VERSION }}-${{ hashFiles('connectorx-python/poetry.lock') }}
+      - name: Cache venv
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pypoetry/virtualenvs
+          key: ${{ runner.os }}-venv-${{ secrets.CACHE_VERSION }}-${{ hashFiles('connectorx-python/poetry.lock') }}
 
-  #     - name: Install python dependencies
-  #       run: just bootstrap-python
+      - name: Install python dependencies
+        run: just bootstrap-python
 
-  #     - name: Test python
-  #       run: just test-python
-  #       env:
-  #         POSTGRES_URL: "postgresql://postgres:postgres@postgres:5432/postgres"
-  #         SQLITE_URL: "sqlite:///tmp/test.db"
-  #         MYSQL_URL: "mysql://root:mysql@mysql:3306/mysql"
-  #         MSSQL_URL: "mssql://sa:mssql!Password@mssql:1433/tempdb"
-  #         DB1: "postgresql://postgres:postgres@postgres:5432/postgres"
-  #         DB2: "postgresql://postgres:postgres@postgres:5432/postgres"
-  #         SQLITE3_STATIC: 1
+      - name: Test python
+        run: just test-python
+        env:
+          POSTGRES_URL: "postgresql://postgres:postgres@postgres:5432/postgres"
+          SQLITE_URL: "sqlite:///tmp/test.db"
+          MYSQL_URL: "mysql://root:mysql@mysql:3306/mysql"
+          MSSQL_URL: "mssql://sa:mssql!Password@mssql:1433/tempdb"
+          DB1: "postgresql://postgres:postgres@postgres:5432/postgres"
+          DB2: "postgresql://postgres:postgres@postgres:5432/postgres"
+          SQLITE3_STATIC: 1
