@@ -16,6 +16,12 @@ pub enum Arrow2TypeSystem {
     Date64(bool),
     Time64(bool),
     DateTimeTz(bool),
+    Int32Array(bool),
+    Int64Array(bool),
+    UInt32Array(bool),
+    UInt64Array(bool),
+    Float32Array(bool),
+    Float64Array(bool),
 }
 
 impl_typesystem! {
@@ -34,5 +40,11 @@ impl_typesystem! {
         { Date64     => NaiveDateTime }
         { Time64     => NaiveTime     }
         { DateTimeTz => DateTime<Utc> }
+        { Int32Array => Vec<i32>      }
+        { Int64Array => Vec<i64>      }
+        { UInt32Array => Vec<u32>      }
+        { UInt64Array => Vec<u64>      }
+        { Float32Array => Vec<f32>      }
+        { Float64Array => Vec<f64>      }
     }
 }

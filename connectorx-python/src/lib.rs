@@ -1,4 +1,3 @@
-#![feature(generic_associated_types)]
 #![feature(fmt_internals)]
 #![allow(incomplete_features)]
 

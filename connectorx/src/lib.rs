@@ -1,4 +1,3 @@
-#![feature(generic_associated_types)]
 #![allow(incomplete_features)]
 #![allow(clippy::upper_case_acronyms)]
 

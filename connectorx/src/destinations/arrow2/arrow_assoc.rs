@@ -61,6 +61,66 @@ impl_arrow_assoc!(f32, ArrowDataType::Float32, MutablePrimitiveArray<f32>);
 impl_arrow_assoc!(f64, ArrowDataType::Float64, MutablePrimitiveArray<f64>);
 impl_arrow_assoc!(bool, ArrowDataType::Boolean, MutableBooleanArray);
 
+macro_rules! impl_arrow_assoc_vec {
+    ($T:ty, $AT:expr) => {
+        impl ArrowAssoc for Vec<$T> {
+            type Builder = MutableListArray<i64, MutablePrimitiveArray<$T>>;
+
+            fn builder(nrows: usize) -> Self::Builder {
+                MutableListArray::<i64, MutablePrimitiveArray<$T>>::with_capacity(nrows)
+            }
+
+            #[inline]
+            fn push(builder: &mut Self::Builder, value: Self) {
+                let val: Vec<Option<$T>> = value.into_iter().map(|v| Some(v)).collect();
+                builder.try_push(Some(val)).unwrap();
+            }
+
+            fn field(header: &str) -> Field {
+                Field::new(
+                    header,
+                    ArrowDataType::LargeList(Box::new(Field::new("", $AT, false))),
+                    false,
+                )
+            }
+        }
+
+        impl ArrowAssoc for Option<Vec<$T>> {
+            type Builder = MutableListArray<i64, MutablePrimitiveArray<$T>>;
+
+            fn builder(nrows: usize) -> Self::Builder {
+                MutableListArray::<i64, MutablePrimitiveArray<$T>>::with_capacity(nrows)
+            }
+
+            #[inline]
+            fn push(builder: &mut Self::Builder, value: Self) {
+                match value {
+                    Some(values) => {
+                        let val: Vec<Option<$T>> = values.into_iter().map(|v| Some(v)).collect();
+                        builder.try_push(Some(val)).unwrap();
+                    }
+                    None => builder.push_null(),
+                }
+            }
+
+            fn field(header: &str) -> Field {
+                Field::new(
+                    header,
+                    ArrowDataType::LargeList(Box::new(Field::new("", $AT, false))),
+                    true,
+                )
+            }
+        }
+    };
+}
+
+impl_arrow_assoc_vec!(i32, ArrowDataType::Int32);
+impl_arrow_assoc_vec!(i64, ArrowDataType::Int64);
+impl_arrow_assoc_vec!(u32, ArrowDataType::UInt32);
+impl_arrow_assoc_vec!(u64, ArrowDataType::UInt64);
+impl_arrow_assoc_vec!(f32, ArrowDataType::Float32);
+impl_arrow_assoc_vec!(f64, ArrowDataType::Float64);
+
 impl ArrowAssoc for &str {
     type Builder = MutableUtf8Array<i64>;
 
