@@ -75,7 +75,7 @@ def test_arrow2(postgres_url: str) -> None:
 
 
 def test_arrow2_type(postgres_url: str) -> None:
-    query = "SELECT test_date, test_timestamp, test_timestamptz, test_int16, test_int64, test_float32, test_numeric, test_bpchar, test_char, test_varchar, test_uuid, test_time, test_bytea, test_json, test_jsonb FROM test_types"
+    query = "SELECT test_date, test_timestamp, test_timestamptz, test_int16, test_int64, test_float32, test_numeric, test_bpchar, test_char, test_varchar, test_uuid, test_time, test_bytea, test_json, test_jsonb, test_f4array, test_f8array, test_narray, test_i2array, test_i4array, test_i8array FROM test_types"
     df = read_sql(postgres_url, query, return_type="arrow2")
     df = df.to_pandas(date_as_object=False)
     df.sort_values(by="test_int16", inplace=True, ignore_index=True)
@@ -157,6 +157,25 @@ def test_arrow2_type(postgres_url: str) -> None:
                     '{"qty":1,"product":"Toy Car"}',
                     None,
                 ],
+                dtype="object",
+            ),
+            "test_f4array": pd.Series(
+                [[], None, [123.123], [-1e-37, 1e37]], dtype="object"
+            ),
+            "test_f8array": pd.Series(
+                [[], None, [1e-307, 1e308], [0.000234, -12.987654321]], dtype="object"
+            ),
+            "test_narray": pd.Series(
+                [[], None, [521.34], [0.12, 333.33, 22.22]], dtype="object"
+            ),
+            "test_i2array": pd.Series(
+                [[-1, 0, 1], [], [-32768, 32767], None], dtype="object"
+            ),
+            "test_i4array": pd.Series(
+                [[-1, 0, 1123], [], [-2147483648, 2147483647], None], dtype="object"
+            ),
+            "test_i8array": pd.Series(
+                [[-9223372036854775808, 9223372036854775807], [], [0], None],
                 dtype="object",
             ),
         },
