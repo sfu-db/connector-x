@@ -1,5 +1,6 @@
 use crate::errors::{ConnectorXPythonError, Result};
 use anyhow::anyhow;
+use connectorx::source_router::{SourceConn, SourceType};
 use connectorx::{
     sources::{
         bigquery::BigQueryDialect,
@@ -27,99 +28,56 @@ use tokio::runtime::Runtime;
 use tokio_util::compat::TokioAsyncWriteCompatExt;
 use url::Url;
 
-pub enum SourceType {
-    Postgres,
-    SQLite,
-    MySQL,
-    MsSQL,
-    Oracle,
-    BigQuery,
+#[throws(ConnectorXPythonError)]
+pub fn parse_source(conn: &str, protocol: Option<&str>) -> SourceConn {
+    let mut source_conn = SourceConn::try_from(conn)?;
+    match protocol {
+        Some(p) => source_conn.set_protocol(p),
+        None => {}
+    }
+    source_conn
 }
 
-pub struct SourceConn {
-    pub ty: SourceType,
-    pub conn: Url,
+pub fn get_col_range(source_conn: &SourceConn, query: &str, col: &str) -> Result<(i64, i64)> {
+    match source_conn.ty {
+        SourceType::Postgres => pg_get_partition_range(&source_conn.conn, query, col),
+        SourceType::SQLite => sqlite_get_partition_range(&source_conn.conn, query, col),
+        SourceType::MySQL => mysql_get_partition_range(&source_conn.conn, query, col),
+        SourceType::MsSQL => mssql_get_partition_range(&source_conn.conn, query, col),
+        SourceType::Oracle => oracle_get_partition_range(&source_conn.conn, query, col),
+        SourceType::BigQuery => bigquery_get_partition_range(&source_conn.conn, query, col),
+    }
 }
 
-impl TryFrom<&str> for SourceConn {
-    type Error = ConnectorXPythonError;
-
-    fn try_from(conn: &str) -> Result<SourceConn> {
-        let url = Url::parse(conn).map_err(|e| anyhow!("parse error: {}", e))?;
-        // users from sqlalchemy may set engine in connection url (e.g. mssql+pymssql://...)
-        // only for compatablility, we don't use the same engine
-        match url.scheme().split('+').collect::<Vec<&str>>()[0] {
-            "postgres" | "postgresql" => Ok(SourceConn {
-                ty: SourceType::Postgres,
-                conn: url,
-            }),
-            "sqlite" => Ok(SourceConn {
-                ty: SourceType::SQLite,
-                conn: url,
-            }),
-            "mysql" => Ok(SourceConn {
-                ty: SourceType::MySQL,
-                conn: url,
-            }),
-            "mssql" => Ok(SourceConn {
-                ty: SourceType::MsSQL,
-                conn: url,
-            }),
-            "oracle" => Ok(SourceConn {
-                ty: SourceType::Oracle,
-                conn: url,
-            }),
-            "bigquery" => Ok(SourceConn {
-                ty: SourceType::BigQuery,
-                conn: url,
-            }),
-            _ => unimplemented!("Connection: {} not supported!", conn),
+#[throws(ConnectorXPythonError)]
+pub fn get_part_query(
+    source_conn: &SourceConn,
+    query: &str,
+    col: &str,
+    lower: i64,
+    upper: i64,
+) -> CXQuery<String> {
+    let query = match source_conn.ty {
+        SourceType::Postgres => {
+            single_col_partition_query(query, col, lower, upper, &PostgreSqlDialect {})?
         }
-    }
-}
-
-impl SourceConn {
-    pub fn get_col_range(&self, query: &str, col: &str) -> Result<(i64, i64)> {
-        match self.ty {
-            SourceType::Postgres => pg_get_partition_range(&self.conn, query, col),
-            SourceType::SQLite => sqlite_get_partition_range(&self.conn, query, col),
-            SourceType::MySQL => mysql_get_partition_range(&self.conn, query, col),
-            SourceType::MsSQL => mssql_get_partition_range(&self.conn, query, col),
-            SourceType::Oracle => oracle_get_partition_range(&self.conn, query, col),
-            SourceType::BigQuery => bigquery_get_partition_range(&self.conn, query, col),
+        SourceType::SQLite => {
+            single_col_partition_query(query, col, lower, upper, &SQLiteDialect {})?
         }
-    }
-
-    #[throws(ConnectorXPythonError)]
-    pub fn get_part_query(
-        &self,
-        query: &str,
-        col: &str,
-        lower: i64,
-        upper: i64,
-    ) -> CXQuery<String> {
-        let query = match self.ty {
-            SourceType::Postgres => {
-                single_col_partition_query(query, col, lower, upper, &PostgreSqlDialect {})?
-            }
-            SourceType::SQLite => {
-                single_col_partition_query(query, col, lower, upper, &SQLiteDialect {})?
-            }
-            SourceType::MySQL => {
-                single_col_partition_query(query, col, lower, upper, &MySqlDialect {})?
-            }
-            SourceType::MsSQL => {
-                single_col_partition_query(query, col, lower, upper, &MsSqlDialect {})?
-            }
-            SourceType::Oracle => {
-                single_col_partition_query(query, col, lower, upper, &OracleDialect {})?
-            }
-            SourceType::BigQuery => {
-                single_col_partition_query(query, col, lower, upper, &BigQueryDialect {})?
-            }
-        };
-        CXQuery::Wrapped(query)
-    }
+        SourceType::MySQL => {
+            single_col_partition_query(query, col, lower, upper, &MySqlDialect {})?
+        }
+        SourceType::MsSQL => {
+            single_col_partition_query(query, col, lower, upper, &MsSqlDialect {})?
+        }
+        SourceType::Oracle => {
+            single_col_partition_query(query, col, lower, upper, &OracleDialect {})?
+        }
+        SourceType::BigQuery => {
+            single_col_partition_query(query, col, lower, upper, &BigQueryDialect {})?
+        }
+    };
+    CXQuery::Wrapped(query)
 }
 
 #[throws(ConnectorXPythonError)]

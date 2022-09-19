@@ -1,9 +1,7 @@
 use crate::{
-    constants::{CX_REWRITER_PATH, J4RS_BASE_PATH, POSTGRES_JDBC_DRIVER},
+    constants::{CX_REWRITER_PATH, J4RS_BASE_PATH, MYSQL_JDBC_DRIVER, POSTGRES_JDBC_DRIVER},
     prelude::*,
-    sources::postgres::{rewrite_tls_args, BinaryProtocol, PostgresSource},
     sql::CXQuery,
-    transports::PostgresArrowTransport,
 };
 use arrow::record_batch::RecordBatch;
 use datafusion::datasource::MemTable;
@@ -11,13 +9,11 @@ use datafusion::prelude::*;
 use fehler::throws;
 use j4rs::{ClasspathEntry, InvocationArg, Jvm, JvmBuilder};
 use log::debug;
-use postgres::NoTls;
 use rayon::prelude::*;
 use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::sync::{mpsc::channel, Arc};
 use std::{env, fs};
-use url::Url;
 
 struct Plan {
     db_name: String,
@@ -25,19 +21,19 @@ struct Plan {
     sql: String,
 }
 
-#[throws(ConnectorXError)]
+#[throws(ConnectorXOutError)]
 fn init_jvm(j4rs_base: Option<&str>) -> Jvm {
     let base = match j4rs_base {
         Some(path) => fs::canonicalize(path)
-            .map_err(|_| ConnectorXError::FileNotFoundError(path.to_string()))?,
+            .map_err(|_| ConnectorXOutError::FileNotFoundError(path.to_string()))?,
         None => fs::canonicalize(J4RS_BASE_PATH)
-            .map_err(|_| ConnectorXError::FileNotFoundError(J4RS_BASE_PATH.to_string()))?,
+            .map_err(|_| ConnectorXOutError::FileNotFoundError(J4RS_BASE_PATH.to_string()))?,
     };
     debug!("j4rs base path: {:?}", base);
 
     let rewriter_path = env::var("CX_REWRITER_PATH").unwrap_or(CX_REWRITER_PATH.to_string());
     let path = fs::canonicalize(rewriter_path.as_str())
-        .map_err(|_| ConnectorXError::FileNotFoundError(rewriter_path))?;
+        .map_err(|_| ConnectorXOutError::FileNotFoundError(rewriter_path))?;
 
     debug!("rewriter path: {:?}", path);
 
@@ -49,28 +45,48 @@ fn init_jvm(j4rs_base: Option<&str>) -> Jvm {
         .build()?
 }
 
-#[throws(ConnectorXError)]
-fn rewrite_sql(jvm: &Jvm, sql: &str, db_map: &HashMap<String, Url>) -> Vec<Plan> {
+#[throws(ConnectorXOutError)]
+fn rewrite_sql(jvm: &Jvm, sql: &str, db_map: &HashMap<String, SourceConn>) -> Vec<Plan> {
     let sql = InvocationArg::try_from(sql).unwrap();
     let db_conns = jvm.create_instance("java.util.HashMap", &[])?;
-    for (db_name, url) in db_map.iter() {
+    for (db_name, source_conn) in db_map.iter() {
+        let url = &source_conn.conn;
         debug!("url: {:?}", url);
-        let ds = jvm.invoke_static(
-            "org.apache.calcite.adapter.jdbc.JdbcSchema",
-            "dataSource",
-            &[
-                InvocationArg::try_from(format!(
-                    "jdbc:postgresql://{}:{}{}",
-                    url.host_str().unwrap_or("localhost"),
-                    url.port().unwrap_or(5432),
-                    url.path()
-                ))
-                .unwrap(),
-                InvocationArg::try_from(POSTGRES_JDBC_DRIVER).unwrap(),
-                InvocationArg::try_from(url.username()).unwrap(),
-                InvocationArg::try_from(url.password().unwrap_or("")).unwrap(),
-            ],
-        )?;
+        let ds = match source_conn.ty {
+            SourceType::Postgres => jvm.invoke_static(
+                "org.apache.calcite.adapter.jdbc.JdbcSchema",
+                "dataSource",
+                &[
+                    InvocationArg::try_from(format!(
+                        "jdbc:postgresql://{}:{}{}",
+                        url.host_str().unwrap_or("localhost"),
+                        url.port().unwrap_or(5432),
+                        url.path()
+                    ))
+                    .unwrap(),
+                    InvocationArg::try_from(POSTGRES_JDBC_DRIVER).unwrap(),
+                    InvocationArg::try_from(url.username()).unwrap(),
+                    InvocationArg::try_from(url.password().unwrap_or("")).unwrap(),
+                ],
+            )?,
+            SourceType::MySQL => jvm.invoke_static(
+                "org.apache.calcite.adapter.jdbc.JdbcSchema",
+                "dataSource",
+                &[
+                    InvocationArg::try_from(format!(
+                        "jdbc:mysql://{}:{}{}",
+                        url.host_str().unwrap_or("localhost"),
+                        url.port().unwrap_or(3306),
+                        url.path()
+                    ))
+                    .unwrap(),
+                    InvocationArg::try_from(MYSQL_JDBC_DRIVER).unwrap(),
+                    InvocationArg::try_from(url.username()).unwrap(),
+                    InvocationArg::try_from(url.password().unwrap_or("")).unwrap(),
+                ],
+            )?,
+            _ => unimplemented!("Connection: {:?} not supported!", url),
+        };
 
         jvm.invoke(
             &db_conns,
@@ -125,7 +141,7 @@ fn rewrite_sql(jvm: &Jvm, sql: &str, db_map: &HashMap<String, Url>) -> Vec<Plan>
     fed_plan
 }
 
-#[throws(ConnectorXError)]
+#[throws(ConnectorXOutError)]
 pub fn run(
     sql: String,
     db_map: HashMap<String, String>,
@@ -136,44 +152,30 @@ pub fn run(
     let jvm = init_jvm(j4rs_base)?;
     debug!("init jvm successfully!");
 
-    let mut db_url_map: HashMap<String, Url> = HashMap::new();
+    let mut db_conn_map: HashMap<String, SourceConn> = HashMap::new();
     for (k, v) in db_map.into_iter() {
-        db_url_map.insert(k, Url::parse(v.as_str())?);
+        db_conn_map.insert(k, SourceConn::try_from(v.as_str())?);
     }
 
-    let fed_plan = rewrite_sql(&jvm, sql.as_str(), &db_url_map)?;
+    let fed_plan = rewrite_sql(&jvm, sql.as_str(), &db_conn_map)?;
 
     debug!("fetch queries from remote");
     let (sender, receiver) = channel();
     fed_plan.into_par_iter().enumerate().try_for_each_with(
         sender,
-        |s, (i, p)| -> Result<(), ConnectorXError> {
+        |s, (i, p)| -> Result<(), ConnectorXOutError> {
             match p.db_name.as_str() {
                 "LOCAL" => {
                     s.send((p.sql, None)).expect("send error local");
                 }
                 _ => {
                     debug!("start query {}: {}", i, p.sql);
-                    let mut destination = ArrowDestination::new();
                     let queries = [CXQuery::naked(p.sql)];
-                    let url = &db_url_map[p.db_name.as_str()];
-                    let (config, _) =
-                        rewrite_tls_args(&url).expect(&format!("{} postgres config error", i));
-                    let sb = PostgresSource::<BinaryProtocol, NoTls>::new(config, NoTls, 1)
-                        .expect(&format!("{} postgres init error", i));
-                    let dispatcher = Dispatcher::<
-                        _,
-                        _,
-                        PostgresArrowTransport<BinaryProtocol, NoTls>,
-                    >::new(
-                        sb, &mut destination, &queries, None
-                    );
-                    dispatcher
-                        .run()
-                        .expect(&format!("run dispatcher fails {}", i));
-                    let rbs = destination
-                        .arrow()
-                        .expect(&format!("get arrow fails {}", i));
+                    let source_conn = &db_conn_map[p.db_name.as_str()];
+
+                    let destination = get_arrow(source_conn, None, &queries)?;
+                    let rbs = destination.arrow()?;
+
                     let provider = MemTable::try_new(rbs[0].schema(), vec![rbs])?;
                     s.send((p.db_alias, Some(Arc::new(provider))))
                         .expect(&format!("send error {}", i));
@@ -189,7 +191,7 @@ pub fn run(
     let mut local_sql = String::new();
     receiver
         .iter()
-        .try_for_each(|(alias, provider)| -> Result<(), ConnectorXError> {
+        .try_for_each(|(alias, provider)| -> Result<(), ConnectorXOutError> {
             match provider {
                 Some(p) => {
                     ctx.register_table(alias.as_str(), p)?;
@@ -201,7 +203,7 @@ pub fn run(
             Ok(())
         })?;
 
-    debug!("\nexecute query final:");
+    debug!("\nexecute query final...");
     let rt = Arc::new(tokio::runtime::Runtime::new().expect("Failed to create runtime"));
     // until datafusion fix the bug: https://github.com/apache/arrow-datafusion/issues/2147
     for alias in alias_names {

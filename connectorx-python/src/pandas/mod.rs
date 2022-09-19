@@ -12,19 +12,15 @@ pub use self::transports::{
 };
 pub use self::typesystem::{PandasDType, PandasTypeSystem};
 use crate::errors::ConnectorXPythonError;
-use crate::source_router::{SourceConn, SourceType};
+use connectorx::source_router::{SourceConn, SourceType};
 use connectorx::sources::oracle::OracleSource;
 use connectorx::{
     prelude::*,
     sources::{
-        bigquery::BigQuerySource,
-        mssql::MsSQLSource,
-        mysql::{BinaryProtocol as MySQLBinaryProtocol, MySQLSource, TextProtocol},
+        mysql::{BinaryProtocol as MySQLBinaryProtocol, TextProtocol},
         postgres::{
             rewrite_tls_args, BinaryProtocol as PgBinaryProtocol, CSVProtocol, CursorProtocol,
-            PostgresSource,
         },
-        sqlite::SQLiteSource,
     },
     sql::CXQuery,
 };
@@ -41,14 +37,14 @@ pub fn write_pandas<'a>(
     source_conn: &SourceConn,
     origin_query: Option<String>,
     queries: &[CXQuery<String>],
-    protocol: &str,
 ) -> &'a PyAny {
     let mut destination = PandasDestination::new(py);
+    let protocol = source_conn.proto.as_str();
+    debug!("Protocol: {}", protocol);
 
     // TODO: unlock gil if possible
     match source_conn.ty {
         SourceType::Postgres => {
-            debug!("Protocol: {}", protocol);
             let (config, tls) = rewrite_tls_args(&source_conn.conn)?;
             match (protocol, tls) {
                 ("csv", Some(tls_conn)) => {
@@ -64,7 +60,6 @@ pub fn write_pandas<'a>(
                     >::new(
                         sb, &mut destination, queries, origin_query
                     );
-                    debug!("Running dispatcher");
                     dispatcher.run()?;
                 }
                 ("csv", None) => {
@@ -77,7 +72,6 @@ pub fn write_pandas<'a>(
                             queries,
                             origin_query,
                         );
-                    debug!("Running dispatcher");
                     dispatcher.run()?;
                 }
                 ("binary", Some(tls_conn)) => {
@@ -92,7 +86,6 @@ pub fn write_pandas<'a>(
                             _,
                             PostgresPandasTransport<PgBinaryProtocol, MakeTlsConnector>,
                         >::new(sb, &mut destination, queries, origin_query);
-                    debug!("Running dispatcher");
                     dispatcher.run()?;
                 }
                 ("binary", None) => {
@@ -108,7 +101,6 @@ pub fn write_pandas<'a>(
                     >::new(
                         sb, &mut destination, queries, origin_query
                     );
-                    debug!("Running dispatcher");
                     dispatcher.run()?;
                 }
                 ("cursor", Some(tls_conn)) => {
@@ -124,7 +116,6 @@ pub fn write_pandas<'a>(
                     >::new(
                         sb, &mut destination, queries, origin_query
                     );
-                    debug!("Running dispatcher");
                     dispatcher.run()?;
                 }
                 ("cursor", None) => {
@@ -137,7 +128,6 @@ pub fn write_pandas<'a>(
                     >::new(
                         sb, &mut destination, queries, origin_query
                     );
-                    debug!("Running dispatcher");
                     dispatcher.run()?;
                 }
                 _ => unimplemented!("{} protocol not supported", protocol),
@@ -153,42 +143,33 @@ pub fn write_pandas<'a>(
                 queries,
                 origin_query,
             );
-            debug!("Running dispatcher");
             dispatcher.run()?;
         }
-        SourceType::MySQL => {
-            debug!("Protocol: {}", protocol);
-            match protocol {
-                "binary" => {
-                    let source = MySQLSource::<MySQLBinaryProtocol>::new(
-                        &source_conn.conn[..],
-                        queries.len(),
-                    )?;
-                    let dispatcher =
-                        Dispatcher::<_, _, MysqlPandasTransport<MySQLBinaryProtocol>>::new(
-                            source,
-                            &mut destination,
-                            queries,
-                            origin_query,
-                        );
-                    debug!("Running dispatcher");
-                    dispatcher.run()?;
-                }
-                "text" => {
-                    let source =
-                        MySQLSource::<TextProtocol>::new(&source_conn.conn[..], queries.len())?;
-                    let dispatcher = Dispatcher::<_, _, MysqlPandasTransport<TextProtocol>>::new(
-                        source,
-                        &mut destination,
-                        queries,
-                        origin_query,
-                    );
-                    debug!("Running dispatcher");
-                    dispatcher.run()?;
-                }
-                _ => unimplemented!("{} protocol not supported", protocol),
+        SourceType::MySQL => match protocol {
+            "binary" => {
+                let source =
+                    MySQLSource::<MySQLBinaryProtocol>::new(&source_conn.conn[..], queries.len())?;
+                let dispatcher = Dispatcher::<_, _, MysqlPandasTransport<MySQLBinaryProtocol>>::new(
+                    source,
+                    &mut destination,
+                    queries,
+                    origin_query,
+                );
+                dispatcher.run()?;
             }
-        }
+            "text" => {
+                let source =
+                    MySQLSource::<TextProtocol>::new(&source_conn.conn[..], queries.len())?;
+                let dispatcher = Dispatcher::<_, _, MysqlPandasTransport<TextProtocol>>::new(
+                    source,
+                    &mut destination,
+                    queries,
+                    origin_query,
+                );
+                dispatcher.run()?;
+            }
+            _ => unimplemented!("{} protocol not supported", protocol),
+        },
         SourceType::MsSQL => {
             let rt = Arc::new(tokio::runtime::Runtime::new().expect("Failed to create runtime"));
             let source = MsSQLSource::new(rt, &source_conn.conn[..], queries.len())?;
@@ -198,7 +179,6 @@ pub fn write_pandas<'a>(
                 queries,
                 origin_query,
             );
-            debug!("Running dispatcher");
             dispatcher.run()?;
         }
         SourceType::Oracle => {
@@ -209,7 +189,6 @@ pub fn write_pandas<'a>(
                 queries,
                 origin_query,
             );
-            debug!("Running dispatcher");
             dispatcher.run()?;
         }
         SourceType::BigQuery => {
@@ -221,7 +200,6 @@ pub fn write_pandas<'a>(
                 queries,
                 origin_query,
             );
-            debug!("Running dispatcher");
             dispatcher.run()?;
         }
     }

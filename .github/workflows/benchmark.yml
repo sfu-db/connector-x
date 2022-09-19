@@ -26,7 +26,7 @@ jobs:
       - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly-2022-04-17
+          toolchain: nightly-2022-09-15
           components: rustfmt
           default: true
 
@@ -44,6 +44,9 @@ jobs:
           POSTGRES_URL: ${{ secrets.POSTGRES_URL }}
           MYSQL_URL: ${{ secrets.MYSQL_URL }}
           TPCH_TABLE: lineitem
+
+      - name: Ignore git safe directory error
+        run: git config --global --add safe.directory /tmp/github-runner-connectorx/connector-x/connector-x
 
       - name: Show benchmark result for pull request
         if: ${{ github.event_name == 'pull_request'}}
