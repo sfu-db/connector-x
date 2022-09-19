@@ -1,9 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `connectorx/src/destinations/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><script defer src="../../../main.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script>
-    <noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../connectorx/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../../connectorx/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../connectorx/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><div class="theme-picker hidden"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="22" height="22" alt="Pick another theme!" src="../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `connectorx/src/destinations/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../connectorx/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../connectorx/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../connectorx/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -79,82 +74,81 @@
 <span id="74">74</span>
 <span id="75">75</span>
 <span id="76">76</span>
-</pre><pre class="rust"><code><span class="doccomment">//! This module defines three traits [`Destination`], [`DestinationPartition`], and [`Consume`] to define a destination.</span>
-<span class="doccomment">//! This module also contains destination implementations for various dataframes.</span>
+</pre><pre class="rust"><code><span class="doccomment">//! This module defines three traits [`Destination`], [`DestinationPartition`], and [`Consume`] to define a destination.
+//! This module also contains destination implementations for various dataframes.
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dst_arrow&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">arrow</span>;
+</span><span class="attribute">#[cfg(feature = <span class="string">&quot;dst_arrow&quot;</span>)]
+</span><span class="kw">pub mod </span>arrow;
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dst_arrow2&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">arrow2</span>;
+<span class="attribute">#[cfg(feature = <span class="string">&quot;dst_arrow2&quot;</span>)]
+</span><span class="kw">pub mod </span>arrow2;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::data_order::DataOrder</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::errors::ConnectorXError</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::typesystem</span>::{<span class="ident">TypeAssoc</span>, <span class="ident">TypeSystem</span>};
+<span class="kw">use </span><span class="kw">crate</span>::data_order::DataOrder;
+<span class="kw">use </span><span class="kw">crate</span>::errors::ConnectorXError;
+<span class="kw">use </span><span class="kw">crate</span>::typesystem::{TypeAssoc, TypeSystem};
 
-<span class="doccomment">/// A `Destination` is associated with a `TypeSystem` and a `PartitionDestination`.</span>
-<span class="doccomment">/// `PartitionDestination` allows multiple threads write data into the buffer owned by `Destination`.</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Destination</span>: <span class="ident">Sized</span> {
-    <span class="kw">const</span> <span class="ident">DATA_ORDERS</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">DataOrder</span>];
-    <span class="kw">type</span> <span class="ident">TypeSystem</span>: <span class="ident">TypeSystem</span>;
-    <span class="kw">type</span> <span class="ident">Partition</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>: <span class="ident">DestinationPartition</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">TypeSystem</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::TypeSystem</span>, <span class="ident">Error</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="self">Self</span>: <span class="lifetime">&#39;a</span>;
-    <span class="kw">type</span> <span class="ident">Error</span>: <span class="ident">From</span><span class="op">&lt;</span><span class="ident">ConnectorXError</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span>;
+<span class="doccomment">/// A `Destination` is associated with a `TypeSystem` and a `PartitionDestination`.
+/// `PartitionDestination` allows multiple threads write data into the buffer owned by `Destination`.
+</span><span class="kw">pub trait </span>Destination: Sized {
+    <span class="kw">const </span>DATA_ORDERS: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[DataOrder];
+    <span class="kw">type </span>TypeSystem: TypeSystem;
+    <span class="kw">type </span>Partition&lt;<span class="lifetime">&#39;a</span>&gt;: DestinationPartition&lt;<span class="lifetime">&#39;a</span>, TypeSystem = <span class="self">Self</span>::TypeSystem, Error = <span class="self">Self</span>::Error&gt;
+    <span class="kw">where
+        </span><span class="self">Self</span>: <span class="lifetime">&#39;a</span>;
+    <span class="kw">type </span>Error: From&lt;ConnectorXError&gt; + Send;
 
-    <span class="doccomment">/// Specify whether the destination needs total rows in advance</span>
-    <span class="doccomment">/// in order to pre-allocate the buffer.</span>
-    <span class="kw">fn</span> <span class="ident">needs_count</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span>;
+    <span class="doccomment">/// Specify whether the destination needs total rows in advance
+    /// in order to pre-allocate the buffer.
+    </span><span class="kw">fn </span>needs_count(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool;
 
-    <span class="doccomment">/// Construct the `Destination`.</span>
-    <span class="doccomment">/// This allocates the memory based on the types of each columns</span>
-    <span class="doccomment">/// and the number of rows.</span>
-    <span class="kw">fn</span> <span class="ident">allocate</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">nrow</span>: <span class="ident">usize</span>,
-        <span class="ident">names</span>: <span class="kw-2">&amp;</span>[<span class="ident">S</span>],
-        <span class="ident">schema</span>: <span class="kw-2">&amp;</span>[<span class="ident"><span class="self">Self</span>::TypeSystem</span>],
-        <span class="ident">data_order</span>: <span class="ident">DataOrder</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span>;
+    <span class="doccomment">/// Construct the `Destination`.
+    /// This allocates the memory based on the types of each columns
+    /// and the number of rows.
+    </span><span class="kw">fn </span>allocate&lt;S: AsRef&lt;str&gt;&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        nrow: usize,
+        names: <span class="kw-2">&amp;</span>[S],
+        schema: <span class="kw-2">&amp;</span>[<span class="self">Self</span>::TypeSystem],
+        data_order: DataOrder,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt;;
 
-    <span class="doccomment">/// Create a bunch of partition destinations, with each write `count` number of rows.</span>
-    <span class="kw">fn</span> <span class="ident">partition</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">counts</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Partition</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span>;
-    <span class="doccomment">/// Return the schema of the destination.</span>
-    <span class="kw">fn</span> <span class="ident">schema</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[<span class="ident"><span class="self">Self</span>::TypeSystem</span>];
+    <span class="doccomment">/// Create a bunch of partition destinations, with each write `count` number of rows.
+    </span><span class="kw">fn </span>partition(<span class="kw-2">&amp;mut </span><span class="self">self</span>, counts: usize) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="self">Self</span>::Partition&lt;<span class="lifetime">&#39;_</span>&gt;&gt;, <span class="self">Self</span>::Error&gt;;
+    <span class="doccomment">/// Return the schema of the destination.
+    </span><span class="kw">fn </span>schema(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[<span class="self">Self</span>::TypeSystem];
 }
 
-<span class="doccomment">/// `PartitionDestination` writes values to its own region. `PartitionDestination` is parameterized</span>
-<span class="doccomment">/// on lifetime `&#39;a`, which is the lifetime of the parent `Destination`. Usually,</span>
-<span class="doccomment">/// a `PartitionDestination` can never live longer than the parent.</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">DestinationPartition</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>: <span class="ident">Send</span> {
-    <span class="kw">type</span> <span class="ident">TypeSystem</span>: <span class="ident">TypeSystem</span>;
-    <span class="kw">type</span> <span class="ident">Error</span>: <span class="ident">From</span><span class="op">&lt;</span><span class="ident">ConnectorXError</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span>;
+<span class="doccomment">/// `PartitionDestination` writes values to its own region. `PartitionDestination` is parameterized
+/// on lifetime `&#39;a`, which is the lifetime of the parent `Destination`. Usually,
+/// a `PartitionDestination` can never live longer than the parent.
+</span><span class="kw">pub trait </span>DestinationPartition&lt;<span class="lifetime">&#39;a</span>&gt;: Send {
+    <span class="kw">type </span>TypeSystem: TypeSystem;
+    <span class="kw">type </span>Error: From&lt;ConnectorXError&gt; + Send;
 
-    <span class="doccomment">/// Write a value of type T to the location (row, col). If T mismatch with the</span>
-    <span class="doccomment">/// schema, `ConnectorXError::TypeCheckFailed` will return.</span>
-    <span class="kw">fn</span> <span class="ident">write</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">value</span>: <span class="ident">T</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">DestinationPartition</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Error</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">T</span>: <span class="ident">TypeAssoc</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::TypeSystem</span><span class="op">&gt;</span>,
-        <span class="self">Self</span>: <span class="ident">Consume</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">Error</span> <span class="op">=</span> <span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">DestinationPartition</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Error</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Write a value of type T to the location (row, col). If T mismatch with the
+    /// schema, `ConnectorXError::TypeCheckFailed` will return.
+    </span><span class="kw">fn </span>write&lt;T&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, value: T) -&gt; <span class="prelude-ty">Result</span>&lt;(), &lt;<span class="self">Self </span><span class="kw">as </span>DestinationPartition&lt;<span class="lifetime">&#39;a</span>&gt;&gt;::Error&gt;
+    <span class="kw">where
+        </span>T: TypeAssoc&lt;<span class="self">Self</span>::TypeSystem&gt;,
+        <span class="self">Self</span>: Consume&lt;T, Error = &lt;<span class="self">Self </span><span class="kw">as </span>DestinationPartition&lt;<span class="lifetime">&#39;a</span>&gt;&gt;::Error&gt;,
     {
-        <span class="self">self</span>.<span class="ident">consume</span>(<span class="ident">value</span>)
+        <span class="self">self</span>.consume(value)
     }
 
-    <span class="doccomment">/// Number of rows this `PartitionDestination` controls.</span>
-    <span class="kw">fn</span> <span class="ident">ncols</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span>;
+    <span class="doccomment">/// Number of rows this `PartitionDestination` controls.
+    </span><span class="kw">fn </span>ncols(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize;
 
-    <span class="doccomment">/// Final clean ups</span>
-    <span class="kw">fn</span> <span class="ident">finalize</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span>;
+    <span class="doccomment">/// Final clean ups
+    </span><span class="kw">fn </span>finalize(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt;;
 
-    <span class="doccomment">/// Aquire n rows in final destination</span>
-    <span class="kw">fn</span> <span class="ident">aquire_row</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">n</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span>;
+    <span class="doccomment">/// Aquire n rows in final destination
+    </span><span class="kw">fn </span>aquire_row(<span class="kw-2">&amp;mut </span><span class="self">self</span>, n: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, <span class="self">Self</span>::Error&gt;;
 }
 
-<span class="doccomment">/// A type implemented `Consume&lt;T&gt;` means that it can consume a value `T` by adding it to it&#39;s own buffer.</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Consume</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Error</span>: <span class="ident">From</span><span class="op">&lt;</span><span class="ident">ConnectorXError</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span>;
-    <span class="kw">fn</span> <span class="ident">consume</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">value</span>: <span class="ident">T</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span>;
+<span class="doccomment">/// A type implemented `Consume&lt;T&gt;` means that it can consume a value `T` by adding it to it&#39;s own buffer.
+</span><span class="kw">pub trait </span>Consume&lt;T&gt; {
+    <span class="kw">type </span>Error: From&lt;ConnectorXError&gt; + Send;
+    <span class="kw">fn </span>consume(<span class="kw-2">&amp;mut </span><span class="self">self</span>, value: T) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt;;
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="connectorx" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.62.0-nightly (878c7833f 2022-04-16)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="connectorx" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (750bd1a7f 2022-09-14)" ></div></body></html>

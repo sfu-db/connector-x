@@ -1,9 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `connectorx/src/sources/postgres/connection.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>connection.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script src="../../../../crates.js"></script><script defer src="../../../../main.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script>
-    <noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../connectorx/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../../../connectorx/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../connectorx/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><div class="theme-picker hidden"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="22" height="22" alt="Pick another theme!" src="../../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `connectorx/src/sources/postgres/connection.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>connection.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../../normalize.css"><link rel="stylesheet" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../../ayu.css" disabled><link rel="stylesheet" href="../../../../dark.css" disabled><link rel="stylesheet" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../connectorx/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../connectorx/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../connectorx/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -131,134 +126,133 @@
 <span id="126">126</span>
 <span id="127">127</span>
 <span id="128">128</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::sources::postgres::errors::PostgresSourceError</span>;
-<span class="kw">use</span> <span class="ident">openssl::ssl</span>::{<span class="ident">SslConnector</span>, <span class="ident">SslFiletype</span>, <span class="ident">SslMethod</span>, <span class="ident">SslVerifyMode</span>};
-<span class="kw">use</span> <span class="ident">postgres</span>::{<span class="ident">config::SslMode</span>, <span class="ident">Config</span>};
-<span class="kw">use</span> <span class="ident">postgres_openssl::MakeTlsConnector</span>;
-<span class="kw">use</span> <span class="ident">std::collections::HashMap</span>;
-<span class="kw">use</span> <span class="ident">std::convert::TryFrom</span>;
-<span class="kw">use</span> <span class="ident">std::path::PathBuf</span>;
-<span class="kw">use</span> <span class="ident">url::Url</span>;
+</pre><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::sources::postgres::errors::PostgresSourceError;
+<span class="kw">use </span>openssl::ssl::{SslConnector, SslFiletype, SslMethod, SslVerifyMode};
+<span class="kw">use </span>postgres::{config::SslMode, Config};
+<span class="kw">use </span>postgres_openssl::MakeTlsConnector;
+<span class="kw">use </span>std::collections::HashMap;
+<span class="kw">use </span>std::convert::TryFrom;
+<span class="kw">use </span>std::path::PathBuf;
+<span class="kw">use </span>url::Url;
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TlsConfig</span> {
-    <span class="doccomment">/// Postgres config, pg_config.sslmode (`sslmode`).</span>
-    <span class="kw">pub</span> <span class="ident">pg_config</span>: <span class="ident">Config</span>,
-    <span class="doccomment">/// Location of the client cert and key (`sslcert`, `sslkey`).</span>
-    <span class="kw">pub</span> <span class="ident">client_cert</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">PathBuf</span>, <span class="ident">PathBuf</span>)<span class="op">&gt;</span>,
-    <span class="doccomment">/// Location of the root certificate (`sslrootcert`).</span>
-    <span class="kw">pub</span> <span class="ident">root_cert</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">PathBuf</span><span class="op">&gt;</span>,
+<span class="attribute">#[derive(Clone, Debug)]
+</span><span class="kw">pub struct </span>TlsConfig {
+    <span class="doccomment">/// Postgres config, pg_config.sslmode (`sslmode`).
+    </span><span class="kw">pub </span>pg_config: Config,
+    <span class="doccomment">/// Location of the client cert and key (`sslcert`, `sslkey`).
+    </span><span class="kw">pub </span>client_cert: <span class="prelude-ty">Option</span>&lt;(PathBuf, PathBuf)&gt;,
+    <span class="doccomment">/// Location of the root certificate (`sslrootcert`).
+    </span><span class="kw">pub </span>root_cert: <span class="prelude-ty">Option</span>&lt;PathBuf&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="ident">TlsConfig</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">MakeTlsConnector</span> {
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">PostgresSourceError</span>;
-    <span class="comment">// The logic of this function adapted primarily from:</span>
-    <span class="comment">// https://github.com/sfackler/rust-postgres/pull/774</span>
-    <span class="comment">// We only support server side authentication (`sslrootcert`) for now</span>
-    <span class="kw">fn</span> <span class="ident">try_from</span>(<span class="ident">tls_config</span>: <span class="ident">TlsConfig</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">builder</span> <span class="op">=</span> <span class="ident">SslConnector::builder</span>(<span class="ident">SslMethod::tls_client</span>())<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">ssl_mode</span> <span class="op">=</span> <span class="ident">tls_config</span>.<span class="ident">pg_config</span>.<span class="ident">get_ssl_mode</span>();
-        <span class="kw">let</span> (<span class="ident">verify_ca</span>, <span class="ident">verify_hostname</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">ssl_mode</span> {
-            <span class="ident">SslMode::Disable</span> <span class="op">|</span> <span class="ident">SslMode::Prefer</span> =&gt; (<span class="bool-val">false</span>, <span class="bool-val">false</span>),
-            <span class="ident">SslMode::Require</span> =&gt; <span class="kw">match</span> <span class="ident">tls_config</span>.<span class="ident">root_cert</span> {
-                <span class="comment">// If a root CA file exists, the behavior of sslmode=require will be the same as</span>
-                <span class="comment">// that of verify-ca, meaning the server certificate is validated against the CA.</span>
-                <span class="comment">//</span>
-                <span class="comment">// For more details, check out the note about backwards compatibility in</span>
-                <span class="comment">// https://postgresql.org/docs/current/libpq-ssl.html#LIBQ-SSL-CERTIFICATES.</span>
-                <span class="prelude-val">Some</span>(<span class="kw">_</span>) =&gt; (<span class="bool-val">true</span>, <span class="bool-val">false</span>),
-                <span class="prelude-val">None</span> =&gt; (<span class="bool-val">false</span>, <span class="bool-val">false</span>),
+<span class="kw">impl </span>TryFrom&lt;TlsConfig&gt; <span class="kw">for </span>MakeTlsConnector {
+    <span class="kw">type </span>Error = PostgresSourceError;
+    <span class="comment">// The logic of this function adapted primarily from:
+    // https://github.com/sfackler/rust-postgres/pull/774
+    // We only support server side authentication (`sslrootcert`) for now
+    </span><span class="kw">fn </span>try_from(tls_config: TlsConfig) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, <span class="self">Self</span>::Error&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>builder = SslConnector::builder(SslMethod::tls_client())<span class="question-mark">?</span>;
+        <span class="kw">let </span>ssl_mode = tls_config.pg_config.get_ssl_mode();
+        <span class="kw">let </span>(verify_ca, verify_hostname) = <span class="kw">match </span>ssl_mode {
+            SslMode::Disable | SslMode::Prefer =&gt; (<span class="bool-val">false</span>, <span class="bool-val">false</span>),
+            SslMode::Require =&gt; <span class="kw">match </span>tls_config.root_cert {
+                <span class="comment">// If a root CA file exists, the behavior of sslmode=require will be the same as
+                // that of verify-ca, meaning the server certificate is validated against the CA.
+                //
+                // For more details, check out the note about backwards compatibility in
+                // https://postgresql.org/docs/current/libpq-ssl.html#LIBQ-SSL-CERTIFICATES.
+                </span><span class="prelude-val">Some</span>(<span class="kw">_</span>) =&gt; (<span class="bool-val">true</span>, <span class="bool-val">false</span>),
+                <span class="prelude-val">None </span>=&gt; (<span class="bool-val">false</span>, <span class="bool-val">false</span>),
             },
-            <span class="comment">// These two modes will not work until upstream rust-postgres supports parsing</span>
-            <span class="comment">// them as part of the TLS config.</span>
-            <span class="comment">//</span>
-            <span class="comment">// SslMode::VerifyCa =&gt; (true, false),</span>
-            <span class="comment">// SslMode::VerifyFull =&gt; (true, true),</span>
-            <span class="kw">_</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;unexpected sslmode {:?}&quot;</span>, <span class="ident">ssl_mode</span>),
+            <span class="comment">// These two modes will not work until upstream rust-postgres supports parsing
+            // them as part of the TLS config.
+            //
+            // SslMode::VerifyCa =&gt; (true, false),
+            // SslMode::VerifyFull =&gt; (true, true),
+            </span><span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">&quot;unexpected sslmode {:?}&quot;</span>, ssl_mode),
         };
 
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>((<span class="ident">cert</span>, <span class="ident">key</span>)) <span class="op">=</span> <span class="ident">tls_config</span>.<span class="ident">client_cert</span> {
-            <span class="ident">builder</span>.<span class="ident">set_certificate_file</span>(<span class="ident">cert</span>, <span class="ident">SslFiletype::PEM</span>)<span class="question-mark">?</span>;
-            <span class="ident">builder</span>.<span class="ident">set_private_key_file</span>(<span class="ident">key</span>, <span class="ident">SslFiletype::PEM</span>)<span class="question-mark">?</span>;
+        <span class="kw">if let </span><span class="prelude-val">Some</span>((cert, key)) = tls_config.client_cert {
+            builder.set_certificate_file(cert, SslFiletype::PEM)<span class="question-mark">?</span>;
+            builder.set_private_key_file(key, SslFiletype::PEM)<span class="question-mark">?</span>;
         }
 
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">root_cert</span>) <span class="op">=</span> <span class="ident">tls_config</span>.<span class="ident">root_cert</span> {
-            <span class="ident">builder</span>.<span class="ident">set_ca_file</span>(<span class="ident">root_cert</span>)<span class="question-mark">?</span>;
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(root_cert) = tls_config.root_cert {
+            builder.set_ca_file(root_cert)<span class="question-mark">?</span>;
         }
 
-        <span class="kw">if</span> <span class="op">!</span><span class="ident">verify_ca</span> {
-            <span class="ident">builder</span>.<span class="ident">set_verify</span>(<span class="ident">SslVerifyMode::NONE</span>); <span class="comment">// do not verify CA</span>
-        }
+        <span class="kw">if </span>!verify_ca {
+            builder.set_verify(SslVerifyMode::NONE); <span class="comment">// do not verify CA
+        </span>}
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tls_connector</span> <span class="op">=</span> <span class="ident">MakeTlsConnector::new</span>(<span class="ident">builder</span>.<span class="ident">build</span>());
+        <span class="kw">let </span><span class="kw-2">mut </span>tls_connector = MakeTlsConnector::new(builder.build());
 
-        <span class="kw">if</span> <span class="op">!</span><span class="ident">verify_hostname</span> {
-            <span class="ident">tls_connector</span>.<span class="ident">set_callback</span>(<span class="op">|</span><span class="ident">connect</span>, <span class="kw">_</span><span class="op">|</span> {
-                <span class="ident">connect</span>.<span class="ident">set_verify_hostname</span>(<span class="bool-val">false</span>);
+        <span class="kw">if </span>!verify_hostname {
+            tls_connector.set_callback(|connect, <span class="kw">_</span>| {
+                connect.set_verify_hostname(<span class="bool-val">false</span>);
                 <span class="prelude-val">Ok</span>(())
             });
         }
 
-        <span class="prelude-val">Ok</span>(<span class="ident">tls_connector</span>)
+        <span class="prelude-val">Ok</span>(tls_connector)
     }
 }
 
-<span class="comment">// Strip URL params not accepted by upstream rust-postgres</span>
-<span class="kw">fn</span> <span class="ident">strip_bad_opts</span>(<span class="ident">url</span>: <span class="kw-2">&amp;</span><span class="ident">Url</span>) -&gt; <span class="ident">Url</span> {
-    <span class="kw">let</span> <span class="ident">stripped_query</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="kw">_</span>, <span class="kw">_</span>)<span class="op">&gt;</span> <span class="op">=</span> <span class="ident">url</span>
-        .<span class="ident">query_pairs</span>()
-        .<span class="ident">filter</span>(<span class="op">|</span><span class="ident">p</span><span class="op">|</span> <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">p</span>.<span class="number">0</span> {
-            <span class="string">&quot;sslkey&quot;</span> <span class="op">|</span> <span class="string">&quot;sslcert&quot;</span> <span class="op">|</span> <span class="string">&quot;sslrootcert&quot;</span> =&gt; <span class="bool-val">false</span>,
-            <span class="kw">_</span> =&gt; <span class="bool-val">true</span>,
+<span class="comment">// Strip URL params not accepted by upstream rust-postgres
+</span><span class="kw">fn </span>strip_bad_opts(url: <span class="kw-2">&amp;</span>Url) -&gt; Url {
+    <span class="kw">let </span>stripped_query: Vec&lt;(<span class="kw">_</span>, <span class="kw">_</span>)&gt; = url
+        .query_pairs()
+        .filter(|p| <span class="kw">match </span><span class="kw-2">&amp;*</span>p.<span class="number">0 </span>{
+            <span class="string">&quot;sslkey&quot; </span>| <span class="string">&quot;sslcert&quot; </span>| <span class="string">&quot;sslrootcert&quot; </span>=&gt; <span class="bool-val">false</span>,
+            <span class="kw">_ </span>=&gt; <span class="bool-val">true</span>,
         })
-        .<span class="ident">collect</span>();
+        .collect();
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">url2</span> <span class="op">=</span> <span class="ident">url</span>.<span class="ident">clone</span>();
-    <span class="ident">url2</span>.<span class="ident">set_query</span>(<span class="prelude-val">None</span>);
+    <span class="kw">let </span><span class="kw-2">mut </span>url2 = url.clone();
+    url2.set_query(<span class="prelude-val">None</span>);
 
-    <span class="kw">for</span> <span class="ident">pair</span> <span class="kw">in</span> <span class="ident">stripped_query</span> {
-        <span class="ident">url2</span>.<span class="ident">query_pairs_mut</span>()
-            .<span class="ident">append_pair</span>(<span class="kw-2">&amp;</span><span class="ident">pair</span>.<span class="number">0</span>.<span class="ident">to_string</span>()[..], <span class="kw-2">&amp;</span><span class="ident">pair</span>.<span class="number">1</span>.<span class="ident">to_string</span>()[..]);
+    <span class="kw">for </span>pair <span class="kw">in </span>stripped_query {
+        url2.query_pairs_mut()
+            .append_pair(<span class="kw-2">&amp;</span>pair.<span class="number">0</span>.to_string()[..], <span class="kw-2">&amp;</span>pair.<span class="number">1</span>.to_string()[..]);
     }
 
-    <span class="ident">url2</span>
+    url2
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">rewrite_tls_args</span>(
-    <span class="ident">conn</span>: <span class="kw-2">&amp;</span><span class="ident">Url</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">Config</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">MakeTlsConnector</span><span class="op">&gt;</span>), <span class="ident">PostgresSourceError</span><span class="op">&gt;</span> {
-    <span class="comment">// We parse the config, then strip unsupported SSL opts and rewrite the URI</span>
-    <span class="comment">// before calling conn.parse().</span>
-    <span class="comment">//</span>
-    <span class="comment">// For more details on this approach, see the conversation here:</span>
-    <span class="comment">// https://github.com/sfackler/rust-postgres/pull/774#discussion_r641784774</span>
+<span class="kw">pub fn </span>rewrite_tls_args(
+    conn: <span class="kw-2">&amp;</span>Url,
+) -&gt; <span class="prelude-ty">Result</span>&lt;(Config, <span class="prelude-ty">Option</span>&lt;MakeTlsConnector&gt;), PostgresSourceError&gt; {
+    <span class="comment">// We parse the config, then strip unsupported SSL opts and rewrite the URI
+    // before calling conn.parse().
+    //
+    // For more details on this approach, see the conversation here:
+    // https://github.com/sfackler/rust-postgres/pull/774#discussion_r641784774
 
-    <span class="kw">let</span> <span class="ident">params</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">String</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">conn</span>.<span class="ident">query_pairs</span>().<span class="ident">into_owned</span>().<span class="ident">collect</span>();
+    </span><span class="kw">let </span>params: HashMap&lt;String, String&gt; = conn.query_pairs().into_owned().collect();
 
-    <span class="kw">let</span> <span class="ident">sslcert</span> <span class="op">=</span> <span class="ident">params</span>.<span class="ident">get</span>(<span class="string">&quot;sslcert&quot;</span>).<span class="ident">map</span>(<span class="ident">PathBuf::from</span>);
-    <span class="kw">let</span> <span class="ident">sslkey</span> <span class="op">=</span> <span class="ident">params</span>.<span class="ident">get</span>(<span class="string">&quot;sslkey&quot;</span>).<span class="ident">map</span>(<span class="ident">PathBuf::from</span>);
-    <span class="kw">let</span> <span class="ident">root_cert</span> <span class="op">=</span> <span class="ident">params</span>.<span class="ident">get</span>(<span class="string">&quot;sslrootcert&quot;</span>).<span class="ident">map</span>(<span class="ident">PathBuf::from</span>);
-    <span class="kw">let</span> <span class="ident">client_cert</span> <span class="op">=</span> <span class="kw">match</span> (<span class="ident">sslcert</span>, <span class="ident">sslkey</span>) {
-        (<span class="prelude-val">Some</span>(<span class="ident">a</span>), <span class="prelude-val">Some</span>(<span class="ident">b</span>)) =&gt; <span class="prelude-val">Some</span>((<span class="ident">a</span>, <span class="ident">b</span>)),
-        <span class="kw">_</span> =&gt; <span class="prelude-val">None</span>,
+    <span class="kw">let </span>sslcert = params.get(<span class="string">&quot;sslcert&quot;</span>).map(PathBuf::from);
+    <span class="kw">let </span>sslkey = params.get(<span class="string">&quot;sslkey&quot;</span>).map(PathBuf::from);
+    <span class="kw">let </span>root_cert = params.get(<span class="string">&quot;sslrootcert&quot;</span>).map(PathBuf::from);
+    <span class="kw">let </span>client_cert = <span class="kw">match </span>(sslcert, sslkey) {
+        (<span class="prelude-val">Some</span>(a), <span class="prelude-val">Some</span>(b)) =&gt; <span class="prelude-val">Some</span>((a, b)),
+        <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
     };
 
-    <span class="kw">let</span> <span class="ident">stripped_url</span> <span class="op">=</span> <span class="ident">strip_bad_opts</span>(<span class="ident">conn</span>);
-    <span class="kw">let</span> <span class="ident">pg_config</span>: <span class="ident">Config</span> <span class="op">=</span> <span class="ident">stripped_url</span>.<span class="ident">as_str</span>().<span class="ident">parse</span>().<span class="ident">unwrap</span>();
+    <span class="kw">let </span>stripped_url = strip_bad_opts(conn);
+    <span class="kw">let </span>pg_config: Config = stripped_url.as_str().parse().unwrap();
 
-    <span class="kw">let</span> <span class="ident">tls_config</span> <span class="op">=</span> <span class="ident">TlsConfig</span> {
-        <span class="ident">pg_config</span>: <span class="ident">pg_config</span>.<span class="ident">clone</span>(),
-        <span class="ident">client_cert</span>: <span class="ident">client_cert</span>,
-        <span class="ident">root_cert</span>: <span class="ident">root_cert</span>,
+    <span class="kw">let </span>tls_config = TlsConfig {
+        pg_config: pg_config.clone(),
+        client_cert: client_cert,
+        root_cert: root_cert,
     };
 
-    <span class="kw">let</span> <span class="ident">tls_connector</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">pg_config</span>.<span class="ident">get_ssl_mode</span>() {
-        <span class="ident">SslMode::Disable</span> =&gt; <span class="prelude-val">None</span>,
-        <span class="kw">_</span> =&gt; <span class="prelude-val">Some</span>(<span class="ident">MakeTlsConnector::try_from</span>(<span class="ident">tls_config</span>)<span class="question-mark">?</span>),
+    <span class="kw">let </span>tls_connector = <span class="kw">match </span>pg_config.get_ssl_mode() {
+        SslMode::Disable =&gt; <span class="prelude-val">None</span>,
+        <span class="kw">_ </span>=&gt; <span class="prelude-val">Some</span>(MakeTlsConnector::try_from(tls_config)<span class="question-mark">?</span>),
     };
 
-    <span class="prelude-val">Ok</span>((<span class="ident">pg_config</span>, <span class="ident">tls_connector</span>))
+    <span class="prelude-val">Ok</span>((pg_config, tls_connector))
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="connectorx" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.62.0-nightly (878c7833f 2022-04-16)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="connectorx" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (750bd1a7f 2022-09-14)" ></div></body></html>

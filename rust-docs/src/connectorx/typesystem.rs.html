@@ -1,9 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `connectorx/src/typesystem.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>typesystem.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script src="../../crates.js"></script><script defer src="../../main.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script>
-    <noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../connectorx/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../connectorx/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../connectorx/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><div class="theme-picker hidden"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="22" height="22" alt="Pick another theme!" src="../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `connectorx/src/typesystem.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>typesystem.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../connectorx/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../connectorx/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../connectorx/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -142,145 +137,144 @@
 <span id="137">137</span>
 <span id="138">138</span>
 <span id="139">139</span>
-</pre><pre class="rust"><code><span class="doccomment">//! This module defines traits that required to define a typesystem.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! A typesystem is an enum that describes what types can be produced by a source and accepted by a destination.</span>
-<span class="doccomment">//! A typesystem also needs to implement [`TypeAssoc`] to associate the enum variants to the physical representation</span>
-<span class="doccomment">//! of the types in the typesystem.</span>
+</pre><pre class="rust"><code><span class="doccomment">//! This module defines traits that required to define a typesystem.
+//!
+//! A typesystem is an enum that describes what types can be produced by a source and accepted by a destination.
+//! A typesystem also needs to implement [`TypeAssoc`] to associate the enum variants to the physical representation
+//! of the types in the typesystem.
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::destinations</span>::{<span class="ident">Consume</span>, <span class="ident">Destination</span>, <span class="ident">DestinationPartition</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::errors</span>::{<span class="ident">ConnectorXError</span>, <span class="prelude-ty">Result</span> <span class="kw">as</span> <span class="ident">CXResult</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::sources</span>::{<span class="ident">PartitionParser</span>, <span class="ident">Produce</span>, <span class="ident">Source</span>, <span class="ident">SourcePartition</span>};
+</span><span class="kw">use </span><span class="kw">crate</span>::destinations::{Consume, Destination, DestinationPartition};
+<span class="kw">use </span><span class="kw">crate</span>::errors::{ConnectorXError, <span class="prelude-ty">Result </span><span class="kw">as </span>CXResult};
+<span class="kw">use </span><span class="kw">crate</span>::sources::{PartitionParser, Produce, Source, SourcePartition};
 
-<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
-<span class="doccomment">/// `TypeSystem` describes all the types a source or destination support</span>
-<span class="doccomment">/// using enum variants.</span>
-<span class="doccomment">/// The variant can be used to type check with a static type `T` through the `check` method.</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">TypeSystem</span>: <span class="ident">Copy</span> <span class="op">+</span> <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> {
-    <span class="doccomment">/// Check whether T is the same type as defined by self.</span>
-    <span class="kw">fn</span> <span class="ident">check</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">TypeAssoc</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="self">self</span>) -&gt; <span class="ident">CXResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="ident">T::check</span>(<span class="self">self</span>)
+<span class="attribute">#[doc(hidden)]
+</span><span class="doccomment">/// `TypeSystem` describes all the types a source or destination support
+/// using enum variants.
+/// The variant can be used to type check with a static type `T` through the `check` method.
+</span><span class="kw">pub trait </span>TypeSystem: Copy + Clone + Send + Sync {
+    <span class="doccomment">/// Check whether T is the same type as defined by self.
+    </span><span class="kw">fn </span>check&lt;T: TypeAssoc&lt;<span class="self">Self</span>&gt;&gt;(<span class="self">self</span>) -&gt; CXResult&lt;()&gt; {
+        T::check(<span class="self">self</span>)
     }
 }
 
-<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
-<span class="doccomment">/// Associate a static type to a TypeSystem</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">TypeAssoc</span><span class="op">&lt;</span><span class="ident">TS</span>: <span class="ident">TypeSystem</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">check</span>(<span class="ident">ts</span>: <span class="ident">TS</span>) -&gt; <span class="ident">CXResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span>;
+<span class="attribute">#[doc(hidden)]
+</span><span class="doccomment">/// Associate a static type to a TypeSystem
+</span><span class="kw">pub trait </span>TypeAssoc&lt;TS: TypeSystem&gt; {
+    <span class="kw">fn </span>check(ts: TS) -&gt; CXResult&lt;()&gt;;
 }
 
-<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
-<span class="doccomment">/// Realize means that a TypeSystem can realize a parameterized func F, based on its current variants.</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Realize</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">F</span>: <span class="ident">ParameterizedFunc</span>,
+<span class="attribute">#[doc(hidden)]
+</span><span class="doccomment">/// Realize means that a TypeSystem can realize a parameterized func F, based on its current variants.
+</span><span class="kw">pub trait </span>Realize&lt;F&gt;
+<span class="kw">where
+    </span>F: ParameterizedFunc,
 {
-    <span class="doccomment">/// realize a parameterized function with the type that self currently is.</span>
-    <span class="kw">fn</span> <span class="ident">realize</span>(<span class="self">self</span>) -&gt; <span class="ident">CXResult</span><span class="op">&lt;</span><span class="ident">F::Function</span><span class="op">&gt;</span>;
+    <span class="doccomment">/// realize a parameterized function with the type that self currently is.
+    </span><span class="kw">fn </span>realize(<span class="self">self</span>) -&gt; CXResult&lt;F::Function&gt;;
 }
 
-<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
-<span class="doccomment">/// A ParameterizedFunc refers to a function that is parameterized on a type T,</span>
-<span class="doccomment">/// where type T will be dynaically determined by the variant of a TypeSystem.</span>
-<span class="doccomment">/// An example is the `transmit&lt;S,W,T&gt;` function. When piping values from a source</span>
-<span class="doccomment">/// to the destination, its type `T` is determined by the schema at the runtime.</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">ParameterizedFunc</span> {
-    <span class="kw">type</span> <span class="ident">Function</span>;
-    <span class="kw">fn</span> <span class="ident">realize</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>() -&gt; <span class="ident"><span class="self">Self</span>::Function</span>
-    <span class="kw">where</span>
-        <span class="self">Self</span>: <span class="ident">ParameterizedOn</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
+<span class="attribute">#[doc(hidden)]
+</span><span class="doccomment">/// A ParameterizedFunc refers to a function that is parameterized on a type T,
+/// where type T will be dynaically determined by the variant of a TypeSystem.
+/// An example is the `transmit&lt;S,W,T&gt;` function. When piping values from a source
+/// to the destination, its type `T` is determined by the schema at the runtime.
+</span><span class="kw">pub trait </span>ParameterizedFunc {
+    <span class="kw">type </span>Function;
+    <span class="kw">fn </span>realize&lt;T&gt;() -&gt; <span class="self">Self</span>::Function
+    <span class="kw">where
+        </span><span class="self">Self</span>: ParameterizedOn&lt;T&gt;,
     {
-        <span class="ident"><span class="self">Self</span>::parameterize</span>()
+        <span class="self">Self</span>::parameterize()
     }
 }
 
-<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
-<span class="doccomment">/// `ParameterizedOn` indicates a parameterized function `Self`</span>
-<span class="doccomment">/// is parameterized on type `T`</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">ParameterizedOn</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>: <span class="ident">ParameterizedFunc</span> {
-    <span class="kw">fn</span> <span class="ident">parameterize</span>() -&gt; <span class="ident"><span class="self">Self</span>::Function</span>;
+<span class="attribute">#[doc(hidden)]
+</span><span class="doccomment">/// `ParameterizedOn` indicates a parameterized function `Self`
+/// is parameterized on type `T`
+</span><span class="kw">pub trait </span>ParameterizedOn&lt;T&gt;: ParameterizedFunc {
+    <span class="kw">fn </span>parameterize() -&gt; <span class="self">Self</span>::Function;
 }
 
-<span class="doccomment">/// Defines a rule to convert a type `T` to a type `U`.</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">TypeConversion</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">U</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">convert</span>(<span class="ident">val</span>: <span class="ident">T</span>) -&gt; <span class="ident">U</span>;
+<span class="doccomment">/// Defines a rule to convert a type `T` to a type `U`.
+</span><span class="kw">pub trait </span>TypeConversion&lt;T, U&gt; {
+    <span class="kw">fn </span>convert(val: T) -&gt; U;
 }
 
-<span class="doccomment">/// Transport asks the source to produce a value, do type conversion and then write</span>
-<span class="doccomment">/// the value to a destination. Do not manually implement this trait for types.</span>
-<span class="doccomment">/// Use [`impl_transport!`] to create a struct that implements this trait instead.</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Transport</span> {
-    <span class="kw">type</span> <span class="ident">TSS</span>: <span class="ident">TypeSystem</span>;
-    <span class="kw">type</span> <span class="ident">TSD</span>: <span class="ident">TypeSystem</span>;
-    <span class="kw">type</span> <span class="ident">S</span>: <span class="ident">Source</span>;
-    <span class="kw">type</span> <span class="ident">D</span>: <span class="ident">Destination</span>;
-    <span class="kw">type</span> <span class="ident">Error</span>: <span class="ident">From</span><span class="op">&lt;</span><span class="ident">ConnectorXError</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span>;
+<span class="doccomment">/// Transport asks the source to produce a value, do type conversion and then write
+/// the value to a destination. Do not manually implement this trait for types.
+/// Use [`impl_transport!`] to create a struct that implements this trait instead.
+</span><span class="kw">pub trait </span>Transport {
+    <span class="kw">type </span>TSS: TypeSystem;
+    <span class="kw">type </span>TSD: TypeSystem;
+    <span class="kw">type </span>S: Source;
+    <span class="kw">type </span>D: Destination;
+    <span class="kw">type </span>Error: From&lt;ConnectorXError&gt; + Send;
 
-    <span class="doccomment">/// convert_typesystem convert the source type system TSS to the destination</span>
-    <span class="doccomment">/// type system TSD.</span>
-    <span class="kw">fn</span> <span class="ident">convert_typesystem</span>(<span class="ident">ts</span>: <span class="ident"><span class="self">Self</span>::TSS</span>) -&gt; <span class="ident">CXResult</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::TSD</span><span class="op">&gt;</span>;
+    <span class="doccomment">/// convert_typesystem convert the source type system TSS to the destination
+    /// type system TSD.
+    </span><span class="kw">fn </span>convert_typesystem(ts: <span class="self">Self</span>::TSS) -&gt; CXResult&lt;<span class="self">Self</span>::TSD&gt;;
 
-    <span class="doccomment">/// convert_type convert the type T1 associated with the source type system</span>
-    <span class="doccomment">/// TSS to a type T2 which is associated with the destination type system TSD.</span>
-    <span class="kw">fn</span> <span class="ident">convert_type</span><span class="op">&lt;</span><span class="ident">T1</span>, <span class="ident">T2</span><span class="op">&gt;</span>(<span class="ident">val</span>: <span class="ident">T1</span>) -&gt; <span class="ident">T2</span>
-    <span class="kw">where</span>
-        <span class="self">Self</span>: <span class="ident">TypeConversion</span><span class="op">&lt;</span><span class="ident">T1</span>, <span class="ident">T2</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// convert_type convert the type T1 associated with the source type system
+    /// TSS to a type T2 which is associated with the destination type system TSD.
+    </span><span class="kw">fn </span>convert_type&lt;T1, T2&gt;(val: T1) -&gt; T2
+    <span class="kw">where
+        </span><span class="self">Self</span>: TypeConversion&lt;T1, T2&gt;,
     {
-        <span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">TypeConversion</span><span class="op">&lt;</span><span class="ident">T1</span>, <span class="ident">T2</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::convert</span>(<span class="ident">val</span>)
+        &lt;<span class="self">Self </span><span class="kw">as </span>TypeConversion&lt;T1, T2&gt;&gt;::convert(val)
     }
 
-    <span class="doccomment">/// `process` will ask source to produce a value with type T1, based on TSS, and then do</span>
-    <span class="doccomment">/// type conversion using `convert_type` to get value with type T2, which is associated to</span>
-    <span class="doccomment">/// TSD. Finally, it will write the value with type T2 to the destination.</span>
-    <span class="kw">fn</span> <span class="ident">process</span><span class="op">&lt;</span><span class="lifetime">&#39;s</span>, <span class="lifetime">&#39;d</span>, <span class="lifetime">&#39;r</span><span class="op">&gt;</span>(
-        <span class="ident">ts1</span>: <span class="ident"><span class="self">Self</span>::TSS</span>,
-        <span class="ident">ts2</span>: <span class="ident"><span class="self">Self</span>::TSD</span>,
-        <span class="ident">src</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;r</span> <span class="kw-2">mut</span> <span class="op">&lt;</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::S</span> <span class="kw">as</span> <span class="ident">Source</span><span class="op">&gt;</span><span class="ident">::Partition</span> <span class="kw">as</span> <span class="ident">SourcePartition</span><span class="op">&gt;</span><span class="ident">::Parser</span><span class="op">&lt;</span><span class="lifetime">&#39;s</span><span class="op">&gt;</span>,
-        <span class="ident">dst</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;r</span> <span class="kw-2">mut</span> <span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::D</span> <span class="kw">as</span> <span class="ident">Destination</span><span class="op">&gt;</span><span class="ident">::Partition</span><span class="op">&lt;</span><span class="lifetime">&#39;d</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="self">Self</span>: <span class="lifetime">&#39;d</span>;
+    <span class="doccomment">/// `process` will ask source to produce a value with type T1, based on TSS, and then do
+    /// type conversion using `convert_type` to get value with type T2, which is associated to
+    /// TSD. Finally, it will write the value with type T2 to the destination.
+    </span><span class="kw">fn </span>process&lt;<span class="lifetime">&#39;s</span>, <span class="lifetime">&#39;d</span>, <span class="lifetime">&#39;r</span>&gt;(
+        ts1: <span class="self">Self</span>::TSS,
+        ts2: <span class="self">Self</span>::TSD,
+        src: <span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span><span class="kw-2">mut </span>&lt;&lt;<span class="self">Self</span>::S <span class="kw">as </span>Source&gt;::Partition <span class="kw">as </span>SourcePartition&gt;::Parser&lt;<span class="lifetime">&#39;s</span>&gt;,
+        dst: <span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span><span class="kw-2">mut </span>&lt;<span class="self">Self</span>::D <span class="kw">as </span>Destination&gt;::Partition&lt;<span class="lifetime">&#39;d</span>&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt;
+    <span class="kw">where
+        </span><span class="self">Self</span>: <span class="lifetime">&#39;d</span>;
 
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::type_complexity</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">processor</span><span class="op">&lt;</span><span class="lifetime">&#39;s</span>, <span class="lifetime">&#39;d</span><span class="op">&gt;</span>(
-        <span class="ident">ts1</span>: <span class="ident"><span class="self">Self</span>::TSS</span>,
-        <span class="ident">ts2</span>: <span class="ident"><span class="self">Self</span>::TSD</span>,
-    ) -&gt; <span class="ident">CXResult</span><span class="op">&lt;</span>
+    <span class="attribute">#[allow(clippy::type_complexity)]
+    </span><span class="kw">fn </span>processor&lt;<span class="lifetime">&#39;s</span>, <span class="lifetime">&#39;d</span>&gt;(
+        ts1: <span class="self">Self</span>::TSS,
+        ts2: <span class="self">Self</span>::TSD,
+    ) -&gt; CXResult&lt;
         <span class="kw">fn</span>(
-            <span class="ident">src</span>: <span class="kw-2">&amp;mut</span> <span class="op">&lt;</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::S</span> <span class="kw">as</span> <span class="ident">Source</span><span class="op">&gt;</span><span class="ident">::Partition</span> <span class="kw">as</span> <span class="ident">SourcePartition</span><span class="op">&gt;</span><span class="ident">::Parser</span><span class="op">&lt;</span><span class="lifetime">&#39;s</span><span class="op">&gt;</span>,
-            <span class="ident">dst</span>: <span class="kw-2">&amp;mut</span> <span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::D</span> <span class="kw">as</span> <span class="ident">Destination</span><span class="op">&gt;</span><span class="ident">::Partition</span><span class="op">&lt;</span><span class="lifetime">&#39;d</span><span class="op">&gt;</span>,
-        ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span>,
-    <span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="self">Self</span>: <span class="lifetime">&#39;d</span>;
+            src: <span class="kw-2">&amp;mut </span>&lt;&lt;<span class="self">Self</span>::S <span class="kw">as </span>Source&gt;::Partition <span class="kw">as </span>SourcePartition&gt;::Parser&lt;<span class="lifetime">&#39;s</span>&gt;,
+            dst: <span class="kw-2">&amp;mut </span>&lt;<span class="self">Self</span>::D <span class="kw">as </span>Destination&gt;::Partition&lt;<span class="lifetime">&#39;d</span>&gt;,
+        ) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt;,
+    &gt;
+    <span class="kw">where
+        </span><span class="self">Self</span>: <span class="lifetime">&#39;d</span>;
 }
 
-<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">process</span><span class="op">&lt;</span><span class="lifetime">&#39;s</span>, <span class="lifetime">&#39;d</span>, <span class="lifetime">&#39;r</span>, <span class="ident">T1</span>, <span class="ident">T2</span>, <span class="ident">TP</span>, <span class="ident">S</span>, <span class="ident">D</span>, <span class="ident">ES</span>, <span class="ident">ED</span>, <span class="ident">ET</span><span class="op">&gt;</span>(
-    <span class="ident">src</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;r</span> <span class="kw-2">mut</span> <span class="op">&lt;</span><span class="op">&lt;</span><span class="ident">S</span> <span class="kw">as</span> <span class="ident">Source</span><span class="op">&gt;</span><span class="ident">::Partition</span> <span class="kw">as</span> <span class="ident">SourcePartition</span><span class="op">&gt;</span><span class="ident">::Parser</span><span class="op">&lt;</span><span class="lifetime">&#39;s</span><span class="op">&gt;</span>,
-    <span class="ident">dst</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;r</span> <span class="kw-2">mut</span> <span class="op">&lt;</span><span class="ident">D</span> <span class="kw">as</span> <span class="ident">Destination</span><span class="op">&gt;</span><span class="ident">::Partition</span><span class="op">&lt;</span><span class="lifetime">&#39;d</span><span class="op">&gt;</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">ET</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">T1</span>: <span class="ident">TypeAssoc</span><span class="op">&lt;</span><span class="op">&lt;</span><span class="ident">S</span> <span class="kw">as</span> <span class="ident">Source</span><span class="op">&gt;</span><span class="ident">::TypeSystem</span><span class="op">&gt;</span>,
-    <span class="ident">S</span>: <span class="ident">Source</span><span class="op">&lt;</span><span class="ident">Error</span> <span class="op">=</span> <span class="ident">ES</span><span class="op">&gt;</span>,
-    <span class="op">&lt;</span><span class="ident">S</span> <span class="kw">as</span> <span class="ident">Source</span><span class="op">&gt;</span><span class="ident">::Partition</span>: <span class="ident">SourcePartition</span><span class="op">&lt;</span><span class="ident">Error</span> <span class="op">=</span> <span class="ident">ES</span><span class="op">&gt;</span>,
+<span class="attribute">#[doc(hidden)]
+</span><span class="kw">pub fn </span>process&lt;<span class="lifetime">&#39;s</span>, <span class="lifetime">&#39;d</span>, <span class="lifetime">&#39;r</span>, T1, T2, TP, S, D, ES, ED, ET&gt;(
+    src: <span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span><span class="kw-2">mut </span>&lt;&lt;S <span class="kw">as </span>Source&gt;::Partition <span class="kw">as </span>SourcePartition&gt;::Parser&lt;<span class="lifetime">&#39;s</span>&gt;,
+    dst: <span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span><span class="kw-2">mut </span>&lt;D <span class="kw">as </span>Destination&gt;::Partition&lt;<span class="lifetime">&#39;d</span>&gt;,
+) -&gt; <span class="prelude-ty">Result</span>&lt;(), ET&gt;
+<span class="kw">where
+    </span>T1: TypeAssoc&lt;&lt;S <span class="kw">as </span>Source&gt;::TypeSystem&gt;,
+    S: Source&lt;Error = ES&gt;,
+    &lt;S <span class="kw">as </span>Source&gt;::Partition: SourcePartition&lt;Error = ES&gt;,
 
-    <span class="op">&lt;</span><span class="op">&lt;</span><span class="ident">S</span> <span class="kw">as</span> <span class="ident">Source</span><span class="op">&gt;</span><span class="ident">::Partition</span> <span class="kw">as</span> <span class="ident">SourcePartition</span><span class="op">&gt;</span><span class="ident">::Parser</span><span class="op">&lt;</span><span class="lifetime">&#39;s</span><span class="op">&gt;</span>: <span class="ident">Produce</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="ident">T1</span>, <span class="ident">Error</span> <span class="op">=</span> <span class="ident">ES</span><span class="op">&gt;</span>,
-    <span class="ident">ES</span>: <span class="ident">From</span><span class="op">&lt;</span><span class="ident">ConnectorXError</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span>,
+    &lt;&lt;S <span class="kw">as </span>Source&gt;::Partition <span class="kw">as </span>SourcePartition&gt;::Parser&lt;<span class="lifetime">&#39;s</span>&gt;: Produce&lt;<span class="lifetime">&#39;r</span>, T1, Error = ES&gt;,
+    ES: From&lt;ConnectorXError&gt; + Send,
 
-    <span class="ident">T2</span>: <span class="ident">TypeAssoc</span><span class="op">&lt;</span><span class="op">&lt;</span><span class="ident">D</span> <span class="kw">as</span> <span class="ident">Destination</span><span class="op">&gt;</span><span class="ident">::TypeSystem</span><span class="op">&gt;</span>,
-    <span class="ident">D</span>: <span class="ident">Destination</span><span class="op">&lt;</span><span class="ident">Error</span> <span class="op">=</span> <span class="ident">ED</span><span class="op">&gt;</span>,
-    <span class="op">&lt;</span><span class="ident">D</span> <span class="kw">as</span> <span class="ident">Destination</span><span class="op">&gt;</span><span class="ident">::Partition</span><span class="op">&lt;</span><span class="lifetime">&#39;d</span><span class="op">&gt;</span>: <span class="ident">Consume</span><span class="op">&lt;</span><span class="ident">T2</span>, <span class="ident">Error</span> <span class="op">=</span> <span class="ident">ED</span><span class="op">&gt;</span>,
-    <span class="ident">ED</span>: <span class="ident">From</span><span class="op">&lt;</span><span class="ident">ConnectorXError</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span>,
+    T2: TypeAssoc&lt;&lt;D <span class="kw">as </span>Destination&gt;::TypeSystem&gt;,
+    D: Destination&lt;Error = ED&gt;,
+    &lt;D <span class="kw">as </span>Destination&gt;::Partition&lt;<span class="lifetime">&#39;d</span>&gt;: Consume&lt;T2, Error = ED&gt;,
+    ED: From&lt;ConnectorXError&gt; + Send,
 
-    <span class="ident">TP</span>: <span class="ident">TypeConversion</span><span class="op">&lt;</span><span class="ident">T1</span>, <span class="ident">T2</span><span class="op">&gt;</span>,
-    <span class="ident">ET</span>: <span class="ident">From</span><span class="op">&lt;</span><span class="ident">ES</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">ED</span><span class="op">&gt;</span>,
+    TP: TypeConversion&lt;T1, T2&gt;,
+    ET: From&lt;ES&gt; + From&lt;ED&gt;,
 {
-    <span class="kw">let</span> <span class="ident">val</span>: <span class="ident">T1</span> <span class="op">=</span> <span class="ident">PartitionParser::parse</span>(<span class="ident">src</span>)<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">val</span>: <span class="ident">T2</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">TP</span> <span class="kw">as</span> <span class="ident">TypeConversion</span><span class="op">&lt;</span><span class="ident">T1</span>, <span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::convert</span>(<span class="ident">val</span>);
-    <span class="ident">DestinationPartition::write</span>(<span class="ident">dst</span>, <span class="ident">val</span>)<span class="question-mark">?</span>;
+    <span class="kw">let </span>val: T1 = PartitionParser::parse(src)<span class="question-mark">?</span>;
+    <span class="kw">let </span>val: T2 = &lt;TP <span class="kw">as </span>TypeConversion&lt;T1, <span class="kw">_</span>&gt;&gt;::convert(val);
+    DestinationPartition::write(dst, val)<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(())
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="connectorx" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.62.0-nightly (878c7833f 2022-04-16)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="connectorx" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (750bd1a7f 2022-09-14)" ></div></body></html>

@@ -1,9 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `connectorx/src/sources/mssql/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script src="../../../../crates.js"></script><script defer src="../../../../main.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script>
-    <noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../connectorx/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../../../connectorx/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../connectorx/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><div class="theme-picker hidden"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="22" height="22" alt="Pick another theme!" src="../../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `connectorx/src/sources/mssql/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../../normalize.css"><link rel="stylesheet" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../../ayu.css" disabled><link rel="stylesheet" href="../../../../dark.css" disabled><link rel="stylesheet" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../connectorx/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../connectorx/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../connectorx/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -401,404 +396,403 @@
 <span id="396">396</span>
 <span id="397">397</span>
 <span id="398">398</span>
-</pre><pre class="rust"><code><span class="doccomment">//! Source implementation for SQL Server.</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Source implementation for SQL Server.
 
-<span class="kw">mod</span> <span class="ident">errors</span>;
-<span class="kw">mod</span> <span class="ident">typesystem</span>;
+</span><span class="kw">mod </span>errors;
+<span class="kw">mod </span>typesystem;
 
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::errors::MsSQLSourceError</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::typesystem</span>::{<span class="ident">FloatN</span>, <span class="ident">IntN</span>, <span class="ident">MsSQLTypeSystem</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::constants::DB_BUFFER_SIZE</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">data_order::DataOrder</span>,
-    <span class="ident">errors::ConnectorXError</span>,
-    <span class="ident">sources</span>::{<span class="ident">PartitionParser</span>, <span class="ident">Produce</span>, <span class="ident">Source</span>, <span class="ident">SourcePartition</span>},
-    <span class="ident">sql</span>::{<span class="ident">count_query</span>, <span class="ident">CXQuery</span>},
-    <span class="ident">utils::DummyBox</span>,
+<span class="kw">pub use </span><span class="self">self</span>::errors::MsSQLSourceError;
+<span class="kw">pub use </span><span class="self">self</span>::typesystem::{FloatN, IntN, MsSQLTypeSystem};
+<span class="kw">use </span><span class="kw">crate</span>::constants::DB_BUFFER_SIZE;
+<span class="kw">use crate</span>::{
+    data_order::DataOrder,
+    errors::ConnectorXError,
+    sources::{PartitionParser, Produce, Source, SourcePartition},
+    sql::{count_query, CXQuery},
+    utils::DummyBox,
 };
-<span class="kw">use</span> <span class="ident">anyhow::anyhow</span>;
-<span class="kw">use</span> <span class="ident">bb8</span>::{<span class="ident">Pool</span>, <span class="ident">PooledConnection</span>};
-<span class="kw">use</span> <span class="ident">bb8_tiberius::ConnectionManager</span>;
-<span class="kw">use</span> <span class="ident">chrono</span>::{<span class="ident">DateTime</span>, <span class="ident">Utc</span>};
-<span class="kw">use</span> <span class="ident">chrono</span>::{<span class="ident">NaiveDate</span>, <span class="ident">NaiveDateTime</span>, <span class="ident">NaiveTime</span>};
-<span class="kw">use</span> <span class="ident">fehler</span>::{<span class="ident">throw</span>, <span class="ident">throws</span>};
-<span class="kw">use</span> <span class="ident">futures::StreamExt</span>;
-<span class="kw">use</span> <span class="ident">log::debug</span>;
-<span class="kw">use</span> <span class="ident">owning_ref::OwningHandle</span>;
-<span class="kw">use</span> <span class="ident">rust_decimal::Decimal</span>;
-<span class="kw">use</span> <span class="ident">sqlparser::dialect::MsSqlDialect</span>;
-<span class="kw">use</span> <span class="ident">std::collections::HashMap</span>;
-<span class="kw">use</span> <span class="ident">std::sync::Arc</span>;
-<span class="kw">use</span> <span class="ident">tiberius</span>::{<span class="ident">AuthMethod</span>, <span class="ident">Config</span>, <span class="ident">EncryptionLevel</span>, <span class="ident">QueryResult</span>, <span class="ident">Row</span>};
-<span class="kw">use</span> <span class="ident">tokio::runtime</span>::{<span class="ident">Handle</span>, <span class="ident">Runtime</span>};
-<span class="kw">use</span> <span class="ident">url::Url</span>;
-<span class="kw">use</span> <span class="ident">urlencoding::decode</span>;
-<span class="kw">use</span> <span class="ident">uuid::Uuid</span>;
+<span class="kw">use </span>anyhow::anyhow;
+<span class="kw">use </span>bb8::{Pool, PooledConnection};
+<span class="kw">use </span>bb8_tiberius::ConnectionManager;
+<span class="kw">use </span>chrono::{DateTime, Utc};
+<span class="kw">use </span>chrono::{NaiveDate, NaiveDateTime, NaiveTime};
+<span class="kw">use </span>fehler::{throw, throws};
+<span class="kw">use </span>futures::StreamExt;
+<span class="kw">use </span>log::debug;
+<span class="kw">use </span>owning_ref::OwningHandle;
+<span class="kw">use </span>rust_decimal::Decimal;
+<span class="kw">use </span>sqlparser::dialect::MsSqlDialect;
+<span class="kw">use </span>std::collections::HashMap;
+<span class="kw">use </span>std::sync::Arc;
+<span class="kw">use </span>tiberius::{AuthMethod, Config, EncryptionLevel, QueryResult, Row};
+<span class="kw">use </span>tokio::runtime::{Handle, Runtime};
+<span class="kw">use </span>url::Url;
+<span class="kw">use </span>urlencoding::decode;
+<span class="kw">use </span>uuid::Uuid;
 
-<span class="kw">type</span> <span class="ident">Conn</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">PooledConnection</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">ConnectionManager</span><span class="op">&gt;</span>;
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MsSQLSource</span> {
-    <span class="ident">rt</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Runtime</span><span class="op">&gt;</span>,
-    <span class="ident">pool</span>: <span class="ident">Pool</span><span class="op">&lt;</span><span class="ident">ConnectionManager</span><span class="op">&gt;</span>,
-    <span class="ident">origin_query</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
-    <span class="ident">queries</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">CXQuery</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">names</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
-    <span class="ident">schema</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">MsSQLTypeSystem</span><span class="op">&gt;</span>,
+<span class="kw">type </span>Conn&lt;<span class="lifetime">&#39;a</span>&gt; = PooledConnection&lt;<span class="lifetime">&#39;a</span>, ConnectionManager&gt;;
+<span class="kw">pub struct </span>MsSQLSource {
+    rt: Arc&lt;Runtime&gt;,
+    pool: Pool&lt;ConnectionManager&gt;,
+    origin_query: <span class="prelude-ty">Option</span>&lt;String&gt;,
+    queries: Vec&lt;CXQuery&lt;String&gt;&gt;,
+    names: Vec&lt;String&gt;,
+    schema: Vec&lt;MsSQLTypeSystem&gt;,
 }
 
-<span class="attribute">#[<span class="ident">throws</span>(<span class="ident">MsSQLSourceError</span>)]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">mssql_config</span>(<span class="ident">url</span>: <span class="kw-2">&amp;</span><span class="ident">Url</span>) -&gt; <span class="ident">Config</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">config</span> <span class="op">=</span> <span class="ident">Config::new</span>();
+<span class="attribute">#[throws(MsSQLSourceError)]
+</span><span class="kw">pub fn </span>mssql_config(url: <span class="kw-2">&amp;</span>Url) -&gt; Config {
+    <span class="kw">let </span><span class="kw-2">mut </span>config = Config::new();
 
-    <span class="kw">let</span> <span class="ident">host</span> <span class="op">=</span> <span class="ident">decode</span>(<span class="ident">url</span>.<span class="ident">host_str</span>().<span class="ident">unwrap_or</span>(<span class="string">&quot;localhost&quot;</span>))<span class="question-mark">?</span>.<span class="ident">into_owned</span>();
-    <span class="kw">let</span> <span class="ident">hosts</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">host</span>.<span class="ident">split</span>(<span class="string">&#39;\\&#39;</span>).<span class="ident">collect</span>();
-    <span class="kw">match</span> <span class="ident">hosts</span>.<span class="ident">len</span>() {
-        <span class="number">1</span> =&gt; <span class="ident">config</span>.<span class="ident">host</span>(<span class="ident">host</span>),
-        <span class="number">2</span> =&gt; {
-            <span class="comment">// SQL Server support instance name: `server\instance:port`</span>
-            <span class="ident">config</span>.<span class="ident">host</span>(<span class="ident">hosts</span>[<span class="number">0</span>]);
-            <span class="ident">config</span>.<span class="ident">instance_name</span>(<span class="ident">hosts</span>[<span class="number">1</span>]);
+    <span class="kw">let </span>host = decode(url.host_str().unwrap_or(<span class="string">&quot;localhost&quot;</span>))<span class="question-mark">?</span>.into_owned();
+    <span class="kw">let </span>hosts: Vec&lt;<span class="kw-2">&amp;</span>str&gt; = host.split(<span class="string">&#39;\\&#39;</span>).collect();
+    <span class="kw">match </span>hosts.len() {
+        <span class="number">1 </span>=&gt; config.host(host),
+        <span class="number">2 </span>=&gt; {
+            <span class="comment">// SQL Server support instance name: `server\instance:port`
+            </span>config.host(hosts[<span class="number">0</span>]);
+            config.instance_name(hosts[<span class="number">1</span>]);
         }
-        <span class="kw">_</span> =&gt; <span class="macro">throw!</span>(<span class="macro">anyhow!</span>(<span class="string">&quot;MsSQL hostname parse error: {}&quot;</span>, <span class="ident">host</span>)),
+        <span class="kw">_ </span>=&gt; <span class="macro">throw!</span>(<span class="macro">anyhow!</span>(<span class="string">&quot;MsSQL hostname parse error: {}&quot;</span>, host)),
     }
-    <span class="ident">config</span>.<span class="ident">port</span>(<span class="ident">url</span>.<span class="ident">port</span>().<span class="ident">unwrap_or</span>(<span class="number">1433</span>));
-    <span class="comment">// remove the leading &quot;/&quot;</span>
-    <span class="ident">config</span>.<span class="ident">database</span>(<span class="kw-2">&amp;</span><span class="ident">url</span>.<span class="ident">path</span>()[<span class="number">1</span>..]);
-    <span class="comment">// Using SQL Server authentication.</span>
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unused</span>)]</span>
-    <span class="kw">let</span> <span class="ident">params</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">String</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">url</span>.<span class="ident">query_pairs</span>().<span class="ident">into_owned</span>().<span class="ident">collect</span>();
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">windows</span>)]</span>
-    <span class="kw">match</span> <span class="ident">params</span>.<span class="ident">get</span>(<span class="string">&quot;trusted_connection&quot;</span>) {
-        <span class="comment">// pefer trusted_connection if set to true</span>
-        <span class="prelude-val">Some</span>(<span class="ident">v</span>) <span class="kw">if</span> <span class="ident">v</span> <span class="op">==</span> <span class="string">&quot;true&quot;</span> =&gt; {
+    config.port(url.port().unwrap_or(<span class="number">1433</span>));
+    <span class="comment">// remove the leading &quot;/&quot;
+    </span>config.database(<span class="kw-2">&amp;</span>url.path()[<span class="number">1</span>..]);
+    <span class="comment">// Using SQL Server authentication.
+    </span><span class="attribute">#[allow(unused)]
+    </span><span class="kw">let </span>params: HashMap&lt;String, String&gt; = url.query_pairs().into_owned().collect();
+    <span class="attribute">#[cfg(windows)]
+    </span><span class="kw">match </span>params.get(<span class="string">&quot;trusted_connection&quot;</span>) {
+        <span class="comment">// pefer trusted_connection if set to true
+        </span><span class="prelude-val">Some</span>(v) <span class="kw">if </span>v == <span class="string">&quot;true&quot; </span>=&gt; {
             <span class="macro">debug!</span>(<span class="string">&quot;mssql auth through trusted connection!&quot;</span>);
-            <span class="ident">config</span>.<span class="ident">authentication</span>(<span class="ident">AuthMethod::Integrated</span>);
+            config.authentication(AuthMethod::Integrated);
         }
-        <span class="kw">_</span> =&gt; {
+        <span class="kw">_ </span>=&gt; {
             <span class="macro">debug!</span>(<span class="string">&quot;mssql auth through sqlserver authentication&quot;</span>);
-            <span class="ident">config</span>.<span class="ident">authentication</span>(<span class="ident">AuthMethod::sql_server</span>(
-                <span class="ident">decode</span>(<span class="ident">url</span>.<span class="ident">username</span>())<span class="question-mark">?</span>.<span class="ident">to_owned</span>(),
-                <span class="ident">decode</span>(<span class="ident">url</span>.<span class="ident">password</span>().<span class="ident">unwrap_or</span>(<span class="string">&quot;&quot;</span>))<span class="question-mark">?</span>.<span class="ident">to_owned</span>(),
+            config.authentication(AuthMethod::sql_server(
+                decode(url.username())<span class="question-mark">?</span>.to_owned(),
+                decode(url.password().unwrap_or(<span class="string">&quot;&quot;</span>))<span class="question-mark">?</span>.to_owned(),
             ));
         }
     };
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">windows</span>))]</span>
-    <span class="ident">config</span>.<span class="ident">authentication</span>(<span class="ident">AuthMethod::sql_server</span>(
-        <span class="ident">decode</span>(<span class="ident">url</span>.<span class="ident">username</span>())<span class="question-mark">?</span>.<span class="ident">to_owned</span>(),
-        <span class="ident">decode</span>(<span class="ident">url</span>.<span class="ident">password</span>().<span class="ident">unwrap_or</span>(<span class="string">&quot;&quot;</span>))<span class="question-mark">?</span>.<span class="ident">to_owned</span>(),
+    <span class="attribute">#[cfg(not(windows))]
+    </span>config.authentication(AuthMethod::sql_server(
+        decode(url.username())<span class="question-mark">?</span>.to_owned(),
+        decode(url.password().unwrap_or(<span class="string">&quot;&quot;</span>))<span class="question-mark">?</span>.to_owned(),
     ));
 
-    <span class="kw">match</span> <span class="ident">params</span>.<span class="ident">get</span>(<span class="string">&quot;encrypt&quot;</span>) {
-        <span class="prelude-val">Some</span>(<span class="ident">v</span>) <span class="kw">if</span> <span class="ident">v</span>.<span class="ident">to_lowercase</span>() <span class="op">==</span> <span class="string">&quot;true&quot;</span> =&gt; <span class="ident">config</span>.<span class="ident">encryption</span>(<span class="ident">EncryptionLevel::Required</span>),
-        <span class="kw">_</span> =&gt; <span class="ident">config</span>.<span class="ident">encryption</span>(<span class="ident">EncryptionLevel::NotSupported</span>),
+    <span class="kw">match </span>params.get(<span class="string">&quot;encrypt&quot;</span>) {
+        <span class="prelude-val">Some</span>(v) <span class="kw">if </span>v.to_lowercase() == <span class="string">&quot;true&quot; </span>=&gt; config.encryption(EncryptionLevel::Required),
+        <span class="kw">_ </span>=&gt; config.encryption(EncryptionLevel::NotSupported),
     };
 
-    <span class="kw">match</span> <span class="ident">params</span>.<span class="ident">get</span>(<span class="string">&quot;appname&quot;</span>) {
-        <span class="prelude-val">Some</span>(<span class="ident">appname</span>) =&gt; <span class="ident">config</span>.<span class="ident">application_name</span>(<span class="ident">decode</span>(<span class="ident">appname</span>)<span class="question-mark">?</span>.<span class="ident">to_owned</span>()),
-        <span class="kw">_</span> =&gt; {}
+    <span class="kw">match </span>params.get(<span class="string">&quot;appname&quot;</span>) {
+        <span class="prelude-val">Some</span>(appname) =&gt; config.application_name(decode(appname)<span class="question-mark">?</span>.to_owned()),
+        <span class="kw">_ </span>=&gt; {}
     };
 
-    <span class="ident">config</span>
+    config
 }
 
-<span class="kw">impl</span> <span class="ident">MsSQLSource</span> {
-    <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">MsSQLSourceError</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">rt</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Runtime</span><span class="op">&gt;</span>, <span class="ident">conn</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">nconn</span>: <span class="ident">usize</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="ident">url</span> <span class="op">=</span> <span class="ident">Url::parse</span>(<span class="ident">conn</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">config</span> <span class="op">=</span> <span class="ident">mssql_config</span>(<span class="kw-2">&amp;</span><span class="ident">url</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">manager</span> <span class="op">=</span> <span class="ident">bb8_tiberius::ConnectionManager::new</span>(<span class="ident">config</span>);
-        <span class="kw">let</span> <span class="ident">pool</span> <span class="op">=</span> <span class="ident">rt</span>.<span class="ident">block_on</span>(<span class="ident">Pool::builder</span>().<span class="ident">max_size</span>(<span class="ident">nconn</span> <span class="kw">as</span> <span class="ident">u32</span>).<span class="ident">build</span>(<span class="ident">manager</span>))<span class="question-mark">?</span>;
+<span class="kw">impl </span>MsSQLSource {
+    <span class="attribute">#[throws(MsSQLSourceError)]
+    </span><span class="kw">pub fn </span>new(rt: Arc&lt;Runtime&gt;, conn: <span class="kw-2">&amp;</span>str, nconn: usize) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>url = Url::parse(conn)<span class="question-mark">?</span>;
+        <span class="kw">let </span>config = mssql_config(<span class="kw-2">&amp;</span>url)<span class="question-mark">?</span>;
+        <span class="kw">let </span>manager = bb8_tiberius::ConnectionManager::new(config);
+        <span class="kw">let </span>pool = rt.block_on(Pool::builder().max_size(nconn <span class="kw">as </span>u32).build(manager))<span class="question-mark">?</span>;
 
-        <span class="self">Self</span> {
-            <span class="ident">rt</span>,
-            <span class="ident">pool</span>,
-            <span class="ident">origin_query</span>: <span class="prelude-val">None</span>,
-            <span class="ident">queries</span>: <span class="macro">vec!</span>[],
-            <span class="ident">names</span>: <span class="macro">vec!</span>[],
-            <span class="ident">schema</span>: <span class="macro">vec!</span>[],
+        <span class="self">Self </span>{
+            rt,
+            pool,
+            origin_query: <span class="prelude-val">None</span>,
+            queries: <span class="macro">vec!</span>[],
+            names: <span class="macro">vec!</span>[],
+            schema: <span class="macro">vec!</span>[],
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Source</span> <span class="kw">for</span> <span class="ident">MsSQLSource</span>
-<span class="kw">where</span>
-    <span class="ident">MsSQLSourcePartition</span>: <span class="ident">SourcePartition</span><span class="op">&lt;</span><span class="ident">TypeSystem</span> <span class="op">=</span> <span class="ident">MsSQLTypeSystem</span>, <span class="ident">Error</span> <span class="op">=</span> <span class="ident">MsSQLSourceError</span><span class="op">&gt;</span>,
+<span class="kw">impl </span>Source <span class="kw">for </span>MsSQLSource
+<span class="kw">where
+    </span>MsSQLSourcePartition: SourcePartition&lt;TypeSystem = MsSQLTypeSystem, Error = MsSQLSourceError&gt;,
 {
-    <span class="kw">const</span> <span class="ident">DATA_ORDERS</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">DataOrder</span>] <span class="op">=</span> <span class="kw-2">&amp;</span>[<span class="ident">DataOrder::RowMajor</span>];
-    <span class="kw">type</span> <span class="ident">Partition</span> <span class="op">=</span> <span class="ident">MsSQLSourcePartition</span>;
-    <span class="kw">type</span> <span class="ident">TypeSystem</span> <span class="op">=</span> <span class="ident">MsSQLTypeSystem</span>;
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">MsSQLSourceError</span>;
+    <span class="kw">const </span>DATA_ORDERS: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[DataOrder] = <span class="kw-2">&amp;</span>[DataOrder::RowMajor];
+    <span class="kw">type </span>Partition = MsSQLSourcePartition;
+    <span class="kw">type </span>TypeSystem = MsSQLTypeSystem;
+    <span class="kw">type </span>Error = MsSQLSourceError;
 
-    <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">MsSQLSourceError</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">set_data_order</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">data_order</span>: <span class="ident">DataOrder</span>) {
-        <span class="kw">if</span> <span class="op">!</span><span class="macro">matches!</span>(<span class="ident">data_order</span>, <span class="ident">DataOrder::RowMajor</span>) {
-            <span class="macro">throw!</span>(<span class="ident">ConnectorXError::UnsupportedDataOrder</span>(<span class="ident">data_order</span>));
+    <span class="attribute">#[throws(MsSQLSourceError)]
+    </span><span class="kw">fn </span>set_data_order(<span class="kw-2">&amp;mut </span><span class="self">self</span>, data_order: DataOrder) {
+        <span class="kw">if </span>!<span class="macro">matches!</span>(data_order, DataOrder::RowMajor) {
+            <span class="macro">throw!</span>(ConnectorXError::UnsupportedDataOrder(data_order));
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">set_queries</span><span class="op">&lt;</span><span class="ident">Q</span>: <span class="ident">ToString</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">queries</span>: <span class="kw-2">&amp;</span>[<span class="ident">CXQuery</span><span class="op">&lt;</span><span class="ident">Q</span><span class="op">&gt;</span>]) {
-        <span class="self">self</span>.<span class="ident">queries</span> <span class="op">=</span> <span class="ident">queries</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">q</span><span class="op">|</span> <span class="ident">q</span>.<span class="ident">map</span>(<span class="ident">Q::to_string</span>)).<span class="ident">collect</span>();
+    <span class="kw">fn </span>set_queries&lt;Q: ToString&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, queries: <span class="kw-2">&amp;</span>[CXQuery&lt;Q&gt;]) {
+        <span class="self">self</span>.queries = queries.iter().map(|q| q.map(Q::to_string)).collect();
     }
 
-    <span class="kw">fn</span> <span class="ident">set_origin_query</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">query</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>) {
-        <span class="self">self</span>.<span class="ident">origin_query</span> <span class="op">=</span> <span class="ident">query</span>;
+    <span class="kw">fn </span>set_origin_query(<span class="kw-2">&amp;mut </span><span class="self">self</span>, query: <span class="prelude-ty">Option</span>&lt;String&gt;) {
+        <span class="self">self</span>.origin_query = query;
     }
 
-    <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">MsSQLSourceError</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">fetch_metadata</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="macro">assert!</span>(<span class="op">!</span><span class="self">self</span>.<span class="ident">queries</span>.<span class="ident">is_empty</span>());
+    <span class="attribute">#[throws(MsSQLSourceError)]
+    </span><span class="kw">fn </span>fetch_metadata(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="macro">assert!</span>(!<span class="self">self</span>.queries.is_empty());
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">conn</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">rt</span>.<span class="ident">block_on</span>(<span class="self">self</span>.<span class="ident">pool</span>.<span class="ident">get</span>())<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">first_query</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">queries</span>[<span class="number">0</span>];
-        <span class="kw">let</span> (<span class="ident">names</span>, <span class="ident">types</span>) <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">rt</span>.<span class="ident">block_on</span>(<span class="ident">conn</span>.<span class="ident">query</span>(<span class="ident">first_query</span>.<span class="ident">as_str</span>(), <span class="kw-2">&amp;</span>[])) {
-            <span class="prelude-val">Ok</span>(<span class="ident">stream</span>) =&gt; {
-                <span class="kw">let</span> <span class="ident">columns</span> <span class="op">=</span> <span class="ident">stream</span>.<span class="ident">columns</span>().<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> {
-                    <span class="macro">anyhow!</span>(<span class="string">&quot;MsSQL failed to get the columns of query: {}&quot;</span>, <span class="ident">first_query</span>)
+        <span class="kw">let </span><span class="kw-2">mut </span>conn = <span class="self">self</span>.rt.block_on(<span class="self">self</span>.pool.get())<span class="question-mark">?</span>;
+        <span class="kw">let </span>first_query = <span class="kw-2">&amp;</span><span class="self">self</span>.queries[<span class="number">0</span>];
+        <span class="kw">let </span>(names, types) = <span class="kw">match </span><span class="self">self</span>.rt.block_on(conn.query(first_query.as_str(), <span class="kw-2">&amp;</span>[])) {
+            <span class="prelude-val">Ok</span>(stream) =&gt; {
+                <span class="kw">let </span>columns = stream.columns().ok_or_else(|| {
+                    <span class="macro">anyhow!</span>(<span class="string">&quot;MsSQL failed to get the columns of query: {}&quot;</span>, first_query)
                 })<span class="question-mark">?</span>;
-                <span class="ident">columns</span>
-                    .<span class="ident">iter</span>()
-                    .<span class="ident">map</span>(<span class="op">|</span><span class="ident">col</span><span class="op">|</span> {
+                columns
+                    .iter()
+                    .map(|col| {
                         (
-                            <span class="ident">col</span>.<span class="ident">name</span>().<span class="ident">to_string</span>(),
-                            <span class="ident">MsSQLTypeSystem::from</span>(<span class="kw-2">&amp;</span><span class="ident">col</span>.<span class="ident">column_type</span>()),
+                            col.name().to_string(),
+                            MsSQLTypeSystem::from(<span class="kw-2">&amp;</span>col.column_type()),
                         )
                     })
-                    .<span class="ident">unzip</span>()
+                    .unzip()
             }
-            <span class="prelude-val">Err</span>(<span class="ident">e</span>) =&gt; {
-                <span class="comment">// tried the last query but still get an error</span>
-                <span class="macro">debug!</span>(
+            <span class="prelude-val">Err</span>(e) =&gt; {
+                <span class="comment">// tried the last query but still get an error
+                </span><span class="macro">debug!</span>(
                     <span class="string">&quot;cannot get metadata for &#39;{}&#39;, try next query: {}&quot;</span>,
-                    <span class="ident">first_query</span>, <span class="ident">e</span>
+                    first_query, e
                 );
-                <span class="macro">throw!</span>(<span class="ident">e</span>);
+                <span class="macro">throw!</span>(e);
             }
         };
 
-        <span class="self">self</span>.<span class="ident">names</span> <span class="op">=</span> <span class="ident">names</span>;
-        <span class="self">self</span>.<span class="ident">schema</span> <span class="op">=</span> <span class="ident">types</span>;
+        <span class="self">self</span>.names = names;
+        <span class="self">self</span>.schema = types;
     }
 
-    <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">MsSQLSourceError</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">result_rows</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">origin_query</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">q</span>) =&gt; {
-                <span class="kw">let</span> <span class="ident">cxq</span> <span class="op">=</span> <span class="ident">CXQuery::Naked</span>(<span class="ident">q</span>.<span class="ident">clone</span>());
-                <span class="kw">let</span> <span class="ident">cquery</span> <span class="op">=</span> <span class="ident">count_query</span>(<span class="kw-2">&amp;</span><span class="ident">cxq</span>, <span class="kw-2">&amp;</span><span class="ident">MsSqlDialect</span> {})<span class="question-mark">?</span>;
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">conn</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">rt</span>.<span class="ident">block_on</span>(<span class="self">self</span>.<span class="ident">pool</span>.<span class="ident">get</span>())<span class="question-mark">?</span>;
+    <span class="attribute">#[throws(MsSQLSourceError)]
+    </span><span class="kw">fn </span>result_rows(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt; {
+        <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.origin_query {
+            <span class="prelude-val">Some</span>(q) =&gt; {
+                <span class="kw">let </span>cxq = CXQuery::Naked(q.clone());
+                <span class="kw">let </span>cquery = count_query(<span class="kw-2">&amp;</span>cxq, <span class="kw-2">&amp;</span>MsSqlDialect {})<span class="question-mark">?</span>;
+                <span class="kw">let </span><span class="kw-2">mut </span>conn = <span class="self">self</span>.rt.block_on(<span class="self">self</span>.pool.get())<span class="question-mark">?</span>;
 
-                <span class="kw">let</span> <span class="ident">stream</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">rt</span>.<span class="ident">block_on</span>(<span class="ident">conn</span>.<span class="ident">query</span>(<span class="ident">cquery</span>.<span class="ident">as_str</span>(), <span class="kw-2">&amp;</span>[]))<span class="question-mark">?</span>;
-                <span class="kw">let</span> <span class="ident">row</span> <span class="op">=</span> <span class="self">self</span>
-                    .<span class="ident">rt</span>
-                    .<span class="ident">block_on</span>(<span class="ident">stream</span>.<span class="ident">into_row</span>())<span class="question-mark">?</span>
-                    .<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="macro">anyhow!</span>(<span class="string">&quot;MsSQL failed to get the count of query: {}&quot;</span>, <span class="ident">q</span>))<span class="question-mark">?</span>;
+                <span class="kw">let </span>stream = <span class="self">self</span>.rt.block_on(conn.query(cquery.as_str(), <span class="kw-2">&amp;</span>[]))<span class="question-mark">?</span>;
+                <span class="kw">let </span>row = <span class="self">self
+                    </span>.rt
+                    .block_on(stream.into_row())<span class="question-mark">?
+                    </span>.ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">&quot;MsSQL failed to get the count of query: {}&quot;</span>, q))<span class="question-mark">?</span>;
 
-                <span class="kw">let</span> <span class="ident">row</span>: <span class="ident">i32</span> <span class="op">=</span> <span class="ident">row</span>.<span class="ident">get</span>(<span class="number">0</span>).<span class="ident">ok_or</span>(<span class="ident">MsSQLSourceError::GetNRowsFailed</span>)<span class="question-mark">?</span>; <span class="comment">// the count in mssql is i32</span>
-                <span class="prelude-val">Some</span>(<span class="ident">row</span> <span class="kw">as</span> <span class="ident">usize</span>)
+                <span class="kw">let </span>row: i32 = row.get(<span class="number">0</span>).ok_or(MsSQLSourceError::GetNRowsFailed)<span class="question-mark">?</span>; <span class="comment">// the count in mssql is i32
+                </span><span class="prelude-val">Some</span>(row <span class="kw">as </span>usize)
             }
-            <span class="prelude-val">None</span> =&gt; <span class="prelude-val">None</span>,
+            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None</span>,
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">names</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">names</span>.<span class="ident">clone</span>()
+    <span class="kw">fn </span>names(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Vec&lt;String&gt; {
+        <span class="self">self</span>.names.clone()
     }
 
-    <span class="kw">fn</span> <span class="ident">schema</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::TypeSystem</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">schema</span>.<span class="ident">clone</span>()
+    <span class="kw">fn </span>schema(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Vec&lt;<span class="self">Self</span>::TypeSystem&gt; {
+        <span class="self">self</span>.schema.clone()
     }
 
-    <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">MsSQLSourceError</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">partition</span>(<span class="self">self</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Partition</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ret</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-        <span class="kw">for</span> <span class="ident">query</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">queries</span> {
-            <span class="ident">ret</span>.<span class="ident">push</span>(<span class="ident">MsSQLSourcePartition::new</span>(
-                <span class="self">self</span>.<span class="ident">pool</span>.<span class="ident">clone</span>(),
-                <span class="self">self</span>.<span class="ident">rt</span>.<span class="ident">clone</span>(),
-                <span class="kw-2">&amp;</span><span class="ident">query</span>,
-                <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">schema</span>,
+    <span class="attribute">#[throws(MsSQLSourceError)]
+    </span><span class="kw">fn </span>partition(<span class="self">self</span>) -&gt; Vec&lt;<span class="self">Self</span>::Partition&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>ret = <span class="macro">vec!</span>[];
+        <span class="kw">for </span>query <span class="kw">in </span><span class="self">self</span>.queries {
+            ret.push(MsSQLSourcePartition::new(
+                <span class="self">self</span>.pool.clone(),
+                <span class="self">self</span>.rt.clone(),
+                <span class="kw-2">&amp;</span>query,
+                <span class="kw-2">&amp;</span><span class="self">self</span>.schema,
             ));
         }
-        <span class="ident">ret</span>
+        ret
     }
 }
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MsSQLSourcePartition</span> {
-    <span class="ident">pool</span>: <span class="ident">Pool</span><span class="op">&lt;</span><span class="ident">ConnectionManager</span><span class="op">&gt;</span>,
-    <span class="ident">rt</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Runtime</span><span class="op">&gt;</span>,
-    <span class="ident">query</span>: <span class="ident">CXQuery</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
-    <span class="ident">schema</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">MsSQLTypeSystem</span><span class="op">&gt;</span>,
-    <span class="ident">nrows</span>: <span class="ident">usize</span>,
-    <span class="ident">ncols</span>: <span class="ident">usize</span>,
+<span class="kw">pub struct </span>MsSQLSourcePartition {
+    pool: Pool&lt;ConnectionManager&gt;,
+    rt: Arc&lt;Runtime&gt;,
+    query: CXQuery&lt;String&gt;,
+    schema: Vec&lt;MsSQLTypeSystem&gt;,
+    nrows: usize,
+    ncols: usize,
 }
 
-<span class="kw">impl</span> <span class="ident">MsSQLSourcePartition</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(
-        <span class="ident">pool</span>: <span class="ident">Pool</span><span class="op">&lt;</span><span class="ident">ConnectionManager</span><span class="op">&gt;</span>,
-        <span class="ident">handle</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Runtime</span><span class="op">&gt;</span>,
-        <span class="ident">query</span>: <span class="kw-2">&amp;</span><span class="ident">CXQuery</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
-        <span class="ident">schema</span>: <span class="kw-2">&amp;</span>[<span class="ident">MsSQLTypeSystem</span>],
-    ) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">rt</span>: <span class="ident">handle</span>,
-            <span class="ident">pool</span>,
-            <span class="ident">query</span>: <span class="ident">query</span>.<span class="ident">clone</span>(),
-            <span class="ident">schema</span>: <span class="ident">schema</span>.<span class="ident">to_vec</span>(),
-            <span class="ident">nrows</span>: <span class="number">0</span>,
-            <span class="ident">ncols</span>: <span class="ident">schema</span>.<span class="ident">len</span>(),
+<span class="kw">impl </span>MsSQLSourcePartition {
+    <span class="kw">pub fn </span>new(
+        pool: Pool&lt;ConnectionManager&gt;,
+        handle: Arc&lt;Runtime&gt;,
+        query: <span class="kw-2">&amp;</span>CXQuery&lt;String&gt;,
+        schema: <span class="kw-2">&amp;</span>[MsSQLTypeSystem],
+    ) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            rt: handle,
+            pool,
+            query: query.clone(),
+            schema: schema.to_vec(),
+            nrows: <span class="number">0</span>,
+            ncols: schema.len(),
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">SourcePartition</span> <span class="kw">for</span> <span class="ident">MsSQLSourcePartition</span> {
-    <span class="kw">type</span> <span class="ident">TypeSystem</span> <span class="op">=</span> <span class="ident">MsSQLTypeSystem</span>;
-    <span class="kw">type</span> <span class="ident">Parser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">MsSQLSourceParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>;
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">MsSQLSourceError</span>;
+<span class="kw">impl </span>SourcePartition <span class="kw">for </span>MsSQLSourcePartition {
+    <span class="kw">type </span>TypeSystem = MsSQLTypeSystem;
+    <span class="kw">type </span>Parser&lt;<span class="lifetime">&#39;a</span>&gt; = MsSQLSourceParser&lt;<span class="lifetime">&#39;a</span>&gt;;
+    <span class="kw">type </span>Error = MsSQLSourceError;
 
-    <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">MsSQLSourceError</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">result_rows</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="kw">let</span> <span class="ident">cquery</span> <span class="op">=</span> <span class="ident">count_query</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">query</span>, <span class="kw-2">&amp;</span><span class="ident">MsSqlDialect</span> {})<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">conn</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">rt</span>.<span class="ident">block_on</span>(<span class="self">self</span>.<span class="ident">pool</span>.<span class="ident">get</span>())<span class="question-mark">?</span>;
+    <span class="attribute">#[throws(MsSQLSourceError)]
+    </span><span class="kw">fn </span>result_rows(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="kw">let </span>cquery = count_query(<span class="kw-2">&amp;</span><span class="self">self</span>.query, <span class="kw-2">&amp;</span>MsSqlDialect {})<span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>conn = <span class="self">self</span>.rt.block_on(<span class="self">self</span>.pool.get())<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">stream</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">rt</span>.<span class="ident">block_on</span>(<span class="ident">conn</span>.<span class="ident">query</span>(<span class="ident">cquery</span>.<span class="ident">as_str</span>(), <span class="kw-2">&amp;</span>[]))<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">row</span> <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">rt</span>
-            .<span class="ident">block_on</span>(<span class="ident">stream</span>.<span class="ident">into_row</span>())<span class="question-mark">?</span>
-            .<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="macro">anyhow!</span>(<span class="string">&quot;MsSQL failed to get the count of query: {}&quot;</span>, <span class="self">self</span>.<span class="ident">query</span>))<span class="question-mark">?</span>;
+        <span class="kw">let </span>stream = <span class="self">self</span>.rt.block_on(conn.query(cquery.as_str(), <span class="kw-2">&amp;</span>[]))<span class="question-mark">?</span>;
+        <span class="kw">let </span>row = <span class="self">self
+            </span>.rt
+            .block_on(stream.into_row())<span class="question-mark">?
+            </span>.ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">&quot;MsSQL failed to get the count of query: {}&quot;</span>, <span class="self">self</span>.query))<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">row</span>: <span class="ident">i32</span> <span class="op">=</span> <span class="ident">row</span>.<span class="ident">get</span>(<span class="number">0</span>).<span class="ident">ok_or</span>(<span class="ident">MsSQLSourceError::GetNRowsFailed</span>)<span class="question-mark">?</span>; <span class="comment">// the count in mssql is i32</span>
-        <span class="self">self</span>.<span class="ident">nrows</span> <span class="op">=</span> <span class="ident">row</span> <span class="kw">as</span> <span class="ident">usize</span>;
+        <span class="kw">let </span>row: i32 = row.get(<span class="number">0</span>).ok_or(MsSQLSourceError::GetNRowsFailed)<span class="question-mark">?</span>; <span class="comment">// the count in mssql is i32
+        </span><span class="self">self</span>.nrows = row <span class="kw">as </span>usize;
     }
 
-    <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">MsSQLSourceError</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">parser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="ident"><span class="self">Self</span>::Parser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">conn</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">rt</span>.<span class="ident">block_on</span>(<span class="self">self</span>.<span class="ident">pool</span>.<span class="ident">get</span>())<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">rows</span>: <span class="ident">OwningHandle</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Conn</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">DummyBox</span><span class="op">&lt;</span><span class="ident">QueryResult</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span>
-            <span class="ident">OwningHandle::new_with_fn</span>(<span class="ident">Box::new</span>(<span class="ident">conn</span>), <span class="op">|</span><span class="ident">conn</span>: <span class="kw-2">*const</span> <span class="ident">Conn</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">|</span> <span class="kw">unsafe</span> {
-                <span class="kw">let</span> <span class="ident">conn</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="kw-2">*</span>(<span class="ident">conn</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">Conn</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>);
+    <span class="attribute">#[throws(MsSQLSourceError)]
+    </span><span class="kw">fn </span>parser&lt;<span class="lifetime">&#39;a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="self">Self</span>::Parser&lt;<span class="lifetime">&#39;a</span>&gt; {
+        <span class="kw">let </span>conn = <span class="self">self</span>.rt.block_on(<span class="self">self</span>.pool.get())<span class="question-mark">?</span>;
+        <span class="kw">let </span>rows: OwningHandle&lt;Box&lt;Conn&lt;<span class="lifetime">&#39;a</span>&gt;&gt;, DummyBox&lt;QueryResult&lt;<span class="lifetime">&#39;a</span>&gt;&gt;&gt; =
+            OwningHandle::new_with_fn(Box::new(conn), |conn: <span class="kw-2">*const </span>Conn&lt;<span class="lifetime">&#39;a</span>&gt;| <span class="kw">unsafe </span>{
+                <span class="kw">let </span>conn = <span class="kw-2">&amp;mut *</span>(conn <span class="kw">as </span><span class="kw-2">*mut </span>Conn&lt;<span class="lifetime">&#39;a</span>&gt;);
 
-                <span class="ident">DummyBox</span>(
-                    <span class="self">self</span>.<span class="ident">rt</span>
-                        .<span class="ident">block_on</span>(<span class="ident">conn</span>.<span class="ident">query</span>(<span class="self">self</span>.<span class="ident">query</span>.<span class="ident">as_str</span>(), <span class="kw-2">&amp;</span>[]))
-                        .<span class="ident">unwrap</span>(),
+                DummyBox(
+                    <span class="self">self</span>.rt
+                        .block_on(conn.query(<span class="self">self</span>.query.as_str(), <span class="kw-2">&amp;</span>[]))
+                        .unwrap(),
                 )
             });
 
-        <span class="ident">MsSQLSourceParser::new</span>(<span class="self">self</span>.<span class="ident">rt</span>.<span class="ident">handle</span>(), <span class="ident">rows</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">schema</span>)
+        MsSQLSourceParser::new(<span class="self">self</span>.rt.handle(), rows, <span class="kw-2">&amp;</span><span class="self">self</span>.schema)
     }
 
-    <span class="kw">fn</span> <span class="ident">nrows</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
-        <span class="self">self</span>.<span class="ident">nrows</span>
+    <span class="kw">fn </span>nrows(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+        <span class="self">self</span>.nrows
     }
 
-    <span class="kw">fn</span> <span class="ident">ncols</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
-        <span class="self">self</span>.<span class="ident">ncols</span>
+    <span class="kw">fn </span>ncols(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+        <span class="self">self</span>.ncols
     }
 }
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MsSQLSourceParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="ident">rt</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Handle</span>,
-    <span class="ident">iter</span>: <span class="ident">OwningHandle</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Conn</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">DummyBox</span><span class="op">&lt;</span><span class="ident">QueryResult</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">rowbuf</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Row</span><span class="op">&gt;</span>,
-    <span class="ident">ncols</span>: <span class="ident">usize</span>,
-    <span class="ident">current_col</span>: <span class="ident">usize</span>,
-    <span class="ident">current_row</span>: <span class="ident">usize</span>,
+<span class="kw">pub struct </span>MsSQLSourceParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+    rt: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Handle,
+    iter: OwningHandle&lt;Box&lt;Conn&lt;<span class="lifetime">&#39;a</span>&gt;&gt;, DummyBox&lt;QueryResult&lt;<span class="lifetime">&#39;a</span>&gt;&gt;&gt;,
+    rowbuf: Vec&lt;Row&gt;,
+    ncols: usize,
+    current_col: usize,
+    current_row: usize,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">MsSQLSourceParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">new</span>(
-        <span class="ident">rt</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Handle</span>,
-        <span class="ident">iter</span>: <span class="ident">OwningHandle</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Conn</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">DummyBox</span><span class="op">&lt;</span><span class="ident">QueryResult</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-        <span class="ident">schema</span>: <span class="kw-2">&amp;</span>[<span class="ident">MsSQLTypeSystem</span>],
-    ) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">rt</span>,
-            <span class="ident">iter</span>,
-            <span class="ident">rowbuf</span>: <span class="ident">Vec::with_capacity</span>(<span class="ident">DB_BUFFER_SIZE</span>),
-            <span class="ident">ncols</span>: <span class="ident">schema</span>.<span class="ident">len</span>(),
-            <span class="ident">current_row</span>: <span class="number">0</span>,
-            <span class="ident">current_col</span>: <span class="number">0</span>,
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; MsSQLSourceParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="kw">fn </span>new(
+        rt: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Handle,
+        iter: OwningHandle&lt;Box&lt;Conn&lt;<span class="lifetime">&#39;a</span>&gt;&gt;, DummyBox&lt;QueryResult&lt;<span class="lifetime">&#39;a</span>&gt;&gt;&gt;,
+        schema: <span class="kw-2">&amp;</span>[MsSQLTypeSystem],
+    ) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            rt,
+            iter,
+            rowbuf: Vec::with_capacity(DB_BUFFER_SIZE),
+            ncols: schema.len(),
+            current_row: <span class="number">0</span>,
+            current_col: <span class="number">0</span>,
         }
     }
 
-    <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">MsSQLSourceError</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">next_loc</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; (<span class="ident">usize</span>, <span class="ident">usize</span>) {
-        <span class="kw">let</span> <span class="ident">ret</span> <span class="op">=</span> (<span class="self">self</span>.<span class="ident">current_row</span>, <span class="self">self</span>.<span class="ident">current_col</span>);
-        <span class="self">self</span>.<span class="ident">current_row</span> <span class="op">+</span><span class="op">=</span> (<span class="self">self</span>.<span class="ident">current_col</span> <span class="op">+</span> <span class="number">1</span>) <span class="op">/</span> <span class="self">self</span>.<span class="ident">ncols</span>;
-        <span class="self">self</span>.<span class="ident">current_col</span> <span class="op">=</span> (<span class="self">self</span>.<span class="ident">current_col</span> <span class="op">+</span> <span class="number">1</span>) <span class="op">%</span> <span class="self">self</span>.<span class="ident">ncols</span>;
-        <span class="ident">ret</span>
+    <span class="attribute">#[throws(MsSQLSourceError)]
+    </span><span class="kw">fn </span>next_loc(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; (usize, usize) {
+        <span class="kw">let </span>ret = (<span class="self">self</span>.current_row, <span class="self">self</span>.current_col);
+        <span class="self">self</span>.current_row += (<span class="self">self</span>.current_col + <span class="number">1</span>) / <span class="self">self</span>.ncols;
+        <span class="self">self</span>.current_col = (<span class="self">self</span>.current_col + <span class="number">1</span>) % <span class="self">self</span>.ncols;
+        ret
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">PartitionParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">MsSQLSourceParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">TypeSystem</span> <span class="op">=</span> <span class="ident">MsSQLTypeSystem</span>;
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">MsSQLSourceError</span>;
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; PartitionParser&lt;<span class="lifetime">&#39;a</span>&gt; <span class="kw">for </span>MsSQLSourceParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="kw">type </span>TypeSystem = MsSQLTypeSystem;
+    <span class="kw">type </span>Error = MsSQLSourceError;
 
-    <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">MsSQLSourceError</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">fetch_next</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; (<span class="ident">usize</span>, <span class="ident">bool</span>) {
-        <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">rowbuf</span>.<span class="ident">is_empty</span>() {
-            <span class="self">self</span>.<span class="ident">rowbuf</span>.<span class="ident">drain</span>(..);
+    <span class="attribute">#[throws(MsSQLSourceError)]
+    </span><span class="kw">fn </span>fetch_next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; (usize, bool) {
+        <span class="kw">if </span>!<span class="self">self</span>.rowbuf.is_empty() {
+            <span class="self">self</span>.rowbuf.drain(..);
         }
 
-        <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">DB_BUFFER_SIZE</span> {
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">item</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">rt</span>.<span class="ident">block_on</span>(<span class="self">self</span>.<span class="ident">iter</span>.<span class="ident">next</span>()) {
-                <span class="self">self</span>.<span class="ident">rowbuf</span>.<span class="ident">push</span>(<span class="ident">item</span><span class="question-mark">?</span>);
-            } <span class="kw">else</span> {
+        <span class="kw">for _ in </span><span class="number">0</span>..DB_BUFFER_SIZE {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(item) = <span class="self">self</span>.rt.block_on(<span class="self">self</span>.iter.next()) {
+                <span class="self">self</span>.rowbuf.push(item<span class="question-mark">?</span>);
+            } <span class="kw">else </span>{
                 <span class="kw">break</span>;
             }
         }
-        <span class="self">self</span>.<span class="ident">current_row</span> <span class="op">=</span> <span class="number">0</span>;
-        <span class="self">self</span>.<span class="ident">current_col</span> <span class="op">=</span> <span class="number">0</span>;
-        (<span class="self">self</span>.<span class="ident">rowbuf</span>.<span class="ident">len</span>(), <span class="self">self</span>.<span class="ident">rowbuf</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="ident">DB_BUFFER_SIZE</span>)
+        <span class="self">self</span>.current_row = <span class="number">0</span>;
+        <span class="self">self</span>.current_col = <span class="number">0</span>;
+        (<span class="self">self</span>.rowbuf.len(), <span class="self">self</span>.rowbuf.len() &lt; DB_BUFFER_SIZE)
     }
 }
 
-<span class="macro">macro_rules!</span> <span class="ident">impl_produce</span> {
-    ($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>: <span class="ident">ty</span>,)<span class="op">+</span>) =&gt; {
+<span class="macro">macro_rules! </span>impl_produce {
+    ($(<span class="macro-nonterminal">$t</span>: ty,)+) =&gt; {
         $(
-            <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">MsSQLSourceParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-                <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">MsSQLSourceError</span>;
+            <span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, <span class="macro-nonterminal">$t</span>&gt; <span class="kw">for </span>MsSQLSourceParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+                <span class="kw">type </span>Error = MsSQLSourceError;
 
-                <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">MsSQLSourceError</span>)]</span>
-                <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;r</span> <span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span> {
-                    <span class="kw">let</span> (<span class="ident">ridx</span>, <span class="ident">cidx</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">next_loc</span>()<span class="question-mark">?</span>;
-                    <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">rowbuf</span>[<span class="ident">ridx</span>].<span class="ident">get</span>(<span class="ident">cidx</span>).<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="macro">anyhow!</span>(<span class="string">&quot;MsSQL get None at position: ({}, {})&quot;</span>, <span class="ident">ridx</span>, <span class="ident">cidx</span>))<span class="question-mark">?</span>;
-                    <span class="ident">res</span>
+                <span class="attribute">#[throws(MsSQLSourceError)]
+                </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="macro-nonterminal">$t </span>{
+                    <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
+                    <span class="kw">let </span>res = <span class="self">self</span>.rowbuf[ridx].get(cidx).ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">&quot;MsSQL get None at position: ({}, {})&quot;</span>, ridx, cidx))<span class="question-mark">?</span>;
+                    res
                 }
             }
 
-            <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">MsSQLSourceParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-                <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">MsSQLSourceError</span>;
+            <span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span>&lt;<span class="macro-nonterminal">$t</span>&gt;&gt; <span class="kw">for </span>MsSQLSourceParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+                <span class="kw">type </span>Error = MsSQLSourceError;
 
-                <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">MsSQLSourceError</span>)]</span>
-                <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;r</span> <span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span> {
-                    <span class="kw">let</span> (<span class="ident">ridx</span>, <span class="ident">cidx</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">next_loc</span>()<span class="question-mark">?</span>;
-                    <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">rowbuf</span>[<span class="ident">ridx</span>].<span class="ident">get</span>(<span class="ident">cidx</span>);
-                    <span class="ident">res</span>
+                <span class="attribute">#[throws(MsSQLSourceError)]
+                </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="macro-nonterminal">$t</span>&gt; {
+                    <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
+                    <span class="kw">let </span>res = <span class="self">self</span>.rowbuf[ridx].get(cidx);
+                    res
                 }
             }
-        )<span class="op">+</span>
+        )+
     };
 }
 
 <span class="macro">impl_produce!</span>(
-    <span class="ident">u8</span>,
-    <span class="ident">i16</span>,
-    <span class="ident">i32</span>,
-    <span class="ident">i64</span>,
-    <span class="ident">IntN</span>,
-    <span class="ident">f32</span>,
-    <span class="ident">f64</span>,
-    <span class="ident">FloatN</span>,
-    <span class="ident">bool</span>,
-    <span class="kw-2">&amp;</span><span class="lifetime">&#39;r</span> <span class="ident">str</span>,
-    <span class="kw-2">&amp;</span><span class="lifetime">&#39;r</span> [<span class="ident">u8</span>],
-    <span class="ident">Uuid</span>,
-    <span class="ident">Decimal</span>,
-    <span class="ident">NaiveDateTime</span>,
-    <span class="ident">NaiveDate</span>,
-    <span class="ident">NaiveTime</span>,
-    <span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span>,
+    u8,
+    i16,
+    i32,
+    i64,
+    IntN,
+    f32,
+    f64,
+    FloatN,
+    bool,
+    <span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span>str,
+    <span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span>[u8],
+    Uuid,
+    Decimal,
+    NaiveDateTime,
+    NaiveDate,
+    NaiveTime,
+    DateTime&lt;Utc&gt;,
 );
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="connectorx" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.62.0-nightly (878c7833f 2022-04-16)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="connectorx" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (750bd1a7f 2022-09-14)" ></div></body></html>

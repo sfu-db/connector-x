@@ -1,9 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `connectorx/src/get_arrow2.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>get_arrow2.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script src="../../crates.js"></script><script defer src="../../main.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script>
-    <noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../connectorx/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../connectorx/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../connectorx/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><div class="theme-picker hidden"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="22" height="22" alt="Pick another theme!" src="../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `connectorx/src/get_arrow2.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>get_arrow2.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../connectorx/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../connectorx/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../connectorx/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -204,207 +199,206 @@
 <span id="199">199</span>
 <span id="200">200</span>
 <span id="201">201</span>
-</pre><pre class="rust"><code><span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;src_mysql&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::sources::mysql</span>::{<span class="ident">BinaryProtocol</span> <span class="kw">as</span> <span class="ident">MySQLBinaryProtocol</span>, <span class="ident">TextProtocol</span>};
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;src_postgres&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::sources::postgres</span>::{
-    <span class="ident">rewrite_tls_args</span>, <span class="ident">BinaryProtocol</span> <span class="kw">as</span> <span class="ident">PgBinaryProtocol</span>, <span class="ident">CSVProtocol</span>, <span class="ident">CursorProtocol</span>,
+</pre><pre class="rust"><code><span class="attribute">#[cfg(feature = <span class="string">&quot;src_mysql&quot;</span>)]
+</span><span class="kw">use </span><span class="kw">crate</span>::sources::mysql::{BinaryProtocol <span class="kw">as </span>MySQLBinaryProtocol, TextProtocol};
+<span class="attribute">#[cfg(feature = <span class="string">&quot;src_postgres&quot;</span>)]
+</span><span class="kw">use </span><span class="kw">crate</span>::sources::postgres::{
+    rewrite_tls_args, BinaryProtocol <span class="kw">as </span>PgBinaryProtocol, CSVProtocol, CursorProtocol,
 };
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">prelude</span>::<span class="kw-2">*</span>, <span class="ident">sql::CXQuery</span>};
-<span class="kw">use</span> <span class="ident">fehler</span>::{<span class="ident">throw</span>, <span class="ident">throws</span>};
-<span class="kw">use</span> <span class="ident">log::debug</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;src_postgres&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">postgres::NoTls</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;src_postgres&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">postgres_openssl::MakeTlsConnector</span>;
-<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unused_imports</span>)]</span>
-<span class="kw">use</span> <span class="ident">std::sync::Arc</span>;
+<span class="kw">use crate</span>::{prelude::<span class="kw-2">*</span>, sql::CXQuery};
+<span class="kw">use </span>fehler::{throw, throws};
+<span class="kw">use </span>log::debug;
+<span class="attribute">#[cfg(feature = <span class="string">&quot;src_postgres&quot;</span>)]
+</span><span class="kw">use </span>postgres::NoTls;
+<span class="attribute">#[cfg(feature = <span class="string">&quot;src_postgres&quot;</span>)]
+</span><span class="kw">use </span>postgres_openssl::MakeTlsConnector;
+<span class="attribute">#[allow(unused_imports)]
+</span><span class="kw">use </span>std::sync::Arc;
 
-<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unreachable_code</span>, <span class="ident">unreachable_patterns</span>, <span class="ident">unused_variables</span>, <span class="ident">unused_mut</span>)]</span>
-<span class="attribute">#[<span class="ident">throws</span>(<span class="ident">ConnectorXOutError</span>)]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_arrow2</span>(
-    <span class="ident">source_conn</span>: <span class="kw-2">&amp;</span><span class="ident">SourceConn</span>,
-    <span class="ident">origin_query</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
-    <span class="ident">queries</span>: <span class="kw-2">&amp;</span>[<span class="ident">CXQuery</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>],
-) -&gt; <span class="ident">Arrow2Destination</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">destination</span> <span class="op">=</span> <span class="ident">Arrow2Destination::new</span>();
-    <span class="kw">let</span> <span class="ident">protocol</span> <span class="op">=</span> <span class="ident">source_conn</span>.<span class="ident">proto</span>.<span class="ident">as_str</span>();
-    <span class="macro">debug!</span>(<span class="string">&quot;Protocol: {}&quot;</span>, <span class="ident">protocol</span>);
+<span class="attribute">#[allow(unreachable_code, unreachable_patterns, unused_variables, unused_mut)]
+#[throws(ConnectorXOutError)]
+</span><span class="kw">pub fn </span>get_arrow2(
+    source_conn: <span class="kw-2">&amp;</span>SourceConn,
+    origin_query: <span class="prelude-ty">Option</span>&lt;String&gt;,
+    queries: <span class="kw-2">&amp;</span>[CXQuery&lt;String&gt;],
+) -&gt; Arrow2Destination {
+    <span class="kw">let </span><span class="kw-2">mut </span>destination = Arrow2Destination::new();
+    <span class="kw">let </span>protocol = source_conn.proto.as_str();
+    <span class="macro">debug!</span>(<span class="string">&quot;Protocol: {}&quot;</span>, protocol);
 
-    <span class="comment">// TODO: unlock gil if possible</span>
-    <span class="kw">match</span> <span class="ident">source_conn</span>.<span class="ident">ty</span> {
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;src_postgres&quot;</span>)]</span>
-        <span class="ident">SourceType::Postgres</span> =&gt; {
-            <span class="kw">let</span> (<span class="ident">config</span>, <span class="ident">tls</span>) <span class="op">=</span> <span class="ident">rewrite_tls_args</span>(<span class="kw-2">&amp;</span><span class="ident">source_conn</span>.<span class="ident">conn</span>)<span class="question-mark">?</span>;
-            <span class="kw">match</span> (<span class="ident">protocol</span>, <span class="ident">tls</span>) {
-                (<span class="string">&quot;csv&quot;</span>, <span class="prelude-val">Some</span>(<span class="ident">tls_conn</span>)) =&gt; {
-                    <span class="kw">let</span> <span class="ident">sb</span> <span class="op">=</span> <span class="ident">PostgresSource</span>::<span class="op">&lt;</span><span class="ident">CSVProtocol</span>, <span class="ident">MakeTlsConnector</span><span class="op">&gt;</span><span class="ident">::new</span>(
-                        <span class="ident">config</span>,
-                        <span class="ident">tls_conn</span>,
-                        <span class="ident">queries</span>.<span class="ident">len</span>(),
+    <span class="comment">// TODO: unlock gil if possible
+    </span><span class="kw">match </span>source_conn.ty {
+        <span class="attribute">#[cfg(feature = <span class="string">&quot;src_postgres&quot;</span>)]
+        </span>SourceType::Postgres =&gt; {
+            <span class="kw">let </span>(config, tls) = rewrite_tls_args(<span class="kw-2">&amp;</span>source_conn.conn)<span class="question-mark">?</span>;
+            <span class="kw">match </span>(protocol, tls) {
+                (<span class="string">&quot;csv&quot;</span>, <span class="prelude-val">Some</span>(tls_conn)) =&gt; {
+                    <span class="kw">let </span>sb = PostgresSource::&lt;CSVProtocol, MakeTlsConnector&gt;::new(
+                        config,
+                        tls_conn,
+                        queries.len(),
                     )<span class="question-mark">?</span>;
-                    <span class="kw">let</span> <span class="ident">dispatcher</span> <span class="op">=</span> <span class="ident">Dispatcher</span>::<span class="op">&lt;</span>
+                    <span class="kw">let </span>dispatcher = Dispatcher::&lt;
                         <span class="kw">_</span>,
                         <span class="kw">_</span>,
-                        <span class="ident">PostgresArrow2Transport</span><span class="op">&lt;</span><span class="ident">CSVProtocol</span>, <span class="ident">MakeTlsConnector</span><span class="op">&gt;</span>,
-                    <span class="op">&gt;</span><span class="ident">::new</span>(
-                        <span class="ident">sb</span>, <span class="kw-2">&amp;mut</span> <span class="ident">destination</span>, <span class="ident">queries</span>, <span class="ident">origin_query</span>
+                        PostgresArrow2Transport&lt;CSVProtocol, MakeTlsConnector&gt;,
+                    &gt;::new(
+                        sb, <span class="kw-2">&amp;mut </span>destination, queries, origin_query
                     );
-                    <span class="ident">dispatcher</span>.<span class="ident">run</span>()<span class="question-mark">?</span>;
+                    dispatcher.run()<span class="question-mark">?</span>;
                 }
                 (<span class="string">&quot;csv&quot;</span>, <span class="prelude-val">None</span>) =&gt; {
-                    <span class="kw">let</span> <span class="ident">sb</span> <span class="op">=</span>
-                        <span class="ident">PostgresSource</span>::<span class="op">&lt;</span><span class="ident">CSVProtocol</span>, <span class="ident">NoTls</span><span class="op">&gt;</span><span class="ident">::new</span>(<span class="ident">config</span>, <span class="ident">NoTls</span>, <span class="ident">queries</span>.<span class="ident">len</span>())<span class="question-mark">?</span>;
-                    <span class="kw">let</span> <span class="ident">dispatcher</span> <span class="op">=</span>
-                        <span class="ident">Dispatcher</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="kw">_</span>, <span class="ident">PostgresArrow2Transport</span><span class="op">&lt;</span><span class="ident">CSVProtocol</span>, <span class="ident">NoTls</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::new</span>(
-                            <span class="ident">sb</span>,
-                            <span class="kw-2">&amp;mut</span> <span class="ident">destination</span>,
-                            <span class="ident">queries</span>,
-                            <span class="ident">origin_query</span>,
+                    <span class="kw">let </span>sb =
+                        PostgresSource::&lt;CSVProtocol, NoTls&gt;::new(config, NoTls, queries.len())<span class="question-mark">?</span>;
+                    <span class="kw">let </span>dispatcher =
+                        Dispatcher::&lt;<span class="kw">_</span>, <span class="kw">_</span>, PostgresArrow2Transport&lt;CSVProtocol, NoTls&gt;&gt;::new(
+                            sb,
+                            <span class="kw-2">&amp;mut </span>destination,
+                            queries,
+                            origin_query,
                         );
-                    <span class="ident">dispatcher</span>.<span class="ident">run</span>()<span class="question-mark">?</span>;
+                    dispatcher.run()<span class="question-mark">?</span>;
                 }
-                (<span class="string">&quot;binary&quot;</span>, <span class="prelude-val">Some</span>(<span class="ident">tls_conn</span>)) =&gt; {
-                    <span class="kw">let</span> <span class="ident">sb</span> <span class="op">=</span> <span class="ident">PostgresSource</span>::<span class="op">&lt;</span><span class="ident">PgBinaryProtocol</span>, <span class="ident">MakeTlsConnector</span><span class="op">&gt;</span><span class="ident">::new</span>(
-                        <span class="ident">config</span>,
-                        <span class="ident">tls_conn</span>,
-                        <span class="ident">queries</span>.<span class="ident">len</span>(),
+                (<span class="string">&quot;binary&quot;</span>, <span class="prelude-val">Some</span>(tls_conn)) =&gt; {
+                    <span class="kw">let </span>sb = PostgresSource::&lt;PgBinaryProtocol, MakeTlsConnector&gt;::new(
+                        config,
+                        tls_conn,
+                        queries.len(),
                     )<span class="question-mark">?</span>;
-                    <span class="kw">let</span> <span class="ident">dispatcher</span> <span class="op">=</span>
-                        <span class="ident">Dispatcher</span>::<span class="op">&lt;</span>
+                    <span class="kw">let </span>dispatcher =
+                        Dispatcher::&lt;
                             <span class="kw">_</span>,
                             <span class="kw">_</span>,
-                            <span class="ident">PostgresArrow2Transport</span><span class="op">&lt;</span><span class="ident">PgBinaryProtocol</span>, <span class="ident">MakeTlsConnector</span><span class="op">&gt;</span>,
-                        <span class="op">&gt;</span><span class="ident">::new</span>(<span class="ident">sb</span>, <span class="kw-2">&amp;mut</span> <span class="ident">destination</span>, <span class="ident">queries</span>, <span class="ident">origin_query</span>);
-                    <span class="ident">dispatcher</span>.<span class="ident">run</span>()<span class="question-mark">?</span>;
+                            PostgresArrow2Transport&lt;PgBinaryProtocol, MakeTlsConnector&gt;,
+                        &gt;::new(sb, <span class="kw-2">&amp;mut </span>destination, queries, origin_query);
+                    dispatcher.run()<span class="question-mark">?</span>;
                 }
                 (<span class="string">&quot;binary&quot;</span>, <span class="prelude-val">None</span>) =&gt; {
-                    <span class="kw">let</span> <span class="ident">sb</span> <span class="op">=</span> <span class="ident">PostgresSource</span>::<span class="op">&lt;</span><span class="ident">PgBinaryProtocol</span>, <span class="ident">NoTls</span><span class="op">&gt;</span><span class="ident">::new</span>(
-                        <span class="ident">config</span>,
-                        <span class="ident">NoTls</span>,
-                        <span class="ident">queries</span>.<span class="ident">len</span>(),
+                    <span class="kw">let </span>sb = PostgresSource::&lt;PgBinaryProtocol, NoTls&gt;::new(
+                        config,
+                        NoTls,
+                        queries.len(),
                     )<span class="question-mark">?</span>;
-                    <span class="kw">let</span> <span class="ident">dispatcher</span> <span class="op">=</span> <span class="ident">Dispatcher</span>::<span class="op">&lt;</span>
+                    <span class="kw">let </span>dispatcher = Dispatcher::&lt;
                         <span class="kw">_</span>,
                         <span class="kw">_</span>,
-                        <span class="ident">PostgresArrow2Transport</span><span class="op">&lt;</span><span class="ident">PgBinaryProtocol</span>, <span class="ident">NoTls</span><span class="op">&gt;</span>,
-                    <span class="op">&gt;</span><span class="ident">::new</span>(
-                        <span class="ident">sb</span>, <span class="kw-2">&amp;mut</span> <span class="ident">destination</span>, <span class="ident">queries</span>, <span class="ident">origin_query</span>
+                        PostgresArrow2Transport&lt;PgBinaryProtocol, NoTls&gt;,
+                    &gt;::new(
+                        sb, <span class="kw-2">&amp;mut </span>destination, queries, origin_query
                     );
-                    <span class="ident">dispatcher</span>.<span class="ident">run</span>()<span class="question-mark">?</span>;
+                    dispatcher.run()<span class="question-mark">?</span>;
                 }
-                (<span class="string">&quot;cursor&quot;</span>, <span class="prelude-val">Some</span>(<span class="ident">tls_conn</span>)) =&gt; {
-                    <span class="kw">let</span> <span class="ident">sb</span> <span class="op">=</span> <span class="ident">PostgresSource</span>::<span class="op">&lt;</span><span class="ident">CursorProtocol</span>, <span class="ident">MakeTlsConnector</span><span class="op">&gt;</span><span class="ident">::new</span>(
-                        <span class="ident">config</span>,
-                        <span class="ident">tls_conn</span>,
-                        <span class="ident">queries</span>.<span class="ident">len</span>(),
+                (<span class="string">&quot;cursor&quot;</span>, <span class="prelude-val">Some</span>(tls_conn)) =&gt; {
+                    <span class="kw">let </span>sb = PostgresSource::&lt;CursorProtocol, MakeTlsConnector&gt;::new(
+                        config,
+                        tls_conn,
+                        queries.len(),
                     )<span class="question-mark">?</span>;
-                    <span class="kw">let</span> <span class="ident">dispatcher</span> <span class="op">=</span> <span class="ident">Dispatcher</span>::<span class="op">&lt;</span>
+                    <span class="kw">let </span>dispatcher = Dispatcher::&lt;
                         <span class="kw">_</span>,
                         <span class="kw">_</span>,
-                        <span class="ident">PostgresArrow2Transport</span><span class="op">&lt;</span><span class="ident">CursorProtocol</span>, <span class="ident">MakeTlsConnector</span><span class="op">&gt;</span>,
-                    <span class="op">&gt;</span><span class="ident">::new</span>(
-                        <span class="ident">sb</span>, <span class="kw-2">&amp;mut</span> <span class="ident">destination</span>, <span class="ident">queries</span>, <span class="ident">origin_query</span>
+                        PostgresArrow2Transport&lt;CursorProtocol, MakeTlsConnector&gt;,
+                    &gt;::new(
+                        sb, <span class="kw-2">&amp;mut </span>destination, queries, origin_query
                     );
-                    <span class="ident">dispatcher</span>.<span class="ident">run</span>()<span class="question-mark">?</span>;
+                    dispatcher.run()<span class="question-mark">?</span>;
                 }
                 (<span class="string">&quot;cursor&quot;</span>, <span class="prelude-val">None</span>) =&gt; {
-                    <span class="kw">let</span> <span class="ident">sb</span> <span class="op">=</span>
-                        <span class="ident">PostgresSource</span>::<span class="op">&lt;</span><span class="ident">CursorProtocol</span>, <span class="ident">NoTls</span><span class="op">&gt;</span><span class="ident">::new</span>(<span class="ident">config</span>, <span class="ident">NoTls</span>, <span class="ident">queries</span>.<span class="ident">len</span>())<span class="question-mark">?</span>;
-                    <span class="kw">let</span> <span class="ident">dispatcher</span> <span class="op">=</span> <span class="ident">Dispatcher</span>::<span class="op">&lt;</span>
+                    <span class="kw">let </span>sb =
+                        PostgresSource::&lt;CursorProtocol, NoTls&gt;::new(config, NoTls, queries.len())<span class="question-mark">?</span>;
+                    <span class="kw">let </span>dispatcher = Dispatcher::&lt;
                         <span class="kw">_</span>,
                         <span class="kw">_</span>,
-                        <span class="ident">PostgresArrow2Transport</span><span class="op">&lt;</span><span class="ident">CursorProtocol</span>, <span class="ident">NoTls</span><span class="op">&gt;</span>,
-                    <span class="op">&gt;</span><span class="ident">::new</span>(
-                        <span class="ident">sb</span>, <span class="kw-2">&amp;mut</span> <span class="ident">destination</span>, <span class="ident">queries</span>, <span class="ident">origin_query</span>
+                        PostgresArrow2Transport&lt;CursorProtocol, NoTls&gt;,
+                    &gt;::new(
+                        sb, <span class="kw-2">&amp;mut </span>destination, queries, origin_query
                     );
-                    <span class="ident">dispatcher</span>.<span class="ident">run</span>()<span class="question-mark">?</span>;
+                    dispatcher.run()<span class="question-mark">?</span>;
                 }
-                <span class="kw">_</span> =&gt; <span class="macro">unimplemented!</span>(<span class="string">&quot;{} protocol not supported&quot;</span>, <span class="ident">protocol</span>),
+                <span class="kw">_ </span>=&gt; <span class="macro">unimplemented!</span>(<span class="string">&quot;{} protocol not supported&quot;</span>, protocol),
             }
         }
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;src_mysql&quot;</span>)]</span>
-        <span class="ident">SourceType::MySQL</span> =&gt; <span class="kw">match</span> <span class="ident">protocol</span> {
-            <span class="string">&quot;binary&quot;</span> =&gt; {
-                <span class="kw">let</span> <span class="ident">source</span> <span class="op">=</span>
-                    <span class="ident">MySQLSource</span>::<span class="op">&lt;</span><span class="ident">MySQLBinaryProtocol</span><span class="op">&gt;</span><span class="ident">::new</span>(<span class="kw-2">&amp;</span><span class="ident">source_conn</span>.<span class="ident">conn</span>[..], <span class="ident">queries</span>.<span class="ident">len</span>())<span class="question-mark">?</span>;
-                <span class="kw">let</span> <span class="ident">dispatcher</span> <span class="op">=</span> <span class="ident">Dispatcher</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="kw">_</span>, <span class="ident">MySQLArrow2Transport</span><span class="op">&lt;</span><span class="ident">MySQLBinaryProtocol</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::new</span>(
-                    <span class="ident">source</span>,
-                    <span class="kw-2">&amp;mut</span> <span class="ident">destination</span>,
-                    <span class="ident">queries</span>,
-                    <span class="ident">origin_query</span>,
+        <span class="attribute">#[cfg(feature = <span class="string">&quot;src_mysql&quot;</span>)]
+        </span>SourceType::MySQL =&gt; <span class="kw">match </span>protocol {
+            <span class="string">&quot;binary&quot; </span>=&gt; {
+                <span class="kw">let </span>source =
+                    MySQLSource::&lt;MySQLBinaryProtocol&gt;::new(<span class="kw-2">&amp;</span>source_conn.conn[..], queries.len())<span class="question-mark">?</span>;
+                <span class="kw">let </span>dispatcher = Dispatcher::&lt;<span class="kw">_</span>, <span class="kw">_</span>, MySQLArrow2Transport&lt;MySQLBinaryProtocol&gt;&gt;::new(
+                    source,
+                    <span class="kw-2">&amp;mut </span>destination,
+                    queries,
+                    origin_query,
                 );
-                <span class="ident">dispatcher</span>.<span class="ident">run</span>()<span class="question-mark">?</span>;
+                dispatcher.run()<span class="question-mark">?</span>;
             }
-            <span class="string">&quot;text&quot;</span> =&gt; {
-                <span class="kw">let</span> <span class="ident">source</span> <span class="op">=</span>
-                    <span class="ident">MySQLSource</span>::<span class="op">&lt;</span><span class="ident">TextProtocol</span><span class="op">&gt;</span><span class="ident">::new</span>(<span class="kw-2">&amp;</span><span class="ident">source_conn</span>.<span class="ident">conn</span>[..], <span class="ident">queries</span>.<span class="ident">len</span>())<span class="question-mark">?</span>;
-                <span class="kw">let</span> <span class="ident">dispatcher</span> <span class="op">=</span> <span class="ident">Dispatcher</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="kw">_</span>, <span class="ident">MySQLArrow2Transport</span><span class="op">&lt;</span><span class="ident">TextProtocol</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::new</span>(
-                    <span class="ident">source</span>,
-                    <span class="kw-2">&amp;mut</span> <span class="ident">destination</span>,
-                    <span class="ident">queries</span>,
-                    <span class="ident">origin_query</span>,
+            <span class="string">&quot;text&quot; </span>=&gt; {
+                <span class="kw">let </span>source =
+                    MySQLSource::&lt;TextProtocol&gt;::new(<span class="kw-2">&amp;</span>source_conn.conn[..], queries.len())<span class="question-mark">?</span>;
+                <span class="kw">let </span>dispatcher = Dispatcher::&lt;<span class="kw">_</span>, <span class="kw">_</span>, MySQLArrow2Transport&lt;TextProtocol&gt;&gt;::new(
+                    source,
+                    <span class="kw-2">&amp;mut </span>destination,
+                    queries,
+                    origin_query,
                 );
-                <span class="ident">dispatcher</span>.<span class="ident">run</span>()<span class="question-mark">?</span>;
+                dispatcher.run()<span class="question-mark">?</span>;
             }
-            <span class="kw">_</span> =&gt; <span class="macro">unimplemented!</span>(<span class="string">&quot;{} protocol not supported&quot;</span>, <span class="ident">protocol</span>),
+            <span class="kw">_ </span>=&gt; <span class="macro">unimplemented!</span>(<span class="string">&quot;{} protocol not supported&quot;</span>, protocol),
         },
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;src_sqlite&quot;</span>)]</span>
-        <span class="ident">SourceType::SQLite</span> =&gt; {
-            <span class="comment">// remove the first &quot;sqlite://&quot; manually since url.path is not correct for windows</span>
-            <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">source_conn</span>.<span class="ident">conn</span>.<span class="ident">as_str</span>()[<span class="number">9</span>..];
-            <span class="kw">let</span> <span class="ident">source</span> <span class="op">=</span> <span class="ident">SQLiteSource::new</span>(<span class="ident">path</span>, <span class="ident">queries</span>.<span class="ident">len</span>())<span class="question-mark">?</span>;
-            <span class="kw">let</span> <span class="ident">dispatcher</span> <span class="op">=</span> <span class="ident">Dispatcher</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="kw">_</span>, <span class="ident">SQLiteArrow2Transport</span><span class="op">&gt;</span><span class="ident">::new</span>(
-                <span class="ident">source</span>,
-                <span class="kw-2">&amp;mut</span> <span class="ident">destination</span>,
-                <span class="ident">queries</span>,
-                <span class="ident">origin_query</span>,
+        <span class="attribute">#[cfg(feature = <span class="string">&quot;src_sqlite&quot;</span>)]
+        </span>SourceType::SQLite =&gt; {
+            <span class="comment">// remove the first &quot;sqlite://&quot; manually since url.path is not correct for windows
+            </span><span class="kw">let </span>path = <span class="kw-2">&amp;</span>source_conn.conn.as_str()[<span class="number">9</span>..];
+            <span class="kw">let </span>source = SQLiteSource::new(path, queries.len())<span class="question-mark">?</span>;
+            <span class="kw">let </span>dispatcher = Dispatcher::&lt;<span class="kw">_</span>, <span class="kw">_</span>, SQLiteArrow2Transport&gt;::new(
+                source,
+                <span class="kw-2">&amp;mut </span>destination,
+                queries,
+                origin_query,
             );
-            <span class="ident">dispatcher</span>.<span class="ident">run</span>()<span class="question-mark">?</span>;
+            dispatcher.run()<span class="question-mark">?</span>;
         }
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;src_mssql&quot;</span>)]</span>
-        <span class="ident">SourceType::MsSQL</span> =&gt; {
-            <span class="kw">let</span> <span class="ident">rt</span> <span class="op">=</span> <span class="ident">Arc::new</span>(<span class="ident">tokio::runtime::Runtime::new</span>().<span class="ident">expect</span>(<span class="string">&quot;Failed to create runtime&quot;</span>));
-            <span class="kw">let</span> <span class="ident">source</span> <span class="op">=</span> <span class="ident">MsSQLSource::new</span>(<span class="ident">rt</span>, <span class="kw-2">&amp;</span><span class="ident">source_conn</span>.<span class="ident">conn</span>[..], <span class="ident">queries</span>.<span class="ident">len</span>())<span class="question-mark">?</span>;
-            <span class="kw">let</span> <span class="ident">dispatcher</span> <span class="op">=</span> <span class="ident">Dispatcher</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="kw">_</span>, <span class="ident">MsSQLArrow2Transport</span><span class="op">&gt;</span><span class="ident">::new</span>(
-                <span class="ident">source</span>,
-                <span class="kw-2">&amp;mut</span> <span class="ident">destination</span>,
-                <span class="ident">queries</span>,
-                <span class="ident">origin_query</span>,
+        <span class="attribute">#[cfg(feature = <span class="string">&quot;src_mssql&quot;</span>)]
+        </span>SourceType::MsSQL =&gt; {
+            <span class="kw">let </span>rt = Arc::new(tokio::runtime::Runtime::new().expect(<span class="string">&quot;Failed to create runtime&quot;</span>));
+            <span class="kw">let </span>source = MsSQLSource::new(rt, <span class="kw-2">&amp;</span>source_conn.conn[..], queries.len())<span class="question-mark">?</span>;
+            <span class="kw">let </span>dispatcher = Dispatcher::&lt;<span class="kw">_</span>, <span class="kw">_</span>, MsSQLArrow2Transport&gt;::new(
+                source,
+                <span class="kw-2">&amp;mut </span>destination,
+                queries,
+                origin_query,
             );
-            <span class="ident">dispatcher</span>.<span class="ident">run</span>()<span class="question-mark">?</span>;
+            dispatcher.run()<span class="question-mark">?</span>;
         }
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;src_oracle&quot;</span>)]</span>
-        <span class="ident">SourceType::Oracle</span> =&gt; {
-            <span class="kw">let</span> <span class="ident">source</span> <span class="op">=</span> <span class="ident">OracleSource::new</span>(<span class="kw-2">&amp;</span><span class="ident">source_conn</span>.<span class="ident">conn</span>[..], <span class="ident">queries</span>.<span class="ident">len</span>())<span class="question-mark">?</span>;
-            <span class="kw">let</span> <span class="ident">dispatcher</span> <span class="op">=</span> <span class="ident">Dispatcher</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="kw">_</span>, <span class="ident">OracleArrow2Transport</span><span class="op">&gt;</span><span class="ident">::new</span>(
-                <span class="ident">source</span>,
-                <span class="kw-2">&amp;mut</span> <span class="ident">destination</span>,
-                <span class="ident">queries</span>,
-                <span class="ident">origin_query</span>,
+        <span class="attribute">#[cfg(feature = <span class="string">&quot;src_oracle&quot;</span>)]
+        </span>SourceType::Oracle =&gt; {
+            <span class="kw">let </span>source = OracleSource::new(<span class="kw-2">&amp;</span>source_conn.conn[..], queries.len())<span class="question-mark">?</span>;
+            <span class="kw">let </span>dispatcher = Dispatcher::&lt;<span class="kw">_</span>, <span class="kw">_</span>, OracleArrow2Transport&gt;::new(
+                source,
+                <span class="kw-2">&amp;mut </span>destination,
+                queries,
+                origin_query,
             );
-            <span class="ident">dispatcher</span>.<span class="ident">run</span>()<span class="question-mark">?</span>;
+            dispatcher.run()<span class="question-mark">?</span>;
         }
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;src_bigquery&quot;</span>)]</span>
-        <span class="ident">SourceType::BigQuery</span> =&gt; {
-            <span class="kw">let</span> <span class="ident">rt</span> <span class="op">=</span> <span class="ident">Arc::new</span>(<span class="ident">tokio::runtime::Runtime::new</span>().<span class="ident">expect</span>(<span class="string">&quot;Failed to create runtime&quot;</span>));
-            <span class="kw">let</span> <span class="ident">source</span> <span class="op">=</span> <span class="ident">BigQuerySource::new</span>(<span class="ident">rt</span>, <span class="kw-2">&amp;</span><span class="ident">source_conn</span>.<span class="ident">conn</span>[..])<span class="question-mark">?</span>;
-            <span class="kw">let</span> <span class="ident">dispatcher</span> <span class="op">=</span> <span class="ident">Dispatcher</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="kw">_</span>, <span class="ident">BigQueryArrow2Transport</span><span class="op">&gt;</span><span class="ident">::new</span>(
-                <span class="ident">source</span>,
-                <span class="kw-2">&amp;mut</span> <span class="ident">destination</span>,
-                <span class="ident">queries</span>,
-                <span class="ident">origin_query</span>,
+        <span class="attribute">#[cfg(feature = <span class="string">&quot;src_bigquery&quot;</span>)]
+        </span>SourceType::BigQuery =&gt; {
+            <span class="kw">let </span>rt = Arc::new(tokio::runtime::Runtime::new().expect(<span class="string">&quot;Failed to create runtime&quot;</span>));
+            <span class="kw">let </span>source = BigQuerySource::new(rt, <span class="kw-2">&amp;</span>source_conn.conn[..])<span class="question-mark">?</span>;
+            <span class="kw">let </span>dispatcher = Dispatcher::&lt;<span class="kw">_</span>, <span class="kw">_</span>, BigQueryArrow2Transport&gt;::new(
+                source,
+                <span class="kw-2">&amp;mut </span>destination,
+                queries,
+                origin_query,
             );
-            <span class="ident">dispatcher</span>.<span class="ident">run</span>()<span class="question-mark">?</span>;
+            dispatcher.run()<span class="question-mark">?</span>;
         }
-        <span class="kw">_</span> =&gt; <span class="macro">throw!</span>(<span class="ident">ConnectorXOutError::SourceNotSupport</span>(<span class="macro">format!</span>(
+        <span class="kw">_ </span>=&gt; <span class="macro">throw!</span>(ConnectorXOutError::SourceNotSupport(<span class="macro">format!</span>(
             <span class="string">&quot;{:?}&quot;</span>,
-            <span class="ident">source_conn</span>.<span class="ident">ty</span>
+            source_conn.ty
         ))),
     }
 
-    <span class="ident">destination</span>
+    destination
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="connectorx" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.62.0-nightly (878c7833f 2022-04-16)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="connectorx" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (750bd1a7f 2022-09-14)" ></div></body></html>

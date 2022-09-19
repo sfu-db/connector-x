@@ -1,1 +1,1 @@
-initSidebarItems({"enum":[["SourceType",""]],"struct":[["SourceConn",""]]});
+window.SIDEBAR_ITEMS = {"enum":[["SourceType",""]],"struct":[["SourceConn",""]]};

@@ -1,9 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `connectorx/src/sources/dummy/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script src="../../../../crates.js"></script><script defer src="../../../../main.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script>
-    <noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../connectorx/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../../../connectorx/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../connectorx/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><div class="theme-picker hidden"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="22" height="22" alt="Pick another theme!" src="../../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `connectorx/src/sources/dummy/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../../normalize.css"><link rel="stylesheet" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../../ayu.css" disabled><link rel="stylesheet" href="../../../../dark.css" disabled><link rel="stylesheet" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../connectorx/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../connectorx/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../connectorx/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -274,277 +269,276 @@
 <span id="269">269</span>
 <span id="270">270</span>
 <span id="271">271</span>
-</pre><pre class="rust"><code><span class="doccomment">//! A dummy source that generates different values based on an internal counter.</span>
-<span class="doccomment">//! This source is for test purpose.</span>
+</pre><pre class="rust"><code><span class="doccomment">//! A dummy source that generates different values based on an internal counter.
+//! This source is for test purpose.
 
-<span class="kw">mod</span> <span class="ident">typesystem</span>;
+</span><span class="kw">mod </span>typesystem;
 
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::typesystem::DummyTypeSystem</span>;
-<span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">PartitionParser</span>, <span class="ident">Produce</span>, <span class="ident">Source</span>, <span class="ident">SourcePartition</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::data_order::DataOrder</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::errors</span>::{<span class="ident">ConnectorXError</span>, <span class="prelude-ty">Result</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::sql::CXQuery</span>;
-<span class="kw">use</span> <span class="ident">chrono</span>::{<span class="ident">offset</span>, <span class="ident">Date</span>, <span class="ident">DateTime</span>, <span class="ident">Utc</span>};
-<span class="kw">use</span> <span class="ident">fehler</span>::{<span class="ident">throw</span>, <span class="ident">throws</span>};
-<span class="kw">use</span> <span class="ident">num_traits::cast::FromPrimitive</span>;
+<span class="kw">pub use </span><span class="self">self</span>::typesystem::DummyTypeSystem;
+<span class="kw">use super</span>::{PartitionParser, Produce, Source, SourcePartition};
+<span class="kw">use </span><span class="kw">crate</span>::data_order::DataOrder;
+<span class="kw">use </span><span class="kw">crate</span>::errors::{ConnectorXError, <span class="prelude-ty">Result</span>};
+<span class="kw">use </span><span class="kw">crate</span>::sql::CXQuery;
+<span class="kw">use </span>chrono::{offset, Date, DateTime, Utc};
+<span class="kw">use </span>fehler::{throw, throws};
+<span class="kw">use </span>num_traits::cast::FromPrimitive;
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">DummySource</span> {
-    <span class="ident">names</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
-    <span class="ident">schema</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">DummyTypeSystem</span><span class="op">&gt;</span>,
-    <span class="ident">queries</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">CXQuery</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+<span class="kw">pub struct </span>DummySource {
+    names: Vec&lt;String&gt;,
+    schema: Vec&lt;DummyTypeSystem&gt;,
+    queries: Vec&lt;CXQuery&lt;String&gt;&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">DummySource</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">names</span>: <span class="kw-2">&amp;</span>[<span class="ident">S</span>], <span class="ident">schema</span>: <span class="kw-2">&amp;</span>[<span class="ident">DummyTypeSystem</span>]) -&gt; <span class="self">Self</span> {
-        <span class="macro">assert_eq!</span>(<span class="ident">names</span>.<span class="ident">len</span>(), <span class="ident">schema</span>.<span class="ident">len</span>());
-        <span class="ident">DummySource</span> {
-            <span class="ident">names</span>: <span class="ident">names</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">s</span><span class="op">|</span> <span class="ident">s</span>.<span class="ident">as_ref</span>().<span class="ident">to_string</span>()).<span class="ident">collect</span>(),
-            <span class="ident">schema</span>: <span class="ident">schema</span>.<span class="ident">to_vec</span>(),
-            <span class="ident">queries</span>: <span class="macro">vec!</span>[],
+<span class="kw">impl </span>DummySource {
+    <span class="kw">pub fn </span>new&lt;S: AsRef&lt;str&gt;&gt;(names: <span class="kw-2">&amp;</span>[S], schema: <span class="kw-2">&amp;</span>[DummyTypeSystem]) -&gt; <span class="self">Self </span>{
+        <span class="macro">assert_eq!</span>(names.len(), schema.len());
+        DummySource {
+            names: names.iter().map(|s| s.as_ref().to_string()).collect(),
+            schema: schema.to_vec(),
+            queries: <span class="macro">vec!</span>[],
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Source</span> <span class="kw">for</span> <span class="ident">DummySource</span> {
-    <span class="kw">const</span> <span class="ident">DATA_ORDERS</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">DataOrder</span>] <span class="op">=</span> <span class="kw-2">&amp;</span>[<span class="ident">DataOrder::RowMajor</span>];
-    <span class="kw">type</span> <span class="ident">TypeSystem</span> <span class="op">=</span> <span class="ident">DummyTypeSystem</span>;
-    <span class="kw">type</span> <span class="ident">Partition</span> <span class="op">=</span> <span class="ident">DummySourcePartition</span>;
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">ConnectorXError</span>;
+<span class="kw">impl </span>Source <span class="kw">for </span>DummySource {
+    <span class="kw">const </span>DATA_ORDERS: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[DataOrder] = <span class="kw-2">&amp;</span>[DataOrder::RowMajor];
+    <span class="kw">type </span>TypeSystem = DummyTypeSystem;
+    <span class="kw">type </span>Partition = DummySourcePartition;
+    <span class="kw">type </span>Error = ConnectorXError;
 
-    <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">ConnectorXError</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">set_data_order</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">data_order</span>: <span class="ident">DataOrder</span>) {
-        <span class="kw">if</span> <span class="op">!</span><span class="macro">matches!</span>(<span class="ident">data_order</span>, <span class="ident">DataOrder::RowMajor</span>) {
-            <span class="macro">throw!</span>(<span class="ident">ConnectorXError::UnsupportedDataOrder</span>(<span class="ident">data_order</span>))
+    <span class="attribute">#[throws(ConnectorXError)]
+    </span><span class="kw">fn </span>set_data_order(<span class="kw-2">&amp;mut </span><span class="self">self</span>, data_order: DataOrder) {
+        <span class="kw">if </span>!<span class="macro">matches!</span>(data_order, DataOrder::RowMajor) {
+            <span class="macro">throw!</span>(ConnectorXError::UnsupportedDataOrder(data_order))
         }
     }
 
-    <span class="comment">// query: nrows,ncols</span>
-    <span class="kw">fn</span> <span class="ident">set_queries</span><span class="op">&lt;</span><span class="ident">Q</span>: <span class="ident">ToString</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">queries</span>: <span class="kw-2">&amp;</span>[<span class="ident">CXQuery</span><span class="op">&lt;</span><span class="ident">Q</span><span class="op">&gt;</span>]) {
-        <span class="self">self</span>.<span class="ident">queries</span> <span class="op">=</span> <span class="ident">queries</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">q</span><span class="op">|</span> <span class="ident">q</span>.<span class="ident">map</span>(<span class="ident">Q::to_string</span>)).<span class="ident">collect</span>();
+    <span class="comment">// query: nrows,ncols
+    </span><span class="kw">fn </span>set_queries&lt;Q: ToString&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, queries: <span class="kw-2">&amp;</span>[CXQuery&lt;Q&gt;]) {
+        <span class="self">self</span>.queries = queries.iter().map(|q| q.map(Q::to_string)).collect();
     }
 
-    <span class="kw">fn</span> <span class="ident">set_origin_query</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_query</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>) {}
+    <span class="kw">fn </span>set_origin_query(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _query: <span class="prelude-ty">Option</span>&lt;String&gt;) {}
 
-    <span class="kw">fn</span> <span class="ident">fetch_metadata</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">fn </span>fetch_metadata(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn</span> <span class="ident">result_rows</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    <span class="kw">fn </span>result_rows(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;usize&gt;&gt; {
         <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>)
     }
 
-    <span class="kw">fn</span> <span class="ident">names</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">names</span>.<span class="ident">clone</span>()
+    <span class="kw">fn </span>names(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Vec&lt;String&gt; {
+        <span class="self">self</span>.names.clone()
     }
 
-    <span class="kw">fn</span> <span class="ident">schema</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::TypeSystem</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">schema</span>.<span class="ident">clone</span>()
+    <span class="kw">fn </span>schema(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Vec&lt;<span class="self">Self</span>::TypeSystem&gt; {
+        <span class="self">self</span>.schema.clone()
     }
 
-    <span class="kw">fn</span> <span class="ident">partition</span>(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Partition</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="macro">assert!</span>(<span class="op">!</span><span class="self">self</span>.<span class="ident">queries</span>.<span class="ident">is_empty</span>());
-        <span class="kw">let</span> <span class="ident">queries</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">queries</span>;
-        <span class="kw">let</span> <span class="ident">schema</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">schema</span>;
+    <span class="kw">fn </span>partition(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="self">Self</span>::Partition&gt;&gt; {
+        <span class="macro">assert!</span>(!<span class="self">self</span>.queries.is_empty());
+        <span class="kw">let </span>queries = <span class="self">self</span>.queries;
+        <span class="kw">let </span>schema = <span class="self">self</span>.schema;
 
-        <span class="prelude-val">Ok</span>(<span class="ident">queries</span>
-            .<span class="ident">into_iter</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">q</span><span class="op">|</span> <span class="ident">DummySourcePartition::new</span>(<span class="kw-2">&amp;</span><span class="ident">schema</span>, <span class="kw-2">&amp;</span><span class="ident">q</span>))
-            .<span class="ident">collect</span>())
+        <span class="prelude-val">Ok</span>(queries
+            .into_iter()
+            .map(|q| DummySourcePartition::new(<span class="kw-2">&amp;</span>schema, <span class="kw-2">&amp;</span>q))
+            .collect())
     }
 }
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">DummySourcePartition</span> {
-    <span class="ident">nrows</span>: <span class="ident">usize</span>,
-    <span class="ident">ncols</span>: <span class="ident">usize</span>,
-    <span class="ident">counter</span>: <span class="ident">usize</span>,
+<span class="kw">pub struct </span>DummySourcePartition {
+    nrows: usize,
+    ncols: usize,
+    counter: usize,
 }
 
-<span class="kw">impl</span> <span class="ident">DummySourcePartition</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">_schema</span>: <span class="kw-2">&amp;</span>[<span class="ident">DummyTypeSystem</span>], <span class="ident">q</span>: <span class="kw-2">&amp;</span><span class="ident">CXQuery</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="ident">v</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">q</span>.<span class="ident">as_str</span>().<span class="ident">split</span>(<span class="string">&#39;,&#39;</span>).<span class="ident">map</span>(<span class="op">|</span><span class="ident">s</span><span class="op">|</span> <span class="ident">s</span>.<span class="ident">parse</span>().<span class="ident">unwrap</span>()).<span class="ident">collect</span>();
+<span class="kw">impl </span>DummySourcePartition {
+    <span class="kw">pub fn </span>new(_schema: <span class="kw-2">&amp;</span>[DummyTypeSystem], q: <span class="kw-2">&amp;</span>CXQuery&lt;String&gt;) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>v: Vec&lt;usize&gt; = q.as_str().split(<span class="string">&#39;,&#39;</span>).map(|s| s.parse().unwrap()).collect();
 
-        <span class="ident">DummySourcePartition</span> {
-            <span class="ident">nrows</span>: <span class="ident">v</span>[<span class="number">0</span>],
-            <span class="ident">ncols</span>: <span class="ident">v</span>[<span class="number">1</span>],
-            <span class="ident">counter</span>: <span class="number">0</span>,
+        DummySourcePartition {
+            nrows: v[<span class="number">0</span>],
+            ncols: v[<span class="number">1</span>],
+            counter: <span class="number">0</span>,
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">SourcePartition</span> <span class="kw">for</span> <span class="ident">DummySourcePartition</span> {
-    <span class="kw">type</span> <span class="ident">TypeSystem</span> <span class="op">=</span> <span class="ident">DummyTypeSystem</span>;
-    <span class="kw">type</span> <span class="ident">Parser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">DummySourcePartitionParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>;
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">ConnectorXError</span>;
+<span class="kw">impl </span>SourcePartition <span class="kw">for </span>DummySourcePartition {
+    <span class="kw">type </span>TypeSystem = DummyTypeSystem;
+    <span class="kw">type </span>Parser&lt;<span class="lifetime">&#39;a</span>&gt; = DummySourcePartitionParser&lt;<span class="lifetime">&#39;a</span>&gt;;
+    <span class="kw">type </span>Error = ConnectorXError;
 
-    <span class="kw">fn</span> <span class="ident">result_rows</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">fn </span>result_rows(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn</span> <span class="ident">parser</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Parser</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="prelude-val">Ok</span>(<span class="ident">DummySourcePartitionParser::new</span>(
-            <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">counter</span>,
-            <span class="self">self</span>.<span class="ident">nrows</span>,
-            <span class="self">self</span>.<span class="ident">ncols</span>,
+    <span class="kw">fn </span>parser(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Parser&lt;<span class="lifetime">&#39;_</span>&gt;&gt; {
+        <span class="prelude-val">Ok</span>(DummySourcePartitionParser::new(
+            <span class="kw-2">&amp;mut </span><span class="self">self</span>.counter,
+            <span class="self">self</span>.nrows,
+            <span class="self">self</span>.ncols,
         ))
     }
 
-    <span class="kw">fn</span> <span class="ident">nrows</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
-        <span class="self">self</span>.<span class="ident">nrows</span>
+    <span class="kw">fn </span>nrows(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+        <span class="self">self</span>.nrows
     }
 
-    <span class="kw">fn</span> <span class="ident">ncols</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
-        <span class="self">self</span>.<span class="ident">ncols</span>
+    <span class="kw">fn </span>ncols(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+        <span class="self">self</span>.ncols
     }
 }
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">DummySourcePartitionParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="ident">counter</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="ident">usize</span>,
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unused</span>)]</span>
-    <span class="ident">nrows</span>: <span class="ident">usize</span>,
-    <span class="ident">ncols</span>: <span class="ident">usize</span>,
+<span class="kw">pub struct </span>DummySourcePartitionParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+    counter: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>usize,
+    <span class="attribute">#[allow(unused)]
+    </span>nrows: usize,
+    ncols: usize,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">DummySourcePartitionParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">counter</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="ident">usize</span>, <span class="ident">nrows</span>: <span class="ident">usize</span>, <span class="ident">ncols</span>: <span class="ident">usize</span>) -&gt; <span class="self">Self</span> {
-        <span class="ident">DummySourcePartitionParser</span> {
-            <span class="ident">counter</span>,
-            <span class="ident">ncols</span>,
-            <span class="ident">nrows</span>,
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; DummySourcePartitionParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="kw">fn </span>new(counter: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>usize, nrows: usize, ncols: usize) -&gt; <span class="self">Self </span>{
+        DummySourcePartitionParser {
+            counter,
+            ncols,
+            nrows,
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">next_val</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident">usize</span> {
-        <span class="kw">let</span> <span class="ident">ret</span> <span class="op">=</span> <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">counter</span> <span class="op">/</span> <span class="self">self</span>.<span class="ident">ncols</span>;
-        <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">counter</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
-        <span class="ident">ret</span>
+    <span class="kw">fn </span>next_val(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; usize {
+        <span class="kw">let </span>ret = <span class="kw-2">*</span><span class="self">self</span>.counter / <span class="self">self</span>.ncols;
+        <span class="kw-2">*</span><span class="self">self</span>.counter += <span class="number">1</span>;
+        ret
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">PartitionParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">DummySourcePartitionParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">TypeSystem</span> <span class="op">=</span> <span class="ident">DummyTypeSystem</span>;
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">ConnectorXError</span>;
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; PartitionParser&lt;<span class="lifetime">&#39;a</span>&gt; <span class="kw">for </span>DummySourcePartitionParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="kw">type </span>TypeSystem = DummyTypeSystem;
+    <span class="kw">type </span>Error = ConnectorXError;
 
-    <span class="kw">fn</span> <span class="ident">fetch_next</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">usize</span>, <span class="ident">bool</span>)<span class="op">&gt;</span> {
-        <span class="prelude-val">Ok</span>((<span class="self">self</span>.<span class="ident">nrows</span>, <span class="bool-val">true</span>))
+    <span class="kw">fn </span>fetch_next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(usize, bool)&gt; {
+        <span class="prelude-val">Ok</span>((<span class="self">self</span>.nrows, <span class="bool-val">true</span>))
     }
 }
 
-<span class="macro">macro_rules!</span> <span class="ident">numeric_impl</span> {
-    ($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>: <span class="ident">ty</span>),<span class="op">+</span>) =&gt; {
+<span class="macro">macro_rules! </span>numeric_impl {
+    ($(<span class="macro-nonterminal">$t</span>: ty),+) =&gt; {
         $(
-            <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">DummySourcePartitionParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-                <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">ConnectorXError</span>;
+            <span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, <span class="macro-nonterminal">$t</span>&gt; <span class="kw">for </span>DummySourcePartitionParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+                <span class="kw">type </span>Error = ConnectorXError;
 
-                <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span> {
-                    <span class="kw">let</span> <span class="ident">ret</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">next_val</span>();
-                    <span class="prelude-val">Ok</span>(<span class="ident">FromPrimitive::from_usize</span>(<span class="ident">ret</span>).<span class="ident">unwrap_or_default</span>())
+                <span class="kw">fn </span>produce(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="macro-nonterminal">$t</span>&gt; {
+                    <span class="kw">let </span>ret = <span class="self">self</span>.next_val();
+                    <span class="prelude-val">Ok</span>(FromPrimitive::from_usize(ret).unwrap_or_default())
                 }
             }
 
-            <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">DummySourcePartitionParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-                <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">ConnectorXError</span>;
+            <span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span>&lt;<span class="macro-nonterminal">$t</span>&gt;&gt; <span class="kw">for </span>DummySourcePartitionParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+                <span class="kw">type </span>Error = ConnectorXError;
 
-                <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-                    <span class="kw">let</span> <span class="ident">ret</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">next_val</span>();
-                    <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">FromPrimitive::from_usize</span>(<span class="ident">ret</span>).<span class="ident">unwrap_or_default</span>()))
+                <span class="kw">fn </span>produce(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;<span class="macro-nonterminal">$t</span>&gt;&gt; {
+                    <span class="kw">let </span>ret = <span class="self">self</span>.next_val();
+                    <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(FromPrimitive::from_usize(ret).unwrap_or_default()))
                 }
             }
-        )<span class="op">+</span>
+        )+
     };
 }
 
-<span class="macro">numeric_impl!</span>(<span class="ident">u64</span>, <span class="ident">i32</span>, <span class="ident">i64</span>, <span class="ident">f64</span>);
+<span class="macro">numeric_impl!</span>(u64, i32, i64, f64);
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="ident">String</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">DummySourcePartitionParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">ConnectorXError</span>;
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, String&gt; <span class="kw">for </span>DummySourcePartitionParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="kw">type </span>Error = ConnectorXError;
 
-    <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">ret</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">next_val</span>().<span class="ident">to_string</span>();
-        <span class="prelude-val">Ok</span>(<span class="ident">ret</span>)
+    <span class="kw">fn </span>produce(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;String&gt; {
+        <span class="kw">let </span>ret = <span class="self">self</span>.next_val().to_string();
+        <span class="prelude-val">Ok</span>(ret)
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">DummySourcePartitionParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">ConnectorXError</span>;
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span>&lt;String&gt;&gt; <span class="kw">for </span>DummySourcePartitionParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="kw">type </span>Error = ConnectorXError;
 
-    <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">ret</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">next_val</span>().<span class="ident">to_string</span>();
-        <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">ret</span>))
+    <span class="kw">fn </span>produce(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;String&gt;&gt; {
+        <span class="kw">let </span>ret = <span class="self">self</span>.next_val().to_string();
+        <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(ret))
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="ident">bool</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">DummySourcePartitionParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">ConnectorXError</span>;
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, bool&gt; <span class="kw">for </span>DummySourcePartitionParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="kw">type </span>Error = ConnectorXError;
 
-    <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">ret</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">next_val</span>() <span class="op">%</span> <span class="number">2</span> <span class="op">==</span> <span class="number">0</span>;
-        <span class="prelude-val">Ok</span>(<span class="ident">ret</span>)
+    <span class="kw">fn </span>produce(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;bool&gt; {
+        <span class="kw">let </span>ret = <span class="self">self</span>.next_val() % <span class="number">2 </span>== <span class="number">0</span>;
+        <span class="prelude-val">Ok</span>(ret)
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">DummySourcePartitionParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">ConnectorXError</span>;
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span>&lt;bool&gt;&gt; <span class="kw">for </span>DummySourcePartitionParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="kw">type </span>Error = ConnectorXError;
 
-    <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">ret</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">next_val</span>() <span class="op">%</span> <span class="number">3</span> {
-            <span class="number">0</span> =&gt; <span class="prelude-val">Some</span>(<span class="bool-val">true</span>),
-            <span class="number">1</span> =&gt; <span class="prelude-val">Some</span>(<span class="bool-val">false</span>),
-            <span class="number">2</span> =&gt; <span class="prelude-val">None</span>,
-            <span class="kw">_</span> =&gt; <span class="macro">unreachable!</span>(),
+    <span class="kw">fn </span>produce(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;bool&gt;&gt; {
+        <span class="kw">let </span>ret = <span class="kw">match </span><span class="self">self</span>.next_val() % <span class="number">3 </span>{
+            <span class="number">0 </span>=&gt; <span class="prelude-val">Some</span>(<span class="bool-val">true</span>),
+            <span class="number">1 </span>=&gt; <span class="prelude-val">Some</span>(<span class="bool-val">false</span>),
+            <span class="number">2 </span>=&gt; <span class="prelude-val">None</span>,
+            <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
         };
 
-        <span class="prelude-val">Ok</span>(<span class="ident">ret</span>)
+        <span class="prelude-val">Ok</span>(ret)
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">DummySourcePartitionParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">ConnectorXError</span>;
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, DateTime&lt;Utc&gt;&gt; <span class="kw">for </span>DummySourcePartitionParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="kw">type </span>Error = ConnectorXError;
 
-    <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">next_val</span>();
-        <span class="kw">let</span> <span class="ident">ret</span> <span class="op">=</span> <span class="ident">offset::Utc::now</span>();
+    <span class="kw">fn </span>produce(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;DateTime&lt;Utc&gt;&gt; {
+        <span class="self">self</span>.next_val();
+        <span class="kw">let </span>ret = offset::Utc::now();
 
-        <span class="prelude-val">Ok</span>(<span class="ident">ret</span>)
+        <span class="prelude-val">Ok</span>(ret)
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">DummySourcePartitionParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">ConnectorXError</span>;
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;&gt; <span class="kw">for </span>DummySourcePartitionParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="kw">type </span>Error = ConnectorXError;
 
-    <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">next_val</span>();
-        <span class="kw">let</span> <span class="ident">ret</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">next_val</span>() <span class="op">%</span> <span class="number">2</span> {
-            <span class="number">0</span> =&gt; <span class="prelude-val">Some</span>(<span class="ident">offset::Utc::now</span>()),
-            <span class="number">1</span> =&gt; <span class="prelude-val">None</span>,
-            <span class="kw">_</span> =&gt; <span class="macro">unreachable!</span>(),
+    <span class="kw">fn </span>produce(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;&gt; {
+        <span class="self">self</span>.next_val();
+        <span class="kw">let </span>ret = <span class="kw">match </span><span class="self">self</span>.next_val() % <span class="number">2 </span>{
+            <span class="number">0 </span>=&gt; <span class="prelude-val">Some</span>(offset::Utc::now()),
+            <span class="number">1 </span>=&gt; <span class="prelude-val">None</span>,
+            <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
         };
-        <span class="prelude-val">Ok</span>(<span class="ident">ret</span>)
+        <span class="prelude-val">Ok</span>(ret)
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="ident">Date</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">DummySourcePartitionParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">ConnectorXError</span>;
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, Date&lt;Utc&gt;&gt; <span class="kw">for </span>DummySourcePartitionParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="kw">type </span>Error = ConnectorXError;
 
-    <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Date</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">next_val</span>();
-        <span class="kw">let</span> <span class="ident">ret</span> <span class="op">=</span> <span class="ident">offset::Utc::now</span>().<span class="ident">date</span>();
-        <span class="prelude-val">Ok</span>(<span class="ident">ret</span>)
+    <span class="kw">fn </span>produce(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Date&lt;Utc&gt;&gt; {
+        <span class="self">self</span>.next_val();
+        <span class="kw">let </span>ret = offset::Utc::now().date();
+        <span class="prelude-val">Ok</span>(ret)
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Date</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">DummySourcePartitionParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">ConnectorXError</span>;
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span>&lt;Date&lt;Utc&gt;&gt;&gt; <span class="kw">for </span>DummySourcePartitionParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="kw">type </span>Error = ConnectorXError;
 
-    <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Date</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">next_val</span>();
-        <span class="kw">let</span> <span class="ident">ret</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">next_val</span>() <span class="op">%</span> <span class="number">2</span> {
-            <span class="number">0</span> =&gt; <span class="prelude-val">Some</span>(<span class="ident">offset::Utc::now</span>().<span class="ident">date</span>()),
-            <span class="number">1</span> =&gt; <span class="prelude-val">None</span>,
-            <span class="kw">_</span> =&gt; <span class="macro">unreachable!</span>(),
+    <span class="kw">fn </span>produce(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Date&lt;Utc&gt;&gt;&gt; {
+        <span class="self">self</span>.next_val();
+        <span class="kw">let </span>ret = <span class="kw">match </span><span class="self">self</span>.next_val() % <span class="number">2 </span>{
+            <span class="number">0 </span>=&gt; <span class="prelude-val">Some</span>(offset::Utc::now().date()),
+            <span class="number">1 </span>=&gt; <span class="prelude-val">None</span>,
+            <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
         };
-        <span class="prelude-val">Ok</span>(<span class="ident">ret</span>)
+        <span class="prelude-val">Ok</span>(ret)
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="connectorx" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.62.0-nightly (878c7833f 2022-04-16)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="connectorx" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (750bd1a7f 2022-09-14)" ></div></body></html>

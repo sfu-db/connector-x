@@ -1,9 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `connectorx/src/sources/mssql/typesystem.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>typesystem.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script src="../../../../crates.js"></script><script defer src="../../../../main.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script>
-    <noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../connectorx/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../../../connectorx/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../connectorx/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><div class="theme-picker hidden"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="22" height="22" alt="Pick another theme!" src="../../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `connectorx/src/sources/mssql/typesystem.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>typesystem.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../../normalize.css"><link rel="stylesheet" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../../ayu.css" disabled><link rel="stylesheet" href="../../../../dark.css" disabled><link rel="stylesheet" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../connectorx/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../connectorx/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../connectorx/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -138,141 +133,140 @@
 <span id="133">133</span>
 <span id="134">134</span>
 <span id="135">135</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">chrono</span>::{<span class="ident">DateTime</span>, <span class="ident">NaiveDate</span>, <span class="ident">NaiveDateTime</span>, <span class="ident">NaiveTime</span>, <span class="ident">Utc</span>};
-<span class="kw">use</span> <span class="ident">rust_decimal::Decimal</span>;
-<span class="kw">use</span> <span class="ident">tiberius</span>::{<span class="ident">ColumnData</span>, <span class="ident">ColumnType</span>, <span class="ident">FromSql</span>};
-<span class="kw">use</span> <span class="ident">uuid::Uuid</span>;
+</pre><pre class="rust"><code><span class="kw">use </span>chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
+<span class="kw">use </span>rust_decimal::Decimal;
+<span class="kw">use </span>tiberius::{ColumnData, ColumnType, FromSql};
+<span class="kw">use </span>uuid::Uuid;
 
-<span class="comment">// https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-tds/ce3183a6-9d89-47e8-a02f-de5a1a1303de</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">MsSQLTypeSystem</span> {
-    <span class="ident">Tinyint</span>(<span class="ident">bool</span>),
-    <span class="ident">Smallint</span>(<span class="ident">bool</span>),
-    <span class="ident">Int</span>(<span class="ident">bool</span>),
-    <span class="ident">Bigint</span>(<span class="ident">bool</span>),
-    <span class="ident">Intn</span>(<span class="ident">bool</span>),
-    <span class="ident">Float24</span>(<span class="ident">bool</span>),
-    <span class="ident">Float53</span>(<span class="ident">bool</span>),
-    <span class="ident">Floatn</span>(<span class="ident">bool</span>),
-    <span class="ident">Bit</span>(<span class="ident">bool</span>),
-    <span class="ident">Nvarchar</span>(<span class="ident">bool</span>),
-    <span class="ident">Varchar</span>(<span class="ident">bool</span>),
-    <span class="ident">Nchar</span>(<span class="ident">bool</span>),
-    <span class="ident">Char</span>(<span class="ident">bool</span>),
-    <span class="ident">Ntext</span>(<span class="ident">bool</span>),
-    <span class="ident">Text</span>(<span class="ident">bool</span>),
-    <span class="ident">Binary</span>(<span class="ident">bool</span>),
-    <span class="ident">Varbinary</span>(<span class="ident">bool</span>),
-    <span class="ident">Image</span>(<span class="ident">bool</span>),
-    <span class="ident">Uniqueidentifier</span>(<span class="ident">bool</span>),
-    <span class="ident">Numeric</span>(<span class="ident">bool</span>),
-    <span class="ident">Decimal</span>(<span class="ident">bool</span>),
-    <span class="ident">Datetime</span>(<span class="ident">bool</span>),
-    <span class="ident">Datetime2</span>(<span class="ident">bool</span>),
-    <span class="ident">Smalldatetime</span>(<span class="ident">bool</span>),
-    <span class="ident">Date</span>(<span class="ident">bool</span>),
-    <span class="ident">Time</span>(<span class="ident">bool</span>),
-    <span class="ident">Datetimeoffset</span>(<span class="ident">bool</span>),
-    <span class="ident">Money</span>(<span class="ident">bool</span>),
-    <span class="ident">SmallMoney</span>(<span class="ident">bool</span>),
+<span class="comment">// https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-tds/ce3183a6-9d89-47e8-a02f-de5a1a1303de
+</span><span class="attribute">#[derive(Copy, Clone, Debug)]
+</span><span class="kw">pub enum </span>MsSQLTypeSystem {
+    Tinyint(bool),
+    Smallint(bool),
+    Int(bool),
+    Bigint(bool),
+    Intn(bool),
+    Float24(bool),
+    Float53(bool),
+    Floatn(bool),
+    Bit(bool),
+    Nvarchar(bool),
+    Varchar(bool),
+    Nchar(bool),
+    Char(bool),
+    Ntext(bool),
+    Text(bool),
+    Binary(bool),
+    Varbinary(bool),
+    Image(bool),
+    Uniqueidentifier(bool),
+    Numeric(bool),
+    Decimal(bool),
+    Datetime(bool),
+    Datetime2(bool),
+    Smalldatetime(bool),
+    Date(bool),
+    Time(bool),
+    Datetimeoffset(bool),
+    Money(bool),
+    SmallMoney(bool),
 }
 
-<span class="macro">impl_typesystem!</span> {
-    <span class="ident">system</span> <span class="op">=</span> <span class="ident">MsSQLTypeSystem</span>,
-    <span class="ident">mappings</span> <span class="op">=</span> {
-        { <span class="ident">Tinyint</span>  =&gt; <span class="ident">u8</span> }
-        { <span class="ident">Smallint</span> =&gt; <span class="ident">i16</span> }
-        { <span class="ident">Int</span> =&gt; <span class="ident">i32</span> }
-        { <span class="ident">Bigint</span> =&gt; <span class="ident">i64</span> }
-        { <span class="ident">Intn</span> =&gt; <span class="ident">IntN</span> }
-        { <span class="ident">Float24</span> <span class="op">|</span> <span class="ident">SmallMoney</span> =&gt; <span class="ident">f32</span> }
-        { <span class="ident">Float53</span> <span class="op">|</span> <span class="ident">Money</span> =&gt; <span class="ident">f64</span> }
-        { <span class="ident">Floatn</span> =&gt; <span class="ident">FloatN</span> }
-        { <span class="ident">Bit</span> =&gt; <span class="ident">bool</span> }
-        { <span class="ident">Nvarchar</span> <span class="op">|</span> <span class="ident">Varchar</span> <span class="op">|</span> <span class="ident">Nchar</span> <span class="op">|</span> <span class="ident">Char</span> <span class="op">|</span> <span class="ident">Text</span> <span class="op">|</span> <span class="ident">Ntext</span> =&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;r</span> <span class="ident">str</span> }
-        { <span class="ident">Binary</span> <span class="op">|</span> <span class="ident">Varbinary</span> <span class="op">|</span> <span class="ident">Image</span> =&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;r</span> [<span class="ident">u8</span>] }
-        { <span class="ident">Uniqueidentifier</span> =&gt; <span class="ident">Uuid</span> }
-        { <span class="ident">Numeric</span> <span class="op">|</span> <span class="ident">Decimal</span> =&gt; <span class="ident">Decimal</span> }
-        { <span class="ident">Datetime</span> <span class="op">|</span> <span class="ident">Datetime2</span> <span class="op">|</span> <span class="ident">Smalldatetime</span> =&gt; <span class="ident">NaiveDateTime</span> }
-        { <span class="ident">Date</span> =&gt; <span class="ident">NaiveDate</span> }
-        { <span class="ident">Time</span> =&gt; <span class="ident">NaiveTime</span> }
-        { <span class="ident">Datetimeoffset</span> =&gt; <span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span> }
+<span class="macro">impl_typesystem! </span>{
+    system = MsSQLTypeSystem,
+    mappings = {
+        { Tinyint  =&gt; u8 }
+        { Smallint =&gt; i16 }
+        { Int =&gt; i32 }
+        { Bigint =&gt; i64 }
+        { Intn =&gt; IntN }
+        { Float24 | SmallMoney =&gt; f32 }
+        { Float53 | Money =&gt; f64 }
+        { Floatn =&gt; FloatN }
+        { Bit =&gt; bool }
+        { Nvarchar | Varchar | Nchar | Char | Text | Ntext =&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span>str }
+        { Binary | Varbinary | Image =&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span>[u8] }
+        { Uniqueidentifier =&gt; Uuid }
+        { Numeric | Decimal =&gt; Decimal }
+        { Datetime | Datetime2 | Smalldatetime =&gt; NaiveDateTime }
+        { Date =&gt; NaiveDate }
+        { Time =&gt; NaiveTime }
+        { Datetimeoffset =&gt; DateTime&lt;Utc&gt; }
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">ColumnType</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">MsSQLTypeSystem</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">ty</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">ColumnType</span>) -&gt; <span class="ident">MsSQLTypeSystem</span> {
-        <span class="kw">use</span> <span class="ident">MsSQLTypeSystem</span>::<span class="kw-2">*</span>;
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; From&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>ColumnType&gt; <span class="kw">for </span>MsSQLTypeSystem {
+    <span class="kw">fn </span>from(ty: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>ColumnType) -&gt; MsSQLTypeSystem {
+        <span class="kw">use </span>MsSQLTypeSystem::<span class="kw-2">*</span>;
 
-        <span class="kw">match</span> <span class="ident">ty</span> {
-            <span class="ident">ColumnType::Int1</span> =&gt; <span class="ident">Tinyint</span>(<span class="bool-val">false</span>),
-            <span class="ident">ColumnType::Int2</span> =&gt; <span class="ident">Smallint</span>(<span class="bool-val">false</span>),
-            <span class="ident">ColumnType::Int4</span> =&gt; <span class="ident">Int</span>(<span class="bool-val">false</span>),
-            <span class="ident">ColumnType::Int8</span> =&gt; <span class="ident">Bigint</span>(<span class="bool-val">false</span>),
-            <span class="ident">ColumnType::Intn</span> =&gt; <span class="ident">Intn</span>(<span class="bool-val">true</span>),
-            <span class="ident">ColumnType::Float4</span> =&gt; <span class="ident">Float24</span>(<span class="bool-val">false</span>),
-            <span class="ident">ColumnType::Float8</span> =&gt; <span class="ident">Float53</span>(<span class="bool-val">false</span>),
-            <span class="ident">ColumnType::Floatn</span> =&gt; <span class="ident">Floatn</span>(<span class="bool-val">true</span>),
-            <span class="ident">ColumnType::Bit</span> =&gt; <span class="ident">Bit</span>(<span class="bool-val">false</span>),
-            <span class="ident">ColumnType::Bitn</span> =&gt; <span class="ident">Bit</span>(<span class="bool-val">true</span>), <span class="comment">// nullable int, var-length</span>
-            <span class="ident">ColumnType::NVarchar</span> =&gt; <span class="ident">Nvarchar</span>(<span class="bool-val">true</span>),
-            <span class="ident">ColumnType::BigVarChar</span> =&gt; <span class="ident">Varchar</span>(<span class="bool-val">true</span>),
-            <span class="ident">ColumnType::NChar</span> =&gt; <span class="ident">Nchar</span>(<span class="bool-val">true</span>),
-            <span class="ident">ColumnType::BigChar</span> =&gt; <span class="ident">Char</span>(<span class="bool-val">true</span>),
-            <span class="ident">ColumnType::NText</span> =&gt; <span class="ident">Ntext</span>(<span class="bool-val">true</span>),
-            <span class="ident">ColumnType::Text</span> =&gt; <span class="ident">Text</span>(<span class="bool-val">true</span>),
-            <span class="ident">ColumnType::BigBinary</span> =&gt; <span class="ident">Binary</span>(<span class="bool-val">true</span>),
-            <span class="ident">ColumnType::BigVarBin</span> =&gt; <span class="ident">Varbinary</span>(<span class="bool-val">true</span>),
-            <span class="ident">ColumnType::Image</span> =&gt; <span class="ident">Image</span>(<span class="bool-val">true</span>),
-            <span class="ident">ColumnType::Guid</span> =&gt; <span class="ident">Uniqueidentifier</span>(<span class="bool-val">true</span>),
-            <span class="ident">ColumnType::Decimaln</span> =&gt; <span class="ident">Decimal</span>(<span class="bool-val">true</span>),
-            <span class="ident">ColumnType::Numericn</span> =&gt; <span class="ident">Numeric</span>(<span class="bool-val">true</span>),
-            <span class="ident">ColumnType::Datetime</span> =&gt; <span class="ident">Datetime</span>(<span class="bool-val">false</span>),
-            <span class="ident">ColumnType::Datetime2</span> =&gt; <span class="ident">Datetime2</span>(<span class="bool-val">true</span>),
-            <span class="ident">ColumnType::Datetimen</span> =&gt; <span class="ident">Datetime</span>(<span class="bool-val">true</span>),
-            <span class="ident">ColumnType::Datetime4</span> =&gt; <span class="ident">Datetime</span>(<span class="bool-val">false</span>),
-            <span class="ident">ColumnType::Daten</span> =&gt; <span class="ident">Date</span>(<span class="bool-val">true</span>),
-            <span class="ident">ColumnType::Timen</span> =&gt; <span class="ident">Time</span>(<span class="bool-val">true</span>),
-            <span class="ident">ColumnType::DatetimeOffsetn</span> =&gt; <span class="ident">Datetimeoffset</span>(<span class="bool-val">true</span>),
-            <span class="ident">ColumnType::Money</span> =&gt; <span class="ident">Money</span>(<span class="bool-val">true</span>),
-            <span class="ident">ColumnType::Money4</span> =&gt; <span class="ident">SmallMoney</span>(<span class="bool-val">true</span>),
-            <span class="kw">_</span> =&gt; <span class="macro">unimplemented!</span>(<span class="string">&quot;{}&quot;</span>, <span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">ty</span>)),
+        <span class="kw">match </span>ty {
+            ColumnType::Int1 =&gt; Tinyint(<span class="bool-val">false</span>),
+            ColumnType::Int2 =&gt; Smallint(<span class="bool-val">false</span>),
+            ColumnType::Int4 =&gt; Int(<span class="bool-val">false</span>),
+            ColumnType::Int8 =&gt; Bigint(<span class="bool-val">false</span>),
+            ColumnType::Intn =&gt; Intn(<span class="bool-val">true</span>),
+            ColumnType::Float4 =&gt; Float24(<span class="bool-val">false</span>),
+            ColumnType::Float8 =&gt; Float53(<span class="bool-val">false</span>),
+            ColumnType::Floatn =&gt; Floatn(<span class="bool-val">true</span>),
+            ColumnType::Bit =&gt; Bit(<span class="bool-val">false</span>),
+            ColumnType::Bitn =&gt; Bit(<span class="bool-val">true</span>), <span class="comment">// nullable int, var-length
+            </span>ColumnType::NVarchar =&gt; Nvarchar(<span class="bool-val">true</span>),
+            ColumnType::BigVarChar =&gt; Varchar(<span class="bool-val">true</span>),
+            ColumnType::NChar =&gt; Nchar(<span class="bool-val">true</span>),
+            ColumnType::BigChar =&gt; Char(<span class="bool-val">true</span>),
+            ColumnType::NText =&gt; Ntext(<span class="bool-val">true</span>),
+            ColumnType::Text =&gt; Text(<span class="bool-val">true</span>),
+            ColumnType::BigBinary =&gt; Binary(<span class="bool-val">true</span>),
+            ColumnType::BigVarBin =&gt; Varbinary(<span class="bool-val">true</span>),
+            ColumnType::Image =&gt; Image(<span class="bool-val">true</span>),
+            ColumnType::Guid =&gt; Uniqueidentifier(<span class="bool-val">true</span>),
+            ColumnType::Decimaln =&gt; Decimal(<span class="bool-val">true</span>),
+            ColumnType::Numericn =&gt; Numeric(<span class="bool-val">true</span>),
+            ColumnType::Datetime =&gt; Datetime(<span class="bool-val">false</span>),
+            ColumnType::Datetime2 =&gt; Datetime2(<span class="bool-val">true</span>),
+            ColumnType::Datetimen =&gt; Datetime(<span class="bool-val">true</span>),
+            ColumnType::Datetime4 =&gt; Datetime(<span class="bool-val">false</span>),
+            ColumnType::Daten =&gt; Date(<span class="bool-val">true</span>),
+            ColumnType::Timen =&gt; Time(<span class="bool-val">true</span>),
+            ColumnType::DatetimeOffsetn =&gt; Datetimeoffset(<span class="bool-val">true</span>),
+            ColumnType::Money =&gt; Money(<span class="bool-val">true</span>),
+            ColumnType::Money4 =&gt; SmallMoney(<span class="bool-val">true</span>),
+            <span class="kw">_ </span>=&gt; <span class="macro">unimplemented!</span>(<span class="string">&quot;{}&quot;</span>, <span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, ty)),
         }
     }
 }
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">IntN</span>(<span class="kw">pub</span> <span class="ident">i64</span>);
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">FromSql</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">IntN</span> {
-    <span class="kw">fn</span> <span class="ident">from_sql</span>(<span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">ColumnData</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>, <span class="ident">tiberius::error::Error</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="ident">value</span> {
-            <span class="ident">ColumnData::U8</span>(<span class="prelude-val">None</span>)
-            <span class="op">|</span> <span class="ident">ColumnData::I16</span>(<span class="prelude-val">None</span>)
-            <span class="op">|</span> <span class="ident">ColumnData::I32</span>(<span class="prelude-val">None</span>)
-            <span class="op">|</span> <span class="ident">ColumnData::I64</span>(<span class="prelude-val">None</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
-            <span class="ident">ColumnData::U8</span>(<span class="prelude-val">Some</span>(<span class="ident">d</span>)) =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">IntN</span>(<span class="kw-2">*</span><span class="ident">d</span> <span class="kw">as</span> <span class="ident">i64</span>))),
-            <span class="ident">ColumnData::I16</span>(<span class="prelude-val">Some</span>(<span class="ident">d</span>)) =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">IntN</span>(<span class="kw-2">*</span><span class="ident">d</span> <span class="kw">as</span> <span class="ident">i64</span>))),
-            <span class="ident">ColumnData::I32</span>(<span class="prelude-val">Some</span>(<span class="ident">d</span>)) =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">IntN</span>(<span class="kw-2">*</span><span class="ident">d</span> <span class="kw">as</span> <span class="ident">i64</span>))),
-            <span class="ident">ColumnData::I64</span>(<span class="prelude-val">Some</span>(<span class="ident">d</span>)) =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">IntN</span>(<span class="kw-2">*</span><span class="ident">d</span> <span class="kw">as</span> <span class="ident">i64</span>))),
-            <span class="ident">v</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">tiberius::error::Error::Conversion</span>(
-                <span class="macro">format!</span>(<span class="string">&quot;cannot interpret {:?} as a intn value&quot;</span>, <span class="ident">v</span>).<span class="ident">into</span>(),
+<span class="kw">pub struct </span>IntN(<span class="kw">pub </span>i64);
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; FromSql&lt;<span class="lifetime">&#39;a</span>&gt; <span class="kw">for </span>IntN {
+    <span class="kw">fn </span>from_sql(value: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>ColumnData&lt;<span class="lifetime">&#39;static</span>&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt;, tiberius::error::Error&gt; {
+        <span class="kw">match </span>value {
+            ColumnData::U8(<span class="prelude-val">None</span>)
+            | ColumnData::I16(<span class="prelude-val">None</span>)
+            | ColumnData::I32(<span class="prelude-val">None</span>)
+            | ColumnData::I64(<span class="prelude-val">None</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
+            ColumnData::U8(<span class="prelude-val">Some</span>(d)) =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(IntN(<span class="kw-2">*</span>d <span class="kw">as </span>i64))),
+            ColumnData::I16(<span class="prelude-val">Some</span>(d)) =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(IntN(<span class="kw-2">*</span>d <span class="kw">as </span>i64))),
+            ColumnData::I32(<span class="prelude-val">Some</span>(d)) =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(IntN(<span class="kw-2">*</span>d <span class="kw">as </span>i64))),
+            ColumnData::I64(<span class="prelude-val">Some</span>(d)) =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(IntN(<span class="kw-2">*</span>d <span class="kw">as </span>i64))),
+            v =&gt; <span class="prelude-val">Err</span>(tiberius::error::Error::Conversion(
+                <span class="macro">format!</span>(<span class="string">&quot;cannot interpret {:?} as a intn value&quot;</span>, v).into(),
             )),
         }
     }
 }
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">FloatN</span>(<span class="kw">pub</span> <span class="ident">f64</span>);
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">FromSql</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">FloatN</span> {
-    <span class="kw">fn</span> <span class="ident">from_sql</span>(<span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">ColumnData</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>, <span class="ident">tiberius::error::Error</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="ident">value</span> {
-            <span class="ident">ColumnData::F32</span>(<span class="prelude-val">None</span>) <span class="op">|</span> <span class="ident">ColumnData::F64</span>(<span class="prelude-val">None</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
-            <span class="ident">ColumnData::F32</span>(<span class="prelude-val">Some</span>(<span class="ident">d</span>)) =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">FloatN</span>(<span class="kw-2">*</span><span class="ident">d</span> <span class="kw">as</span> <span class="ident">f64</span>))),
-            <span class="ident">ColumnData::F64</span>(<span class="prelude-val">Some</span>(<span class="ident">d</span>)) =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">FloatN</span>(<span class="kw-2">*</span><span class="ident">d</span> <span class="kw">as</span> <span class="ident">f64</span>))),
-            <span class="ident">v</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">tiberius::error::Error::Conversion</span>(
-                <span class="macro">format!</span>(<span class="string">&quot;cannot interpret {:?} as a floatn value&quot;</span>, <span class="ident">v</span>).<span class="ident">into</span>(),
+<span class="kw">pub struct </span>FloatN(<span class="kw">pub </span>f64);
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; FromSql&lt;<span class="lifetime">&#39;a</span>&gt; <span class="kw">for </span>FloatN {
+    <span class="kw">fn </span>from_sql(value: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>ColumnData&lt;<span class="lifetime">&#39;static</span>&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt;, tiberius::error::Error&gt; {
+        <span class="kw">match </span>value {
+            ColumnData::F32(<span class="prelude-val">None</span>) | ColumnData::F64(<span class="prelude-val">None</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
+            ColumnData::F32(<span class="prelude-val">Some</span>(d)) =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(FloatN(<span class="kw-2">*</span>d <span class="kw">as </span>f64))),
+            ColumnData::F64(<span class="prelude-val">Some</span>(d)) =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(FloatN(<span class="kw-2">*</span>d <span class="kw">as </span>f64))),
+            v =&gt; <span class="prelude-val">Err</span>(tiberius::error::Error::Conversion(
+                <span class="macro">format!</span>(<span class="string">&quot;cannot interpret {:?} as a floatn value&quot;</span>, v).into(),
             )),
         }
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="connectorx" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.62.0-nightly (878c7833f 2022-04-16)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="connectorx" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (750bd1a7f 2022-09-14)" ></div></body></html>

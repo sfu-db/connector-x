@@ -1,9 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `connectorx/src/sources/postgres/typesystem.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>typesystem.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script src="../../../../crates.js"></script><script defer src="../../../../main.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script>
-    <noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../connectorx/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../../../connectorx/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../connectorx/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><div class="theme-picker hidden"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="22" height="22" alt="Pick another theme!" src="../../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `connectorx/src/sources/postgres/typesystem.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>typesystem.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../../normalize.css"><link rel="stylesheet" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../../ayu.css" disabled><link rel="stylesheet" href="../../../../dark.css" disabled><link rel="stylesheet" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../connectorx/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../connectorx/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../connectorx/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -143,146 +138,145 @@
 <span id="138">138</span>
 <span id="139">139</span>
 <span id="140">140</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">chrono</span>::{<span class="ident">DateTime</span>, <span class="ident">NaiveDate</span>, <span class="ident">NaiveDateTime</span>, <span class="ident">NaiveTime</span>, <span class="ident">Utc</span>};
-<span class="kw">use</span> <span class="ident">postgres::types::Type</span>;
-<span class="kw">use</span> <span class="ident">rust_decimal::Decimal</span>;
-<span class="kw">use</span> <span class="ident">serde_json::Value</span>;
-<span class="kw">use</span> <span class="ident">std::collections::HashMap</span>;
-<span class="kw">use</span> <span class="ident">uuid::Uuid</span>;
+</pre><pre class="rust"><code><span class="kw">use </span>chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
+<span class="kw">use </span>postgres::types::Type;
+<span class="kw">use </span>rust_decimal::Decimal;
+<span class="kw">use </span>serde_json::Value;
+<span class="kw">use </span>std::collections::HashMap;
+<span class="kw">use </span>uuid::Uuid;
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">PostgresTypeSystem</span> {
-    <span class="ident">Bool</span>(<span class="ident">bool</span>),
-    <span class="ident">Float4</span>(<span class="ident">bool</span>),
-    <span class="ident">Float8</span>(<span class="ident">bool</span>),
-    <span class="ident">Numeric</span>(<span class="ident">bool</span>),
-    <span class="ident">Int2</span>(<span class="ident">bool</span>),
-    <span class="ident">Int4</span>(<span class="ident">bool</span>),
-    <span class="ident">Int8</span>(<span class="ident">bool</span>),
-    <span class="ident">Float4Array</span>(<span class="ident">bool</span>),
-    <span class="ident">Float8Array</span>(<span class="ident">bool</span>),
-    <span class="ident">NumericArray</span>(<span class="ident">bool</span>),
-    <span class="ident">Int2Array</span>(<span class="ident">bool</span>),
-    <span class="ident">Int4Array</span>(<span class="ident">bool</span>),
-    <span class="ident">Int8Array</span>(<span class="ident">bool</span>),
-    <span class="ident">Date</span>(<span class="ident">bool</span>),
-    <span class="ident">Char</span>(<span class="ident">bool</span>),
-    <span class="ident">BpChar</span>(<span class="ident">bool</span>),
-    <span class="ident">VarChar</span>(<span class="ident">bool</span>),
-    <span class="ident">Text</span>(<span class="ident">bool</span>),
-    <span class="ident">ByteA</span>(<span class="ident">bool</span>),
-    <span class="ident">Time</span>(<span class="ident">bool</span>),
-    <span class="ident">Timestamp</span>(<span class="ident">bool</span>),
-    <span class="ident">TimestampTz</span>(<span class="ident">bool</span>),
-    <span class="ident">UUID</span>(<span class="ident">bool</span>),
-    <span class="ident">JSON</span>(<span class="ident">bool</span>),
-    <span class="ident">JSONB</span>(<span class="ident">bool</span>),
-    <span class="ident">Enum</span>(<span class="ident">bool</span>),
-    <span class="ident">HSTORE</span>(<span class="ident">bool</span>),
+<span class="attribute">#[derive(Copy, Clone, Debug)]
+</span><span class="kw">pub enum </span>PostgresTypeSystem {
+    Bool(bool),
+    Float4(bool),
+    Float8(bool),
+    Numeric(bool),
+    Int2(bool),
+    Int4(bool),
+    Int8(bool),
+    Float4Array(bool),
+    Float8Array(bool),
+    NumericArray(bool),
+    Int2Array(bool),
+    Int4Array(bool),
+    Int8Array(bool),
+    Date(bool),
+    Char(bool),
+    BpChar(bool),
+    VarChar(bool),
+    Text(bool),
+    ByteA(bool),
+    Time(bool),
+    Timestamp(bool),
+    TimestampTz(bool),
+    UUID(bool),
+    JSON(bool),
+    JSONB(bool),
+    Enum(bool),
+    HSTORE(bool),
 }
 
-<span class="macro">impl_typesystem!</span> {
-    <span class="ident">system</span> <span class="op">=</span> <span class="ident">PostgresTypeSystem</span>,
-    <span class="ident">mappings</span> <span class="op">=</span> {
-        { <span class="ident">Int2</span> =&gt; <span class="ident">i16</span> }
-        { <span class="ident">Int4</span> =&gt; <span class="ident">i32</span> }
-        { <span class="ident">Int8</span> =&gt; <span class="ident">i64</span> }
-        { <span class="ident">Float4</span> =&gt; <span class="ident">f32</span> }
-        { <span class="ident">Float8</span> =&gt; <span class="ident">f64</span> }
-        { <span class="ident">Numeric</span> =&gt; <span class="ident">Decimal</span> }
-        { <span class="ident">Int2Array</span> =&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">i16</span><span class="op">&gt;</span> }
-        { <span class="ident">Int4Array</span> =&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">i32</span><span class="op">&gt;</span> }
-        { <span class="ident">Int8Array</span> =&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span> }
-        { <span class="ident">Float4Array</span> =&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span> }
-        { <span class="ident">Float8Array</span> =&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span> }
-        { <span class="ident">NumericArray</span> =&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Decimal</span><span class="op">&gt;</span> }
-        { <span class="ident">Bool</span> =&gt; <span class="ident">bool</span> }
-        { <span class="ident">Char</span> =&gt; <span class="ident">i8</span> }
-        { <span class="ident">Text</span> <span class="op">|</span> <span class="ident">BpChar</span> <span class="op">|</span> <span class="ident">VarChar</span> <span class="op">|</span> <span class="ident">Enum</span> =&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;r</span> <span class="ident">str</span> }
-        { <span class="ident">ByteA</span> =&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> }
-        { <span class="ident">Time</span> =&gt; <span class="ident">NaiveTime</span> }
-        { <span class="ident">Timestamp</span> =&gt; <span class="ident">NaiveDateTime</span> }
-        { <span class="ident">TimestampTz</span> =&gt; <span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span> }
-        { <span class="ident">Date</span> =&gt; <span class="ident">NaiveDate</span> }
-        { <span class="ident">UUID</span> =&gt; <span class="ident">Uuid</span> }
-        { <span class="ident">JSON</span> <span class="op">|</span> <span class="ident">JSONB</span> =&gt; <span class="ident">Value</span> }
-        { <span class="ident">HSTORE</span> =&gt; <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span> }
+<span class="macro">impl_typesystem! </span>{
+    system = PostgresTypeSystem,
+    mappings = {
+        { Int2 =&gt; i16 }
+        { Int4 =&gt; i32 }
+        { Int8 =&gt; i64 }
+        { Float4 =&gt; f32 }
+        { Float8 =&gt; f64 }
+        { Numeric =&gt; Decimal }
+        { Int2Array =&gt; Vec&lt;i16&gt; }
+        { Int4Array =&gt; Vec&lt;i32&gt; }
+        { Int8Array =&gt; Vec&lt;i64&gt; }
+        { Float4Array =&gt; Vec&lt;f32&gt; }
+        { Float8Array =&gt; Vec&lt;f64&gt; }
+        { NumericArray =&gt; Vec&lt;Decimal&gt; }
+        { Bool =&gt; bool }
+        { Char =&gt; i8 }
+        { Text | BpChar | VarChar | Enum =&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span>str }
+        { ByteA =&gt; Vec&lt;u8&gt; }
+        { Time =&gt; NaiveTime }
+        { Timestamp =&gt; NaiveDateTime }
+        { TimestampTz =&gt; DateTime&lt;Utc&gt; }
+        { Date =&gt; NaiveDate }
+        { UUID =&gt; Uuid }
+        { JSON | JSONB =&gt; Value }
+        { HSTORE =&gt; HashMap&lt;String, <span class="prelude-ty">Option</span>&lt;String&gt;&gt; }
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Type</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PostgresTypeSystem</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">ty</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Type</span>) -&gt; <span class="ident">PostgresTypeSystem</span> {
-        <span class="kw">use</span> <span class="ident">PostgresTypeSystem</span>::<span class="kw-2">*</span>;
-        <span class="kw">match</span> <span class="ident">ty</span>.<span class="ident">name</span>() {
-            <span class="string">&quot;int2&quot;</span> =&gt; <span class="ident">Int2</span>(<span class="bool-val">true</span>),
-            <span class="string">&quot;int4&quot;</span> =&gt; <span class="ident">Int4</span>(<span class="bool-val">true</span>),
-            <span class="string">&quot;int8&quot;</span> =&gt; <span class="ident">Int8</span>(<span class="bool-val">true</span>),
-            <span class="string">&quot;float4&quot;</span> =&gt; <span class="ident">Float4</span>(<span class="bool-val">true</span>),
-            <span class="string">&quot;float8&quot;</span> =&gt; <span class="ident">Float8</span>(<span class="bool-val">true</span>),
-            <span class="string">&quot;numeric&quot;</span> =&gt; <span class="ident">Numeric</span>(<span class="bool-val">true</span>),
-            <span class="string">&quot;_int2&quot;</span> =&gt; <span class="ident">Int2Array</span>(<span class="bool-val">true</span>),
-            <span class="string">&quot;_int4&quot;</span> =&gt; <span class="ident">Int4Array</span>(<span class="bool-val">true</span>),
-            <span class="string">&quot;_int8&quot;</span> =&gt; <span class="ident">Int8Array</span>(<span class="bool-val">true</span>),
-            <span class="string">&quot;_float4&quot;</span> =&gt; <span class="ident">Float4Array</span>(<span class="bool-val">true</span>),
-            <span class="string">&quot;_float8&quot;</span> =&gt; <span class="ident">Float8Array</span>(<span class="bool-val">true</span>),
-            <span class="string">&quot;_numeric&quot;</span> =&gt; <span class="ident">NumericArray</span>(<span class="bool-val">true</span>),
-            <span class="string">&quot;bool&quot;</span> =&gt; <span class="ident">Bool</span>(<span class="bool-val">true</span>),
-            <span class="string">&quot;char&quot;</span> =&gt; <span class="ident">Char</span>(<span class="bool-val">true</span>),
-            <span class="string">&quot;text&quot;</span> =&gt; <span class="ident">Text</span>(<span class="bool-val">true</span>),
-            <span class="string">&quot;bpchar&quot;</span> =&gt; <span class="ident">BpChar</span>(<span class="bool-val">true</span>),
-            <span class="string">&quot;varchar&quot;</span> =&gt; <span class="ident">VarChar</span>(<span class="bool-val">true</span>),
-            <span class="string">&quot;bytea&quot;</span> =&gt; <span class="ident">ByteA</span>(<span class="bool-val">true</span>),
-            <span class="string">&quot;time&quot;</span> =&gt; <span class="ident">Time</span>(<span class="bool-val">true</span>),
-            <span class="string">&quot;timestamp&quot;</span> =&gt; <span class="ident">Timestamp</span>(<span class="bool-val">true</span>),
-            <span class="string">&quot;timestamptz&quot;</span> =&gt; <span class="ident">TimestampTz</span>(<span class="bool-val">true</span>),
-            <span class="string">&quot;date&quot;</span> =&gt; <span class="ident">Date</span>(<span class="bool-val">true</span>),
-            <span class="string">&quot;uuid&quot;</span> =&gt; <span class="ident">UUID</span>(<span class="bool-val">true</span>),
-            <span class="string">&quot;json&quot;</span> =&gt; <span class="ident">JSON</span>(<span class="bool-val">true</span>),
-            <span class="string">&quot;jsonb&quot;</span> =&gt; <span class="ident">JSONB</span>(<span class="bool-val">true</span>),
-            <span class="string">&quot;hstore&quot;</span> =&gt; <span class="ident">HSTORE</span>(<span class="bool-val">true</span>),
-            <span class="kw">_</span> =&gt; <span class="kw">match</span> <span class="ident">ty</span>.<span class="ident">kind</span>() {
-                <span class="ident">postgres::types::Kind::Enum</span>(<span class="kw">_</span>) =&gt; <span class="ident">Enum</span>(<span class="bool-val">true</span>),
-                <span class="kw">_</span> =&gt; <span class="macro">unimplemented!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">ty</span>.<span class="ident">name</span>()),
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; From&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Type&gt; <span class="kw">for </span>PostgresTypeSystem {
+    <span class="kw">fn </span>from(ty: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Type) -&gt; PostgresTypeSystem {
+        <span class="kw">use </span>PostgresTypeSystem::<span class="kw-2">*</span>;
+        <span class="kw">match </span>ty.name() {
+            <span class="string">&quot;int2&quot; </span>=&gt; Int2(<span class="bool-val">true</span>),
+            <span class="string">&quot;int4&quot; </span>=&gt; Int4(<span class="bool-val">true</span>),
+            <span class="string">&quot;int8&quot; </span>=&gt; Int8(<span class="bool-val">true</span>),
+            <span class="string">&quot;float4&quot; </span>=&gt; Float4(<span class="bool-val">true</span>),
+            <span class="string">&quot;float8&quot; </span>=&gt; Float8(<span class="bool-val">true</span>),
+            <span class="string">&quot;numeric&quot; </span>=&gt; Numeric(<span class="bool-val">true</span>),
+            <span class="string">&quot;_int2&quot; </span>=&gt; Int2Array(<span class="bool-val">true</span>),
+            <span class="string">&quot;_int4&quot; </span>=&gt; Int4Array(<span class="bool-val">true</span>),
+            <span class="string">&quot;_int8&quot; </span>=&gt; Int8Array(<span class="bool-val">true</span>),
+            <span class="string">&quot;_float4&quot; </span>=&gt; Float4Array(<span class="bool-val">true</span>),
+            <span class="string">&quot;_float8&quot; </span>=&gt; Float8Array(<span class="bool-val">true</span>),
+            <span class="string">&quot;_numeric&quot; </span>=&gt; NumericArray(<span class="bool-val">true</span>),
+            <span class="string">&quot;bool&quot; </span>=&gt; Bool(<span class="bool-val">true</span>),
+            <span class="string">&quot;char&quot; </span>=&gt; Char(<span class="bool-val">true</span>),
+            <span class="string">&quot;text&quot; </span>=&gt; Text(<span class="bool-val">true</span>),
+            <span class="string">&quot;bpchar&quot; </span>=&gt; BpChar(<span class="bool-val">true</span>),
+            <span class="string">&quot;varchar&quot; </span>=&gt; VarChar(<span class="bool-val">true</span>),
+            <span class="string">&quot;bytea&quot; </span>=&gt; ByteA(<span class="bool-val">true</span>),
+            <span class="string">&quot;time&quot; </span>=&gt; Time(<span class="bool-val">true</span>),
+            <span class="string">&quot;timestamp&quot; </span>=&gt; Timestamp(<span class="bool-val">true</span>),
+            <span class="string">&quot;timestamptz&quot; </span>=&gt; TimestampTz(<span class="bool-val">true</span>),
+            <span class="string">&quot;date&quot; </span>=&gt; Date(<span class="bool-val">true</span>),
+            <span class="string">&quot;uuid&quot; </span>=&gt; UUID(<span class="bool-val">true</span>),
+            <span class="string">&quot;json&quot; </span>=&gt; JSON(<span class="bool-val">true</span>),
+            <span class="string">&quot;jsonb&quot; </span>=&gt; JSONB(<span class="bool-val">true</span>),
+            <span class="string">&quot;hstore&quot; </span>=&gt; HSTORE(<span class="bool-val">true</span>),
+            <span class="kw">_ </span>=&gt; <span class="kw">match </span>ty.kind() {
+                postgres::types::Kind::Enum(<span class="kw">_</span>) =&gt; Enum(<span class="bool-val">true</span>),
+                <span class="kw">_ </span>=&gt; <span class="macro">unimplemented!</span>(<span class="string">&quot;{}&quot;</span>, ty.name()),
             },
         }
     }
 }
 
-<span class="comment">// Link PostgresDTypes back to the one defiend by the postgres crate.</span>
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">PostgresTypeSystem</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Type</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">ty</span>: <span class="ident">PostgresTypeSystem</span>) -&gt; <span class="ident">Type</span> {
-        <span class="kw">use</span> <span class="ident">PostgresTypeSystem</span>::<span class="kw-2">*</span>;
-        <span class="kw">match</span> <span class="ident">ty</span> {
-            <span class="ident">Int2</span>(<span class="kw">_</span>) =&gt; <span class="ident">Type::INT2</span>,
-            <span class="ident">Int4</span>(<span class="kw">_</span>) =&gt; <span class="ident">Type::INT4</span>,
-            <span class="ident">Int8</span>(<span class="kw">_</span>) =&gt; <span class="ident">Type::INT8</span>,
-            <span class="ident">Float4</span>(<span class="kw">_</span>) =&gt; <span class="ident">Type::FLOAT4</span>,
-            <span class="ident">Float8</span>(<span class="kw">_</span>) =&gt; <span class="ident">Type::FLOAT8</span>,
-            <span class="ident">Numeric</span>(<span class="kw">_</span>) =&gt; <span class="ident">Type::NUMERIC</span>,
-            <span class="ident">Int2Array</span>(<span class="kw">_</span>) =&gt; <span class="ident">Type::INT2_ARRAY</span>,
-            <span class="ident">Int4Array</span>(<span class="kw">_</span>) =&gt; <span class="ident">Type::INT4_ARRAY</span>,
-            <span class="ident">Int8Array</span>(<span class="kw">_</span>) =&gt; <span class="ident">Type::INT8_ARRAY</span>,
-            <span class="ident">Float4Array</span>(<span class="kw">_</span>) =&gt; <span class="ident">Type::FLOAT4_ARRAY</span>,
-            <span class="ident">Float8Array</span>(<span class="kw">_</span>) =&gt; <span class="ident">Type::FLOAT8_ARRAY</span>,
-            <span class="ident">NumericArray</span>(<span class="kw">_</span>) =&gt; <span class="ident">Type::NUMERIC_ARRAY</span>,
-            <span class="ident">Bool</span>(<span class="kw">_</span>) =&gt; <span class="ident">Type::BOOL</span>,
-            <span class="ident">Text</span>(<span class="kw">_</span>) =&gt; <span class="ident">Type::TEXT</span>,
-            <span class="ident">BpChar</span>(<span class="kw">_</span>) =&gt; <span class="ident">Type::BPCHAR</span>,
-            <span class="ident">VarChar</span>(<span class="kw">_</span>) =&gt; <span class="ident">Type::VARCHAR</span>,
-            <span class="ident">Char</span>(<span class="kw">_</span>) =&gt; <span class="ident">Type::CHAR</span>,
-            <span class="ident">ByteA</span>(<span class="kw">_</span>) =&gt; <span class="ident">Type::BYTEA</span>,
-            <span class="ident">Date</span>(<span class="kw">_</span>) =&gt; <span class="ident">Type::DATE</span>,
-            <span class="ident">Time</span>(<span class="kw">_</span>) =&gt; <span class="ident">Type::TIME</span>,
-            <span class="ident">Timestamp</span>(<span class="kw">_</span>) =&gt; <span class="ident">Type::TIMESTAMP</span>,
-            <span class="ident">TimestampTz</span>(<span class="kw">_</span>) =&gt; <span class="ident">Type::TIMESTAMPTZ</span>,
-            <span class="ident">UUID</span>(<span class="kw">_</span>) =&gt; <span class="ident">Type::UUID</span>,
-            <span class="ident">JSON</span>(<span class="kw">_</span>) =&gt; <span class="ident">Type::JSON</span>,
-            <span class="ident">JSONB</span>(<span class="kw">_</span>) =&gt; <span class="ident">Type::JSONB</span>,
-            <span class="ident">Enum</span>(<span class="kw">_</span>) =&gt; <span class="ident">Type::TEXT</span>,
-            <span class="ident">HSTORE</span>(<span class="kw">_</span>) =&gt; <span class="ident">Type::TEXT</span>, <span class="comment">// hstore is not supported in binary protocol (since no corresponding inner TYPE)</span>
-        }
+<span class="comment">// Link PostgresDTypes back to the one defiend by the postgres crate.
+</span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; From&lt;PostgresTypeSystem&gt; <span class="kw">for </span>Type {
+    <span class="kw">fn </span>from(ty: PostgresTypeSystem) -&gt; Type {
+        <span class="kw">use </span>PostgresTypeSystem::<span class="kw-2">*</span>;
+        <span class="kw">match </span>ty {
+            Int2(<span class="kw">_</span>) =&gt; Type::INT2,
+            Int4(<span class="kw">_</span>) =&gt; Type::INT4,
+            Int8(<span class="kw">_</span>) =&gt; Type::INT8,
+            Float4(<span class="kw">_</span>) =&gt; Type::FLOAT4,
+            Float8(<span class="kw">_</span>) =&gt; Type::FLOAT8,
+            Numeric(<span class="kw">_</span>) =&gt; Type::NUMERIC,
+            Int2Array(<span class="kw">_</span>) =&gt; Type::INT2_ARRAY,
+            Int4Array(<span class="kw">_</span>) =&gt; Type::INT4_ARRAY,
+            Int8Array(<span class="kw">_</span>) =&gt; Type::INT8_ARRAY,
+            Float4Array(<span class="kw">_</span>) =&gt; Type::FLOAT4_ARRAY,
+            Float8Array(<span class="kw">_</span>) =&gt; Type::FLOAT8_ARRAY,
+            NumericArray(<span class="kw">_</span>) =&gt; Type::NUMERIC_ARRAY,
+            Bool(<span class="kw">_</span>) =&gt; Type::BOOL,
+            Text(<span class="kw">_</span>) =&gt; Type::TEXT,
+            BpChar(<span class="kw">_</span>) =&gt; Type::BPCHAR,
+            VarChar(<span class="kw">_</span>) =&gt; Type::VARCHAR,
+            Char(<span class="kw">_</span>) =&gt; Type::CHAR,
+            ByteA(<span class="kw">_</span>) =&gt; Type::BYTEA,
+            Date(<span class="kw">_</span>) =&gt; Type::DATE,
+            Time(<span class="kw">_</span>) =&gt; Type::TIME,
+            Timestamp(<span class="kw">_</span>) =&gt; Type::TIMESTAMP,
+            TimestampTz(<span class="kw">_</span>) =&gt; Type::TIMESTAMPTZ,
+            UUID(<span class="kw">_</span>) =&gt; Type::UUID,
+            JSON(<span class="kw">_</span>) =&gt; Type::JSON,
+            JSONB(<span class="kw">_</span>) =&gt; Type::JSONB,
+            Enum(<span class="kw">_</span>) =&gt; Type::TEXT,
+            HSTORE(<span class="kw">_</span>) =&gt; Type::TEXT, <span class="comment">// hstore is not supported in binary protocol (since no corresponding inner TYPE)
+        </span>}
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="connectorx" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.62.0-nightly (878c7833f 2022-04-16)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="connectorx" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (750bd1a7f 2022-09-14)" ></div></body></html>

@@ -1,1 +1,1 @@
-initSidebarItems({"fn":[["get_arrow",""]]});
+window.SIDEBAR_ITEMS = {"fn":[["get_arrow",""]]};

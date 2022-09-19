@@ -1,1 +1,1 @@
-initSidebarItems({"enum":[["ArrowTypeSystem",""]]});
+window.SIDEBAR_ITEMS = {"enum":[["ArrowTypeSystem",""]]};

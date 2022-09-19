@@ -1,9 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `connectorx/src/destinations/arrow2/arrow_assoc.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>arrow_assoc.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script src="../../../../crates.js"></script><script defer src="../../../../main.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script>
-    <noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../connectorx/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../../../connectorx/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../connectorx/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><div class="theme-picker hidden"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="22" height="22" alt="Pick another theme!" src="../../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `connectorx/src/destinations/arrow2/arrow_assoc.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>arrow_assoc.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../../normalize.css"><link rel="stylesheet" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../../ayu.css" disabled><link rel="stylesheet" href="../../../../dark.css" disabled><link rel="stylesheet" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../connectorx/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../connectorx/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../connectorx/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -384,387 +379,506 @@
 <span id="379">379</span>
 <span id="380">380</span>
 <span id="381">381</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">arrow2</span>::{
-    <span class="ident">array</span>::<span class="kw-2">*</span>,
-    <span class="ident">datatypes</span>::{<span class="ident">DataType</span> <span class="kw">as</span> <span class="ident">ArrowDataType</span>, <span class="ident">Field</span>, <span class="ident">TimeUnit</span>},
+<span id="382">382</span>
+<span id="383">383</span>
+<span id="384">384</span>
+<span id="385">385</span>
+<span id="386">386</span>
+<span id="387">387</span>
+<span id="388">388</span>
+<span id="389">389</span>
+<span id="390">390</span>
+<span id="391">391</span>
+<span id="392">392</span>
+<span id="393">393</span>
+<span id="394">394</span>
+<span id="395">395</span>
+<span id="396">396</span>
+<span id="397">397</span>
+<span id="398">398</span>
+<span id="399">399</span>
+<span id="400">400</span>
+<span id="401">401</span>
+<span id="402">402</span>
+<span id="403">403</span>
+<span id="404">404</span>
+<span id="405">405</span>
+<span id="406">406</span>
+<span id="407">407</span>
+<span id="408">408</span>
+<span id="409">409</span>
+<span id="410">410</span>
+<span id="411">411</span>
+<span id="412">412</span>
+<span id="413">413</span>
+<span id="414">414</span>
+<span id="415">415</span>
+<span id="416">416</span>
+<span id="417">417</span>
+<span id="418">418</span>
+<span id="419">419</span>
+<span id="420">420</span>
+<span id="421">421</span>
+<span id="422">422</span>
+<span id="423">423</span>
+<span id="424">424</span>
+<span id="425">425</span>
+<span id="426">426</span>
+<span id="427">427</span>
+<span id="428">428</span>
+<span id="429">429</span>
+<span id="430">430</span>
+<span id="431">431</span>
+<span id="432">432</span>
+<span id="433">433</span>
+<span id="434">434</span>
+<span id="435">435</span>
+<span id="436">436</span>
+<span id="437">437</span>
+<span id="438">438</span>
+<span id="439">439</span>
+<span id="440">440</span>
+<span id="441">441</span>
+</pre><pre class="rust"><code><span class="kw">use </span>arrow2::{
+    array::<span class="kw-2">*</span>,
+    datatypes::{DataType <span class="kw">as </span>ArrowDataType, Field, TimeUnit},
 };
-<span class="kw">use</span> <span class="ident">chrono</span>::{<span class="ident">Date</span>, <span class="ident">DateTime</span>, <span class="ident">NaiveDate</span>, <span class="ident">NaiveDateTime</span>, <span class="ident">NaiveTime</span>, <span class="ident">Timelike</span>, <span class="ident">Utc</span>};
+<span class="kw">use </span>chrono::{Date, DateTime, NaiveDate, NaiveDateTime, NaiveTime, Timelike, Utc};
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::constants::SECONDS_IN_DAY</span>;
+<span class="kw">use </span><span class="kw">crate</span>::constants::SECONDS_IN_DAY;
 
-<span class="doccomment">/// Associate arrow builder with native type</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">ArrowAssoc</span> {
-    <span class="kw">type</span> <span class="ident">Builder</span>: <span class="ident">MutableArray</span> <span class="op">+</span> <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">Send</span>;
+<span class="doccomment">/// Associate arrow builder with native type
+</span><span class="kw">pub trait </span>ArrowAssoc {
+    <span class="kw">type </span>Builder: MutableArray + <span class="lifetime">&#39;static </span>+ Send;
 
-    <span class="kw">fn</span> <span class="ident">builder</span>(<span class="ident">nrows</span>: <span class="ident">usize</span>) -&gt; <span class="ident"><span class="self">Self</span>::Builder</span>;
-    <span class="kw">fn</span> <span class="ident">push</span>(<span class="ident">builder</span>: <span class="kw-2">&amp;mut</span> <span class="ident"><span class="self">Self</span>::Builder</span>, <span class="ident">value</span>: <span class="self">Self</span>);
-    <span class="kw">fn</span> <span class="ident">field</span>(<span class="ident">header</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">Field</span>;
+    <span class="kw">fn </span>builder(nrows: usize) -&gt; <span class="self">Self</span>::Builder;
+    <span class="kw">fn </span>push(builder: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Builder, value: <span class="self">Self</span>);
+    <span class="kw">fn </span>field(header: <span class="kw-2">&amp;</span>str) -&gt; Field;
 }
 
-<span class="macro">macro_rules!</span> <span class="ident">impl_arrow_assoc</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">T</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">AT</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">B</span>:<span class="ident">ty</span>) =&gt; {
-        <span class="kw">impl</span> <span class="ident">ArrowAssoc</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T</span> {
-            <span class="kw">type</span> <span class="ident">Builder</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">B</span>;
+<span class="macro">macro_rules! </span>impl_arrow_assoc {
+    (<span class="macro-nonterminal">$T</span>:ty, <span class="macro-nonterminal">$AT</span>:expr, <span class="macro-nonterminal">$B</span>:ty) =&gt; {
+        <span class="kw">impl </span>ArrowAssoc <span class="kw">for </span><span class="macro-nonterminal">$T </span>{
+            <span class="kw">type </span>Builder = <span class="macro-nonterminal">$B</span>;
 
-            <span class="kw">fn</span> <span class="ident">builder</span>(<span class="ident">nrows</span>: <span class="ident">usize</span>) -&gt; <span class="ident"><span class="self">Self</span>::Builder</span> {
-                <span class="ident"><span class="self">Self</span>::Builder::with_capacity</span>(<span class="ident">nrows</span>)
+            <span class="kw">fn </span>builder(nrows: usize) -&gt; <span class="self">Self</span>::Builder {
+                <span class="self">Self</span>::Builder::with_capacity(nrows)
             }
 
-            <span class="attribute">#[<span class="ident">inline</span>]</span>
-            <span class="kw">fn</span> <span class="ident">push</span>(<span class="ident">builder</span>: <span class="kw-2">&amp;mut</span> <span class="ident"><span class="self">Self</span>::Builder</span>, <span class="ident">value</span>: <span class="self">Self</span>) {
-                <span class="ident">builder</span>.<span class="ident">push</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>));
+            <span class="attribute">#[inline]
+            </span><span class="kw">fn </span>push(builder: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Builder, value: <span class="self">Self</span>) {
+                builder.push(<span class="prelude-val">Some</span>(value));
             }
 
-            <span class="kw">fn</span> <span class="ident">field</span>(<span class="ident">header</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">Field</span> {
-                <span class="ident">Field::new</span>(<span class="ident">header</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">AT</span>, <span class="bool-val">false</span>)
+            <span class="kw">fn </span>field(header: <span class="kw-2">&amp;</span>str) -&gt; Field {
+                Field::new(header, <span class="macro-nonterminal">$AT</span>, <span class="bool-val">false</span>)
             }
         }
 
-        <span class="kw">impl</span> <span class="ident">ArrowAssoc</span> <span class="kw">for</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">T</span><span class="op">&gt;</span> {
-            <span class="kw">type</span> <span class="ident">Builder</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">B</span>;
+        <span class="kw">impl </span>ArrowAssoc <span class="kw">for </span><span class="prelude-ty">Option</span>&lt;<span class="macro-nonterminal">$T</span>&gt; {
+            <span class="kw">type </span>Builder = <span class="macro-nonterminal">$B</span>;
 
-            <span class="kw">fn</span> <span class="ident">builder</span>(<span class="ident">nrows</span>: <span class="ident">usize</span>) -&gt; <span class="ident"><span class="self">Self</span>::Builder</span> {
-                <span class="ident"><span class="self">Self</span>::Builder::with_capacity</span>(<span class="ident">nrows</span>)
+            <span class="kw">fn </span>builder(nrows: usize) -&gt; <span class="self">Self</span>::Builder {
+                <span class="self">Self</span>::Builder::with_capacity(nrows)
             }
 
-            <span class="attribute">#[<span class="ident">inline</span>]</span>
-            <span class="kw">fn</span> <span class="ident">push</span>(<span class="ident">builder</span>: <span class="kw-2">&amp;mut</span> <span class="ident"><span class="self">Self</span>::Builder</span>, <span class="ident">value</span>: <span class="self">Self</span>) {
-                <span class="ident">builder</span>.<span class="ident">push</span>(<span class="ident">value</span>);
+            <span class="attribute">#[inline]
+            </span><span class="kw">fn </span>push(builder: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Builder, value: <span class="self">Self</span>) {
+                builder.push(value);
             }
 
-            <span class="kw">fn</span> <span class="ident">field</span>(<span class="ident">header</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">Field</span> {
-                <span class="ident">Field::new</span>(<span class="ident">header</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">AT</span>, <span class="bool-val">true</span>)
+            <span class="kw">fn </span>field(header: <span class="kw-2">&amp;</span>str) -&gt; Field {
+                Field::new(header, <span class="macro-nonterminal">$AT</span>, <span class="bool-val">true</span>)
             }
         }
     };
 }
 
-<span class="macro">impl_arrow_assoc!</span>(<span class="ident">u32</span>, <span class="ident">ArrowDataType::UInt32</span>, <span class="ident">MutablePrimitiveArray</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>);
-<span class="macro">impl_arrow_assoc!</span>(<span class="ident">u64</span>, <span class="ident">ArrowDataType::UInt64</span>, <span class="ident">MutablePrimitiveArray</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>);
-<span class="macro">impl_arrow_assoc!</span>(<span class="ident">i32</span>, <span class="ident">ArrowDataType::Int32</span>, <span class="ident">MutablePrimitiveArray</span><span class="op">&lt;</span><span class="ident">i32</span><span class="op">&gt;</span>);
-<span class="macro">impl_arrow_assoc!</span>(<span class="ident">i64</span>, <span class="ident">ArrowDataType::Int64</span>, <span class="ident">MutablePrimitiveArray</span><span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span>);
-<span class="macro">impl_arrow_assoc!</span>(<span class="ident">f32</span>, <span class="ident">ArrowDataType::Float32</span>, <span class="ident">MutablePrimitiveArray</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>);
-<span class="macro">impl_arrow_assoc!</span>(<span class="ident">f64</span>, <span class="ident">ArrowDataType::Float64</span>, <span class="ident">MutablePrimitiveArray</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span>);
-<span class="macro">impl_arrow_assoc!</span>(<span class="ident">bool</span>, <span class="ident">ArrowDataType::Boolean</span>, <span class="ident">MutableBooleanArray</span>);
+<span class="macro">impl_arrow_assoc!</span>(u32, ArrowDataType::UInt32, MutablePrimitiveArray&lt;u32&gt;);
+<span class="macro">impl_arrow_assoc!</span>(u64, ArrowDataType::UInt64, MutablePrimitiveArray&lt;u64&gt;);
+<span class="macro">impl_arrow_assoc!</span>(i32, ArrowDataType::Int32, MutablePrimitiveArray&lt;i32&gt;);
+<span class="macro">impl_arrow_assoc!</span>(i64, ArrowDataType::Int64, MutablePrimitiveArray&lt;i64&gt;);
+<span class="macro">impl_arrow_assoc!</span>(f32, ArrowDataType::Float32, MutablePrimitiveArray&lt;f32&gt;);
+<span class="macro">impl_arrow_assoc!</span>(f64, ArrowDataType::Float64, MutablePrimitiveArray&lt;f64&gt;);
+<span class="macro">impl_arrow_assoc!</span>(bool, ArrowDataType::Boolean, MutableBooleanArray);
 
-<span class="kw">impl</span> <span class="ident">ArrowAssoc</span> <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="ident">str</span> {
-    <span class="kw">type</span> <span class="ident">Builder</span> <span class="op">=</span> <span class="ident">MutableUtf8Array</span><span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span>;
+<span class="macro">macro_rules! </span>impl_arrow_assoc_vec {
+    (<span class="macro-nonterminal">$T</span>:ty, <span class="macro-nonterminal">$AT</span>:expr) =&gt; {
+        <span class="kw">impl </span>ArrowAssoc <span class="kw">for </span>Vec&lt;<span class="macro-nonterminal">$T</span>&gt; {
+            <span class="kw">type </span>Builder = MutableListArray&lt;i64, MutablePrimitiveArray&lt;<span class="macro-nonterminal">$T</span>&gt;&gt;;
 
-    <span class="kw">fn</span> <span class="ident">builder</span>(<span class="ident">nrows</span>: <span class="ident">usize</span>) -&gt; <span class="ident"><span class="self">Self</span>::Builder</span> {
-        <span class="ident">MutableUtf8Array</span>::<span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span><span class="ident">::with_capacity</span>(<span class="ident">nrows</span>)
+            <span class="kw">fn </span>builder(nrows: usize) -&gt; <span class="self">Self</span>::Builder {
+                MutableListArray::&lt;i64, MutablePrimitiveArray&lt;<span class="macro-nonterminal">$T</span>&gt;&gt;::with_capacity(nrows)
+            }
+
+            <span class="attribute">#[inline]
+            </span><span class="kw">fn </span>push(builder: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Builder, value: <span class="self">Self</span>) {
+                <span class="kw">let </span>val: Vec&lt;<span class="prelude-ty">Option</span>&lt;<span class="macro-nonterminal">$T</span>&gt;&gt; = value.into_iter().map(|v| <span class="prelude-val">Some</span>(v)).collect();
+                builder.try_push(<span class="prelude-val">Some</span>(val)).unwrap();
+            }
+
+            <span class="kw">fn </span>field(header: <span class="kw-2">&amp;</span>str) -&gt; Field {
+                Field::new(
+                    header,
+                    ArrowDataType::LargeList(Box::new(Field::new(<span class="string">&quot;&quot;</span>, <span class="macro-nonterminal">$AT</span>, <span class="bool-val">false</span>))),
+                    <span class="bool-val">false</span>,
+                )
+            }
+        }
+
+        <span class="kw">impl </span>ArrowAssoc <span class="kw">for </span><span class="prelude-ty">Option</span>&lt;Vec&lt;<span class="macro-nonterminal">$T</span>&gt;&gt; {
+            <span class="kw">type </span>Builder = MutableListArray&lt;i64, MutablePrimitiveArray&lt;<span class="macro-nonterminal">$T</span>&gt;&gt;;
+
+            <span class="kw">fn </span>builder(nrows: usize) -&gt; <span class="self">Self</span>::Builder {
+                MutableListArray::&lt;i64, MutablePrimitiveArray&lt;<span class="macro-nonterminal">$T</span>&gt;&gt;::with_capacity(nrows)
+            }
+
+            <span class="attribute">#[inline]
+            </span><span class="kw">fn </span>push(builder: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Builder, value: <span class="self">Self</span>) {
+                <span class="kw">match </span>value {
+                    <span class="prelude-val">Some</span>(values) =&gt; {
+                        <span class="kw">let </span>val: Vec&lt;<span class="prelude-ty">Option</span>&lt;<span class="macro-nonterminal">$T</span>&gt;&gt; = values.into_iter().map(|v| <span class="prelude-val">Some</span>(v)).collect();
+                        builder.try_push(<span class="prelude-val">Some</span>(val)).unwrap();
+                    }
+                    <span class="prelude-val">None </span>=&gt; builder.push_null(),
+                }
+            }
+
+            <span class="kw">fn </span>field(header: <span class="kw-2">&amp;</span>str) -&gt; Field {
+                Field::new(
+                    header,
+                    ArrowDataType::LargeList(Box::new(Field::new(<span class="string">&quot;&quot;</span>, <span class="macro-nonterminal">$AT</span>, <span class="bool-val">false</span>))),
+                    <span class="bool-val">true</span>,
+                )
+            }
+        }
+    };
+}
+
+<span class="macro">impl_arrow_assoc_vec!</span>(i32, ArrowDataType::Int32);
+<span class="macro">impl_arrow_assoc_vec!</span>(i64, ArrowDataType::Int64);
+<span class="macro">impl_arrow_assoc_vec!</span>(u32, ArrowDataType::UInt32);
+<span class="macro">impl_arrow_assoc_vec!</span>(u64, ArrowDataType::UInt64);
+<span class="macro">impl_arrow_assoc_vec!</span>(f32, ArrowDataType::Float32);
+<span class="macro">impl_arrow_assoc_vec!</span>(f64, ArrowDataType::Float64);
+
+<span class="kw">impl </span>ArrowAssoc <span class="kw">for </span><span class="kw-2">&amp;</span>str {
+    <span class="kw">type </span>Builder = MutableUtf8Array&lt;i64&gt;;
+
+    <span class="kw">fn </span>builder(nrows: usize) -&gt; <span class="self">Self</span>::Builder {
+        MutableUtf8Array::&lt;i64&gt;::with_capacity(nrows)
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">push</span>(<span class="ident">builder</span>: <span class="kw-2">&amp;mut</span> <span class="ident"><span class="self">Self</span>::Builder</span>, <span class="ident">value</span>: <span class="self">Self</span>) {
-        <span class="ident">builder</span>.<span class="ident">push</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>));
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>push(builder: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Builder, value: <span class="self">Self</span>) {
+        builder.push(<span class="prelude-val">Some</span>(value));
     }
 
-    <span class="kw">fn</span> <span class="ident">field</span>(<span class="ident">header</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">Field</span> {
-        <span class="ident">Field::new</span>(<span class="ident">header</span>, <span class="ident">ArrowDataType::LargeUtf8</span>, <span class="bool-val">false</span>)
+    <span class="kw">fn </span>field(header: <span class="kw-2">&amp;</span>str) -&gt; Field {
+        Field::new(header, ArrowDataType::LargeUtf8, <span class="bool-val">false</span>)
     }
 }
 
-<span class="kw">impl</span> <span class="ident">ArrowAssoc</span> <span class="kw">for</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Builder</span> <span class="op">=</span> <span class="ident">MutableUtf8Array</span><span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span>;
+<span class="kw">impl </span>ArrowAssoc <span class="kw">for </span><span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt; {
+    <span class="kw">type </span>Builder = MutableUtf8Array&lt;i64&gt;;
 
-    <span class="kw">fn</span> <span class="ident">builder</span>(<span class="ident">nrows</span>: <span class="ident">usize</span>) -&gt; <span class="ident"><span class="self">Self</span>::Builder</span> {
-        <span class="ident">MutableUtf8Array</span>::<span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span><span class="ident">::with_capacity</span>(<span class="ident">nrows</span>)
+    <span class="kw">fn </span>builder(nrows: usize) -&gt; <span class="self">Self</span>::Builder {
+        MutableUtf8Array::&lt;i64&gt;::with_capacity(nrows)
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">push</span>(<span class="ident">builder</span>: <span class="kw-2">&amp;mut</span> <span class="ident"><span class="self">Self</span>::Builder</span>, <span class="ident">value</span>: <span class="self">Self</span>) {
-        <span class="ident">builder</span>.<span class="ident">push</span>(<span class="ident">value</span>);
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>push(builder: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Builder, value: <span class="self">Self</span>) {
+        builder.push(value);
     }
 
-    <span class="kw">fn</span> <span class="ident">field</span>(<span class="ident">header</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">Field</span> {
-        <span class="ident">Field::new</span>(<span class="ident">header</span>, <span class="ident">ArrowDataType::LargeUtf8</span>, <span class="bool-val">true</span>)
-    }
-}
-
-<span class="kw">impl</span> <span class="ident">ArrowAssoc</span> <span class="kw">for</span> <span class="ident">String</span> {
-    <span class="kw">type</span> <span class="ident">Builder</span> <span class="op">=</span> <span class="ident">MutableUtf8Array</span><span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span>;
-
-    <span class="kw">fn</span> <span class="ident">builder</span>(<span class="ident">nrows</span>: <span class="ident">usize</span>) -&gt; <span class="ident"><span class="self">Self</span>::Builder</span> {
-        <span class="ident">MutableUtf8Array</span>::<span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span><span class="ident">::with_capacity</span>(<span class="ident">nrows</span>)
-    }
-
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">push</span>(<span class="ident">builder</span>: <span class="kw-2">&amp;mut</span> <span class="ident"><span class="self">Self</span>::Builder</span>, <span class="ident">value</span>: <span class="ident">String</span>) {
-        <span class="ident">builder</span>.<span class="ident">push</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>));
-    }
-
-    <span class="kw">fn</span> <span class="ident">field</span>(<span class="ident">header</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">Field</span> {
-        <span class="ident">Field::new</span>(<span class="ident">header</span>, <span class="ident">ArrowDataType::LargeUtf8</span>, <span class="bool-val">false</span>)
+    <span class="kw">fn </span>field(header: <span class="kw-2">&amp;</span>str) -&gt; Field {
+        Field::new(header, ArrowDataType::LargeUtf8, <span class="bool-val">true</span>)
     }
 }
 
-<span class="kw">impl</span> <span class="ident">ArrowAssoc</span> <span class="kw">for</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Builder</span> <span class="op">=</span> <span class="ident">MutableUtf8Array</span><span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span>;
+<span class="kw">impl </span>ArrowAssoc <span class="kw">for </span>String {
+    <span class="kw">type </span>Builder = MutableUtf8Array&lt;i64&gt;;
 
-    <span class="kw">fn</span> <span class="ident">builder</span>(<span class="ident">nrows</span>: <span class="ident">usize</span>) -&gt; <span class="ident"><span class="self">Self</span>::Builder</span> {
-        <span class="ident">MutableUtf8Array::with_capacity</span>(<span class="ident">nrows</span>)
+    <span class="kw">fn </span>builder(nrows: usize) -&gt; <span class="self">Self</span>::Builder {
+        MutableUtf8Array::&lt;i64&gt;::with_capacity(nrows)
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">push</span>(<span class="ident">builder</span>: <span class="kw-2">&amp;mut</span> <span class="ident"><span class="self">Self</span>::Builder</span>, <span class="ident">value</span>: <span class="self">Self</span>) {
-        <span class="ident">builder</span>.<span class="ident">push</span>(<span class="ident">value</span>);
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>push(builder: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Builder, value: String) {
+        builder.push(<span class="prelude-val">Some</span>(value));
     }
 
-    <span class="kw">fn</span> <span class="ident">field</span>(<span class="ident">header</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">Field</span> {
-        <span class="ident">Field::new</span>(<span class="ident">header</span>, <span class="ident">ArrowDataType::LargeUtf8</span>, <span class="bool-val">true</span>)
+    <span class="kw">fn </span>field(header: <span class="kw-2">&amp;</span>str) -&gt; Field {
+        Field::new(header, ArrowDataType::LargeUtf8, <span class="bool-val">false</span>)
     }
 }
 
-<span class="kw">impl</span> <span class="ident">ArrowAssoc</span> <span class="kw">for</span> <span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Builder</span> <span class="op">=</span> <span class="ident">MutablePrimitiveArray</span><span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span>;
+<span class="kw">impl </span>ArrowAssoc <span class="kw">for </span><span class="prelude-ty">Option</span>&lt;String&gt; {
+    <span class="kw">type </span>Builder = MutableUtf8Array&lt;i64&gt;;
 
-    <span class="kw">fn</span> <span class="ident">builder</span>(<span class="ident">nrows</span>: <span class="ident">usize</span>) -&gt; <span class="ident"><span class="self">Self</span>::Builder</span> {
-        <span class="ident">MutablePrimitiveArray::with_capacity</span>(<span class="ident">nrows</span>).<span class="ident">to</span>(<span class="ident">ArrowDataType::Timestamp</span>(
-            <span class="ident">TimeUnit::Nanosecond</span>,
-            <span class="prelude-val">Some</span>(<span class="string">&quot;UTC&quot;</span>.<span class="ident">to_string</span>()),
+    <span class="kw">fn </span>builder(nrows: usize) -&gt; <span class="self">Self</span>::Builder {
+        MutableUtf8Array::with_capacity(nrows)
+    }
+
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>push(builder: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Builder, value: <span class="self">Self</span>) {
+        builder.push(value);
+    }
+
+    <span class="kw">fn </span>field(header: <span class="kw-2">&amp;</span>str) -&gt; Field {
+        Field::new(header, ArrowDataType::LargeUtf8, <span class="bool-val">true</span>)
+    }
+}
+
+<span class="kw">impl </span>ArrowAssoc <span class="kw">for </span>DateTime&lt;Utc&gt; {
+    <span class="kw">type </span>Builder = MutablePrimitiveArray&lt;i64&gt;;
+
+    <span class="kw">fn </span>builder(nrows: usize) -&gt; <span class="self">Self</span>::Builder {
+        MutablePrimitiveArray::with_capacity(nrows).to(ArrowDataType::Timestamp(
+            TimeUnit::Nanosecond,
+            <span class="prelude-val">Some</span>(<span class="string">&quot;UTC&quot;</span>.to_string()),
         ))
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">push</span>(<span class="ident">builder</span>: <span class="kw-2">&amp;mut</span> <span class="ident"><span class="self">Self</span>::Builder</span>, <span class="ident">value</span>: <span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span>) {
-        <span class="ident">builder</span>.<span class="ident">push</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>).<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">x</span>.<span class="ident">timestamp_nanos</span>()));
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>push(builder: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Builder, value: DateTime&lt;Utc&gt;) {
+        builder.push(<span class="prelude-val">Some</span>(value).map(|x| x.timestamp_nanos()));
     }
 
-    <span class="kw">fn</span> <span class="ident">field</span>(<span class="ident">header</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">Field</span> {
-        <span class="ident">Field::new</span>(
-            <span class="ident">header</span>,
-            <span class="ident">ArrowDataType::Timestamp</span>(<span class="ident">TimeUnit::Nanosecond</span>, <span class="prelude-val">Some</span>(<span class="string">&quot;UTC&quot;</span>.<span class="ident">to_string</span>())),
+    <span class="kw">fn </span>field(header: <span class="kw-2">&amp;</span>str) -&gt; Field {
+        Field::new(
+            header,
+            ArrowDataType::Timestamp(TimeUnit::Nanosecond, <span class="prelude-val">Some</span>(<span class="string">&quot;UTC&quot;</span>.to_string())),
             <span class="bool-val">true</span>,
         )
     }
 }
 
-<span class="kw">impl</span> <span class="ident">ArrowAssoc</span> <span class="kw">for</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Builder</span> <span class="op">=</span> <span class="ident">MutablePrimitiveArray</span><span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span>;
+<span class="kw">impl </span>ArrowAssoc <span class="kw">for </span><span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt; {
+    <span class="kw">type </span>Builder = MutablePrimitiveArray&lt;i64&gt;;
 
-    <span class="kw">fn</span> <span class="ident">builder</span>(<span class="ident">nrows</span>: <span class="ident">usize</span>) -&gt; <span class="ident"><span class="self">Self</span>::Builder</span> {
-        <span class="ident">MutablePrimitiveArray::with_capacity</span>(<span class="ident">nrows</span>).<span class="ident">to</span>(<span class="ident">ArrowDataType::Timestamp</span>(
-            <span class="ident">TimeUnit::Nanosecond</span>,
-            <span class="prelude-val">Some</span>(<span class="string">&quot;UTC&quot;</span>.<span class="ident">to_string</span>()),
+    <span class="kw">fn </span>builder(nrows: usize) -&gt; <span class="self">Self</span>::Builder {
+        MutablePrimitiveArray::with_capacity(nrows).to(ArrowDataType::Timestamp(
+            TimeUnit::Nanosecond,
+            <span class="prelude-val">Some</span>(<span class="string">&quot;UTC&quot;</span>.to_string()),
         ))
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">push</span>(<span class="ident">builder</span>: <span class="kw-2">&amp;mut</span> <span class="ident"><span class="self">Self</span>::Builder</span>, <span class="ident">value</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span><span class="op">&gt;</span>) {
-        <span class="ident">builder</span>.<span class="ident">push</span>(<span class="ident">value</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">x</span>.<span class="ident">timestamp_nanos</span>()));
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>push(builder: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Builder, value: <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;) {
+        builder.push(value.map(|x| x.timestamp_nanos()));
     }
 
-    <span class="kw">fn</span> <span class="ident">field</span>(<span class="ident">header</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">Field</span> {
-        <span class="ident">Field::new</span>(
-            <span class="ident">header</span>,
-            <span class="ident">ArrowDataType::Timestamp</span>(<span class="ident">TimeUnit::Nanosecond</span>, <span class="prelude-val">Some</span>(<span class="string">&quot;UTC&quot;</span>.<span class="ident">to_string</span>())),
+    <span class="kw">fn </span>field(header: <span class="kw-2">&amp;</span>str) -&gt; Field {
+        Field::new(
+            header,
+            ArrowDataType::Timestamp(TimeUnit::Nanosecond, <span class="prelude-val">Some</span>(<span class="string">&quot;UTC&quot;</span>.to_string())),
             <span class="bool-val">false</span>,
         )
     }
 }
 
-<span class="kw">impl</span> <span class="ident">ArrowAssoc</span> <span class="kw">for</span> <span class="ident">Date</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Builder</span> <span class="op">=</span> <span class="ident">MutablePrimitiveArray</span><span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span>;
+<span class="kw">impl </span>ArrowAssoc <span class="kw">for </span>Date&lt;Utc&gt; {
+    <span class="kw">type </span>Builder = MutablePrimitiveArray&lt;i64&gt;;
 
-    <span class="kw">fn</span> <span class="ident">builder</span>(<span class="ident">nrows</span>: <span class="ident">usize</span>) -&gt; <span class="ident"><span class="self">Self</span>::Builder</span> {
-        <span class="ident">MutablePrimitiveArray::with_capacity</span>(<span class="ident">nrows</span>).<span class="ident">to</span>(<span class="ident">ArrowDataType::Timestamp</span>(
-            <span class="ident">TimeUnit::Second</span>,
-            <span class="prelude-val">Some</span>(<span class="string">&quot;UTC&quot;</span>.<span class="ident">to_string</span>()),
+    <span class="kw">fn </span>builder(nrows: usize) -&gt; <span class="self">Self</span>::Builder {
+        MutablePrimitiveArray::with_capacity(nrows).to(ArrowDataType::Timestamp(
+            TimeUnit::Second,
+            <span class="prelude-val">Some</span>(<span class="string">&quot;UTC&quot;</span>.to_string()),
         ))
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">push</span>(<span class="ident">builder</span>: <span class="kw-2">&amp;mut</span> <span class="ident"><span class="self">Self</span>::Builder</span>, <span class="ident">value</span>: <span class="ident">Date</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span>) {
-        <span class="ident">builder</span>.<span class="ident">push</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>).<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">x</span>.<span class="ident">and_hms</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>).<span class="ident">timestamp</span>()))
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>push(builder: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Builder, value: Date&lt;Utc&gt;) {
+        builder.push(<span class="prelude-val">Some</span>(value).map(|x| x.and_hms(<span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>).timestamp()))
     }
 
-    <span class="kw">fn</span> <span class="ident">field</span>(<span class="ident">header</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">Field</span> {
-        <span class="ident">Field::new</span>(
-            <span class="ident">header</span>,
-            <span class="ident">ArrowDataType::Timestamp</span>(<span class="ident">TimeUnit::Second</span>, <span class="prelude-val">Some</span>(<span class="string">&quot;UTC&quot;</span>.<span class="ident">to_string</span>())),
+    <span class="kw">fn </span>field(header: <span class="kw-2">&amp;</span>str) -&gt; Field {
+        Field::new(
+            header,
+            ArrowDataType::Timestamp(TimeUnit::Second, <span class="prelude-val">Some</span>(<span class="string">&quot;UTC&quot;</span>.to_string())),
             <span class="bool-val">false</span>,
         )
     }
 }
 
-<span class="kw">impl</span> <span class="ident">ArrowAssoc</span> <span class="kw">for</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Date</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Builder</span> <span class="op">=</span> <span class="ident">MutablePrimitiveArray</span><span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span>;
+<span class="kw">impl </span>ArrowAssoc <span class="kw">for </span><span class="prelude-ty">Option</span>&lt;Date&lt;Utc&gt;&gt; {
+    <span class="kw">type </span>Builder = MutablePrimitiveArray&lt;i64&gt;;
 
-    <span class="kw">fn</span> <span class="ident">builder</span>(<span class="ident">nrows</span>: <span class="ident">usize</span>) -&gt; <span class="ident"><span class="self">Self</span>::Builder</span> {
-        <span class="ident">MutablePrimitiveArray::with_capacity</span>(<span class="ident">nrows</span>).<span class="ident">to</span>(<span class="ident">ArrowDataType::Timestamp</span>(
-            <span class="ident">TimeUnit::Second</span>,
-            <span class="prelude-val">Some</span>(<span class="string">&quot;UTC&quot;</span>.<span class="ident">to_string</span>()),
+    <span class="kw">fn </span>builder(nrows: usize) -&gt; <span class="self">Self</span>::Builder {
+        MutablePrimitiveArray::with_capacity(nrows).to(ArrowDataType::Timestamp(
+            TimeUnit::Second,
+            <span class="prelude-val">Some</span>(<span class="string">&quot;UTC&quot;</span>.to_string()),
         ))
     }
 
-    <span class="kw">fn</span> <span class="ident">push</span>(<span class="ident">builder</span>: <span class="kw-2">&amp;mut</span> <span class="ident"><span class="self">Self</span>::Builder</span>, <span class="ident">value</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Date</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span><span class="op">&gt;</span>) {
-        <span class="comment">// time-aware are stored as naive (i64) + offset (on the datatype)</span>
-        <span class="ident">builder</span>.<span class="ident">push</span>(<span class="ident">value</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">x</span>.<span class="ident">and_hms</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>).<span class="ident">timestamp</span>()))
+    <span class="kw">fn </span>push(builder: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Builder, value: <span class="prelude-ty">Option</span>&lt;Date&lt;Utc&gt;&gt;) {
+        <span class="comment">// time-aware are stored as naive (i64) + offset (on the datatype)
+        </span>builder.push(value.map(|x| x.and_hms(<span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>).timestamp()))
     }
 
-    <span class="kw">fn</span> <span class="ident">field</span>(<span class="ident">header</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">Field</span> {
-        <span class="ident">Field::new</span>(
-            <span class="ident">header</span>,
-            <span class="ident">ArrowDataType::Timestamp</span>(<span class="ident">TimeUnit::Second</span>, <span class="prelude-val">Some</span>(<span class="string">&quot;UTC&quot;</span>.<span class="ident">to_string</span>())),
+    <span class="kw">fn </span>field(header: <span class="kw-2">&amp;</span>str) -&gt; Field {
+        Field::new(
+            header,
+            ArrowDataType::Timestamp(TimeUnit::Second, <span class="prelude-val">Some</span>(<span class="string">&quot;UTC&quot;</span>.to_string())),
             <span class="bool-val">false</span>,
         )
     }
 }
 
-<span class="kw">fn</span> <span class="ident">naive_date_to_date32</span>(<span class="ident">nd</span>: <span class="ident">NaiveDate</span>) -&gt; <span class="ident">i32</span> {
-    (<span class="ident">nd</span>.<span class="ident">and_hms</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>).<span class="ident">timestamp</span>() <span class="op">/</span> <span class="ident">SECONDS_IN_DAY</span>) <span class="kw">as</span> <span class="ident">i32</span>
+<span class="kw">fn </span>naive_date_to_date32(nd: NaiveDate) -&gt; i32 {
+    (nd.and_hms(<span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>).timestamp() / SECONDS_IN_DAY) <span class="kw">as </span>i32
 }
 
-<span class="kw">fn</span> <span class="ident">naive_time_to_time64_nanos</span>(<span class="ident">nd</span>: <span class="ident">NaiveTime</span>) -&gt; <span class="ident">i64</span> {
-    <span class="ident">nd</span>.<span class="ident">num_seconds_from_midnight</span>() <span class="kw">as</span> <span class="ident">i64</span> <span class="op">*</span> <span class="number">1_000_000_000</span> <span class="op">+</span> <span class="ident">nd</span>.<span class="ident">nanosecond</span>() <span class="kw">as</span> <span class="ident">i64</span>
+<span class="kw">fn </span>naive_time_to_time64_nanos(nd: NaiveTime) -&gt; i64 {
+    nd.num_seconds_from_midnight() <span class="kw">as </span>i64 * <span class="number">1_000_000_000 </span>+ nd.nanosecond() <span class="kw">as </span>i64
 }
 
-<span class="kw">impl</span> <span class="ident">ArrowAssoc</span> <span class="kw">for</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">NaiveDate</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Builder</span> <span class="op">=</span> <span class="ident">MutablePrimitiveArray</span><span class="op">&lt;</span><span class="ident">i32</span><span class="op">&gt;</span>;
+<span class="kw">impl </span>ArrowAssoc <span class="kw">for </span><span class="prelude-ty">Option</span>&lt;NaiveDate&gt; {
+    <span class="kw">type </span>Builder = MutablePrimitiveArray&lt;i32&gt;;
 
-    <span class="kw">fn</span> <span class="ident">builder</span>(<span class="ident">nrows</span>: <span class="ident">usize</span>) -&gt; <span class="ident"><span class="self">Self</span>::Builder</span> {
-        <span class="ident">MutablePrimitiveArray::with_capacity</span>(<span class="ident">nrows</span>).<span class="ident">to</span>(<span class="ident">ArrowDataType::Date32</span>)
+    <span class="kw">fn </span>builder(nrows: usize) -&gt; <span class="self">Self</span>::Builder {
+        MutablePrimitiveArray::with_capacity(nrows).to(ArrowDataType::Date32)
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">push</span>(<span class="ident">builder</span>: <span class="kw-2">&amp;mut</span> <span class="ident"><span class="self">Self</span>::Builder</span>, <span class="ident">value</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">NaiveDate</span><span class="op">&gt;</span>) {
-        <span class="ident">builder</span>.<span class="ident">push</span>(<span class="ident">value</span>.<span class="ident">map</span>(<span class="ident">naive_date_to_date32</span>));
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>push(builder: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Builder, value: <span class="prelude-ty">Option</span>&lt;NaiveDate&gt;) {
+        builder.push(value.map(naive_date_to_date32));
     }
 
-    <span class="kw">fn</span> <span class="ident">field</span>(<span class="ident">header</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">Field</span> {
-        <span class="ident">Field::new</span>(<span class="ident">header</span>, <span class="ident">ArrowDataType::Date32</span>, <span class="bool-val">true</span>)
-    }
-}
-
-<span class="kw">impl</span> <span class="ident">ArrowAssoc</span> <span class="kw">for</span> <span class="ident">NaiveDate</span> {
-    <span class="kw">type</span> <span class="ident">Builder</span> <span class="op">=</span> <span class="ident">MutablePrimitiveArray</span><span class="op">&lt;</span><span class="ident">i32</span><span class="op">&gt;</span>;
-
-    <span class="kw">fn</span> <span class="ident">builder</span>(<span class="ident">nrows</span>: <span class="ident">usize</span>) -&gt; <span class="ident"><span class="self">Self</span>::Builder</span> {
-        <span class="ident">MutablePrimitiveArray::with_capacity</span>(<span class="ident">nrows</span>).<span class="ident">to</span>(<span class="ident">ArrowDataType::Date32</span>)
-    }
-
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">push</span>(<span class="ident">builder</span>: <span class="kw-2">&amp;mut</span> <span class="ident"><span class="self">Self</span>::Builder</span>, <span class="ident">value</span>: <span class="ident">NaiveDate</span>) {
-        <span class="ident">builder</span>.<span class="ident">push</span>(<span class="prelude-val">Some</span>(<span class="ident">naive_date_to_date32</span>(<span class="ident">value</span>)));
-    }
-
-    <span class="kw">fn</span> <span class="ident">field</span>(<span class="ident">header</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">Field</span> {
-        <span class="ident">Field::new</span>(<span class="ident">header</span>, <span class="ident">ArrowDataType::Date32</span>, <span class="bool-val">false</span>)
+    <span class="kw">fn </span>field(header: <span class="kw-2">&amp;</span>str) -&gt; Field {
+        Field::new(header, ArrowDataType::Date32, <span class="bool-val">true</span>)
     }
 }
 
-<span class="kw">impl</span> <span class="ident">ArrowAssoc</span> <span class="kw">for</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">NaiveDateTime</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Builder</span> <span class="op">=</span> <span class="ident">MutablePrimitiveArray</span><span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span>;
+<span class="kw">impl </span>ArrowAssoc <span class="kw">for </span>NaiveDate {
+    <span class="kw">type </span>Builder = MutablePrimitiveArray&lt;i32&gt;;
 
-    <span class="kw">fn</span> <span class="ident">builder</span>(<span class="ident">nrows</span>: <span class="ident">usize</span>) -&gt; <span class="ident"><span class="self">Self</span>::Builder</span> {
-        <span class="comment">// naive =&gt; None</span>
-        <span class="ident">MutablePrimitiveArray::with_capacity</span>(<span class="ident">nrows</span>)
-            .<span class="ident">to</span>(<span class="ident">ArrowDataType::Timestamp</span>(<span class="ident">TimeUnit::Nanosecond</span>, <span class="prelude-val">None</span>))
+    <span class="kw">fn </span>builder(nrows: usize) -&gt; <span class="self">Self</span>::Builder {
+        MutablePrimitiveArray::with_capacity(nrows).to(ArrowDataType::Date32)
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">push</span>(<span class="ident">builder</span>: <span class="kw-2">&amp;mut</span> <span class="ident"><span class="self">Self</span>::Builder</span>, <span class="ident">value</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">NaiveDateTime</span><span class="op">&gt;</span>) {
-        <span class="ident">builder</span>.<span class="ident">push</span>(<span class="ident">value</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">x</span>.<span class="ident">timestamp_nanos</span>()));
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>push(builder: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Builder, value: NaiveDate) {
+        builder.push(<span class="prelude-val">Some</span>(naive_date_to_date32(value)));
     }
 
-    <span class="kw">fn</span> <span class="ident">field</span>(<span class="ident">header</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">Field</span> {
-        <span class="comment">// naive =&gt; None</span>
-        <span class="ident">Field::new</span>(
-            <span class="ident">header</span>,
-            <span class="ident">ArrowDataType::Timestamp</span>(<span class="ident">TimeUnit::Nanosecond</span>, <span class="prelude-val">None</span>),
+    <span class="kw">fn </span>field(header: <span class="kw-2">&amp;</span>str) -&gt; Field {
+        Field::new(header, ArrowDataType::Date32, <span class="bool-val">false</span>)
+    }
+}
+
+<span class="kw">impl </span>ArrowAssoc <span class="kw">for </span><span class="prelude-ty">Option</span>&lt;NaiveDateTime&gt; {
+    <span class="kw">type </span>Builder = MutablePrimitiveArray&lt;i64&gt;;
+
+    <span class="kw">fn </span>builder(nrows: usize) -&gt; <span class="self">Self</span>::Builder {
+        <span class="comment">// naive =&gt; None
+        </span>MutablePrimitiveArray::with_capacity(nrows)
+            .to(ArrowDataType::Timestamp(TimeUnit::Nanosecond, <span class="prelude-val">None</span>))
+    }
+
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>push(builder: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Builder, value: <span class="prelude-ty">Option</span>&lt;NaiveDateTime&gt;) {
+        builder.push(value.map(|x| x.timestamp_nanos()));
+    }
+
+    <span class="kw">fn </span>field(header: <span class="kw-2">&amp;</span>str) -&gt; Field {
+        <span class="comment">// naive =&gt; None
+        </span>Field::new(
+            header,
+            ArrowDataType::Timestamp(TimeUnit::Nanosecond, <span class="prelude-val">None</span>),
             <span class="bool-val">true</span>,
         )
     }
 }
 
-<span class="kw">impl</span> <span class="ident">ArrowAssoc</span> <span class="kw">for</span> <span class="ident">NaiveDateTime</span> {
-    <span class="kw">type</span> <span class="ident">Builder</span> <span class="op">=</span> <span class="ident">MutablePrimitiveArray</span><span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span>;
+<span class="kw">impl </span>ArrowAssoc <span class="kw">for </span>NaiveDateTime {
+    <span class="kw">type </span>Builder = MutablePrimitiveArray&lt;i64&gt;;
 
-    <span class="kw">fn</span> <span class="ident">builder</span>(<span class="ident">nrows</span>: <span class="ident">usize</span>) -&gt; <span class="ident"><span class="self">Self</span>::Builder</span> {
-        <span class="comment">// naive =&gt; None</span>
-        <span class="ident">MutablePrimitiveArray::with_capacity</span>(<span class="ident">nrows</span>)
-            .<span class="ident">to</span>(<span class="ident">ArrowDataType::Timestamp</span>(<span class="ident">TimeUnit::Nanosecond</span>, <span class="prelude-val">None</span>))
+    <span class="kw">fn </span>builder(nrows: usize) -&gt; <span class="self">Self</span>::Builder {
+        <span class="comment">// naive =&gt; None
+        </span>MutablePrimitiveArray::with_capacity(nrows)
+            .to(ArrowDataType::Timestamp(TimeUnit::Nanosecond, <span class="prelude-val">None</span>))
     }
 
-    <span class="kw">fn</span> <span class="ident">push</span>(<span class="ident">builder</span>: <span class="kw-2">&amp;mut</span> <span class="ident"><span class="self">Self</span>::Builder</span>, <span class="ident">value</span>: <span class="ident">NaiveDateTime</span>) {
-        <span class="ident">builder</span>.<span class="ident">push</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>).<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">x</span>.<span class="ident">timestamp_nanos</span>()));
+    <span class="kw">fn </span>push(builder: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Builder, value: NaiveDateTime) {
+        builder.push(<span class="prelude-val">Some</span>(value).map(|x| x.timestamp_nanos()));
     }
 
-    <span class="kw">fn</span> <span class="ident">field</span>(<span class="ident">header</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">Field</span> {
-        <span class="comment">// naive =&gt; None</span>
-        <span class="ident">Field::new</span>(
-            <span class="ident">header</span>,
-            <span class="ident">ArrowDataType::Timestamp</span>(<span class="ident">TimeUnit::Nanosecond</span>, <span class="prelude-val">None</span>),
+    <span class="kw">fn </span>field(header: <span class="kw-2">&amp;</span>str) -&gt; Field {
+        <span class="comment">// naive =&gt; None
+        </span>Field::new(
+            header,
+            ArrowDataType::Timestamp(TimeUnit::Nanosecond, <span class="prelude-val">None</span>),
             <span class="bool-val">true</span>,
         )
     }
 }
 
-<span class="kw">impl</span> <span class="ident">ArrowAssoc</span> <span class="kw">for</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">NaiveTime</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Builder</span> <span class="op">=</span> <span class="ident">MutablePrimitiveArray</span><span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span>;
+<span class="kw">impl </span>ArrowAssoc <span class="kw">for </span><span class="prelude-ty">Option</span>&lt;NaiveTime&gt; {
+    <span class="kw">type </span>Builder = MutablePrimitiveArray&lt;i64&gt;;
 
-    <span class="kw">fn</span> <span class="ident">builder</span>(<span class="ident">nrows</span>: <span class="ident">usize</span>) -&gt; <span class="ident"><span class="self">Self</span>::Builder</span> {
-        <span class="ident">MutablePrimitiveArray::with_capacity</span>(<span class="ident">nrows</span>).<span class="ident">to</span>(<span class="ident">ArrowDataType::Time64</span>(<span class="ident">TimeUnit::Nanosecond</span>))
+    <span class="kw">fn </span>builder(nrows: usize) -&gt; <span class="self">Self</span>::Builder {
+        MutablePrimitiveArray::with_capacity(nrows).to(ArrowDataType::Time64(TimeUnit::Nanosecond))
     }
 
-    <span class="kw">fn</span> <span class="ident">push</span>(<span class="ident">builder</span>: <span class="kw-2">&amp;mut</span> <span class="ident"><span class="self">Self</span>::Builder</span>, <span class="ident">value</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">NaiveTime</span><span class="op">&gt;</span>) {
-        <span class="ident">builder</span>.<span class="ident">push</span>(<span class="ident">value</span>.<span class="ident">map</span>(<span class="ident">naive_time_to_time64_nanos</span>));
+    <span class="kw">fn </span>push(builder: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Builder, value: <span class="prelude-ty">Option</span>&lt;NaiveTime&gt;) {
+        builder.push(value.map(naive_time_to_time64_nanos));
     }
 
-    <span class="kw">fn</span> <span class="ident">field</span>(<span class="ident">header</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">Field</span> {
-        <span class="ident">Field::new</span>(<span class="ident">header</span>, <span class="ident">ArrowDataType::Time64</span>(<span class="ident">TimeUnit::Nanosecond</span>), <span class="bool-val">true</span>)
-    }
-}
-
-<span class="kw">impl</span> <span class="ident">ArrowAssoc</span> <span class="kw">for</span> <span class="ident">NaiveTime</span> {
-    <span class="kw">type</span> <span class="ident">Builder</span> <span class="op">=</span> <span class="ident">MutablePrimitiveArray</span><span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span>;
-
-    <span class="kw">fn</span> <span class="ident">builder</span>(<span class="ident">nrows</span>: <span class="ident">usize</span>) -&gt; <span class="ident"><span class="self">Self</span>::Builder</span> {
-        <span class="ident">MutablePrimitiveArray::with_capacity</span>(<span class="ident">nrows</span>).<span class="ident">to</span>(<span class="ident">ArrowDataType::Time64</span>(<span class="ident">TimeUnit::Nanosecond</span>))
-    }
-
-    <span class="kw">fn</span> <span class="ident">push</span>(<span class="ident">builder</span>: <span class="kw-2">&amp;mut</span> <span class="ident"><span class="self">Self</span>::Builder</span>, <span class="ident">value</span>: <span class="ident">NaiveTime</span>) {
-        <span class="ident">builder</span>.<span class="ident">push</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>).<span class="ident">map</span>(<span class="ident">naive_time_to_time64_nanos</span>));
-    }
-
-    <span class="kw">fn</span> <span class="ident">field</span>(<span class="ident">header</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">Field</span> {
-        <span class="ident">Field::new</span>(<span class="ident">header</span>, <span class="ident">ArrowDataType::Time64</span>(<span class="ident">TimeUnit::Nanosecond</span>), <span class="bool-val">false</span>)
+    <span class="kw">fn </span>field(header: <span class="kw-2">&amp;</span>str) -&gt; Field {
+        Field::new(header, ArrowDataType::Time64(TimeUnit::Nanosecond), <span class="bool-val">true</span>)
     }
 }
 
-<span class="kw">impl</span> <span class="ident">ArrowAssoc</span> <span class="kw">for</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Builder</span> <span class="op">=</span> <span class="ident">MutableBinaryArray</span><span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span>;
+<span class="kw">impl </span>ArrowAssoc <span class="kw">for </span>NaiveTime {
+    <span class="kw">type </span>Builder = MutablePrimitiveArray&lt;i64&gt;;
 
-    <span class="kw">fn</span> <span class="ident">builder</span>(<span class="ident">nrows</span>: <span class="ident">usize</span>) -&gt; <span class="ident"><span class="self">Self</span>::Builder</span> {
-        <span class="ident">MutableBinaryArray::with_capacity</span>(<span class="ident">nrows</span>)
+    <span class="kw">fn </span>builder(nrows: usize) -&gt; <span class="self">Self</span>::Builder {
+        MutablePrimitiveArray::with_capacity(nrows).to(ArrowDataType::Time64(TimeUnit::Nanosecond))
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">push</span>(<span class="ident">builder</span>: <span class="kw-2">&amp;mut</span> <span class="ident"><span class="self">Self</span>::Builder</span>, <span class="ident">value</span>: <span class="self">Self</span>) {
-        <span class="ident">builder</span>.<span class="ident">push</span>(<span class="ident">value</span>);
+    <span class="kw">fn </span>push(builder: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Builder, value: NaiveTime) {
+        builder.push(<span class="prelude-val">Some</span>(value).map(naive_time_to_time64_nanos));
     }
 
-    <span class="kw">fn</span> <span class="ident">field</span>(<span class="ident">header</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">Field</span> {
-        <span class="ident">Field::new</span>(<span class="ident">header</span>, <span class="ident">ArrowDataType::LargeBinary</span>, <span class="bool-val">true</span>)
+    <span class="kw">fn </span>field(header: <span class="kw-2">&amp;</span>str) -&gt; Field {
+        Field::new(header, ArrowDataType::Time64(TimeUnit::Nanosecond), <span class="bool-val">false</span>)
     }
 }
 
-<span class="kw">impl</span> <span class="ident">ArrowAssoc</span> <span class="kw">for</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Builder</span> <span class="op">=</span> <span class="ident">MutableBinaryArray</span><span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span>;
+<span class="kw">impl </span>ArrowAssoc <span class="kw">for </span><span class="prelude-ty">Option</span>&lt;Vec&lt;u8&gt;&gt; {
+    <span class="kw">type </span>Builder = MutableBinaryArray&lt;i64&gt;;
 
-    <span class="kw">fn</span> <span class="ident">builder</span>(<span class="ident">nrows</span>: <span class="ident">usize</span>) -&gt; <span class="ident"><span class="self">Self</span>::Builder</span> {
-        <span class="ident">MutableBinaryArray::with_capacity</span>(<span class="ident">nrows</span>)
+    <span class="kw">fn </span>builder(nrows: usize) -&gt; <span class="self">Self</span>::Builder {
+        MutableBinaryArray::with_capacity(nrows)
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">push</span>(<span class="ident">builder</span>: <span class="kw-2">&amp;mut</span> <span class="ident"><span class="self">Self</span>::Builder</span>, <span class="ident">value</span>: <span class="self">Self</span>) {
-        <span class="ident">builder</span>.<span class="ident">push</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>));
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>push(builder: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Builder, value: <span class="self">Self</span>) {
+        builder.push(value);
     }
 
-    <span class="kw">fn</span> <span class="ident">field</span>(<span class="ident">header</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">Field</span> {
-        <span class="ident">Field::new</span>(<span class="ident">header</span>, <span class="ident">ArrowDataType::LargeBinary</span>, <span class="bool-val">false</span>)
+    <span class="kw">fn </span>field(header: <span class="kw-2">&amp;</span>str) -&gt; Field {
+        Field::new(header, ArrowDataType::LargeBinary, <span class="bool-val">true</span>)
+    }
+}
+
+<span class="kw">impl </span>ArrowAssoc <span class="kw">for </span>Vec&lt;u8&gt; {
+    <span class="kw">type </span>Builder = MutableBinaryArray&lt;i64&gt;;
+
+    <span class="kw">fn </span>builder(nrows: usize) -&gt; <span class="self">Self</span>::Builder {
+        MutableBinaryArray::with_capacity(nrows)
+    }
+
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>push(builder: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Builder, value: <span class="self">Self</span>) {
+        builder.push(<span class="prelude-val">Some</span>(value));
+    }
+
+    <span class="kw">fn </span>field(header: <span class="kw-2">&amp;</span>str) -&gt; Field {
+        Field::new(header, ArrowDataType::LargeBinary, <span class="bool-val">false</span>)
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="connectorx" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.62.0-nightly (878c7833f 2022-04-16)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="connectorx" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (750bd1a7f 2022-09-14)" ></div></body></html>

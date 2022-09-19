@@ -1,1 +1,1 @@
-initSidebarItems({"enum":[["DataOrder",""]],"fn":[["coordinate","Given the supported data order from source and destination, decide the optimal data order for producing and writing."]]});
+window.SIDEBAR_ITEMS = {"enum":[["DataOrder",""]],"fn":[["coordinate","Given the supported data order from source and destination, decide the optimal data order for producing and writing."]]};

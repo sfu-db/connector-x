@@ -1,9 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `connectorx/src/sources/mysql/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script src="../../../../crates.js"></script><script defer src="../../../../main.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script>
-    <noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../connectorx/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../../../connectorx/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../connectorx/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><div class="theme-picker hidden"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="22" height="22" alt="Pick another theme!" src="../../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `connectorx/src/sources/mysql/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../../normalize.css"><link rel="stylesheet" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../../ayu.css" disabled><link rel="stylesheet" href="../../../../dark.css" disabled><link rel="stylesheet" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../connectorx/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../connectorx/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../connectorx/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -476,479 +471,478 @@
 <span id="471">471</span>
 <span id="472">472</span>
 <span id="473">473</span>
-</pre><pre class="rust"><code><span class="doccomment">//! Source implementation for MySQL database.</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Source implementation for MySQL database.
 
-<span class="kw">mod</span> <span class="ident">errors</span>;
-<span class="kw">mod</span> <span class="ident">typesystem</span>;
+</span><span class="kw">mod </span>errors;
+<span class="kw">mod </span>typesystem;
 
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::errors::MySQLSourceError</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::constants::DB_BUFFER_SIZE</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">data_order::DataOrder</span>,
-    <span class="ident">errors::ConnectorXError</span>,
-    <span class="ident">sources</span>::{<span class="ident">PartitionParser</span>, <span class="ident">Produce</span>, <span class="ident">Source</span>, <span class="ident">SourcePartition</span>},
-    <span class="ident">sql</span>::{<span class="ident">count_query</span>, <span class="ident">limit1_query</span>, <span class="ident">CXQuery</span>},
+<span class="kw">pub use </span><span class="self">self</span>::errors::MySQLSourceError;
+<span class="kw">use </span><span class="kw">crate</span>::constants::DB_BUFFER_SIZE;
+<span class="kw">use crate</span>::{
+    data_order::DataOrder,
+    errors::ConnectorXError,
+    sources::{PartitionParser, Produce, Source, SourcePartition},
+    sql::{count_query, limit1_query, CXQuery},
 };
-<span class="kw">use</span> <span class="ident">anyhow::anyhow</span>;
-<span class="kw">use</span> <span class="ident">chrono</span>::{<span class="ident">NaiveDate</span>, <span class="ident">NaiveDateTime</span>, <span class="ident">NaiveTime</span>};
-<span class="kw">use</span> <span class="ident">fehler</span>::{<span class="ident">throw</span>, <span class="ident">throws</span>};
-<span class="kw">use</span> <span class="ident">log</span>::{<span class="ident">debug</span>, <span class="ident">warn</span>};
-<span class="kw">use</span> <span class="ident">r2d2</span>::{<span class="ident">Pool</span>, <span class="ident">PooledConnection</span>};
-<span class="kw">use</span> <span class="ident">r2d2_mysql</span>::{
-    <span class="ident">mysql</span>::{<span class="ident">prelude::Queryable</span>, <span class="ident">Binary</span>, <span class="ident">Opts</span>, <span class="ident">OptsBuilder</span>, <span class="ident">QueryResult</span>, <span class="ident">Row</span>, <span class="ident">Text</span>},
-    <span class="ident">MysqlConnectionManager</span>,
+<span class="kw">use </span>anyhow::anyhow;
+<span class="kw">use </span>chrono::{NaiveDate, NaiveDateTime, NaiveTime};
+<span class="kw">use </span>fehler::{throw, throws};
+<span class="kw">use </span>log::{debug, warn};
+<span class="kw">use </span>r2d2::{Pool, PooledConnection};
+<span class="kw">use </span>r2d2_mysql::{
+    mysql::{prelude::Queryable, Binary, Opts, OptsBuilder, QueryResult, Row, Text},
+    MysqlConnectionManager,
 };
-<span class="kw">use</span> <span class="ident">rust_decimal::Decimal</span>;
-<span class="kw">use</span> <span class="ident">serde_json::Value</span>;
-<span class="kw">use</span> <span class="ident">sqlparser::dialect::MySqlDialect</span>;
-<span class="kw">use</span> <span class="ident">std::marker::PhantomData</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">typesystem::MySQLTypeSystem</span>;
+<span class="kw">use </span>rust_decimal::Decimal;
+<span class="kw">use </span>serde_json::Value;
+<span class="kw">use </span>sqlparser::dialect::MySqlDialect;
+<span class="kw">use </span>std::marker::PhantomData;
+<span class="kw">pub use </span>typesystem::MySQLTypeSystem;
 
-<span class="kw">type</span> <span class="ident">MysqlManager</span> <span class="op">=</span> <span class="ident">MysqlConnectionManager</span>;
-<span class="kw">type</span> <span class="ident">MysqlConn</span> <span class="op">=</span> <span class="ident">PooledConnection</span><span class="op">&lt;</span><span class="ident">MysqlManager</span><span class="op">&gt;</span>;
+<span class="kw">type </span>MysqlManager = MysqlConnectionManager;
+<span class="kw">type </span>MysqlConn = PooledConnection&lt;MysqlManager&gt;;
 
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">BinaryProtocol</span> {}
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">TextProtocol</span> {}
+<span class="kw">pub enum </span>BinaryProtocol {}
+<span class="kw">pub enum </span>TextProtocol {}
 
-<span class="attribute">#[<span class="ident">throws</span>(<span class="ident">MySQLSourceError</span>)]</span>
-<span class="kw">fn</span> <span class="ident">get_total_rows</span>(<span class="ident">conn</span>: <span class="kw-2">&amp;mut</span> <span class="ident">MysqlConn</span>, <span class="ident">query</span>: <span class="kw-2">&amp;</span><span class="ident">CXQuery</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>) -&gt; <span class="ident">usize</span> {
-    <span class="ident">conn</span>.<span class="ident">query_first</span>(<span class="kw-2">&amp;</span><span class="ident">count_query</span>(<span class="ident">query</span>, <span class="kw-2">&amp;</span><span class="ident">MySqlDialect</span> {})<span class="question-mark">?</span>)<span class="question-mark">?</span>
-        .<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="macro">anyhow!</span>(<span class="string">&quot;mysql failed to get the count of query: {}&quot;</span>, <span class="ident">query</span>))<span class="question-mark">?</span>
+<span class="attribute">#[throws(MySQLSourceError)]
+</span><span class="kw">fn </span>get_total_rows(conn: <span class="kw-2">&amp;mut </span>MysqlConn, query: <span class="kw-2">&amp;</span>CXQuery&lt;String&gt;) -&gt; usize {
+    conn.query_first(<span class="kw-2">&amp;</span>count_query(query, <span class="kw-2">&amp;</span>MySqlDialect {})<span class="question-mark">?</span>)<span class="question-mark">?
+        </span>.ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">&quot;mysql failed to get the count of query: {}&quot;</span>, query))<span class="question-mark">?
+</span>}
+
+<span class="kw">pub struct </span>MySQLSource&lt;P&gt; {
+    pool: Pool&lt;MysqlManager&gt;,
+    origin_query: <span class="prelude-ty">Option</span>&lt;String&gt;,
+    queries: Vec&lt;CXQuery&lt;String&gt;&gt;,
+    names: Vec&lt;String&gt;,
+    schema: Vec&lt;MySQLTypeSystem&gt;,
+    _protocol: PhantomData&lt;P&gt;,
 }
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MySQLSource</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span> {
-    <span class="ident">pool</span>: <span class="ident">Pool</span><span class="op">&lt;</span><span class="ident">MysqlManager</span><span class="op">&gt;</span>,
-    <span class="ident">origin_query</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
-    <span class="ident">queries</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">CXQuery</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">names</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
-    <span class="ident">schema</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">MySQLTypeSystem</span><span class="op">&gt;</span>,
-    <span class="ident">_protocol</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>,
-}
+<span class="kw">impl</span>&lt;P&gt; MySQLSource&lt;P&gt; {
+    <span class="attribute">#[throws(MySQLSourceError)]
+    </span><span class="kw">pub fn </span>new(conn: <span class="kw-2">&amp;</span>str, nconn: usize) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>manager = MysqlConnectionManager::new(OptsBuilder::from_opts(Opts::from_url(conn)<span class="question-mark">?</span>));
+        <span class="kw">let </span>pool = r2d2::Pool::builder()
+            .max_size(nconn <span class="kw">as </span>u32)
+            .build(manager)<span class="question-mark">?</span>;
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span> <span class="ident">MySQLSource</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span> {
-    <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">MySQLSourceError</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">conn</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">nconn</span>: <span class="ident">usize</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="ident">manager</span> <span class="op">=</span> <span class="ident">MysqlConnectionManager::new</span>(<span class="ident">OptsBuilder::from_opts</span>(<span class="ident">Opts::from_url</span>(<span class="ident">conn</span>)<span class="question-mark">?</span>));
-        <span class="kw">let</span> <span class="ident">pool</span> <span class="op">=</span> <span class="ident">r2d2::Pool::builder</span>()
-            .<span class="ident">max_size</span>(<span class="ident">nconn</span> <span class="kw">as</span> <span class="ident">u32</span>)
-            .<span class="ident">build</span>(<span class="ident">manager</span>)<span class="question-mark">?</span>;
-
-        <span class="self">Self</span> {
-            <span class="ident">pool</span>,
-            <span class="ident">origin_query</span>: <span class="prelude-val">None</span>,
-            <span class="ident">queries</span>: <span class="macro">vec!</span>[],
-            <span class="ident">names</span>: <span class="macro">vec!</span>[],
-            <span class="ident">schema</span>: <span class="macro">vec!</span>[],
-            <span class="ident">_protocol</span>: <span class="ident">PhantomData</span>,
+        <span class="self">Self </span>{
+            pool,
+            origin_query: <span class="prelude-val">None</span>,
+            queries: <span class="macro">vec!</span>[],
+            names: <span class="macro">vec!</span>[],
+            schema: <span class="macro">vec!</span>[],
+            _protocol: PhantomData,
         }
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span> <span class="ident">Source</span> <span class="kw">for</span> <span class="ident">MySQLSource</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">MySQLSourcePartition</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>:
-        <span class="ident">SourcePartition</span><span class="op">&lt;</span><span class="ident">TypeSystem</span> <span class="op">=</span> <span class="ident">MySQLTypeSystem</span>, <span class="ident">Error</span> <span class="op">=</span> <span class="ident">MySQLSourceError</span><span class="op">&gt;</span>,
-    <span class="ident">P</span>: <span class="ident">Send</span>,
+<span class="kw">impl</span>&lt;P&gt; Source <span class="kw">for </span>MySQLSource&lt;P&gt;
+<span class="kw">where
+    </span>MySQLSourcePartition&lt;P&gt;:
+        SourcePartition&lt;TypeSystem = MySQLTypeSystem, Error = MySQLSourceError&gt;,
+    P: Send,
 {
-    <span class="kw">const</span> <span class="ident">DATA_ORDERS</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">DataOrder</span>] <span class="op">=</span> <span class="kw-2">&amp;</span>[<span class="ident">DataOrder::RowMajor</span>];
-    <span class="kw">type</span> <span class="ident">Partition</span> <span class="op">=</span> <span class="ident">MySQLSourcePartition</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>;
-    <span class="kw">type</span> <span class="ident">TypeSystem</span> <span class="op">=</span> <span class="ident">MySQLTypeSystem</span>;
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">MySQLSourceError</span>;
+    <span class="kw">const </span>DATA_ORDERS: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[DataOrder] = <span class="kw-2">&amp;</span>[DataOrder::RowMajor];
+    <span class="kw">type </span>Partition = MySQLSourcePartition&lt;P&gt;;
+    <span class="kw">type </span>TypeSystem = MySQLTypeSystem;
+    <span class="kw">type </span>Error = MySQLSourceError;
 
-    <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">MySQLSourceError</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">set_data_order</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">data_order</span>: <span class="ident">DataOrder</span>) {
-        <span class="kw">if</span> <span class="op">!</span><span class="macro">matches!</span>(<span class="ident">data_order</span>, <span class="ident">DataOrder::RowMajor</span>) {
-            <span class="macro">throw!</span>(<span class="ident">ConnectorXError::UnsupportedDataOrder</span>(<span class="ident">data_order</span>));
+    <span class="attribute">#[throws(MySQLSourceError)]
+    </span><span class="kw">fn </span>set_data_order(<span class="kw-2">&amp;mut </span><span class="self">self</span>, data_order: DataOrder) {
+        <span class="kw">if </span>!<span class="macro">matches!</span>(data_order, DataOrder::RowMajor) {
+            <span class="macro">throw!</span>(ConnectorXError::UnsupportedDataOrder(data_order));
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">set_queries</span><span class="op">&lt;</span><span class="ident">Q</span>: <span class="ident">ToString</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">queries</span>: <span class="kw-2">&amp;</span>[<span class="ident">CXQuery</span><span class="op">&lt;</span><span class="ident">Q</span><span class="op">&gt;</span>]) {
-        <span class="self">self</span>.<span class="ident">queries</span> <span class="op">=</span> <span class="ident">queries</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">q</span><span class="op">|</span> <span class="ident">q</span>.<span class="ident">map</span>(<span class="ident">Q::to_string</span>)).<span class="ident">collect</span>();
+    <span class="kw">fn </span>set_queries&lt;Q: ToString&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, queries: <span class="kw-2">&amp;</span>[CXQuery&lt;Q&gt;]) {
+        <span class="self">self</span>.queries = queries.iter().map(|q| q.map(Q::to_string)).collect();
     }
 
-    <span class="kw">fn</span> <span class="ident">set_origin_query</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">query</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>) {
-        <span class="self">self</span>.<span class="ident">origin_query</span> <span class="op">=</span> <span class="ident">query</span>;
+    <span class="kw">fn </span>set_origin_query(<span class="kw-2">&amp;mut </span><span class="self">self</span>, query: <span class="prelude-ty">Option</span>&lt;String&gt;) {
+        <span class="self">self</span>.origin_query = query;
     }
 
-    <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">MySQLSourceError</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">fetch_metadata</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="macro">assert!</span>(<span class="op">!</span><span class="self">self</span>.<span class="ident">queries</span>.<span class="ident">is_empty</span>());
+    <span class="attribute">#[throws(MySQLSourceError)]
+    </span><span class="kw">fn </span>fetch_metadata(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="macro">assert!</span>(!<span class="self">self</span>.queries.is_empty());
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">conn</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">pool</span>.<span class="ident">get</span>()<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">first_query</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">queries</span>[<span class="number">0</span>];
+        <span class="kw">let </span><span class="kw-2">mut </span>conn = <span class="self">self</span>.pool.get()<span class="question-mark">?</span>;
+        <span class="kw">let </span>first_query = <span class="kw-2">&amp;</span><span class="self">self</span>.queries[<span class="number">0</span>];
 
-        <span class="kw">match</span> <span class="ident">conn</span>.<span class="ident">prep</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">first_query</span>) {
-            <span class="prelude-val">Ok</span>(<span class="ident">stmt</span>) =&gt; {
-                <span class="kw">let</span> (<span class="ident">names</span>, <span class="ident">types</span>) <span class="op">=</span> <span class="ident">stmt</span>
-                    .<span class="ident">columns</span>()
-                    .<span class="ident">iter</span>()
-                    .<span class="ident">map</span>(<span class="op">|</span><span class="ident">col</span><span class="op">|</span> {
+        <span class="kw">match </span>conn.prep(<span class="kw-2">&amp;*</span>first_query) {
+            <span class="prelude-val">Ok</span>(stmt) =&gt; {
+                <span class="kw">let </span>(names, types) = stmt
+                    .columns()
+                    .iter()
+                    .map(|col| {
                         (
-                            <span class="ident">col</span>.<span class="ident">name_str</span>().<span class="ident">to_string</span>(),
-                            <span class="ident">MySQLTypeSystem::from</span>((<span class="kw-2">&amp;</span><span class="ident">col</span>.<span class="ident">column_type</span>(), <span class="kw-2">&amp;</span><span class="ident">col</span>.<span class="ident">flags</span>())),
+                            col.name_str().to_string(),
+                            MySQLTypeSystem::from((<span class="kw-2">&amp;</span>col.column_type(), <span class="kw-2">&amp;</span>col.flags())),
                         )
                     })
-                    .<span class="ident">unzip</span>();
-                <span class="self">self</span>.<span class="ident">names</span> <span class="op">=</span> <span class="ident">names</span>;
-                <span class="self">self</span>.<span class="ident">schema</span> <span class="op">=</span> <span class="ident">types</span>;
+                    .unzip();
+                <span class="self">self</span>.names = names;
+                <span class="self">self</span>.schema = types;
             }
-            <span class="prelude-val">Err</span>(<span class="ident">e</span>) =&gt; {
+            <span class="prelude-val">Err</span>(e) =&gt; {
                 <span class="macro">warn!</span>(
                     <span class="string">&quot;mysql text prepared statement error: {:?}, switch to limit1 method&quot;</span>,
-                    <span class="ident">e</span>
+                    e
                 );
-                <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">query</span>) <span class="kw">in</span> <span class="self">self</span>.<span class="ident">queries</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
-                    <span class="comment">// assuming all the partition queries yield same schema</span>
-                    <span class="kw">match</span> <span class="ident">conn</span>
-                        .<span class="ident">query_first</span>::<span class="op">&lt;</span><span class="ident">Row</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">limit1_query</span>(<span class="ident">query</span>, <span class="kw-2">&amp;</span><span class="ident">MySqlDialect</span> {})<span class="question-mark">?</span>.<span class="ident">as_str</span>())
+                <span class="kw">for </span>(i, query) <span class="kw">in </span><span class="self">self</span>.queries.iter().enumerate() {
+                    <span class="comment">// assuming all the partition queries yield same schema
+                    </span><span class="kw">match </span>conn
+                        .query_first::&lt;Row, <span class="kw">_</span>&gt;(limit1_query(query, <span class="kw-2">&amp;</span>MySqlDialect {})<span class="question-mark">?</span>.as_str())
                     {
-                        <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">row</span>)) =&gt; {
-                            <span class="kw">let</span> (<span class="ident">names</span>, <span class="ident">types</span>) <span class="op">=</span> <span class="ident">row</span>
-                                .<span class="ident">columns_ref</span>()
-                                .<span class="ident">iter</span>()
-                                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">col</span><span class="op">|</span> {
+                        <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(row)) =&gt; {
+                            <span class="kw">let </span>(names, types) = row
+                                .columns_ref()
+                                .iter()
+                                .map(|col| {
                                     (
-                                        <span class="ident">col</span>.<span class="ident">name_str</span>().<span class="ident">to_string</span>(),
-                                        <span class="ident">MySQLTypeSystem::from</span>((<span class="kw-2">&amp;</span><span class="ident">col</span>.<span class="ident">column_type</span>(), <span class="kw-2">&amp;</span><span class="ident">col</span>.<span class="ident">flags</span>())),
+                                        col.name_str().to_string(),
+                                        MySQLTypeSystem::from((<span class="kw-2">&amp;</span>col.column_type(), <span class="kw-2">&amp;</span>col.flags())),
                                     )
                                 })
-                                .<span class="ident">unzip</span>();
-                            <span class="self">self</span>.<span class="ident">names</span> <span class="op">=</span> <span class="ident">names</span>;
-                            <span class="self">self</span>.<span class="ident">schema</span> <span class="op">=</span> <span class="ident">types</span>;
+                                .unzip();
+                            <span class="self">self</span>.names = names;
+                            <span class="self">self</span>.schema = types;
                             <span class="kw">return</span>;
                         }
                         <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) =&gt; {}
-                        <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="kw">if</span> <span class="ident">i</span> <span class="op">==</span> <span class="self">self</span>.<span class="ident">queries</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="number">1</span> =&gt; {
-                            <span class="comment">// tried the last query but still get an error</span>
-                            <span class="macro">debug!</span>(<span class="string">&quot;cannot get metadata for &#39;{}&#39;, try next query: {}&quot;</span>, <span class="ident">query</span>, <span class="ident">e</span>);
-                            <span class="macro">throw!</span>(<span class="ident">e</span>)
+                        <span class="prelude-val">Err</span>(e) <span class="kw">if </span>i == <span class="self">self</span>.queries.len() - <span class="number">1 </span>=&gt; {
+                            <span class="comment">// tried the last query but still get an error
+                            </span><span class="macro">debug!</span>(<span class="string">&quot;cannot get metadata for &#39;{}&#39;, try next query: {}&quot;</span>, query, e);
+                            <span class="macro">throw!</span>(e)
                         }
                         <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; {}
                     }
                 }
 
-                <span class="comment">// tried all queries but all get empty result set</span>
-                <span class="kw">let</span> <span class="ident">iter</span> <span class="op">=</span> <span class="ident">conn</span>.<span class="ident">query_iter</span>(<span class="self">self</span>.<span class="ident">queries</span>[<span class="number">0</span>].<span class="ident">as_str</span>())<span class="question-mark">?</span>;
-                <span class="kw">let</span> (<span class="ident">names</span>, <span class="ident">types</span>) <span class="op">=</span> <span class="ident">iter</span>
-                    .<span class="ident">columns</span>()
-                    .<span class="ident">as_ref</span>()
-                    .<span class="ident">iter</span>()
-                    .<span class="ident">map</span>(<span class="op">|</span><span class="ident">col</span><span class="op">|</span> {
+                <span class="comment">// tried all queries but all get empty result set
+                </span><span class="kw">let </span>iter = conn.query_iter(<span class="self">self</span>.queries[<span class="number">0</span>].as_str())<span class="question-mark">?</span>;
+                <span class="kw">let </span>(names, types) = iter
+                    .columns()
+                    .as_ref()
+                    .iter()
+                    .map(|col| {
                         (
-                            <span class="ident">col</span>.<span class="ident">name_str</span>().<span class="ident">to_string</span>(),
-                            <span class="ident">MySQLTypeSystem::VarChar</span>(<span class="bool-val">false</span>), <span class="comment">// set all columns as string (align with pandas)</span>
-                        )
+                            col.name_str().to_string(),
+                            MySQLTypeSystem::VarChar(<span class="bool-val">false</span>), <span class="comment">// set all columns as string (align with pandas)
+                        </span>)
                     })
-                    .<span class="ident">unzip</span>();
-                <span class="self">self</span>.<span class="ident">names</span> <span class="op">=</span> <span class="ident">names</span>;
-                <span class="self">self</span>.<span class="ident">schema</span> <span class="op">=</span> <span class="ident">types</span>;
+                    .unzip();
+                <span class="self">self</span>.names = names;
+                <span class="self">self</span>.schema = types;
             }
         }
     }
 
-    <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">MySQLSourceError</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">result_rows</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">origin_query</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">q</span>) =&gt; {
-                <span class="kw">let</span> <span class="ident">cxq</span> <span class="op">=</span> <span class="ident">CXQuery::Naked</span>(<span class="ident">q</span>.<span class="ident">clone</span>());
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">conn</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">pool</span>.<span class="ident">get</span>()<span class="question-mark">?</span>;
-                <span class="kw">let</span> <span class="ident">nrows</span> <span class="op">=</span> <span class="ident">get_total_rows</span>(<span class="kw-2">&amp;mut</span> <span class="ident">conn</span>, <span class="kw-2">&amp;</span><span class="ident">cxq</span>)<span class="question-mark">?</span>;
-                <span class="prelude-val">Some</span>(<span class="ident">nrows</span>)
+    <span class="attribute">#[throws(MySQLSourceError)]
+    </span><span class="kw">fn </span>result_rows(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt; {
+        <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.origin_query {
+            <span class="prelude-val">Some</span>(q) =&gt; {
+                <span class="kw">let </span>cxq = CXQuery::Naked(q.clone());
+                <span class="kw">let </span><span class="kw-2">mut </span>conn = <span class="self">self</span>.pool.get()<span class="question-mark">?</span>;
+                <span class="kw">let </span>nrows = get_total_rows(<span class="kw-2">&amp;mut </span>conn, <span class="kw-2">&amp;</span>cxq)<span class="question-mark">?</span>;
+                <span class="prelude-val">Some</span>(nrows)
             }
-            <span class="prelude-val">None</span> =&gt; <span class="prelude-val">None</span>,
+            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None</span>,
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">names</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">names</span>.<span class="ident">clone</span>()
+    <span class="kw">fn </span>names(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Vec&lt;String&gt; {
+        <span class="self">self</span>.names.clone()
     }
 
-    <span class="kw">fn</span> <span class="ident">schema</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::TypeSystem</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">schema</span>.<span class="ident">clone</span>()
+    <span class="kw">fn </span>schema(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Vec&lt;<span class="self">Self</span>::TypeSystem&gt; {
+        <span class="self">self</span>.schema.clone()
     }
 
-    <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">MySQLSourceError</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">partition</span>(<span class="self">self</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Partition</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ret</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-        <span class="kw">for</span> <span class="ident">query</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">queries</span> {
-            <span class="kw">let</span> <span class="ident">conn</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">pool</span>.<span class="ident">get</span>()<span class="question-mark">?</span>;
-            <span class="ident">ret</span>.<span class="ident">push</span>(<span class="ident">MySQLSourcePartition::new</span>(<span class="ident">conn</span>, <span class="kw-2">&amp;</span><span class="ident">query</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">schema</span>));
+    <span class="attribute">#[throws(MySQLSourceError)]
+    </span><span class="kw">fn </span>partition(<span class="self">self</span>) -&gt; Vec&lt;<span class="self">Self</span>::Partition&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>ret = <span class="macro">vec!</span>[];
+        <span class="kw">for </span>query <span class="kw">in </span><span class="self">self</span>.queries {
+            <span class="kw">let </span>conn = <span class="self">self</span>.pool.get()<span class="question-mark">?</span>;
+            ret.push(MySQLSourcePartition::new(conn, <span class="kw-2">&amp;</span>query, <span class="kw-2">&amp;</span><span class="self">self</span>.schema));
         }
-        <span class="ident">ret</span>
+        ret
     }
 }
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MySQLSourcePartition</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span> {
-    <span class="ident">conn</span>: <span class="ident">MysqlConn</span>,
-    <span class="ident">query</span>: <span class="ident">CXQuery</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
-    <span class="ident">schema</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">MySQLTypeSystem</span><span class="op">&gt;</span>,
-    <span class="ident">nrows</span>: <span class="ident">usize</span>,
-    <span class="ident">ncols</span>: <span class="ident">usize</span>,
-    <span class="ident">_protocol</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>,
+<span class="kw">pub struct </span>MySQLSourcePartition&lt;P&gt; {
+    conn: MysqlConn,
+    query: CXQuery&lt;String&gt;,
+    schema: Vec&lt;MySQLTypeSystem&gt;,
+    nrows: usize,
+    ncols: usize,
+    _protocol: PhantomData&lt;P&gt;,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span> <span class="ident">MySQLSourcePartition</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">conn</span>: <span class="ident">MysqlConn</span>, <span class="ident">query</span>: <span class="kw-2">&amp;</span><span class="ident">CXQuery</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>, <span class="ident">schema</span>: <span class="kw-2">&amp;</span>[<span class="ident">MySQLTypeSystem</span>]) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">conn</span>,
-            <span class="ident">query</span>: <span class="ident">query</span>.<span class="ident">clone</span>(),
-            <span class="ident">schema</span>: <span class="ident">schema</span>.<span class="ident">to_vec</span>(),
-            <span class="ident">nrows</span>: <span class="number">0</span>,
-            <span class="ident">ncols</span>: <span class="ident">schema</span>.<span class="ident">len</span>(),
-            <span class="ident">_protocol</span>: <span class="ident">PhantomData</span>,
-        }
-    }
-}
-
-<span class="kw">impl</span> <span class="ident">SourcePartition</span> <span class="kw">for</span> <span class="ident">MySQLSourcePartition</span><span class="op">&lt;</span><span class="ident">BinaryProtocol</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">TypeSystem</span> <span class="op">=</span> <span class="ident">MySQLTypeSystem</span>;
-    <span class="kw">type</span> <span class="ident">Parser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">MySQLBinarySourceParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>;
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">MySQLSourceError</span>;
-
-    <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">MySQLSourceError</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">result_rows</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="self">self</span>.<span class="ident">nrows</span> <span class="op">=</span> <span class="ident">get_total_rows</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">conn</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">query</span>)<span class="question-mark">?</span>;
-    }
-
-    <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">MySQLSourceError</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">parser</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident"><span class="self">Self</span>::Parser</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">stmt</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">conn</span>.<span class="ident">prep</span>(<span class="self">self</span>.<span class="ident">query</span>.<span class="ident">as_str</span>())<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">iter</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">conn</span>.<span class="ident">exec_iter</span>(<span class="ident">stmt</span>, ())<span class="question-mark">?</span>;
-        <span class="ident">MySQLBinarySourceParser::new</span>(<span class="ident">iter</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">schema</span>)
-    }
-
-    <span class="kw">fn</span> <span class="ident">nrows</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
-        <span class="self">self</span>.<span class="ident">nrows</span>
-    }
-
-    <span class="kw">fn</span> <span class="ident">ncols</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
-        <span class="self">self</span>.<span class="ident">ncols</span>
-    }
-}
-
-<span class="kw">impl</span> <span class="ident">SourcePartition</span> <span class="kw">for</span> <span class="ident">MySQLSourcePartition</span><span class="op">&lt;</span><span class="ident">TextProtocol</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">TypeSystem</span> <span class="op">=</span> <span class="ident">MySQLTypeSystem</span>;
-    <span class="kw">type</span> <span class="ident">Parser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">MySQLTextSourceParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>;
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">MySQLSourceError</span>;
-
-    <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">MySQLSourceError</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">result_rows</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="self">self</span>.<span class="ident">nrows</span> <span class="op">=</span> <span class="ident">get_total_rows</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">conn</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">query</span>)<span class="question-mark">?</span>;
-    }
-
-    <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">MySQLSourceError</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">parser</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident"><span class="self">Self</span>::Parser</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">query</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">query</span>.<span class="ident">clone</span>();
-        <span class="kw">let</span> <span class="ident">iter</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">conn</span>.<span class="ident">query_iter</span>(<span class="ident">query</span>)<span class="question-mark">?</span>;
-        <span class="ident">MySQLTextSourceParser::new</span>(<span class="ident">iter</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">schema</span>)
-    }
-
-    <span class="kw">fn</span> <span class="ident">nrows</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
-        <span class="self">self</span>.<span class="ident">nrows</span>
-    }
-
-    <span class="kw">fn</span> <span class="ident">ncols</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
-        <span class="self">self</span>.<span class="ident">ncols</span>
-    }
-}
-
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MySQLBinarySourceParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="ident">iter</span>: <span class="ident">QueryResult</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;a</span>, <span class="ident">Binary</span><span class="op">&gt;</span>,
-    <span class="ident">rowbuf</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Row</span><span class="op">&gt;</span>,
-    <span class="ident">ncols</span>: <span class="ident">usize</span>,
-    <span class="ident">current_col</span>: <span class="ident">usize</span>,
-    <span class="ident">current_row</span>: <span class="ident">usize</span>,
-}
-
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">MySQLBinarySourceParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">iter</span>: <span class="ident">QueryResult</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;a</span>, <span class="ident">Binary</span><span class="op">&gt;</span>, <span class="ident">schema</span>: <span class="kw-2">&amp;</span>[<span class="ident">MySQLTypeSystem</span>]) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">iter</span>,
-            <span class="ident">rowbuf</span>: <span class="ident">Vec::with_capacity</span>(<span class="ident">DB_BUFFER_SIZE</span>),
-            <span class="ident">ncols</span>: <span class="ident">schema</span>.<span class="ident">len</span>(),
-            <span class="ident">current_row</span>: <span class="number">0</span>,
-            <span class="ident">current_col</span>: <span class="number">0</span>,
+<span class="kw">impl</span>&lt;P&gt; MySQLSourcePartition&lt;P&gt; {
+    <span class="kw">pub fn </span>new(conn: MysqlConn, query: <span class="kw-2">&amp;</span>CXQuery&lt;String&gt;, schema: <span class="kw-2">&amp;</span>[MySQLTypeSystem]) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            conn,
+            query: query.clone(),
+            schema: schema.to_vec(),
+            nrows: <span class="number">0</span>,
+            ncols: schema.len(),
+            _protocol: PhantomData,
         }
     }
+}
 
-    <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">MySQLSourceError</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">next_loc</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; (<span class="ident">usize</span>, <span class="ident">usize</span>) {
-        <span class="kw">let</span> <span class="ident">ret</span> <span class="op">=</span> (<span class="self">self</span>.<span class="ident">current_row</span>, <span class="self">self</span>.<span class="ident">current_col</span>);
-        <span class="self">self</span>.<span class="ident">current_row</span> <span class="op">+</span><span class="op">=</span> (<span class="self">self</span>.<span class="ident">current_col</span> <span class="op">+</span> <span class="number">1</span>) <span class="op">/</span> <span class="self">self</span>.<span class="ident">ncols</span>;
-        <span class="self">self</span>.<span class="ident">current_col</span> <span class="op">=</span> (<span class="self">self</span>.<span class="ident">current_col</span> <span class="op">+</span> <span class="number">1</span>) <span class="op">%</span> <span class="self">self</span>.<span class="ident">ncols</span>;
-        <span class="ident">ret</span>
+<span class="kw">impl </span>SourcePartition <span class="kw">for </span>MySQLSourcePartition&lt;BinaryProtocol&gt; {
+    <span class="kw">type </span>TypeSystem = MySQLTypeSystem;
+    <span class="kw">type </span>Parser&lt;<span class="lifetime">&#39;a</span>&gt; = MySQLBinarySourceParser&lt;<span class="lifetime">&#39;a</span>&gt;;
+    <span class="kw">type </span>Error = MySQLSourceError;
+
+    <span class="attribute">#[throws(MySQLSourceError)]
+    </span><span class="kw">fn </span>result_rows(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="self">self</span>.nrows = get_total_rows(<span class="kw-2">&amp;mut </span><span class="self">self</span>.conn, <span class="kw-2">&amp;</span><span class="self">self</span>.query)<span class="question-mark">?</span>;
+    }
+
+    <span class="attribute">#[throws(MySQLSourceError)]
+    </span><span class="kw">fn </span>parser(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="self">Self</span>::Parser&lt;<span class="lifetime">&#39;_</span>&gt; {
+        <span class="kw">let </span>stmt = <span class="self">self</span>.conn.prep(<span class="self">self</span>.query.as_str())<span class="question-mark">?</span>;
+        <span class="kw">let </span>iter = <span class="self">self</span>.conn.exec_iter(stmt, ())<span class="question-mark">?</span>;
+        MySQLBinarySourceParser::new(iter, <span class="kw-2">&amp;</span><span class="self">self</span>.schema)
+    }
+
+    <span class="kw">fn </span>nrows(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+        <span class="self">self</span>.nrows
+    }
+
+    <span class="kw">fn </span>ncols(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+        <span class="self">self</span>.ncols
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">PartitionParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">MySQLBinarySourceParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">TypeSystem</span> <span class="op">=</span> <span class="ident">MySQLTypeSystem</span>;
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">MySQLSourceError</span>;
+<span class="kw">impl </span>SourcePartition <span class="kw">for </span>MySQLSourcePartition&lt;TextProtocol&gt; {
+    <span class="kw">type </span>TypeSystem = MySQLTypeSystem;
+    <span class="kw">type </span>Parser&lt;<span class="lifetime">&#39;a</span>&gt; = MySQLTextSourceParser&lt;<span class="lifetime">&#39;a</span>&gt;;
+    <span class="kw">type </span>Error = MySQLSourceError;
 
-    <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">MySQLSourceError</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">fetch_next</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; (<span class="ident">usize</span>, <span class="ident">bool</span>) {
-        <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">rowbuf</span>.<span class="ident">is_empty</span>() {
-            <span class="self">self</span>.<span class="ident">rowbuf</span>.<span class="ident">drain</span>(..);
+    <span class="attribute">#[throws(MySQLSourceError)]
+    </span><span class="kw">fn </span>result_rows(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="self">self</span>.nrows = get_total_rows(<span class="kw-2">&amp;mut </span><span class="self">self</span>.conn, <span class="kw-2">&amp;</span><span class="self">self</span>.query)<span class="question-mark">?</span>;
+    }
+
+    <span class="attribute">#[throws(MySQLSourceError)]
+    </span><span class="kw">fn </span>parser(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="self">Self</span>::Parser&lt;<span class="lifetime">&#39;_</span>&gt; {
+        <span class="kw">let </span>query = <span class="self">self</span>.query.clone();
+        <span class="kw">let </span>iter = <span class="self">self</span>.conn.query_iter(query)<span class="question-mark">?</span>;
+        MySQLTextSourceParser::new(iter, <span class="kw-2">&amp;</span><span class="self">self</span>.schema)
+    }
+
+    <span class="kw">fn </span>nrows(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+        <span class="self">self</span>.nrows
+    }
+
+    <span class="kw">fn </span>ncols(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+        <span class="self">self</span>.ncols
+    }
+}
+
+<span class="kw">pub struct </span>MySQLBinarySourceParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+    iter: QueryResult&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;a</span>, Binary&gt;,
+    rowbuf: Vec&lt;Row&gt;,
+    ncols: usize,
+    current_col: usize,
+    current_row: usize,
+}
+
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; MySQLBinarySourceParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="kw">pub fn </span>new(iter: QueryResult&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;a</span>, Binary&gt;, schema: <span class="kw-2">&amp;</span>[MySQLTypeSystem]) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            iter,
+            rowbuf: Vec::with_capacity(DB_BUFFER_SIZE),
+            ncols: schema.len(),
+            current_row: <span class="number">0</span>,
+            current_col: <span class="number">0</span>,
+        }
+    }
+
+    <span class="attribute">#[throws(MySQLSourceError)]
+    </span><span class="kw">fn </span>next_loc(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; (usize, usize) {
+        <span class="kw">let </span>ret = (<span class="self">self</span>.current_row, <span class="self">self</span>.current_col);
+        <span class="self">self</span>.current_row += (<span class="self">self</span>.current_col + <span class="number">1</span>) / <span class="self">self</span>.ncols;
+        <span class="self">self</span>.current_col = (<span class="self">self</span>.current_col + <span class="number">1</span>) % <span class="self">self</span>.ncols;
+        ret
+    }
+}
+
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; PartitionParser&lt;<span class="lifetime">&#39;a</span>&gt; <span class="kw">for </span>MySQLBinarySourceParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="kw">type </span>TypeSystem = MySQLTypeSystem;
+    <span class="kw">type </span>Error = MySQLSourceError;
+
+    <span class="attribute">#[throws(MySQLSourceError)]
+    </span><span class="kw">fn </span>fetch_next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; (usize, bool) {
+        <span class="kw">if </span>!<span class="self">self</span>.rowbuf.is_empty() {
+            <span class="self">self</span>.rowbuf.drain(..);
         }
 
-        <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">DB_BUFFER_SIZE</span> {
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">item</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">iter</span>.<span class="ident">next</span>() {
-                <span class="self">self</span>.<span class="ident">rowbuf</span>.<span class="ident">push</span>(<span class="ident">item</span><span class="question-mark">?</span>);
-            } <span class="kw">else</span> {
+        <span class="kw">for _ in </span><span class="number">0</span>..DB_BUFFER_SIZE {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(item) = <span class="self">self</span>.iter.next() {
+                <span class="self">self</span>.rowbuf.push(item<span class="question-mark">?</span>);
+            } <span class="kw">else </span>{
                 <span class="kw">break</span>;
             }
         }
-        <span class="self">self</span>.<span class="ident">current_row</span> <span class="op">=</span> <span class="number">0</span>;
-        <span class="self">self</span>.<span class="ident">current_col</span> <span class="op">=</span> <span class="number">0</span>;
+        <span class="self">self</span>.current_row = <span class="number">0</span>;
+        <span class="self">self</span>.current_col = <span class="number">0</span>;
 
-        (<span class="self">self</span>.<span class="ident">rowbuf</span>.<span class="ident">len</span>(), <span class="self">self</span>.<span class="ident">rowbuf</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="ident">DB_BUFFER_SIZE</span>)
+        (<span class="self">self</span>.rowbuf.len(), <span class="self">self</span>.rowbuf.len() &lt; DB_BUFFER_SIZE)
     }
 }
 
-<span class="macro">macro_rules!</span> <span class="ident">impl_produce_binary</span> {
-    ($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>: <span class="ident">ty</span>,)<span class="op">+</span>) =&gt; {
+<span class="macro">macro_rules! </span>impl_produce_binary {
+    ($(<span class="macro-nonterminal">$t</span>: ty,)+) =&gt; {
         $(
-            <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">MySQLBinarySourceParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-                <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">MySQLSourceError</span>;
+            <span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, <span class="macro-nonterminal">$t</span>&gt; <span class="kw">for </span>MySQLBinarySourceParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+                <span class="kw">type </span>Error = MySQLSourceError;
 
-                <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">MySQLSourceError</span>)]</span>
-                <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;r</span> <span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span> {
-                    <span class="kw">let</span> (<span class="ident">ridx</span>, <span class="ident">cidx</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">next_loc</span>()<span class="question-mark">?</span>;
-                    <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">rowbuf</span>[<span class="ident">ridx</span>].<span class="ident">take</span>(<span class="ident">cidx</span>).<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="macro">anyhow!</span>(<span class="string">&quot;mysql cannot parse at position: ({}, {})&quot;</span>, <span class="ident">ridx</span>, <span class="ident">cidx</span>))<span class="question-mark">?</span>;
-                    <span class="ident">res</span>
+                <span class="attribute">#[throws(MySQLSourceError)]
+                </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="macro-nonterminal">$t </span>{
+                    <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
+                    <span class="kw">let </span>res = <span class="self">self</span>.rowbuf[ridx].take(cidx).ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">&quot;mysql cannot parse at position: ({}, {})&quot;</span>, ridx, cidx))<span class="question-mark">?</span>;
+                    res
                 }
             }
 
-            <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">MySQLBinarySourceParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-                <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">MySQLSourceError</span>;
+            <span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span>&lt;<span class="macro-nonterminal">$t</span>&gt;&gt; <span class="kw">for </span>MySQLBinarySourceParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+                <span class="kw">type </span>Error = MySQLSourceError;
 
-                <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">MySQLSourceError</span>)]</span>
-                <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;r</span> <span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span> {
-                    <span class="kw">let</span> (<span class="ident">ridx</span>, <span class="ident">cidx</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">next_loc</span>()<span class="question-mark">?</span>;
-                    <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">rowbuf</span>[<span class="ident">ridx</span>].<span class="ident">take</span>(<span class="ident">cidx</span>).<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="macro">anyhow!</span>(<span class="string">&quot;mysql cannot parse at position: ({}, {})&quot;</span>, <span class="ident">ridx</span>, <span class="ident">cidx</span>))<span class="question-mark">?</span>;
-                    <span class="ident">res</span>
+                <span class="attribute">#[throws(MySQLSourceError)]
+                </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="macro-nonterminal">$t</span>&gt; {
+                    <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
+                    <span class="kw">let </span>res = <span class="self">self</span>.rowbuf[ridx].take(cidx).ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">&quot;mysql cannot parse at position: ({}, {})&quot;</span>, ridx, cidx))<span class="question-mark">?</span>;
+                    res
                 }
             }
-        )<span class="op">+</span>
+        )+
     };
 }
 
 <span class="macro">impl_produce_binary!</span>(
-    <span class="ident">i8</span>,
-    <span class="ident">i16</span>,
-    <span class="ident">i32</span>,
-    <span class="ident">i64</span>,
-    <span class="ident">u8</span>,
-    <span class="ident">u16</span>,
-    <span class="ident">u32</span>,
-    <span class="ident">u64</span>,
-    <span class="ident">f32</span>,
-    <span class="ident">f64</span>,
-    <span class="ident">NaiveDate</span>,
-    <span class="ident">NaiveTime</span>,
-    <span class="ident">NaiveDateTime</span>,
-    <span class="ident">Decimal</span>,
-    <span class="ident">String</span>,
-    <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
-    <span class="ident">Value</span>,
+    i8,
+    i16,
+    i32,
+    i64,
+    u8,
+    u16,
+    u32,
+    u64,
+    f32,
+    f64,
+    NaiveDate,
+    NaiveTime,
+    NaiveDateTime,
+    Decimal,
+    String,
+    Vec&lt;u8&gt;,
+    Value,
 );
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MySQLTextSourceParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="ident">iter</span>: <span class="ident">QueryResult</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;a</span>, <span class="ident">Text</span><span class="op">&gt;</span>,
-    <span class="ident">rowbuf</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Row</span><span class="op">&gt;</span>,
-    <span class="ident">ncols</span>: <span class="ident">usize</span>,
-    <span class="ident">current_col</span>: <span class="ident">usize</span>,
-    <span class="ident">current_row</span>: <span class="ident">usize</span>,
+<span class="kw">pub struct </span>MySQLTextSourceParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+    iter: QueryResult&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;a</span>, Text&gt;,
+    rowbuf: Vec&lt;Row&gt;,
+    ncols: usize,
+    current_col: usize,
+    current_row: usize,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">MySQLTextSourceParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">iter</span>: <span class="ident">QueryResult</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;a</span>, <span class="ident">Text</span><span class="op">&gt;</span>, <span class="ident">schema</span>: <span class="kw-2">&amp;</span>[<span class="ident">MySQLTypeSystem</span>]) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">iter</span>,
-            <span class="ident">rowbuf</span>: <span class="ident">Vec::with_capacity</span>(<span class="ident">DB_BUFFER_SIZE</span>),
-            <span class="ident">ncols</span>: <span class="ident">schema</span>.<span class="ident">len</span>(),
-            <span class="ident">current_row</span>: <span class="number">0</span>,
-            <span class="ident">current_col</span>: <span class="number">0</span>,
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; MySQLTextSourceParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="kw">pub fn </span>new(iter: QueryResult&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;a</span>, Text&gt;, schema: <span class="kw-2">&amp;</span>[MySQLTypeSystem]) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            iter,
+            rowbuf: Vec::with_capacity(DB_BUFFER_SIZE),
+            ncols: schema.len(),
+            current_row: <span class="number">0</span>,
+            current_col: <span class="number">0</span>,
         }
     }
 
-    <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">MySQLSourceError</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">next_loc</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; (<span class="ident">usize</span>, <span class="ident">usize</span>) {
-        <span class="kw">let</span> <span class="ident">ret</span> <span class="op">=</span> (<span class="self">self</span>.<span class="ident">current_row</span>, <span class="self">self</span>.<span class="ident">current_col</span>);
-        <span class="self">self</span>.<span class="ident">current_row</span> <span class="op">+</span><span class="op">=</span> (<span class="self">self</span>.<span class="ident">current_col</span> <span class="op">+</span> <span class="number">1</span>) <span class="op">/</span> <span class="self">self</span>.<span class="ident">ncols</span>;
-        <span class="self">self</span>.<span class="ident">current_col</span> <span class="op">=</span> (<span class="self">self</span>.<span class="ident">current_col</span> <span class="op">+</span> <span class="number">1</span>) <span class="op">%</span> <span class="self">self</span>.<span class="ident">ncols</span>;
-        <span class="ident">ret</span>
+    <span class="attribute">#[throws(MySQLSourceError)]
+    </span><span class="kw">fn </span>next_loc(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; (usize, usize) {
+        <span class="kw">let </span>ret = (<span class="self">self</span>.current_row, <span class="self">self</span>.current_col);
+        <span class="self">self</span>.current_row += (<span class="self">self</span>.current_col + <span class="number">1</span>) / <span class="self">self</span>.ncols;
+        <span class="self">self</span>.current_col = (<span class="self">self</span>.current_col + <span class="number">1</span>) % <span class="self">self</span>.ncols;
+        ret
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">PartitionParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">MySQLTextSourceParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">TypeSystem</span> <span class="op">=</span> <span class="ident">MySQLTypeSystem</span>;
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">MySQLSourceError</span>;
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; PartitionParser&lt;<span class="lifetime">&#39;a</span>&gt; <span class="kw">for </span>MySQLTextSourceParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="kw">type </span>TypeSystem = MySQLTypeSystem;
+    <span class="kw">type </span>Error = MySQLSourceError;
 
-    <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">MySQLSourceError</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">fetch_next</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; (<span class="ident">usize</span>, <span class="ident">bool</span>) {
-        <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">rowbuf</span>.<span class="ident">is_empty</span>() {
-            <span class="self">self</span>.<span class="ident">rowbuf</span>.<span class="ident">drain</span>(..);
+    <span class="attribute">#[throws(MySQLSourceError)]
+    </span><span class="kw">fn </span>fetch_next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; (usize, bool) {
+        <span class="kw">if </span>!<span class="self">self</span>.rowbuf.is_empty() {
+            <span class="self">self</span>.rowbuf.drain(..);
         }
-        <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">DB_BUFFER_SIZE</span> {
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">item</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">iter</span>.<span class="ident">next</span>() {
-                <span class="self">self</span>.<span class="ident">rowbuf</span>.<span class="ident">push</span>(<span class="ident">item</span><span class="question-mark">?</span>);
-            } <span class="kw">else</span> {
+        <span class="kw">for _ in </span><span class="number">0</span>..DB_BUFFER_SIZE {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(item) = <span class="self">self</span>.iter.next() {
+                <span class="self">self</span>.rowbuf.push(item<span class="question-mark">?</span>);
+            } <span class="kw">else </span>{
                 <span class="kw">break</span>;
             }
         }
-        <span class="self">self</span>.<span class="ident">current_row</span> <span class="op">=</span> <span class="number">0</span>;
-        <span class="self">self</span>.<span class="ident">current_col</span> <span class="op">=</span> <span class="number">0</span>;
-        (<span class="self">self</span>.<span class="ident">rowbuf</span>.<span class="ident">len</span>(), <span class="self">self</span>.<span class="ident">rowbuf</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="ident">DB_BUFFER_SIZE</span>)
+        <span class="self">self</span>.current_row = <span class="number">0</span>;
+        <span class="self">self</span>.current_col = <span class="number">0</span>;
+        (<span class="self">self</span>.rowbuf.len(), <span class="self">self</span>.rowbuf.len() &lt; DB_BUFFER_SIZE)
     }
 }
 
-<span class="macro">macro_rules!</span> <span class="ident">impl_produce_text</span> {
-    ($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>: <span class="ident">ty</span>,)<span class="op">+</span>) =&gt; {
+<span class="macro">macro_rules! </span>impl_produce_text {
+    ($(<span class="macro-nonterminal">$t</span>: ty,)+) =&gt; {
         $(
-            <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">MySQLTextSourceParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-                <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">MySQLSourceError</span>;
+            <span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, <span class="macro-nonterminal">$t</span>&gt; <span class="kw">for </span>MySQLTextSourceParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+                <span class="kw">type </span>Error = MySQLSourceError;
 
-                <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">MySQLSourceError</span>)]</span>
-                <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;r</span> <span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span> {
-                    <span class="kw">let</span> (<span class="ident">ridx</span>, <span class="ident">cidx</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">next_loc</span>()<span class="question-mark">?</span>;
-                    <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">rowbuf</span>[<span class="ident">ridx</span>].<span class="ident">take</span>(<span class="ident">cidx</span>).<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="macro">anyhow!</span>(<span class="string">&quot;mysql cannot parse at position: ({}, {})&quot;</span>, <span class="ident">ridx</span>, <span class="ident">cidx</span>))<span class="question-mark">?</span>;
-                    <span class="ident">res</span>
+                <span class="attribute">#[throws(MySQLSourceError)]
+                </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="macro-nonterminal">$t </span>{
+                    <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
+                    <span class="kw">let </span>res = <span class="self">self</span>.rowbuf[ridx].take(cidx).ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">&quot;mysql cannot parse at position: ({}, {})&quot;</span>, ridx, cidx))<span class="question-mark">?</span>;
+                    res
                 }
             }
 
-            <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">MySQLTextSourceParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-                <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">MySQLSourceError</span>;
+            <span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span>&lt;<span class="macro-nonterminal">$t</span>&gt;&gt; <span class="kw">for </span>MySQLTextSourceParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+                <span class="kw">type </span>Error = MySQLSourceError;
 
-                <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">MySQLSourceError</span>)]</span>
-                <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;r</span> <span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span> {
-                    <span class="kw">let</span> (<span class="ident">ridx</span>, <span class="ident">cidx</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">next_loc</span>()<span class="question-mark">?</span>;
-                    <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">rowbuf</span>[<span class="ident">ridx</span>].<span class="ident">take</span>(<span class="ident">cidx</span>).<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="macro">anyhow!</span>(<span class="string">&quot;mysql cannot parse at position: ({}, {})&quot;</span>, <span class="ident">ridx</span>, <span class="ident">cidx</span>))<span class="question-mark">?</span>;
-                    <span class="ident">res</span>
+                <span class="attribute">#[throws(MySQLSourceError)]
+                </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="macro-nonterminal">$t</span>&gt; {
+                    <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
+                    <span class="kw">let </span>res = <span class="self">self</span>.rowbuf[ridx].take(cidx).ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">&quot;mysql cannot parse at position: ({}, {})&quot;</span>, ridx, cidx))<span class="question-mark">?</span>;
+                    res
                 }
             }
-        )<span class="op">+</span>
+        )+
     };
 }
 
 <span class="macro">impl_produce_text!</span>(
-    <span class="ident">i8</span>,
-    <span class="ident">i16</span>,
-    <span class="ident">i32</span>,
-    <span class="ident">i64</span>,
-    <span class="ident">u8</span>,
-    <span class="ident">u16</span>,
-    <span class="ident">u32</span>,
-    <span class="ident">u64</span>,
-    <span class="ident">f32</span>,
-    <span class="ident">f64</span>,
-    <span class="ident">NaiveDate</span>,
-    <span class="ident">NaiveTime</span>,
-    <span class="ident">NaiveDateTime</span>,
-    <span class="ident">Decimal</span>,
-    <span class="ident">String</span>,
-    <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
-    <span class="ident">Value</span>,
+    i8,
+    i16,
+    i32,
+    i64,
+    u8,
+    u16,
+    u32,
+    u64,
+    f32,
+    f64,
+    NaiveDate,
+    NaiveTime,
+    NaiveDateTime,
+    Decimal,
+    String,
+    Vec&lt;u8&gt;,
+    Value,
 );
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="connectorx" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.62.0-nightly (878c7833f 2022-04-16)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="connectorx" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (750bd1a7f 2022-09-14)" ></div></body></html>

@@ -1,9 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `connectorx/src/sql.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>sql.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script src="../../crates.js"></script><script defer src="../../main.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script>
-    <noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../connectorx/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../connectorx/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../connectorx/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><div class="theme-picker hidden"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="22" height="22" alt="Pick another theme!" src="../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `connectorx/src/sql.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>sql.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../connectorx/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../connectorx/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../connectorx/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -579,582 +574,581 @@
 <span id="574">574</span>
 <span id="575">575</span>
 <span id="576">576</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::errors::ConnectorXError</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;src_oracle&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::sources::oracle::OracleDialect</span>;
-<span class="kw">use</span> <span class="ident">fehler</span>::{<span class="ident">throw</span>, <span class="ident">throws</span>};
-<span class="kw">use</span> <span class="ident">log</span>::{<span class="ident">debug</span>, <span class="ident">trace</span>, <span class="ident">warn</span>};
-<span class="kw">use</span> <span class="ident">sqlparser::ast</span>::{
-    <span class="ident">BinaryOperator</span>, <span class="ident">Expr</span>, <span class="ident">Function</span>, <span class="ident">FunctionArg</span>, <span class="ident">Ident</span>, <span class="ident">ObjectName</span>, <span class="ident">Query</span>, <span class="ident">Select</span>, <span class="ident">SelectItem</span>,
-    <span class="ident">SetExpr</span>, <span class="ident">Statement</span>, <span class="ident">TableAlias</span>, <span class="ident">TableFactor</span>, <span class="ident">TableWithJoins</span>, <span class="ident">Value</span>,
+</pre><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::errors::ConnectorXError;
+<span class="attribute">#[cfg(feature = <span class="string">&quot;src_oracle&quot;</span>)]
+</span><span class="kw">use </span><span class="kw">crate</span>::sources::oracle::OracleDialect;
+<span class="kw">use </span>fehler::{throw, throws};
+<span class="kw">use </span>log::{debug, trace, warn};
+<span class="kw">use </span>sqlparser::ast::{
+    BinaryOperator, Expr, Function, FunctionArg, Ident, ObjectName, Query, Select, SelectItem,
+    SetExpr, Statement, TableAlias, TableFactor, TableWithJoins, Value,
 };
-<span class="kw">use</span> <span class="ident">sqlparser::dialect::Dialect</span>;
-<span class="kw">use</span> <span class="ident">sqlparser::parser::Parser</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;src_oracle&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">std::any::Any</span>;
+<span class="kw">use </span>sqlparser::dialect::Dialect;
+<span class="kw">use </span>sqlparser::parser::Parser;
+<span class="attribute">#[cfg(feature = <span class="string">&quot;src_oracle&quot;</span>)]
+</span><span class="kw">use </span>std::any::Any;
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">CXQuery</span><span class="op">&lt;</span><span class="ident">Q</span> <span class="op">=</span> <span class="ident">String</span><span class="op">&gt;</span> {
-    <span class="ident">Naked</span>(<span class="ident">Q</span>),   <span class="comment">// The query directly comes from the user</span>
-    <span class="ident">Wrapped</span>(<span class="ident">Q</span>), <span class="comment">// The user query is already wrapped in a subquery</span>
-}
+<span class="attribute">#[derive(Debug, Clone)]
+</span><span class="kw">pub enum </span>CXQuery&lt;Q = String&gt; {
+    Naked(Q),   <span class="comment">// The query directly comes from the user
+    </span>Wrapped(Q), <span class="comment">// The user query is already wrapped in a subquery
+</span>}
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Q</span>: <span class="ident">std::fmt::Display</span><span class="op">&gt;</span> <span class="ident">std::fmt::Display</span> <span class="kw">for</span> <span class="ident">CXQuery</span><span class="op">&lt;</span><span class="ident">Q</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">std::fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">std::fmt::Result</span> {
-        <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">CXQuery::Naked</span>(<span class="ident">q</span>) =&gt; <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="ident">q</span>),
-            <span class="ident">CXQuery::Wrapped</span>(<span class="ident">q</span>) =&gt; <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="ident">q</span>),
+<span class="kw">impl</span>&lt;Q: std::fmt::Display&gt; std::fmt::Display <span class="kw">for </span>CXQuery&lt;Q&gt; {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; std::fmt::Result {
+        <span class="kw">match </span><span class="self">self </span>{
+            CXQuery::Naked(q) =&gt; <span class="macro">write!</span>(f, <span class="string">&quot;{}&quot;</span>, q),
+            CXQuery::Wrapped(q) =&gt; <span class="macro">write!</span>(f, <span class="string">&quot;{}&quot;</span>, q),
         }
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Q</span>: <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="ident">CXQuery</span><span class="op">&lt;</span><span class="ident">Q</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_str</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">str</span> {
-        <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">CXQuery::Naked</span>(<span class="ident">q</span>) =&gt; <span class="ident">q</span>.<span class="ident">as_ref</span>(),
-            <span class="ident">CXQuery::Wrapped</span>(<span class="ident">q</span>) =&gt; <span class="ident">q</span>.<span class="ident">as_ref</span>(),
+<span class="kw">impl</span>&lt;Q: AsRef&lt;str&gt;&gt; CXQuery&lt;Q&gt; {
+    <span class="kw">pub fn </span>as_str(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>str {
+        <span class="kw">match </span><span class="self">self </span>{
+            CXQuery::Naked(q) =&gt; q.as_ref(),
+            CXQuery::Wrapped(q) =&gt; q.as_ref(),
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">CXQuery</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">CXQuery</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
-        <span class="ident">CXQuery::Naked</span>(<span class="ident">s</span>.<span class="ident">to_string</span>())
+<span class="kw">impl </span>From&lt;<span class="kw-2">&amp;</span>str&gt; <span class="kw">for </span>CXQuery {
+    <span class="kw">fn </span>from(s: <span class="kw-2">&amp;</span>str) -&gt; CXQuery&lt;String&gt; {
+        CXQuery::Naked(s.to_string())
     }
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="op">&amp;&amp;</span><span class="ident">str</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">CXQuery</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">s</span>: <span class="op">&amp;&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">CXQuery</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
-        <span class="ident">CXQuery::Naked</span>(<span class="ident">s</span>.<span class="ident">to_string</span>())
+<span class="kw">impl </span>From&lt;&amp;&amp;str&gt; <span class="kw">for </span>CXQuery {
+    <span class="kw">fn </span>from(s: &amp;&amp;str) -&gt; CXQuery&lt;String&gt; {
+        CXQuery::Naked(s.to_string())
     }
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">CXQuery</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">String</span>) -&gt; <span class="ident">CXQuery</span> {
-        <span class="ident">CXQuery::Naked</span>(<span class="ident">s</span>.<span class="ident">clone</span>())
+<span class="kw">impl </span>From&lt;<span class="kw-2">&amp;</span>String&gt; <span class="kw">for </span>CXQuery {
+    <span class="kw">fn </span>from(s: <span class="kw-2">&amp;</span>String) -&gt; CXQuery {
+        CXQuery::Naked(s.clone())
     }
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">CXQuery</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">CXQuery</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">q</span>: <span class="kw-2">&amp;</span><span class="ident">CXQuery</span>) -&gt; <span class="ident">CXQuery</span> {
-        <span class="ident">q</span>.<span class="ident">clone</span>()
+<span class="kw">impl </span>From&lt;<span class="kw-2">&amp;</span>CXQuery&gt; <span class="kw">for </span>CXQuery {
+    <span class="kw">fn </span>from(q: <span class="kw-2">&amp;</span>CXQuery) -&gt; CXQuery {
+        q.clone()
     }
 }
 
-<span class="kw">impl</span> <span class="ident">CXQuery</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">naked</span><span class="op">&lt;</span><span class="ident">Q</span>: <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">q</span>: <span class="ident">Q</span>) -&gt; <span class="self">Self</span> {
-        <span class="ident">CXQuery::Naked</span>(<span class="ident">q</span>.<span class="ident">as_ref</span>().<span class="ident">to_string</span>())
+<span class="kw">impl </span>CXQuery&lt;String&gt; {
+    <span class="kw">pub fn </span>naked&lt;Q: AsRef&lt;str&gt;&gt;(q: Q) -&gt; <span class="self">Self </span>{
+        CXQuery::Naked(q.as_ref().to_string())
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Q</span>: <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">CXQuery</span><span class="op">&lt;</span><span class="ident">Q</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">as_ref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">str</span> {
-        <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">CXQuery::Naked</span>(<span class="ident">q</span>) =&gt; <span class="ident">q</span>.<span class="ident">as_ref</span>(),
-            <span class="ident">CXQuery::Wrapped</span>(<span class="ident">q</span>) =&gt; <span class="ident">q</span>.<span class="ident">as_ref</span>(),
+<span class="kw">impl</span>&lt;Q: AsRef&lt;str&gt;&gt; AsRef&lt;str&gt; <span class="kw">for </span>CXQuery&lt;Q&gt; {
+    <span class="kw">fn </span>as_ref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>str {
+        <span class="kw">match </span><span class="self">self </span>{
+            CXQuery::Naked(q) =&gt; q.as_ref(),
+            CXQuery::Wrapped(q) =&gt; q.as_ref(),
         }
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Q</span><span class="op">&gt;</span> <span class="ident">CXQuery</span><span class="op">&lt;</span><span class="ident">Q</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">map</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">U</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="ident">F</span>) -&gt; <span class="ident">CXQuery</span><span class="op">&lt;</span><span class="ident">U</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">F</span>: <span class="ident">Fn</span>(<span class="kw-2">&amp;</span><span class="ident">Q</span>) -&gt; <span class="ident">U</span>,
+<span class="kw">impl</span>&lt;Q&gt; CXQuery&lt;Q&gt; {
+    <span class="kw">pub fn </span>map&lt;F, U&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, f: F) -&gt; CXQuery&lt;U&gt;
+    <span class="kw">where
+        </span>F: Fn(<span class="kw-2">&amp;</span>Q) -&gt; U,
     {
-        <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">CXQuery::Naked</span>(<span class="ident">q</span>) =&gt; <span class="ident">CXQuery::Naked</span>(<span class="ident">f</span>(<span class="ident">q</span>)),
-            <span class="ident">CXQuery::Wrapped</span>(<span class="ident">q</span>) =&gt; <span class="ident">CXQuery::Wrapped</span>(<span class="ident">f</span>(<span class="ident">q</span>)),
+        <span class="kw">match </span><span class="self">self </span>{
+            CXQuery::Naked(q) =&gt; CXQuery::Naked(f(q)),
+            CXQuery::Wrapped(q) =&gt; CXQuery::Wrapped(f(q)),
         }
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Q</span>, <span class="ident">E</span><span class="op">&gt;</span> <span class="ident">CXQuery</span><span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Q</span>, <span class="ident">E</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">result</span>(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">CXQuery</span><span class="op">&lt;</span><span class="ident">Q</span><span class="op">&gt;</span>, <span class="ident">E</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">CXQuery::Naked</span>(<span class="ident">q</span>) =&gt; <span class="ident">q</span>.<span class="ident">map</span>(<span class="ident">CXQuery::Naked</span>),
-            <span class="ident">CXQuery::Wrapped</span>(<span class="ident">q</span>) =&gt; <span class="ident">q</span>.<span class="ident">map</span>(<span class="ident">CXQuery::Wrapped</span>),
+<span class="kw">impl</span>&lt;Q, E&gt; CXQuery&lt;<span class="prelude-ty">Result</span>&lt;Q, E&gt;&gt; {
+    <span class="kw">pub fn </span>result(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;CXQuery&lt;Q&gt;, E&gt; {
+        <span class="kw">match </span><span class="self">self </span>{
+            CXQuery::Naked(q) =&gt; q.map(CXQuery::Naked),
+            CXQuery::Wrapped(q) =&gt; q.map(CXQuery::Wrapped),
         }
     }
 }
 
-<span class="comment">// wrap a query into a derived table</span>
-<span class="kw">fn</span> <span class="ident">wrap_query</span>(
-    <span class="ident">query</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Query</span>,
-    <span class="ident">projection</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">SelectItem</span><span class="op">&gt;</span>,
-    <span class="ident">selection</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Expr</span><span class="op">&gt;</span>,
-    <span class="ident">tmp_tab_name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
-) -&gt; <span class="ident">Statement</span> {
-    <span class="kw">let</span> <span class="ident">with</span> <span class="op">=</span> <span class="ident">query</span>.<span class="ident">with</span>.<span class="ident">clone</span>();
-    <span class="ident">query</span>.<span class="ident">with</span> <span class="op">=</span> <span class="prelude-val">None</span>;
-    <span class="kw">let</span> <span class="ident">alias</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">tmp_tab_name</span>.<span class="ident">is_empty</span>() {
-        <span class="prelude-val">None</span>
-    } <span class="kw">else</span> {
-        <span class="prelude-val">Some</span>(<span class="ident">TableAlias</span> {
-            <span class="ident">name</span>: <span class="ident">Ident</span> {
-                <span class="ident">value</span>: <span class="ident">tmp_tab_name</span>.<span class="ident">into</span>(),
-                <span class="ident">quote_style</span>: <span class="prelude-val">None</span>,
+<span class="comment">// wrap a query into a derived table
+</span><span class="kw">fn </span>wrap_query(
+    query: <span class="kw-2">&amp;mut </span>Query,
+    projection: Vec&lt;SelectItem&gt;,
+    selection: <span class="prelude-ty">Option</span>&lt;Expr&gt;,
+    tmp_tab_name: <span class="kw-2">&amp;</span>str,
+) -&gt; Statement {
+    <span class="kw">let </span>with = query.with.clone();
+    query.with = <span class="prelude-val">None</span>;
+    <span class="kw">let </span>alias = <span class="kw">if </span>tmp_tab_name.is_empty() {
+        <span class="prelude-val">None
+    </span>} <span class="kw">else </span>{
+        <span class="prelude-val">Some</span>(TableAlias {
+            name: Ident {
+                value: tmp_tab_name.into(),
+                quote_style: <span class="prelude-val">None</span>,
             },
-            <span class="ident">columns</span>: <span class="macro">vec!</span>[],
+            columns: <span class="macro">vec!</span>[],
         })
     };
-    <span class="ident">Statement::Query</span>(<span class="ident">Box::new</span>(<span class="ident">Query</span> {
-        <span class="ident">with</span>,
-        <span class="ident">body</span>: <span class="ident">SetExpr::Select</span>(<span class="ident">Box::new</span>(<span class="ident">Select</span> {
-            <span class="ident">distinct</span>: <span class="bool-val">false</span>,
-            <span class="ident">top</span>: <span class="prelude-val">None</span>,
-            <span class="ident">projection</span>,
-            <span class="ident">from</span>: <span class="macro">vec!</span>[<span class="ident">TableWithJoins</span> {
-                <span class="ident">relation</span>: <span class="ident">TableFactor::Derived</span> {
-                    <span class="ident">lateral</span>: <span class="bool-val">false</span>,
-                    <span class="ident">subquery</span>: <span class="ident">Box::new</span>(<span class="ident">query</span>.<span class="ident">clone</span>()),
-                    <span class="ident">alias</span>,
+    Statement::Query(Box::new(Query {
+        with,
+        body: SetExpr::Select(Box::new(Select {
+            distinct: <span class="bool-val">false</span>,
+            top: <span class="prelude-val">None</span>,
+            projection,
+            from: <span class="macro">vec!</span>[TableWithJoins {
+                relation: TableFactor::Derived {
+                    lateral: <span class="bool-val">false</span>,
+                    subquery: Box::new(query.clone()),
+                    alias,
                 },
-                <span class="ident">joins</span>: <span class="macro">vec!</span>[],
+                joins: <span class="macro">vec!</span>[],
             }],
-            <span class="ident">lateral_views</span>: <span class="macro">vec!</span>[],
-            <span class="ident">selection</span>,
-            <span class="ident">group_by</span>: <span class="macro">vec!</span>[],
-            <span class="ident">cluster_by</span>: <span class="macro">vec!</span>[],
-            <span class="ident">distribute_by</span>: <span class="macro">vec!</span>[],
-            <span class="ident">sort_by</span>: <span class="macro">vec!</span>[],
-            <span class="ident">having</span>: <span class="prelude-val">None</span>,
+            lateral_views: <span class="macro">vec!</span>[],
+            selection,
+            group_by: <span class="macro">vec!</span>[],
+            cluster_by: <span class="macro">vec!</span>[],
+            distribute_by: <span class="macro">vec!</span>[],
+            sort_by: <span class="macro">vec!</span>[],
+            having: <span class="prelude-val">None</span>,
         })),
-        <span class="ident">order_by</span>: <span class="macro">vec!</span>[],
-        <span class="ident">limit</span>: <span class="prelude-val">None</span>,
-        <span class="ident">offset</span>: <span class="prelude-val">None</span>,
-        <span class="ident">fetch</span>: <span class="prelude-val">None</span>,
+        order_by: <span class="macro">vec!</span>[],
+        limit: <span class="prelude-val">None</span>,
+        offset: <span class="prelude-val">None</span>,
+        fetch: <span class="prelude-val">None</span>,
     }))
 }
 
-<span class="kw">trait</span> <span class="ident">StatementExt</span> {
-    <span class="kw">fn</span> <span class="ident">as_query</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Query</span><span class="op">&gt;</span>;
+<span class="kw">trait </span>StatementExt {
+    <span class="kw">fn </span>as_query(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Query&gt;;
 }
 
-<span class="kw">impl</span> <span class="ident">StatementExt</span> <span class="kw">for</span> <span class="ident">Statement</span> {
-    <span class="kw">fn</span> <span class="ident">as_query</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Query</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">Statement::Query</span>(<span class="ident">q</span>) =&gt; <span class="prelude-val">Some</span>(<span class="ident">q</span>),
-            <span class="kw">_</span> =&gt; <span class="prelude-val">None</span>,
+<span class="kw">impl </span>StatementExt <span class="kw">for </span>Statement {
+    <span class="kw">fn </span>as_query(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Query&gt; {
+        <span class="kw">match </span><span class="self">self </span>{
+            Statement::Query(q) =&gt; <span class="prelude-val">Some</span>(q),
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
         }
     }
 }
 
-<span class="kw">trait</span> <span class="ident">QueryExt</span> {
-    <span class="kw">fn</span> <span class="ident">as_select_mut</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;mut</span> <span class="ident">Select</span><span class="op">&gt;</span>;
+<span class="kw">trait </span>QueryExt {
+    <span class="kw">fn </span>as_select_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>Select&gt;;
 }
 
-<span class="kw">impl</span> <span class="ident">QueryExt</span> <span class="kw">for</span> <span class="ident">Query</span> {
-    <span class="kw">fn</span> <span class="ident">as_select_mut</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;mut</span> <span class="ident">Select</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">body</span> {
-            <span class="ident">SetExpr::Select</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">select</span>) =&gt; <span class="prelude-val">Some</span>(<span class="ident">select</span>),
-            <span class="kw">_</span> =&gt; <span class="prelude-val">None</span>,
+<span class="kw">impl </span>QueryExt <span class="kw">for </span>Query {
+    <span class="kw">fn </span>as_select_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>Select&gt; {
+        <span class="kw">match </span><span class="self">self</span>.body {
+            SetExpr::Select(<span class="kw-2">ref mut </span>select) =&gt; <span class="prelude-val">Some</span>(select),
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
         }
     }
 }
 
-<span class="attribute">#[<span class="ident">throws</span>(<span class="ident">ConnectorXError</span>)]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">count_query</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Dialect</span><span class="op">&gt;</span>(<span class="ident">sql</span>: <span class="kw-2">&amp;</span><span class="ident">CXQuery</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>, <span class="ident">dialect</span>: <span class="kw-2">&amp;</span><span class="ident">T</span>) -&gt; <span class="ident">CXQuery</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
-    <span class="macro">trace!</span>(<span class="string">&quot;Incoming query: {}&quot;</span>, <span class="ident">sql</span>);
+<span class="attribute">#[throws(ConnectorXError)]
+</span><span class="kw">pub fn </span>count_query&lt;T: Dialect&gt;(sql: <span class="kw-2">&amp;</span>CXQuery&lt;String&gt;, dialect: <span class="kw-2">&amp;</span>T) -&gt; CXQuery&lt;String&gt; {
+    <span class="macro">trace!</span>(<span class="string">&quot;Incoming query: {}&quot;</span>, sql);
 
-    <span class="kw">const</span> <span class="ident">COUNT_TMP_TAB_NAME</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;CXTMPTAB_COUNT&quot;</span>;
+    <span class="kw">const </span>COUNT_TMP_TAB_NAME: <span class="kw-2">&amp;</span>str = <span class="string">&quot;CXTMPTAB_COUNT&quot;</span>;
 
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unused_mut</span>)]</span>
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">table_alias</span> <span class="op">=</span> <span class="ident">COUNT_TMP_TAB_NAME</span>;
+    <span class="attribute">#[allow(unused_mut)]
+    </span><span class="kw">let </span><span class="kw-2">mut </span>table_alias = COUNT_TMP_TAB_NAME;
 
-    <span class="comment">// HACK: Some dialect (e.g. Oracle) does not support &quot;AS&quot; for alias</span>
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;src_oracle&quot;</span>)]</span>
-    <span class="kw">if</span> <span class="ident">dialect</span>.<span class="ident">type_id</span>() <span class="op">==</span> (<span class="ident">OracleDialect</span> {}.<span class="ident">type_id</span>()) {
-        <span class="comment">// table_alias = &quot;&quot;;</span>
-        <span class="kw">return</span> <span class="ident">CXQuery::Wrapped</span>(<span class="macro">format!</span>(
+    <span class="comment">// HACK: Some dialect (e.g. Oracle) does not support &quot;AS&quot; for alias
+    </span><span class="attribute">#[cfg(feature = <span class="string">&quot;src_oracle&quot;</span>)]
+    </span><span class="kw">if </span>dialect.type_id() == (OracleDialect {}.type_id()) {
+        <span class="comment">// table_alias = &quot;&quot;;
+        </span><span class="kw">return </span>CXQuery::Wrapped(<span class="macro">format!</span>(
             <span class="string">&quot;SELECT COUNT(*) FROM ({}) {}&quot;</span>,
-            <span class="ident">sql</span>.<span class="ident">as_str</span>(),
-            <span class="ident">COUNT_TMP_TAB_NAME</span>
+            sql.as_str(),
+            COUNT_TMP_TAB_NAME
         ));
     }
 
-    <span class="kw">let</span> <span class="ident">tsql</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">sql</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">sql</span><span class="op">|</span> <span class="ident">Parser::parse_sql</span>(<span class="ident">dialect</span>, <span class="ident">sql</span>)).<span class="ident">result</span>() {
-        <span class="prelude-val">Ok</span>(<span class="ident">ast</span>) =&gt; {
-            <span class="kw">let</span> <span class="ident">projection</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="ident">SelectItem::UnnamedExpr</span>(<span class="ident">Expr::Function</span>(<span class="ident">Function</span> {
-                <span class="ident">name</span>: <span class="ident">ObjectName</span>(<span class="macro">vec!</span>[<span class="ident">Ident</span> {
-                    <span class="ident">value</span>: <span class="string">&quot;count&quot;</span>.<span class="ident">to_string</span>(),
-                    <span class="ident">quote_style</span>: <span class="prelude-val">None</span>,
+    <span class="kw">let </span>tsql = <span class="kw">match </span>sql.map(|sql| Parser::parse_sql(dialect, sql)).result() {
+        <span class="prelude-val">Ok</span>(ast) =&gt; {
+            <span class="kw">let </span>projection = <span class="macro">vec!</span>[SelectItem::UnnamedExpr(Expr::Function(Function {
+                name: ObjectName(<span class="macro">vec!</span>[Ident {
+                    value: <span class="string">&quot;count&quot;</span>.to_string(),
+                    quote_style: <span class="prelude-val">None</span>,
                 }]),
-                <span class="ident">args</span>: <span class="macro">vec!</span>[<span class="ident">FunctionArg::Unnamed</span>(<span class="ident">Expr::Wildcard</span>)],
-                <span class="ident">over</span>: <span class="prelude-val">None</span>,
-                <span class="ident">distinct</span>: <span class="bool-val">false</span>,
+                args: <span class="macro">vec!</span>[FunctionArg::Unnamed(Expr::Wildcard)],
+                over: <span class="prelude-val">None</span>,
+                distinct: <span class="bool-val">false</span>,
             }))];
-            <span class="kw">let</span> <span class="ident">ast_count</span>: <span class="ident">Statement</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">ast</span> {
-                <span class="ident">CXQuery::Naked</span>(<span class="ident">ast</span>) =&gt; {
-                    <span class="kw">if</span> <span class="ident">ast</span>.<span class="ident">len</span>() <span class="op">!</span><span class="op">=</span> <span class="number">1</span> {
-                        <span class="macro">throw!</span>(<span class="ident">ConnectorXError::SqlQueryNotSupported</span>(<span class="ident">sql</span>.<span class="ident">to_string</span>()));
+            <span class="kw">let </span>ast_count: Statement = <span class="kw">match </span>ast {
+                CXQuery::Naked(ast) =&gt; {
+                    <span class="kw">if </span>ast.len() != <span class="number">1 </span>{
+                        <span class="macro">throw!</span>(ConnectorXError::SqlQueryNotSupported(sql.to_string()));
                     }
-                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">query</span> <span class="op">=</span> <span class="ident">ast</span>[<span class="number">0</span>]
-                        .<span class="ident">as_query</span>()
-                        .<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">ConnectorXError::SqlQueryNotSupported</span>(<span class="ident">sql</span>.<span class="ident">to_string</span>()))<span class="question-mark">?</span>
-                        .<span class="ident">clone</span>();
-                    <span class="kw">if</span> <span class="ident">query</span>.<span class="ident">offset</span>.<span class="ident">is_none</span>() {
-                        <span class="ident">query</span>.<span class="ident">order_by</span> <span class="op">=</span> <span class="macro">vec!</span>[]; <span class="comment">// mssql offset must appear with order by</span>
-                    }
-                    <span class="kw">let</span> <span class="ident">select</span> <span class="op">=</span> <span class="ident">query</span>
-                        .<span class="ident">as_select_mut</span>()
-                        .<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">ConnectorXError::SqlQueryNotSupported</span>(<span class="ident">sql</span>.<span class="ident">to_string</span>()))<span class="question-mark">?</span>;
-                    <span class="ident">select</span>.<span class="ident">sort_by</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-                    <span class="ident">wrap_query</span>(<span class="kw-2">&amp;mut</span> <span class="ident">query</span>, <span class="ident">projection</span>, <span class="prelude-val">None</span>, <span class="ident">table_alias</span>)
+                    <span class="kw">let </span><span class="kw-2">mut </span>query = ast[<span class="number">0</span>]
+                        .as_query()
+                        .ok_or_else(|| ConnectorXError::SqlQueryNotSupported(sql.to_string()))<span class="question-mark">?
+                        </span>.clone();
+                    <span class="kw">if </span>query.offset.is_none() {
+                        query.order_by = <span class="macro">vec!</span>[]; <span class="comment">// mssql offset must appear with order by
+                    </span>}
+                    <span class="kw">let </span>select = query
+                        .as_select_mut()
+                        .ok_or_else(|| ConnectorXError::SqlQueryNotSupported(sql.to_string()))<span class="question-mark">?</span>;
+                    select.sort_by = <span class="macro">vec!</span>[];
+                    wrap_query(<span class="kw-2">&amp;mut </span>query, projection, <span class="prelude-val">None</span>, table_alias)
                 }
-                <span class="ident">CXQuery::Wrapped</span>(<span class="ident">ast</span>) =&gt; {
-                    <span class="kw">if</span> <span class="ident">ast</span>.<span class="ident">len</span>() <span class="op">!</span><span class="op">=</span> <span class="number">1</span> {
-                        <span class="macro">throw!</span>(<span class="ident">ConnectorXError::SqlQueryNotSupported</span>(<span class="ident">sql</span>.<span class="ident">to_string</span>()));
+                CXQuery::Wrapped(ast) =&gt; {
+                    <span class="kw">if </span>ast.len() != <span class="number">1 </span>{
+                        <span class="macro">throw!</span>(ConnectorXError::SqlQueryNotSupported(sql.to_string()));
                     }
-                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">query</span> <span class="op">=</span> <span class="ident">ast</span>[<span class="number">0</span>]
-                        .<span class="ident">as_query</span>()
-                        .<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">ConnectorXError::SqlQueryNotSupported</span>(<span class="ident">sql</span>.<span class="ident">to_string</span>()))<span class="question-mark">?</span>
-                        .<span class="ident">clone</span>();
-                    <span class="kw">let</span> <span class="ident">select</span> <span class="op">=</span> <span class="ident">query</span>
-                        .<span class="ident">as_select_mut</span>()
-                        .<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">ConnectorXError::SqlQueryNotSupported</span>(<span class="ident">sql</span>.<span class="ident">to_string</span>()))<span class="question-mark">?</span>;
-                    <span class="ident">select</span>.<span class="ident">projection</span> <span class="op">=</span> <span class="ident">projection</span>;
-                    <span class="ident">Statement::Query</span>(<span class="ident">Box::new</span>(<span class="ident">query</span>))
+                    <span class="kw">let </span><span class="kw-2">mut </span>query = ast[<span class="number">0</span>]
+                        .as_query()
+                        .ok_or_else(|| ConnectorXError::SqlQueryNotSupported(sql.to_string()))<span class="question-mark">?
+                        </span>.clone();
+                    <span class="kw">let </span>select = query
+                        .as_select_mut()
+                        .ok_or_else(|| ConnectorXError::SqlQueryNotSupported(sql.to_string()))<span class="question-mark">?</span>;
+                    select.projection = projection;
+                    Statement::Query(Box::new(query))
                 }
             };
-            <span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">ast_count</span>)
+            <span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, ast_count)
         }
-        <span class="prelude-val">Err</span>(<span class="ident">e</span>) =&gt; {
-            <span class="macro">warn!</span>(<span class="string">&quot;parser error: {:?}, manually compose query string&quot;</span>, <span class="ident">e</span>);
+        <span class="prelude-val">Err</span>(e) =&gt; {
+            <span class="macro">warn!</span>(<span class="string">&quot;parser error: {:?}, manually compose query string&quot;</span>, e);
             <span class="macro">format!</span>(
                 <span class="string">&quot;SELECT COUNT(*) FROM ({}) as {}&quot;</span>,
-                <span class="ident">sql</span>.<span class="ident">as_str</span>(),
-                <span class="ident">COUNT_TMP_TAB_NAME</span>
+                sql.as_str(),
+                COUNT_TMP_TAB_NAME
             )
         }
     };
 
-    <span class="macro">debug!</span>(<span class="string">&quot;Transformed count query: {}&quot;</span>, <span class="ident">tsql</span>);
-    <span class="ident">CXQuery::Wrapped</span>(<span class="ident">tsql</span>)
+    <span class="macro">debug!</span>(<span class="string">&quot;Transformed count query: {}&quot;</span>, tsql);
+    CXQuery::Wrapped(tsql)
 }
 
-<span class="attribute">#[<span class="ident">throws</span>(<span class="ident">ConnectorXError</span>)]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">limit1_query</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Dialect</span><span class="op">&gt;</span>(<span class="ident">sql</span>: <span class="kw-2">&amp;</span><span class="ident">CXQuery</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>, <span class="ident">dialect</span>: <span class="kw-2">&amp;</span><span class="ident">T</span>) -&gt; <span class="ident">CXQuery</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
-    <span class="macro">trace!</span>(<span class="string">&quot;Incoming query: {}&quot;</span>, <span class="ident">sql</span>);
+<span class="attribute">#[throws(ConnectorXError)]
+</span><span class="kw">pub fn </span>limit1_query&lt;T: Dialect&gt;(sql: <span class="kw-2">&amp;</span>CXQuery&lt;String&gt;, dialect: <span class="kw-2">&amp;</span>T) -&gt; CXQuery&lt;String&gt; {
+    <span class="macro">trace!</span>(<span class="string">&quot;Incoming query: {}&quot;</span>, sql);
 
-    <span class="kw">let</span> <span class="ident">sql</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">Parser::parse_sql</span>(<span class="ident">dialect</span>, <span class="ident">sql</span>.<span class="ident">as_str</span>()) {
-        <span class="prelude-val">Ok</span>(<span class="kw-2">mut</span> <span class="ident">ast</span>) =&gt; {
-            <span class="kw">if</span> <span class="ident">ast</span>.<span class="ident">len</span>() <span class="op">!</span><span class="op">=</span> <span class="number">1</span> {
-                <span class="macro">throw!</span>(<span class="ident">ConnectorXError::SqlQueryNotSupported</span>(<span class="ident">sql</span>.<span class="ident">to_string</span>()));
+    <span class="kw">let </span>sql = <span class="kw">match </span>Parser::parse_sql(dialect, sql.as_str()) {
+        <span class="prelude-val">Ok</span>(<span class="kw-2">mut </span>ast) =&gt; {
+            <span class="kw">if </span>ast.len() != <span class="number">1 </span>{
+                <span class="macro">throw!</span>(ConnectorXError::SqlQueryNotSupported(sql.to_string()));
             }
 
-            <span class="kw">match</span> <span class="kw-2">&amp;mut</span> <span class="ident">ast</span>[<span class="number">0</span>] {
-                <span class="ident">Statement::Query</span>(<span class="ident">q</span>) =&gt; {
-                    <span class="ident">q</span>.<span class="ident">limit</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">Expr::Value</span>(<span class="ident">Value::Number</span>(<span class="string">&quot;1&quot;</span>.<span class="ident">to_string</span>(), <span class="bool-val">false</span>)));
+            <span class="kw">match </span><span class="kw-2">&amp;mut </span>ast[<span class="number">0</span>] {
+                Statement::Query(q) =&gt; {
+                    q.limit = <span class="prelude-val">Some</span>(Expr::Value(Value::Number(<span class="string">&quot;1&quot;</span>.to_string(), <span class="bool-val">false</span>)));
                 }
-                <span class="kw">_</span> =&gt; <span class="macro">throw!</span>(<span class="ident">ConnectorXError::SqlQueryNotSupported</span>(<span class="ident">sql</span>.<span class="ident">to_string</span>())),
+                <span class="kw">_ </span>=&gt; <span class="macro">throw!</span>(ConnectorXError::SqlQueryNotSupported(sql.to_string())),
             };
 
-            <span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">ast</span>[<span class="number">0</span>])
+            <span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, ast[<span class="number">0</span>])
         }
-        <span class="prelude-val">Err</span>(<span class="ident">e</span>) =&gt; {
-            <span class="macro">warn!</span>(<span class="string">&quot;parser error: {:?}, manually compose query string&quot;</span>, <span class="ident">e</span>);
-            <span class="macro">format!</span>(<span class="string">&quot;{} LIMIT 1&quot;</span>, <span class="ident">sql</span>.<span class="ident">as_str</span>())
+        <span class="prelude-val">Err</span>(e) =&gt; {
+            <span class="macro">warn!</span>(<span class="string">&quot;parser error: {:?}, manually compose query string&quot;</span>, e);
+            <span class="macro">format!</span>(<span class="string">&quot;{} LIMIT 1&quot;</span>, sql.as_str())
         }
     };
 
-    <span class="macro">debug!</span>(<span class="string">&quot;Transformed limit 1 query: {}&quot;</span>, <span class="ident">sql</span>);
-    <span class="ident">CXQuery::Wrapped</span>(<span class="ident">sql</span>)
+    <span class="macro">debug!</span>(<span class="string">&quot;Transformed limit 1 query: {}&quot;</span>, sql);
+    CXQuery::Wrapped(sql)
 }
 
-<span class="attribute">#[<span class="ident">throws</span>(<span class="ident">ConnectorXError</span>)]</span>
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;src_oracle&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">limit1_query_oracle</span>(<span class="ident">sql</span>: <span class="kw-2">&amp;</span><span class="ident">CXQuery</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>) -&gt; <span class="ident">CXQuery</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
-    <span class="macro">trace!</span>(<span class="string">&quot;Incoming oracle query: {}&quot;</span>, <span class="ident">sql</span>);
+<span class="attribute">#[throws(ConnectorXError)]
+#[cfg(feature = <span class="string">&quot;src_oracle&quot;</span>)]
+</span><span class="kw">pub fn </span>limit1_query_oracle(sql: <span class="kw-2">&amp;</span>CXQuery&lt;String&gt;) -&gt; CXQuery&lt;String&gt; {
+    <span class="macro">trace!</span>(<span class="string">&quot;Incoming oracle query: {}&quot;</span>, sql);
 
-    <span class="ident">CXQuery::Wrapped</span>(<span class="macro">format!</span>(<span class="string">&quot;SELECT * FROM ({}) WHERE rownum = 1&quot;</span>, <span class="ident">sql</span>))
+    CXQuery::Wrapped(<span class="macro">format!</span>(<span class="string">&quot;SELECT * FROM ({}) WHERE rownum = 1&quot;</span>, sql))
 
-    <span class="comment">// let ast = Parser::parse_sql(&amp;OracleDialect {}, sql.as_str())?;</span>
-    <span class="comment">// if ast.len() != 1 {</span>
-    <span class="comment">//     throw!(ConnectorXError::SqlQueryNotSupported(sql.to_string()));</span>
-    <span class="comment">// }</span>
-    <span class="comment">// let ast_part: Statement;</span>
-    <span class="comment">// let mut query = ast[0]</span>
-    <span class="comment">//     .as_query()</span>
-    <span class="comment">//     .ok_or_else(|| ConnectorXError::SqlQueryNotSupported(sql.to_string()))?</span>
-    <span class="comment">//     .clone();</span>
+    <span class="comment">// let ast = Parser::parse_sql(&amp;OracleDialect {}, sql.as_str())?;
+    // if ast.len() != 1 {
+    //     throw!(ConnectorXError::SqlQueryNotSupported(sql.to_string()));
+    // }
+    // let ast_part: Statement;
+    // let mut query = ast[0]
+    //     .as_query()
+    //     .ok_or_else(|| ConnectorXError::SqlQueryNotSupported(sql.to_string()))?
+    //     .clone();
 
-    <span class="comment">// let selection = Expr::BinaryOp {</span>
-    <span class="comment">//     left: Box::new(Expr::CompoundIdentifier(vec![Ident {</span>
-    <span class="comment">//         value: &quot;rownum&quot;.to_string(),</span>
-    <span class="comment">//         quote_style: None,</span>
-    <span class="comment">//     }])),</span>
-    <span class="comment">//     op: BinaryOperator::Eq,</span>
-    <span class="comment">//     right: Box::new(Expr::Value(Value::Number(&quot;1&quot;.to_string(), false))),</span>
-    <span class="comment">// };</span>
-    <span class="comment">// ast_part = wrap_query(&amp;mut query, vec![SelectItem::Wildcard], Some(selection), &quot;&quot;);</span>
+    // let selection = Expr::BinaryOp {
+    //     left: Box::new(Expr::CompoundIdentifier(vec![Ident {
+    //         value: &quot;rownum&quot;.to_string(),
+    //         quote_style: None,
+    //     }])),
+    //     op: BinaryOperator::Eq,
+    //     right: Box::new(Expr::Value(Value::Number(&quot;1&quot;.to_string(), false))),
+    // };
+    // ast_part = wrap_query(&amp;mut query, vec![SelectItem::Wildcard], Some(selection), &quot;&quot;);
 
-    <span class="comment">// let tsql = format!(&quot;{}&quot;, ast_part);</span>
-    <span class="comment">// debug!(&quot;Transformed limit 1 query: {}&quot;, tsql);</span>
-    <span class="comment">// CXQuery::Wrapped(tsql)</span>
-}
+    // let tsql = format!(&quot;{}&quot;, ast_part);
+    // debug!(&quot;Transformed limit 1 query: {}&quot;, tsql);
+    // CXQuery::Wrapped(tsql)
+</span>}
 
-<span class="attribute">#[<span class="ident">throws</span>(<span class="ident">ConnectorXError</span>)]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">single_col_partition_query</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Dialect</span><span class="op">&gt;</span>(
-    <span class="ident">sql</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
-    <span class="ident">col</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
-    <span class="ident">lower</span>: <span class="ident">i64</span>,
-    <span class="ident">upper</span>: <span class="ident">i64</span>,
-    <span class="ident">dialect</span>: <span class="kw-2">&amp;</span><span class="ident">T</span>,
-) -&gt; <span class="ident">String</span> {
-    <span class="macro">trace!</span>(<span class="string">&quot;Incoming query: {}&quot;</span>, <span class="ident">sql</span>);
-    <span class="kw">const</span> <span class="ident">PART_TMP_TAB_NAME</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;CXTMPTAB_PART&quot;</span>;
+<span class="attribute">#[throws(ConnectorXError)]
+</span><span class="kw">pub fn </span>single_col_partition_query&lt;T: Dialect&gt;(
+    sql: <span class="kw-2">&amp;</span>str,
+    col: <span class="kw-2">&amp;</span>str,
+    lower: i64,
+    upper: i64,
+    dialect: <span class="kw-2">&amp;</span>T,
+) -&gt; String {
+    <span class="macro">trace!</span>(<span class="string">&quot;Incoming query: {}&quot;</span>, sql);
+    <span class="kw">const </span>PART_TMP_TAB_NAME: <span class="kw-2">&amp;</span>str = <span class="string">&quot;CXTMPTAB_PART&quot;</span>;
 
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unused_mut</span>)]</span>
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">table_alias</span> <span class="op">=</span> <span class="ident">PART_TMP_TAB_NAME</span>;
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unused_mut</span>)]</span>
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cid</span> <span class="op">=</span> <span class="ident">Box::new</span>(<span class="ident">Expr::CompoundIdentifier</span>(<span class="macro">vec!</span>[
-        <span class="ident">Ident</span> {
-            <span class="ident">value</span>: <span class="ident">PART_TMP_TAB_NAME</span>.<span class="ident">to_string</span>(),
-            <span class="ident">quote_style</span>: <span class="prelude-val">None</span>,
+    <span class="attribute">#[allow(unused_mut)]
+    </span><span class="kw">let </span><span class="kw-2">mut </span>table_alias = PART_TMP_TAB_NAME;
+    <span class="attribute">#[allow(unused_mut)]
+    </span><span class="kw">let </span><span class="kw-2">mut </span>cid = Box::new(Expr::CompoundIdentifier(<span class="macro">vec!</span>[
+        Ident {
+            value: PART_TMP_TAB_NAME.to_string(),
+            quote_style: <span class="prelude-val">None</span>,
         },
-        <span class="ident">Ident</span> {
-            <span class="ident">value</span>: <span class="ident">col</span>.<span class="ident">to_string</span>(),
-            <span class="ident">quote_style</span>: <span class="prelude-val">None</span>,
+        Ident {
+            value: col.to_string(),
+            quote_style: <span class="prelude-val">None</span>,
         },
     ]));
 
-    <span class="comment">// HACK: Some dialect (e.g. Oracle) does not support &quot;AS&quot; for alias</span>
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;src_oracle&quot;</span>)]</span>
-    <span class="kw">if</span> <span class="ident">dialect</span>.<span class="ident">type_id</span>() <span class="op">==</span> (<span class="ident">OracleDialect</span> {}.<span class="ident">type_id</span>()) {
-        <span class="kw">return</span> <span class="macro">format!</span>(<span class="string">&quot;SELECT * FROM ({}) CXTMPTAB_PART WHERE CXTMPTAB_PART.{} &gt;= {} AND CXTMPTAB_PART.{} &lt; {}&quot;</span>, <span class="ident">sql</span>, <span class="ident">col</span>, <span class="ident">lower</span>, <span class="ident">col</span>, <span class="ident">upper</span>);
-        <span class="comment">// table_alias = &quot;&quot;;</span>
-        <span class="comment">// cid = Box::new(Expr::Identifier(Ident {</span>
-        <span class="comment">//     value: col.to_string(),</span>
-        <span class="comment">//     quote_style: None,</span>
-        <span class="comment">// }));</span>
-    }
+    <span class="comment">// HACK: Some dialect (e.g. Oracle) does not support &quot;AS&quot; for alias
+    </span><span class="attribute">#[cfg(feature = <span class="string">&quot;src_oracle&quot;</span>)]
+    </span><span class="kw">if </span>dialect.type_id() == (OracleDialect {}.type_id()) {
+        <span class="kw">return </span><span class="macro">format!</span>(<span class="string">&quot;SELECT * FROM ({}) CXTMPTAB_PART WHERE CXTMPTAB_PART.{} &gt;= {} AND CXTMPTAB_PART.{} &lt; {}&quot;</span>, sql, col, lower, col, upper);
+        <span class="comment">// table_alias = &quot;&quot;;
+        // cid = Box::new(Expr::Identifier(Ident {
+        //     value: col.to_string(),
+        //     quote_style: None,
+        // }));
+    </span>}
 
-    <span class="kw">let</span> <span class="ident">tsql</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">Parser::parse_sql</span>(<span class="ident">dialect</span>, <span class="ident">sql</span>) {
-        <span class="prelude-val">Ok</span>(<span class="ident">ast</span>) =&gt; {
-            <span class="kw">if</span> <span class="ident">ast</span>.<span class="ident">len</span>() <span class="op">!</span><span class="op">=</span> <span class="number">1</span> {
-                <span class="macro">throw!</span>(<span class="ident">ConnectorXError::SqlQueryNotSupported</span>(<span class="ident">sql</span>.<span class="ident">to_string</span>()));
+    <span class="kw">let </span>tsql = <span class="kw">match </span>Parser::parse_sql(dialect, sql) {
+        <span class="prelude-val">Ok</span>(ast) =&gt; {
+            <span class="kw">if </span>ast.len() != <span class="number">1 </span>{
+                <span class="macro">throw!</span>(ConnectorXError::SqlQueryNotSupported(sql.to_string()));
             }
 
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">query</span> <span class="op">=</span> <span class="ident">ast</span>[<span class="number">0</span>]
-                .<span class="ident">as_query</span>()
-                .<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">ConnectorXError::SqlQueryNotSupported</span>(<span class="ident">sql</span>.<span class="ident">to_string</span>()))<span class="question-mark">?</span>
-                .<span class="ident">clone</span>();
+            <span class="kw">let </span><span class="kw-2">mut </span>query = ast[<span class="number">0</span>]
+                .as_query()
+                .ok_or_else(|| ConnectorXError::SqlQueryNotSupported(sql.to_string()))<span class="question-mark">?
+                </span>.clone();
 
-            <span class="kw">let</span> <span class="ident">select</span> <span class="op">=</span> <span class="ident">query</span>
-                .<span class="ident">as_select_mut</span>()
-                .<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">ConnectorXError::SqlQueryNotSupported</span>(<span class="ident">sql</span>.<span class="ident">to_string</span>()))<span class="question-mark">?</span>
-                .<span class="ident">clone</span>();
+            <span class="kw">let </span>select = query
+                .as_select_mut()
+                .ok_or_else(|| ConnectorXError::SqlQueryNotSupported(sql.to_string()))<span class="question-mark">?
+                </span>.clone();
 
-            <span class="kw">let</span> <span class="ident">ast_part</span>: <span class="ident">Statement</span>;
+            <span class="kw">let </span>ast_part: Statement;
 
-            <span class="kw">let</span> <span class="ident">lb</span> <span class="op">=</span> <span class="ident">Expr::BinaryOp</span> {
-                <span class="ident">left</span>: <span class="ident">Box::new</span>(<span class="ident">Expr::Value</span>(<span class="ident">Value::Number</span>(<span class="ident">lower</span>.<span class="ident">to_string</span>(), <span class="bool-val">false</span>))),
-                <span class="ident">op</span>: <span class="ident">BinaryOperator::LtEq</span>,
-                <span class="ident">right</span>: <span class="ident">cid</span>.<span class="ident">clone</span>(),
+            <span class="kw">let </span>lb = Expr::BinaryOp {
+                left: Box::new(Expr::Value(Value::Number(lower.to_string(), <span class="bool-val">false</span>))),
+                op: BinaryOperator::LtEq,
+                right: cid.clone(),
             };
 
-            <span class="kw">let</span> <span class="ident">ub</span> <span class="op">=</span> <span class="ident">Expr::BinaryOp</span> {
-                <span class="ident">left</span>: <span class="ident">cid</span>,
-                <span class="ident">op</span>: <span class="ident">BinaryOperator::Lt</span>,
-                <span class="ident">right</span>: <span class="ident">Box::new</span>(<span class="ident">Expr::Value</span>(<span class="ident">Value::Number</span>(<span class="ident">upper</span>.<span class="ident">to_string</span>(), <span class="bool-val">false</span>))),
+            <span class="kw">let </span>ub = Expr::BinaryOp {
+                left: cid,
+                op: BinaryOperator::Lt,
+                right: Box::new(Expr::Value(Value::Number(upper.to_string(), <span class="bool-val">false</span>))),
             };
 
-            <span class="kw">let</span> <span class="ident">selection</span> <span class="op">=</span> <span class="ident">Expr::BinaryOp</span> {
-                <span class="ident">left</span>: <span class="ident">Box::new</span>(<span class="ident">lb</span>),
-                <span class="ident">op</span>: <span class="ident">BinaryOperator::And</span>,
-                <span class="ident">right</span>: <span class="ident">Box::new</span>(<span class="ident">ub</span>),
+            <span class="kw">let </span>selection = Expr::BinaryOp {
+                left: Box::new(lb),
+                op: BinaryOperator::And,
+                right: Box::new(ub),
             };
 
-            <span class="kw">if</span> <span class="ident">query</span>.<span class="ident">limit</span>.<span class="ident">is_none</span>() <span class="op">&amp;&amp;</span> <span class="ident">select</span>.<span class="ident">top</span>.<span class="ident">is_none</span>() <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">query</span>.<span class="ident">order_by</span>.<span class="ident">is_empty</span>() {
-                <span class="comment">// order by in a partition query does not make sense because partition is unordered.</span>
-                <span class="comment">// clear the order by beceause mssql does not support order by in a derived table.</span>
-                <span class="comment">// also order by in the derived table does not make any difference.</span>
-                <span class="ident">query</span>.<span class="ident">order_by</span>.<span class="ident">clear</span>();
+            <span class="kw">if </span>query.limit.is_none() &amp;&amp; select.top.is_none() &amp;&amp; !query.order_by.is_empty() {
+                <span class="comment">// order by in a partition query does not make sense because partition is unordered.
+                // clear the order by beceause mssql does not support order by in a derived table.
+                // also order by in the derived table does not make any difference.
+                </span>query.order_by.clear();
             }
 
-            <span class="ident">ast_part</span> <span class="op">=</span> <span class="ident">wrap_query</span>(
-                <span class="kw-2">&amp;mut</span> <span class="ident">query</span>,
-                <span class="macro">vec!</span>[<span class="ident">SelectItem::Wildcard</span>],
-                <span class="prelude-val">Some</span>(<span class="ident">selection</span>),
-                <span class="ident">table_alias</span>,
+            ast_part = wrap_query(
+                <span class="kw-2">&amp;mut </span>query,
+                <span class="macro">vec!</span>[SelectItem::Wildcard],
+                <span class="prelude-val">Some</span>(selection),
+                table_alias,
             );
-            <span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">ast_part</span>)
+            <span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, ast_part)
         }
-        <span class="prelude-val">Err</span>(<span class="ident">e</span>) =&gt; {
-            <span class="macro">warn!</span>(<span class="string">&quot;parser error: {:?}, manually compose query string&quot;</span>, <span class="ident">e</span>);
-            <span class="macro">format!</span>(<span class="string">&quot;SELECT * FROM ({}) AS CXTMPTAB_PART WHERE CXTMPTAB_PART.{} &gt;= {} AND CXTMPTAB_PART.{} &lt; {}&quot;</span>, <span class="ident">sql</span>, <span class="ident">col</span>, <span class="ident">lower</span>, <span class="ident">col</span>, <span class="ident">upper</span>)
+        <span class="prelude-val">Err</span>(e) =&gt; {
+            <span class="macro">warn!</span>(<span class="string">&quot;parser error: {:?}, manually compose query string&quot;</span>, e);
+            <span class="macro">format!</span>(<span class="string">&quot;SELECT * FROM ({}) AS CXTMPTAB_PART WHERE CXTMPTAB_PART.{} &gt;= {} AND CXTMPTAB_PART.{} &lt; {}&quot;</span>, sql, col, lower, col, upper)
         }
     };
 
-    <span class="macro">debug!</span>(<span class="string">&quot;Transformed single column partition query: {}&quot;</span>, <span class="ident">tsql</span>);
-    <span class="ident">tsql</span>
+    <span class="macro">debug!</span>(<span class="string">&quot;Transformed single column partition query: {}&quot;</span>, tsql);
+    tsql
 }
 
-<span class="attribute">#[<span class="ident">throws</span>(<span class="ident">ConnectorXError</span>)]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_partition_range_query</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Dialect</span><span class="op">&gt;</span>(<span class="ident">sql</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">col</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">dialect</span>: <span class="kw-2">&amp;</span><span class="ident">T</span>) -&gt; <span class="ident">String</span> {
-    <span class="macro">trace!</span>(<span class="string">&quot;Incoming query: {}&quot;</span>, <span class="ident">sql</span>);
-    <span class="kw">const</span> <span class="ident">RANGE_TMP_TAB_NAME</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;CXTMPTAB_RANGE&quot;</span>;
+<span class="attribute">#[throws(ConnectorXError)]
+</span><span class="kw">pub fn </span>get_partition_range_query&lt;T: Dialect&gt;(sql: <span class="kw-2">&amp;</span>str, col: <span class="kw-2">&amp;</span>str, dialect: <span class="kw-2">&amp;</span>T) -&gt; String {
+    <span class="macro">trace!</span>(<span class="string">&quot;Incoming query: {}&quot;</span>, sql);
+    <span class="kw">const </span>RANGE_TMP_TAB_NAME: <span class="kw-2">&amp;</span>str = <span class="string">&quot;CXTMPTAB_RANGE&quot;</span>;
 
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unused_mut</span>)]</span>
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">table_alias</span> <span class="op">=</span> <span class="ident">RANGE_TMP_TAB_NAME</span>;
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unused_mut</span>)]</span>
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">args</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="ident">FunctionArg::Unnamed</span>(<span class="ident">Expr::CompoundIdentifier</span>(<span class="macro">vec!</span>[
-        <span class="ident">Ident</span> {
-            <span class="ident">value</span>: <span class="ident">RANGE_TMP_TAB_NAME</span>.<span class="ident">to_string</span>(),
-            <span class="ident">quote_style</span>: <span class="prelude-val">None</span>,
+    <span class="attribute">#[allow(unused_mut)]
+    </span><span class="kw">let </span><span class="kw-2">mut </span>table_alias = RANGE_TMP_TAB_NAME;
+    <span class="attribute">#[allow(unused_mut)]
+    </span><span class="kw">let </span><span class="kw-2">mut </span>args = <span class="macro">vec!</span>[FunctionArg::Unnamed(Expr::CompoundIdentifier(<span class="macro">vec!</span>[
+        Ident {
+            value: RANGE_TMP_TAB_NAME.to_string(),
+            quote_style: <span class="prelude-val">None</span>,
         },
-        <span class="ident">Ident</span> {
-            <span class="ident">value</span>: <span class="ident">col</span>.<span class="ident">to_string</span>(),
-            <span class="ident">quote_style</span>: <span class="prelude-val">None</span>,
+        Ident {
+            value: col.to_string(),
+            quote_style: <span class="prelude-val">None</span>,
         },
     ]))];
 
-    <span class="comment">// HACK: Some dialect (e.g. Oracle) does not support &quot;AS&quot; for alias</span>
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;src_oracle&quot;</span>)]</span>
-    <span class="kw">if</span> <span class="ident">dialect</span>.<span class="ident">type_id</span>() <span class="op">==</span> (<span class="ident">OracleDialect</span> {}.<span class="ident">type_id</span>()) {
-        <span class="kw">return</span> <span class="macro">format!</span>(
+    <span class="comment">// HACK: Some dialect (e.g. Oracle) does not support &quot;AS&quot; for alias
+    </span><span class="attribute">#[cfg(feature = <span class="string">&quot;src_oracle&quot;</span>)]
+    </span><span class="kw">if </span>dialect.type_id() == (OracleDialect {}.type_id()) {
+        <span class="kw">return </span><span class="macro">format!</span>(
             <span class="string">&quot;SELECT MIN({}.{}) as min, MAX({}.{}) as max FROM ({}) {}&quot;</span>,
-            <span class="ident">RANGE_TMP_TAB_NAME</span>, <span class="ident">col</span>, <span class="ident">RANGE_TMP_TAB_NAME</span>, <span class="ident">col</span>, <span class="ident">sql</span>, <span class="ident">RANGE_TMP_TAB_NAME</span>
+            RANGE_TMP_TAB_NAME, col, RANGE_TMP_TAB_NAME, col, sql, RANGE_TMP_TAB_NAME
         );
-        <span class="comment">// table_alias = &quot;&quot;;</span>
-        <span class="comment">// args = vec![FunctionArg::Unnamed(Expr::Identifier(Ident {</span>
-        <span class="comment">//     value: col.to_string(),</span>
-        <span class="comment">//     quote_style: None,</span>
-        <span class="comment">// }))];</span>
-    }
+        <span class="comment">// table_alias = &quot;&quot;;
+        // args = vec![FunctionArg::Unnamed(Expr::Identifier(Ident {
+        //     value: col.to_string(),
+        //     quote_style: None,
+        // }))];
+    </span>}
 
-    <span class="kw">let</span> <span class="ident">tsql</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">Parser::parse_sql</span>(<span class="ident">dialect</span>, <span class="ident">sql</span>) {
-        <span class="prelude-val">Ok</span>(<span class="ident">ast</span>) =&gt; {
-            <span class="kw">if</span> <span class="ident">ast</span>.<span class="ident">len</span>() <span class="op">!</span><span class="op">=</span> <span class="number">1</span> {
-                <span class="macro">throw!</span>(<span class="ident">ConnectorXError::SqlQueryNotSupported</span>(<span class="ident">sql</span>.<span class="ident">to_string</span>()));
+    <span class="kw">let </span>tsql = <span class="kw">match </span>Parser::parse_sql(dialect, sql) {
+        <span class="prelude-val">Ok</span>(ast) =&gt; {
+            <span class="kw">if </span>ast.len() != <span class="number">1 </span>{
+                <span class="macro">throw!</span>(ConnectorXError::SqlQueryNotSupported(sql.to_string()));
             }
 
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">query</span> <span class="op">=</span> <span class="ident">ast</span>[<span class="number">0</span>]
-                .<span class="ident">as_query</span>()
-                .<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">ConnectorXError::SqlQueryNotSupported</span>(<span class="ident">sql</span>.<span class="ident">to_string</span>()))<span class="question-mark">?</span>
-                .<span class="ident">clone</span>();
-            <span class="kw">let</span> <span class="ident">ast_range</span>: <span class="ident">Statement</span>;
-            <span class="ident">query</span>.<span class="ident">order_by</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-            <span class="kw">let</span> <span class="ident">projection</span> <span class="op">=</span> <span class="macro">vec!</span>[
-                <span class="ident">SelectItem::UnnamedExpr</span>(<span class="ident">Expr::Function</span>(<span class="ident">Function</span> {
-                    <span class="ident">name</span>: <span class="ident">ObjectName</span>(<span class="macro">vec!</span>[<span class="ident">Ident</span> {
-                        <span class="ident">value</span>: <span class="string">&quot;min&quot;</span>.<span class="ident">to_string</span>(),
-                        <span class="ident">quote_style</span>: <span class="prelude-val">None</span>,
+            <span class="kw">let </span><span class="kw-2">mut </span>query = ast[<span class="number">0</span>]
+                .as_query()
+                .ok_or_else(|| ConnectorXError::SqlQueryNotSupported(sql.to_string()))<span class="question-mark">?
+                </span>.clone();
+            <span class="kw">let </span>ast_range: Statement;
+            query.order_by = <span class="macro">vec!</span>[];
+            <span class="kw">let </span>projection = <span class="macro">vec!</span>[
+                SelectItem::UnnamedExpr(Expr::Function(Function {
+                    name: ObjectName(<span class="macro">vec!</span>[Ident {
+                        value: <span class="string">&quot;min&quot;</span>.to_string(),
+                        quote_style: <span class="prelude-val">None</span>,
                     }]),
-                    <span class="ident">args</span>: <span class="ident">args</span>.<span class="ident">clone</span>(),
-                    <span class="ident">over</span>: <span class="prelude-val">None</span>,
-                    <span class="ident">distinct</span>: <span class="bool-val">false</span>,
+                    args: args.clone(),
+                    over: <span class="prelude-val">None</span>,
+                    distinct: <span class="bool-val">false</span>,
                 })),
-                <span class="ident">SelectItem::UnnamedExpr</span>(<span class="ident">Expr::Function</span>(<span class="ident">Function</span> {
-                    <span class="ident">name</span>: <span class="ident">ObjectName</span>(<span class="macro">vec!</span>[<span class="ident">Ident</span> {
-                        <span class="ident">value</span>: <span class="string">&quot;max&quot;</span>.<span class="ident">to_string</span>(),
-                        <span class="ident">quote_style</span>: <span class="prelude-val">None</span>,
+                SelectItem::UnnamedExpr(Expr::Function(Function {
+                    name: ObjectName(<span class="macro">vec!</span>[Ident {
+                        value: <span class="string">&quot;max&quot;</span>.to_string(),
+                        quote_style: <span class="prelude-val">None</span>,
                     }]),
-                    <span class="ident">args</span>,
-                    <span class="ident">over</span>: <span class="prelude-val">None</span>,
-                    <span class="ident">distinct</span>: <span class="bool-val">false</span>,
+                    args,
+                    over: <span class="prelude-val">None</span>,
+                    distinct: <span class="bool-val">false</span>,
                 })),
             ];
-            <span class="ident">ast_range</span> <span class="op">=</span> <span class="ident">wrap_query</span>(<span class="kw-2">&amp;mut</span> <span class="ident">query</span>, <span class="ident">projection</span>, <span class="prelude-val">None</span>, <span class="ident">table_alias</span>);
-            <span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">ast_range</span>)
+            ast_range = wrap_query(<span class="kw-2">&amp;mut </span>query, projection, <span class="prelude-val">None</span>, table_alias);
+            <span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, ast_range)
         }
-        <span class="prelude-val">Err</span>(<span class="ident">e</span>) =&gt; {
-            <span class="macro">warn!</span>(<span class="string">&quot;parser error: {:?}, manually compose query string&quot;</span>, <span class="ident">e</span>);
+        <span class="prelude-val">Err</span>(e) =&gt; {
+            <span class="macro">warn!</span>(<span class="string">&quot;parser error: {:?}, manually compose query string&quot;</span>, e);
             <span class="macro">format!</span>(
                 <span class="string">&quot;SELECT MIN({}.{}) as min, MAX({}.{}) as max FROM ({}) AS {}&quot;</span>,
-                <span class="ident">RANGE_TMP_TAB_NAME</span>, <span class="ident">col</span>, <span class="ident">RANGE_TMP_TAB_NAME</span>, <span class="ident">col</span>, <span class="ident">sql</span>, <span class="ident">RANGE_TMP_TAB_NAME</span>
+                RANGE_TMP_TAB_NAME, col, RANGE_TMP_TAB_NAME, col, sql, RANGE_TMP_TAB_NAME
             )
         }
     };
 
-    <span class="macro">debug!</span>(<span class="string">&quot;Transformed partition range query: {}&quot;</span>, <span class="ident">tsql</span>);
-    <span class="ident">tsql</span>
+    <span class="macro">debug!</span>(<span class="string">&quot;Transformed partition range query: {}&quot;</span>, tsql);
+    tsql
 }
 
-<span class="attribute">#[<span class="ident">throws</span>(<span class="ident">ConnectorXError</span>)]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_partition_range_query_sep</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Dialect</span><span class="op">&gt;</span>(
-    <span class="ident">sql</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
-    <span class="ident">col</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
-    <span class="ident">dialect</span>: <span class="kw-2">&amp;</span><span class="ident">T</span>,
-) -&gt; (<span class="ident">String</span>, <span class="ident">String</span>) {
-    <span class="macro">trace!</span>(<span class="string">&quot;Incoming query: {}&quot;</span>, <span class="ident">sql</span>);
-    <span class="kw">const</span> <span class="ident">RANGE_TMP_TAB_NAME</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;CXTMPTAB_RANGE&quot;</span>;
+<span class="attribute">#[throws(ConnectorXError)]
+</span><span class="kw">pub fn </span>get_partition_range_query_sep&lt;T: Dialect&gt;(
+    sql: <span class="kw-2">&amp;</span>str,
+    col: <span class="kw-2">&amp;</span>str,
+    dialect: <span class="kw-2">&amp;</span>T,
+) -&gt; (String, String) {
+    <span class="macro">trace!</span>(<span class="string">&quot;Incoming query: {}&quot;</span>, sql);
+    <span class="kw">const </span>RANGE_TMP_TAB_NAME: <span class="kw-2">&amp;</span>str = <span class="string">&quot;CXTMPTAB_RANGE&quot;</span>;
 
-    <span class="kw">let</span> (<span class="ident">sql_min</span>, <span class="ident">sql_max</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">Parser::parse_sql</span>(<span class="ident">dialect</span>, <span class="ident">sql</span>) {
-        <span class="prelude-val">Ok</span>(<span class="ident">ast</span>) =&gt; {
-            <span class="kw">if</span> <span class="ident">ast</span>.<span class="ident">len</span>() <span class="op">!</span><span class="op">=</span> <span class="number">1</span> {
-                <span class="macro">throw!</span>(<span class="ident">ConnectorXError::SqlQueryNotSupported</span>(<span class="ident">sql</span>.<span class="ident">to_string</span>()));
+    <span class="kw">let </span>(sql_min, sql_max) = <span class="kw">match </span>Parser::parse_sql(dialect, sql) {
+        <span class="prelude-val">Ok</span>(ast) =&gt; {
+            <span class="kw">if </span>ast.len() != <span class="number">1 </span>{
+                <span class="macro">throw!</span>(ConnectorXError::SqlQueryNotSupported(sql.to_string()));
             }
 
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">query</span> <span class="op">=</span> <span class="ident">ast</span>[<span class="number">0</span>]
-                .<span class="ident">as_query</span>()
-                .<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">ConnectorXError::SqlQueryNotSupported</span>(<span class="ident">sql</span>.<span class="ident">to_string</span>()))<span class="question-mark">?</span>
-                .<span class="ident">clone</span>();
+            <span class="kw">let </span><span class="kw-2">mut </span>query = ast[<span class="number">0</span>]
+                .as_query()
+                .ok_or_else(|| ConnectorXError::SqlQueryNotSupported(sql.to_string()))<span class="question-mark">?
+                </span>.clone();
 
-            <span class="kw">let</span> <span class="ident">ast_range_min</span>: <span class="ident">Statement</span>;
-            <span class="kw">let</span> <span class="ident">ast_range_max</span>: <span class="ident">Statement</span>;
+            <span class="kw">let </span>ast_range_min: Statement;
+            <span class="kw">let </span>ast_range_max: Statement;
 
-            <span class="ident">query</span>.<span class="ident">order_by</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-            <span class="kw">let</span> <span class="ident">min_proj</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="ident">SelectItem::UnnamedExpr</span>(<span class="ident">Expr::Function</span>(<span class="ident">Function</span> {
-                <span class="ident">name</span>: <span class="ident">ObjectName</span>(<span class="macro">vec!</span>[<span class="ident">Ident</span> {
-                    <span class="ident">value</span>: <span class="string">&quot;min&quot;</span>.<span class="ident">to_string</span>(),
-                    <span class="ident">quote_style</span>: <span class="prelude-val">None</span>,
+            query.order_by = <span class="macro">vec!</span>[];
+            <span class="kw">let </span>min_proj = <span class="macro">vec!</span>[SelectItem::UnnamedExpr(Expr::Function(Function {
+                name: ObjectName(<span class="macro">vec!</span>[Ident {
+                    value: <span class="string">&quot;min&quot;</span>.to_string(),
+                    quote_style: <span class="prelude-val">None</span>,
                 }]),
-                <span class="ident">args</span>: <span class="macro">vec!</span>[<span class="ident">FunctionArg::Unnamed</span>(<span class="ident">Expr::CompoundIdentifier</span>(<span class="macro">vec!</span>[
-                    <span class="ident">Ident</span> {
-                        <span class="ident">value</span>: <span class="ident">RANGE_TMP_TAB_NAME</span>.<span class="ident">to_string</span>(),
-                        <span class="ident">quote_style</span>: <span class="prelude-val">None</span>,
+                args: <span class="macro">vec!</span>[FunctionArg::Unnamed(Expr::CompoundIdentifier(<span class="macro">vec!</span>[
+                    Ident {
+                        value: RANGE_TMP_TAB_NAME.to_string(),
+                        quote_style: <span class="prelude-val">None</span>,
                     },
-                    <span class="ident">Ident</span> {
-                        <span class="ident">value</span>: <span class="ident">col</span>.<span class="ident">to_string</span>(),
-                        <span class="ident">quote_style</span>: <span class="prelude-val">None</span>,
+                    Ident {
+                        value: col.to_string(),
+                        quote_style: <span class="prelude-val">None</span>,
                     },
                 ]))],
-                <span class="ident">over</span>: <span class="prelude-val">None</span>,
-                <span class="ident">distinct</span>: <span class="bool-val">false</span>,
+                over: <span class="prelude-val">None</span>,
+                distinct: <span class="bool-val">false</span>,
             }))];
-            <span class="kw">let</span> <span class="ident">max_proj</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="ident">SelectItem::UnnamedExpr</span>(<span class="ident">Expr::Function</span>(<span class="ident">Function</span> {
-                <span class="ident">name</span>: <span class="ident">ObjectName</span>(<span class="macro">vec!</span>[<span class="ident">Ident</span> {
-                    <span class="ident">value</span>: <span class="string">&quot;max&quot;</span>.<span class="ident">to_string</span>(),
-                    <span class="ident">quote_style</span>: <span class="prelude-val">None</span>,
+            <span class="kw">let </span>max_proj = <span class="macro">vec!</span>[SelectItem::UnnamedExpr(Expr::Function(Function {
+                name: ObjectName(<span class="macro">vec!</span>[Ident {
+                    value: <span class="string">&quot;max&quot;</span>.to_string(),
+                    quote_style: <span class="prelude-val">None</span>,
                 }]),
-                <span class="ident">args</span>: <span class="macro">vec!</span>[<span class="ident">FunctionArg::Unnamed</span>(<span class="ident">Expr::CompoundIdentifier</span>(<span class="macro">vec!</span>[
-                    <span class="ident">Ident</span> {
-                        <span class="ident">value</span>: <span class="ident">RANGE_TMP_TAB_NAME</span>.<span class="ident">into</span>(),
-                        <span class="ident">quote_style</span>: <span class="prelude-val">None</span>,
+                args: <span class="macro">vec!</span>[FunctionArg::Unnamed(Expr::CompoundIdentifier(<span class="macro">vec!</span>[
+                    Ident {
+                        value: RANGE_TMP_TAB_NAME.into(),
+                        quote_style: <span class="prelude-val">None</span>,
                     },
-                    <span class="ident">Ident</span> {
-                        <span class="ident">value</span>: <span class="ident">col</span>.<span class="ident">into</span>(),
-                        <span class="ident">quote_style</span>: <span class="prelude-val">None</span>,
+                    Ident {
+                        value: col.into(),
+                        quote_style: <span class="prelude-val">None</span>,
                     },
                 ]))],
-                <span class="ident">over</span>: <span class="prelude-val">None</span>,
-                <span class="ident">distinct</span>: <span class="bool-val">false</span>,
+                over: <span class="prelude-val">None</span>,
+                distinct: <span class="bool-val">false</span>,
             }))];
-            <span class="ident">ast_range_min</span> <span class="op">=</span> <span class="ident">wrap_query</span>(<span class="kw-2">&amp;mut</span> <span class="ident">query</span>.<span class="ident">clone</span>(), <span class="ident">min_proj</span>, <span class="prelude-val">None</span>, <span class="ident">RANGE_TMP_TAB_NAME</span>);
-            <span class="ident">ast_range_max</span> <span class="op">=</span> <span class="ident">wrap_query</span>(<span class="kw-2">&amp;mut</span> <span class="ident">query</span>, <span class="ident">max_proj</span>, <span class="prelude-val">None</span>, <span class="ident">RANGE_TMP_TAB_NAME</span>);
-            (<span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">ast_range_min</span>), <span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">ast_range_max</span>))
+            ast_range_min = wrap_query(<span class="kw-2">&amp;mut </span>query.clone(), min_proj, <span class="prelude-val">None</span>, RANGE_TMP_TAB_NAME);
+            ast_range_max = wrap_query(<span class="kw-2">&amp;mut </span>query, max_proj, <span class="prelude-val">None</span>, RANGE_TMP_TAB_NAME);
+            (<span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, ast_range_min), <span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, ast_range_max))
         }
-        <span class="prelude-val">Err</span>(<span class="ident">e</span>) =&gt; {
-            <span class="macro">warn!</span>(<span class="string">&quot;parser error: {:?}, manually compose query string&quot;</span>, <span class="ident">e</span>);
+        <span class="prelude-val">Err</span>(e) =&gt; {
+            <span class="macro">warn!</span>(<span class="string">&quot;parser error: {:?}, manually compose query string&quot;</span>, e);
             (
                 <span class="macro">format!</span>(
                     <span class="string">&quot;SELECT MIN({}.{}) as min FROM ({}) AS {}&quot;</span>,
-                    <span class="ident">RANGE_TMP_TAB_NAME</span>, <span class="ident">col</span>, <span class="ident">sql</span>, <span class="ident">RANGE_TMP_TAB_NAME</span>
+                    RANGE_TMP_TAB_NAME, col, sql, RANGE_TMP_TAB_NAME
                 ),
                 <span class="macro">format!</span>(
                     <span class="string">&quot;SELECT MAX({}.{}) as max FROM ({}) AS {}&quot;</span>,
-                    <span class="ident">RANGE_TMP_TAB_NAME</span>, <span class="ident">col</span>, <span class="ident">sql</span>, <span class="ident">RANGE_TMP_TAB_NAME</span>
+                    RANGE_TMP_TAB_NAME, col, sql, RANGE_TMP_TAB_NAME
                 ),
             )
         }
     };
     <span class="macro">debug!</span>(
         <span class="string">&quot;Transformed separated partition range query: {}, {}&quot;</span>,
-        <span class="ident">sql_min</span>, <span class="ident">sql_max</span>
+        sql_min, sql_max
     );
-    (<span class="ident">sql_min</span>, <span class="ident">sql_max</span>)
+    (sql_min, sql_max)
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="connectorx" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.62.0-nightly (878c7833f 2022-04-16)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="connectorx" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (750bd1a7f 2022-09-14)" ></div></body></html>

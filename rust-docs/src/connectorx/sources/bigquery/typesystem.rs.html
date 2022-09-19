@@ -1,9 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `connectorx/src/sources/bigquery/typesystem.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>typesystem.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script src="../../../../crates.js"></script><script defer src="../../../../main.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script>
-    <noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../connectorx/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../../../connectorx/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../connectorx/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><div class="theme-picker hidden"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="22" height="22" alt="Pick another theme!" src="../../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `connectorx/src/sources/bigquery/typesystem.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>typesystem.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../../normalize.css"><link rel="stylesheet" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../../ayu.css" disabled><link rel="stylesheet" href="../../../../dark.css" disabled><link rel="stylesheet" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../connectorx/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../connectorx/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../connectorx/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -82,85 +77,84 @@
 <span id="77">77</span>
 <span id="78">78</span>
 <span id="79">79</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">chrono</span>::{<span class="ident">DateTime</span>, <span class="ident">NaiveDate</span>, <span class="ident">NaiveDateTime</span>, <span class="ident">NaiveTime</span>, <span class="ident">Utc</span>};
-<span class="kw">use</span> <span class="ident">gcp_bigquery_client::model::field_type::FieldType</span>;
+</pre><pre class="rust"><code><span class="kw">use </span>chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
+<span class="kw">use </span>gcp_bigquery_client::model::field_type::FieldType;
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">BigQueryTypeSystem</span> {
-    <span class="ident">Bool</span>(<span class="ident">bool</span>),
-    <span class="ident">Boolean</span>(<span class="ident">bool</span>),
-    <span class="ident">Int64</span>(<span class="ident">bool</span>),
-    <span class="ident">Integer</span>(<span class="ident">bool</span>),
-    <span class="ident">Float</span>(<span class="ident">bool</span>),
-    <span class="ident">Float64</span>(<span class="ident">bool</span>),
-    <span class="ident">Numeric</span>(<span class="ident">bool</span>),
-    <span class="ident">Bignumeric</span>(<span class="ident">bool</span>),
-    <span class="ident">String</span>(<span class="ident">bool</span>),
-    <span class="ident">Bytes</span>(<span class="ident">bool</span>),
-    <span class="ident">Date</span>(<span class="ident">bool</span>),
-    <span class="ident">Datetime</span>(<span class="ident">bool</span>),
-    <span class="ident">Time</span>(<span class="ident">bool</span>),
-    <span class="ident">Timestamp</span>(<span class="ident">bool</span>),
+<span class="attribute">#[derive(Copy, Clone, Debug)]
+</span><span class="kw">pub enum </span>BigQueryTypeSystem {
+    Bool(bool),
+    Boolean(bool),
+    Int64(bool),
+    Integer(bool),
+    Float(bool),
+    Float64(bool),
+    Numeric(bool),
+    Bignumeric(bool),
+    String(bool),
+    Bytes(bool),
+    Date(bool),
+    Datetime(bool),
+    Time(bool),
+    Timestamp(bool),
 }
 
-<span class="macro">impl_typesystem!</span> {
-    <span class="ident">system</span> <span class="op">=</span> <span class="ident">BigQueryTypeSystem</span>,
-    <span class="ident">mappings</span> <span class="op">=</span> {
-        { <span class="ident">Bool</span> <span class="op">|</span> <span class="ident">Boolean</span> =&gt; <span class="ident">bool</span> }
-        { <span class="ident">Int64</span> <span class="op">|</span> <span class="ident">Integer</span>  =&gt;  <span class="ident">i64</span> }
-        { <span class="ident">Float64</span> <span class="op">|</span> <span class="ident">Float</span> <span class="op">|</span> <span class="ident">Numeric</span> <span class="op">|</span> <span class="ident">Bignumeric</span>  =&gt;  <span class="ident">f64</span> }
-        { <span class="ident">String</span> <span class="op">|</span> <span class="ident">Bytes</span>  =&gt;  <span class="ident">String</span> }
-        { <span class="ident">Date</span> =&gt; <span class="ident">NaiveDate</span> }
-        { <span class="ident">Datetime</span> =&gt; <span class="ident">NaiveDateTime</span> }
-        { <span class="ident">Time</span> =&gt; <span class="ident">NaiveTime</span> }
-        { <span class="ident">Timestamp</span> =&gt; <span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span> }
+<span class="macro">impl_typesystem! </span>{
+    system = BigQueryTypeSystem,
+    mappings = {
+        { Bool | Boolean =&gt; bool }
+        { Int64 | Integer  =&gt;  i64 }
+        { Float64 | Float | Numeric | Bignumeric  =&gt;  f64 }
+        { String | Bytes  =&gt;  String }
+        { Date =&gt; NaiveDate }
+        { Datetime =&gt; NaiveDateTime }
+        { Time =&gt; NaiveTime }
+        { Timestamp =&gt; DateTime&lt;Utc&gt; }
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">FieldType</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">BigQueryTypeSystem</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">ty</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">FieldType</span>) -&gt; <span class="ident">BigQueryTypeSystem</span> {
-        <span class="kw">use</span> <span class="ident">BigQueryTypeSystem</span>::<span class="kw-2">*</span>;
-        <span class="kw">match</span> <span class="ident">ty</span> {
-            <span class="ident">FieldType::Bool</span> =&gt; <span class="ident">Bool</span>(<span class="bool-val">true</span>),
-            <span class="ident">FieldType::Boolean</span> =&gt; <span class="ident">Boolean</span>(<span class="bool-val">true</span>),
-            <span class="ident">FieldType::Int64</span> =&gt; <span class="ident">Int64</span>(<span class="bool-val">true</span>),
-            <span class="ident">FieldType::Integer</span> =&gt; <span class="ident">Integer</span>(<span class="bool-val">true</span>),
-            <span class="ident">FieldType::Float</span> =&gt; <span class="ident">Float</span>(<span class="bool-val">true</span>),
-            <span class="ident">FieldType::Float64</span> =&gt; <span class="ident">Float64</span>(<span class="bool-val">true</span>),
-            <span class="ident">FieldType::Numeric</span> =&gt; <span class="ident">Numeric</span>(<span class="bool-val">true</span>),
-            <span class="ident">FieldType::Bignumeric</span> =&gt; <span class="ident">Bignumeric</span>(<span class="bool-val">true</span>),
-            <span class="ident">FieldType::String</span> =&gt; <span class="ident">String</span>(<span class="bool-val">true</span>),
-            <span class="ident">FieldType::Bytes</span> =&gt; <span class="ident">Bytes</span>(<span class="bool-val">true</span>),
-            <span class="ident">FieldType::Date</span> =&gt; <span class="ident">Date</span>(<span class="bool-val">true</span>),
-            <span class="ident">FieldType::Datetime</span> =&gt; <span class="ident">Datetime</span>(<span class="bool-val">true</span>),
-            <span class="ident">FieldType::Time</span> =&gt; <span class="ident">Time</span>(<span class="bool-val">true</span>),
-            <span class="ident">FieldType::Timestamp</span> =&gt; <span class="ident">Timestamp</span>(<span class="bool-val">true</span>),
-            <span class="kw">_</span> =&gt; <span class="macro">unimplemented!</span>(<span class="string">&quot;{}&quot;</span>, <span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">ty</span>)),
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; From&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>FieldType&gt; <span class="kw">for </span>BigQueryTypeSystem {
+    <span class="kw">fn </span>from(ty: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>FieldType) -&gt; BigQueryTypeSystem {
+        <span class="kw">use </span>BigQueryTypeSystem::<span class="kw-2">*</span>;
+        <span class="kw">match </span>ty {
+            FieldType::Bool =&gt; Bool(<span class="bool-val">true</span>),
+            FieldType::Boolean =&gt; Boolean(<span class="bool-val">true</span>),
+            FieldType::Int64 =&gt; Int64(<span class="bool-val">true</span>),
+            FieldType::Integer =&gt; Integer(<span class="bool-val">true</span>),
+            FieldType::Float =&gt; Float(<span class="bool-val">true</span>),
+            FieldType::Float64 =&gt; Float64(<span class="bool-val">true</span>),
+            FieldType::Numeric =&gt; Numeric(<span class="bool-val">true</span>),
+            FieldType::Bignumeric =&gt; Bignumeric(<span class="bool-val">true</span>),
+            FieldType::String =&gt; String(<span class="bool-val">true</span>),
+            FieldType::Bytes =&gt; Bytes(<span class="bool-val">true</span>),
+            FieldType::Date =&gt; Date(<span class="bool-val">true</span>),
+            FieldType::Datetime =&gt; Datetime(<span class="bool-val">true</span>),
+            FieldType::Time =&gt; Time(<span class="bool-val">true</span>),
+            FieldType::Timestamp =&gt; Timestamp(<span class="bool-val">true</span>),
+            <span class="kw">_ </span>=&gt; <span class="macro">unimplemented!</span>(<span class="string">&quot;{}&quot;</span>, <span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, ty)),
         }
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">BigQueryTypeSystem</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">FieldType</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">ty</span>: <span class="ident">BigQueryTypeSystem</span>) -&gt; <span class="ident">FieldType</span> {
-        <span class="kw">use</span> <span class="ident">BigQueryTypeSystem</span>::<span class="kw-2">*</span>;
-        <span class="kw">match</span> <span class="ident">ty</span> {
-            <span class="ident">Bool</span>(<span class="kw">_</span>) =&gt; <span class="ident">FieldType::Bool</span>,
-            <span class="ident">Boolean</span>(<span class="kw">_</span>) =&gt; <span class="ident">FieldType::Boolean</span>,
-            <span class="ident">Int64</span>(<span class="kw">_</span>) =&gt; <span class="ident">FieldType::Int64</span>,
-            <span class="ident">Integer</span>(<span class="kw">_</span>) =&gt; <span class="ident">FieldType::Integer</span>,
-            <span class="ident">Float64</span>(<span class="kw">_</span>) =&gt; <span class="ident">FieldType::Float64</span>,
-            <span class="ident">Float</span>(<span class="kw">_</span>) =&gt; <span class="ident">FieldType::Float</span>,
-            <span class="ident">Numeric</span>(<span class="kw">_</span>) =&gt; <span class="ident">FieldType::Numeric</span>,
-            <span class="ident">Bignumeric</span>(<span class="kw">_</span>) =&gt; <span class="ident">FieldType::Bignumeric</span>,
-            <span class="ident">String</span>(<span class="kw">_</span>) =&gt; <span class="ident">FieldType::String</span>,
-            <span class="ident">Bytes</span>(<span class="kw">_</span>) =&gt; <span class="ident">FieldType::Bytes</span>,
-            <span class="ident">Date</span>(<span class="kw">_</span>) =&gt; <span class="ident">FieldType::Date</span>,
-            <span class="ident">Datetime</span>(<span class="kw">_</span>) =&gt; <span class="ident">FieldType::Datetime</span>,
-            <span class="ident">Time</span>(<span class="kw">_</span>) =&gt; <span class="ident">FieldType::Time</span>,
-            <span class="ident">Timestamp</span>(<span class="kw">_</span>) =&gt; <span class="ident">FieldType::Timestamp</span>,
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; From&lt;BigQueryTypeSystem&gt; <span class="kw">for </span>FieldType {
+    <span class="kw">fn </span>from(ty: BigQueryTypeSystem) -&gt; FieldType {
+        <span class="kw">use </span>BigQueryTypeSystem::<span class="kw-2">*</span>;
+        <span class="kw">match </span>ty {
+            Bool(<span class="kw">_</span>) =&gt; FieldType::Bool,
+            Boolean(<span class="kw">_</span>) =&gt; FieldType::Boolean,
+            Int64(<span class="kw">_</span>) =&gt; FieldType::Int64,
+            Integer(<span class="kw">_</span>) =&gt; FieldType::Integer,
+            Float64(<span class="kw">_</span>) =&gt; FieldType::Float64,
+            Float(<span class="kw">_</span>) =&gt; FieldType::Float,
+            Numeric(<span class="kw">_</span>) =&gt; FieldType::Numeric,
+            Bignumeric(<span class="kw">_</span>) =&gt; FieldType::Bignumeric,
+            String(<span class="kw">_</span>) =&gt; FieldType::String,
+            Bytes(<span class="kw">_</span>) =&gt; FieldType::Bytes,
+            Date(<span class="kw">_</span>) =&gt; FieldType::Date,
+            Datetime(<span class="kw">_</span>) =&gt; FieldType::Datetime,
+            Time(<span class="kw">_</span>) =&gt; FieldType::Time,
+            Timestamp(<span class="kw">_</span>) =&gt; FieldType::Timestamp,
         }
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="connectorx" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.62.0-nightly (878c7833f 2022-04-16)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="connectorx" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (750bd1a7f 2022-09-14)" ></div></body></html>

@@ -1,9 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `connectorx/src/errors.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>errors.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script src="../../crates.js"></script><script defer src="../../main.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script>
-    <noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../connectorx/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../connectorx/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../connectorx/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><div class="theme-picker hidden"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="22" height="22" alt="Pick another theme!" src="../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `connectorx/src/errors.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>errors.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../connectorx/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../connectorx/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../connectorx/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -182,185 +177,184 @@
 <span id="177">177</span>
 <span id="178">178</span>
 <span id="179">179</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::data_order::DataOrder</span>;
-<span class="kw">use</span> <span class="ident">std::any::type_name</span>;
-<span class="kw">use</span> <span class="ident">std::fmt</span>;
-<span class="kw">use</span> <span class="ident">thiserror::Error</span>;
+</pre><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::data_order::DataOrder;
+<span class="kw">use </span>std::any::type_name;
+<span class="kw">use </span>std::fmt;
+<span class="kw">use </span>thiserror::Error;
 
-<span class="kw">pub</span> <span class="kw">type</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">ConnectorXError</span><span class="op">&gt;</span>;
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">OutResult</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">ConnectorXOutError</span><span class="op">&gt;</span>;
+<span class="kw">pub type </span><span class="prelude-ty">Result</span>&lt;T&gt; = std::result::Result&lt;T, ConnectorXError&gt;;
+<span class="kw">pub type </span>OutResult&lt;T&gt; = std::result::Result&lt;T, ConnectorXOutError&gt;;
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Error</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ConnectorXOutError</span> {
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;File {0} not found.&quot;</span>)]</span>
-    <span class="ident">FileNotFoundError</span>(<span class="ident">String</span>),
+<span class="attribute">#[derive(Error, Debug)]
+</span><span class="kw">pub enum </span>ConnectorXOutError {
+    <span class="attribute">#[error(<span class="string">&quot;File {0} not found.&quot;</span>)]
+    </span>FileNotFoundError(String),
 
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Source {0} not supported.&quot;</span>)]</span>
-    <span class="ident">SourceNotSupport</span>(<span class="ident">String</span>),
+    <span class="attribute">#[error(<span class="string">&quot;Source {0} not supported.&quot;</span>)]
+    </span>SourceNotSupport(String),
 
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;federation&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
-    <span class="ident">J4RSError</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">j4rs::errors::J4RsError</span>),
+    <span class="attribute">#[cfg(feature = <span class="string">&quot;federation&quot;</span>)]
+    #[error(transparent)]
+    </span>J4RSError(<span class="attribute">#[from] </span>j4rs::errors::J4RsError),
 
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;federation&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
-    <span class="ident">DataFusionError</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">datafusion::error::DataFusionError</span>),
+    <span class="attribute">#[cfg(feature = <span class="string">&quot;federation&quot;</span>)]
+    #[error(transparent)]
+    </span>DataFusionError(<span class="attribute">#[from] </span>datafusion::error::DataFusionError),
 
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;federation&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
-    <span class="ident">UrlParseError</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">url::ParseError</span>),
+    <span class="attribute">#[cfg(feature = <span class="string">&quot;federation&quot;</span>)]
+    #[error(transparent)]
+    </span>UrlParseError(<span class="attribute">#[from] </span>url::ParseError),
 
-    <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
-    <span class="ident">ConnectorXInternalError</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">ConnectorXError</span>),
+    <span class="attribute">#[error(transparent)]
+    </span>ConnectorXInternalError(<span class="attribute">#[from] </span>ConnectorXError),
 
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;src_postgres&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
-    <span class="ident">PostgresError</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident"><span class="kw">crate</span>::sources::postgres::PostgresSourceError</span>),
+    <span class="attribute">#[cfg(feature = <span class="string">&quot;src_postgres&quot;</span>)]
+    #[error(transparent)]
+    </span>PostgresError(<span class="attribute">#[from] </span><span class="kw">crate</span>::sources::postgres::PostgresSourceError),
 
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;src_mysql&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
-    <span class="ident">MySQLError</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident"><span class="kw">crate</span>::sources::mysql::MySQLSourceError</span>),
+    <span class="attribute">#[cfg(feature = <span class="string">&quot;src_mysql&quot;</span>)]
+    #[error(transparent)]
+    </span>MySQLError(<span class="attribute">#[from] </span><span class="kw">crate</span>::sources::mysql::MySQLSourceError),
 
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;src_mssql&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
-    <span class="ident">MsSQLSourceError</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident"><span class="kw">crate</span>::sources::mssql::MsSQLSourceError</span>),
+    <span class="attribute">#[cfg(feature = <span class="string">&quot;src_mssql&quot;</span>)]
+    #[error(transparent)]
+    </span>MsSQLSourceError(<span class="attribute">#[from] </span><span class="kw">crate</span>::sources::mssql::MsSQLSourceError),
 
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;src_sqlite&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
-    <span class="ident">SQLiteSourceError</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident"><span class="kw">crate</span>::sources::sqlite::SQLiteSourceError</span>),
+    <span class="attribute">#[cfg(feature = <span class="string">&quot;src_sqlite&quot;</span>)]
+    #[error(transparent)]
+    </span>SQLiteSourceError(<span class="attribute">#[from] </span><span class="kw">crate</span>::sources::sqlite::SQLiteSourceError),
 
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;src_oracle&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
-    <span class="ident">OracleSourceError</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident"><span class="kw">crate</span>::sources::oracle::OracleSourceError</span>),
+    <span class="attribute">#[cfg(feature = <span class="string">&quot;src_oracle&quot;</span>)]
+    #[error(transparent)]
+    </span>OracleSourceError(<span class="attribute">#[from] </span><span class="kw">crate</span>::sources::oracle::OracleSourceError),
 
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;src_bigquery&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
-    <span class="ident">BigQuerySourceError</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident"><span class="kw">crate</span>::sources::bigquery::BigQuerySourceError</span>),
+    <span class="attribute">#[cfg(feature = <span class="string">&quot;src_bigquery&quot;</span>)]
+    #[error(transparent)]
+    </span>BigQuerySourceError(<span class="attribute">#[from] </span><span class="kw">crate</span>::sources::bigquery::BigQuerySourceError),
 
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dst_arrow&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
-    <span class="ident">ArrowError</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident"><span class="kw">crate</span>::destinations::arrow::ArrowDestinationError</span>),
+    <span class="attribute">#[cfg(feature = <span class="string">&quot;dst_arrow&quot;</span>)]
+    #[error(transparent)]
+    </span>ArrowError(<span class="attribute">#[from] </span><span class="kw">crate</span>::destinations::arrow::ArrowDestinationError),
 
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dst_arrow2&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
-    <span class="ident">Arrow2Error</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident"><span class="kw">crate</span>::destinations::arrow2::Arrow2DestinationError</span>),
+    <span class="attribute">#[cfg(feature = <span class="string">&quot;dst_arrow2&quot;</span>)]
+    #[error(transparent)]
+    </span>Arrow2Error(<span class="attribute">#[from] </span><span class="kw">crate</span>::destinations::arrow2::Arrow2DestinationError),
 
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;src_postgres&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dst_arrow&quot;</span>))]</span>
-    <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
-    <span class="ident">PostgresArrowTransportError</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident"><span class="kw">crate</span>::transports::PostgresArrowTransportError</span>),
+    <span class="attribute">#[cfg(all(feature = <span class="string">&quot;src_postgres&quot;</span>, feature = <span class="string">&quot;dst_arrow&quot;</span>))]
+    #[error(transparent)]
+    </span>PostgresArrowTransportError(<span class="attribute">#[from] </span><span class="kw">crate</span>::transports::PostgresArrowTransportError),
 
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;src_postgres&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dst_arrow2&quot;</span>))]</span>
-    <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
-    <span class="ident">PostgresArrow2TransportError</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident"><span class="kw">crate</span>::transports::PostgresArrow2TransportError</span>),
+    <span class="attribute">#[cfg(all(feature = <span class="string">&quot;src_postgres&quot;</span>, feature = <span class="string">&quot;dst_arrow2&quot;</span>))]
+    #[error(transparent)]
+    </span>PostgresArrow2TransportError(<span class="attribute">#[from] </span><span class="kw">crate</span>::transports::PostgresArrow2TransportError),
 
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;src_mysql&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dst_arrow&quot;</span>))]</span>
-    <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
-    <span class="ident">MySQLArrowTransportError</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident"><span class="kw">crate</span>::transports::MySQLArrowTransportError</span>),
+    <span class="attribute">#[cfg(all(feature = <span class="string">&quot;src_mysql&quot;</span>, feature = <span class="string">&quot;dst_arrow&quot;</span>))]
+    #[error(transparent)]
+    </span>MySQLArrowTransportError(<span class="attribute">#[from] </span><span class="kw">crate</span>::transports::MySQLArrowTransportError),
 
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;src_mysql&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dst_arrow2&quot;</span>))]</span>
-    <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
-    <span class="ident">MySQLArrow2TransportError</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident"><span class="kw">crate</span>::transports::MySQLArrow2TransportError</span>),
+    <span class="attribute">#[cfg(all(feature = <span class="string">&quot;src_mysql&quot;</span>, feature = <span class="string">&quot;dst_arrow2&quot;</span>))]
+    #[error(transparent)]
+    </span>MySQLArrow2TransportError(<span class="attribute">#[from] </span><span class="kw">crate</span>::transports::MySQLArrow2TransportError),
 
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;src_sqlite&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dst_arrow&quot;</span>))]</span>
-    <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
-    <span class="ident">SQLiteArrowTransportError</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident"><span class="kw">crate</span>::transports::SQLiteArrowTransportError</span>),
+    <span class="attribute">#[cfg(all(feature = <span class="string">&quot;src_sqlite&quot;</span>, feature = <span class="string">&quot;dst_arrow&quot;</span>))]
+    #[error(transparent)]
+    </span>SQLiteArrowTransportError(<span class="attribute">#[from] </span><span class="kw">crate</span>::transports::SQLiteArrowTransportError),
 
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;src_sqlite&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dst_arrow2&quot;</span>))]</span>
-    <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
-    <span class="ident">SQLiteArrow2TransportError</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident"><span class="kw">crate</span>::transports::SQLiteArrow2TransportError</span>),
+    <span class="attribute">#[cfg(all(feature = <span class="string">&quot;src_sqlite&quot;</span>, feature = <span class="string">&quot;dst_arrow2&quot;</span>))]
+    #[error(transparent)]
+    </span>SQLiteArrow2TransportError(<span class="attribute">#[from] </span><span class="kw">crate</span>::transports::SQLiteArrow2TransportError),
 
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;src_mssql&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dst_arrow&quot;</span>))]</span>
-    <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
-    <span class="ident">MsSQLArrowTransportError</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident"><span class="kw">crate</span>::transports::MsSQLArrowTransportError</span>),
+    <span class="attribute">#[cfg(all(feature = <span class="string">&quot;src_mssql&quot;</span>, feature = <span class="string">&quot;dst_arrow&quot;</span>))]
+    #[error(transparent)]
+    </span>MsSQLArrowTransportError(<span class="attribute">#[from] </span><span class="kw">crate</span>::transports::MsSQLArrowTransportError),
 
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;src_mssql&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dst_arrow2&quot;</span>))]</span>
-    <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
-    <span class="ident">MsSQLArrow2TransportError</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident"><span class="kw">crate</span>::transports::MsSQLArrow2TransportError</span>),
+    <span class="attribute">#[cfg(all(feature = <span class="string">&quot;src_mssql&quot;</span>, feature = <span class="string">&quot;dst_arrow2&quot;</span>))]
+    #[error(transparent)]
+    </span>MsSQLArrow2TransportError(<span class="attribute">#[from] </span><span class="kw">crate</span>::transports::MsSQLArrow2TransportError),
 
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;src_oracle&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dst_arrow&quot;</span>))]</span>
-    <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
-    <span class="ident">OracleArrowTransportError</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident"><span class="kw">crate</span>::transports::OracleArrowTransportError</span>),
+    <span class="attribute">#[cfg(all(feature = <span class="string">&quot;src_oracle&quot;</span>, feature = <span class="string">&quot;dst_arrow&quot;</span>))]
+    #[error(transparent)]
+    </span>OracleArrowTransportError(<span class="attribute">#[from] </span><span class="kw">crate</span>::transports::OracleArrowTransportError),
 
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;src_oracle&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dst_arrow2&quot;</span>))]</span>
-    <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
-    <span class="ident">OracleArrow2TransportError</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident"><span class="kw">crate</span>::transports::OracleArrow2TransportError</span>),
+    <span class="attribute">#[cfg(all(feature = <span class="string">&quot;src_oracle&quot;</span>, feature = <span class="string">&quot;dst_arrow2&quot;</span>))]
+    #[error(transparent)]
+    </span>OracleArrow2TransportError(<span class="attribute">#[from] </span><span class="kw">crate</span>::transports::OracleArrow2TransportError),
 
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;src_bigquery&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dst_arrow&quot;</span>))]</span>
-    <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
-    <span class="ident">BigqueryArrowTransportError</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident"><span class="kw">crate</span>::transports::BigQueryArrowTransportError</span>),
+    <span class="attribute">#[cfg(all(feature = <span class="string">&quot;src_bigquery&quot;</span>, feature = <span class="string">&quot;dst_arrow&quot;</span>))]
+    #[error(transparent)]
+    </span>BigqueryArrowTransportError(<span class="attribute">#[from] </span><span class="kw">crate</span>::transports::BigQueryArrowTransportError),
 
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;src_bigquery&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dst_arrow2&quot;</span>))]</span>
-    <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
-    <span class="ident">BigqueryArrow2TransportError</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident"><span class="kw">crate</span>::transports::BigQueryArrow2TransportError</span>),
+    <span class="attribute">#[cfg(all(feature = <span class="string">&quot;src_bigquery&quot;</span>, feature = <span class="string">&quot;dst_arrow2&quot;</span>))]
+    #[error(transparent)]
+    </span>BigqueryArrow2TransportError(<span class="attribute">#[from] </span><span class="kw">crate</span>::transports::BigQueryArrow2TransportError),
 }
 
-<span class="doccomment">/// Errors that can be raised from this library.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Error</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ConnectorXError</span> {
-    <span class="doccomment">/// The required type does not same as the schema defined.</span>
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Data type unexpected: {0:?} expected, {1} found.&quot;</span>)]</span>
-    <span class="ident">TypeCheckFailed</span>(<span class="ident">String</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>),
+<span class="doccomment">/// Errors that can be raised from this library.
+</span><span class="attribute">#[derive(Error, Debug)]
+</span><span class="kw">pub enum </span>ConnectorXError {
+    <span class="doccomment">/// The required type does not same as the schema defined.
+    </span><span class="attribute">#[error(<span class="string">&quot;Data type unexpected: {0:?} expected, {1} found.&quot;</span>)]
+    </span>TypeCheckFailed(String, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str),
 
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Data order not supported {0:?}.&quot;</span>)]</span>
-    <span class="ident">UnsupportedDataOrder</span>(<span class="ident">DataOrder</span>),
+    <span class="attribute">#[error(<span class="string">&quot;Data order not supported {0:?}.&quot;</span>)]
+    </span>UnsupportedDataOrder(DataOrder),
 
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Cannot resolve data order: got {0:?} from source, {1:?} from destination.&quot;</span>)]</span>
-    <span class="ident">CannotResolveDataOrder</span>(<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">DataOrder</span><span class="op">&gt;</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">DataOrder</span><span class="op">&gt;</span>),
+    <span class="attribute">#[error(<span class="string">&quot;Cannot resolve data order: got {0:?} from source, {1:?} from destination.&quot;</span>)]
+    </span>CannotResolveDataOrder(Vec&lt;DataOrder&gt;, Vec&lt;DataOrder&gt;),
 
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Cannot produce a {0}, context: {1}.&quot;</span>)]</span>
-    <span class="ident">CannotProduce</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>, <span class="ident">ProduceContext</span>),
+    <span class="attribute">#[error(<span class="string">&quot;Cannot produce a {0}, context: {1}.&quot;</span>)]
+    </span>CannotProduce(<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str, ProduceContext),
 
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;No conversion rule from {0} to {1}.&quot;</span>)]</span>
-    <span class="ident">NoConversionRule</span>(<span class="ident">String</span>, <span class="ident">String</span>),
+    <span class="attribute">#[error(<span class="string">&quot;No conversion rule from {0} to {1}.&quot;</span>)]
+    </span>NoConversionRule(String, String),
 
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Only support single query with SELECT statement, got {0}.&quot;</span>)]</span>
-    <span class="ident">SqlQueryNotSupported</span>(<span class="ident">String</span>),
+    <span class="attribute">#[error(<span class="string">&quot;Only support single query with SELECT statement, got {0}.&quot;</span>)]
+    </span>SqlQueryNotSupported(String),
 
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Cannot get total number of rows in advance.&quot;</span>)]</span>
-    <span class="ident">CountError</span>(),
+    <span class="attribute">#[error(<span class="string">&quot;Cannot get total number of rows in advance.&quot;</span>)]
+    </span>CountError(),
 
-    <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
-    <span class="ident">SQLParserError</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">sqlparser::parser::ParserError</span>),
+    <span class="attribute">#[error(transparent)]
+    </span>SQLParserError(<span class="attribute">#[from] </span>sqlparser::parser::ParserError),
 
-    <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
-    <span class="ident">StdIOError</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">std::io::Error</span>),
+    <span class="attribute">#[error(transparent)]
+    </span>StdIOError(<span class="attribute">#[from] </span>std::io::Error),
 
-    <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
-    <span class="ident">StdVarError</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">std::env::VarError</span>),
+    <span class="attribute">#[error(transparent)]
+    </span>StdVarError(<span class="attribute">#[from] </span>std::env::VarError),
 
-    <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
-    <span class="ident">Other</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">anyhow::Error</span>),
+    <span class="attribute">#[error(transparent)]
+    </span>Other(<span class="attribute">#[from] </span>anyhow::Error),
 }
 
-<span class="kw">impl</span> <span class="ident">ConnectorXError</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">cannot_produce</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">context</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
-        <span class="ident">ConnectorXError::CannotProduce</span>(<span class="ident">type_name</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(), <span class="ident">context</span>.<span class="ident">into</span>())
+<span class="kw">impl </span>ConnectorXError {
+    <span class="kw">pub fn </span>cannot_produce&lt;T&gt;(context: <span class="prelude-ty">Option</span>&lt;String&gt;) -&gt; <span class="self">Self </span>{
+        ConnectorXError::CannotProduce(type_name::&lt;T&gt;(), context.into())
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ProduceContext</span> {
-    <span class="ident">NoContext</span>,
-    <span class="ident">Context</span>(<span class="ident">String</span>),
+<span class="attribute">#[derive(Debug)]
+</span><span class="kw">pub enum </span>ProduceContext {
+    NoContext,
+    Context(String),
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">ProduceContext</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">val</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">match</span> <span class="ident">val</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">c</span>) =&gt; <span class="ident">ProduceContext::Context</span>(<span class="ident">c</span>),
-            <span class="prelude-val">None</span> =&gt; <span class="ident">ProduceContext::NoContext</span>,
+<span class="kw">impl </span>From&lt;<span class="prelude-ty">Option</span>&lt;String&gt;&gt; <span class="kw">for </span>ProduceContext {
+    <span class="kw">fn </span>from(val: <span class="prelude-ty">Option</span>&lt;String&gt;) -&gt; <span class="self">Self </span>{
+        <span class="kw">match </span>val {
+            <span class="prelude-val">Some</span>(c) =&gt; ProduceContext::Context(c),
+            <span class="prelude-val">None </span>=&gt; ProduceContext::NoContext,
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">fmt::Display</span> <span class="kw">for</span> <span class="ident">ProduceContext</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">fmt::Result</span> {
-        <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">ProduceContext::NoContext</span> =&gt; <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;No Context&quot;</span>),
-            <span class="ident">ProduceContext::Context</span>(<span class="ident">s</span>) =&gt; <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="ident">s</span>),
+<span class="kw">impl </span>fmt::Display <span class="kw">for </span>ProduceContext {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+        <span class="kw">match </span><span class="self">self </span>{
+            ProduceContext::NoContext =&gt; <span class="macro">write!</span>(f, <span class="string">&quot;No Context&quot;</span>),
+            ProduceContext::Context(s) =&gt; <span class="macro">write!</span>(f, <span class="string">&quot;{}&quot;</span>, s),
         }
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="connectorx" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.62.0-nightly (878c7833f 2022-04-16)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="connectorx" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (750bd1a7f 2022-09-14)" ></div></body></html>

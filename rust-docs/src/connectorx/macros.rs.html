@@ -1,9 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `connectorx/src/macros.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>macros.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script src="../../crates.js"></script><script defer src="../../main.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script>
-    <noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../connectorx/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../connectorx/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../connectorx/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><div class="theme-picker hidden"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="22" height="22" alt="Pick another theme!" src="../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `connectorx/src/macros.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>macros.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../connectorx/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../connectorx/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../connectorx/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -324,327 +319,326 @@
 <span id="319">319</span>
 <span id="320">320</span>
 <span id="321">321</span>
-</pre><pre class="rust"><code><span class="doccomment">/// Associate physical representations to a typesystem.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Example Usage</span>
-<span class="doccomment">/// ```ignore</span>
-<span class="doccomment">/// pub enum ArrowTypeSystem {</span>
-<span class="doccomment">///     Int32(bool),</span>
-<span class="doccomment">///     Int64(bool),</span>
-<span class="doccomment">///     UInt32(bool),</span>
-<span class="doccomment">///     UInt64(bool),</span>
-<span class="doccomment">///     Float32(bool),</span>
-<span class="doccomment">///     Float64(bool),</span>
-<span class="doccomment">///     Boolean(bool),</span>
-<span class="doccomment">///     LargeUtf8(bool),</span>
-<span class="doccomment">///     LargeBinary(bool),</span>
-<span class="doccomment">///     Date32(bool),</span>
-<span class="doccomment">///     Date64(bool),</span>
-<span class="doccomment">///     Time64(bool),</span>
-<span class="doccomment">///     DateTimeTz(bool),</span>
-<span class="doccomment">/// }</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// impl_typesystem! {</span>
-<span class="doccomment">///     system = ArrowTypeSystem,</span>
-<span class="doccomment">///     mappings = {</span>
-<span class="doccomment">///         { Int32      =&gt; i32           }</span>
-<span class="doccomment">///         { Int64      =&gt; i64           }</span>
-<span class="doccomment">///         { UInt32     =&gt; u32           }</span>
-<span class="doccomment">///         { UInt64     =&gt; u64           }</span>
-<span class="doccomment">///         { Float64    =&gt; f64           }</span>
-<span class="doccomment">///         { Float32    =&gt; f32           }</span>
-<span class="doccomment">///         { Boolean    =&gt; bool          }</span>
-<span class="doccomment">///         { LargeUtf8  =&gt; String        }</span>
-<span class="doccomment">///         { LargeBinary =&gt; Vec&lt;u8&gt;      }</span>
-<span class="doccomment">///         { Date32     =&gt; NaiveDate     }</span>
-<span class="doccomment">///         { Date64     =&gt; NaiveDateTime }</span>
-<span class="doccomment">///         { Time64     =&gt; NaiveTime     }</span>
-<span class="doccomment">///         { DateTimeTz =&gt; DateTime&lt;Utc&gt; }</span>
-<span class="doccomment">///     }</span>
-<span class="doccomment">/// }</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">/// This means for the type system `ArrowTypeSystem`, it&#39;s variant `ArrowTypeSystem::Int32(false)` is corresponding to the physical type `i32` and</span>
-<span class="doccomment">/// `ArrowTypeSystem::Int32(true)` is corresponding to the physical type `Option&lt;i32&gt;`.</span>
-<span class="attribute">#[<span class="ident">macro_export</span>]</span>
-<span class="macro">macro_rules!</span> <span class="ident">impl_typesystem</span> {
+</pre><pre class="rust"><code><span class="doccomment">/// Associate physical representations to a typesystem.
+///
+/// # Example Usage
+/// ```ignore
+/// pub enum ArrowTypeSystem {
+///     Int32(bool),
+///     Int64(bool),
+///     UInt32(bool),
+///     UInt64(bool),
+///     Float32(bool),
+///     Float64(bool),
+///     Boolean(bool),
+///     LargeUtf8(bool),
+///     LargeBinary(bool),
+///     Date32(bool),
+///     Date64(bool),
+///     Time64(bool),
+///     DateTimeTz(bool),
+/// }
+///
+/// impl_typesystem! {
+///     system = ArrowTypeSystem,
+///     mappings = {
+///         { Int32      =&gt; i32           }
+///         { Int64      =&gt; i64           }
+///         { UInt32     =&gt; u32           }
+///         { UInt64     =&gt; u64           }
+///         { Float64    =&gt; f64           }
+///         { Float32    =&gt; f32           }
+///         { Boolean    =&gt; bool          }
+///         { LargeUtf8  =&gt; String        }
+///         { LargeBinary =&gt; Vec&lt;u8&gt;      }
+///         { Date32     =&gt; NaiveDate     }
+///         { Date64     =&gt; NaiveDateTime }
+///         { Time64     =&gt; NaiveTime     }
+///         { DateTimeTz =&gt; DateTime&lt;Utc&gt; }
+///     }
+/// }
+/// ```
+/// This means for the type system `ArrowTypeSystem`, it&#39;s variant `ArrowTypeSystem::Int32(false)` is corresponding to the physical type `i32` and
+/// `ArrowTypeSystem::Int32(true)` is corresponding to the physical type `Option&lt;i32&gt;`.
+</span><span class="attribute">#[macro_export]
+</span><span class="macro">macro_rules! </span>impl_typesystem {
     (
-        <span class="ident">system</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TS</span>:<span class="ident">tt</span>,
-        <span class="ident">mappings</span> <span class="op">=</span> {
+        system = <span class="macro-nonterminal">$TS</span>:tt,
+        mappings = {
             $(
-                { $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">V</span>:<span class="ident">tt</span>)<span class="op">|</span><span class="op">+</span> =&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">NT</span>:<span class="ident">ty</span> }
-            )<span class="op">*</span>
+                { $(<span class="macro-nonterminal">$V</span>:tt)|+ =&gt; <span class="macro-nonterminal">$NT</span>:ty }
+            )*
         }
     ) =&gt; {
-        <span class="kw">impl</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::typesystem::TypeSystem</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TS</span> {}
+        <span class="kw">impl </span><span class="macro-nonterminal">$crate::typesystem::TypeSystem </span><span class="kw">for </span><span class="macro-nonterminal">$TS </span>{}
 
         $(
-            <span class="macro">impl_typesystem!</span>(@<span class="ident">typeassoc</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TS</span> [$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">V</span>)<span class="op">+</span>], <span class="macro-nonterminal">$</span><span class="macro-nonterminal">NT</span>);
-        )<span class="op">+</span>
+            <span class="macro">impl_typesystem!</span>(@typeassoc <span class="macro-nonterminal">$TS </span>[$(<span class="macro-nonterminal">$V</span>)+], <span class="macro-nonterminal">$NT</span>);
+        )+
 
-        <span class="macro">impl_typesystem!</span>(@<span class="ident">realize</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TS</span> $([ [$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">V</span>)<span class="op">+</span>] =&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">NT</span> ])<span class="op">+</span> );
+        <span class="macro">impl_typesystem!</span>(@realize <span class="macro-nonterminal">$TS </span>$([ [$(<span class="macro-nonterminal">$V</span>)+] =&gt; <span class="macro-nonterminal">$NT </span>])+ );
     };
 
-    (@<span class="ident">typeassoc</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TS</span>:<span class="ident">tt</span> [$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">V</span>:<span class="ident">tt</span>)<span class="op">+</span>], <span class="macro-nonterminal">$</span><span class="macro-nonterminal">NT</span>:<span class="ident">ty</span>) =&gt; {
-        <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::typesystem::TypeAssoc</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">TS</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">NT</span> {
-            <span class="kw">fn</span> <span class="ident">check</span>(<span class="ident">ts</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TS</span>) -&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::errors::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-                <span class="kw">match</span> <span class="ident">ts</span> {
+    (@typeassoc <span class="macro-nonterminal">$TS</span>:tt [$(<span class="macro-nonterminal">$V</span>:tt)+], <span class="macro-nonterminal">$NT</span>:ty) =&gt; {
+        <span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>&gt; <span class="macro-nonterminal">$crate::typesystem::TypeAssoc</span>&lt;<span class="macro-nonterminal">$TS</span>&gt; <span class="kw">for </span><span class="macro-nonterminal">$NT </span>{
+            <span class="kw">fn </span>check(ts: <span class="macro-nonterminal">$TS</span>) -&gt; <span class="macro-nonterminal">$crate::errors::Result</span>&lt;()&gt; {
+                <span class="kw">match </span>ts {
                     $(
-                        <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TS</span>::<span class="macro-nonterminal">$</span><span class="macro-nonterminal">V</span>(<span class="bool-val">false</span>) =&gt; <span class="prelude-val">Ok</span>(()),
-                    )<span class="op">+</span>
-                    <span class="kw">_</span> =&gt; <span class="macro">fehler::throw!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::errors::ConnectorXError::TypeCheckFailed</span>(<span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">ts</span>), <span class="ident">std::any::type_name</span>::<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">NT</span><span class="op">&gt;</span>()))
+                        <span class="macro-nonterminal">$TS</span>::<span class="macro-nonterminal">$V</span>(<span class="bool-val">false</span>) =&gt; <span class="prelude-val">Ok</span>(()),
+                    )+
+                    <span class="kw">_ </span>=&gt; <span class="macro">fehler::throw!</span>(<span class="macro-nonterminal">$crate::errors::ConnectorXError::TypeCheckFailed</span>(<span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, ts), std::any::type_name::&lt;<span class="macro-nonterminal">$NT</span>&gt;()))
                 }
             }
         }
 
-        <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::typesystem::TypeAssoc</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">TS</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">NT</span><span class="op">&gt;</span> {
-            <span class="kw">fn</span> <span class="ident">check</span>(<span class="ident">ts</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TS</span>) -&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::errors::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-                <span class="kw">match</span> <span class="ident">ts</span> {
+        <span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>&gt; <span class="macro-nonterminal">$crate::typesystem::TypeAssoc</span>&lt;<span class="macro-nonterminal">$TS</span>&gt; <span class="kw">for </span><span class="prelude-ty">Option</span>&lt;<span class="macro-nonterminal">$NT</span>&gt; {
+            <span class="kw">fn </span>check(ts: <span class="macro-nonterminal">$TS</span>) -&gt; <span class="macro-nonterminal">$crate::errors::Result</span>&lt;()&gt; {
+                <span class="kw">match </span>ts {
                     $(
-                        <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TS</span>::<span class="macro-nonterminal">$</span><span class="macro-nonterminal">V</span>(<span class="bool-val">true</span>) =&gt; <span class="prelude-val">Ok</span>(()),
-                    )<span class="op">+</span>
-                    <span class="kw">_</span> =&gt; <span class="macro">fehler::throw!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::errors::ConnectorXError::TypeCheckFailed</span>(<span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">ts</span>), <span class="ident">std::any::type_name</span>::<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">NT</span><span class="op">&gt;</span>()))
+                        <span class="macro-nonterminal">$TS</span>::<span class="macro-nonterminal">$V</span>(<span class="bool-val">true</span>) =&gt; <span class="prelude-val">Ok</span>(()),
+                    )+
+                    <span class="kw">_ </span>=&gt; <span class="macro">fehler::throw!</span>(<span class="macro-nonterminal">$crate::errors::ConnectorXError::TypeCheckFailed</span>(<span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, ts), std::any::type_name::&lt;<span class="macro-nonterminal">$NT</span>&gt;()))
                 }
             }
         }
     };
 
-    (@<span class="ident">realize</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TS</span>:<span class="ident">tt</span> $([ [$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">V</span>:<span class="ident">tt</span>)<span class="op">+</span>] =&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">NT</span>:<span class="ident">ty</span> ])<span class="op">+</span>) =&gt; {
-        <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="ident">F</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::typesystem::Realize</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TS</span>
-        <span class="kw">where</span>
-            <span class="ident">F</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::typesystem::ParameterizedFunc</span>,
-            $(<span class="ident">F</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::typesystem::ParameterizedOn</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">NT</span><span class="op">&gt;</span>,)<span class="op">+</span>
-            $(<span class="ident">F</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::typesystem::ParameterizedOn</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">NT</span><span class="op">&gt;</span><span class="op">&gt;</span>,)<span class="op">+</span>
+    (@realize <span class="macro-nonterminal">$TS</span>:tt $([ [$(<span class="macro-nonterminal">$V</span>:tt)+] =&gt; <span class="macro-nonterminal">$NT</span>:ty ])+) =&gt; {
+        <span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, F&gt; <span class="macro-nonterminal">$crate::typesystem::Realize</span>&lt;F&gt; <span class="kw">for </span><span class="macro-nonterminal">$TS
+        </span><span class="kw">where
+            </span>F: <span class="macro-nonterminal">$crate::typesystem::ParameterizedFunc</span>,
+            $(F: <span class="macro-nonterminal">$crate::typesystem::ParameterizedOn</span>&lt;<span class="macro-nonterminal">$NT</span>&gt;,)+
+            $(F: <span class="macro-nonterminal">$crate::typesystem::ParameterizedOn</span>&lt;<span class="prelude-ty">Option</span>&lt;<span class="macro-nonterminal">$NT</span>&gt;&gt;,)+
         {
-            <span class="kw">fn</span> <span class="ident">realize</span>(<span class="self">self</span>) -&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::errors::Result</span><span class="op">&lt;</span><span class="ident">F::Function</span><span class="op">&gt;</span> {
-                <span class="kw">match</span> <span class="self">self</span> {
+            <span class="kw">fn </span>realize(<span class="self">self</span>) -&gt; <span class="macro-nonterminal">$crate::errors::Result</span>&lt;F::Function&gt; {
+                <span class="kw">match </span><span class="self">self </span>{
                     $(
                         $(
-                            <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TS</span>::<span class="macro-nonterminal">$</span><span class="macro-nonterminal">V</span>(<span class="bool-val">false</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">F::realize</span>::<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">NT</span><span class="op">&gt;</span>()),
-                        )<span class="op">+</span>
+                            <span class="macro-nonterminal">$TS</span>::<span class="macro-nonterminal">$V</span>(<span class="bool-val">false</span>) =&gt; <span class="prelude-val">Ok</span>(F::realize::&lt;<span class="macro-nonterminal">$NT</span>&gt;()),
+                        )+
                         $(
-                            <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TS</span>::<span class="macro-nonterminal">$</span><span class="macro-nonterminal">V</span>(<span class="bool-val">true</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">F::realize</span>::<span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">NT</span><span class="op">&gt;</span><span class="op">&gt;</span>()),
-                        )<span class="op">+</span>
-                    )<span class="op">+</span>
+                            <span class="macro-nonterminal">$TS</span>::<span class="macro-nonterminal">$V</span>(<span class="bool-val">true</span>) =&gt; <span class="prelude-val">Ok</span>(F::realize::&lt;<span class="prelude-ty">Option</span>&lt;<span class="macro-nonterminal">$NT</span>&gt;&gt;()),
+                        )+
+                    )+
                 }
             }
         }
     };
 }
 
-<span class="doccomment">/// A macro to help define a Transport.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Example Usage</span>
-<span class="doccomment">/// ```ignore</span>
-<span class="doccomment">/// impl_transport!(</span>
-<span class="doccomment">///     name = MsSQLArrowTransport,</span>
-<span class="doccomment">///     error = MsSQLArrowTransportError,</span>
-<span class="doccomment">///     systems = MsSQLTypeSystem =&gt; ArrowTypeSystem,</span>
-<span class="doccomment">///     route = MsSQLSource =&gt; ArrowDestination,</span>
-<span class="doccomment">///     mappings = {</span>
-<span class="doccomment">///         { Tinyint[u8]                   =&gt; Int32[i32]                | conversion auto }</span>
-<span class="doccomment">///         { Smallint[i16]                 =&gt; Int32[i32]                | conversion auto }</span>
-<span class="doccomment">///         { Int[i32]                      =&gt; Int32[i32]                | conversion auto }</span>
-<span class="doccomment">///         { Bigint[i64]                   =&gt; Int64[i64]                | conversion auto }</span>
-<span class="doccomment">///         { Intn[IntN]                    =&gt; Int64[i64]                | conversion option }</span>
-<span class="doccomment">///         { Float24[f32]                  =&gt; Float32[f32]              | conversion auto }</span>
-<span class="doccomment">///         { Float53[f64]                  =&gt; Float64[f64]              | conversion auto }</span>
-<span class="doccomment">///         { Floatn[FloatN]                =&gt; Float64[f64]              | conversion option }</span>
-<span class="doccomment">///         { Bit[bool]                     =&gt; Boolean[bool]             | conversion auto  }</span>
-<span class="doccomment">///         { Nvarchar[&amp;&#39;r str]             =&gt; LargeUtf8[String]         | conversion owned }</span>
-<span class="doccomment">///         { Varchar[&amp;&#39;r str]              =&gt; LargeUtf8[String]         | conversion none }</span>
-<span class="doccomment">///         { Nchar[&amp;&#39;r str]                =&gt; LargeUtf8[String]         | conversion none }</span>
-<span class="doccomment">///         { Char[&amp;&#39;r str]                 =&gt; LargeUtf8[String]         | conversion none }</span>
-<span class="doccomment">///         { Text[&amp;&#39;r str]                 =&gt; LargeUtf8[String]         | conversion none }</span>
-<span class="doccomment">///         { Ntext[&amp;&#39;r str]                =&gt; LargeUtf8[String]         | conversion none }</span>
-<span class="doccomment">///         { Binary[&amp;&#39;r [u8]]              =&gt; LargeBinary[Vec&lt;u8&gt;]      | conversion owned }</span>
-<span class="doccomment">///         { Varbinary[&amp;&#39;r [u8]]           =&gt; LargeBinary[Vec&lt;u8&gt;]      | conversion none }</span>
-<span class="doccomment">///         { Image[&amp;&#39;r [u8]]               =&gt; LargeBinary[Vec&lt;u8&gt;]      | conversion none }</span>
-<span class="doccomment">///         { Numeric[Decimal]              =&gt; Float64[f64]              | conversion option }</span>
-<span class="doccomment">///         { Decimal[Decimal]              =&gt; Float64[f64]              | conversion none }</span>
-<span class="doccomment">///         { Datetime[NaiveDateTime]       =&gt; Date64[NaiveDateTime]     | conversion auto }</span>
-<span class="doccomment">///         { Datetime2[NaiveDateTime]      =&gt; Date64[NaiveDateTime]     | conversion none }</span>
-<span class="doccomment">///         { Smalldatetime[NaiveDateTime]  =&gt; Date64[NaiveDateTime]     | conversion none }</span>
-<span class="doccomment">///         { Date[NaiveDate]               =&gt; Date32[NaiveDate]         | conversion auto }</span>
-<span class="doccomment">///         { Datetimeoffset[DateTime&lt;Utc&gt;] =&gt; DateTimeTz[DateTime&lt;Utc&gt;] | conversion auto }</span>
-<span class="doccomment">///         { Uniqueidentifier[Uuid]        =&gt; LargeUtf8[String]         | conversion option }</span>
-<span class="doccomment">///     }</span>
-<span class="doccomment">/// );</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">/// This implements a `Transport` called `MsSQLArrowTransport` that can convert types from MsSQL to Arrow.</span>
-<span class="attribute">#[<span class="ident">macro_export</span>]</span>
-<span class="macro">macro_rules!</span> <span class="ident">impl_transport</span> {
+<span class="doccomment">/// A macro to help define a Transport.
+///
+/// # Example Usage
+/// ```ignore
+/// impl_transport!(
+///     name = MsSQLArrowTransport,
+///     error = MsSQLArrowTransportError,
+///     systems = MsSQLTypeSystem =&gt; ArrowTypeSystem,
+///     route = MsSQLSource =&gt; ArrowDestination,
+///     mappings = {
+///         { Tinyint[u8]                   =&gt; Int32[i32]                | conversion auto }
+///         { Smallint[i16]                 =&gt; Int32[i32]                | conversion auto }
+///         { Int[i32]                      =&gt; Int32[i32]                | conversion auto }
+///         { Bigint[i64]                   =&gt; Int64[i64]                | conversion auto }
+///         { Intn[IntN]                    =&gt; Int64[i64]                | conversion option }
+///         { Float24[f32]                  =&gt; Float32[f32]              | conversion auto }
+///         { Float53[f64]                  =&gt; Float64[f64]              | conversion auto }
+///         { Floatn[FloatN]                =&gt; Float64[f64]              | conversion option }
+///         { Bit[bool]                     =&gt; Boolean[bool]             | conversion auto  }
+///         { Nvarchar[&amp;&#39;r str]             =&gt; LargeUtf8[String]         | conversion owned }
+///         { Varchar[&amp;&#39;r str]              =&gt; LargeUtf8[String]         | conversion none }
+///         { Nchar[&amp;&#39;r str]                =&gt; LargeUtf8[String]         | conversion none }
+///         { Char[&amp;&#39;r str]                 =&gt; LargeUtf8[String]         | conversion none }
+///         { Text[&amp;&#39;r str]                 =&gt; LargeUtf8[String]         | conversion none }
+///         { Ntext[&amp;&#39;r str]                =&gt; LargeUtf8[String]         | conversion none }
+///         { Binary[&amp;&#39;r [u8]]              =&gt; LargeBinary[Vec&lt;u8&gt;]      | conversion owned }
+///         { Varbinary[&amp;&#39;r [u8]]           =&gt; LargeBinary[Vec&lt;u8&gt;]      | conversion none }
+///         { Image[&amp;&#39;r [u8]]               =&gt; LargeBinary[Vec&lt;u8&gt;]      | conversion none }
+///         { Numeric[Decimal]              =&gt; Float64[f64]              | conversion option }
+///         { Decimal[Decimal]              =&gt; Float64[f64]              | conversion none }
+///         { Datetime[NaiveDateTime]       =&gt; Date64[NaiveDateTime]     | conversion auto }
+///         { Datetime2[NaiveDateTime]      =&gt; Date64[NaiveDateTime]     | conversion none }
+///         { Smalldatetime[NaiveDateTime]  =&gt; Date64[NaiveDateTime]     | conversion none }
+///         { Date[NaiveDate]               =&gt; Date32[NaiveDate]         | conversion auto }
+///         { Datetimeoffset[DateTime&lt;Utc&gt;] =&gt; DateTimeTz[DateTime&lt;Utc&gt;] | conversion auto }
+///         { Uniqueidentifier[Uuid]        =&gt; LargeUtf8[String]         | conversion option }
+///     }
+/// );
+/// ```
+/// This implements a `Transport` called `MsSQLArrowTransport` that can convert types from MsSQL to Arrow.
+</span><span class="attribute">#[macro_export]
+</span><span class="macro">macro_rules! </span>impl_transport {
     (
-        <span class="ident">name</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TP</span>:<span class="ident">ty</span>,
-        <span class="ident">error</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ET</span>:<span class="ident">ty</span>,
-        <span class="ident">systems</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TSS</span>:<span class="ident">tt</span> =&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TSD</span>:<span class="ident">tt</span>,
-        <span class="ident">route</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">S</span>:<span class="ident">ty</span> =&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">D</span>:<span class="ident">ty</span>,
-        <span class="ident">mappings</span> <span class="op">=</span> {
+        name = <span class="macro-nonterminal">$TP</span>:ty,
+        error = <span class="macro-nonterminal">$ET</span>:ty,
+        systems = <span class="macro-nonterminal">$TSS</span>:tt =&gt; <span class="macro-nonterminal">$TSD</span>:tt,
+        route = <span class="macro-nonterminal">$S</span>:ty =&gt; <span class="macro-nonterminal">$D</span>:ty,
+        mappings = {
             $(
-                { $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">TOKENS</span>:<span class="ident">tt</span>)<span class="op">+</span> }
-            )<span class="op">*</span>
+                { $(<span class="macro-nonterminal">$TOKENS</span>:tt)+ }
+            )*
         }
     ) =&gt; {
         $(
-            <span class="macro">impl_transport!</span>(@<span class="ident">cvt</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TP</span>, $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">TOKENS</span>)<span class="op">+</span>);
-        )<span class="op">*</span>
+            <span class="macro">impl_transport!</span>(@cvt <span class="macro-nonterminal">$TP</span>, $(<span class="macro-nonterminal">$TOKENS</span>)+);
+        )*
 
-        <span class="macro">impl_transport!</span>(@<span class="ident">transport</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TP</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ET</span> [<span class="macro-nonterminal">$</span><span class="macro-nonterminal">TSS</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TSD</span>] [<span class="macro-nonterminal">$</span><span class="macro-nonterminal">S</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">D</span>] $([ $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">TOKENS</span>)<span class="op">+</span> ])<span class="kw-2">*</span>);
+        <span class="macro">impl_transport!</span>(@transport <span class="macro-nonterminal">$TP</span>, <span class="macro-nonterminal">$ET </span>[<span class="macro-nonterminal">$TSS</span>, <span class="macro-nonterminal">$TSD</span>] [<span class="macro-nonterminal">$S</span>, <span class="macro-nonterminal">$D</span>] $([ $(<span class="macro-nonterminal">$TOKENS</span>)+ ])<span class="kw-2">*</span>);
     };
 
-    <span class="comment">// transport</span>
-    (@<span class="ident">transport</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TP</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ET</span>:<span class="ident">ty</span> [<span class="macro-nonterminal">$</span><span class="macro-nonterminal">TSS</span>:<span class="ident">tt</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TSD</span>:<span class="ident">tt</span>] [<span class="macro-nonterminal">$</span><span class="macro-nonterminal">S</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">D</span>:<span class="ident">ty</span>] $([ $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">TOKENS</span>:<span class="ident">tt</span>)<span class="op">+</span> ])<span class="kw-2">*</span>) =&gt; {
-        <span class="kw">impl</span> <span class="op">&lt;</span><span class="lifetime">&#39;tp</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::typesystem::Transport</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TP</span> {
-            <span class="kw">type</span> <span class="ident">TSS</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TSS</span>;
-            <span class="kw">type</span> <span class="ident">TSD</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TSD</span>;
-            <span class="kw">type</span> <span class="ident">S</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">S</span>;
-            <span class="kw">type</span> <span class="ident">D</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">D</span>;
-            <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ET</span>;
+    <span class="comment">// transport
+    </span>(@transport <span class="macro-nonterminal">$TP</span>:ty, <span class="macro-nonterminal">$ET</span>:ty [<span class="macro-nonterminal">$TSS</span>:tt, <span class="macro-nonterminal">$TSD</span>:tt] [<span class="macro-nonterminal">$S</span>:ty, <span class="macro-nonterminal">$D</span>:ty] $([ $(<span class="macro-nonterminal">$TOKENS</span>:tt)+ ])<span class="kw-2">*</span>) =&gt; {
+        <span class="kw">impl </span>&lt;<span class="lifetime">&#39;tp</span>&gt; <span class="macro-nonterminal">$crate::typesystem::Transport </span><span class="kw">for </span><span class="macro-nonterminal">$TP </span>{
+            <span class="kw">type </span>TSS = <span class="macro-nonterminal">$TSS</span>;
+            <span class="kw">type </span>TSD = <span class="macro-nonterminal">$TSD</span>;
+            <span class="kw">type </span>S = <span class="macro-nonterminal">$S</span>;
+            <span class="kw">type </span>D = <span class="macro-nonterminal">$D</span>;
+            <span class="kw">type </span>Error = <span class="macro-nonterminal">$ET</span>;
 
-            <span class="macro">impl_transport!</span>(@<span class="ident">cvtts</span> [<span class="macro-nonterminal">$</span><span class="macro-nonterminal">TSS</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TSD</span>] $([ $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">TOKENS</span>)<span class="op">+</span> ])<span class="kw-2">*</span>);
-            <span class="macro">impl_transport!</span>(@<span class="ident">process</span> [<span class="macro-nonterminal">$</span><span class="macro-nonterminal">TSS</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TSD</span>] $([ $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">TOKENS</span>)<span class="op">+</span> ])<span class="kw-2">*</span>);
-            <span class="macro">impl_transport!</span>(@<span class="ident">processor</span> [<span class="macro-nonterminal">$</span><span class="macro-nonterminal">TSS</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TSD</span>] $([ $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">TOKENS</span>)<span class="op">+</span> ])<span class="kw-2">*</span>, $([ $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">TOKENS</span>)<span class="op">+</span> ])<span class="kw-2">*</span>);
+            <span class="macro">impl_transport!</span>(@cvtts [<span class="macro-nonterminal">$TSS</span>, <span class="macro-nonterminal">$TSD</span>] $([ $(<span class="macro-nonterminal">$TOKENS</span>)+ ])<span class="kw-2">*</span>);
+            <span class="macro">impl_transport!</span>(@process [<span class="macro-nonterminal">$TSS</span>, <span class="macro-nonterminal">$TSD</span>] $([ $(<span class="macro-nonterminal">$TOKENS</span>)+ ])<span class="kw-2">*</span>);
+            <span class="macro">impl_transport!</span>(@processor [<span class="macro-nonterminal">$TSS</span>, <span class="macro-nonterminal">$TSD</span>] $([ $(<span class="macro-nonterminal">$TOKENS</span>)+ ])<span class="kw-2">*</span>, $([ $(<span class="macro-nonterminal">$TOKENS</span>)+ ])<span class="kw-2">*</span>);
         }
     };
 
-    (@<span class="ident">cvtts</span> [<span class="macro-nonterminal">$</span><span class="macro-nonterminal">TSS</span>:<span class="ident">tt</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TSD</span>:<span class="ident">tt</span>] $( [<span class="macro-nonterminal">$</span><span class="macro-nonterminal">V1</span>:<span class="ident">tt</span> [<span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span>:<span class="ident">ty</span>] =&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">V2</span>:<span class="ident">tt</span> [<span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span>:<span class="ident">ty</span>] <span class="op">|</span> <span class="ident">conversion</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">HOW</span>:<span class="ident">ident</span>] )<span class="kw-2">*</span>) =&gt; {
-        <span class="kw">fn</span> <span class="ident">convert_typesystem</span>(<span class="ident">ts</span>: <span class="ident"><span class="self">Self</span>::TSS</span>) -&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::errors::Result</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::TSD</span><span class="op">&gt;</span> {
-            <span class="kw">match</span> <span class="ident">ts</span> {
+    (@cvtts [<span class="macro-nonterminal">$TSS</span>:tt, <span class="macro-nonterminal">$TSD</span>:tt] $( [<span class="macro-nonterminal">$V1</span>:tt [<span class="macro-nonterminal">$T1</span>:ty] =&gt; <span class="macro-nonterminal">$V2</span>:tt [<span class="macro-nonterminal">$T2</span>:ty] | conversion <span class="macro-nonterminal">$HOW</span>:ident] )<span class="kw-2">*</span>) =&gt; {
+        <span class="kw">fn </span>convert_typesystem(ts: <span class="self">Self</span>::TSS) -&gt; <span class="macro-nonterminal">$crate::errors::Result</span>&lt;<span class="self">Self</span>::TSD&gt; {
+            <span class="kw">match </span>ts {
                 $(
-                    <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TSS</span>::<span class="macro-nonterminal">$</span><span class="macro-nonterminal">V1</span>(<span class="bool-val">true</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">TSD</span>::<span class="macro-nonterminal">$</span><span class="macro-nonterminal">V2</span>(<span class="bool-val">true</span>)),
-                    <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TSS</span>::<span class="macro-nonterminal">$</span><span class="macro-nonterminal">V1</span>(<span class="bool-val">false</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">TSD</span>::<span class="macro-nonterminal">$</span><span class="macro-nonterminal">V2</span>(<span class="bool-val">false</span>)),
-                )<span class="op">*</span>
-                <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unreachable_patterns</span>)]</span>
-                <span class="kw">_</span> =&gt; <span class="macro">fehler::throw!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::errors::ConnectorXError::NoConversionRule</span>(
-                    <span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">ts</span>), <span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">std::any::type_name</span>::<span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::TSD</span><span class="op">&gt;</span>())
+                    <span class="macro-nonterminal">$TSS</span>::<span class="macro-nonterminal">$V1</span>(<span class="bool-val">true</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="macro-nonterminal">$TSD</span>::<span class="macro-nonterminal">$V2</span>(<span class="bool-val">true</span>)),
+                    <span class="macro-nonterminal">$TSS</span>::<span class="macro-nonterminal">$V1</span>(<span class="bool-val">false</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="macro-nonterminal">$TSD</span>::<span class="macro-nonterminal">$V2</span>(<span class="bool-val">false</span>)),
+                )*
+                <span class="attribute">#[allow(unreachable_patterns)]
+                </span><span class="kw">_ </span>=&gt; <span class="macro">fehler::throw!</span>(<span class="macro-nonterminal">$crate::errors::ConnectorXError::NoConversionRule</span>(
+                    <span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, ts), <span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, std::any::type_name::&lt;<span class="self">Self</span>::TSD&gt;())
                 ))
             }
         }
     };
 
-    (@<span class="ident">process</span> [<span class="macro-nonterminal">$</span><span class="macro-nonterminal">TSS</span>:<span class="ident">tt</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TSD</span>:<span class="ident">tt</span>] $([ <span class="macro-nonterminal">$</span><span class="macro-nonterminal">V1</span>:<span class="ident">tt</span> [<span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span>:<span class="ident">ty</span>] =&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">V2</span>:<span class="ident">tt</span> [<span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span>:<span class="ident">ty</span>] <span class="op">|</span> <span class="ident">conversion</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">HOW</span>:<span class="ident">ident</span> ])<span class="kw-2">*</span>) =&gt; {
-        <span class="kw">fn</span> <span class="ident">process</span><span class="op">&lt;</span><span class="lifetime">&#39;s</span>, <span class="lifetime">&#39;d</span>, <span class="lifetime">&#39;r</span><span class="op">&gt;</span>(
-            <span class="ident">ts1</span>: <span class="ident"><span class="self">Self</span>::TSS</span>,
-            <span class="ident">ts2</span>: <span class="ident"><span class="self">Self</span>::TSD</span>,
-            <span class="ident">src</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;r</span> <span class="kw-2">mut</span> <span class="op">&lt;</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::S</span> <span class="kw">as</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::sources::Source</span><span class="op">&gt;</span><span class="ident">::Partition</span> <span class="kw">as</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::sources::SourcePartition</span><span class="op">&gt;</span><span class="ident">::Parser</span><span class="op">&lt;</span><span class="lifetime">&#39;s</span><span class="op">&gt;</span>,
-            <span class="ident">dst</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;r</span> <span class="kw-2">mut</span> <span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::D</span> <span class="kw">as</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::destinations::Destination</span><span class="op">&gt;</span><span class="ident">::Partition</span><span class="op">&lt;</span><span class="lifetime">&#39;d</span><span class="op">&gt;</span>,
-        ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> <span class="kw">where</span> <span class="self">Self</span>: <span class="lifetime">&#39;d</span> {
-            <span class="kw">match</span> (<span class="ident">ts1</span>, <span class="ident">ts2</span>) {
+    (@process [<span class="macro-nonterminal">$TSS</span>:tt, <span class="macro-nonterminal">$TSD</span>:tt] $([ <span class="macro-nonterminal">$V1</span>:tt [<span class="macro-nonterminal">$T1</span>:ty] =&gt; <span class="macro-nonterminal">$V2</span>:tt [<span class="macro-nonterminal">$T2</span>:ty] | conversion <span class="macro-nonterminal">$HOW</span>:ident ])<span class="kw-2">*</span>) =&gt; {
+        <span class="kw">fn </span>process&lt;<span class="lifetime">&#39;s</span>, <span class="lifetime">&#39;d</span>, <span class="lifetime">&#39;r</span>&gt;(
+            ts1: <span class="self">Self</span>::TSS,
+            ts2: <span class="self">Self</span>::TSD,
+            src: <span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span><span class="kw-2">mut </span>&lt;&lt;<span class="self">Self</span>::S <span class="kw">as </span><span class="macro-nonterminal">$crate::sources::Source</span>&gt;::Partition <span class="kw">as </span><span class="macro-nonterminal">$crate::sources::SourcePartition</span>&gt;::Parser&lt;<span class="lifetime">&#39;s</span>&gt;,
+            dst: <span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span><span class="kw-2">mut </span>&lt;<span class="self">Self</span>::D <span class="kw">as </span><span class="macro-nonterminal">$crate::destinations::Destination</span>&gt;::Partition&lt;<span class="lifetime">&#39;d</span>&gt;,
+        ) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt; <span class="kw">where </span><span class="self">Self</span>: <span class="lifetime">&#39;d </span>{
+            <span class="kw">match </span>(ts1, ts2) {
                 $(
-                    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">TSS</span>::<span class="macro-nonterminal">$</span><span class="macro-nonterminal">V1</span>(<span class="bool-val">true</span>), <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TSD</span>::<span class="macro-nonterminal">$</span><span class="macro-nonterminal">V2</span>(<span class="bool-val">true</span>)) =&gt; {
-                        <span class="kw">let</span> <span class="ident">val</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span><span class="op">&gt;</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::sources::PartitionParser::parse</span>(<span class="ident">src</span>)<span class="question-mark">?</span>;
-                        <span class="kw">let</span> <span class="ident">val</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span><span class="op">&gt;</span> <span class="op">=</span> <span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">TypeConversion</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span><span class="op">&gt;</span>, <span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::convert</span>(<span class="ident">val</span>);
-                        <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::destinations::DestinationPartition::write</span>(<span class="ident">dst</span>, <span class="ident">val</span>)<span class="question-mark">?</span>;
+                    (<span class="macro-nonterminal">$TSS</span>::<span class="macro-nonterminal">$V1</span>(<span class="bool-val">true</span>), <span class="macro-nonterminal">$TSD</span>::<span class="macro-nonterminal">$V2</span>(<span class="bool-val">true</span>)) =&gt; {
+                        <span class="kw">let </span>val: <span class="prelude-ty">Option</span>&lt;<span class="macro-nonterminal">$T1</span>&gt; = <span class="macro-nonterminal">$crate::sources::PartitionParser::parse</span>(src)<span class="question-mark">?</span>;
+                        <span class="kw">let </span>val: <span class="prelude-ty">Option</span>&lt;<span class="macro-nonterminal">$T2</span>&gt; = &lt;<span class="self">Self </span><span class="kw">as </span>TypeConversion&lt;<span class="prelude-ty">Option</span>&lt;<span class="macro-nonterminal">$T1</span>&gt;, <span class="kw">_</span>&gt;&gt;::convert(val);
+                        <span class="macro-nonterminal">$crate::destinations::DestinationPartition::write</span>(dst, val)<span class="question-mark">?</span>;
                         <span class="prelude-val">Ok</span>(())
                     }
 
-                    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">TSS</span>::<span class="macro-nonterminal">$</span><span class="macro-nonterminal">V1</span>(<span class="bool-val">false</span>), <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TSD</span>::<span class="macro-nonterminal">$</span><span class="macro-nonterminal">V2</span>(<span class="bool-val">false</span>)) =&gt; {
-                        <span class="kw">let</span> <span class="ident">val</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::sources::PartitionParser::parse</span>(<span class="ident">src</span>)<span class="question-mark">?</span>;
-                        <span class="kw">let</span> <span class="ident">val</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span> <span class="op">=</span> <span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">TypeConversion</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span>, <span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::convert</span>(<span class="ident">val</span>);
-                        <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::destinations::DestinationPartition::write</span>(<span class="ident">dst</span>, <span class="ident">val</span>)<span class="question-mark">?</span>;
+                    (<span class="macro-nonterminal">$TSS</span>::<span class="macro-nonterminal">$V1</span>(<span class="bool-val">false</span>), <span class="macro-nonterminal">$TSD</span>::<span class="macro-nonterminal">$V2</span>(<span class="bool-val">false</span>)) =&gt; {
+                        <span class="kw">let </span>val: <span class="macro-nonterminal">$T1 </span>= <span class="macro-nonterminal">$crate::sources::PartitionParser::parse</span>(src)<span class="question-mark">?</span>;
+                        <span class="kw">let </span>val: <span class="macro-nonterminal">$T2 </span>= &lt;<span class="self">Self </span><span class="kw">as </span>TypeConversion&lt;<span class="macro-nonterminal">$T1</span>, <span class="kw">_</span>&gt;&gt;::convert(val);
+                        <span class="macro-nonterminal">$crate::destinations::DestinationPartition::write</span>(dst, val)<span class="question-mark">?</span>;
                         <span class="prelude-val">Ok</span>(())
                     }
-                )<span class="op">*</span>
-                <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unreachable_patterns</span>)]</span>
-                <span class="kw">_</span> =&gt; <span class="macro">fehler::throw!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::errors::ConnectorXError::NoConversionRule</span>(
-                    <span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">ts1</span>), <span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">ts1</span>))
+                )*
+                <span class="attribute">#[allow(unreachable_patterns)]
+                </span><span class="kw">_ </span>=&gt; <span class="macro">fehler::throw!</span>(<span class="macro-nonterminal">$crate::errors::ConnectorXError::NoConversionRule</span>(
+                    <span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, ts1), <span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, ts1))
                 )
             }
 
         }
     };
 
-    (@<span class="ident">processor</span> [<span class="macro-nonterminal">$</span><span class="macro-nonterminal">TSS</span>:<span class="ident">tt</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TSD</span>:<span class="ident">tt</span>] $([ <span class="macro-nonterminal">$</span><span class="macro-nonterminal">V1</span>:<span class="ident">tt</span> [<span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span>:<span class="ident">ty</span>] =&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">V2</span>:<span class="ident">tt</span> [<span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span>:<span class="ident">ty</span>] <span class="op">|</span> <span class="ident">conversion</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">HOW</span>:<span class="ident">ident</span> ])<span class="kw-2">*</span>, $([ $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">TOKENS</span>:<span class="ident">tt</span>)<span class="op">+</span> ])<span class="kw-2">*</span>) =&gt; {
-        <span class="kw">fn</span> <span class="ident">processor</span><span class="op">&lt;</span><span class="lifetime">&#39;s</span>, <span class="lifetime">&#39;d</span><span class="op">&gt;</span>(
-            <span class="ident">ts1</span>: <span class="ident"><span class="self">Self</span>::TSS</span>,
-            <span class="ident">ts2</span>: <span class="ident"><span class="self">Self</span>::TSD</span>,
-        ) -&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::errors::Result</span><span class="op">&lt;</span>
+    (@processor [<span class="macro-nonterminal">$TSS</span>:tt, <span class="macro-nonterminal">$TSD</span>:tt] $([ <span class="macro-nonterminal">$V1</span>:tt [<span class="macro-nonterminal">$T1</span>:ty] =&gt; <span class="macro-nonterminal">$V2</span>:tt [<span class="macro-nonterminal">$T2</span>:ty] | conversion <span class="macro-nonterminal">$HOW</span>:ident ])<span class="kw-2">*</span>, $([ $(<span class="macro-nonterminal">$TOKENS</span>:tt)+ ])<span class="kw-2">*</span>) =&gt; {
+        <span class="kw">fn </span>processor&lt;<span class="lifetime">&#39;s</span>, <span class="lifetime">&#39;d</span>&gt;(
+            ts1: <span class="self">Self</span>::TSS,
+            ts2: <span class="self">Self</span>::TSD,
+        ) -&gt; <span class="macro-nonterminal">$crate::errors::Result</span>&lt;
             <span class="kw">fn</span>(
-                <span class="ident">src</span>: <span class="kw-2">&amp;mut</span> <span class="op">&lt;</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::S</span> <span class="kw">as</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::sources::Source</span><span class="op">&gt;</span><span class="ident">::Partition</span> <span class="kw">as</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::sources::SourcePartition</span><span class="op">&gt;</span><span class="ident">::Parser</span><span class="op">&lt;</span><span class="lifetime">&#39;s</span><span class="op">&gt;</span>,
-                <span class="ident">dst</span>: <span class="kw-2">&amp;mut</span> <span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::D</span> <span class="kw">as</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::destinations::Destination</span><span class="op">&gt;</span><span class="ident">::Partition</span><span class="op">&lt;</span><span class="lifetime">&#39;d</span><span class="op">&gt;</span>,
-            ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span>
-        <span class="op">&gt;</span> <span class="kw">where</span> <span class="self">Self</span>: <span class="lifetime">&#39;d</span> {
-            <span class="kw">match</span> (<span class="ident">ts1</span>, <span class="ident">ts2</span>) {
+                src: <span class="kw-2">&amp;mut </span>&lt;&lt;<span class="self">Self</span>::S <span class="kw">as </span><span class="macro-nonterminal">$crate::sources::Source</span>&gt;::Partition <span class="kw">as </span><span class="macro-nonterminal">$crate::sources::SourcePartition</span>&gt;::Parser&lt;<span class="lifetime">&#39;s</span>&gt;,
+                dst: <span class="kw-2">&amp;mut </span>&lt;<span class="self">Self</span>::D <span class="kw">as </span><span class="macro-nonterminal">$crate::destinations::Destination</span>&gt;::Partition&lt;<span class="lifetime">&#39;d</span>&gt;,
+            ) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt;
+        &gt; <span class="kw">where </span><span class="self">Self</span>: <span class="lifetime">&#39;d </span>{
+            <span class="kw">match </span>(ts1, ts2) {
                 $(
-                    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">TSS</span>::<span class="macro-nonterminal">$</span><span class="macro-nonterminal">V1</span>(<span class="bool-val">true</span>), <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TSD</span>::<span class="macro-nonterminal">$</span><span class="macro-nonterminal">V2</span>(<span class="bool-val">true</span>)) =&gt; {
-                        <span class="macro">impl_transport!</span>(@<span class="ident">process_func_branch</span> <span class="bool-val">true</span> [ $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">TOKENS</span>)<span class="op">+</span> ])
+                    (<span class="macro-nonterminal">$TSS</span>::<span class="macro-nonterminal">$V1</span>(<span class="bool-val">true</span>), <span class="macro-nonterminal">$TSD</span>::<span class="macro-nonterminal">$V2</span>(<span class="bool-val">true</span>)) =&gt; {
+                        <span class="macro">impl_transport!</span>(@process_func_branch <span class="bool-val">true </span>[ $(<span class="macro-nonterminal">$TOKENS</span>)+ ])
                     }
 
-                    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">TSS</span>::<span class="macro-nonterminal">$</span><span class="macro-nonterminal">V1</span>(<span class="bool-val">false</span>), <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TSD</span>::<span class="macro-nonterminal">$</span><span class="macro-nonterminal">V2</span>(<span class="bool-val">false</span>)) =&gt; {
-                        <span class="macro">impl_transport!</span>(@<span class="ident">process_func_branch</span> <span class="bool-val">false</span> [ $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">TOKENS</span>)<span class="op">+</span> ])
+                    (<span class="macro-nonterminal">$TSS</span>::<span class="macro-nonterminal">$V1</span>(<span class="bool-val">false</span>), <span class="macro-nonterminal">$TSD</span>::<span class="macro-nonterminal">$V2</span>(<span class="bool-val">false</span>)) =&gt; {
+                        <span class="macro">impl_transport!</span>(@process_func_branch <span class="bool-val">false </span>[ $(<span class="macro-nonterminal">$TOKENS</span>)+ ])
                     }
-                )<span class="op">*</span>
-                <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unreachable_patterns</span>)]</span>
-                <span class="kw">_</span> =&gt; <span class="macro">fehler::throw!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::errors::ConnectorXError::NoConversionRule</span>(
-                    <span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">ts1</span>), <span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">ts1</span>))
+                )*
+                <span class="attribute">#[allow(unreachable_patterns)]
+                </span><span class="kw">_ </span>=&gt; <span class="macro">fehler::throw!</span>(<span class="macro-nonterminal">$crate::errors::ConnectorXError::NoConversionRule</span>(
+                    <span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, ts1), <span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, ts1))
                 )
             }
 
         }
     };
 
-    (@<span class="ident">process_func_branch</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">OPT</span>:<span class="ident">ident</span> [ <span class="macro-nonterminal">$</span><span class="macro-nonterminal">V1</span>:<span class="ident">tt</span> [<span class="kw-2">&amp;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">L1</span>:<span class="ident">lifetime</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span>:<span class="ident">ty</span>] =&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">V2</span>:<span class="ident">tt</span> [<span class="kw-2">&amp;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">L2</span>:<span class="ident">lifetime</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span>:<span class="ident">ty</span>] <span class="op">|</span> <span class="ident">conversion</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">HOW</span>:<span class="ident">ident</span> ]) =&gt; {
-        <span class="macro">impl_transport!</span>(@<span class="ident">process_func_branch</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">OPT</span> <span class="kw-2">&amp;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span>, <span class="kw-2">&amp;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span>)
+    (@process_func_branch <span class="macro-nonterminal">$OPT</span>:ident [ <span class="macro-nonterminal">$V1</span>:tt [<span class="kw-2">&amp;</span><span class="macro-nonterminal">$L1</span>:lifetime <span class="macro-nonterminal">$T1</span>:ty] =&gt; <span class="macro-nonterminal">$V2</span>:tt [<span class="kw-2">&amp;</span><span class="macro-nonterminal">$L2</span>:lifetime <span class="macro-nonterminal">$T2</span>:ty] | conversion <span class="macro-nonterminal">$HOW</span>:ident ]) =&gt; {
+        <span class="macro">impl_transport!</span>(@process_func_branch <span class="macro-nonterminal">$OPT </span><span class="kw-2">&amp;</span><span class="macro-nonterminal">$T1</span>, <span class="kw-2">&amp;</span><span class="macro-nonterminal">$T2</span>)
     };
-    (@<span class="ident">process_func_branch</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">OPT</span>:<span class="ident">ident</span> [ <span class="macro-nonterminal">$</span><span class="macro-nonterminal">V1</span>:<span class="ident">tt</span> [<span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span>:<span class="ident">ty</span>] =&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">V2</span>:<span class="ident">tt</span> [<span class="kw-2">&amp;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">L2</span>:<span class="ident">lifetime</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span>:<span class="ident">ty</span>] <span class="op">|</span> <span class="ident">conversion</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">HOW</span>:<span class="ident">ident</span> ]) =&gt; {
-        <span class="macro">impl_transport!</span>(@<span class="ident">process_func_branch</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">OPT</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span>, <span class="kw-2">&amp;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span>)
+    (@process_func_branch <span class="macro-nonterminal">$OPT</span>:ident [ <span class="macro-nonterminal">$V1</span>:tt [<span class="macro-nonterminal">$T1</span>:ty] =&gt; <span class="macro-nonterminal">$V2</span>:tt [<span class="kw-2">&amp;</span><span class="macro-nonterminal">$L2</span>:lifetime <span class="macro-nonterminal">$T2</span>:ty] | conversion <span class="macro-nonterminal">$HOW</span>:ident ]) =&gt; {
+        <span class="macro">impl_transport!</span>(@process_func_branch <span class="macro-nonterminal">$OPT $T1</span>, <span class="kw-2">&amp;</span><span class="macro-nonterminal">$T2</span>)
     };
-    (@<span class="ident">process_func_branch</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">OPT</span>:<span class="ident">ident</span> [ <span class="macro-nonterminal">$</span><span class="macro-nonterminal">V1</span>:<span class="ident">tt</span> [<span class="kw-2">&amp;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">L1</span>:<span class="ident">lifetime</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span>:<span class="ident">ty</span>] =&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">V2</span>:<span class="ident">tt</span> [<span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span>:<span class="ident">ty</span>] <span class="op">|</span> <span class="ident">conversion</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">HOW</span>:<span class="ident">ident</span> ]) =&gt; {
-        <span class="macro">impl_transport!</span>(@<span class="ident">process_func_branch</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">OPT</span> <span class="kw-2">&amp;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span>)
+    (@process_func_branch <span class="macro-nonterminal">$OPT</span>:ident [ <span class="macro-nonterminal">$V1</span>:tt [<span class="kw-2">&amp;</span><span class="macro-nonterminal">$L1</span>:lifetime <span class="macro-nonterminal">$T1</span>:ty] =&gt; <span class="macro-nonterminal">$V2</span>:tt [<span class="macro-nonterminal">$T2</span>:ty] | conversion <span class="macro-nonterminal">$HOW</span>:ident ]) =&gt; {
+        <span class="macro">impl_transport!</span>(@process_func_branch <span class="macro-nonterminal">$OPT </span><span class="kw-2">&amp;</span><span class="macro-nonterminal">$T1</span>, <span class="macro-nonterminal">$T2</span>)
     };
-    (@<span class="ident">process_func_branch</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">OPT</span>:<span class="ident">ident</span> [ <span class="macro-nonterminal">$</span><span class="macro-nonterminal">V1</span>:<span class="ident">tt</span> [<span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span>:<span class="ident">ty</span>] =&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">V2</span>:<span class="ident">tt</span> [<span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span>:<span class="ident">ty</span>] <span class="op">|</span> <span class="ident">conversion</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">HOW</span>:<span class="ident">ident</span> ]) =&gt; {
-        <span class="macro">impl_transport!</span>(@<span class="ident">process_func_branch</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">OPT</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span>)
+    (@process_func_branch <span class="macro-nonterminal">$OPT</span>:ident [ <span class="macro-nonterminal">$V1</span>:tt [<span class="macro-nonterminal">$T1</span>:ty] =&gt; <span class="macro-nonterminal">$V2</span>:tt [<span class="macro-nonterminal">$T2</span>:ty] | conversion <span class="macro-nonterminal">$HOW</span>:ident ]) =&gt; {
+        <span class="macro">impl_transport!</span>(@process_func_branch <span class="macro-nonterminal">$OPT $T1</span>, <span class="macro-nonterminal">$T2</span>)
     };
-    (@<span class="ident">process_func_branch</span> <span class="bool-val">true</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span>:<span class="ident">ty</span>) =&gt; {
+    (@process_func_branch <span class="bool-val">true </span><span class="macro-nonterminal">$T1</span>:ty, <span class="macro-nonterminal">$T2</span>:ty) =&gt; {
         <span class="prelude-val">Ok</span>(
-            <span class="op">|</span><span class="ident">s</span>: <span class="kw-2">&amp;mut</span> <span class="kw">_</span>, <span class="ident">d</span>: <span class="kw-2">&amp;mut</span> <span class="kw">_</span><span class="op">|</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::typesystem::process</span>::<span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span><span class="op">&gt;</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span><span class="op">&gt;</span>, <span class="self">Self</span>, <span class="ident"><span class="self">Self</span>::S</span>, <span class="ident"><span class="self">Self</span>::D</span>, <span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::S</span> <span class="kw">as</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::sources::Source</span><span class="op">&gt;</span><span class="ident">::Error</span>, <span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::D</span> <span class="kw">as</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::destinations::Destination</span><span class="op">&gt;</span><span class="ident">::Error</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span>(<span class="ident">s</span>, <span class="ident">d</span>)
+            |s: <span class="kw-2">&amp;mut </span><span class="kw">_</span>, d: <span class="kw-2">&amp;mut </span><span class="kw">_</span>| <span class="macro-nonterminal">$crate::typesystem::process</span>::&lt;<span class="prelude-ty">Option</span>&lt;<span class="macro-nonterminal">$T1</span>&gt;, <span class="prelude-ty">Option</span>&lt;<span class="macro-nonterminal">$T2</span>&gt;, <span class="self">Self</span>, <span class="self">Self</span>::S, <span class="self">Self</span>::D, &lt;<span class="self">Self</span>::S <span class="kw">as </span><span class="macro-nonterminal">$crate::sources::Source</span>&gt;::Error, &lt;<span class="self">Self</span>::D <span class="kw">as </span><span class="macro-nonterminal">$crate::destinations::Destination</span>&gt;::Error, <span class="self">Self</span>::Error&gt;(s, d)
         )
     };
-    (@<span class="ident">process_func_branch</span> <span class="bool-val">false</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span>:<span class="ident">ty</span>) =&gt; {
+    (@process_func_branch <span class="bool-val">false </span><span class="macro-nonterminal">$T1</span>:ty, <span class="macro-nonterminal">$T2</span>:ty) =&gt; {
         <span class="prelude-val">Ok</span>(
-            <span class="op">|</span><span class="ident">s</span>: <span class="kw-2">&amp;mut</span> <span class="kw">_</span>, <span class="ident">d</span>: <span class="kw-2">&amp;mut</span> <span class="kw">_</span><span class="op">|</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::typesystem::process</span>::<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span>, <span class="self">Self</span>, <span class="ident"><span class="self">Self</span>::S</span>, <span class="ident"><span class="self">Self</span>::D</span>, <span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::S</span> <span class="kw">as</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::sources::Source</span><span class="op">&gt;</span><span class="ident">::Error</span>, <span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::D</span> <span class="kw">as</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::destinations::Destination</span><span class="op">&gt;</span><span class="ident">::Error</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span>(<span class="ident">s</span>, <span class="ident">d</span>)
+            |s: <span class="kw-2">&amp;mut </span><span class="kw">_</span>, d: <span class="kw-2">&amp;mut </span><span class="kw">_</span>| <span class="macro-nonterminal">$crate::typesystem::process</span>::&lt;<span class="macro-nonterminal">$T1</span>, <span class="macro-nonterminal">$T2</span>, <span class="self">Self</span>, <span class="self">Self</span>::S, <span class="self">Self</span>::D, &lt;<span class="self">Self</span>::S <span class="kw">as </span><span class="macro-nonterminal">$crate::sources::Source</span>&gt;::Error, &lt;<span class="self">Self</span>::D <span class="kw">as </span><span class="macro-nonterminal">$crate::destinations::Destination</span>&gt;::Error, <span class="self">Self</span>::Error&gt;(s, d)
         )
     };
 
-    <span class="comment">// TypeConversion</span>
-    (@<span class="ident">cvt</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TP</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">V1</span>:<span class="ident">tt</span> [<span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span>:<span class="ident">ty</span>] =&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">V2</span>:<span class="ident">tt</span> [<span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span>:<span class="ident">ty</span>] <span class="op">|</span> <span class="ident">conversion</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">HOW</span>:<span class="ident">ident</span>) =&gt; {
-        <span class="macro">impl_transport!</span>(@<span class="ident">cvt</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">HOW</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TP</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span>);
+    <span class="comment">// TypeConversion
+    </span>(@cvt <span class="macro-nonterminal">$TP</span>:ty, <span class="macro-nonterminal">$V1</span>:tt [<span class="macro-nonterminal">$T1</span>:ty] =&gt; <span class="macro-nonterminal">$V2</span>:tt [<span class="macro-nonterminal">$T2</span>:ty] | conversion <span class="macro-nonterminal">$HOW</span>:ident) =&gt; {
+        <span class="macro">impl_transport!</span>(@cvt <span class="macro-nonterminal">$HOW $TP</span>, <span class="macro-nonterminal">$T1</span>, <span class="macro-nonterminal">$T2</span>);
     };
-    (@<span class="ident">cvt</span> <span class="ident">auto</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TP</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span>:<span class="ident">ty</span>) =&gt; {
-        <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;tp</span>, <span class="lifetime">&#39;r</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::typesystem::TypeConversion</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TP</span> {
-            <span class="kw">fn</span> <span class="ident">convert</span>(<span class="ident">val</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span>) -&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span> {
-                <span class="ident">val</span> <span class="kw">as</span> <span class="kw">_</span>
+    (@cvt auto <span class="macro-nonterminal">$TP</span>:ty, <span class="macro-nonterminal">$T1</span>:ty, <span class="macro-nonterminal">$T2</span>:ty) =&gt; {
+        <span class="kw">impl</span>&lt;<span class="lifetime">&#39;tp</span>, <span class="lifetime">&#39;r</span>&gt; <span class="macro-nonterminal">$crate::typesystem::TypeConversion</span>&lt;<span class="macro-nonterminal">$T1</span>, <span class="macro-nonterminal">$T2</span>&gt; <span class="kw">for </span><span class="macro-nonterminal">$TP </span>{
+            <span class="kw">fn </span>convert(val: <span class="macro-nonterminal">$T1</span>) -&gt; <span class="macro-nonterminal">$T2 </span>{
+                val <span class="kw">as _
+            </span>}
+        }
+
+        <span class="macro">impl_transport!</span>(@cvt option <span class="macro-nonterminal">$TP</span>, <span class="macro-nonterminal">$T1</span>, <span class="macro-nonterminal">$T2</span>);
+    };
+    (@cvt auto_vec <span class="macro-nonterminal">$TP</span>:ty, <span class="macro-nonterminal">$T1</span>:ty, <span class="macro-nonterminal">$T2</span>:ty) =&gt; {
+        <span class="kw">impl</span>&lt;<span class="lifetime">&#39;tp</span>, <span class="lifetime">&#39;r</span>&gt; <span class="macro-nonterminal">$crate::typesystem::TypeConversion</span>&lt;<span class="macro-nonterminal">$T1</span>, <span class="macro-nonterminal">$T2</span>&gt; <span class="kw">for </span><span class="macro-nonterminal">$TP </span>{
+            <span class="kw">fn </span>convert(val: <span class="macro-nonterminal">$T1</span>) -&gt; <span class="macro-nonterminal">$T2 </span>{
+                val.into_iter().map(|v| v <span class="kw">as _</span>).collect()
             }
         }
 
-        <span class="macro">impl_transport!</span>(@<span class="ident">cvt</span> <span class="ident">option</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TP</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span>);
+        <span class="macro">impl_transport!</span>(@cvt option <span class="macro-nonterminal">$TP</span>, <span class="macro-nonterminal">$T1</span>, <span class="macro-nonterminal">$T2</span>);
     };
-    (@<span class="ident">cvt</span> <span class="ident">auto_vec</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TP</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span>:<span class="ident">ty</span>) =&gt; {
-        <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;tp</span>, <span class="lifetime">&#39;r</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::typesystem::TypeConversion</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TP</span> {
-            <span class="kw">fn</span> <span class="ident">convert</span>(<span class="ident">val</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span>) -&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span> {
-                <span class="ident">val</span>.<span class="ident">into_iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">v</span><span class="op">|</span> <span class="ident">v</span> <span class="kw">as</span> <span class="kw">_</span>).<span class="ident">collect</span>()
+    (@cvt owned <span class="macro-nonterminal">$TP</span>:ty, <span class="macro-nonterminal">$T1</span>:ty, <span class="macro-nonterminal">$T2</span>:ty) =&gt; {
+        <span class="kw">impl</span>&lt;<span class="lifetime">&#39;tp</span>, <span class="lifetime">&#39;r</span>&gt; <span class="macro-nonterminal">$crate::typesystem::TypeConversion</span>&lt;<span class="macro-nonterminal">$T1</span>, <span class="macro-nonterminal">$T2</span>&gt; <span class="kw">for </span><span class="macro-nonterminal">$TP </span>{
+            <span class="kw">fn </span>convert(val: <span class="macro-nonterminal">$T1</span>) -&gt; <span class="macro-nonterminal">$T2 </span>{
+                val.to_owned()
             }
         }
 
-        <span class="macro">impl_transport!</span>(@<span class="ident">cvt</span> <span class="ident">option</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TP</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span>);
+        <span class="macro">impl_transport!</span>(@cvt option <span class="macro-nonterminal">$TP</span>, <span class="macro-nonterminal">$T1</span>, <span class="macro-nonterminal">$T2</span>);
     };
-    (@<span class="ident">cvt</span> <span class="ident">owned</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TP</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span>:<span class="ident">ty</span>) =&gt; {
-        <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;tp</span>, <span class="lifetime">&#39;r</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::typesystem::TypeConversion</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TP</span> {
-            <span class="kw">fn</span> <span class="ident">convert</span>(<span class="ident">val</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span>) -&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span> {
-                <span class="ident">val</span>.<span class="ident">to_owned</span>()
-            }
-        }
-
-        <span class="macro">impl_transport!</span>(@<span class="ident">cvt</span> <span class="ident">option</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TP</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span>);
-    };
-    (@<span class="ident">cvt</span> <span class="ident">option</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TP</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span>:<span class="ident">ty</span>) =&gt; {
-        <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;tp</span>, <span class="lifetime">&#39;r</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::typesystem::TypeConversion</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span><span class="op">&gt;</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TP</span> {
-            <span class="kw">fn</span> <span class="ident">convert</span>(<span class="ident">val</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span><span class="op">&gt;</span> {
-                <span class="ident">val</span>.<span class="ident">map</span>(<span class="ident"><span class="self">Self</span>::convert</span>)
+    (@cvt option <span class="macro-nonterminal">$TP</span>:ty, <span class="macro-nonterminal">$T1</span>:ty, <span class="macro-nonterminal">$T2</span>:ty) =&gt; {
+        <span class="kw">impl</span>&lt;<span class="lifetime">&#39;tp</span>, <span class="lifetime">&#39;r</span>&gt; <span class="macro-nonterminal">$crate::typesystem::TypeConversion</span>&lt;<span class="prelude-ty">Option</span>&lt;<span class="macro-nonterminal">$T1</span>&gt;, <span class="prelude-ty">Option</span>&lt;<span class="macro-nonterminal">$T2</span>&gt;&gt; <span class="kw">for </span><span class="macro-nonterminal">$TP </span>{
+            <span class="kw">fn </span>convert(val: <span class="prelude-ty">Option</span>&lt;<span class="macro-nonterminal">$T1</span>&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="macro-nonterminal">$T2</span>&gt; {
+                val.map(<span class="self">Self</span>::convert)
             }
         }
     };
-    (@<span class="ident">cvt</span> <span class="ident">none</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">TP</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T1</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T2</span>:<span class="ident">ty</span>) =&gt; {};
+    (@cvt none <span class="macro-nonterminal">$TP</span>:ty, <span class="macro-nonterminal">$T1</span>:ty, <span class="macro-nonterminal">$T2</span>:ty) =&gt; {};
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="connectorx" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.62.0-nightly (878c7833f 2022-04-16)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="connectorx" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (750bd1a7f 2022-09-14)" ></div></body></html>

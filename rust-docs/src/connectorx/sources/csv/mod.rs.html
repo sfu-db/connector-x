@@ -1,9 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `connectorx/src/sources/csv/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script src="../../../../crates.js"></script><script defer src="../../../../main.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script>
-    <noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../connectorx/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../../../connectorx/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../connectorx/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><div class="theme-picker hidden"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="22" height="22" alt="Pick another theme!" src="../../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `connectorx/src/sources/csv/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../../normalize.css"><link rel="stylesheet" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../../ayu.css" disabled><link rel="stylesheet" href="../../../../dark.css" disabled><link rel="stylesheet" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../connectorx/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../connectorx/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../connectorx/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -413,416 +408,415 @@
 <span id="408">408</span>
 <span id="409">409</span>
 <span id="410">410</span>
-</pre><pre class="rust"><code><span class="doccomment">//! Source implementation for CSV files.</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Source implementation for CSV files.
 
-<span class="kw">mod</span> <span class="ident">errors</span>;
-<span class="kw">mod</span> <span class="ident">typesystem</span>;
+</span><span class="kw">mod </span>errors;
+<span class="kw">mod </span>typesystem;
 
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::errors::CSVSourceError</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::typesystem::CSVTypeSystem</span>;
-<span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">PartitionParser</span>, <span class="ident">Produce</span>, <span class="ident">Source</span>, <span class="ident">SourcePartition</span>};
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">data_order::DataOrder</span>, <span class="ident">errors::ConnectorXError</span>, <span class="ident">sql::CXQuery</span>};
-<span class="kw">use</span> <span class="ident">anyhow::anyhow</span>;
-<span class="kw">use</span> <span class="ident">chrono</span>::{<span class="ident">DateTime</span>, <span class="ident">Utc</span>};
-<span class="kw">use</span> <span class="ident">fehler</span>::{<span class="ident">throw</span>, <span class="ident">throws</span>};
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;src_csv&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">regex</span>::{<span class="ident">Regex</span>, <span class="ident">RegexBuilder</span>};
-<span class="kw">use</span> <span class="ident">std::collections::HashSet</span>;
-<span class="kw">use</span> <span class="ident">std::fs::File</span>;
+<span class="kw">pub use </span><span class="self">self</span>::errors::CSVSourceError;
+<span class="kw">pub use </span><span class="self">self</span>::typesystem::CSVTypeSystem;
+<span class="kw">use super</span>::{PartitionParser, Produce, Source, SourcePartition};
+<span class="kw">use crate</span>::{data_order::DataOrder, errors::ConnectorXError, sql::CXQuery};
+<span class="kw">use </span>anyhow::anyhow;
+<span class="kw">use </span>chrono::{DateTime, Utc};
+<span class="kw">use </span>fehler::{throw, throws};
+<span class="attribute">#[cfg(feature = <span class="string">&quot;src_csv&quot;</span>)]
+</span><span class="kw">use </span>regex::{Regex, RegexBuilder};
+<span class="kw">use </span>std::collections::HashSet;
+<span class="kw">use </span>std::fs::File;
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">CSVSource</span> {
-    <span class="ident">schema</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">CSVTypeSystem</span><span class="op">&gt;</span>,
-    <span class="ident">files</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">CXQuery</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">names</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
+<span class="kw">pub struct </span>CSVSource {
+    schema: Vec&lt;CSVTypeSystem&gt;,
+    files: Vec&lt;CXQuery&lt;String&gt;&gt;,
+    names: Vec&lt;String&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">CSVSource</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">schema</span>: <span class="kw-2">&amp;</span>[<span class="ident">CSVTypeSystem</span>]) -&gt; <span class="self">Self</span> {
-        <span class="ident">CSVSource</span> {
-            <span class="ident">schema</span>: <span class="ident">schema</span>.<span class="ident">to_vec</span>(),
-            <span class="ident">files</span>: <span class="macro">vec!</span>[],
-            <span class="ident">names</span>: <span class="macro">vec!</span>[],
+<span class="kw">impl </span>CSVSource {
+    <span class="kw">pub fn </span>new(schema: <span class="kw-2">&amp;</span>[CSVTypeSystem]) -&gt; <span class="self">Self </span>{
+        CSVSource {
+            schema: schema.to_vec(),
+            files: <span class="macro">vec!</span>[],
+            names: <span class="macro">vec!</span>[],
         }
     }
 
-    <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">CSVSourceError</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">infer_schema</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">CSVTypeSystem</span><span class="op">&gt;</span> {
-        <span class="comment">// regular expressions for infer CSVTypeSystem from string</span>
-        <span class="kw">let</span> <span class="ident">decimal_re</span>: <span class="ident">Regex</span> <span class="op">=</span> <span class="ident">Regex::new</span>(<span class="string">r&quot;^-?(\d+\.\d+)$&quot;</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">integer_re</span>: <span class="ident">Regex</span> <span class="op">=</span> <span class="ident">Regex::new</span>(<span class="string">r&quot;^-?(\d+)$&quot;</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">boolean_re</span>: <span class="ident">Regex</span> <span class="op">=</span> <span class="ident">RegexBuilder::new</span>(<span class="string">r&quot;^(true)$|^(false)$&quot;</span>)
-            .<span class="ident">case_insensitive</span>(<span class="bool-val">true</span>)
-            .<span class="ident">build</span>()<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">datetime_re</span>: <span class="ident">Regex</span> <span class="op">=</span> <span class="ident">Regex::new</span>(<span class="string">r&quot;^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d$&quot;</span>)<span class="question-mark">?</span>;
+    <span class="attribute">#[throws(CSVSourceError)]
+    </span><span class="kw">pub fn </span>infer_schema(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; Vec&lt;CSVTypeSystem&gt; {
+        <span class="comment">// regular expressions for infer CSVTypeSystem from string
+        </span><span class="kw">let </span>decimal_re: Regex = Regex::new(<span class="string">r&quot;^-?(\d+\.\d+)$&quot;</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>integer_re: Regex = Regex::new(<span class="string">r&quot;^-?(\d+)$&quot;</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>boolean_re: Regex = RegexBuilder::new(<span class="string">r&quot;^(true)$|^(false)$&quot;</span>)
+            .case_insensitive(<span class="bool-val">true</span>)
+            .build()<span class="question-mark">?</span>;
+        <span class="kw">let </span>datetime_re: Regex = Regex::new(<span class="string">r&quot;^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d$&quot;</span>)<span class="question-mark">?</span>;
 
-        <span class="comment">// read max_records rows to infer possible CSVTypeSystems for each field</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">reader</span> <span class="op">=</span> <span class="ident">csv::ReaderBuilder::new</span>()
-            .<span class="ident">has_headers</span>(<span class="bool-val">true</span>)
-            .<span class="ident">from_reader</span>(<span class="ident">File::open</span>(<span class="self">self</span>.<span class="ident">files</span>[<span class="number">0</span>].<span class="ident">as_str</span>())<span class="question-mark">?</span>);
+        <span class="comment">// read max_records rows to infer possible CSVTypeSystems for each field
+        </span><span class="kw">let </span><span class="kw-2">mut </span>reader = csv::ReaderBuilder::new()
+            .has_headers(<span class="bool-val">true</span>)
+            .from_reader(File::open(<span class="self">self</span>.files[<span class="number">0</span>].as_str())<span class="question-mark">?</span>);
 
-        <span class="kw">let</span> <span class="ident">max_records_to_read</span> <span class="op">=</span> <span class="number">50</span>;
-        <span class="kw">let</span> <span class="ident">num_cols</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">names</span>.<span class="ident">len</span>();
+        <span class="kw">let </span>max_records_to_read = <span class="number">50</span>;
+        <span class="kw">let </span>num_cols = <span class="self">self</span>.names.len();
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">column_types</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">CSVTypeSystem</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="ident">HashSet::new</span>(); <span class="ident">num_cols</span>];
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">nulls</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="bool-val">false</span>; <span class="ident">num_cols</span>];
+        <span class="kw">let </span><span class="kw-2">mut </span>column_types: Vec&lt;HashSet&lt;CSVTypeSystem&gt;&gt; = <span class="macro">vec!</span>[HashSet::new(); num_cols];
+        <span class="kw">let </span><span class="kw-2">mut </span>nulls: Vec&lt;bool&gt; = <span class="macro">vec!</span>[<span class="bool-val">false</span>; num_cols];
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">record</span> <span class="op">=</span> <span class="ident">csv::StringRecord::new</span>();
+        <span class="kw">let </span><span class="kw-2">mut </span>record = csv::StringRecord::new();
 
-        <span class="kw">for</span> <span class="ident">_record_counter</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">max_records_to_read</span> {
-            <span class="kw">if</span> <span class="op">!</span><span class="ident">reader</span>.<span class="ident">read_record</span>(<span class="kw-2">&amp;mut</span> <span class="ident">record</span>)<span class="question-mark">?</span> {
+        <span class="kw">for </span>_record_counter <span class="kw">in </span><span class="number">0</span>..max_records_to_read {
+            <span class="kw">if </span>!reader.read_record(<span class="kw-2">&amp;mut </span>record)<span class="question-mark">? </span>{
                 <span class="kw">break</span>;
             }
-            <span class="kw">for</span> <span class="ident">field_counter</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">num_cols</span> {
-                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">string</span>) <span class="op">=</span> <span class="ident">record</span>.<span class="ident">get</span>(<span class="ident">field_counter</span>) {
-                    <span class="kw">if</span> <span class="ident">string</span>.<span class="ident">is_empty</span>() {
-                        <span class="ident">nulls</span>[<span class="ident">field_counter</span>] <span class="op">=</span> <span class="bool-val">true</span>;
-                    } <span class="kw">else</span> {
-                        <span class="kw">let</span> <span class="ident">dt</span>: <span class="ident">CSVTypeSystem</span>;
+            <span class="kw">for </span>field_counter <span class="kw">in </span><span class="number">0</span>..num_cols {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(string) = record.get(field_counter) {
+                    <span class="kw">if </span>string.is_empty() {
+                        nulls[field_counter] = <span class="bool-val">true</span>;
+                    } <span class="kw">else </span>{
+                        <span class="kw">let </span>dt: CSVTypeSystem;
 
-                        <span class="kw">if</span> <span class="ident">string</span>.<span class="ident">starts_with</span>(<span class="string">&#39;&quot;&#39;</span>) {
-                            <span class="ident">dt</span> <span class="op">=</span> <span class="ident">CSVTypeSystem::String</span>(<span class="bool-val">false</span>);
-                        } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">boolean_re</span>.<span class="ident">is_match</span>(<span class="ident">string</span>) {
-                            <span class="ident">dt</span> <span class="op">=</span> <span class="ident">CSVTypeSystem::Bool</span>(<span class="bool-val">false</span>);
-                        } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">decimal_re</span>.<span class="ident">is_match</span>(<span class="ident">string</span>) {
-                            <span class="ident">dt</span> <span class="op">=</span> <span class="ident">CSVTypeSystem::F64</span>(<span class="bool-val">false</span>);
-                        } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">integer_re</span>.<span class="ident">is_match</span>(<span class="ident">string</span>) {
-                            <span class="ident">dt</span> <span class="op">=</span> <span class="ident">CSVTypeSystem::I64</span>(<span class="bool-val">false</span>);
-                        } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">datetime_re</span>.<span class="ident">is_match</span>(<span class="ident">string</span>) {
-                            <span class="ident">dt</span> <span class="op">=</span> <span class="ident">CSVTypeSystem::DateTime</span>(<span class="bool-val">false</span>);
-                        } <span class="kw">else</span> {
-                            <span class="ident">dt</span> <span class="op">=</span> <span class="ident">CSVTypeSystem::String</span>(<span class="bool-val">false</span>);
+                        <span class="kw">if </span>string.starts_with(<span class="string">&#39;&quot;&#39;</span>) {
+                            dt = CSVTypeSystem::String(<span class="bool-val">false</span>);
+                        } <span class="kw">else if </span>boolean_re.is_match(string) {
+                            dt = CSVTypeSystem::Bool(<span class="bool-val">false</span>);
+                        } <span class="kw">else if </span>decimal_re.is_match(string) {
+                            dt = CSVTypeSystem::F64(<span class="bool-val">false</span>);
+                        } <span class="kw">else if </span>integer_re.is_match(string) {
+                            dt = CSVTypeSystem::I64(<span class="bool-val">false</span>);
+                        } <span class="kw">else if </span>datetime_re.is_match(string) {
+                            dt = CSVTypeSystem::DateTime(<span class="bool-val">false</span>);
+                        } <span class="kw">else </span>{
+                            dt = CSVTypeSystem::String(<span class="bool-val">false</span>);
                         }
-                        <span class="ident">column_types</span>[<span class="ident">field_counter</span>].<span class="ident">insert</span>(<span class="ident">dt</span>);
+                        column_types[field_counter].insert(dt);
                     }
                 }
             }
         }
 
-        <span class="comment">// determine CSVTypeSystem based on possible candidates</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">schema</span> <span class="op">=</span> <span class="macro">vec!</span>[];
+        <span class="comment">// determine CSVTypeSystem based on possible candidates
+        </span><span class="kw">let </span><span class="kw-2">mut </span>schema = <span class="macro">vec!</span>[];
 
-        <span class="kw">for</span> <span class="ident">field_counter</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">num_cols</span> {
-            <span class="kw">let</span> <span class="ident">possibilities</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">column_types</span>[<span class="ident">field_counter</span>];
-            <span class="kw">let</span> <span class="ident">has_nulls</span> <span class="op">=</span> <span class="ident">nulls</span>[<span class="ident">field_counter</span>];
+        <span class="kw">for </span>field_counter <span class="kw">in </span><span class="number">0</span>..num_cols {
+            <span class="kw">let </span>possibilities = <span class="kw-2">&amp;</span>column_types[field_counter];
+            <span class="kw">let </span>has_nulls = nulls[field_counter];
 
-            <span class="kw">match</span> <span class="ident">possibilities</span>.<span class="ident">len</span>() {
-                <span class="number">1</span> =&gt; {
-                    <span class="kw">for</span> <span class="ident">dt</span> <span class="kw">in</span> <span class="ident">possibilities</span>.<span class="ident">iter</span>() {
-                        <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">dt</span> {
-                            <span class="ident">CSVTypeSystem::I64</span>(<span class="bool-val">false</span>) =&gt; {
-                                <span class="ident">schema</span>.<span class="ident">push</span>(<span class="ident">CSVTypeSystem::I64</span>(<span class="ident">has_nulls</span>));
+            <span class="kw">match </span>possibilities.len() {
+                <span class="number">1 </span>=&gt; {
+                    <span class="kw">for </span>dt <span class="kw">in </span>possibilities.iter() {
+                        <span class="kw">match </span><span class="kw-2">*</span>dt {
+                            CSVTypeSystem::I64(<span class="bool-val">false</span>) =&gt; {
+                                schema.push(CSVTypeSystem::I64(has_nulls));
                             }
-                            <span class="ident">CSVTypeSystem::F64</span>(<span class="bool-val">false</span>) =&gt; {
-                                <span class="ident">schema</span>.<span class="ident">push</span>(<span class="ident">CSVTypeSystem::F64</span>(<span class="ident">has_nulls</span>));
+                            CSVTypeSystem::F64(<span class="bool-val">false</span>) =&gt; {
+                                schema.push(CSVTypeSystem::F64(has_nulls));
                             }
-                            <span class="ident">CSVTypeSystem::Bool</span>(<span class="bool-val">false</span>) =&gt; {
-                                <span class="ident">schema</span>.<span class="ident">push</span>(<span class="ident">CSVTypeSystem::Bool</span>(<span class="ident">has_nulls</span>));
+                            CSVTypeSystem::Bool(<span class="bool-val">false</span>) =&gt; {
+                                schema.push(CSVTypeSystem::Bool(has_nulls));
                             }
-                            <span class="ident">CSVTypeSystem::String</span>(<span class="bool-val">false</span>) =&gt; {
-                                <span class="ident">schema</span>.<span class="ident">push</span>(<span class="ident">CSVTypeSystem::String</span>(<span class="ident">has_nulls</span>));
+                            CSVTypeSystem::String(<span class="bool-val">false</span>) =&gt; {
+                                schema.push(CSVTypeSystem::String(has_nulls));
                             }
-                            <span class="ident">CSVTypeSystem::DateTime</span>(<span class="bool-val">false</span>) =&gt; {
-                                <span class="ident">schema</span>.<span class="ident">push</span>(<span class="ident">CSVTypeSystem::DateTime</span>(<span class="ident">has_nulls</span>));
+                            CSVTypeSystem::DateTime(<span class="bool-val">false</span>) =&gt; {
+                                schema.push(CSVTypeSystem::DateTime(has_nulls));
                             }
-                            <span class="kw">_</span> =&gt; {}
+                            <span class="kw">_ </span>=&gt; {}
                         }
                     }
                 }
-                <span class="number">2</span> =&gt; {
-                    <span class="kw">if</span> <span class="ident">possibilities</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">CSVTypeSystem::I64</span>(<span class="bool-val">false</span>))
-                        <span class="op">&amp;&amp;</span> <span class="ident">possibilities</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">CSVTypeSystem::F64</span>(<span class="bool-val">false</span>))
+                <span class="number">2 </span>=&gt; {
+                    <span class="kw">if </span>possibilities.contains(<span class="kw-2">&amp;</span>CSVTypeSystem::I64(<span class="bool-val">false</span>))
+                        &amp;&amp; possibilities.contains(<span class="kw-2">&amp;</span>CSVTypeSystem::F64(<span class="bool-val">false</span>))
                     {
-                        <span class="comment">// Integer &amp;&amp; Float -&gt; Float</span>
-                        <span class="ident">schema</span>.<span class="ident">push</span>(<span class="ident">CSVTypeSystem::F64</span>(<span class="ident">has_nulls</span>));
-                    } <span class="kw">else</span> {
-                        <span class="comment">// Conflicting CSVTypeSystems -&gt; String</span>
-                        <span class="ident">schema</span>.<span class="ident">push</span>(<span class="ident">CSVTypeSystem::String</span>(<span class="ident">has_nulls</span>));
+                        <span class="comment">// Integer &amp;&amp; Float -&gt; Float
+                        </span>schema.push(CSVTypeSystem::F64(has_nulls));
+                    } <span class="kw">else </span>{
+                        <span class="comment">// Conflicting CSVTypeSystems -&gt; String
+                        </span>schema.push(CSVTypeSystem::String(has_nulls));
                     }
                 }
-                <span class="kw">_</span> =&gt; {
-                    <span class="comment">// Conflicting CSVTypeSystems -&gt; String</span>
-                    <span class="ident">schema</span>.<span class="ident">push</span>(<span class="ident">CSVTypeSystem::String</span>(<span class="ident">has_nulls</span>));
+                <span class="kw">_ </span>=&gt; {
+                    <span class="comment">// Conflicting CSVTypeSystems -&gt; String
+                    </span>schema.push(CSVTypeSystem::String(has_nulls));
                 }
             }
         }
-        <span class="ident">schema</span>
+        schema
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Source</span> <span class="kw">for</span> <span class="ident">CSVSource</span> {
-    <span class="kw">const</span> <span class="ident">DATA_ORDERS</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">DataOrder</span>] <span class="op">=</span> <span class="kw-2">&amp;</span>[<span class="ident">DataOrder::RowMajor</span>];
-    <span class="kw">type</span> <span class="ident">Partition</span> <span class="op">=</span> <span class="ident">CSVSourcePartition</span>;
-    <span class="kw">type</span> <span class="ident">TypeSystem</span> <span class="op">=</span> <span class="ident">CSVTypeSystem</span>;
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">CSVSourceError</span>;
+<span class="kw">impl </span>Source <span class="kw">for </span>CSVSource {
+    <span class="kw">const </span>DATA_ORDERS: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[DataOrder] = <span class="kw-2">&amp;</span>[DataOrder::RowMajor];
+    <span class="kw">type </span>Partition = CSVSourcePartition;
+    <span class="kw">type </span>TypeSystem = CSVTypeSystem;
+    <span class="kw">type </span>Error = CSVSourceError;
 
-    <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">CSVSourceError</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">set_data_order</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">data_order</span>: <span class="ident">DataOrder</span>) {
-        <span class="kw">if</span> <span class="op">!</span><span class="macro">matches!</span>(<span class="ident">data_order</span>, <span class="ident">DataOrder::RowMajor</span>) {
-            <span class="macro">throw!</span>(<span class="ident">ConnectorXError::UnsupportedDataOrder</span>(<span class="ident">data_order</span>))
+    <span class="attribute">#[throws(CSVSourceError)]
+    </span><span class="kw">fn </span>set_data_order(<span class="kw-2">&amp;mut </span><span class="self">self</span>, data_order: DataOrder) {
+        <span class="kw">if </span>!<span class="macro">matches!</span>(data_order, DataOrder::RowMajor) {
+            <span class="macro">throw!</span>(ConnectorXError::UnsupportedDataOrder(data_order))
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">set_queries</span><span class="op">&lt;</span><span class="ident">Q</span>: <span class="ident">ToString</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">queries</span>: <span class="kw-2">&amp;</span>[<span class="ident">CXQuery</span><span class="op">&lt;</span><span class="ident">Q</span><span class="op">&gt;</span>]) {
-        <span class="self">self</span>.<span class="ident">files</span> <span class="op">=</span> <span class="ident">queries</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">q</span><span class="op">|</span> <span class="ident">q</span>.<span class="ident">map</span>(<span class="ident">Q::to_string</span>)).<span class="ident">collect</span>();
+    <span class="kw">fn </span>set_queries&lt;Q: ToString&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, queries: <span class="kw-2">&amp;</span>[CXQuery&lt;Q&gt;]) {
+        <span class="self">self</span>.files = queries.iter().map(|q| q.map(Q::to_string)).collect();
     }
 
-    <span class="kw">fn</span> <span class="ident">set_origin_query</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_query</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>) {}
+    <span class="kw">fn </span>set_origin_query(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _query: <span class="prelude-ty">Option</span>&lt;String&gt;) {}
 
-    <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">CSVSourceError</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">fetch_metadata</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">reader</span> <span class="op">=</span> <span class="ident">csv::ReaderBuilder::new</span>()
-            .<span class="ident">has_headers</span>(<span class="bool-val">true</span>)
-            .<span class="ident">from_reader</span>(<span class="ident">File::open</span>(<span class="self">self</span>.<span class="ident">files</span>[<span class="number">0</span>].<span class="ident">as_str</span>())<span class="question-mark">?</span>);
-        <span class="kw">let</span> <span class="ident">header</span> <span class="op">=</span> <span class="ident">reader</span>.<span class="ident">headers</span>()<span class="question-mark">?</span>;
+    <span class="attribute">#[throws(CSVSourceError)]
+    </span><span class="kw">fn </span>fetch_metadata(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="kw">let </span><span class="kw-2">mut </span>reader = csv::ReaderBuilder::new()
+            .has_headers(<span class="bool-val">true</span>)
+            .from_reader(File::open(<span class="self">self</span>.files[<span class="number">0</span>].as_str())<span class="question-mark">?</span>);
+        <span class="kw">let </span>header = reader.headers()<span class="question-mark">?</span>;
 
-        <span class="self">self</span>.<span class="ident">names</span> <span class="op">=</span> <span class="ident">header</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">s</span><span class="op">|</span> <span class="ident">s</span>.<span class="ident">to_string</span>()).<span class="ident">collect</span>();
+        <span class="self">self</span>.names = header.iter().map(|s| s.to_string()).collect();
 
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">schema</span>.<span class="ident">is_empty</span>() {
-            <span class="self">self</span>.<span class="ident">schema</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">infer_schema</span>()<span class="question-mark">?</span>;
+        <span class="kw">if </span><span class="self">self</span>.schema.is_empty() {
+            <span class="self">self</span>.schema = <span class="self">self</span>.infer_schema()<span class="question-mark">?</span>;
         }
 
-        <span class="macro">assert_eq!</span>(<span class="ident">header</span>.<span class="ident">len</span>(), <span class="self">self</span>.<span class="ident">schema</span>.<span class="ident">len</span>());
+        <span class="macro">assert_eq!</span>(header.len(), <span class="self">self</span>.schema.len());
     }
 
-    <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">CSVSourceError</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">result_rows</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
-        <span class="prelude-val">None</span>
+    <span class="attribute">#[throws(CSVSourceError)]
+    </span><span class="kw">fn </span>result_rows(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt; {
+        <span class="prelude-val">None
+    </span>}
+
+    <span class="kw">fn </span>names(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Vec&lt;String&gt; {
+        <span class="self">self</span>.names.clone()
     }
 
-    <span class="kw">fn</span> <span class="ident">names</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">names</span>.<span class="ident">clone</span>()
+    <span class="kw">fn </span>schema(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Vec&lt;<span class="self">Self</span>::TypeSystem&gt; {
+        <span class="self">self</span>.schema.clone()
     }
 
-    <span class="kw">fn</span> <span class="ident">schema</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::TypeSystem</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">schema</span>.<span class="ident">clone</span>()
-    }
-
-    <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">CSVSourceError</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">partition</span>(<span class="self">self</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Partition</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">partitions</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-        <span class="kw">for</span> <span class="ident">file</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">files</span> {
-            <span class="ident">partitions</span>.<span class="ident">push</span>(<span class="ident">CSVSourcePartition::new</span>(<span class="ident">file</span>)<span class="question-mark">?</span>);
+    <span class="attribute">#[throws(CSVSourceError)]
+    </span><span class="kw">fn </span>partition(<span class="self">self</span>) -&gt; Vec&lt;<span class="self">Self</span>::Partition&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>partitions = <span class="macro">vec!</span>[];
+        <span class="kw">for </span>file <span class="kw">in </span><span class="self">self</span>.files {
+            partitions.push(CSVSourcePartition::new(file)<span class="question-mark">?</span>);
         }
-        <span class="ident">partitions</span>
+        partitions
     }
 }
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">CSVSourcePartition</span> {
-    <span class="ident">records</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">csv::StringRecord</span><span class="op">&gt;</span>,
-    <span class="ident">counter</span>: <span class="ident">usize</span>,
-    <span class="ident">nrows</span>: <span class="ident">usize</span>,
-    <span class="ident">ncols</span>: <span class="ident">usize</span>,
+<span class="kw">pub struct </span>CSVSourcePartition {
+    records: Vec&lt;csv::StringRecord&gt;,
+    counter: usize,
+    nrows: usize,
+    ncols: usize,
 }
 
-<span class="kw">impl</span> <span class="ident">CSVSourcePartition</span> {
-    <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">CSVSourceError</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">fname</span>: <span class="ident">CXQuery</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="ident">reader</span> <span class="op">=</span> <span class="ident">csv::ReaderBuilder::new</span>()
-            .<span class="ident">has_headers</span>(<span class="bool-val">true</span>)
-            .<span class="ident">from_reader</span>(<span class="ident">File::open</span>(<span class="ident">fname</span>.<span class="ident">as_str</span>())<span class="question-mark">?</span>);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">records</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-        <span class="ident">reader</span>
-            .<span class="ident">into_records</span>()
-            .<span class="ident">try_for_each</span>(<span class="op">|</span><span class="ident">v</span><span class="op">|</span> -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CSVSourceError</span><span class="op">&gt;</span> {
-                <span class="ident">records</span>.<span class="ident">push</span>(<span class="ident">v</span>.<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">anyhow!</span>(<span class="ident">e</span>))<span class="question-mark">?</span>);
+<span class="kw">impl </span>CSVSourcePartition {
+    <span class="attribute">#[throws(CSVSourceError)]
+    </span><span class="kw">pub fn </span>new(fname: CXQuery&lt;String&gt;) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>reader = csv::ReaderBuilder::new()
+            .has_headers(<span class="bool-val">true</span>)
+            .from_reader(File::open(fname.as_str())<span class="question-mark">?</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>records = <span class="macro">vec!</span>[];
+        reader
+            .into_records()
+            .try_for_each(|v| -&gt; <span class="prelude-ty">Result</span>&lt;(), CSVSourceError&gt; {
+                records.push(v.map_err(|e| <span class="macro">anyhow!</span>(e))<span class="question-mark">?</span>);
                 <span class="prelude-val">Ok</span>(())
             })<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">nrows</span> <span class="op">=</span> <span class="ident">records</span>.<span class="ident">len</span>();
-        <span class="kw">let</span> <span class="ident">ncols</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">nrows</span> <span class="op">&gt;</span> <span class="number">0</span> { <span class="ident">records</span>[<span class="number">0</span>].<span class="ident">len</span>() } <span class="kw">else</span> { <span class="number">0</span> };
+        <span class="kw">let </span>nrows = records.len();
+        <span class="kw">let </span>ncols = <span class="kw">if </span>nrows &gt; <span class="number">0 </span>{ records[<span class="number">0</span>].len() } <span class="kw">else </span>{ <span class="number">0 </span>};
 
-        <span class="self">Self</span> {
-            <span class="ident">records</span>,
-            <span class="ident">counter</span>: <span class="number">0</span>,
-            <span class="ident">nrows</span>,
-            <span class="ident">ncols</span>,
+        <span class="self">Self </span>{
+            records,
+            counter: <span class="number">0</span>,
+            nrows,
+            ncols,
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">SourcePartition</span> <span class="kw">for</span> <span class="ident">CSVSourcePartition</span> {
-    <span class="kw">type</span> <span class="ident">TypeSystem</span> <span class="op">=</span> <span class="ident">CSVTypeSystem</span>;
-    <span class="kw">type</span> <span class="ident">Parser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">CSVSourcePartitionParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>;
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">CSVSourceError</span>;
+<span class="kw">impl </span>SourcePartition <span class="kw">for </span>CSVSourcePartition {
+    <span class="kw">type </span>TypeSystem = CSVTypeSystem;
+    <span class="kw">type </span>Parser&lt;<span class="lifetime">&#39;a</span>&gt; = CSVSourcePartitionParser&lt;<span class="lifetime">&#39;a</span>&gt;;
+    <span class="kw">type </span>Error = CSVSourceError;
 
-    <span class="doccomment">/// The parameter `query` is the path of the csv file</span>
-    <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">CSVSourceError</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">result_rows</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {}
+    <span class="doccomment">/// The parameter `query` is the path of the csv file
+    </span><span class="attribute">#[throws(CSVSourceError)]
+    </span><span class="kw">fn </span>result_rows(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {}
 
-    <span class="kw">fn</span> <span class="ident">nrows</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
-        <span class="self">self</span>.<span class="ident">nrows</span>
+    <span class="kw">fn </span>nrows(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+        <span class="self">self</span>.nrows
     }
 
-    <span class="kw">fn</span> <span class="ident">ncols</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
-        <span class="self">self</span>.<span class="ident">ncols</span>
+    <span class="kw">fn </span>ncols(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+        <span class="self">self</span>.ncols
     }
 
-    <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">CSVSourceError</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">parser</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident"><span class="self">Self</span>::Parser</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span> {
-        <span class="ident">CSVSourcePartitionParser</span> {
-            <span class="ident">records</span>: <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">records</span>,
-            <span class="ident">counter</span>: <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">counter</span>,
-            <span class="ident">ncols</span>: <span class="self">self</span>.<span class="ident">ncols</span>,
+    <span class="attribute">#[throws(CSVSourceError)]
+    </span><span class="kw">fn </span>parser(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="self">Self</span>::Parser&lt;<span class="lifetime">&#39;_</span>&gt; {
+        CSVSourcePartitionParser {
+            records: <span class="kw-2">&amp;mut </span><span class="self">self</span>.records,
+            counter: <span class="kw-2">&amp;mut </span><span class="self">self</span>.counter,
+            ncols: <span class="self">self</span>.ncols,
         }
     }
 }
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">CSVSourcePartitionParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="ident">records</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> [<span class="ident">csv::StringRecord</span>],
-    <span class="ident">counter</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="ident">usize</span>,
-    <span class="ident">ncols</span>: <span class="ident">usize</span>,
+<span class="kw">pub struct </span>CSVSourcePartitionParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+    records: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>[csv::StringRecord],
+    counter: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>usize,
+    ncols: usize,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">CSVSourcePartitionParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">next_val</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">str</span> {
-        <span class="kw">let</span> <span class="ident">v</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">records</span>[<span class="kw-2">*</span><span class="self">self</span>.<span class="ident">counter</span> <span class="op">/</span> <span class="self">self</span>.<span class="ident">ncols</span>][<span class="kw-2">*</span><span class="self">self</span>.<span class="ident">counter</span> <span class="op">%</span> <span class="self">self</span>.<span class="ident">ncols</span>].<span class="ident">as_ref</span>();
-        <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">counter</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; CSVSourcePartitionParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="kw">fn </span>next_val(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>str {
+        <span class="kw">let </span>v: <span class="kw-2">&amp;</span>str = <span class="self">self</span>.records[<span class="kw-2">*</span><span class="self">self</span>.counter / <span class="self">self</span>.ncols][<span class="kw-2">*</span><span class="self">self</span>.counter % <span class="self">self</span>.ncols].as_ref();
+        <span class="kw-2">*</span><span class="self">self</span>.counter += <span class="number">1</span>;
 
-        <span class="ident">v</span>
+        v
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">PartitionParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">CSVSourcePartitionParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">TypeSystem</span> <span class="op">=</span> <span class="ident">CSVTypeSystem</span>;
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">CSVSourceError</span>;
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; PartitionParser&lt;<span class="lifetime">&#39;a</span>&gt; <span class="kw">for </span>CSVSourcePartitionParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="kw">type </span>TypeSystem = CSVTypeSystem;
+    <span class="kw">type </span>Error = CSVSourceError;
 
-    <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">CSVSourceError</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">fetch_next</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; (<span class="ident">usize</span>, <span class="ident">bool</span>) {
-        (<span class="self">self</span>.<span class="ident">records</span>.<span class="ident">len</span>(), <span class="bool-val">true</span>)
+    <span class="attribute">#[throws(CSVSourceError)]
+    </span><span class="kw">fn </span>fetch_next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; (usize, bool) {
+        (<span class="self">self</span>.records.len(), <span class="bool-val">true</span>)
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="ident">i64</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">CSVSourcePartitionParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">CSVSourceError</span>;
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, i64&gt; <span class="kw">for </span>CSVSourcePartitionParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="kw">type </span>Error = CSVSourceError;
 
-    <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">CSVSourceError</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident">i64</span> {
-        <span class="kw">let</span> <span class="ident">v</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">next_val</span>();
-        <span class="ident">v</span>.<span class="ident">parse</span>()
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">ConnectorXError::cannot_produce</span>::<span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span>(<span class="prelude-val">Some</span>(<span class="ident">v</span>.<span class="ident">into</span>())))<span class="question-mark">?</span>
-    }
+    <span class="attribute">#[throws(CSVSourceError)]
+    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; i64 {
+        <span class="kw">let </span>v = <span class="self">self</span>.next_val();
+        v.parse()
+            .map_err(|<span class="kw">_</span>| ConnectorXError::cannot_produce::&lt;i64&gt;(<span class="prelude-val">Some</span>(v.into())))<span class="question-mark">?
+    </span>}
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">CSVSourcePartitionParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">CSVSourceError</span>;
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span>&lt;i64&gt;&gt; <span class="kw">for </span>CSVSourcePartitionParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="kw">type </span>Error = CSVSourceError;
 
-    <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">CSVSourceError</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">v</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">next_val</span>();
-        <span class="kw">if</span> <span class="ident">v</span>.<span class="ident">is_empty</span>() {
-            <span class="kw">return</span> <span class="prelude-val">None</span>;
+    <span class="attribute">#[throws(CSVSourceError)]
+    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;i64&gt; {
+        <span class="kw">let </span>v = <span class="self">self</span>.next_val();
+        <span class="kw">if </span>v.is_empty() {
+            <span class="kw">return </span><span class="prelude-val">None</span>;
         }
-        <span class="kw">let</span> <span class="ident">v</span> <span class="op">=</span> <span class="ident">v</span>
-            .<span class="ident">parse</span>()
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">ConnectorXError::cannot_produce</span>::<span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="prelude-val">Some</span>(<span class="ident">v</span>.<span class="ident">into</span>())))<span class="question-mark">?</span>;
+        <span class="kw">let </span>v = v
+            .parse()
+            .map_err(|<span class="kw">_</span>| ConnectorXError::cannot_produce::&lt;<span class="prelude-ty">Option</span>&lt;i64&gt;&gt;(<span class="prelude-val">Some</span>(v.into())))<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Some</span>(<span class="ident">v</span>)
+        <span class="prelude-val">Some</span>(v)
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="ident">f64</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">CSVSourcePartitionParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">CSVSourceError</span>;
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, f64&gt; <span class="kw">for </span>CSVSourcePartitionParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="kw">type </span>Error = CSVSourceError;
 
-    <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">CSVSourceError</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident">f64</span> {
-        <span class="kw">let</span> <span class="ident">v</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">next_val</span>();
-        <span class="ident">v</span>.<span class="ident">parse</span>()
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">ConnectorXError::cannot_produce</span>::<span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span>(<span class="prelude-val">Some</span>(<span class="ident">v</span>.<span class="ident">into</span>())))<span class="question-mark">?</span>
-    }
+    <span class="attribute">#[throws(CSVSourceError)]
+    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; f64 {
+        <span class="kw">let </span>v = <span class="self">self</span>.next_val();
+        v.parse()
+            .map_err(|<span class="kw">_</span>| ConnectorXError::cannot_produce::&lt;f64&gt;(<span class="prelude-val">Some</span>(v.into())))<span class="question-mark">?
+    </span>}
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">CSVSourcePartitionParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">CSVSourceError</span>;
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span>&lt;f64&gt;&gt; <span class="kw">for </span>CSVSourcePartitionParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="kw">type </span>Error = CSVSourceError;
 
-    <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">CSVSourceError</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">v</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">next_val</span>();
-        <span class="kw">if</span> <span class="ident">v</span>.<span class="ident">is_empty</span>() {
-            <span class="kw">return</span> <span class="prelude-val">None</span>;
+    <span class="attribute">#[throws(CSVSourceError)]
+    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;f64&gt; {
+        <span class="kw">let </span>v = <span class="self">self</span>.next_val();
+        <span class="kw">if </span>v.is_empty() {
+            <span class="kw">return </span><span class="prelude-val">None</span>;
         }
-        <span class="kw">let</span> <span class="ident">v</span> <span class="op">=</span> <span class="ident">v</span>
-            .<span class="ident">parse</span>()
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">ConnectorXError::cannot_produce</span>::<span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="prelude-val">Some</span>(<span class="ident">v</span>.<span class="ident">into</span>())))<span class="question-mark">?</span>;
+        <span class="kw">let </span>v = v
+            .parse()
+            .map_err(|<span class="kw">_</span>| ConnectorXError::cannot_produce::&lt;<span class="prelude-ty">Option</span>&lt;f64&gt;&gt;(<span class="prelude-val">Some</span>(v.into())))<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Some</span>(<span class="ident">v</span>)
+        <span class="prelude-val">Some</span>(v)
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="ident">bool</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">CSVSourcePartitionParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">CSVSourceError</span>;
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, bool&gt; <span class="kw">for </span>CSVSourcePartitionParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="kw">type </span>Error = CSVSourceError;
 
-    <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">CSVSourceError</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="kw">let</span> <span class="ident">v</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">next_val</span>();
-        <span class="ident">v</span>.<span class="ident">parse</span>()
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">ConnectorXError::cannot_produce</span>::<span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>(<span class="prelude-val">Some</span>(<span class="ident">v</span>.<span class="ident">into</span>())))<span class="question-mark">?</span>
-    }
+    <span class="attribute">#[throws(CSVSourceError)]
+    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; bool {
+        <span class="kw">let </span>v = <span class="self">self</span>.next_val();
+        v.parse()
+            .map_err(|<span class="kw">_</span>| ConnectorXError::cannot_produce::&lt;bool&gt;(<span class="prelude-val">Some</span>(v.into())))<span class="question-mark">?
+    </span>}
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">CSVSourcePartitionParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">CSVSourceError</span>;
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span>&lt;bool&gt;&gt; <span class="kw">for </span>CSVSourcePartitionParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="kw">type </span>Error = CSVSourceError;
 
-    <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">CSVSourceError</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">v</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">next_val</span>();
-        <span class="kw">if</span> <span class="ident">v</span>.<span class="ident">is_empty</span>() {
-            <span class="kw">return</span> <span class="prelude-val">None</span>;
+    <span class="attribute">#[throws(CSVSourceError)]
+    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;bool&gt; {
+        <span class="kw">let </span>v = <span class="self">self</span>.next_val();
+        <span class="kw">if </span>v.is_empty() {
+            <span class="kw">return </span><span class="prelude-val">None</span>;
         }
-        <span class="kw">let</span> <span class="ident">v</span> <span class="op">=</span> <span class="ident">v</span>
-            .<span class="ident">parse</span>()
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">ConnectorXError::cannot_produce</span>::<span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="prelude-val">Some</span>(<span class="ident">v</span>.<span class="ident">into</span>())))<span class="question-mark">?</span>;
+        <span class="kw">let </span>v = v
+            .parse()
+            .map_err(|<span class="kw">_</span>| ConnectorXError::cannot_produce::&lt;<span class="prelude-ty">Option</span>&lt;bool&gt;&gt;(<span class="prelude-val">Some</span>(v.into())))<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Some</span>(<span class="ident">v</span>)
+        <span class="prelude-val">Some</span>(v)
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="ident">String</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">CSVSourcePartitionParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">CSVSourceError</span>;
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, String&gt; <span class="kw">for </span>CSVSourcePartitionParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="kw">type </span>Error = CSVSourceError;
 
-    <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">CSVSourceError</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident">String</span> {
-        <span class="kw">let</span> <span class="ident">v</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">next_val</span>();
-        <span class="ident">String::from</span>(<span class="ident">v</span>)
+    <span class="attribute">#[throws(CSVSourceError)]
+    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; String {
+        <span class="kw">let </span>v = <span class="self">self</span>.next_val();
+        String::from(v)
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;r</span><span class="op">&gt;</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">CSVSourcePartitionParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">CSVSourceError</span>;
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;r</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span>&lt;String&gt;&gt; <span class="kw">for </span>CSVSourcePartitionParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="kw">type </span>Error = CSVSourceError;
 
-    <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">CSVSourceError</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;r</span> <span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">v</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">next_val</span>();
+    <span class="attribute">#[throws(CSVSourceError)]
+    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;String&gt; {
+        <span class="kw">let </span>v = <span class="self">self</span>.next_val();
 
-        <span class="prelude-val">Some</span>(<span class="ident">String::from</span>(<span class="ident">v</span>))
+        <span class="prelude-val">Some</span>(String::from(v))
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">CSVSourcePartitionParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">CSVSourceError</span>;
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, DateTime&lt;Utc&gt;&gt; <span class="kw">for </span>CSVSourcePartitionParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="kw">type </span>Error = CSVSourceError;
 
-    <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">CSVSourceError</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">v</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">next_val</span>();
-        <span class="ident">v</span>.<span class="ident">parse</span>()
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">ConnectorXError::cannot_produce</span>::<span class="op">&lt;</span><span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="prelude-val">Some</span>(<span class="ident">v</span>.<span class="ident">into</span>())))<span class="question-mark">?</span>
-    }
+    <span class="attribute">#[throws(CSVSourceError)]
+    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; DateTime&lt;Utc&gt; {
+        <span class="kw">let </span>v = <span class="self">self</span>.next_val();
+        v.parse()
+            .map_err(|<span class="kw">_</span>| ConnectorXError::cannot_produce::&lt;DateTime&lt;Utc&gt;&gt;(<span class="prelude-val">Some</span>(v.into())))<span class="question-mark">?
+    </span>}
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Produce</span><span class="op">&lt;</span><span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">CSVSourcePartitionParser</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">CSVSourceError</span>;
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;&gt; <span class="kw">for </span>CSVSourcePartitionParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="kw">type </span>Error = CSVSourceError;
 
-    <span class="attribute">#[<span class="ident">throws</span>(<span class="ident">CSVSourceError</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">produce</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">v</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">next_val</span>();
-        <span class="kw">if</span> <span class="ident">v</span>.<span class="ident">is_empty</span>() {
-            <span class="kw">return</span> <span class="prelude-val">None</span>;
+    <span class="attribute">#[throws(CSVSourceError)]
+    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt; {
+        <span class="kw">let </span>v = <span class="self">self</span>.next_val();
+        <span class="kw">if </span>v.is_empty() {
+            <span class="kw">return </span><span class="prelude-val">None</span>;
         }
-        <span class="kw">let</span> <span class="ident">v</span> <span class="op">=</span> <span class="ident">v</span>
-            .<span class="ident">parse</span>()
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">ConnectorXError::cannot_produce</span>::<span class="op">&lt;</span><span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="prelude-val">Some</span>(<span class="ident">v</span>.<span class="ident">into</span>())))<span class="question-mark">?</span>;
-        <span class="prelude-val">Some</span>(<span class="ident">v</span>)
+        <span class="kw">let </span>v = v
+            .parse()
+            .map_err(|<span class="kw">_</span>| ConnectorXError::cannot_produce::&lt;DateTime&lt;Utc&gt;&gt;(<span class="prelude-val">Some</span>(v.into())))<span class="question-mark">?</span>;
+        <span class="prelude-val">Some</span>(v)
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="connectorx" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.62.0-nightly (878c7833f 2022-04-16)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="connectorx" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (750bd1a7f 2022-09-14)" ></div></body></html>
