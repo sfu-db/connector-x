@@ -1129,9 +1129,7 @@ impl<'r> Produce<'r, &'r str> for PostgresSimpleSourceParser {
         let val = match &self.rows[ridx] {
             SimpleQueryMessage::Row(row) => match row.try_get(cidx)? {
                 Some(s) => s,
-                None => throw!(anyhow!(
-                    "Cannot parse NULL in non-NULL column."
-                )),
+                None => throw!(anyhow!("Cannot parse NULL in non-NULL column.")),
             },
             SimpleQueryMessage::CommandComplete(c) => {
                 panic!("get command: {}", c);
@@ -1175,9 +1173,7 @@ impl<'r> Produce<'r, Vec<u8>> for PostgresSimpleSourceParser {
                     let res: Vec<u8> = s.chars().map(|c| c as u8).collect::<Vec<_>>();
                     res
                 }
-                None => throw!(anyhow!(
-                    "Cannot parse NULL in non-NULL column."
-                )),
+                None => throw!(anyhow!("Cannot parse NULL in non-NULL column.")),
             },
             SimpleQueryMessage::CommandComplete(c) => {
                 panic!("get command: {}", c);
@@ -1235,9 +1231,7 @@ impl<'r> Produce<'r, Vec<i16>> for PostgresSimpleSourceParser {
         let val = match &self.rows[ridx] {
             SimpleQueryMessage::Row(row) => match row.try_get(cidx)? {
                 Some(s) => parse_input_i16(rem_first_and_last(s)).unwrap(),
-                None => throw!(anyhow!(
-                    "Cannot parse NULL in non-NULL column."
-                )),
+                None => throw!(anyhow!("Cannot parse NULL in non-NULL column.")),
             },
             SimpleQueryMessage::CommandComplete(c) => {
                 panic!("get command: {}", c);
@@ -1285,9 +1279,7 @@ impl<'r> Produce<'r, Vec<i32>> for PostgresSimpleSourceParser {
         let val = match &self.rows[ridx] {
             SimpleQueryMessage::Row(row) => match row.try_get(cidx)? {
                 Some(s) => parse_input_i32(rem_first_and_last(s)).unwrap(),
-                None => throw!(anyhow!(
-                    "Cannot parse NULL in non-NULL column."
-                )),
+                None => throw!(anyhow!("Cannot parse NULL in non-NULL column.")),
             },
             SimpleQueryMessage::CommandComplete(c) => {
                 panic!("get command: {}", c);
@@ -1335,9 +1327,7 @@ impl<'r> Produce<'r, Vec<i64>> for PostgresSimpleSourceParser {
         let val = match &self.rows[ridx] {
             SimpleQueryMessage::Row(row) => match row.try_get(cidx)? {
                 Some(s) => parse_input_i64(rem_first_and_last(s)).unwrap(),
-                None => throw!(anyhow!(
-                    "Cannot parse NULL in non-NULL column."
-                )),
+                None => throw!(anyhow!("Cannot parse NULL in non-NULL column.")),
             },
             SimpleQueryMessage::CommandComplete(c) => {
                 panic!("get command: {}", c);
@@ -1385,9 +1375,7 @@ impl<'r> Produce<'r, Vec<f32>> for PostgresSimpleSourceParser {
         let val = match &self.rows[ridx] {
             SimpleQueryMessage::Row(row) => match row.try_get(cidx)? {
                 Some(s) => parse_input_f32(rem_first_and_last(s)).unwrap(),
-                None => throw!(anyhow!(
-                    "Cannot parse NULL in non-NULL column."
-                )),
+                None => throw!(anyhow!("Cannot parse NULL in non-NULL column.")),
             },
             SimpleQueryMessage::CommandComplete(c) => {
                 panic!("get command: {}", c);
@@ -1435,9 +1423,7 @@ impl<'r> Produce<'r, Vec<f64>> for PostgresSimpleSourceParser {
         let val = match &self.rows[ridx] {
             SimpleQueryMessage::Row(row) => match row.try_get(cidx)? {
                 Some(s) => parse_input_f64(rem_first_and_last(s)).unwrap(),
-                None => throw!(anyhow!(
-                    "Cannot parse NULL in non-NULL column."
-                )),
+                None => throw!(anyhow!("Cannot parse NULL in non-NULL column.")),
             },
             SimpleQueryMessage::CommandComplete(c) => {
                 panic!("get command: {}", c);
@@ -1485,9 +1471,7 @@ impl<'r> Produce<'r, Vec<Decimal>> for PostgresSimpleSourceParser {
         let val = match &self.rows[ridx] {
             SimpleQueryMessage::Row(row) => match row.try_get(cidx)? {
                 Some(s) => parse_input_decimal(rem_first_and_last(s)).unwrap(),
-                None => throw!(anyhow!(
-                    "Cannot parse NULL in non-NULL column."
-                )),
+                None => throw!(anyhow!("Cannot parse NULL in non-NULL column.")),
             },
             SimpleQueryMessage::CommandComplete(c) => {
                 panic!("get command: {}", c);
@@ -1532,9 +1516,7 @@ impl<'r> Produce<'r, NaiveDate> for PostgresSimpleSourceParser {
             SimpleQueryMessage::Row(row) => match row.try_get(cidx)? {
                 Some(s) => NaiveDate::parse_from_str(s, "%Y-%m-%d")
                     .map_err(|_| ConnectorXError::cannot_produce::<NaiveDate>(Some(s.into())))?,
-                None => throw!(anyhow!(
-                    "Cannot parse NULL in non-NULL column."
-                )),
+                None => throw!(anyhow!("Cannot parse NULL in non-NULL column.")),
             },
             SimpleQueryMessage::CommandComplete(c) => {
                 panic!("get command: {}", c);
@@ -1581,9 +1563,7 @@ impl<'r> Produce<'r, NaiveTime> for PostgresSimpleSourceParser {
             SimpleQueryMessage::Row(row) => match row.try_get(cidx)? {
                 Some(s) => NaiveTime::parse_from_str(s, "%H:%M:%S")
                     .map_err(|_| ConnectorXError::cannot_produce::<NaiveTime>(Some(s.into())))?,
-                None => throw!(anyhow!(
-                    "Cannot parse NULL in non-NULL column."
-                )),
+                None => throw!(anyhow!("Cannot parse NULL in non-NULL column.")),
             },
             SimpleQueryMessage::CommandComplete(c) => {
                 panic!("get command: {}", c);
@@ -1631,9 +1611,7 @@ impl<'r> Produce<'r, NaiveDateTime> for PostgresSimpleSourceParser {
                 Some(s) => NaiveDateTime::parse_from_str(s, "%Y-%m-%d %H:%M:%S").map_err(|_| {
                     ConnectorXError::cannot_produce::<NaiveDateTime>(Some(s.into()))
                 })?,
-                None => throw!(anyhow!(
-                    "Cannot parse NULL in non-NULL column."
-                )),
+                None => throw!(anyhow!("Cannot parse NULL in non-NULL column.")),
             },
             SimpleQueryMessage::CommandComplete(c) => {
                 panic!("get command: {}", c);
@@ -1688,9 +1666,7 @@ impl<'r> Produce<'r, DateTime<Utc>> for PostgresSimpleSourceParser {
 
                     time.with_timezone(&Utc)
                 }
-                None => throw!(anyhow!(
-                    "Cannot parse NULL in non-NULL column."
-                )),
+                None => throw!(anyhow!("Cannot parse NULL in non-NULL column.")),
             },
             SimpleQueryMessage::CommandComplete(c) => {
                 panic!("get command: {}", c);
