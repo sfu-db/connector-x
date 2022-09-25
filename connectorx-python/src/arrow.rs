@@ -6,6 +6,7 @@ use fehler::throws;
 use libc::uintptr_t;
 use pyo3::prelude::*;
 use pyo3::{PyAny, Python};
+use std::convert::TryFrom;
 
 #[throws(ConnectorXPythonError)]
 pub fn write_arrow<'a>(
@@ -38,7 +39,9 @@ pub fn to_ptrs(rbs: Vec<RecordBatch>) -> (Vec<String>, Vec<Vec<(uintptr_t, uintp
         let mut cols = vec![];
 
         for array in rb.columns() {
-            let (array_ptr, schema_ptr) = array.to_raw().expect("c ptr");
+            let data = array.data().clone();
+            let array = arrow::ffi::ArrowArray::try_from(data).expect("c ptr");
+            let (array_ptr, schema_ptr) = arrow::ffi::ArrowArray::into_raw(array);
             cols.push((array_ptr as uintptr_t, schema_ptr as uintptr_t));
         }
 
