@@ -510,9 +510,9 @@ def test_types_binary(postgres_url: str) -> None:
             ),
             "test_jsonb": pd.Series(
                 [
-                    '{"qty":6,"product":"Beer"}',
-                    '{"qty":24,"product":"Diaper"}',
-                    '{"qty":1,"product":"Toy Car"}',
+                    '{"product":"Beer","qty":6}',
+                    '{"product":"Diaper","qty":24}',
+                    '{"product":"Toy Car","qty":1}',
                     None,
                 ],
                 dtype="object",
@@ -614,9 +614,9 @@ def test_types_csv(postgres_url: str) -> None:
             ),
             "test_jsonb": pd.Series(
                 [
-                    '{"qty":6,"product":"Beer"}',
-                    '{"qty":24,"product":"Diaper"}',
-                    '{"qty":1,"product":"Toy Car"}',
+                    '{"product":"Beer","qty":6}',
+                    '{"product":"Diaper","qty":24}',
+                    '{"product":"Toy Car","qty":1}',
                     None,
                 ],
                 dtype="object",
@@ -718,9 +718,9 @@ def test_types_cursor(postgres_url: str) -> None:
             ),
             "test_jsonb": pd.Series(
                 [
-                    '{"qty":6,"product":"Beer"}',
-                    '{"qty":24,"product":"Diaper"}',
-                    '{"qty":1,"product":"Toy Car"}',
+                    '{"product":"Beer","qty":6}',
+                    '{"product":"Diaper","qty":24}',
+                    '{"product":"Toy Car","qty":1}',
                     None,
                 ],
                 dtype="object",
