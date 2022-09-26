@@ -353,6 +353,8 @@
 <span id="353">353</span>
 <span id="354">354</span>
 <span id="355">355</span>
+<span id="356">356</span>
+<span id="357">357</span>
 </pre><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::errors::{ArrowDestinationError, <span class="prelude-ty">Result</span>};
 <span class="kw">use </span><span class="kw">crate</span>::constants::SECONDS_IN_DAY;
 <span class="kw">use </span>arrow::array::{
@@ -380,12 +382,12 @@
             <span class="kw">type </span>Builder = <span class="macro-nonterminal">$B</span>;
 
             <span class="kw">fn </span>builder(nrows: usize) -&gt; <span class="self">Self</span>::Builder {
-                <span class="self">Self</span>::Builder::new(nrows)
+                <span class="self">Self</span>::Builder::with_capacity(nrows)
             }
 
             <span class="attribute">#[throws(ArrowDestinationError)]
             </span><span class="kw">fn </span>append(builder: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Builder, value: <span class="self">Self</span>) {
-                builder.append_value(value)<span class="question-mark">?</span>;
+                builder.append_value(value);
             }
 
             <span class="kw">fn </span>field(header: <span class="kw-2">&amp;</span>str) -&gt; Field {
@@ -397,12 +399,12 @@
             <span class="kw">type </span>Builder = <span class="macro-nonterminal">$B</span>;
 
             <span class="kw">fn </span>builder(nrows: usize) -&gt; <span class="self">Self</span>::Builder {
-                <span class="self">Self</span>::Builder::new(nrows)
+                <span class="self">Self</span>::Builder::with_capacity(nrows)
             }
 
             <span class="attribute">#[throws(ArrowDestinationError)]
             </span><span class="kw">fn </span>append(builder: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Builder, value: <span class="self">Self</span>) {
-                builder.append_option(value)<span class="question-mark">?</span>;
+                builder.append_option(value);
             }
 
             <span class="kw">fn </span>field(header: <span class="kw-2">&amp;</span>str) -&gt; Field {
@@ -424,12 +426,12 @@
     <span class="kw">type </span>Builder = StringBuilder;
 
     <span class="kw">fn </span>builder(nrows: usize) -&gt; <span class="self">Self</span>::Builder {
-        StringBuilder::new(nrows)
+        StringBuilder::with_capacity(<span class="number">1024</span>, nrows)
     }
 
     <span class="attribute">#[throws(ArrowDestinationError)]
     </span><span class="kw">fn </span>append(builder: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Builder, value: <span class="self">Self</span>) {
-        builder.append_value(value)<span class="question-mark">?</span>;
+        builder.append_value(value);
     }
 
     <span class="kw">fn </span>field(header: <span class="kw-2">&amp;</span>str) -&gt; Field {
@@ -441,14 +443,14 @@
     <span class="kw">type </span>Builder = StringBuilder;
 
     <span class="kw">fn </span>builder(nrows: usize) -&gt; <span class="self">Self</span>::Builder {
-        StringBuilder::new(nrows)
+        StringBuilder::with_capacity(<span class="number">1024</span>, nrows)
     }
 
     <span class="attribute">#[throws(ArrowDestinationError)]
     </span><span class="kw">fn </span>append(builder: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Builder, value: <span class="self">Self</span>) {
         <span class="kw">match </span>value {
-            <span class="prelude-val">Some</span>(s) =&gt; builder.append_value(s)<span class="question-mark">?</span>,
-            <span class="prelude-val">None </span>=&gt; builder.append_null()<span class="question-mark">?</span>,
+            <span class="prelude-val">Some</span>(s) =&gt; builder.append_value(s),
+            <span class="prelude-val">None </span>=&gt; builder.append_null(),
         }
     }
 
@@ -461,12 +463,12 @@
     <span class="kw">type </span>Builder = StringBuilder;
 
     <span class="kw">fn </span>builder(nrows: usize) -&gt; <span class="self">Self</span>::Builder {
-        StringBuilder::new(nrows)
+        StringBuilder::with_capacity(<span class="number">1024</span>, nrows)
     }
 
     <span class="attribute">#[throws(ArrowDestinationError)]
     </span><span class="kw">fn </span>append(builder: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Builder, value: String) {
-        builder.append_value(value.as_str())<span class="question-mark">?</span>;
+        builder.append_value(value.as_str());
     }
 
     <span class="kw">fn </span>field(header: <span class="kw-2">&amp;</span>str) -&gt; Field {
@@ -478,14 +480,14 @@
     <span class="kw">type </span>Builder = StringBuilder;
 
     <span class="kw">fn </span>builder(nrows: usize) -&gt; <span class="self">Self</span>::Builder {
-        StringBuilder::new(nrows)
+        StringBuilder::with_capacity(<span class="number">1024</span>, nrows)
     }
 
     <span class="attribute">#[throws(ArrowDestinationError)]
     </span><span class="kw">fn </span>append(builder: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Builder, value: <span class="self">Self</span>) {
         <span class="kw">match </span>value {
-            <span class="prelude-val">Some</span>(s) =&gt; builder.append_value(s.as_str())<span class="question-mark">?</span>,
-            <span class="prelude-val">None </span>=&gt; builder.append_null()<span class="question-mark">?</span>,
+            <span class="prelude-val">Some</span>(s) =&gt; builder.append_value(s.as_str()),
+            <span class="prelude-val">None </span>=&gt; builder.append_null(),
         }
     }
 
@@ -570,11 +572,11 @@
     <span class="kw">type </span>Builder = Date32Builder;
 
     <span class="kw">fn </span>builder(nrows: usize) -&gt; <span class="self">Self</span>::Builder {
-        Date32Builder::new(nrows)
+        Date32Builder::with_capacity(nrows)
     }
 
     <span class="kw">fn </span>append(builder: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Builder, value: <span class="prelude-ty">Option</span>&lt;NaiveDate&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        builder.append_option(value.map(naive_date_to_arrow))<span class="question-mark">?</span>;
+        builder.append_option(value.map(naive_date_to_arrow));
         <span class="prelude-val">Ok</span>(())
     }
 
@@ -587,11 +589,11 @@
     <span class="kw">type </span>Builder = Date32Builder;
 
     <span class="kw">fn </span>builder(nrows: usize) -&gt; <span class="self">Self</span>::Builder {
-        Date32Builder::new(nrows)
+        Date32Builder::with_capacity(nrows)
     }
 
     <span class="kw">fn </span>append(builder: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Builder, value: NaiveDate) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        builder.append_value(naive_date_to_arrow(value))<span class="question-mark">?</span>;
+        builder.append_value(naive_date_to_arrow(value));
         <span class="prelude-val">Ok</span>(())
     }
 
@@ -604,11 +606,11 @@
     <span class="kw">type </span>Builder = Date64Builder;
 
     <span class="kw">fn </span>builder(nrows: usize) -&gt; <span class="self">Self</span>::Builder {
-        Date64Builder::new(nrows)
+        Date64Builder::with_capacity(nrows)
     }
 
     <span class="kw">fn </span>append(builder: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Builder, value: <span class="prelude-ty">Option</span>&lt;NaiveDateTime&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        builder.append_option(value.map(naive_datetime_to_arrow))<span class="question-mark">?</span>;
+        builder.append_option(value.map(naive_datetime_to_arrow));
         <span class="prelude-val">Ok</span>(())
     }
 
@@ -621,11 +623,11 @@
     <span class="kw">type </span>Builder = Date64Builder;
 
     <span class="kw">fn </span>builder(nrows: usize) -&gt; <span class="self">Self</span>::Builder {
-        Date64Builder::new(nrows)
+        Date64Builder::with_capacity(nrows)
     }
 
     <span class="kw">fn </span>append(builder: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Builder, value: NaiveDateTime) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        builder.append_value(naive_datetime_to_arrow(value))<span class="question-mark">?</span>;
+        builder.append_value(naive_datetime_to_arrow(value));
         <span class="prelude-val">Ok</span>(())
     }
 
@@ -638,13 +640,15 @@
     <span class="kw">type </span>Builder = Time64NanosecondBuilder;
 
     <span class="kw">fn </span>builder(nrows: usize) -&gt; <span class="self">Self</span>::Builder {
-        Time64NanosecondBuilder::new(nrows)
+        Time64NanosecondBuilder::with_capacity(nrows)
     }
 
     <span class="kw">fn </span>append(builder: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Builder, value: <span class="prelude-ty">Option</span>&lt;NaiveTime&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        builder.append_option(value.map(|t| {
-            t.num_seconds_from_midnight() <span class="kw">as </span>i64 * <span class="number">1_000_000_000 </span>+ t.nanosecond() <span class="kw">as </span>i64
-        }))<span class="question-mark">?</span>;
+        builder.append_option(
+            value.map(|t| {
+                t.num_seconds_from_midnight() <span class="kw">as </span>i64 * <span class="number">1_000_000_000 </span>+ t.nanosecond() <span class="kw">as </span>i64
+            }),
+        );
         <span class="prelude-val">Ok</span>(())
     }
 
@@ -657,13 +661,13 @@
     <span class="kw">type </span>Builder = Time64NanosecondBuilder;
 
     <span class="kw">fn </span>builder(nrows: usize) -&gt; <span class="self">Self</span>::Builder {
-        Time64NanosecondBuilder::new(nrows)
+        Time64NanosecondBuilder::with_capacity(nrows)
     }
 
     <span class="kw">fn </span>append(builder: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Builder, value: NaiveTime) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         builder.append_value(
             value.num_seconds_from_midnight() <span class="kw">as </span>i64 * <span class="number">1_000_000_000 </span>+ value.nanosecond() <span class="kw">as </span>i64,
-        )<span class="question-mark">?</span>;
+        );
         <span class="prelude-val">Ok</span>(())
     }
 
@@ -676,13 +680,13 @@
     <span class="kw">type </span>Builder = LargeBinaryBuilder;
 
     <span class="kw">fn </span>builder(nrows: usize) -&gt; <span class="self">Self</span>::Builder {
-        LargeBinaryBuilder::new(nrows)
+        LargeBinaryBuilder::with_capacity(<span class="number">1024</span>, nrows)
     }
 
     <span class="kw">fn </span>append(builder: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Builder, value: <span class="self">Self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">match </span>value {
-            <span class="prelude-val">Some</span>(v) =&gt; builder.append_value(v)<span class="question-mark">?</span>,
-            <span class="prelude-val">None </span>=&gt; builder.append_null()<span class="question-mark">?</span>,
+            <span class="prelude-val">Some</span>(v) =&gt; builder.append_value(v),
+            <span class="prelude-val">None </span>=&gt; builder.append_null(),
         };
         <span class="prelude-val">Ok</span>(())
     }
@@ -696,11 +700,11 @@
     <span class="kw">type </span>Builder = LargeBinaryBuilder;
 
     <span class="kw">fn </span>builder(nrows: usize) -&gt; <span class="self">Self</span>::Builder {
-        LargeBinaryBuilder::new(nrows)
+        LargeBinaryBuilder::with_capacity(<span class="number">1024</span>, nrows)
     }
 
     <span class="kw">fn </span>append(builder: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Builder, value: <span class="self">Self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        builder.append_value(value)<span class="question-mark">?</span>;
+        builder.append_value(value);
         <span class="prelude-val">Ok</span>(())
     }
 
