@@ -1,4 +1,5 @@
 #![allow(clippy::upper_case_acronyms)]
+#![feature(vec_into_raw_parts)]
 
 //! # ConnectorX
 //!
@@ -141,6 +142,12 @@
 //! For example, if you'd like to load data from Postgres to Arrow, you can enable `src_postgres` and `dst_arrow` in `Cargo.toml`.
 //! This will enable [`sources::postgres`], [`destinations::arrow`] and [`transports::PostgresArrowTransport`].
 
+use source_router::SourceConn;
+use sql::CXQuery;
+use std::convert::TryFrom;
+use std::ffi::CStr;
+use std::mem;
+
 pub mod typesystem;
 #[macro_use]
 mod macros;
@@ -201,3 +208,117 @@ pub mod prelude {
         TypeSystem,
     };
 }
+
+#[no_mangle]
+pub extern "C" fn hello_from_rust() {
+    println!("Hello from rust!");
+}
+
+#[repr(C)]
+pub struct CXArray {
+    array: *const arrow::ffi::FFI_ArrowArray,
+    schema: *const arrow::ffi::FFI_ArrowSchema,
+}
+
+#[repr(C)]
+pub struct CXRecordBatch {
+    data: *const CXArray,
+    len: usize,
+}
+
+#[repr(C)]
+pub struct CXColumnName {
+    data: *const u8,
+    len: usize,
+}
+
+#[repr(C)]
+pub struct CXHeader {
+    data: *const CXColumnName,
+    len: usize,
+}
+
+#[repr(C)]
+pub struct CXResult {
+    data: *const CXRecordBatch,
+    len: usize,
+    header: CXHeader,
+}
+
+#[cfg(feature = "dst_arrow")]
+#[no_mangle]
+pub extern "C" fn connectorx_scan(conn: *const i8, query: *const i8) -> CXResult {
+    let conn_str = unsafe { CStr::from_ptr(conn) }.to_str().unwrap();
+    let query_str = unsafe { CStr::from_ptr(query) }.to_str().unwrap();
+    let source_conn = SourceConn::try_from(conn_str).unwrap();
+    let record_batches = get_arrow::get_arrow(&source_conn, None, &[CXQuery::from(query_str)])
+        .unwrap()
+        .arrow()
+        .unwrap();
+
+    arrow::util::pretty::print_batches(&record_batches[..]).unwrap();
+
+    let names: Vec<CXColumnName> = record_batches[0]
+        .schema()
+        .fields()
+        .iter()
+        .map(|f| {
+            let mut t = f.name().clone();
+            t.shrink_to_fit();
+            let (buf, length, _) = t.into_raw_parts();
+            CXColumnName {
+                data: buf,
+                len: length,
+            }
+        })
+        .collect();
+
+    let mut result = vec![];
+    for rb in record_batches {
+        let mut cols = vec![];
+
+        for array in rb.columns() {
+            let data = array.data().clone();
+            let array = arrow::ffi::ArrowArray::try_from(data).expect("c ptr");
+            let (array_ptr, schema_ptr) = arrow::ffi::ArrowArray::into_raw(array);
+
+            let cx_array = CXArray {
+                array: array_ptr,
+                schema: schema_ptr,
+            };
+            cols.push(cx_array);
+        }
+
+        cols.shrink_to_fit();
+        let cx_rb = CXRecordBatch {
+            data: cols.as_mut_ptr(),
+            len: cols.len(),
+        };
+        mem::forget(cols);
+        result.push(cx_rb);
+    }
+
+    let (buf, length, _) = names.into_raw_parts();
+    result.shrink_to_fit();
+    let res = CXResult {
+        data: result.as_mut_ptr(),
+        len: result.len(),
+        header: CXHeader {
+            data: buf,
+            len: length,
+        },
+    };
+
+    mem::forget(result);
+
+    res
+}
+
+// #[cfg(feature = "dst_arrow")]
+// #[no_mangle]
+// pub unsafe extern "C" fn connectorx_free(
+//     rbs: *mut arrow::record_batch::RecordBatch,
+//     rbs_len: usize,
+// ) {
+//     mem::drop(Vec::from_raw_parts(rbs, rbs_len, rbs_len));
+// }

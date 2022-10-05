@@ -1,5 +1,11 @@
 set dotenv-load := true
 
+build-lib:
+    cargo build --features src_postgres --features dst_arrow
+
+build-lib-release:
+    cargo build --release --features src_postgres --features dst_arrow
+
 build-release:
     cargo build  --release
 
