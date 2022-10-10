@@ -2,6 +2,7 @@ use crate::{
     constants::{CX_REWRITER_PATH, J4RS_BASE_PATH, MYSQL_JDBC_DRIVER, POSTGRES_JDBC_DRIVER},
     prelude::*,
     sql::CXQuery,
+    CXFederatedPlan, CXSlice,
 };
 use arrow::record_batch::RecordBatch;
 use datafusion::datasource::MemTable;
@@ -11,14 +12,39 @@ use j4rs::{ClasspathEntry, InvocationArg, Jvm, JvmBuilder};
 use log::debug;
 use rayon::prelude::*;
 use std::collections::HashMap;
-use std::convert::TryFrom;
+use std::convert::{Into, TryFrom};
 use std::sync::{mpsc::channel, Arc};
 use std::{env, fs};
 
-struct Plan {
+pub struct Plan {
     db_name: String,
     db_alias: String,
     sql: String,
+}
+
+impl Into<CXFederatedPlan> for Plan {
+    fn into(mut self) -> CXFederatedPlan {
+        self.db_name.shrink_to_fit();
+        self.db_alias.shrink_to_fit();
+        self.sql.shrink_to_fit();
+        let (data1, len1, _) = self.db_name.into_raw_parts();
+        let (data2, len2, _) = self.db_alias.into_raw_parts();
+        let (data3, len3, _) = self.sql.into_raw_parts();
+        CXFederatedPlan {
+            db_name: CXSlice::<u8> {
+                data: data1,
+                len: len1,
+            },
+            db_alias: CXSlice::<u8> {
+                data: data2,
+                len: len2,
+            },
+            sql: CXSlice::<u8> {
+                data: data3,
+                len: len3,
+            },
+        }
+    }
 }
 
 #[throws(ConnectorXOutError)]
@@ -29,12 +55,14 @@ fn init_jvm(j4rs_base: Option<&str>) -> Jvm {
         None => fs::canonicalize(J4RS_BASE_PATH)
             .map_err(|_| ConnectorXOutError::FileNotFoundError(J4RS_BASE_PATH.to_string()))?,
     };
+    println!("j4rs base path: {:?}", base);
     debug!("j4rs base path: {:?}", base);
 
     let rewriter_path = env::var("CX_REWRITER_PATH").unwrap_or(CX_REWRITER_PATH.to_string());
     let path = fs::canonicalize(rewriter_path.as_str())
         .map_err(|_| ConnectorXOutError::FileNotFoundError(rewriter_path))?;
 
+    println!("rewriter path: {:?}", path);
     debug!("rewriter path: {:?}", path);
 
     let entry = ClasspathEntry::new(path.to_str().unwrap());
@@ -46,7 +74,14 @@ fn init_jvm(j4rs_base: Option<&str>) -> Jvm {
 }
 
 #[throws(ConnectorXOutError)]
-fn rewrite_sql(jvm: &Jvm, sql: &str, db_map: &HashMap<String, SourceConn>) -> Vec<Plan> {
+pub fn rewrite_sql(
+    sql: &str,
+    db_map: &HashMap<String, SourceConn>,
+    j4rs_base: Option<&str>,
+) -> Vec<Plan> {
+    let jvm = init_jvm(j4rs_base)?;
+    debug!("init jvm successfully!");
+
     let sql = InvocationArg::try_from(sql).unwrap();
     let db_conns = jvm.create_instance("java.util.HashMap", &[])?;
     for (db_name, source_conn) in db_map.iter() {
@@ -148,16 +183,11 @@ pub fn run(
     j4rs_base: Option<&str>,
 ) -> Vec<RecordBatch> {
     debug!("federated input sql: {}", sql);
-
-    let jvm = init_jvm(j4rs_base)?;
-    debug!("init jvm successfully!");
-
     let mut db_conn_map: HashMap<String, SourceConn> = HashMap::new();
     for (k, v) in db_map.into_iter() {
         db_conn_map.insert(k, SourceConn::try_from(v.as_str())?);
     }
-
-    let fed_plan = rewrite_sql(&jvm, sql.as_str(), &db_conn_map)?;
+    let fed_plan = rewrite_sql(sql.as_str(), &db_conn_map, j4rs_base)?;
 
     debug!("fetch queries from remote");
     let (sender, receiver) = channel();

@@ -144,8 +144,10 @@
 
 use source_router::SourceConn;
 use sql::CXQuery;
+use std::collections::HashMap;
 use std::convert::TryFrom;
-use std::ffi::CStr;
+use std::env;
+use std::ffi::{c_char, CStr};
 use std::mem;
 
 pub mod typesystem;
@@ -212,6 +214,63 @@ pub mod prelude {
 #[no_mangle]
 pub extern "C" fn hello_from_rust() {
     println!("Hello from rust!");
+}
+
+#[repr(C)]
+pub struct CXSlice<T> {
+    data: *const T,
+    len: usize,
+}
+
+#[repr(C)]
+pub struct CXConnectionString {
+    name: *const c_char,
+    conn: *const c_char,
+}
+
+#[repr(C)]
+pub struct CXFederatedPlan {
+    db_name: CXSlice<u8>,
+    db_alias: CXSlice<u8>,
+    sql: CXSlice<u8>,
+}
+
+#[cfg(feature = "federation")]
+#[no_mangle]
+pub unsafe extern "C" fn connectorx_rewrite(
+    conn_list: *const CXSlice<CXConnectionString>,
+    query: *const c_char,
+) -> CXSlice<CXFederatedPlan> {
+    let mut db_map = HashMap::new();
+    let conn_slice = unsafe { std::slice::from_raw_parts((*conn_list).data, (*conn_list).len) };
+    for p in conn_slice {
+        let name = unsafe { CStr::from_ptr(p.name) }.to_str().unwrap();
+        let conn = unsafe { CStr::from_ptr(p.conn) }.to_str().unwrap();
+        println!("name: {:?}, conn: {:?}", name, conn);
+        let source_conn = SourceConn::try_from(conn).unwrap();
+        db_map.insert(name.to_string(), source_conn);
+    }
+
+    let query_str = unsafe { CStr::from_ptr(query) }.to_str().unwrap();
+    let j4rs_base = match env::var("CX_LIB_PATH") {
+        Ok(val) => Some(val),
+        Err(_) => None,
+    };
+    println!("j4rs_base: {:?}", j4rs_base);
+    let mut fed_plan: Vec<CXFederatedPlan> =
+        fed_dispatcher::rewrite_sql(query_str, &db_map, j4rs_base.as_deref())
+            .unwrap()
+            .into_iter()
+            .map(|p| p.into())
+            .collect();
+
+    fed_plan.shrink_to_fit();
+    let res = CXSlice::<CXFederatedPlan> {
+        data: fed_plan.as_mut_ptr(),
+        len: fed_plan.len(),
+    };
+    mem::forget(fed_plan);
+    res
 }
 
 #[repr(C)]
@@ -316,7 +375,7 @@ pub extern "C" fn connectorx_scan(conn: *const i8, query: *const i8) -> CXResult
 
 // #[cfg(feature = "dst_arrow")]
 // #[no_mangle]
-// pub unsafe extern "C" fn connectorx_free(
+// pub unsafe extern "C" fn connectorx_free_slice(
 //     rbs: *mut arrow::record_batch::RecordBatch,
 //     rbs_len: usize,
 // ) {
