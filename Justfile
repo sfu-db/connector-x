@@ -1,10 +1,10 @@
 set dotenv-load := true
 
 build-lib:
-    cargo build --features src_postgres --features dst_arrow
+    cargo build --features src_postgres --features src_mysql --features dst_arrow --features federation
 
 build-lib-release:
-    cargo build --release --features src_postgres --features dst_arrow
+    cargo build --release --features src_postgres --features src_mysql --features dst_arrow --features federation
 
 build-release:
     cargo build  --release
