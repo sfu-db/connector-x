@@ -44,7 +44,7 @@ impl<'a> From<&'a OracleType> for OracleTypeSystem {
             OracleType::BinaryDouble => BinaryDouble(true),
             OracleType::BLOB => Blob(true),
             OracleType::CLOB => Clob(true),
-            OracleType::Char(_) => Char(true),
+            OracleType::Char(_) | OracleType::Long => Char(true),
             OracleType::NChar(_) => NChar(true),
             OracleType::Varchar2(_) => VarChar(true),
             OracleType::NVarchar2(_) => NVarChar(true),

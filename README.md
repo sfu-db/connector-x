@@ -135,8 +135,8 @@ Please see [Developer's Guide](https://github.com/sfu-db/connector-x/blob/main/C
 # Supports
 
 You are always welcomed to:
-1. Ask questions in stackoverflow. Make sure to have #connectorx attached.
-2. Ask questions & propose new ideas in our [forum][discussion_page].
+1. Ask questions & propose new ideas in our github [discussion][discussion_page].
+2. Ask questions in stackoverflow. Make sure to have #connectorx attached.
 
 # Organizations and Projects using ConnectorX
 
