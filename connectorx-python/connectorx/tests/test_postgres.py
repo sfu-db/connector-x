@@ -449,8 +449,8 @@ def test_postgres_with_index_col(postgres_url: str) -> None:
     assert_frame_equal(df, expected, check_names=True)
 
 
-def test_types_binary(postgres_url: str) -> None:
-    query = "SELECT test_date, test_timestamp, test_timestamptz, test_int16, test_int64, test_float32, test_numeric, test_bpchar, test_char, test_varchar, test_uuid, test_time, test_json, test_jsonb, test_bytea, test_enum, test_f4array, test_f8array, test_narray, test_i2array, test_i4array, test_i8array FROM test_types"
+def test_postgres_types_binary(postgres_url: str) -> None:
+    query = "SELECT test_date, test_timestamp, test_timestamptz, test_int16, test_int64, test_float32, test_numeric, test_bpchar, test_char, test_varchar, test_uuid, test_time, test_json, test_jsonb, test_bytea, test_enum, test_f4array, test_f8array, test_narray, test_i2array, test_i4array, test_i8array, test_citext FROM test_types"
     df = read_sql(postgres_url, query)
     expected = pd.DataFrame(
         index=range(4),
@@ -548,13 +548,14 @@ def test_types_binary(postgres_url: str) -> None:
                 [[-9223372036854775808, 9223372036854775807], [], [0], None],
                 dtype="object",
             ),
+            "test_citext": pd.Series(["str_citext", "", "s", None], dtype="object"),
         },
     )
     assert_frame_equal(df, expected, check_names=True)
 
 
-def test_types_csv(postgres_url: str) -> None:
-    query = "SELECT test_date, test_timestamp, test_timestamptz, test_int16, test_int64, test_float32, test_numeric, test_bpchar, test_char, test_varchar, test_uuid, test_time, test_json, test_jsonb, test_bytea, test_enum::text, test_f4array, test_f8array, test_narray, test_i2array, test_i4array, test_i8array FROM test_types"
+def test_postgres_types_csv(postgres_url: str) -> None:
+    query = "SELECT test_date, test_timestamp, test_timestamptz, test_int16, test_int64, test_float32, test_numeric, test_bpchar, test_char, test_varchar, test_uuid, test_time, test_json, test_jsonb, test_bytea, test_enum::text, test_f4array, test_f8array, test_narray, test_i2array, test_i4array, test_i8array, test_citext FROM test_types"
     df = read_sql(postgres_url, query, protocol="csv")
     expected = pd.DataFrame(
         index=range(4),
@@ -652,13 +653,14 @@ def test_types_csv(postgres_url: str) -> None:
                 [[-9223372036854775808, 9223372036854775807], [], [0], None],
                 dtype="object",
             ),
+            "test_citext": pd.Series(["str_citext", None, "s", None], dtype="object"),
         },
     )
     assert_frame_equal(df, expected, check_names=True)
 
 
-def test_types_cursor(postgres_url: str) -> None:
-    query = "SELECT test_date, test_timestamp, test_timestamptz, test_int16, test_int64, test_float32, test_numeric, test_bpchar, test_char, test_varchar, test_uuid, test_time, test_json, test_jsonb, test_bytea, test_enum::text, test_f4array, test_f8array, test_narray, test_i2array, test_i4array, test_i8array FROM test_types"
+def test_postgres_types_cursor(postgres_url: str) -> None:
+    query = "SELECT test_date, test_timestamp, test_timestamptz, test_int16, test_int64, test_float32, test_numeric, test_bpchar, test_char, test_varchar, test_uuid, test_time, test_json, test_jsonb, test_bytea, test_enum::text, test_f4array, test_f8array, test_narray, test_i2array, test_i4array, test_i8array, test_citext FROM test_types"
     df = read_sql(postgres_url, query, protocol="cursor")
     expected = pd.DataFrame(
         index=range(4),
@@ -756,6 +758,7 @@ def test_types_cursor(postgres_url: str) -> None:
                 [[-9223372036854775808, 9223372036854775807], [], [0], None],
                 dtype="object",
             ),
+            "test_citext": pd.Series(["str_citext", "", "s", None], dtype="object"),
         },
     )
     assert_frame_equal(df, expected, check_names=True)
@@ -944,7 +947,10 @@ def test_postgres_tls_with_cert(postgres_url_tls: str, postgres_rootcert: str) -
     reason="Do not test Postgres TLS unless `POSTGRES_URL_TLS` is set",
 )
 def test_postgres_tls_client_auth(
-    postgres_url_tls: str, postgres_rootcert: str, postgres_sslcert: str, postgres_sslkey: str
+    postgres_url_tls: str,
+    postgres_rootcert: str,
+    postgres_sslcert: str,
+    postgres_sslkey: str,
 ) -> None:
     query = "SELECT * FROM test_table"
     df = read_sql(
