@@ -83,7 +83,7 @@ impl<'a> From<&'a Type> for PostgresTypeSystem {
             "_numeric" => NumericArray(true),
             "bool" => Bool(true),
             "char" => Char(true),
-            "text" => Text(true),
+            "text" | "citext" => Text(true),
             "bpchar" => BpChar(true),
             "varchar" => VarChar(true),
             "bytea" => ByteA(true),
