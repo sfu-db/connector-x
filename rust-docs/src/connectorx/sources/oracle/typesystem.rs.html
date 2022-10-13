@@ -101,7 +101,7 @@
             OracleType::BinaryDouble =&gt; BinaryDouble(<span class="bool-val">true</span>),
             OracleType::BLOB =&gt; Blob(<span class="bool-val">true</span>),
             OracleType::CLOB =&gt; Clob(<span class="bool-val">true</span>),
-            OracleType::Char(<span class="kw">_</span>) =&gt; Char(<span class="bool-val">true</span>),
+            OracleType::Char(<span class="kw">_</span>) | OracleType::Long =&gt; Char(<span class="bool-val">true</span>),
             OracleType::NChar(<span class="kw">_</span>) =&gt; NChar(<span class="bool-val">true</span>),
             OracleType::Varchar2(<span class="kw">_</span>) =&gt; VarChar(<span class="bool-val">true</span>),
             OracleType::NVarchar2(<span class="kw">_</span>) =&gt; NVarChar(<span class="bool-val">true</span>),
