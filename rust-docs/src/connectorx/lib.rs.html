@@ -190,6 +190,16 @@
 <span id="190">190</span>
 <span id="191">191</span>
 <span id="192">192</span>
+<span id="193">193</span>
+<span id="194">194</span>
+<span id="195">195</span>
+<span id="196">196</span>
+<span id="197">197</span>
+<span id="198">198</span>
+<span id="199">199</span>
+<span id="200">200</span>
+<span id="201">201</span>
+<span id="202">202</span>
 </pre><pre class="rust"><code><span class="attribute">#![allow(incomplete_features)]
 #![allow(clippy::upper_case_acronyms)]
 
@@ -293,6 +303,18 @@
 //! let data = destination.arrow();
 //! ```
 //!
+//! Or simply you can directly use the [`get_arrow::get_arrow`] or [`get_arrow2::get_arrow2`] in which we wrapped the above procedures:
+//!
+//! ```no_run
+//! use connectorx::prelude::*;
+//!
+//! let mut source_conn = SourceConn::try_from(&quot;postgresql://username:password@host:port/db?cxprotocol=binary&quot;);
+//! let queries = &amp;[&quot;SELECT * FROM table WHERE id &lt; 100&quot;, &quot;SELECT * FROM table WHERE id &gt;= 100&quot;];
+//! let destination = get_arrow(source_conn, Some(&quot;SELECT * FROM table&quot;), queries);
+//!
+//! let data = destination.arrow();
+//! ```
+//!
 //! NOTE: the pool size parameter `nconn` used in initializing the source should be larger than or equal to the number of partitioned queries input later.
 //!
 //! ## Need more examples?
@@ -301,21 +323,19 @@
 //! [Arrow destination](https://github.com/sfu-db/connector-x/tree/main/connectorx/src/destinations/arrow),
 //! [MySQL to Arrow transport](https://github.com/sfu-db/connector-x/blob/main/connectorx/src/transports/mysql_arrow.rs).
 //!
-//! # Sources &amp; Destinations that is implemented in the Rust core.
+//! # Sources protocols &amp; Destinations that is implemented in the Rust core.
 //!
 //! ## Sources
 //! - [x] Postgres
 //! - [x] Mysql
 //! - [x] Sqlite
-//! - [x] Redshift (through postgres protocol)
-//! - [x] Clickhouse (through mysql protocol)
 //! - [x] SQL Server
+//! - [x] Oracle
+//! - [x] BigQuery
 //!
 //! ## Destinations
-//! - [x] PyArrow
-//! - [x] Modin
-//! - [x] Dask
-//! - [x] Polars
+//! - [x] Arrow
+//! - [x] Arrow2
 //!
 //! # Feature gates
 //! By default, ConnectorX does not enable any sources / destinations to keep the dependencies minimal.
