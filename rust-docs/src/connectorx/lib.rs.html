@@ -310,7 +310,7 @@
 //!
 //! let mut source_conn = SourceConn::try_from(&quot;postgresql://username:password@host:port/db?cxprotocol=binary&quot;);
 //! let queries = &amp;[&quot;SELECT * FROM table WHERE id &lt; 100&quot;, &quot;SELECT * FROM table WHERE id &gt;= 100&quot;];
-//! let destination = get_arrow(source_conn, Some(&quot;SELECT * FROM table&quot;), queries);
+//! let destination = get_arrow(source_conn, Some(&quot;SELECT * FROM table&quot;), queries).expect(&quot;run failed&quot;);
 //!
 //! let data = destination.arrow();
 //! ```
