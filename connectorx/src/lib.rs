@@ -105,10 +105,11 @@
 //!
 //! ```no_run
 //! use connectorx::prelude::*;
+//! use std::convert::TryFrom;
 //!
-//! let mut source_conn = SourceConn::try_from("postgresql://username:password@host:port/db?cxprotocol=binary");
-//! let queries = &["SELECT * FROM table WHERE id < 100", "SELECT * FROM table WHERE id >= 100"];
-//! let destination = get_arrow(source_conn, Some("SELECT * FROM table"), queries).expect("run failed");
+//! let mut source_conn = SourceConn::try_from("postgresql://username:password@host:port/db?cxprotocol=binary").expect("parse conn str failed");
+//! let queries = &[CXQuery::from("SELECT * FROM table WHERE id < 100"), CXQuery::from("SELECT * FROM table WHERE id >= 100")];
+//! let destination = get_arrow(&source_conn, None, queries).expect("run failed");
 //!
 //! let data = destination.arrow();
 //! ```
@@ -194,6 +195,7 @@ pub mod prelude {
     #[cfg(feature = "src_sqlite")]
     pub use crate::sources::sqlite::SQLiteSource;
     pub use crate::sources::{PartitionParser, Produce, Source, SourcePartition};
+    pub use crate::sql::CXQuery;
     pub use crate::transports::*;
     pub use crate::typesystem::{
         ParameterizedFunc, ParameterizedOn, Realize, Transport, TypeAssoc, TypeConversion,
