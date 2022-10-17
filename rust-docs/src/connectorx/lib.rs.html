@@ -200,6 +200,8 @@
 <span id="200">200</span>
 <span id="201">201</span>
 <span id="202">202</span>
+<span id="203">203</span>
+<span id="204">204</span>
 </pre><pre class="rust"><code><span class="attribute">#![allow(incomplete_features)]
 #![allow(clippy::upper_case_acronyms)]
 
@@ -307,10 +309,11 @@
 //!
 //! ```no_run
 //! use connectorx::prelude::*;
+//! use std::convert::TryFrom;
 //!
-//! let mut source_conn = SourceConn::try_from(&quot;postgresql://username:password@host:port/db?cxprotocol=binary&quot;);
-//! let queries = &amp;[&quot;SELECT * FROM table WHERE id &lt; 100&quot;, &quot;SELECT * FROM table WHERE id &gt;= 100&quot;];
-//! let destination = get_arrow(source_conn, Some(&quot;SELECT * FROM table&quot;), queries).expect(&quot;run failed&quot;);
+//! let mut source_conn = SourceConn::try_from(&quot;postgresql://username:password@host:port/db?cxprotocol=binary&quot;).expect(&quot;parse conn str failed&quot;);
+//! let queries = &amp;[CXQuery::from(&quot;SELECT * FROM table WHERE id &lt; 100&quot;), CXQuery::from(&quot;SELECT * FROM table WHERE id &gt;= 100&quot;)];
+//! let destination = get_arrow(&amp;source_conn, None, queries).expect(&quot;run failed&quot;);
 //!
 //! let data = destination.arrow();
 //! ```
@@ -396,6 +399,7 @@
     <span class="attribute">#[cfg(feature = <span class="string">&quot;src_sqlite&quot;</span>)]
     </span><span class="kw">pub use </span><span class="kw">crate</span>::sources::sqlite::SQLiteSource;
     <span class="kw">pub use </span><span class="kw">crate</span>::sources::{PartitionParser, Produce, Source, SourcePartition};
+    <span class="kw">pub use </span><span class="kw">crate</span>::sql::CXQuery;
     <span class="kw">pub use </span><span class="kw">crate</span>::transports::<span class="kw-2">*</span>;
     <span class="kw">pub use </span><span class="kw">crate</span>::typesystem::{
         ParameterizedFunc, ParameterizedOn, Realize, Transport, TypeAssoc, TypeConversion,
