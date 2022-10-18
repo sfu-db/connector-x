@@ -210,6 +210,7 @@ pub fn get_meta<'a>(py: Python<'a>, conn: &str, protocol: &str, query: String) -
             debug!("Running dispatcher");
             dispatcher.get_meta()?;
         }
+        _ => unimplemented!("{:?} not implemented!", source_conn.ty),
     }
 
     destination.result()?

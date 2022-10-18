@@ -226,6 +226,7 @@ pub struct CXSlice<T> {
 pub struct CXConnectionString {
     name: *const c_char,
     conn: *const c_char,
+    is_local: bool,
 }
 
 #[repr(C)]
@@ -247,7 +248,8 @@ pub unsafe extern "C" fn connectorx_rewrite(
         let name = unsafe { CStr::from_ptr(p.name) }.to_str().unwrap();
         let conn = unsafe { CStr::from_ptr(p.conn) }.to_str().unwrap();
         println!("name: {:?}, conn: {:?}", name, conn);
-        let source_conn = SourceConn::try_from(conn).unwrap();
+        let mut source_conn = SourceConn::try_from(conn).unwrap();
+        source_conn.set_local(p.is_local);
         db_map.insert(name.to_string(), source_conn);
     }
 

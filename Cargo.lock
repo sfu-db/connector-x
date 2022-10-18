@@ -677,6 +677,7 @@ dependencies = [
  "iai",
  "itertools",
  "j4rs",
+ "libc",
  "log",
  "native-tls",
  "ndarray",

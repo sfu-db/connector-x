@@ -12,12 +12,14 @@ pub enum SourceType {
     MsSQL,
     Oracle,
     BigQuery,
+    DuckDB,
 }
 
 pub struct SourceConn {
     pub ty: SourceType,
     pub conn: Url,
     pub proto: String,
+    pub local: bool,
 }
 
 impl TryFrom<&str> for SourceConn {
@@ -47,43 +49,31 @@ impl TryFrom<&str> for SourceConn {
         // users from sqlalchemy may set engine in connection url (e.g. mssql+pymssql://...)
         // only for compatablility, we don't use the same engine
         match url.scheme().split('+').collect::<Vec<&str>>()[0] {
-            "postgres" | "postgresql" => Ok(SourceConn {
-                ty: SourceType::Postgres,
-                conn: url,
-                proto,
-            }),
-            "sqlite" => Ok(SourceConn {
-                ty: SourceType::SQLite,
-                conn: url,
-                proto,
-            }),
-            "mysql" => Ok(SourceConn {
-                ty: SourceType::MySQL,
-                conn: url,
-                proto,
-            }),
-            "mssql" => Ok(SourceConn {
-                ty: SourceType::MsSQL,
-                conn: url,
-                proto,
-            }),
-            "oracle" => Ok(SourceConn {
-                ty: SourceType::Oracle,
-                conn: url,
-                proto,
-            }),
-            "bigquery" => Ok(SourceConn {
-                ty: SourceType::BigQuery,
-                conn: url,
-                proto,
-            }),
+            "postgres" | "postgresql" => Ok(SourceConn::new(SourceType::Postgres, url, proto)),
+            "sqlite" => Ok(SourceConn::new(SourceType::SQLite, url, proto)),
+            "mysql" => Ok(SourceConn::new(SourceType::MySQL, url, proto)),
+            "mssql" => Ok(SourceConn::new(SourceType::MsSQL, url, proto)),
+            "oracle" => Ok(SourceConn::new(SourceType::Oracle, url, proto)),
+            "bigquery" => Ok(SourceConn::new(SourceType::BigQuery, url, proto)),
+            "duckdb" => Ok(SourceConn::new(SourceType::DuckDB, url, proto)),
             _ => unimplemented!("Connection: {} not supported!", conn),
         }
     }
 }
 
 impl SourceConn {
+    pub fn new(ty: SourceType, conn: Url, proto: String) -> Self {
+        Self {
+            ty,
+            conn,
+            proto,
+            local: false,
+        }
+    }
     pub fn set_protocol(&mut self, protocol: &str) {
         self.proto = protocol.to_string();
+    }
+    pub fn set_local(&mut self, local: bool) {
+        self.local = local;
     }
 }

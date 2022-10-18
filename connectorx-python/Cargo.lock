@@ -708,6 +708,7 @@ dependencies = [
  "hex",
  "itertools",
  "j4rs",
+ "libc",
  "log",
  "native-tls",
  "num-traits",

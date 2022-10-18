@@ -229,6 +229,7 @@ pub fn write_pandas<'a>(
             );
             dispatcher.run()?;
         }
+        _ => unimplemented!("{:?} not implemented!", source_conn.ty),
     }
 
     destination.result()?

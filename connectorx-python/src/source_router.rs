@@ -46,6 +46,7 @@ pub fn get_col_range(source_conn: &SourceConn, query: &str, col: &str) -> Result
         SourceType::MsSQL => mssql_get_partition_range(&source_conn.conn, query, col),
         SourceType::Oracle => oracle_get_partition_range(&source_conn.conn, query, col),
         SourceType::BigQuery => bigquery_get_partition_range(&source_conn.conn, query, col),
+        _ => unimplemented!("{:?} not implemented!", source_conn.ty),
     }
 }
 
@@ -76,6 +77,7 @@ pub fn get_part_query(
         SourceType::BigQuery => {
             single_col_partition_query(query, col, lower, upper, &BigQueryDialect {})?
         }
+        _ => unimplemented!("{:?} not implemented!", source_conn.ty),
     };
     CXQuery::Wrapped(query)
 }

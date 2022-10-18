@@ -18,6 +18,7 @@ rayon = "1"
 sqlparser = "0.11"
 thiserror = "1"
 url = "2"
+libc = "0.2"
 
 arrow = {version = "22", optional = true, features = ["prettyprint", "ffi"]}
 arrow2 = {version = "0.10", default-features = false, optional = true}

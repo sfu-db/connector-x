@@ -1,5 +1,8 @@
 use crate::{
-    constants::{CX_REWRITER_PATH, J4RS_BASE_PATH, MYSQL_JDBC_DRIVER, POSTGRES_JDBC_DRIVER},
+    constants::{
+        CX_REWRITER_PATH, DUCKDB_JDBC_DRIVER, J4RS_BASE_PATH, MYSQL_JDBC_DRIVER,
+        POSTGRES_JDBC_DRIVER,
+    },
     prelude::*,
     sql::CXQuery,
     CXFederatedPlan, CXSlice,
@@ -8,7 +11,7 @@ use arrow::record_batch::RecordBatch;
 use datafusion::datasource::MemTable;
 use datafusion::prelude::*;
 use fehler::throws;
-use j4rs::{ClasspathEntry, InvocationArg, Jvm, JvmBuilder};
+use j4rs::{ClasspathEntry, InvocationArg, Jvm, JvmBuilder, Null};
 use log::debug;
 use rayon::prelude::*;
 use std::collections::HashMap;
@@ -55,14 +58,12 @@ fn init_jvm(j4rs_base: Option<&str>) -> Jvm {
         None => fs::canonicalize(J4RS_BASE_PATH)
             .map_err(|_| ConnectorXOutError::FileNotFoundError(J4RS_BASE_PATH.to_string()))?,
     };
-    println!("j4rs base path: {:?}", base);
     debug!("j4rs base path: {:?}", base);
 
     let rewriter_path = env::var("CX_REWRITER_PATH").unwrap_or(CX_REWRITER_PATH.to_string());
     let path = fs::canonicalize(rewriter_path.as_str())
         .map_err(|_| ConnectorXOutError::FileNotFoundError(rewriter_path))?;
 
-    println!("rewriter path: {:?}", path);
     debug!("rewriter path: {:?}", path);
 
     let entry = ClasspathEntry::new(path.to_str().unwrap());
@@ -120,15 +121,31 @@ pub fn rewrite_sql(
                     InvocationArg::try_from(url.password().unwrap_or("")).unwrap(),
                 ],
             )?,
+            SourceType::DuckDB => jvm.invoke_static(
+                "org.apache.calcite.adapter.jdbc.JdbcSchema",
+                "dataSource",
+                &[
+                    InvocationArg::try_from(format!("jdbc:duckdb:{}", url.path())).unwrap(),
+                    InvocationArg::try_from(DUCKDB_JDBC_DRIVER).unwrap(),
+                    InvocationArg::try_from(Null::String).unwrap(),
+                    InvocationArg::try_from(Null::String).unwrap(),
+                ],
+            )?,
             _ => unimplemented!("Connection: {:?} not supported!", url),
         };
-
+        let fed_ds = jvm.create_instance(
+            "ai.dataprep.federated.FederatedDataSource",
+            &[
+                InvocationArg::try_from(ds).unwrap(),
+                InvocationArg::try_from(source_conn.local).unwrap(),
+            ],
+        )?;
         jvm.invoke(
             &db_conns,
             "put",
             &[
                 InvocationArg::try_from(db_name).unwrap(),
-                InvocationArg::try_from(ds).unwrap(),
+                InvocationArg::try_from(fed_ds).unwrap(),
             ],
         )?;
     }
