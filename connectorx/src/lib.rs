@@ -142,13 +142,13 @@
 //! For example, if you'd like to load data from Postgres to Arrow, you can enable `src_postgres` and `dst_arrow` in `Cargo.toml`.
 //! This will enable [`sources::postgres`], [`destinations::arrow`] and [`transports::PostgresArrowTransport`].
 
+use libc::c_char;
 use source_router::SourceConn;
 use sql::CXQuery;
 use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::env;
-use std::ffi::{c_char, CStr};
-use std::mem;
+use std::ffi::{CStr, CString};
 
 pub mod typesystem;
 #[macro_use]
@@ -211,15 +211,18 @@ pub mod prelude {
     };
 }
 
-#[no_mangle]
-pub extern "C" fn hello_from_rust() {
-    println!("Hello from rust!");
-}
-
 #[repr(C)]
 pub struct CXSlice<T> {
-    data: *const T,
+    ptr: *const T,
     len: usize,
+    capacity: usize,
+}
+
+impl<T> CXSlice<T> {
+    pub fn new_from_vec(v: Vec<T>) -> Self {
+        let (ptr, len, capacity) = v.into_raw_parts();
+        Self { ptr, len, capacity }
+    }
 }
 
 #[repr(C)]
@@ -231,9 +234,20 @@ pub struct CXConnectionString {
 
 #[repr(C)]
 pub struct CXFederatedPlan {
-    db_name: CXSlice<u8>,
-    db_alias: CXSlice<u8>,
-    sql: CXSlice<u8>,
+    db_name: *const c_char,
+    db_alias: *const c_char,
+    sql: *const c_char,
+}
+
+#[cfg(feature = "federation")]
+#[no_mangle]
+pub unsafe extern "C" fn free_plans(res: *const CXSlice<CXFederatedPlan>) {
+    let plans = get_vec::<_>((*res).ptr, (*res).len, (*res).capacity);
+    plans.into_iter().for_each(|plan| {
+        free_str(plan.db_name);
+        free_str(plan.db_alias);
+        free_str(plan.sql);
+    });
 }
 
 #[cfg(feature = "federation")]
@@ -243,7 +257,7 @@ pub unsafe extern "C" fn connectorx_rewrite(
     query: *const c_char,
 ) -> CXSlice<CXFederatedPlan> {
     let mut db_map = HashMap::new();
-    let conn_slice = unsafe { std::slice::from_raw_parts((*conn_list).data, (*conn_list).len) };
+    let conn_slice = unsafe { std::slice::from_raw_parts((*conn_list).ptr, (*conn_list).len) };
     for p in conn_slice {
         let name = unsafe { CStr::from_ptr(p.name) }.to_str().unwrap();
         let conn = unsafe { CStr::from_ptr(p.conn) }.to_str().unwrap();
@@ -259,20 +273,14 @@ pub unsafe extern "C" fn connectorx_rewrite(
         Err(_) => None,
     };
     println!("j4rs_base: {:?}", j4rs_base);
-    let mut fed_plan: Vec<CXFederatedPlan> =
+    let fed_plan: Vec<CXFederatedPlan> =
         fed_dispatcher::rewrite_sql(query_str, &db_map, j4rs_base.as_deref())
             .unwrap()
             .into_iter()
             .map(|p| p.into())
             .collect();
 
-    fed_plan.shrink_to_fit();
-    let res = CXSlice::<CXFederatedPlan> {
-        data: fed_plan.as_mut_ptr(),
-        len: fed_plan.len(),
-    };
-    mem::forget(fed_plan);
-    res
+    CXSlice::<_>::new_from_vec(fed_plan)
 }
 
 #[repr(C)]
@@ -282,28 +290,34 @@ pub struct CXArray {
 }
 
 #[repr(C)]
-pub struct CXRecordBatch {
-    data: *const CXArray,
-    len: usize,
-}
-
-#[repr(C)]
-pub struct CXColumnName {
-    data: *const u8,
-    len: usize,
-}
-
-#[repr(C)]
-pub struct CXHeader {
-    data: *const CXColumnName,
-    len: usize,
-}
-
-#[repr(C)]
 pub struct CXResult {
-    data: *const CXRecordBatch,
-    len: usize,
-    header: CXHeader,
+    data: CXSlice<CXSlice<CXArray>>,
+    header: CXSlice<*const c_char>,
+}
+
+pub unsafe fn get_vec<T>(ptr: *const T, len: usize, capacity: usize) -> Vec<T> {
+    Vec::from_raw_parts(ptr as *mut T, len, capacity)
+}
+
+pub unsafe fn free_str(ptr: *const c_char) {
+    let _ = CString::from_raw(ptr as *mut _);
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn free_result(res: *const CXResult) {
+    let header = get_vec::<_>((*res).header.ptr, (*res).header.len, (*res).header.capacity);
+    header.into_iter().for_each(|col| free_str(col));
+
+    let rbs = get_vec::<_>((*res).data.ptr, (*res).data.len, (*res).data.capacity);
+    rbs.into_iter().for_each(|rb| {
+        get_vec::<_>(rb.ptr, rb.len, rb.capacity)
+            .into_iter()
+            .for_each(|a| {
+                // Otherwise memory leak
+                std::sync::Arc::from_raw(a.array);
+                std::sync::Arc::from_raw(a.schema);
+            })
+    });
 }
 
 #[cfg(feature = "dst_arrow")]
@@ -319,18 +333,14 @@ pub extern "C" fn connectorx_scan(conn: *const i8, query: *const i8) -> CXResult
 
     arrow::util::pretty::print_batches(&record_batches[..]).unwrap();
 
-    let names: Vec<CXColumnName> = record_batches[0]
+    let names: Vec<*const c_char> = record_batches[0]
         .schema()
         .fields()
         .iter()
         .map(|f| {
-            let mut t = f.name().clone();
-            t.shrink_to_fit();
-            let (buf, length, _) = t.into_raw_parts();
-            CXColumnName {
-                data: buf,
-                len: length,
-            }
+            CString::new(f.name().as_str())
+                .expect("new CString error")
+                .into_raw() as *const c_char
         })
         .collect();
 
@@ -340,7 +350,7 @@ pub extern "C" fn connectorx_scan(conn: *const i8, query: *const i8) -> CXResult
 
         for array in rb.columns() {
             let data = array.data().clone();
-            let array = arrow::ffi::ArrowArray::try_from(data).expect("c ptr");
+            let array = arrow::ffi::ArrowArray::try_new(data).expect("c ptr");
             let (array_ptr, schema_ptr) = arrow::ffi::ArrowArray::into_raw(array);
 
             let cx_array = CXArray {
@@ -350,36 +360,14 @@ pub extern "C" fn connectorx_scan(conn: *const i8, query: *const i8) -> CXResult
             cols.push(cx_array);
         }
 
-        cols.shrink_to_fit();
-        let cx_rb = CXRecordBatch {
-            data: cols.as_mut_ptr(),
-            len: cols.len(),
-        };
-        mem::forget(cols);
+        let cx_rb = CXSlice::<CXArray>::new_from_vec(cols);
         result.push(cx_rb);
     }
 
-    let (buf, length, _) = names.into_raw_parts();
-    result.shrink_to_fit();
     let res = CXResult {
-        data: result.as_mut_ptr(),
-        len: result.len(),
-        header: CXHeader {
-            data: buf,
-            len: length,
-        },
+        data: CXSlice::<_>::new_from_vec(result),
+        header: CXSlice::<_>::new_from_vec(names),
     };
-
-    mem::forget(result);
 
     res
 }
-
-// #[cfg(feature = "dst_arrow")]
-// #[no_mangle]
-// pub unsafe extern "C" fn connectorx_free_slice(
-//     rbs: *mut arrow::record_batch::RecordBatch,
-//     rbs_len: usize,
-// ) {
-//     mem::drop(Vec::from_raw_parts(rbs, rbs_len, rbs_len));
-// }

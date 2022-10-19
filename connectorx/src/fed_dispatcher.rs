@@ -5,17 +5,19 @@ use crate::{
     },
     prelude::*,
     sql::CXQuery,
-    CXFederatedPlan, CXSlice,
+    CXFederatedPlan,
 };
 use arrow::record_batch::RecordBatch;
 use datafusion::datasource::MemTable;
 use datafusion::prelude::*;
 use fehler::throws;
 use j4rs::{ClasspathEntry, InvocationArg, Jvm, JvmBuilder, Null};
+use libc::c_char;
 use log::debug;
 use rayon::prelude::*;
 use std::collections::HashMap;
 use std::convert::{Into, TryFrom};
+use std::ffi::CString;
 use std::sync::{mpsc::channel, Arc};
 use std::{env, fs};
 
@@ -26,26 +28,17 @@ pub struct Plan {
 }
 
 impl Into<CXFederatedPlan> for Plan {
-    fn into(mut self) -> CXFederatedPlan {
-        self.db_name.shrink_to_fit();
-        self.db_alias.shrink_to_fit();
-        self.sql.shrink_to_fit();
-        let (data1, len1, _) = self.db_name.into_raw_parts();
-        let (data2, len2, _) = self.db_alias.into_raw_parts();
-        let (data3, len3, _) = self.sql.into_raw_parts();
+    fn into(self) -> CXFederatedPlan {
         CXFederatedPlan {
-            db_name: CXSlice::<u8> {
-                data: data1,
-                len: len1,
-            },
-            db_alias: CXSlice::<u8> {
-                data: data2,
-                len: len2,
-            },
-            sql: CXSlice::<u8> {
-                data: data3,
-                len: len3,
-            },
+            db_name: CString::new(self.db_name.as_str())
+                .expect("new CString error")
+                .into_raw() as *const c_char,
+            db_alias: CString::new(self.db_alias.as_str())
+                .expect("new CString error")
+                .into_raw() as *const c_char,
+            sql: CString::new(self.sql.as_str())
+                .expect("new CString error")
+                .into_raw() as *const c_char,
         }
     }
 }
@@ -82,12 +75,14 @@ pub fn rewrite_sql(
 ) -> Vec<Plan> {
     let jvm = init_jvm(j4rs_base)?;
     debug!("init jvm successfully!");
+    println!("init jvm successfully!");
 
     let sql = InvocationArg::try_from(sql).unwrap();
     let db_conns = jvm.create_instance("java.util.HashMap", &[])?;
     for (db_name, source_conn) in db_map.iter() {
         let url = &source_conn.conn;
         debug!("url: {:?}", url);
+        println!("url: {:?}", url);
         let ds = match source_conn.ty {
             SourceType::Postgres => jvm.invoke_static(
                 "org.apache.calcite.adapter.jdbc.JdbcSchema",
@@ -157,6 +152,7 @@ pub fn rewrite_sql(
     let count = jvm.invoke(&plan, "getCount", &[])?;
     let count: i32 = jvm.to_rust(count)?;
     debug!("rewrite finished, got {} queries", count);
+    println!("rewrite finished, got {} queries", count);
 
     let mut fed_plan = vec![];
     for i in 0..count {
