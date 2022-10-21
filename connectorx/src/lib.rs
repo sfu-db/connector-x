@@ -226,9 +226,16 @@ impl<T> CXSlice<T> {
 }
 
 #[repr(C)]
-pub struct CXConnectionString {
+pub struct CXTable {
+    name: *const c_char,
+    columns: CXSlice<*const c_char>,
+}
+
+#[repr(C)]
+pub struct CXConnectionInfo {
     name: *const c_char,
     conn: *const c_char,
+    schema: CXSlice<CXTable>,
     is_local: bool,
 }
 
@@ -253,18 +260,43 @@ pub unsafe extern "C" fn free_plans(res: *const CXSlice<CXFederatedPlan>) {
 #[cfg(feature = "federation")]
 #[no_mangle]
 pub unsafe extern "C" fn connectorx_rewrite(
-    conn_list: *const CXSlice<CXConnectionString>,
+    conn_list: *const CXSlice<CXConnectionInfo>,
     query: *const c_char,
 ) -> CXSlice<CXFederatedPlan> {
+    use crate::fed_dispatcher::FederatedDataSourceInfo;
+
     let mut db_map = HashMap::new();
     let conn_slice = unsafe { std::slice::from_raw_parts((*conn_list).ptr, (*conn_list).len) };
     for p in conn_slice {
         let name = unsafe { CStr::from_ptr(p.name) }.to_str().unwrap();
-        let conn = unsafe { CStr::from_ptr(p.conn) }.to_str().unwrap();
-        println!("name: {:?}, conn: {:?}", name, conn);
-        let mut source_conn = SourceConn::try_from(conn).unwrap();
-        source_conn.set_local(p.is_local);
-        db_map.insert(name.to_string(), source_conn);
+        if p.conn.is_null() {
+            let mut table_map: HashMap<String, Vec<String>> = HashMap::new();
+            let table_slice = unsafe { std::slice::from_raw_parts(p.schema.ptr, p.schema.len) };
+            for t in table_slice {
+                let table_name = unsafe { CStr::from_ptr(t.name) }.to_str().unwrap();
+                println!("raw table name: {:?}", table_name);
+                let column_slice =
+                    unsafe { std::slice::from_raw_parts(t.columns.ptr, t.columns.len) };
+
+                let mut column_names = vec![];
+                for &c in column_slice {
+                    let column_name = unsafe { CStr::from_ptr(c).to_str().unwrap() };
+                    column_names.push(column_name.to_string());
+                }
+                table_map.insert(table_name.to_string(), column_names);
+            }
+            let source_info =
+                FederatedDataSourceInfo::new_from_manual_schema(table_map, p.is_local);
+            db_map.insert(name.to_string(), source_info);
+        } else {
+            let conn = unsafe { CStr::from_ptr(p.conn) }.to_str().unwrap();
+            println!("name: {:?}, conn: {:?}", name, conn);
+            let source_info = FederatedDataSourceInfo::new_from_conn_str(
+                SourceConn::try_from(conn).unwrap(),
+                p.is_local,
+            );
+            db_map.insert(name.to_string(), source_info);
+        }
     }
 
     let query_str = unsafe { CStr::from_ptr(query) }.to_str().unwrap();
@@ -331,7 +363,7 @@ pub extern "C" fn connectorx_scan(conn: *const i8, query: *const i8) -> CXResult
         .arrow()
         .unwrap();
 
-    arrow::util::pretty::print_batches(&record_batches[..]).unwrap();
+    // arrow::util::pretty::print_batches(&record_batches[..]).unwrap();
 
     let names: Vec<*const c_char> = record_batches[0]
         .schema()

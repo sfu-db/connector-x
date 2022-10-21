@@ -19,7 +19,6 @@ pub struct SourceConn {
     pub ty: SourceType,
     pub conn: Url,
     pub proto: String,
-    pub local: bool,
 }
 
 impl TryFrom<&str> for SourceConn {
@@ -63,17 +62,9 @@ impl TryFrom<&str> for SourceConn {
 
 impl SourceConn {
     pub fn new(ty: SourceType, conn: Url, proto: String) -> Self {
-        Self {
-            ty,
-            conn,
-            proto,
-            local: false,
-        }
+        Self { ty, conn, proto }
     }
     pub fn set_protocol(&mut self, protocol: &str) {
         self.proto = protocol.to_string();
-    }
-    pub fn set_local(&mut self, local: bool) {
-        self.local = local;
     }
 }
