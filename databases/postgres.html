@@ -530,27 +530,31 @@ title="Print to PDF"
 <td class="text-align:center"><p>object</p></td>
 <td class="text-align:center"><p>need to convert enum column to text manually (<code class="docutils literal notranslate"><span class="pre">::text</span></code>) when using <code class="docutils literal notranslate"><span class="pre">csv</span></code> and <code class="docutils literal notranslate"><span class="pre">cursor</span></code> protocol</p></td>
 </tr>
-<tr class="row-even"><td class="text-align:center"><p>INT2[]</p></td>
+<tr class="row-even"><td class="text-align:center"><p>ltree</p></td>
+<td class="text-align:center"><p>object</p></td>
+<td class="text-align:center"><p>binary protocol returns with a hex char prefix. Check <a class="reference external" href="https://github.com/sfu-db/connector-x/pull/382">https://github.com/sfu-db/connector-x/pull/382</a> and <a class="reference external" href="https://github.com/sfackler/rust-postgres/issues/960">https://github.com/sfackler/rust-postgres/issues/960</a> for status</p></td>
+</tr>
+<tr class="row-odd"><td class="text-align:center"><p>INT2[]</p></td>
 <td class="text-align:center"><p>object</p></td>
 <td class="text-align:center"><p>list of i64</p></td>
 </tr>
-<tr class="row-odd"><td class="text-align:center"><p>INT4[]</p></td>
+<tr class="row-even"><td class="text-align:center"><p>INT4[]</p></td>
 <td class="text-align:center"><p>object</p></td>
 <td class="text-align:center"><p>list of i64</p></td>
 </tr>
-<tr class="row-even"><td class="text-align:center"><p>INT8[]</p></td>
+<tr class="row-odd"><td class="text-align:center"><p>INT8[]</p></td>
 <td class="text-align:center"><p>object</p></td>
 <td class="text-align:center"><p>list of i64</p></td>
 </tr>
-<tr class="row-odd"><td class="text-align:center"><p>FLOAT4[]</p></td>
+<tr class="row-even"><td class="text-align:center"><p>FLOAT4[]</p></td>
 <td class="text-align:center"><p>object</p></td>
 <td class="text-align:center"><p>list of f64</p></td>
 </tr>
-<tr class="row-even"><td class="text-align:center"><p>FLOAT8[]</p></td>
+<tr class="row-odd"><td class="text-align:center"><p>FLOAT8[]</p></td>
 <td class="text-align:center"><p>object</p></td>
 <td class="text-align:center"><p>list of f64</p></td>
 </tr>
-<tr class="row-odd"><td class="text-align:center"><p>NUMERIC[]</p></td>
+<tr class="row-even"><td class="text-align:center"><p>NUMERIC[]</p></td>
 <td class="text-align:center"><p>object</p></td>
 <td class="text-align:center"><p>list of f64</p></td>
 </tr>
