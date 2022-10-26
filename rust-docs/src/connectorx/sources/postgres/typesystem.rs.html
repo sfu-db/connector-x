@@ -243,7 +243,7 @@
     }
 }
 
-<span class="comment">// Link PostgresDTypes back to the one defiend by the postgres crate.
+<span class="comment">// Link PostgresDTypes back to the one defined by the postgres crate.
 </span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; From&lt;PostgresTypeSystem&gt; <span class="kw">for </span>Type {
     <span class="kw">fn </span>from(ty: PostgresTypeSystem) -&gt; Type {
         <span class="kw">use </span>PostgresTypeSystem::<span class="kw-2">*</span>;
