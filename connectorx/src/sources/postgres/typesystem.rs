@@ -103,38 +103,16 @@ impl<'a> From<&'a Type> for PostgresTypeSystem {
     }
 }
 
-// Link PostgresDTypes back to the one defined by the postgres crate.
-impl<'a> From<PostgresTypeSystem> for Type {
-    fn from(ty: PostgresTypeSystem) -> Type {
+pub struct PostgresTypePairs<'a>(pub &'a Type, pub &'a PostgresTypeSystem);
+
+// Link (postgres::Type, connectorx::PostgresTypes) back to the one defiend by the postgres crate.
+impl<'a> From<PostgresTypePairs<'a>> for Type {
+    fn from(ty: PostgresTypePairs) -> Type {
         use PostgresTypeSystem::*;
-        match ty {
-            Int2(_) => Type::INT2,
-            Int4(_) => Type::INT4,
-            Int8(_) => Type::INT8,
-            Float4(_) => Type::FLOAT4,
-            Float8(_) => Type::FLOAT8,
-            Numeric(_) => Type::NUMERIC,
-            Int2Array(_) => Type::INT2_ARRAY,
-            Int4Array(_) => Type::INT4_ARRAY,
-            Int8Array(_) => Type::INT8_ARRAY,
-            Float4Array(_) => Type::FLOAT4_ARRAY,
-            Float8Array(_) => Type::FLOAT8_ARRAY,
-            NumericArray(_) => Type::NUMERIC_ARRAY,
-            Bool(_) => Type::BOOL,
-            Text(_) => Type::TEXT,
-            BpChar(_) => Type::BPCHAR,
-            VarChar(_) => Type::VARCHAR,
-            Char(_) => Type::CHAR,
-            ByteA(_) => Type::BYTEA,
-            Date(_) => Type::DATE,
-            Time(_) => Type::TIME,
-            Timestamp(_) => Type::TIMESTAMP,
-            TimestampTz(_) => Type::TIMESTAMPTZ,
-            UUID(_) => Type::UUID,
-            JSON(_) => Type::JSON,
-            JSONB(_) => Type::JSONB,
+        match ty.1 {
             Enum(_) => Type::TEXT,
             HSTORE(_) => Type::TEXT, // hstore is not supported in binary protocol (since no corresponding inner TYPE)
+            _ => ty.0.clone(),
         }
     }
 }
