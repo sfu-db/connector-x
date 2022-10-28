@@ -116,28 +116,6 @@
 <span id="116">116</span>
 <span id="117">117</span>
 <span id="118">118</span>
-<span id="119">119</span>
-<span id="120">120</span>
-<span id="121">121</span>
-<span id="122">122</span>
-<span id="123">123</span>
-<span id="124">124</span>
-<span id="125">125</span>
-<span id="126">126</span>
-<span id="127">127</span>
-<span id="128">128</span>
-<span id="129">129</span>
-<span id="130">130</span>
-<span id="131">131</span>
-<span id="132">132</span>
-<span id="133">133</span>
-<span id="134">134</span>
-<span id="135">135</span>
-<span id="136">136</span>
-<span id="137">137</span>
-<span id="138">138</span>
-<span id="139">139</span>
-<span id="140">140</span>
 </pre><pre class="rust"><code><span class="kw">use </span>chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
 <span class="kw">use </span>postgres::types::Type;
 <span class="kw">use </span>rust_decimal::Decimal;
@@ -243,39 +221,17 @@
     }
 }
 
-<span class="comment">// Link PostgresDTypes back to the one defined by the postgres crate.
-</span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; From&lt;PostgresTypeSystem&gt; <span class="kw">for </span>Type {
-    <span class="kw">fn </span>from(ty: PostgresTypeSystem) -&gt; Type {
+<span class="kw">pub struct </span>PostgresTypePairs&lt;<span class="lifetime">&#39;a</span>&gt;(<span class="kw">pub </span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Type, <span class="kw">pub </span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>PostgresTypeSystem);
+
+<span class="comment">// Link (postgres::Type, connectorx::PostgresTypes) back to the one defiend by the postgres crate.
+</span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; From&lt;PostgresTypePairs&lt;<span class="lifetime">&#39;a</span>&gt;&gt; <span class="kw">for </span>Type {
+    <span class="kw">fn </span>from(ty: PostgresTypePairs) -&gt; Type {
         <span class="kw">use </span>PostgresTypeSystem::<span class="kw-2">*</span>;
-        <span class="kw">match </span>ty {
-            Int2(<span class="kw">_</span>) =&gt; Type::INT2,
-            Int4(<span class="kw">_</span>) =&gt; Type::INT4,
-            Int8(<span class="kw">_</span>) =&gt; Type::INT8,
-            Float4(<span class="kw">_</span>) =&gt; Type::FLOAT4,
-            Float8(<span class="kw">_</span>) =&gt; Type::FLOAT8,
-            Numeric(<span class="kw">_</span>) =&gt; Type::NUMERIC,
-            Int2Array(<span class="kw">_</span>) =&gt; Type::INT2_ARRAY,
-            Int4Array(<span class="kw">_</span>) =&gt; Type::INT4_ARRAY,
-            Int8Array(<span class="kw">_</span>) =&gt; Type::INT8_ARRAY,
-            Float4Array(<span class="kw">_</span>) =&gt; Type::FLOAT4_ARRAY,
-            Float8Array(<span class="kw">_</span>) =&gt; Type::FLOAT8_ARRAY,
-            NumericArray(<span class="kw">_</span>) =&gt; Type::NUMERIC_ARRAY,
-            Bool(<span class="kw">_</span>) =&gt; Type::BOOL,
-            Text(<span class="kw">_</span>) =&gt; Type::TEXT,
-            BpChar(<span class="kw">_</span>) =&gt; Type::BPCHAR,
-            VarChar(<span class="kw">_</span>) =&gt; Type::VARCHAR,
-            Char(<span class="kw">_</span>) =&gt; Type::CHAR,
-            ByteA(<span class="kw">_</span>) =&gt; Type::BYTEA,
-            Date(<span class="kw">_</span>) =&gt; Type::DATE,
-            Time(<span class="kw">_</span>) =&gt; Type::TIME,
-            Timestamp(<span class="kw">_</span>) =&gt; Type::TIMESTAMP,
-            TimestampTz(<span class="kw">_</span>) =&gt; Type::TIMESTAMPTZ,
-            UUID(<span class="kw">_</span>) =&gt; Type::UUID,
-            JSON(<span class="kw">_</span>) =&gt; Type::JSON,
-            JSONB(<span class="kw">_</span>) =&gt; Type::JSONB,
+        <span class="kw">match </span>ty.<span class="number">1 </span>{
             Enum(<span class="kw">_</span>) =&gt; Type::TEXT,
             HSTORE(<span class="kw">_</span>) =&gt; Type::TEXT, <span class="comment">// hstore is not supported in binary protocol (since no corresponding inner TYPE)
-        </span>}
+            </span><span class="kw">_ </span>=&gt; ty.<span class="number">0</span>.clone(),
+        }
     }
 }
 </code></pre></div>
