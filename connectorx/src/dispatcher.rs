@@ -50,9 +50,19 @@ where
         }
     }
 
-    /// Start the data loading process.
-    pub fn run(mut self) -> Result<(), ET> {
-        debug!("Run dispatcher");
+    pub fn prepare(
+        mut self,
+    ) -> Result<
+        (
+            DataOrder,
+            Vec<S::Partition>,
+            Vec<D::Partition<'w>>,
+            Vec<TSS>,
+            Vec<TSD>,
+        ),
+        ET,
+    > {
+        debug!("Prepare");
         let dorder = coordinate(S::DATA_ORDERS, D::DATA_ORDERS)?;
         self.src.set_data_order(dorder)?;
         self.src.set_queries(self.queries.as_slice());
@@ -101,6 +111,20 @@ where
 
         debug!("Create destination partition");
         let dst_partitions = self.dst.partition(self.queries.len())?;
+
+        Ok((
+            dorder,
+            src_partitions,
+            dst_partitions,
+            src_schema,
+            dst_schema,
+        ))
+    }
+
+    /// Start the data loading process.
+    pub fn run(self) -> Result<(), ET> {
+        debug!("Run dispatcher");
+        let (dorder, src_partitions, dst_partitions, src_schema, dst_schema) = self.prepare()?;
 
         #[cfg(all(not(feature = "branch"), not(feature = "fptr")))]
         compile_error!("branch or fptr, pick one");
@@ -182,11 +206,11 @@ where
     }
 
     /// Only fetch the metadata (header) of the destination.
-    pub fn get_meta(mut self) -> Result<(), ET> {
+    pub fn get_meta(&mut self) -> Result<(), ET> {
         let dorder = coordinate(S::DATA_ORDERS, D::DATA_ORDERS)?;
         self.src.set_data_order(dorder)?;
         self.src.set_queries(self.queries.as_slice());
-        self.src.set_origin_query(self.origin_query);
+        self.src.set_origin_query(self.origin_query.clone());
         self.src.fetch_metadata()?;
         let src_schema = self.src.schema();
         let dst_schema = src_schema

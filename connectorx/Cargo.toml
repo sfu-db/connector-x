@@ -19,6 +19,7 @@ sqlparser = "0.11"
 thiserror = "1"
 url = "2"
 libc = "0.2"
+owning_ref = "0.4"
 
 arrow = {version = "22", optional = true, features = ["prettyprint", "ffi"]}
 arrow2 = {version = "0.10", default-features = false, optional = true}
@@ -35,7 +36,6 @@ ndarray = {version = "0.15", optional = true}
 num-traits = {version = "0.2", optional = true}
 openssl = {version = "0.10", optional = true}
 oracle = {version = "0.5", optional = true}
-owning_ref = {version = "0.4", optional = true}
 polars = {version = "0.20", optional = true}
 postgres = {version = "0.19", features = ["with-chrono-0_4", "with-uuid-0_8", "with-serde_json-1"], optional = true}
 postgres-native-tls = {version = "0.5", optional = true}
@@ -76,9 +76,9 @@ fptr = []
 src_bigquery = ["gcp-bigquery-client", "serde_json", "tokio"]
 src_csv = ["csv", "regex", "chrono"]
 src_dummy = ["num-traits", "chrono"]
-src_mssql = ["rust_decimal", "num-traits", "chrono", "tiberius", "bb8-tiberius", "bb8", "tokio", "uuid", "owning_ref", "futures", "urlencoding"]
+src_mssql = ["rust_decimal", "num-traits", "chrono", "tiberius", "bb8-tiberius", "bb8", "tokio", "uuid", "futures", "urlencoding"]
 src_mysql = ["r2d2_mysql", "rust_decimal", "num-traits", "chrono", "serde_json", "r2d2"]
-src_oracle = ["oracle", "r2d2-oracle", "chrono", "r2d2", "urlencoding", "owning_ref"]
+src_oracle = ["oracle", "r2d2-oracle", "chrono", "r2d2", "urlencoding"]
 src_postgres = [
   "postgres",
   "r2d2_postgres",
@@ -95,7 +95,7 @@ src_postgres = [
   "openssl",
   "postgres-openssl",
 ]
-src_sqlite = ["rusqlite", "r2d2_sqlite", "fallible-streaming-iterator", "owning_ref", "chrono", "r2d2", "urlencoding"]
+src_sqlite = ["rusqlite", "r2d2_sqlite", "fallible-streaming-iterator", "chrono", "r2d2", "urlencoding"]
 federation = ["datafusion", "j4rs", "tokio"]
 [package.metadata.docs.rs]
 features = ["all"]

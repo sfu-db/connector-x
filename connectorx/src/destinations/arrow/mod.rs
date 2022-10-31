@@ -30,6 +30,7 @@ pub struct ArrowDestination {
     names: Vec<String>,
     data: Arc<Mutex<Vec<RecordBatch>>>,
     arrow_schema: Arc<Schema>,
+    batch_size: usize,
 }
 
 impl Default for ArrowDestination {
@@ -39,6 +40,7 @@ impl Default for ArrowDestination {
             names: vec![],
             data: Arc::new(Mutex::new(vec![])),
             arrow_schema: Arc::new(Schema::empty()),
+            batch_size: RECORD_BATCH_SIZE,
         }
     }
 }
@@ -46,6 +48,16 @@ impl Default for ArrowDestination {
 impl ArrowDestination {
     pub fn new() -> Self {
         Self::default()
+    }
+
+    pub fn new_with_batch_size(batch_size: usize) -> Self {
+        ArrowDestination {
+            schema: vec![],
+            names: vec![],
+            data: Arc::new(Mutex::new(vec![])),
+            arrow_schema: Arc::new(Schema::empty()),
+            batch_size,
+        }
     }
 }
 
@@ -94,6 +106,7 @@ impl Destination for ArrowDestination {
                 self.schema.clone(),
                 Arc::clone(&self.data),
                 Arc::clone(&self.arrow_schema),
+                self.batch_size,
             )?);
         }
         partitions
@@ -112,6 +125,15 @@ impl ArrowDestination {
             .map_err(|e| anyhow!("mutex poisoned {}", e))?
     }
 
+    #[throws(ArrowDestinationError)]
+    pub fn record_batch(&mut self) -> Option<RecordBatch> {
+        let mut guard = self
+            .data
+            .lock()
+            .map_err(|e| anyhow!("mutex poisoned {}", e))?;
+        (*guard).pop()
+    }
+
     pub fn arrow_schema(&self) -> Arc<Schema> {
         self.arrow_schema.clone()
     }
@@ -124,7 +146,10 @@ pub struct ArrowPartitionWriter {
     current_col: usize,
     data: Arc<Mutex<Vec<RecordBatch>>>,
     arrow_schema: Arc<Schema>,
+    batch_size: usize,
 }
+
+// unsafe impl Sync for ArrowPartitionWriter {}
 
 impl ArrowPartitionWriter {
     #[throws(ArrowDestinationError)]
@@ -132,6 +157,7 @@ impl ArrowPartitionWriter {
         schema: Vec<ArrowTypeSystem>,
         data: Arc<Mutex<Vec<RecordBatch>>>,
         arrow_schema: Arc<Schema>,
+        batch_size: usize,
     ) -> Self {
         let mut pw = ArrowPartitionWriter {
             schema,
@@ -140,6 +166,7 @@ impl ArrowPartitionWriter {
             current_col: 0,
             data,
             arrow_schema,
+            batch_size,
         };
         pw.allocate()?;
         pw
@@ -150,7 +177,7 @@ impl ArrowPartitionWriter {
         let builders = self
             .schema
             .iter()
-            .map(|dt| Ok(Realize::<FNewBuilder>::realize(*dt)?(RECORD_BATCH_SIZE)))
+            .map(|dt| Ok(Realize::<FNewBuilder>::realize(*dt)?(self.batch_size)))
             .collect::<Result<Vec<_>>>()?;
         self.builders.replace(builders);
     }
@@ -214,22 +241,25 @@ where
         self.current_col = (self.current_col + 1) % self.ncols();
         self.schema[col].check::<T>()?;
 
-        match &mut self.builders {
-            Some(builders) => {
-                <T as ArrowAssoc>::append(
-                    builders[col]
-                        .downcast_mut::<T::Builder>()
-                        .ok_or_else(|| anyhow!("cannot cast arrow builder for append"))?,
-                    value,
-                )?;
+        loop {
+            match &mut self.builders {
+                Some(builders) => {
+                    <T as ArrowAssoc>::append(
+                        builders[col]
+                            .downcast_mut::<T::Builder>()
+                            .ok_or_else(|| anyhow!("cannot cast arrow builder for append"))?,
+                        value,
+                    )?;
+                    break;
+                }
+                None => self.allocate()?, // allocate if builders are not initialized
             }
-            None => throw!(anyhow!("arrow arrays are empty!")),
         }
 
         // flush if exceed batch_size
         if self.current_col == 0 {
             self.current_row += 1;
-            if self.current_row >= RECORD_BATCH_SIZE {
+            if self.current_row >= self.batch_size {
                 self.flush()?;
                 self.allocate()?;
             }

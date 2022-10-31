@@ -153,6 +153,7 @@ use std::ffi::{CStr, CString};
 pub mod typesystem;
 #[macro_use]
 mod macros;
+pub mod arrow_batch_iter;
 pub mod constants;
 pub mod data_order;
 pub mod destinations;
