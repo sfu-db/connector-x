@@ -450,7 +450,7 @@ def test_postgres_with_index_col(postgres_url: str) -> None:
 
 
 def test_postgres_types_binary(postgres_url: str) -> None:
-    query = "SELECT test_date, test_timestamp, test_timestamptz, test_int16, test_int64, test_float32, test_numeric, test_bpchar, test_char, test_varchar, test_uuid, test_time, test_json, test_jsonb, test_bytea, test_enum, test_f4array, test_f8array, test_narray, test_i2array, test_i4array, test_i8array, test_citext FROM test_types"
+    query = "SELECT test_date, test_timestamp, test_timestamptz, test_int16, test_int64, test_float32, test_numeric, test_bpchar, test_char, test_varchar, test_uuid, test_time, test_json, test_jsonb, test_bytea, test_enum, test_f4array, test_f8array, test_narray, test_i2array, test_i4array, test_i8array, test_citext, test_ltree FROM test_types"
     df = read_sql(postgres_url, query)
     expected = pd.DataFrame(
         index=range(4),
@@ -549,13 +549,14 @@ def test_postgres_types_binary(postgres_url: str) -> None:
                 dtype="object",
             ),
             "test_citext": pd.Series(["str_citext", "", "s", None], dtype="object"),
+            "test_ltree": pd.Series(["A.B.C.D", "A.B.E", "A", None], dtype="object"),
         },
     )
     assert_frame_equal(df, expected, check_names=True)
 
 
 def test_postgres_types_csv(postgres_url: str) -> None:
-    query = "SELECT test_date, test_timestamp, test_timestamptz, test_int16, test_int64, test_float32, test_numeric, test_bpchar, test_char, test_varchar, test_uuid, test_time, test_json, test_jsonb, test_bytea, test_enum::text, test_f4array, test_f8array, test_narray, test_i2array, test_i4array, test_i8array, test_citext FROM test_types"
+    query = "SELECT test_date, test_timestamp, test_timestamptz, test_int16, test_int64, test_float32, test_numeric, test_bpchar, test_char, test_varchar, test_uuid, test_time, test_json, test_jsonb, test_bytea, test_enum::text, test_f4array, test_f8array, test_narray, test_i2array, test_i4array, test_i8array, test_citext, test_ltree FROM test_types"
     df = read_sql(postgres_url, query, protocol="csv")
     expected = pd.DataFrame(
         index=range(4),
@@ -654,13 +655,14 @@ def test_postgres_types_csv(postgres_url: str) -> None:
                 dtype="object",
             ),
             "test_citext": pd.Series(["str_citext", None, "s", None], dtype="object"),
+            "test_ltree": pd.Series(["A.B.C.D", "A.B.E", "A", None], dtype="object"),
         },
     )
     assert_frame_equal(df, expected, check_names=True)
 
 
 def test_postgres_types_cursor(postgres_url: str) -> None:
-    query = "SELECT test_date, test_timestamp, test_timestamptz, test_int16, test_int64, test_float32, test_numeric, test_bpchar, test_char, test_varchar, test_uuid, test_time, test_json, test_jsonb, test_bytea, test_enum::text, test_f4array, test_f8array, test_narray, test_i2array, test_i4array, test_i8array, test_citext FROM test_types"
+    query = "SELECT test_date, test_timestamp, test_timestamptz, test_int16, test_int64, test_float32, test_numeric, test_bpchar, test_char, test_varchar, test_uuid, test_time, test_json, test_jsonb, test_bytea, test_enum::text, test_f4array, test_f8array, test_narray, test_i2array, test_i4array, test_i8array, test_citext, test_ltree FROM test_types"
     df = read_sql(postgres_url, query, protocol="cursor")
     expected = pd.DataFrame(
         index=range(4),
@@ -759,6 +761,7 @@ def test_postgres_types_cursor(postgres_url: str) -> None:
                 dtype="object",
             ),
             "test_citext": pd.Series(["str_citext", "", "s", None], dtype="object"),
+            "test_ltree": pd.Series(["A.B.C.D", "A.B.E", "A", None], dtype="object"),
         },
     )
     assert_frame_equal(df, expected, check_names=True)

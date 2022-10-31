@@ -1,6 +1,6 @@
 # Supported Protocols, Data Types and Mappings
 
-**Currently we assume all columns are nullabel when inferring schema.**
+**Currently we assume all columns are nullable when inferring schema.**
 
 ## Postgres (Redshift)
 

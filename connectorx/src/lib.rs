@@ -101,6 +101,19 @@
 //! let data = destination.arrow();
 //! ```
 //!
+//! Or simply you can directly use the [`get_arrow::get_arrow`] or [`get_arrow2::get_arrow2`] in which we wrapped the above procedures:
+//!
+//! ```no_run
+//! use connectorx::prelude::*;
+//! use std::convert::TryFrom;
+//!
+//! let mut source_conn = SourceConn::try_from("postgresql://username:password@host:port/db?cxprotocol=binary").expect("parse conn str failed");
+//! let queries = &[CXQuery::from("SELECT * FROM table WHERE id < 100"), CXQuery::from("SELECT * FROM table WHERE id >= 100")];
+//! let destination = get_arrow(&source_conn, None, queries).expect("run failed");
+//!
+//! let data = destination.arrow();
+//! ```
+//!
 //! NOTE: the pool size parameter `nconn` used in initializing the source should be larger than or equal to the number of partitioned queries input later.
 //!
 //! ## Need more examples?
@@ -109,21 +122,19 @@
 //! [Arrow destination](https://github.com/sfu-db/connector-x/tree/main/connectorx/src/destinations/arrow),
 //! [MySQL to Arrow transport](https://github.com/sfu-db/connector-x/blob/main/connectorx/src/transports/mysql_arrow.rs).
 //!
-//! # Sources & Destinations that is implemented in the Rust core.
+//! # Sources protocols & Destinations that is implemented in the Rust core.
 //!
 //! ## Sources
 //! - [x] Postgres
 //! - [x] Mysql
 //! - [x] Sqlite
-//! - [x] Redshift (through postgres protocol)
-//! - [x] Clickhouse (through mysql protocol)
 //! - [x] SQL Server
+//! - [x] Oracle
+//! - [x] BigQuery
 //!
 //! ## Destinations
-//! - [x] PyArrow
-//! - [x] Modin
-//! - [x] Dask
-//! - [x] Polars
+//! - [x] Arrow
+//! - [x] Arrow2
 //!
 //! # Feature gates
 //! By default, ConnectorX does not enable any sources / destinations to keep the dependencies minimal.
@@ -184,6 +195,7 @@ pub mod prelude {
     #[cfg(feature = "src_sqlite")]
     pub use crate::sources::sqlite::SQLiteSource;
     pub use crate::sources::{PartitionParser, Produce, Source, SourcePartition};
+    pub use crate::sql::CXQuery;
     pub use crate::transports::*;
     pub use crate::typesystem::{
         ParameterizedFunc, ParameterizedOn, Realize, Transport, TypeAssoc, TypeConversion,

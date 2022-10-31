@@ -6,7 +6,7 @@ mod typesystem;
 
 pub use self::errors::PostgresSourceError;
 pub use connection::rewrite_tls_args;
-pub use typesystem::PostgresTypeSystem;
+pub use typesystem::{PostgresTypePairs, PostgresTypeSystem};
 
 use crate::constants::DB_BUFFER_SIZE;
 use crate::{
@@ -88,6 +88,7 @@ where
     queries: Vec<CXQuery<String>>,
     names: Vec<String>,
     schema: Vec<PostgresTypeSystem>,
+    pg_schema: Vec<postgres::types::Type>,
     _protocol: PhantomData<P>,
 }
 
@@ -109,6 +110,7 @@ where
             queries: vec![],
             names: vec![],
             schema: vec![],
+            pg_schema: vec![],
             _protocol: PhantomData,
         }
     }
@@ -153,19 +155,23 @@ where
 
         let stmt = conn.prepare(first_query.as_str())?;
 
-        let (names, types) = stmt
+        let (names, pg_types): (Vec<String>, Vec<postgres::types::Type>) = stmt
             .columns()
             .iter()
-            .map(|col| {
-                (
-                    col.name().to_string(),
-                    PostgresTypeSystem::from(col.type_()),
-                )
-            })
+            .map(|col| (col.name().to_string(), col.type_().clone()))
             .unzip();
 
         self.names = names;
-        self.schema = types;
+        self.schema = pg_types
+            .iter()
+            .map(|t| PostgresTypeSystem::from(t))
+            .collect();
+        self.pg_schema = self
+            .schema
+            .iter()
+            .zip(pg_types.iter())
+            .map(|(t1, t2)| PostgresTypePairs(t2, t1).into())
+            .collect();
     }
 
     #[throws(PostgresSourceError)]
@@ -199,6 +205,7 @@ where
                 conn,
                 &query,
                 &self.schema,
+                &self.pg_schema,
             ));
         }
         ret
@@ -215,6 +222,7 @@ where
     conn: PgConn<C>,
     query: CXQuery<String>,
     schema: Vec<PostgresTypeSystem>,
+    pg_schema: Vec<postgres::types::Type>,
     nrows: usize,
     ncols: usize,
     _protocol: PhantomData<P>,
@@ -227,11 +235,17 @@ where
     C::Stream: Send,
     <C::TlsConnect as TlsConnect<Socket>>::Future: Send,
 {
-    pub fn new(conn: PgConn<C>, query: &CXQuery<String>, schema: &[PostgresTypeSystem]) -> Self {
+    pub fn new(
+        conn: PgConn<C>,
+        query: &CXQuery<String>,
+        schema: &[PostgresTypeSystem],
+        pg_schema: &[postgres::types::Type],
+    ) -> Self {
         Self {
             conn,
             query: query.clone(),
             schema: schema.to_vec(),
+            pg_schema: pg_schema.to_vec(),
             nrows: 0,
             ncols: schema.len(),
             _protocol: PhantomData,
@@ -259,8 +273,7 @@ where
     fn parser(&mut self) -> Self::Parser<'_> {
         let query = format!("COPY ({}) TO STDOUT WITH BINARY", self.query);
         let reader = self.conn.copy_out(&*query)?; // unless reading the data, it seems like issue the query is fast
-        let pg_schema: Vec<_> = self.schema.iter().map(|&dt| dt.into()).collect();
-        let iter = BinaryCopyOutIter::new(reader, &pg_schema);
+        let iter = BinaryCopyOutIter::new(reader, &self.pg_schema);
 
         PostgresBinarySourcePartitionParser::new(iter, &self.schema)
     }

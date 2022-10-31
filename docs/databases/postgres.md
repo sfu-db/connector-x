@@ -41,6 +41,7 @@ cx.read_sql(conn, query)                                        # read data from
 | JSON            | object                    |                                    |
 | JSONB           | object                    |                                    |
 | ENUM            | object                    | need to convert enum column to text manually (`::text`) when using `csv` and `cursor` protocol |
+| ltree           | object                    |                                    |
 | INT2[]          | object                    | list of i64                        |
 | INT4[]          | object                    | list of i64                        |
 | INT8[]          | object                    | list of i64                        |
