@@ -1,16 +1,16 @@
 set dotenv-load := true
 
-build-lib:
-    cargo build --features src_postgres --features src_mysql --features dst_arrow --features federation
-
-build-lib-release:
-    cargo build --release --features src_postgres --features src_mysql --features dst_arrow --features federation
-
 build-release:
-    cargo build  --release
+    cargo build --release --features all
 
 build-debug:
-    cargo build
+    cargo build --features all
+
+build-cpp:
+    cd connectorx-cpp && cargo build
+
+build-cpp-release:
+    cd connectorx-cpp && cargo build --release
 
 test +ARGS="": 
     cargo test --features all {{ARGS}} -- --nocapture

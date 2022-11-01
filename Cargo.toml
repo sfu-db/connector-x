@@ -1,6 +1,6 @@
 [workspace]
 default-members = ["connectorx"]
-members = ["connectorx"]
+members = ["connectorx", "connectorx-cpp"]
 
 [profile.release]
 debug = true

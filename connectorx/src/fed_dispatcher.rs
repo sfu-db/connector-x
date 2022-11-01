@@ -5,21 +5,24 @@ use crate::{
     },
     prelude::*,
     sql::CXQuery,
-    CXFederatedPlan,
 };
 use arrow::record_batch::RecordBatch;
 use datafusion::datasource::MemTable;
 use datafusion::prelude::*;
 use fehler::throws;
 use j4rs::{ClasspathEntry, Instance, InvocationArg, Jvm, JvmBuilder, Null};
-use libc::c_char;
 use log::debug;
 use rayon::prelude::*;
 use std::collections::HashMap;
-use std::convert::{Into, TryFrom};
-use std::ffi::CString;
+use std::convert::TryFrom;
 use std::sync::{mpsc::channel, Arc};
 use std::{env, fs};
+
+pub struct Plan {
+    pub db_name: String,
+    pub db_alias: String,
+    pub sql: String,
+}
 
 pub struct FederatedDataSourceInfo {
     conn_str_info: Option<SourceConn>,
@@ -43,28 +46,6 @@ impl FederatedDataSourceInfo {
             conn_str_info: None,
             manual_info: Some(manual_schema),
             is_local,
-        }
-    }
-}
-
-pub struct Plan {
-    db_name: String,
-    db_alias: String,
-    sql: String,
-}
-
-impl Into<CXFederatedPlan> for Plan {
-    fn into(self) -> CXFederatedPlan {
-        CXFederatedPlan {
-            db_name: CString::new(self.db_name.as_str())
-                .expect("new CString error")
-                .into_raw() as *const c_char,
-            db_alias: CString::new(self.db_alias.as_str())
-                .expect("new CString error")
-                .into_raw() as *const c_char,
-            sql: CString::new(self.sql.as_str())
-                .expect("new CString error")
-                .into_raw() as *const c_char,
         }
     }
 }
