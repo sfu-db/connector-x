@@ -240,14 +240,10 @@ impl SourcePartition for SQLiteSourcePartition {
     }
 }
 
-struct MySqliteStatement<'a>(Statement<'a>);
-struct MySqliteRows<'a>(Rows<'a>);
-
-unsafe impl<'a> Send for MySqliteStatement<'a> {}
-unsafe impl<'a> Send for MySqliteRows<'a> {}
+unsafe impl<'a> Send for SQLiteSourcePartitionParser<'a> {}
 
 pub struct SQLiteSourcePartitionParser<'a> {
-    rows: OwningHandle<Box<MySqliteStatement<'a>>, DummyBox<MySqliteRows<'a>>>,
+    rows: OwningHandle<Box<Statement<'a>>, DummyBox<Rows<'a>>>,
     ncols: usize,
     current_col: usize,
 }
@@ -264,18 +260,10 @@ impl<'a> SQLiteSourcePartitionParser<'a> {
         // Safety: DummyBox borrows the on-heap stmt, which is owned by the OwningHandle.
         // No matter how we move the owning handle (thus the Box<Statment>), the Statement
         // keeps its address static on the heap, thus the borrow of MyRows keeps valid.
-        let rows: OwningHandle<Box<MySqliteStatement<'a>>, DummyBox<MySqliteRows<'a>>> =
-            OwningHandle::new_with_fn(
-                Box::new(MySqliteStatement(stmt)),
-                |stmt: *const MySqliteStatement<'a>| unsafe {
-                    DummyBox(MySqliteRows(
-                        (&mut *(stmt as *mut MySqliteStatement<'_>))
-                            .0
-                            .query([])
-                            .unwrap(),
-                    ))
-                },
-            );
+        let rows: OwningHandle<Box<Statement<'a>>, DummyBox<Rows<'a>>> =
+            OwningHandle::new_with_fn(Box::new(stmt), |stmt: *const Statement<'a>| unsafe {
+                DummyBox((&mut *(stmt as *mut Statement<'_>)).query([]).unwrap())
+            });
         Self {
             rows,
             ncols: schema.len(),
@@ -286,7 +274,6 @@ impl<'a> SQLiteSourcePartitionParser<'a> {
     #[throws(SQLiteSourceError)]
     fn next_loc(&mut self) -> (&Row, usize) {
         let row: &Row = (*self.rows)
-            .0
             .get()
             .ok_or_else(|| anyhow!("Sqlite empty current row"))?;
         let col = self.current_col;
@@ -302,7 +289,7 @@ impl<'a> PartitionParser<'a> for SQLiteSourcePartitionParser<'a> {
     #[throws(SQLiteSourceError)]
     fn fetch_next(&mut self) -> (usize, bool) {
         self.current_col = 0;
-        match (*self.rows).0.next()? {
+        match (*self.rows).next()? {
             Some(_) => (1, false),
             None => (0, true),
         }
