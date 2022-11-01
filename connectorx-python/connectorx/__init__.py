@@ -185,10 +185,10 @@ def read_sql(
                 raise ValueError("You need to install polars first")
 
             try:
-                df = pl.DataFrame.from_arrow(df)
-            except AttributeError:
                 # api change for polars >= 0.8.*
                 df = pl.from_arrow(df)
+            except AttributeError:
+                df = pl.DataFrame.from_arrow(df)
         return df
 
     if isinstance(query, str):
@@ -256,7 +256,7 @@ def read_sql(
 
         result = _read_sql(
             conn,
-            "arrow" if return_type in {"arrow", "polars"} else "arrow2",
+            "arrow2" if return_type in {"arrow2", "polars", "polars2"} else "arrow",
             queries=queries,
             protocol=protocol,
             partition_query=partition_query,
