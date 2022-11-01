@@ -243,9 +243,17 @@ impl SourcePartition for OracleSourcePartition {
     }
 }
 
+struct MyOracleStatement<'a>(Statement<'a>);
+struct MyOracleResultSet<'a>(ResultSet<'a, Row>);
+struct MyOracleRow(Row);
+
+unsafe impl<'a> Send for MyOracleStatement<'a> {}
+unsafe impl<'a> Send for MyOracleResultSet<'a> {}
+unsafe impl Send for MyOracleRow {}
+
 pub struct OracleTextSourceParser<'a> {
-    rows: OwningHandle<Box<Statement<'a>>, DummyBox<ResultSet<'a, Row>>>,
-    rowbuf: Vec<Row>,
+    rows: OwningHandle<Box<MyOracleStatement<'a>>, DummyBox<MyOracleResultSet<'a>>>,
+    rowbuf: Vec<MyOracleRow>,
     ncols: usize,
     current_col: usize,
     current_row: usize,
@@ -259,10 +267,18 @@ impl<'a> OracleTextSourceParser<'a> {
             .prefetch_rows(ORACLE_ARRAY_SIZE)
             .fetch_array_size(ORACLE_ARRAY_SIZE)
             .build()?;
-        let rows: OwningHandle<Box<Statement<'a>>, DummyBox<ResultSet<'a, Row>>> =
-            OwningHandle::new_with_fn(Box::new(stmt), |stmt: *const Statement<'a>| unsafe {
-                DummyBox((&mut *(stmt as *mut Statement<'_>)).query(&[]).unwrap())
-            });
+        let rows: OwningHandle<Box<MyOracleStatement<'a>>, DummyBox<MyOracleResultSet<'a>>> =
+            OwningHandle::new_with_fn(
+                Box::new(MyOracleStatement(stmt)),
+                |stmt: *const MyOracleStatement<'a>| unsafe {
+                    DummyBox(MyOracleResultSet(
+                        (&mut *(stmt as *mut MyOracleStatement<'_>))
+                            .0
+                            .query(&[])
+                            .unwrap(),
+                    ))
+                },
+            );
 
         Self {
             rows,
@@ -292,8 +308,8 @@ impl<'a> PartitionParser<'a> for OracleTextSourceParser<'a> {
             self.rowbuf.drain(..);
         }
         for _ in 0..DB_BUFFER_SIZE {
-            if let Some(item) = (*self.rows).next() {
-                self.rowbuf.push(item?);
+            if let Some(item) = (*self.rows).0.next() {
+                self.rowbuf.push(MyOracleRow(item?));
             } else {
                 break;
             }
@@ -313,7 +329,7 @@ macro_rules! impl_produce_text {
                 #[throws(OracleSourceError)]
                 fn produce(&'r mut self) -> $t {
                     let (ridx, cidx) = self.next_loc()?;
-                    let res = self.rowbuf[ridx].get(cidx)?;
+                    let res = self.rowbuf[ridx].0.get(cidx)?;
                     res
                 }
             }
@@ -324,7 +340,7 @@ macro_rules! impl_produce_text {
                 #[throws(OracleSourceError)]
                 fn produce(&'r mut self) -> Option<$t> {
                     let (ridx, cidx) = self.next_loc()?;
-                    let res = self.rowbuf[ridx].get(cidx)?;
+                    let res = self.rowbuf[ridx].0.get(cidx)?;
                     res
                 }
             }

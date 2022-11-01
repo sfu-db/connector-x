@@ -22,6 +22,7 @@ use crate::data_order::DataOrder;
 use crate::errors::ConnectorXError;
 use crate::sql::CXQuery;
 use crate::typesystem::{TypeAssoc, TypeSystem};
+use std::fmt::Debug;
 
 pub trait Source {
     /// Supported data orders, ordering by preference.
@@ -30,7 +31,7 @@ pub trait Source {
     type TypeSystem: TypeSystem;
     // Partition needs to be send to different threads for parallel execution
     type Partition: SourcePartition<TypeSystem = Self::TypeSystem, Error = Self::Error> + Send;
-    type Error: From<ConnectorXError>;
+    type Error: From<ConnectorXError> + Send + Debug;
 
     fn set_data_order(&mut self, data_order: DataOrder) -> Result<(), Self::Error>;
 
@@ -51,12 +52,12 @@ pub trait Source {
 
 /// In general, a `DataSource` abstracts the data source as a stream, which can produce
 /// a sequence of values of variate types by repetitively calling the function `produce`.
-pub trait SourcePartition: Sized {
+pub trait SourcePartition {
     type TypeSystem: TypeSystem;
     type Parser<'a>: PartitionParser<'a, TypeSystem = Self::TypeSystem, Error = Self::Error>
     where
         Self: 'a;
-    type Error: From<ConnectorXError> + Send;
+    type Error: From<ConnectorXError> + Send + Debug;
 
     /// Count total number of rows in each partition.
     fn result_rows(&mut self) -> Result<(), Self::Error>;
@@ -71,9 +72,9 @@ pub trait SourcePartition: Sized {
     fn ncols(&self) -> usize;
 }
 
-pub trait PartitionParser<'a> {
+pub trait PartitionParser<'a>: Send {
     type TypeSystem: TypeSystem;
-    type Error: From<ConnectorXError> + Send;
+    type Error: From<ConnectorXError> + Send + Debug;
 
     /// Read a value `T` by calling `Produce<T>::produce`. Usually this function does not need to be
     /// implemented.

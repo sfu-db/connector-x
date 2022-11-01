@@ -1,6 +1,7 @@
-use connectorx::arrow_batch_iter::PostgresArrowBatchIter;
+use connectorx::arrow_batch_iter::ArrowBatchIter;
 use connectorx::prelude::*;
 use connectorx::sources::postgres::{rewrite_tls_args, BinaryProtocol as PgBinaryProtocol};
+use connectorx::transports::PostgresArrowTransport;
 use postgres::NoTls;
 use std::convert::TryFrom;
 
@@ -13,8 +14,8 @@ fn main() {
 
     // let queries = &[CXQuery::naked("select * from lineitem limit 10")];
     let queries = &[
-        CXQuery::naked("select * from lineitem where l_orderkey < 3000000"),
-        CXQuery::naked("select * from lineitem where l_orderkey >= 3000000"),
+        CXQuery::naked("select * from lineitem where l_orderkey < 3000000 limit 10000"),
+        CXQuery::naked("select * from lineitem where l_orderkey >= 3000000 limit 20000"),
     ];
 
     let origin_query = None;
@@ -27,12 +28,13 @@ fn main() {
 
     let destination = ArrowDestination::new();
 
-    let mut batch_iter =
-        PostgresArrowBatchIter::new(source, destination, origin_query, queries, 1024);
+    let mut batch_iter: ArrowBatchIter<_, PostgresArrowTransport<PgBinaryProtocol, NoTls>> =
+        ArrowBatchIter::new(source, destination, origin_query, queries, 1024).unwrap();
 
     let mut num_rows = 0;
     let mut num_batches = 0;
     while let Some(record_batch) = batch_iter.next() {
+        let record_batch = record_batch.unwrap();
         println!("got 1 batch, with {} rows", record_batch.num_rows());
         num_rows += record_batch.num_rows();
         num_batches += 1;

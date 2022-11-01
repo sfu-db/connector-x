@@ -6,7 +6,7 @@ use crate::{
     errors::{ConnectorXError, Result as CXResult},
     sources::{PartitionParser, Source, SourcePartition},
     sql::CXQuery,
-    typesystem::{Transport, TypeSystem},
+    typesystem::Transport,
 };
 use itertools::Itertools;
 use log::debug;
@@ -23,25 +23,18 @@ pub struct Dispatcher<'a, S, D, TP> {
     _phantom: PhantomData<TP>,
 }
 
-impl<'w, S, TSS, D, TSD, TP, ES, ED, ET> Dispatcher<'w, S, D, TP>
+impl<'w, S, D, TP> Dispatcher<'w, S, D, TP>
 where
-    TSS: TypeSystem,
-    S: Source<TypeSystem = TSS, Error = ES>,
-    ES: From<ConnectorXError> + Send,
-
-    TSD: TypeSystem,
-    D: Destination<TypeSystem = TSD, Error = ED>,
-    ED: From<ConnectorXError> + Send,
-
-    TP: Transport<TSS = TSS, TSD = TSD, S = S, D = D, Error = ET>,
-    ET: From<ConnectorXError> + From<ES> + From<ED> + Send,
+    S: Source,
+    D: Destination,
+    TP: Transport<TSS = S::TypeSystem, TSD = D::TypeSystem, S = S, D = D>,
 {
     /// Create a new dispatcher by providing a source, a destination and the queries.
     pub fn new<Q>(src: S, dst: &'w mut D, queries: &[Q], origin_query: Option<String>) -> Self
     where
         for<'a> &'a Q: Into<CXQuery>,
     {
-        Dispatcher {
+        Self {
             src,
             dst,
             queries: queries.iter().map(Into::into).collect(),
@@ -57,10 +50,10 @@ where
             DataOrder,
             Vec<S::Partition>,
             Vec<D::Partition<'w>>,
-            Vec<TSS>,
-            Vec<TSD>,
+            Vec<S::TypeSystem>,
+            Vec<D::TypeSystem>,
         ),
-        ET,
+        TP::Error,
     > {
         debug!("Prepare");
         let dorder = coordinate(S::DATA_ORDERS, D::DATA_ORDERS)?;
@@ -91,7 +84,7 @@ where
             // run queries
             src_partitions
                 .par_iter_mut()
-                .try_for_each(|partition| -> Result<(), ES> { partition.result_rows() })?;
+                .try_for_each(|partition| -> Result<(), S::Error> { partition.result_rows() })?;
 
             // get number of row of each partition from the source
             let part_rows: Vec<usize> = src_partitions
@@ -122,7 +115,7 @@ where
     }
 
     /// Start the data loading process.
-    pub fn run(self) -> Result<(), ET> {
+    pub fn run(self) -> Result<(), TP::Error> {
         debug!("Run dispatcher");
         let (dorder, src_partitions, dst_partitions, src_schema, dst_schema) = self.prepare()?;
 
@@ -142,7 +135,7 @@ where
             .into_par_iter()
             .zip_eq(src_partitions)
             .enumerate()
-            .try_for_each(|(i, (mut dst, mut src))| -> Result<(), ET> {
+            .try_for_each(|(i, (mut dst, mut src))| -> Result<(), TP::Error> {
                 #[cfg(feature = "fptr")]
                 let f: Vec<_> = src_schema
                     .iter()
@@ -206,7 +199,7 @@ where
     }
 
     /// Only fetch the metadata (header) of the destination.
-    pub fn get_meta(&mut self) -> Result<(), ET> {
+    pub fn get_meta(&mut self) -> Result<(), TP::Error> {
         let dorder = coordinate(S::DATA_ORDERS, D::DATA_ORDERS)?;
         self.src.set_data_order(dorder)?;
         self.src.set_queries(self.queries.as_slice());

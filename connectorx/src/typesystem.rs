@@ -70,7 +70,11 @@ pub trait Transport {
     type TSD: TypeSystem;
     type S: Source;
     type D: Destination;
-    type Error: From<ConnectorXError> + Send;
+    type Error: From<ConnectorXError>
+        + From<<Self::S as Source>::Error>
+        + From<<Self::D as Destination>::Error>
+        + Send
+        + std::fmt::Debug;
 
     /// convert_typesystem convert the source type system TSS to the destination
     /// type system TSD.
