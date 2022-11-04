@@ -16,7 +16,7 @@ use crate::{
     sql::{count_query, CXQuery},
 };
 use anyhow::anyhow;
-use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
+use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, FixedOffset, Utc};
 use csv::{ReaderBuilder, StringRecord, StringRecordsIntoIter};
 use fehler::{throw, throws};
 use hex::decode;

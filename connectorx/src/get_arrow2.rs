@@ -124,7 +124,7 @@ pub fn get_arrow2(
                     let dispatcher = Dispatcher::<
                         _,
                         _,
-                        PostgresArrowTransport<SimpleProtocol, MakeTlsConnector>,
+                        PostgresArrow2Transport<SimpleProtocol, MakeTlsConnector>,
                     >::new(
                         sb, &mut destination, queries, origin_query
                     );
@@ -137,7 +137,7 @@ pub fn get_arrow2(
                     let dispatcher = Dispatcher::<
                         _,
                         _,
-                        PostgresArrowTransport<SimpleProtocol, NoTls>,
+                        PostgresArrow2Transport<SimpleProtocol, NoTls>,
                     >::new(
                         sb, &mut destination, queries, origin_query
                     );
