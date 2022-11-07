@@ -216,9 +216,8 @@ pub struct CXResultIter<'a> {
 
 #[no_mangle]
 pub unsafe extern "C" fn free_result_iter<'a>(res: *const CXResultIter<'a>) {
-    let _ = get_vec::<_>((*res).header.ptr, (*res).header.len, (*res).header.capacity);
-    // should not need to free string if they are just pointing to the arrow_iter.dst
-    // header.into_iter().for_each(|col| free_str(col));
+    let header = get_vec::<_>((*res).header.ptr, (*res).header.len, (*res).header.capacity);
+    header.into_iter().for_each(|col| free_str(col));
 
     let arrow_iter = Box::from_raw(res as *mut CXResultIter<'a>);
     let _ = Box::from_raw(arrow_iter.iter);
