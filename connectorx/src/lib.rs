@@ -144,6 +144,7 @@
 pub mod typesystem;
 #[macro_use]
 mod macros;
+#[cfg(feature = "dst_arrow")]
 pub mod arrow_batch_iter;
 pub mod constants;
 pub mod data_order;
@@ -165,6 +166,8 @@ pub mod transports;
 pub mod utils;
 
 pub mod prelude {
+    #[cfg(feature = "dst_arrow")]
+    pub use crate::arrow_batch_iter::ArrowBatchIter;
     pub use crate::data_order::{coordinate, DataOrder};
     #[cfg(feature = "dst_arrow")]
     pub use crate::destinations::arrow::ArrowDestination;

@@ -5,7 +5,7 @@ use crate::sources::postgres::{
     rewrite_tls_args, BinaryProtocol as PgBinaryProtocol, CSVProtocol, CursorProtocol,
     SimpleProtocol,
 };
-use crate::{prelude::*, sql::CXQuery};
+use crate::{arrow_batch_iter::ArrowBatchIter, prelude::*, sql::CXQuery};
 use fehler::{throw, throws};
 use log::debug;
 #[cfg(feature = "src_postgres")]
@@ -228,4 +228,45 @@ pub fn get_arrow(
     }
 
     destination
+}
+
+#[allow(unreachable_code, unreachable_patterns, unused_variables, unused_mut)]
+#[throws(ConnectorXOutError)]
+pub fn get_arrow_iter<'a>(
+    source_conn: &SourceConn,
+    origin_query: Option<String>,
+    queries: &[CXQuery<String>],
+    batch_size: usize,
+) -> ArrowBatchIter<
+    'a,
+    PostgresSource<PgBinaryProtocol, NoTls>,
+    PostgresArrowTransport<PgBinaryProtocol, NoTls>,
+> {
+    let destination = ArrowDestination::new();
+    let protocol = source_conn.proto.as_str();
+    debug!("Protocol: {}", protocol);
+
+    // TODO: unlock gil if possible
+    match source_conn.ty {
+        #[cfg(feature = "src_postgres")]
+        SourceType::Postgres => {
+            let (config, _) = rewrite_tls_args(&source_conn.conn)?;
+            let source =
+                PostgresSource::<PgBinaryProtocol, NoTls>::new(config, NoTls, queries.len())?;
+            let batch_iter: ArrowBatchIter<
+                PostgresSource<PgBinaryProtocol, NoTls>,
+                PostgresArrowTransport<PgBinaryProtocol, NoTls>,
+            > = ArrowBatchIter::new(source, destination, origin_query, queries, batch_size)?;
+            return batch_iter;
+        }
+        _ => throw!(ConnectorXOutError::SourceNotSupport(format!(
+            "{:?}",
+            source_conn.ty
+        ))),
+    }
+
+    throw!(ConnectorXOutError::SourceNotSupport(format!(
+        "{:?}",
+        source_conn.ty
+    )))
 }

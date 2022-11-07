@@ -3,12 +3,13 @@
 mod plan;
 
 use arrow::ffi::{ArrowArray, FFI_ArrowArray, FFI_ArrowSchema};
+use connectorx::get_arrow::get_arrow_iter;
 use connectorx::prelude::*;
 use libc::c_char;
 use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::env;
-use std::ffi::{CStr, CString};
+use std::ffi::{c_void, CStr, CString};
 
 #[repr(C)]
 pub struct CXSlice<T> {
@@ -196,4 +197,130 @@ pub extern "C" fn connectorx_scan(conn: *const i8, query: *const i8) -> CXResult
     };
 
     res
+}
+
+use connectorx::sources::postgres::BinaryProtocol as PgBinaryProtocol;
+use connectorx::transports::PostgresArrowTransport;
+use postgres::NoTls;
+
+#[repr(C)]
+pub struct CXResultIter<'a> {
+    iter: *mut ArrowBatchIter<
+        'a,
+        PostgresSource<PgBinaryProtocol, NoTls>,
+        PostgresArrowTransport<PgBinaryProtocol, NoTls>,
+    >,
+    schema: CXSlice<CXArray>,
+    header: CXSlice<*const c_char>,
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn free_result_iter<'a>(res: *const CXResultIter<'a>) {
+    let _ = get_vec::<_>((*res).header.ptr, (*res).header.len, (*res).header.capacity);
+    // should not need to free string if they are just pointing to the arrow_iter.dst
+    // header.into_iter().for_each(|col| free_str(col));
+
+    let arrow_iter = Box::from_raw(res as *mut CXResultIter<'a>);
+    let _ = Box::from_raw(arrow_iter.iter);
+    get_vec::<_>(
+        arrow_iter.schema.ptr,
+        arrow_iter.schema.len,
+        arrow_iter.schema.capacity,
+    )
+    .into_iter()
+    .for_each(|a| {
+        std::sync::Arc::from_raw(a.array);
+        std::sync::Arc::from_raw(a.schema);
+    });
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn free_record_batch(rb: *mut CXSlice<CXArray>) {
+    let slice = Box::from_raw(rb);
+    get_vec::<_>(slice.ptr, slice.len, slice.capacity)
+        .into_iter()
+        .for_each(|a| {
+            std::sync::Arc::from_raw(a.array);
+            std::sync::Arc::from_raw(a.schema);
+        })
+}
+
+#[no_mangle]
+pub extern "C" fn connectorx_scan_iter<'a>(
+    conn: *const i8,
+    query: *const i8,
+    batch_size: usize,
+) -> *const CXResultIter<'a> {
+    let conn_str = unsafe { CStr::from_ptr(conn) }.to_str().unwrap();
+    let query_str = unsafe { CStr::from_ptr(query) }.to_str().unwrap();
+    let source_conn = SourceConn::try_from(conn_str).unwrap();
+
+    let arrow_iter = Box::new(
+        get_arrow_iter(&source_conn, None, &[CXQuery::from(query_str)], batch_size).unwrap(),
+    );
+    let (empty_batch, names) = arrow_iter.get_schema();
+    let mut cols = vec![];
+    for array in empty_batch.columns() {
+        let data = array.data().clone();
+        let array = ArrowArray::try_new(data).expect("c ptr");
+        let (array_ptr, schema_ptr) = ArrowArray::into_raw(array);
+        let cx_array = CXArray {
+            array: array_ptr,
+            schema: schema_ptr,
+        };
+        cols.push(cx_array);
+    }
+
+    let names: Vec<*const c_char> = names
+        .iter()
+        .map(|name| {
+            CString::new(name.as_str())
+                .expect("new CString error")
+                .into_raw() as *const c_char
+        })
+        .collect();
+
+    let res = Box::new(CXResultIter {
+        iter: Box::into_raw(arrow_iter),
+        schema: CXSlice::<_>::new_from_vec(cols),
+        header: CXSlice::<_>::new_from_vec(names),
+    });
+
+    Box::into_raw(res)
+}
+
+#[no_mangle]
+pub extern "C" fn connectorx_iter_next(iter: *mut c_void) -> *mut CXSlice<CXArray> {
+    let arrow_iter: &mut ArrowBatchIter<
+        PostgresSource<PgBinaryProtocol, NoTls>,
+        PostgresArrowTransport<PgBinaryProtocol, NoTls>,
+    > = unsafe { &mut (*(iter as *mut _)) };
+
+    match arrow_iter.next() {
+        Some(Ok(rb)) => {
+            let mut cols = vec![];
+
+            for array in rb.columns() {
+                let data = array.data().clone();
+                let array = ArrowArray::try_new(data).expect("c ptr");
+                let (array_ptr, schema_ptr) = ArrowArray::into_raw(array);
+
+                let cx_array = CXArray {
+                    array: array_ptr,
+                    schema: schema_ptr,
+                };
+                cols.push(cx_array);
+            }
+
+            let cx_rb = Box::new(CXSlice::<CXArray>::new_from_vec(cols));
+            return Box::into_raw(cx_rb);
+        }
+        Some(Err(e)) => {
+            println!("error: {:?}", e);
+            return std::ptr::null_mut();
+        }
+        None => {
+            return std::ptr::null_mut();
+        }
+    }
 }

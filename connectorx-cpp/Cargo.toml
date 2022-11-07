@@ -10,6 +10,7 @@ license = "MIT"
 libc = "0.2"
 connectorx = {path = "../connectorx", default-features = false}
 arrow = {version = "22", features = ["prettyprint", "ffi"]}
+postgres = "0.19"
 
 [lib]
 crate-type = ["cdylib"]

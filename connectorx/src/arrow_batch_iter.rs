@@ -70,6 +70,10 @@ where
         })
     }
 
+    pub fn get_schema(&self) -> (RecordBatch, &[String]) {
+        (self.dst.empty_batch(), self.dst.names())
+    }
+
     fn run_batch(&mut self) -> Result<(), TP::Error> {
         let schemas: Vec<_> = self
             .src_schema

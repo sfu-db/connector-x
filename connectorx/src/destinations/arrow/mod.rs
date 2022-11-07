@@ -134,8 +134,16 @@ impl ArrowDestination {
         (*guard).pop()
     }
 
+    pub fn empty_batch(&self) -> RecordBatch {
+        RecordBatch::new_empty(self.arrow_schema.clone())
+    }
+
     pub fn arrow_schema(&self) -> Arc<Schema> {
         self.arrow_schema.clone()
+    }
+
+    pub fn names(&self) -> &[String] {
+        self.names.as_slice()
     }
 }
 
