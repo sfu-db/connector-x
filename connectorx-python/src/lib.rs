@@ -1,6 +1,3 @@
-#![feature(fmt_internals)]
-#![allow(incomplete_features)]
-
 pub mod arrow;
 pub mod arrow2;
 pub mod constants;

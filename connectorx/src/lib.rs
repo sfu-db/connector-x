@@ -1,4 +1,3 @@
-#![allow(incomplete_features)]
 #![allow(clippy::upper_case_acronyms)]
 
 //! # ConnectorX
