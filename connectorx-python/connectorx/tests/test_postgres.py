@@ -768,7 +768,7 @@ def test_postgres_types_cursor(postgres_url: str) -> None:
 
 
 def test_types_simple(postgres_url: str) -> None:
-    query = "SELECT test_date, test_timestamp, test_timestamptz, test_int16, test_int64, test_float32, test_numeric, test_bpchar, test_char, test_varchar, test_uuid, test_time, test_json, test_jsonb, test_bytea, test_enum::text, test_f4array, test_f8array, test_narray, test_i2array, test_i4array, test_i8array FROM test_types"
+    query = "SELECT test_date, test_timestamp, test_timestamptz, test_int16, test_int64, test_float32, test_numeric, test_bpchar, test_char, test_varchar, test_uuid, test_time, test_bytea, test_enum, test_f4array, test_f8array, test_narray, test_i2array, test_i4array, test_i8array FROM test_types"
     df = read_sql(postgres_url, query, protocol="simple")
     expected = pd.DataFrame(
         index=range(4),
@@ -816,24 +816,6 @@ def test_types_simple(postgres_url: str) -> None:
             ),
             "test_time": pd.Series(
                 ["08:12:40", None, "23:00:10", "18:30:00"], dtype="object"
-            ),
-            "test_json": pd.Series(
-                [
-                    '{"customer":"John Doe","items":{"product":"Beer","qty":6}}',
-                    '{"customer":"Lily Bush","items":{"product":"Diaper","qty":24}}',
-                    '{"customer":"Josh William","items":{"product":"Toy Car","qty":1}}',
-                    None,
-                ],
-                dtype="object",
-            ),
-            "test_jsonb": pd.Series(
-                [
-                    '{"qty":6,"product":"Beer"}',
-                    '{"qty":24,"product":"Diaper"}',
-                    '{"qty":1,"product":"Toy Car"}',
-                    None,
-                ],
-                dtype="object",
             ),
             "test_bytea": pd.Series(
                 [

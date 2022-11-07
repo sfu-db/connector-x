@@ -1182,8 +1182,16 @@ impl<'r> Produce<'r, Vec<u8>> for PostgresSimpleSourceParser {
         let val = match &self.rows[ridx] {
             SimpleQueryMessage::Row(row) => match row.try_get(cidx)? {
                 Some(s) => {
-                    let res: Vec<u8> = s.chars().map(|c| c as u8).collect::<Vec<_>>();
-                    res
+                    let mut res = s.chars();
+                    res.next();
+                    res.next();
+                    decode(
+                        res.enumerate()
+                            .fold(String::new(), |acc, (_i, c)| format!("{}{}", acc, c))
+                            .chars()
+                            .map(|c| c as u8)
+                            .collect::<Vec<u8>>(),
+                    )?
                 }
                 None => throw!(anyhow!("Cannot parse NULL in non-NULL column.")),
             },
@@ -1207,8 +1215,16 @@ impl<'r, 'a> Produce<'r, Option<Vec<u8>>> for PostgresSimpleSourceParser {
         let val = match &self.rows[ridx] {
             SimpleQueryMessage::Row(row) => match row.try_get(cidx)? {
                 Some(s) => {
-                    let res: Vec<u8> = s.chars().map(|c| c as u8).collect::<Vec<_>>();
-                    Option::Some(res)
+                    let mut res = s.chars();
+                    res.next();
+                    res.next();
+                    Some(decode(
+                        res.enumerate()
+                            .fold(String::new(), |acc, (_i, c)| format!("{}{}", acc, c))
+                            .chars()
+                            .map(|c| c as u8)
+                            .collect::<Vec<u8>>(),
+                    )?)
                 }
                 None => None,
             },
@@ -1230,293 +1246,66 @@ fn rem_first_and_last(value: &str) -> &str {
     chars.as_str()
 }
 
-fn parse_input_i16(input: &str) -> Result<Vec<i16>, std::num::ParseIntError> {
-    input.split(",").map(|token| token.parse()).collect()
+macro_rules! impl_simple_vec_produce {
+    ($($t: ty,)+) => {
+        $(
+            impl<'r> Produce<'r, Vec<$t>> for PostgresSimpleSourceParser {
+                type Error = PostgresSourceError;
+
+                #[throws(PostgresSourceError)]
+                fn produce(&'r mut self) -> Vec<$t> {
+                    let (ridx, cidx) = self.next_loc()?;
+                    let val = match &self.rows[ridx] {
+                        SimpleQueryMessage::Row(row) => match row.try_get(cidx)? {
+                            Some(s) => match s{
+                                "" => throw!(anyhow!("Cannot parse NULL in non-NULL column.")),
+                                "{}" => vec![],
+                                _ => rem_first_and_last(s).split(",").map(|token| token.parse().map_err(|_| ConnectorXError::cannot_produce::<Vec<$t>>(Some(s.into())))).collect::<Result<Vec<$t>, ConnectorXError>>()?
+                            },
+                            None => throw!(anyhow!("Cannot parse NULL in non-NULL column.")),
+                        },
+                        SimpleQueryMessage::CommandComplete(c) => {
+                            panic!("get command: {}", c);
+                        }
+                        _ => {
+                            panic!("what?");
+                        }
+                    };
+                    val
+                }
+            }
+
+            impl<'r, 'a> Produce<'r, Option<Vec<$t>>> for PostgresSimpleSourceParser {
+                type Error = PostgresSourceError;
+
+                #[throws(PostgresSourceError)]
+                fn produce(&'r mut self) -> Option<Vec<$t>> {
+                    let (ridx, cidx) = self.next_loc()?;
+                    let val = match &self.rows[ridx] {
+
+                        SimpleQueryMessage::Row(row) => match row.try_get(cidx)? {
+                            Some(s) => match s{
+                                "" => None,
+                                "{}" => Some(vec![]),
+                                _ => Some(rem_first_and_last(s).split(",").map(|token| token.parse().map_err(|_| ConnectorXError::cannot_produce::<Vec<$t>>(Some(s.into())))).collect::<Result<Vec<$t>, ConnectorXError>>()?)
+                            },
+                            None => None,
+                        },
+
+                        SimpleQueryMessage::CommandComplete(c) => {
+                            panic!("get command: {}", c);
+                        }
+                        _ => {
+                            panic!("what?");
+                        }
+                    };
+                    val
+                }
+            }
+        )+
+    };
 }
-
-impl<'r> Produce<'r, Vec<i16>> for PostgresSimpleSourceParser {
-    type Error = PostgresSourceError;
-
-    #[throws(PostgresSourceError)]
-    fn produce(&'r mut self) -> Vec<i16> {
-        let (ridx, cidx) = self.next_loc()?;
-        let val = match &self.rows[ridx] {
-            SimpleQueryMessage::Row(row) => match row.try_get(cidx)? {
-                Some(s) => parse_input_i16(rem_first_and_last(s)).unwrap(),
-                None => throw!(anyhow!("Cannot parse NULL in non-NULL column.")),
-            },
-            SimpleQueryMessage::CommandComplete(c) => {
-                panic!("get command: {}", c);
-            }
-            _ => {
-                panic!("what?");
-            }
-        };
-        val
-    }
-}
-
-impl<'r, 'a> Produce<'r, Option<Vec<i16>>> for PostgresSimpleSourceParser {
-    type Error = PostgresSourceError;
-
-    #[throws(PostgresSourceError)]
-    fn produce(&'r mut self) -> Option<Vec<i16>> {
-        let (ridx, cidx) = self.next_loc()?;
-        let val = match &self.rows[ridx] {
-            SimpleQueryMessage::Row(row) => match row.try_get(cidx)? {
-                Some(s) => Option::Some(parse_input_i16(rem_first_and_last(s)).unwrap()),
-                None => None,
-            },
-            SimpleQueryMessage::CommandComplete(c) => {
-                panic!("get command: {}", c);
-            }
-            _ => {
-                panic!("what?");
-            }
-        };
-        val
-    }
-}
-
-fn parse_input_i32(input: &str) -> Result<Vec<i32>, std::num::ParseIntError> {
-    input.split(",").map(|token| token.parse()).collect()
-}
-
-impl<'r> Produce<'r, Vec<i32>> for PostgresSimpleSourceParser {
-    type Error = PostgresSourceError;
-
-    #[throws(PostgresSourceError)]
-    fn produce(&'r mut self) -> Vec<i32> {
-        let (ridx, cidx) = self.next_loc()?;
-        let val = match &self.rows[ridx] {
-            SimpleQueryMessage::Row(row) => match row.try_get(cidx)? {
-                Some(s) => parse_input_i32(rem_first_and_last(s)).unwrap(),
-                None => throw!(anyhow!("Cannot parse NULL in non-NULL column.")),
-            },
-            SimpleQueryMessage::CommandComplete(c) => {
-                panic!("get command: {}", c);
-            }
-            _ => {
-                panic!("what?");
-            }
-        };
-        val
-    }
-}
-
-impl<'r, 'a> Produce<'r, Option<Vec<i32>>> for PostgresSimpleSourceParser {
-    type Error = PostgresSourceError;
-
-    #[throws(PostgresSourceError)]
-    fn produce(&'r mut self) -> Option<Vec<i32>> {
-        let (ridx, cidx) = self.next_loc()?;
-        let val = match &self.rows[ridx] {
-            SimpleQueryMessage::Row(row) => match row.try_get(cidx)? {
-                Some(s) => Option::Some(parse_input_i32(rem_first_and_last(s)).unwrap()),
-                None => None,
-            },
-            SimpleQueryMessage::CommandComplete(c) => {
-                panic!("get command: {}", c);
-            }
-            _ => {
-                panic!("what?");
-            }
-        };
-        val
-    }
-}
-
-fn parse_input_i64(input: &str) -> Result<Vec<i64>, std::num::ParseIntError> {
-    input.split(",").map(|token| token.parse()).collect()
-}
-
-impl<'r> Produce<'r, Vec<i64>> for PostgresSimpleSourceParser {
-    type Error = PostgresSourceError;
-
-    #[throws(PostgresSourceError)]
-    fn produce(&'r mut self) -> Vec<i64> {
-        let (ridx, cidx) = self.next_loc()?;
-        let val = match &self.rows[ridx] {
-            SimpleQueryMessage::Row(row) => match row.try_get(cidx)? {
-                Some(s) => parse_input_i64(rem_first_and_last(s)).unwrap(),
-                None => throw!(anyhow!("Cannot parse NULL in non-NULL column.")),
-            },
-            SimpleQueryMessage::CommandComplete(c) => {
-                panic!("get command: {}", c);
-            }
-            _ => {
-                panic!("what?");
-            }
-        };
-        val
-    }
-}
-
-impl<'r, 'a> Produce<'r, Option<Vec<i64>>> for PostgresSimpleSourceParser {
-    type Error = PostgresSourceError;
-
-    #[throws(PostgresSourceError)]
-    fn produce(&'r mut self) -> Option<Vec<i64>> {
-        let (ridx, cidx) = self.next_loc()?;
-        let val = match &self.rows[ridx] {
-            SimpleQueryMessage::Row(row) => match row.try_get(cidx)? {
-                Some(s) => Option::Some(parse_input_i64(rem_first_and_last(s)).unwrap()),
-                None => None,
-            },
-            SimpleQueryMessage::CommandComplete(c) => {
-                panic!("get command: {}", c);
-            }
-            _ => {
-                panic!("what?");
-            }
-        };
-        val
-    }
-}
-
-fn parse_input_f32(input: &str) -> Result<Vec<f32>, std::num::ParseFloatError> {
-    input.split(",").map(|token| token.parse()).collect()
-}
-
-impl<'r> Produce<'r, Vec<f32>> for PostgresSimpleSourceParser {
-    type Error = PostgresSourceError;
-
-    #[throws(PostgresSourceError)]
-    fn produce(&'r mut self) -> Vec<f32> {
-        let (ridx, cidx) = self.next_loc()?;
-        let val = match &self.rows[ridx] {
-            SimpleQueryMessage::Row(row) => match row.try_get(cidx)? {
-                Some(s) => parse_input_f32(rem_first_and_last(s)).unwrap(),
-                None => throw!(anyhow!("Cannot parse NULL in non-NULL column.")),
-            },
-            SimpleQueryMessage::CommandComplete(c) => {
-                panic!("get command: {}", c);
-            }
-            _ => {
-                panic!("what?");
-            }
-        };
-        val
-    }
-}
-
-impl<'r, 'a> Produce<'r, Option<Vec<f32>>> for PostgresSimpleSourceParser {
-    type Error = PostgresSourceError;
-
-    #[throws(PostgresSourceError)]
-    fn produce(&'r mut self) -> Option<Vec<f32>> {
-        let (ridx, cidx) = self.next_loc()?;
-        let val = match &self.rows[ridx] {
-            SimpleQueryMessage::Row(row) => match row.try_get(cidx)? {
-                Some(s) => Option::Some(parse_input_f32(rem_first_and_last(s)).unwrap()),
-                None => None,
-            },
-            SimpleQueryMessage::CommandComplete(c) => {
-                panic!("get command: {}", c);
-            }
-            _ => {
-                panic!("what?");
-            }
-        };
-        val
-    }
-}
-
-fn parse_input_f64(input: &str) -> Result<Vec<f64>, std::num::ParseFloatError> {
-    input.split(",").map(|token| token.parse()).collect()
-}
-
-impl<'r> Produce<'r, Vec<f64>> for PostgresSimpleSourceParser {
-    type Error = PostgresSourceError;
-
-    #[throws(PostgresSourceError)]
-    fn produce(&'r mut self) -> Vec<f64> {
-        let (ridx, cidx) = self.next_loc()?;
-        let val = match &self.rows[ridx] {
-            SimpleQueryMessage::Row(row) => match row.try_get(cidx)? {
-                Some(s) => parse_input_f64(rem_first_and_last(s)).unwrap(),
-                None => throw!(anyhow!("Cannot parse NULL in non-NULL column.")),
-            },
-            SimpleQueryMessage::CommandComplete(c) => {
-                panic!("get command: {}", c);
-            }
-            _ => {
-                panic!("what?");
-            }
-        };
-        val
-    }
-}
-
-impl<'r, 'a> Produce<'r, Option<Vec<f64>>> for PostgresSimpleSourceParser {
-    type Error = PostgresSourceError;
-
-    #[throws(PostgresSourceError)]
-    fn produce(&'r mut self) -> Option<Vec<f64>> {
-        let (ridx, cidx) = self.next_loc()?;
-        let val = match &self.rows[ridx] {
-            SimpleQueryMessage::Row(row) => match row.try_get(cidx)? {
-                Some(s) => Option::Some(parse_input_f64(rem_first_and_last(s)).unwrap()),
-                None => None,
-            },
-            SimpleQueryMessage::CommandComplete(c) => {
-                panic!("get command: {}", c);
-            }
-            _ => {
-                panic!("what?");
-            }
-        };
-        val
-    }
-}
-
-fn parse_input_decimal(input: &str) -> Result<Vec<Decimal>, rust_decimal::Error> {
-    input.split(",").map(|token| token.parse()).collect()
-}
-
-impl<'r> Produce<'r, Vec<Decimal>> for PostgresSimpleSourceParser {
-    type Error = PostgresSourceError;
-
-    #[throws(PostgresSourceError)]
-    fn produce(&'r mut self) -> Vec<Decimal> {
-        let (ridx, cidx) = self.next_loc()?;
-        let val = match &self.rows[ridx] {
-            SimpleQueryMessage::Row(row) => match row.try_get(cidx)? {
-                Some(s) => parse_input_decimal(rem_first_and_last(s)).unwrap(),
-                None => throw!(anyhow!("Cannot parse NULL in non-NULL column.")),
-            },
-            SimpleQueryMessage::CommandComplete(c) => {
-                panic!("get command: {}", c);
-            }
-            _ => {
-                panic!("what?");
-            }
-        };
-        val
-    }
-}
-
-impl<'r, 'a> Produce<'r, Option<Vec<Decimal>>> for PostgresSimpleSourceParser {
-    type Error = PostgresSourceError;
-
-    #[throws(PostgresSourceError)]
-    fn produce(&'r mut self) -> Option<Vec<Decimal>> {
-        let (ridx, cidx) = self.next_loc()?;
-        let val = match &self.rows[ridx] {
-            SimpleQueryMessage::Row(row) => match row.try_get(cidx)? {
-                Some(s) => Option::Some(parse_input_decimal(rem_first_and_last(s)).unwrap()),
-                None => None,
-            },
-            SimpleQueryMessage::CommandComplete(c) => {
-                panic!("get command: {}", c);
-            }
-            _ => {
-                panic!("what?");
-            }
-        };
-        val
-    }
-}
+impl_simple_vec_produce!(i16, i32, i64, f32, f64, Decimal,);
 
 impl<'r> Produce<'r, NaiveDate> for PostgresSimpleSourceParser {
     type Error = PostgresSourceError;
