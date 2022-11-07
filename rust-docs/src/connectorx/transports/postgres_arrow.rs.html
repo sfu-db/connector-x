@@ -81,6 +81,8 @@
 <span id="81">81</span>
 <span id="82">82</span>
 <span id="83">83</span>
+<span id="84">84</span>
+<span id="85">85</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Transport from Postgres Source to Arrow Destination.
 
 </span><span class="kw">use </span><span class="kw">crate</span>::destinations::arrow::{
@@ -88,7 +90,7 @@
 };
 <span class="kw">use </span><span class="kw">crate</span>::sources::postgres::{
     BinaryProtocol, CSVProtocol, CursorProtocol, PostgresSource, PostgresSourceError,
-    PostgresTypeSystem,
+    PostgresTypeSystem, SimpleProtocol,
 };
 <span class="kw">use </span><span class="kw">crate</span>::typesystem::TypeConversion;
 <span class="kw">use </span>chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
@@ -151,6 +153,8 @@
 <span class="macro">impl_postgres_transport!</span>(CSVProtocol, MakeTlsConnector);
 <span class="macro">impl_postgres_transport!</span>(CursorProtocol, NoTls);
 <span class="macro">impl_postgres_transport!</span>(CursorProtocol, MakeTlsConnector);
+<span class="macro">impl_postgres_transport!</span>(SimpleProtocol, NoTls);
+<span class="macro">impl_postgres_transport!</span>(SimpleProtocol, MakeTlsConnector);
 
 <span class="kw">impl</span>&lt;P, C&gt; TypeConversion&lt;Uuid, String&gt; <span class="kw">for </span>PostgresArrowTransport&lt;P, C&gt; {
     <span class="kw">fn </span>convert(val: Uuid) -&gt; String {

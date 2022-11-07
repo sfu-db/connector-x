@@ -199,11 +199,42 @@
 <span id="199">199</span>
 <span id="200">200</span>
 <span id="201">201</span>
+<span id="202">202</span>
+<span id="203">203</span>
+<span id="204">204</span>
+<span id="205">205</span>
+<span id="206">206</span>
+<span id="207">207</span>
+<span id="208">208</span>
+<span id="209">209</span>
+<span id="210">210</span>
+<span id="211">211</span>
+<span id="212">212</span>
+<span id="213">213</span>
+<span id="214">214</span>
+<span id="215">215</span>
+<span id="216">216</span>
+<span id="217">217</span>
+<span id="218">218</span>
+<span id="219">219</span>
+<span id="220">220</span>
+<span id="221">221</span>
+<span id="222">222</span>
+<span id="223">223</span>
+<span id="224">224</span>
+<span id="225">225</span>
+<span id="226">226</span>
+<span id="227">227</span>
+<span id="228">228</span>
+<span id="229">229</span>
+<span id="230">230</span>
+<span id="231">231</span>
 </pre><pre class="rust"><code><span class="attribute">#[cfg(feature = <span class="string">&quot;src_mysql&quot;</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::sources::mysql::{BinaryProtocol <span class="kw">as </span>MySQLBinaryProtocol, TextProtocol};
 <span class="attribute">#[cfg(feature = <span class="string">&quot;src_postgres&quot;</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::sources::postgres::{
     rewrite_tls_args, BinaryProtocol <span class="kw">as </span>PgBinaryProtocol, CSVProtocol, CursorProtocol,
+    SimpleProtocol,
 };
 <span class="kw">use crate</span>::{prelude::<span class="kw-2">*</span>, sql::CXQuery};
 <span class="kw">use </span>fehler::{throw, throws};
@@ -313,6 +344,35 @@
                     &gt;::new(
                         sb, <span class="kw-2">&amp;mut </span>destination, queries, origin_query
                     );
+                    dispatcher.run()<span class="question-mark">?</span>;
+                }
+                (<span class="string">&quot;simple&quot;</span>, <span class="prelude-val">Some</span>(tls_conn)) =&gt; {
+                    <span class="kw">let </span>sb = PostgresSource::&lt;SimpleProtocol, MakeTlsConnector&gt;::new(
+                        config,
+                        tls_conn,
+                        queries.len(),
+                    )<span class="question-mark">?</span>;
+                    <span class="kw">let </span>dispatcher = Dispatcher::&lt;
+                        <span class="kw">_</span>,
+                        <span class="kw">_</span>,
+                        PostgresArrowTransport&lt;SimpleProtocol, MakeTlsConnector&gt;,
+                    &gt;::new(
+                        sb, <span class="kw-2">&amp;mut </span>destination, queries, origin_query
+                    );
+                    <span class="macro">debug!</span>(<span class="string">&quot;Running dispatcher&quot;</span>);
+                    dispatcher.run()<span class="question-mark">?</span>;
+                }
+                (<span class="string">&quot;simple&quot;</span>, <span class="prelude-val">None</span>) =&gt; {
+                    <span class="kw">let </span>sb =
+                        PostgresSource::&lt;SimpleProtocol, NoTls&gt;::new(config, NoTls, queries.len())<span class="question-mark">?</span>;
+                    <span class="kw">let </span>dispatcher = Dispatcher::&lt;
+                        <span class="kw">_</span>,
+                        <span class="kw">_</span>,
+                        PostgresArrowTransport&lt;SimpleProtocol, NoTls&gt;,
+                    &gt;::new(
+                        sb, <span class="kw-2">&amp;mut </span>destination, queries, origin_query
+                    );
+                    <span class="macro">debug!</span>(<span class="string">&quot;Running dispatcher&quot;</span>);
                     dispatcher.run()<span class="question-mark">?</span>;
                 }
                 <span class="kw">_ </span>=&gt; <span class="macro">unimplemented!</span>(<span class="string">&quot;{} protocol not supported&quot;</span>, protocol),
