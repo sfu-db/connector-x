@@ -715,7 +715,6 @@ dependencies = [
  "arrow",
  "connectorx",
  "libc",
- "postgres",
 ]
 
 [[package]]
