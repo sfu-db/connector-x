@@ -1,5 +1,8 @@
 use crate::{
-    constants::{CX_REWRITER_PATH, J4RS_BASE_PATH, MYSQL_JDBC_DRIVER, POSTGRES_JDBC_DRIVER},
+    constants::{
+        CX_REWRITER_PATH, DUCKDB_JDBC_DRIVER, J4RS_BASE_PATH, MYSQL_JDBC_DRIVER,
+        POSTGRES_JDBC_DRIVER,
+    },
     prelude::*,
     sql::CXQuery,
 };
@@ -7,7 +10,7 @@ use arrow::record_batch::RecordBatch;
 use datafusion::datasource::MemTable;
 use datafusion::prelude::*;
 use fehler::throws;
-use j4rs::{ClasspathEntry, InvocationArg, Jvm, JvmBuilder};
+use j4rs::{ClasspathEntry, Instance, InvocationArg, Jvm, JvmBuilder, Null};
 use log::debug;
 use rayon::prelude::*;
 use std::collections::HashMap;
@@ -15,10 +18,36 @@ use std::convert::TryFrom;
 use std::sync::{mpsc::channel, Arc};
 use std::{env, fs};
 
-struct Plan {
-    db_name: String,
-    db_alias: String,
-    sql: String,
+pub struct Plan {
+    pub db_name: String,
+    pub db_alias: String,
+    pub sql: String,
+}
+
+pub struct FederatedDataSourceInfo {
+    conn_str_info: Option<SourceConn>,
+    manual_info: Option<HashMap<String, Vec<String>>>,
+    is_local: bool,
+}
+
+impl FederatedDataSourceInfo {
+    pub fn new_from_conn_str(source_conn: SourceConn, is_local: bool) -> Self {
+        Self {
+            conn_str_info: Some(source_conn),
+            manual_info: None,
+            is_local,
+        }
+    }
+    pub fn new_from_manual_schema(
+        manual_schema: HashMap<String, Vec<String>>,
+        is_local: bool,
+    ) -> Self {
+        Self {
+            conn_str_info: None,
+            manual_info: Some(manual_schema),
+            is_local,
+        }
+    }
 }
 
 #[throws(ConnectorXOutError)]
@@ -46,65 +75,131 @@ fn init_jvm(j4rs_base: Option<&str>) -> Jvm {
 }
 
 #[throws(ConnectorXOutError)]
-fn rewrite_sql(jvm: &Jvm, sql: &str, db_map: &HashMap<String, SourceConn>) -> Vec<Plan> {
-    let sql = InvocationArg::try_from(sql).unwrap();
-    let db_conns = jvm.create_instance("java.util.HashMap", &[])?;
-    for (db_name, source_conn) in db_map.iter() {
-        let url = &source_conn.conn;
-        debug!("url: {:?}", url);
-        let ds = match source_conn.ty {
-            SourceType::Postgres => jvm.invoke_static(
-                "org.apache.calcite.adapter.jdbc.JdbcSchema",
-                "dataSource",
-                &[
-                    InvocationArg::try_from(format!(
-                        "jdbc:postgresql://{}:{}{}",
-                        url.host_str().unwrap_or("localhost"),
-                        url.port().unwrap_or(5432),
-                        url.path()
-                    ))
-                    .unwrap(),
-                    InvocationArg::try_from(POSTGRES_JDBC_DRIVER).unwrap(),
-                    InvocationArg::try_from(url.username()).unwrap(),
-                    InvocationArg::try_from(url.password().unwrap_or("")).unwrap(),
-                ],
-            )?,
-            SourceType::MySQL => jvm.invoke_static(
-                "org.apache.calcite.adapter.jdbc.JdbcSchema",
-                "dataSource",
-                &[
-                    InvocationArg::try_from(format!(
-                        "jdbc:mysql://{}:{}{}",
-                        url.host_str().unwrap_or("localhost"),
-                        url.port().unwrap_or(3306),
-                        url.path()
-                    ))
-                    .unwrap(),
-                    InvocationArg::try_from(MYSQL_JDBC_DRIVER).unwrap(),
-                    InvocationArg::try_from(url.username()).unwrap(),
-                    InvocationArg::try_from(url.password().unwrap_or("")).unwrap(),
-                ],
-            )?,
-            _ => unimplemented!("Connection: {:?} not supported!", url),
-        };
+fn create_sources(jvm: &Jvm, db_map: &HashMap<String, FederatedDataSourceInfo>) -> Instance {
+    let data_sources = jvm.create_instance("java.util.HashMap", &[])?;
 
-        jvm.invoke(
-            &db_conns,
-            "put",
-            &[
-                InvocationArg::try_from(db_name).unwrap(),
-                InvocationArg::try_from(ds).unwrap(),
-            ],
-        )?;
+    for (db_name, db_info) in db_map.iter() {
+        if db_info.conn_str_info.is_some() {
+            let source_conn = db_info.conn_str_info.as_ref().unwrap();
+            let url = &source_conn.conn;
+            debug!("url: {:?}", url);
+            println!("url: {:?}", url);
+            let ds = match source_conn.ty {
+                SourceType::Postgres => jvm.invoke_static(
+                    "org.apache.calcite.adapter.jdbc.JdbcSchema",
+                    "dataSource",
+                    &[
+                        InvocationArg::try_from(format!(
+                            "jdbc:postgresql://{}:{}{}",
+                            url.host_str().unwrap_or("localhost"),
+                            url.port().unwrap_or(5432),
+                            url.path()
+                        ))
+                        .unwrap(),
+                        InvocationArg::try_from(POSTGRES_JDBC_DRIVER).unwrap(),
+                        InvocationArg::try_from(url.username()).unwrap(),
+                        InvocationArg::try_from(url.password().unwrap_or("")).unwrap(),
+                    ],
+                )?,
+                SourceType::MySQL => jvm.invoke_static(
+                    "org.apache.calcite.adapter.jdbc.JdbcSchema",
+                    "dataSource",
+                    &[
+                        InvocationArg::try_from(format!(
+                            "jdbc:mysql://{}:{}{}",
+                            url.host_str().unwrap_or("localhost"),
+                            url.port().unwrap_or(3306),
+                            url.path()
+                        ))
+                        .unwrap(),
+                        InvocationArg::try_from(MYSQL_JDBC_DRIVER).unwrap(),
+                        InvocationArg::try_from(url.username()).unwrap(),
+                        InvocationArg::try_from(url.password().unwrap_or("")).unwrap(),
+                    ],
+                )?,
+                SourceType::DuckDB => jvm.invoke_static(
+                    "org.apache.calcite.adapter.jdbc.JdbcSchema",
+                    "dataSource",
+                    &[
+                        InvocationArg::try_from(format!("jdbc:duckdb:{}", url.path())).unwrap(),
+                        InvocationArg::try_from(DUCKDB_JDBC_DRIVER).unwrap(),
+                        InvocationArg::try_from(Null::String).unwrap(),
+                        InvocationArg::try_from(Null::String).unwrap(),
+                    ],
+                )?,
+                _ => unimplemented!("Connection: {:?} not supported!", url),
+            };
+            let fed_ds = jvm.create_instance(
+                "ai.dataprep.federated.FederatedDataSource",
+                &[
+                    InvocationArg::try_from(ds).unwrap(),
+                    InvocationArg::try_from(db_info.is_local).unwrap(),
+                ],
+            )?;
+            jvm.invoke(
+                &data_sources,
+                "put",
+                &[
+                    InvocationArg::try_from(db_name).unwrap(),
+                    InvocationArg::try_from(fed_ds).unwrap(),
+                ],
+            )?;
+        } else {
+            assert!(db_info.manual_info.is_some());
+            let manual_info = db_info.manual_info.as_ref().unwrap();
+            let schema_info = jvm.create_instance("java.util.HashMap", &[])?;
+            for (name, columns) in manual_info {
+                let col_names: Vec<InvocationArg> = columns
+                    .iter()
+                    .map(|c| InvocationArg::try_from(c).unwrap())
+                    .collect();
+                let arr_instance = jvm.create_java_list("java.lang.String", &col_names)?;
+                jvm.invoke(
+                    &schema_info,
+                    "put",
+                    &[
+                        InvocationArg::try_from(name).unwrap(),
+                        InvocationArg::try_from(arr_instance).unwrap(),
+                    ],
+                )?;
+            }
+            let fed_ds = jvm.create_instance(
+                "ai.dataprep.federated.FederatedDataSource",
+                &[InvocationArg::try_from(schema_info).unwrap()],
+            )?;
+            jvm.invoke(
+                &data_sources,
+                "put",
+                &[
+                    InvocationArg::try_from(db_name).unwrap(),
+                    InvocationArg::try_from(fed_ds).unwrap(),
+                ],
+            )?;
+        }
     }
+    data_sources
+}
 
+#[throws(ConnectorXOutError)]
+pub fn rewrite_sql(
+    sql: &str,
+    db_map: &HashMap<String, FederatedDataSourceInfo>,
+    j4rs_base: Option<&str>,
+) -> Vec<Plan> {
+    let jvm = init_jvm(j4rs_base)?;
+    debug!("init jvm successfully!");
+    println!("init jvm successfully!");
+
+    let sql = InvocationArg::try_from(sql).unwrap();
+    let data_sources = create_sources(&jvm, db_map)?;
     let rewriter = jvm.create_instance("ai.dataprep.federated.FederatedQueryRewriter", &[])?;
-    let db_conns = InvocationArg::try_from(db_conns).unwrap();
-    let plan = jvm.invoke(&rewriter, "rewrite", &[db_conns, sql])?;
+    let data_sources = InvocationArg::try_from(data_sources).unwrap();
+    let plan = jvm.invoke(&rewriter, "rewrite", &[data_sources, sql])?;
 
     let count = jvm.invoke(&plan, "getCount", &[])?;
     let count: i32 = jvm.to_rust(count)?;
     debug!("rewrite finished, got {} queries", count);
+    println!("rewrite finished, got {} queries", count);
 
     let mut fed_plan = vec![];
     for i in 0..count {
@@ -148,16 +243,14 @@ pub fn run(
     j4rs_base: Option<&str>,
 ) -> Vec<RecordBatch> {
     debug!("federated input sql: {}", sql);
-
-    let jvm = init_jvm(j4rs_base)?;
-    debug!("init jvm successfully!");
-
-    let mut db_conn_map: HashMap<String, SourceConn> = HashMap::new();
+    let mut db_conn_map: HashMap<String, FederatedDataSourceInfo> = HashMap::new();
     for (k, v) in db_map.into_iter() {
-        db_conn_map.insert(k, SourceConn::try_from(v.as_str())?);
+        db_conn_map.insert(
+            k,
+            FederatedDataSourceInfo::new_from_conn_str(SourceConn::try_from(v.as_str())?, false),
+        );
     }
-
-    let fed_plan = rewrite_sql(&jvm, sql.as_str(), &db_conn_map)?;
+    let fed_plan = rewrite_sql(sql.as_str(), &db_conn_map, j4rs_base)?;
 
     debug!("fetch queries from remote");
     let (sender, receiver) = channel();
@@ -171,7 +264,10 @@ pub fn run(
                 _ => {
                     debug!("start query {}: {}", i, p.sql);
                     let queries = [CXQuery::naked(p.sql)];
-                    let source_conn = &db_conn_map[p.db_name.as_str()];
+                    let source_conn = &db_conn_map[p.db_name.as_str()]
+                        .conn_str_info
+                        .as_ref()
+                        .unwrap();
 
                     let destination = get_arrow(source_conn, None, &queries)?;
                     let rbs = destination.arrow()?;

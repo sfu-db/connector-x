@@ -299,6 +299,7 @@ pub struct MsSQLSourceParser<'a> {
     ncols: usize,
     current_col: usize,
     current_row: usize,
+    is_finished: bool,
 }
 
 impl<'a> MsSQLSourceParser<'a> {
@@ -314,6 +315,7 @@ impl<'a> MsSQLSourceParser<'a> {
             ncols: schema.len(),
             current_row: 0,
             current_col: 0,
+            is_finished: false,
         }
     }
 
@@ -332,6 +334,14 @@ impl<'a> PartitionParser<'a> for MsSQLSourceParser<'a> {
 
     #[throws(MsSQLSourceError)]
     fn fetch_next(&mut self) -> (usize, bool) {
+        assert!(self.current_col == 0);
+        let remaining_rows = self.rowbuf.len() - self.current_row;
+        if remaining_rows > 0 {
+            return (remaining_rows, self.is_finished);
+        } else if self.is_finished {
+            return (0, self.is_finished);
+        }
+
         if !self.rowbuf.is_empty() {
             self.rowbuf.drain(..);
         }
@@ -340,12 +350,13 @@ impl<'a> PartitionParser<'a> for MsSQLSourceParser<'a> {
             if let Some(item) = self.rt.block_on(self.iter.next()) {
                 self.rowbuf.push(item?);
             } else {
+                self.is_finished = true;
                 break;
             }
         }
         self.current_row = 0;
         self.current_col = 0;
-        (self.rowbuf.len(), self.rowbuf.len() < DB_BUFFER_SIZE)
+        (self.rowbuf.len(), self.is_finished)
     }
 }
 

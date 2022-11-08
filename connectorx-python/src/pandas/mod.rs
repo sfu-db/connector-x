@@ -19,7 +19,8 @@ use connectorx::{
     sources::{
         mysql::{BinaryProtocol as MySQLBinaryProtocol, TextProtocol},
         postgres::{
-            rewrite_tls_args, BinaryProtocol as PgBinaryProtocol, CSVProtocol, CursorProtocol, SimpleProtocol
+            rewrite_tls_args, BinaryProtocol as PgBinaryProtocol, CSVProtocol, CursorProtocol,
+            SimpleProtocol,
         },
     },
     sql::CXQuery,
@@ -229,6 +230,7 @@ pub fn write_pandas<'a>(
             );
             dispatcher.run()?;
         }
+        _ => unimplemented!("{:?} not implemented!", source_conn.ty),
     }
 
     destination.result()?
