@@ -35,6 +35,9 @@
 <span id="35">35</span>
 <span id="36">36</span>
 <span id="37">37</span>
+<span id="38">38</span>
+<span id="39">39</span>
+<span id="40">40</span>
 </pre><pre class="rust"><code><span class="attribute">#[cfg(any(feature = <span class="string">&quot;dst_arrow&quot;</span>, feature = <span class="string">&quot;dst_arrow2&quot;</span>))]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>SECONDS_IN_DAY: i64 = <span class="number">86_400</span>;
 
@@ -65,11 +68,14 @@
 </span><span class="kw">pub const </span>CX_REWRITER_PATH: <span class="kw-2">&amp;</span>str =
     <span class="string">&quot;../connectorx-python/connectorx/dependencies/federated-rewriter.jar&quot;</span>;
 
-<span class="attribute">#[cfg(any(feature = <span class="string">&quot;federation&quot;</span>, feature = <span class="string">&quot;src_postgres&quot;</span>))]
+<span class="attribute">#[cfg(feature = <span class="string">&quot;federation&quot;</span>)]
 </span><span class="kw">pub const </span>POSTGRES_JDBC_DRIVER: <span class="kw-2">&amp;</span>str = <span class="string">&quot;org.postgresql.Driver&quot;</span>;
 
-<span class="attribute">#[cfg(any(feature = <span class="string">&quot;federation&quot;</span>, feature = <span class="string">&quot;src_mysql&quot;</span>))]
+<span class="attribute">#[cfg(feature = <span class="string">&quot;federation&quot;</span>)]
 </span><span class="kw">pub const </span>MYSQL_JDBC_DRIVER: <span class="kw-2">&amp;</span>str = <span class="string">&quot;com.mysql.cj.jdbc.Driver&quot;</span>;
+
+<span class="attribute">#[cfg(feature = <span class="string">&quot;federation&quot;</span>)]
+</span><span class="kw">pub const </span>DUCKDB_JDBC_DRIVER: <span class="kw-2">&amp;</span>str = <span class="string">&quot;org.duckdb.DuckDBDriver&quot;</span>;
 
 <span class="kw">pub const </span>CONNECTORX_PROTOCOL: <span class="kw-2">&amp;</span>str = <span class="string">&quot;cxprotocol&quot;</span>;
 </code></pre></div>

@@ -229,7 +229,6 @@
 <span id="229">229</span>
 <span id="230">230</span>
 <span id="231">231</span>
-<span id="232">232</span>
 </pre><pre class="rust"><code><span class="attribute">#[cfg(feature = <span class="string">&quot;src_mysql&quot;</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::sources::mysql::{BinaryProtocol <span class="kw">as </span>MySQLBinaryProtocol, TextProtocol};
 <span class="attribute">#[cfg(feature = <span class="string">&quot;src_postgres&quot;</span>)]
@@ -258,8 +257,7 @@
     <span class="kw">let </span>protocol = source_conn.proto.as_str();
     <span class="macro">debug!</span>(<span class="string">&quot;Protocol: {}&quot;</span>, protocol);
 
-    <span class="comment">// TODO: unlock gil if possible
-    </span><span class="kw">match </span>source_conn.ty {
+    <span class="kw">match </span>source_conn.ty {
         <span class="attribute">#[cfg(feature = <span class="string">&quot;src_postgres&quot;</span>)]
         </span>SourceType::Postgres =&gt; {
             <span class="kw">let </span>(config, tls) = rewrite_tls_args(<span class="kw-2">&amp;</span>source_conn.conn)<span class="question-mark">?</span>;

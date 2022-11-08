@@ -137,6 +137,10 @@
 <span id="137">137</span>
 <span id="138">138</span>
 <span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
 </pre><pre class="rust"><code><span class="doccomment">//! This module defines traits that required to define a typesystem.
 //!
 //! A typesystem is an enum that describes what types can be produced by a source and accepted by a destination.
@@ -209,7 +213,11 @@
     <span class="kw">type </span>TSD: TypeSystem;
     <span class="kw">type </span>S: Source;
     <span class="kw">type </span>D: Destination;
-    <span class="kw">type </span>Error: From&lt;ConnectorXError&gt; + Send;
+    <span class="kw">type </span>Error: From&lt;ConnectorXError&gt;
+        + From&lt;&lt;<span class="self">Self</span>::S <span class="kw">as </span>Source&gt;::Error&gt;
+        + From&lt;&lt;<span class="self">Self</span>::D <span class="kw">as </span>Destination&gt;::Error&gt;
+        + Send
+        + std::fmt::Debug;
 
     <span class="doccomment">/// convert_typesystem convert the source type system TSS to the destination
     /// type system TSD.

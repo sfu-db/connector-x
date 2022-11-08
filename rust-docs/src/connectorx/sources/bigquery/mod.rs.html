@@ -1130,6 +1130,16 @@
 <span id="1130">1130</span>
 <span id="1131">1131</span>
 <span id="1132">1132</span>
+<span id="1133">1133</span>
+<span id="1134">1134</span>
+<span id="1135">1135</span>
+<span id="1136">1136</span>
+<span id="1137">1137</span>
+<span id="1138">1138</span>
+<span id="1139">1139</span>
+<span id="1140">1140</span>
+<span id="1141">1141</span>
+<span id="1142">1142</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Source implementation for Google BigQuery
 
 </span><span class="kw">mod </span>errors;
@@ -1413,6 +1423,7 @@
     ncols: usize,
     current_col: usize,
     current_row: usize,
+    nrows: <span class="prelude-ty">Option</span>&lt;usize&gt;,
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; BigQuerySourceParser {
@@ -1429,6 +1440,7 @@
             ncols: schema.len(),
             current_row: <span class="number">0</span>,
             current_col: <span class="number">0</span>,
+            nrows: <span class="prelude-val">None</span>,
         }
     }
 
@@ -1447,13 +1459,21 @@
 
     <span class="attribute">#[throws(BigQuerySourceError)]
     </span><span class="kw">fn </span>fetch_next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; (usize, bool) {
-        <span class="kw">let </span>total_rows = <span class="self">self
-            </span>.response
-            .total_rows
-            .as_ref()
-            .ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">&quot;total_rows is none&quot;</span>))<span class="question-mark">?
-            </span>.parse::&lt;usize&gt;()<span class="question-mark">?</span>;
-        (total_rows, <span class="bool-val">true</span>)
+        <span class="macro">assert!</span>(<span class="self">self</span>.current_col == <span class="number">0</span>);
+        <span class="kw">match </span><span class="self">self</span>.nrows {
+            <span class="prelude-val">Some</span>(total_rows) =&gt; (total_rows - <span class="self">self</span>.current_row, <span class="bool-val">true</span>),
+            <span class="prelude-val">None </span>=&gt; {
+                <span class="comment">// Get all number of rows
+                </span><span class="kw">let </span>total_rows = <span class="self">self
+                    </span>.response
+                    .total_rows
+                    .as_ref()
+                    .ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">&quot;total_rows is none&quot;</span>))<span class="question-mark">?
+                    </span>.parse::&lt;usize&gt;()<span class="question-mark">?</span>;
+                <span class="self">self</span>.nrows = <span class="prelude-val">Some</span>(total_rows);
+                (total_rows, <span class="bool-val">true</span>)
+            }
+        }
     }
 }
 

@@ -95,6 +95,9 @@
 <span id="95">95</span>
 <span id="96">96</span>
 <span id="97">97</span>
+<span id="98">98</span>
+<span id="99">99</span>
+<span id="100">100</span>
 </pre><pre class="rust"><code><span class="doccomment">//! This module defines four traits [`Source`], [`SourcePartition`], [`PartitionParser`], and [`Produce`]  to define a source.
 //! This module also contains source implementations for various databases.
 
@@ -119,6 +122,7 @@
 <span class="kw">use </span><span class="kw">crate</span>::errors::ConnectorXError;
 <span class="kw">use </span><span class="kw">crate</span>::sql::CXQuery;
 <span class="kw">use </span><span class="kw">crate</span>::typesystem::{TypeAssoc, TypeSystem};
+<span class="kw">use </span>std::fmt::Debug;
 
 <span class="kw">pub trait </span>Source {
     <span class="doccomment">/// Supported data orders, ordering by preference.
@@ -127,7 +131,7 @@
     </span><span class="kw">type </span>TypeSystem: TypeSystem;
     <span class="comment">// Partition needs to be send to different threads for parallel execution
     </span><span class="kw">type </span>Partition: SourcePartition&lt;TypeSystem = <span class="self">Self</span>::TypeSystem, Error = <span class="self">Self</span>::Error&gt; + Send;
-    <span class="kw">type </span>Error: From&lt;ConnectorXError&gt;;
+    <span class="kw">type </span>Error: From&lt;ConnectorXError&gt; + Send + Debug;
 
     <span class="kw">fn </span>set_data_order(<span class="kw-2">&amp;mut </span><span class="self">self</span>, data_order: DataOrder) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt;;
 
@@ -148,12 +152,12 @@
 
 <span class="doccomment">/// In general, a `DataSource` abstracts the data source as a stream, which can produce
 /// a sequence of values of variate types by repetitively calling the function `produce`.
-</span><span class="kw">pub trait </span>SourcePartition: Sized {
+</span><span class="kw">pub trait </span>SourcePartition {
     <span class="kw">type </span>TypeSystem: TypeSystem;
     <span class="kw">type </span>Parser&lt;<span class="lifetime">&#39;a</span>&gt;: PartitionParser&lt;<span class="lifetime">&#39;a</span>, TypeSystem = <span class="self">Self</span>::TypeSystem, Error = <span class="self">Self</span>::Error&gt;
     <span class="kw">where
         </span><span class="self">Self</span>: <span class="lifetime">&#39;a</span>;
-    <span class="kw">type </span>Error: From&lt;ConnectorXError&gt; + Send;
+    <span class="kw">type </span>Error: From&lt;ConnectorXError&gt; + Send + Debug;
 
     <span class="doccomment">/// Count total number of rows in each partition.
     </span><span class="kw">fn </span>result_rows(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt;;
@@ -168,9 +172,9 @@
     </span><span class="kw">fn </span>ncols(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize;
 }
 
-<span class="kw">pub trait </span>PartitionParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">pub trait </span>PartitionParser&lt;<span class="lifetime">&#39;a</span>&gt;: Send {
     <span class="kw">type </span>TypeSystem: TypeSystem;
-    <span class="kw">type </span>Error: From&lt;ConnectorXError&gt; + Send;
+    <span class="kw">type </span>Error: From&lt;ConnectorXError&gt; + Send + Debug;
 
     <span class="doccomment">/// Read a value `T` by calling `Produce&lt;T&gt;::produce`. Usually this function does not need to be
     /// implemented.
@@ -182,7 +186,9 @@
         <span class="self">self</span>.produce()
     }
 
-    <span class="doccomment">/// Fetch next batch of rows from database, return actuall number of rows fetched
+    <span class="doccomment">/// Fetch next batch of rows from database, return (number of rows fetched to local, whether all rows are fechted from database).
+    /// There might be rows that are not consumed yet when calling the next fetch_next.
+    /// The function might be called even after the last batch is fetched.
     </span><span class="kw">fn </span>fetch_next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(usize, bool), <span class="self">Self</span>::Error&gt;;
 }
 

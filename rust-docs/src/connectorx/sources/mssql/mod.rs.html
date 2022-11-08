@@ -396,6 +396,17 @@
 <span id="396">396</span>
 <span id="397">397</span>
 <span id="398">398</span>
+<span id="399">399</span>
+<span id="400">400</span>
+<span id="401">401</span>
+<span id="402">402</span>
+<span id="403">403</span>
+<span id="404">404</span>
+<span id="405">405</span>
+<span id="406">406</span>
+<span id="407">407</span>
+<span id="408">408</span>
+<span id="409">409</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Source implementation for SQL Server.
 
 </span><span class="kw">mod </span>errors;
@@ -697,6 +708,7 @@
     ncols: usize,
     current_col: usize,
     current_row: usize,
+    is_finished: bool,
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; MsSQLSourceParser&lt;<span class="lifetime">&#39;a</span>&gt; {
@@ -712,6 +724,7 @@
             ncols: schema.len(),
             current_row: <span class="number">0</span>,
             current_col: <span class="number">0</span>,
+            is_finished: <span class="bool-val">false</span>,
         }
     }
 
@@ -730,6 +743,14 @@
 
     <span class="attribute">#[throws(MsSQLSourceError)]
     </span><span class="kw">fn </span>fetch_next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; (usize, bool) {
+        <span class="macro">assert!</span>(<span class="self">self</span>.current_col == <span class="number">0</span>);
+        <span class="kw">let </span>remaining_rows = <span class="self">self</span>.rowbuf.len() - <span class="self">self</span>.current_row;
+        <span class="kw">if </span>remaining_rows &gt; <span class="number">0 </span>{
+            <span class="kw">return </span>(remaining_rows, <span class="self">self</span>.is_finished);
+        } <span class="kw">else if </span><span class="self">self</span>.is_finished {
+            <span class="kw">return </span>(<span class="number">0</span>, <span class="self">self</span>.is_finished);
+        }
+
         <span class="kw">if </span>!<span class="self">self</span>.rowbuf.is_empty() {
             <span class="self">self</span>.rowbuf.drain(..);
         }
@@ -738,12 +759,13 @@
             <span class="kw">if let </span><span class="prelude-val">Some</span>(item) = <span class="self">self</span>.rt.block_on(<span class="self">self</span>.iter.next()) {
                 <span class="self">self</span>.rowbuf.push(item<span class="question-mark">?</span>);
             } <span class="kw">else </span>{
+                <span class="self">self</span>.is_finished = <span class="bool-val">true</span>;
                 <span class="kw">break</span>;
             }
         }
         <span class="self">self</span>.current_row = <span class="number">0</span>;
         <span class="self">self</span>.current_col = <span class="number">0</span>;
-        (<span class="self">self</span>.rowbuf.len(), <span class="self">self</span>.rowbuf.len() &lt; DB_BUFFER_SIZE)
+        (<span class="self">self</span>.rowbuf.len(), <span class="self">self</span>.is_finished)
     }
 }
 

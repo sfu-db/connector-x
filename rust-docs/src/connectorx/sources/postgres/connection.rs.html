@@ -243,8 +243,8 @@
 
     <span class="kw">let </span>tls_config = TlsConfig {
         pg_config: pg_config.clone(),
-        client_cert: client_cert,
-        root_cert: root_cert,
+        client_cert,
+        root_cert,
     };
 
     <span class="kw">let </span>tls_connector = <span class="kw">match </span>pg_config.get_ssl_mode() {

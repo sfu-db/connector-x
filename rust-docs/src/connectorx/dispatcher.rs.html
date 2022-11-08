@@ -198,6 +198,23 @@
 <span id="198">198</span>
 <span id="199">199</span>
 <span id="200">200</span>
+<span id="201">201</span>
+<span id="202">202</span>
+<span id="203">203</span>
+<span id="204">204</span>
+<span id="205">205</span>
+<span id="206">206</span>
+<span id="207">207</span>
+<span id="208">208</span>
+<span id="209">209</span>
+<span id="210">210</span>
+<span id="211">211</span>
+<span id="212">212</span>
+<span id="213">213</span>
+<span id="214">214</span>
+<span id="215">215</span>
+<span id="216">216</span>
+<span id="217">217</span>
 </pre><pre class="rust"><code><span class="doccomment">///! This module provides [`dispatcher::Dispatcher`], the core struct in ConnectorX
 ///! that drives the data loading from a source to a destination.
 </span><span class="kw">use crate</span>::{
@@ -206,7 +223,7 @@
     errors::{ConnectorXError, <span class="prelude-ty">Result </span><span class="kw">as </span>CXResult},
     sources::{PartitionParser, Source, SourcePartition},
     sql::CXQuery,
-    typesystem::{Transport, TypeSystem},
+    typesystem::Transport,
 };
 <span class="kw">use </span>itertools::Itertools;
 <span class="kw">use </span>log::debug;
@@ -223,25 +240,18 @@
     _phantom: PhantomData&lt;TP&gt;,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;w</span>, S, TSS, D, TSD, TP, ES, ED, ET&gt; Dispatcher&lt;<span class="lifetime">&#39;w</span>, S, D, TP&gt;
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;w</span>, S, D, TP&gt; Dispatcher&lt;<span class="lifetime">&#39;w</span>, S, D, TP&gt;
 <span class="kw">where
-    </span>TSS: TypeSystem,
-    S: Source&lt;TypeSystem = TSS, Error = ES&gt;,
-    ES: From&lt;ConnectorXError&gt; + Send,
-
-    TSD: TypeSystem,
-    D: Destination&lt;TypeSystem = TSD, Error = ED&gt;,
-    ED: From&lt;ConnectorXError&gt; + Send,
-
-    TP: Transport&lt;TSS = TSS, TSD = TSD, S = S, D = D, Error = ET&gt;,
-    ET: From&lt;ConnectorXError&gt; + From&lt;ES&gt; + From&lt;ED&gt; + Send,
+    </span>S: Source,
+    D: Destination,
+    TP: Transport&lt;TSS = S::TypeSystem, TSD = D::TypeSystem, S = S, D = D&gt;,
 {
     <span class="doccomment">/// Create a new dispatcher by providing a source, a destination and the queries.
     </span><span class="kw">pub fn </span>new&lt;Q&gt;(src: S, dst: <span class="kw-2">&amp;</span><span class="lifetime">&#39;w </span><span class="kw-2">mut </span>D, queries: <span class="kw-2">&amp;</span>[Q], origin_query: <span class="prelude-ty">Option</span>&lt;String&gt;) -&gt; <span class="self">Self
     </span><span class="kw">where
         for</span>&lt;<span class="lifetime">&#39;a</span>&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Q: Into&lt;CXQuery&gt;,
     {
-        Dispatcher {
+        <span class="self">Self </span>{
             src,
             dst,
             queries: queries.iter().map(Into::into).collect(),
@@ -250,9 +260,19 @@
         }
     }
 
-    <span class="doccomment">/// Start the data loading process.
-    </span><span class="kw">pub fn </span>run(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), ET&gt; {
-        <span class="macro">debug!</span>(<span class="string">&quot;Run dispatcher&quot;</span>);
+    <span class="kw">pub fn </span>prepare(
+        <span class="kw-2">mut </span><span class="self">self</span>,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;
+        (
+            DataOrder,
+            Vec&lt;S::Partition&gt;,
+            Vec&lt;D::Partition&lt;<span class="lifetime">&#39;w</span>&gt;&gt;,
+            Vec&lt;S::TypeSystem&gt;,
+            Vec&lt;D::TypeSystem&gt;,
+        ),
+        TP::Error,
+    &gt; {
+        <span class="macro">debug!</span>(<span class="string">&quot;Prepare&quot;</span>);
         <span class="kw">let </span>dorder = coordinate(S::DATA_ORDERS, D::DATA_ORDERS)<span class="question-mark">?</span>;
         <span class="self">self</span>.src.set_data_order(dorder)<span class="question-mark">?</span>;
         <span class="self">self</span>.src.set_queries(<span class="self">self</span>.queries.as_slice());
@@ -281,7 +301,7 @@
             <span class="comment">// run queries
             </span>src_partitions
                 .par_iter_mut()
-                .try_for_each(|partition| -&gt; <span class="prelude-ty">Result</span>&lt;(), ES&gt; { partition.result_rows() })<span class="question-mark">?</span>;
+                .try_for_each(|partition| -&gt; <span class="prelude-ty">Result</span>&lt;(), S::Error&gt; { partition.result_rows() })<span class="question-mark">?</span>;
 
             <span class="comment">// get number of row of each partition from the source
             </span><span class="kw">let </span>part_rows: Vec&lt;usize&gt; = src_partitions
@@ -302,6 +322,20 @@
         <span class="macro">debug!</span>(<span class="string">&quot;Create destination partition&quot;</span>);
         <span class="kw">let </span>dst_partitions = <span class="self">self</span>.dst.partition(<span class="self">self</span>.queries.len())<span class="question-mark">?</span>;
 
+        <span class="prelude-val">Ok</span>((
+            dorder,
+            src_partitions,
+            dst_partitions,
+            src_schema,
+            dst_schema,
+        ))
+    }
+
+    <span class="doccomment">/// Start the data loading process.
+    </span><span class="kw">pub fn </span>run(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), TP::Error&gt; {
+        <span class="macro">debug!</span>(<span class="string">&quot;Run dispatcher&quot;</span>);
+        <span class="kw">let </span>(dorder, src_partitions, dst_partitions, src_schema, dst_schema) = <span class="self">self</span>.prepare()<span class="question-mark">?</span>;
+
         <span class="attribute">#[cfg(all(not(feature = <span class="string">&quot;branch&quot;</span>), not(feature = <span class="string">&quot;fptr&quot;</span>)))]
         </span><span class="macro">compile_error!</span>(<span class="string">&quot;branch or fptr, pick one&quot;</span>);
 
@@ -318,7 +352,7 @@
             .into_par_iter()
             .zip_eq(src_partitions)
             .enumerate()
-            .try_for_each(|(i, (<span class="kw-2">mut </span>dst, <span class="kw-2">mut </span>src))| -&gt; <span class="prelude-ty">Result</span>&lt;(), ET&gt; {
+            .try_for_each(|(i, (<span class="kw-2">mut </span>dst, <span class="kw-2">mut </span>src))| -&gt; <span class="prelude-ty">Result</span>&lt;(), TP::Error&gt; {
                 <span class="attribute">#[cfg(feature = <span class="string">&quot;fptr&quot;</span>)]
                 </span><span class="kw">let </span>f: Vec&lt;<span class="kw">_</span>&gt; = src_schema
                     .iter()
@@ -382,11 +416,11 @@
     }
 
     <span class="doccomment">/// Only fetch the metadata (header) of the destination.
-    </span><span class="kw">pub fn </span>get_meta(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), ET&gt; {
+    </span><span class="kw">pub fn </span>get_meta(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), TP::Error&gt; {
         <span class="kw">let </span>dorder = coordinate(S::DATA_ORDERS, D::DATA_ORDERS)<span class="question-mark">?</span>;
         <span class="self">self</span>.src.set_data_order(dorder)<span class="question-mark">?</span>;
         <span class="self">self</span>.src.set_queries(<span class="self">self</span>.queries.as_slice());
-        <span class="self">self</span>.src.set_origin_query(<span class="self">self</span>.origin_query);
+        <span class="self">self</span>.src.set_origin_query(<span class="self">self</span>.origin_query.clone());
         <span class="self">self</span>.src.fetch_metadata()<span class="question-mark">?</span>;
         <span class="kw">let </span>src_schema = <span class="self">self</span>.src.schema();
         <span class="kw">let </span>dst_schema = src_schema

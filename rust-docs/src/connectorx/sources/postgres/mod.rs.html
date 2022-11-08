@@ -1508,6 +1508,45 @@
 <span id="1508">1508</span>
 <span id="1509">1509</span>
 <span id="1510">1510</span>
+<span id="1511">1511</span>
+<span id="1512">1512</span>
+<span id="1513">1513</span>
+<span id="1514">1514</span>
+<span id="1515">1515</span>
+<span id="1516">1516</span>
+<span id="1517">1517</span>
+<span id="1518">1518</span>
+<span id="1519">1519</span>
+<span id="1520">1520</span>
+<span id="1521">1521</span>
+<span id="1522">1522</span>
+<span id="1523">1523</span>
+<span id="1524">1524</span>
+<span id="1525">1525</span>
+<span id="1526">1526</span>
+<span id="1527">1527</span>
+<span id="1528">1528</span>
+<span id="1529">1529</span>
+<span id="1530">1530</span>
+<span id="1531">1531</span>
+<span id="1532">1532</span>
+<span id="1533">1533</span>
+<span id="1534">1534</span>
+<span id="1535">1535</span>
+<span id="1536">1536</span>
+<span id="1537">1537</span>
+<span id="1538">1538</span>
+<span id="1539">1539</span>
+<span id="1540">1540</span>
+<span id="1541">1541</span>
+<span id="1542">1542</span>
+<span id="1543">1543</span>
+<span id="1544">1544</span>
+<span id="1545">1545</span>
+<span id="1546">1546</span>
+<span id="1547">1547</span>
+<span id="1548">1548</span>
+<span id="1549">1549</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Source implementation for Postgres database, including the TLS support (client only).
 
 </span><span class="kw">mod </span>connection;
@@ -1875,6 +1914,7 @@
     ncols: usize,
     current_col: usize,
     current_row: usize,
+    is_finished: bool,
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; PostgresBinarySourcePartitionParser&lt;<span class="lifetime">&#39;a</span>&gt; {
@@ -1885,6 +1925,7 @@
             ncols: schema.len(),
             current_row: <span class="number">0</span>,
             current_col: <span class="number">0</span>,
+            is_finished: <span class="bool-val">false</span>,
         }
     }
 
@@ -1903,7 +1944,16 @@
 
     <span class="attribute">#[throws(PostgresSourceError)]
     </span><span class="kw">fn </span>fetch_next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; (usize, bool) {
-        <span class="kw">if </span>!<span class="self">self</span>.rowbuf.is_empty() {
+        <span class="macro">assert!</span>(<span class="self">self</span>.current_col == <span class="number">0</span>);
+        <span class="kw">let </span>remaining_rows = <span class="self">self</span>.rowbuf.len() - <span class="self">self</span>.current_row;
+        <span class="kw">if </span>remaining_rows &gt; <span class="number">0 </span>{
+            <span class="kw">return </span>(remaining_rows, <span class="self">self</span>.is_finished);
+        } <span class="kw">else if </span><span class="self">self</span>.is_finished {
+            <span class="kw">return </span>(<span class="number">0</span>, <span class="self">self</span>.is_finished);
+        }
+
+        <span class="comment">// clear the buffer
+        </span><span class="kw">if </span>!<span class="self">self</span>.rowbuf.is_empty() {
             <span class="self">self</span>.rowbuf.drain(..);
         }
         <span class="kw">for _ in </span><span class="number">0</span>..DB_BUFFER_SIZE {
@@ -1911,12 +1961,18 @@
                 <span class="prelude-val">Some</span>(row) =&gt; {
                     <span class="self">self</span>.rowbuf.push(row);
                 }
-                <span class="prelude-val">None </span>=&gt; <span class="kw">break</span>,
+                <span class="prelude-val">None </span>=&gt; {
+                    <span class="self">self</span>.is_finished = <span class="bool-val">true</span>;
+                    <span class="kw">break</span>;
+                }
             }
         }
-        <span class="self">self</span>.current_row = <span class="number">0</span>;
+
+        <span class="comment">// reset current cursor positions
+        </span><span class="self">self</span>.current_row = <span class="number">0</span>;
         <span class="self">self</span>.current_col = <span class="number">0</span>;
-        (<span class="self">self</span>.rowbuf.len(), <span class="self">self</span>.rowbuf.len() &lt; DB_BUFFER_SIZE)
+
+        (<span class="self">self</span>.rowbuf.len(), <span class="self">self</span>.is_finished)
     }
 }
 
@@ -2001,6 +2057,7 @@
     ncols: usize,
     current_col: usize,
     current_row: usize,
+    is_finished: bool,
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; PostgresCSVSourceParser&lt;<span class="lifetime">&#39;a</span>&gt; {
@@ -2014,6 +2071,7 @@
             ncols: schema.len(),
             current_row: <span class="number">0</span>,
             current_col: <span class="number">0</span>,
+            is_finished: <span class="bool-val">false</span>,
         }
     }
 
@@ -2032,6 +2090,14 @@
 
     <span class="attribute">#[throws(PostgresSourceError)]
     </span><span class="kw">fn </span>fetch_next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; (usize, bool) {
+        <span class="macro">assert!</span>(<span class="self">self</span>.current_col == <span class="number">0</span>);
+        <span class="kw">let </span>remaining_rows = <span class="self">self</span>.rowbuf.len() - <span class="self">self</span>.current_row;
+        <span class="kw">if </span>remaining_rows &gt; <span class="number">0 </span>{
+            <span class="kw">return </span>(remaining_rows, <span class="self">self</span>.is_finished);
+        } <span class="kw">else if </span><span class="self">self</span>.is_finished {
+            <span class="kw">return </span>(<span class="number">0</span>, <span class="self">self</span>.is_finished);
+        }
+
         <span class="kw">if </span>!<span class="self">self</span>.rowbuf.is_empty() {
             <span class="self">self</span>.rowbuf.drain(..);
         }
@@ -2039,12 +2105,13 @@
             <span class="kw">if let </span><span class="prelude-val">Some</span>(row) = <span class="self">self</span>.iter.next() {
                 <span class="self">self</span>.rowbuf.push(row<span class="question-mark">?</span>);
             } <span class="kw">else </span>{
+                <span class="self">self</span>.is_finished = <span class="bool-val">true</span>;
                 <span class="kw">break</span>;
             }
         }
         <span class="self">self</span>.current_row = <span class="number">0</span>;
         <span class="self">self</span>.current_col = <span class="number">0</span>;
-        (<span class="self">self</span>.rowbuf.len(), <span class="self">self</span>.rowbuf.len() &lt; DB_BUFFER_SIZE)
+        (<span class="self">self</span>.rowbuf.len(), <span class="self">self</span>.is_finished)
     }
 }
 
@@ -2388,6 +2455,7 @@
     ncols: usize,
     current_col: usize,
     current_row: usize,
+    is_finished: bool,
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; PostgresRawSourceParser&lt;<span class="lifetime">&#39;a</span>&gt; {
@@ -2398,6 +2466,7 @@
             ncols: schema.len(),
             current_row: <span class="number">0</span>,
             current_col: <span class="number">0</span>,
+            is_finished: <span class="bool-val">false</span>,
         }
     }
 
@@ -2416,6 +2485,14 @@
 
     <span class="attribute">#[throws(PostgresSourceError)]
     </span><span class="kw">fn </span>fetch_next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; (usize, bool) {
+        <span class="macro">assert!</span>(<span class="self">self</span>.current_col == <span class="number">0</span>);
+        <span class="kw">let </span>remaining_rows = <span class="self">self</span>.rowbuf.len() - <span class="self">self</span>.current_row;
+        <span class="kw">if </span>remaining_rows &gt; <span class="number">0 </span>{
+            <span class="kw">return </span>(remaining_rows, <span class="self">self</span>.is_finished);
+        } <span class="kw">else if </span><span class="self">self</span>.is_finished {
+            <span class="kw">return </span>(<span class="number">0</span>, <span class="self">self</span>.is_finished);
+        }
+
         <span class="kw">if </span>!<span class="self">self</span>.rowbuf.is_empty() {
             <span class="self">self</span>.rowbuf.drain(..);
         }
@@ -2423,12 +2500,13 @@
             <span class="kw">if let </span><span class="prelude-val">Some</span>(row) = <span class="self">self</span>.iter.next()<span class="question-mark">? </span>{
                 <span class="self">self</span>.rowbuf.push(row);
             } <span class="kw">else </span>{
+                <span class="self">self</span>.is_finished = <span class="bool-val">true</span>;
                 <span class="kw">break</span>;
             }
         }
         <span class="self">self</span>.current_row = <span class="number">0</span>;
         <span class="self">self</span>.current_col = <span class="number">0</span>;
-        (<span class="self">self</span>.rowbuf.len(), <span class="self">self</span>.rowbuf.len() &lt; DB_BUFFER_SIZE)
+        (<span class="self">self</span>.rowbuf.len(), <span class="self">self</span>.is_finished)
     }
 }
 
