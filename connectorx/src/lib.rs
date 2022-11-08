@@ -170,7 +170,7 @@ pub mod prelude {
     pub use crate::arrow_batch_iter::ArrowBatchIter;
     pub use crate::data_order::{coordinate, DataOrder};
     #[cfg(feature = "dst_arrow")]
-    pub use crate::destinations::arrow::ArrowDestination;
+    pub use crate::destinations::arrow::{ArrowDestination, ArrowTypeSystem};
     #[cfg(feature = "dst_arrow2")]
     pub use crate::destinations::arrow2::Arrow2Destination;
     pub use crate::destinations::{Consume, Destination, DestinationPartition};
