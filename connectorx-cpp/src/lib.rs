@@ -3,7 +3,6 @@
 mod plan;
 
 use arrow::ffi::{ArrowArray, FFI_ArrowArray, FFI_ArrowSchema};
-use connectorx::get_arrow::get_arrow_iter;
 use connectorx::prelude::*;
 use libc::c_char;
 use std::collections::HashMap;
@@ -205,80 +204,8 @@ pub struct CXSchema {
     headers: CXSlice<*const c_char>,
 }
 
-pub trait CXIterator {
-    fn get_schema(&self) -> *mut CXSchema;
-    fn next_batch(&mut self) -> *mut CXSlice<CXArray>;
-}
-
-impl<'a, S, TP> CXIterator for ArrowBatchIter<'a, S, TP>
-where
-    S: Source + 'a,
-    TP: Transport<TSS = S::TypeSystem, TSD = ArrowTypeSystem, S = S, D = ArrowDestination>,
-{
-    fn get_schema(&self) -> *mut CXSchema {
-        let (empty_batch, names) = self.get_schema();
-        let mut cols = vec![];
-        for array in empty_batch.columns() {
-            let data = array.data().clone();
-            let array = ArrowArray::try_new(data).expect("c ptr");
-            let (array_ptr, schema_ptr) = ArrowArray::into_raw(array);
-            let cx_array = CXArray {
-                array: array_ptr,
-                schema: schema_ptr,
-            };
-            cols.push(cx_array);
-        }
-
-        let names: Vec<*const c_char> = names
-            .iter()
-            .map(|name| {
-                CString::new(name.as_str())
-                    .expect("new CString error")
-                    .into_raw() as *const c_char
-            })
-            .collect();
-
-        let res = Box::new(CXSchema {
-            types: CXSlice::<_>::new_from_vec(cols),
-            headers: CXSlice::<_>::new_from_vec(names),
-        });
-
-        Box::into_raw(res)
-    }
-
-    fn next_batch(&mut self) -> *mut CXSlice<CXArray> {
-        match self.next() {
-            Some(Ok(rb)) => {
-                let mut cols = vec![];
-
-                for array in rb.columns() {
-                    let data = array.data().clone();
-                    let array = ArrowArray::try_new(data).expect("c ptr");
-                    let (array_ptr, schema_ptr) = ArrowArray::into_raw(array);
-
-                    let cx_array = CXArray {
-                        array: array_ptr,
-                        schema: schema_ptr,
-                    };
-                    cols.push(cx_array);
-                }
-
-                let cx_rb = Box::new(CXSlice::<CXArray>::new_from_vec(cols));
-                return Box::into_raw(cx_rb);
-            }
-            Some(Err(e)) => {
-                println!("error: {:?}", e);
-                return std::ptr::null_mut();
-            }
-            None => {
-                return std::ptr::null_mut();
-            }
-        }
-    }
-}
-
 #[no_mangle]
-pub unsafe extern "C" fn free_iter(iter: *mut Box<dyn CXIterator>) {
+pub unsafe extern "C" fn free_iter(iter: *mut Box<dyn RecordBatchIterator>) {
     let _ = Box::from_raw(iter);
 }
 
@@ -313,26 +240,76 @@ pub extern "C" fn connectorx_scan_iter(
     conn: *const i8,
     query: *const i8,
     batch_size: usize,
-) -> *mut Box<dyn CXIterator> {
+) -> *mut Box<dyn RecordBatchIterator> {
     let conn_str = unsafe { CStr::from_ptr(conn) }.to_str().unwrap();
     let query_str = unsafe { CStr::from_ptr(query) }.to_str().unwrap();
     let source_conn = SourceConn::try_from(conn_str).unwrap();
 
-    let arrow_iter: Box<dyn CXIterator> = Box::new(
-        get_arrow_iter(&source_conn, None, &[CXQuery::from(query_str)], batch_size).unwrap(),
-    );
+    let arrow_iter: Box<dyn RecordBatchIterator> =
+        new_record_batch_iter(&source_conn, None, &[CXQuery::from(query_str)], batch_size);
 
     Box::into_raw(Box::new(arrow_iter))
 }
 
 #[no_mangle]
-pub extern "C" fn connectorx_get_schema(iter: *mut Box<dyn CXIterator>) -> *mut CXSchema {
+pub extern "C" fn connectorx_get_schema(iter: *mut Box<dyn RecordBatchIterator>) -> *mut CXSchema {
     let arrow_iter = unsafe { &*iter };
-    arrow_iter.get_schema()
+    let (empty_batch, names) = arrow_iter.get_schema();
+    let mut cols = vec![];
+    for array in empty_batch.columns() {
+        let data = array.data().clone();
+        let array = ArrowArray::try_new(data).expect("c ptr");
+        let (array_ptr, schema_ptr) = ArrowArray::into_raw(array);
+        let cx_array = CXArray {
+            array: array_ptr,
+            schema: schema_ptr,
+        };
+        cols.push(cx_array);
+    }
+
+    let names: Vec<*const c_char> = names
+        .iter()
+        .map(|name| {
+            CString::new(name.as_str())
+                .expect("new CString error")
+                .into_raw() as *const c_char
+        })
+        .collect();
+
+    let res = Box::new(CXSchema {
+        types: CXSlice::<_>::new_from_vec(cols),
+        headers: CXSlice::<_>::new_from_vec(names),
+    });
+
+    Box::into_raw(res)
 }
 
 #[no_mangle]
-pub extern "C" fn connectorx_iter_next(iter: *mut Box<dyn CXIterator>) -> *mut CXSlice<CXArray> {
+pub extern "C" fn connectorx_iter_next(
+    iter: *mut Box<dyn RecordBatchIterator>,
+) -> *mut CXSlice<CXArray> {
     let arrow_iter = unsafe { &mut *iter };
-    arrow_iter.next_batch()
+    match arrow_iter.next_batch() {
+        Some(rb) => {
+            let mut cols = vec![];
+
+            for array in rb.columns() {
+                let data = array.data().clone();
+                let array = ArrowArray::try_new(data).expect("c ptr");
+                let (array_ptr, schema_ptr) = ArrowArray::into_raw(array);
+
+                let cx_array = CXArray {
+                    array: array_ptr,
+                    schema: schema_ptr,
+                };
+                cols.push(cx_array);
+            }
+
+            let cx_rb = Box::new(CXSlice::<CXArray>::new_from_vec(cols));
+            return Box::into_raw(cx_rb);
+        }
+        None => {
+            return std::ptr::null_mut();
+        }
+    }
 }

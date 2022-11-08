@@ -26,7 +26,6 @@ pub fn get_arrow2(
     let protocol = source_conn.proto.as_str();
     debug!("Protocol: {}", protocol);
 
-    // TODO: unlock gil if possible
     match source_conn.ty {
         #[cfg(feature = "src_postgres")]
         SourceType::Postgres => {

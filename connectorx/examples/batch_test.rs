@@ -34,7 +34,7 @@ fn main() {
     let mut num_rows = 0;
     let mut num_batches = 0;
     while let Some(record_batch) = batch_iter.next() {
-        let record_batch = record_batch.unwrap();
+        let record_batch = record_batch;
         println!("got 1 batch, with {} rows", record_batch.num_rows());
         num_rows += record_batch.num_rows();
         num_batches += 1;

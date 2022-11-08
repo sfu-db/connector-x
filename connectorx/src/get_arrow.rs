@@ -5,7 +5,11 @@ use crate::sources::postgres::{
     rewrite_tls_args, BinaryProtocol as PgBinaryProtocol, CSVProtocol, CursorProtocol,
     SimpleProtocol,
 };
-use crate::{arrow_batch_iter::ArrowBatchIter, prelude::*, sql::CXQuery};
+use crate::{
+    arrow_batch_iter::{ArrowBatchIter, RecordBatchIterator},
+    prelude::*,
+    sql::CXQuery,
+};
 use fehler::{throw, throws};
 use log::debug;
 #[cfg(feature = "src_postgres")]
@@ -26,7 +30,6 @@ pub fn get_arrow(
     let protocol = source_conn.proto.as_str();
     debug!("Protocol: {}", protocol);
 
-    // TODO: unlock gil if possible
     match source_conn.ty {
         #[cfg(feature = "src_postgres")]
         SourceType::Postgres => {
@@ -246,7 +249,6 @@ pub fn get_arrow_iter<'a>(
     let protocol = source_conn.proto.as_str();
     debug!("Protocol: {}", protocol);
 
-    // TODO: unlock gil if possible
     match source_conn.ty {
         #[cfg(feature = "src_postgres")]
         SourceType::Postgres => {
@@ -269,4 +271,54 @@ pub fn get_arrow_iter<'a>(
         "{:?}",
         source_conn.ty
     )))
+}
+
+// #[throws(ConnectorXOutError)]
+pub fn new_record_batch_iter(
+    source_conn: &SourceConn,
+    origin_query: Option<String>,
+    queries: &[CXQuery<String>],
+    batch_size: usize,
+) -> Box<dyn RecordBatchIterator> {
+    let destination = ArrowDestination::new();
+    let protocol = source_conn.proto.as_str();
+    debug!("Protocol: {}", protocol);
+
+    match source_conn.ty {
+        #[cfg(feature = "src_postgres")]
+        SourceType::Postgres => {
+            let (config, _) = rewrite_tls_args(&source_conn.conn).unwrap();
+            let source =
+                PostgresSource::<PgBinaryProtocol, NoTls>::new(config, NoTls, queries.len())
+                    .unwrap();
+            let batch_iter: ArrowBatchIter<
+                '_,
+                PostgresSource<PgBinaryProtocol, NoTls>,
+                PostgresArrowTransport<PgBinaryProtocol, NoTls>,
+            > = ArrowBatchIter::new(source, destination, origin_query, queries, batch_size)
+                .unwrap();
+            return Box::new(batch_iter);
+        }
+        #[cfg(feature = "src_sqlite")]
+        SourceType::SQLite => {
+            // remove the first "sqlite://" manually since url.path is not correct for windows
+            let path = &source_conn.conn.as_str()[9..];
+            let source = SQLiteSource::new(path, queries.len()).unwrap();
+            let batch_iter = ArrowBatchIter::<'_, _, SQLiteArrowTransport>::new(
+                source,
+                destination,
+                origin_query,
+                queries,
+                batch_size,
+            )
+            .unwrap();
+            return Box::new(batch_iter);
+        }
+        _ => {}
+    }
+    panic!("not supported!");
+    // throw!(ConnectorXOutError::SourceNotSupport(format!(
+    //     "{:?}",
+    //     source_conn.ty
+    // )));
 }

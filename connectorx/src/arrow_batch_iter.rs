@@ -1,15 +1,4 @@
-use crate::{
-    data_order::DataOrder,
-    destinations::{
-        arrow::{ArrowDestination, ArrowPartitionWriter, ArrowTypeSystem},
-        DestinationPartition,
-    },
-    dispatcher::Dispatcher,
-    sources::{PartitionParser, Source, SourcePartition},
-    sql::CXQuery,
-    typesystem::Transport,
-    utils::*,
-};
+use crate::{prelude::*, utils::*};
 use arrow::record_batch::RecordBatch;
 use itertools::Itertools;
 use log::debug;
@@ -23,7 +12,11 @@ type SourceParserHandle<'a, S> = OwningHandle<
 >;
 
 /// The iterator that returns arrow in `RecordBatch`
-pub struct ArrowBatchIter<'a, S: 'a + Source, TP> {
+pub struct ArrowBatchIter<'a, S, TP>
+where
+    S: Source + 'a,
+    TP: Transport<TSS = S::TypeSystem, TSD = ArrowTypeSystem, S = S, D = ArrowDestination>,
+{
     dst: ArrowDestination,
     dst_parts: Vec<ArrowPartitionWriter>,
     src_parsers: Vec<SourceParserHandle<'a, S>>,
@@ -68,10 +61,6 @@ where
             batch_size,
             _phantom: PhantomData,
         })
-    }
-
-    pub fn get_schema(&self) -> (RecordBatch, &[String]) {
-        (self.dst.empty_batch(), self.dst.names())
     }
 
     fn run_batch(&mut self) -> Result<(), TP::Error> {
@@ -145,44 +134,63 @@ where
     }
 }
 
-// impl<'a, S, TP> Iterator for ArrowBatchIter<'a, S, TP>
-// where
-//     S: Source + 'a,
-//     TP: Transport<TSS = S::TypeSystem, TSD = ArrowTypeSystem, S = S, D = ArrowDestination>,
-// {
-//     type Item = RecordBatch;
-//     fn next(&mut self) -> Option<Self::Item> {
-//         let res = self.dst.record_batch().unwrap();
-//         if res.is_some() {
-//             return res;
-//         }
-//         self.run_batch().unwrap();
-//         self.dst.record_batch().unwrap()
-//     }
-// }
-
 impl<'a, S, TP> Iterator for ArrowBatchIter<'a, S, TP>
 where
     S: Source + 'a,
     TP: Transport<TSS = S::TypeSystem, TSD = ArrowTypeSystem, S = S, D = ArrowDestination>,
 {
-    type Item = Result<RecordBatch, TP::Error>;
+    type Item = RecordBatch;
     fn next(&mut self) -> Option<Self::Item> {
-        match self.dst.record_batch() {
-            Ok(Some(res)) => return Some(Ok(res)),
-            Ok(None) => {}
-            Err(e) => return Some(Err(e.into())),
+        let res = self.dst.record_batch().unwrap();
+        if res.is_some() {
+            return res;
         }
+        self.run_batch().unwrap();
+        self.dst.record_batch().unwrap()
+    }
+}
 
-        match self.run_batch() {
-            Err(e) => return Some(Err(e)),
-            Ok(()) => {}
-        }
+// impl<'a, S, TP> Iterator for ArrowBatchIter<'a, S, TP>
+// where
+//     S: Source + 'a,
+//     TP: Transport<TSS = S::TypeSystem, TSD = ArrowTypeSystem, S = S, D = ArrowDestination>,
+// {
+//     type Item = Result<RecordBatch, TP::Error>;
+//     fn next(&mut self) -> Option<Self::Item> {
+//         match self.dst.record_batch() {
+//             Ok(Some(res)) => return Some(Ok(res)),
+//             Ok(None) => {}
+//             Err(e) => return Some(Err(e.into())),
+//         }
 
-        match self.dst.record_batch() {
-            Err(e) => Some(Err(e.into())),
-            Ok(Some(res)) => Some(Ok(res)),
-            Ok(None) => None,
-        }
+//         match self.run_batch() {
+//             Err(e) => return Some(Err(e)),
+//             Ok(()) => {}
+//         }
+
+//         match self.dst.record_batch() {
+//             Err(e) => Some(Err(e.into())),
+//             Ok(Some(res)) => Some(Ok(res)),
+//             Ok(None) => None,
+//         }
+//     }
+// }
+
+pub trait RecordBatchIterator {
+    fn get_schema(&self) -> (RecordBatch, &[String]);
+    fn next_batch(&mut self) -> Option<RecordBatch>;
+}
+
+impl<'a, S, TP> RecordBatchIterator for ArrowBatchIter<'a, S, TP>
+where
+    S: Source + 'a,
+    TP: Transport<TSS = S::TypeSystem, TSD = ArrowTypeSystem, S = S, D = ArrowDestination>,
+{
+    fn get_schema(&self) -> (RecordBatch, &[String]) {
+        (self.dst.empty_batch(), self.dst.names())
+    }
+
+    fn next_batch(&mut self) -> Option<RecordBatch> {
+        self.next()
     }
 }
