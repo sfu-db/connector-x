@@ -4,7 +4,7 @@ use anyhow::anyhow;
 use std::convert::TryFrom;
 use url::Url;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum SourceType {
     Postgres,
     SQLite,
@@ -15,6 +15,7 @@ pub enum SourceType {
     DuckDB,
 }
 
+#[derive(Debug, Clone)]
 pub struct SourceConn {
     pub ty: SourceType,
     pub conn: Url,
