@@ -86,7 +86,9 @@ pub trait PartitionParser<'a>: Send {
         self.produce()
     }
 
-    /// Fetch next batch of rows from database, return actuall number of rows fetched
+    /// Fetch next batch of rows from database, return (number of rows fetched to local, whether all rows are fechted from database).
+    /// There might be rows that are not consumed yet when calling the next fetch_next.
+    /// The function might be called even after the last batch is fetched.
     fn fetch_next(&mut self) -> Result<(usize, bool), Self::Error>;
 }
 

@@ -246,6 +246,8 @@ pub struct SQLiteSourcePartitionParser<'a> {
     rows: OwningHandle<Box<Statement<'a>>, DummyBox<Rows<'a>>>,
     ncols: usize,
     current_col: usize,
+    current_consumed: bool,
+    is_finished: bool,
 }
 
 impl<'a> SQLiteSourcePartitionParser<'a> {
@@ -268,11 +270,14 @@ impl<'a> SQLiteSourcePartitionParser<'a> {
             rows,
             ncols: schema.len(),
             current_col: 0,
+            current_consumed: true,
+            is_finished: false,
         }
     }
 
     #[throws(SQLiteSourceError)]
     fn next_loc(&mut self) -> (&Row, usize) {
+        self.current_consumed = true;
         let row: &Row = (*self.rows)
             .get()
             .ok_or_else(|| anyhow!("Sqlite empty current row"))?;
@@ -288,10 +293,23 @@ impl<'a> PartitionParser<'a> for SQLiteSourcePartitionParser<'a> {
 
     #[throws(SQLiteSourceError)]
     fn fetch_next(&mut self) -> (usize, bool) {
-        self.current_col = 0;
+        assert!(self.current_col == 0);
+
+        if !self.current_consumed {
+            return (1, false);
+        } else if self.is_finished {
+            return (0, true);
+        }
+
         match (*self.rows).next()? {
-            Some(_) => (1, false),
-            None => (0, true),
+            Some(_) => {
+                self.current_consumed = false;
+                (1, false)
+            }
+            None => {
+                self.is_finished = true;
+                (0, true)
+            }
         }
     }
 }
