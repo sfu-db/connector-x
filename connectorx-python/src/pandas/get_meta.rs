@@ -15,8 +15,7 @@ use connectorx::{
         mysql::{BinaryProtocol as MySQLBinaryProtocol, MySQLSource, TextProtocol},
         postgres::{
             rewrite_tls_args, BinaryProtocol as PgBinaryProtocol, CSVProtocol, CursorProtocol,
-            SimpleProtocol,
-            PostgresSource,
+            PostgresSource, SimpleProtocol,
         },
         sqlite::SQLiteSource,
     },
@@ -121,21 +120,25 @@ pub fn get_meta<'a>(py: Python<'a>, conn: &str, protocol: &str, query: String) -
                     let sb = PostgresSource::<SimpleProtocol, MakeTlsConnector>::new(
                         config, tls_conn, 1,
                     )?;
-                    let dispatcher = Dispatcher::<
+                    let mut dispatcher = Dispatcher::<
                         _,
                         _,
                         PostgresPandasTransport<SimpleProtocol, MakeTlsConnector>,
-                    >::new(sb, &mut destination, queries, None);
+                    >::new(
+                        sb, &mut destination, queries, None
+                    );
                     debug!("Running dispatcher");
                     dispatcher.get_meta()?;
                 }
                 ("simple", None) => {
                     let sb = PostgresSource::<SimpleProtocol, NoTls>::new(config, NoTls, 1)?;
-                    let dispatcher = Dispatcher::<
+                    let mut dispatcher = Dispatcher::<
                         _,
                         _,
                         PostgresPandasTransport<SimpleProtocol, NoTls>,
-                    >::new(sb, &mut destination, queries, None);
+                    >::new(
+                        sb, &mut destination, queries, None
+                    );
                     debug!("Running dispatcher");
                     dispatcher.get_meta()?;
                 }

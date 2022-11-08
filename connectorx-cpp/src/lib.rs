@@ -1,5 +1,3 @@
-#![feature(vec_into_raw_parts)]
-
 mod plan;
 
 use arrow::ffi::{ArrowArray, FFI_ArrowArray, FFI_ArrowSchema};
@@ -19,8 +17,17 @@ pub struct CXSlice<T> {
 
 impl<T> CXSlice<T> {
     pub fn new_from_vec(v: Vec<T>) -> Self {
-        let (ptr, len, capacity) = v.into_raw_parts();
-        Self { ptr, len, capacity }
+        // If `Vec::into_raw_parts` becomes stable, can directly change to:
+        // let (ptr, len, capacity) = v.into_raw_parts();
+        // Self {ptr, len, capacity}
+
+        let slice = Self {
+            ptr: v.as_ptr(),
+            len: v.len(),
+            capacity: v.capacity(),
+        };
+        std::mem::forget(v);
+        slice
     }
 }
 

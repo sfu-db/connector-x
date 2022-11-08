@@ -4,8 +4,8 @@ use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
 use connectorx::{
     impl_transport,
     sources::postgres::{
-        BinaryProtocol, CSVProtocol, CursorProtocol, SimpleProtocol, 
-        PostgresSource, PostgresTypeSystem,
+        BinaryProtocol, CSVProtocol, CursorProtocol, PostgresSource, PostgresTypeSystem,
+        SimpleProtocol,
     },
     typesystem::TypeConversion,
 };
