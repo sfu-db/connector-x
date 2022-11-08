@@ -46,7 +46,7 @@ where
             .into_iter()
             .map(|part| {
                 OwningHandle::new_with_fn(Box::new(part), |part: *const S::Partition| unsafe {
-                    DummyBox((&mut *(part as *mut S::Partition)).parser().unwrap())
+                    DummyBox((*(part as *mut S::Partition)).parser().unwrap())
                 })
             })
             .collect();

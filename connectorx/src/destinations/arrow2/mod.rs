@@ -27,11 +27,12 @@ pub use typesystem::Arrow2TypeSystem;
 
 type Builder = Box<dyn MutableArray + 'static + Send>;
 type Builders = Vec<Builder>;
+type ChunkBuffer = Arc<Mutex<Vec<Chunk<Arc<dyn Array>>>>>;
 
 pub struct Arrow2Destination {
     schema: Vec<Arrow2TypeSystem>,
     names: Vec<String>,
-    data: Arc<Mutex<Vec<Chunk<Arc<dyn Array>>>>>,
+    data: ChunkBuffer,
     arrow_schema: Arc<Schema>,
 }
 
@@ -166,12 +167,12 @@ pub struct ArrowPartitionWriter {
     builders: Option<Builders>,
     current_row: usize,
     current_col: usize,
-    data: Arc<Mutex<Vec<Chunk<Arc<dyn Array>>>>>,
+    data: ChunkBuffer,
 }
 
 impl ArrowPartitionWriter {
     #[throws(Arrow2DestinationError)]
-    fn new(schema: Vec<Arrow2TypeSystem>, data: Arc<Mutex<Vec<Chunk<Arc<dyn Array>>>>>) -> Self {
+    fn new(schema: Vec<Arrow2TypeSystem>, data: ChunkBuffer) -> Self {
         let mut pw = ArrowPartitionWriter {
             schema,
             builders: None,

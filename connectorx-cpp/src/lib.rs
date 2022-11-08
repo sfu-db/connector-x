@@ -155,7 +155,7 @@ pub unsafe extern "C" fn free_result(res: *const CXResult) {
 }
 
 #[no_mangle]
-pub extern "C" fn connectorx_scan(conn: *const i8, query: *const i8) -> CXResult {
+pub unsafe extern "C" fn connectorx_scan(conn: *const i8, query: *const i8) -> CXResult {
     let conn_str = unsafe { CStr::from_ptr(conn) }.to_str().unwrap();
     let query_str = unsafe { CStr::from_ptr(query) }.to_str().unwrap();
     let source_conn = SourceConn::try_from(conn_str).unwrap();
@@ -243,7 +243,7 @@ pub unsafe extern "C" fn free_record_batch(rb: *mut CXSlice<CXArray>) {
 }
 
 #[no_mangle]
-pub extern "C" fn connectorx_scan_iter(
+pub unsafe extern "C" fn connectorx_scan_iter(
     conn: *const i8,
     query: *const i8,
     batch_size: usize,
@@ -259,7 +259,9 @@ pub extern "C" fn connectorx_scan_iter(
 }
 
 #[no_mangle]
-pub extern "C" fn connectorx_get_schema(iter: *mut Box<dyn RecordBatchIterator>) -> *mut CXSchema {
+pub unsafe extern "C" fn connectorx_get_schema(
+    iter: *mut Box<dyn RecordBatchIterator>,
+) -> *mut CXSchema {
     let arrow_iter = unsafe { &*iter };
     let (empty_batch, names) = arrow_iter.get_schema();
     let mut cols = vec![];
@@ -292,7 +294,7 @@ pub extern "C" fn connectorx_get_schema(iter: *mut Box<dyn RecordBatchIterator>)
 }
 
 #[no_mangle]
-pub extern "C" fn connectorx_iter_next(
+pub unsafe extern "C" fn connectorx_iter_next(
     iter: *mut Box<dyn RecordBatchIterator>,
 ) -> *mut CXSlice<CXArray> {
     let arrow_iter = unsafe { &mut *iter };
@@ -313,10 +315,8 @@ pub extern "C" fn connectorx_iter_next(
             }
 
             let cx_rb = Box::new(CXSlice::<CXArray>::new_from_vec(cols));
-            return Box::into_raw(cx_rb);
+            Box::into_raw(cx_rb)
         }
-        None => {
-            return std::ptr::null_mut();
-        }
+        None => std::ptr::null_mut(),
     }
 }
