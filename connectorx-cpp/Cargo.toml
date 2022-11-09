@@ -9,7 +9,7 @@ license = "MIT"
 [dependencies]
 libc = "0.2"
 connectorx = {path = "../connectorx", default-features = false}
-arrow = {version = "22", features = ["prettyprint", "ffi"]}
+arrow = {version = "26", features = ["prettyprint", "ffi"]}
 
 [lib]
 crate-type = ["cdylib"]
