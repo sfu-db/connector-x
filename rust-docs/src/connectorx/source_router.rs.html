@@ -68,13 +68,14 @@
 <span id="68">68</span>
 <span id="69">69</span>
 <span id="70">70</span>
+<span id="71">71</span>
 </pre><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::constants::CONNECTORX_PROTOCOL;
 <span class="kw">use </span><span class="kw">crate</span>::errors::{ConnectorXError, <span class="prelude-ty">Result</span>};
 <span class="kw">use </span>anyhow::anyhow;
 <span class="kw">use </span>std::convert::TryFrom;
 <span class="kw">use </span>url::Url;
 
-<span class="attribute">#[derive(Debug)]
+<span class="attribute">#[derive(Debug, Clone)]
 </span><span class="kw">pub enum </span>SourceType {
     Postgres,
     SQLite,
@@ -85,7 +86,8 @@
     DuckDB,
 }
 
-<span class="kw">pub struct </span>SourceConn {
+<span class="attribute">#[derive(Debug, Clone)]
+</span><span class="kw">pub struct </span>SourceConn {
     <span class="kw">pub </span>ty: SourceType,
     <span class="kw">pub </span>conn: Url,
     <span class="kw">pub </span>proto: String,
