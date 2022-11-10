@@ -425,39 +425,43 @@ title="Print to PDF"
 <section id="build-from-source-code">
 <h3>Build from source code<a class="headerlink" href="#build-from-source-code" title="Permalink to this headline">#</a></h3>
 <ul class="simple">
-<li><p>Step 0: Install tools</p>
+<li><p>Step 0: Install tools.</p>
 <ul>
 <li><p>Install Rust: <code class="docutils literal notranslate"><span class="pre">curl</span> <span class="pre">--proto</span> <span class="pre">'=https'</span> <span class="pre">--tlsv1.2</span> <span class="pre">-sSf</span> <span class="pre">https://sh.rustup.rs</span> <span class="pre">|</span> <span class="pre">sh</span></code></p></li>
 <li><p>Install <a class="reference external" href="https://github.com/casey/just">just</a>: <code class="docutils literal notranslate"><span class="pre">cargo</span> <span class="pre">install</span> <span class="pre">just</span></code></p></li>
 <li><p>Install <a class="reference external" href="https://python-poetry.org/docs/">Poetry</a>: <code class="docutils literal notranslate"><span class="pre">pip3</span> <span class="pre">install</span> <span class="pre">poetry</span></code></p></li>
 </ul>
 </li>
-<li><p>Step 1: Fresh clone of source</p></li>
+<li><p>Step 1: Fresh clone of source.</p></li>
 </ul>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git clone https://github.com/sfu-db/connector-x.git
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>Step 2: Install and switch to rust nightly (please refer <a class="reference external" href="https://github.com/sfu-db/connector-x/blob/main/.github/workflows/release.yml">this file</a> and search for <code class="docutils literal notranslate"><span class="pre">Install</span> <span class="pre">Rust</span></code> for the latest using version)</p></li>
+<li><p>Step 2: Install and switch to the correct rust version (please refer <a class="reference external" href="https://github.com/sfu-db/connector-x/blob/main/.github/workflows/release.yml">this file</a> and search for <code class="docutils literal notranslate"><span class="pre">rust</span></code> for the latest using version).</p></li>
 </ul>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rustup install nightly-<span class="o">{</span>version<span class="o">}</span>
-rustup default nightly-<span class="o">{</span>version<span class="o">}</span>
-rustup override <span class="nb">set</span> nightly-<span class="o">{</span>version<span class="o">}</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rustup install <span class="o">{</span>version<span class="o">}</span>
+rustup override <span class="nb">set</span> <span class="o">{</span>version<span class="o">}</span>
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>Step 3: Install python dependencies</p></li>
+<li><p>Step 3: Install system dependencies. Please refer to <a class="reference external" href="https://github.com/sfu-db/connector-x/blob/main/.github/workflows/release.yml">release.yml</a> for dependencies needed for different os.</p></li>
+<li><p>Step 4: Install python dependencies.</p></li>
 </ul>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>just bootstrap-python
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>Step 4: Build wheel</p></li>
+<li><p>Step 5: Build wheel.</p></li>
 </ul>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>just build-python-wheel
 </pre></div>
 </div>
-<p>NOTE: <code class="docutils literal notranslate"><span class="pre">OPENSSL_NO_VENDOR=1</span></code> might required to compile for windows users.</p>
+<p>NOTES:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">OPENSSL_NO_VENDOR=1</span></code> might required to compile for windows users.</p></li>
+<li><p>Dynamic library is required for the python installation. (e.g. If you are using <code class="docutils literal notranslate"><span class="pre">pyenv</span></code>, use command <code class="docutils literal notranslate"><span class="pre">PYTHON_CONFIGURE_OPTS=“--enable-shared”</span> <span class="pre">pyenv</span> <span class="pre">install</span> <span class="pre">{version}</span></code> to install python since dylib is not enabled by default.)</p></li>
+</ul>
 </section>
 </section>
 </section>
