@@ -3,7 +3,7 @@ use crate::constants::SECONDS_IN_DAY;
 use arrow::array::{
     ArrayBuilder, BooleanBuilder, Date32Builder, Date64Builder, Float32Builder, Float64Builder,
     Int32Builder, Int64Builder, LargeBinaryBuilder, StringBuilder, Time64NanosecondBuilder,
-    UInt32Builder, UInt64Builder,
+    TimestampNanosecondBuilder, UInt32Builder, UInt64Builder,
 };
 use arrow::datatypes::Field;
 use arrow::datatypes::{DataType as ArrowDataType, TimeUnit};
@@ -140,34 +140,44 @@ impl ArrowAssoc for Option<String> {
 }
 
 impl ArrowAssoc for DateTime<Utc> {
-    type Builder = Float64Builder;
+    type Builder = TimestampNanosecondBuilder;
 
-    fn builder(_nrows: usize) -> Float64Builder {
-        unimplemented!()
+    fn builder(nrows: usize) -> Self::Builder {
+        TimestampNanosecondBuilder::with_capacity(nrows)
     }
 
-    fn append(_builder: &mut Self::Builder, _value: DateTime<Utc>) -> Result<()> {
-        unimplemented!()
+    #[throws(ArrowDestinationError)]
+    fn append(builder: &mut Self::Builder, value: DateTime<Utc>) {
+        builder.append_value(value.timestamp_nanos())
     }
 
-    fn field(_header: &str) -> Field {
-        unimplemented!()
+    fn field(header: &str) -> Field {
+        Field::new(
+            header,
+            ArrowDataType::Timestamp(TimeUnit::Nanosecond, Some("UTC".to_string())),
+            true,
+        )
     }
 }
 
 impl ArrowAssoc for Option<DateTime<Utc>> {
-    type Builder = Float64Builder;
+    type Builder = TimestampNanosecondBuilder;
 
-    fn builder(_nrows: usize) -> Float64Builder {
-        unimplemented!()
+    fn builder(nrows: usize) -> Self::Builder {
+        TimestampNanosecondBuilder::with_capacity(nrows)
     }
 
-    fn append(_builder: &mut Self::Builder, _value: Option<DateTime<Utc>>) -> Result<()> {
-        unimplemented!()
+    #[throws(ArrowDestinationError)]
+    fn append(builder: &mut Self::Builder, value: Option<DateTime<Utc>>) {
+        builder.append_option(value.map(|x| x.timestamp_nanos()))
     }
 
-    fn field(_header: &str) -> Field {
-        unimplemented!()
+    fn field(header: &str) -> Field {
+        Field::new(
+            header,
+            ArrowDataType::Timestamp(TimeUnit::Nanosecond, Some("UTC".to_string())),
+            false,
+        )
     }
 }
 
