@@ -177,6 +177,40 @@
 <span id="177">177</span>
 <span id="178">178</span>
 <span id="179">179</span>
+<span id="180">180</span>
+<span id="181">181</span>
+<span id="182">182</span>
+<span id="183">183</span>
+<span id="184">184</span>
+<span id="185">185</span>
+<span id="186">186</span>
+<span id="187">187</span>
+<span id="188">188</span>
+<span id="189">189</span>
+<span id="190">190</span>
+<span id="191">191</span>
+<span id="192">192</span>
+<span id="193">193</span>
+<span id="194">194</span>
+<span id="195">195</span>
+<span id="196">196</span>
+<span id="197">197</span>
+<span id="198">198</span>
+<span id="199">199</span>
+<span id="200">200</span>
+<span id="201">201</span>
+<span id="202">202</span>
+<span id="203">203</span>
+<span id="204">204</span>
+<span id="205">205</span>
+<span id="206">206</span>
+<span id="207">207</span>
+<span id="208">208</span>
+<span id="209">209</span>
+<span id="210">210</span>
+<span id="211">211</span>
+<span id="212">212</span>
+<span id="213">213</span>
 </pre><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::data_order::DataOrder;
 <span class="kw">use </span>std::any::type_name;
 <span class="kw">use </span>std::fmt;
@@ -192,6 +226,12 @@
 
     <span class="attribute">#[error(<span class="string">&quot;Source {0} not supported.&quot;</span>)]
     </span>SourceNotSupport(String),
+
+    <span class="attribute">#[error(transparent)]
+    </span>IOError(<span class="attribute">#[from] </span>std::io::Error),
+
+    <span class="attribute">#[error(transparent)]
+    </span>JsonError(<span class="attribute">#[from] </span>serde_json::Error),
 
     <span class="attribute">#[cfg(feature = <span class="string">&quot;federation&quot;</span>)]
     #[error(transparent)]
@@ -210,27 +250,51 @@
 
     <span class="attribute">#[cfg(feature = <span class="string">&quot;src_postgres&quot;</span>)]
     #[error(transparent)]
-    </span>PostgresError(<span class="attribute">#[from] </span><span class="kw">crate</span>::sources::postgres::PostgresSourceError),
+    </span>PostgresSourceError(<span class="attribute">#[from] </span><span class="kw">crate</span>::sources::postgres::PostgresSourceError),
+
+    <span class="attribute">#[cfg(feature = <span class="string">&quot;src_postgres&quot;</span>)]
+    #[error(transparent)]
+    </span>PostgresError(<span class="attribute">#[from] </span>postgres::Error),
 
     <span class="attribute">#[cfg(feature = <span class="string">&quot;src_mysql&quot;</span>)]
     #[error(transparent)]
-    </span>MySQLError(<span class="attribute">#[from] </span><span class="kw">crate</span>::sources::mysql::MySQLSourceError),
+    </span>MySQLSourceError(<span class="attribute">#[from] </span><span class="kw">crate</span>::sources::mysql::MySQLSourceError),
+
+    <span class="attribute">#[cfg(feature = <span class="string">&quot;src_mysql&quot;</span>)]
+    #[error(transparent)]
+    </span>MysqlError(<span class="attribute">#[from] </span>r2d2_mysql::mysql::Error),
 
     <span class="attribute">#[cfg(feature = <span class="string">&quot;src_mssql&quot;</span>)]
     #[error(transparent)]
     </span>MsSQLSourceError(<span class="attribute">#[from] </span><span class="kw">crate</span>::sources::mssql::MsSQLSourceError),
 
+    <span class="attribute">#[cfg(feature = <span class="string">&quot;src_mssql&quot;</span>)]
+    #[error(transparent)]
+    </span>MsSQL(<span class="attribute">#[from] </span>tiberius::error::Error),
+
     <span class="attribute">#[cfg(feature = <span class="string">&quot;src_sqlite&quot;</span>)]
     #[error(transparent)]
     </span>SQLiteSourceError(<span class="attribute">#[from] </span><span class="kw">crate</span>::sources::sqlite::SQLiteSourceError),
+
+    <span class="attribute">#[cfg(feature = <span class="string">&quot;src_sqlite&quot;</span>)]
+    #[error(transparent)]
+    </span>SQLiteError(<span class="attribute">#[from] </span>rusqlite::Error),
 
     <span class="attribute">#[cfg(feature = <span class="string">&quot;src_oracle&quot;</span>)]
     #[error(transparent)]
     </span>OracleSourceError(<span class="attribute">#[from] </span><span class="kw">crate</span>::sources::oracle::OracleSourceError),
 
+    <span class="attribute">#[cfg(feature = <span class="string">&quot;src_oracle&quot;</span>)]
+    #[error(transparent)]
+    </span>OracleError(<span class="attribute">#[from] </span>r2d2_oracle::oracle::Error),
+
     <span class="attribute">#[cfg(feature = <span class="string">&quot;src_bigquery&quot;</span>)]
     #[error(transparent)]
     </span>BigQuerySourceError(<span class="attribute">#[from] </span><span class="kw">crate</span>::sources::bigquery::BigQuerySourceError),
+
+    <span class="attribute">#[cfg(feature = <span class="string">&quot;src_bigquery&quot;</span>)]
+    #[error(transparent)]
+    </span>BigQueryError(<span class="attribute">#[from] </span>gcp_bigquery_client::error::BQError),
 
     <span class="attribute">#[cfg(feature = <span class="string">&quot;dst_arrow&quot;</span>)]
     #[error(transparent)]
@@ -287,6 +351,10 @@
     <span class="attribute">#[cfg(all(feature = <span class="string">&quot;src_bigquery&quot;</span>, feature = <span class="string">&quot;dst_arrow2&quot;</span>))]
     #[error(transparent)]
     </span>BigqueryArrow2TransportError(<span class="attribute">#[from] </span><span class="kw">crate</span>::transports::BigQueryArrow2TransportError),
+
+    <span class="doccomment">/// Any other errors that are too trivial to be put here explicitly.
+    </span><span class="attribute">#[error(transparent)]
+    </span>Other(<span class="attribute">#[from] </span>anyhow::Error),
 }
 
 <span class="doccomment">/// Errors that can be raised from this library.

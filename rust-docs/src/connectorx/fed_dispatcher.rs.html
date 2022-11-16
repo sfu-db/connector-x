@@ -306,9 +306,6 @@
 <span id="306">306</span>
 <span id="307">307</span>
 <span id="308">308</span>
-<span id="309">309</span>
-<span id="310">310</span>
-<span id="311">311</span>
 </pre><pre class="rust"><code><span class="kw">use crate</span>::{
     constants::{
         CX_REWRITER_PATH, DUCKDB_JDBC_DRIVER, J4RS_BASE_PATH, MYSQL_JDBC_DRIVER,
@@ -394,7 +391,6 @@
             <span class="kw">let </span>source_conn = db_info.conn_str_info.as_ref().unwrap();
             <span class="kw">let </span>url = <span class="kw-2">&amp;</span>source_conn.conn;
             <span class="macro">debug!</span>(<span class="string">&quot;url: {:?}&quot;</span>, url);
-            <span class="macro">println!</span>(<span class="string">&quot;url: {:?}&quot;</span>, url);
             <span class="kw">let </span>ds = <span class="kw">match </span>source_conn.ty {
                 SourceType::Postgres =&gt; jvm.invoke_static(
                     <span class="string">&quot;org.apache.calcite.adapter.jdbc.JdbcSchema&quot;</span>,
@@ -499,7 +495,6 @@
 ) -&gt; Vec&lt;Plan&gt; {
     <span class="kw">let </span>jvm = init_jvm(j4rs_base)<span class="question-mark">?</span>;
     <span class="macro">debug!</span>(<span class="string">&quot;init jvm successfully!&quot;</span>);
-    <span class="macro">println!</span>(<span class="string">&quot;init jvm successfully!&quot;</span>);
 
     <span class="kw">let </span>sql = InvocationArg::try_from(sql).unwrap();
     <span class="kw">let </span>data_sources = create_sources(<span class="kw-2">&amp;</span>jvm, db_map)<span class="question-mark">?</span>;
@@ -510,7 +505,6 @@
     <span class="kw">let </span>count = jvm.invoke(<span class="kw-2">&amp;</span>plan, <span class="string">&quot;getCount&quot;</span>, <span class="kw-2">&amp;</span>[])<span class="question-mark">?</span>;
     <span class="kw">let </span>count: i32 = jvm.to_rust(count)<span class="question-mark">?</span>;
     <span class="macro">debug!</span>(<span class="string">&quot;rewrite finished, got {} queries&quot;</span>, count);
-    <span class="macro">println!</span>(<span class="string">&quot;rewrite finished, got {} queries&quot;</span>, count);
 
     <span class="kw">let </span><span class="kw-2">mut </span>fed_plan = <span class="macro">vec!</span>[];
     <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..count {

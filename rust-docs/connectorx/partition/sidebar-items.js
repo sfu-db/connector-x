@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":[["get_col_range",""],["get_part_query",""],["partition",""]],"struct":[["PartitionQuery",""]]};
