@@ -210,7 +210,6 @@
 <span id="210">210</span>
 <span id="211">211</span>
 <span id="212">212</span>
-<span id="213">213</span>
 </pre><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::data_order::DataOrder;
 <span class="kw">use </span>std::any::type_name;
 <span class="kw">use </span>std::fmt;
@@ -241,8 +240,7 @@
     #[error(transparent)]
     </span>DataFusionError(<span class="attribute">#[from] </span>datafusion::error::DataFusionError),
 
-    <span class="attribute">#[cfg(feature = <span class="string">&quot;federation&quot;</span>)]
-    #[error(transparent)]
+    <span class="attribute">#[error(transparent)]
     </span>UrlParseError(<span class="attribute">#[from] </span>url::ParseError),
 
     <span class="attribute">#[error(transparent)]
