@@ -1,29 +1,43 @@
 use crate::errors::{ConnectorXOutError, OutResult};
 use crate::source_router::{SourceConn, SourceType};
-use crate::{
-    sources::{
-        bigquery::BigQueryDialect,
-        mssql::{mssql_config, FloatN, IntN, MsSQLTypeSystem},
-        mysql::{MySQLSourceError, MySQLTypeSystem},
-        oracle::{connect_oracle, OracleDialect},
-        postgres::{rewrite_tls_args, PostgresTypeSystem},
-    },
-    sql::{
-        get_partition_range_query, get_partition_range_query_sep, single_col_partition_query,
-        CXQuery,
-    },
-};
+#[cfg(feature = "src_bigquery")]
+use crate::sources::bigquery::BigQueryDialect;
+#[cfg(feature = "src_mssql")]
+use crate::sources::mssql::{mssql_config, FloatN, IntN, MsSQLTypeSystem};
+#[cfg(feature = "src_mysql")]
+use crate::sources::mysql::{MySQLSourceError, MySQLTypeSystem};
+#[cfg(feature = "src_oracle")]
+use crate::sources::oracle::{connect_oracle, OracleDialect};
+#[cfg(feature = "src_postgres")]
+use crate::sources::postgres::{rewrite_tls_args, PostgresTypeSystem};
+#[cfg(feature = "src_sqlite")]
+use crate::sql::get_partition_range_query_sep;
+use crate::sql::{get_partition_range_query, single_col_partition_query, CXQuery};
 use anyhow::anyhow;
 use fehler::{throw, throws};
+#[cfg(feature = "src_bigquery")]
 use gcp_bigquery_client;
+#[cfg(feature = "src_mysql")]
 use r2d2_mysql::mysql::{prelude::Queryable, Opts, Pool, Row};
+#[cfg(feature = "src_sqlite")]
 use rusqlite::{types::Type, Connection};
+#[cfg(feature = "src_postgres")]
 use rust_decimal::{prelude::ToPrimitive, Decimal};
+#[cfg(feature = "src_postgres")]
 use rust_decimal_macros::dec;
-use sqlparser::dialect::{MsSqlDialect, MySqlDialect, PostgreSqlDialect, SQLiteDialect};
+#[cfg(feature = "src_mssql")]
+use sqlparser::dialect::MsSqlDialect;
+#[cfg(feature = "src_mysql")]
+use sqlparser::dialect::MySqlDialect;
+#[cfg(feature = "src_postgres")]
+use sqlparser::dialect::PostgreSqlDialect;
+#[cfg(feature = "src_sqlite")]
+use sqlparser::dialect::SQLiteDialect;
+#[cfg(feature = "src_mssql")]
 use tiberius::Client;
-use tokio::net::TcpStream;
-use tokio::runtime::Runtime;
+#[cfg(any(feature = "src_bigquery", feature = "src_mssql"))]
+use tokio::{net::TcpStream, runtime::Runtime};
+#[cfg(feature = "src_mssql")]
 use tokio_util::compat::TokioAsyncWriteCompatExt;
 use url::Url;
 
@@ -74,11 +88,17 @@ pub fn partition(part: &PartitionQuery, source_conn: &SourceConn) -> OutResult<V
 
 pub fn get_col_range(source_conn: &SourceConn, query: &str, col: &str) -> OutResult<(i64, i64)> {
     match source_conn.ty {
+        #[cfg(feature = "src_postgres")]
         SourceType::Postgres => pg_get_partition_range(&source_conn.conn, query, col),
+        #[cfg(feature = "src_sqlite")]
         SourceType::SQLite => sqlite_get_partition_range(&source_conn.conn, query, col),
+        #[cfg(feature = "src_mysql")]
         SourceType::MySQL => mysql_get_partition_range(&source_conn.conn, query, col),
+        #[cfg(feature = "src_mssql")]
         SourceType::MsSQL => mssql_get_partition_range(&source_conn.conn, query, col),
+        #[cfg(feature = "src_oracle")]
         SourceType::Oracle => oracle_get_partition_range(&source_conn.conn, query, col),
+        #[cfg(feature = "src_bigquery")]
         SourceType::BigQuery => bigquery_get_partition_range(&source_conn.conn, query, col),
         _ => unimplemented!("{:?} not implemented!", source_conn.ty),
     }
@@ -93,21 +113,27 @@ pub fn get_part_query(
     upper: i64,
 ) -> CXQuery<String> {
     let query = match source_conn.ty {
+        #[cfg(feature = "src_postgres")]
         SourceType::Postgres => {
             single_col_partition_query(query, col, lower, upper, &PostgreSqlDialect {})?
         }
+        #[cfg(feature = "src_sqlite")]
         SourceType::SQLite => {
             single_col_partition_query(query, col, lower, upper, &SQLiteDialect {})?
         }
+        #[cfg(feature = "src_mysql")]
         SourceType::MySQL => {
             single_col_partition_query(query, col, lower, upper, &MySqlDialect {})?
         }
+        #[cfg(feature = "src_mssql")]
         SourceType::MsSQL => {
             single_col_partition_query(query, col, lower, upper, &MsSqlDialect {})?
         }
+        #[cfg(feature = "src_oracle")]
         SourceType::Oracle => {
             single_col_partition_query(query, col, lower, upper, &OracleDialect {})?
         }
+        #[cfg(feature = "src_bigquery")]
         SourceType::BigQuery => {
             single_col_partition_query(query, col, lower, upper, &BigQueryDialect {})?
         }
@@ -116,6 +142,7 @@ pub fn get_part_query(
     CXQuery::Wrapped(query)
 }
 
+#[cfg(feature = "src_postgres")]
 #[throws(ConnectorXOutError)]
 fn pg_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
     let (config, tls) = rewrite_tls_args(conn)?;
@@ -169,6 +196,7 @@ fn pg_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
     (min_v, max_v)
 }
 
+#[cfg(feature = "src_sqlite")]
 #[throws(ConnectorXOutError)]
 fn sqlite_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
     let conn = Connection::open(conn.path())?;
@@ -219,6 +247,7 @@ fn sqlite_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) 
     (min_v, max_v)
 }
 
+#[cfg(feature = "src_mysql")]
 #[throws(ConnectorXOutError)]
 fn mysql_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
     let pool = Pool::new(Opts::from_url(conn.as_str()).map_err(MySQLSourceError::MySQLUrlError)?)?;
@@ -346,6 +375,7 @@ fn mysql_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
     (min_v, max_v)
 }
 
+#[cfg(feature = "src_mssql")]
 #[throws(ConnectorXOutError)]
 fn mssql_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
     let rt = Runtime::new().expect("Failed to create runtime");
@@ -409,6 +439,7 @@ fn mssql_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
     (min_v, max_v)
 }
 
+#[cfg(feature = "src_oracle")]
 #[throws(ConnectorXOutError)]
 fn oracle_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
     let connector = connect_oracle(conn)?;
@@ -420,6 +451,7 @@ fn oracle_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) 
     (min_v, max_v)
 }
 
+#[cfg(feature = "src_bigquery")]
 #[throws(ConnectorXOutError)] // TODO
 fn bigquery_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
     let rt = Runtime::new().expect("Failed to create runtime");

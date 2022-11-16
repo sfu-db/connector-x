@@ -28,7 +28,6 @@ pub enum ConnectorXOutError {
     #[error(transparent)]
     DataFusionError(#[from] datafusion::error::DataFusionError),
 
-    #[cfg(feature = "federation")]
     #[error(transparent)]
     UrlParseError(#[from] url::ParseError),
 
