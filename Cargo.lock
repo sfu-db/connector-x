@@ -795,11 +795,13 @@ dependencies = [
  "regex",
  "rusqlite",
  "rust_decimal",
+ "rust_decimal_macros",
  "serde_json",
  "sqlparser 0.11.0",
  "thiserror",
  "tiberius",
  "tokio",
+ "tokio-util 0.6.10",
  "url",
  "urlencoding",
  "uuid 0.8.2",
@@ -3552,6 +3554,16 @@ dependencies = [
  "num-traits",
  "postgres",
  "serde",
+]
+
+[[package]]
+name = "rust_decimal_macros"
+version = "1.26.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4903d8db81d2321699ca8318035d6ff805c548868df435813968795a802171b2"
+dependencies = [
+ "quote",
+ "rust_decimal",
 ]
 
 [[package]]

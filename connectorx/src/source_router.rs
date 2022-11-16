@@ -1,6 +1,7 @@
 use crate::constants::CONNECTORX_PROTOCOL;
 use crate::errors::{ConnectorXError, Result};
 use anyhow::anyhow;
+use fehler::throws;
 use std::convert::TryFrom;
 use url::Url;
 
@@ -68,4 +69,14 @@ impl SourceConn {
     pub fn set_protocol(&mut self, protocol: &str) {
         self.proto = protocol.to_string();
     }
+}
+
+#[throws(ConnectorXError)]
+pub fn parse_source(conn: &str, protocol: Option<&str>) -> SourceConn {
+    let mut source_conn = SourceConn::try_from(conn)?;
+    match protocol {
+        Some(p) => source_conn.set_protocol(p),
+        None => {}
+    }
+    source_conn
 }

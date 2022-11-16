@@ -1,7 +1,6 @@
-use crate::errors::{ConnectorXPythonError, Result};
-use anyhow::anyhow;
-use connectorx::source_router::{SourceConn, SourceType};
-use connectorx::{
+use crate::errors::{ConnectorXOutError, OutResult};
+use crate::source_router::{SourceConn, SourceType};
+use crate::{
     sources::{
         bigquery::BigQueryDialect,
         mssql::{mssql_config, FloatN, IntN, MsSQLTypeSystem},
@@ -14,6 +13,7 @@ use connectorx::{
         CXQuery,
     },
 };
+use anyhow::anyhow;
 use fehler::{throw, throws};
 use gcp_bigquery_client;
 use r2d2_mysql::mysql::{prelude::Queryable, Opts, Pool, Row};
@@ -21,24 +21,58 @@ use rusqlite::{types::Type, Connection};
 use rust_decimal::{prelude::ToPrimitive, Decimal};
 use rust_decimal_macros::dec;
 use sqlparser::dialect::{MsSqlDialect, MySqlDialect, PostgreSqlDialect, SQLiteDialect};
-use std::convert::TryFrom;
 use tiberius::Client;
 use tokio::net::TcpStream;
 use tokio::runtime::Runtime;
 use tokio_util::compat::TokioAsyncWriteCompatExt;
 use url::Url;
 
-#[throws(ConnectorXPythonError)]
-pub fn parse_source(conn: &str, protocol: Option<&str>) -> SourceConn {
-    let mut source_conn = SourceConn::try_from(conn)?;
-    match protocol {
-        Some(p) => source_conn.set_protocol(p),
-        None => {}
-    }
-    source_conn
+pub struct PartitionQuery {
+    query: String,
+    column: String,
+    min: Option<i64>,
+    max: Option<i64>,
+    num: usize,
 }
 
-pub fn get_col_range(source_conn: &SourceConn, query: &str, col: &str) -> Result<(i64, i64)> {
+impl PartitionQuery {
+    pub fn new(query: &str, column: &str, min: Option<i64>, max: Option<i64>, num: usize) -> Self {
+        Self {
+            query: query.into(),
+            column: column.into(),
+            min,
+            max,
+            num,
+        }
+    }
+}
+
+pub fn partition(part: &PartitionQuery, source_conn: &SourceConn) -> OutResult<Vec<CXQuery>> {
+    let mut queries = vec![];
+    let num = part.num as i64;
+    let (min, max) = match (part.min, part.max) {
+        (None, None) => get_col_range(source_conn, &part.query, &part.column)?,
+        (Some(min), Some(max)) => (min, max),
+        _ => throw!(anyhow!(
+            "partition_query range can not be partially specified",
+        )),
+    };
+
+    let partition_size = (max - min + 1) / num;
+
+    for i in 0..num {
+        let lower = min + i * partition_size;
+        let upper = match i == num - 1 {
+            true => max + 1,
+            false => min + (i + 1) * partition_size,
+        };
+        let partition_query = get_part_query(source_conn, &part.query, &part.column, lower, upper)?;
+        queries.push(partition_query);
+    }
+    Ok(queries)
+}
+
+pub fn get_col_range(source_conn: &SourceConn, query: &str, col: &str) -> OutResult<(i64, i64)> {
     match source_conn.ty {
         SourceType::Postgres => pg_get_partition_range(&source_conn.conn, query, col),
         SourceType::SQLite => sqlite_get_partition_range(&source_conn.conn, query, col),
@@ -50,7 +84,7 @@ pub fn get_col_range(source_conn: &SourceConn, query: &str, col: &str) -> Result
     }
 }
 
-#[throws(ConnectorXPythonError)]
+#[throws(ConnectorXOutError)]
 pub fn get_part_query(
     source_conn: &SourceConn,
     query: &str,
@@ -82,7 +116,7 @@ pub fn get_part_query(
     CXQuery::Wrapped(query)
 }
 
-#[throws(ConnectorXPythonError)]
+#[throws(ConnectorXOutError)]
 fn pg_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
     let (config, tls) = rewrite_tls_args(conn)?;
     let mut client = match tls {
@@ -135,7 +169,7 @@ fn pg_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
     (min_v, max_v)
 }
 
-#[throws(ConnectorXPythonError)]
+#[throws(ConnectorXOutError)]
 fn sqlite_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
     let conn = Connection::open(conn.path())?;
     // SQLite only optimize min max queries when there is only one aggregation
@@ -185,7 +219,7 @@ fn sqlite_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) 
     (min_v, max_v)
 }
 
-#[throws(ConnectorXPythonError)]
+#[throws(ConnectorXOutError)]
 fn mysql_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
     let pool = Pool::new(Opts::from_url(conn.as_str()).map_err(MySQLSourceError::MySQLUrlError)?)?;
     let mut conn = pool.get_conn()?;
@@ -312,7 +346,7 @@ fn mysql_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
     (min_v, max_v)
 }
 
-#[throws(ConnectorXPythonError)]
+#[throws(ConnectorXOutError)]
 fn mssql_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
     let rt = Runtime::new().expect("Failed to create runtime");
     let config = mssql_config(conn)?;
@@ -375,7 +409,7 @@ fn mssql_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
     (min_v, max_v)
 }
 
-#[throws(ConnectorXPythonError)]
+#[throws(ConnectorXOutError)]
 fn oracle_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
     let connector = connect_oracle(conn)?;
     let conn = connector.connect()?;
@@ -386,7 +420,7 @@ fn oracle_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) 
     (min_v, max_v)
 }
 
-#[throws(ConnectorXPythonError)] // TODO
+#[throws(ConnectorXOutError)] // TODO
 fn bigquery_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
     let rt = Runtime::new().expect("Failed to create runtime");
     let url = Url::parse(conn.as_str())?;

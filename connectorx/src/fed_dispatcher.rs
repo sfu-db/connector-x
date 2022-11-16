@@ -83,7 +83,6 @@ fn create_sources(jvm: &Jvm, db_map: &HashMap<String, FederatedDataSourceInfo>) 
             let source_conn = db_info.conn_str_info.as_ref().unwrap();
             let url = &source_conn.conn;
             debug!("url: {:?}", url);
-            println!("url: {:?}", url);
             let ds = match source_conn.ty {
                 SourceType::Postgres => jvm.invoke_static(
                     "org.apache.calcite.adapter.jdbc.JdbcSchema",
@@ -188,7 +187,6 @@ pub fn rewrite_sql(
 ) -> Vec<Plan> {
     let jvm = init_jvm(j4rs_base)?;
     debug!("init jvm successfully!");
-    println!("init jvm successfully!");
 
     let sql = InvocationArg::try_from(sql).unwrap();
     let data_sources = create_sources(&jvm, db_map)?;
@@ -199,7 +197,6 @@ pub fn rewrite_sql(
     let count = jvm.invoke(&plan, "getCount", &[])?;
     let count: i32 = jvm.to_rust(count)?;
     debug!("rewrite finished, got {} queries", count);
-    println!("rewrite finished, got {} queries", count);
 
     let mut fed_plan = vec![];
     for i in 0..count {

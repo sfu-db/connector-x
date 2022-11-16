@@ -22,7 +22,6 @@ connectorx = {path = "../connectorx", default-features = false}
 dict_derive = "0.4"
 env_logger = "0.9"
 fehler = "1"
-gcp-bigquery-client = {version = "0.13.0"}
 itertools = "0.10"
 lazy_static = "1.4.0"
 libc = "0.2"
@@ -35,15 +34,10 @@ postgres-native-tls = {version = "0.5"}
 postgres-openssl = {version = "0.5.0"}
 pyo3 = {version = "0.14", default-features = false, features = ["macros"]}
 pyo3-built = "0.4"
-r2d2-oracle = {version = "0.5.0", features = ["chrono"]}
-r2d2_mysql = {version = "21.0"}
-rusqlite = {version = "0.25", features = ["column_decltype", "chrono", "bundled"]}
 rust_decimal = {version = "1", features = ["db-postgres"]}
-rust_decimal_macros = "1"
 serde_json = "1"
 sqlparser = "0.11"
 thiserror = "1"
-tiberius = "0.5"
 tokio = {version = "1", features = ["rt", "rt-multi-thread", "net"]}
 tokio-util = "0.6"
 url = "2"

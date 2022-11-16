@@ -157,6 +157,7 @@ pub mod fed_dispatcher;
 pub mod get_arrow;
 #[cfg(feature = "dst_arrow2")]
 pub mod get_arrow2;
+pub mod partition;
 pub mod source_router;
 pub mod sources;
 #[doc(hidden)]
