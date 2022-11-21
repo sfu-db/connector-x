@@ -77,7 +77,7 @@ pub unsafe extern "C" fn connectorx_rewrite(
             let table_slice = unsafe { std::slice::from_raw_parts(p.schema.ptr, p.schema.len) };
             for t in table_slice {
                 let table_name = unsafe { CStr::from_ptr(t.name) }.to_str().unwrap();
-                println!("raw table name: {:?}", table_name);
+                // println!("raw table name: {:?}", table_name);
                 let column_slice =
                     unsafe { std::slice::from_raw_parts(t.columns.ptr, t.columns.len) };
 
@@ -93,7 +93,7 @@ pub unsafe extern "C" fn connectorx_rewrite(
             db_map.insert(name.to_string(), source_info);
         } else {
             let conn = unsafe { CStr::from_ptr(p.conn) }.to_str().unwrap();
-            println!("name: {:?}, conn: {:?}", name, conn);
+            // println!("name: {:?}, conn: {:?}", name, conn);
             let source_info = FederatedDataSourceInfo::new_from_conn_str(
                 SourceConn::try_from(conn).unwrap(),
                 p.is_local,
@@ -107,7 +107,7 @@ pub unsafe extern "C" fn connectorx_rewrite(
         Ok(val) => Some(val),
         Err(_) => None,
     };
-    println!("j4rs_base: {:?}", j4rs_base);
+    // println!("j4rs_base: {:?}", j4rs_base);
     let fed_plan: Vec<CXFederatedPlan> = rewrite_sql(query_str, &db_map, j4rs_base.as_deref())
         .unwrap()
         .into_iter()
