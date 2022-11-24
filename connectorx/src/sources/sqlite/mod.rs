@@ -90,7 +90,7 @@ where
             let l1query = limit1_query(query, &SQLiteDialect {})?;
 
             let is_sucess = conn.query_row(l1query.as_str(), [], |row| {
-                for (j, col) in row.columns().iter().enumerate() {
+                for (j, col) in row.as_ref().columns().iter().enumerate() {
                     if j >= names.len() {
                         names.push(col.name().to_string());
                     }
@@ -142,14 +142,15 @@ where
         }
 
         // tried all queries but all get empty result set
-        let mut stmt = conn.prepare(self.queries[0].as_str())?;
-        let rows = stmt.query([])?;
+        let stmt = conn.prepare(self.queries[0].as_str())?;
 
-        if let Some(cnames) = rows.column_names() {
-            self.names = cnames.into_iter().map(|s| s.to_string()).collect();
-            // set all columns as string (align with pandas)
-            self.schema = vec![SQLiteTypeSystem::Text(false); self.names.len()];
-        }
+        self.names = stmt
+            .column_names()
+            .into_iter()
+            .map(|s| s.to_string())
+            .collect();
+        // set all columns as string (align with pandas)
+        self.schema = vec![SQLiteTypeSystem::Text(false); self.names.len()];
     }
 
     #[throws(SQLiteSourceError)]
