@@ -355,12 +355,22 @@
 <span id="355">355</span>
 <span id="356">356</span>
 <span id="357">357</span>
+<span id="358">358</span>
+<span id="359">359</span>
+<span id="360">360</span>
+<span id="361">361</span>
+<span id="362">362</span>
+<span id="363">363</span>
+<span id="364">364</span>
+<span id="365">365</span>
+<span id="366">366</span>
+<span id="367">367</span>
 </pre><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::errors::{ArrowDestinationError, <span class="prelude-ty">Result</span>};
 <span class="kw">use </span><span class="kw">crate</span>::constants::SECONDS_IN_DAY;
 <span class="kw">use </span>arrow::array::{
     ArrayBuilder, BooleanBuilder, Date32Builder, Date64Builder, Float32Builder, Float64Builder,
     Int32Builder, Int64Builder, LargeBinaryBuilder, StringBuilder, Time64NanosecondBuilder,
-    UInt32Builder, UInt64Builder,
+    TimestampNanosecondBuilder, UInt32Builder, UInt64Builder,
 };
 <span class="kw">use </span>arrow::datatypes::Field;
 <span class="kw">use </span>arrow::datatypes::{DataType <span class="kw">as </span>ArrowDataType, TimeUnit};
@@ -497,34 +507,44 @@
 }
 
 <span class="kw">impl </span>ArrowAssoc <span class="kw">for </span>DateTime&lt;Utc&gt; {
-    <span class="kw">type </span>Builder = Float64Builder;
+    <span class="kw">type </span>Builder = TimestampNanosecondBuilder;
 
-    <span class="kw">fn </span>builder(_nrows: usize) -&gt; Float64Builder {
-        <span class="macro">unimplemented!</span>()
+    <span class="kw">fn </span>builder(nrows: usize) -&gt; <span class="self">Self</span>::Builder {
+        TimestampNanosecondBuilder::with_capacity(nrows)
     }
 
-    <span class="kw">fn </span>append(_builder: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Builder, _value: DateTime&lt;Utc&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="macro">unimplemented!</span>()
+    <span class="attribute">#[throws(ArrowDestinationError)]
+    </span><span class="kw">fn </span>append(builder: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Builder, value: DateTime&lt;Utc&gt;) {
+        builder.append_value(value.timestamp_nanos())
     }
 
-    <span class="kw">fn </span>field(_header: <span class="kw-2">&amp;</span>str) -&gt; Field {
-        <span class="macro">unimplemented!</span>()
+    <span class="kw">fn </span>field(header: <span class="kw-2">&amp;</span>str) -&gt; Field {
+        Field::new(
+            header,
+            ArrowDataType::Timestamp(TimeUnit::Nanosecond, <span class="prelude-val">None</span>),
+            <span class="bool-val">true</span>,
+        )
     }
 }
 
 <span class="kw">impl </span>ArrowAssoc <span class="kw">for </span><span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt; {
-    <span class="kw">type </span>Builder = Float64Builder;
+    <span class="kw">type </span>Builder = TimestampNanosecondBuilder;
 
-    <span class="kw">fn </span>builder(_nrows: usize) -&gt; Float64Builder {
-        <span class="macro">unimplemented!</span>()
+    <span class="kw">fn </span>builder(nrows: usize) -&gt; <span class="self">Self</span>::Builder {
+        TimestampNanosecondBuilder::with_capacity(nrows)
     }
 
-    <span class="kw">fn </span>append(_builder: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Builder, _value: <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="macro">unimplemented!</span>()
+    <span class="attribute">#[throws(ArrowDestinationError)]
+    </span><span class="kw">fn </span>append(builder: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Builder, value: <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;) {
+        builder.append_option(value.map(|x| x.timestamp_nanos()))
     }
 
-    <span class="kw">fn </span>field(_header: <span class="kw-2">&amp;</span>str) -&gt; Field {
-        <span class="macro">unimplemented!</span>()
+    <span class="kw">fn </span>field(header: <span class="kw-2">&amp;</span>str) -&gt; Field {
+        Field::new(
+            header,
+            ArrowDataType::Timestamp(TimeUnit::Nanosecond, <span class="prelude-val">None</span>),
+            <span class="bool-val">false</span>,
+        )
     }
 }
 

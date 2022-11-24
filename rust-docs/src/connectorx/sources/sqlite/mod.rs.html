@@ -354,6 +354,7 @@
 <span id="354">354</span>
 <span id="355">355</span>
 <span id="356">356</span>
+<span id="357">357</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Source implementation for SQLite embedded database.
 
 </span><span class="kw">mod </span>errors;
@@ -446,7 +447,7 @@
             <span class="kw">let </span>l1query = limit1_query(query, <span class="kw-2">&amp;</span>SQLiteDialect {})<span class="question-mark">?</span>;
 
             <span class="kw">let </span>is_sucess = conn.query_row(l1query.as_str(), [], |row| {
-                <span class="kw">for </span>(j, col) <span class="kw">in </span>row.columns().iter().enumerate() {
+                <span class="kw">for </span>(j, col) <span class="kw">in </span>row.as_ref().columns().iter().enumerate() {
                     <span class="kw">if </span>j &gt;= names.len() {
                         names.push(col.name().to_string());
                     }
@@ -498,14 +499,15 @@
         }
 
         <span class="comment">// tried all queries but all get empty result set
-        </span><span class="kw">let </span><span class="kw-2">mut </span>stmt = conn.prepare(<span class="self">self</span>.queries[<span class="number">0</span>].as_str())<span class="question-mark">?</span>;
-        <span class="kw">let </span>rows = stmt.query([])<span class="question-mark">?</span>;
+        </span><span class="kw">let </span>stmt = conn.prepare(<span class="self">self</span>.queries[<span class="number">0</span>].as_str())<span class="question-mark">?</span>;
 
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(cnames) = rows.column_names() {
-            <span class="self">self</span>.names = cnames.into_iter().map(|s| s.to_string()).collect();
-            <span class="comment">// set all columns as string (align with pandas)
-            </span><span class="self">self</span>.schema = <span class="macro">vec!</span>[SQLiteTypeSystem::Text(<span class="bool-val">false</span>); <span class="self">self</span>.names.len()];
-        }
+        <span class="self">self</span>.names = stmt
+            .column_names()
+            .into_iter()
+            .map(|s| s.to_string())
+            .collect();
+        <span class="comment">// set all columns as string (align with pandas)
+        </span><span class="self">self</span>.schema = <span class="macro">vec!</span>[SQLiteTypeSystem::Text(<span class="bool-val">false</span>); <span class="self">self</span>.names.len()];
     }
 
     <span class="attribute">#[throws(SQLiteSourceError)]
