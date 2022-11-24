@@ -118,6 +118,7 @@
 <span id="118">118</span>
 <span id="119">119</span>
 <span id="120">120</span>
+<span id="121">121</span>
 </pre><pre class="rust"><code><span class="kw">use </span>chrono::{NaiveDate, NaiveDateTime, NaiveTime};
 <span class="kw">use </span>r2d2_mysql::mysql::consts::{ColumnFlags, ColumnType};
 <span class="kw">use </span>rust_decimal::Decimal;
@@ -223,6 +224,7 @@
             ColumnType::MYSQL_TYPE_DATETIME =&gt; Datetime(null_ok),
             ColumnType::MYSQL_TYPE_DATE =&gt; Date(null_ok),
             ColumnType::MYSQL_TYPE_TIME =&gt; Time(null_ok),
+            ColumnType::MYSQL_TYPE_DECIMAL =&gt; Decimal(null_ok),
             ColumnType::MYSQL_TYPE_NEWDECIMAL =&gt; Decimal(null_ok),
             ColumnType::MYSQL_TYPE_STRING =&gt; Char(null_ok),
             ColumnType::MYSQL_TYPE_VAR_STRING =&gt; VarChar(null_ok),
