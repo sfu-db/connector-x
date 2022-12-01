@@ -28,10 +28,13 @@ pub const J4RS_BASE_PATH: &str = "../target/debug";
 pub const CX_REWRITER_PATH: &str =
     "../connectorx-python/connectorx/dependencies/federated-rewriter.jar";
 
-#[cfg(any(feature = "federation", feature = "src_postgres"))]
+#[cfg(feature = "federation")]
 pub const POSTGRES_JDBC_DRIVER: &str = "org.postgresql.Driver";
 
-#[cfg(any(feature = "federation", feature = "src_mysql"))]
+#[cfg(feature = "federation")]
 pub const MYSQL_JDBC_DRIVER: &str = "com.mysql.cj.jdbc.Driver";
+
+#[cfg(feature = "federation")]
+pub const DUCKDB_JDBC_DRIVER: &str = "org.duckdb.DuckDBDriver";
 
 pub const CONNECTORX_PROTOCOL: &str = "cxprotocol";

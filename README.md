@@ -66,7 +66,7 @@ We compared different solutions in Python that provides the `read_sql` function,
 
 In conclusion, ConnectorX uses up to **3x** less memory and **21x** less time (**3x** less memory and **13x** less time compared with Pandas.). More on [here](https://github.com/sfu-db/connector-x/blob/main/Benchmark.md#benchmark-result-on-aws-r54xlarge).
 
-## How does ConnectorX achieve a lightening speed while keeping the memory footprint low?
+## How does ConnectorX achieve a lightning speed while keeping the memory footprint low?
 
 We observe that existing solutions more or less do data copy multiple times when downloading the data.
 Additionally, implementing a data intensive application in Python brings additional cost.
@@ -145,3 +145,24 @@ You are always welcomed to:
 [<img src="https://github.com/modin-project/modin/blob/3d6368edf311995ad231ec5342a51cd9e4e3dc20/docs/img/MODIN_ver2_hrz.png?raw=true" height="60" style="margin-bottom: -2px"/>](https://modin.readthedocs.io)
 
 To add your project/organization here, reply our post [here](https://github.com/sfu-db/connector-x/discussions/146)
+
+# Citing ConnectorX
+
+If you use ConnectorX, please consider citing the following paper:
+
+Xiaoying Wang, Weiyuan Wu, Jinze Wu, Yizhou Chen, Nick Zrymiak, Changbo Qu, Lampros Flokas, George Chow, Jiannan Wang, Tianzheng Wang, Eugene Wu, Qingqing Zhou. [ConnectorX: Accelerating Data Loading From Databases to Dataframes.](https://www.vldb.org/pvldb/vol15/p2994-wang.pdf) _VLDB 2022_.
+
+BibTeX entry:
+
+```bibtex
+@article{connectorx2022,
+  author    = {Xiaoying Wang and Weiyuan Wu and Jinze Wu and Yizhou Chen and Nick Zrymiak and Changbo Qu and Lampros Flokas and George Chow and Jiannan Wang and Tianzheng Wang and Eugene Wu and Qingqing Zhou},
+  title     = {ConnectorX: Accelerating Data Loading From Databases to Dataframes},
+  journal   = {Proc. {VLDB} Endow.},
+  volume    = {15},
+  number    = {11},
+  pages     = {2994--3003},
+  year      = {2022},
+  url       = {https://www.vldb.org/pvldb/vol15/p2994-wang.pdf},
+}
+```

@@ -17,3 +17,4 @@ dist
 benchmark.json
 docs/_build
 connectorx/examples/test.rs
+*.duckdb

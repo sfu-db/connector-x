@@ -1,6 +1,5 @@
 use pyo3::exceptions::PyRuntimeError;
 use pyo3::PyErr;
-use std::string::FromUtf8Error;
 use thiserror::Error;
 
 #[allow(unused)]
@@ -15,30 +14,6 @@ pub enum ConnectorXPythonError {
 
     #[error("Python: {0}.")]
     PythonError(String),
-
-    #[error(transparent)]
-    IOError(#[from] std::io::Error),
-
-    #[error(transparent)]
-    MsSQL(#[from] tiberius::error::Error),
-
-    #[error(transparent)]
-    UrlParseError(#[from] url::ParseError),
-
-    #[error(transparent)]
-    MysqlError(#[from] r2d2_mysql::mysql::Error),
-
-    #[error(transparent)]
-    SQLiteError(#[from] rusqlite::Error),
-
-    #[error(transparent)]
-    PostgresError(#[from] postgres::Error),
-
-    #[error(transparent)]
-    OracleError(#[from] r2d2_oracle::oracle::Error),
-
-    #[error(transparent)]
-    BQError(#[from] gcp_bigquery_client::error::BQError),
 
     #[error(transparent)]
     NdArrayShapeError(#[from] ndarray::ShapeError),
@@ -72,12 +47,6 @@ pub enum ConnectorXPythonError {
 
     #[error(transparent)]
     Arrow2DestinationError(#[from] connectorx::destinations::arrow2::Arrow2DestinationError),
-
-    #[error(transparent)]
-    UrlDecodeError(#[from] FromUtf8Error),
-
-    #[error(transparent)]
-    JsonError(#[from] serde_json::Error),
 
     /// Any other errors that are too trivial to be put here explicitly.
     #[error(transparent)]

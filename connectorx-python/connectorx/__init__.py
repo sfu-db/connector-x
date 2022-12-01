@@ -109,6 +109,46 @@ def partition_sql(
     return _partition_sql(conn, partition_query)
 
 
+def read_sql_pandas(
+    sql: Union[List[str], str],
+    con: Union[str, Dict[str, str]],
+    index_col: Optional[str] = None,
+    protocol: Optional[str] = None,
+    partition_on: Optional[str] = None,
+    partition_range: Optional[Tuple[int, int]] = None,
+    partition_num: Optional[int] = None,
+):
+    """
+    Run the SQL query, download the data from database into a dataframe.
+    First several parameters are in the same name and order with `pandas.read_sql`.
+
+    Parameters
+    ==========
+    Please refer to `read_sql`
+
+    Examples
+    ========
+    Read a DataFrame from a SQL query using a single thread:
+
+    >>> # from pandas import read_sql
+    >>> from connectorx import read_sql_pandas as read_sql
+    >>> postgres_url = "postgresql://username:password@server:port/database"
+    >>> query = "SELECT * FROM lineitem"
+    >>> read_sql(query, postgres_url)
+
+    """
+    return read_sql(
+        con,
+        sql,
+        return_type="pandas",
+        protocol=protocol,
+        partition_on=partition_on,
+        partition_range=partition_range,
+        partition_num=partition_num,
+        index_col=index_col,
+    )
+
+
 def read_sql(
     conn: Union[str, Dict[str, str]],
     query: Union[List[str], str],
@@ -130,7 +170,7 @@ def read_sql(
     query
       a SQL query or a list of SQL queries.
     return_type
-      the return type of this function; one of "arrow", "pandas", "modin", "dask" or "polars".
+      the return type of this function; one of "arrow(2)", "pandas", "modin", "dask" or "polars(2)".
     protocol
       backend-specific transfer protocol directive; defaults to 'binary' (except for redshift
       connection strings, where 'cursor' will be used instead).
@@ -185,10 +225,10 @@ def read_sql(
                 raise ValueError("You need to install polars first")
 
             try:
-                df = pl.DataFrame.from_arrow(df)
-            except AttributeError:
                 # api change for polars >= 0.8.*
                 df = pl.from_arrow(df)
+            except AttributeError:
+                df = pl.DataFrame.from_arrow(df)
         return df
 
     if isinstance(query, str):
@@ -256,7 +296,7 @@ def read_sql(
 
         result = _read_sql(
             conn,
-            "arrow" if return_type in {"arrow", "polars"} else "arrow2",
+            "arrow2" if return_type in {"arrow2", "polars", "polars2"} else "arrow",
             queries=queries,
             protocol=protocol,
             partition_query=partition_query,

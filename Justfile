@@ -1,10 +1,16 @@
 set dotenv-load := true
 
 build-release:
-    cargo build  --release
+    cargo build --release --features all
 
 build-debug:
-    cargo build
+    cargo build --features all
+
+build-cpp:
+    cd connectorx-cpp && cargo build
+
+build-cpp-release:
+    cd connectorx-cpp && cargo build --release
 
 test +ARGS="": 
     cargo test --features all {{ARGS}} -- --nocapture

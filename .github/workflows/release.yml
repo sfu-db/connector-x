@@ -12,7 +12,8 @@ jobs:
     container: quay.io/pypa/manylinux2014_x86_64
     strategy:
       matrix:
-        python-version: [[37, "3.7"], [38, "3.8"], [39, "3.9"], [310, "3.10"]]
+        # python-version: [[37, "3.7"], [38, "3.8"], [39, "3.9"], [310, "3.10"], [311, "3.11"]]
+        python-version: [[311, "3.11"]]
     steps:
       - uses: actions/checkout@v2
 
@@ -26,7 +27,7 @@ jobs:
 
       - uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly-2022-09-15
+          toolchain: 1.65.0
           components: rustfmt
           target: aarch64-unknown-linux-gnu
           default: true
@@ -47,7 +48,7 @@ jobs:
 
       - uses: messense/maturin-action@v1
         with:
-          rust-toolchain: nightly-2022-09-15
+          rust-toolchain: 1.65.0
           maturin-version: v0.12.1
           command: build
           args: -m connectorx-python/Cargo.toml -i python --no-sdist --release --manylinux 2014
@@ -61,7 +62,7 @@ jobs:
       # rebuild the wheel to incorporate j4rs dependencies
       - uses: messense/maturin-action@v1
         with:
-          rust-toolchain: nightly-2022-09-15
+          rust-toolchain: 1.65.0
           maturin-version: v0.12.1
           command: build
           args: -m connectorx-python/Cargo.toml -i python --no-sdist --release --manylinux 2014
@@ -86,7 +87,8 @@ jobs:
     strategy:
       matrix:
         os: ["windows-latest", "macos-10.15"]
-        python-version: ["3.7", "3.8", "3.9", "3.10"]
+        # python-version: ["3.7", "3.8", "3.9", "3.10"]
+        python-version: ["3.11"]
     steps:
       - uses: actions/checkout@v2
 
@@ -101,7 +103,7 @@ jobs:
 
       - uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly-2022-09-15
+          toolchain: 1.65.0
           components: rustfmt
           default: true
 
@@ -117,7 +119,7 @@ jobs:
 
       - uses: messense/maturin-action@v1
         with:
-          rust-toolchain: nightly-2022-09-15
+          rust-toolchain: 1.65.0
           maturin-version: v0.12.1
           command: build
           args: -m connectorx-python/Cargo.toml -i python --no-sdist --release
@@ -131,7 +133,7 @@ jobs:
       # rebuild the wheel to incorporate j4rs dependencies
       - uses: messense/maturin-action@v1
         with:
-          rust-toolchain: nightly-2022-09-15
+          rust-toolchain: 1.65.0
           maturin-version: v0.12.1
           command: build
           args: -m connectorx-python/Cargo.toml -i python --no-sdist --release
@@ -147,7 +149,8 @@ jobs:
     runs-on: macos-latest
     strategy:
       matrix:
-        python-version: ["3.7", "3.8", "3.9", "3.10"]
+        # python-version: ["3.7", "3.8", "3.9", "3.10"]
+        python-version: ["3.11"]
     steps:
       - uses: actions/checkout@v2
 
@@ -161,7 +164,7 @@ jobs:
 
       - uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly-2022-09-15
+          toolchain: 1.65.0
           components: rustfmt
           target: aarch64-apple-darwin
           default: true
@@ -178,7 +181,7 @@ jobs:
 
       - uses: messense/maturin-action@v1
         with:
-          rust-toolchain: nightly-2022-09-15
+          rust-toolchain: 1.65.0
           maturin-version: v0.12.1
           command: build
           args: -m connectorx-python/Cargo.toml --target aarch64-apple-darwin -i python --no-sdist --release
@@ -192,7 +195,7 @@ jobs:
       # rebuild the wheel to incorporate j4rs dependencies
       - uses: messense/maturin-action@v1
         with:
-          rust-toolchain: nightly-2022-09-15
+          rust-toolchain: 1.65.0
           maturin-version: v0.12.1
           command: build
           args: -m connectorx-python/Cargo.toml --target aarch64-apple-darwin -i python --no-sdist --release
@@ -209,7 +212,8 @@ jobs:
     needs: [win-and-mac, linux, apple-arm]
     strategy:
       matrix:
-        python-version: ["3.7", "3.8", "3.9", "3.10"]
+        # python-version: ["3.7", "3.8", "3.9", "3.10"]
+        python-version: ["3.11"]
         os: [macos-10.15, ubuntu-latest, windows-latest]
     steps:
       - uses: actions/checkout@v2

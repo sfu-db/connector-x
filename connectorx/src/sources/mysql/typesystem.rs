@@ -103,6 +103,7 @@ impl<'a> From<(&'a ColumnType, &'a ColumnFlags)> for MySQLTypeSystem {
             ColumnType::MYSQL_TYPE_DATETIME => Datetime(null_ok),
             ColumnType::MYSQL_TYPE_DATE => Date(null_ok),
             ColumnType::MYSQL_TYPE_TIME => Time(null_ok),
+            ColumnType::MYSQL_TYPE_DECIMAL => Decimal(null_ok),
             ColumnType::MYSQL_TYPE_NEWDECIMAL => Decimal(null_ok),
             ColumnType::MYSQL_TYPE_STRING => Char(null_ok),
             ColumnType::MYSQL_TYPE_VAR_STRING => VarChar(null_ok),

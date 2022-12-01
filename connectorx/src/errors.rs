@@ -14,6 +14,12 @@ pub enum ConnectorXOutError {
     #[error("Source {0} not supported.")]
     SourceNotSupport(String),
 
+    #[error(transparent)]
+    IOError(#[from] std::io::Error),
+
+    #[error(transparent)]
+    JsonError(#[from] serde_json::Error),
+
     #[cfg(feature = "federation")]
     #[error(transparent)]
     J4RSError(#[from] j4rs::errors::J4RsError),
@@ -22,7 +28,6 @@ pub enum ConnectorXOutError {
     #[error(transparent)]
     DataFusionError(#[from] datafusion::error::DataFusionError),
 
-    #[cfg(feature = "federation")]
     #[error(transparent)]
     UrlParseError(#[from] url::ParseError),
 
@@ -31,27 +36,51 @@ pub enum ConnectorXOutError {
 
     #[cfg(feature = "src_postgres")]
     #[error(transparent)]
-    PostgresError(#[from] crate::sources::postgres::PostgresSourceError),
+    PostgresSourceError(#[from] crate::sources::postgres::PostgresSourceError),
+
+    #[cfg(feature = "src_postgres")]
+    #[error(transparent)]
+    PostgresError(#[from] postgres::Error),
 
     #[cfg(feature = "src_mysql")]
     #[error(transparent)]
-    MySQLError(#[from] crate::sources::mysql::MySQLSourceError),
+    MySQLSourceError(#[from] crate::sources::mysql::MySQLSourceError),
+
+    #[cfg(feature = "src_mysql")]
+    #[error(transparent)]
+    MysqlError(#[from] r2d2_mysql::mysql::Error),
 
     #[cfg(feature = "src_mssql")]
     #[error(transparent)]
     MsSQLSourceError(#[from] crate::sources::mssql::MsSQLSourceError),
 
+    #[cfg(feature = "src_mssql")]
+    #[error(transparent)]
+    MsSQL(#[from] tiberius::error::Error),
+
     #[cfg(feature = "src_sqlite")]
     #[error(transparent)]
     SQLiteSourceError(#[from] crate::sources::sqlite::SQLiteSourceError),
+
+    #[cfg(feature = "src_sqlite")]
+    #[error(transparent)]
+    SQLiteError(#[from] rusqlite::Error),
 
     #[cfg(feature = "src_oracle")]
     #[error(transparent)]
     OracleSourceError(#[from] crate::sources::oracle::OracleSourceError),
 
+    #[cfg(feature = "src_oracle")]
+    #[error(transparent)]
+    OracleError(#[from] r2d2_oracle::oracle::Error),
+
     #[cfg(feature = "src_bigquery")]
     #[error(transparent)]
     BigQuerySourceError(#[from] crate::sources::bigquery::BigQuerySourceError),
+
+    #[cfg(feature = "src_bigquery")]
+    #[error(transparent)]
+    BigQueryError(#[from] gcp_bigquery_client::error::BQError),
 
     #[cfg(feature = "dst_arrow")]
     #[error(transparent)]
@@ -108,6 +137,10 @@ pub enum ConnectorXOutError {
     #[cfg(all(feature = "src_bigquery", feature = "dst_arrow2"))]
     #[error(transparent)]
     BigqueryArrow2TransportError(#[from] crate::transports::BigQueryArrow2TransportError),
+
+    /// Any other errors that are too trivial to be put here explicitly.
+    #[error(transparent)]
+    Other(#[from] anyhow::Error),
 }
 
 /// Errors that can be raised from this library.

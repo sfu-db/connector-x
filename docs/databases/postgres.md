@@ -41,7 +41,9 @@ cx.read_sql(conn, query)                                        # read data from
 | JSON            | object                    |                                    |
 | JSONB           | object                    |                                    |
 | ENUM            | object                    | need to convert enum column to text manually (`::text`) when using `csv` and `cursor` protocol |
-| ltree           | object                    |                                    |
+| ltree           | object                    | binary protocol supported only after Postgres version 13 |
+| lquery          | object                    | binary protocol supported only after Postgres version 13 |
+| ltxtquery       | object                    | binary protocol supported only after Postgres version 13 |
 | INT2[]          | object                    | list of i64                        |
 | INT4[]          | object                    | list of i64                        |
 | INT8[]          | object                    | list of i64                        |

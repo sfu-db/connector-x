@@ -5,7 +5,7 @@ use crate::destinations::arrow::{
 };
 use crate::sources::postgres::{
     BinaryProtocol, CSVProtocol, CursorProtocol, PostgresSource, PostgresSourceError,
-    PostgresTypeSystem,
+    PostgresTypeSystem, SimpleProtocol,
 };
 use crate::typesystem::TypeConversion;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
@@ -13,6 +13,7 @@ use num_traits::ToPrimitive;
 use postgres::NoTls;
 use postgres_openssl::MakeTlsConnector;
 use rust_decimal::Decimal;
+use serde_json::Value;
 use std::marker::PhantomData;
 use thiserror::Error;
 use uuid::Uuid;
@@ -57,6 +58,8 @@ macro_rules! impl_postgres_transport {
                 { UUID[Uuid]                 => LargeUtf8[String]         | conversion option }
                 { Char[&'r str]              => LargeUtf8[String]         | conversion none }
                 { ByteA[Vec<u8>]             => LargeBinary[Vec<u8>]      | conversion auto }
+                { JSON[Value]                => LargeUtf8[String]         | conversion option }
+                { JSONB[Value]               => LargeUtf8[String]         | conversion none }
             }
         );
     }
@@ -68,6 +71,8 @@ impl_postgres_transport!(CSVProtocol, NoTls);
 impl_postgres_transport!(CSVProtocol, MakeTlsConnector);
 impl_postgres_transport!(CursorProtocol, NoTls);
 impl_postgres_transport!(CursorProtocol, MakeTlsConnector);
+impl_postgres_transport!(SimpleProtocol, NoTls);
+impl_postgres_transport!(SimpleProtocol, MakeTlsConnector);
 
 impl<P, C> TypeConversion<Uuid, String> for PostgresArrowTransport<P, C> {
     fn convert(val: Uuid) -> String {
@@ -79,5 +84,11 @@ impl<P, C> TypeConversion<Decimal, f64> for PostgresArrowTransport<P, C> {
     fn convert(val: Decimal) -> f64 {
         val.to_f64()
             .unwrap_or_else(|| panic!("cannot convert decimal {:?} to float64", val))
+    }
+}
+
+impl<P, C> TypeConversion<Value, String> for PostgresArrowTransport<P, C> {
+    fn convert(val: Value) -> String {
+        val.to_string()
     }
 }
