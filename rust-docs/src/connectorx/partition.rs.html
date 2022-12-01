@@ -480,6 +480,7 @@
 <span id="480">480</span>
 <span id="481">481</span>
 <span id="482">482</span>
+<span id="483">483</span>
 </pre><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::errors::{ConnectorXOutError, OutResult};
 <span class="kw">use </span><span class="kw">crate</span>::source_router::{SourceConn, SourceType};
 <span class="attribute">#[cfg(feature = <span class="string">&quot;src_bigquery&quot;</span>)]
@@ -681,7 +682,8 @@
 <span class="attribute">#[cfg(feature = <span class="string">&quot;src_sqlite&quot;</span>)]
 #[throws(ConnectorXOutError)]
 </span><span class="kw">fn </span>sqlite_get_partition_range(conn: <span class="kw-2">&amp;</span>Url, query: <span class="kw-2">&amp;</span>str, col: <span class="kw-2">&amp;</span>str) -&gt; (i64, i64) {
-    <span class="kw">let </span>conn = Connection::open(conn.path())<span class="question-mark">?</span>;
+    <span class="comment">// remove the first &quot;sqlite://&quot; manually since url.path is not correct for windows and for relative path
+    </span><span class="kw">let </span>conn = Connection::open(<span class="kw-2">&amp;</span>conn.as_str()[<span class="number">9</span>..])<span class="question-mark">?</span>;
     <span class="comment">// SQLite only optimize min max queries when there is only one aggregation
     // https://www.sqlite.org/optoverview.html#minmax
     </span><span class="kw">let </span>(min_query, max_query) = get_partition_range_query_sep(query, col, <span class="kw-2">&amp;</span>SQLiteDialect {})<span class="question-mark">?</span>;
