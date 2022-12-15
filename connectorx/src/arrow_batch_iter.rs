@@ -19,6 +19,7 @@ where
 {
     dst: ArrowDestination,
     dst_parts: Vec<ArrowPartitionWriter>,
+    src_parts: Option<Vec<S::Partition>>,
     src_parsers: Vec<SourceParserHandle<'a, S>>,
     dorder: DataOrder,
     src_schema: Vec<S::TypeSystem>,
@@ -42,19 +43,11 @@ where
         let dispatcher = Dispatcher::<_, _, TP>::new(src, &mut dst, queries, origin_query);
         let (dorder, src_parts, dst_parts, src_schema, dst_schema) = dispatcher.prepare()?;
 
-        let src_parsers: Vec<_> = src_parts
-            .into_iter()
-            .map(|part| {
-                OwningHandle::new_with_fn(Box::new(part), |part: *const S::Partition| unsafe {
-                    DummyBox((*(part as *mut S::Partition)).parser().unwrap())
-                })
-            })
-            .collect();
-
         Ok(Self {
             dst,
             dst_parts,
-            src_parsers,
+            src_parts: Some(src_parts),
+            src_parsers: vec![],
             dorder,
             src_schema,
             dst_schema,
@@ -178,6 +171,7 @@ where
 
 pub trait RecordBatchIterator {
     fn get_schema(&self) -> (RecordBatch, &[String]);
+    fn prepare(&mut self);
     fn next_batch(&mut self) -> Option<RecordBatch>;
 }
 
@@ -188,6 +182,18 @@ where
 {
     fn get_schema(&self) -> (RecordBatch, &[String]) {
         (self.dst.empty_batch(), self.dst.names())
+    }
+
+    fn prepare(&mut self) {
+        let src_parts = self.src_parts.take().unwrap();
+        self.src_parsers = src_parts
+            .into_iter()
+            .map(|part| {
+                OwningHandle::new_with_fn(Box::new(part), |part: *const S::Partition| unsafe {
+                    DummyBox((*(part as *mut S::Partition)).parser().unwrap())
+                })
+            })
+            .collect();
     }
 
     fn next_batch(&mut self) -> Option<RecordBatch> {
