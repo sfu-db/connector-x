@@ -492,7 +492,6 @@
 <span id="492">492</span>
 <span id="493">493</span>
 <span id="494">494</span>
-<span id="495">495</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Source implementation for MySQL database.
 
 </span><span class="kw">mod </span>errors;
@@ -513,7 +512,7 @@
 <span class="kw">use </span>r2d2::{Pool, PooledConnection};
 <span class="kw">use </span>r2d2_mysql::{
     mysql::{prelude::Queryable, Binary, Opts, OptsBuilder, QueryResult, Row, Text},
-    MysqlConnectionManager,
+    MySqlConnectionManager,
 };
 <span class="kw">use </span>rust_decimal::Decimal;
 <span class="kw">use </span>serde_json::Value;
@@ -521,8 +520,7 @@
 <span class="kw">use </span>std::marker::PhantomData;
 <span class="kw">pub use </span>typesystem::MySQLTypeSystem;
 
-<span class="kw">type </span>MysqlManager = MysqlConnectionManager;
-<span class="kw">type </span>MysqlConn = PooledConnection&lt;MysqlManager&gt;;
+<span class="kw">type </span>MysqlConn = PooledConnection&lt;MySqlConnectionManager&gt;;
 
 <span class="kw">pub enum </span>BinaryProtocol {}
 <span class="kw">pub enum </span>TextProtocol {}
@@ -534,7 +532,7 @@
 </span>}
 
 <span class="kw">pub struct </span>MySQLSource&lt;P&gt; {
-    pool: Pool&lt;MysqlManager&gt;,
+    pool: Pool&lt;MySqlConnectionManager&gt;,
     origin_query: <span class="prelude-ty">Option</span>&lt;String&gt;,
     queries: Vec&lt;CXQuery&lt;String&gt;&gt;,
     names: Vec&lt;String&gt;,
@@ -545,7 +543,7 @@
 <span class="kw">impl</span>&lt;P&gt; MySQLSource&lt;P&gt; {
     <span class="attribute">#[throws(MySQLSourceError)]
     </span><span class="kw">pub fn </span>new(conn: <span class="kw-2">&amp;</span>str, nconn: usize) -&gt; <span class="self">Self </span>{
-        <span class="kw">let </span>manager = MysqlConnectionManager::new(OptsBuilder::from_opts(Opts::from_url(conn)<span class="question-mark">?</span>));
+        <span class="kw">let </span>manager = MySqlConnectionManager::new(OptsBuilder::from_opts(Opts::from_url(conn)<span class="question-mark">?</span>));
         <span class="kw">let </span>pool = r2d2::Pool::builder()
             .max_size(nconn <span class="kw">as </span>u32)
             .build(manager)<span class="question-mark">?</span>;
