@@ -239,37 +239,37 @@ jobs:
           pip install *.whl
           python -c "import connectorx"
 
-  upload:
-    runs-on: ubuntu-latest
-    needs: [verify]
-    steps:
-      - name: Download all artifacts
-        uses: actions/download-artifact@v3
+  # upload:
+  #   runs-on: ubuntu-latest
+  #   needs: [verify]
+  #   steps:
+  #     - name: Download all artifacts
+  #       uses: actions/download-artifact@v3
 
-      - name: Setup environment
-        run: |
-          tree .
-          echo "/home/runner/.local/bin" >> $GITHUB_PATH
+  #     - name: Setup environment
+  #       run: |
+  #         tree .
+  #         echo "/home/runner/.local/bin" >> $GITHUB_PATH
 
-      - name: Install Twine
-        run: pip install twine
+  #     - name: Install Twine
+  #       run: pip install twine
 
-      - name: Upload to PyPI site
-        if: github.ref == 'refs/heads/release'
-        env:
-          PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
-        run: |
-          for file in $(ls **/*)
-          do
-            twine upload --non-interactive -u __token__ -p $PYPI_TOKEN $file || continue
-          done
+  #     - name: Upload to PyPI site
+  #       if: github.ref == 'refs/heads/release'
+  #       env:
+  #         PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
+  #       run: |
+  #         for file in $(ls **/*)
+  #         do
+  #           twine upload --non-interactive -u __token__ -p $PYPI_TOKEN $file || continue
+  #         done
 
-      - name: Upload to PyPI test site
-        if: github.ref == 'refs/heads/prerelease'
-        env:
-          PYPI_TEST_TOKEN: ${{ secrets.PYPI_TEST_TOKEN }}
-        run: |
-          for file in $(ls **/*)
-          do
-            twine upload --non-interactive --repository-url https://test.pypi.org/legacy/ -u __token__ -p $PYPI_TEST_TOKEN $file --verbose || continue
-          done
+  #     - name: Upload to PyPI test site
+  #       if: github.ref == 'refs/heads/prerelease'
+  #       env:
+  #         PYPI_TEST_TOKEN: ${{ secrets.PYPI_TEST_TOKEN }}
+  #       run: |
+  #         for file in $(ls **/*)
+  #         do
+  #           twine upload --non-interactive --repository-url https://test.pypi.org/legacy/ -u __token__ -p $PYPI_TEST_TOKEN $file --verbose || continue
+  #         done
