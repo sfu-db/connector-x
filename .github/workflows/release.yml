@@ -101,10 +101,6 @@ jobs:
           python-version: ${{ matrix.python-version }}
           architecture: x64
 
-      - uses: Gr1N/setup-poetry@v8
-      - run: export PATH="/Users/runner/Library/Python/3.11/bin:$PATH
-      - run: poetry --version
-
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: 1.65.0
@@ -165,10 +161,6 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
-
-      - uses: Gr1N/setup-poetry@v8
-      - run: export PATH="/Users/runner/Library/Python/3.11/bin:$PATH"
-      - run: poetry --version
 
       - uses: actions-rs/toolchain@v1
         with:
