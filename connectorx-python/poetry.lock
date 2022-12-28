@@ -1031,8 +1031,8 @@ pyarrow = ["pyarrow"]
 
 [metadata]
 lock-version = "1.1"
-python-versions = ">=3.7.1,<3.11"
-content-hash = "5747a1ceeddd939343e7ec344c6a01b1a8b6fbeb87dbdb4e394640c7f4966a63"
+python-versions = ">=3.7.1,<3.12"
+content-hash = "bb0ec416ef76077dbc2e87023ff6ccea88e73e99ec43cc9e059ff91cb537ec4c"
 
 [metadata.files]
 appnope = [
