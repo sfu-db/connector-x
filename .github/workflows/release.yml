@@ -93,9 +93,12 @@ jobs:
 
       - name: Copy test
         run: |
+          ls
           mkdir a
           mkdir b
-          cp -r -force a b
+          ls
+          rm -rf b/a
+          cp -r a b
           rm -rf a
           rm -rf b
 
