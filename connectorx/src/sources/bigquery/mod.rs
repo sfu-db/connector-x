@@ -281,6 +281,7 @@ pub struct BigQuerySourceParser {
     ncols: usize,
     current_col: usize,
     current_row: usize,
+    nrows: Option<usize>,
 }
 
 impl<'a> BigQuerySourceParser {
@@ -297,6 +298,7 @@ impl<'a> BigQuerySourceParser {
             ncols: schema.len(),
             current_row: 0,
             current_col: 0,
+            nrows: None,
         }
     }
 
@@ -315,13 +317,21 @@ impl<'a> PartitionParser<'a> for BigQuerySourceParser {
 
     #[throws(BigQuerySourceError)]
     fn fetch_next(&mut self) -> (usize, bool) {
-        let total_rows = self
-            .response
-            .total_rows
-            .as_ref()
-            .ok_or_else(|| anyhow!("total_rows is none"))?
-            .parse::<usize>()?;
-        (total_rows, true)
+        assert!(self.current_col == 0);
+        match self.nrows {
+            Some(total_rows) => (total_rows - self.current_row, true),
+            None => {
+                // Get all number of rows
+                let total_rows = self
+                    .response
+                    .total_rows
+                    .as_ref()
+                    .ok_or_else(|| anyhow!("total_rows is none"))?
+                    .parse::<usize>()?;
+                self.nrows = Some(total_rows);
+                (total_rows, true)
+            }
+        }
     }
 }
 

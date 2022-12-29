@@ -18,7 +18,7 @@ use log::{debug, warn};
 use r2d2::{Pool, PooledConnection};
 use r2d2_mysql::{
     mysql::{prelude::Queryable, Binary, Opts, OptsBuilder, QueryResult, Row, Text},
-    MysqlConnectionManager,
+    MySqlConnectionManager,
 };
 use rust_decimal::Decimal;
 use serde_json::Value;
@@ -26,8 +26,7 @@ use sqlparser::dialect::MySqlDialect;
 use std::marker::PhantomData;
 pub use typesystem::MySQLTypeSystem;
 
-type MysqlManager = MysqlConnectionManager;
-type MysqlConn = PooledConnection<MysqlManager>;
+type MysqlConn = PooledConnection<MySqlConnectionManager>;
 
 pub enum BinaryProtocol {}
 pub enum TextProtocol {}
@@ -39,7 +38,7 @@ fn get_total_rows(conn: &mut MysqlConn, query: &CXQuery<String>) -> usize {
 }
 
 pub struct MySQLSource<P> {
-    pool: Pool<MysqlManager>,
+    pool: Pool<MySqlConnectionManager>,
     origin_query: Option<String>,
     queries: Vec<CXQuery<String>>,
     names: Vec<String>,
@@ -50,7 +49,7 @@ pub struct MySQLSource<P> {
 impl<P> MySQLSource<P> {
     #[throws(MySQLSourceError)]
     pub fn new(conn: &str, nconn: usize) -> Self {
-        let manager = MysqlConnectionManager::new(OptsBuilder::from_opts(Opts::from_url(conn)?));
+        let manager = MySqlConnectionManager::new(OptsBuilder::from_opts(Opts::from_url(conn)?));
         let pool = r2d2::Pool::builder()
             .max_size(nconn as u32)
             .build(manager)?;
@@ -280,6 +279,7 @@ pub struct MySQLBinarySourceParser<'a> {
     ncols: usize,
     current_col: usize,
     current_row: usize,
+    is_finished: bool,
 }
 
 impl<'a> MySQLBinarySourceParser<'a> {
@@ -290,6 +290,7 @@ impl<'a> MySQLBinarySourceParser<'a> {
             ncols: schema.len(),
             current_row: 0,
             current_col: 0,
+            is_finished: false,
         }
     }
 
@@ -308,6 +309,14 @@ impl<'a> PartitionParser<'a> for MySQLBinarySourceParser<'a> {
 
     #[throws(MySQLSourceError)]
     fn fetch_next(&mut self) -> (usize, bool) {
+        assert!(self.current_col == 0);
+        let remaining_rows = self.rowbuf.len() - self.current_row;
+        if remaining_rows > 0 {
+            return (remaining_rows, self.is_finished);
+        } else if self.is_finished {
+            return (0, self.is_finished);
+        }
+
         if !self.rowbuf.is_empty() {
             self.rowbuf.drain(..);
         }
@@ -316,13 +325,14 @@ impl<'a> PartitionParser<'a> for MySQLBinarySourceParser<'a> {
             if let Some(item) = self.iter.next() {
                 self.rowbuf.push(item?);
             } else {
+                self.is_finished = true;
                 break;
             }
         }
         self.current_row = 0;
         self.current_col = 0;
 
-        (self.rowbuf.len(), self.rowbuf.len() < DB_BUFFER_SIZE)
+        (self.rowbuf.len(), self.is_finished)
     }
 }
 
@@ -380,6 +390,7 @@ pub struct MySQLTextSourceParser<'a> {
     ncols: usize,
     current_col: usize,
     current_row: usize,
+    is_finished: bool,
 }
 
 impl<'a> MySQLTextSourceParser<'a> {
@@ -390,6 +401,7 @@ impl<'a> MySQLTextSourceParser<'a> {
             ncols: schema.len(),
             current_row: 0,
             current_col: 0,
+            is_finished: false,
         }
     }
 
@@ -408,6 +420,14 @@ impl<'a> PartitionParser<'a> for MySQLTextSourceParser<'a> {
 
     #[throws(MySQLSourceError)]
     fn fetch_next(&mut self) -> (usize, bool) {
+        assert!(self.current_col == 0);
+        let remaining_rows = self.rowbuf.len() - self.current_row;
+        if remaining_rows > 0 {
+            return (remaining_rows, self.is_finished);
+        } else if self.is_finished {
+            return (0, self.is_finished);
+        }
+
         if !self.rowbuf.is_empty() {
             self.rowbuf.drain(..);
         }
@@ -415,12 +435,13 @@ impl<'a> PartitionParser<'a> for MySQLTextSourceParser<'a> {
             if let Some(item) = self.iter.next() {
                 self.rowbuf.push(item?);
             } else {
+                self.is_finished = true;
                 break;
             }
         }
         self.current_row = 0;
         self.current_col = 0;
-        (self.rowbuf.len(), self.rowbuf.len() < DB_BUFFER_SIZE)
+        (self.rowbuf.len(), self.is_finished)
     }
 }
 

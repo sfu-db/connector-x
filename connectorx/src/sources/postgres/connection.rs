@@ -115,8 +115,8 @@ pub fn rewrite_tls_args(
 
     let tls_config = TlsConfig {
         pg_config: pg_config.clone(),
-        client_cert: client_cert,
-        root_cert: root_cert,
+        client_cert,
+        root_cert,
     };
 
     let tls_connector = match pg_config.get_ssl_mode() {

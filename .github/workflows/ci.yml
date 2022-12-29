@@ -69,7 +69,7 @@ jobs:
       - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly-2022-09-15
+          toolchain: 1.65.0
           components: rustfmt
           default: true
 
@@ -191,14 +191,14 @@ jobs:
       - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly-2022-09-15
+          toolchain: 1.65.0
           components: rustfmt
           default: true
 
       - uses: actions/setup-java@v3
         with:
-          distribution: 'temurin'
-          java-version: '8'
+          distribution: "temurin"
+          java-version: "8"
 
       - uses: actions/cache@v2
         with:

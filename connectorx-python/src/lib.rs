@@ -1,13 +1,9 @@
-#![feature(fmt_internals)]
-#![allow(incomplete_features)]
-
 pub mod arrow;
 pub mod arrow2;
 pub mod constants;
 mod errors;
 pub mod pandas;
 pub mod read_sql;
-mod source_router;
 
 use crate::constants::J4RS_BASE_PATH;
 use connectorx::fed_dispatcher::run;
@@ -50,7 +46,7 @@ pub fn read_sql<'a>(
     return_type: &str,
     protocol: Option<&str>,
     queries: Option<Vec<String>>,
-    partition_query: Option<read_sql::PartitionQuery>,
+    partition_query: Option<read_sql::PyPartitionQuery>,
 ) -> PyResult<&'a PyAny> {
     read_sql::read_sql(py, conn, return_type, protocol, queries, partition_query)
 }
@@ -58,10 +54,10 @@ pub fn read_sql<'a>(
 #[pyfunction]
 pub fn partition_sql(
     conn: &str,
-    partition_query: read_sql::PartitionQuery,
+    partition_query: read_sql::PyPartitionQuery,
 ) -> PyResult<Vec<String>> {
-    let source_conn = source_router::parse_source(conn, None)?;
-    let queries = read_sql::partition(&partition_query, &source_conn)?;
+    let source_conn = connectorx::source_router::parse_source(conn, None).map_err(|e| crate::errors::ConnectorXPythonError::from(e))?;
+    let queries = connectorx::partition::partition(&partition_query.into(), &source_conn).map_err(|e| crate::errors::ConnectorXPythonError::from(e))?;
     Ok(queries.into_iter().map(|q| q.to_string()).collect())
 }
 

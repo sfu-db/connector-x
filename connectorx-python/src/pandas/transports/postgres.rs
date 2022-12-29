@@ -5,6 +5,7 @@ use connectorx::{
     impl_transport,
     sources::postgres::{
         BinaryProtocol, CSVProtocol, CursorProtocol, PostgresSource, PostgresTypeSystem,
+        SimpleProtocol,
     },
     typesystem::TypeConversion,
 };
@@ -64,6 +65,8 @@ impl_postgres_transport!(CSVProtocol, NoTls);
 impl_postgres_transport!(CSVProtocol, MakeTlsConnector);
 impl_postgres_transport!(CursorProtocol, NoTls);
 impl_postgres_transport!(CursorProtocol, MakeTlsConnector);
+impl_postgres_transport!(SimpleProtocol, NoTls);
+impl_postgres_transport!(SimpleProtocol, MakeTlsConnector);
 
 impl<'py, P, C> TypeConversion<HashMap<String, Option<String>>, String>
     for PostgresPandasTransport<'py, P, C>

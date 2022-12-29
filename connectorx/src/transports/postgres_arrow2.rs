@@ -5,7 +5,7 @@ use crate::destinations::arrow2::{
 };
 use crate::sources::postgres::{
     BinaryProtocol, CSVProtocol, CursorProtocol, PostgresSource, PostgresSourceError,
-    PostgresTypeSystem,
+    PostgresTypeSystem, SimpleProtocol,
 };
 use crate::typesystem::TypeConversion;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
@@ -51,6 +51,7 @@ macro_rules! impl_postgres_transport {
                 { Text[&'r str]                     => LargeUtf8[String]           | conversion owned }
                 { BpChar[&'r str]                   => LargeUtf8[String]           | conversion none }
                 { VarChar[&'r str]                  => LargeUtf8[String]           | conversion none }
+                { Enum[&'r str]                     => LargeUtf8[String]           | conversion none }
                 { Timestamp[NaiveDateTime]          => Date64[NaiveDateTime]       | conversion auto }
                 { Date[NaiveDate]                   => Date32[NaiveDate]           | conversion auto }
                 { Time[NaiveTime]                   => Time64[NaiveTime]           | conversion auto }
@@ -77,6 +78,8 @@ impl_postgres_transport!(CSVProtocol, NoTls);
 impl_postgres_transport!(CSVProtocol, MakeTlsConnector);
 impl_postgres_transport!(CursorProtocol, NoTls);
 impl_postgres_transport!(CursorProtocol, MakeTlsConnector);
+impl_postgres_transport!(SimpleProtocol, NoTls);
+impl_postgres_transport!(SimpleProtocol, MakeTlsConnector);
 
 impl<P, C> TypeConversion<Uuid, String> for PostgresArrow2Transport<P, C> {
     fn convert(val: Uuid) -> String {

@@ -1,4 +1,3 @@
-#![allow(incomplete_features)]
 #![allow(clippy::upper_case_acronyms)]
 
 //! # ConnectorX
@@ -145,6 +144,8 @@
 pub mod typesystem;
 #[macro_use]
 mod macros;
+#[cfg(feature = "dst_arrow")]
+pub mod arrow_batch_iter;
 pub mod constants;
 pub mod data_order;
 pub mod destinations;
@@ -156,6 +157,7 @@ pub mod fed_dispatcher;
 pub mod get_arrow;
 #[cfg(feature = "dst_arrow2")]
 pub mod get_arrow2;
+pub mod partition;
 pub mod source_router;
 pub mod sources;
 #[doc(hidden)]
@@ -165,16 +167,20 @@ pub mod transports;
 pub mod utils;
 
 pub mod prelude {
+    #[cfg(feature = "dst_arrow")]
+    pub use crate::arrow_batch_iter::RecordBatchIterator;
     pub use crate::data_order::{coordinate, DataOrder};
     #[cfg(feature = "dst_arrow")]
-    pub use crate::destinations::arrow::ArrowDestination;
+    pub use crate::destinations::arrow::{ArrowDestination, ArrowPartitionWriter, ArrowTypeSystem};
     #[cfg(feature = "dst_arrow2")]
     pub use crate::destinations::arrow2::Arrow2Destination;
     pub use crate::destinations::{Consume, Destination, DestinationPartition};
     pub use crate::dispatcher::Dispatcher;
     pub use crate::errors::{ConnectorXError, ConnectorXOutError};
+    #[cfg(feature = "federation")]
+    pub use crate::fed_dispatcher::{rewrite_sql, FederatedDataSourceInfo, Plan};
     #[cfg(feature = "dst_arrow")]
-    pub use crate::get_arrow::get_arrow;
+    pub use crate::get_arrow::{get_arrow, new_record_batch_iter};
     #[cfg(feature = "dst_arrow2")]
     pub use crate::get_arrow2::get_arrow2;
     pub use crate::source_router::*;
