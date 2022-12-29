@@ -81,11 +81,11 @@ jobs:
   #         name: "ubuntu-latest-${{ matrix.python-version[1] }}"
   #         path: connectorx-python/target/wheels/*.whl
 
-  win-and-mac:
+  win:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: ["windows-latest", "macos-10.15"]
+        os: ["windows-latest"]
         python-version: ["3.9"]
         # python-version: ["3.8", "3.9", "3.10", "3.11"]
     steps:
@@ -93,12 +93,25 @@ jobs:
 
       - name: Copy test
         run: |
-          ls
           mkdir a
           mkdir b
-          ls
-          rm -r b/a
-          cp -r a b
+          cp -r -force a b
+
+  mac:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: ["macos-10.15"]
+        python-version: ["3.9"]
+        # python-version: ["3.8", "3.9", "3.10", "3.11"]
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Copy test
+        run: |
+          mkdir a
+          mkdir b
+          cp -rf a b
           rm -rf a
           rm -rf b
 
