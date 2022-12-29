@@ -95,7 +95,7 @@ jobs:
         run: |
           mkdir a
           mkdir b
-          cp -rf a b
+          cp -r -force a b
           rm -rf a
           rm -rf b
 
