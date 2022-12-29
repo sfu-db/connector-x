@@ -97,7 +97,7 @@ jobs:
           mkdir a
           mkdir b
           ls
-          rm -rf b/a
+          rm -r b/a
           cp -r a b
           rm -rf a
           rm -rf b
