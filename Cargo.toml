@@ -5,8 +5,3 @@ members = ["connectorx", "connectorx-cpp"]
 [profile.release]
 debug = true
 lto = true
-
-[patch.crates-io]
-postgres = { path="https://github.com/wangxiaoying/rust-postgres/postgres" }
-postgres-native-tls = { path="https://github.com/wangxiaoying/rust-postgres/postgres-native-tls" }
-postgres-openssl = { path="https://github.com/wangxiaoying/rust-postgres/postgres-openssl" }
