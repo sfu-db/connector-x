@@ -418,7 +418,7 @@ title="Print to PDF"
 <section id="pip">
 <h3>Pip<a class="headerlink" href="#pip" title="Permalink to this headline">#</a></h3>
 <p>The easiest way to install ConnectorX is using pip, with the following command:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip install connectorx
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>connectorx
 </pre></div>
 </div>
 </section>
@@ -434,27 +434,27 @@ title="Print to PDF"
 </li>
 <li><p>Step 1: Fresh clone of source.</p></li>
 </ul>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git clone https://github.com/sfu-db/connector-x.git
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/sfu-db/connector-x.git
 </pre></div>
 </div>
 <ul class="simple">
 <li><p>Step 2: Install and switch to the correct rust version (please refer <a class="reference external" href="https://github.com/sfu-db/connector-x/blob/main/.github/workflows/release.yml">this file</a> and search for <code class="docutils literal notranslate"><span class="pre">rust</span></code> for the latest using version).</p></li>
 </ul>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rustup install <span class="o">{</span>version<span class="o">}</span>
-rustup override <span class="nb">set</span> <span class="o">{</span>version<span class="o">}</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rustup<span class="w"> </span>install<span class="w"> </span><span class="o">{</span>version<span class="o">}</span>
+rustup<span class="w"> </span>override<span class="w"> </span><span class="nb">set</span><span class="w"> </span><span class="o">{</span>version<span class="o">}</span>
 </pre></div>
 </div>
 <ul class="simple">
 <li><p>Step 3: Install system dependencies. Please refer to <a class="reference external" href="https://github.com/sfu-db/connector-x/blob/main/.github/workflows/release.yml">release.yml</a> for dependencies needed for different os.</p></li>
 <li><p>Step 4: Install python dependencies.</p></li>
 </ul>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>just bootstrap-python
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>just<span class="w"> </span>bootstrap-python
 </pre></div>
 </div>
 <ul class="simple">
 <li><p>Step 5: Build wheel.</p></li>
 </ul>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>just build-python-wheel
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>just<span class="w"> </span>build-python-wheel
 </pre></div>
 </div>
 <p>NOTES:</p>

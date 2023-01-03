@@ -194,6 +194,12 @@
 <span id="194">194</span>
 <span id="195">195</span>
 <span id="196">196</span>
+<span id="197">197</span>
+<span id="198">198</span>
+<span id="199">199</span>
+<span id="200">200</span>
+<span id="201">201</span>
+<span id="202">202</span>
 </pre><pre class="rust"><code><span class="kw">use crate</span>::{prelude::<span class="kw-2">*</span>, utils::<span class="kw-2">*</span>};
 <span class="kw">use </span>arrow::record_batch::RecordBatch;
 <span class="kw">use </span>itertools::Itertools;
@@ -215,6 +221,7 @@
 {
     dst: ArrowDestination,
     dst_parts: Vec&lt;ArrowPartitionWriter&gt;,
+    src_parts: <span class="prelude-ty">Option</span>&lt;Vec&lt;S::Partition&gt;&gt;,
     src_parsers: Vec&lt;SourceParserHandle&lt;<span class="lifetime">&#39;a</span>, S&gt;&gt;,
     dorder: DataOrder,
     src_schema: Vec&lt;S::TypeSystem&gt;,
@@ -238,19 +245,11 @@
         <span class="kw">let </span>dispatcher = Dispatcher::&lt;<span class="kw">_</span>, <span class="kw">_</span>, TP&gt;::new(src, <span class="kw-2">&amp;mut </span>dst, queries, origin_query);
         <span class="kw">let </span>(dorder, src_parts, dst_parts, src_schema, dst_schema) = dispatcher.prepare()<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>src_parsers: Vec&lt;<span class="kw">_</span>&gt; = src_parts
-            .into_iter()
-            .map(|part| {
-                OwningHandle::new_with_fn(Box::new(part), |part: <span class="kw-2">*const </span>S::Partition| <span class="kw">unsafe </span>{
-                    DummyBox((<span class="kw-2">*</span>(part <span class="kw">as </span><span class="kw-2">*mut </span>S::Partition)).parser().unwrap())
-                })
-            })
-            .collect();
-
         <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
             dst,
             dst_parts,
-            src_parsers,
+            src_parts: <span class="prelude-val">Some</span>(src_parts),
+            src_parsers: <span class="macro">vec!</span>[],
             dorder,
             src_schema,
             dst_schema,
@@ -374,6 +373,7 @@
 
 </span><span class="kw">pub trait </span>RecordBatchIterator {
     <span class="kw">fn </span>get_schema(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; (RecordBatch, <span class="kw-2">&amp;</span>[String]);
+    <span class="kw">fn </span>prepare(<span class="kw-2">&amp;mut </span><span class="self">self</span>);
     <span class="kw">fn </span>next_batch(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;RecordBatch&gt;;
 }
 
@@ -384,6 +384,18 @@
 {
     <span class="kw">fn </span>get_schema(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; (RecordBatch, <span class="kw-2">&amp;</span>[String]) {
         (<span class="self">self</span>.dst.empty_batch(), <span class="self">self</span>.dst.names())
+    }
+
+    <span class="kw">fn </span>prepare(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="kw">let </span>src_parts = <span class="self">self</span>.src_parts.take().unwrap();
+        <span class="self">self</span>.src_parsers = src_parts
+            .into_iter()
+            .map(|part| {
+                OwningHandle::new_with_fn(Box::new(part), |part: <span class="kw-2">*const </span>S::Partition| <span class="kw">unsafe </span>{
+                    DummyBox((<span class="kw-2">*</span>(part <span class="kw">as </span><span class="kw-2">*mut </span>S::Partition)).parser().unwrap())
+                })
+            })
+            .collect();
     }
 
     <span class="kw">fn </span>next_batch(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;RecordBatch&gt; {
