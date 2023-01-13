@@ -245,14 +245,13 @@ pub unsafe extern "C" fn free_record_batch(rb: *mut CXSlice<CXArray>) {
 #[no_mangle]
 pub unsafe extern "C" fn connectorx_scan_iter(
     conn: *const c_char,
-    queries: CXSlice<*const c_char>,
+    queries: *const CXSlice<*const c_char>,
     batch_size: usize,
 ) -> *mut Box<dyn RecordBatchIterator> {
     let conn_str = unsafe { CStr::from_ptr(conn) }.to_str().unwrap();
-    // let query_str = unsafe { CStr::from_ptr(query) }.to_str().unwrap();
     let source_conn = SourceConn::try_from(conn_str).unwrap();
 
-    let query_slice = unsafe { std::slice::from_raw_parts(queries.ptr, queries.len) };
+    let query_slice = unsafe { std::slice::from_raw_parts((*queries).ptr, (*queries).len) };
 
     let mut query_vec = vec![];
     for &q in query_slice {
