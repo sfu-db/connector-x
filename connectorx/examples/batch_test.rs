@@ -12,10 +12,21 @@ fn main() {
     //     CXQuery::naked("select * from test_table where test_int >= 3"),
     // ];
 
-    // let queries = &[CXQuery::naked("select * from lineitem limit 10")];
     let queries = &[
-        CXQuery::naked("select * from lineitem where l_orderkey < 3000000 limit 10000"),
-        CXQuery::naked("select * from lineitem where l_orderkey >= 3000000 limit 20000"),
+        CXQuery::naked("select * from lineitem where l_orderkey < 1000000"),
+        CXQuery::naked(
+            "select * from lineitem where l_orderkey >= 1000000 AND l_orderkey < 2000000",
+        ),
+        CXQuery::naked(
+            "select * from lineitem where l_orderkey >= 2000000 AND l_orderkey < 3000000",
+        ),
+        CXQuery::naked(
+            "select * from lineitem where l_orderkey >= 3000000 AND l_orderkey < 4000000",
+        ),
+        CXQuery::naked(
+            "select * from lineitem where l_orderkey >= 4000000 AND l_orderkey < 5000000",
+        ),
+        CXQuery::naked("select * from lineitem where l_orderkey >= 5000000"),
     ];
 
     let origin_query = None;
@@ -30,6 +41,8 @@ fn main() {
 
     let mut batch_iter: ArrowBatchIter<_, PostgresArrowTransport<PgBinaryProtocol, NoTls>> =
         ArrowBatchIter::new(source, destination, origin_query, queries, 1024).unwrap();
+
+    batch_iter.prepare();
 
     let mut num_rows = 0;
     let mut num_batches = 0;
