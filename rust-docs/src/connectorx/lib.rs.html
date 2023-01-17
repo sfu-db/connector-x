@@ -208,6 +208,8 @@
 <span id="208">208</span>
 <span id="209">209</span>
 <span id="210">210</span>
+<span id="211">211</span>
+<span id="212">212</span>
 </pre><pre class="rust"><code><span class="attribute">#![allow(clippy::upper_case_acronyms)]
 
 </span><span class="doccomment">//! # ConnectorX
@@ -361,8 +363,10 @@
 <span class="kw">pub mod </span>destinations;
 <span class="kw">mod </span>dispatcher;
 <span class="kw">pub mod </span>errors;
-<span class="attribute">#[cfg(feature = <span class="string">&quot;federation&quot;</span>)]
+<span class="attribute">#[cfg(feature = <span class="string">&quot;fed_exec&quot;</span>)]
 </span><span class="kw">pub mod </span>fed_dispatcher;
+<span class="attribute">#[cfg(feature = <span class="string">&quot;federation&quot;</span>)]
+</span><span class="kw">pub mod </span>fed_rewriter;
 <span class="attribute">#[cfg(feature = <span class="string">&quot;dst_arrow&quot;</span>)]
 </span><span class="kw">pub mod </span>get_arrow;
 <span class="attribute">#[cfg(feature = <span class="string">&quot;dst_arrow2&quot;</span>)]
@@ -388,7 +392,7 @@
     <span class="kw">pub use </span><span class="kw">crate</span>::dispatcher::Dispatcher;
     <span class="kw">pub use </span><span class="kw">crate</span>::errors::{ConnectorXError, ConnectorXOutError};
     <span class="attribute">#[cfg(feature = <span class="string">&quot;federation&quot;</span>)]
-    </span><span class="kw">pub use </span><span class="kw">crate</span>::fed_dispatcher::{rewrite_sql, FederatedDataSourceInfo, Plan};
+    </span><span class="kw">pub use </span><span class="kw">crate</span>::fed_rewriter::{rewrite_sql, FederatedDataSourceInfo, Plan};
     <span class="attribute">#[cfg(feature = <span class="string">&quot;dst_arrow&quot;</span>)]
     </span><span class="kw">pub use </span><span class="kw">crate</span>::get_arrow::{get_arrow, new_record_batch_iter};
     <span class="attribute">#[cfg(feature = <span class="string">&quot;dst_arrow2&quot;</span>)]

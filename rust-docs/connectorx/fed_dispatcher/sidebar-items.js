@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":[["rewrite_sql",""],["run",""]],"struct":[["FederatedDataSourceInfo",""],["Plan",""]]};
+window.SIDEBAR_ITEMS = {"fn":[["run",""]]};
