@@ -6,11 +6,11 @@ build-release:
 build-debug:
     cargo build --features all
 
-build-cpp:
-    cd connectorx-cpp && cargo build
+build-cpp +ARGS="":
+    cd connectorx-cpp && cargo build {{ARGS}}
 
-build-cpp-release:
-    cd connectorx-cpp && cargo build --release
+build-cpp-release +ARGS="":
+    cd connectorx-cpp && cargo build --release {{ARGS}}
 
 test +ARGS="": 
     cargo test --features all {{ARGS}} -- --nocapture

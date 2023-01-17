@@ -60,12 +60,13 @@ name = "connectorx"
 
 [features]
 branch = ["connectorx/branch"]
-default = ["extension", "fptr", "nbstr", "dsts", "srcs", "federation"]
+default = ["extension", "fptr", "nbstr", "dsts", "srcs", "federation", "fed_exec"]
 dsts = ["connectorx/dst_arrow", "connectorx/dst_arrow2"]
 executable = ["pyo3/auto-initialize"]
 extension = ["pyo3/extension-module"]
 fptr = ["connectorx/fptr"]
 federation = ["connectorx/federation"]
+fed_exec = ["connectorx/fed_exec"]
 nbstr = []
 srcs = [
   "connectorx/src_postgres",

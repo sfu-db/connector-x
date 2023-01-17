@@ -69,7 +69,7 @@ iai = "0.1"
 pprof = {version = "0.5", features = ["flamegraph"]}
 
 [features]
-all = ["src_sqlite", "src_postgres", "src_mysql", "src_mssql", "src_oracle", "src_bigquery", "src_csv", "src_dummy", "dst_arrow", "dst_arrow2", "federation"]
+all = ["src_sqlite", "src_postgres", "src_mysql", "src_mssql", "src_oracle", "src_bigquery", "src_csv", "src_dummy", "dst_arrow", "dst_arrow2", "federation", "fed_exec"]
 branch = []
 default = ["fptr"]
 dst_arrow = ["arrow"]
@@ -97,6 +97,7 @@ src_postgres = [
   "postgres-openssl",
 ]
 src_sqlite = ["rusqlite", "r2d2_sqlite", "fallible-streaming-iterator", "r2d2", "urlencoding"]
-federation = ["datafusion", "j4rs", "tokio"]
+federation = ["j4rs"]
+fed_exec = ["datafusion", "tokio"]
 [package.metadata.docs.rs]
 features = ["all"]

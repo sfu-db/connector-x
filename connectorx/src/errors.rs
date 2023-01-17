@@ -24,7 +24,7 @@ pub enum ConnectorXOutError {
     #[error(transparent)]
     J4RSError(#[from] j4rs::errors::J4RsError),
 
-    #[cfg(feature = "federation")]
+    #[cfg(feature = "fed_exec")]
     #[error(transparent)]
     DataFusionError(#[from] datafusion::error::DataFusionError),
 

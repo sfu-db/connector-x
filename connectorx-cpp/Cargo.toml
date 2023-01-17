@@ -17,6 +17,10 @@ name = "connectorx_cpp"
 
 [features]
 default = ["fptr", "nbstr", "dsts", "srcs", "federation"]
+light = ["fptr", "nbstr", "dsts_light" , "srcs_light", "federation"]
+srcs_light = ["connectorx/src_postgres"]
+dsts_light = ["connectorx/dst_arrow"]
+
 dsts = ["connectorx/dst_arrow", "connectorx/dst_arrow2"]
 fptr = ["connectorx/fptr"]
 branch = ["connectorx/branch"]

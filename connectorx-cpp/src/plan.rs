@@ -1,5 +1,5 @@
 use crate::CXFederatedPlan;
-use connectorx::fed_dispatcher::Plan;
+use connectorx::fed_rewriter::Plan;
 use libc::c_char;
 use std::convert::Into;
 use std::ffi::CString;
