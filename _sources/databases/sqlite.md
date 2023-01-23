@@ -13,6 +13,16 @@ query = 'SELECT * FROM `database.dataset.table`'            # query string
 cx.read_sql(conn, query)                                    # read data from SQLite
 ```
 
+Example on windows:
+```py
+import connectorx as cx
+import urllib
+db_path = urllib.parse.quote("C:\\user\\path\\test.db")     # url encode the path to your SQLite database         
+conn = 'sqlite://' + db_path                                # connection token
+query = 'SELECT * FROM `database.dataset.table`'            # query string
+cx.read_sql(conn, query)                                    # read data from SQLite
+```
+
 ### SQLite Type Mapping
 | SQLite Type      |      Pandas Type            |  Comment                           |
 |:----------------:|:---------------------------:|:----------------------------------:|
