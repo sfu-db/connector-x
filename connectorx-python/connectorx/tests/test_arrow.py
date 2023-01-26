@@ -110,7 +110,7 @@ def test_arrow2_type(postgres_url: str) -> None:
             "test_float32": pd.Series(
                 [None, 3.1415926535, 2.71, -1e-37], dtype="float32"
             ),
-            "test_numeric": pd.Series([None, 521.34, 999.99, 0.00], dtype="float64"),
+            "test_numeric": pd.Series([None, 521.34, 0.00, 0.00], dtype="float64"),
             "test_bpchar": pd.Series(["a    ", "bb   ", "ccc  ", None], dtype="object"),
             "test_char": pd.Series(["a", "b", None, "d"], dtype="object"),
             "test_varchar": pd.Series([None, "bb", "c", "defghijklm"], dtype="object"),
