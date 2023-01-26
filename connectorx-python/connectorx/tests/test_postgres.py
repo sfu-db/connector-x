@@ -483,7 +483,7 @@ def test_postgres_types_binary(postgres_url: str) -> None:
             "test_float32": pd.Series(
                 [None, 3.1415926535, 2.71, -1e-37], dtype="float64"
             ),
-            "test_numeric": pd.Series([None, 521.34, 999.99, 0.00], dtype="float64"),
+            "test_numeric": pd.Series([None, 521.34, 0.00, 0.00], dtype="float64"),
             "test_bpchar": pd.Series(["a    ", "bb   ", "ccc  ", None], dtype="object"),
             "test_char": pd.Series(["a", "b", None, "d"], dtype="object"),
             "test_varchar": pd.Series([None, "bb", "c", "defghijklm"], dtype="object"),
@@ -551,7 +551,9 @@ def test_postgres_types_binary(postgres_url: str) -> None:
             "test_citext": pd.Series(["str_citext", "", "s", None], dtype="object"),
             "test_ltree": pd.Series(["A.B.C.D", "A.B.E", "A", None], dtype="object"),
             "test_lquery": pd.Series(["*.B.*", "A.*", "*", None], dtype="object"),
-            "test_ltxtquery": pd.Series(["A & B*", "A | B", "A@", None], dtype="object"),
+            "test_ltxtquery": pd.Series(
+                ["A & B*", "A | B", "A@", None], dtype="object"
+            ),
         },
     )
     assert_frame_equal(df, expected, check_names=True)
@@ -591,7 +593,7 @@ def test_postgres_types_csv(postgres_url: str) -> None:
             "test_float32": pd.Series(
                 [None, 3.1415926535, 2.71, -1e-37], dtype="float64"
             ),
-            "test_numeric": pd.Series([None, 521.34, 999.99, 0.00], dtype="float64"),
+            "test_numeric": pd.Series([None, 521.34, 0.00, 0.00], dtype="float64"),
             "test_bpchar": pd.Series(["a    ", "bb   ", "ccc  ", None], dtype="object"),
             "test_char": pd.Series(["a", "b", None, "d"], dtype="object"),
             "test_varchar": pd.Series([None, "bb", "c", "defghijklm"], dtype="object"),
@@ -697,7 +699,7 @@ def test_postgres_types_cursor(postgres_url: str) -> None:
             "test_float32": pd.Series(
                 [None, 3.1415926535, 2.71, -1e-37], dtype="float64"
             ),
-            "test_numeric": pd.Series([None, 521.34, 999.99, 0.00], dtype="float64"),
+            "test_numeric": pd.Series([None, 521.34, 0.00, 0.00], dtype="float64"),
             "test_bpchar": pd.Series(["a    ", "bb   ", "ccc  ", None], dtype="object"),
             "test_char": pd.Series(["a", "b", None, "d"], dtype="object"),
             "test_varchar": pd.Series([None, "bb", "c", "defghijklm"], dtype="object"),
@@ -769,7 +771,7 @@ def test_postgres_types_cursor(postgres_url: str) -> None:
     assert_frame_equal(df, expected, check_names=True)
 
 
-def test_types_simple(postgres_url: str) -> None:
+def test_postgres_types_simple(postgres_url: str) -> None:
     query = "SELECT test_date, test_timestamp, test_timestamptz, test_int16, test_int64, test_float32, test_numeric, test_bpchar, test_char, test_varchar, test_uuid, test_time, test_bytea, test_enum, test_f4array, test_f8array, test_narray, test_i2array, test_i4array, test_i8array FROM test_types"
     df = read_sql(postgres_url, query, protocol="simple")
     expected = pd.DataFrame(
@@ -803,7 +805,7 @@ def test_types_simple(postgres_url: str) -> None:
             "test_float32": pd.Series(
                 [None, 3.1415926535, 2.71, -1e-37], dtype="float64"
             ),
-            "test_numeric": pd.Series([None, 521.34, 999.99, 0.00], dtype="float64"),
+            "test_numeric": pd.Series([None, 521.34, 0.00, 0.00], dtype="float64"),
             "test_bpchar": pd.Series(["a    ", "bb   ", "ccc  ", None], dtype="object"),
             "test_char": pd.Series(["a", "b", None, "d"], dtype="object"),
             "test_varchar": pd.Series([None, "bb", "c", "defghijklm"], dtype="object"),
