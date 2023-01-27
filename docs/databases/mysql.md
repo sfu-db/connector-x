@@ -22,7 +22,7 @@ cx.read_sql(conn, query)                                        # read data from
 | BIGINT          | int64, Int64(nullable)      |                                    |
 | FLOAT           | float64                     |                                    |
 | DOUBLE          | float64                     |                                    |
-| DECIMAL         | float64, object(Clickhouse) | Clickhouse return DECIMAL in string |
+| DECIMAL         | float64, object(Clickhouse) | Clickhouse return DECIMAL in string, cannot support precision larger than 28 |
 | VARCHAR         | object                      |                                    |
 | CHAR            | object                      |                                    |
 | DATE            | datetime64[ns]              | only support date after year 1970  |
