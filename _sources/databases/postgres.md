@@ -27,7 +27,7 @@ cx.read_sql(conn, query)                                        # read data from
 | INT8            | int64, Int64(nullable)    |                                    |
 | FLOAT4          | float64                   |                                    |
 | FLOAT8          | float64                   |                                    |
-| NUMERIC         | float64                   |                                    |
+| NUMERIC         | float64                   | cannot support precision larger than 28                                    |
 | TEXT            | object                    |                                    |
 | BPCHAR          | object                    |                                    |
 | VARCHAR         | object                    |                                    |

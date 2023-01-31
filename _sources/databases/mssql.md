@@ -26,7 +26,7 @@ cx.read_sql(conn, query)                                        # read data from
 | BIGINT          | int64, Int64(nullable)      |                                    |
 | FLOAT           | float64                     |                                    |
 | NUMERIC         | float64                     |                                    |
-| DECIMAL         | float64                     |                                    |
+| DECIMAL         | float64                     | cannot support precision larger than 28                                   |
 | BIT             | bool, boolean(nullable)     |                                    |
 | VARCHAR         | object                      |                                    |
 | CHAR            | object                      |                                    |
