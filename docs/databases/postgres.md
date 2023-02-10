@@ -8,6 +8,8 @@
 ## Postgres Connection
 ```{hint}
 Adding `sslmode=require` to connection uri parameter force SSL connection. Example: `postgresql://username:password@host:port/db?sslmode=require`. `sslmode=disable` to disable SSL connection.
+
+To connect to redshift, replace `postgresql://` with `redshift://`.
 ```
 
 ```py
