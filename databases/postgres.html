@@ -432,6 +432,7 @@ title="Print to PDF"
 <div class="admonition hint">
 <p class="admonition-title">Hint</p>
 <p>Adding <code class="docutils literal notranslate"><span class="pre">sslmode=require</span></code> to connection uri parameter force SSL connection. Example: <code class="docutils literal notranslate"><span class="pre">postgresql://username:password&#64;host:port/db?sslmode=require</span></code>. <code class="docutils literal notranslate"><span class="pre">sslmode=disable</span></code> to disable SSL connection.</p>
+<p>To connect to redshift, replace <code class="docutils literal notranslate"><span class="pre">postgresql://</span></code> with <code class="docutils literal notranslate"><span class="pre">redshift://</span></code>.</p>
 </div>
 <div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">connectorx</span> <span class="k">as</span> <span class="nn">cx</span>
 <span class="n">conn</span> <span class="o">=</span> <span class="s1">&#39;postgres://username:password@server:port/database&#39;</span>         <span class="c1"># connection token</span>
@@ -595,7 +596,7 @@ title="Print to PDF"
             mode: "python"
         },
         kernelOptions: {
-            kernelName: "python3",
+            name: "python3",
             path: "./databases"
         },
         predefinedOutput: true
