@@ -187,7 +187,7 @@ where
     fn prepare(&mut self) {
         let src_parts = self.src_parts.take().unwrap();
         self.src_parsers = src_parts
-            .into_iter()
+            .into_par_iter()
             .map(|part| {
                 OwningHandle::new_with_fn(Box::new(part), |part: *const S::Partition| unsafe {
                     DummyBox((*(part as *mut S::Partition)).parser().unwrap())
