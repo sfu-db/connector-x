@@ -389,7 +389,7 @@
     <span class="kw">fn </span>prepare(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">let </span>src_parts = <span class="self">self</span>.src_parts.take().unwrap();
         <span class="self">self</span>.src_parsers = src_parts
-            .into_iter()
+            .into_par_iter()
             .map(|part| {
                 OwningHandle::new_with_fn(Box::new(part), |part: <span class="kw-2">*const </span>S::Partition| <span class="kw">unsafe </span>{
                     DummyBox((<span class="kw-2">*</span>(part <span class="kw">as </span><span class="kw-2">*mut </span>S::Partition)).parser().unwrap())
