@@ -16,6 +16,7 @@ impl Into<CXFederatedPlan> for Plan {
             sql: CString::new(self.sql.as_str())
                 .expect("new CString error")
                 .into_raw() as *const c_char,
+            cardinality: self.cardinality,
         }
     }
 }

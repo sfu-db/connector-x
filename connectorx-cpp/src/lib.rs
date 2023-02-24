@@ -50,6 +50,7 @@ pub struct CXFederatedPlan {
     db_name: *const c_char,
     db_alias: *const c_char,
     sql: *const c_char,
+    cardinality: usize,
 }
 
 #[cfg(feature = "federation")]
