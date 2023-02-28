@@ -222,10 +222,6 @@
 <span id="222">222</span>
 <span id="223">223</span>
 <span id="224">224</span>
-<span id="225">225</span>
-<span id="226">226</span>
-<span id="227">227</span>
-<span id="228">228</span>
 </pre><pre class="rust"><code><span class="kw">use crate</span>::{
     constants::{
         CX_REWRITER_PATH, DUCKDB_JDBC_DRIVER, J4RS_BASE_PATH, MYSQL_JDBC_DRIVER,
@@ -244,6 +240,7 @@
     <span class="kw">pub </span>db_name: String,
     <span class="kw">pub </span>db_alias: String,
     <span class="kw">pub </span>sql: String,
+    <span class="kw">pub </span>cardinality: usize,
 }
 
 <span class="kw">pub struct </span>FederatedDataSourceInfo {
@@ -422,34 +419,29 @@
 
     <span class="kw">let </span><span class="kw-2">mut </span>fed_plan = <span class="macro">vec!</span>[];
     <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..count {
-        <span class="kw">let </span>db = jvm.invoke(
-            <span class="kw-2">&amp;</span>plan,
-            <span class="string">&quot;getDBName&quot;</span>,
-            <span class="kw-2">&amp;</span>[InvocationArg::try_from(i).unwrap().into_primitive()<span class="question-mark">?</span>],
-        )<span class="question-mark">?</span>;
+        <span class="kw">let </span>idx = [InvocationArg::try_from(i).unwrap().into_primitive()<span class="question-mark">?</span>];
+
+        <span class="kw">let </span>db = jvm.invoke(<span class="kw-2">&amp;</span>plan, <span class="string">&quot;getDBName&quot;</span>, <span class="kw-2">&amp;</span>idx)<span class="question-mark">?</span>;
         <span class="kw">let </span>db: String = jvm.to_rust(db)<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>alias_db = jvm.invoke(
-            <span class="kw-2">&amp;</span>plan,
-            <span class="string">&quot;getAliasDBName&quot;</span>,
-            <span class="kw-2">&amp;</span>[InvocationArg::try_from(i).unwrap().into_primitive()<span class="question-mark">?</span>],
-        )<span class="question-mark">?</span>;
+        <span class="kw">let </span>alias_db = jvm.invoke(<span class="kw-2">&amp;</span>plan, <span class="string">&quot;getAliasDBName&quot;</span>, <span class="kw-2">&amp;</span>idx)<span class="question-mark">?</span>;
         <span class="kw">let </span>alias_db: String = jvm.to_rust(alias_db)<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>rewrite_sql = jvm.invoke(
-            <span class="kw-2">&amp;</span>plan,
-            <span class="string">&quot;getSql&quot;</span>,
-            <span class="kw-2">&amp;</span>[InvocationArg::try_from(i).unwrap().into_primitive()<span class="question-mark">?</span>],
-        )<span class="question-mark">?</span>;
+        <span class="kw">let </span>rewrite_sql = jvm.invoke(<span class="kw-2">&amp;</span>plan, <span class="string">&quot;getSql&quot;</span>, <span class="kw-2">&amp;</span>idx)<span class="question-mark">?</span>;
         <span class="kw">let </span>rewrite_sql: String = jvm.to_rust(rewrite_sql)<span class="question-mark">?</span>;
+
+        <span class="kw">let </span>cardinality = jvm.invoke(<span class="kw-2">&amp;</span>plan, <span class="string">&quot;getCardinality&quot;</span>, <span class="kw-2">&amp;</span>idx)<span class="question-mark">?</span>;
+        <span class="kw">let </span>cardinality: usize = jvm.to_rust(cardinality)<span class="question-mark">?</span>;
+
         <span class="macro">debug!</span>(
-            <span class="string">&quot;{} - db: {}, alias: {} rewrite sql: {}&quot;</span>,
-            i, db, alias_db, rewrite_sql
+            <span class="string">&quot;{} - db: {}, alias: {}, cardinality: {}, rewrite sql: {}&quot;</span>,
+            i, db, alias_db, cardinality, rewrite_sql
         );
         fed_plan.push(Plan {
             db_name: db,
             db_alias: alias_db,
             sql: rewrite_sql,
+            cardinality,
         });
     }
     fed_plan
