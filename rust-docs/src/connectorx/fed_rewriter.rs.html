@@ -222,6 +222,7 @@
 <span id="222">222</span>
 <span id="223">223</span>
 <span id="224">224</span>
+<span id="225">225</span>
 </pre><pre class="rust"><code><span class="kw">use crate</span>::{
     constants::{
         CX_REWRITER_PATH, DUCKDB_JDBC_DRIVER, J4RS_BASE_PATH, MYSQL_JDBC_DRIVER,
@@ -304,8 +305,8 @@
             <span class="macro">debug!</span>(<span class="string">&quot;url: {:?}&quot;</span>, url);
             <span class="kw">let </span>ds = <span class="kw">match </span>source_conn.ty {
                 SourceType::Postgres =&gt; jvm.invoke_static(
-                    <span class="string">&quot;org.apache.calcite.adapter.jdbc.JdbcSchema&quot;</span>,
-                    <span class="string">&quot;dataSource&quot;</span>,
+                    <span class="string">&quot;ai.dataprep.federated.FederatedQueryRewriter&quot;</span>,
+                    <span class="string">&quot;createDataSource&quot;</span>,
                     <span class="kw-2">&amp;</span>[
                         InvocationArg::try_from(<span class="macro">format!</span>(
                             <span class="string">&quot;jdbc:postgresql://{}:{}{}&quot;</span>,
@@ -320,8 +321,8 @@
                     ],
                 )<span class="question-mark">?</span>,
                 SourceType::MySQL =&gt; jvm.invoke_static(
-                    <span class="string">&quot;org.apache.calcite.adapter.jdbc.JdbcSchema&quot;</span>,
-                    <span class="string">&quot;dataSource&quot;</span>,
+                    <span class="string">&quot;ai.dataprep.federated.FederatedQueryRewriter&quot;</span>,
+                    <span class="string">&quot;createDataSource&quot;</span>,
                     <span class="kw-2">&amp;</span>[
                         InvocationArg::try_from(<span class="macro">format!</span>(
                             <span class="string">&quot;jdbc:mysql://{}:{}{}&quot;</span>,
@@ -336,8 +337,8 @@
                     ],
                 )<span class="question-mark">?</span>,
                 SourceType::DuckDB =&gt; jvm.invoke_static(
-                    <span class="string">&quot;org.apache.calcite.adapter.jdbc.JdbcSchema&quot;</span>,
-                    <span class="string">&quot;dataSource&quot;</span>,
+                    <span class="string">&quot;ai.dataprep.federated.FederatedQueryRewriter&quot;</span>,
+                    <span class="string">&quot;createDataSource&quot;</span>,
                     <span class="kw-2">&amp;</span>[
                         InvocationArg::try_from(<span class="macro">format!</span>(<span class="string">&quot;jdbc:duckdb:{}&quot;</span>, url.path())).unwrap(),
                         InvocationArg::try_from(DUCKDB_JDBC_DRIVER).unwrap(),
@@ -350,6 +351,7 @@
             <span class="kw">let </span>fed_ds = jvm.create_instance(
                 <span class="string">&quot;ai.dataprep.federated.FederatedDataSource&quot;</span>,
                 <span class="kw-2">&amp;</span>[
+                    InvocationArg::try_from(url.scheme()).unwrap(),
                     InvocationArg::try_from(ds).unwrap(),
                     InvocationArg::try_from(db_info.is_local).unwrap(),
                 ],
