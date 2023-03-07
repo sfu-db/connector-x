@@ -80,8 +80,8 @@ fn create_sources(jvm: &Jvm, db_map: &HashMap<String, FederatedDataSourceInfo>) 
             debug!("url: {:?}", url);
             let ds = match source_conn.ty {
                 SourceType::Postgres => jvm.invoke_static(
-                    "org.apache.calcite.adapter.jdbc.JdbcSchema",
-                    "dataSource",
+                    "ai.dataprep.federated.FederatedQueryRewriter",
+                    "createDataSource",
                     &[
                         InvocationArg::try_from(format!(
                             "jdbc:postgresql://{}:{}{}",
@@ -96,8 +96,8 @@ fn create_sources(jvm: &Jvm, db_map: &HashMap<String, FederatedDataSourceInfo>) 
                     ],
                 )?,
                 SourceType::MySQL => jvm.invoke_static(
-                    "org.apache.calcite.adapter.jdbc.JdbcSchema",
-                    "dataSource",
+                    "ai.dataprep.federated.FederatedQueryRewriter",
+                    "createDataSource",
                     &[
                         InvocationArg::try_from(format!(
                             "jdbc:mysql://{}:{}{}",
@@ -112,8 +112,8 @@ fn create_sources(jvm: &Jvm, db_map: &HashMap<String, FederatedDataSourceInfo>) 
                     ],
                 )?,
                 SourceType::DuckDB => jvm.invoke_static(
-                    "org.apache.calcite.adapter.jdbc.JdbcSchema",
-                    "dataSource",
+                    "ai.dataprep.federated.FederatedQueryRewriter",
+                    "createDataSource",
                     &[
                         InvocationArg::try_from(format!("jdbc:duckdb:{}", url.path())).unwrap(),
                         InvocationArg::try_from(DUCKDB_JDBC_DRIVER).unwrap(),
@@ -126,6 +126,7 @@ fn create_sources(jvm: &Jvm, db_map: &HashMap<String, FederatedDataSourceInfo>) 
             let fed_ds = jvm.create_instance(
                 "ai.dataprep.federated.FederatedDataSource",
                 &[
+                    InvocationArg::try_from(url.scheme()).unwrap(),
                     InvocationArg::try_from(ds).unwrap(),
                     InvocationArg::try_from(db_info.is_local).unwrap(),
                 ],
