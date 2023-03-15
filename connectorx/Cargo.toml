@@ -58,6 +58,9 @@ uuid = {version = "0.8", optional = true}
 j4rs = {version = "0.13", optional = true}
 datafusion = {version = "14", optional = true}
 
+[target.'cfg(unix)'.dependencies]
+libgssapi = { version = "0.4.5", optional = true, default-features = false }
+
 [lib]
 crate-type = ["cdylib", "rlib"]
 name = "connectorx"
@@ -69,7 +72,7 @@ iai = "0.1"
 pprof = {version = "0.5", features = ["flamegraph"]}
 
 [features]
-all = ["src_sqlite", "src_postgres", "src_mysql", "src_mssql", "src_oracle", "src_bigquery", "src_csv", "src_dummy", "dst_arrow", "dst_arrow2", "federation", "fed_exec"]
+all = ["src_sqlite", "src_postgres", "src_mysql", "src_mssql", "src_oracle", "src_bigquery", "src_csv", "src_dummy", "dst_arrow", "dst_arrow2", "federation", "fed_exec", "integrated-auth-gssapi"]
 branch = []
 default = ["fptr"]
 dst_arrow = ["arrow"]
@@ -99,5 +102,6 @@ src_postgres = [
 src_sqlite = ["rusqlite", "r2d2_sqlite", "fallible-streaming-iterator", "r2d2", "urlencoding"]
 federation = ["j4rs"]
 fed_exec = ["datafusion", "tokio"]
+integrated-auth-gssapi = ["libgssapi"]
 [package.metadata.docs.rs]
 features = ["all"]
