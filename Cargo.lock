@@ -4260,6 +4260,7 @@ dependencies = [
  "futures",
  "futures-sink",
  "futures-util",
+ "libgssapi",
  "num-traits",
  "once_cell",
  "opentls",
