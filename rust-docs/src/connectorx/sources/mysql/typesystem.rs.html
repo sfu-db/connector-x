@@ -119,6 +119,7 @@
 <span id="119">119</span>
 <span id="120">120</span>
 <span id="121">121</span>
+<span id="122">122</span>
 </pre><pre class="rust"><code><span class="kw">use </span>chrono::{NaiveDate, NaiveDateTime, NaiveTime};
 <span class="kw">use </span>r2d2_mysql::mysql::consts::{ColumnFlags, ColumnType};
 <span class="kw">use </span>rust_decimal::Decimal;
@@ -236,6 +237,7 @@
             ColumnType::MYSQL_TYPE_MEDIUM_BLOB =&gt; MediumBlob(null_ok),
             ColumnType::MYSQL_TYPE_LONG_BLOB =&gt; LongBlob(null_ok),
             ColumnType::MYSQL_TYPE_JSON =&gt; Json(null_ok),
+            ColumnType::MYSQL_TYPE_VARCHAR =&gt; VarChar(null_ok),
             <span class="kw">_ </span>=&gt; <span class="macro">unimplemented!</span>(<span class="string">&quot;{}&quot;</span>, <span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, ty)),
         }
     }
