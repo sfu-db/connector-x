@@ -115,6 +115,7 @@ impl<'a> From<(&'a ColumnType, &'a ColumnFlags)> for MySQLTypeSystem {
             ColumnType::MYSQL_TYPE_MEDIUM_BLOB => MediumBlob(null_ok),
             ColumnType::MYSQL_TYPE_LONG_BLOB => LongBlob(null_ok),
             ColumnType::MYSQL_TYPE_JSON => Json(null_ok),
+            ColumnType::MYSQL_TYPE_VARCHAR => VarChar(null_ok),
             _ => unimplemented!("{}", format!("{:?}", ty)),
         }
     }
