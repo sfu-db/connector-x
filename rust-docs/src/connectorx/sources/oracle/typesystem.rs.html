@@ -54,8 +54,7 @@
 <span id="54">54</span>
 <span id="55">55</span>
 <span id="56">56</span>
-<span id="57">57</span>
-</pre><pre class="rust"><code><span class="kw">use </span>chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
+</pre><pre class="rust"><code><span class="kw">use </span>chrono::{DateTime, NaiveDateTime, Utc};
 <span class="kw">use </span>r2d2_oracle::oracle::sql_type::OracleType;
 
 <span class="attribute">#[derive(Copy, Clone, Debug)]
@@ -83,8 +82,7 @@
         { Float | NumFloat | BinaryFloat | BinaryDouble =&gt; f64 }
         { Blob =&gt; Vec&lt;u8&gt;}
         { Clob | VarChar | Char | NVarChar | NChar =&gt; String }
-        { Date =&gt; NaiveDate }
-        { Timestamp =&gt; NaiveDateTime }
+        { Date | Timestamp =&gt; NaiveDateTime }
         { TimestampTz =&gt; DateTime&lt;Utc&gt; }
     }
 }
