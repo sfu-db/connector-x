@@ -1,4 +1,4 @@
-use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
+use chrono::{DateTime, NaiveDateTime, Utc};
 use r2d2_oracle::oracle::sql_type::OracleType;
 
 #[derive(Copy, Clone, Debug)]
@@ -14,6 +14,7 @@ pub enum OracleTypeSystem {
     Char(bool),
     NVarChar(bool),
     NChar(bool),
+    Date(bool),
     Timestamp(bool),
     TimestampTz(bool),
 }
@@ -25,8 +26,7 @@ impl_typesystem! {
         { Float | NumFloat | BinaryFloat | BinaryDouble => f64 }
         { Blob => Vec<u8>}
         { Clob | VarChar | Char | NVarChar | NChar => String }
-        { Date => NaiveDateTime }
-        { Timestamp => NaiveDateTime }
+        { Date | Timestamp => NaiveDateTime }
         { TimestampTz => DateTime<Utc> }
     }
 }
@@ -47,7 +47,7 @@ impl<'a> From<&'a OracleType> for OracleTypeSystem {
             OracleType::NChar(_) => NChar(true),
             OracleType::Varchar2(_) => VarChar(true),
             OracleType::NVarchar2(_) => NVarChar(true),
-            OracleType::Date => Timestamp(true),
+            OracleType::Date => Date(true),
             OracleType::Timestamp(_) => Timestamp(true),
             OracleType::TimestampTZ(_) => TimestampTz(true),
             _ => unimplemented!("{}", format!("Type {:?} not implemented for oracle!", ty)),
