@@ -1,4 +1,4 @@
-use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
+use chrono::{DateTime, NaiveDateTime, Utc};
 use r2d2_oracle::oracle::sql_type::OracleType;
 
 #[derive(Copy, Clone, Debug)]
@@ -26,8 +26,7 @@ impl_typesystem! {
         { Float | NumFloat | BinaryFloat | BinaryDouble => f64 }
         { Blob => Vec<u8>}
         { Clob | VarChar | Char | NVarChar | NChar => String }
-        { Date => NaiveDate }
-        { Timestamp => NaiveDateTime }
+        { Date | Timestamp => NaiveDateTime }
         { TimestampTz => DateTime<Utc> }
     }
 }
