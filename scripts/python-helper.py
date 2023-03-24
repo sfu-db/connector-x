@@ -61,7 +61,7 @@ def main() -> None:
             else:
                 abitag = pyver
         elif METADATA["platform"] == "linux":
-            arch = "manylinux2014_x86_64"
+            arch = "manylinux_2_28_x86_64"
             abitag = METADATA["abi_tag"]
         elif METADATA["platform"] == "darwin":
             arch = "macosx_10_15_intel"
