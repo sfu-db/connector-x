@@ -19,7 +19,11 @@ use funcs::{FFinishBuilder, FNewBuilder, FNewField};
 use itertools::Itertools;
 use std::{
     any::Any,
-    sync::{Arc, Mutex},
+    sync::{
+        mpsc::{channel, Receiver, Sender},
+        // Arc, Mutex,
+        Arc,
+    },
 };
 
 type Builder = Box<dyn Any + Send>;
@@ -28,19 +32,26 @@ type Builders = Vec<Builder>;
 pub struct ArrowDestination {
     schema: Vec<ArrowTypeSystem>,
     names: Vec<String>,
-    data: Arc<Mutex<Vec<RecordBatch>>>,
+    // data: Arc<Mutex<Vec<RecordBatch>>>,
     arrow_schema: Arc<Schema>,
     batch_size: usize,
+    sender: Option<Sender<RecordBatch>>,
+    // receiver: Arc<Mutex<Receiver<RecordBatch>>>,
+    receiver: Receiver<RecordBatch>,
 }
 
 impl Default for ArrowDestination {
     fn default() -> Self {
+        let (tx, rx) = channel();
         ArrowDestination {
             schema: vec![],
             names: vec![],
-            data: Arc::new(Mutex::new(vec![])),
+            // data: Arc::new(Mutex::new(vec![])),
             arrow_schema: Arc::new(Schema::empty()),
             batch_size: RECORD_BATCH_SIZE,
+            sender: Some(tx),
+            // receiver: Arc::new(Mutex::new(rx)),
+            receiver: rx,
         }
     }
 }
@@ -51,12 +62,16 @@ impl ArrowDestination {
     }
 
     pub fn new_with_batch_size(batch_size: usize) -> Self {
+        let (tx, rx) = channel();
         ArrowDestination {
             schema: vec![],
             names: vec![],
-            data: Arc::new(Mutex::new(vec![])),
+            // data: Arc::new(Mutex::new(vec![])),
             arrow_schema: Arc::new(Schema::empty()),
             batch_size,
+            sender: Some(tx),
+            receiver: rx,
+            // receiver: Arc::new(Mutex::new(rx)),
         }
     }
 }
@@ -101,14 +116,23 @@ impl Destination for ArrowDestination {
     #[throws(ArrowDestinationError)]
     fn partition(&mut self, counts: usize) -> Vec<Self::Partition<'_>> {
         let mut partitions = vec![];
+        let sender = self.sender.take().unwrap();
         for _ in 0..counts {
             partitions.push(ArrowPartitionWriter::new(
                 self.schema.clone(),
-                Arc::clone(&self.data),
                 Arc::clone(&self.arrow_schema),
                 self.batch_size,
+                sender.clone(),
             )?);
         }
+        // let data = self.data.clone();
+        // let receiver = self.receiver.clone();
+        // std::thread::spawn(move || loop {
+        //     match receiver.lock().unwrap().recv() {
+        //         Ok(rb) => data.lock().unwrap().push(rb),
+        //         Err(_) => break,
+        //     }
+        // });
         partitions
     }
 
@@ -120,18 +144,32 @@ impl Destination for ArrowDestination {
 impl ArrowDestination {
     #[throws(ArrowDestinationError)]
     pub fn arrow(self) -> Vec<RecordBatch> {
-        let lock = Arc::try_unwrap(self.data).map_err(|_| anyhow!("Partitions are not freed"))?;
-        lock.into_inner()
-            .map_err(|e| anyhow!("mutex poisoned {}", e))?
+        std::mem::drop(self.sender);
+        let mut data = vec![];
+        loop {
+            match self.receiver.recv() {
+                Ok(rb) => data.push(rb),
+                Err(_) => break,
+            }
+        }
+        data
+        // let lock = Arc::try_unwrap(self.data).map_err(|_| anyhow!("Partitions are not freed"))?;
+        // lock.into_inner()
+        //     .map_err(|e| anyhow!("mutex poisoned {}", e))?
     }
 
     #[throws(ArrowDestinationError)]
     pub fn record_batch(&mut self) -> Option<RecordBatch> {
-        let mut guard = self
-            .data
-            .lock()
-            .map_err(|e| anyhow!("mutex poisoned {}", e))?;
-        (*guard).pop()
+        match self.receiver.recv() {
+            Ok(rb) => Some(rb),
+            Err(_) => None,
+        }
+        // self.data.lock().unwrap().pop()
+        // let mut guard = self
+        //     .data
+        //     .lock()
+        //     .map_err(|e| anyhow!("mutex poisoned {}", e))?;
+        // (*guard).pop()
     }
 
     pub fn empty_batch(&self) -> RecordBatch {
@@ -152,9 +190,9 @@ pub struct ArrowPartitionWriter {
     builders: Option<Builders>,
     current_row: usize,
     current_col: usize,
-    data: Arc<Mutex<Vec<RecordBatch>>>,
     arrow_schema: Arc<Schema>,
     batch_size: usize,
+    sender: Option<Sender<RecordBatch>>,
 }
 
 // unsafe impl Sync for ArrowPartitionWriter {}
@@ -163,18 +201,18 @@ impl ArrowPartitionWriter {
     #[throws(ArrowDestinationError)]
     fn new(
         schema: Vec<ArrowTypeSystem>,
-        data: Arc<Mutex<Vec<RecordBatch>>>,
         arrow_schema: Arc<Schema>,
         batch_size: usize,
+        sender: Sender<RecordBatch>,
     ) -> Self {
         let mut pw = ArrowPartitionWriter {
             schema,
             builders: None,
             current_row: 0,
             current_col: 0,
-            data,
             arrow_schema,
             batch_size,
+            sender: Some(sender),
         };
         pw.allocate()?;
         pw
@@ -202,14 +240,15 @@ impl ArrowPartitionWriter {
             .map(|(builder, &dt)| Realize::<FFinishBuilder>::realize(dt)?(builder))
             .collect::<std::result::Result<Vec<_>, crate::errors::ConnectorXError>>()?;
         let rb = RecordBatch::try_new(Arc::clone(&self.arrow_schema), columns)?;
-        {
-            let mut guard = self
-                .data
-                .lock()
-                .map_err(|e| anyhow!("mutex poisoned {}", e))?;
-            let inner_data = &mut *guard;
-            inner_data.push(rb);
-        }
+        self.sender.as_ref().unwrap().send(rb).unwrap();
+        // {
+        //     let mut guard = self
+        //         .data
+        //         .lock()
+        //         .map_err(|e| anyhow!("mutex poisoned {}", e))?;
+        //     let inner_data = &mut *guard;
+        //     inner_data.push(rb);
+        // }
 
         self.current_row = 0;
         self.current_col = 0;
@@ -225,6 +264,8 @@ impl<'a> DestinationPartition<'a> for ArrowPartitionWriter {
         if self.builders.is_some() {
             self.flush()?;
         }
+        std::mem::drop(self.sender.take());
+        // std::mem::take(&mut self.sender);
     }
 
     #[throws(ArrowDestinationError)]

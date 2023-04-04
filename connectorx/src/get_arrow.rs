@@ -258,7 +258,6 @@ pub fn new_record_batch_iter(
                     )
                     .unwrap();
                     let batch_iter = ArrowBatchIter::<
-                        '_,
                         _,
                         PostgresArrowTransport<CSVProtocol, MakeTlsConnector>,
                     >::new(
@@ -271,14 +270,15 @@ pub fn new_record_batch_iter(
                     let source =
                         PostgresSource::<CSVProtocol, NoTls>::new(config, NoTls, queries.len())
                             .unwrap();
-                    let batch_iter = ArrowBatchIter::<
-                        '_,
-                        _,
-                        PostgresArrowTransport<CSVProtocol, NoTls>,
-                    >::new(
-                        source, destination, origin_query, queries, batch_size
-                    )
-                    .unwrap();
+                    let batch_iter =
+                        ArrowBatchIter::<_, PostgresArrowTransport<CSVProtocol, NoTls>>::new(
+                            source,
+                            destination,
+                            origin_query,
+                            queries,
+                            batch_size,
+                        )
+                        .unwrap();
                     return Box::new(batch_iter);
                 }
                 ("binary", Some(tls_conn)) => {
@@ -289,7 +289,6 @@ pub fn new_record_batch_iter(
                     )
                     .unwrap();
                     let batch_iter = ArrowBatchIter::<
-                        '_,
                         _,
                         PostgresArrowTransport<PgBinaryProtocol, MakeTlsConnector>,
                     >::new(
@@ -306,7 +305,6 @@ pub fn new_record_batch_iter(
                     )
                     .unwrap();
                     let batch_iter = ArrowBatchIter::<
-                        '_,
                         _,
                         PostgresArrowTransport<PgBinaryProtocol, NoTls>,
                     >::new(
@@ -323,7 +321,6 @@ pub fn new_record_batch_iter(
                     )
                     .unwrap();
                     let batch_iter = ArrowBatchIter::<
-                        '_,
                         _,
                         PostgresArrowTransport<CursorProtocol, MakeTlsConnector>,
                     >::new(
@@ -337,7 +334,6 @@ pub fn new_record_batch_iter(
                         PostgresSource::<CursorProtocol, NoTls>::new(config, NoTls, queries.len())
                             .unwrap();
                     let batch_iter = ArrowBatchIter::<
-                        '_,
                         _,
                         PostgresArrowTransport<CursorProtocol, NoTls>,
                     >::new(
@@ -356,7 +352,7 @@ pub fn new_record_batch_iter(
                     MySQLSource::<MySQLBinaryProtocol>::new(&source_conn.conn[..], queries.len())
                         .unwrap();
                 let batch_iter =
-                    ArrowBatchIter::<'_, _, MySQLArrowTransport<MySQLBinaryProtocol>>::new(
+                    ArrowBatchIter::<_, MySQLArrowTransport<MySQLBinaryProtocol>>::new(
                         source,
                         destination,
                         origin_query,
@@ -369,7 +365,7 @@ pub fn new_record_batch_iter(
             "text" => {
                 let source =
                     MySQLSource::<TextProtocol>::new(&source_conn.conn[..], queries.len()).unwrap();
-                let batch_iter = ArrowBatchIter::<'_, _, MySQLArrowTransport<TextProtocol>>::new(
+                let batch_iter = ArrowBatchIter::<_, MySQLArrowTransport<TextProtocol>>::new(
                     source,
                     destination,
                     origin_query,
@@ -386,7 +382,7 @@ pub fn new_record_batch_iter(
             // remove the first "sqlite://" manually since url.path is not correct for windows
             let path = &source_conn.conn.as_str()[9..];
             let source = SQLiteSource::new(path, queries.len()).unwrap();
-            let batch_iter = ArrowBatchIter::<'_, _, SQLiteArrowTransport>::new(
+            let batch_iter = ArrowBatchIter::<_, SQLiteArrowTransport>::new(
                 source,
                 destination,
                 origin_query,
@@ -400,7 +396,7 @@ pub fn new_record_batch_iter(
         SourceType::MsSQL => {
             let rt = Arc::new(tokio::runtime::Runtime::new().expect("Failed to create runtime"));
             let source = MsSQLSource::new(rt, &source_conn.conn[..], queries.len()).unwrap();
-            let batch_iter = ArrowBatchIter::<'_, _, MsSQLArrowTransport>::new(
+            let batch_iter = ArrowBatchIter::<_, MsSQLArrowTransport>::new(
                 source,
                 destination,
                 origin_query,
@@ -413,7 +409,7 @@ pub fn new_record_batch_iter(
         #[cfg(feature = "src_oracle")]
         SourceType::Oracle => {
             let source = OracleSource::new(&source_conn.conn[..], queries.len()).unwrap();
-            let batch_iter = ArrowBatchIter::<'_, _, OracleArrowTransport>::new(
+            let batch_iter = ArrowBatchIter::<_, OracleArrowTransport>::new(
                 source,
                 destination,
                 origin_query,
@@ -427,7 +423,7 @@ pub fn new_record_batch_iter(
         SourceType::BigQuery => {
             let rt = Arc::new(tokio::runtime::Runtime::new().expect("Failed to create runtime"));
             let source = BigQuerySource::new(rt, &source_conn.conn[..]).unwrap();
-            let batch_iter = ArrowBatchIter::<'_, _, BigQueryArrowTransport>::new(
+            let batch_iter = ArrowBatchIter::<_, BigQueryArrowTransport>::new(
                 source,
                 destination,
                 origin_query,
