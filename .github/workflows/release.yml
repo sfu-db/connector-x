@@ -47,7 +47,7 @@ jobs:
           rust-toolchain: 1.65.0
           maturin-version: v0.14.15
           command: build
-          args: -m connectorx-python/Cargo.toml -i python --release --manylinux 2_28
+          args: -m connectorx-python/Cargo.toml -i python --release --manylinux 2_28 --features integrated-auth-gssapi
         env:
           SQLITE3_STATIC: 1
 
@@ -61,7 +61,7 @@ jobs:
           rust-toolchain: 1.65.0
           maturin-version: v0.14.15
           command: build
-          args: -m connectorx-python/Cargo.toml -i python --release --manylinux 2_28
+          args: -m connectorx-python/Cargo.toml -i python --release --manylinux 2_28 --features integrated-auth-gssapi
         env:
           SQLITE3_STATIC: 1
 
@@ -69,7 +69,7 @@ jobs:
       #   with:
       #     maturin-version: v0.14.15
       #     command: build
-      #     args: -m connectorx-python/Cargo.toml --target aarch64-unknown-linux-gnu -i python --release --manylinux 2_28
+      #     args: -m connectorx-python/Cargo.toml --target aarch64-unknown-linux-gnu -i python --release --manylinux 2_28 --features integrated-auth-gssapi
       #   env:
       #     SQLITE3_STATIC: 1
 
@@ -84,6 +84,9 @@ jobs:
       matrix:
         os: ["windows-latest", "macos-10.15"]
         python-version: ["3.8", "3.9", "3.10", "3.11"]
+        include:
+          - os: "macos-10.15"
+            features: "--features integrated-auth-gssapi"
     steps:
       - uses: actions/checkout@v2
 
@@ -117,7 +120,7 @@ jobs:
           rust-toolchain: 1.65.0
           maturin-version: v0.14.15
           command: build
-          args: -m connectorx-python/Cargo.toml -i python --release
+          args: -m connectorx-python/Cargo.toml -i python --release ${{ matrix.features }}
         env:
           SQLITE3_STATIC: 1
 
@@ -131,7 +134,7 @@ jobs:
           rust-toolchain: 1.65.0
           maturin-version: v0.14.15
           command: build
-          args: -m connectorx-python/Cargo.toml -i python --release
+          args: -m connectorx-python/Cargo.toml -i python --release ${{ matrix.features }}
         env:
           SQLITE3_STATIC: 1
 
@@ -178,7 +181,7 @@ jobs:
           rust-toolchain: 1.65.0
           maturin-version: v0.14.15
           command: build
-          args: -m connectorx-python/Cargo.toml --target aarch64-apple-darwin -i python --release
+          args: -m connectorx-python/Cargo.toml --target aarch64-apple-darwin -i python --release  --features integrated-auth-gssapi
         env:
           SQLITE3_STATIC: 1
 
@@ -192,7 +195,7 @@ jobs:
           rust-toolchain: 1.65.0
           maturin-version: v0.14.15
           command: build
-          args: -m connectorx-python/Cargo.toml --target aarch64-apple-darwin -i python --release
+          args: -m connectorx-python/Cargo.toml --target aarch64-apple-darwin -i python --release  --features integrated-auth-gssapi
         env:
           SQLITE3_STATIC: 1
 

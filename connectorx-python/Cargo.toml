@@ -76,3 +76,4 @@ srcs = [
   "connectorx/src_oracle",
   "connectorx/src_bigquery",
 ]
+integrated-auth-gssapi = ["connectorx/integrated-auth-gssapi"]

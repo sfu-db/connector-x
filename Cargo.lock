@@ -827,7 +827,6 @@ dependencies = [
  "iai",
  "itertools",
  "j4rs",
- "libgssapi",
  "log",
  "mysql_common",
  "native-tls",
