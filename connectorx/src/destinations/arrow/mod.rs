@@ -21,7 +21,6 @@ use std::{
     any::Any,
     sync::{
         mpsc::{channel, Receiver, Sender},
-        // Arc, Mutex,
         Arc,
     },
 };
@@ -32,11 +31,9 @@ type Builders = Vec<Builder>;
 pub struct ArrowDestination {
     schema: Vec<ArrowTypeSystem>,
     names: Vec<String>,
-    // data: Arc<Mutex<Vec<RecordBatch>>>,
     arrow_schema: Arc<Schema>,
     batch_size: usize,
     sender: Option<Sender<RecordBatch>>,
-    // receiver: Arc<Mutex<Receiver<RecordBatch>>>,
     receiver: Receiver<RecordBatch>,
 }
 
@@ -46,11 +43,9 @@ impl Default for ArrowDestination {
         ArrowDestination {
             schema: vec![],
             names: vec![],
-            // data: Arc::new(Mutex::new(vec![])),
             arrow_schema: Arc::new(Schema::empty()),
             batch_size: RECORD_BATCH_SIZE,
             sender: Some(tx),
-            // receiver: Arc::new(Mutex::new(rx)),
             receiver: rx,
         }
     }
@@ -66,12 +61,10 @@ impl ArrowDestination {
         ArrowDestination {
             schema: vec![],
             names: vec![],
-            // data: Arc::new(Mutex::new(vec![])),
             arrow_schema: Arc::new(Schema::empty()),
             batch_size,
             sender: Some(tx),
             receiver: rx,
-            // receiver: Arc::new(Mutex::new(rx)),
         }
     }
 }
@@ -125,15 +118,8 @@ impl Destination for ArrowDestination {
                 sender.clone(),
             )?);
         }
-        // let data = self.data.clone();
-        // let receiver = self.receiver.clone();
-        // std::thread::spawn(move || loop {
-        //     match receiver.lock().unwrap().recv() {
-        //         Ok(rb) => data.lock().unwrap().push(rb),
-        //         Err(_) => break,
-        //     }
-        // });
         partitions
+        // self.sender should be freed
     }
 
     fn schema(&self) -> &[ArrowTypeSystem] {
@@ -144,7 +130,11 @@ impl Destination for ArrowDestination {
 impl ArrowDestination {
     #[throws(ArrowDestinationError)]
     pub fn arrow(self) -> Vec<RecordBatch> {
-        std::mem::drop(self.sender);
+        if self.sender.is_some() {
+            // should not happen since it is dropped after partition
+            // but need to make sure here otherwise recv will be blocked forever
+            std::mem::drop(self.sender);
+        }
         let mut data = vec![];
         loop {
             match self.receiver.recv() {
@@ -153,9 +143,6 @@ impl ArrowDestination {
             }
         }
         data
-        // let lock = Arc::try_unwrap(self.data).map_err(|_| anyhow!("Partitions are not freed"))?;
-        // lock.into_inner()
-        //     .map_err(|e| anyhow!("mutex poisoned {}", e))?
     }
 
     #[throws(ArrowDestinationError)]
@@ -164,12 +151,6 @@ impl ArrowDestination {
             Ok(rb) => Some(rb),
             Err(_) => None,
         }
-        // self.data.lock().unwrap().pop()
-        // let mut guard = self
-        //     .data
-        //     .lock()
-        //     .map_err(|e| anyhow!("mutex poisoned {}", e))?;
-        // (*guard).pop()
     }
 
     pub fn empty_batch(&self) -> RecordBatch {
@@ -241,14 +222,6 @@ impl ArrowPartitionWriter {
             .collect::<std::result::Result<Vec<_>, crate::errors::ConnectorXError>>()?;
         let rb = RecordBatch::try_new(Arc::clone(&self.arrow_schema), columns)?;
         self.sender.as_ref().unwrap().send(rb).unwrap();
-        // {
-        //     let mut guard = self
-        //         .data
-        //         .lock()
-        //         .map_err(|e| anyhow!("mutex poisoned {}", e))?;
-        //     let inner_data = &mut *guard;
-        //     inner_data.push(rb);
-        // }
 
         self.current_row = 0;
         self.current_col = 0;
@@ -264,8 +237,8 @@ impl<'a> DestinationPartition<'a> for ArrowPartitionWriter {
         if self.builders.is_some() {
             self.flush()?;
         }
+        // need to release the sender so receiver knows when the stream is exhasted
         std::mem::drop(self.sender.take());
-        // std::mem::take(&mut self.sender);
     }
 
     #[throws(ArrowDestinationError)]

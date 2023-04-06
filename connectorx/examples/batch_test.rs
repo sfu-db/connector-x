@@ -40,10 +40,10 @@ fn main() {
     let source =
         PostgresSource::<PgBinaryProtocol, NoTls>::new(config, NoTls, queries.len()).unwrap();
 
-    let destination = ArrowDestination::new();
+    let destination = ArrowDestination::new_with_batch_size(2048);
 
     let mut batch_iter: ArrowBatchIter<_, PostgresArrowTransport<PgBinaryProtocol, NoTls>> =
-        ArrowBatchIter::new(source, destination, origin_query, queries, 1024).unwrap();
+        ArrowBatchIter::new(source, destination, origin_query, queries).unwrap();
 
     batch_iter.prepare();
 
