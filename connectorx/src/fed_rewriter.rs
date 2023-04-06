@@ -144,11 +144,7 @@ fn create_sources(jvm: &Jvm, db_map: &HashMap<String, FederatedDataSourceInfo>) 
             let manual_info = db_info.manual_info.as_ref().unwrap();
             let schema_info = jvm.create_instance("java.util.HashMap", &[])?;
             for (name, columns) in manual_info {
-                let col_names: Vec<InvocationArg> = columns
-                    .iter()
-                    .map(|c| InvocationArg::try_from(c).unwrap())
-                    .collect();
-                let arr_instance = jvm.create_java_list("java.lang.String", &col_names)?;
+                let arr_instance = jvm.java_list("java.lang.String", columns.to_vec())?;
                 jvm.invoke(
                     &schema_info,
                     "put",
@@ -160,7 +156,10 @@ fn create_sources(jvm: &Jvm, db_map: &HashMap<String, FederatedDataSourceInfo>) 
             }
             let fed_ds = jvm.create_instance(
                 "ai.dataprep.federated.FederatedDataSource",
-                &[InvocationArg::try_from(schema_info).unwrap()],
+                &[
+                    InvocationArg::try_from("local").unwrap(),
+                    InvocationArg::try_from(schema_info).unwrap(),
+                ],
             )?;
             jvm.invoke(
                 &data_sources,
