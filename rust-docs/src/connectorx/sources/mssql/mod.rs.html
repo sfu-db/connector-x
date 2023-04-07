@@ -472,7 +472,7 @@
     <span class="comment">// Using SQL Server authentication.
     </span><span class="attribute">#[allow(unused)]
     </span><span class="kw">let </span>params: HashMap&lt;String, String&gt; = url.query_pairs().into_owned().collect();
-    <span class="attribute">#[cfg(windows)]
+    <span class="attribute">#[cfg(any(windows, feature = <span class="string">&quot;integrated-auth-gssapi&quot;</span>))]
     </span><span class="kw">match </span>params.get(<span class="string">&quot;trusted_connection&quot;</span>) {
         <span class="comment">// pefer trusted_connection if set to true
         </span><span class="prelude-val">Some</span>(v) <span class="kw">if </span>v == <span class="string">&quot;true&quot; </span>=&gt; {
@@ -487,7 +487,7 @@
             ));
         }
     };
-    <span class="attribute">#[cfg(not(windows))]
+    <span class="attribute">#[cfg(all(not(windows), not(feature = <span class="string">&quot;integrated-auth-gssapi&quot;</span>)))]
     </span>config.authentication(AuthMethod::sql_server(
         decode(url.username())<span class="question-mark">?</span>.to_owned(),
         decode(url.password().unwrap_or(<span class="string">&quot;&quot;</span>))<span class="question-mark">?</span>.to_owned(),
