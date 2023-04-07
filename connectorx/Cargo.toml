@@ -50,7 +50,7 @@ regex = {version = "1", optional = true}
 rusqlite = {version = "0.27.0", features = ["column_decltype", "chrono", "bundled"], optional = true}
 rust_decimal = {version = "1", features = ["db-postgres"], optional = true}
 rust_decimal_macros = {version = "1", optional = true}
-tiberius = {version = "0.5", features = ["rust_decimal", "chrono"], optional = true}
+tiberius = {version = "0.5", features = ["rust_decimal", "chrono", "integrated-auth-gssapi"], optional = true}
 tokio = {version = "1", features = ["rt", "rt-multi-thread", "net"], optional = true}
 tokio-util = {version = "0.6", optional = true}
 urlencoding = {version = "2.1", optional = true}
@@ -99,5 +99,7 @@ src_postgres = [
 src_sqlite = ["rusqlite", "r2d2_sqlite", "fallible-streaming-iterator", "r2d2", "urlencoding"]
 federation = ["j4rs"]
 fed_exec = ["datafusion", "tokio"]
+integrated-auth-gssapi = ["tiberius/integrated-auth-gssapi"]
+
 [package.metadata.docs.rs]
 features = ["all"]
