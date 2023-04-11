@@ -20,6 +20,7 @@ pub enum PostgresTypeSystem {
     Int2Array(bool),
     Int4Array(bool),
     Int8Array(bool),
+    VarcharArray(bool),
     Date(bool),
     Char(bool),
     BpChar(bool),
@@ -51,6 +52,7 @@ impl_typesystem! {
         { Float4Array => Vec<f32> }
         { Float8Array => Vec<f64> }
         { NumericArray => Vec<Decimal> }
+        { VarcharArray => Vec<String>}
         { Bool => bool }
         { Char => i8 }
         { Text | BpChar | VarChar | Enum => &'r str }
@@ -81,6 +83,7 @@ impl<'a> From<&'a Type> for PostgresTypeSystem {
             "_float4" => Float4Array(true),
             "_float8" => Float8Array(true),
             "_numeric" => NumericArray(true),
+            "_varchar" => VarcharArray(true),
             "bool" => Bool(true),
             "char" => Char(true),
             "text" | "citext" | "ltree" | "lquery" | "ltxtquery" => Text(true),
