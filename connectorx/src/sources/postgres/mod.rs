@@ -483,10 +483,6 @@ impl_produce!(
     Vec<String>,
 );
 
-
-
-
-
 impl<'r, 'a> Produce<'r, HashMap<String, Option<String>>>
     for PostgresBinarySourcePartitionParser<'a>
 {
@@ -657,7 +653,7 @@ macro_rules! impl_csv_vec_produce {
     };
 }
 
-impl_csv_vec_produce!(i8, i16, i32, i64, f32, f64, Decimal,String,);
+impl_csv_vec_produce!(i8, i16, i32, i64, f32, f64, Decimal, String,);
 
 impl<'r, 'a> Produce<'r, HashMap<String, Option<String>>> for PostgresCSVSourceParser<'a> {
     type Error = PostgresSourceError;
@@ -1021,7 +1017,6 @@ impl_produce!(
     Value,
     HashMap<String, Option<String>>,
     Vec<String>,
-    
 );
 
 impl<C> SourcePartition for PostgresSourcePartition<SimpleProtocol, C>

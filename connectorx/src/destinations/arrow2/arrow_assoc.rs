@@ -61,7 +61,6 @@ impl_arrow_assoc!(f32, ArrowDataType::Float32, MutablePrimitiveArray<f32>);
 impl_arrow_assoc!(f64, ArrowDataType::Float64, MutablePrimitiveArray<f64>);
 impl_arrow_assoc!(bool, ArrowDataType::Boolean, MutableBooleanArray);
 
-
 macro_rules! impl_arrow_assoc_vec {
     ($T:ty, $AT:expr) => {
         impl ArrowAssoc for Vec<$T> {
@@ -441,25 +440,21 @@ impl ArrowAssoc for Vec<u8> {
     }
 }
 
-
-
 impl ArrowAssoc for Option<Vec<String>> {
-    type Builder = MutableUtf8Array<i64>;
+    type Builder = MutableListArray<i64, MutableUtf8Array<i64>>;
 
     fn builder(nrows: usize) -> Self::Builder {
-        MutableUtf8Array::with_capacity(nrows)
+        MutableListArray::with_capacity(nrows)
     }
 
-    #[inline]
     fn push(builder: &mut Self::Builder, value: Self) {
-        let mut z: String = String::new(); 
-
-        for v in value.unwrap() {
-            z.push_str(&v);
-
+        let value = value.unwrap();
+        let mut string_array: Vec<Option<String>> = vec![];
+        for sub_value in value {
+            string_array.push(Some(sub_value))
         }
-        println!("{}",z);
-        builder.push(Some(z));
+
+        builder.try_push(Some(string_array));
     }
 
     fn field(header: &str) -> Field {
@@ -467,55 +462,22 @@ impl ArrowAssoc for Option<Vec<String>> {
     }
 }
 
-
-
 impl ArrowAssoc for Vec<String> {
-    type Builder = MutableUtf8Array<i64>;
+    type Builder = MutableListArray<i64, MutableUtf8Array<i64>>;
 
     fn builder(nrows: usize) -> Self::Builder {
-        MutableUtf8Array::<i64>::with_capacity(nrows)
+        MutableListArray::with_capacity(nrows)
     }
 
-    #[inline]
     fn push(builder: &mut Self::Builder, value: Self) {
-        let mut z: String = String::new(); 
-        for v in value {
-            z.push_str(&v);
-
+        let mut string_array: Vec<Option<String>> = vec![];
+        for sub_value in value {
+            string_array.push(Some(sub_value))
         }
-        println!("{}",z);
-        builder.push(Some(z));
-
+        builder.try_push(Some(string_array));
     }
 
     fn field(header: &str) -> Field {
         Field::new(header, ArrowDataType::LargeUtf8, false)
     }
-
-
 }
-
-
-
-
-
-
-
-
-
-// impl ArrowAssoc for Option<Vec<u8>> {
-//     type Builder = MutableBinaryArray<i64>;
-
-//     fn builder(nrows: usize) -> Self::Builder {
-//         MutableBinaryArray::with_capacity(nrows)
-//     }
-
-//     #[inline]
-//     fn push(builder: &mut Self::Builder, value: Self) {
-//         builder.push(value);
-//     }
-
-//     fn field(header: &str) -> Field {
-//         Field::new(header, ArrowDataType::LargeBinary, true)
-//     }
-// }
