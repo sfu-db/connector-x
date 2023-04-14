@@ -66,7 +66,7 @@ CREATE TABLE IF NOT EXISTS test_types(
     test_citext CITEXT,
     test_ltree ltree,
     test_lquery lquery,
-    test_ltxtquery ltxtquery
+    test_ltxtquery ltxtquery,
     test_varchararray VARCHAR[]
 );
 
