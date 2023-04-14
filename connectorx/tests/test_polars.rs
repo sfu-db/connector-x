@@ -159,16 +159,24 @@ fn test_pg_pl_varchar_array() {
 
     dispatcher.run().expect("run dispatcher");
 
-    let s1 = Series::new("a", ["str1","str2"]);
-    let s2 = Series::new("b",["0123456789","abcdefghijklmnopqrstuvwxyz","!@#$%^&*()_-+=~`:;<>?/"]);
-    let s3 = Series::new("c",["","  "]);
+    let s1 = Series::new("a", ["str1", "str2"]);
+    let s2 = Series::new(
+        "b",
+        [
+            "0123456789",
+            "abcdefghijklmnopqrstuvwxyz",
+            "!@#$%^&*()_-+=~`:;<>?/",
+        ],
+    );
+    let s3 = Series::new("c", ["", "  "]);
     let empty_vec: Vec<&str> = vec![];
     let s4 = Series::new("d", empty_vec);
 
     let df: DataFrame = destination.polars().unwrap();
     let test_df: DataFrame = df!(
         "test_varchararray" => &[s1,s2,s3,s4]
-    ).unwrap();
+    )
+    .unwrap();
 
     println!("{:?}", df);
     assert_eq!(df, test_df);

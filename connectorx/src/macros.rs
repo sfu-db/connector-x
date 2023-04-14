@@ -16,7 +16,6 @@
 ///     Date64(bool),
 ///     Time64(bool),
 ///     DateTimeTz(bool),
-///     Utf8Array(bool),
 /// }
 ///
 /// impl_typesystem! {
@@ -142,7 +141,6 @@ macro_rules! impl_typesystem {
 ///         { Date[NaiveDate]               => Date32[NaiveDate]         | conversion auto }
 ///         { Datetimeoffset[DateTime<Utc>] => DateTimeTz[DateTime<Utc>] | conversion auto }
 ///         { Uniqueidentifier[Uuid]        => LargeUtf8[String]         | conversion option }
-///         { }
 ///     }
 /// );
 /// ```
