@@ -439,3 +439,45 @@ impl ArrowAssoc for Vec<u8> {
         Field::new(header, ArrowDataType::LargeBinary, false)
     }
 }
+
+impl ArrowAssoc for Option<Vec<String>> {
+    type Builder = MutableListArray<i64, MutableUtf8Array<i64>>;
+
+    fn builder(nrows: usize) -> Self::Builder {
+        MutableListArray::with_capacity(nrows)
+    }
+
+    fn push(builder: &mut Self::Builder, value: Self) {
+        let value = value.unwrap();
+        let mut string_array: Vec<Option<String>> = vec![];
+        for sub_value in value {
+            string_array.push(Some(sub_value))
+        }
+
+        builder.try_push(Some(string_array));
+    }
+
+    fn field(header: &str) -> Field {
+        Field::new(header, ArrowDataType::LargeUtf8, true)
+    }
+}
+
+impl ArrowAssoc for Vec<String> {
+    type Builder = MutableListArray<i64, MutableUtf8Array<i64>>;
+
+    fn builder(nrows: usize) -> Self::Builder {
+        MutableListArray::with_capacity(nrows)
+    }
+
+    fn push(builder: &mut Self::Builder, value: Self) {
+        let mut string_array: Vec<Option<String>> = vec![];
+        for sub_value in value {
+            string_array.push(Some(sub_value))
+        }
+        builder.try_push(Some(string_array));
+    }
+
+    fn field(header: &str) -> Field {
+        Field::new(header, ArrowDataType::LargeUtf8, false)
+    }
+}

@@ -22,6 +22,7 @@ pub enum Arrow2TypeSystem {
     UInt64Array(bool),
     Float32Array(bool),
     Float64Array(bool),
+    Utf8Array(bool),
 }
 
 impl_typesystem! {
@@ -42,9 +43,10 @@ impl_typesystem! {
         { DateTimeTz => DateTime<Utc> }
         { Int32Array => Vec<i32>      }
         { Int64Array => Vec<i64>      }
-        { UInt32Array => Vec<u32>      }
-        { UInt64Array => Vec<u64>      }
-        { Float32Array => Vec<f32>      }
-        { Float64Array => Vec<f64>      }
+        { UInt32Array => Vec<u32>     }
+        { UInt64Array => Vec<u64>     }
+        { Float32Array => Vec<f32>    }
+        { Float64Array => Vec<f64>    }
+        { Utf8Array => Vec<String>    }
     }
 }
