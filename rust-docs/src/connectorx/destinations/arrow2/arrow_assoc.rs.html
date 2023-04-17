@@ -439,6 +439,48 @@
 <span id="439">439</span>
 <span id="440">440</span>
 <span id="441">441</span>
+<span id="442">442</span>
+<span id="443">443</span>
+<span id="444">444</span>
+<span id="445">445</span>
+<span id="446">446</span>
+<span id="447">447</span>
+<span id="448">448</span>
+<span id="449">449</span>
+<span id="450">450</span>
+<span id="451">451</span>
+<span id="452">452</span>
+<span id="453">453</span>
+<span id="454">454</span>
+<span id="455">455</span>
+<span id="456">456</span>
+<span id="457">457</span>
+<span id="458">458</span>
+<span id="459">459</span>
+<span id="460">460</span>
+<span id="461">461</span>
+<span id="462">462</span>
+<span id="463">463</span>
+<span id="464">464</span>
+<span id="465">465</span>
+<span id="466">466</span>
+<span id="467">467</span>
+<span id="468">468</span>
+<span id="469">469</span>
+<span id="470">470</span>
+<span id="471">471</span>
+<span id="472">472</span>
+<span id="473">473</span>
+<span id="474">474</span>
+<span id="475">475</span>
+<span id="476">476</span>
+<span id="477">477</span>
+<span id="478">478</span>
+<span id="479">479</span>
+<span id="480">480</span>
+<span id="481">481</span>
+<span id="482">482</span>
+<span id="483">483</span>
 </pre><pre class="rust"><code><span class="kw">use </span>arrow2::{
     array::<span class="kw-2">*</span>,
     datatypes::{DataType <span class="kw">as </span>ArrowDataType, Field, TimeUnit},
@@ -878,6 +920,48 @@
 
     <span class="kw">fn </span>field(header: <span class="kw-2">&amp;</span>str) -&gt; Field {
         Field::new(header, ArrowDataType::LargeBinary, <span class="bool-val">false</span>)
+    }
+}
+
+<span class="kw">impl </span>ArrowAssoc <span class="kw">for </span><span class="prelude-ty">Option</span>&lt;Vec&lt;String&gt;&gt; {
+    <span class="kw">type </span>Builder = MutableListArray&lt;i64, MutableUtf8Array&lt;i64&gt;&gt;;
+
+    <span class="kw">fn </span>builder(nrows: usize) -&gt; <span class="self">Self</span>::Builder {
+        MutableListArray::with_capacity(nrows)
+    }
+
+    <span class="kw">fn </span>push(builder: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Builder, value: <span class="self">Self</span>) {
+        <span class="kw">let </span>value = value.unwrap();
+        <span class="kw">let </span><span class="kw-2">mut </span>string_array: Vec&lt;<span class="prelude-ty">Option</span>&lt;String&gt;&gt; = <span class="macro">vec!</span>[];
+        <span class="kw">for </span>sub_value <span class="kw">in </span>value {
+            string_array.push(<span class="prelude-val">Some</span>(sub_value))
+        }
+
+        builder.try_push(<span class="prelude-val">Some</span>(string_array));
+    }
+
+    <span class="kw">fn </span>field(header: <span class="kw-2">&amp;</span>str) -&gt; Field {
+        Field::new(header, ArrowDataType::LargeUtf8, <span class="bool-val">true</span>)
+    }
+}
+
+<span class="kw">impl </span>ArrowAssoc <span class="kw">for </span>Vec&lt;String&gt; {
+    <span class="kw">type </span>Builder = MutableListArray&lt;i64, MutableUtf8Array&lt;i64&gt;&gt;;
+
+    <span class="kw">fn </span>builder(nrows: usize) -&gt; <span class="self">Self</span>::Builder {
+        MutableListArray::with_capacity(nrows)
+    }
+
+    <span class="kw">fn </span>push(builder: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Builder, value: <span class="self">Self</span>) {
+        <span class="kw">let </span><span class="kw-2">mut </span>string_array: Vec&lt;<span class="prelude-ty">Option</span>&lt;String&gt;&gt; = <span class="macro">vec!</span>[];
+        <span class="kw">for </span>sub_value <span class="kw">in </span>value {
+            string_array.push(<span class="prelude-val">Some</span>(sub_value))
+        }
+        builder.try_push(<span class="prelude-val">Some</span>(string_array));
+    }
+
+    <span class="kw">fn </span>field(header: <span class="kw-2">&amp;</span>str) -&gt; Field {
+        Field::new(header, ArrowDataType::LargeUtf8, <span class="bool-val">false</span>)
     }
 }
 </code></pre></div>

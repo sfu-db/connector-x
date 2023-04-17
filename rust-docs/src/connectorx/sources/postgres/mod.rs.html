@@ -1547,6 +1547,8 @@
 <span id="1547">1547</span>
 <span id="1548">1548</span>
 <span id="1549">1549</span>
+<span id="1550">1550</span>
+<span id="1551">1551</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Source implementation for Postgres database, including the TLS support (client only).
 
 </span><span class="kw">mod </span>connection;
@@ -2029,6 +2031,7 @@
     NaiveDate,
     Uuid,
     Value,
+    Vec&lt;String&gt;,
 );
 
 <span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, HashMap&lt;String, <span class="prelude-ty">Option</span>&lt;String&gt;&gt;&gt;
@@ -2201,7 +2204,7 @@
     };
 }
 
-<span class="macro">impl_csv_vec_produce!</span>(i8, i16, i32, i64, f32, f64, Decimal,);
+<span class="macro">impl_csv_vec_produce!</span>(i8, i16, i32, i64, f32, f64, Decimal, String,);
 
 <span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, HashMap&lt;String, <span class="prelude-ty">Option</span>&lt;String&gt;&gt;&gt; <span class="kw">for </span>PostgresCSVSourceParser&lt;<span class="lifetime">&#39;a</span>&gt; {
     <span class="kw">type </span>Error = PostgresSourceError;
@@ -2564,6 +2567,7 @@
     Uuid,
     Value,
     HashMap&lt;String, <span class="prelude-ty">Option</span>&lt;String&gt;&gt;,
+    Vec&lt;String&gt;,
 );
 
 <span class="kw">impl</span>&lt;C&gt; SourcePartition <span class="kw">for </span>PostgresSourcePartition&lt;SimpleProtocol, C&gt;
@@ -2893,7 +2897,7 @@
         )+
     };
 }
-<span class="macro">impl_simple_vec_produce!</span>(i16, i32, i64, f32, f64, Decimal,);
+<span class="macro">impl_simple_vec_produce!</span>(i16, i32, i64, f32, f64, Decimal, String,);
 
 <span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, NaiveDate&gt; <span class="kw">for </span>PostgresSimpleSourceParser {
     <span class="kw">type </span>Error = PostgresSourceError;
