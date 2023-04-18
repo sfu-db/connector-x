@@ -7,7 +7,7 @@ use arrow::array::{
 };
 use arrow::datatypes::Field;
 use arrow::datatypes::{DataType as ArrowDataType, TimeUnit};
-use chrono::{Date, DateTime, NaiveDate, NaiveDateTime, NaiveTime, Timelike, Utc};
+use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Timelike, Utc};
 use fehler::throws;
 
 /// Associate arrow builder with native type
@@ -181,40 +181,8 @@ impl ArrowAssoc for Option<DateTime<Utc>> {
     }
 }
 
-impl ArrowAssoc for Date<Utc> {
-    type Builder = Float64Builder;
-
-    fn builder(_nrows: usize) -> Float64Builder {
-        unimplemented!()
-    }
-
-    fn append(_builder: &mut Self::Builder, _value: Date<Utc>) -> Result<()> {
-        unimplemented!()
-    }
-
-    fn field(_header: &str) -> Field {
-        unimplemented!()
-    }
-}
-
-impl ArrowAssoc for Option<Date<Utc>> {
-    type Builder = Float64Builder;
-
-    fn builder(_nrows: usize) -> Float64Builder {
-        unimplemented!()
-    }
-
-    fn append(_builder: &mut Self::Builder, _value: Option<Date<Utc>>) -> Result<()> {
-        unimplemented!()
-    }
-
-    fn field(_header: &str) -> Field {
-        unimplemented!()
-    }
-}
-
 fn naive_date_to_arrow(nd: NaiveDate) -> i32 {
-    (nd.and_hms(0, 0, 0).timestamp() / SECONDS_IN_DAY) as i32
+    (nd.and_hms_opt(0, 0, 0).expect("invalid time").timestamp() / SECONDS_IN_DAY) as i32
 }
 
 fn naive_datetime_to_arrow(nd: NaiveDateTime) -> i64 {
