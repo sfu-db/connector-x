@@ -451,9 +451,9 @@ impl ArrowAssoc for Option<Vec<String>> {
         let mut string_array: Vec<Option<String>> = vec![];
         match value {
             Some(value) => {
-        for sub_value in value {
-            string_array.push(Some(sub_value))
-        }
+                for sub_value in value {
+                    string_array.push(Some(sub_value))
+                }
 
                 builder.try_push(Some(string_array)).unwrap();
             }
