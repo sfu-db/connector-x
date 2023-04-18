@@ -480,7 +480,7 @@ impl ArrowAssoc for Vec<String> {
         for sub_value in value {
             string_array.push(Some(sub_value))
         }
-        builder.try_push(Some(string_array));
+        builder.try_push(Some(string_array)).unwrap();
     }
 
     fn field(header: &str) -> Field {
