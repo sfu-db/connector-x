@@ -448,13 +448,19 @@ impl ArrowAssoc for Option<Vec<String>> {
     }
 
     fn push(builder: &mut Self::Builder, value: Self) {
-        let value = value.unwrap();
         let mut string_array: Vec<Option<String>> = vec![];
-        for sub_value in value {
-            string_array.push(Some(sub_value))
-        }
+        match value {
+            Some(value) => {
+                for sub_value in value {
+                    string_array.push(Some(sub_value))
+                }
 
-        builder.try_push(Some(string_array));
+                builder.try_push(Some(string_array)).unwrap();
+            }
+            None => {
+                builder.try_push(Some(string_array)).unwrap();
+            }
+        };
     }
 
     fn field(header: &str) -> Field {
@@ -474,7 +480,7 @@ impl ArrowAssoc for Vec<String> {
         for sub_value in value {
             string_array.push(Some(sub_value))
         }
-        builder.try_push(Some(string_array));
+        builder.try_push(Some(string_array)).unwrap();
     }
 
     fn field(header: &str) -> Field {
