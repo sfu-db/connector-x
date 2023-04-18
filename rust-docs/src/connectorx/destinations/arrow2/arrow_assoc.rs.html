@@ -481,6 +481,12 @@
 <span id="481">481</span>
 <span id="482">482</span>
 <span id="483">483</span>
+<span id="484">484</span>
+<span id="485">485</span>
+<span id="486">486</span>
+<span id="487">487</span>
+<span id="488">488</span>
+<span id="489">489</span>
 </pre><pre class="rust"><code><span class="kw">use </span>arrow2::{
     array::<span class="kw-2">*</span>,
     datatypes::{DataType <span class="kw">as </span>ArrowDataType, Field, TimeUnit},
@@ -931,13 +937,19 @@
     }
 
     <span class="kw">fn </span>push(builder: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Builder, value: <span class="self">Self</span>) {
-        <span class="kw">let </span>value = value.unwrap();
         <span class="kw">let </span><span class="kw-2">mut </span>string_array: Vec&lt;<span class="prelude-ty">Option</span>&lt;String&gt;&gt; = <span class="macro">vec!</span>[];
-        <span class="kw">for </span>sub_value <span class="kw">in </span>value {
-            string_array.push(<span class="prelude-val">Some</span>(sub_value))
-        }
+        <span class="kw">match </span>value {
+            <span class="prelude-val">Some</span>(value) =&gt; {
+                <span class="kw">for </span>sub_value <span class="kw">in </span>value {
+                    string_array.push(<span class="prelude-val">Some</span>(sub_value))
+                }
 
-        builder.try_push(<span class="prelude-val">Some</span>(string_array));
+                builder.try_push(<span class="prelude-val">Some</span>(string_array)).unwrap();
+            }
+            <span class="prelude-val">None </span>=&gt; {
+                builder.try_push(<span class="prelude-val">Some</span>(string_array)).unwrap();
+            }
+        };
     }
 
     <span class="kw">fn </span>field(header: <span class="kw-2">&amp;</span>str) -&gt; Field {
@@ -957,7 +969,7 @@
         <span class="kw">for </span>sub_value <span class="kw">in </span>value {
             string_array.push(<span class="prelude-val">Some</span>(sub_value))
         }
-        builder.try_push(<span class="prelude-val">Some</span>(string_array));
+        builder.try_push(<span class="prelude-val">Some</span>(string_array)).unwrap();
     }
 
     <span class="kw">fn </span>field(header: <span class="kw-2">&amp;</span>str) -&gt; Field {
