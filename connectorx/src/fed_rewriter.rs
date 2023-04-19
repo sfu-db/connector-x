@@ -79,10 +79,10 @@ fn create_sources(jvm: &Jvm, db_map: &HashMap<String, FederatedDataSourceInfo>) 
             let url = &source_conn.conn;
             debug!("url: {:?}", url);
             let ds = match source_conn.ty {
-                SourceType::Postgres => jvm.invoke_static(
-                    "ai.dataprep.federated.FederatedQueryRewriter",
-                    "createDataSource",
+                SourceType::Postgres => jvm.create_instance(
+                    "ai.dataprep.federated.FederatedDataSource",
                     &[
+                        InvocationArg::try_from(db_info.is_local).unwrap(),
                         InvocationArg::try_from(format!(
                             "jdbc:postgresql://{}:{}{}",
                             url.host_str().unwrap_or("localhost"),
@@ -95,10 +95,10 @@ fn create_sources(jvm: &Jvm, db_map: &HashMap<String, FederatedDataSourceInfo>) 
                         InvocationArg::try_from(url.password().unwrap_or("")).unwrap(),
                     ],
                 )?,
-                SourceType::MySQL => jvm.invoke_static(
-                    "ai.dataprep.federated.FederatedQueryRewriter",
-                    "createDataSource",
+                SourceType::MySQL => jvm.create_instance(
+                    "ai.dataprep.federated.FederatedDataSource",
                     &[
+                        InvocationArg::try_from(db_info.is_local).unwrap(),
                         InvocationArg::try_from(format!(
                             "jdbc:mysql://{}:{}{}",
                             url.host_str().unwrap_or("localhost"),
@@ -111,10 +111,10 @@ fn create_sources(jvm: &Jvm, db_map: &HashMap<String, FederatedDataSourceInfo>) 
                         InvocationArg::try_from(url.password().unwrap_or("")).unwrap(),
                     ],
                 )?,
-                SourceType::DuckDB => jvm.invoke_static(
-                    "ai.dataprep.federated.FederatedQueryRewriter",
-                    "createDataSource",
+                SourceType::DuckDB => jvm.create_instance(
+                    "ai.dataprep.federated.FederatedDataSource",
                     &[
+                        InvocationArg::try_from(db_info.is_local).unwrap(),
                         InvocationArg::try_from(format!("jdbc:duckdb:{}", url.path())).unwrap(),
                         InvocationArg::try_from(DUCKDB_JDBC_DRIVER).unwrap(),
                         InvocationArg::try_from(Null::String).unwrap(),
@@ -123,20 +123,12 @@ fn create_sources(jvm: &Jvm, db_map: &HashMap<String, FederatedDataSourceInfo>) 
                 )?,
                 _ => unimplemented!("Connection: {:?} not supported!", url),
             };
-            let fed_ds = jvm.create_instance(
-                "ai.dataprep.federated.FederatedDataSource",
-                &[
-                    InvocationArg::try_from(url.scheme()).unwrap(),
-                    InvocationArg::try_from(ds).unwrap(),
-                    InvocationArg::try_from(db_info.is_local).unwrap(),
-                ],
-            )?;
             jvm.invoke(
                 &data_sources,
                 "put",
                 &[
                     InvocationArg::try_from(db_name).unwrap(),
-                    InvocationArg::try_from(fed_ds).unwrap(),
+                    InvocationArg::try_from(ds).unwrap(),
                 ],
             )?;
         } else {
@@ -157,7 +149,7 @@ fn create_sources(jvm: &Jvm, db_map: &HashMap<String, FederatedDataSourceInfo>) 
             let fed_ds = jvm.create_instance(
                 "ai.dataprep.federated.FederatedDataSource",
                 &[
-                    InvocationArg::try_from("local").unwrap(),
+                    InvocationArg::try_from(db_info.is_local).unwrap(),
                     InvocationArg::try_from(schema_info).unwrap(),
                 ],
             )?;
@@ -187,7 +179,7 @@ pub fn rewrite_sql(
     let data_sources = create_sources(&jvm, db_map)?;
     let rewriter = jvm.create_instance("ai.dataprep.federated.FederatedQueryRewriter", &[])?;
     let data_sources = InvocationArg::try_from(data_sources).unwrap();
-    let plan = jvm.invoke(&rewriter, "rewrite", &[data_sources, sql])?;
+    let plan = jvm.invoke(&rewriter, "rewrite", &[sql, data_sources])?;
 
     let count = jvm.invoke(&plan, "getCount", &[])?;
     let count: i32 = jvm.to_rust(count)?;

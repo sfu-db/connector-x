@@ -5,6 +5,10 @@ use log::debug;
 use rayon::prelude::*;
 use std::marker::PhantomData;
 
+pub fn set_global_num_thread(num: usize) {
+    rayon::ThreadPoolBuilder::new().num_threads(num).build_global().unwrap();
+}
+
 /// The iterator that returns arrow in `RecordBatch`
 pub struct ArrowBatchIter<S, TP>
 where

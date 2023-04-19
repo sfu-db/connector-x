@@ -10,6 +10,7 @@ license = "MIT"
 libc = "0.2"
 connectorx = {path = "../connectorx", default-features = false}
 arrow = {version = "26", features = ["prettyprint", "ffi"]}
+openssl = {version = "0.10", features = ["vendored"]}
 
 [lib]
 crate-type = ["cdylib"]

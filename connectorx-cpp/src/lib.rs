@@ -334,3 +334,10 @@ pub unsafe extern "C" fn connectorx_iter_next(
         None => std::ptr::null_mut(),
     }
 }
+
+#[no_mangle]
+pub unsafe extern "C" fn connectorx_set_thread_num(
+    num: usize,
+) {
+    set_global_num_thread(num);
+}
