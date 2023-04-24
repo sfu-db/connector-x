@@ -55,7 +55,7 @@ tokio = {version = "1", features = ["rt", "rt-multi-thread", "net"], optional = 
 tokio-util = {version = "0.6", optional = true}
 urlencoding = {version = "2.1", optional = true}
 uuid = {version = "0.8", optional = true}
-j4rs = {version = "0.15", optional = true}
+j4rs = { git = "https://github.com/astonbitecode/j4rs.git", features = ["no-runtime-libloading"], optional = true}
 datafusion = {version = "14", optional = true}
 
 [lib]

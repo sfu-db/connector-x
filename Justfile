@@ -7,7 +7,7 @@ build-debug:
     cargo build --features all
 
 build-cpp +ARGS="":
-    cd connectorx-cpp && cargo build {{ARGS}}
+    cd connectorx-cpp && RUSTFLAGS='-L /usr/lib/jvm/zulu-17-amd64/lib/server' cargo build {{ARGS}}
 
 build-cpp-release +ARGS="":
     cd connectorx-cpp && cargo build --release {{ARGS}}
