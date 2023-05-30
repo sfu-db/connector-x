@@ -1,4 +1,5 @@
 use crate::errors::ConnectorXPythonError;
+use arrow::ffi::{FFI_ArrowArray, FFI_ArrowSchema};
 use arrow::record_batch::RecordBatch;
 use connectorx::source_router::SourceConn;
 use connectorx::{prelude::*, sql::CXQuery};
@@ -7,6 +8,7 @@ use libc::uintptr_t;
 use pyo3::prelude::*;
 use pyo3::{PyAny, Python};
 use std::convert::TryFrom;
+use std::ptr::addr_of;
 
 #[throws(ConnectorXPythonError)]
 pub fn write_arrow<'a>(
@@ -39,10 +41,10 @@ pub fn to_ptrs(rbs: Vec<RecordBatch>) -> (Vec<String>, Vec<Vec<(uintptr_t, uintp
         let mut cols = vec![];
 
         for array in rb.columns() {
-            let data = array.data().clone();
-            let array = arrow::ffi::ArrowArray::try_from(data).expect("c ptr");
-            let (array_ptr, schema_ptr) = arrow::ffi::ArrowArray::into_raw(array);
-            cols.push((array_ptr as uintptr_t, schema_ptr as uintptr_t));
+            let data = array.to_data();
+            let array = FFI_ArrowArray::new(&data);
+            let schema = FFI_ArrowSchema::try_from(data.data_type()).unwrap();
+            cols.push((addr_of!(array) as uintptr_t, addr_of!(schema) as uintptr_t));
         }
 
         result.push(cols);

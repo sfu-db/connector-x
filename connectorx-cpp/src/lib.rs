@@ -120,8 +120,8 @@ pub unsafe extern "C" fn connectorx_rewrite(
 
 #[repr(C)]
 pub struct CXArray {
-    array: *const FFI_ArrowArray,
-    schema: *const FFI_ArrowSchema,
+    array: FFI_ArrowArray,
+    schema: FFI_ArrowSchema,
 }
 
 #[repr(C)]
@@ -142,17 +142,6 @@ pub unsafe fn free_str(ptr: *const c_char) {
 pub unsafe extern "C" fn free_result(res: *const CXResult) {
     let header = get_vec::<_>((*res).header.ptr, (*res).header.len, (*res).header.capacity);
     header.into_iter().for_each(|col| free_str(col));
-
-    let rbs = get_vec::<_>((*res).data.ptr, (*res).data.len, (*res).data.capacity);
-    rbs.into_iter().for_each(|rb| {
-        get_vec::<_>(rb.ptr, rb.len, rb.capacity)
-            .into_iter()
-            .for_each(|a| {
-                // Otherwise memory leak
-                std::sync::Arc::from_raw(a.array);
-                std::sync::Arc::from_raw(a.schema);
-            })
-    });
 }
 
 #[no_mangle]
@@ -183,13 +172,10 @@ pub unsafe extern "C" fn connectorx_scan(conn: *const c_char, query: *const c_ch
         let mut cols = vec![];
 
         for array in rb.columns() {
-            let data = array.data().clone();
-            let array = ArrowArray::try_new(data).expect("c ptr");
-            let (array_ptr, schema_ptr) = ArrowArray::into_raw(array);
-
+            let data = array.to_data();
             let cx_array = CXArray {
-                array: array_ptr,
-                schema: schema_ptr,
+                schema: FFI_ArrowSchema::try_from(data.data_type()).unwrap(),
+                array: FFI_ArrowArray::new(&data),
             };
             cols.push(cx_array);
         }
@@ -215,32 +201,6 @@ pub struct CXSchema {
 #[no_mangle]
 pub unsafe extern "C" fn free_iter(iter: *mut Box<dyn RecordBatchIterator>) {
     let _ = Box::from_raw(iter);
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn free_schema(schema: *mut CXSchema) {
-    let res = Box::from_raw(schema);
-
-    let header = get_vec::<_>(res.headers.ptr, res.headers.len, res.headers.capacity);
-    header.into_iter().for_each(|col| free_str(col));
-
-    get_vec::<_>(res.types.ptr, res.types.len, res.types.capacity)
-        .into_iter()
-        .for_each(|a| {
-            std::sync::Arc::from_raw(a.array);
-            std::sync::Arc::from_raw(a.schema);
-        });
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn free_record_batch(rb: *mut CXSlice<CXArray>) {
-    let slice = Box::from_raw(rb);
-    get_vec::<_>(slice.ptr, slice.len, slice.capacity)
-        .into_iter()
-        .for_each(|a| {
-            std::sync::Arc::from_raw(a.array);
-            std::sync::Arc::from_raw(a.schema);
-        })
 }
 
 #[no_mangle]
@@ -274,12 +234,10 @@ pub unsafe extern "C" fn connectorx_get_schema(
     let (empty_batch, names) = arrow_iter.get_schema();
     let mut cols = vec![];
     for array in empty_batch.columns() {
-        let data = array.data().clone();
-        let array = ArrowArray::try_new(data).expect("c ptr");
-        let (array_ptr, schema_ptr) = ArrowArray::into_raw(array);
+        let data = array.to_data();
         let cx_array = CXArray {
-            array: array_ptr,
-            schema: schema_ptr,
+            schema: FFI_ArrowSchema::try_from(data.data_type()).unwrap(),
+            array: FFI_ArrowArray::new(&data),
         };
         cols.push(cx_array);
     }
@@ -317,13 +275,10 @@ pub unsafe extern "C" fn connectorx_iter_next(
             let mut cols = vec![];
 
             for array in rb.columns() {
-                let data = array.data().clone();
-                let array = ArrowArray::try_new(data).expect("c ptr");
-                let (array_ptr, schema_ptr) = ArrowArray::into_raw(array);
-
+                let data = array.to_data();
                 let cx_array = CXArray {
-                    array: array_ptr,
-                    schema: schema_ptr,
+                    schema: FFI_ArrowSchema::try_from(data.data_type()).unwrap(),
+                    array: FFI_ArrowArray::new(&data),
                 };
                 cols.push(cx_array);
             }
