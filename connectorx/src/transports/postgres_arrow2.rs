@@ -67,7 +67,9 @@ macro_rules! impl_postgres_transport {
                 { Float4Array[Vec<f32>]             => Float64Array[Vec<f64>]      | conversion auto_vec }
                 { Float8Array[Vec<f64>]             => Float64Array[Vec<f64>]      | conversion auto }
                 { NumericArray[Vec<Decimal>]        => Float64Array[Vec<f64>]      | conversion option }
-                { VarcharArray[Vec<String>]        => Utf8Array[Vec<String>]      | conversion auto_vec }
+                { VarcharArray[Vec<String>]        => Utf8Array[Vec<String>]      | conversion none }
+                { TextArray[Vec<String>]        => Utf8Array[Vec<String>]      | conversion auto }
+
             }
         );
     }
