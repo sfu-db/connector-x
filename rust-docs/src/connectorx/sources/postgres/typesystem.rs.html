@@ -119,6 +119,8 @@
 <span id="119">119</span>
 <span id="120">120</span>
 <span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
 </pre><pre class="rust"><code><span class="kw">use </span>chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
 <span class="kw">use </span>postgres::types::Type;
 <span class="kw">use </span>rust_decimal::Decimal;
@@ -142,6 +144,7 @@
     Int4Array(bool),
     Int8Array(bool),
     VarcharArray(bool),
+    TextArray(bool),
     Date(bool),
     Char(bool),
     BpChar(bool),
@@ -173,7 +176,7 @@
         { Float4Array =&gt; Vec&lt;f32&gt; }
         { Float8Array =&gt; Vec&lt;f64&gt; }
         { NumericArray =&gt; Vec&lt;Decimal&gt; }
-        { VarcharArray =&gt; Vec&lt;String&gt;}
+        { VarcharArray | TextArray =&gt; Vec&lt;String&gt;}
         { Bool =&gt; bool }
         { Char =&gt; i8 }
         { Text | BpChar | VarChar | Enum =&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span>str }
@@ -205,6 +208,7 @@
             <span class="string">&quot;_float8&quot; </span>=&gt; Float8Array(<span class="bool-val">true</span>),
             <span class="string">&quot;_numeric&quot; </span>=&gt; NumericArray(<span class="bool-val">true</span>),
             <span class="string">&quot;_varchar&quot; </span>=&gt; VarcharArray(<span class="bool-val">true</span>),
+            <span class="string">&quot;_text&quot; </span>=&gt; TextArray(<span class="bool-val">true</span>),
             <span class="string">&quot;bool&quot; </span>=&gt; Bool(<span class="bool-val">true</span>),
             <span class="string">&quot;char&quot; </span>=&gt; Char(<span class="bool-val">true</span>),
             <span class="string">&quot;text&quot; </span>| <span class="string">&quot;citext&quot; </span>| <span class="string">&quot;ltree&quot; </span>| <span class="string">&quot;lquery&quot; </span>| <span class="string">&quot;ltxtquery&quot; </span>=&gt; Text(<span class="bool-val">true</span>),
