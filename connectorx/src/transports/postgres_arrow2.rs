@@ -52,6 +52,7 @@ macro_rules! impl_postgres_transport {
                 { BpChar[&'r str]                   => LargeUtf8[String]           | conversion none }
                 { VarChar[&'r str]                  => LargeUtf8[String]           | conversion none }
                 { Enum[&'r str]                     => LargeUtf8[String]           | conversion none }
+                { Name[&'r str]                     => LargeUtf8[String]           | conversion none }
                 { Timestamp[NaiveDateTime]          => Date64[NaiveDateTime]       | conversion auto }
                 { Date[NaiveDate]                   => Date32[NaiveDate]           | conversion auto }
                 { Time[NaiveTime]                   => Time64[NaiveTime]           | conversion auto }

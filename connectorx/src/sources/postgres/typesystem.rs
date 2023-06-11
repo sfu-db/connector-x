@@ -36,6 +36,7 @@ pub enum PostgresTypeSystem {
     JSONB(bool),
     Enum(bool),
     HSTORE(bool),
+    Name(bool),
 }
 
 impl_typesystem! {
@@ -56,8 +57,7 @@ impl_typesystem! {
         { VarcharArray | TextArray => Vec<String>}
         { Bool => bool }
         { Char => i8 }
-        { Text | BpChar | VarChar | Enum => &'r str }
-        { ByteA => Vec<u8> }
+        { Text | BpChar | VarChar | Enum | Name => &'r str }        { ByteA => Vec<u8> }
         { Time => NaiveTime }
         { Timestamp => NaiveDateTime }
         { TimestampTz => DateTime<Utc> }
@@ -88,7 +88,7 @@ impl<'a> From<&'a Type> for PostgresTypeSystem {
             "_text" => TextArray(true),
             "bool" => Bool(true),
             "char" => Char(true),
-            "text" | "citext" | "ltree" | "lquery" | "ltxtquery" => Text(true),
+            "text" | "citext" | "ltree" | "lquery" | "ltxtquery" | "name" => Text(true),
             "bpchar" => BpChar(true),
             "varchar" => VarChar(true),
             "bytea" => ByteA(true),
