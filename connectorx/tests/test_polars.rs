@@ -139,7 +139,43 @@ fn test_postgres_arrow() {
 }
 
 #[test]
+fn test_pg_pl_bool_array() {
+    let _ = env_logger::builder().is_test(true).try_init();
 
+    let dburl = env::var("POSTGRES_URL").unwrap();
+
+    let queries = [CXQuery::naked(
+        "select test_boolarray from test_types where test_boolarray is not null",
+    )];
+    let url = Url::parse(dburl.as_str()).unwrap();
+    let (config, _tls) = rewrite_tls_args(&url).unwrap();
+    let builder = PostgresSource::<BinaryProtocol, NoTls>::new(config, NoTls, 2).unwrap();
+    let mut destination = Arrow2Destination::new();
+    let dispatcher = Dispatcher::<_, _, PostgresArrow2Transport<BinaryProtocol, NoTls>>::new(
+        builder,
+        &mut destination,
+        &queries,
+        Some(format!("select * from test_types")),
+    );
+
+    dispatcher.run().expect("run dispatcher");
+
+    let s1 = Series::new("a", [true, false]);
+    let empty_vec: Vec<bool> = vec![];
+    let s2 = Series::new("b", empty_vec);
+    let s3 = Series::new("c", [true]);
+
+    let df: DataFrame = destination.polars().unwrap();
+    let test_df: DataFrame = df!(
+        "test_boolarray" => &[s1,s2,s3]
+    )
+    .unwrap();
+
+    println!("{:?}", df);
+    assert_eq!(df, test_df);
+}
+
+#[test]
 fn test_pg_pl_varchar_array() {
     let _ = env_logger::builder().is_test(true).try_init();
 
@@ -179,6 +215,7 @@ fn test_pg_pl_varchar_array() {
     .unwrap();
 
     println!("{:?}", df);
+    // panic!("spurious");
     assert_eq!(df, test_df);
 }
 

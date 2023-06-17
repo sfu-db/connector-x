@@ -17,6 +17,7 @@ pub enum PostgresTypeSystem {
     Float4Array(bool),
     Float8Array(bool),
     NumericArray(bool),
+    BoolArray(bool),
     Int2Array(bool),
     Int4Array(bool),
     Int8Array(bool),
@@ -47,6 +48,7 @@ impl_typesystem! {
         { Float4 => f32 }
         { Float8 => f64 }
         { Numeric => Decimal }
+        { BoolArray => Vec<bool> }
         { Int2Array => Vec<i16> }
         { Int4Array => Vec<i32> }
         { Int8Array => Vec<i64> }
@@ -78,6 +80,7 @@ impl<'a> From<&'a Type> for PostgresTypeSystem {
             "float4" => Float4(true),
             "float8" => Float8(true),
             "numeric" => Numeric(true),
+            "_bool" => BoolArray(true),
             "_int2" => Int2Array(true),
             "_int4" => Int4Array(true),
             "_int8" => Int8Array(true),

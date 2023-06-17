@@ -94,6 +94,33 @@ where
     }
 }
 
+impl PandasColumn<Vec<bool>> for ArrayColumn<bool> {
+    #[throws(ConnectorXPythonError)]
+    fn write(&mut self, val: Vec<bool>, row: usize) {
+        self.lengths.push(val.len());
+        self.buffer.extend_from_slice(&val[..]);
+        self.row_idx.push(row);
+        self.try_flush()?;
+    }
+}
+
+impl PandasColumn<Option<Vec<bool>>> for ArrayColumn<bool> {
+    #[throws(ConnectorXPythonError)]
+    fn write(&mut self, val: Option<Vec<bool>>, row: usize) {
+        match val {
+            Some(v) => {
+                self.lengths.push(v.len());
+                self.buffer.extend_from_slice(&v[..]);
+                self.row_idx.push(row);
+                self.try_flush()?;
+            }
+            None => {
+                self.lengths.push(usize::MAX);
+                self.row_idx.push(row);
+            }
+        }
+    }
+}
 impl PandasColumn<Vec<f64>> for ArrayColumn<f64> {
     #[throws(ConnectorXPythonError)]
     fn write(&mut self, val: Vec<f64>, row: usize) {
@@ -148,6 +175,14 @@ impl PandasColumn<Option<Vec<i64>>> for ArrayColumn<i64> {
             }
         }
     }
+}
+
+impl HasPandasColumn for Vec<bool> {
+    type PandasColumn<'a> = ArrayColumn<bool>;
+}
+
+impl HasPandasColumn for Option<Vec<bool>> {
+    type PandasColumn<'a> = ArrayColumn<bool>;
 }
 
 impl HasPandasColumn for Vec<f64> {
