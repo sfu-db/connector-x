@@ -1,12 +1,13 @@
 mod plan;
 
-use arrow::ffi::{ArrowArray, FFI_ArrowArray, FFI_ArrowSchema};
+use arrow::ffi::{FFI_ArrowArray, FFI_ArrowSchema};
 use connectorx::prelude::*;
 use libc::c_char;
 use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::env;
 use std::ffi::{CStr, CString};
+use std::sync::Arc;
 
 #[repr(C)]
 pub struct CXSlice<T> {
@@ -183,9 +184,13 @@ pub unsafe extern "C" fn connectorx_scan(conn: *const c_char, query: *const c_ch
         let mut cols = vec![];
 
         for array in rb.columns() {
-            let data = array.data().clone();
-            let array = ArrowArray::try_new(data).expect("c ptr");
-            let (array_ptr, schema_ptr) = ArrowArray::into_raw(array);
+            let data = array.to_data();
+            let array = Arc::new(FFI_ArrowArray::new(&data));
+            let schema = Arc::new(
+                arrow::ffi::FFI_ArrowSchema::try_from(data.data_type()).expect("export schema c"),
+            );
+            let array_ptr = Arc::into_raw(array);
+            let schema_ptr = Arc::into_raw(schema);
 
             let cx_array = CXArray {
                 array: array_ptr,
@@ -274,9 +279,13 @@ pub unsafe extern "C" fn connectorx_get_schema(
     let (empty_batch, names) = arrow_iter.get_schema();
     let mut cols = vec![];
     for array in empty_batch.columns() {
-        let data = array.data().clone();
-        let array = ArrowArray::try_new(data).expect("c ptr");
-        let (array_ptr, schema_ptr) = ArrowArray::into_raw(array);
+        let data = array.to_data();
+        let array = Arc::new(arrow::ffi::FFI_ArrowArray::new(&data));
+        let schema = Arc::new(
+            arrow::ffi::FFI_ArrowSchema::try_from(data.data_type()).expect("export schema c"),
+        );
+        let array_ptr = Arc::into_raw(array);
+        let schema_ptr = Arc::into_raw(schema);
         let cx_array = CXArray {
             array: array_ptr,
             schema: schema_ptr,
@@ -317,9 +326,12 @@ pub unsafe extern "C" fn connectorx_iter_next(
             let mut cols = vec![];
 
             for array in rb.columns() {
-                let data = array.data().clone();
-                let array = ArrowArray::try_new(data).expect("c ptr");
-                let (array_ptr, schema_ptr) = ArrowArray::into_raw(array);
+                let data = array.to_data();
+                let array = Arc::new(arrow::ffi::FFI_ArrowArray::new(&data));
+                let schema =
+                    Arc::new(FFI_ArrowSchema::try_from(data.data_type()).expect("export schema c"));
+                let array_ptr = Arc::into_raw(array);
+                let schema_ptr = Arc::into_raw(schema);
 
                 let cx_array = CXArray {
                     array: array_ptr,
@@ -336,8 +348,6 @@ pub unsafe extern "C" fn connectorx_iter_next(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn connectorx_set_thread_num(
-    num: usize,
-) {
+pub unsafe extern "C" fn connectorx_set_thread_num(num: usize) {
     set_global_num_thread(num);
 }
