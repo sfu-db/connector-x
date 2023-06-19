@@ -19,18 +19,22 @@ pub struct Plan {
     pub cardinality: usize,
 }
 
-pub struct FederatedDataSourceInfo {
+pub struct FederatedDataSourceInfo<'a> {
     pub conn_str_info: Option<SourceConn>,
     pub manual_info: Option<HashMap<String, Vec<String>>>,
     pub is_local: bool,
+    pub jdbc_url: &'a str,
+    pub jdbc_driver: &'a str,
 }
 
-impl FederatedDataSourceInfo {
-    pub fn new_from_conn_str(source_conn: SourceConn, is_local: bool) -> Self {
+impl<'a> FederatedDataSourceInfo<'a> {
+    pub fn new_from_conn_str(source_conn: SourceConn, is_local: bool, jdbc_url: &'a str, jdbc_driver: &'a str) -> Self {
         Self {
             conn_str_info: Some(source_conn),
             manual_info: None,
             is_local,
+            jdbc_url,
+            jdbc_driver
         }
     }
     pub fn new_from_manual_schema(
@@ -41,6 +45,8 @@ impl FederatedDataSourceInfo {
             conn_str_info: None,
             manual_info: Some(manual_schema),
             is_local,
+            jdbc_url: "",
+            jdbc_driver: "",
         }
     }
 }
@@ -69,6 +75,7 @@ fn init_jvm(j4rs_base: Option<&str>) -> Jvm {
         .build()?
 }
 
+#[allow(dead_code)]
 #[throws(ConnectorXOutError)]
 fn create_sources(jvm: &Jvm, db_map: &HashMap<String, FederatedDataSourceInfo>) -> Instance {
     let data_sources = jvm.create_instance("java.util.HashMap", &[])?;
@@ -121,7 +128,16 @@ fn create_sources(jvm: &Jvm, db_map: &HashMap<String, FederatedDataSourceInfo>) 
                         InvocationArg::try_from(Null::String).unwrap(),
                     ],
                 )?,
-                _ => unimplemented!("Connection: {:?} not supported!", url),
+                _ => jvm.create_instance(
+                    "ai.dataprep.federated.FederatedDataSource",
+                    &[
+                        InvocationArg::try_from(db_info.is_local).unwrap(),
+                        InvocationArg::try_from(db_info.jdbc_url).unwrap(),
+                        InvocationArg::try_from(db_info.jdbc_driver).unwrap(),
+                        InvocationArg::try_from(url.username()).unwrap(),
+                        InvocationArg::try_from(url.password().unwrap_or("")).unwrap(),
+                    ],
+                )?,
             };
             jvm.invoke(
                 &data_sources,
@@ -166,6 +182,16 @@ fn create_sources(jvm: &Jvm, db_map: &HashMap<String, FederatedDataSourceInfo>) 
     data_sources
 }
 
+#[allow(dead_code)]
+#[throws(ConnectorXOutError)]
+fn create_sources2(jvm: &Jvm, db_map: &HashMap<String, FederatedDataSourceInfo>) -> Instance {
+    let mut dbs = vec![];
+    for db in db_map.keys() {
+        dbs.push(String::from(db));
+    }
+    jvm.java_list("java.lang.String", dbs)?
+}
+
 #[throws(ConnectorXOutError)]
 pub fn rewrite_sql(
     sql: &str,
@@ -176,10 +202,10 @@ pub fn rewrite_sql(
     debug!("init jvm successfully!");
 
     let sql = InvocationArg::try_from(sql).unwrap();
-    let data_sources = create_sources(&jvm, db_map)?;
+    let data_sources = create_sources2(&jvm, db_map)?;
     let rewriter = jvm.create_instance("ai.dataprep.federated.FederatedQueryRewriter", &[])?;
     let data_sources = InvocationArg::try_from(data_sources).unwrap();
-    let plan = jvm.invoke(&rewriter, "rewrite", &[sql, data_sources])?;
+    let plan = jvm.invoke(&rewriter, "rewrite2", &[sql, data_sources])?;
 
     let count = jvm.invoke(&plan, "getCount", &[])?;
     let count: i32 = jvm.to_rust(count)?;

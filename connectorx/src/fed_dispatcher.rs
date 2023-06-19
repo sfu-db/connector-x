@@ -20,7 +20,7 @@ pub fn run(
     for (k, v) in db_map.into_iter() {
         db_conn_map.insert(
             k,
-            FederatedDataSourceInfo::new_from_conn_str(SourceConn::try_from(v.as_str())?, false),
+            FederatedDataSourceInfo::new_from_conn_str(SourceConn::try_from(v.as_str())?, false, "", ""),
         );
     }
     let fed_plan = rewrite_sql(sql.as_str(), &db_conn_map, j4rs_base)?;
@@ -36,13 +36,16 @@ pub fn run(
                 }
                 _ => {
                     debug!("start query {}: {}", i, p.sql);
-                    let queries = [CXQuery::naked(p.sql)];
+                    let mut queries = vec![];
+                    p.sql.split(';').for_each(|ss| {
+                       queries.push(CXQuery::naked(ss)); 
+                    });
                     let source_conn = &db_conn_map[p.db_name.as_str()]
                         .conn_str_info
                         .as_ref()
                         .unwrap();
 
-                    let destination = get_arrow(source_conn, None, &queries)?;
+                    let destination = get_arrow(source_conn, None, queries.as_slice())?;
                     let rbs = destination.arrow()?;
 
                     let provider = MemTable::try_new(rbs[0].schema(), vec![rbs])?;
@@ -72,7 +75,7 @@ pub fn run(
             Ok(())
         })?;
 
-    debug!("\nexecute query final...");
+    debug!("\nexecute query final...\n{}\n", local_sql);
     let rt = Arc::new(tokio::runtime::Runtime::new().expect("Failed to create runtime"));
     // until datafusion fix the bug: https://github.com/apache/arrow-datafusion/issues/2147
     for alias in alias_names {

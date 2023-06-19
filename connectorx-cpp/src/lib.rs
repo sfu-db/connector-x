@@ -44,6 +44,8 @@ pub struct CXConnectionInfo {
     conn: *const c_char,
     schema: CXSlice<CXTable>,
     is_local: bool,
+    jdbc_url: *const c_char,
+    jdbc_driver: *const c_char,
 }
 
 #[repr(C)]
@@ -95,10 +97,20 @@ pub unsafe extern "C" fn connectorx_rewrite(
             db_map.insert(name.to_string(), source_info);
         } else {
             let conn = unsafe { CStr::from_ptr(p.conn) }.to_str().unwrap();
+            let jdbc_url = match p.jdbc_url.is_null() {
+                true => "",
+                false => unsafe { CStr::from_ptr(p.jdbc_url) }.to_str().unwrap(),
+            };
+            let jdbc_driver = match p.jdbc_driver.is_null() {
+                true => "",
+                false => unsafe { CStr::from_ptr(p.jdbc_driver) }.to_str().unwrap(),
+            };
             // println!("name: {:?}, conn: {:?}", name, conn);
             let source_info = FederatedDataSourceInfo::new_from_conn_str(
                 SourceConn::try_from(conn).unwrap(),
                 p.is_local,
+                jdbc_url,
+                jdbc_driver,
             );
             db_map.insert(name.to_string(), source_info);
         }
