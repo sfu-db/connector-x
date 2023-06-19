@@ -1,12 +1,11 @@
 use crate::{
     constants::{
-        CX_REWRITER_PATH, DUCKDB_JDBC_DRIVER, J4RS_BASE_PATH, MYSQL_JDBC_DRIVER,
-        POSTGRES_JDBC_DRIVER,
+        CX_REWRITER_PATH, J4RS_BASE_PATH, 
     },
     prelude::*,
 };
 use fehler::throws;
-use j4rs::{ClasspathEntry, Instance, InvocationArg, Jvm, JvmBuilder, Null};
+use j4rs::{ClasspathEntry, Instance, InvocationArg, Jvm, JvmBuilder};
 use log::debug;
 use std::collections::HashMap;
 use std::convert::TryFrom;
@@ -77,78 +76,12 @@ fn init_jvm(j4rs_base: Option<&str>) -> Jvm {
 
 #[allow(dead_code)]
 #[throws(ConnectorXOutError)]
-fn create_sources(jvm: &Jvm, db_map: &HashMap<String, FederatedDataSourceInfo>) -> Instance {
-    let data_sources = jvm.create_instance("java.util.HashMap", &[])?;
+fn create_sources(jvm: &Jvm, db_map: &HashMap<String, FederatedDataSourceInfo>) -> (Instance, Instance) {
+    let mut db_config = vec![];
+    let db_manual = jvm.create_instance("java.util.HashMap", &[])?;
 
     for (db_name, db_info) in db_map.iter() {
-        if db_info.conn_str_info.is_some() {
-            let source_conn = db_info.conn_str_info.as_ref().unwrap();
-            let url = &source_conn.conn;
-            debug!("url: {:?}", url);
-            let ds = match source_conn.ty {
-                SourceType::Postgres => jvm.create_instance(
-                    "ai.dataprep.federated.FederatedDataSource",
-                    &[
-                        InvocationArg::try_from(db_info.is_local).unwrap(),
-                        InvocationArg::try_from(format!(
-                            "jdbc:postgresql://{}:{}{}",
-                            url.host_str().unwrap_or("localhost"),
-                            url.port().unwrap_or(5432),
-                            url.path()
-                        ))
-                        .unwrap(),
-                        InvocationArg::try_from(POSTGRES_JDBC_DRIVER).unwrap(),
-                        InvocationArg::try_from(url.username()).unwrap(),
-                        InvocationArg::try_from(url.password().unwrap_or("")).unwrap(),
-                    ],
-                )?,
-                SourceType::MySQL => jvm.create_instance(
-                    "ai.dataprep.federated.FederatedDataSource",
-                    &[
-                        InvocationArg::try_from(db_info.is_local).unwrap(),
-                        InvocationArg::try_from(format!(
-                            "jdbc:mysql://{}:{}{}",
-                            url.host_str().unwrap_or("localhost"),
-                            url.port().unwrap_or(3306),
-                            url.path()
-                        ))
-                        .unwrap(),
-                        InvocationArg::try_from(MYSQL_JDBC_DRIVER).unwrap(),
-                        InvocationArg::try_from(url.username()).unwrap(),
-                        InvocationArg::try_from(url.password().unwrap_or("")).unwrap(),
-                    ],
-                )?,
-                SourceType::DuckDB => jvm.create_instance(
-                    "ai.dataprep.federated.FederatedDataSource",
-                    &[
-                        InvocationArg::try_from(db_info.is_local).unwrap(),
-                        InvocationArg::try_from(format!("jdbc:duckdb:{}", url.path())).unwrap(),
-                        InvocationArg::try_from(DUCKDB_JDBC_DRIVER).unwrap(),
-                        InvocationArg::try_from(Null::String).unwrap(),
-                        InvocationArg::try_from(Null::String).unwrap(),
-                    ],
-                )?,
-                _ => jvm.create_instance(
-                    "ai.dataprep.federated.FederatedDataSource",
-                    &[
-                        InvocationArg::try_from(db_info.is_local).unwrap(),
-                        InvocationArg::try_from(db_info.jdbc_url).unwrap(),
-                        InvocationArg::try_from(db_info.jdbc_driver).unwrap(),
-                        InvocationArg::try_from(url.username()).unwrap(),
-                        InvocationArg::try_from(url.password().unwrap_or("")).unwrap(),
-                    ],
-                )?,
-            };
-            jvm.invoke(
-                &data_sources,
-                "put",
-                &[
-                    InvocationArg::try_from(db_name).unwrap(),
-                    InvocationArg::try_from(ds).unwrap(),
-                ],
-            )?;
-        } else {
-            assert!(db_info.manual_info.is_some());
+        if db_info.manual_info.is_some() {
             let manual_info = db_info.manual_info.as_ref().unwrap();
             let schema_info = jvm.create_instance("java.util.HashMap", &[])?;
             for (name, columns) in manual_info {
@@ -170,16 +103,19 @@ fn create_sources(jvm: &Jvm, db_map: &HashMap<String, FederatedDataSourceInfo>) 
                 ],
             )?;
             jvm.invoke(
-                &data_sources,
+                &db_manual,
                 "put",
                 &[
                     InvocationArg::try_from(db_name).unwrap(),
                     InvocationArg::try_from(fed_ds).unwrap(),
                 ],
             )?;
+        } else {
+            db_config.push(String::from(db_name));
         }
     }
-    data_sources
+    let db_config = jvm.java_list("java.lang.String", db_config)?;
+    (db_config, db_manual) 
 }
 
 #[allow(dead_code)]
@@ -202,10 +138,11 @@ pub fn rewrite_sql(
     debug!("init jvm successfully!");
 
     let sql = InvocationArg::try_from(sql).unwrap();
-    let data_sources = create_sources2(&jvm, db_map)?;
+    let (db_config, db_manual) = create_sources(&jvm, db_map)?;
     let rewriter = jvm.create_instance("ai.dataprep.federated.FederatedQueryRewriter", &[])?;
-    let data_sources = InvocationArg::try_from(data_sources).unwrap();
-    let plan = jvm.invoke(&rewriter, "rewrite2", &[sql, data_sources])?;
+    let db_config = InvocationArg::try_from(db_config).unwrap();
+    let db_manual = InvocationArg::try_from(db_manual).unwrap();
+    let plan = jvm.invoke(&rewriter, "rewrite3", &[sql, db_config, db_manual])?;
 
     let count = jvm.invoke(&plan, "getCount", &[])?;
     let count: i32 = jvm.to_rust(count)?;
