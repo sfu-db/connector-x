@@ -2,7 +2,7 @@ use arrow2::{
     array::*,
     datatypes::{DataType as ArrowDataType, Field, TimeUnit},
 };
-use chrono::{Date, DateTime, NaiveDate, NaiveDateTime, NaiveTime, Timelike, Utc};
+use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Timelike, Utc};
 
 use crate::constants::SECONDS_IN_DAY;
 
@@ -237,56 +237,11 @@ impl ArrowAssoc for Option<DateTime<Utc>> {
     }
 }
 
-impl ArrowAssoc for Date<Utc> {
-    type Builder = MutablePrimitiveArray<i64>;
-
-    fn builder(nrows: usize) -> Self::Builder {
-        MutablePrimitiveArray::with_capacity(nrows).to(ArrowDataType::Timestamp(
-            TimeUnit::Second,
-            Some("UTC".to_string()),
-        ))
-    }
-
-    #[inline]
-    fn push(builder: &mut Self::Builder, value: Date<Utc>) {
-        builder.push(Some(value).map(|x| x.and_hms(0, 0, 0).timestamp()))
-    }
-
-    fn field(header: &str) -> Field {
-        Field::new(
-            header,
-            ArrowDataType::Timestamp(TimeUnit::Second, Some("UTC".to_string())),
-            false,
-        )
-    }
-}
-
-impl ArrowAssoc for Option<Date<Utc>> {
-    type Builder = MutablePrimitiveArray<i64>;
-
-    fn builder(nrows: usize) -> Self::Builder {
-        MutablePrimitiveArray::with_capacity(nrows).to(ArrowDataType::Timestamp(
-            TimeUnit::Second,
-            Some("UTC".to_string()),
-        ))
-    }
-
-    fn push(builder: &mut Self::Builder, value: Option<Date<Utc>>) {
-        // time-aware are stored as naive (i64) + offset (on the datatype)
-        builder.push(value.map(|x| x.and_hms(0, 0, 0).timestamp()))
-    }
-
-    fn field(header: &str) -> Field {
-        Field::new(
-            header,
-            ArrowDataType::Timestamp(TimeUnit::Second, Some("UTC".to_string())),
-            false,
-        )
-    }
-}
-
 fn naive_date_to_date32(nd: NaiveDate) -> i32 {
-    (nd.and_hms(0, 0, 0).timestamp() / SECONDS_IN_DAY) as i32
+    match nd.and_hms_opt(0, 0, 0) {
+        Some(dt) => (dt.timestamp() / SECONDS_IN_DAY) as i32,
+        None => panic!("and_hms_opt got None from {:?}", nd)
+    }
 }
 
 fn naive_time_to_time64_nanos(nd: NaiveTime) -> i64 {

@@ -69,7 +69,7 @@ impl<'py> TypeConversion<NaiveDateTime, DateTime<Utc>> for MsSQLPandasTransport<
 
 impl<'py> TypeConversion<NaiveDate, DateTime<Utc>> for MsSQLPandasTransport<'py> {
     fn convert(val: NaiveDate) -> DateTime<Utc> {
-        DateTime::from_utc(val.and_hms(0, 0, 0), Utc)
+        DateTime::from_utc(val.and_hms_opt(0, 0, 0).unwrap_or_else(|| panic!("and_hms_opt got None from {:?}", val)), Utc)
     }
 }
 
