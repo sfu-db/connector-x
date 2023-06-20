@@ -287,13 +287,12 @@ pub fn new_record_batch_iter(
                         queries.len(),
                     )
                     .unwrap();
-                    let batch_iter = ArrowBatchIter::<
-                        _,
-                        PostgresArrowTransport<PgBinaryProtocol, MakeTlsConnector>,
-                    >::new(
-                        source, destination, origin_query, queries
-                    )
-                    .unwrap();
+                    let batch_iter =
+                        ArrowBatchIter::<
+                            _,
+                            PostgresArrowTransport<PgBinaryProtocol, MakeTlsConnector>,
+                        >::new(source, destination, origin_query, queries)
+                        .unwrap();
                     return Box::new(batch_iter);
                 }
                 ("binary", None) => {

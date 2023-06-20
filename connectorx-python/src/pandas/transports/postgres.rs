@@ -116,7 +116,11 @@ impl<'py, P, C> TypeConversion<NaiveDateTime, DateTime<Utc>>
 
 impl<'py, P, C> TypeConversion<NaiveDate, DateTime<Utc>> for PostgresPandasTransport<'py, P, C> {
     fn convert(val: NaiveDate) -> DateTime<Utc> {
-        DateTime::from_utc(val.and_hms_opt(0, 0, 0).unwrap_or_else(|| panic!("and_hms_opt got None from {:?}", val)), Utc)
+        DateTime::from_utc(
+            val.and_hms_opt(0, 0, 0)
+                .unwrap_or_else(|| panic!("and_hms_opt got None from {:?}", val)),
+            Utc,
+        )
     }
 }
 
