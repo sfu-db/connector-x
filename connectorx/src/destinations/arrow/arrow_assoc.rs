@@ -184,7 +184,7 @@ impl ArrowAssoc for Option<DateTime<Utc>> {
 fn naive_date_to_arrow(nd: NaiveDate) -> i32 {
     match nd.and_hms_opt(0, 0, 0) {
         Some(dt) => (dt.timestamp() / SECONDS_IN_DAY) as i32,
-        None => panic!("and_hms_opt got None from {:?}", nd)
+        None => panic!("and_hms_opt got None from {:?}", nd),
     }
 }
 

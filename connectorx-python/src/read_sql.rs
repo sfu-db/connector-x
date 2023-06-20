@@ -10,7 +10,6 @@ use pyo3::{exceptions::PyValueError, PyResult};
 
 use crate::errors::ConnectorXPythonError;
 
-
 #[derive(FromPyObject)]
 pub struct PyPartitionQuery {
     query: String,
@@ -22,7 +21,13 @@ pub struct PyPartitionQuery {
 
 impl Into<PartitionQuery> for PyPartitionQuery {
     fn into(self) -> PartitionQuery {
-        PartitionQuery::new(self.query.as_str(), self.column.as_str(), self.min, self.max, self.num)
+        PartitionQuery::new(
+            self.query.as_str(),
+            self.column.as_str(),
+            self.min,
+            self.max,
+            self.num,
+        )
     }
 }
 
@@ -39,7 +44,8 @@ pub fn read_sql<'a>(
         (Some(queries), None) => (queries.into_iter().map(CXQuery::Naked).collect(), None),
         (None, Some(part)) => {
             let origin_query = Some(part.query.clone());
-            let queries = partition(&part.into(), &source_conn).map_err(|e| ConnectorXPythonError::from(e))?;
+            let queries = partition(&part.into(), &source_conn)
+                .map_err(|e| ConnectorXPythonError::from(e))?;
             (queries, origin_query)
         }
         (Some(_), Some(_)) => throw!(PyValueError::new_err(

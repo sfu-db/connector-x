@@ -1,7 +1,5 @@
 use crate::{
-    constants::{
-        CX_REWRITER_PATH, J4RS_BASE_PATH, 
-    },
+    constants::{CX_REWRITER_PATH, J4RS_BASE_PATH},
     prelude::*,
 };
 use fehler::throws;
@@ -27,13 +25,18 @@ pub struct FederatedDataSourceInfo<'a> {
 }
 
 impl<'a> FederatedDataSourceInfo<'a> {
-    pub fn new_from_conn_str(source_conn: SourceConn, is_local: bool, jdbc_url: &'a str, jdbc_driver: &'a str) -> Self {
+    pub fn new_from_conn_str(
+        source_conn: SourceConn,
+        is_local: bool,
+        jdbc_url: &'a str,
+        jdbc_driver: &'a str,
+    ) -> Self {
         Self {
             conn_str_info: Some(source_conn),
             manual_info: None,
             is_local,
             jdbc_url,
-            jdbc_driver
+            jdbc_driver,
         }
     }
     pub fn new_from_manual_schema(
@@ -76,7 +79,10 @@ fn init_jvm(j4rs_base: Option<&str>) -> Jvm {
 
 #[allow(dead_code)]
 #[throws(ConnectorXOutError)]
-fn create_sources(jvm: &Jvm, db_map: &HashMap<String, FederatedDataSourceInfo>) -> (Instance, Instance) {
+fn create_sources(
+    jvm: &Jvm,
+    db_map: &HashMap<String, FederatedDataSourceInfo>,
+) -> (Instance, Instance) {
     let mut db_config = vec![];
     let db_manual = jvm.create_instance("java.util.HashMap", &[])?;
 
@@ -115,7 +121,7 @@ fn create_sources(jvm: &Jvm, db_map: &HashMap<String, FederatedDataSourceInfo>) 
         }
     }
     let db_config = jvm.java_list("java.lang.String", db_config)?;
-    (db_config, db_manual) 
+    (db_config, db_manual)
 }
 
 #[allow(dead_code)]

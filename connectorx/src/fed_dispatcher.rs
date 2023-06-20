@@ -20,7 +20,12 @@ pub fn run(
     for (k, v) in db_map.into_iter() {
         db_conn_map.insert(
             k,
-            FederatedDataSourceInfo::new_from_conn_str(SourceConn::try_from(v.as_str())?, false, "", ""),
+            FederatedDataSourceInfo::new_from_conn_str(
+                SourceConn::try_from(v.as_str())?,
+                false,
+                "",
+                "",
+            ),
         );
     }
     let fed_plan = rewrite_sql(sql.as_str(), &db_conn_map, j4rs_base)?;
@@ -38,7 +43,7 @@ pub fn run(
                     debug!("start query {}: {}", i, p.sql);
                     let mut queries = vec![];
                     p.sql.split(';').for_each(|ss| {
-                       queries.push(CXQuery::naked(ss)); 
+                        queries.push(CXQuery::naked(ss));
                     });
                     let source_conn = &db_conn_map[p.db_name.as_str()]
                         .conn_str_info

@@ -6,7 +6,10 @@ use rayon::prelude::*;
 use std::marker::PhantomData;
 
 pub fn set_global_num_thread(num: usize) {
-    rayon::ThreadPoolBuilder::new().num_threads(num).build_global().unwrap();
+    rayon::ThreadPoolBuilder::new()
+        .num_threads(num)
+        .build_global()
+        .unwrap();
 }
 
 /// The iterator that returns arrow in `RecordBatch`
@@ -121,7 +124,6 @@ where
             Ok(())
         });
     }
-
 }
 
 impl<'a, S, TP> Iterator for ArrowBatchIter<S, TP>
