@@ -38,3 +38,6 @@ pub const MYSQL_JDBC_DRIVER: &str = "com.mysql.cj.jdbc.Driver";
 pub const DUCKDB_JDBC_DRIVER: &str = "org.duckdb.DuckDBDriver";
 
 pub const CONNECTORX_PROTOCOL: &str = "cxprotocol";
+
+#[cfg(any(feature = "dst_arrow", feature = "dst_arrow2"))]
+pub const MPSC_CHANNEL_SIZE: usize = 32;

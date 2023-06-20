@@ -8,7 +8,7 @@ pub mod typesystem;
 pub use self::errors::{ArrowDestinationError, Result};
 pub use self::typesystem::ArrowTypeSystem;
 use super::{Consume, Destination, DestinationPartition};
-use crate::constants::RECORD_BATCH_SIZE;
+use crate::constants::{MPSC_CHANNEL_SIZE, RECORD_BATCH_SIZE};
 use crate::data_order::DataOrder;
 use crate::typesystem::{Realize, TypeAssoc, TypeSystem};
 use anyhow::anyhow;
@@ -17,13 +17,8 @@ use arrow_assoc::ArrowAssoc;
 use fehler::{throw, throws};
 use funcs::{FFinishBuilder, FNewBuilder, FNewField};
 use itertools::Itertools;
-use std::{
-    any::Any,
-    sync::{
-        mpsc::{channel, Receiver, Sender},
-        Arc,
-    },
-};
+use std::{any::Any, sync::Arc};
+use tokio::sync::mpsc::{channel, Receiver, Sender};
 
 type Builder = Box<dyn Any + Send>;
 type Builders = Vec<Builder>;
@@ -39,7 +34,7 @@ pub struct ArrowDestination {
 
 impl Default for ArrowDestination {
     fn default() -> Self {
-        let (tx, rx) = channel();
+        let (tx, rx) = channel(MPSC_CHANNEL_SIZE);
         ArrowDestination {
             schema: vec![],
             names: vec![],
@@ -57,7 +52,7 @@ impl ArrowDestination {
     }
 
     pub fn new_with_batch_size(batch_size: usize) -> Self {
-        let (tx, rx) = channel();
+        let (tx, rx) = channel(MPSC_CHANNEL_SIZE);
         ArrowDestination {
             schema: vec![],
             names: vec![],
@@ -129,7 +124,7 @@ impl Destination for ArrowDestination {
 
 impl ArrowDestination {
     #[throws(ArrowDestinationError)]
-    pub fn arrow(self) -> Vec<RecordBatch> {
+    pub fn arrow(mut self) -> Vec<RecordBatch> {
         if self.sender.is_some() {
             // should not happen since it is dropped after partition
             // but need to make sure here otherwise recv will be blocked forever
@@ -137,9 +132,9 @@ impl ArrowDestination {
         }
         let mut data = vec![];
         loop {
-            match self.receiver.recv() {
-                Ok(rb) => data.push(rb),
-                Err(_) => break,
+            match self.receiver.blocking_recv() {
+                Some(rb) => data.push(rb),
+                None => break,
             }
         }
         data
@@ -147,10 +142,7 @@ impl ArrowDestination {
 
     #[throws(ArrowDestinationError)]
     pub fn record_batch(&mut self) -> Option<RecordBatch> {
-        match self.receiver.recv() {
-            Ok(rb) => Some(rb),
-            Err(_) => None,
-        }
+        self.receiver.blocking_recv()
     }
 
     pub fn empty_batch(&self) -> RecordBatch {
@@ -221,7 +213,7 @@ impl ArrowPartitionWriter {
             .map(|(builder, &dt)| Realize::<FFinishBuilder>::realize(dt)?(builder))
             .collect::<std::result::Result<Vec<_>, crate::errors::ConnectorXError>>()?;
         let rb = RecordBatch::try_new(Arc::clone(&self.arrow_schema), columns)?;
-        self.sender.as_ref().unwrap().send(rb).unwrap();
+        self.sender.as_ref().unwrap().blocking_send(rb).unwrap();
 
         self.current_row = 0;
         self.current_col = 0;
