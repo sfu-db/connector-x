@@ -11,6 +11,7 @@ Options:
 """
 
 import os
+import sys
 import time
 import connectorx as cx
 from contexttimer import Timer
@@ -25,9 +26,10 @@ def run_query_from_file(query_file):
     with Timer() as timer:
         df = cx.read_sql(db_map, sql, return_type="arrow")
     print(f"time in total: {timer.elapsed}, {len(df)} rows, {len(df.columns)} cols")
-    print(df)
- 
-
+    print(df.schema)
+    # print(df)
+    sys.stdout.flush()
+    del df
 
 if __name__ == "__main__":
     args = docopt(__doc__, version="Naval Fate 2.0")
@@ -43,6 +45,7 @@ if __name__ == "__main__":
     for i in range(int(args["--runs"])):
         print(f"=============== run {i} ================")
         print()
+        sys.stdout.flush()
         if args["--file"]:
             filename = args["--file"]
             run_query_from_file(filename)
