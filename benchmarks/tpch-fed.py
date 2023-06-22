@@ -18,18 +18,28 @@ from contexttimer import Timer
 from docopt import docopt
 from pathlib import Path
 
-def run_query_from_file(query_file):
+def run_query_from_file(query_file, ntries=0):
     with open(query_file, "r") as f:
         sql = f.read()
     print(f"file: {query_file}")
 
-    with Timer() as timer:
-        df = cx.read_sql(db_map, sql, return_type="arrow")
-    print(f"time in total: {timer.elapsed}, {len(df)} rows, {len(df.columns)} cols")
-    print(df.schema)
-    # print(df)
+    try:
+        with Timer() as timer:
+            df = cx.read_sql(db_map, sql, return_type="arrow")
+        print(f"time in total: {timer.elapsed:.2f}, {len(df)} rows, {len(df.columns)} cols")
+        del df
+        # print(df.schema)
+        # print(df)
+    except RuntimeError as e:
+        print(e)
+        if ntries >= 5:
+            raise
+        print("retry in 10 seconds...")
+        sys.stdout.flush()
+        time.sleep(10)
+        run_query_from_file(query_file, ntries+1)
+
     sys.stdout.flush()
-    del df
 
 if __name__ == "__main__":
     args = docopt(__doc__, version="Naval Fate 2.0")
