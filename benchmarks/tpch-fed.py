@@ -1,11 +1,12 @@
 """
 Usage:
-  tpch-fed.py [--file=<file>] [--dir=<dir>] [--runs=<runs>]
+  tpch-fed.py [--file=<file>] [--dir=<dir>] [--runs=<runs>] [--print]
 
 Options:
   --file=<file>          Query file.
   --dir=<dir>            Query path.
   --runs=<runs>          # runs [default: 1].
+  --print                Print query result.
   -h --help              Show this screen.
   --version              Show version.
 """
@@ -18,7 +19,7 @@ from contexttimer import Timer
 from docopt import docopt
 from pathlib import Path
 
-def run_query_from_file(query_file, ntries=0):
+def run_query_from_file(query_file, doprint=False, ntries=0):
     with open(query_file, "r") as f:
         sql = f.read()
     print(f"file: {query_file}")
@@ -27,6 +28,8 @@ def run_query_from_file(query_file, ntries=0):
         with Timer() as timer:
             df = cx.read_sql(db_map, sql, return_type="arrow")
         print(f"time in total: {timer.elapsed:.2f}, {len(df)} rows, {len(df.columns)} cols")
+        if doprint:
+            print(df)
         del df
         # print(df.schema)
         # print(df)
@@ -58,9 +61,9 @@ if __name__ == "__main__":
         sys.stdout.flush()
         if args["--file"]:
             filename = args["--file"]
-            run_query_from_file(filename)
+            run_query_from_file(filename, args["--print"])
         elif args["--dir"]:
             for filename in sorted(Path(args["--dir"]).glob("q*.sql")):
-                run_query_from_file(filename)
+                run_query_from_file(filename, args["--print"])
                 time.sleep(2)
 
