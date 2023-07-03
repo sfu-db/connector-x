@@ -44,6 +44,7 @@ macro_rules! impl_postgres_transport {
                 { Text[&'r str]                                 => Str[&'r str]             | conversion auto }
                 { BpChar[&'r str]                               => Str[&'r str]             | conversion none }
                 { VarChar[&'r str]                              => Str[&'r str]             | conversion none }
+                { Name[&'r str]                                 => Str[&'r str]             | conversion none }
                 { Timestamp[NaiveDateTime]                      => DateTime[DateTime<Utc>]  | conversion option }
                 { TimestampTz[DateTime<Utc>]                    => DateTime[DateTime<Utc>]  | conversion auto }
                 { Date[NaiveDate]                               => DateTime[DateTime<Utc>]  | conversion option }

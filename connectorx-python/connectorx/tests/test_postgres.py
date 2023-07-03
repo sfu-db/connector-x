@@ -1116,3 +1116,14 @@ def test_postgres_tls_fail(postgres_url_tls: str) -> None:
         partition_range=(0, 2000),
         partition_num=3,
     )
+
+def test_postgres_name_type(postgres_url: str) -> None:
+    # partition column can not have None
+    query = "SELECT test_name FROM test_types"
+    df = read_sql(postgres_url, query)
+    expected = pd.DataFrame(
+        data={
+            "test_name": pd.Series(["0", "21", "someName", "101203203-1212323-22131235"]),
+        },
+    )
+    assert_frame_equal(df, expected, check_names=True)
