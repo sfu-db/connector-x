@@ -261,3 +261,39 @@ fn test_pg_pl_text_array() {
     println!("{:?}", df);
     assert_eq!(df, test_df);
 }
+
+#[test]
+
+fn test_pg_pl_name() {
+    let _ = env_logger::builder().is_test(true).try_init();
+
+    let dburl = env::var("POSTGRES_URL").unwrap();
+
+    let queries = [CXQuery::naked("select test_name from test_types")];
+    let url = Url::parse(dburl.as_str()).unwrap();
+    let (config, _tls) = rewrite_tls_args(&url).unwrap();
+    let builder = PostgresSource::<BinaryProtocol, NoTls>::new(config, NoTls, 2).unwrap();
+    let mut destination = Arrow2Destination::new();
+    let dispatcher = Dispatcher::<_, _, PostgresArrow2Transport<BinaryProtocol, NoTls>>::new(
+        builder,
+        &mut destination,
+        &queries,
+        Some(format!("select * from test_types")),
+    );
+
+    dispatcher.run().expect("run dispatcher");
+
+    let s1 = "0";
+    let s2 = "21";
+    let s3 = "someName";
+    let s4 = "101203203-1212323-22131235";
+
+    let df: DataFrame = destination.polars().unwrap();
+    let test_df: DataFrame = df!(
+        "test_name" => &[s1,s2,s3,s4]
+    )
+    .unwrap();
+
+    println!("{:?}", df);
+    assert_eq!(df, test_df);
+}
