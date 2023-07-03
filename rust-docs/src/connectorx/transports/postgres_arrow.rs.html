@@ -92,6 +92,7 @@
 <span id="92">92</span>
 <span id="93">93</span>
 <span id="94">94</span>
+<span id="95">95</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Transport from Postgres Source to Arrow Destination.
 
 </span><span class="kw">use </span><span class="kw">crate</span>::destinations::arrow::{
@@ -145,6 +146,7 @@
                 { Text[<span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span>str]              =&gt; LargeUtf8[String]         | conversion owned }
                 { BpChar[<span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span>str]            =&gt; LargeUtf8[String]         | conversion none }
                 { VarChar[<span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span>str]           =&gt; LargeUtf8[String]         | conversion none }
+                { Name[<span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span>str]              =&gt; LargeUtf8[String]         | conversion none }
                 { Timestamp[NaiveDateTime]   =&gt; Date64[NaiveDateTime]     | conversion auto }
                 { Date[NaiveDate]            =&gt; Date32[NaiveDate]         | conversion auto }
                 { Time[NaiveTime]            =&gt; Time64[NaiveTime]         | conversion auto }
