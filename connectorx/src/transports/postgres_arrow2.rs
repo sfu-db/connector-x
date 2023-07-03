@@ -62,6 +62,7 @@ macro_rules! impl_postgres_transport {
                 { ByteA[Vec<u8>]                    => LargeBinary[Vec<u8>]        | conversion auto }
                 { JSON[Value]                       => LargeUtf8[String]           | conversion option }
                 { JSONB[Value]                      => LargeUtf8[String]           | conversion none }
+                { BoolArray[Vec<bool>]              => BoolArray[Vec<bool>]        | conversion auto_vec }
                 { Int2Array[Vec<i16>]               => Int64Array[Vec<i64>]        | conversion auto_vec }
                 { Int4Array[Vec<i32>]               => Int64Array[Vec<i64>]        | conversion auto_vec }
                 { Int8Array[Vec<i64>]               => Int64Array[Vec<i64>]        | conversion auto }

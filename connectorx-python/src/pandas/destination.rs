@@ -169,6 +169,9 @@ impl<'a> Destination for PandasDestination<'a> {
                 PandasBlockType::Float64 => {
                     self.allocate_array::<f64>(dt, placement)?;
                 }
+                PandasBlockType::BooleanArray => {
+                    self.allocate_array::<super::pandas_columns::PyList>(dt, placement)?;
+                }
                 PandasBlockType::Float64Array => {
                     self.allocate_array::<super::pandas_columns::PyList>(dt, placement)?;
                 }
@@ -213,6 +216,17 @@ impl<'a> Destination for PandasDestination<'a> {
                     let fcols = fblock.split()?;
                     for (&cid, fcol) in block.cids.iter().zip_eq(fcols) {
                         partitioned_columns[cid] = fcol
+                            .partition(counts)
+                            .into_iter()
+                            .map(|c| Box::new(c) as _)
+                            .collect()
+                    }
+                }
+                PandasBlockType::BooleanArray => {
+                    let bblock = ArrayBlock::<bool>::extract(buf)?;
+                    let bcols = bblock.split()?;
+                    for (&cid, bcol) in block.cids.iter().zip_eq(bcols) {
+                        partitioned_columns[cid] = bcol
                             .partition(counts)
                             .into_iter()
                             .map(|c| Box::new(c) as _)

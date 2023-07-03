@@ -450,7 +450,7 @@ def test_postgres_with_index_col(postgres_url: str) -> None:
 
 
 def test_postgres_types_binary(postgres_url: str) -> None:
-    query = "SELECT test_date, test_timestamp, test_timestamptz, test_int16, test_int64, test_float32, test_numeric, test_bpchar, test_char, test_varchar, test_uuid, test_time, test_json, test_jsonb, test_bytea, test_enum, test_f4array, test_f8array, test_narray, test_i2array, test_i4array, test_i8array, test_citext, test_ltree, test_lquery, test_ltxtquery FROM test_types"
+    query = "SELECT test_date, test_timestamp, test_timestamptz, test_int16, test_int64, test_float32, test_numeric, test_bpchar, test_char, test_varchar, test_uuid, test_time, test_json, test_jsonb, test_bytea, test_enum, test_f4array, test_f8array, test_narray, test_boolarray, test_i2array, test_i4array, test_i8array, test_citext, test_ltree, test_lquery, test_ltxtquery FROM test_types"
     df = read_sql(postgres_url, query)
     expected = pd.DataFrame(
         index=range(4),
@@ -538,6 +538,9 @@ def test_postgres_types_binary(postgres_url: str) -> None:
             "test_narray": pd.Series(
                 [[], None, [521.34], [0.12, 333.33, 22.22]], dtype="object"
             ),
+            "test_boolarray": pd.Series(
+                [[True, False], [], [True], None], dtype="object"
+            ),
             "test_i2array": pd.Series(
                 [[-1, 0, 1], [], [-32768, 32767], None], dtype="object"
             ),
@@ -560,7 +563,7 @@ def test_postgres_types_binary(postgres_url: str) -> None:
 
 
 def test_postgres_types_csv(postgres_url: str) -> None:
-    query = "SELECT test_date, test_timestamp, test_timestamptz, test_int16, test_int64, test_float32, test_numeric, test_bpchar, test_char, test_varchar, test_uuid, test_time, test_json, test_jsonb, test_bytea, test_enum::text, test_f4array, test_f8array, test_narray, test_i2array, test_i4array, test_i8array, test_citext, test_ltree FROM test_types"
+    query = "SELECT test_date, test_timestamp, test_timestamptz, test_int16, test_int64, test_float32, test_numeric, test_bpchar, test_char, test_varchar, test_uuid, test_time, test_json, test_jsonb, test_bytea, test_enum::text, test_f4array, test_f8array, test_narray, test_boolarray, test_i2array, test_i4array, test_i8array, test_citext, test_ltree FROM test_types"
     df = read_sql(postgres_url, query, protocol="csv")
     expected = pd.DataFrame(
         index=range(4),
@@ -648,6 +651,9 @@ def test_postgres_types_csv(postgres_url: str) -> None:
             "test_narray": pd.Series(
                 [[], None, [521.34], [0.12, 333.33, 22.22]], dtype="object"
             ),
+            "test_boolarray": pd.Series(
+                [[True, False], [], [True], None], dtype="object"
+            ),
             "test_i2array": pd.Series(
                 [[-1, 0, 1], [], [-32768, 32767], None], dtype="object"
             ),
@@ -666,7 +672,7 @@ def test_postgres_types_csv(postgres_url: str) -> None:
 
 
 def test_postgres_types_cursor(postgres_url: str) -> None:
-    query = "SELECT test_date, test_timestamp, test_timestamptz, test_int16, test_int64, test_float32, test_numeric, test_bpchar, test_char, test_varchar, test_uuid, test_time, test_json, test_jsonb, test_bytea, test_enum::text, test_f4array, test_f8array, test_narray, test_i2array, test_i4array, test_i8array, test_citext, test_ltree FROM test_types"
+    query = "SELECT test_date, test_timestamp, test_timestamptz, test_int16, test_int64, test_float32, test_numeric, test_bpchar, test_char, test_varchar, test_uuid, test_time, test_json, test_jsonb, test_bytea, test_enum::text, test_f4array, test_f8array, test_narray, test_boolarray, test_i2array, test_i4array, test_i8array, test_citext, test_ltree FROM test_types"
     df = read_sql(postgres_url, query, protocol="cursor")
     expected = pd.DataFrame(
         index=range(4),
@@ -754,6 +760,9 @@ def test_postgres_types_cursor(postgres_url: str) -> None:
             "test_narray": pd.Series(
                 [[], None, [521.34], [0.12, 333.33, 22.22]], dtype="object"
             ),
+            "test_boolarray": pd.Series(
+                [[True, False], [], [True], None], dtype="object"
+            ),
             "test_i2array": pd.Series(
                 [[-1, 0, 1], [], [-32768, 32767], None], dtype="object"
             ),
@@ -772,7 +781,7 @@ def test_postgres_types_cursor(postgres_url: str) -> None:
 
 
 def test_postgres_types_simple(postgres_url: str) -> None:
-    query = "SELECT test_date, test_timestamp, test_timestamptz, test_int16, test_int64, test_float32, test_numeric, test_bpchar, test_char, test_varchar, test_uuid, test_time, test_bytea, test_enum, test_f4array, test_f8array, test_narray, test_i2array, test_i4array, test_i8array FROM test_types"
+    query = "SELECT test_date, test_timestamp, test_timestamptz, test_int16, test_int64, test_float32, test_numeric, test_bpchar, test_char, test_varchar, test_uuid, test_time, test_bytea, test_enum, test_f4array, test_f8array, test_narray, test_boolarray, test_i2array, test_i4array, test_i8array FROM test_types"
     df = read_sql(postgres_url, query, protocol="simple")
     expected = pd.DataFrame(
         index=range(4),
@@ -841,6 +850,9 @@ def test_postgres_types_simple(postgres_url: str) -> None:
             ),
             "test_narray": pd.Series(
                 [[], None, [521.34], [0.12, 333.33, 22.22]], dtype="object"
+            ),
+            "test_boolarray": pd.Series(
+                [[True, False], [], [True], None], dtype="object"
             ),
             "test_i2array": pd.Series(
                 [[-1, 0, 1], [], [-32768, 32767], None], dtype="object"
