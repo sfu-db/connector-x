@@ -114,6 +114,7 @@
 <span id="114">114</span>
 <span id="115">115</span>
 <span id="116">116</span>
+<span id="117">117</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Transport from Postgres Source to Arrow2 Destination.
 
 </span><span class="kw">use </span><span class="kw">crate</span>::destinations::arrow2::{
@@ -178,6 +179,7 @@
                 { ByteA[Vec&lt;u8&gt;]                    =&gt; LargeBinary[Vec&lt;u8&gt;]        | conversion auto }
                 { JSON[Value]                       =&gt; LargeUtf8[String]           | conversion option }
                 { JSONB[Value]                      =&gt; LargeUtf8[String]           | conversion none }
+                { BoolArray[Vec&lt;bool&gt;]              =&gt; BoolArray[Vec&lt;bool&gt;]        | conversion auto_vec }
                 { Int2Array[Vec&lt;i16&gt;]               =&gt; Int64Array[Vec&lt;i64&gt;]        | conversion auto_vec }
                 { Int4Array[Vec&lt;i32&gt;]               =&gt; Int64Array[Vec&lt;i64&gt;]        | conversion auto_vec }
                 { Int8Array[Vec&lt;i64&gt;]               =&gt; Int64Array[Vec&lt;i64&gt;]        | conversion auto }

@@ -121,6 +121,9 @@
 <span id="121">121</span>
 <span id="122">122</span>
 <span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
 </pre><pre class="rust"><code><span class="kw">use </span>chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
 <span class="kw">use </span>postgres::types::Type;
 <span class="kw">use </span>rust_decimal::Decimal;
@@ -140,6 +143,7 @@
     Float4Array(bool),
     Float8Array(bool),
     NumericArray(bool),
+    BoolArray(bool),
     Int2Array(bool),
     Int4Array(bool),
     Int8Array(bool),
@@ -171,6 +175,7 @@
         { Float4 =&gt; f32 }
         { Float8 =&gt; f64 }
         { Numeric =&gt; Decimal }
+        { BoolArray =&gt; Vec&lt;bool&gt; }
         { Int2Array =&gt; Vec&lt;i16&gt; }
         { Int4Array =&gt; Vec&lt;i32&gt; }
         { Int8Array =&gt; Vec&lt;i64&gt; }
@@ -201,6 +206,7 @@
             <span class="string">&quot;float4&quot; </span>=&gt; Float4(<span class="bool-val">true</span>),
             <span class="string">&quot;float8&quot; </span>=&gt; Float8(<span class="bool-val">true</span>),
             <span class="string">&quot;numeric&quot; </span>=&gt; Numeric(<span class="bool-val">true</span>),
+            <span class="string">&quot;_bool&quot; </span>=&gt; BoolArray(<span class="bool-val">true</span>),
             <span class="string">&quot;_int2&quot; </span>=&gt; Int2Array(<span class="bool-val">true</span>),
             <span class="string">&quot;_int4&quot; </span>=&gt; Int4Array(<span class="bool-val">true</span>),
             <span class="string">&quot;_int8&quot; </span>=&gt; Int8Array(<span class="bool-val">true</span>),

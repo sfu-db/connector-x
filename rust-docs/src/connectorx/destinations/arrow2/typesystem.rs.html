@@ -50,6 +50,8 @@
 <span id="50">50</span>
 <span id="51">51</span>
 <span id="52">52</span>
+<span id="53">53</span>
+<span id="54">54</span>
 </pre><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::impl_typesystem;
 <span class="kw">use </span>chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
 
@@ -68,6 +70,7 @@
     Date64(bool),
     Time64(bool),
     DateTimeTz(bool),
+    BoolArray(bool),
     Int32Array(bool),
     Int64Array(bool),
     UInt32Array(bool),
@@ -93,6 +96,7 @@
         { Date64     =&gt; NaiveDateTime }
         { Time64     =&gt; NaiveTime     }
         { DateTimeTz =&gt; DateTime&lt;Utc&gt; }
+        { BoolArray  =&gt; Vec&lt;bool&gt;     }
         { Int32Array =&gt; Vec&lt;i32&gt;      }
         { Int64Array =&gt; Vec&lt;i64&gt;      }
         { UInt32Array =&gt; Vec&lt;u32&gt;     }
