@@ -17,6 +17,7 @@ pub enum PostgresTypeSystem {
     Float4Array(bool),
     Float8Array(bool),
     NumericArray(bool),
+    BoolArray(bool),
     Int2Array(bool),
     Int4Array(bool),
     Int8Array(bool),
@@ -36,6 +37,7 @@ pub enum PostgresTypeSystem {
     JSONB(bool),
     Enum(bool),
     HSTORE(bool),
+    Name(bool),
 }
 
 impl_typesystem! {
@@ -47,6 +49,7 @@ impl_typesystem! {
         { Float4 => f32 }
         { Float8 => f64 }
         { Numeric => Decimal }
+        { BoolArray => Vec<bool> }
         { Int2Array => Vec<i16> }
         { Int4Array => Vec<i32> }
         { Int8Array => Vec<i64> }
@@ -56,8 +59,7 @@ impl_typesystem! {
         { VarcharArray | TextArray => Vec<String>}
         { Bool => bool }
         { Char => i8 }
-        { Text | BpChar | VarChar | Enum => &'r str }
-        { ByteA => Vec<u8> }
+        { Text | BpChar | VarChar | Enum | Name => &'r str }        { ByteA => Vec<u8> }
         { Time => NaiveTime }
         { Timestamp => NaiveDateTime }
         { TimestampTz => DateTime<Utc> }
@@ -78,6 +80,7 @@ impl<'a> From<&'a Type> for PostgresTypeSystem {
             "float4" => Float4(true),
             "float8" => Float8(true),
             "numeric" => Numeric(true),
+            "_bool" => BoolArray(true),
             "_int2" => Int2Array(true),
             "_int4" => Int4Array(true),
             "_int8" => Int8Array(true),
@@ -88,7 +91,7 @@ impl<'a> From<&'a Type> for PostgresTypeSystem {
             "_text" => TextArray(true),
             "bool" => Bool(true),
             "char" => Char(true),
-            "text" | "citext" | "ltree" | "lquery" | "ltxtquery" => Text(true),
+            "text" | "citext" | "ltree" | "lquery" | "ltxtquery" | "name" => Text(true),
             "bpchar" => BpChar(true),
             "varchar" => VarChar(true),
             "bytea" => ByteA(true),

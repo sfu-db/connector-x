@@ -9,6 +9,7 @@ pub enum PandasTypeSystem {
     F64Array(bool),
     I64Array(bool),
     Bool(bool),
+    BoolArray(bool),
     Char(bool),
     Str(bool),
     BoxStr(bool),
@@ -23,6 +24,7 @@ pub enum PandasBlockType {
     Boolean(bool), // bool indicates nullablity
     Int64(bool),
     Float64,
+    BooleanArray,
     Int64Array,
     Float64Array,
     String,
@@ -54,6 +56,7 @@ impl From<PandasTypeSystem> for PandasBlockType {
             PandasTypeSystem::Bool(nullable) => PandasBlockType::Boolean(nullable),
             PandasTypeSystem::I64(nullable) => PandasBlockType::Int64(nullable),
             PandasTypeSystem::F64(_) => PandasBlockType::Float64,
+            PandasTypeSystem::BoolArray(_) => PandasBlockType::BooleanArray,
             PandasTypeSystem::F64Array(_) => PandasBlockType::Float64Array,
             PandasTypeSystem::I64Array(_) => PandasBlockType::Int64Array,
             PandasTypeSystem::String(_)
@@ -74,6 +77,7 @@ impl_typesystem! {
         { F64Array => Vec<f64> }
         { I64Array => Vec<i64> }
         { Bool => bool }
+        { BoolArray => Vec<bool> }
         { Char => char }
         { Str => &'r str }
         { BoxStr => Box<str> }

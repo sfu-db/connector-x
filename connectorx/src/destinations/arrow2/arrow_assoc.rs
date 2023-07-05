@@ -62,12 +62,12 @@ impl_arrow_assoc!(f64, ArrowDataType::Float64, MutablePrimitiveArray<f64>);
 impl_arrow_assoc!(bool, ArrowDataType::Boolean, MutableBooleanArray);
 
 macro_rules! impl_arrow_assoc_vec {
-    ($T:ty, $AT:expr) => {
+    ($T:ty, $PT:ty, $AT:expr) => {
         impl ArrowAssoc for Vec<$T> {
-            type Builder = MutableListArray<i64, MutablePrimitiveArray<$T>>;
+            type Builder = MutableListArray<i64, $PT>;
 
             fn builder(nrows: usize) -> Self::Builder {
-                MutableListArray::<i64, MutablePrimitiveArray<$T>>::with_capacity(nrows)
+                MutableListArray::<i64, $PT>::with_capacity(nrows)
             }
 
             #[inline]
@@ -86,10 +86,10 @@ macro_rules! impl_arrow_assoc_vec {
         }
 
         impl ArrowAssoc for Option<Vec<$T>> {
-            type Builder = MutableListArray<i64, MutablePrimitiveArray<$T>>;
+            type Builder = MutableListArray<i64, $PT>;
 
             fn builder(nrows: usize) -> Self::Builder {
-                MutableListArray::<i64, MutablePrimitiveArray<$T>>::with_capacity(nrows)
+                MutableListArray::<i64, $PT>::with_capacity(nrows)
             }
 
             #[inline]
@@ -114,12 +114,19 @@ macro_rules! impl_arrow_assoc_vec {
     };
 }
 
-impl_arrow_assoc_vec!(i32, ArrowDataType::Int32);
-impl_arrow_assoc_vec!(i64, ArrowDataType::Int64);
-impl_arrow_assoc_vec!(u32, ArrowDataType::UInt32);
-impl_arrow_assoc_vec!(u64, ArrowDataType::UInt64);
-impl_arrow_assoc_vec!(f32, ArrowDataType::Float32);
-impl_arrow_assoc_vec!(f64, ArrowDataType::Float64);
+macro_rules! impl_arrow_assoc_primitive_vec {
+    ($T:ty, $AT:expr) => {
+        impl_arrow_assoc_vec!($T, MutablePrimitiveArray<$T>, $AT);
+    };
+}
+
+impl_arrow_assoc_vec!(bool, MutableBooleanArray, ArrowDataType::Boolean);
+impl_arrow_assoc_primitive_vec!(i32, ArrowDataType::Int32);
+impl_arrow_assoc_primitive_vec!(i64, ArrowDataType::Int64);
+impl_arrow_assoc_primitive_vec!(u32, ArrowDataType::UInt32);
+impl_arrow_assoc_primitive_vec!(u64, ArrowDataType::UInt64);
+impl_arrow_assoc_primitive_vec!(f32, ArrowDataType::Float32);
+impl_arrow_assoc_primitive_vec!(f64, ArrowDataType::Float64);
 
 impl ArrowAssoc for &str {
     type Builder = MutableUtf8Array<i64>;
