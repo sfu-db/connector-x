@@ -11,10 +11,9 @@ use crate::data_order::DataOrder;
 use crate::typesystem::{Realize, TypeAssoc, TypeSystem};
 use anyhow::anyhow;
 use arrow2::array::Array;
-use arrow2::array::ArrayRef;
 use arrow2::array::MutableArray;
 use arrow2::chunk::Chunk;
-use arrow2::datatypes::Schema;
+use arrow2::datatypes::{Schema, Field};
 use arrow_assoc::ArrowAssoc;
 pub use errors::{Arrow2DestinationError, Result};
 use fehler::throw;
@@ -120,13 +119,14 @@ impl Arrow2Destination {
 
     #[throws(Arrow2DestinationError)]
     pub fn polars(self) -> DataFrame {
-        let (rbs, schema): (Vec<Chunk<ArrayRef>>, Arc<Schema>) = self.arrow()?;
+        let (rbs, schema): (Vec<Chunk<Arc<dyn Array>>>, Arc<Schema>) = self.arrow()?;
+        //let fields = schema.fields.as_slice();
         let fields: &[arrow2::datatypes::Field] = schema.fields.as_slice();
 
         // This should be in polars but their version needs updating.
         // Whave placed this here contained in an inner function until the fix is merged upstream
         fn try_from(
-            chunks: (&[Chunk<Arc<dyn Array>>], &[ArrowField]),
+            chunks: (&[Chunk<Arc<dyn Array>>], &[Field]),
         ) -> std::result::Result<DataFrame, PolarsError> {
             use polars::prelude::NamedFrom;
 

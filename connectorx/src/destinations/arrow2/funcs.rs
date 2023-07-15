@@ -5,6 +5,7 @@ use crate::typesystem::{ParameterizedFunc, ParameterizedOn};
 use anyhow::anyhow;
 use arrow2::array::*;
 use arrow2::datatypes::Field;
+use std::sync::Arc;
 
 pub struct FNewBuilder;
 
@@ -30,7 +31,7 @@ where
 pub struct FFinishBuilder;
 
 impl ParameterizedFunc for FFinishBuilder {
-    type Function = fn(Builder) -> Result<ArrayRef>;
+    type Function = fn(Builder) -> Result<Arc<dyn Array>>;
 }
 
 impl<T> ParameterizedOn<T> for FFinishBuilder
@@ -38,7 +39,7 @@ where
     T: ArrowAssoc,
 {
     fn parameterize() -> Self::Function {
-        fn imp<T>(mut builder: Builder) -> Result<ArrayRef>
+        fn imp<T>(mut builder: Builder) -> Result<Arc<dyn Array>>
         where
             T: ArrowAssoc,
         {
