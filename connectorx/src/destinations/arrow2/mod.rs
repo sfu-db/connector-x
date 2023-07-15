@@ -126,7 +126,7 @@ impl Arrow2Destination {
         // This should be in polars but their version needs updating.
         // Whave placed this here contained in an inner function until the fix is merged upstream
         fn try_from(
-            chunks: (&[Chunk<ArrayRef>], &[ArrowField]),
+            chunks: (&[Chunk<Arc<dyn Array>>], &[ArrowField]),
         ) -> std::result::Result<DataFrame, PolarsError> {
             use polars::prelude::NamedFrom;
 

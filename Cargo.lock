@@ -229,15 +229,20 @@ dependencies = [
 
 [[package]]
 name = "arrow2"
-version = "0.10.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2e387b20dd573a96f36b173d9027483898f944d696521afd74e2caa3c813d86e"
+version = "0.17.1"
+source = "git+https://github.com/jorgecarleitao/arrow2?rev=fb5e4d591c7149df590a330365fae55d2370962f#fb5e4d591c7149df590a330365fae55d2370962f"
 dependencies = [
+ "ahash 0.8.0",
  "bytemuck",
  "chrono",
+ "dyn-clone",
  "either",
+ "ethnum",
+ "foreign_vec",
+ "getrandom 0.2.7",
  "hash_hasher",
  "num-traits",
+ "rustc_version",
  "simdutf8",
 ]
 
@@ -875,7 +880,7 @@ version = "0.3.2-alpha.7"
 dependencies = [
  "anyhow",
  "arrow",
- "arrow2 0.10.1",
+ "arrow2 0.17.1",
  "bb8",
  "bb8-tiberius",
  "chrono",
