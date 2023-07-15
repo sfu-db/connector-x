@@ -5,7 +5,7 @@ pub type Result<T> = std::result::Result<T, Arrow2DestinationError>;
 #[derive(Error, Debug)]
 pub enum Arrow2DestinationError {
     #[error(transparent)]
-    ArrowError(#[from] arrow2::error::Error),
+    ArrowError(#[from] polars::export::arrow::error::Error),
 
     #[error(transparent)]
     PolarsError(#[from] polars::error::PolarsError),

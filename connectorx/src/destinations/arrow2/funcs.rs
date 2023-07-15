@@ -3,9 +3,9 @@ use super::Builder;
 use crate::errors::Result;
 use crate::typesystem::{ParameterizedFunc, ParameterizedOn};
 use anyhow::anyhow;
-use arrow2::array::*;
-use arrow2::datatypes::Field;
+use polars::export::arrow::datatypes::Field;
 use std::sync::Arc;
+use polars::export::arrow::array::{Array, MutableArray};
 
 pub struct FNewBuilder;
 
@@ -31,7 +31,7 @@ where
 pub struct FFinishBuilder;
 
 impl ParameterizedFunc for FFinishBuilder {
-    type Function = fn(Builder) -> Result<Arc<dyn Array>>;
+    type Function = fn(Builder) -> Result<Box<dyn Array>>;
 }
 
 impl<T> ParameterizedOn<T> for FFinishBuilder
@@ -39,12 +39,13 @@ where
     T: ArrowAssoc,
 {
     fn parameterize() -> Self::Function {
-        fn imp<T>(mut builder: Builder) -> Result<Arc<dyn Array>>
+        fn imp<T>(mut builder: Builder) -> Result<Box<dyn Array>>
         where
             T: ArrowAssoc,
         {
             builder.shrink_to_fit();
-            Ok(MutableArray::as_arc(
+            Ok(
+                MutableArray::as_box(
                 builder
                     .as_mut_any()
                     .downcast_mut::<T::Builder>()

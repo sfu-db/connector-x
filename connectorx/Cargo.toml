@@ -24,7 +24,17 @@ chrono = "0.4"
 
 arrow = {version = "26", optional = true, features = ["prettyprint", "ffi"]}
 #arrow2 = {version = "0.10", default-features = false, optional = true}
-arrow2 = {git = "https://github.com/jorgecarleitao/arrow2", version = "0.17", rev = "fb5e4d591c7149df590a330365fae55d2370962f", default-features = false, optional = true}
+arrow2 = {git = "https://github.com/jorgecarleitao/arrow2", version = "0.17", default-features = false, optional = true, features = [
+  "compute_aggregate",
+  "compute_arithmetics",
+  "compute_boolean",
+  "compute_boolean_kleene",
+  "compute_cast",
+  "compute_comparison",
+  "compute_concatenate",
+  "compute_filter",
+  "compute_if_then_else",
+]}
 bb8 = {version = "0.7", optional = true}
 bb8-tiberius = {version = "0.5", optional = true}
 csv = {version = "1", optional = true}
