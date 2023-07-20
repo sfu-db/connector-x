@@ -13,7 +13,7 @@ readme = "README.md"
 
 [dependencies]
 anyhow = "1"
-arrow = { version = "26", features = ["ffi"]}
+arrow = { version = "42", features = ["ffi"]}
 arrow2 = {version = "0.10", default-features = false}
 bitfield = "0.13"
 bytes = "1"
@@ -36,7 +36,7 @@ pyo3 = {version = "0.14", default-features = false, features = ["macros"]}
 pyo3-built = "0.4"
 rust_decimal = {version = "1", features = ["db-postgres"]}
 serde_json = "1"
-sqlparser = "0.11"
+sqlparser = "0.35"
 thiserror = "1"
 tokio = {version = "1", features = ["rt", "rt-multi-thread", "net"]}
 tokio-util = "0.6"

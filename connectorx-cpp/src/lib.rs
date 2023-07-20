@@ -1,5 +1,6 @@
 mod plan;
 
+use arrow::array::ArrayRef;
 use arrow::ffi::{ArrowArray, FFI_ArrowArray, FFI_ArrowSchema};
 use connectorx::prelude::*;
 use libc::c_char;
@@ -7,6 +8,7 @@ use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::env;
 use std::ffi::{CStr, CString};
+use std::ptr::addr_of;
 
 #[repr(C)]
 pub struct CXSlice<T> {
@@ -124,6 +126,19 @@ pub struct CXArray {
     schema: *const FFI_ArrowSchema,
 }
 
+// `TryFrom` and don't `expect` anything?
+impl From<&ArrayRef> for CXArray {
+    fn from(array: &ArrayRef) -> Self {
+        let schema = FFI_ArrowSchema::try_from(array.data_type()).expect("c ptr");
+        let array = FFI_ArrowArray::new(&array.to_data());
+
+        CXArray {
+            array: addr_of!(array),
+            schema: addr_of!(schema),
+        }
+    }
+}
+
 #[repr(C)]
 pub struct CXResult {
     data: CXSlice<CXSlice<CXArray>>,
@@ -180,20 +195,7 @@ pub unsafe extern "C" fn connectorx_scan(conn: *const c_char, query: *const c_ch
 
     let mut result = vec![];
     for rb in record_batches {
-        let mut cols = vec![];
-
-        for array in rb.columns() {
-            let data = array.data().clone();
-            let array = ArrowArray::try_new(data).expect("c ptr");
-            let (array_ptr, schema_ptr) = ArrowArray::into_raw(array);
-
-            let cx_array = CXArray {
-                array: array_ptr,
-                schema: schema_ptr,
-            };
-            cols.push(cx_array);
-        }
-
+        let cols = rb.columns().iter().map(CXArray::from).collect();
         let cx_rb = CXSlice::<CXArray>::new_from_vec(cols);
         result.push(cx_rb);
     }
@@ -272,17 +274,7 @@ pub unsafe extern "C" fn connectorx_get_schema(
 ) -> *mut CXSchema {
     let arrow_iter = unsafe { &*iter };
     let (empty_batch, names) = arrow_iter.get_schema();
-    let mut cols = vec![];
-    for array in empty_batch.columns() {
-        let data = array.data().clone();
-        let array = ArrowArray::try_new(data).expect("c ptr");
-        let (array_ptr, schema_ptr) = ArrowArray::into_raw(array);
-        let cx_array = CXArray {
-            array: array_ptr,
-            schema: schema_ptr,
-        };
-        cols.push(cx_array);
-    }
+    let cols = empty_batch.columns().iter().map(CXArray::from).collect();
 
     let names: Vec<*const c_char> = names
         .iter()
@@ -314,20 +306,7 @@ pub unsafe extern "C" fn connectorx_iter_next(
     let arrow_iter = unsafe { &mut *iter };
     match arrow_iter.next_batch() {
         Some(rb) => {
-            let mut cols = vec![];
-
-            for array in rb.columns() {
-                let data = array.data().clone();
-                let array = ArrowArray::try_new(data).expect("c ptr");
-                let (array_ptr, schema_ptr) = ArrowArray::into_raw(array);
-
-                let cx_array = CXArray {
-                    array: array_ptr,
-                    schema: schema_ptr,
-                };
-                cols.push(cx_array);
-            }
-
+            let cols = rb.columns().iter().map(CXArray::from).collect();
             let cx_rb = Box::new(CXSlice::<CXArray>::new_from_vec(cols));
             Box::into_raw(cx_rb)
         }
