@@ -1,7 +1,7 @@
 mod plan;
 
 use arrow::array::ArrayRef;
-use arrow::ffi::{ArrowArray, FFI_ArrowArray, FFI_ArrowSchema};
+use arrow::ffi::{FFI_ArrowArray, FFI_ArrowSchema};
 use connectorx::prelude::*;
 use libc::c_char;
 use std::collections::HashMap;
