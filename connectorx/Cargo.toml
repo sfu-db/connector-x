@@ -22,7 +22,7 @@ owning_ref = "0.4"
 serde_json = "1"
 chrono = "0.4"
 
-arrow = {version = "42", optional = true, features = ["prettyprint", "ffi"]}
+arrow = {version = "43", optional = true, features = ["prettyprint", "ffi"]}
 arrow2 = {version = "0.10", default-features = false, optional = true}
 bb8 = {version = "0.7", optional = true}
 bb8-tiberius = {version = "0.5", optional = true}
@@ -45,9 +45,9 @@ r2d2 = {version = "0.8", optional = true}
 r2d2-oracle = {version = "0.5.0", features = ["chrono"], optional = true}
 r2d2_mysql = {version = "23", optional = true}
 r2d2_postgres = {version = "0.18.1", optional = true}
-r2d2_sqlite = {version = "0.20.0", optional = true}
+r2d2_sqlite = {version = "0.22.0", optional = true}
 regex = {version = "1", optional = true}
-rusqlite = {version = "0.27.0", features = ["column_decltype", "chrono", "bundled"], optional = true}
+rusqlite = {version = "0.29.0", features = ["column_decltype", "chrono", "bundled"], optional = true}
 rust_decimal = {version = "1", features = ["db-postgres"], optional = true}
 rust_decimal_macros = {version = "1", optional = true}
 tiberius = {version = "0.5", features = ["rust_decimal", "chrono", "integrated-auth-gssapi"], optional = true}
@@ -56,7 +56,7 @@ tokio-util = {version = "0.6", optional = true}
 urlencoding = {version = "2.1", optional = true}
 uuid = {version = "0.8", optional = true}
 j4rs = {version = "0.13", optional = true}
-datafusion = {version = "27", optional = true}
+datafusion = {git = "https://github.com/apache/arrow-datafusion", rev = "51b4392577554becf637a8adcefa0e7fdc79e41f", optional = true}
 
 [lib]
 crate-type = ["cdylib", "rlib"]
