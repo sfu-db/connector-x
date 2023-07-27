@@ -56,7 +56,7 @@ tokio-util = {version = "0.6", optional = true}
 urlencoding = {version = "2.1", optional = true}
 uuid = {version = "0.8", optional = true}
 j4rs = {version = "0.13", optional = true}
-datafusion = {git = "https://github.com/apache/arrow-datafusion", rev = "51b4392577554becf637a8adcefa0e7fdc79e41f", optional = true}
+datafusion = {version = "28", optional = true}
 
 [lib]
 crate-type = ["cdylib", "rlib"]
