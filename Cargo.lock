@@ -849,6 +849,7 @@ version = "0.3.2-alpha.7"
 dependencies = [
  "anyhow",
  "arrow",
+ "arrow2",
  "bb8",
  "bb8-tiberius",
  "chrono",

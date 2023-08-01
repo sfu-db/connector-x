@@ -1,5 +1,5 @@
-use polars::export::arrow::array::*;
-use polars::export::arrow::datatypes::{DataType as ArrowDataType, Field, TimeUnit};
+use arrow2::array::*;
+use arrow2::datatypes::{DataType as ArrowDataType, Field, TimeUnit};
 
 use chrono::{Date, DateTime, NaiveDate, NaiveDateTime, NaiveTime, Timelike, Utc};
 

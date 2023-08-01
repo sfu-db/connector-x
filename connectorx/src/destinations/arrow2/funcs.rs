@@ -3,9 +3,9 @@ use super::Builder;
 use crate::errors::Result;
 use crate::typesystem::{ParameterizedFunc, ParameterizedOn};
 use anyhow::anyhow;
-use polars::export::arrow::datatypes::Field;
+use arrow2::datatypes::Field;
 use std::sync::Arc;
-use polars::export::arrow::array::{Array, MutableArray};
+use arrow2::array::{Array, MutableArray};
 
 pub struct FNewBuilder;
 
