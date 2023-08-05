@@ -3,9 +3,9 @@ use super::Builder;
 use crate::errors::Result;
 use crate::typesystem::{ParameterizedFunc, ParameterizedOn};
 use anyhow::anyhow;
+use arrow2::array::{Array, MutableArray};
 use arrow2::datatypes::Field;
 use std::sync::Arc;
-use arrow2::array::{Array, MutableArray};
 
 pub struct FNewBuilder;
 
@@ -44,8 +44,7 @@ where
             T: ArrowAssoc,
         {
             builder.shrink_to_fit();
-            Ok(
-                MutableArray::as_box(
+            Ok(MutableArray::as_box(
                 builder
                     .as_mut_any()
                     .downcast_mut::<T::Builder>()

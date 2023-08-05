@@ -12,7 +12,7 @@ use crate::typesystem::{Realize, TypeAssoc, TypeSystem};
 use anyhow::anyhow;
 use arrow2::array::{Array, MutableArray};
 use arrow2::chunk::Chunk;
-use arrow2::datatypes::{Schema, Field};
+use arrow2::datatypes::{Field, Schema};
 use arrow_assoc::ArrowAssoc;
 pub use errors::{Arrow2DestinationError, Result};
 use fehler::throw;
@@ -137,8 +137,9 @@ impl Arrow2Destination {
                     .into_iter()
                     .zip(chunks.1)
                     .map(|(arr, field)| {
-                        let a = Series::try_from((field.name.as_str(), arr))
-                            .map_err(|er|PolarsError::ComputeError("Couldn't build Series from box".into()));
+                        let a = Series::try_from((field.name.as_str(), arr)).map_err(|er| {
+                            PolarsError::ComputeError("Couldn't build Series from box".into())
+                        });
                         a
                     })
                     .collect();
@@ -207,10 +208,9 @@ impl ArrowPartitionWriter {
         let columns = builders
             .into_iter()
             .zip(self.schema.iter())
-            .map(|(builder, &dt)| {
-                Realize::<FFinishBuilder>::realize(dt)?(builder)
-            })
-            .collect::<std::result::Result<Vec<Box<dyn Array>>, crate::errors::ConnectorXError>>()?;
+            .map(|(builder, &dt)| Realize::<FFinishBuilder>::realize(dt)?(builder))
+            .collect::<std::result::Result<Vec<Box<dyn Array>>, crate::errors::ConnectorXError>>(
+            )?;
 
         let rb = Chunk::try_new(columns)?;
         {
