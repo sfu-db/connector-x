@@ -1,6 +1,6 @@
 use crate::errors::ConnectorXPythonError;
 use arrow2::{
-    array::ArrayRef,
+    array::Array,
     chunk::Chunk,
     datatypes::{Field, Schema},
     ffi,
@@ -28,7 +28,7 @@ pub fn write_arrow<'a>(
 }
 
 fn to_ptrs(
-    rbs: Vec<Chunk<ArrayRef>>,
+    rbs: Vec<Chunk<Box<dyn Array>>>,
     schema: Arc<Schema>,
 ) -> (Vec<String>, Vec<Vec<(uintptr_t, uintptr_t)>>) {
     if rbs.is_empty() {
@@ -49,9 +49,8 @@ fn to_ptrs(
             unsafe {
                 ffi::export_field_to_c(
                     &Field::new("", array.data_type().clone(), true),
-                    schema_ptr,
                 );
-                ffi::export_array_to_c(array.clone(), array_ptr);
+                ffi::export_array_to_c(array.clone());
             };
             cols.push((array_ptr as uintptr_t, schema_ptr as uintptr_t));
         }
