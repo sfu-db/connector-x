@@ -155,7 +155,7 @@ impl ArrowAssoc for DateTime<Utc> {
         Field::new(
             header,
             ArrowDataType::Timestamp(TimeUnit::Nanosecond, None),
-            true,
+            false,
         )
     }
 }
@@ -176,7 +176,7 @@ impl ArrowAssoc for Option<DateTime<Utc>> {
         Field::new(
             header,
             ArrowDataType::Timestamp(TimeUnit::Nanosecond, None),
-            false,
+            true,
         )
     }
 }
