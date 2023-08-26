@@ -18,7 +18,7 @@ pub use errors::{Arrow2DestinationError, Result};
 use fehler::throw;
 use fehler::throws;
 use funcs::{FFinishBuilder, FNewBuilder, FNewField};
-use polars::prelude::{ArrowField, DataFrame, PolarsError, Series};
+use polars::prelude::{DataFrame, PolarsError, Series};
 use std::convert::TryFrom;
 use std::sync::{Arc, Mutex};
 pub use typesystem::Arrow2TypeSystem;
@@ -137,7 +137,7 @@ impl Arrow2Destination {
                     .into_iter()
                     .zip(chunks.1)
                     .map(|(arr, field)| {
-                        let a = Series::try_from((field.name.as_str(), arr)).map_err(|er| {
+                        let a = Series::try_from((field.name.as_str(), arr)).map_err(|_| {
                             PolarsError::ComputeError("Couldn't build Series from box".into())
                         });
                         a

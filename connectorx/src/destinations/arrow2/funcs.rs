@@ -5,7 +5,6 @@ use crate::typesystem::{ParameterizedFunc, ParameterizedOn};
 use anyhow::anyhow;
 use arrow2::array::{Array, MutableArray};
 use arrow2::datatypes::Field;
-use std::sync::Arc;
 
 pub struct FNewBuilder;
 

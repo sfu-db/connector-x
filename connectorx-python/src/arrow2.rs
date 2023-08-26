@@ -38,20 +38,16 @@ fn to_ptrs(
     let mut result = vec![];
     let names = schema.fields.iter().map(|f| f.name.clone()).collect();
 
-    for rb in rbs {
+    for rb in rbs.into_iter() {
         let mut cols = vec![];
 
-        for array in rb.columns() {
-            let array_ptr = Box::new(ffi::ArrowArray::empty());
-            let schema_ptr = Box::new(ffi::ArrowSchema::empty());
-            let array_ptr = Box::into_raw(array_ptr);
-            let schema_ptr = Box::into_raw(schema_ptr);
-            unsafe {
-                ffi::export_field_to_c(
-                    &Field::new("", array.data_type().clone(), true),
-                );
-                ffi::export_array_to_c(array.clone());
-            };
+        for array in rb.into_arrays() {
+            let schema_ptr =
+                ffi::export_field_to_c(&Field::new("", array.data_type().clone(), true));
+            let array_ptr = ffi::export_array_to_c(array);
+            let array_ptr = Box::into_raw(Box::new(array_ptr));
+            let schema_ptr = Box::into_raw(Box::new(schema_ptr));
+
             cols.push((array_ptr as uintptr_t, schema_ptr as uintptr_t));
         }
 
