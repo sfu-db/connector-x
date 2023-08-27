@@ -103,11 +103,11 @@ benchmark-report: setup-python
 # releases
 build-python-wheel:
     # need to get the j4rs dependency first
-    cd connectorx-python && maturin build --release -i python --no-sdist
+    cd connectorx-python && maturin build --release -i python
     # copy files
     cp -rf connectorx-python/target/release/jassets connectorx-python/connectorx/dependencies
     # build final wheel
-    cd connectorx-python && maturin build --release -i python --no-sdist
+    cd connectorx-python && maturin build --release -i python
 
 bench-fed path:
     just python-tpch fed --file {{path}}/q2.sql
