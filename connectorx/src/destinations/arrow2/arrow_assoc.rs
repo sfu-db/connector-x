@@ -1,7 +1,6 @@
-use arrow2::{
-    array::*,
-    datatypes::{DataType as ArrowDataType, Field, TimeUnit},
-};
+use arrow2::array::*;
+use arrow2::datatypes::{DataType as ArrowDataType, Field, TimeUnit};
+
 use chrono::{Date, DateTime, NaiveDate, NaiveDateTime, NaiveTime, Timelike, Utc};
 
 use crate::constants::SECONDS_IN_DAY;
