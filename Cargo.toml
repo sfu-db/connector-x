@@ -5,3 +5,6 @@ members = ["connectorx", "connectorx-cpp"]
 [profile.release]
 debug = true
 lto = true
+
+[workspace.dependencies]
+arrow2 = {version = "0.17", default-features = false}
