@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":[["OracleSourceError",""],["OracleTypeSystem",""]],"fn":[["connect_oracle",""]],"struct":[["OracleDialect",""],["OracleSource",""],["OracleSourcePartition",""],["OracleTextSourceParser",""]]};
+window.SIDEBAR_ITEMS = {"enum":["OracleSourceError","OracleTypeSystem"],"fn":["connect_oracle"],"struct":["OracleDialect","OracleSource","OracleSourcePartition","OracleTextSourceParser"]};

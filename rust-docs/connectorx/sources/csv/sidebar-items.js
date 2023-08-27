@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":[["CSVSourceError",""],["CSVTypeSystem","This is a dummy type system used in this library. For all the sources, their output values must be one of the types defined by DummyTypeSystem. For all the destinations, they must support writing any value whose type is defined by DummyTypeSystem."]],"struct":[["CSVSource",""],["CSVSourcePartition",""],["CSVSourcePartitionParser",""]]};
+window.SIDEBAR_ITEMS = {"enum":["CSVSourceError","CSVTypeSystem"],"struct":["CSVSource","CSVSourcePartition","CSVSourcePartitionParser"]};

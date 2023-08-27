@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":[["BigQuerySourceError",""],["BigQueryTypeSystem",""]],"struct":[["BigQueryDialect",""],["BigQuerySource",""],["BigQuerySourceParser",""],["BigQuerySourcePartition",""]]};
+window.SIDEBAR_ITEMS = {"enum":["BigQuerySourceError","BigQueryTypeSystem"],"struct":["BigQueryDialect","BigQuerySource","BigQuerySourceParser","BigQuerySourcePartition"]};

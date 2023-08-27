@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":[["SourceType",""]],"fn":[["parse_source",""]],"struct":[["SourceConn",""]]};
+window.SIDEBAR_ITEMS = {"enum":["SourceType"],"fn":["parse_source"],"struct":["SourceConn"]};

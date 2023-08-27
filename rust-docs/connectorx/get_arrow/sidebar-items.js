@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":[["get_arrow",""],["new_record_batch_iter",""]]};
+window.SIDEBAR_ITEMS = {"fn":["get_arrow","new_record_batch_iter"]};

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":[["SQLiteSourceError",""],["SQLiteTypeSystem",""]],"struct":[["SQLiteSource",""],["SQLiteSourcePartition",""],["SQLiteSourcePartitionParser",""]]};
+window.SIDEBAR_ITEMS = {"enum":["SQLiteSourceError","SQLiteTypeSystem"],"struct":["SQLiteSource","SQLiteSourcePartition","SQLiteSourcePartitionParser"]};

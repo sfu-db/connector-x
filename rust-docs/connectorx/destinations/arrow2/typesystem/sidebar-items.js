@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":[["Arrow2TypeSystem",""]]};
+window.SIDEBAR_ITEMS = {"enum":["Arrow2TypeSystem"]};

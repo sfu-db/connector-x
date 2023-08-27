@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":[["ConnectorXError","Errors that can be raised from this library."],["ConnectorXOutError",""],["ProduceContext",""]],"type":[["OutResult",""],["Result",""]]};
+window.SIDEBAR_ITEMS = {"enum":["ConnectorXError","ConnectorXOutError","ProduceContext"],"type":["OutResult","Result"]};

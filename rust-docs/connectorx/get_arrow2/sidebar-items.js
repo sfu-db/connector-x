@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":[["get_arrow2",""]]};
+window.SIDEBAR_ITEMS = {"fn":["get_arrow2"]};
