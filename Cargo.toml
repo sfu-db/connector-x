@@ -7,4 +7,4 @@ debug = true
 lto = true
 
 [workspace.dependencies]
-arrow2 = {version = "0.17.4", default-features = false}
+arrow2 = {version = "0.17", default-features = false}
