@@ -1,6 +1,6 @@
 {
     "driver": "org.postgresql.Driver",
-    "url": "jdbc:postgresql://postgres:5432/tpch",
+    "url": "jdbc:postgresql://postgres:5432/postgres",
     "username": "postgres",
     "password": "postgres",
     "costParams": {
