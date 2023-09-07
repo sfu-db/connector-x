@@ -74,6 +74,7 @@ fn init_jvm(j4rs_base: Option<&str>) -> Jvm {
         .skip_setting_native_lib()
         .classpath_entry(entry)
         .with_base_path(base.to_str().unwrap())
+        .with_default_classloader() // for JAVA < 9
         .build()?
 }
 

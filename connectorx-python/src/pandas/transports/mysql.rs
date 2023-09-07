@@ -85,7 +85,7 @@ impl_transport!(
 
 impl<'py, P> TypeConversion<NaiveDate, DateTime<Utc>> for MysqlPandasTransport<'py, P> {
     fn convert(val: NaiveDate) -> DateTime<Utc> {
-        DateTime::from_utc(
+        DateTime::from_naive_utc_and_offset(
             val.and_hms_opt(0, 0, 0)
                 .unwrap_or_else(|| panic!("and_hms_opt got None from {:?}", val)),
             Utc,
@@ -101,7 +101,7 @@ impl<'py, P> TypeConversion<NaiveTime, String> for MysqlPandasTransport<'py, P> 
 
 impl<'py, P> TypeConversion<NaiveDateTime, DateTime<Utc>> for MysqlPandasTransport<'py, P> {
     fn convert(val: NaiveDateTime) -> DateTime<Utc> {
-        DateTime::from_utc(val, Utc)
+        DateTime::from_naive_utc_and_offset(val, Utc)
     }
 }
 
