@@ -472,6 +472,7 @@ impl_produce!(
     Vec<f64>,
     Vec<Decimal>,
     bool,
+    Vec<bool>,
     &'r str,
     Vec<u8>,
     NaiveTime,
@@ -480,6 +481,7 @@ impl_produce!(
     NaiveDate,
     Uuid,
     Value,
+    Vec<String>,
 );
 
 impl<'r, 'a> Produce<'r, HashMap<String, Option<String>>>
@@ -652,7 +654,7 @@ macro_rules! impl_csv_vec_produce {
     };
 }
 
-impl_csv_vec_produce!(i8, i16, i32, i64, f32, f64, Decimal,);
+impl_csv_vec_produce!(i8, i16, i32, i64, f32, f64, Decimal, String,);
 
 impl<'r, 'a> Produce<'r, HashMap<String, Option<String>>> for PostgresCSVSourceParser<'a> {
     type Error = PostgresSourceError;
@@ -702,6 +704,53 @@ impl<'r, 'a> Produce<'r, Option<bool>> for PostgresCSVSourceParser<'a> {
             ))),
         };
         ret
+    }
+}
+
+impl<'r, 'a> Produce<'r, Vec<bool>> for PostgresCSVSourceParser<'a> {
+    type Error = PostgresSourceError;
+
+    #[throws(PostgresSourceError)]
+    fn produce(&mut self) -> Vec<bool> {
+        let (ridx, cidx) = self.next_loc()?;
+        let s = &self.rowbuf[ridx][cidx][..];
+        match s {
+            "{}" => vec![],
+            _ if s.len() < 3 => throw!(ConnectorXError::cannot_produce::<bool>(Some(s.into()))),
+            s => s[1..s.len() - 1]
+                .split(",")
+                .map(|v| match v {
+                    "t" => Ok(true),
+                    "f" => Ok(false),
+                    _ => throw!(ConnectorXError::cannot_produce::<bool>(Some(s.into()))),
+                })
+                .collect::<Result<Vec<bool>, ConnectorXError>>()?,
+        }
+    }
+}
+
+impl<'r, 'a> Produce<'r, Option<Vec<bool>>> for PostgresCSVSourceParser<'a> {
+    type Error = PostgresSourceError;
+
+    #[throws(PostgresSourceError)]
+    fn produce(&mut self) -> Option<Vec<bool>> {
+        let (ridx, cidx) = self.next_loc()?;
+        let s = &self.rowbuf[ridx][cidx][..];
+        match s {
+            "" => None,
+            "{}" => Some(vec![]),
+            _ if s.len() < 3 => throw!(ConnectorXError::cannot_produce::<bool>(Some(s.into()))),
+            s => Some(
+                s[1..s.len() - 1]
+                    .split(",")
+                    .map(|v| match v {
+                        "t" => Ok(true),
+                        "f" => Ok(false),
+                        _ => throw!(ConnectorXError::cannot_produce::<bool>(Some(s.into()))),
+                    })
+                    .collect::<Result<Vec<bool>, ConnectorXError>>()?,
+            ),
+        }
     }
 }
 
@@ -1006,6 +1055,7 @@ impl_produce!(
     Vec<f64>,
     Vec<Decimal>,
     bool,
+    Vec<bool>,
     &'r str,
     Vec<u8>,
     NaiveTime,
@@ -1015,6 +1065,7 @@ impl_produce!(
     Uuid,
     Value,
     HashMap<String, Option<String>>,
+    Vec<String>,
 );
 
 impl<C> SourcePartition for PostgresSourcePartition<SimpleProtocol, C>
@@ -1344,7 +1395,79 @@ macro_rules! impl_simple_vec_produce {
         )+
     };
 }
-impl_simple_vec_produce!(i16, i32, i64, f32, f64, Decimal,);
+impl_simple_vec_produce!(i16, i32, i64, f32, f64, Decimal, String,);
+
+impl<'r> Produce<'r, Vec<bool>> for PostgresSimpleSourceParser {
+    type Error = PostgresSourceError;
+
+    #[throws(PostgresSourceError)]
+    fn produce(&'r mut self) -> Vec<bool> {
+        let (ridx, cidx) = self.next_loc()?;
+        let val = match &self.rows[ridx] {
+            SimpleQueryMessage::Row(row) => match row.try_get(cidx)? {
+                Some(s) => match s {
+                    "" => throw!(anyhow!("Cannot parse NULL in non-NULL column.")),
+                    "{}" => vec![],
+                    _ => rem_first_and_last(s)
+                        .split(",")
+                        .map(|token| match token {
+                            "t" => Ok(true),
+                            "f" => Ok(false),
+                            _ => {
+                                throw!(ConnectorXError::cannot_produce::<Vec<bool>>(Some(s.into())))
+                            }
+                        })
+                        .collect::<Result<Vec<bool>, ConnectorXError>>()?,
+                },
+                None => throw!(anyhow!("Cannot parse NULL in non-NULL column.")),
+            },
+            SimpleQueryMessage::CommandComplete(c) => {
+                panic!("get command: {}", c);
+            }
+            _ => {
+                panic!("what?");
+            }
+        };
+        val
+    }
+}
+
+impl<'r> Produce<'r, Option<Vec<bool>>> for PostgresSimpleSourceParser {
+    type Error = PostgresSourceError;
+
+    #[throws(PostgresSourceError)]
+    fn produce(&'r mut self) -> Option<Vec<bool>> {
+        let (ridx, cidx) = self.next_loc()?;
+        let val = match &self.rows[ridx] {
+            SimpleQueryMessage::Row(row) => match row.try_get(cidx)? {
+                Some(s) => match s {
+                    "" => None,
+                    "{}" => Some(vec![]),
+                    _ => Some(
+                        rem_first_and_last(s)
+                            .split(",")
+                            .map(|token| match token {
+                                "t" => Ok(true),
+                                "f" => Ok(false),
+                                _ => throw!(ConnectorXError::cannot_produce::<Vec<bool>>(Some(
+                                    s.into()
+                                ))),
+                            })
+                            .collect::<Result<Vec<bool>, ConnectorXError>>()?,
+                    ),
+                },
+                None => None,
+            },
+            SimpleQueryMessage::CommandComplete(c) => {
+                panic!("get command: {}", c);
+            }
+            _ => {
+                panic!("what?");
+            }
+        };
+        val
+    }
+}
 
 impl<'r> Produce<'r, NaiveDate> for PostgresSimpleSourceParser {
     type Error = PostgresSourceError;

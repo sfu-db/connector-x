@@ -75,7 +75,7 @@ def test_arrow2(postgres_url: str) -> None:
 
 
 def test_arrow2_type(postgres_url: str) -> None:
-    query = "SELECT test_date, test_timestamp, test_timestamptz, test_int16, test_int64, test_float32, test_numeric, test_bpchar, test_char, test_varchar, test_uuid, test_time, test_bytea, test_json, test_jsonb, test_f4array, test_f8array, test_narray, test_i2array, test_i4array, test_i8array, test_enum, test_ltree FROM test_types"
+    query = "SELECT test_date, test_timestamp, test_timestamptz, test_int16, test_int64, test_float32, test_numeric, test_bpchar, test_char, test_varchar, test_uuid, test_time, test_bytea, test_json, test_jsonb, test_f4array, test_f8array, test_narray, test_i2array, test_i4array, test_i8array, test_enum, test_ltree, test_name FROM test_types"
     df = read_sql(postgres_url, query, return_type="arrow2")
     df = df.to_pandas(date_as_object=False)
     df.sort_values(by="test_int16", inplace=True, ignore_index=True)
@@ -181,7 +181,13 @@ def test_arrow2_type(postgres_url: str) -> None:
             "test_enum": pd.Series(
                 ["happy", "very happy", "ecstatic", None], dtype="object"
             ),
-            "test_ltree": pd.Series(["A.B.C.D", "A.B.E", "A", None], dtype="object"),
+            "test_ltree": pd.Series(
+                ["A.B.C.D", "A.B.E", "A", None], dtype="object"
+            ),
+            "test_name": pd.Series(
+                ["0", "21", "someName", "101203203-1212323-22131235"]
+            )
+            
         },
     )
     assert_frame_equal(df, expected, check_names=True)

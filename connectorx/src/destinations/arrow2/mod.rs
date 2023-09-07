@@ -10,24 +10,22 @@ use crate::constants::RECORD_BATCH_SIZE;
 use crate::data_order::DataOrder;
 use crate::typesystem::{Realize, TypeAssoc, TypeSystem};
 use anyhow::anyhow;
-use arrow2::array::Array;
-use arrow2::array::ArrayRef;
-use arrow2::array::MutableArray;
+use arrow2::array::{Array, MutableArray};
 use arrow2::chunk::Chunk;
-use arrow2::datatypes::Schema;
+use arrow2::datatypes::{Field, Schema};
 use arrow_assoc::ArrowAssoc;
 pub use errors::{Arrow2DestinationError, Result};
 use fehler::throw;
 use fehler::throws;
 use funcs::{FFinishBuilder, FNewBuilder, FNewField};
-use polars::prelude::{ArrowField, DataFrame, PolarsError, Series};
+use polars::prelude::{DataFrame, PolarsError, Series};
 use std::convert::TryFrom;
 use std::sync::{Arc, Mutex};
 pub use typesystem::Arrow2TypeSystem;
 
 type Builder = Box<dyn MutableArray + 'static + Send>;
 type Builders = Vec<Builder>;
-type ChunkBuffer = Arc<Mutex<Vec<Chunk<Arc<dyn Array>>>>>;
+type ChunkBuffer = Arc<Mutex<Vec<Chunk<Box<dyn Array>>>>>;
 
 pub struct Arrow2Destination {
     schema: Vec<Arrow2TypeSystem>,
@@ -109,7 +107,7 @@ impl Destination for Arrow2Destination {
 
 impl Arrow2Destination {
     #[throws(Arrow2DestinationError)]
-    pub fn arrow(self) -> (Vec<Chunk<Arc<dyn Array>>>, Arc<Schema>) {
+    pub fn arrow(self) -> (Vec<Chunk<Box<dyn Array>>>, Arc<Schema>) {
         let lock = Arc::try_unwrap(self.data).map_err(|_| anyhow!("Partitions are not freed"))?;
         (
             lock.into_inner()
@@ -120,24 +118,30 @@ impl Arrow2Destination {
 
     #[throws(Arrow2DestinationError)]
     pub fn polars(self) -> DataFrame {
-        let (rbs, schema): (Vec<Chunk<ArrayRef>>, Arc<Schema>) = self.arrow()?;
-        let fields: &[arrow2::datatypes::Field] = schema.fields.as_slice();
+        let (rbs, schema): (Vec<Chunk<Box<dyn Array>>>, Arc<Schema>) = self.arrow()?;
+        //let fields = schema.fields.as_slice();
+        let fields: &[Field] = schema.fields.as_slice();
 
         // This should be in polars but their version needs updating.
         // Whave placed this here contained in an inner function until the fix is merged upstream
         fn try_from(
-            chunks: (&[Chunk<ArrayRef>], &[ArrowField]),
+            chunks: (Vec<Chunk<Box<dyn Array>>>, &[Field]),
         ) -> std::result::Result<DataFrame, PolarsError> {
             use polars::prelude::NamedFrom;
 
             let mut series: Vec<Series> = vec![];
 
-            for chunk in chunks.0.iter() {
+            for chunk in chunks.0.into_iter() {
                 let columns_results: std::result::Result<Vec<Series>, PolarsError> = chunk
-                    .columns()
-                    .iter()
+                    .into_arrays()
+                    .into_iter()
                     .zip(chunks.1)
-                    .map(|(arr, field)| Series::try_from((field.name.as_ref(), arr.clone())))
+                    .map(|(arr, field)| {
+                        let a = Series::try_from((field.name.as_str(), arr)).map_err(|_| {
+                            PolarsError::ComputeError("Couldn't build Series from box".into())
+                        });
+                        a
+                    })
                     .collect();
 
                 let columns = columns_results?;
@@ -158,7 +162,7 @@ impl Arrow2Destination {
             DataFrame::new(series)
         }
 
-        try_from((&rbs, fields)).unwrap()
+        try_from((rbs, fields)).unwrap()
     }
 }
 
@@ -200,11 +204,14 @@ impl ArrowPartitionWriter {
             .builders
             .take()
             .unwrap_or_else(|| panic!("arrow builder is none when flush!"));
+
         let columns = builders
             .into_iter()
             .zip(self.schema.iter())
             .map(|(builder, &dt)| Realize::<FFinishBuilder>::realize(dt)?(builder))
-            .collect::<std::result::Result<Vec<_>, crate::errors::ConnectorXError>>()?;
+            .collect::<std::result::Result<Vec<Box<dyn Array>>, crate::errors::ConnectorXError>>(
+            )?;
+
         let rb = Chunk::try_new(columns)?;
         {
             let mut guard = self

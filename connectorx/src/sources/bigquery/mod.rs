@@ -1059,7 +1059,7 @@ impl<'r, 'a> Produce<'r, DateTime<Utc>> for BigQuerySourceParser {
             * 1e9) as i64;
         let secs = timestamp_ns / 1000000000;
         let nsecs = (timestamp_ns % 1000000000) as u32;
-        DateTime::<Utc>::from_utc(
+        DateTime::<Utc>::from_naive_utc_and_offset(
             NaiveDateTime::from_timestamp_opt(secs, nsecs)
                 .ok_or_else(|| anyhow!("from_timestamp_opt return None"))?,
             Utc,
@@ -1137,7 +1137,7 @@ impl<'r, 'a> Produce<'r, Option<DateTime<Utc>>> for BigQuerySourceParser {
                 let secs = timestamp_ns / 1000000000;
                 let nsecs = (timestamp_ns % 1000000000) as u32;
                 match NaiveDateTime::from_timestamp_opt(secs, nsecs) {
-                    Some(ndt) => Some(DateTime::<Utc>::from_utc(ndt, Utc)),
+                    Some(ndt) => Some(DateTime::<Utc>::from_naive_utc_and_offset(ndt, Utc)),
                     None => None,
                 }
             }

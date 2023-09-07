@@ -52,6 +52,7 @@ macro_rules! impl_postgres_transport {
                 { BpChar[&'r str]                   => LargeUtf8[String]           | conversion none }
                 { VarChar[&'r str]                  => LargeUtf8[String]           | conversion none }
                 { Enum[&'r str]                     => LargeUtf8[String]           | conversion none }
+                { Name[&'r str]                     => LargeUtf8[String]           | conversion none }
                 { Timestamp[NaiveDateTime]          => Date64[NaiveDateTime]       | conversion auto }
                 { Date[NaiveDate]                   => Date32[NaiveDate]           | conversion auto }
                 { Time[NaiveTime]                   => Time64[NaiveTime]           | conversion auto }
@@ -61,12 +62,16 @@ macro_rules! impl_postgres_transport {
                 { ByteA[Vec<u8>]                    => LargeBinary[Vec<u8>]        | conversion auto }
                 { JSON[Value]                       => LargeUtf8[String]           | conversion option }
                 { JSONB[Value]                      => LargeUtf8[String]           | conversion none }
+                { BoolArray[Vec<bool>]              => BoolArray[Vec<bool>]        | conversion auto_vec }
                 { Int2Array[Vec<i16>]               => Int64Array[Vec<i64>]        | conversion auto_vec }
                 { Int4Array[Vec<i32>]               => Int64Array[Vec<i64>]        | conversion auto_vec }
                 { Int8Array[Vec<i64>]               => Int64Array[Vec<i64>]        | conversion auto }
                 { Float4Array[Vec<f32>]             => Float64Array[Vec<f64>]      | conversion auto_vec }
                 { Float8Array[Vec<f64>]             => Float64Array[Vec<f64>]      | conversion auto }
                 { NumericArray[Vec<Decimal>]        => Float64Array[Vec<f64>]      | conversion option }
+                { VarcharArray[Vec<String>]        => Utf8Array[Vec<String>]      | conversion none }
+                { TextArray[Vec<String>]        => Utf8Array[Vec<String>]      | conversion auto }
+
             }
         );
     }

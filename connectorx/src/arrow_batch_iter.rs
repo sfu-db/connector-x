@@ -16,28 +16,38 @@ pub fn set_global_num_thread(num: usize) {
 pub struct ArrowBatchIter<S, TP>
 where
     S: Source,
-    TP: Transport<TSS = S::TypeSystem, TSD = ArrowTypeSystem, S = S, D = ArrowDestination>,
+    TP: Transport<
+        TSS = S::TypeSystem,
+        TSD = ArrowStreamTypeSystem,
+        S = S,
+        D = ArrowStreamDestination,
+    >,
     <S as Source>::Partition: 'static,
     <S as Source>::TypeSystem: 'static,
     <TP as Transport>::Error: 'static,
 {
-    dst: ArrowDestination,
-    dst_parts: Option<Vec<ArrowPartitionWriter>>,
+    dst: ArrowStreamDestination,
+    dst_parts: Option<Vec<ArrowStreamPartitionWriter>>,
     src_parts: Option<Vec<S::Partition>>,
     dorder: DataOrder,
     src_schema: Vec<S::TypeSystem>,
-    dst_schema: Vec<ArrowTypeSystem>,
+    dst_schema: Vec<ArrowStreamTypeSystem>,
     _phantom: PhantomData<TP>,
 }
 
 impl<'a, S, TP> ArrowBatchIter<S, TP>
 where
     S: Source + 'a,
-    TP: Transport<TSS = S::TypeSystem, TSD = ArrowTypeSystem, S = S, D = ArrowDestination>,
+    TP: Transport<
+        TSS = S::TypeSystem,
+        TSD = ArrowStreamTypeSystem,
+        S = S,
+        D = ArrowStreamDestination,
+    >,
 {
     pub fn new(
         src: S,
-        mut dst: ArrowDestination,
+        mut dst: ArrowStreamDestination,
         origin_query: Option<String>,
         queries: &[CXQuery<String>],
     ) -> Result<Self, TP::Error> {
@@ -129,7 +139,12 @@ where
 impl<'a, S, TP> Iterator for ArrowBatchIter<S, TP>
 where
     S: Source + 'a,
-    TP: Transport<TSS = S::TypeSystem, TSD = ArrowTypeSystem, S = S, D = ArrowDestination>,
+    TP: Transport<
+        TSS = S::TypeSystem,
+        TSD = ArrowStreamTypeSystem,
+        S = S,
+        D = ArrowStreamDestination,
+    >,
 {
     type Item = RecordBatch;
     /// NOTE: not thread safe
@@ -147,7 +162,12 @@ pub trait RecordBatchIterator {
 impl<'a, S, TP> RecordBatchIterator for ArrowBatchIter<S, TP>
 where
     S: Source + 'a,
-    TP: Transport<TSS = S::TypeSystem, TSD = ArrowTypeSystem, S = S, D = ArrowDestination>,
+    TP: Transport<
+        TSS = S::TypeSystem,
+        TSD = ArrowStreamTypeSystem,
+        S = S,
+        D = ArrowStreamDestination,
+    >,
 {
     fn get_schema(&self) -> (RecordBatch, &[String]) {
         (self.dst.empty_batch(), self.dst.names())

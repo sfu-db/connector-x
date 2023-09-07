@@ -14,7 +14,7 @@ jobs:
       - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: 1.65.0
+          toolchain: 1.71.1
           components: rustfmt
           default: true
 
@@ -26,6 +26,8 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -r docs/requirements.txt
+          sudo apt-get update
+          sudo apt-get install -y libkrb5-dev libclang-dev
 
       - name: Build the book
         run: |

@@ -7,7 +7,7 @@ license = "MIT"
 name = "connectorx"
 readme = "../README.md"
 repository = "https://github.com/sfu-db/connector-x"
-version = "0.3.2-alpha.2"
+version = "0.3.2"
 
 [dependencies]
 anyhow = "1"
@@ -22,8 +22,8 @@ owning_ref = "0.4"
 serde_json = "1"
 chrono = "0.4"
 
-arrow = {version = "40", optional = true, features = ["prettyprint", "ffi"]}
-arrow2 = {version = "0.10", default-features = false, optional = true}
+arrow = {workspace = true, optional = true}
+arrow2 = {workspace = true, default-features = false, optional = true}
 bb8 = {version = "0.7", optional = true}
 bb8-tiberius = {version = "0.5", optional = true}
 csv = {version = "1", optional = true}
@@ -36,7 +36,7 @@ ndarray = {version = "0.15", optional = true}
 num-traits = {version = "0.2", optional = true}
 openssl = {version = "0.10", optional = true}
 oracle = {version = "0.5", optional = true}
-polars = {version = "0.20", optional = true}
+polars = {version = "0.32", optional = true, features=["dtype-u8", "dtype-u16"]}
 postgres = {version = "0.19", features = ["with-chrono-0_4", "with-uuid-0_8", "with-serde_json-1"], optional = true}
 postgres-native-tls = {version = "0.5", optional = true}
 postgres-openssl = {version = "0.5", optional = true}
@@ -50,7 +50,7 @@ regex = {version = "1", optional = true}
 rusqlite = {version = "0.27.0", features = ["column_decltype", "chrono", "bundled"], optional = true}
 rust_decimal = {version = "1", features = ["db-postgres"], optional = true}
 rust_decimal_macros = {version = "1", optional = true}
-tiberius = {version = "0.5", features = ["rust_decimal", "chrono"], optional = true}
+tiberius = {version = "0.5", features = ["rust_decimal", "chrono", "integrated-auth-gssapi"], optional = true}
 tokio = {version = "1", features = ["rt", "rt-multi-thread", "net"], optional = true}
 tokio-util = {version = "0.6", optional = true}
 urlencoding = {version = "2.1", optional = true}
@@ -73,7 +73,7 @@ all = ["src_sqlite", "src_postgres", "src_mysql", "src_mssql", "src_oracle", "sr
 branch = []
 default = ["fptr"]
 dst_arrow = ["arrow"]
-dst_arrow2 = ["arrow2", "polars"]
+dst_arrow2 = ["polars", "arrow2"]
 fptr = []
 src_bigquery = ["gcp-bigquery-client", "tokio"]
 src_csv = ["csv", "regex"]
@@ -99,5 +99,7 @@ src_postgres = [
 src_sqlite = ["rusqlite", "r2d2_sqlite", "fallible-streaming-iterator", "r2d2", "urlencoding"]
 federation = ["j4rs"]
 fed_exec = ["datafusion", "tokio"]
+integrated-auth-gssapi = ["tiberius/integrated-auth-gssapi"]
+
 [package.metadata.docs.rs]
 features = ["all"]

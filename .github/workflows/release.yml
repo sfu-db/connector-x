@@ -9,7 +9,7 @@ on:
 jobs:
   linux:
     runs-on: ubuntu-latest
-    container: quay.io/pypa/manylinux2014_x86_64
+    container: quay.io/pypa/manylinux_2_28_x86_64
     strategy:
       matrix:
         python-version: [[38, "3.8"], [39, "3.9"], [310, "3.10"], [311, "3.11"]]
@@ -18,15 +18,11 @@ jobs:
 
       - name: Set python version
         run: |
-          if [[ "${{ matrix.python-version[0] }}" == "37" ]]; then
-            echo "/opt/python/cp37-cp37m/bin" >> $GITHUB_PATH
-          else
-            echo "/opt/python/cp${{ matrix.python-version[0] }}-cp${{ matrix.python-version[0] }}/bin" >> $GITHUB_PATH
-          fi
+          echo "/opt/python/cp${{ matrix.python-version[0] }}-cp${{ matrix.python-version[0] }}/bin" >> $GITHUB_PATH
 
       - uses: actions-rs/toolchain@v1
         with:
-          toolchain: 1.65.0
+          toolchain: 1.71.1
           components: rustfmt
           target: aarch64-unknown-linux-gnu
           default: true
@@ -39,18 +35,19 @@ jobs:
 
       - name: Install tools
         run: |
-          yum install -y mysql-devel postgresql-devel freetds-devel
+          yum install -y epel-release
+          yum install -y mysql-devel postgresql-devel freetds-devel krb5-libs clang-devel
 
       - name: Setup project
         run: |
           just bootstrap-python
 
-      - uses: messense/maturin-action@v1
+      - uses: PyO3/maturin-action@v1
         with:
-          rust-toolchain: 1.65.0
-          maturin-version: v0.12.1
+          rust-toolchain: 1.71.1
+          maturin-version: v0.14.15
           command: build
-          args: -m connectorx-python/Cargo.toml -i python --no-sdist --release --manylinux 2014
+          args: -m connectorx-python/Cargo.toml -i python --release --manylinux 2_28 --features integrated-auth-gssapi
         env:
           SQLITE3_STATIC: 1
 
@@ -59,20 +56,20 @@ jobs:
           cp -rf connectorx-python/target/release/jassets connectorx-python/connectorx/dependencies
 
       # rebuild the wheel to incorporate j4rs dependencies
-      - uses: messense/maturin-action@v1
+      - uses: PyO3/maturin-action@v1
         with:
-          rust-toolchain: 1.65.0
-          maturin-version: v0.12.1
+          rust-toolchain: 1.71.1
+          maturin-version: v0.14.15
           command: build
-          args: -m connectorx-python/Cargo.toml -i python --no-sdist --release --manylinux 2014
+          args: -m connectorx-python/Cargo.toml -i python --release --manylinux 2_28 --features integrated-auth-gssapi
         env:
           SQLITE3_STATIC: 1
 
-      # - uses: messense/maturin-action@v1
+      # - uses: PyO3/maturin-action@v1
       #   with:
-      #     maturin-version: v0.12.1
+      #     maturin-version: v0.14.15
       #     command: build
-      #     args: -m connectorx-python/Cargo.toml --target aarch64-unknown-linux-gnu -i python --no-sdist --release --manylinux 2014
+      #     args: -m connectorx-python/Cargo.toml --target aarch64-unknown-linux-gnu -i python --release --manylinux 2_28 --features integrated-auth-gssapi
       #   env:
       #     SQLITE3_STATIC: 1
 
@@ -85,8 +82,11 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: ["windows-latest", "macos-10.15"]
+        os: ["windows-latest", "macos-11"]
         python-version: ["3.8", "3.9", "3.10", "3.11"]
+        include:
+          - os: "macos-11"
+            features: "--features integrated-auth-gssapi"
     steps:
       - uses: actions/checkout@v2
 
@@ -101,7 +101,7 @@ jobs:
 
       - uses: actions-rs/toolchain@v1
         with:
-          toolchain: 1.65.0
+          toolchain: 1.71.1
           components: rustfmt
           default: true
 
@@ -115,12 +115,12 @@ jobs:
         run: |
           just bootstrap-python
 
-      - uses: messense/maturin-action@v1
+      - uses: PyO3/maturin-action@v1
         with:
-          rust-toolchain: 1.65.0
-          maturin-version: v0.12.1
+          rust-toolchain: 1.71.1
+          maturin-version: v0.14.15
           command: build
-          args: -m connectorx-python/Cargo.toml -i python --no-sdist --release
+          args: -m connectorx-python/Cargo.toml -i python --release ${{ matrix.features }}
         env:
           SQLITE3_STATIC: 1
 
@@ -129,12 +129,12 @@ jobs:
           cp -r connectorx-python/target/release/jassets connectorx-python/connectorx/dependencies
 
       # rebuild the wheel to incorporate j4rs dependencies
-      - uses: messense/maturin-action@v1
+      - uses: PyO3/maturin-action@v1
         with:
-          rust-toolchain: 1.65.0
-          maturin-version: v0.12.1
+          rust-toolchain: 1.71.1
+          maturin-version: v0.14.15
           command: build
-          args: -m connectorx-python/Cargo.toml -i python --no-sdist --release
+          args: -m connectorx-python/Cargo.toml -i python --release ${{ matrix.features }}
         env:
           SQLITE3_STATIC: 1
 
@@ -161,7 +161,7 @@ jobs:
 
       - uses: actions-rs/toolchain@v1
         with:
-          toolchain: 1.65.0
+          toolchain: 1.71.1
           components: rustfmt
           target: aarch64-apple-darwin
           default: true
@@ -176,12 +176,12 @@ jobs:
         run: |
           just bootstrap-python
 
-      - uses: messense/maturin-action@v1
+      - uses: PyO3/maturin-action@v1
         with:
-          rust-toolchain: 1.65.0
-          maturin-version: v0.12.1
+          rust-toolchain: 1.71.1
+          maturin-version: v0.14.15
           command: build
-          args: -m connectorx-python/Cargo.toml --target aarch64-apple-darwin -i python --no-sdist --release
+          args: -m connectorx-python/Cargo.toml --target aarch64-apple-darwin -i python --release  --features integrated-auth-gssapi
         env:
           SQLITE3_STATIC: 1
 
@@ -190,12 +190,12 @@ jobs:
           cp -rf connectorx-python/target/aarch64-apple-darwin/release/jassets connectorx-python/connectorx/dependencies
 
       # rebuild the wheel to incorporate j4rs dependencies
-      - uses: messense/maturin-action@v1
+      - uses: PyO3/maturin-action@v1
         with:
-          rust-toolchain: 1.65.0
-          maturin-version: v0.12.1
+          rust-toolchain: 1.71.1
+          maturin-version: v0.14.15
           command: build
-          args: -m connectorx-python/Cargo.toml --target aarch64-apple-darwin -i python --no-sdist --release
+          args: -m connectorx-python/Cargo.toml --target aarch64-apple-darwin -i python --release  --features integrated-auth-gssapi
         env:
           SQLITE3_STATIC: 1
 
@@ -210,7 +210,7 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.8", "3.9", "3.10", "3.11"]
-        os: [macos-10.15, ubuntu-latest, windows-latest]
+        os: [macos-11, ubuntu-latest, windows-latest]
     steps:
       - uses: actions/checkout@v2
 

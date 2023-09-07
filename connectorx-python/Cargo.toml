@@ -2,7 +2,7 @@
 authors = ["Weiyuan Wu <youngw@sfu.ca>"]
 edition = "2018"
 name = "connectorx-python"
-version = "0.3.2-alpha.2"
+version = "0.3.2"
 license = "MIT"
 readme = "README.md"
 
@@ -13,8 +13,8 @@ readme = "README.md"
 
 [dependencies]
 anyhow = "1"
-arrow = { version = "40", features = ["ffi"]}
-arrow2 = {version = "0.10", default-features = false}
+arrow = { version = "40" }
+arrow2 = {version = "0.17", default-features = false}
 bitfield = "0.13"
 bytes = "1.4"
 chrono = "0.4"
@@ -76,3 +76,4 @@ srcs = [
   "connectorx/src_oracle",
   "connectorx/src_bigquery",
 ]
+integrated-auth-gssapi = ["connectorx/integrated-auth-gssapi"]

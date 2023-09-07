@@ -19,14 +19,14 @@ jobs:
       - name: Install tools
         run: |
           apt-get update
-          apt-get install -y curl postgresql-client build-essential python3-dev python3-pip pkg-config libssl-dev git sqlite3 libsqlite3-dev mysql-client libmysqlclient-dev
+          apt-get install -y curl postgresql-client build-essential python3-dev python3-pip pkg-config libssl-dev git sqlite3 libsqlite3-dev mysql-client libmysqlclient-dev libkrb5-dev libclang-dev
         env:
           DEBIAN_FRONTEND: noninteractive
 
       - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: 1.65.0
+          toolchain: 1.71.1
           components: rustfmt
           default: true
 

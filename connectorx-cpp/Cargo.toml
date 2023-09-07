@@ -1,6 +1,6 @@
 [package]
 name = "connectorx-cpp"
-version = "0.3.2-alpha.2"
+version = "0.3.2"
 edition = "2021"
 license = "MIT"
 
@@ -9,7 +9,7 @@ license = "MIT"
 [dependencies]
 libc = "0.2"
 connectorx = {path = "../connectorx", default-features = false}
-arrow = {version = "40", features = ["prettyprint", "ffi"]}
+arrow = {workspace = true}
 openssl = {version = "0.10", features = ["vendored"]}
 
 [lib]

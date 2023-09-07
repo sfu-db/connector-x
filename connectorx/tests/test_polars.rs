@@ -137,3 +137,163 @@ fn test_postgres_arrow() {
 
     assert!(df.frame_equal_missing(&expected) || df.frame_equal_missing(&expected2));
 }
+
+#[test]
+fn test_pg_pl_bool_array() {
+    let _ = env_logger::builder().is_test(true).try_init();
+
+    let dburl = env::var("POSTGRES_URL").unwrap();
+
+    let queries = [CXQuery::naked(
+        "select test_boolarray from test_types where test_boolarray is not null",
+    )];
+    let url = Url::parse(dburl.as_str()).unwrap();
+    let (config, _tls) = rewrite_tls_args(&url).unwrap();
+    let builder = PostgresSource::<BinaryProtocol, NoTls>::new(config, NoTls, 2).unwrap();
+    let mut destination = Arrow2Destination::new();
+    let dispatcher = Dispatcher::<_, _, PostgresArrow2Transport<BinaryProtocol, NoTls>>::new(
+        builder,
+        &mut destination,
+        &queries,
+        Some(format!("select * from test_types")),
+    );
+
+    dispatcher.run().expect("run dispatcher");
+
+    let s1 = Series::new("a", [true, false]);
+    let empty_vec: Vec<bool> = vec![];
+    let s2 = Series::new("b", empty_vec);
+    let s3 = Series::new("c", [true]);
+
+    let df: DataFrame = destination.polars().unwrap();
+    let test_df: DataFrame = df!(
+        "test_boolarray" => &[s1,s2,s3]
+    )
+    .unwrap();
+
+    println!("{:?}", df);
+    assert_eq!(df, test_df);
+}
+
+#[test]
+fn test_pg_pl_varchar_array() {
+    let _ = env_logger::builder().is_test(true).try_init();
+
+    let dburl = env::var("POSTGRES_URL").unwrap();
+
+    let queries = [CXQuery::naked("select test_varchararray from test_types")];
+    let url = Url::parse(dburl.as_str()).unwrap();
+    let (config, _tls) = rewrite_tls_args(&url).unwrap();
+    let builder = PostgresSource::<BinaryProtocol, NoTls>::new(config, NoTls, 2).unwrap();
+    let mut destination = Arrow2Destination::new();
+    let dispatcher = Dispatcher::<_, _, PostgresArrow2Transport<BinaryProtocol, NoTls>>::new(
+        builder,
+        &mut destination,
+        &queries,
+        Some(format!("select * from test_types")),
+    );
+
+    dispatcher.run().expect("run dispatcher");
+
+    let s1 = Series::new("a", ["str1", "str2"]);
+    let s2 = Series::new(
+        "b",
+        [
+            "0123456789",
+            "abcdefghijklmnopqrstuvwxyz",
+            "!@#$%^&*()_-+=~`:;<>?/",
+        ],
+    );
+    let s3 = Series::new("c", ["", "  "]);
+    let empty_vec: Vec<&str> = vec![];
+    let s4 = Series::new("d", empty_vec);
+
+    let df: DataFrame = destination.polars().unwrap();
+    let test_df: DataFrame = df!(
+        "test_varchararray" => &[s1,s2,s3,s4]
+    )
+    .unwrap();
+
+    println!("{:?}", df);
+    // panic!("spurious");
+    assert_eq!(df, test_df);
+}
+
+#[test]
+fn test_pg_pl_text_array() {
+    let _ = env_logger::builder().is_test(true).try_init();
+
+    let dburl = env::var("POSTGRES_URL").unwrap();
+
+    let queries = [CXQuery::naked("select test_textarray from test_types")];
+    let url = Url::parse(dburl.as_str()).unwrap();
+    let (config, _tls) = rewrite_tls_args(&url).unwrap();
+    let builder = PostgresSource::<BinaryProtocol, NoTls>::new(config, NoTls, 2).unwrap();
+    let mut destination = Arrow2Destination::new();
+    let dispatcher = Dispatcher::<_, _, PostgresArrow2Transport<BinaryProtocol, NoTls>>::new(
+        builder,
+        &mut destination,
+        &queries,
+        Some(format!("select * from test_types")),
+    );
+
+    dispatcher.run().expect("run dispatcher");
+
+    let s1 = Series::new("a", ["text1", "text2"]);
+    let s2 = Series::new(
+        "b",
+        [
+            "0123456789",
+            "abcdefghijklmnopqrstuvwxyz",
+            "!@#$%^&*()_-+=~`:;<>?/",
+        ],
+    );
+    let s3 = Series::new("c", ["", "  "]);
+    let empty_vec: Vec<&str> = vec![];
+    let s4 = Series::new("d", empty_vec);
+
+    let df: DataFrame = destination.polars().unwrap();
+    let test_df: DataFrame = df!(
+        "test_textarray" => &[s1,s2,s3,s4]
+    )
+    .unwrap();
+
+    println!("{:?}", df);
+    assert_eq!(df, test_df);
+}
+
+#[test]
+
+fn test_pg_pl_name() {
+    let _ = env_logger::builder().is_test(true).try_init();
+
+    let dburl = env::var("POSTGRES_URL").unwrap();
+
+    let queries = [CXQuery::naked("select test_name from test_types")];
+    let url = Url::parse(dburl.as_str()).unwrap();
+    let (config, _tls) = rewrite_tls_args(&url).unwrap();
+    let builder = PostgresSource::<BinaryProtocol, NoTls>::new(config, NoTls, 2).unwrap();
+    let mut destination = Arrow2Destination::new();
+    let dispatcher = Dispatcher::<_, _, PostgresArrow2Transport<BinaryProtocol, NoTls>>::new(
+        builder,
+        &mut destination,
+        &queries,
+        Some(format!("select * from test_types")),
+    );
+
+    dispatcher.run().expect("run dispatcher");
+
+    let s1 = "0";
+    let s2 = "21";
+    let s3 = "someName";
+    let s4 = "101203203-1212323-22131235";
+
+    let df: DataFrame = destination.polars().unwrap();
+    let test_df: DataFrame = df!(
+        "test_name" => &[s1,s2,s3,s4]
+    )
+    .unwrap();
+
+    println!("{:?}", df);
+    assert_eq!(df, test_df);
+}

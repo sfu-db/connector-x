@@ -18,12 +18,13 @@ license = "MIT"
 maintainers = ["Weiyuan Wu <youngw@sfu.ca>"] 
 name = "connectorx" 
 readme = "README.md" # Markdown files are supported
-version = "0.3.2-alpha.2" 
+version = "0.3.2" 
 
 [project]
 name = "connectorx" # Target file name of maturin build
 readme = "README.md"
 license = { text = "MIT" }
+requires-python = ">=3.8"
 
 [tool.poetry.dependencies]
 dask = {version = "^2021", optional = true, extras = ["dataframe"]}
@@ -48,7 +49,7 @@ contexttimer = "^0.3.3"
 dask = {extras = ["dataframe"], version = "^2021.7.0"}
 docopt = "^0.6.2"
 ipython = "^7.31.1"
-maturin = ">=0.12,<0.13"
+maturin = ">=1.0,<2.0"
 modin = {extras = ["dask"], version = ">=0.10.1"}
 polars = ">=0.8"
 pyarrow = ">=4"
@@ -69,7 +70,12 @@ python_functions = "test_* bench_*"
 
 [build-system]
 build-backend = "maturin"
-requires = ["maturin>=0.12,<0.13"]
+requires = ["maturin>=1.0,<2.0"]
 
 [tool.maturin]
-sdist-include = ["connectorx/*.so", "connectorx/*.pyd", "connectorx/dependencies/", "LICENSE"]
+include = [
+    { path = "connectorx/*.so", format = "sdist"},
+    { path = "connectorx/*.pyd", format = "sdist"},
+    { path = "connectorx/dependencies/", format = "sdist"},
+    { path = "LICENSE", format = "sdist"},
+]

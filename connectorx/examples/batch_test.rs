@@ -1,7 +1,6 @@
 use connectorx::arrow_batch_iter::ArrowBatchIter;
 use connectorx::prelude::*;
 use connectorx::sources::postgres::{rewrite_tls_args, BinaryProtocol as PgBinaryProtocol};
-use connectorx::transports::PostgresArrowTransport;
 use postgres::NoTls;
 use std::convert::TryFrom;
 use std::time::Instant;
@@ -40,9 +39,9 @@ fn main() {
     let source =
         PostgresSource::<PgBinaryProtocol, NoTls>::new(config, NoTls, queries.len()).unwrap();
 
-    let destination = ArrowDestination::new_with_batch_size(2048);
+    let destination = ArrowStreamDestination::new_with_batch_size(2048);
 
-    let mut batch_iter: ArrowBatchIter<_, PostgresArrowTransport<PgBinaryProtocol, NoTls>> =
+    let mut batch_iter: ArrowBatchIter<_, PostgresArrowStreamTransport<PgBinaryProtocol, NoTls>> =
         ArrowBatchIter::new(source, destination, origin_query, queries).unwrap();
 
     batch_iter.prepare();

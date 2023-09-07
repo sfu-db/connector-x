@@ -3,6 +3,8 @@
 
 #[cfg(feature = "dst_arrow")]
 pub mod arrow;
+#[cfg(feature = "dst_arrow")]
+pub mod arrowstream;
 
 #[cfg(feature = "dst_arrow2")]
 pub mod arrow2;

@@ -86,6 +86,10 @@ pub enum ConnectorXOutError {
     #[error(transparent)]
     ArrowError(#[from] crate::destinations::arrow::ArrowDestinationError),
 
+    #[cfg(feature = "dst_arrow")]
+    #[error(transparent)]
+    ArrowStreamError(#[from] crate::destinations::arrowstream::ArrowDestinationError),
+
     #[cfg(feature = "dst_arrow2")]
     #[error(transparent)]
     Arrow2Error(#[from] crate::destinations::arrow2::Arrow2DestinationError),
