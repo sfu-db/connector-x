@@ -178,6 +178,12 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: print local path
+        run: pwd
+
+      - name: print workspace path
+        run: echo ${{ github.workspace }}
+
       - name: Install tools
         run: |
           apt-get update
