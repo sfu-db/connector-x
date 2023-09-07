@@ -198,7 +198,7 @@ jobs:
       - uses: actions/setup-java@v3
         with:
           distribution: "temurin"
-          java-version: "8"
+          java-version: "9"
 
       - uses: actions/cache@v2
         with:
