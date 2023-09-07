@@ -182,7 +182,14 @@ jobs:
         run: pwd
 
       - name: print workspace path
-        run: echo ${{ github.workspace }}
+        run: echo $FED_CONFIG_PATH
+        env:
+          FED_CONFIG_PATH: ${{ github.workspace }}/.github/config
+
+      - name: list workspace path
+        run: ls $FED_CONFIG_PATH
+        env:
+          FED_CONFIG_PATH: ${{ github.workspace }}/.github/config
 
       - name: Install tools
         run: |
