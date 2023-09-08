@@ -18,12 +18,13 @@ license = "MIT"
 maintainers = ["Weiyuan Wu <youngw@sfu.ca>"] 
 name = "connectorx" 
 readme = "README.md" # Markdown files are supported
-version = "0.3.2" 
+version = "0.3.3-alpha.1" 
 
 [project]
 name = "connectorx" # Target file name of maturin build
 readme = "README.md"
 license = { text = "MIT" }
+requires-python = ">=3.8"
 
 [tool.poetry.dependencies]
 dask = {version = "^2021", optional = true, extras = ["dataframe"]}

@@ -8,7 +8,7 @@ use std::str::from_utf8_unchecked;
 pub struct PyString(Py<pyo3::types::PyString>);
 
 // In order to put it into a numpy array
-impl Element for PyString {
+unsafe impl Element for PyString {
     const DATA_TYPE: numpy::DataType = numpy::DataType::Object;
     fn is_same_type(dtype: &PyArrayDescr) -> bool {
         unsafe { *dtype.as_dtype_ptr() }.type_num == NPY_TYPES::NPY_OBJECT as i32
