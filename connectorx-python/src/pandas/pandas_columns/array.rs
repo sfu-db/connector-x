@@ -13,7 +13,7 @@ use std::marker::PhantomData;
 pub struct PyList(Py<pyo3::types::PyList>);
 
 // In order to put it into a numpy array
-impl Element for PyList {
+unsafe impl Element for PyList {
     const DATA_TYPE: numpy::DataType = numpy::DataType::Object;
     fn is_same_type(dtype: &PyArrayDescr) -> bool {
         unsafe { *dtype.as_dtype_ptr() }.type_num == NPY_TYPES::NPY_OBJECT as i32
