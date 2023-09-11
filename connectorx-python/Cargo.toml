@@ -13,8 +13,8 @@ readme = "README.md"
 
 [dependencies]
 anyhow = "1"
-arrow = { version = "26", features = ["ffi"]}
-arrow2 = {version = "0.17.4", default-features = false}
+arrow = { version = "40" }
+arrow2 = {version = "0.17", default-features = false}
 bitfield = "0.13"
 bytes = "1.4"
 chrono = "0.4"

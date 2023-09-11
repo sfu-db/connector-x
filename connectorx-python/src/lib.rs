@@ -56,8 +56,10 @@ pub fn partition_sql(
     conn: &str,
     partition_query: read_sql::PyPartitionQuery,
 ) -> PyResult<Vec<String>> {
-    let source_conn = connectorx::source_router::parse_source(conn, None).map_err(|e| crate::errors::ConnectorXPythonError::from(e))?;
-    let queries = connectorx::partition::partition(&partition_query.into(), &source_conn).map_err(|e| crate::errors::ConnectorXPythonError::from(e))?;
+    let source_conn = connectorx::source_router::parse_source(conn, None)
+        .map_err(|e| crate::errors::ConnectorXPythonError::from(e))?;
+    let queries = connectorx::partition::partition(&partition_query.into(), &source_conn)
+        .map_err(|e| crate::errors::ConnectorXPythonError::from(e))?;
     Ok(queries.into_iter().map(|q| q.to_string()).collect())
 }
 

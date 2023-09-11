@@ -170,12 +170,18 @@ pub mod utils;
 
 pub mod prelude {
     #[cfg(feature = "dst_arrow")]
-    pub use crate::arrow_batch_iter::RecordBatchIterator;
+    pub use crate::arrow_batch_iter::{set_global_num_thread, RecordBatchIterator};
     pub use crate::data_order::{coordinate, DataOrder};
     #[cfg(feature = "dst_arrow")]
     pub use crate::destinations::arrow::{ArrowDestination, ArrowPartitionWriter, ArrowTypeSystem};
     #[cfg(feature = "dst_arrow2")]
     pub use crate::destinations::arrow2::Arrow2Destination;
+    #[cfg(feature = "dst_arrow")]
+    pub use crate::destinations::arrowstream::{
+        ArrowDestination as ArrowStreamDestination,
+        ArrowPartitionWriter as ArrowStreamPartitionWriter,
+        ArrowTypeSystem as ArrowStreamTypeSystem,
+    };
     pub use crate::destinations::{Consume, Destination, DestinationPartition};
     pub use crate::dispatcher::Dispatcher;
     pub use crate::errors::{ConnectorXError, ConnectorXOutError};

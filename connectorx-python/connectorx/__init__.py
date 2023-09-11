@@ -323,10 +323,10 @@ def reconstruct_arrow(result: Tuple[List[str], List[List[Tuple[int, int]]]]):
     import pyarrow as pa
 
     names, ptrs = result
-    rbs = []
     if len(names) == 0:
-        raise ValueError("Empty result")
+        return pa.Table.from_arrays([])
 
+    rbs = []
     for chunk in ptrs:
         rb = pa.RecordBatch.from_arrays(
             [pa.Array._import_from_c(*col_ptr) for col_ptr in chunk], names

@@ -1,0 +1,15 @@
+{
+    "driver": "org.postgresql.Driver",
+    "url": "jdbc:postgresql://postgres:5432/postgres",
+    "username": "postgres",
+    "password": "postgres",
+    "costParams": {
+        "join": 10.0,
+        "agg": 20.0,
+        "sort": 20.0,
+        "trans": 3.0
+    },
+    "dialect": "postgres",
+    "cardEstType": "postgres",
+    "partitionType": "postgres"
+}

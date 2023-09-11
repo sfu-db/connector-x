@@ -22,7 +22,7 @@ owning_ref = "0.4"
 serde_json = "1"
 chrono = "0.4"
 
-arrow = {version = "26", optional = true, features = ["prettyprint", "ffi"]}
+arrow = {workspace = true, optional = true}
 arrow2 = {workspace = true, default-features = false, optional = true}
 bb8 = {version = "0.7", optional = true}
 bb8-tiberius = {version = "0.5", optional = true}
@@ -55,8 +55,8 @@ tokio = {version = "1", features = ["rt", "rt-multi-thread", "net"], optional = 
 tokio-util = {version = "0.6", optional = true}
 urlencoding = {version = "2.1", optional = true}
 uuid = {version = "0.8", optional = true}
-j4rs = {version = "0.13", optional = true}
-datafusion = {version = "14", optional = true}
+j4rs = {version = "0.15", optional = true}
+datafusion = {version = "26", optional = true}
 
 [lib]
 crate-type = ["cdylib", "rlib"]

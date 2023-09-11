@@ -7,6 +7,7 @@ use libc::uintptr_t;
 use pyo3::prelude::*;
 use pyo3::{PyAny, Python};
 use std::convert::TryFrom;
+use std::sync::Arc;
 
 #[throws(ConnectorXPythonError)]
 pub fn write_arrow<'a>(
@@ -35,14 +36,19 @@ pub fn to_ptrs(rbs: Vec<RecordBatch>) -> (Vec<String>, Vec<Vec<(uintptr_t, uintp
         .map(|f| f.name().clone())
         .collect();
 
-    for rb in rbs {
+    for rb in rbs.into_iter() {
         let mut cols = vec![];
 
-        for array in rb.columns() {
-            let data = array.data().clone();
-            let array = arrow::ffi::ArrowArray::try_from(data).expect("c ptr");
-            let (array_ptr, schema_ptr) = arrow::ffi::ArrowArray::into_raw(array);
-            cols.push((array_ptr as uintptr_t, schema_ptr as uintptr_t));
+        for array in rb.columns().into_iter() {
+            let data = array.to_data();
+            let array_ptr = Arc::new(arrow::ffi::FFI_ArrowArray::new(&data));
+            let schema_ptr = Arc::new(
+                arrow::ffi::FFI_ArrowSchema::try_from(data.data_type()).expect("export schema c"),
+            );
+            cols.push((
+                Arc::into_raw(array_ptr) as uintptr_t,
+                Arc::into_raw(schema_ptr) as uintptr_t,
+            ));
         }
 
         result.push(cols);

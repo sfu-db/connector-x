@@ -198,7 +198,7 @@ jobs:
       - uses: actions/setup-java@v3
         with:
           distribution: "temurin"
-          java-version: "8"
+          java-version: "17"
 
       - uses: actions/cache@v2
         with:
@@ -255,4 +255,5 @@ jobs:
           MSSQL_URL: "mssql://sa:mssql!Password@mssql:1433/tempdb"
           DB1: "postgresql://postgres:postgres@postgres:5432/postgres"
           DB2: "postgresql://postgres:postgres@postgres:5432/postgres"
+          FED_CONFIG_PATH: ${{ github.workspace }}/.github/config
           SQLITE3_STATIC: 1
