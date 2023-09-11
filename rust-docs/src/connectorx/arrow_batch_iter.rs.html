@@ -181,221 +181,183 @@
 <a href="#181" id="181">181</a>
 <a href="#182" id="182">182</a>
 <a href="#183" id="183">183</a>
-<a href="#184" id="184">184</a>
-<a href="#185" id="185">185</a>
-<a href="#186" id="186">186</a>
-<a href="#187" id="187">187</a>
-<a href="#188" id="188">188</a>
-<a href="#189" id="189">189</a>
-<a href="#190" id="190">190</a>
-<a href="#191" id="191">191</a>
-<a href="#192" id="192">192</a>
-<a href="#193" id="193">193</a>
-<a href="#194" id="194">194</a>
-<a href="#195" id="195">195</a>
-<a href="#196" id="196">196</a>
-<a href="#197" id="197">197</a>
-<a href="#198" id="198">198</a>
-<a href="#199" id="199">199</a>
-<a href="#200" id="200">200</a>
-<a href="#201" id="201">201</a>
-<a href="#202" id="202">202</a>
-</pre></div><pre class="rust"><code><span class="kw">use crate</span>::{prelude::<span class="kw-2">*</span>, utils::<span class="kw-2">*</span>};
+</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::prelude::<span class="kw-2">*</span>;
 <span class="kw">use </span>arrow::record_batch::RecordBatch;
 <span class="kw">use </span>itertools::Itertools;
 <span class="kw">use </span>log::debug;
-<span class="kw">use </span>owning_ref::OwningHandle;
 <span class="kw">use </span>rayon::prelude::<span class="kw-2">*</span>;
 <span class="kw">use </span>std::marker::PhantomData;
 
-<span class="kw">type </span>SourceParserHandle&lt;<span class="lifetime">&#39;a</span>, S&gt; = OwningHandle&lt;
-    Box&lt;&lt;S <span class="kw">as </span>Source&gt;::Partition&gt;,
-    DummyBox&lt;&lt;&lt;S <span class="kw">as </span>Source&gt;::Partition <span class="kw">as </span>SourcePartition&gt;::Parser&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
-&gt;;
+<span class="kw">pub fn </span>set_global_num_thread(num: usize) {
+    rayon::ThreadPoolBuilder::new()
+        .num_threads(num)
+        .build_global()
+        .unwrap();
+}
 
 <span class="doccomment">/// The iterator that returns arrow in `RecordBatch`
-</span><span class="kw">pub struct </span>ArrowBatchIter&lt;<span class="lifetime">&#39;a</span>, S, TP&gt;
+</span><span class="kw">pub struct </span>ArrowBatchIter&lt;S, TP&gt;
 <span class="kw">where
-    </span>S: Source + <span class="lifetime">&#39;a</span>,
-    TP: Transport&lt;TSS = S::TypeSystem, TSD = ArrowTypeSystem, S = S, D = ArrowDestination&gt;,
+    </span>S: Source,
+    TP: Transport&lt;
+        TSS = S::TypeSystem,
+        TSD = ArrowStreamTypeSystem,
+        S = S,
+        D = ArrowStreamDestination,
+    &gt;,
+    &lt;S <span class="kw">as </span>Source&gt;::Partition: <span class="lifetime">&#39;static</span>,
+    &lt;S <span class="kw">as </span>Source&gt;::TypeSystem: <span class="lifetime">&#39;static</span>,
+    &lt;TP <span class="kw">as </span>Transport&gt;::Error: <span class="lifetime">&#39;static</span>,
 {
-    dst: ArrowDestination,
-    dst_parts: Vec&lt;ArrowPartitionWriter&gt;,
+    dst: ArrowStreamDestination,
+    dst_parts: <span class="prelude-ty">Option</span>&lt;Vec&lt;ArrowStreamPartitionWriter&gt;&gt;,
     src_parts: <span class="prelude-ty">Option</span>&lt;Vec&lt;S::Partition&gt;&gt;,
-    src_parsers: Vec&lt;SourceParserHandle&lt;<span class="lifetime">&#39;a</span>, S&gt;&gt;,
     dorder: DataOrder,
     src_schema: Vec&lt;S::TypeSystem&gt;,
-    dst_schema: Vec&lt;ArrowTypeSystem&gt;,
-    batch_size: usize,
+    dst_schema: Vec&lt;ArrowStreamTypeSystem&gt;,
     _phantom: PhantomData&lt;TP&gt;,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, S, TP&gt; ArrowBatchIter&lt;<span class="lifetime">&#39;a</span>, S, TP&gt;
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, S, TP&gt; ArrowBatchIter&lt;S, TP&gt;
 <span class="kw">where
     </span>S: Source + <span class="lifetime">&#39;a</span>,
-    TP: Transport&lt;TSS = S::TypeSystem, TSD = ArrowTypeSystem, S = S, D = ArrowDestination&gt;,
+    TP: Transport&lt;
+        TSS = S::TypeSystem,
+        TSD = ArrowStreamTypeSystem,
+        S = S,
+        D = ArrowStreamDestination,
+    &gt;,
 {
     <span class="kw">pub fn </span>new(
         src: S,
-        <span class="kw-2">mut </span>dst: ArrowDestination,
+        <span class="kw-2">mut </span>dst: ArrowStreamDestination,
         origin_query: <span class="prelude-ty">Option</span>&lt;String&gt;,
         queries: <span class="kw-2">&amp;</span>[CXQuery&lt;String&gt;],
-        batch_size: usize,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, TP::Error&gt; {
         <span class="kw">let </span>dispatcher = Dispatcher::&lt;<span class="kw">_</span>, <span class="kw">_</span>, TP&gt;::new(src, <span class="kw-2">&amp;mut </span>dst, queries, origin_query);
         <span class="kw">let </span>(dorder, src_parts, dst_parts, src_schema, dst_schema) = dispatcher.prepare()<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
             dst,
-            dst_parts,
+            dst_parts: <span class="prelude-val">Some</span>(dst_parts),
             src_parts: <span class="prelude-val">Some</span>(src_parts),
-            src_parsers: <span class="macro">vec!</span>[],
             dorder,
             src_schema,
             dst_schema,
-            batch_size,
             _phantom: PhantomData,
         })
     }
 
-    <span class="kw">fn </span>run_batch(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), TP::Error&gt; {
-        <span class="kw">let </span>schemas: Vec&lt;<span class="kw">_</span>&gt; = <span class="self">self
-            </span>.src_schema
-            .iter()
-            .zip_eq(<span class="kw-2">&amp;</span><span class="self">self</span>.dst_schema)
-            .map(|(<span class="kw-2">&amp;</span>src_ty, <span class="kw-2">&amp;</span>dst_ty)| (src_ty, dst_ty))
-            .collect();
-
-        <span class="macro">debug!</span>(<span class="string">&quot;Start writing&quot;</span>);
-
+    <span class="kw">fn </span>run(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="kw">let </span>src_schema = <span class="self">self</span>.src_schema.clone();
+        <span class="kw">let </span>dst_schema = <span class="self">self</span>.dst_schema.clone();
+        <span class="kw">let </span>src_partitions = <span class="self">self</span>.src_parts.take().unwrap();
+        <span class="kw">let </span>dst_partitions = <span class="self">self</span>.dst_parts.take().unwrap();
         <span class="kw">let </span>dorder = <span class="self">self</span>.dorder;
-        <span class="kw">let </span>batch_size = <span class="self">self</span>.batch_size;
 
-        <span class="comment">// parse and write
-        </span><span class="self">self</span>.dst_parts
-            .par_iter_mut()
-            .zip_eq(<span class="self">self</span>.src_parsers.par_iter_mut())
-            .enumerate()
-            .try_for_each(|(i, (dst, src))| -&gt; <span class="prelude-ty">Result</span>&lt;(), TP::Error&gt; {
-                <span class="kw">let </span>parser: <span class="kw-2">&amp;mut </span>&lt;S::Partition <span class="kw">as </span><span class="kw">crate</span>::sources::SourcePartition&gt;::Parser&lt;<span class="lifetime">&#39;_</span>&gt; =
-                    <span class="kw-2">&amp;mut *</span>src;
-                <span class="kw">let </span><span class="kw-2">mut </span>processed_rows = <span class="number">0</span>;
+        std::thread::spawn(<span class="kw">move </span>|| -&gt; <span class="prelude-ty">Result</span>&lt;(), TP::Error&gt; {
+            <span class="kw">let </span>schemas: Vec&lt;<span class="kw">_</span>&gt; = src_schema
+                .iter()
+                .zip_eq(<span class="kw-2">&amp;</span>dst_schema)
+                .map(|(<span class="kw-2">&amp;</span>src_ty, <span class="kw-2">&amp;</span>dst_ty)| (src_ty, dst_ty))
+                .collect();
 
-                <span class="kw">match </span>dorder {
-                    DataOrder::RowMajor =&gt; <span class="kw">loop </span>{
-                        <span class="kw">let </span>(<span class="kw-2">mut </span>n, is_last) = parser.fetch_next()<span class="question-mark">?</span>;
-                        n = std::cmp::min(n, batch_size - processed_rows); <span class="comment">// only process until batch size is reached
-                        </span>processed_rows += n;
-                        dst.aquire_row(n)<span class="question-mark">?</span>;
-                        <span class="kw">for _ in </span><span class="number">0</span>..n {
+            <span class="macro">debug!</span>(<span class="string">&quot;Start writing&quot;</span>);
+            <span class="comment">// parse and write
+            </span>dst_partitions
+                .into_par_iter()
+                .zip_eq(src_partitions)
+                .enumerate()
+                .try_for_each(|(i, (<span class="kw-2">mut </span>dst, <span class="kw-2">mut </span>src))| -&gt; <span class="prelude-ty">Result</span>&lt;(), TP::Error&gt; {
+                    <span class="kw">let </span><span class="kw-2">mut </span>parser = src.parser()<span class="question-mark">?</span>;
+
+                    <span class="kw">match </span>dorder {
+                        DataOrder::RowMajor =&gt; <span class="kw">loop </span>{
+                            <span class="kw">let </span>(n, is_last) = parser.fetch_next()<span class="question-mark">?</span>;
+                            dst.aquire_row(n)<span class="question-mark">?</span>;
+                            <span class="kw">for _ in </span><span class="number">0</span>..n {
+                                <span class="attr">#[allow(clippy::needless_range_loop)]
+                                </span><span class="kw">for </span>col <span class="kw">in </span><span class="number">0</span>..dst.ncols() {
+                                    {
+                                        <span class="kw">let </span>(s1, s2) = schemas[col];
+                                        TP::process(s1, s2, <span class="kw-2">&amp;mut </span>parser, <span class="kw-2">&amp;mut </span>dst)<span class="question-mark">?</span>;
+                                    }
+                                }
+                            }
+                            <span class="kw">if </span>is_last {
+                                <span class="kw">break</span>;
+                            }
+                        },
+                        DataOrder::ColumnMajor =&gt; <span class="kw">loop </span>{
+                            <span class="kw">let </span>(n, is_last) = parser.fetch_next()<span class="question-mark">?</span>;
+                            dst.aquire_row(n)<span class="question-mark">?</span>;
                             <span class="attr">#[allow(clippy::needless_range_loop)]
                             </span><span class="kw">for </span>col <span class="kw">in </span><span class="number">0</span>..dst.ncols() {
-                                {
-                                    <span class="kw">let </span>(s1, s2) = schemas[col];
-                                    TP::process(s1, s2, parser, dst)<span class="question-mark">?</span>;
+                                <span class="kw">for _ in </span><span class="number">0</span>..n {
+                                    {
+                                        <span class="kw">let </span>(s1, s2) = schemas[col];
+                                        TP::process(s1, s2, <span class="kw-2">&amp;mut </span>parser, <span class="kw-2">&amp;mut </span>dst)<span class="question-mark">?</span>;
+                                    }
                                 }
                             }
-                        }
-                        <span class="kw">if </span>is_last || processed_rows &gt;= batch_size {
-                            <span class="kw">break</span>;
-                        }
-                    },
-                    DataOrder::ColumnMajor =&gt; <span class="kw">loop </span>{
-                        <span class="kw">let </span>(<span class="kw-2">mut </span>n, is_last) = parser.fetch_next()<span class="question-mark">?</span>;
-                        n = std::cmp::min(n, batch_size - processed_rows);
-                        processed_rows += n;
-                        dst.aquire_row(n)<span class="question-mark">?</span>;
-                        <span class="attr">#[allow(clippy::needless_range_loop)]
-                        </span><span class="kw">for </span>col <span class="kw">in </span><span class="number">0</span>..dst.ncols() {
-                            <span class="kw">for _ in </span><span class="number">0</span>..n {
-                                {
-                                    <span class="kw">let </span>(s1, s2) = schemas[col];
-                                    TP::process(s1, s2, parser, dst)<span class="question-mark">?</span>;
-                                }
+                            <span class="kw">if </span>is_last {
+                                <span class="kw">break</span>;
                             }
-                        }
-                        <span class="kw">if </span>is_last || processed_rows &gt;= batch_size {
-                            <span class="kw">break</span>;
-                        }
-                    },
-                }
+                        },
+                    }
 
-                <span class="macro">debug!</span>(<span class="string">&quot;Finalize partition {}&quot;</span>, i);
-                dst.finalize()<span class="question-mark">?</span>;
-                <span class="macro">debug!</span>(<span class="string">&quot;Partition {} finished&quot;</span>, i);
-                <span class="prelude-val">Ok</span>(())
-            })<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(())
+                    <span class="macro">debug!</span>(<span class="string">&quot;Finalize partition {}&quot;</span>, i);
+                    dst.finalize()<span class="question-mark">?</span>;
+                    <span class="macro">debug!</span>(<span class="string">&quot;Partition {} finished&quot;</span>, i);
+                    <span class="prelude-val">Ok</span>(())
+                })<span class="question-mark">?</span>;
+
+            <span class="macro">debug!</span>(<span class="string">&quot;Writing finished&quot;</span>);
+
+            <span class="prelude-val">Ok</span>(())
+        });
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, S, TP&gt; Iterator <span class="kw">for </span>ArrowBatchIter&lt;<span class="lifetime">&#39;a</span>, S, TP&gt;
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, S, TP&gt; Iterator <span class="kw">for </span>ArrowBatchIter&lt;S, TP&gt;
 <span class="kw">where
     </span>S: Source + <span class="lifetime">&#39;a</span>,
-    TP: Transport&lt;TSS = S::TypeSystem, TSD = ArrowTypeSystem, S = S, D = ArrowDestination&gt;,
+    TP: Transport&lt;
+        TSS = S::TypeSystem,
+        TSD = ArrowStreamTypeSystem,
+        S = S,
+        D = ArrowStreamDestination,
+    &gt;,
 {
     <span class="kw">type </span>Item = RecordBatch;
-    <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::Item&gt; {
-        <span class="kw">let </span>res = <span class="self">self</span>.dst.record_batch().unwrap();
-        <span class="kw">if </span>res.is_some() {
-            <span class="kw">return </span>res;
-        }
-        <span class="self">self</span>.run_batch().unwrap();
+    <span class="doccomment">/// NOTE: not thread safe
+    </span><span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::Item&gt; {
         <span class="self">self</span>.dst.record_batch().unwrap()
     }
 }
 
-<span class="comment">// impl&lt;&#39;a, S, TP&gt; Iterator for ArrowBatchIter&lt;&#39;a, S, TP&gt;
-// where
-//     S: Source + &#39;a,
-//     TP: Transport&lt;TSS = S::TypeSystem, TSD = ArrowTypeSystem, S = S, D = ArrowDestination&gt;,
-// {
-//     type Item = Result&lt;RecordBatch, TP::Error&gt;;
-//     fn next(&amp;mut self) -&gt; Option&lt;Self::Item&gt; {
-//         match self.dst.record_batch() {
-//             Ok(Some(res)) =&gt; return Some(Ok(res)),
-//             Ok(None) =&gt; {}
-//             Err(e) =&gt; return Some(Err(e.into())),
-//         }
-
-//         match self.run_batch() {
-//             Err(e) =&gt; return Some(Err(e)),
-//             Ok(()) =&gt; {}
-//         }
-
-//         match self.dst.record_batch() {
-//             Err(e) =&gt; Some(Err(e.into())),
-//             Ok(Some(res)) =&gt; Some(Ok(res)),
-//             Ok(None) =&gt; None,
-//         }
-//     }
-// }
-
-</span><span class="kw">pub trait </span>RecordBatchIterator {
+<span class="kw">pub trait </span>RecordBatchIterator {
     <span class="kw">fn </span>get_schema(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; (RecordBatch, <span class="kw-2">&amp;</span>[String]);
     <span class="kw">fn </span>prepare(<span class="kw-2">&amp;mut </span><span class="self">self</span>);
     <span class="kw">fn </span>next_batch(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;RecordBatch&gt;;
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, S, TP&gt; RecordBatchIterator <span class="kw">for </span>ArrowBatchIter&lt;<span class="lifetime">&#39;a</span>, S, TP&gt;
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, S, TP&gt; RecordBatchIterator <span class="kw">for </span>ArrowBatchIter&lt;S, TP&gt;
 <span class="kw">where
     </span>S: Source + <span class="lifetime">&#39;a</span>,
-    TP: Transport&lt;TSS = S::TypeSystem, TSD = ArrowTypeSystem, S = S, D = ArrowDestination&gt;,
+    TP: Transport&lt;
+        TSS = S::TypeSystem,
+        TSD = ArrowStreamTypeSystem,
+        S = S,
+        D = ArrowStreamDestination,
+    &gt;,
 {
     <span class="kw">fn </span>get_schema(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; (RecordBatch, <span class="kw-2">&amp;</span>[String]) {
         (<span class="self">self</span>.dst.empty_batch(), <span class="self">self</span>.dst.names())
     }
 
     <span class="kw">fn </span>prepare(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="kw">let </span>src_parts = <span class="self">self</span>.src_parts.take().unwrap();
-        <span class="self">self</span>.src_parsers = src_parts
-            .into_par_iter()
-            .map(|part| {
-                OwningHandle::new_with_fn(Box::new(part), |part: <span class="kw-2">*const </span>S::Partition| <span class="kw">unsafe </span>{
-                    DummyBox((<span class="kw-2">*</span>(part <span class="kw">as </span><span class="kw-2">*mut </span>S::Partition)).parser().unwrap())
-                })
-            })
-            .collect();
+        <span class="self">self</span>.run();
     }
 
     <span class="kw">fn </span>next_batch(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;RecordBatch&gt; {

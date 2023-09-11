@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["ArrowBatchIter"],"trait":["RecordBatchIterator"]};
+window.SIDEBAR_ITEMS = {"fn":["set_global_num_thread"],"struct":["ArrowBatchIter"],"trait":["RecordBatchIterator"]};

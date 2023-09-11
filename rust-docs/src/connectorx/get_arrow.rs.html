@@ -426,21 +426,6 @@
 <a href="#426" id="426">426</a>
 <a href="#427" id="427">427</a>
 <a href="#428" id="428">428</a>
-<a href="#429" id="429">429</a>
-<a href="#430" id="430">430</a>
-<a href="#431" id="431">431</a>
-<a href="#432" id="432">432</a>
-<a href="#433" id="433">433</a>
-<a href="#434" id="434">434</a>
-<a href="#435" id="435">435</a>
-<a href="#436" id="436">436</a>
-<a href="#437" id="437">437</a>
-<a href="#438" id="438">438</a>
-<a href="#439" id="439">439</a>
-<a href="#440" id="440">440</a>
-<a href="#441" id="441">441</a>
-<a href="#442" id="442">442</a>
-<a href="#443" id="443">443</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">&quot;src_mysql&quot;</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::sources::mysql::{BinaryProtocol <span class="kw">as </span>MySQLBinaryProtocol, TextProtocol};
 <span class="attr">#[cfg(feature = <span class="string">&quot;src_postgres&quot;</span>)]
@@ -684,7 +669,7 @@
     queries: <span class="kw-2">&amp;</span>[CXQuery&lt;String&gt;],
     batch_size: usize,
 ) -&gt; Box&lt;<span class="kw">dyn </span>RecordBatchIterator&gt; {
-    <span class="kw">let </span>destination = ArrowDestination::new();
+    <span class="kw">let </span>destination = ArrowStreamDestination::new_with_batch_size(batch_size);
     <span class="kw">let </span>protocol = source_conn.proto.as_str();
     <span class="macro">debug!</span>(<span class="string">&quot;Protocol: {}&quot;</span>, protocol);
 
@@ -700,14 +685,12 @@
                         queries.len(),
                     )
                     .unwrap();
-                    <span class="kw">let </span>batch_iter = ArrowBatchIter::&lt;
-                        <span class="lifetime">&#39;_</span>,
-                        <span class="kw">_</span>,
-                        PostgresArrowTransport&lt;CSVProtocol, MakeTlsConnector&gt;,
-                    &gt;::new(
-                        source, destination, origin_query, queries, batch_size
-                    )
-                    .unwrap();
+                    <span class="kw">let </span>batch_iter =
+                        ArrowBatchIter::&lt;
+                            <span class="kw">_</span>,
+                            PostgresArrowStreamTransport&lt;CSVProtocol, MakeTlsConnector&gt;,
+                        &gt;::new(source, destination, origin_query, queries)
+                        .unwrap();
                     <span class="kw">return </span>Box::new(batch_iter);
                 }
                 (<span class="string">&quot;csv&quot;</span>, <span class="prelude-val">None</span>) =&gt; {
@@ -715,11 +698,10 @@
                         PostgresSource::&lt;CSVProtocol, NoTls&gt;::new(config, NoTls, queries.len())
                             .unwrap();
                     <span class="kw">let </span>batch_iter = ArrowBatchIter::&lt;
-                        <span class="lifetime">&#39;_</span>,
                         <span class="kw">_</span>,
-                        PostgresArrowTransport&lt;CSVProtocol, NoTls&gt;,
+                        PostgresArrowStreamTransport&lt;CSVProtocol, NoTls&gt;,
                     &gt;::new(
-                        source, destination, origin_query, queries, batch_size
+                        source, destination, origin_query, queries
                     )
                     .unwrap();
                     <span class="kw">return </span>Box::new(batch_iter);
@@ -731,14 +713,12 @@
                         queries.len(),
                     )
                     .unwrap();
-                    <span class="kw">let </span>batch_iter = ArrowBatchIter::&lt;
-                        <span class="lifetime">&#39;_</span>,
-                        <span class="kw">_</span>,
-                        PostgresArrowTransport&lt;PgBinaryProtocol, MakeTlsConnector&gt;,
-                    &gt;::new(
-                        source, destination, origin_query, queries, batch_size
-                    )
-                    .unwrap();
+                    <span class="kw">let </span>batch_iter =
+                        ArrowBatchIter::&lt;
+                            <span class="kw">_</span>,
+                            PostgresArrowStreamTransport&lt;PgBinaryProtocol, MakeTlsConnector&gt;,
+                        &gt;::new(source, destination, origin_query, queries)
+                        .unwrap();
                     <span class="kw">return </span>Box::new(batch_iter);
                 }
                 (<span class="string">&quot;binary&quot;</span>, <span class="prelude-val">None</span>) =&gt; {
@@ -749,11 +729,10 @@
                     )
                     .unwrap();
                     <span class="kw">let </span>batch_iter = ArrowBatchIter::&lt;
-                        <span class="lifetime">&#39;_</span>,
                         <span class="kw">_</span>,
-                        PostgresArrowTransport&lt;PgBinaryProtocol, NoTls&gt;,
+                        PostgresArrowStreamTransport&lt;PgBinaryProtocol, NoTls&gt;,
                     &gt;::new(
-                        source, destination, origin_query, queries, batch_size
+                        source, destination, origin_query, queries
                     )
                     .unwrap();
                     <span class="kw">return </span>Box::new(batch_iter);
@@ -765,14 +744,12 @@
                         queries.len(),
                     )
                     .unwrap();
-                    <span class="kw">let </span>batch_iter = ArrowBatchIter::&lt;
-                        <span class="lifetime">&#39;_</span>,
-                        <span class="kw">_</span>,
-                        PostgresArrowTransport&lt;CursorProtocol, MakeTlsConnector&gt;,
-                    &gt;::new(
-                        source, destination, origin_query, queries, batch_size
-                    )
-                    .unwrap();
+                    <span class="kw">let </span>batch_iter =
+                        ArrowBatchIter::&lt;
+                            <span class="kw">_</span>,
+                            PostgresArrowStreamTransport&lt;CursorProtocol, MakeTlsConnector&gt;,
+                        &gt;::new(source, destination, origin_query, queries)
+                        .unwrap();
                     <span class="kw">return </span>Box::new(batch_iter);
                 }
                 (<span class="string">&quot;cursor&quot;</span>, <span class="prelude-val">None</span>) =&gt; {
@@ -780,11 +757,10 @@
                         PostgresSource::&lt;CursorProtocol, NoTls&gt;::new(config, NoTls, queries.len())
                             .unwrap();
                     <span class="kw">let </span>batch_iter = ArrowBatchIter::&lt;
-                        <span class="lifetime">&#39;_</span>,
                         <span class="kw">_</span>,
-                        PostgresArrowTransport&lt;CursorProtocol, NoTls&gt;,
+                        PostgresArrowStreamTransport&lt;CursorProtocol, NoTls&gt;,
                     &gt;::new(
-                        source, destination, origin_query, queries, batch_size
+                        source, destination, origin_query, queries
                     )
                     .unwrap();
                     <span class="kw">return </span>Box::new(batch_iter);
@@ -799,12 +775,11 @@
                     MySQLSource::&lt;MySQLBinaryProtocol&gt;::new(<span class="kw-2">&amp;</span>source_conn.conn[..], queries.len())
                         .unwrap();
                 <span class="kw">let </span>batch_iter =
-                    ArrowBatchIter::&lt;<span class="lifetime">&#39;_</span>, <span class="kw">_</span>, MySQLArrowTransport&lt;MySQLBinaryProtocol&gt;&gt;::new(
+                    ArrowBatchIter::&lt;<span class="kw">_</span>, MySQLArrowStreamTransport&lt;MySQLBinaryProtocol&gt;&gt;::new(
                         source,
                         destination,
                         origin_query,
                         queries,
-                        batch_size,
                     )
                     .unwrap();
                 <span class="kw">return </span>Box::new(batch_iter);
@@ -812,12 +787,11 @@
             <span class="string">&quot;text&quot; </span>=&gt; {
                 <span class="kw">let </span>source =
                     MySQLSource::&lt;TextProtocol&gt;::new(<span class="kw-2">&amp;</span>source_conn.conn[..], queries.len()).unwrap();
-                <span class="kw">let </span>batch_iter = ArrowBatchIter::&lt;<span class="lifetime">&#39;_</span>, <span class="kw">_</span>, MySQLArrowTransport&lt;TextProtocol&gt;&gt;::new(
+                <span class="kw">let </span>batch_iter = ArrowBatchIter::&lt;<span class="kw">_</span>, MySQLArrowStreamTransport&lt;TextProtocol&gt;&gt;::new(
                     source,
                     destination,
                     origin_query,
                     queries,
-                    batch_size,
                 )
                 .unwrap();
                 <span class="kw">return </span>Box::new(batch_iter);
@@ -829,12 +803,11 @@
             <span class="comment">// remove the first &quot;sqlite://&quot; manually since url.path is not correct for windows
             </span><span class="kw">let </span>path = <span class="kw-2">&amp;</span>source_conn.conn.as_str()[<span class="number">9</span>..];
             <span class="kw">let </span>source = SQLiteSource::new(path, queries.len()).unwrap();
-            <span class="kw">let </span>batch_iter = ArrowBatchIter::&lt;<span class="lifetime">&#39;_</span>, <span class="kw">_</span>, SQLiteArrowTransport&gt;::new(
+            <span class="kw">let </span>batch_iter = ArrowBatchIter::&lt;<span class="kw">_</span>, SQLiteArrowStreamTransport&gt;::new(
                 source,
                 destination,
                 origin_query,
                 queries,
-                batch_size,
             )
             .unwrap();
             <span class="kw">return </span>Box::new(batch_iter);
@@ -843,12 +816,11 @@
         </span>SourceType::MsSQL =&gt; {
             <span class="kw">let </span>rt = Arc::new(tokio::runtime::Runtime::new().expect(<span class="string">&quot;Failed to create runtime&quot;</span>));
             <span class="kw">let </span>source = MsSQLSource::new(rt, <span class="kw-2">&amp;</span>source_conn.conn[..], queries.len()).unwrap();
-            <span class="kw">let </span>batch_iter = ArrowBatchIter::&lt;<span class="lifetime">&#39;_</span>, <span class="kw">_</span>, MsSQLArrowTransport&gt;::new(
+            <span class="kw">let </span>batch_iter = ArrowBatchIter::&lt;<span class="kw">_</span>, MsSQLArrowStreamTransport&gt;::new(
                 source,
                 destination,
                 origin_query,
                 queries,
-                batch_size,
             )
             .unwrap();
             <span class="kw">return </span>Box::new(batch_iter);
@@ -856,12 +828,11 @@
         <span class="attr">#[cfg(feature = <span class="string">&quot;src_oracle&quot;</span>)]
         </span>SourceType::Oracle =&gt; {
             <span class="kw">let </span>source = OracleSource::new(<span class="kw-2">&amp;</span>source_conn.conn[..], queries.len()).unwrap();
-            <span class="kw">let </span>batch_iter = ArrowBatchIter::&lt;<span class="lifetime">&#39;_</span>, <span class="kw">_</span>, OracleArrowTransport&gt;::new(
+            <span class="kw">let </span>batch_iter = ArrowBatchIter::&lt;<span class="kw">_</span>, OracleArrowStreamTransport&gt;::new(
                 source,
                 destination,
                 origin_query,
                 queries,
-                batch_size,
             )
             .unwrap();
             <span class="kw">return </span>Box::new(batch_iter);
@@ -870,12 +841,11 @@
         </span>SourceType::BigQuery =&gt; {
             <span class="kw">let </span>rt = Arc::new(tokio::runtime::Runtime::new().expect(<span class="string">&quot;Failed to create runtime&quot;</span>));
             <span class="kw">let </span>source = BigQuerySource::new(rt, <span class="kw-2">&amp;</span>source_conn.conn[..]).unwrap();
-            <span class="kw">let </span>batch_iter = ArrowBatchIter::&lt;<span class="lifetime">&#39;_</span>, <span class="kw">_</span>, BigQueryArrowTransport&gt;::new(
+            <span class="kw">let </span>batch_iter = ArrowBatchIter::&lt;<span class="kw">_</span>, BigQueryArrowStreamTransport&gt;::new(
                 source,
                 destination,
                 origin_query,
                 queries,
-                batch_size,
             )
             .unwrap();
             <span class="kw">return </span>Box::new(batch_iter);

@@ -80,6 +80,7 @@
 <a href="#80" id="80">80</a>
 <a href="#81" id="81">81</a>
 <a href="#82" id="82">82</a>
+<a href="#83" id="83">83</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::constants::CONNECTORX_PROTOCOL;
 <span class="kw">use </span><span class="kw">crate</span>::errors::{ConnectorXError, <span class="prelude-ty">Result</span>};
 <span class="kw">use </span>anyhow::anyhow;
@@ -96,6 +97,7 @@
     Oracle,
     BigQuery,
     DuckDB,
+    Unknown,
 }
 
 <span class="attr">#[derive(Debug, Clone)]
@@ -139,7 +141,7 @@
             <span class="string">&quot;oracle&quot; </span>=&gt; <span class="prelude-val">Ok</span>(SourceConn::new(SourceType::Oracle, url, proto)),
             <span class="string">&quot;bigquery&quot; </span>=&gt; <span class="prelude-val">Ok</span>(SourceConn::new(SourceType::BigQuery, url, proto)),
             <span class="string">&quot;duckdb&quot; </span>=&gt; <span class="prelude-val">Ok</span>(SourceConn::new(SourceType::DuckDB, url, proto)),
-            <span class="kw">_ </span>=&gt; <span class="macro">unimplemented!</span>(<span class="string">&quot;Connection: {} not supported!&quot;</span>, conn),
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">Ok</span>(SourceConn::new(SourceType::Unknown, url, proto)),
         }
     }
 }

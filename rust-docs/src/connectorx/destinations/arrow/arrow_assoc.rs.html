@@ -336,35 +336,6 @@
 <a href="#336" id="336">336</a>
 <a href="#337" id="337">337</a>
 <a href="#338" id="338">338</a>
-<a href="#339" id="339">339</a>
-<a href="#340" id="340">340</a>
-<a href="#341" id="341">341</a>
-<a href="#342" id="342">342</a>
-<a href="#343" id="343">343</a>
-<a href="#344" id="344">344</a>
-<a href="#345" id="345">345</a>
-<a href="#346" id="346">346</a>
-<a href="#347" id="347">347</a>
-<a href="#348" id="348">348</a>
-<a href="#349" id="349">349</a>
-<a href="#350" id="350">350</a>
-<a href="#351" id="351">351</a>
-<a href="#352" id="352">352</a>
-<a href="#353" id="353">353</a>
-<a href="#354" id="354">354</a>
-<a href="#355" id="355">355</a>
-<a href="#356" id="356">356</a>
-<a href="#357" id="357">357</a>
-<a href="#358" id="358">358</a>
-<a href="#359" id="359">359</a>
-<a href="#360" id="360">360</a>
-<a href="#361" id="361">361</a>
-<a href="#362" id="362">362</a>
-<a href="#363" id="363">363</a>
-<a href="#364" id="364">364</a>
-<a href="#365" id="365">365</a>
-<a href="#366" id="366">366</a>
-<a href="#367" id="367">367</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::errors::{ArrowDestinationError, <span class="prelude-ty">Result</span>};
 <span class="kw">use </span><span class="kw">crate</span>::constants::SECONDS_IN_DAY;
 <span class="kw">use </span>arrow::array::{
@@ -374,7 +345,7 @@
 };
 <span class="kw">use </span>arrow::datatypes::Field;
 <span class="kw">use </span>arrow::datatypes::{DataType <span class="kw">as </span>ArrowDataType, TimeUnit};
-<span class="kw">use </span>chrono::{Date, DateTime, NaiveDate, NaiveDateTime, NaiveTime, Timelike, Utc};
+<span class="kw">use </span>chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Timelike, Utc};
 <span class="kw">use </span>fehler::throws;
 
 <span class="doccomment">/// Associate arrow builder with native type
@@ -548,40 +519,11 @@
     }
 }
 
-<span class="kw">impl </span>ArrowAssoc <span class="kw">for </span>Date&lt;Utc&gt; {
-    <span class="kw">type </span>Builder = Float64Builder;
-
-    <span class="kw">fn </span>builder(_nrows: usize) -&gt; Float64Builder {
-        <span class="macro">unimplemented!</span>()
-    }
-
-    <span class="kw">fn </span>append(_builder: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Builder, _value: Date&lt;Utc&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="macro">unimplemented!</span>()
-    }
-
-    <span class="kw">fn </span>field(_header: <span class="kw-2">&amp;</span>str) -&gt; Field {
-        <span class="macro">unimplemented!</span>()
-    }
-}
-
-<span class="kw">impl </span>ArrowAssoc <span class="kw">for </span><span class="prelude-ty">Option</span>&lt;Date&lt;Utc&gt;&gt; {
-    <span class="kw">type </span>Builder = Float64Builder;
-
-    <span class="kw">fn </span>builder(_nrows: usize) -&gt; Float64Builder {
-        <span class="macro">unimplemented!</span>()
-    }
-
-    <span class="kw">fn </span>append(_builder: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Builder, _value: <span class="prelude-ty">Option</span>&lt;Date&lt;Utc&gt;&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="macro">unimplemented!</span>()
-    }
-
-    <span class="kw">fn </span>field(_header: <span class="kw-2">&amp;</span>str) -&gt; Field {
-        <span class="macro">unimplemented!</span>()
-    }
-}
-
 <span class="kw">fn </span>naive_date_to_arrow(nd: NaiveDate) -&gt; i32 {
-    (nd.and_hms(<span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>).timestamp() / SECONDS_IN_DAY) <span class="kw">as </span>i32
+    <span class="kw">match </span>nd.and_hms_opt(<span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>) {
+        <span class="prelude-val">Some</span>(dt) =&gt; (dt.timestamp() / SECONDS_IN_DAY) <span class="kw">as </span>i32,
+        <span class="prelude-val">None </span>=&gt; <span class="macro">panic!</span>(<span class="string">&quot;and_hms_opt got None from {:?}&quot;</span>, nd),
+    }
 }
 
 <span class="kw">fn </span>naive_datetime_to_arrow(nd: NaiveDateTime) -&gt; i64 {

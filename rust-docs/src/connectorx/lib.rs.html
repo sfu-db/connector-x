@@ -210,6 +210,12 @@
 <a href="#210" id="210">210</a>
 <a href="#211" id="211">211</a>
 <a href="#212" id="212">212</a>
+<a href="#213" id="213">213</a>
+<a href="#214" id="214">214</a>
+<a href="#215" id="215">215</a>
+<a href="#216" id="216">216</a>
+<a href="#217" id="217">217</a>
+<a href="#218" id="218">218</a>
 </pre></div><pre class="rust"><code><span class="attr">#![allow(clippy::upper_case_acronyms)]
 
 </span><span class="doccomment">//! # ConnectorX
@@ -382,12 +388,18 @@
 
 <span class="kw">pub mod </span>prelude {
     <span class="attr">#[cfg(feature = <span class="string">&quot;dst_arrow&quot;</span>)]
-    </span><span class="kw">pub use </span><span class="kw">crate</span>::arrow_batch_iter::RecordBatchIterator;
+    </span><span class="kw">pub use </span><span class="kw">crate</span>::arrow_batch_iter::{set_global_num_thread, RecordBatchIterator};
     <span class="kw">pub use </span><span class="kw">crate</span>::data_order::{coordinate, DataOrder};
     <span class="attr">#[cfg(feature = <span class="string">&quot;dst_arrow&quot;</span>)]
     </span><span class="kw">pub use </span><span class="kw">crate</span>::destinations::arrow::{ArrowDestination, ArrowPartitionWriter, ArrowTypeSystem};
     <span class="attr">#[cfg(feature = <span class="string">&quot;dst_arrow2&quot;</span>)]
     </span><span class="kw">pub use </span><span class="kw">crate</span>::destinations::arrow2::Arrow2Destination;
+    <span class="attr">#[cfg(feature = <span class="string">&quot;dst_arrow&quot;</span>)]
+    </span><span class="kw">pub use </span><span class="kw">crate</span>::destinations::arrowstream::{
+        ArrowDestination <span class="kw">as </span>ArrowStreamDestination,
+        ArrowPartitionWriter <span class="kw">as </span>ArrowStreamPartitionWriter,
+        ArrowTypeSystem <span class="kw">as </span>ArrowStreamTypeSystem,
+    };
     <span class="kw">pub use </span><span class="kw">crate</span>::destinations::{Consume, Destination, DestinationPartition};
     <span class="kw">pub use </span><span class="kw">crate</span>::dispatcher::Dispatcher;
     <span class="kw">pub use </span><span class="kw">crate</span>::errors::{ConnectorXError, ConnectorXOutError};

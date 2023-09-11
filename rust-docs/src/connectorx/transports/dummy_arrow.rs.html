@@ -49,6 +49,11 @@
 <a href="#49" id="49">49</a>
 <a href="#50" id="50">50</a>
 <a href="#51" id="51">51</a>
+<a href="#52" id="52">52</a>
+<a href="#53" id="53">53</a>
+<a href="#54" id="54">54</a>
+<a href="#55" id="55">55</a>
+<a href="#56" id="56">56</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Transport from Dummy Source to Arrow Destination.
 
 </span><span class="kw">use </span><span class="kw">crate</span>::destinations::arrow::{ArrowDestination, ArrowDestinationError, ArrowTypeSystem};
@@ -85,19 +90,24 @@
 
 <span class="kw">impl </span>TypeConversion&lt;DateTime&lt;Utc&gt;, NaiveDateTime&gt; <span class="kw">for </span>DummyArrowTransport {
     <span class="kw">fn </span>convert(val: DateTime&lt;Utc&gt;) -&gt; NaiveDateTime {
-        NaiveDateTime::from_timestamp(val.timestamp(), val.timestamp_subsec_nanos())
+        NaiveDateTime::from_timestamp_opt(val.timestamp(), val.timestamp_subsec_nanos())
+            .unwrap_or_else(|| <span class="macro">panic!</span>(<span class="string">&quot;from_timestamp_opt return None&quot;</span>))
     }
 }
 
 <span class="kw">impl </span>TypeConversion&lt;NaiveDateTime, DateTime&lt;Utc&gt;&gt; <span class="kw">for </span>DummyArrowTransport {
     <span class="kw">fn </span>convert(val: NaiveDateTime) -&gt; DateTime&lt;Utc&gt; {
-        DateTime::from_utc(val, Utc)
+        DateTime::from_naive_utc_and_offset(val, Utc)
     }
 }
 
 <span class="kw">impl </span>TypeConversion&lt;NaiveDate, DateTime&lt;Utc&gt;&gt; <span class="kw">for </span>DummyArrowTransport {
     <span class="kw">fn </span>convert(val: NaiveDate) -&gt; DateTime&lt;Utc&gt; {
-        DateTime::from_utc(val.and_hms(<span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>), Utc)
+        DateTime::from_naive_utc_and_offset(
+            val.and_hms_opt(<span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>)
+                .unwrap_or_else(|| <span class="macro">panic!</span>(<span class="string">&quot;and_hms_opt return None&quot;</span>)),
+            Utc,
+        )
     }
 }
 </code></pre></div></section></main></body></html>

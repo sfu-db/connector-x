@@ -1140,6 +1140,10 @@
 <a href="#1140" id="1140">1140</a>
 <a href="#1141" id="1141">1141</a>
 <a href="#1142" id="1142">1142</a>
+<a href="#1143" id="1143">1143</a>
+<a href="#1144" id="1144">1144</a>
+<a href="#1145" id="1145">1145</a>
+<a href="#1146" id="1146">1146</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Source implementation for Google BigQuery
 
 </span><span class="kw">mod </span>errors;
@@ -2201,7 +2205,11 @@
             </span>* <span class="number">1e9</span>) <span class="kw">as </span>i64;
         <span class="kw">let </span>secs = timestamp_ns / <span class="number">1000000000</span>;
         <span class="kw">let </span>nsecs = (timestamp_ns % <span class="number">1000000000</span>) <span class="kw">as </span>u32;
-        DateTime::&lt;Utc&gt;::from_utc(NaiveDateTime::from_timestamp(secs, nsecs), Utc)
+        DateTime::&lt;Utc&gt;::from_naive_utc_and_offset(
+            NaiveDateTime::from_timestamp_opt(secs, nsecs)
+                .ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">&quot;from_timestamp_opt return None&quot;</span>))<span class="question-mark">?</span>,
+            Utc,
+        )
     }
 }
 
@@ -2274,10 +2282,10 @@
                     </span>* <span class="number">1e9</span>) <span class="kw">as </span>i64;
                 <span class="kw">let </span>secs = timestamp_ns / <span class="number">1000000000</span>;
                 <span class="kw">let </span>nsecs = (timestamp_ns % <span class="number">1000000000</span>) <span class="kw">as </span>u32;
-                <span class="prelude-val">Some</span>(DateTime::&lt;Utc&gt;::from_utc(
-                    NaiveDateTime::from_timestamp(secs, nsecs),
-                    Utc,
-                ))
+                <span class="kw">match </span>NaiveDateTime::from_timestamp_opt(secs, nsecs) {
+                    <span class="prelude-val">Some</span>(ndt) =&gt; <span class="prelude-val">Some</span>(DateTime::&lt;Utc&gt;::from_naive_utc_and_offset(ndt, Utc)),
+                    <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None</span>,
+                }
             }
         }
     }

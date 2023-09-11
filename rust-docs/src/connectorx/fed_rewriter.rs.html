@@ -183,55 +183,12 @@
 <a href="#183" id="183">183</a>
 <a href="#184" id="184">184</a>
 <a href="#185" id="185">185</a>
-<a href="#186" id="186">186</a>
-<a href="#187" id="187">187</a>
-<a href="#188" id="188">188</a>
-<a href="#189" id="189">189</a>
-<a href="#190" id="190">190</a>
-<a href="#191" id="191">191</a>
-<a href="#192" id="192">192</a>
-<a href="#193" id="193">193</a>
-<a href="#194" id="194">194</a>
-<a href="#195" id="195">195</a>
-<a href="#196" id="196">196</a>
-<a href="#197" id="197">197</a>
-<a href="#198" id="198">198</a>
-<a href="#199" id="199">199</a>
-<a href="#200" id="200">200</a>
-<a href="#201" id="201">201</a>
-<a href="#202" id="202">202</a>
-<a href="#203" id="203">203</a>
-<a href="#204" id="204">204</a>
-<a href="#205" id="205">205</a>
-<a href="#206" id="206">206</a>
-<a href="#207" id="207">207</a>
-<a href="#208" id="208">208</a>
-<a href="#209" id="209">209</a>
-<a href="#210" id="210">210</a>
-<a href="#211" id="211">211</a>
-<a href="#212" id="212">212</a>
-<a href="#213" id="213">213</a>
-<a href="#214" id="214">214</a>
-<a href="#215" id="215">215</a>
-<a href="#216" id="216">216</a>
-<a href="#217" id="217">217</a>
-<a href="#218" id="218">218</a>
-<a href="#219" id="219">219</a>
-<a href="#220" id="220">220</a>
-<a href="#221" id="221">221</a>
-<a href="#222" id="222">222</a>
-<a href="#223" id="223">223</a>
-<a href="#224" id="224">224</a>
-<a href="#225" id="225">225</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
-    constants::{
-        CX_REWRITER_PATH, DUCKDB_JDBC_DRIVER, J4RS_BASE_PATH, MYSQL_JDBC_DRIVER,
-        POSTGRES_JDBC_DRIVER,
-    },
+    constants::{CX_REWRITER_PATH, J4RS_BASE_PATH},
     prelude::<span class="kw-2">*</span>,
 };
 <span class="kw">use </span>fehler::throws;
-<span class="kw">use </span>j4rs::{ClasspathEntry, Instance, InvocationArg, Jvm, JvmBuilder, Null};
+<span class="kw">use </span>j4rs::{ClasspathEntry, Instance, InvocationArg, Jvm, JvmBuilder};
 <span class="kw">use </span>log::debug;
 <span class="kw">use </span>std::collections::HashMap;
 <span class="kw">use </span>std::convert::TryFrom;
@@ -244,18 +201,27 @@
     <span class="kw">pub </span>cardinality: usize,
 }
 
-<span class="kw">pub struct </span>FederatedDataSourceInfo {
+<span class="kw">pub struct </span>FederatedDataSourceInfo&lt;<span class="lifetime">&#39;a</span>&gt; {
     <span class="kw">pub </span>conn_str_info: <span class="prelude-ty">Option</span>&lt;SourceConn&gt;,
     <span class="kw">pub </span>manual_info: <span class="prelude-ty">Option</span>&lt;HashMap&lt;String, Vec&lt;String&gt;&gt;&gt;,
     <span class="kw">pub </span>is_local: bool,
+    <span class="kw">pub </span>jdbc_url: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str,
+    <span class="kw">pub </span>jdbc_driver: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str,
 }
 
-<span class="kw">impl </span>FederatedDataSourceInfo {
-    <span class="kw">pub fn </span>new_from_conn_str(source_conn: SourceConn, is_local: bool) -&gt; <span class="self">Self </span>{
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; FederatedDataSourceInfo&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="kw">pub fn </span>new_from_conn_str(
+        source_conn: SourceConn,
+        is_local: bool,
+        jdbc_url: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str,
+        jdbc_driver: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str,
+    ) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             conn_str_info: <span class="prelude-val">Some</span>(source_conn),
             manual_info: <span class="prelude-val">None</span>,
             is_local,
+            jdbc_url,
+            jdbc_driver,
         }
     }
     <span class="kw">pub fn </span>new_from_manual_schema(
@@ -266,6 +232,8 @@
             conn_str_info: <span class="prelude-val">None</span>,
             manual_info: <span class="prelude-val">Some</span>(manual_schema),
             is_local,
+            jdbc_url: <span class="string">&quot;&quot;</span>,
+            jdbc_driver: <span class="string">&quot;&quot;</span>,
         }
     }
 }
@@ -294,86 +262,21 @@
         .build()<span class="question-mark">?
 </span>}
 
-<span class="attr">#[throws(ConnectorXOutError)]
-</span><span class="kw">fn </span>create_sources(jvm: <span class="kw-2">&amp;</span>Jvm, db_map: <span class="kw-2">&amp;</span>HashMap&lt;String, FederatedDataSourceInfo&gt;) -&gt; Instance {
-    <span class="kw">let </span>data_sources = jvm.create_instance(<span class="string">&quot;java.util.HashMap&quot;</span>, <span class="kw-2">&amp;</span>[])<span class="question-mark">?</span>;
+<span class="attr">#[allow(dead_code)]
+#[throws(ConnectorXOutError)]
+</span><span class="kw">fn </span>create_sources(
+    jvm: <span class="kw-2">&amp;</span>Jvm,
+    db_map: <span class="kw-2">&amp;</span>HashMap&lt;String, FederatedDataSourceInfo&gt;,
+) -&gt; (Instance, Instance) {
+    <span class="kw">let </span><span class="kw-2">mut </span>db_config = <span class="macro">vec!</span>[];
+    <span class="kw">let </span>db_manual = jvm.create_instance(<span class="string">&quot;java.util.HashMap&quot;</span>, <span class="kw-2">&amp;</span>[])<span class="question-mark">?</span>;
 
     <span class="kw">for </span>(db_name, db_info) <span class="kw">in </span>db_map.iter() {
-        <span class="kw">if </span>db_info.conn_str_info.is_some() {
-            <span class="kw">let </span>source_conn = db_info.conn_str_info.as_ref().unwrap();
-            <span class="kw">let </span>url = <span class="kw-2">&amp;</span>source_conn.conn;
-            <span class="macro">debug!</span>(<span class="string">&quot;url: {:?}&quot;</span>, url);
-            <span class="kw">let </span>ds = <span class="kw">match </span>source_conn.ty {
-                SourceType::Postgres =&gt; jvm.invoke_static(
-                    <span class="string">&quot;ai.dataprep.federated.FederatedQueryRewriter&quot;</span>,
-                    <span class="string">&quot;createDataSource&quot;</span>,
-                    <span class="kw-2">&amp;</span>[
-                        InvocationArg::try_from(<span class="macro">format!</span>(
-                            <span class="string">&quot;jdbc:postgresql://{}:{}{}&quot;</span>,
-                            url.host_str().unwrap_or(<span class="string">&quot;localhost&quot;</span>),
-                            url.port().unwrap_or(<span class="number">5432</span>),
-                            url.path()
-                        ))
-                        .unwrap(),
-                        InvocationArg::try_from(POSTGRES_JDBC_DRIVER).unwrap(),
-                        InvocationArg::try_from(url.username()).unwrap(),
-                        InvocationArg::try_from(url.password().unwrap_or(<span class="string">&quot;&quot;</span>)).unwrap(),
-                    ],
-                )<span class="question-mark">?</span>,
-                SourceType::MySQL =&gt; jvm.invoke_static(
-                    <span class="string">&quot;ai.dataprep.federated.FederatedQueryRewriter&quot;</span>,
-                    <span class="string">&quot;createDataSource&quot;</span>,
-                    <span class="kw-2">&amp;</span>[
-                        InvocationArg::try_from(<span class="macro">format!</span>(
-                            <span class="string">&quot;jdbc:mysql://{}:{}{}&quot;</span>,
-                            url.host_str().unwrap_or(<span class="string">&quot;localhost&quot;</span>),
-                            url.port().unwrap_or(<span class="number">3306</span>),
-                            url.path()
-                        ))
-                        .unwrap(),
-                        InvocationArg::try_from(MYSQL_JDBC_DRIVER).unwrap(),
-                        InvocationArg::try_from(url.username()).unwrap(),
-                        InvocationArg::try_from(url.password().unwrap_or(<span class="string">&quot;&quot;</span>)).unwrap(),
-                    ],
-                )<span class="question-mark">?</span>,
-                SourceType::DuckDB =&gt; jvm.invoke_static(
-                    <span class="string">&quot;ai.dataprep.federated.FederatedQueryRewriter&quot;</span>,
-                    <span class="string">&quot;createDataSource&quot;</span>,
-                    <span class="kw-2">&amp;</span>[
-                        InvocationArg::try_from(<span class="macro">format!</span>(<span class="string">&quot;jdbc:duckdb:{}&quot;</span>, url.path())).unwrap(),
-                        InvocationArg::try_from(DUCKDB_JDBC_DRIVER).unwrap(),
-                        InvocationArg::try_from(Null::String).unwrap(),
-                        InvocationArg::try_from(Null::String).unwrap(),
-                    ],
-                )<span class="question-mark">?</span>,
-                <span class="kw">_ </span>=&gt; <span class="macro">unimplemented!</span>(<span class="string">&quot;Connection: {:?} not supported!&quot;</span>, url),
-            };
-            <span class="kw">let </span>fed_ds = jvm.create_instance(
-                <span class="string">&quot;ai.dataprep.federated.FederatedDataSource&quot;</span>,
-                <span class="kw-2">&amp;</span>[
-                    InvocationArg::try_from(url.scheme()).unwrap(),
-                    InvocationArg::try_from(ds).unwrap(),
-                    InvocationArg::try_from(db_info.is_local).unwrap(),
-                ],
-            )<span class="question-mark">?</span>;
-            jvm.invoke(
-                <span class="kw-2">&amp;</span>data_sources,
-                <span class="string">&quot;put&quot;</span>,
-                <span class="kw-2">&amp;</span>[
-                    InvocationArg::try_from(db_name).unwrap(),
-                    InvocationArg::try_from(fed_ds).unwrap(),
-                ],
-            )<span class="question-mark">?</span>;
-        } <span class="kw">else </span>{
-            <span class="macro">assert!</span>(db_info.manual_info.is_some());
+        <span class="kw">if </span>db_info.manual_info.is_some() {
             <span class="kw">let </span>manual_info = db_info.manual_info.as_ref().unwrap();
             <span class="kw">let </span>schema_info = jvm.create_instance(<span class="string">&quot;java.util.HashMap&quot;</span>, <span class="kw-2">&amp;</span>[])<span class="question-mark">?</span>;
             <span class="kw">for </span>(name, columns) <span class="kw">in </span>manual_info {
-                <span class="kw">let </span>col_names: Vec&lt;InvocationArg&gt; = columns
-                    .iter()
-                    .map(|c| InvocationArg::try_from(c).unwrap())
-                    .collect();
-                <span class="kw">let </span>arr_instance = jvm.create_java_list(<span class="string">&quot;java.lang.String&quot;</span>, <span class="kw-2">&amp;</span>col_names)<span class="question-mark">?</span>;
+                <span class="kw">let </span>arr_instance = jvm.java_list(<span class="string">&quot;java.lang.String&quot;</span>, columns.to_vec())<span class="question-mark">?</span>;
                 jvm.invoke(
                     <span class="kw-2">&amp;</span>schema_info,
                     <span class="string">&quot;put&quot;</span>,
@@ -385,20 +288,36 @@
             }
             <span class="kw">let </span>fed_ds = jvm.create_instance(
                 <span class="string">&quot;ai.dataprep.federated.FederatedDataSource&quot;</span>,
-                <span class="kw-2">&amp;</span>[InvocationArg::try_from(schema_info).unwrap()],
+                <span class="kw-2">&amp;</span>[
+                    InvocationArg::try_from(db_info.is_local).unwrap(),
+                    InvocationArg::try_from(schema_info).unwrap(),
+                ],
             )<span class="question-mark">?</span>;
             jvm.invoke(
-                <span class="kw-2">&amp;</span>data_sources,
+                <span class="kw-2">&amp;</span>db_manual,
                 <span class="string">&quot;put&quot;</span>,
                 <span class="kw-2">&amp;</span>[
                     InvocationArg::try_from(db_name).unwrap(),
                     InvocationArg::try_from(fed_ds).unwrap(),
                 ],
             )<span class="question-mark">?</span>;
+        } <span class="kw">else </span>{
+            db_config.push(String::from(db_name));
         }
     }
-    data_sources
+    <span class="kw">let </span>db_config = jvm.java_list(<span class="string">&quot;java.lang.String&quot;</span>, db_config)<span class="question-mark">?</span>;
+    (db_config, db_manual)
 }
+
+<span class="attr">#[allow(dead_code)]
+#[throws(ConnectorXOutError)]
+</span><span class="kw">fn </span>create_sources2(jvm: <span class="kw-2">&amp;</span>Jvm, db_map: <span class="kw-2">&amp;</span>HashMap&lt;String, FederatedDataSourceInfo&gt;) -&gt; Instance {
+    <span class="kw">let </span><span class="kw-2">mut </span>dbs = <span class="macro">vec!</span>[];
+    <span class="kw">for </span>db <span class="kw">in </span>db_map.keys() {
+        dbs.push(String::from(db));
+    }
+    jvm.java_list(<span class="string">&quot;java.lang.String&quot;</span>, dbs)<span class="question-mark">?
+</span>}
 
 <span class="attr">#[throws(ConnectorXOutError)]
 </span><span class="kw">pub fn </span>rewrite_sql(
@@ -410,10 +329,11 @@
     <span class="macro">debug!</span>(<span class="string">&quot;init jvm successfully!&quot;</span>);
 
     <span class="kw">let </span>sql = InvocationArg::try_from(sql).unwrap();
-    <span class="kw">let </span>data_sources = create_sources(<span class="kw-2">&amp;</span>jvm, db_map)<span class="question-mark">?</span>;
+    <span class="kw">let </span>(db_config, db_manual) = create_sources(<span class="kw-2">&amp;</span>jvm, db_map)<span class="question-mark">?</span>;
     <span class="kw">let </span>rewriter = jvm.create_instance(<span class="string">&quot;ai.dataprep.federated.FederatedQueryRewriter&quot;</span>, <span class="kw-2">&amp;</span>[])<span class="question-mark">?</span>;
-    <span class="kw">let </span>data_sources = InvocationArg::try_from(data_sources).unwrap();
-    <span class="kw">let </span>plan = jvm.invoke(<span class="kw-2">&amp;</span>rewriter, <span class="string">&quot;rewrite&quot;</span>, <span class="kw-2">&amp;</span>[data_sources, sql])<span class="question-mark">?</span>;
+    <span class="kw">let </span>db_config = InvocationArg::try_from(db_config).unwrap();
+    <span class="kw">let </span>db_manual = InvocationArg::try_from(db_manual).unwrap();
+    <span class="kw">let </span>plan = jvm.invoke(<span class="kw-2">&amp;</span>rewriter, <span class="string">&quot;rewrite3&quot;</span>, <span class="kw-2">&amp;</span>[sql, db_config, db_manual])<span class="question-mark">?</span>;
 
     <span class="kw">let </span>count = jvm.invoke(<span class="kw-2">&amp;</span>plan, <span class="string">&quot;getCount&quot;</span>, <span class="kw-2">&amp;</span>[])<span class="question-mark">?</span>;
     <span class="kw">let </span>count: i32 = jvm.to_rust(count)<span class="question-mark">?</span>;
