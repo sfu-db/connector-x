@@ -167,7 +167,7 @@ where
         self.names = names;
         self.schema = pg_types
             .iter()
-            .map(|t| PostgresTypeSystem::from(t))
+            .map(PostgresTypeSystem::from)
             .collect();
         self.pg_schema = self
             .schema
@@ -718,7 +718,7 @@ impl<'r, 'a> Produce<'r, Vec<bool>> for PostgresCSVSourceParser<'a> {
             "{}" => vec![],
             _ if s.len() < 3 => throw!(ConnectorXError::cannot_produce::<bool>(Some(s.into()))),
             s => s[1..s.len() - 1]
-                .split(",")
+                .split(',')
                 .map(|v| match v {
                     "t" => Ok(true),
                     "f" => Ok(false),
@@ -742,7 +742,7 @@ impl<'r, 'a> Produce<'r, Option<Vec<bool>>> for PostgresCSVSourceParser<'a> {
             _ if s.len() < 3 => throw!(ConnectorXError::cannot_produce::<bool>(Some(s.into()))),
             s => Some(
                 s[1..s.len() - 1]
-                    .split(",")
+                    .split(',')
                     .map(|v| match v {
                         "t" => Ok(true),
                         "f" => Ok(false),
@@ -1409,7 +1409,7 @@ impl<'r> Produce<'r, Vec<bool>> for PostgresSimpleSourceParser {
                     "" => throw!(anyhow!("Cannot parse NULL in non-NULL column.")),
                     "{}" => vec![],
                     _ => rem_first_and_last(s)
-                        .split(",")
+                        .split(',')
                         .map(|token| match token {
                             "t" => Ok(true),
                             "f" => Ok(false),
@@ -1445,7 +1445,7 @@ impl<'r> Produce<'r, Option<Vec<bool>>> for PostgresSimpleSourceParser {
                     "{}" => Some(vec![]),
                     _ => Some(
                         rem_first_and_last(s)
-                            .split(",")
+                            .split(',')
                             .map(|token| match token {
                                 "t" => Ok(true),
                                 "f" => Ok(false),

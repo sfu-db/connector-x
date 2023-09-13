@@ -112,7 +112,7 @@ impl<'a> FromSql<'a> for IntN {
             ColumnData::U8(Some(d)) => Ok(Some(IntN(*d as i64))),
             ColumnData::I16(Some(d)) => Ok(Some(IntN(*d as i64))),
             ColumnData::I32(Some(d)) => Ok(Some(IntN(*d as i64))),
-            ColumnData::I64(Some(d)) => Ok(Some(IntN(*d as i64))),
+            ColumnData::I64(Some(d)) => Ok(Some(IntN(*d))),
             v => Err(tiberius::error::Error::Conversion(
                 format!("cannot interpret {:?} as a intn value", v).into(),
             )),
@@ -126,7 +126,7 @@ impl<'a> FromSql<'a> for FloatN {
         match value {
             ColumnData::F32(None) | ColumnData::F64(None) => Ok(None),
             ColumnData::F32(Some(d)) => Ok(Some(FloatN(*d as f64))),
-            ColumnData::F64(Some(d)) => Ok(Some(FloatN(*d as f64))),
+            ColumnData::F64(Some(d)) => Ok(Some(FloatN(*d))),
             v => Err(tiberius::error::Error::Conversion(
                 format!("cannot interpret {:?} as a floatn value", v).into(),
             )),

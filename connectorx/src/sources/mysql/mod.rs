@@ -98,7 +98,7 @@ where
         let mut conn = self.pool.get()?;
         let first_query = &self.queries[0];
 
-        match conn.prep(&*first_query) {
+        match conn.prep(first_query) {
             Ok(stmt) => {
                 let (names, types) = stmt
                     .columns()

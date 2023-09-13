@@ -190,9 +190,7 @@ fn test_postgres_agg() {
         builder,
         &mut destination,
         &queries,
-        Some(format!(
-            "SELECT test_bool, SUM(test_float) FROM test_table GROUP BY test_bool"
-        )),
+        Some("SELECT test_bool, SUM(test_float) FROM test_table GROUP BY test_bool".to_string()),
     );
 
     dispatcher.run().expect("run dispatcher");

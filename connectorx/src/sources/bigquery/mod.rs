@@ -36,11 +36,11 @@ impl Dialect for BigQueryDialect {
     }
 
     fn is_identifier_start(&self, ch: char) -> bool {
-        ('a'..='z').contains(&ch) || ('A'..='Z').contains(&ch) || ch == '_' || ch == '-'
+        ch.is_ascii_lowercase() || ch.is_ascii_uppercase() || ch == '_' || ch == '-'
     }
 
     fn is_identifier_part(&self, ch: char) -> bool {
-        self.is_identifier_start(ch) || ('0'..='9').contains(&ch)
+        self.is_identifier_start(ch) || ch.is_ascii_digit()
     }
 }
 
@@ -232,7 +232,7 @@ impl SourcePartition for BigQuerySourcePartition {
     }
 
     #[throws(BigQuerySourceError)]
-    fn parser<'a>(&'a mut self) -> Self::Parser<'a> {
+    fn parser(&mut self) -> Self::Parser<'_> {
         let job = self.client.job();
         let qry = self.rt.block_on(job.query(
             self.project_id.as_str(),
@@ -1136,10 +1136,7 @@ impl<'r, 'a> Produce<'r, Option<DateTime<Utc>>> for BigQuerySourceParser {
                     * 1e9) as i64;
                 let secs = timestamp_ns / 1000000000;
                 let nsecs = (timestamp_ns % 1000000000) as u32;
-                match NaiveDateTime::from_timestamp_opt(secs, nsecs) {
-                    Some(ndt) => Some(DateTime::<Utc>::from_naive_utc_and_offset(ndt, Utc)),
-                    None => None,
-                }
+                NaiveDateTime::from_timestamp_opt(secs, nsecs).map(|ndt| DateTime::<Utc>::from_naive_utc_and_offset(ndt, Utc))
             }
         }
     }

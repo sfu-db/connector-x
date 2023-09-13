@@ -4,8 +4,9 @@ use crate::sources::oracle::OracleDialect;
 use fehler::{throw, throws};
 use log::{debug, trace, warn};
 use sqlparser::ast::{
-    BinaryOperator, Expr, Function, FunctionArg, Ident, ObjectName, Query, Select, SelectItem,
-    SetExpr, Statement, TableAlias, TableFactor, TableWithJoins, Value,
+    BinaryOperator, Expr, Function, FunctionArg, FunctionArgExpr, Ident, ObjectName, Query, Select,
+    SelectItem, SetExpr, Statement, TableAlias, TableFactor, TableWithJoins, Value,
+    WildcardAdditionalOptions,
 };
 use sqlparser::dialect::Dialect;
 use sqlparser::parser::Parser;
@@ -118,8 +119,9 @@ fn wrap_query(
     };
     Statement::Query(Box::new(Query {
         with,
-        body: SetExpr::Select(Box::new(Select {
-            distinct: false,
+        locks: vec![],
+        body: Box::new(SetExpr::Select(Box::new(Select {
+            distinct: None,
             top: None,
             projection,
             from: vec![TableWithJoins {
@@ -137,7 +139,10 @@ fn wrap_query(
             distribute_by: vec![],
             sort_by: vec![],
             having: None,
-        })),
+            into: None,
+            named_window: vec![],
+            qualify: None,
+        }))),
         order_by: vec![],
         limit: None,
         offset: None,
@@ -164,7 +169,7 @@ trait QueryExt {
 
 impl QueryExt for Query {
     fn as_select_mut(&mut self) -> Option<&mut Select> {
-        match self.body {
+        match *self.body {
             SetExpr::Select(ref mut select) => Some(select),
             _ => None,
         }
@@ -198,9 +203,11 @@ pub fn count_query<T: Dialect>(sql: &CXQuery<String>, dialect: &T) -> CXQuery<St
                     value: "count".to_string(),
                     quote_style: None,
                 }]),
-                args: vec![FunctionArg::Unnamed(Expr::Wildcard)],
+                args: vec![FunctionArg::Unnamed(FunctionArgExpr::Wildcard)],
                 over: None,
                 distinct: false,
+                order_by: vec![],
+                special: false,
             }))];
             let ast_count: Statement = match ast {
                 CXQuery::Naked(ast) => {
@@ -393,7 +400,7 @@ pub fn single_col_partition_query<T: Dialect>(
 
             ast_part = wrap_query(
                 &mut query,
-                vec![SelectItem::Wildcard],
+                vec![SelectItem::Wildcard(WildcardAdditionalOptions::default())],
                 Some(selection),
                 table_alias,
             );
@@ -417,16 +424,18 @@ pub fn get_partition_range_query<T: Dialect>(sql: &str, col: &str, dialect: &T) 
     #[allow(unused_mut)]
     let mut table_alias = RANGE_TMP_TAB_NAME;
     #[allow(unused_mut)]
-    let mut args = vec![FunctionArg::Unnamed(Expr::CompoundIdentifier(vec![
-        Ident {
-            value: RANGE_TMP_TAB_NAME.to_string(),
-            quote_style: None,
-        },
-        Ident {
-            value: col.to_string(),
-            quote_style: None,
-        },
-    ]))];
+    let mut args = vec![FunctionArg::Unnamed(FunctionArgExpr::Expr(
+        Expr::CompoundIdentifier(vec![
+            Ident {
+                value: RANGE_TMP_TAB_NAME.to_string(),
+                quote_style: None,
+            },
+            Ident {
+                value: col.to_string(),
+                quote_style: None,
+            },
+        ]),
+    ))];
 
     // HACK: Some dialect (e.g. Oracle) does not support "AS" for alias
     #[cfg(feature = "src_oracle")]
@@ -463,6 +472,8 @@ pub fn get_partition_range_query<T: Dialect>(sql: &str, col: &str, dialect: &T) 
                     args: args.clone(),
                     over: None,
                     distinct: false,
+                    order_by: vec![],
+                    special: false,
                 })),
                 SelectItem::UnnamedExpr(Expr::Function(Function {
                     name: ObjectName(vec![Ident {
@@ -472,6 +483,8 @@ pub fn get_partition_range_query<T: Dialect>(sql: &str, col: &str, dialect: &T) 
                     args,
                     over: None,
                     distinct: false,
+                    order_by: vec![],
+                    special: false,
                 })),
             ];
             ast_range = wrap_query(&mut query, projection, None, table_alias);
@@ -519,36 +532,44 @@ pub fn get_partition_range_query_sep<T: Dialect>(
                     value: "min".to_string(),
                     quote_style: None,
                 }]),
-                args: vec![FunctionArg::Unnamed(Expr::CompoundIdentifier(vec![
-                    Ident {
-                        value: RANGE_TMP_TAB_NAME.to_string(),
-                        quote_style: None,
-                    },
-                    Ident {
-                        value: col.to_string(),
-                        quote_style: None,
-                    },
-                ]))],
+                args: vec![FunctionArg::Unnamed(FunctionArgExpr::Expr(
+                    Expr::CompoundIdentifier(vec![
+                        Ident {
+                            value: RANGE_TMP_TAB_NAME.to_string(),
+                            quote_style: None,
+                        },
+                        Ident {
+                            value: col.to_string(),
+                            quote_style: None,
+                        },
+                    ]),
+                ))],
                 over: None,
                 distinct: false,
+                order_by: vec![],
+                special: false,
             }))];
             let max_proj = vec![SelectItem::UnnamedExpr(Expr::Function(Function {
                 name: ObjectName(vec![Ident {
                     value: "max".to_string(),
                     quote_style: None,
                 }]),
-                args: vec![FunctionArg::Unnamed(Expr::CompoundIdentifier(vec![
-                    Ident {
-                        value: RANGE_TMP_TAB_NAME.into(),
-                        quote_style: None,
-                    },
-                    Ident {
-                        value: col.into(),
-                        quote_style: None,
-                    },
-                ]))],
+                args: vec![FunctionArg::Unnamed(FunctionArgExpr::Expr(
+                    Expr::CompoundIdentifier(vec![
+                        Ident {
+                            value: RANGE_TMP_TAB_NAME.into(),
+                            quote_style: None,
+                        },
+                        Ident {
+                            value: col.into(),
+                            quote_style: None,
+                        },
+                    ]),
+                ))],
                 over: None,
                 distinct: false,
+                order_by: vec![],
+                special: false,
             }))];
             ast_range_min = wrap_query(&mut query.clone(), min_proj, None, RANGE_TMP_TAB_NAME);
             ast_range_max = wrap_query(&mut query, max_proj, None, RANGE_TMP_TAB_NAME);
