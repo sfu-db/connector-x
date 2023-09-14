@@ -265,7 +265,7 @@ impl<'a> SQLiteSourcePartitionParser<'a> {
         // keeps its address static on the heap, thus the borrow of MyRows keeps valid.
         let rows: OwningHandle<Box<Statement<'a>>, DummyBox<Rows<'a>>> =
             OwningHandle::new_with_fn(Box::new(stmt), |stmt: *const Statement<'a>| unsafe {
-                DummyBox((&mut *(stmt as *mut Statement<'_>)).query([]).unwrap())
+                DummyBox((*(stmt as *mut Statement<'_>)).query([]).unwrap())
             });
         Self {
             rows,
