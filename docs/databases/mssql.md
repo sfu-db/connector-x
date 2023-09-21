@@ -9,6 +9,9 @@ SQLServer does not need to specify protocol.
 By adding `trusted_connection=true` to connection uri parameter, windows authentication will be enabled. Example: `mssql://host:port/db?trusted_connection=true`
 By adding `encrypt=true` to connection uri parameter, SQLServer will use SSL encryption. Example: `mssql://host:port/db?encrypt=true&trusted_connection=true`
 ```
+```{hint} 
+if the user password has special characters, they need to be sanitized. example: `from urllib import parse; password = parse.quote_plus(password)`
+```
 
 ```py
 import connectorx as cx
