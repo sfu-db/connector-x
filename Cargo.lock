@@ -3874,9 +3874,9 @@ dependencies = [
 
 [[package]]
 name = "r2d2-oracle"
-version = "0.5.0"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eca5358dca54423e557b30e7b5a6d950d3a442ab4a56cc916965030cead8b02b"
+checksum = "e592c29a9d04b2eb9aa5adc8775087200343b486efa8a374cb43a02f4269d67f"
 dependencies = [
  "oracle",
  "r2d2",
