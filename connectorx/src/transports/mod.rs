@@ -44,7 +44,8 @@ mod sqlite_arrow;
 mod sqlite_arrow2;
 #[cfg(all(feature = "src_sqlite", feature = "dst_arrow"))]
 mod sqlite_arrowstream;
-
+#[cfg(all(feature = "src_trino", feature = "dst_arrow2"))]
+mod trino_arrow2;
 #[cfg(all(feature = "src_bigquery", feature = "dst_arrow"))]
 pub use bigquery_arrow::{BigQueryArrowTransport, BigQueryArrowTransportError};
 #[cfg(all(feature = "src_bigquery", feature = "dst_arrow2"))]
@@ -105,3 +106,5 @@ pub use sqlite_arrowstream::{
     SQLiteArrowTransport as SQLiteArrowStreamTransport,
     SQLiteArrowTransportError as SQLiteArrowStreamTransportError,
 };
+#[cfg(all(feature = "src_trino", feature = "dst_arrow2"))]
+pub use trino_arrow2::{TrinoArrow2Transport, TrinoArrow2TransportError};

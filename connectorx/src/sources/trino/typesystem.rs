@@ -3,15 +3,13 @@ use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
 use fehler::{throw, throws};
 use prusto::{PrestoFloat, PrestoInt, PrestoTy};
 use std::convert::TryFrom;
-use uuid::Uuid;
 
-// TODO: implement Tuple, Row, Array and Map
+// TODO: implement Tuple, Row, Array and Map as well as UUID
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum TrinoTypeSystem {
     Date(bool),
     Time(bool),
     Timestamp(bool),
-    Uuid(bool),
     Boolean(bool),
     Bigint(bool),
     Integer(bool),
@@ -29,7 +27,6 @@ impl_typesystem! {
         { Date => NaiveDate }
         { Time => NaiveTime }
         { Timestamp => NaiveDateTime }
-        { Uuid => Uuid }
         { Boolean => bool }
         { Bigint => i64 }
         { Integer => i32 }
@@ -37,7 +34,7 @@ impl_typesystem! {
         { Tinyint => i8 }
         { Double => f64 }
         { Real => f32 }
-        { Varchar => Box<str> }
+        { Varchar => String }
         { Char => char }
     }
 }
@@ -52,7 +49,6 @@ impl TryFrom<PrestoTy> for TrinoTypeSystem {
             PrestoTy::Date => Date(true),
             PrestoTy::Time => Time(true),
             PrestoTy::Timestamp => Timestamp(true),
-            PrestoTy::Uuid => Uuid(true),
             PrestoTy::Boolean => Boolean(true),
             PrestoTy::PrestoInt(PrestoInt::I64) => Bigint(true),
             PrestoTy::PrestoInt(PrestoInt::I32) => Integer(true),
@@ -86,7 +82,6 @@ impl TryFrom<(Option<&str>, PrestoTy)> for TrinoTypeSystem {
                     "date" => Date(true),
                     "time" => Time(true),
                     "timestamp" => Timestamp(true),
-                    "uuid" => Uuid(true),
                     "boolean" => Boolean(true),
                     "bigint" => Bigint(true),
                     "int" | "integer" => Integer(true),

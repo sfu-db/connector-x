@@ -98,7 +98,7 @@ src_postgres = [
   "postgres-openssl",
 ]
 src_sqlite = ["rusqlite", "r2d2_sqlite", "fallible-streaming-iterator", "r2d2", "urlencoding"]
-src_trino = ["prusto", "uuid"]
+src_trino = ["prusto", "uuid", "urlencoding", "rust_decimal", "tokio", "num-traits"]
 federation = ["j4rs"]
 fed_exec = ["datafusion", "tokio"]
 integrated-auth-gssapi = ["tiberius/integrated-auth-gssapi"]
