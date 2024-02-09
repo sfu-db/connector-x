@@ -12,7 +12,7 @@ use crate::{
     data_order::DataOrder,
     errors::ConnectorXError,
     sources::Produce,
-    sql::{count_query, limit1_query, CXQuery},
+    sql::{limit1_query, CXQuery},
 };
 
 pub use self::{errors::TrinoSourceError, typesystem::TrinoTypeSystem};
@@ -26,13 +26,10 @@ pub mod errors;
 pub mod typesystem;
 
 #[throws(TrinoSourceError)]
-async fn get_total_rows(client: Arc<Client>, query: &CXQuery<String>) -> usize {
-    let result = client
-        .get_all::<u16>(count_query(query, &GenericDialect {})?.to_string())
-        .await
-        .map_err(TrinoSourceError::PrustoError)?;
-
-    usize::from(result.as_slice()[0])
+fn get_total_rows(rt: Arc<Runtime>, client: Arc<Client>, query: &CXQuery<String>) -> usize {
+    rt.block_on(client.get_all::<Row>(query.to_string()))
+        .map_err(TrinoSourceError::PrustoError)?
+        .len()
 }
 
 pub struct TrinoSource {
@@ -104,43 +101,20 @@ where
     fn fetch_metadata(&mut self) {
         assert!(!self.queries.is_empty());
 
-        match &self.origin_query {
-            Some(q) => {
-                /*let cxq = CXQuery::Naked(q.clone());
-                let cxq = limit1_query(&cxq, &GenericDialect {})?;
-                let data_set: DataSet<_> = self
-                    .rt
-                    .block_on(self.client.get_all::<Row>(cxq.to_string()))
-                    .map_err(TrinoSourceError::PrustoError)?;
+        // TODO: prevent from running the same query multiple times (limit1 + no limit)
+        let first_query = &self.queries[0];
+        let cxq = limit1_query(first_query, &GenericDialect {})?;
 
-                let x = data_set.into_vec().first().unwrap();
-                let ncols = x.value().to_vec().len();
+        let dataset: DataSet<Row> = self
+            .rt
+            .block_on(self.client.get_all::<Row>(cxq.to_string()))
+            .map_err(TrinoSourceError::PrustoError)?;
 
-                let mut parser =
-                    TrinoSourceParser::new(self.rt.clone(), self.client.clone(), cxq, ncols)?;
+        let schema = dataset.split().0;
 
-                // produce the first row
-                for x in 0..ncols {
-                    let x: TrinoTypeSystem = parser.produce()?;
-                }
-
-                data_set.into_vec().iter().for_each(|row| {
-                    row.value().iter().for_each(|x| {
-                        println!("{:?}", x);
-                    });
-
-                    println!("{:?}", row);
-                });*/
-
-                // TODO: remove hard-coded
-                self.schema = vec![
-                    TrinoTypeSystem::Integer(true),
-                    TrinoTypeSystem::Double(true),
-                    TrinoTypeSystem::Varchar(true),
-                ];
-                self.names = vec!["a".to_string(), "b".to_string(), "c".to_string()];
-            }
-            None => {}
+        for (name, t) in schema {
+            self.names.push(name.clone());
+            self.schema.push(TrinoTypeSystem::try_from(t.clone())?);
         }
     }
 
@@ -149,8 +123,7 @@ where
         match &self.origin_query {
             Some(q) => {
                 let cxq = CXQuery::Naked(q.clone());
-                let client = self.client.clone();
-                let nrows = self.rt.block_on(get_total_rows(client, &cxq))?;
+                let nrows = get_total_rows(self.rt.clone(), self.client.clone(), &cxq)?;
                 Some(nrows)
             }
             None => None,
@@ -170,15 +143,12 @@ where
         let mut ret = vec![];
 
         for query in self.queries {
-            ret.push(
-                TrinoSourcePartition::new(
-                    self.client.clone(),
-                    query,
-                    self.schema.clone(),
-                    self.rt.clone(),
-                )
-                .unwrap(), // TODO: handle error
-            );
+            ret.push(TrinoSourcePartition::new(
+                self.client.clone(),
+                query,
+                self.schema.clone(),
+                self.rt.clone(),
+            )?);
         }
         ret
     }
@@ -190,7 +160,6 @@ pub struct TrinoSourcePartition {
     schema: Vec<TrinoTypeSystem>,
     rt: Arc<Runtime>,
     nrows: usize,
-    ncols: usize,
 }
 
 impl TrinoSourcePartition {
@@ -203,31 +172,32 @@ impl TrinoSourcePartition {
     ) -> Self {
         Self {
             client,
-            query,
-            schema: schema.clone(),
+            query: query.clone(),
+            schema: schema.to_vec(),
             rt,
             nrows: 0,
-            ncols: schema.len(),
         }
     }
 }
 
 impl SourcePartition for TrinoSourcePartition {
     type TypeSystem = TrinoTypeSystem;
-    type Parser<'a> = TrinoSourceParser<'a>;
+    type Parser<'a> = TrinoSourcePartitionParser<'a>;
     type Error = TrinoSourceError;
 
     #[throws(TrinoSourceError)]
     fn result_rows(&mut self) {
-        self.nrows = self
-            .rt
-            .block_on(get_total_rows(self.client.clone(), &self.query))?
+        self.nrows = get_total_rows(self.rt.clone(), self.client.clone(), &self.query)?;
     }
 
     #[throws(TrinoSourceError)]
     fn parser(&mut self) -> Self::Parser<'_> {
-        let query = self.query.clone();
-        TrinoSourceParser::new(self.rt.clone(), self.client.clone(), query, &self.schema)?
+        TrinoSourcePartitionParser::new(
+            self.rt.clone(),
+            self.client.clone(),
+            self.query.clone(),
+            &self.schema,
+        )?
     }
 
     fn nrows(&self) -> usize {
@@ -235,20 +205,19 @@ impl SourcePartition for TrinoSourcePartition {
     }
 
     fn ncols(&self) -> usize {
-        self.ncols
+        self.schema.len()
     }
 }
 
-pub struct TrinoSourceParser<'a> {
+pub struct TrinoSourcePartitionParser<'a> {
     rows: Vec<Row>,
-    nrows: usize,
     ncols: usize,
     current_col: usize,
     current_row: usize,
     _phantom: &'a PhantomData<DataSet<Row>>,
 }
 
-impl<'a> TrinoSourceParser<'a> {
+impl<'a> TrinoSourcePartitionParser<'a> {
     #[throws(TrinoSourceError)]
     pub fn new(
         rt: Arc<Runtime>,
@@ -262,10 +231,9 @@ impl<'a> TrinoSourceParser<'a> {
 
         Self {
             rows,
-            nrows: data.len(),
             ncols: schema.len(),
-            current_col: 0,
             current_row: 0,
+            current_col: 0,
             _phantom: &PhantomData,
         }
     }
@@ -279,7 +247,7 @@ impl<'a> TrinoSourceParser<'a> {
     }
 }
 
-impl<'a> PartitionParser<'a> for TrinoSourceParser<'a> {
+impl<'a> PartitionParser<'a> for TrinoSourcePartitionParser<'a> {
     type TypeSystem = TrinoTypeSystem;
     type Error = TrinoSourceError;
 
@@ -287,14 +255,15 @@ impl<'a> PartitionParser<'a> for TrinoSourceParser<'a> {
     fn fetch_next(&mut self) -> (usize, bool) {
         assert!(self.current_col == 0);
 
-        (self.nrows, true)
+        // results are always fetched in a single batch for Prusto
+        (self.rows.len(), true)
     }
 }
 
 macro_rules! impl_produce_int {
     ($($t: ty,)+) => {
         $(
-            impl<'r, 'a> Produce<'r, $t> for TrinoSourceParser<'a> {
+            impl<'r, 'a> Produce<'r, $t> for TrinoSourcePartitionParser<'a> {
                 type Error = TrinoSourceError;
 
                 #[throws(TrinoSourceError)]
@@ -315,7 +284,7 @@ macro_rules! impl_produce_int {
                 }
             }
 
-            impl<'r, 'a> Produce<'r, Option<$t>> for TrinoSourceParser<'a> {
+            impl<'r, 'a> Produce<'r, Option<$t>> for TrinoSourcePartitionParser<'a> {
                 type Error = TrinoSourceError;
 
                 #[throws(TrinoSourceError)]
@@ -343,7 +312,7 @@ macro_rules! impl_produce_int {
 macro_rules! impl_produce_float {
     ($($t: ty,)+) => {
         $(
-            impl<'r, 'a> Produce<'r, $t> for TrinoSourceParser<'a> {
+            impl<'r, 'a> Produce<'r, $t> for TrinoSourcePartitionParser<'a> {
                 type Error = TrinoSourceError;
 
                 #[throws(TrinoSourceError)]
@@ -364,7 +333,7 @@ macro_rules! impl_produce_float {
                 }
             }
 
-            impl<'r, 'a> Produce<'r, Option<$t>> for TrinoSourceParser<'a> {
+            impl<'r, 'a> Produce<'r, Option<$t>> for TrinoSourcePartitionParser<'a> {
                 type Error = TrinoSourceError;
 
                 #[throws(TrinoSourceError)]
@@ -392,7 +361,7 @@ macro_rules! impl_produce_float {
 macro_rules! impl_produce_text {
     ($($t: ty,)+) => {
         $(
-            impl<'r, 'a> Produce<'r, $t> for TrinoSourceParser<'a> {
+            impl<'r, 'a> Produce<'r, $t> for TrinoSourcePartitionParser<'a> {
                 type Error = TrinoSourceError;
 
                 #[throws(TrinoSourceError)]
@@ -402,14 +371,14 @@ macro_rules! impl_produce_text {
 
                     match value {
                         Value::String(x) => {
-                            x.parse().map_err(|_| anyhow!("Trino cannot parse String at position: ({}, {})", ridx, cidx))?
+                            x.parse().map_err(|_| anyhow!("Trino cannot parse String at position: ({}, {}): {:?}", ridx, cidx, value))?
                         }
-                        _ => throw!(anyhow!("Trino cannot parse String at position: ({}, {})", ridx, cidx))
+                        _ => throw!(anyhow!("Trino unknown value at position: ({}, {}): {:?}", ridx, cidx, value))
                     }
                 }
             }
 
-            impl<'r, 'a> Produce<'r, Option<$t>> for TrinoSourceParser<'a> {
+            impl<'r, 'a> Produce<'r, Option<$t>> for TrinoSourcePartitionParser<'a> {
                 type Error = TrinoSourceError;
 
                 #[throws(TrinoSourceError)]
@@ -420,9 +389,9 @@ macro_rules! impl_produce_text {
                     match value {
                         Value::Null => None,
                         Value::String(x) => {
-                            Some(x.parse().map_err(|_| anyhow!("Trino cannot parse String at position: ({}, {})", ridx, cidx))?)
+                            Some(x.parse().map_err(|_| anyhow!("Trino cannot parse String at position: ({}, {}): {:?}", ridx, cidx, value))?)
                         }
-                        _ => throw!(anyhow!("Trino cannot parse String at position: ({}, {})", ridx, cidx))
+                        _ => throw!(anyhow!("Trino unknown value at position: ({}, {}): {:?}", ridx, cidx, value))
                     }
                 }
             }
@@ -430,6 +399,194 @@ macro_rules! impl_produce_text {
     };
 }
 
+macro_rules! impl_produce_timestamp {
+    ($($t: ty,)+) => {
+        $(
+            impl<'r, 'a> Produce<'r, $t> for TrinoSourcePartitionParser<'a> {
+                type Error = TrinoSourceError;
+
+                #[throws(TrinoSourceError)]
+                fn produce(&'r mut self) -> $t {
+                    let (ridx, cidx) = self.next_loc()?;
+                    let value = &self.rows[ridx].value()[cidx];
+
+                    match value {
+                        Value::String(x) => NaiveDateTime::parse_from_str(x, "%Y-%m-%d %H:%M:%S%.f").map_err(|_| anyhow!("Trino cannot parse String at position: ({}, {}): {:?}", ridx, cidx, value))?,
+                        _ => throw!(anyhow!("Trino unknown value at position: ({}, {}): {:?}", ridx, cidx, value))
+                    }
+                }
+            }
+
+            impl<'r, 'a> Produce<'r, Option<$t>> for TrinoSourcePartitionParser<'a> {
+                type Error = TrinoSourceError;
+
+                #[throws(TrinoSourceError)]
+                fn produce(&'r mut self) -> Option<$t> {
+                    let (ridx, cidx) = self.next_loc()?;
+                    let value = &self.rows[ridx].value()[cidx];
+
+                    match value {
+                        Value::Null => None,
+                        Value::String(x) => Some(NaiveDateTime::parse_from_str(x, "%Y-%m-%d %H:%M:%S%.f").map_err(|_| anyhow!("Trino cannot parse String at position: ({}, {}): {:?}", ridx, cidx, value))?),
+                        _ => throw!(anyhow!("Trino unknown value at position: ({}, {}): {:?}", ridx, cidx, value))
+                    }
+                }
+            }
+        )+
+    };
+}
+
+macro_rules! impl_produce_bool {
+    ($($t: ty,)+) => {
+        $(
+            impl<'r, 'a> Produce<'r, $t> for TrinoSourcePartitionParser<'a> {
+                type Error = TrinoSourceError;
+
+                #[throws(TrinoSourceError)]
+                fn produce(&'r mut self) -> $t {
+                    let (ridx, cidx) = self.next_loc()?;
+                    let value = &self.rows[ridx].value()[cidx];
+
+                    match value {
+                        Value::Bool(x) => *x,
+                        _ => throw!(anyhow!("Trino unknown value at position: ({}, {}): {:?}", ridx, cidx, value))
+                    }
+                }
+            }
+
+            impl<'r, 'a> Produce<'r, Option<$t>> for TrinoSourcePartitionParser<'a> {
+                type Error = TrinoSourceError;
+
+                #[throws(TrinoSourceError)]
+                fn produce(&'r mut self) -> Option<$t> {
+                    let (ridx, cidx) = self.next_loc()?;
+                    let value = &self.rows[ridx].value()[cidx];
+
+                    match value {
+                        Value::Null => None,
+                        Value::Bool(x) => Some(*x),
+                        _ => throw!(anyhow!("Trino unknown value at position: ({}, {}): {:?}", ridx, cidx, value))
+                    }
+                }
+            }
+        )+
+    };
+}
+
+impl_produce_bool!(bool,);
 impl_produce_int!(i8, i16, i32, i64,);
 impl_produce_float!(f32, f64,);
-impl_produce_text!(NaiveDate, NaiveTime, NaiveDateTime, String, bool, char,);
+impl_produce_timestamp!(NaiveDateTime,);
+impl_produce_text!(String, char,);
+
+impl<'r, 'a> Produce<'r, NaiveTime> for TrinoSourcePartitionParser<'a> {
+    type Error = TrinoSourceError;
+
+    #[throws(TrinoSourceError)]
+    fn produce(&'r mut self) -> NaiveTime {
+        let (ridx, cidx) = self.next_loc()?;
+        let value = &self.rows[ridx].value()[cidx];
+
+        match value {
+            Value::String(x) => NaiveTime::parse_from_str(x, "%H:%M:%S%.f").map_err(|_| {
+                anyhow!(
+                    "Trino cannot parse String at position: ({}, {}): {:?}",
+                    ridx,
+                    cidx,
+                    value
+                )
+            })?,
+            _ => throw!(anyhow!(
+                "Trino unknown value at position: ({}, {}): {:?}",
+                ridx,
+                cidx,
+                value
+            )),
+        }
+    }
+}
+
+impl<'r, 'a> Produce<'r, Option<NaiveTime>> for TrinoSourcePartitionParser<'a> {
+    type Error = TrinoSourceError;
+
+    #[throws(TrinoSourceError)]
+    fn produce(&'r mut self) -> Option<NaiveTime> {
+        let (ridx, cidx) = self.next_loc()?;
+        let value = &self.rows[ridx].value()[cidx];
+
+        match value {
+            Value::Null => None,
+            Value::String(x) => {
+                Some(NaiveTime::parse_from_str(x, "%H:%M:%S%.f").map_err(|_| {
+                    anyhow!(
+                        "Trino cannot parse Time at position: ({}, {}): {:?}",
+                        ridx,
+                        cidx,
+                        value
+                    )
+                })?)
+            }
+            _ => throw!(anyhow!(
+                "Trino unknown value at position: ({}, {}): {:?}",
+                ridx,
+                cidx,
+                value
+            )),
+        }
+    }
+}
+
+impl<'r, 'a> Produce<'r, NaiveDate> for TrinoSourcePartitionParser<'a> {
+    type Error = TrinoSourceError;
+
+    #[throws(TrinoSourceError)]
+    fn produce(&'r mut self) -> NaiveDate {
+        let (ridx, cidx) = self.next_loc()?;
+        let value = &self.rows[ridx].value()[cidx];
+
+        match value {
+            Value::String(x) => NaiveDate::parse_from_str(x, "%Y-%m-%d").map_err(|_| {
+                anyhow!(
+                    "Trino cannot parse Date at position: ({}, {}): {:?}",
+                    ridx,
+                    cidx,
+                    value
+                )
+            })?,
+            _ => throw!(anyhow!(
+                "Trino unknown value at position: ({}, {}): {:?}",
+                ridx,
+                cidx,
+                value
+            )),
+        }
+    }
+}
+
+impl<'r, 'a> Produce<'r, Option<NaiveDate>> for TrinoSourcePartitionParser<'a> {
+    type Error = TrinoSourceError;
+
+    #[throws(TrinoSourceError)]
+    fn produce(&'r mut self) -> Option<NaiveDate> {
+        let (ridx, cidx) = self.next_loc()?;
+        let value = &self.rows[ridx].value()[cidx];
+
+        match value {
+            Value::Null => None,
+            Value::String(x) => Some(NaiveDate::parse_from_str(x, "%Y-%m-%d").map_err(|_| {
+                anyhow!(
+                    "Trino cannot parse Date at position: ({}, {}): {:?}",
+                    ridx,
+                    cidx,
+                    value
+                )
+            })?),
+            _ => throw!(anyhow!(
+                "Trino unknown value at position: ({}, {}): {:?}",
+                ridx,
+                cidx,
+                value
+            )),
+        }
+    }
+}

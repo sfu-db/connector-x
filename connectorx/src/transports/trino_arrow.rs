@@ -1,8 +1,8 @@
-//! Transport from Trino Source to Arrow2 Destination.
+//! Transport from Trino Source to Arrow Destination.
 
 use crate::{
-    destinations::arrow2::{
-        typesystem::Arrow2TypeSystem, Arrow2Destination, Arrow2DestinationError,
+    destinations::arrow::{
+        typesystem::ArrowTypeSystem, ArrowDestination, ArrowDestinationError,
     },
     impl_transport,
     sources::trino::{TrinoSource, TrinoSourceError, TrinoTypeSystem},
@@ -15,25 +15,25 @@ use serde_json::{to_string, Value};
 use thiserror::Error;
 
 #[derive(Error, Debug)]
-pub enum TrinoArrow2TransportError {
+pub enum TrinoArrowTransportError {
     #[error(transparent)]
     Source(#[from] TrinoSourceError),
 
     #[error(transparent)]
-    Destination(#[from] Arrow2DestinationError),
+    Destination(#[from] ArrowDestinationError),
 
     #[error(transparent)]
     ConnectorX(#[from] crate::errors::ConnectorXError),
 }
 
-/// Convert Trino data types to Arrow2 data types.
-pub struct TrinoArrow2Transport();
+/// Convert Trino data types to Arrow data types.
+pub struct TrinoArrowTransport();
 
 impl_transport!(
-    name = TrinoArrow2Transport,
-    error = TrinoArrow2TransportError,
-    systems = TrinoTypeSystem => Arrow2TypeSystem,
-    route = TrinoSource => Arrow2Destination,
+    name = TrinoArrowTransport,
+    error = TrinoArrowTransportError,
+    systems = TrinoTypeSystem => ArrowTypeSystem,
+    route = TrinoSource => ArrowDestination,
     mappings = {
         { Date[NaiveDate]            => Date32[NaiveDate]       | conversion auto }
         { Time[NaiveTime]            => Time64[NaiveTime]       | conversion auto }
@@ -50,14 +50,14 @@ impl_transport!(
     }
 );
 
-impl TypeConversion<Decimal, f64> for TrinoArrow2Transport {
+impl TypeConversion<Decimal, f64> for TrinoArrowTransport {
     fn convert(val: Decimal) -> f64 {
         val.to_f64()
             .unwrap_or_else(|| panic!("cannot convert decimal {:?} to float64", val))
     }
 }
 
-impl TypeConversion<Value, String> for TrinoArrow2Transport {
+impl TypeConversion<Value, String> for TrinoArrowTransport {
     fn convert(val: Value) -> String {
         to_string(&val).unwrap()
     }

@@ -4,7 +4,7 @@ use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum TrinoSourceError {
-    #[error("Cannot infer type from null for SQLite")]
+    #[error("Cannot infer type from null for Trino")]
     InferTypeFromNull,
 
     #[error(transparent)]

@@ -43,6 +43,9 @@ pub enum ConnectorXPythonError {
     BigQuerySourceError(#[from] connectorx::sources::bigquery::BigQuerySourceError),
 
     #[error(transparent)]
+    TrinoSourceError(#[from] connectorx::sources::trino::TrinoSourceError),
+
+    #[error(transparent)]
     ArrowDestinationError(#[from] connectorx::destinations::arrow::ArrowDestinationError),
 
     #[error(transparent)]
