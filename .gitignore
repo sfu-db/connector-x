@@ -1,3 +1,5 @@
+*.swp
+
 **/target
 .vscode
 connectorx-python/connectorx/*.so
