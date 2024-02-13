@@ -1,3 +1,4 @@
+use chrono::NaiveDate;
 use arrow::{
     array::{BooleanArray, Float64Array, Int64Array, StringArray},
     record_batch::RecordBatch,
@@ -147,6 +148,53 @@ fn test_postgres() {
 
     let result = destination.arrow().unwrap();
     verify_arrow_results(result);
+}
+
+#[test]
+fn test_csv_infinite_values() {
+
+    let _ = env_logger::builder().is_test(true).try_init();
+
+    let dburl = env::var("POSTGRES_URL").unwrap();
+    #[derive(Debug, PartialEq)]
+    struct Row(i32, NaiveDate);
+
+    let url = Url::parse(dburl.as_str()).unwrap();
+    let (config, _tls) = rewrite_tls_args(&url).unwrap();
+    let mut source = PostgresSource::<CSVProtocol, NoTls>::new(config, NoTls, 1).unwrap();
+    source.set_queries(&[CXQuery::naked("select * from test_infinite_values")]);
+    source.fetch_metadata().unwrap();
+
+    let mut partitions = source.partition().unwrap();
+    assert!(partitions.len() == 1);
+    let mut partition = partitions.remove(0);
+    partition.result_rows().expect("run query");
+
+    assert_eq!(2, partition.nrows());
+    assert_eq!(2, partition.ncols());
+
+    let mut parser = partition.parser().unwrap();
+
+    let mut rows: Vec<Row> = Vec::new();
+    loop {
+        let (n, is_last) = parser.fetch_next().unwrap();
+        for _i in 0..n {
+            rows.push(Row(
+                parser.produce().unwrap(),
+                parser.produce().unwrap(),
+            ));
+        }
+        if is_last {
+            break;
+        }
+    }
+    assert_eq!(
+        vec![
+            Row(1, NaiveDate::MAX),
+            Row(2, NaiveDate::MIN),
+        ],
+        rows
+    );
 }
 
 #[test]
