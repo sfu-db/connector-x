@@ -824,13 +824,17 @@ impl<'r, 'a> Produce<'r, NaiveDateTime> for PostgresCSVSourceParser<'a> {
     #[throws(PostgresSourceError)]
     fn produce(&mut self) -> NaiveDateTime {
         let (ridx, cidx) = self.next_loc()?;
-        NaiveDateTime::parse_from_str(&self.rowbuf[ridx][cidx], "%Y-%m-%d %H:%M:%S").map_err(
-            |_| {
-                ConnectorXError::cannot_produce::<NaiveDateTime>(Some(
-                    self.rowbuf[ridx][cidx].into(),
-                ))
-            },
-        )?
+        match &self.rowbuf[ridx][cidx] {
+            "infinity" => NaiveDateTime::MAX,
+            "-infinity" => NaiveDateTime::MIN,
+            v => NaiveDateTime::parse_from_str(v, "%Y-%m-%d %H:%M:%S").map_err(
+                |_| {
+                    ConnectorXError::cannot_produce::<NaiveDateTime>(Some(
+                        v.into(),
+                    ))
+                },
+            )?
+        }
     }
 }
 

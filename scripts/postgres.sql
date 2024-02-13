@@ -23,11 +23,12 @@ INSERT INTO test_table VALUES (1314, 2, NULL, -10, TRUE);
 
 CREATE TABLE IF NOT EXISTS test_infinite_values(
     test_int INTEGER NOT NULL,
-    test_date DATE
+    test_date DATE,
+	test_timestamp TIMESTAMP
 );
 
-INSERT INTO test_infinite_values VALUES (1, 'infinity'::DATE);
-INSERT INTO test_infinite_values VALUES (2, '-infinity'::DATE);
+INSERT INTO test_infinite_values VALUES (1, 'infinity'::DATE, 'infinity'::TIMESTAMP);
+INSERT INTO test_infinite_values VALUES (2, '-infinity'::DATE, '-infinity'::TIMESTAMP);
 
 CREATE TABLE IF NOT EXISTS test_str(
     id INTEGER NOT NULL,
