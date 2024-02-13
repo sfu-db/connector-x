@@ -1,4 +1,5 @@
 use chrono::{NaiveDate, NaiveDateTime};
+use rust_decimal::Decimal;
 use arrow::{
     array::{BooleanArray, Float64Array, Int64Array, StringArray},
     record_batch::RecordBatch,
@@ -157,7 +158,7 @@ fn test_csv_infinite_values() {
 
     let dburl = env::var("POSTGRES_URL").unwrap();
     #[derive(Debug, PartialEq)]
-    struct Row(i32, NaiveDate, NaiveDateTime);
+    struct Row(i32, NaiveDate, NaiveDateTime, Decimal);
 
     let url = Url::parse(dburl.as_str()).unwrap();
     let (config, _tls) = rewrite_tls_args(&url).unwrap();
@@ -171,7 +172,7 @@ fn test_csv_infinite_values() {
     partition.result_rows().expect("run query");
 
     assert_eq!(2, partition.nrows());
-    assert_eq!(3, partition.ncols());
+    assert_eq!(4, partition.ncols());
 
     let mut parser = partition.parser().unwrap();
 
@@ -183,6 +184,7 @@ fn test_csv_infinite_values() {
                 parser.produce().unwrap(),
                 parser.produce().unwrap(),
                 parser.produce().unwrap(),
+                parser.produce().unwrap(),
             ));
         }
         if is_last {
@@ -191,8 +193,8 @@ fn test_csv_infinite_values() {
     }
     assert_eq!(
         vec![
-            Row(1, NaiveDate::MAX, NaiveDateTime::MAX),
-            Row(2, NaiveDate::MIN, NaiveDateTime::MIN),
+            Row(1, NaiveDate::MAX, NaiveDateTime::MAX, Decimal::MAX),
+            Row(2, NaiveDate::MIN, NaiveDateTime::MIN, Decimal::MIN),
         ],
         rows
     );

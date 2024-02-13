@@ -601,7 +601,7 @@ macro_rules! impl_csv_produce {
     };
 }
 
-impl_csv_produce!(i8, i16, i32, i64, f32, f64, Decimal, Uuid,);
+impl_csv_produce!(i8, i16, i32, i64, f32, f64, Uuid,);
 
 macro_rules! impl_csv_vec_produce {
     ($($t: ty,)+) => {
@@ -753,6 +753,40 @@ impl<'r, 'a> Produce<'r, Option<Vec<bool>>> for PostgresCSVSourceParser<'a> {
         }
     }
 }
+
+
+impl<'r, 'a> Produce<'r, Decimal> for PostgresCSVSourceParser<'a> {
+    type Error = PostgresSourceError;
+
+    #[throws(PostgresSourceError)]
+    fn produce(&'r mut self) -> Decimal {
+        let (ridx, cidx) = self.next_loc()?;
+        match &self.rowbuf[ridx][cidx][..] {
+            "Infinity" => Decimal::MAX,
+            "-Infinity" => Decimal::MIN,
+            v => v.parse().map_err(|_| {
+                ConnectorXError::cannot_produce::<Decimal>(Some(v.into()))
+            })?
+        }
+    }
+}
+
+
+impl<'r, 'a> Produce<'r, Option<Decimal>> for PostgresCSVSourceParser<'a> {
+    type Error = PostgresSourceError;
+
+    #[throws(PostgresSourceError)]
+    fn produce(&'r mut self) -> Option<Decimal> {
+        let (ridx, cidx) = self.next_loc()?;
+        match &self.rowbuf[ridx][cidx][..] {
+            "" => None,
+            v => Some(v.parse().map_err(|_| {
+                ConnectorXError::cannot_produce::<Decimal>(Some(v.into()))
+            })?),
+        }
+    }
+}
+
 
 impl<'r, 'a> Produce<'r, DateTime<Utc>> for PostgresCSVSourceParser<'a> {
     type Error = PostgresSourceError;
