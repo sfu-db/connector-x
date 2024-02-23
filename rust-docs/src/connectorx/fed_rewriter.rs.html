@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `connectorx/src/fed_rewriter.rs`."><title>fed_rewriter.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="connectorx" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `connectorx/src/fed_rewriter.rs`."><title>fed_rewriter.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="connectorx" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -201,20 +202,20 @@
     <span class="kw">pub </span>cardinality: usize,
 }
 
-<span class="kw">pub struct </span>FederatedDataSourceInfo&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">pub struct </span>FederatedDataSourceInfo&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">pub </span>conn_str_info: <span class="prelude-ty">Option</span>&lt;SourceConn&gt;,
     <span class="kw">pub </span>manual_info: <span class="prelude-ty">Option</span>&lt;HashMap&lt;String, Vec&lt;String&gt;&gt;&gt;,
     <span class="kw">pub </span>is_local: bool,
-    <span class="kw">pub </span>jdbc_url: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str,
-    <span class="kw">pub </span>jdbc_driver: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str,
+    <span class="kw">pub </span>jdbc_url: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>str,
+    <span class="kw">pub </span>jdbc_driver: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>str,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; FederatedDataSourceInfo&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; FederatedDataSourceInfo&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">pub fn </span>new_from_conn_str(
         source_conn: SourceConn,
         is_local: bool,
-        jdbc_url: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str,
-        jdbc_driver: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str,
+        jdbc_url: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>str,
+        jdbc_driver: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>str,
     ) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             conn_str_info: <span class="prelude-val">Some</span>(source_conn),
@@ -232,8 +233,8 @@
             conn_str_info: <span class="prelude-val">None</span>,
             manual_info: <span class="prelude-val">Some</span>(manual_schema),
             is_local,
-            jdbc_url: <span class="string">&quot;&quot;</span>,
-            jdbc_driver: <span class="string">&quot;&quot;</span>,
+            jdbc_url: <span class="string">""</span>,
+            jdbc_driver: <span class="string">""</span>,
         }
     }
 }
@@ -246,13 +247,13 @@
         <span class="prelude-val">None </span>=&gt; fs::canonicalize(J4RS_BASE_PATH)
             .map_err(|<span class="kw">_</span>| ConnectorXOutError::FileNotFoundError(J4RS_BASE_PATH.to_string()))<span class="question-mark">?</span>,
     };
-    <span class="macro">debug!</span>(<span class="string">&quot;j4rs base path: {:?}&quot;</span>, base);
+    <span class="macro">debug!</span>(<span class="string">"j4rs base path: {:?}"</span>, base);
 
-    <span class="kw">let </span>rewriter_path = env::var(<span class="string">&quot;CX_REWRITER_PATH&quot;</span>).unwrap_or(CX_REWRITER_PATH.to_string());
+    <span class="kw">let </span>rewriter_path = env::var(<span class="string">"CX_REWRITER_PATH"</span>).unwrap_or(CX_REWRITER_PATH.to_string());
     <span class="kw">let </span>path = fs::canonicalize(rewriter_path.as_str())
         .map_err(|<span class="kw">_</span>| ConnectorXOutError::FileNotFoundError(rewriter_path))<span class="question-mark">?</span>;
 
-    <span class="macro">debug!</span>(<span class="string">&quot;rewriter path: {:?}&quot;</span>, path);
+    <span class="macro">debug!</span>(<span class="string">"rewriter path: {:?}"</span>, path);
 
     <span class="kw">let </span>entry = ClasspathEntry::new(path.to_str().unwrap());
     JvmBuilder::new()
@@ -269,17 +270,17 @@
     db_map: <span class="kw-2">&amp;</span>HashMap&lt;String, FederatedDataSourceInfo&gt;,
 ) -&gt; (Instance, Instance) {
     <span class="kw">let </span><span class="kw-2">mut </span>db_config = <span class="macro">vec!</span>[];
-    <span class="kw">let </span>db_manual = jvm.create_instance(<span class="string">&quot;java.util.HashMap&quot;</span>, <span class="kw-2">&amp;</span>[])<span class="question-mark">?</span>;
+    <span class="kw">let </span>db_manual = jvm.create_instance(<span class="string">"java.util.HashMap"</span>, <span class="kw-2">&amp;</span>[])<span class="question-mark">?</span>;
 
     <span class="kw">for </span>(db_name, db_info) <span class="kw">in </span>db_map.iter() {
         <span class="kw">if </span>db_info.manual_info.is_some() {
             <span class="kw">let </span>manual_info = db_info.manual_info.as_ref().unwrap();
-            <span class="kw">let </span>schema_info = jvm.create_instance(<span class="string">&quot;java.util.HashMap&quot;</span>, <span class="kw-2">&amp;</span>[])<span class="question-mark">?</span>;
+            <span class="kw">let </span>schema_info = jvm.create_instance(<span class="string">"java.util.HashMap"</span>, <span class="kw-2">&amp;</span>[])<span class="question-mark">?</span>;
             <span class="kw">for </span>(name, columns) <span class="kw">in </span>manual_info {
-                <span class="kw">let </span>arr_instance = jvm.java_list(<span class="string">&quot;java.lang.String&quot;</span>, columns.to_vec())<span class="question-mark">?</span>;
+                <span class="kw">let </span>arr_instance = jvm.java_list(<span class="string">"java.lang.String"</span>, columns.to_vec())<span class="question-mark">?</span>;
                 jvm.invoke(
                     <span class="kw-2">&amp;</span>schema_info,
-                    <span class="string">&quot;put&quot;</span>,
+                    <span class="string">"put"</span>,
                     <span class="kw-2">&amp;</span>[
                         InvocationArg::try_from(name).unwrap(),
                         InvocationArg::try_from(arr_instance).unwrap(),
@@ -287,7 +288,7 @@
                 )<span class="question-mark">?</span>;
             }
             <span class="kw">let </span>fed_ds = jvm.create_instance(
-                <span class="string">&quot;ai.dataprep.federated.FederatedDataSource&quot;</span>,
+                <span class="string">"ai.dataprep.federated.FederatedDataSource"</span>,
                 <span class="kw-2">&amp;</span>[
                     InvocationArg::try_from(db_info.is_local).unwrap(),
                     InvocationArg::try_from(schema_info).unwrap(),
@@ -295,7 +296,7 @@
             )<span class="question-mark">?</span>;
             jvm.invoke(
                 <span class="kw-2">&amp;</span>db_manual,
-                <span class="string">&quot;put&quot;</span>,
+                <span class="string">"put"</span>,
                 <span class="kw-2">&amp;</span>[
                     InvocationArg::try_from(db_name).unwrap(),
                     InvocationArg::try_from(fed_ds).unwrap(),
@@ -305,7 +306,7 @@
             db_config.push(String::from(db_name));
         }
     }
-    <span class="kw">let </span>db_config = jvm.java_list(<span class="string">&quot;java.lang.String&quot;</span>, db_config)<span class="question-mark">?</span>;
+    <span class="kw">let </span>db_config = jvm.java_list(<span class="string">"java.lang.String"</span>, db_config)<span class="question-mark">?</span>;
     (db_config, db_manual)
 }
 
@@ -316,7 +317,7 @@
     <span class="kw">for </span>db <span class="kw">in </span>db_map.keys() {
         dbs.push(String::from(db));
     }
-    jvm.java_list(<span class="string">&quot;java.lang.String&quot;</span>, dbs)<span class="question-mark">?
+    jvm.java_list(<span class="string">"java.lang.String"</span>, dbs)<span class="question-mark">?
 </span>}
 
 <span class="attr">#[throws(ConnectorXOutError)]
@@ -326,37 +327,37 @@
     j4rs_base: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
 ) -&gt; Vec&lt;Plan&gt; {
     <span class="kw">let </span>jvm = init_jvm(j4rs_base)<span class="question-mark">?</span>;
-    <span class="macro">debug!</span>(<span class="string">&quot;init jvm successfully!&quot;</span>);
+    <span class="macro">debug!</span>(<span class="string">"init jvm successfully!"</span>);
 
     <span class="kw">let </span>sql = InvocationArg::try_from(sql).unwrap();
     <span class="kw">let </span>(db_config, db_manual) = create_sources(<span class="kw-2">&amp;</span>jvm, db_map)<span class="question-mark">?</span>;
-    <span class="kw">let </span>rewriter = jvm.create_instance(<span class="string">&quot;ai.dataprep.federated.FederatedQueryRewriter&quot;</span>, <span class="kw-2">&amp;</span>[])<span class="question-mark">?</span>;
+    <span class="kw">let </span>rewriter = jvm.create_instance(<span class="string">"ai.dataprep.federated.FederatedQueryRewriter"</span>, <span class="kw-2">&amp;</span>[])<span class="question-mark">?</span>;
     <span class="kw">let </span>db_config = InvocationArg::try_from(db_config).unwrap();
     <span class="kw">let </span>db_manual = InvocationArg::try_from(db_manual).unwrap();
-    <span class="kw">let </span>plan = jvm.invoke(<span class="kw-2">&amp;</span>rewriter, <span class="string">&quot;rewrite3&quot;</span>, <span class="kw-2">&amp;</span>[sql, db_config, db_manual])<span class="question-mark">?</span>;
+    <span class="kw">let </span>plan = jvm.invoke(<span class="kw-2">&amp;</span>rewriter, <span class="string">"rewrite3"</span>, <span class="kw-2">&amp;</span>[sql, db_config, db_manual])<span class="question-mark">?</span>;
 
-    <span class="kw">let </span>count = jvm.invoke(<span class="kw-2">&amp;</span>plan, <span class="string">&quot;getCount&quot;</span>, <span class="kw-2">&amp;</span>[])<span class="question-mark">?</span>;
+    <span class="kw">let </span>count = jvm.invoke(<span class="kw-2">&amp;</span>plan, <span class="string">"getCount"</span>, <span class="kw-2">&amp;</span>[])<span class="question-mark">?</span>;
     <span class="kw">let </span>count: i32 = jvm.to_rust(count)<span class="question-mark">?</span>;
-    <span class="macro">debug!</span>(<span class="string">&quot;rewrite finished, got {} queries&quot;</span>, count);
+    <span class="macro">debug!</span>(<span class="string">"rewrite finished, got {} queries"</span>, count);
 
     <span class="kw">let </span><span class="kw-2">mut </span>fed_plan = <span class="macro">vec!</span>[];
     <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..count {
         <span class="kw">let </span>idx = [InvocationArg::try_from(i).unwrap().into_primitive()<span class="question-mark">?</span>];
 
-        <span class="kw">let </span>db = jvm.invoke(<span class="kw-2">&amp;</span>plan, <span class="string">&quot;getDBName&quot;</span>, <span class="kw-2">&amp;</span>idx)<span class="question-mark">?</span>;
+        <span class="kw">let </span>db = jvm.invoke(<span class="kw-2">&amp;</span>plan, <span class="string">"getDBName"</span>, <span class="kw-2">&amp;</span>idx)<span class="question-mark">?</span>;
         <span class="kw">let </span>db: String = jvm.to_rust(db)<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>alias_db = jvm.invoke(<span class="kw-2">&amp;</span>plan, <span class="string">&quot;getAliasDBName&quot;</span>, <span class="kw-2">&amp;</span>idx)<span class="question-mark">?</span>;
+        <span class="kw">let </span>alias_db = jvm.invoke(<span class="kw-2">&amp;</span>plan, <span class="string">"getAliasDBName"</span>, <span class="kw-2">&amp;</span>idx)<span class="question-mark">?</span>;
         <span class="kw">let </span>alias_db: String = jvm.to_rust(alias_db)<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>rewrite_sql = jvm.invoke(<span class="kw-2">&amp;</span>plan, <span class="string">&quot;getSql&quot;</span>, <span class="kw-2">&amp;</span>idx)<span class="question-mark">?</span>;
+        <span class="kw">let </span>rewrite_sql = jvm.invoke(<span class="kw-2">&amp;</span>plan, <span class="string">"getSql"</span>, <span class="kw-2">&amp;</span>idx)<span class="question-mark">?</span>;
         <span class="kw">let </span>rewrite_sql: String = jvm.to_rust(rewrite_sql)<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>cardinality = jvm.invoke(<span class="kw-2">&amp;</span>plan, <span class="string">&quot;getCardinality&quot;</span>, <span class="kw-2">&amp;</span>idx)<span class="question-mark">?</span>;
+        <span class="kw">let </span>cardinality = jvm.invoke(<span class="kw-2">&amp;</span>plan, <span class="string">"getCardinality"</span>, <span class="kw-2">&amp;</span>idx)<span class="question-mark">?</span>;
         <span class="kw">let </span>cardinality: usize = jvm.to_rust(cardinality)<span class="question-mark">?</span>;
 
         <span class="macro">debug!</span>(
-            <span class="string">&quot;{} - db: {}, alias: {}, cardinality: {}, rewrite sql: {}&quot;</span>,
+            <span class="string">"{} - db: {}, alias: {}, cardinality: {}, rewrite sql: {}"</span>,
             i, db, alias_db, cardinality, rewrite_sql
         );
         fed_plan.push(Plan {

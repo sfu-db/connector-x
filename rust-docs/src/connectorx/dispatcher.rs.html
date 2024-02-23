@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `connectorx/src/dispatcher.rs`."><title>dispatcher.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="connectorx" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `connectorx/src/dispatcher.rs`."><title>dispatcher.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="connectorx" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -232,24 +233,24 @@
 
 <span class="doccomment">/// A dispatcher takes a `S: Source`, a `D: Destination`, a `TP: Transport` and a vector of `queries` as input to
 /// load data from `S` to `D` using the queries.
-</span><span class="kw">pub struct </span>Dispatcher&lt;<span class="lifetime">&#39;a</span>, S, D, TP&gt; {
+</span><span class="kw">pub struct </span>Dispatcher&lt;<span class="lifetime">'a</span>, S, D, TP&gt; {
     src: S,
-    dst: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>D,
+    dst: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>D,
     queries: Vec&lt;CXQuery&lt;String&gt;&gt;,
     origin_query: <span class="prelude-ty">Option</span>&lt;String&gt;,
     _phantom: PhantomData&lt;TP&gt;,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;w</span>, S, D, TP&gt; Dispatcher&lt;<span class="lifetime">&#39;w</span>, S, D, TP&gt;
+<span class="kw">impl</span>&lt;<span class="lifetime">'w</span>, S, D, TP&gt; Dispatcher&lt;<span class="lifetime">'w</span>, S, D, TP&gt;
 <span class="kw">where
     </span>S: Source,
     D: Destination,
     TP: Transport&lt;TSS = S::TypeSystem, TSD = D::TypeSystem, S = S, D = D&gt;,
 {
     <span class="doccomment">/// Create a new dispatcher by providing a source, a destination and the queries.
-    </span><span class="kw">pub fn </span>new&lt;Q&gt;(src: S, dst: <span class="kw-2">&amp;</span><span class="lifetime">&#39;w </span><span class="kw-2">mut </span>D, queries: <span class="kw-2">&amp;</span>[Q], origin_query: <span class="prelude-ty">Option</span>&lt;String&gt;) -&gt; <span class="self">Self
+    </span><span class="kw">pub fn </span>new&lt;Q&gt;(src: S, dst: <span class="kw-2">&amp;</span><span class="lifetime">'w </span><span class="kw-2">mut </span>D, queries: <span class="kw-2">&amp;</span>[Q], origin_query: <span class="prelude-ty">Option</span>&lt;String&gt;) -&gt; <span class="self">Self
     </span><span class="kw">where
-        for</span>&lt;<span class="lifetime">&#39;a</span>&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Q: Into&lt;CXQuery&gt;,
+        for</span>&lt;<span class="lifetime">'a</span>&gt; <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Q: Into&lt;CXQuery&gt;,
     {
         <span class="self">Self </span>{
             src,
@@ -266,19 +267,19 @@
         (
             DataOrder,
             Vec&lt;S::Partition&gt;,
-            Vec&lt;D::Partition&lt;<span class="lifetime">&#39;w</span>&gt;&gt;,
+            Vec&lt;D::Partition&lt;<span class="lifetime">'w</span>&gt;&gt;,
             Vec&lt;S::TypeSystem&gt;,
             Vec&lt;D::TypeSystem&gt;,
         ),
         TP::Error,
     &gt; {
-        <span class="macro">debug!</span>(<span class="string">&quot;Prepare&quot;</span>);
+        <span class="macro">debug!</span>(<span class="string">"Prepare"</span>);
         <span class="kw">let </span>dorder = coordinate(S::DATA_ORDERS, D::DATA_ORDERS)<span class="question-mark">?</span>;
         <span class="self">self</span>.src.set_data_order(dorder)<span class="question-mark">?</span>;
         <span class="self">self</span>.src.set_queries(<span class="self">self</span>.queries.as_slice());
         <span class="self">self</span>.src.set_origin_query(<span class="self">self</span>.origin_query);
 
-        <span class="macro">debug!</span>(<span class="string">&quot;Fetching metadata&quot;</span>);
+        <span class="macro">debug!</span>(<span class="string">"Fetching metadata"</span>);
         <span class="self">self</span>.src.fetch_metadata()<span class="question-mark">?</span>;
         <span class="kw">let </span>src_schema = <span class="self">self</span>.src.schema();
         <span class="kw">let </span>dst_schema = src_schema
@@ -289,15 +290,15 @@
 
         <span class="kw">let </span><span class="kw-2">mut </span>total_rows = <span class="kw">if </span><span class="self">self</span>.dst.needs_count() {
             <span class="comment">// return None if cannot derive total count
-            </span><span class="macro">debug!</span>(<span class="string">&quot;Try get row rounts for entire result&quot;</span>);
+            </span><span class="macro">debug!</span>(<span class="string">"Try get row rounts for entire result"</span>);
             <span class="self">self</span>.src.result_rows()<span class="question-mark">?
         </span>} <span class="kw">else </span>{
-            <span class="macro">debug!</span>(<span class="string">&quot;Do not need counts in advance&quot;</span>);
+            <span class="macro">debug!</span>(<span class="string">"Do not need counts in advance"</span>);
             <span class="prelude-val">Some</span>(<span class="number">0</span>)
         };
         <span class="kw">let </span><span class="kw-2">mut </span>src_partitions: Vec&lt;S::Partition&gt; = <span class="self">self</span>.src.partition()<span class="question-mark">?</span>;
         <span class="kw">if </span><span class="self">self</span>.dst.needs_count() &amp;&amp; total_rows.is_none() {
-            <span class="macro">debug!</span>(<span class="string">&quot;Manually count rows of each partitioned query and sum up&quot;</span>);
+            <span class="macro">debug!</span>(<span class="string">"Manually count rows of each partitioned query and sum up"</span>);
             <span class="comment">// run queries
             </span>src_partitions
                 .par_iter_mut()
@@ -313,13 +314,13 @@
         <span class="kw">let </span>total_rows = total_rows.ok_or_else(ConnectorXError::CountError)<span class="question-mark">?</span>;
 
         <span class="macro">debug!</span>(
-            <span class="string">&quot;Allocate destination memory: {}x{}&quot;</span>,
+            <span class="string">"Allocate destination memory: {}x{}"</span>,
             total_rows,
             src_schema.len()
         );
         <span class="self">self</span>.dst.allocate(total_rows, <span class="kw-2">&amp;</span>names, <span class="kw-2">&amp;</span>dst_schema, dorder)<span class="question-mark">?</span>;
 
-        <span class="macro">debug!</span>(<span class="string">&quot;Create destination partition&quot;</span>);
+        <span class="macro">debug!</span>(<span class="string">"Create destination partition"</span>);
         <span class="kw">let </span>dst_partitions = <span class="self">self</span>.dst.partition(<span class="self">self</span>.queries.len())<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>((
@@ -333,27 +334,27 @@
 
     <span class="doccomment">/// Start the data loading process.
     </span><span class="kw">pub fn </span>run(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), TP::Error&gt; {
-        <span class="macro">debug!</span>(<span class="string">&quot;Run dispatcher&quot;</span>);
+        <span class="macro">debug!</span>(<span class="string">"Run dispatcher"</span>);
         <span class="kw">let </span>(dorder, src_partitions, dst_partitions, src_schema, dst_schema) = <span class="self">self</span>.prepare()<span class="question-mark">?</span>;
 
-        <span class="attr">#[cfg(all(not(feature = <span class="string">&quot;branch&quot;</span>), not(feature = <span class="string">&quot;fptr&quot;</span>)))]
-        </span><span class="macro">compile_error!</span>(<span class="string">&quot;branch or fptr, pick one&quot;</span>);
+        <span class="attr">#[cfg(all(not(feature = <span class="string">"branch"</span>), not(feature = <span class="string">"fptr"</span>)))]
+        </span><span class="macro">compile_error!</span>(<span class="string">"branch or fptr, pick one"</span>);
 
-        <span class="attr">#[cfg(feature = <span class="string">&quot;branch&quot;</span>)]
+        <span class="attr">#[cfg(feature = <span class="string">"branch"</span>)]
         </span><span class="kw">let </span>schemas: Vec&lt;<span class="kw">_</span>&gt; = src_schema
             .iter()
             .zip_eq(<span class="kw-2">&amp;</span>dst_schema)
             .map(|(<span class="kw-2">&amp;</span>src_ty, <span class="kw-2">&amp;</span>dst_ty)| (src_ty, dst_ty))
             .collect();
 
-        <span class="macro">debug!</span>(<span class="string">&quot;Start writing&quot;</span>);
+        <span class="macro">debug!</span>(<span class="string">"Start writing"</span>);
         <span class="comment">// parse and write
         </span>dst_partitions
             .into_par_iter()
             .zip_eq(src_partitions)
             .enumerate()
             .try_for_each(|(i, (<span class="kw-2">mut </span>dst, <span class="kw-2">mut </span>src))| -&gt; <span class="prelude-ty">Result</span>&lt;(), TP::Error&gt; {
-                <span class="attr">#[cfg(feature = <span class="string">&quot;fptr&quot;</span>)]
+                <span class="attr">#[cfg(feature = <span class="string">"fptr"</span>)]
                 </span><span class="kw">let </span>f: Vec&lt;<span class="kw">_</span>&gt; = src_schema
                     .iter()
                     .zip_eq(<span class="kw-2">&amp;</span>dst_schema)
@@ -369,10 +370,10 @@
                         <span class="kw">for _ in </span><span class="number">0</span>..n {
                             <span class="attr">#[allow(clippy::needless_range_loop)]
                             </span><span class="kw">for </span>col <span class="kw">in </span><span class="number">0</span>..dst.ncols() {
-                                <span class="attr">#[cfg(feature = <span class="string">&quot;fptr&quot;</span>)]
+                                <span class="attr">#[cfg(feature = <span class="string">"fptr"</span>)]
                                 </span>f[col](<span class="kw-2">&amp;mut </span>parser, <span class="kw-2">&amp;mut </span>dst)<span class="question-mark">?</span>;
 
-                                <span class="attr">#[cfg(feature = <span class="string">&quot;branch&quot;</span>)]
+                                <span class="attr">#[cfg(feature = <span class="string">"branch"</span>)]
                                 </span>{
                                     <span class="kw">let </span>(s1, s2) = schemas[col];
                                     TP::process(s1, s2, <span class="kw-2">&amp;mut </span>parser, <span class="kw-2">&amp;mut </span>dst)<span class="question-mark">?</span>;
@@ -389,9 +390,9 @@
                         <span class="attr">#[allow(clippy::needless_range_loop)]
                         </span><span class="kw">for </span>col <span class="kw">in </span><span class="number">0</span>..dst.ncols() {
                             <span class="kw">for _ in </span><span class="number">0</span>..n {
-                                <span class="attr">#[cfg(feature = <span class="string">&quot;fptr&quot;</span>)]
+                                <span class="attr">#[cfg(feature = <span class="string">"fptr"</span>)]
                                 </span>f[col](<span class="kw-2">&amp;mut </span>parser, <span class="kw-2">&amp;mut </span>dst)<span class="question-mark">?</span>;
-                                <span class="attr">#[cfg(feature = <span class="string">&quot;branch&quot;</span>)]
+                                <span class="attr">#[cfg(feature = <span class="string">"branch"</span>)]
                                 </span>{
                                     <span class="kw">let </span>(s1, s2) = schemas[col];
                                     TP::process(s1, s2, <span class="kw-2">&amp;mut </span>parser, <span class="kw-2">&amp;mut </span>dst)<span class="question-mark">?</span>;
@@ -404,13 +405,13 @@
                     },
                 }
 
-                <span class="macro">debug!</span>(<span class="string">&quot;Finalize partition {}&quot;</span>, i);
+                <span class="macro">debug!</span>(<span class="string">"Finalize partition {}"</span>, i);
                 dst.finalize()<span class="question-mark">?</span>;
-                <span class="macro">debug!</span>(<span class="string">&quot;Partition {} finished&quot;</span>, i);
+                <span class="macro">debug!</span>(<span class="string">"Partition {} finished"</span>, i);
                 <span class="prelude-val">Ok</span>(())
             })<span class="question-mark">?</span>;
 
-        <span class="macro">debug!</span>(<span class="string">&quot;Writing finished&quot;</span>);
+        <span class="macro">debug!</span>(<span class="string">"Writing finished"</span>);
 
         <span class="prelude-val">Ok</span>(())
     }

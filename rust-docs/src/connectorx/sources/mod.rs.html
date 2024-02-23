@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `connectorx/src/sources/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="connectorx" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `connectorx/src/sources/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="connectorx" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -101,21 +102,21 @@
 </pre></div><pre class="rust"><code><span class="doccomment">//! This module defines four traits [`Source`], [`SourcePartition`], [`PartitionParser`], and [`Produce`]  to define a source.
 //! This module also contains source implementations for various databases.
 
-</span><span class="attr">#[cfg(feature = <span class="string">&quot;src_bigquery&quot;</span>)]
+</span><span class="attr">#[cfg(feature = <span class="string">"src_bigquery"</span>)]
 </span><span class="kw">pub mod </span>bigquery;
-<span class="attr">#[cfg(feature = <span class="string">&quot;src_csv&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"src_csv"</span>)]
 </span><span class="kw">pub mod </span>csv;
-<span class="attr">#[cfg(feature = <span class="string">&quot;src_dummy&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"src_dummy"</span>)]
 </span><span class="kw">pub mod </span>dummy;
-<span class="attr">#[cfg(feature = <span class="string">&quot;src_mssql&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"src_mssql"</span>)]
 </span><span class="kw">pub mod </span>mssql;
-<span class="attr">#[cfg(feature = <span class="string">&quot;src_mysql&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"src_mysql"</span>)]
 </span><span class="kw">pub mod </span>mysql;
-<span class="attr">#[cfg(feature = <span class="string">&quot;src_oracle&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"src_oracle"</span>)]
 </span><span class="kw">pub mod </span>oracle;
-<span class="attr">#[cfg(feature = <span class="string">&quot;src_postgres&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"src_postgres"</span>)]
 </span><span class="kw">pub mod </span>postgres;
-<span class="attr">#[cfg(feature = <span class="string">&quot;src_sqlite&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"src_sqlite"</span>)]
 </span><span class="kw">pub mod </span>sqlite;
 
 <span class="kw">use </span><span class="kw">crate</span>::data_order::DataOrder;
@@ -126,7 +127,7 @@
 
 <span class="kw">pub trait </span>Source {
     <span class="doccomment">/// Supported data orders, ordering by preference.
-    </span><span class="kw">const </span>DATA_ORDERS: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[DataOrder];
+    </span><span class="kw">const </span>DATA_ORDERS: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>[DataOrder];
     <span class="doccomment">/// The type system this `Source` associated with.
     </span><span class="kw">type </span>TypeSystem: TypeSystem;
     <span class="comment">// Partition needs to be send to different threads for parallel execution
@@ -154,15 +155,15 @@
 /// a sequence of values of variate types by repetitively calling the function `produce`.
 </span><span class="kw">pub trait </span>SourcePartition {
     <span class="kw">type </span>TypeSystem: TypeSystem;
-    <span class="kw">type </span>Parser&lt;<span class="lifetime">&#39;a</span>&gt;: PartitionParser&lt;<span class="lifetime">&#39;a</span>, TypeSystem = <span class="self">Self</span>::TypeSystem, Error = <span class="self">Self</span>::Error&gt;
+    <span class="kw">type </span>Parser&lt;<span class="lifetime">'a</span>&gt;: PartitionParser&lt;<span class="lifetime">'a</span>, TypeSystem = <span class="self">Self</span>::TypeSystem, Error = <span class="self">Self</span>::Error&gt;
     <span class="kw">where
-        </span><span class="self">Self</span>: <span class="lifetime">&#39;a</span>;
+        </span><span class="self">Self</span>: <span class="lifetime">'a</span>;
     <span class="kw">type </span>Error: From&lt;ConnectorXError&gt; + Send + Debug;
 
     <span class="doccomment">/// Count total number of rows in each partition.
     </span><span class="kw">fn </span>result_rows(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt;;
 
-    <span class="kw">fn </span>parser(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Parser&lt;<span class="lifetime">&#39;_</span>&gt;, <span class="self">Self</span>::Error&gt;;
+    <span class="kw">fn </span>parser(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Parser&lt;<span class="lifetime">'_</span>&gt;, <span class="self">Self</span>::Error&gt;;
 
     <span class="doccomment">/// Number of rows this `DataSource` got.
     /// Sometimes it is not possible for the source to know how many rows it gets before reading the whole data.
@@ -172,16 +173,16 @@
     </span><span class="kw">fn </span>ncols(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize;
 }
 
-<span class="kw">pub trait </span>PartitionParser&lt;<span class="lifetime">&#39;a</span>&gt;: Send {
+<span class="kw">pub trait </span>PartitionParser&lt;<span class="lifetime">'a</span>&gt;: Send {
     <span class="kw">type </span>TypeSystem: TypeSystem;
     <span class="kw">type </span>Error: From&lt;ConnectorXError&gt; + Send + Debug;
 
     <span class="doccomment">/// Read a value `T` by calling `Produce&lt;T&gt;::produce`. Usually this function does not need to be
     /// implemented.
-    </span><span class="kw">fn </span>parse&lt;<span class="lifetime">&#39;r</span>, T&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;T, &lt;<span class="self">Self </span><span class="kw">as </span>PartitionParser&lt;<span class="lifetime">&#39;a</span>&gt;&gt;::Error&gt;
+    </span><span class="kw">fn </span>parse&lt;<span class="lifetime">'r</span>, T&gt;(<span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;T, &lt;<span class="self">Self </span><span class="kw">as </span>PartitionParser&lt;<span class="lifetime">'a</span>&gt;&gt;::Error&gt;
     <span class="kw">where
         </span>T: TypeAssoc&lt;<span class="self">Self</span>::TypeSystem&gt;,
-        <span class="self">Self</span>: Produce&lt;<span class="lifetime">&#39;r</span>, T, Error = &lt;<span class="self">Self </span><span class="kw">as </span>PartitionParser&lt;<span class="lifetime">&#39;a</span>&gt;&gt;::Error&gt;,
+        <span class="self">Self</span>: Produce&lt;<span class="lifetime">'r</span>, T, Error = &lt;<span class="self">Self </span><span class="kw">as </span>PartitionParser&lt;<span class="lifetime">'a</span>&gt;&gt;::Error&gt;,
     {
         <span class="self">self</span>.produce()
     }
@@ -192,10 +193,10 @@
     </span><span class="kw">fn </span>fetch_next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(usize, bool), <span class="self">Self</span>::Error&gt;;
 }
 
-<span class="doccomment">/// A type implemented `Produce&lt;T&gt;` means that it can produce a value `T` by consuming part of it&#39;s raw data buffer.
-</span><span class="kw">pub trait </span>Produce&lt;<span class="lifetime">&#39;r</span>, T&gt; {
+<span class="doccomment">/// A type implemented `Produce&lt;T&gt;` means that it can produce a value `T` by consuming part of it's raw data buffer.
+</span><span class="kw">pub trait </span>Produce&lt;<span class="lifetime">'r</span>, T&gt; {
     <span class="kw">type </span>Error: From&lt;ConnectorXError&gt; + Send;
 
-    <span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;T, <span class="self">Self</span>::Error&gt;;
+    <span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;T, <span class="self">Self</span>::Error&gt;;
 }
 </code></pre></div></section></main></body></html>

@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `connectorx/src/macros.rs`."><title>macros.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="connectorx" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `connectorx/src/macros.rs`."><title>macros.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="connectorx" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -358,7 +359,7 @@
 ///     }
 /// }
 /// ```
-/// This means for the type system `ArrowTypeSystem`, it&#39;s variant `ArrowTypeSystem::Int32(false)` is corresponding to the physical type `i32` and
+/// This means for the type system `ArrowTypeSystem`, it's variant `ArrowTypeSystem::Int32(false)` is corresponding to the physical type `i32` and
 /// `ArrowTypeSystem::Int32(true)` is corresponding to the physical type `Option&lt;i32&gt;`.
 </span><span class="attr">#[macro_export]
 </span><span class="macro">macro_rules! </span>impl_typesystem {
@@ -380,31 +381,31 @@
     };
 
     (@typeassoc <span class="macro-nonterminal">$TS</span>:tt [$(<span class="macro-nonterminal">$V</span>:tt)+], <span class="macro-nonterminal">$NT</span>:ty) =&gt; {
-        <span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>&gt; <span class="macro-nonterminal">$crate::typesystem::TypeAssoc</span>&lt;<span class="macro-nonterminal">$TS</span>&gt; <span class="kw">for </span><span class="macro-nonterminal">$NT </span>{
+        <span class="kw">impl</span>&lt;<span class="lifetime">'r</span>&gt; <span class="macro-nonterminal">$crate::typesystem::TypeAssoc</span>&lt;<span class="macro-nonterminal">$TS</span>&gt; <span class="kw">for </span><span class="macro-nonterminal">$NT </span>{
             <span class="kw">fn </span>check(ts: <span class="macro-nonterminal">$TS</span>) -&gt; <span class="macro-nonterminal">$crate::errors::Result</span>&lt;()&gt; {
                 <span class="kw">match </span>ts {
                     $(
                         <span class="macro-nonterminal">$TS</span>::<span class="macro-nonterminal">$V</span>(<span class="bool-val">false</span>) =&gt; <span class="prelude-val">Ok</span>(()),
                     )+
-                    <span class="kw">_ </span>=&gt; <span class="macro">fehler::throw!</span>(<span class="macro-nonterminal">$crate::errors::ConnectorXError::TypeCheckFailed</span>(<span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, ts), std::any::type_name::&lt;<span class="macro-nonterminal">$NT</span>&gt;()))
+                    <span class="kw">_ </span>=&gt; <span class="macro">fehler::throw!</span>(<span class="macro-nonterminal">$crate::errors::ConnectorXError::TypeCheckFailed</span>(<span class="macro">format!</span>(<span class="string">"{:?}"</span>, ts), std::any::type_name::&lt;<span class="macro-nonterminal">$NT</span>&gt;()))
                 }
             }
         }
 
-        <span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>&gt; <span class="macro-nonterminal">$crate::typesystem::TypeAssoc</span>&lt;<span class="macro-nonterminal">$TS</span>&gt; <span class="kw">for </span><span class="prelude-ty">Option</span>&lt;<span class="macro-nonterminal">$NT</span>&gt; {
+        <span class="kw">impl</span>&lt;<span class="lifetime">'r</span>&gt; <span class="macro-nonterminal">$crate::typesystem::TypeAssoc</span>&lt;<span class="macro-nonterminal">$TS</span>&gt; <span class="kw">for </span><span class="prelude-ty">Option</span>&lt;<span class="macro-nonterminal">$NT</span>&gt; {
             <span class="kw">fn </span>check(ts: <span class="macro-nonterminal">$TS</span>) -&gt; <span class="macro-nonterminal">$crate::errors::Result</span>&lt;()&gt; {
                 <span class="kw">match </span>ts {
                     $(
                         <span class="macro-nonterminal">$TS</span>::<span class="macro-nonterminal">$V</span>(<span class="bool-val">true</span>) =&gt; <span class="prelude-val">Ok</span>(()),
                     )+
-                    <span class="kw">_ </span>=&gt; <span class="macro">fehler::throw!</span>(<span class="macro-nonterminal">$crate::errors::ConnectorXError::TypeCheckFailed</span>(<span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, ts), std::any::type_name::&lt;<span class="macro-nonterminal">$NT</span>&gt;()))
+                    <span class="kw">_ </span>=&gt; <span class="macro">fehler::throw!</span>(<span class="macro-nonterminal">$crate::errors::ConnectorXError::TypeCheckFailed</span>(<span class="macro">format!</span>(<span class="string">"{:?}"</span>, ts), std::any::type_name::&lt;<span class="macro-nonterminal">$NT</span>&gt;()))
                 }
             }
         }
     };
 
     (@realize <span class="macro-nonterminal">$TS</span>:tt $([ [$(<span class="macro-nonterminal">$V</span>:tt)+] =&gt; <span class="macro-nonterminal">$NT</span>:ty ])+) =&gt; {
-        <span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, F&gt; <span class="macro-nonterminal">$crate::typesystem::Realize</span>&lt;F&gt; <span class="kw">for </span><span class="macro-nonterminal">$TS
+        <span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, F&gt; <span class="macro-nonterminal">$crate::typesystem::Realize</span>&lt;F&gt; <span class="kw">for </span><span class="macro-nonterminal">$TS
         </span><span class="kw">where
             </span>F: <span class="macro-nonterminal">$crate::typesystem::ParameterizedFunc</span>,
             $(F: <span class="macro-nonterminal">$crate::typesystem::ParameterizedOn</span>&lt;<span class="macro-nonterminal">$NT</span>&gt;,)+
@@ -445,15 +446,15 @@
 ///         { Float53[f64]                  =&gt; Float64[f64]              | conversion auto }
 ///         { Floatn[FloatN]                =&gt; Float64[f64]              | conversion option }
 ///         { Bit[bool]                     =&gt; Boolean[bool]             | conversion auto  }
-///         { Nvarchar[&amp;&#39;r str]             =&gt; LargeUtf8[String]         | conversion owned }
-///         { Varchar[&amp;&#39;r str]              =&gt; LargeUtf8[String]         | conversion none }
-///         { Nchar[&amp;&#39;r str]                =&gt; LargeUtf8[String]         | conversion none }
-///         { Char[&amp;&#39;r str]                 =&gt; LargeUtf8[String]         | conversion none }
-///         { Text[&amp;&#39;r str]                 =&gt; LargeUtf8[String]         | conversion none }
-///         { Ntext[&amp;&#39;r str]                =&gt; LargeUtf8[String]         | conversion none }
-///         { Binary[&amp;&#39;r [u8]]              =&gt; LargeBinary[Vec&lt;u8&gt;]      | conversion owned }
-///         { Varbinary[&amp;&#39;r [u8]]           =&gt; LargeBinary[Vec&lt;u8&gt;]      | conversion none }
-///         { Image[&amp;&#39;r [u8]]               =&gt; LargeBinary[Vec&lt;u8&gt;]      | conversion none }
+///         { Nvarchar[&amp;'r str]             =&gt; LargeUtf8[String]         | conversion owned }
+///         { Varchar[&amp;'r str]              =&gt; LargeUtf8[String]         | conversion none }
+///         { Nchar[&amp;'r str]                =&gt; LargeUtf8[String]         | conversion none }
+///         { Char[&amp;'r str]                 =&gt; LargeUtf8[String]         | conversion none }
+///         { Text[&amp;'r str]                 =&gt; LargeUtf8[String]         | conversion none }
+///         { Ntext[&amp;'r str]                =&gt; LargeUtf8[String]         | conversion none }
+///         { Binary[&amp;'r [u8]]              =&gt; LargeBinary[Vec&lt;u8&gt;]      | conversion owned }
+///         { Varbinary[&amp;'r [u8]]           =&gt; LargeBinary[Vec&lt;u8&gt;]      | conversion none }
+///         { Image[&amp;'r [u8]]               =&gt; LargeBinary[Vec&lt;u8&gt;]      | conversion none }
 ///         { Numeric[Decimal]              =&gt; Float64[f64]              | conversion option }
 ///         { Decimal[Decimal]              =&gt; Float64[f64]              | conversion none }
 ///         { Datetime[NaiveDateTime]       =&gt; Date64[NaiveDateTime]     | conversion auto }
@@ -488,7 +489,7 @@
 
     <span class="comment">// transport
     </span>(@transport <span class="macro-nonterminal">$TP</span>:ty, <span class="macro-nonterminal">$ET</span>:ty [<span class="macro-nonterminal">$TSS</span>:tt, <span class="macro-nonterminal">$TSD</span>:tt] [<span class="macro-nonterminal">$S</span>:ty, <span class="macro-nonterminal">$D</span>:ty] $([ $(<span class="macro-nonterminal">$TOKENS</span>:tt)+ ])<span class="kw-2">*</span>) =&gt; {
-        <span class="kw">impl </span>&lt;<span class="lifetime">&#39;tp</span>&gt; <span class="macro-nonterminal">$crate::typesystem::Transport </span><span class="kw">for </span><span class="macro-nonterminal">$TP </span>{
+        <span class="kw">impl </span>&lt;<span class="lifetime">'tp</span>&gt; <span class="macro-nonterminal">$crate::typesystem::Transport </span><span class="kw">for </span><span class="macro-nonterminal">$TP </span>{
             <span class="kw">type </span>TSS = <span class="macro-nonterminal">$TSS</span>;
             <span class="kw">type </span>TSD = <span class="macro-nonterminal">$TSD</span>;
             <span class="kw">type </span>S = <span class="macro-nonterminal">$S</span>;
@@ -510,19 +511,19 @@
                 )*
                 <span class="attr">#[allow(unreachable_patterns)]
                 </span><span class="kw">_ </span>=&gt; <span class="macro">fehler::throw!</span>(<span class="macro-nonterminal">$crate::errors::ConnectorXError::NoConversionRule</span>(
-                    <span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, ts), <span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, std::any::type_name::&lt;<span class="self">Self</span>::TSD&gt;())
+                    <span class="macro">format!</span>(<span class="string">"{:?}"</span>, ts), <span class="macro">format!</span>(<span class="string">"{}"</span>, std::any::type_name::&lt;<span class="self">Self</span>::TSD&gt;())
                 ))
             }
         }
     };
 
     (@process [<span class="macro-nonterminal">$TSS</span>:tt, <span class="macro-nonterminal">$TSD</span>:tt] $([ <span class="macro-nonterminal">$V1</span>:tt [<span class="macro-nonterminal">$T1</span>:ty] =&gt; <span class="macro-nonterminal">$V2</span>:tt [<span class="macro-nonterminal">$T2</span>:ty] | conversion <span class="macro-nonterminal">$HOW</span>:ident ])<span class="kw-2">*</span>) =&gt; {
-        <span class="kw">fn </span>process&lt;<span class="lifetime">&#39;s</span>, <span class="lifetime">&#39;d</span>, <span class="lifetime">&#39;r</span>&gt;(
+        <span class="kw">fn </span>process&lt;<span class="lifetime">'s</span>, <span class="lifetime">'d</span>, <span class="lifetime">'r</span>&gt;(
             ts1: <span class="self">Self</span>::TSS,
             ts2: <span class="self">Self</span>::TSD,
-            src: <span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span><span class="kw-2">mut </span>&lt;&lt;<span class="self">Self</span>::S <span class="kw">as </span><span class="macro-nonterminal">$crate::sources::Source</span>&gt;::Partition <span class="kw">as </span><span class="macro-nonterminal">$crate::sources::SourcePartition</span>&gt;::Parser&lt;<span class="lifetime">&#39;s</span>&gt;,
-            dst: <span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span><span class="kw-2">mut </span>&lt;<span class="self">Self</span>::D <span class="kw">as </span><span class="macro-nonterminal">$crate::destinations::Destination</span>&gt;::Partition&lt;<span class="lifetime">&#39;d</span>&gt;,
-        ) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt; <span class="kw">where </span><span class="self">Self</span>: <span class="lifetime">&#39;d </span>{
+            src: <span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span>&lt;&lt;<span class="self">Self</span>::S <span class="kw">as </span><span class="macro-nonterminal">$crate::sources::Source</span>&gt;::Partition <span class="kw">as </span><span class="macro-nonterminal">$crate::sources::SourcePartition</span>&gt;::Parser&lt;<span class="lifetime">'s</span>&gt;,
+            dst: <span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span>&lt;<span class="self">Self</span>::D <span class="kw">as </span><span class="macro-nonterminal">$crate::destinations::Destination</span>&gt;::Partition&lt;<span class="lifetime">'d</span>&gt;,
+        ) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt; <span class="kw">where </span><span class="self">Self</span>: <span class="lifetime">'d </span>{
             <span class="kw">match </span>(ts1, ts2) {
                 $(
                     (<span class="macro-nonterminal">$TSS</span>::<span class="macro-nonterminal">$V1</span>(<span class="bool-val">true</span>), <span class="macro-nonterminal">$TSD</span>::<span class="macro-nonterminal">$V2</span>(<span class="bool-val">true</span>)) =&gt; {
@@ -541,7 +542,7 @@
                 )*
                 <span class="attr">#[allow(unreachable_patterns)]
                 </span><span class="kw">_ </span>=&gt; <span class="macro">fehler::throw!</span>(<span class="macro-nonterminal">$crate::errors::ConnectorXError::NoConversionRule</span>(
-                    <span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, ts1), <span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, ts1))
+                    <span class="macro">format!</span>(<span class="string">"{:?}"</span>, ts1), <span class="macro">format!</span>(<span class="string">"{:?}"</span>, ts1))
                 )
             }
 
@@ -549,15 +550,15 @@
     };
 
     (@processor [<span class="macro-nonterminal">$TSS</span>:tt, <span class="macro-nonterminal">$TSD</span>:tt] $([ <span class="macro-nonterminal">$V1</span>:tt [<span class="macro-nonterminal">$T1</span>:ty] =&gt; <span class="macro-nonterminal">$V2</span>:tt [<span class="macro-nonterminal">$T2</span>:ty] | conversion <span class="macro-nonterminal">$HOW</span>:ident ])<span class="kw-2">*</span>, $([ $(<span class="macro-nonterminal">$TOKENS</span>:tt)+ ])<span class="kw-2">*</span>) =&gt; {
-        <span class="kw">fn </span>processor&lt;<span class="lifetime">&#39;s</span>, <span class="lifetime">&#39;d</span>&gt;(
+        <span class="kw">fn </span>processor&lt;<span class="lifetime">'s</span>, <span class="lifetime">'d</span>&gt;(
             ts1: <span class="self">Self</span>::TSS,
             ts2: <span class="self">Self</span>::TSD,
         ) -&gt; <span class="macro-nonterminal">$crate::errors::Result</span>&lt;
             <span class="kw">fn</span>(
-                src: <span class="kw-2">&amp;mut </span>&lt;&lt;<span class="self">Self</span>::S <span class="kw">as </span><span class="macro-nonterminal">$crate::sources::Source</span>&gt;::Partition <span class="kw">as </span><span class="macro-nonterminal">$crate::sources::SourcePartition</span>&gt;::Parser&lt;<span class="lifetime">&#39;s</span>&gt;,
-                dst: <span class="kw-2">&amp;mut </span>&lt;<span class="self">Self</span>::D <span class="kw">as </span><span class="macro-nonterminal">$crate::destinations::Destination</span>&gt;::Partition&lt;<span class="lifetime">&#39;d</span>&gt;,
+                src: <span class="kw-2">&amp;mut </span>&lt;&lt;<span class="self">Self</span>::S <span class="kw">as </span><span class="macro-nonterminal">$crate::sources::Source</span>&gt;::Partition <span class="kw">as </span><span class="macro-nonterminal">$crate::sources::SourcePartition</span>&gt;::Parser&lt;<span class="lifetime">'s</span>&gt;,
+                dst: <span class="kw-2">&amp;mut </span>&lt;<span class="self">Self</span>::D <span class="kw">as </span><span class="macro-nonterminal">$crate::destinations::Destination</span>&gt;::Partition&lt;<span class="lifetime">'d</span>&gt;,
             ) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt;
-        &gt; <span class="kw">where </span><span class="self">Self</span>: <span class="lifetime">&#39;d </span>{
+        &gt; <span class="kw">where </span><span class="self">Self</span>: <span class="lifetime">'d </span>{
             <span class="kw">match </span>(ts1, ts2) {
                 $(
                     (<span class="macro-nonterminal">$TSS</span>::<span class="macro-nonterminal">$V1</span>(<span class="bool-val">true</span>), <span class="macro-nonterminal">$TSD</span>::<span class="macro-nonterminal">$V2</span>(<span class="bool-val">true</span>)) =&gt; {
@@ -570,7 +571,7 @@
                 )*
                 <span class="attr">#[allow(unreachable_patterns)]
                 </span><span class="kw">_ </span>=&gt; <span class="macro">fehler::throw!</span>(<span class="macro-nonterminal">$crate::errors::ConnectorXError::NoConversionRule</span>(
-                    <span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, ts1), <span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, ts1))
+                    <span class="macro">format!</span>(<span class="string">"{:?}"</span>, ts1), <span class="macro">format!</span>(<span class="string">"{:?}"</span>, ts1))
                 )
             }
 
@@ -605,7 +606,7 @@
         <span class="macro">impl_transport!</span>(@cvt <span class="macro-nonterminal">$HOW $TP</span>, <span class="macro-nonterminal">$T1</span>, <span class="macro-nonterminal">$T2</span>);
     };
     (@cvt auto <span class="macro-nonterminal">$TP</span>:ty, <span class="macro-nonterminal">$T1</span>:ty, <span class="macro-nonterminal">$T2</span>:ty) =&gt; {
-        <span class="kw">impl</span>&lt;<span class="lifetime">&#39;tp</span>, <span class="lifetime">&#39;r</span>&gt; <span class="macro-nonterminal">$crate::typesystem::TypeConversion</span>&lt;<span class="macro-nonterminal">$T1</span>, <span class="macro-nonterminal">$T2</span>&gt; <span class="kw">for </span><span class="macro-nonterminal">$TP </span>{
+        <span class="kw">impl</span>&lt;<span class="lifetime">'tp</span>, <span class="lifetime">'r</span>&gt; <span class="macro-nonterminal">$crate::typesystem::TypeConversion</span>&lt;<span class="macro-nonterminal">$T1</span>, <span class="macro-nonterminal">$T2</span>&gt; <span class="kw">for </span><span class="macro-nonterminal">$TP </span>{
             <span class="kw">fn </span>convert(val: <span class="macro-nonterminal">$T1</span>) -&gt; <span class="macro-nonterminal">$T2 </span>{
                 val <span class="kw">as _
             </span>}
@@ -614,7 +615,7 @@
         <span class="macro">impl_transport!</span>(@cvt option <span class="macro-nonterminal">$TP</span>, <span class="macro-nonterminal">$T1</span>, <span class="macro-nonterminal">$T2</span>);
     };
     (@cvt auto_vec <span class="macro-nonterminal">$TP</span>:ty, <span class="macro-nonterminal">$T1</span>:ty, <span class="macro-nonterminal">$T2</span>:ty) =&gt; {
-        <span class="kw">impl</span>&lt;<span class="lifetime">&#39;tp</span>, <span class="lifetime">&#39;r</span>&gt; <span class="macro-nonterminal">$crate::typesystem::TypeConversion</span>&lt;<span class="macro-nonterminal">$T1</span>, <span class="macro-nonterminal">$T2</span>&gt; <span class="kw">for </span><span class="macro-nonterminal">$TP </span>{
+        <span class="kw">impl</span>&lt;<span class="lifetime">'tp</span>, <span class="lifetime">'r</span>&gt; <span class="macro-nonterminal">$crate::typesystem::TypeConversion</span>&lt;<span class="macro-nonterminal">$T1</span>, <span class="macro-nonterminal">$T2</span>&gt; <span class="kw">for </span><span class="macro-nonterminal">$TP </span>{
             <span class="kw">fn </span>convert(val: <span class="macro-nonterminal">$T1</span>) -&gt; <span class="macro-nonterminal">$T2 </span>{
                 val.into_iter().map(|v| v <span class="kw">as _</span>).collect()
             }
@@ -623,7 +624,7 @@
         <span class="macro">impl_transport!</span>(@cvt option <span class="macro-nonterminal">$TP</span>, <span class="macro-nonterminal">$T1</span>, <span class="macro-nonterminal">$T2</span>);
     };
     (@cvt owned <span class="macro-nonterminal">$TP</span>:ty, <span class="macro-nonterminal">$T1</span>:ty, <span class="macro-nonterminal">$T2</span>:ty) =&gt; {
-        <span class="kw">impl</span>&lt;<span class="lifetime">&#39;tp</span>, <span class="lifetime">&#39;r</span>&gt; <span class="macro-nonterminal">$crate::typesystem::TypeConversion</span>&lt;<span class="macro-nonterminal">$T1</span>, <span class="macro-nonterminal">$T2</span>&gt; <span class="kw">for </span><span class="macro-nonterminal">$TP </span>{
+        <span class="kw">impl</span>&lt;<span class="lifetime">'tp</span>, <span class="lifetime">'r</span>&gt; <span class="macro-nonterminal">$crate::typesystem::TypeConversion</span>&lt;<span class="macro-nonterminal">$T1</span>, <span class="macro-nonterminal">$T2</span>&gt; <span class="kw">for </span><span class="macro-nonterminal">$TP </span>{
             <span class="kw">fn </span>convert(val: <span class="macro-nonterminal">$T1</span>) -&gt; <span class="macro-nonterminal">$T2 </span>{
                 val.to_owned()
             }
@@ -632,7 +633,7 @@
         <span class="macro">impl_transport!</span>(@cvt option <span class="macro-nonterminal">$TP</span>, <span class="macro-nonterminal">$T1</span>, <span class="macro-nonterminal">$T2</span>);
     };
     (@cvt option <span class="macro-nonterminal">$TP</span>:ty, <span class="macro-nonterminal">$T1</span>:ty, <span class="macro-nonterminal">$T2</span>:ty) =&gt; {
-        <span class="kw">impl</span>&lt;<span class="lifetime">&#39;tp</span>, <span class="lifetime">&#39;r</span>&gt; <span class="macro-nonterminal">$crate::typesystem::TypeConversion</span>&lt;<span class="prelude-ty">Option</span>&lt;<span class="macro-nonterminal">$T1</span>&gt;, <span class="prelude-ty">Option</span>&lt;<span class="macro-nonterminal">$T2</span>&gt;&gt; <span class="kw">for </span><span class="macro-nonterminal">$TP </span>{
+        <span class="kw">impl</span>&lt;<span class="lifetime">'tp</span>, <span class="lifetime">'r</span>&gt; <span class="macro-nonterminal">$crate::typesystem::TypeConversion</span>&lt;<span class="prelude-ty">Option</span>&lt;<span class="macro-nonterminal">$T1</span>&gt;, <span class="prelude-ty">Option</span>&lt;<span class="macro-nonterminal">$T2</span>&gt;&gt; <span class="kw">for </span><span class="macro-nonterminal">$TP </span>{
             <span class="kw">fn </span>convert(val: <span class="prelude-ty">Option</span>&lt;<span class="macro-nonterminal">$T1</span>&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="macro-nonterminal">$T2</span>&gt; {
                 val.map(<span class="self">Self</span>::convert)
             }

@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `connectorx/src/lib.rs`."><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="connectorx" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `connectorx/src/lib.rs`."><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="connectorx" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -297,7 +298,7 @@
 //!
 //! After having a source and a destination that describes how to read and write the data,
 //! ConnectorX also needs to know how to convert the values with different types from the source to the destination.
-//! For example, Postgres can produce a `uuid` type but there&#39;s no uuid in Arrow. It is the transport&#39;s duty to convert
+//! For example, Postgres can produce a `uuid` type but there's no uuid in Arrow. It is the transport's duty to convert
 //! the `uuid` into an Arrow compatible type, e.g. string. You can use the [`impl_transport!`] macro to define a transport.
 //!
 //! ## Putting things together
@@ -310,10 +311,10 @@
 //! use connectorx::prelude::*;
 //!
 //! let mut destination = ArrowDestination::new();
-//! let source = SQLiteSource::new(&quot;/path/to/db&quot;, 10).expect(&quot;cannot create the source&quot;);
-//! let queries = &amp;[&quot;SELECT * FROM db WHERE id &lt; 100&quot;, &quot;SELECT * FROM db WHERE id &gt;= 100&quot;];
+//! let source = SQLiteSource::new("/path/to/db", 10).expect("cannot create the source");
+//! let queries = &amp;["SELECT * FROM db WHERE id &lt; 100", "SELECT * FROM db WHERE id &gt;= 100"];
 //! let dispatcher = Dispatcher::&lt;SQLiteSource, ArrowDestination, SQLiteArrowTransport&gt;::new(source, &amp;mut destination, queries, None);
-//! dispatcher.run().expect(&quot;run failed&quot;);
+//! dispatcher.run().expect("run failed");
 //!
 //! let data = destination.arrow();
 //! ```
@@ -324,9 +325,9 @@
 //! use connectorx::prelude::*;
 //! use std::convert::TryFrom;
 //!
-//! let mut source_conn = SourceConn::try_from(&quot;postgresql://username:password@host:port/db?cxprotocol=binary&quot;).expect(&quot;parse conn str failed&quot;);
-//! let queries = &amp;[CXQuery::from(&quot;SELECT * FROM table WHERE id &lt; 100&quot;), CXQuery::from(&quot;SELECT * FROM table WHERE id &gt;= 100&quot;)];
-//! let destination = get_arrow(&amp;source_conn, None, queries).expect(&quot;run failed&quot;);
+//! let mut source_conn = SourceConn::try_from("postgresql://username:password@host:port/db?cxprotocol=binary").expect("parse conn str failed");
+//! let queries = &amp;[CXQuery::from("SELECT * FROM table WHERE id &lt; 100"), CXQuery::from("SELECT * FROM table WHERE id &gt;= 100")];
+//! let destination = get_arrow(&amp;source_conn, None, queries).expect("run failed");
 //!
 //! let data = destination.arrow();
 //! ```
@@ -356,26 +357,26 @@
 //! # Feature gates
 //! By default, ConnectorX does not enable any sources / destinations to keep the dependencies minimal.
 //! Instead, we provide following features for you to opt-in: `src_sqlite`, `src_postgres`, `src_mysql`, `src_mssql`, `src_oracle`, `dst_arrow`, `dst_arrow2`.
-//! For example, if you&#39;d like to load data from Postgres to Arrow, you can enable `src_postgres` and `dst_arrow` in `Cargo.toml`.
+//! For example, if you'd like to load data from Postgres to Arrow, you can enable `src_postgres` and `dst_arrow` in `Cargo.toml`.
 //! This will enable [`sources::postgres`], [`destinations::arrow`] and [`transports::PostgresArrowTransport`].
 
 </span><span class="kw">pub mod </span>typesystem;
 <span class="attr">#[macro_use]
 </span><span class="kw">mod </span>macros;
-<span class="attr">#[cfg(feature = <span class="string">&quot;dst_arrow&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"dst_arrow"</span>)]
 </span><span class="kw">pub mod </span>arrow_batch_iter;
 <span class="kw">pub mod </span>constants;
 <span class="kw">pub mod </span>data_order;
 <span class="kw">pub mod </span>destinations;
 <span class="kw">mod </span>dispatcher;
 <span class="kw">pub mod </span>errors;
-<span class="attr">#[cfg(feature = <span class="string">&quot;fed_exec&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"fed_exec"</span>)]
 </span><span class="kw">pub mod </span>fed_dispatcher;
-<span class="attr">#[cfg(feature = <span class="string">&quot;federation&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"federation"</span>)]
 </span><span class="kw">pub mod </span>fed_rewriter;
-<span class="attr">#[cfg(feature = <span class="string">&quot;dst_arrow&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"dst_arrow"</span>)]
 </span><span class="kw">pub mod </span>get_arrow;
-<span class="attr">#[cfg(feature = <span class="string">&quot;dst_arrow2&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"dst_arrow2"</span>)]
 </span><span class="kw">pub mod </span>get_arrow2;
 <span class="kw">pub mod </span>partition;
 <span class="kw">pub mod </span>source_router;
@@ -387,14 +388,14 @@
 </span><span class="kw">pub mod </span>utils;
 
 <span class="kw">pub mod </span>prelude {
-    <span class="attr">#[cfg(feature = <span class="string">&quot;dst_arrow&quot;</span>)]
+    <span class="attr">#[cfg(feature = <span class="string">"dst_arrow"</span>)]
     </span><span class="kw">pub use </span><span class="kw">crate</span>::arrow_batch_iter::{set_global_num_thread, RecordBatchIterator};
     <span class="kw">pub use </span><span class="kw">crate</span>::data_order::{coordinate, DataOrder};
-    <span class="attr">#[cfg(feature = <span class="string">&quot;dst_arrow&quot;</span>)]
+    <span class="attr">#[cfg(feature = <span class="string">"dst_arrow"</span>)]
     </span><span class="kw">pub use </span><span class="kw">crate</span>::destinations::arrow::{ArrowDestination, ArrowPartitionWriter, ArrowTypeSystem};
-    <span class="attr">#[cfg(feature = <span class="string">&quot;dst_arrow2&quot;</span>)]
+    <span class="attr">#[cfg(feature = <span class="string">"dst_arrow2"</span>)]
     </span><span class="kw">pub use </span><span class="kw">crate</span>::destinations::arrow2::Arrow2Destination;
-    <span class="attr">#[cfg(feature = <span class="string">&quot;dst_arrow&quot;</span>)]
+    <span class="attr">#[cfg(feature = <span class="string">"dst_arrow"</span>)]
     </span><span class="kw">pub use </span><span class="kw">crate</span>::destinations::arrowstream::{
         ArrowDestination <span class="kw">as </span>ArrowStreamDestination,
         ArrowPartitionWriter <span class="kw">as </span>ArrowStreamPartitionWriter,
@@ -403,28 +404,28 @@
     <span class="kw">pub use </span><span class="kw">crate</span>::destinations::{Consume, Destination, DestinationPartition};
     <span class="kw">pub use </span><span class="kw">crate</span>::dispatcher::Dispatcher;
     <span class="kw">pub use </span><span class="kw">crate</span>::errors::{ConnectorXError, ConnectorXOutError};
-    <span class="attr">#[cfg(feature = <span class="string">&quot;federation&quot;</span>)]
+    <span class="attr">#[cfg(feature = <span class="string">"federation"</span>)]
     </span><span class="kw">pub use </span><span class="kw">crate</span>::fed_rewriter::{rewrite_sql, FederatedDataSourceInfo, Plan};
-    <span class="attr">#[cfg(feature = <span class="string">&quot;dst_arrow&quot;</span>)]
+    <span class="attr">#[cfg(feature = <span class="string">"dst_arrow"</span>)]
     </span><span class="kw">pub use </span><span class="kw">crate</span>::get_arrow::{get_arrow, new_record_batch_iter};
-    <span class="attr">#[cfg(feature = <span class="string">&quot;dst_arrow2&quot;</span>)]
+    <span class="attr">#[cfg(feature = <span class="string">"dst_arrow2"</span>)]
     </span><span class="kw">pub use </span><span class="kw">crate</span>::get_arrow2::get_arrow2;
     <span class="kw">pub use </span><span class="kw">crate</span>::source_router::<span class="kw-2">*</span>;
-    <span class="attr">#[cfg(feature = <span class="string">&quot;src_bigquery&quot;</span>)]
+    <span class="attr">#[cfg(feature = <span class="string">"src_bigquery"</span>)]
     </span><span class="kw">pub use </span><span class="kw">crate</span>::sources::bigquery::BigQuerySource;
-    <span class="attr">#[cfg(feature = <span class="string">&quot;src_csv&quot;</span>)]
+    <span class="attr">#[cfg(feature = <span class="string">"src_csv"</span>)]
     </span><span class="kw">pub use </span><span class="kw">crate</span>::sources::csv::CSVSource;
-    <span class="attr">#[cfg(feature = <span class="string">&quot;src_dummy&quot;</span>)]
+    <span class="attr">#[cfg(feature = <span class="string">"src_dummy"</span>)]
     </span><span class="kw">pub use </span><span class="kw">crate</span>::sources::dummy::DummySource;
-    <span class="attr">#[cfg(feature = <span class="string">&quot;src_mssql&quot;</span>)]
+    <span class="attr">#[cfg(feature = <span class="string">"src_mssql"</span>)]
     </span><span class="kw">pub use </span><span class="kw">crate</span>::sources::mssql::MsSQLSource;
-    <span class="attr">#[cfg(feature = <span class="string">&quot;src_mysql&quot;</span>)]
+    <span class="attr">#[cfg(feature = <span class="string">"src_mysql"</span>)]
     </span><span class="kw">pub use </span><span class="kw">crate</span>::sources::mysql::MySQLSource;
-    <span class="attr">#[cfg(feature = <span class="string">&quot;src_oracle&quot;</span>)]
+    <span class="attr">#[cfg(feature = <span class="string">"src_oracle"</span>)]
     </span><span class="kw">pub use </span><span class="kw">crate</span>::sources::oracle::OracleSource;
-    <span class="attr">#[cfg(feature = <span class="string">&quot;src_postgres&quot;</span>)]
+    <span class="attr">#[cfg(feature = <span class="string">"src_postgres"</span>)]
     </span><span class="kw">pub use </span><span class="kw">crate</span>::sources::postgres::PostgresSource;
-    <span class="attr">#[cfg(feature = <span class="string">&quot;src_sqlite&quot;</span>)]
+    <span class="attr">#[cfg(feature = <span class="string">"src_sqlite"</span>)]
     </span><span class="kw">pub use </span><span class="kw">crate</span>::sources::sqlite::SQLiteSource;
     <span class="kw">pub use </span><span class="kw">crate</span>::sources::{PartitionParser, Produce, Source, SourcePartition};
     <span class="kw">pub use </span><span class="kw">crate</span>::sql::CXQuery;

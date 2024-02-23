@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `connectorx/src/sources/csv/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="connectorx" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `connectorx/src/sources/csv/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="connectorx" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -420,7 +421,7 @@
 <span class="kw">use </span>anyhow::anyhow;
 <span class="kw">use </span>chrono::{DateTime, Utc};
 <span class="kw">use </span>fehler::{throw, throws};
-<span class="attr">#[cfg(feature = <span class="string">&quot;src_csv&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"src_csv"</span>)]
 </span><span class="kw">use </span>regex::{Regex, RegexBuilder};
 <span class="kw">use </span>std::collections::HashSet;
 <span class="kw">use </span>std::fs::File;
@@ -443,12 +444,12 @@
     <span class="attr">#[throws(CSVSourceError)]
     </span><span class="kw">pub fn </span>infer_schema(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; Vec&lt;CSVTypeSystem&gt; {
         <span class="comment">// regular expressions for infer CSVTypeSystem from string
-        </span><span class="kw">let </span>decimal_re: Regex = Regex::new(<span class="string">r&quot;^-?(\d+\.\d+)$&quot;</span>)<span class="question-mark">?</span>;
-        <span class="kw">let </span>integer_re: Regex = Regex::new(<span class="string">r&quot;^-?(\d+)$&quot;</span>)<span class="question-mark">?</span>;
-        <span class="kw">let </span>boolean_re: Regex = RegexBuilder::new(<span class="string">r&quot;^(true)$|^(false)$&quot;</span>)
+        </span><span class="kw">let </span>decimal_re: Regex = Regex::new(<span class="string">r"^-?(\d+\.\d+)$"</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>integer_re: Regex = Regex::new(<span class="string">r"^-?(\d+)$"</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>boolean_re: Regex = RegexBuilder::new(<span class="string">r"^(true)$|^(false)$"</span>)
             .case_insensitive(<span class="bool-val">true</span>)
             .build()<span class="question-mark">?</span>;
-        <span class="kw">let </span>datetime_re: Regex = Regex::new(<span class="string">r&quot;^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d$&quot;</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>datetime_re: Regex = Regex::new(<span class="string">r"^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d$"</span>)<span class="question-mark">?</span>;
 
         <span class="comment">// read max_records rows to infer possible CSVTypeSystems for each field
         </span><span class="kw">let </span><span class="kw-2">mut </span>reader = csv::ReaderBuilder::new()
@@ -474,7 +475,7 @@
                     } <span class="kw">else </span>{
                         <span class="kw">let </span>dt: CSVTypeSystem;
 
-                        <span class="kw">if </span>string.starts_with(<span class="string">&#39;&quot;&#39;</span>) {
+                        <span class="kw">if </span>string.starts_with(<span class="string">'"'</span>) {
                             dt = CSVTypeSystem::String(<span class="bool-val">false</span>);
                         } <span class="kw">else if </span>boolean_re.is_match(string) {
                             dt = CSVTypeSystem::Bool(<span class="bool-val">false</span>);
@@ -545,7 +546,7 @@
 }
 
 <span class="kw">impl </span>Source <span class="kw">for </span>CSVSource {
-    <span class="kw">const </span>DATA_ORDERS: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[DataOrder] = <span class="kw-2">&amp;</span>[DataOrder::RowMajor];
+    <span class="kw">const </span>DATA_ORDERS: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>[DataOrder] = <span class="kw-2">&amp;</span>[DataOrder::RowMajor];
     <span class="kw">type </span>Partition = CSVSourcePartition;
     <span class="kw">type </span>TypeSystem = CSVTypeSystem;
     <span class="kw">type </span>Error = CSVSourceError;
@@ -637,7 +638,7 @@
 
 <span class="kw">impl </span>SourcePartition <span class="kw">for </span>CSVSourcePartition {
     <span class="kw">type </span>TypeSystem = CSVTypeSystem;
-    <span class="kw">type </span>Parser&lt;<span class="lifetime">&#39;a</span>&gt; = CSVSourcePartitionParser&lt;<span class="lifetime">&#39;a</span>&gt;;
+    <span class="kw">type </span>Parser&lt;<span class="lifetime">'a</span>&gt; = CSVSourcePartitionParser&lt;<span class="lifetime">'a</span>&gt;;
     <span class="kw">type </span>Error = CSVSourceError;
 
     <span class="doccomment">/// The parameter `query` is the path of the csv file
@@ -653,7 +654,7 @@
     }
 
     <span class="attr">#[throws(CSVSourceError)]
-    </span><span class="kw">fn </span>parser(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="self">Self</span>::Parser&lt;<span class="lifetime">&#39;_</span>&gt; {
+    </span><span class="kw">fn </span>parser(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="self">Self</span>::Parser&lt;<span class="lifetime">'_</span>&gt; {
         CSVSourcePartitionParser {
             records: <span class="kw-2">&amp;mut </span><span class="self">self</span>.records,
             counter: <span class="kw-2">&amp;mut </span><span class="self">self</span>.counter,
@@ -662,13 +663,13 @@
     }
 }
 
-<span class="kw">pub struct </span>CSVSourcePartitionParser&lt;<span class="lifetime">&#39;a</span>&gt; {
-    records: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>[csv::StringRecord],
-    counter: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>usize,
+<span class="kw">pub struct </span>CSVSourcePartitionParser&lt;<span class="lifetime">'a</span>&gt; {
+    records: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>[csv::StringRecord],
+    counter: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>usize,
     ncols: usize,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; CSVSourcePartitionParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; CSVSourcePartitionParser&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">fn </span>next_val(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>str {
         <span class="kw">let </span>v: <span class="kw-2">&amp;</span>str = <span class="self">self</span>.records[<span class="kw-2">*</span><span class="self">self</span>.counter / <span class="self">self</span>.ncols][<span class="kw-2">*</span><span class="self">self</span>.counter % <span class="self">self</span>.ncols].as_ref();
         <span class="kw-2">*</span><span class="self">self</span>.counter += <span class="number">1</span>;
@@ -677,7 +678,7 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; PartitionParser&lt;<span class="lifetime">&#39;a</span>&gt; <span class="kw">for </span>CSVSourcePartitionParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; PartitionParser&lt;<span class="lifetime">'a</span>&gt; <span class="kw">for </span>CSVSourcePartitionParser&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">type </span>TypeSystem = CSVTypeSystem;
     <span class="kw">type </span>Error = CSVSourceError;
 
@@ -687,7 +688,7 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, i64&gt; <span class="kw">for </span>CSVSourcePartitionParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, i64&gt; <span class="kw">for </span>CSVSourcePartitionParser&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">type </span>Error = CSVSourceError;
 
     <span class="attr">#[throws(CSVSourceError)]
@@ -698,7 +699,7 @@
     </span>}
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span>&lt;i64&gt;&gt; <span class="kw">for </span>CSVSourcePartitionParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, <span class="prelude-ty">Option</span>&lt;i64&gt;&gt; <span class="kw">for </span>CSVSourcePartitionParser&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">type </span>Error = CSVSourceError;
 
     <span class="attr">#[throws(CSVSourceError)]
@@ -715,7 +716,7 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, f64&gt; <span class="kw">for </span>CSVSourcePartitionParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, f64&gt; <span class="kw">for </span>CSVSourcePartitionParser&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">type </span>Error = CSVSourceError;
 
     <span class="attr">#[throws(CSVSourceError)]
@@ -726,7 +727,7 @@
     </span>}
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span>&lt;f64&gt;&gt; <span class="kw">for </span>CSVSourcePartitionParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, <span class="prelude-ty">Option</span>&lt;f64&gt;&gt; <span class="kw">for </span>CSVSourcePartitionParser&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">type </span>Error = CSVSourceError;
 
     <span class="attr">#[throws(CSVSourceError)]
@@ -743,7 +744,7 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, bool&gt; <span class="kw">for </span>CSVSourcePartitionParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, bool&gt; <span class="kw">for </span>CSVSourcePartitionParser&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">type </span>Error = CSVSourceError;
 
     <span class="attr">#[throws(CSVSourceError)]
@@ -754,7 +755,7 @@
     </span>}
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span>&lt;bool&gt;&gt; <span class="kw">for </span>CSVSourcePartitionParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, <span class="prelude-ty">Option</span>&lt;bool&gt;&gt; <span class="kw">for </span>CSVSourcePartitionParser&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">type </span>Error = CSVSourceError;
 
     <span class="attr">#[throws(CSVSourceError)]
@@ -771,7 +772,7 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, String&gt; <span class="kw">for </span>CSVSourcePartitionParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, String&gt; <span class="kw">for </span>CSVSourcePartitionParser&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">type </span>Error = CSVSourceError;
 
     <span class="attr">#[throws(CSVSourceError)]
@@ -781,18 +782,18 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;r</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span>&lt;String&gt;&gt; <span class="kw">for </span>CSVSourcePartitionParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, <span class="lifetime">'r</span>&gt; Produce&lt;<span class="lifetime">'r</span>, <span class="prelude-ty">Option</span>&lt;String&gt;&gt; <span class="kw">for </span>CSVSourcePartitionParser&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">type </span>Error = CSVSourceError;
 
     <span class="attr">#[throws(CSVSourceError)]
-    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;String&gt; {
+    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;String&gt; {
         <span class="kw">let </span>v = <span class="self">self</span>.next_val();
 
         <span class="prelude-val">Some</span>(String::from(v))
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, DateTime&lt;Utc&gt;&gt; <span class="kw">for </span>CSVSourcePartitionParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, DateTime&lt;Utc&gt;&gt; <span class="kw">for </span>CSVSourcePartitionParser&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">type </span>Error = CSVSourceError;
 
     <span class="attr">#[throws(CSVSourceError)]
@@ -803,7 +804,7 @@
     </span>}
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;&gt; <span class="kw">for </span>CSVSourcePartitionParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;&gt; <span class="kw">for </span>CSVSourcePartitionParser&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">type </span>Error = CSVSourceError;
 
     <span class="attr">#[throws(CSVSourceError)]

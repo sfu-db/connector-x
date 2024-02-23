@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `connectorx/src/sql.rs`."><title>sql.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="connectorx" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `connectorx/src/sql.rs`."><title>sql.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="connectorx" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -596,7 +597,7 @@
 <a href="#596" id="596">596</a>
 <a href="#597" id="597">597</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::errors::ConnectorXError;
-<span class="attr">#[cfg(feature = <span class="string">&quot;src_oracle&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"src_oracle"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::sources::oracle::OracleDialect;
 <span class="kw">use </span>fehler::{throw, throws};
 <span class="kw">use </span>log::{debug, trace, warn};
@@ -607,7 +608,7 @@
 };
 <span class="kw">use </span>sqlparser::dialect::Dialect;
 <span class="kw">use </span>sqlparser::parser::Parser;
-<span class="attr">#[cfg(feature = <span class="string">&quot;src_oracle&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"src_oracle"</span>)]
 </span><span class="kw">use </span>std::any::Any;
 
 <span class="attr">#[derive(Debug, Clone)]
@@ -617,10 +618,10 @@
 </span>}
 
 <span class="kw">impl</span>&lt;Q: std::fmt::Display&gt; std::fmt::Display <span class="kw">for </span>CXQuery&lt;Q&gt; {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; std::fmt::Result {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; std::fmt::Result {
         <span class="kw">match </span><span class="self">self </span>{
-            CXQuery::Naked(q) =&gt; <span class="macro">write!</span>(f, <span class="string">&quot;{}&quot;</span>, q),
-            CXQuery::Wrapped(q) =&gt; <span class="macro">write!</span>(f, <span class="string">&quot;{}&quot;</span>, q),
+            CXQuery::Naked(q) =&gt; <span class="macro">write!</span>(f, <span class="string">"{}"</span>, q),
+            CXQuery::Wrapped(q) =&gt; <span class="macro">write!</span>(f, <span class="string">"{}"</span>, q),
         }
     }
 }
@@ -775,19 +776,19 @@
 
 <span class="attr">#[throws(ConnectorXError)]
 </span><span class="kw">pub fn </span>count_query&lt;T: Dialect&gt;(sql: <span class="kw-2">&amp;</span>CXQuery&lt;String&gt;, dialect: <span class="kw-2">&amp;</span>T) -&gt; CXQuery&lt;String&gt; {
-    <span class="macro">trace!</span>(<span class="string">&quot;Incoming query: {}&quot;</span>, sql);
+    <span class="macro">trace!</span>(<span class="string">"Incoming query: {}"</span>, sql);
 
-    <span class="kw">const </span>COUNT_TMP_TAB_NAME: <span class="kw-2">&amp;</span>str = <span class="string">&quot;CXTMPTAB_COUNT&quot;</span>;
+    <span class="kw">const </span>COUNT_TMP_TAB_NAME: <span class="kw-2">&amp;</span>str = <span class="string">"CXTMPTAB_COUNT"</span>;
 
     <span class="attr">#[allow(unused_mut)]
     </span><span class="kw">let </span><span class="kw-2">mut </span>table_alias = COUNT_TMP_TAB_NAME;
 
-    <span class="comment">// HACK: Some dialect (e.g. Oracle) does not support &quot;AS&quot; for alias
-    </span><span class="attr">#[cfg(feature = <span class="string">&quot;src_oracle&quot;</span>)]
+    <span class="comment">// HACK: Some dialect (e.g. Oracle) does not support "AS" for alias
+    </span><span class="attr">#[cfg(feature = <span class="string">"src_oracle"</span>)]
     </span><span class="kw">if </span>dialect.type_id() == (OracleDialect {}.type_id()) {
-        <span class="comment">// table_alias = &quot;&quot;;
+        <span class="comment">// table_alias = "";
         </span><span class="kw">return </span>CXQuery::Wrapped(<span class="macro">format!</span>(
-            <span class="string">&quot;SELECT COUNT(*) FROM ({}) {}&quot;</span>,
+            <span class="string">"SELECT COUNT(*) FROM ({}) {}"</span>,
             sql.as_str(),
             COUNT_TMP_TAB_NAME
         ));
@@ -797,7 +798,7 @@
         <span class="prelude-val">Ok</span>(ast) =&gt; {
             <span class="kw">let </span>projection = <span class="macro">vec!</span>[SelectItem::UnnamedExpr(Expr::Function(Function {
                 name: ObjectName(<span class="macro">vec!</span>[Ident {
-                    value: <span class="string">&quot;count&quot;</span>.to_string(),
+                    value: <span class="string">"count"</span>.to_string(),
                     quote_style: <span class="prelude-val">None</span>,
                 }]),
                 args: <span class="macro">vec!</span>[FunctionArg::Unnamed(FunctionArgExpr::Wildcard)],
@@ -839,25 +840,25 @@
                     Statement::Query(Box::new(query))
                 }
             };
-            <span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, ast_count)
+            <span class="macro">format!</span>(<span class="string">"{}"</span>, ast_count)
         }
         <span class="prelude-val">Err</span>(e) =&gt; {
-            <span class="macro">warn!</span>(<span class="string">&quot;parser error: {:?}, manually compose query string&quot;</span>, e);
+            <span class="macro">warn!</span>(<span class="string">"parser error: {:?}, manually compose query string"</span>, e);
             <span class="macro">format!</span>(
-                <span class="string">&quot;SELECT COUNT(*) FROM ({}) as {}&quot;</span>,
+                <span class="string">"SELECT COUNT(*) FROM ({}) as {}"</span>,
                 sql.as_str(),
                 COUNT_TMP_TAB_NAME
             )
         }
     };
 
-    <span class="macro">debug!</span>(<span class="string">&quot;Transformed count query: {}&quot;</span>, tsql);
+    <span class="macro">debug!</span>(<span class="string">"Transformed count query: {}"</span>, tsql);
     CXQuery::Wrapped(tsql)
 }
 
 <span class="attr">#[throws(ConnectorXError)]
 </span><span class="kw">pub fn </span>limit1_query&lt;T: Dialect&gt;(sql: <span class="kw-2">&amp;</span>CXQuery&lt;String&gt;, dialect: <span class="kw-2">&amp;</span>T) -&gt; CXQuery&lt;String&gt; {
-    <span class="macro">trace!</span>(<span class="string">&quot;Incoming query: {}&quot;</span>, sql);
+    <span class="macro">trace!</span>(<span class="string">"Incoming query: {}"</span>, sql);
 
     <span class="kw">let </span>sql = <span class="kw">match </span>Parser::parse_sql(dialect, sql.as_str()) {
         <span class="prelude-val">Ok</span>(<span class="kw-2">mut </span>ast) =&gt; {
@@ -867,29 +868,29 @@
 
             <span class="kw">match </span><span class="kw-2">&amp;mut </span>ast[<span class="number">0</span>] {
                 Statement::Query(q) =&gt; {
-                    q.limit = <span class="prelude-val">Some</span>(Expr::Value(Value::Number(<span class="string">&quot;1&quot;</span>.to_string(), <span class="bool-val">false</span>)));
+                    q.limit = <span class="prelude-val">Some</span>(Expr::Value(Value::Number(<span class="string">"1"</span>.to_string(), <span class="bool-val">false</span>)));
                 }
                 <span class="kw">_ </span>=&gt; <span class="macro">throw!</span>(ConnectorXError::SqlQueryNotSupported(sql.to_string())),
             };
 
-            <span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, ast[<span class="number">0</span>])
+            <span class="macro">format!</span>(<span class="string">"{}"</span>, ast[<span class="number">0</span>])
         }
         <span class="prelude-val">Err</span>(e) =&gt; {
-            <span class="macro">warn!</span>(<span class="string">&quot;parser error: {:?}, manually compose query string&quot;</span>, e);
-            <span class="macro">format!</span>(<span class="string">&quot;{} LIMIT 1&quot;</span>, sql.as_str())
+            <span class="macro">warn!</span>(<span class="string">"parser error: {:?}, manually compose query string"</span>, e);
+            <span class="macro">format!</span>(<span class="string">"{} LIMIT 1"</span>, sql.as_str())
         }
     };
 
-    <span class="macro">debug!</span>(<span class="string">&quot;Transformed limit 1 query: {}&quot;</span>, sql);
+    <span class="macro">debug!</span>(<span class="string">"Transformed limit 1 query: {}"</span>, sql);
     CXQuery::Wrapped(sql)
 }
 
 <span class="attr">#[throws(ConnectorXError)]
-#[cfg(feature = <span class="string">&quot;src_oracle&quot;</span>)]
+#[cfg(feature = <span class="string">"src_oracle"</span>)]
 </span><span class="kw">pub fn </span>limit1_query_oracle(sql: <span class="kw-2">&amp;</span>CXQuery&lt;String&gt;) -&gt; CXQuery&lt;String&gt; {
-    <span class="macro">trace!</span>(<span class="string">&quot;Incoming oracle query: {}&quot;</span>, sql);
+    <span class="macro">trace!</span>(<span class="string">"Incoming oracle query: {}"</span>, sql);
 
-    CXQuery::Wrapped(<span class="macro">format!</span>(<span class="string">&quot;SELECT * FROM ({}) WHERE rownum = 1&quot;</span>, sql))
+    CXQuery::Wrapped(<span class="macro">format!</span>(<span class="string">"SELECT * FROM ({}) WHERE rownum = 1"</span>, sql))
 
     <span class="comment">// let ast = Parser::parse_sql(&amp;OracleDialect {}, sql.as_str())?;
     // if ast.len() != 1 {
@@ -903,16 +904,16 @@
 
     // let selection = Expr::BinaryOp {
     //     left: Box::new(Expr::CompoundIdentifier(vec![Ident {
-    //         value: &quot;rownum&quot;.to_string(),
+    //         value: "rownum".to_string(),
     //         quote_style: None,
     //     }])),
     //     op: BinaryOperator::Eq,
-    //     right: Box::new(Expr::Value(Value::Number(&quot;1&quot;.to_string(), false))),
+    //     right: Box::new(Expr::Value(Value::Number("1".to_string(), false))),
     // };
-    // ast_part = wrap_query(&amp;mut query, vec![SelectItem::Wildcard], Some(selection), &quot;&quot;);
+    // ast_part = wrap_query(&amp;mut query, vec![SelectItem::Wildcard], Some(selection), "");
 
-    // let tsql = format!(&quot;{}&quot;, ast_part);
-    // debug!(&quot;Transformed limit 1 query: {}&quot;, tsql);
+    // let tsql = format!("{}", ast_part);
+    // debug!("Transformed limit 1 query: {}", tsql);
     // CXQuery::Wrapped(tsql)
 </span>}
 
@@ -924,8 +925,8 @@
     upper: i64,
     dialect: <span class="kw-2">&amp;</span>T,
 ) -&gt; String {
-    <span class="macro">trace!</span>(<span class="string">&quot;Incoming query: {}&quot;</span>, sql);
-    <span class="kw">const </span>PART_TMP_TAB_NAME: <span class="kw-2">&amp;</span>str = <span class="string">&quot;CXTMPTAB_PART&quot;</span>;
+    <span class="macro">trace!</span>(<span class="string">"Incoming query: {}"</span>, sql);
+    <span class="kw">const </span>PART_TMP_TAB_NAME: <span class="kw-2">&amp;</span>str = <span class="string">"CXTMPTAB_PART"</span>;
 
     <span class="attr">#[allow(unused_mut)]
     </span><span class="kw">let </span><span class="kw-2">mut </span>table_alias = PART_TMP_TAB_NAME;
@@ -941,11 +942,11 @@
         },
     ]));
 
-    <span class="comment">// HACK: Some dialect (e.g. Oracle) does not support &quot;AS&quot; for alias
-    </span><span class="attr">#[cfg(feature = <span class="string">&quot;src_oracle&quot;</span>)]
+    <span class="comment">// HACK: Some dialect (e.g. Oracle) does not support "AS" for alias
+    </span><span class="attr">#[cfg(feature = <span class="string">"src_oracle"</span>)]
     </span><span class="kw">if </span>dialect.type_id() == (OracleDialect {}.type_id()) {
-        <span class="kw">return </span><span class="macro">format!</span>(<span class="string">&quot;SELECT * FROM ({}) CXTMPTAB_PART WHERE CXTMPTAB_PART.{} &gt;= {} AND CXTMPTAB_PART.{} &lt; {}&quot;</span>, sql, col, lower, col, upper);
-        <span class="comment">// table_alias = &quot;&quot;;
+        <span class="kw">return </span><span class="macro">format!</span>(<span class="string">"SELECT * FROM ({}) CXTMPTAB_PART WHERE CXTMPTAB_PART.{} &gt;= {} AND CXTMPTAB_PART.{} &lt; {}"</span>, sql, col, lower, col, upper);
+        <span class="comment">// table_alias = "";
         // cid = Box::new(Expr::Identifier(Ident {
         //     value: col.to_string(),
         //     quote_style: None,
@@ -1001,22 +1002,22 @@
                 <span class="prelude-val">Some</span>(selection),
                 table_alias,
             );
-            <span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, ast_part)
+            <span class="macro">format!</span>(<span class="string">"{}"</span>, ast_part)
         }
         <span class="prelude-val">Err</span>(e) =&gt; {
-            <span class="macro">warn!</span>(<span class="string">&quot;parser error: {:?}, manually compose query string&quot;</span>, e);
-            <span class="macro">format!</span>(<span class="string">&quot;SELECT * FROM ({}) AS CXTMPTAB_PART WHERE CXTMPTAB_PART.{} &gt;= {} AND CXTMPTAB_PART.{} &lt; {}&quot;</span>, sql, col, lower, col, upper)
+            <span class="macro">warn!</span>(<span class="string">"parser error: {:?}, manually compose query string"</span>, e);
+            <span class="macro">format!</span>(<span class="string">"SELECT * FROM ({}) AS CXTMPTAB_PART WHERE CXTMPTAB_PART.{} &gt;= {} AND CXTMPTAB_PART.{} &lt; {}"</span>, sql, col, lower, col, upper)
         }
     };
 
-    <span class="macro">debug!</span>(<span class="string">&quot;Transformed single column partition query: {}&quot;</span>, tsql);
+    <span class="macro">debug!</span>(<span class="string">"Transformed single column partition query: {}"</span>, tsql);
     tsql
 }
 
 <span class="attr">#[throws(ConnectorXError)]
 </span><span class="kw">pub fn </span>get_partition_range_query&lt;T: Dialect&gt;(sql: <span class="kw-2">&amp;</span>str, col: <span class="kw-2">&amp;</span>str, dialect: <span class="kw-2">&amp;</span>T) -&gt; String {
-    <span class="macro">trace!</span>(<span class="string">&quot;Incoming query: {}&quot;</span>, sql);
-    <span class="kw">const </span>RANGE_TMP_TAB_NAME: <span class="kw-2">&amp;</span>str = <span class="string">&quot;CXTMPTAB_RANGE&quot;</span>;
+    <span class="macro">trace!</span>(<span class="string">"Incoming query: {}"</span>, sql);
+    <span class="kw">const </span>RANGE_TMP_TAB_NAME: <span class="kw-2">&amp;</span>str = <span class="string">"CXTMPTAB_RANGE"</span>;
 
     <span class="attr">#[allow(unused_mut)]
     </span><span class="kw">let </span><span class="kw-2">mut </span>table_alias = RANGE_TMP_TAB_NAME;
@@ -1034,14 +1035,14 @@
         ]),
     ))];
 
-    <span class="comment">// HACK: Some dialect (e.g. Oracle) does not support &quot;AS&quot; for alias
-    </span><span class="attr">#[cfg(feature = <span class="string">&quot;src_oracle&quot;</span>)]
+    <span class="comment">// HACK: Some dialect (e.g. Oracle) does not support "AS" for alias
+    </span><span class="attr">#[cfg(feature = <span class="string">"src_oracle"</span>)]
     </span><span class="kw">if </span>dialect.type_id() == (OracleDialect {}.type_id()) {
         <span class="kw">return </span><span class="macro">format!</span>(
-            <span class="string">&quot;SELECT MIN({}.{}) as min, MAX({}.{}) as max FROM ({}) {}&quot;</span>,
+            <span class="string">"SELECT MIN({}.{}) as min, MAX({}.{}) as max FROM ({}) {}"</span>,
             RANGE_TMP_TAB_NAME, col, RANGE_TMP_TAB_NAME, col, sql, RANGE_TMP_TAB_NAME
         );
-        <span class="comment">// table_alias = &quot;&quot;;
+        <span class="comment">// table_alias = "";
         // args = vec![FunctionArg::Unnamed(Expr::Identifier(Ident {
         //     value: col.to_string(),
         //     quote_style: None,
@@ -1063,7 +1064,7 @@
             <span class="kw">let </span>projection = <span class="macro">vec!</span>[
                 SelectItem::UnnamedExpr(Expr::Function(Function {
                     name: ObjectName(<span class="macro">vec!</span>[Ident {
-                        value: <span class="string">&quot;min&quot;</span>.to_string(),
+                        value: <span class="string">"min"</span>.to_string(),
                         quote_style: <span class="prelude-val">None</span>,
                     }]),
                     args: args.clone(),
@@ -1074,7 +1075,7 @@
                 })),
                 SelectItem::UnnamedExpr(Expr::Function(Function {
                     name: ObjectName(<span class="macro">vec!</span>[Ident {
-                        value: <span class="string">&quot;max&quot;</span>.to_string(),
+                        value: <span class="string">"max"</span>.to_string(),
                         quote_style: <span class="prelude-val">None</span>,
                     }]),
                     args,
@@ -1085,18 +1086,18 @@
                 })),
             ];
             ast_range = wrap_query(<span class="kw-2">&amp;mut </span>query, projection, <span class="prelude-val">None</span>, table_alias);
-            <span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, ast_range)
+            <span class="macro">format!</span>(<span class="string">"{}"</span>, ast_range)
         }
         <span class="prelude-val">Err</span>(e) =&gt; {
-            <span class="macro">warn!</span>(<span class="string">&quot;parser error: {:?}, manually compose query string&quot;</span>, e);
+            <span class="macro">warn!</span>(<span class="string">"parser error: {:?}, manually compose query string"</span>, e);
             <span class="macro">format!</span>(
-                <span class="string">&quot;SELECT MIN({}.{}) as min, MAX({}.{}) as max FROM ({}) AS {}&quot;</span>,
+                <span class="string">"SELECT MIN({}.{}) as min, MAX({}.{}) as max FROM ({}) AS {}"</span>,
                 RANGE_TMP_TAB_NAME, col, RANGE_TMP_TAB_NAME, col, sql, RANGE_TMP_TAB_NAME
             )
         }
     };
 
-    <span class="macro">debug!</span>(<span class="string">&quot;Transformed partition range query: {}&quot;</span>, tsql);
+    <span class="macro">debug!</span>(<span class="string">"Transformed partition range query: {}"</span>, tsql);
     tsql
 }
 
@@ -1106,8 +1107,8 @@
     col: <span class="kw-2">&amp;</span>str,
     dialect: <span class="kw-2">&amp;</span>T,
 ) -&gt; (String, String) {
-    <span class="macro">trace!</span>(<span class="string">&quot;Incoming query: {}&quot;</span>, sql);
-    <span class="kw">const </span>RANGE_TMP_TAB_NAME: <span class="kw-2">&amp;</span>str = <span class="string">&quot;CXTMPTAB_RANGE&quot;</span>;
+    <span class="macro">trace!</span>(<span class="string">"Incoming query: {}"</span>, sql);
+    <span class="kw">const </span>RANGE_TMP_TAB_NAME: <span class="kw-2">&amp;</span>str = <span class="string">"CXTMPTAB_RANGE"</span>;
 
     <span class="kw">let </span>(sql_min, sql_max) = <span class="kw">match </span>Parser::parse_sql(dialect, sql) {
         <span class="prelude-val">Ok</span>(ast) =&gt; {
@@ -1126,7 +1127,7 @@
             query.order_by = <span class="macro">vec!</span>[];
             <span class="kw">let </span>min_proj = <span class="macro">vec!</span>[SelectItem::UnnamedExpr(Expr::Function(Function {
                 name: ObjectName(<span class="macro">vec!</span>[Ident {
-                    value: <span class="string">&quot;min&quot;</span>.to_string(),
+                    value: <span class="string">"min"</span>.to_string(),
                     quote_style: <span class="prelude-val">None</span>,
                 }]),
                 args: <span class="macro">vec!</span>[FunctionArg::Unnamed(FunctionArgExpr::Expr(
@@ -1148,7 +1149,7 @@
             }))];
             <span class="kw">let </span>max_proj = <span class="macro">vec!</span>[SelectItem::UnnamedExpr(Expr::Function(Function {
                 name: ObjectName(<span class="macro">vec!</span>[Ident {
-                    value: <span class="string">&quot;max&quot;</span>.to_string(),
+                    value: <span class="string">"max"</span>.to_string(),
                     quote_style: <span class="prelude-val">None</span>,
                 }]),
                 args: <span class="macro">vec!</span>[FunctionArg::Unnamed(FunctionArgExpr::Expr(
@@ -1170,24 +1171,24 @@
             }))];
             ast_range_min = wrap_query(<span class="kw-2">&amp;mut </span>query.clone(), min_proj, <span class="prelude-val">None</span>, RANGE_TMP_TAB_NAME);
             ast_range_max = wrap_query(<span class="kw-2">&amp;mut </span>query, max_proj, <span class="prelude-val">None</span>, RANGE_TMP_TAB_NAME);
-            (<span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, ast_range_min), <span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, ast_range_max))
+            (<span class="macro">format!</span>(<span class="string">"{}"</span>, ast_range_min), <span class="macro">format!</span>(<span class="string">"{}"</span>, ast_range_max))
         }
         <span class="prelude-val">Err</span>(e) =&gt; {
-            <span class="macro">warn!</span>(<span class="string">&quot;parser error: {:?}, manually compose query string&quot;</span>, e);
+            <span class="macro">warn!</span>(<span class="string">"parser error: {:?}, manually compose query string"</span>, e);
             (
                 <span class="macro">format!</span>(
-                    <span class="string">&quot;SELECT MIN({}.{}) as min FROM ({}) AS {}&quot;</span>,
+                    <span class="string">"SELECT MIN({}.{}) as min FROM ({}) AS {}"</span>,
                     RANGE_TMP_TAB_NAME, col, sql, RANGE_TMP_TAB_NAME
                 ),
                 <span class="macro">format!</span>(
-                    <span class="string">&quot;SELECT MAX({}.{}) as max FROM ({}) AS {}&quot;</span>,
+                    <span class="string">"SELECT MAX({}.{}) as max FROM ({}) AS {}"</span>,
                     RANGE_TMP_TAB_NAME, col, sql, RANGE_TMP_TAB_NAME
                 ),
             )
         }
     };
     <span class="macro">debug!</span>(
-        <span class="string">&quot;Transformed separated partition range query: {}, {}&quot;</span>,
+        <span class="string">"Transformed separated partition range query: {}, {}"</span>,
         sql_min, sql_max
     );
     (sql_min, sql_max)

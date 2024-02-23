@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `connectorx/src/sources/postgres/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="connectorx" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `connectorx/src/sources/postgres/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="connectorx" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1670,6 +1671,333 @@
 <a href="#1670" id="1670">1670</a>
 <a href="#1671" id="1671">1671</a>
 <a href="#1672" id="1672">1672</a>
+<a href="#1673" id="1673">1673</a>
+<a href="#1674" id="1674">1674</a>
+<a href="#1675" id="1675">1675</a>
+<a href="#1676" id="1676">1676</a>
+<a href="#1677" id="1677">1677</a>
+<a href="#1678" id="1678">1678</a>
+<a href="#1679" id="1679">1679</a>
+<a href="#1680" id="1680">1680</a>
+<a href="#1681" id="1681">1681</a>
+<a href="#1682" id="1682">1682</a>
+<a href="#1683" id="1683">1683</a>
+<a href="#1684" id="1684">1684</a>
+<a href="#1685" id="1685">1685</a>
+<a href="#1686" id="1686">1686</a>
+<a href="#1687" id="1687">1687</a>
+<a href="#1688" id="1688">1688</a>
+<a href="#1689" id="1689">1689</a>
+<a href="#1690" id="1690">1690</a>
+<a href="#1691" id="1691">1691</a>
+<a href="#1692" id="1692">1692</a>
+<a href="#1693" id="1693">1693</a>
+<a href="#1694" id="1694">1694</a>
+<a href="#1695" id="1695">1695</a>
+<a href="#1696" id="1696">1696</a>
+<a href="#1697" id="1697">1697</a>
+<a href="#1698" id="1698">1698</a>
+<a href="#1699" id="1699">1699</a>
+<a href="#1700" id="1700">1700</a>
+<a href="#1701" id="1701">1701</a>
+<a href="#1702" id="1702">1702</a>
+<a href="#1703" id="1703">1703</a>
+<a href="#1704" id="1704">1704</a>
+<a href="#1705" id="1705">1705</a>
+<a href="#1706" id="1706">1706</a>
+<a href="#1707" id="1707">1707</a>
+<a href="#1708" id="1708">1708</a>
+<a href="#1709" id="1709">1709</a>
+<a href="#1710" id="1710">1710</a>
+<a href="#1711" id="1711">1711</a>
+<a href="#1712" id="1712">1712</a>
+<a href="#1713" id="1713">1713</a>
+<a href="#1714" id="1714">1714</a>
+<a href="#1715" id="1715">1715</a>
+<a href="#1716" id="1716">1716</a>
+<a href="#1717" id="1717">1717</a>
+<a href="#1718" id="1718">1718</a>
+<a href="#1719" id="1719">1719</a>
+<a href="#1720" id="1720">1720</a>
+<a href="#1721" id="1721">1721</a>
+<a href="#1722" id="1722">1722</a>
+<a href="#1723" id="1723">1723</a>
+<a href="#1724" id="1724">1724</a>
+<a href="#1725" id="1725">1725</a>
+<a href="#1726" id="1726">1726</a>
+<a href="#1727" id="1727">1727</a>
+<a href="#1728" id="1728">1728</a>
+<a href="#1729" id="1729">1729</a>
+<a href="#1730" id="1730">1730</a>
+<a href="#1731" id="1731">1731</a>
+<a href="#1732" id="1732">1732</a>
+<a href="#1733" id="1733">1733</a>
+<a href="#1734" id="1734">1734</a>
+<a href="#1735" id="1735">1735</a>
+<a href="#1736" id="1736">1736</a>
+<a href="#1737" id="1737">1737</a>
+<a href="#1738" id="1738">1738</a>
+<a href="#1739" id="1739">1739</a>
+<a href="#1740" id="1740">1740</a>
+<a href="#1741" id="1741">1741</a>
+<a href="#1742" id="1742">1742</a>
+<a href="#1743" id="1743">1743</a>
+<a href="#1744" id="1744">1744</a>
+<a href="#1745" id="1745">1745</a>
+<a href="#1746" id="1746">1746</a>
+<a href="#1747" id="1747">1747</a>
+<a href="#1748" id="1748">1748</a>
+<a href="#1749" id="1749">1749</a>
+<a href="#1750" id="1750">1750</a>
+<a href="#1751" id="1751">1751</a>
+<a href="#1752" id="1752">1752</a>
+<a href="#1753" id="1753">1753</a>
+<a href="#1754" id="1754">1754</a>
+<a href="#1755" id="1755">1755</a>
+<a href="#1756" id="1756">1756</a>
+<a href="#1757" id="1757">1757</a>
+<a href="#1758" id="1758">1758</a>
+<a href="#1759" id="1759">1759</a>
+<a href="#1760" id="1760">1760</a>
+<a href="#1761" id="1761">1761</a>
+<a href="#1762" id="1762">1762</a>
+<a href="#1763" id="1763">1763</a>
+<a href="#1764" id="1764">1764</a>
+<a href="#1765" id="1765">1765</a>
+<a href="#1766" id="1766">1766</a>
+<a href="#1767" id="1767">1767</a>
+<a href="#1768" id="1768">1768</a>
+<a href="#1769" id="1769">1769</a>
+<a href="#1770" id="1770">1770</a>
+<a href="#1771" id="1771">1771</a>
+<a href="#1772" id="1772">1772</a>
+<a href="#1773" id="1773">1773</a>
+<a href="#1774" id="1774">1774</a>
+<a href="#1775" id="1775">1775</a>
+<a href="#1776" id="1776">1776</a>
+<a href="#1777" id="1777">1777</a>
+<a href="#1778" id="1778">1778</a>
+<a href="#1779" id="1779">1779</a>
+<a href="#1780" id="1780">1780</a>
+<a href="#1781" id="1781">1781</a>
+<a href="#1782" id="1782">1782</a>
+<a href="#1783" id="1783">1783</a>
+<a href="#1784" id="1784">1784</a>
+<a href="#1785" id="1785">1785</a>
+<a href="#1786" id="1786">1786</a>
+<a href="#1787" id="1787">1787</a>
+<a href="#1788" id="1788">1788</a>
+<a href="#1789" id="1789">1789</a>
+<a href="#1790" id="1790">1790</a>
+<a href="#1791" id="1791">1791</a>
+<a href="#1792" id="1792">1792</a>
+<a href="#1793" id="1793">1793</a>
+<a href="#1794" id="1794">1794</a>
+<a href="#1795" id="1795">1795</a>
+<a href="#1796" id="1796">1796</a>
+<a href="#1797" id="1797">1797</a>
+<a href="#1798" id="1798">1798</a>
+<a href="#1799" id="1799">1799</a>
+<a href="#1800" id="1800">1800</a>
+<a href="#1801" id="1801">1801</a>
+<a href="#1802" id="1802">1802</a>
+<a href="#1803" id="1803">1803</a>
+<a href="#1804" id="1804">1804</a>
+<a href="#1805" id="1805">1805</a>
+<a href="#1806" id="1806">1806</a>
+<a href="#1807" id="1807">1807</a>
+<a href="#1808" id="1808">1808</a>
+<a href="#1809" id="1809">1809</a>
+<a href="#1810" id="1810">1810</a>
+<a href="#1811" id="1811">1811</a>
+<a href="#1812" id="1812">1812</a>
+<a href="#1813" id="1813">1813</a>
+<a href="#1814" id="1814">1814</a>
+<a href="#1815" id="1815">1815</a>
+<a href="#1816" id="1816">1816</a>
+<a href="#1817" id="1817">1817</a>
+<a href="#1818" id="1818">1818</a>
+<a href="#1819" id="1819">1819</a>
+<a href="#1820" id="1820">1820</a>
+<a href="#1821" id="1821">1821</a>
+<a href="#1822" id="1822">1822</a>
+<a href="#1823" id="1823">1823</a>
+<a href="#1824" id="1824">1824</a>
+<a href="#1825" id="1825">1825</a>
+<a href="#1826" id="1826">1826</a>
+<a href="#1827" id="1827">1827</a>
+<a href="#1828" id="1828">1828</a>
+<a href="#1829" id="1829">1829</a>
+<a href="#1830" id="1830">1830</a>
+<a href="#1831" id="1831">1831</a>
+<a href="#1832" id="1832">1832</a>
+<a href="#1833" id="1833">1833</a>
+<a href="#1834" id="1834">1834</a>
+<a href="#1835" id="1835">1835</a>
+<a href="#1836" id="1836">1836</a>
+<a href="#1837" id="1837">1837</a>
+<a href="#1838" id="1838">1838</a>
+<a href="#1839" id="1839">1839</a>
+<a href="#1840" id="1840">1840</a>
+<a href="#1841" id="1841">1841</a>
+<a href="#1842" id="1842">1842</a>
+<a href="#1843" id="1843">1843</a>
+<a href="#1844" id="1844">1844</a>
+<a href="#1845" id="1845">1845</a>
+<a href="#1846" id="1846">1846</a>
+<a href="#1847" id="1847">1847</a>
+<a href="#1848" id="1848">1848</a>
+<a href="#1849" id="1849">1849</a>
+<a href="#1850" id="1850">1850</a>
+<a href="#1851" id="1851">1851</a>
+<a href="#1852" id="1852">1852</a>
+<a href="#1853" id="1853">1853</a>
+<a href="#1854" id="1854">1854</a>
+<a href="#1855" id="1855">1855</a>
+<a href="#1856" id="1856">1856</a>
+<a href="#1857" id="1857">1857</a>
+<a href="#1858" id="1858">1858</a>
+<a href="#1859" id="1859">1859</a>
+<a href="#1860" id="1860">1860</a>
+<a href="#1861" id="1861">1861</a>
+<a href="#1862" id="1862">1862</a>
+<a href="#1863" id="1863">1863</a>
+<a href="#1864" id="1864">1864</a>
+<a href="#1865" id="1865">1865</a>
+<a href="#1866" id="1866">1866</a>
+<a href="#1867" id="1867">1867</a>
+<a href="#1868" id="1868">1868</a>
+<a href="#1869" id="1869">1869</a>
+<a href="#1870" id="1870">1870</a>
+<a href="#1871" id="1871">1871</a>
+<a href="#1872" id="1872">1872</a>
+<a href="#1873" id="1873">1873</a>
+<a href="#1874" id="1874">1874</a>
+<a href="#1875" id="1875">1875</a>
+<a href="#1876" id="1876">1876</a>
+<a href="#1877" id="1877">1877</a>
+<a href="#1878" id="1878">1878</a>
+<a href="#1879" id="1879">1879</a>
+<a href="#1880" id="1880">1880</a>
+<a href="#1881" id="1881">1881</a>
+<a href="#1882" id="1882">1882</a>
+<a href="#1883" id="1883">1883</a>
+<a href="#1884" id="1884">1884</a>
+<a href="#1885" id="1885">1885</a>
+<a href="#1886" id="1886">1886</a>
+<a href="#1887" id="1887">1887</a>
+<a href="#1888" id="1888">1888</a>
+<a href="#1889" id="1889">1889</a>
+<a href="#1890" id="1890">1890</a>
+<a href="#1891" id="1891">1891</a>
+<a href="#1892" id="1892">1892</a>
+<a href="#1893" id="1893">1893</a>
+<a href="#1894" id="1894">1894</a>
+<a href="#1895" id="1895">1895</a>
+<a href="#1896" id="1896">1896</a>
+<a href="#1897" id="1897">1897</a>
+<a href="#1898" id="1898">1898</a>
+<a href="#1899" id="1899">1899</a>
+<a href="#1900" id="1900">1900</a>
+<a href="#1901" id="1901">1901</a>
+<a href="#1902" id="1902">1902</a>
+<a href="#1903" id="1903">1903</a>
+<a href="#1904" id="1904">1904</a>
+<a href="#1905" id="1905">1905</a>
+<a href="#1906" id="1906">1906</a>
+<a href="#1907" id="1907">1907</a>
+<a href="#1908" id="1908">1908</a>
+<a href="#1909" id="1909">1909</a>
+<a href="#1910" id="1910">1910</a>
+<a href="#1911" id="1911">1911</a>
+<a href="#1912" id="1912">1912</a>
+<a href="#1913" id="1913">1913</a>
+<a href="#1914" id="1914">1914</a>
+<a href="#1915" id="1915">1915</a>
+<a href="#1916" id="1916">1916</a>
+<a href="#1917" id="1917">1917</a>
+<a href="#1918" id="1918">1918</a>
+<a href="#1919" id="1919">1919</a>
+<a href="#1920" id="1920">1920</a>
+<a href="#1921" id="1921">1921</a>
+<a href="#1922" id="1922">1922</a>
+<a href="#1923" id="1923">1923</a>
+<a href="#1924" id="1924">1924</a>
+<a href="#1925" id="1925">1925</a>
+<a href="#1926" id="1926">1926</a>
+<a href="#1927" id="1927">1927</a>
+<a href="#1928" id="1928">1928</a>
+<a href="#1929" id="1929">1929</a>
+<a href="#1930" id="1930">1930</a>
+<a href="#1931" id="1931">1931</a>
+<a href="#1932" id="1932">1932</a>
+<a href="#1933" id="1933">1933</a>
+<a href="#1934" id="1934">1934</a>
+<a href="#1935" id="1935">1935</a>
+<a href="#1936" id="1936">1936</a>
+<a href="#1937" id="1937">1937</a>
+<a href="#1938" id="1938">1938</a>
+<a href="#1939" id="1939">1939</a>
+<a href="#1940" id="1940">1940</a>
+<a href="#1941" id="1941">1941</a>
+<a href="#1942" id="1942">1942</a>
+<a href="#1943" id="1943">1943</a>
+<a href="#1944" id="1944">1944</a>
+<a href="#1945" id="1945">1945</a>
+<a href="#1946" id="1946">1946</a>
+<a href="#1947" id="1947">1947</a>
+<a href="#1948" id="1948">1948</a>
+<a href="#1949" id="1949">1949</a>
+<a href="#1950" id="1950">1950</a>
+<a href="#1951" id="1951">1951</a>
+<a href="#1952" id="1952">1952</a>
+<a href="#1953" id="1953">1953</a>
+<a href="#1954" id="1954">1954</a>
+<a href="#1955" id="1955">1955</a>
+<a href="#1956" id="1956">1956</a>
+<a href="#1957" id="1957">1957</a>
+<a href="#1958" id="1958">1958</a>
+<a href="#1959" id="1959">1959</a>
+<a href="#1960" id="1960">1960</a>
+<a href="#1961" id="1961">1961</a>
+<a href="#1962" id="1962">1962</a>
+<a href="#1963" id="1963">1963</a>
+<a href="#1964" id="1964">1964</a>
+<a href="#1965" id="1965">1965</a>
+<a href="#1966" id="1966">1966</a>
+<a href="#1967" id="1967">1967</a>
+<a href="#1968" id="1968">1968</a>
+<a href="#1969" id="1969">1969</a>
+<a href="#1970" id="1970">1970</a>
+<a href="#1971" id="1971">1971</a>
+<a href="#1972" id="1972">1972</a>
+<a href="#1973" id="1973">1973</a>
+<a href="#1974" id="1974">1974</a>
+<a href="#1975" id="1975">1975</a>
+<a href="#1976" id="1976">1976</a>
+<a href="#1977" id="1977">1977</a>
+<a href="#1978" id="1978">1978</a>
+<a href="#1979" id="1979">1979</a>
+<a href="#1980" id="1980">1980</a>
+<a href="#1981" id="1981">1981</a>
+<a href="#1982" id="1982">1982</a>
+<a href="#1983" id="1983">1983</a>
+<a href="#1984" id="1984">1984</a>
+<a href="#1985" id="1985">1985</a>
+<a href="#1986" id="1986">1986</a>
+<a href="#1987" id="1987">1987</a>
+<a href="#1988" id="1988">1988</a>
+<a href="#1989" id="1989">1989</a>
+<a href="#1990" id="1990">1990</a>
+<a href="#1991" id="1991">1991</a>
+<a href="#1992" id="1992">1992</a>
+<a href="#1993" id="1993">1993</a>
+<a href="#1994" id="1994">1994</a>
+<a href="#1995" id="1995">1995</a>
+<a href="#1996" id="1996">1996</a>
+<a href="#1997" id="1997">1997</a>
+<a href="#1998" id="1998">1998</a>
+<a href="#1999" id="1999">1999</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Source implementation for Postgres database, including the TLS support (client only).
 
 </span><span class="kw">mod </span>connection;
@@ -1724,15 +2052,15 @@
 <span class="kw">type </span>PgConn&lt;C&gt; = PooledConnection&lt;PgManager&lt;C&gt;&gt;;
 
 <span class="comment">// take a row and unwrap the interior field from column 0
-</span><span class="kw">fn </span>convert_row&lt;<span class="lifetime">&#39;b</span>, R: TryFrom&lt;usize&gt; + postgres::types::FromSql&lt;<span class="lifetime">&#39;b</span>&gt; + Clone&gt;(row: <span class="kw-2">&amp;</span><span class="lifetime">&#39;b </span>Row) -&gt; R {
+</span><span class="kw">fn </span>convert_row&lt;<span class="lifetime">'b</span>, R: TryFrom&lt;usize&gt; + postgres::types::FromSql&lt;<span class="lifetime">'b</span>&gt; + Clone&gt;(row: <span class="kw-2">&amp;</span><span class="lifetime">'b </span>Row) -&gt; R {
     <span class="kw">let </span>nrows: <span class="prelude-ty">Option</span>&lt;R&gt; = row.get(<span class="number">0</span>);
-    nrows.expect(<span class="string">&quot;Could not parse int result from count_query&quot;</span>)
+    nrows.expect(<span class="string">"Could not parse int result from count_query"</span>)
 }
 
 <span class="attr">#[throws(PostgresSourceError)]
 </span><span class="kw">fn </span>get_total_rows&lt;C&gt;(conn: <span class="kw-2">&amp;mut </span>PgConn&lt;C&gt;, query: <span class="kw-2">&amp;</span>CXQuery&lt;String&gt;) -&gt; usize
 <span class="kw">where
-    </span>C: MakeTlsConnect&lt;Socket&gt; + Clone + <span class="lifetime">&#39;static </span>+ Sync + Send,
+    </span>C: MakeTlsConnect&lt;Socket&gt; + Clone + <span class="lifetime">'static </span>+ Sync + Send,
     C::TlsConnect: Send,
     C::Stream: Send,
     &lt;C::TlsConnect <span class="kw">as </span>TlsConnect&lt;Socket&gt;&gt;::Future: Send,
@@ -1746,14 +2074,14 @@
         PostgresTypeSystem::Int4(<span class="kw">_</span>) =&gt; convert_row::&lt;i32&gt;(<span class="kw-2">&amp;</span>row) <span class="kw">as </span>usize,
         PostgresTypeSystem::Int8(<span class="kw">_</span>) =&gt; convert_row::&lt;i64&gt;(<span class="kw-2">&amp;</span>row) <span class="kw">as </span>usize,
         <span class="kw">_ </span>=&gt; <span class="macro">throw!</span>(<span class="macro">anyhow!</span>(
-            <span class="string">&quot;The result of the count query was not an int, aborting.&quot;
+            <span class="string">"The result of the count query was not an int, aborting."
         </span>)),
     }
 }
 
 <span class="kw">pub struct </span>PostgresSource&lt;P, C&gt;
 <span class="kw">where
-    </span>C: MakeTlsConnect&lt;Socket&gt; + Clone + <span class="lifetime">&#39;static </span>+ Sync + Send,
+    </span>C: MakeTlsConnect&lt;Socket&gt; + Clone + <span class="lifetime">'static </span>+ Sync + Send,
     C::TlsConnect: Send,
     C::Stream: Send,
     &lt;C::TlsConnect <span class="kw">as </span>TlsConnect&lt;Socket&gt;&gt;::Future: Send,
@@ -1769,7 +2097,7 @@
 
 <span class="kw">impl</span>&lt;P, C&gt; PostgresSource&lt;P, C&gt;
 <span class="kw">where
-    </span>C: MakeTlsConnect&lt;Socket&gt; + Clone + <span class="lifetime">&#39;static </span>+ Sync + Send,
+    </span>C: MakeTlsConnect&lt;Socket&gt; + Clone + <span class="lifetime">'static </span>+ Sync + Send,
     C::TlsConnect: Send,
     C::Stream: Send,
     &lt;C::TlsConnect <span class="kw">as </span>TlsConnect&lt;Socket&gt;&gt;::Future: Send,
@@ -1796,12 +2124,12 @@
     </span>PostgresSourcePartition&lt;P, C&gt;:
         SourcePartition&lt;TypeSystem = PostgresTypeSystem, Error = PostgresSourceError&gt;,
     P: Send,
-    C: MakeTlsConnect&lt;Socket&gt; + Clone + <span class="lifetime">&#39;static </span>+ Sync + Send,
+    C: MakeTlsConnect&lt;Socket&gt; + Clone + <span class="lifetime">'static </span>+ Sync + Send,
     C::TlsConnect: Send,
     C::Stream: Send,
     &lt;C::TlsConnect <span class="kw">as </span>TlsConnect&lt;Socket&gt;&gt;::Future: Send,
 {
-    <span class="kw">const </span>DATA_ORDERS: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[DataOrder] = <span class="kw-2">&amp;</span>[DataOrder::RowMajor];
+    <span class="kw">const </span>DATA_ORDERS: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>[DataOrder] = <span class="kw-2">&amp;</span>[DataOrder::RowMajor];
     <span class="kw">type </span>Partition = PostgresSourcePartition&lt;P, C&gt;;
     <span class="kw">type </span>TypeSystem = PostgresTypeSystem;
     <span class="kw">type </span>Error = PostgresSourceError;
@@ -1889,7 +2217,7 @@
 
 <span class="kw">pub struct </span>PostgresSourcePartition&lt;P, C&gt;
 <span class="kw">where
-    </span>C: MakeTlsConnect&lt;Socket&gt; + Clone + <span class="lifetime">&#39;static </span>+ Sync + Send,
+    </span>C: MakeTlsConnect&lt;Socket&gt; + Clone + <span class="lifetime">'static </span>+ Sync + Send,
     C::TlsConnect: Send,
     C::Stream: Send,
     &lt;C::TlsConnect <span class="kw">as </span>TlsConnect&lt;Socket&gt;&gt;::Future: Send,
@@ -1905,7 +2233,7 @@
 
 <span class="kw">impl</span>&lt;P, C&gt; PostgresSourcePartition&lt;P, C&gt;
 <span class="kw">where
-    </span>C: MakeTlsConnect&lt;Socket&gt; + Clone + <span class="lifetime">&#39;static </span>+ Sync + Send,
+    </span>C: MakeTlsConnect&lt;Socket&gt; + Clone + <span class="lifetime">'static </span>+ Sync + Send,
     C::TlsConnect: Send,
     C::Stream: Send,
     &lt;C::TlsConnect <span class="kw">as </span>TlsConnect&lt;Socket&gt;&gt;::Future: Send,
@@ -1930,13 +2258,13 @@
 
 <span class="kw">impl</span>&lt;C&gt; SourcePartition <span class="kw">for </span>PostgresSourcePartition&lt;BinaryProtocol, C&gt;
 <span class="kw">where
-    </span>C: MakeTlsConnect&lt;Socket&gt; + Clone + <span class="lifetime">&#39;static </span>+ Sync + Send,
+    </span>C: MakeTlsConnect&lt;Socket&gt; + Clone + <span class="lifetime">'static </span>+ Sync + Send,
     C::TlsConnect: Send,
     C::Stream: Send,
     &lt;C::TlsConnect <span class="kw">as </span>TlsConnect&lt;Socket&gt;&gt;::Future: Send,
 {
     <span class="kw">type </span>TypeSystem = PostgresTypeSystem;
-    <span class="kw">type </span>Parser&lt;<span class="lifetime">&#39;a</span>&gt; = PostgresBinarySourcePartitionParser&lt;<span class="lifetime">&#39;a</span>&gt;;
+    <span class="kw">type </span>Parser&lt;<span class="lifetime">'a</span>&gt; = PostgresBinarySourcePartitionParser&lt;<span class="lifetime">'a</span>&gt;;
     <span class="kw">type </span>Error = PostgresSourceError;
 
     <span class="attr">#[throws(PostgresSourceError)]
@@ -1945,8 +2273,8 @@
     }
 
     <span class="attr">#[throws(PostgresSourceError)]
-    </span><span class="kw">fn </span>parser(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="self">Self</span>::Parser&lt;<span class="lifetime">&#39;_</span>&gt; {
-        <span class="kw">let </span>query = <span class="macro">format!</span>(<span class="string">&quot;COPY ({}) TO STDOUT WITH BINARY&quot;</span>, <span class="self">self</span>.query);
+    </span><span class="kw">fn </span>parser(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="self">Self</span>::Parser&lt;<span class="lifetime">'_</span>&gt; {
+        <span class="kw">let </span>query = <span class="macro">format!</span>(<span class="string">"COPY ({}) TO STDOUT WITH BINARY"</span>, <span class="self">self</span>.query);
         <span class="kw">let </span>reader = <span class="self">self</span>.conn.copy_out(<span class="kw-2">&amp;*</span>query)<span class="question-mark">?</span>; <span class="comment">// unless reading the data, it seems like issue the query is fast
         </span><span class="kw">let </span>iter = BinaryCopyOutIter::new(reader, <span class="kw-2">&amp;</span><span class="self">self</span>.pg_schema);
 
@@ -1964,13 +2292,13 @@
 
 <span class="kw">impl</span>&lt;C&gt; SourcePartition <span class="kw">for </span>PostgresSourcePartition&lt;CSVProtocol, C&gt;
 <span class="kw">where
-    </span>C: MakeTlsConnect&lt;Socket&gt; + Clone + <span class="lifetime">&#39;static </span>+ Sync + Send,
+    </span>C: MakeTlsConnect&lt;Socket&gt; + Clone + <span class="lifetime">'static </span>+ Sync + Send,
     C::TlsConnect: Send,
     C::Stream: Send,
     &lt;C::TlsConnect <span class="kw">as </span>TlsConnect&lt;Socket&gt;&gt;::Future: Send,
 {
     <span class="kw">type </span>TypeSystem = PostgresTypeSystem;
-    <span class="kw">type </span>Parser&lt;<span class="lifetime">&#39;a</span>&gt; = PostgresCSVSourceParser&lt;<span class="lifetime">&#39;a</span>&gt;;
+    <span class="kw">type </span>Parser&lt;<span class="lifetime">'a</span>&gt; = PostgresCSVSourceParser&lt;<span class="lifetime">'a</span>&gt;;
     <span class="kw">type </span>Error = PostgresSourceError;
 
     <span class="attr">#[throws(PostgresSourceError)]
@@ -1979,8 +2307,8 @@
     }
 
     <span class="attr">#[throws(PostgresSourceError)]
-    </span><span class="kw">fn </span>parser(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="self">Self</span>::Parser&lt;<span class="lifetime">&#39;_</span>&gt; {
-        <span class="kw">let </span>query = <span class="macro">format!</span>(<span class="string">&quot;COPY ({}) TO STDOUT WITH CSV&quot;</span>, <span class="self">self</span>.query);
+    </span><span class="kw">fn </span>parser(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="self">Self</span>::Parser&lt;<span class="lifetime">'_</span>&gt; {
+        <span class="kw">let </span>query = <span class="macro">format!</span>(<span class="string">"COPY ({}) TO STDOUT WITH CSV"</span>, <span class="self">self</span>.query);
         <span class="kw">let </span>reader = <span class="self">self</span>.conn.copy_out(<span class="kw-2">&amp;*</span>query)<span class="question-mark">?</span>; <span class="comment">// unless reading the data, it seems like issue the query is fast
         </span><span class="kw">let </span>iter = ReaderBuilder::new()
             .has_headers(<span class="bool-val">false</span>)
@@ -2001,13 +2329,13 @@
 
 <span class="kw">impl</span>&lt;C&gt; SourcePartition <span class="kw">for </span>PostgresSourcePartition&lt;CursorProtocol, C&gt;
 <span class="kw">where
-    </span>C: MakeTlsConnect&lt;Socket&gt; + Clone + <span class="lifetime">&#39;static </span>+ Sync + Send,
+    </span>C: MakeTlsConnect&lt;Socket&gt; + Clone + <span class="lifetime">'static </span>+ Sync + Send,
     C::TlsConnect: Send,
     C::Stream: Send,
     &lt;C::TlsConnect <span class="kw">as </span>TlsConnect&lt;Socket&gt;&gt;::Future: Send,
 {
     <span class="kw">type </span>TypeSystem = PostgresTypeSystem;
-    <span class="kw">type </span>Parser&lt;<span class="lifetime">&#39;a</span>&gt; = PostgresRawSourceParser&lt;<span class="lifetime">&#39;a</span>&gt;;
+    <span class="kw">type </span>Parser&lt;<span class="lifetime">'a</span>&gt; = PostgresRawSourceParser&lt;<span class="lifetime">'a</span>&gt;;
     <span class="kw">type </span>Error = PostgresSourceError;
 
     <span class="attr">#[throws(PostgresSourceError)]
@@ -2016,7 +2344,7 @@
     }
 
     <span class="attr">#[throws(PostgresSourceError)]
-    </span><span class="kw">fn </span>parser(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="self">Self</span>::Parser&lt;<span class="lifetime">&#39;_</span>&gt; {
+    </span><span class="kw">fn </span>parser(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="self">Self</span>::Parser&lt;<span class="lifetime">'_</span>&gt; {
         <span class="kw">let </span>iter = <span class="self">self
             </span>.conn
             .query_raw::&lt;<span class="kw">_</span>, bool, <span class="kw">_</span>&gt;(<span class="self">self</span>.query.as_str(), <span class="macro">vec!</span>[])<span class="question-mark">?</span>; <span class="comment">// unless reading the data, it seems like issue the query is fast
@@ -2031,8 +2359,8 @@
         <span class="self">self</span>.ncols
     }
 }
-<span class="kw">pub struct </span>PostgresBinarySourcePartitionParser&lt;<span class="lifetime">&#39;a</span>&gt; {
-    iter: BinaryCopyOutIter&lt;<span class="lifetime">&#39;a</span>&gt;,
+<span class="kw">pub struct </span>PostgresBinarySourcePartitionParser&lt;<span class="lifetime">'a</span>&gt; {
+    iter: BinaryCopyOutIter&lt;<span class="lifetime">'a</span>&gt;,
     rowbuf: Vec&lt;BinaryCopyOutRow&gt;,
     ncols: usize,
     current_col: usize,
@@ -2040,8 +2368,8 @@
     is_finished: bool,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; PostgresBinarySourcePartitionParser&lt;<span class="lifetime">&#39;a</span>&gt; {
-    <span class="kw">pub fn </span>new(iter: BinaryCopyOutIter&lt;<span class="lifetime">&#39;a</span>&gt;, schema: <span class="kw-2">&amp;</span>[PostgresTypeSystem]) -&gt; <span class="self">Self </span>{
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; PostgresBinarySourcePartitionParser&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">pub fn </span>new(iter: BinaryCopyOutIter&lt;<span class="lifetime">'a</span>&gt;, schema: <span class="kw-2">&amp;</span>[PostgresTypeSystem]) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             iter,
             rowbuf: Vec::with_capacity(DB_BUFFER_SIZE),
@@ -2061,7 +2389,7 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; PartitionParser&lt;<span class="lifetime">&#39;a</span>&gt; <span class="kw">for </span>PostgresBinarySourcePartitionParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; PartitionParser&lt;<span class="lifetime">'a</span>&gt; <span class="kw">for </span>PostgresBinarySourcePartitionParser&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">type </span>TypeSystem = PostgresTypeSystem;
     <span class="kw">type </span>Error = PostgresSourceError;
 
@@ -2102,11 +2430,11 @@
 <span class="macro">macro_rules! </span>impl_produce {
     ($(<span class="macro-nonterminal">$t</span>: ty,)+) =&gt; {
         $(
-            <span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, <span class="macro-nonterminal">$t</span>&gt; <span class="kw">for </span>PostgresBinarySourcePartitionParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+            <span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, <span class="macro-nonterminal">$t</span>&gt; <span class="kw">for </span>PostgresBinarySourcePartitionParser&lt;<span class="lifetime">'a</span>&gt; {
                 <span class="kw">type </span>Error = PostgresSourceError;
 
                 <span class="attr">#[throws(PostgresSourceError)]
-                </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="macro-nonterminal">$t </span>{
+                </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="macro-nonterminal">$t </span>{
                     <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
                     <span class="kw">let </span>row = <span class="kw-2">&amp;</span><span class="self">self</span>.rowbuf[ridx];
                     <span class="kw">let </span>val = row.try_get(cidx)<span class="question-mark">?</span>;
@@ -2114,11 +2442,11 @@
                 }
             }
 
-            <span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span>&lt;<span class="macro-nonterminal">$t</span>&gt;&gt; <span class="kw">for </span>PostgresBinarySourcePartitionParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+            <span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, <span class="prelude-ty">Option</span>&lt;<span class="macro-nonterminal">$t</span>&gt;&gt; <span class="kw">for </span>PostgresBinarySourcePartitionParser&lt;<span class="lifetime">'a</span>&gt; {
                 <span class="kw">type </span>Error = PostgresSourceError;
 
                 <span class="attr">#[throws(PostgresSourceError)]
-                </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="macro-nonterminal">$t</span>&gt; {
+                </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="macro-nonterminal">$t</span>&gt; {
                     <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
                     <span class="kw">let </span>row = <span class="kw-2">&amp;</span><span class="self">self</span>.rowbuf[ridx];
                     <span class="kw">let </span>val = row.try_get(cidx)<span class="question-mark">?</span>;
@@ -2145,39 +2473,138 @@
     Vec&lt;Decimal&gt;,
     bool,
     Vec&lt;bool&gt;,
-    <span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span>str,
+    <span class="kw-2">&amp;</span><span class="lifetime">'r </span>str,
     Vec&lt;u8&gt;,
     NaiveTime,
-    NaiveDateTime,
-    DateTime&lt;Utc&gt;,
-    NaiveDate,
-    Uuid,
+    <span class="comment">// NaiveDateTime,
+    // DateTime&lt;Utc&gt;,
+    // NaiveDate,
+    </span>Uuid,
     Value,
     Vec&lt;String&gt;,
 );
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, HashMap&lt;String, <span class="prelude-ty">Option</span>&lt;String&gt;&gt;&gt;
-    <span class="kw">for </span>PostgresBinarySourcePartitionParser&lt;<span class="lifetime">&#39;a</span>&gt;
+<span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, NaiveDateTime&gt; <span class="kw">for </span>PostgresBinarySourcePartitionParser&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">type </span>Error = PostgresSourceError;
+
+    <span class="attr">#[throws(PostgresSourceError)]
+    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; NaiveDateTime {
+        <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
+        <span class="kw">let </span>row = <span class="kw-2">&amp;</span><span class="self">self</span>.rowbuf[ridx];
+        <span class="kw">let </span>val = row.try_get(cidx)<span class="question-mark">?</span>;
+        <span class="kw">match </span>val {
+            postgres::types::Timestamp::PosInfinity =&gt; NaiveDateTime::MAX,
+            postgres::types::Timestamp::NegInfinity =&gt; NaiveDateTime::MIN,
+            postgres::types::Timestamp::Value(t) =&gt; t,
+        }
+    }
+}
+
+<span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, <span class="prelude-ty">Option</span>&lt;NaiveDateTime&gt;&gt; <span class="kw">for </span>PostgresBinarySourcePartitionParser&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">type </span>Error = PostgresSourceError;
+
+    <span class="attr">#[throws(PostgresSourceError)]
+    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;NaiveDateTime&gt; {
+        <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
+        <span class="kw">let </span>row = <span class="kw-2">&amp;</span><span class="self">self</span>.rowbuf[ridx];
+        <span class="kw">let </span>val = row.try_get(cidx)<span class="question-mark">?</span>;
+        <span class="kw">match </span>val {
+            <span class="prelude-val">Some</span>(postgres::types::Timestamp::PosInfinity) =&gt; <span class="prelude-val">Some</span>(NaiveDateTime::MAX),
+            <span class="prelude-val">Some</span>(postgres::types::Timestamp::NegInfinity) =&gt; <span class="prelude-val">Some</span>(NaiveDateTime::MIN),
+            <span class="prelude-val">Some</span>(postgres::types::Timestamp::Value(t)) =&gt; t,
+            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None
+        </span>}
+    }
+}
+
+<span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, DateTime&lt;Utc&gt;&gt; <span class="kw">for </span>PostgresBinarySourcePartitionParser&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">type </span>Error = PostgresSourceError;
+
+    <span class="attr">#[throws(PostgresSourceError)]
+    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; DateTime&lt;Utc&gt; {
+        <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
+        <span class="kw">let </span>row = <span class="kw-2">&amp;</span><span class="self">self</span>.rowbuf[ridx];
+        <span class="kw">let </span>val = row.try_get(cidx)<span class="question-mark">?</span>;
+        <span class="kw">match </span>val {
+            postgres::types::Timestamp::PosInfinity =&gt; DateTime::&lt;Utc&gt;::MAX_UTC,
+            postgres::types::Timestamp::NegInfinity =&gt; DateTime::&lt;Utc&gt;::MIN_UTC,
+            postgres::types::Timestamp::Value(t) =&gt; t,
+        }
+    }
+}
+
+<span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;&gt; <span class="kw">for </span>PostgresBinarySourcePartitionParser&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">type </span>Error = PostgresSourceError;
+
+    <span class="attr">#[throws(PostgresSourceError)]
+    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt; {
+        <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
+        <span class="kw">let </span>row = <span class="kw-2">&amp;</span><span class="self">self</span>.rowbuf[ridx];
+        <span class="kw">let </span>val = row.try_get(cidx)<span class="question-mark">?</span>;
+        <span class="kw">match </span>val {
+            <span class="prelude-val">Some</span>(postgres::types::Timestamp::PosInfinity) =&gt; <span class="prelude-val">Some</span>(DateTime::&lt;Utc&gt;::MAX_UTC),
+            <span class="prelude-val">Some</span>(postgres::types::Timestamp::NegInfinity) =&gt; <span class="prelude-val">Some</span>(DateTime::&lt;Utc&gt;::MIN_UTC),
+            <span class="prelude-val">Some</span>(postgres::types::Timestamp::Value(t)) =&gt; t,
+            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None
+        </span>}
+    }
+}
+
+<span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, NaiveDate&gt; <span class="kw">for </span>PostgresBinarySourcePartitionParser&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">type </span>Error = PostgresSourceError;
+
+    <span class="attr">#[throws(PostgresSourceError)]
+    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; NaiveDate {
+        <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
+        <span class="kw">let </span>row = <span class="kw-2">&amp;</span><span class="self">self</span>.rowbuf[ridx];
+        <span class="kw">let </span>val = row.try_get(cidx)<span class="question-mark">?</span>;
+        <span class="kw">match </span>val {
+            postgres::types::Date::PosInfinity =&gt; NaiveDate::MAX,
+            postgres::types::Date::NegInfinity =&gt; NaiveDate::MIN,
+            postgres::types::Date::Value(t) =&gt; t,
+        }
+    }
+}
+
+<span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, <span class="prelude-ty">Option</span>&lt;NaiveDate&gt;&gt; <span class="kw">for </span>PostgresBinarySourcePartitionParser&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">type </span>Error = PostgresSourceError;
+
+    <span class="attr">#[throws(PostgresSourceError)]
+    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;NaiveDate&gt; {
+        <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
+        <span class="kw">let </span>row = <span class="kw-2">&amp;</span><span class="self">self</span>.rowbuf[ridx];
+        <span class="kw">let </span>val = row.try_get(cidx)<span class="question-mark">?</span>;
+        <span class="kw">match </span>val {
+            <span class="prelude-val">Some</span>(postgres::types::Date::PosInfinity) =&gt; <span class="prelude-val">Some</span>(NaiveDate::MAX),
+            <span class="prelude-val">Some</span>(postgres::types::Date::NegInfinity) =&gt; <span class="prelude-val">Some</span>(NaiveDate::MIN),
+            <span class="prelude-val">Some</span>(postgres::types::Date::Value(t)) =&gt; t,
+            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None
+        </span>}
+    }
+}
+
+<span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, HashMap&lt;String, <span class="prelude-ty">Option</span>&lt;String&gt;&gt;&gt;
+    <span class="kw">for </span>PostgresBinarySourcePartitionParser&lt;<span class="lifetime">'a</span>&gt;
 {
     <span class="kw">type </span>Error = PostgresSourceError;
     <span class="attr">#[throws(PostgresSourceError)]
     </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; HashMap&lt;String, <span class="prelude-ty">Option</span>&lt;String&gt;&gt; {
-        <span class="macro">unimplemented!</span>(<span class="string">&quot;Please use `cursor` protocol for hstore type&quot;</span>);
+        <span class="macro">unimplemented!</span>(<span class="string">"Please use `cursor` protocol for hstore type"</span>);
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span>&lt;HashMap&lt;String, <span class="prelude-ty">Option</span>&lt;String&gt;&gt;&gt;&gt;
-    <span class="kw">for </span>PostgresBinarySourcePartitionParser&lt;<span class="lifetime">&#39;a</span>&gt;
+<span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, <span class="prelude-ty">Option</span>&lt;HashMap&lt;String, <span class="prelude-ty">Option</span>&lt;String&gt;&gt;&gt;&gt;
+    <span class="kw">for </span>PostgresBinarySourcePartitionParser&lt;<span class="lifetime">'a</span>&gt;
 {
     <span class="kw">type </span>Error = PostgresSourceError;
     <span class="attr">#[throws(PostgresSourceError)]
     </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;HashMap&lt;String, <span class="prelude-ty">Option</span>&lt;String&gt;&gt;&gt; {
-        <span class="macro">unimplemented!</span>(<span class="string">&quot;Please use `cursor` protocol for hstore type&quot;</span>);
+        <span class="macro">unimplemented!</span>(<span class="string">"Please use `cursor` protocol for hstore type"</span>);
     }
 }
 
-<span class="kw">pub struct </span>PostgresCSVSourceParser&lt;<span class="lifetime">&#39;a</span>&gt; {
-    iter: StringRecordsIntoIter&lt;CopyOutReader&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
+<span class="kw">pub struct </span>PostgresCSVSourceParser&lt;<span class="lifetime">'a</span>&gt; {
+    iter: StringRecordsIntoIter&lt;CopyOutReader&lt;<span class="lifetime">'a</span>&gt;&gt;,
     rowbuf: Vec&lt;StringRecord&gt;,
     ncols: usize,
     current_col: usize,
@@ -2185,9 +2612,9 @@
     is_finished: bool,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; PostgresCSVSourceParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; PostgresCSVSourceParser&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">pub fn </span>new(
-        iter: StringRecordsIntoIter&lt;CopyOutReader&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
+        iter: StringRecordsIntoIter&lt;CopyOutReader&lt;<span class="lifetime">'a</span>&gt;&gt;,
         schema: <span class="kw-2">&amp;</span>[PostgresTypeSystem],
     ) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
@@ -2209,7 +2636,7 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; PartitionParser&lt;<span class="lifetime">&#39;a</span>&gt; <span class="kw">for </span>PostgresCSVSourceParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; PartitionParser&lt;<span class="lifetime">'a</span>&gt; <span class="kw">for </span>PostgresCSVSourceParser&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">type </span>Error = PostgresSourceError;
     <span class="kw">type </span>TypeSystem = PostgresTypeSystem;
 
@@ -2243,11 +2670,11 @@
 <span class="macro">macro_rules! </span>impl_csv_produce {
     ($(<span class="macro-nonterminal">$t</span>: ty,)+) =&gt; {
         $(
-            <span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, <span class="macro-nonterminal">$t</span>&gt; <span class="kw">for </span>PostgresCSVSourceParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+            <span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, <span class="macro-nonterminal">$t</span>&gt; <span class="kw">for </span>PostgresCSVSourceParser&lt;<span class="lifetime">'a</span>&gt; {
                 <span class="kw">type </span>Error = PostgresSourceError;
 
                 <span class="attr">#[throws(PostgresSourceError)]
-                </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="macro-nonterminal">$t </span>{
+                </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="macro-nonterminal">$t </span>{
                     <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
                     <span class="self">self</span>.rowbuf[ridx][cidx].parse().map_err(|<span class="kw">_</span>| {
                         ConnectorXError::cannot_produce::&lt;<span class="macro-nonterminal">$t</span>&gt;(<span class="prelude-val">Some</span>(<span class="self">self</span>.rowbuf[ridx][cidx].into()))
@@ -2255,14 +2682,14 @@
                 </span>}
             }
 
-            <span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span>&lt;<span class="macro-nonterminal">$t</span>&gt;&gt; <span class="kw">for </span>PostgresCSVSourceParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+            <span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, <span class="prelude-ty">Option</span>&lt;<span class="macro-nonterminal">$t</span>&gt;&gt; <span class="kw">for </span>PostgresCSVSourceParser&lt;<span class="lifetime">'a</span>&gt; {
                 <span class="kw">type </span>Error = PostgresSourceError;
 
                 <span class="attr">#[throws(PostgresSourceError)]
-                </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="macro-nonterminal">$t</span>&gt; {
+                </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="macro-nonterminal">$t</span>&gt; {
                     <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
                     <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.rowbuf[ridx][cidx][..] {
-                        <span class="string">&quot;&quot; </span>=&gt; <span class="prelude-val">None</span>,
+                        <span class="string">"" </span>=&gt; <span class="prelude-val">None</span>,
                         v =&gt; <span class="prelude-val">Some</span>(v.parse().map_err(|<span class="kw">_</span>| {
                             ConnectorXError::cannot_produce::&lt;<span class="macro-nonterminal">$t</span>&gt;(<span class="prelude-val">Some</span>(<span class="self">self</span>.rowbuf[ridx][cidx].into()))
                         })<span class="question-mark">?</span>),
@@ -2273,12 +2700,12 @@
     };
 }
 
-<span class="macro">impl_csv_produce!</span>(i8, i16, i32, i64, f32, f64, Decimal, Uuid,);
+<span class="macro">impl_csv_produce!</span>(i8, i16, i32, i64, f32, f64, Uuid,);
 
 <span class="macro">macro_rules! </span>impl_csv_vec_produce {
     ($(<span class="macro-nonterminal">$t</span>: ty,)+) =&gt; {
         $(
-            <span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, Vec&lt;<span class="macro-nonterminal">$t</span>&gt;&gt; <span class="kw">for </span>PostgresCSVSourceParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+            <span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, Vec&lt;<span class="macro-nonterminal">$t</span>&gt;&gt; <span class="kw">for </span>PostgresCSVSourceParser&lt;<span class="lifetime">'a</span>&gt; {
                 <span class="kw">type </span>Error = PostgresSourceError;
 
                 <span class="attr">#[throws(PostgresSourceError)]
@@ -2286,10 +2713,10 @@
                     <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
                     <span class="kw">let </span>s = <span class="kw-2">&amp;</span><span class="self">self</span>.rowbuf[ridx][cidx][..];
                     <span class="kw">match </span>s {
-                        <span class="string">&quot;{}&quot; </span>=&gt; <span class="macro">vec!</span>[],
+                        <span class="string">"{}" </span>=&gt; <span class="macro">vec!</span>[],
                         <span class="kw">_ if </span>s.len() &lt; <span class="number">3 </span>=&gt; <span class="macro">throw!</span>(ConnectorXError::cannot_produce::&lt;<span class="macro-nonterminal">$t</span>&gt;(<span class="prelude-val">Some</span>(s.into()))),
                         s =&gt; s[<span class="number">1</span>..s.len() - <span class="number">1</span>]
-                            .split(<span class="string">&quot;,&quot;</span>)
+                            .split(<span class="string">","</span>)
                             .map(|v| {
                                 v.parse()
                                     .map_err(|<span class="kw">_</span>| ConnectorXError::cannot_produce::&lt;<span class="macro-nonterminal">$t</span>&gt;(<span class="prelude-val">Some</span>(s.into())))
@@ -2299,7 +2726,7 @@
                 }
             }
 
-            <span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span>&lt;Vec&lt;<span class="macro-nonterminal">$t</span>&gt;&gt;&gt; <span class="kw">for </span>PostgresCSVSourceParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+            <span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, <span class="prelude-ty">Option</span>&lt;Vec&lt;<span class="macro-nonterminal">$t</span>&gt;&gt;&gt; <span class="kw">for </span>PostgresCSVSourceParser&lt;<span class="lifetime">'a</span>&gt; {
                 <span class="kw">type </span>Error = PostgresSourceError;
 
                 <span class="attr">#[throws(PostgresSourceError)]
@@ -2307,12 +2734,12 @@
                     <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
                     <span class="kw">let </span>s = <span class="kw-2">&amp;</span><span class="self">self</span>.rowbuf[ridx][cidx][..];
                     <span class="kw">match </span>s {
-                        <span class="string">&quot;&quot; </span>=&gt; <span class="prelude-val">None</span>,
-                        <span class="string">&quot;{}&quot; </span>=&gt; <span class="prelude-val">Some</span>(<span class="macro">vec!</span>[]),
+                        <span class="string">"" </span>=&gt; <span class="prelude-val">None</span>,
+                        <span class="string">"{}" </span>=&gt; <span class="prelude-val">Some</span>(<span class="macro">vec!</span>[]),
                         <span class="kw">_ if </span>s.len() &lt; <span class="number">3 </span>=&gt; <span class="macro">throw!</span>(ConnectorXError::cannot_produce::&lt;<span class="macro-nonterminal">$t</span>&gt;(<span class="prelude-val">Some</span>(s.into()))),
                         s =&gt; <span class="prelude-val">Some</span>(
                             s[<span class="number">1</span>..s.len() - <span class="number">1</span>]
-                                .split(<span class="string">&quot;,&quot;</span>)
+                                .split(<span class="string">","</span>)
                                 .map(|v| {
                                     v.parse()
                                         .map_err(|<span class="kw">_</span>| ConnectorXError::cannot_produce::&lt;<span class="macro-nonterminal">$t</span>&gt;(<span class="prelude-val">Some</span>(s.into())))
@@ -2328,31 +2755,31 @@
 
 <span class="macro">impl_csv_vec_produce!</span>(i8, i16, i32, i64, f32, f64, Decimal, String,);
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, HashMap&lt;String, <span class="prelude-ty">Option</span>&lt;String&gt;&gt;&gt; <span class="kw">for </span>PostgresCSVSourceParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, HashMap&lt;String, <span class="prelude-ty">Option</span>&lt;String&gt;&gt;&gt; <span class="kw">for </span>PostgresCSVSourceParser&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">type </span>Error = PostgresSourceError;
     <span class="attr">#[throws(PostgresSourceError)]
     </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; HashMap&lt;String, <span class="prelude-ty">Option</span>&lt;String&gt;&gt; {
-        <span class="macro">unimplemented!</span>(<span class="string">&quot;Please use `cursor` protocol for hstore type&quot;</span>);
+        <span class="macro">unimplemented!</span>(<span class="string">"Please use `cursor` protocol for hstore type"</span>);
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span>&lt;HashMap&lt;String, <span class="prelude-ty">Option</span>&lt;String&gt;&gt;&gt;&gt; <span class="kw">for </span>PostgresCSVSourceParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, <span class="prelude-ty">Option</span>&lt;HashMap&lt;String, <span class="prelude-ty">Option</span>&lt;String&gt;&gt;&gt;&gt; <span class="kw">for </span>PostgresCSVSourceParser&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">type </span>Error = PostgresSourceError;
     <span class="attr">#[throws(PostgresSourceError)]
     </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;HashMap&lt;String, <span class="prelude-ty">Option</span>&lt;String&gt;&gt;&gt; {
-        <span class="macro">unimplemented!</span>(<span class="string">&quot;Please use `cursor` protocol for hstore type&quot;</span>);
+        <span class="macro">unimplemented!</span>(<span class="string">"Please use `cursor` protocol for hstore type"</span>);
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, bool&gt; <span class="kw">for </span>PostgresCSVSourceParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, bool&gt; <span class="kw">for </span>PostgresCSVSourceParser&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">type </span>Error = PostgresSourceError;
 
     <span class="attr">#[throws(PostgresSourceError)]
     </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; bool {
         <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
         <span class="kw">let </span>ret = <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.rowbuf[ridx][cidx][..] {
-            <span class="string">&quot;t&quot; </span>=&gt; <span class="bool-val">true</span>,
-            <span class="string">&quot;f&quot; </span>=&gt; <span class="bool-val">false</span>,
+            <span class="string">"t" </span>=&gt; <span class="bool-val">true</span>,
+            <span class="string">"f" </span>=&gt; <span class="bool-val">false</span>,
             <span class="kw">_ </span>=&gt; <span class="macro">throw!</span>(ConnectorXError::cannot_produce::&lt;bool&gt;(<span class="prelude-val">Some</span>(
                 <span class="self">self</span>.rowbuf[ridx][cidx].into()
             ))),
@@ -2361,16 +2788,16 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span>&lt;bool&gt;&gt; <span class="kw">for </span>PostgresCSVSourceParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, <span class="prelude-ty">Option</span>&lt;bool&gt;&gt; <span class="kw">for </span>PostgresCSVSourceParser&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">type </span>Error = PostgresSourceError;
 
     <span class="attr">#[throws(PostgresSourceError)]
     </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;bool&gt; {
         <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
         <span class="kw">let </span>ret = <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.rowbuf[ridx][cidx][..] {
-            <span class="string">&quot;&quot; </span>=&gt; <span class="prelude-val">None</span>,
-            <span class="string">&quot;t&quot; </span>=&gt; <span class="prelude-val">Some</span>(<span class="bool-val">true</span>),
-            <span class="string">&quot;f&quot; </span>=&gt; <span class="prelude-val">Some</span>(<span class="bool-val">false</span>),
+            <span class="string">"" </span>=&gt; <span class="prelude-val">None</span>,
+            <span class="string">"t" </span>=&gt; <span class="prelude-val">Some</span>(<span class="bool-val">true</span>),
+            <span class="string">"f" </span>=&gt; <span class="prelude-val">Some</span>(<span class="bool-val">false</span>),
             <span class="kw">_ </span>=&gt; <span class="macro">throw!</span>(ConnectorXError::cannot_produce::&lt;bool&gt;(<span class="prelude-val">Some</span>(
                 <span class="self">self</span>.rowbuf[ridx][cidx].into()
             ))),
@@ -2379,7 +2806,7 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, Vec&lt;bool&gt;&gt; <span class="kw">for </span>PostgresCSVSourceParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, Vec&lt;bool&gt;&gt; <span class="kw">for </span>PostgresCSVSourceParser&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">type </span>Error = PostgresSourceError;
 
     <span class="attr">#[throws(PostgresSourceError)]
@@ -2387,13 +2814,13 @@
         <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
         <span class="kw">let </span>s = <span class="kw-2">&amp;</span><span class="self">self</span>.rowbuf[ridx][cidx][..];
         <span class="kw">match </span>s {
-            <span class="string">&quot;{}&quot; </span>=&gt; <span class="macro">vec!</span>[],
+            <span class="string">"{}" </span>=&gt; <span class="macro">vec!</span>[],
             <span class="kw">_ if </span>s.len() &lt; <span class="number">3 </span>=&gt; <span class="macro">throw!</span>(ConnectorXError::cannot_produce::&lt;bool&gt;(<span class="prelude-val">Some</span>(s.into()))),
             s =&gt; s[<span class="number">1</span>..s.len() - <span class="number">1</span>]
-                .split(<span class="string">&#39;,&#39;</span>)
+                .split(<span class="string">','</span>)
                 .map(|v| <span class="kw">match </span>v {
-                    <span class="string">&quot;t&quot; </span>=&gt; <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>),
-                    <span class="string">&quot;f&quot; </span>=&gt; <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>),
+                    <span class="string">"t" </span>=&gt; <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>),
+                    <span class="string">"f" </span>=&gt; <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>),
                     <span class="kw">_ </span>=&gt; <span class="macro">throw!</span>(ConnectorXError::cannot_produce::&lt;bool&gt;(<span class="prelude-val">Some</span>(s.into()))),
                 })
                 .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;bool&gt;, ConnectorXError&gt;&gt;()<span class="question-mark">?</span>,
@@ -2401,7 +2828,7 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span>&lt;Vec&lt;bool&gt;&gt;&gt; <span class="kw">for </span>PostgresCSVSourceParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, <span class="prelude-ty">Option</span>&lt;Vec&lt;bool&gt;&gt;&gt; <span class="kw">for </span>PostgresCSVSourceParser&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">type </span>Error = PostgresSourceError;
 
     <span class="attr">#[throws(PostgresSourceError)]
@@ -2409,15 +2836,15 @@
         <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
         <span class="kw">let </span>s = <span class="kw-2">&amp;</span><span class="self">self</span>.rowbuf[ridx][cidx][..];
         <span class="kw">match </span>s {
-            <span class="string">&quot;&quot; </span>=&gt; <span class="prelude-val">None</span>,
-            <span class="string">&quot;{}&quot; </span>=&gt; <span class="prelude-val">Some</span>(<span class="macro">vec!</span>[]),
+            <span class="string">"" </span>=&gt; <span class="prelude-val">None</span>,
+            <span class="string">"{}" </span>=&gt; <span class="prelude-val">Some</span>(<span class="macro">vec!</span>[]),
             <span class="kw">_ if </span>s.len() &lt; <span class="number">3 </span>=&gt; <span class="macro">throw!</span>(ConnectorXError::cannot_produce::&lt;bool&gt;(<span class="prelude-val">Some</span>(s.into()))),
             s =&gt; <span class="prelude-val">Some</span>(
                 s[<span class="number">1</span>..s.len() - <span class="number">1</span>]
-                    .split(<span class="string">&#39;,&#39;</span>)
+                    .split(<span class="string">','</span>)
                     .map(|v| <span class="kw">match </span>v {
-                        <span class="string">&quot;t&quot; </span>=&gt; <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>),
-                        <span class="string">&quot;f&quot; </span>=&gt; <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>),
+                        <span class="string">"t" </span>=&gt; <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>),
+                        <span class="string">"f" </span>=&gt; <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>),
                         <span class="kw">_ </span>=&gt; <span class="macro">throw!</span>(ConnectorXError::cannot_produce::&lt;bool&gt;(<span class="prelude-val">Some</span>(s.into()))),
                     })
                     .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;bool&gt;, ConnectorXError&gt;&gt;()<span class="question-mark">?</span>,
@@ -2426,31 +2853,72 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, DateTime&lt;Utc&gt;&gt; <span class="kw">for </span>PostgresCSVSourceParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+
+<span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, Decimal&gt; <span class="kw">for </span>PostgresCSVSourceParser&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">type </span>Error = PostgresSourceError;
+
+    <span class="attr">#[throws(PostgresSourceError)]
+    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; Decimal {
+        <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
+        <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.rowbuf[ridx][cidx][..] {
+            <span class="string">"Infinity" </span>=&gt; Decimal::MAX,
+            <span class="string">"-Infinity" </span>=&gt; Decimal::MIN,
+            v =&gt; v.parse().map_err(|<span class="kw">_</span>| {
+                ConnectorXError::cannot_produce::&lt;Decimal&gt;(<span class="prelude-val">Some</span>(v.into()))
+            })<span class="question-mark">?
+        </span>}
+    }
+}
+
+
+<span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, <span class="prelude-ty">Option</span>&lt;Decimal&gt;&gt; <span class="kw">for </span>PostgresCSVSourceParser&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">type </span>Error = PostgresSourceError;
+
+    <span class="attr">#[throws(PostgresSourceError)]
+    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;Decimal&gt; {
+        <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
+        <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.rowbuf[ridx][cidx][..] {
+            <span class="string">"" </span>=&gt; <span class="prelude-val">None</span>,
+            <span class="string">"Infinity" </span>=&gt; <span class="prelude-val">Some</span>(Decimal::MAX),
+            <span class="string">"-Infinity" </span>=&gt; <span class="prelude-val">Some</span>(Decimal::MIN),
+            v =&gt; <span class="prelude-val">Some</span>(v.parse().map_err(|<span class="kw">_</span>| {
+                ConnectorXError::cannot_produce::&lt;Decimal&gt;(<span class="prelude-val">Some</span>(v.into()))
+            })<span class="question-mark">?</span>),
+        }
+    }
+}
+
+
+<span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, DateTime&lt;Utc&gt;&gt; <span class="kw">for </span>PostgresCSVSourceParser&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">type </span>Error = PostgresSourceError;
 
     <span class="attr">#[throws(PostgresSourceError)]
     </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; DateTime&lt;Utc&gt; {
         <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
-        <span class="kw">let </span>s: <span class="kw-2">&amp;</span>str = <span class="kw-2">&amp;</span><span class="self">self</span>.rowbuf[ridx][cidx][..];
-        <span class="comment">// postgres csv return example: 1970-01-01 00:00:01+00
-        </span><span class="macro">format!</span>(<span class="string">&quot;{}:00&quot;</span>, s).parse().map_err(|<span class="kw">_</span>| {
-            ConnectorXError::cannot_produce::&lt;DateTime&lt;Utc&gt;&gt;(<span class="prelude-val">Some</span>(<span class="self">self</span>.rowbuf[ridx][cidx].into()))
-        })<span class="question-mark">?
-    </span>}
+        <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.rowbuf[ridx][cidx][..] {
+            <span class="string">"infinity" </span>=&gt; DateTime::&lt;Utc&gt;::MAX_UTC,
+            <span class="string">"-infinity" </span>=&gt; DateTime::&lt;Utc&gt;::MIN_UTC,
+            <span class="comment">// postgres csv return example: 1970-01-01 00:00:01+00
+            </span>v =&gt; <span class="macro">format!</span>(<span class="string">"{}:00"</span>, v).parse().map_err(|<span class="kw">_</span>| {
+                    ConnectorXError::cannot_produce::&lt;DateTime&lt;Utc&gt;&gt;(<span class="prelude-val">Some</span>(v.into()))
+            })<span class="question-mark">?
+        </span>}
+    }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;&gt; <span class="kw">for </span>PostgresCSVSourceParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;&gt; <span class="kw">for </span>PostgresCSVSourceParser&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">type </span>Error = PostgresSourceError;
 
     <span class="attr">#[throws(PostgresSourceError)]
     </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt; {
         <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
         <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.rowbuf[ridx][cidx][..] {
-            <span class="string">&quot;&quot; </span>=&gt; <span class="prelude-val">None</span>,
+            <span class="string">"" </span>=&gt; <span class="prelude-val">None</span>,
+            <span class="string">"infinity" </span>=&gt; <span class="prelude-val">Some</span>(DateTime::&lt;Utc&gt;::MAX_UTC),
+            <span class="string">"-infinity" </span>=&gt; <span class="prelude-val">Some</span>(DateTime::&lt;Utc&gt;::MIN_UTC),
             v =&gt; {
                 <span class="comment">// postgres csv return example: 1970-01-01 00:00:01+00
-                </span><span class="prelude-val">Some</span>(<span class="macro">format!</span>(<span class="string">&quot;{}:00&quot;</span>, v).parse().map_err(|<span class="kw">_</span>| {
+                </span><span class="prelude-val">Some</span>(<span class="macro">format!</span>(<span class="string">"{}:00"</span>, v).parse().map_err(|<span class="kw">_</span>| {
                     ConnectorXError::cannot_produce::&lt;DateTime&lt;Utc&gt;&gt;(<span class="prelude-val">Some</span>(v.into()))
                 })<span class="question-mark">?</span>)
             }
@@ -2458,60 +2926,72 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, NaiveDate&gt; <span class="kw">for </span>PostgresCSVSourceParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, NaiveDate&gt; <span class="kw">for </span>PostgresCSVSourceParser&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">type </span>Error = PostgresSourceError;
 
     <span class="attr">#[throws(PostgresSourceError)]
     </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; NaiveDate {
         <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
-        NaiveDate::parse_from_str(<span class="kw-2">&amp;</span><span class="self">self</span>.rowbuf[ridx][cidx], <span class="string">&quot;%Y-%m-%d&quot;</span>).map_err(|<span class="kw">_</span>| {
-            ConnectorXError::cannot_produce::&lt;NaiveDate&gt;(<span class="prelude-val">Some</span>(<span class="self">self</span>.rowbuf[ridx][cidx].into()))
-        })<span class="question-mark">?
-    </span>}
+        <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.rowbuf[ridx][cidx][..] {
+            <span class="string">"infinity" </span>=&gt; NaiveDate::MAX,
+            <span class="string">"-infinity" </span>=&gt; NaiveDate::MIN,
+            v =&gt; NaiveDate::parse_from_str(v, <span class="string">"%Y-%m-%d"</span>).map_err(|<span class="kw">_</span>| {
+                ConnectorXError::cannot_produce::&lt;NaiveDate&gt;(<span class="prelude-val">Some</span>(v.into()))
+            })<span class="question-mark">?
+        </span>}
+    }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span>&lt;NaiveDate&gt;&gt; <span class="kw">for </span>PostgresCSVSourceParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, <span class="prelude-ty">Option</span>&lt;NaiveDate&gt;&gt; <span class="kw">for </span>PostgresCSVSourceParser&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">type </span>Error = PostgresSourceError;
 
     <span class="attr">#[throws(PostgresSourceError)]
     </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;NaiveDate&gt; {
         <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
         <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.rowbuf[ridx][cidx][..] {
-            <span class="string">&quot;&quot; </span>=&gt; <span class="prelude-val">None</span>,
+            <span class="string">"" </span>=&gt; <span class="prelude-val">None</span>,
+            <span class="string">"infinity" </span>=&gt; <span class="prelude-val">Some</span>(NaiveDate::MAX),
+            <span class="string">"-infinity" </span>=&gt; <span class="prelude-val">Some</span>(NaiveDate::MIN),
             v =&gt; <span class="prelude-val">Some</span>(
-                NaiveDate::parse_from_str(v, <span class="string">&quot;%Y-%m-%d&quot;</span>)
+                NaiveDate::parse_from_str(v, <span class="string">"%Y-%m-%d"</span>)
                     .map_err(|<span class="kw">_</span>| ConnectorXError::cannot_produce::&lt;NaiveDate&gt;(<span class="prelude-val">Some</span>(v.into())))<span class="question-mark">?</span>,
             ),
         }
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, NaiveDateTime&gt; <span class="kw">for </span>PostgresCSVSourceParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, NaiveDateTime&gt; <span class="kw">for </span>PostgresCSVSourceParser&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">type </span>Error = PostgresSourceError;
 
     <span class="attr">#[throws(PostgresSourceError)]
     </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; NaiveDateTime {
         <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
-        NaiveDateTime::parse_from_str(<span class="kw-2">&amp;</span><span class="self">self</span>.rowbuf[ridx][cidx], <span class="string">&quot;%Y-%m-%d %H:%M:%S&quot;</span>).map_err(
-            |<span class="kw">_</span>| {
-                ConnectorXError::cannot_produce::&lt;NaiveDateTime&gt;(<span class="prelude-val">Some</span>(
-                    <span class="self">self</span>.rowbuf[ridx][cidx].into(),
-                ))
-            },
-        )<span class="question-mark">?
-    </span>}
+        <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.rowbuf[ridx][cidx] {
+            <span class="string">"infinity" </span>=&gt; NaiveDateTime::MAX,
+            <span class="string">"-infinity" </span>=&gt; NaiveDateTime::MIN,
+            v =&gt; NaiveDateTime::parse_from_str(v, <span class="string">"%Y-%m-%d %H:%M:%S"</span>).map_err(
+                |<span class="kw">_</span>| {
+                    ConnectorXError::cannot_produce::&lt;NaiveDateTime&gt;(<span class="prelude-val">Some</span>(
+                        v.into(),
+                    ))
+                },
+            )<span class="question-mark">?
+        </span>}
+    }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span>&lt;NaiveDateTime&gt;&gt; <span class="kw">for </span>PostgresCSVSourceParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, <span class="prelude-ty">Option</span>&lt;NaiveDateTime&gt;&gt; <span class="kw">for </span>PostgresCSVSourceParser&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">type </span>Error = PostgresSourceError;
 
     <span class="attr">#[throws(PostgresSourceError)]
     </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;NaiveDateTime&gt; {
         <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
         <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.rowbuf[ridx][cidx][..] {
-            <span class="string">&quot;&quot; </span>=&gt; <span class="prelude-val">None</span>,
+            <span class="string">"" </span>=&gt; <span class="prelude-val">None</span>,
+            <span class="string">"infinity" </span>=&gt; <span class="prelude-val">Some</span>(NaiveDateTime::MAX),
+            <span class="string">"-infinity" </span>=&gt; <span class="prelude-val">Some</span>(NaiveDateTime::MIN),
             v =&gt; <span class="prelude-val">Some</span>(
-                NaiveDateTime::parse_from_str(v, <span class="string">&quot;%Y-%m-%d %H:%M:%S&quot;</span>).map_err(|<span class="kw">_</span>| {
+                NaiveDateTime::parse_from_str(v, <span class="string">"%Y-%m-%d %H:%M:%S"</span>).map_err(|<span class="kw">_</span>| {
                     ConnectorXError::cannot_produce::&lt;NaiveDateTime&gt;(<span class="prelude-val">Some</span>(v.into()))
                 })<span class="question-mark">?</span>,
             ),
@@ -2519,101 +2999,101 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, NaiveTime&gt; <span class="kw">for </span>PostgresCSVSourceParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, NaiveTime&gt; <span class="kw">for </span>PostgresCSVSourceParser&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">type </span>Error = PostgresSourceError;
 
     <span class="attr">#[throws(PostgresSourceError)]
     </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; NaiveTime {
         <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
-        NaiveTime::parse_from_str(<span class="kw-2">&amp;</span><span class="self">self</span>.rowbuf[ridx][cidx], <span class="string">&quot;%H:%M:%S&quot;</span>).map_err(|<span class="kw">_</span>| {
+        NaiveTime::parse_from_str(<span class="kw-2">&amp;</span><span class="self">self</span>.rowbuf[ridx][cidx], <span class="string">"%H:%M:%S"</span>).map_err(|<span class="kw">_</span>| {
             ConnectorXError::cannot_produce::&lt;NaiveTime&gt;(<span class="prelude-val">Some</span>(<span class="self">self</span>.rowbuf[ridx][cidx].into()))
         })<span class="question-mark">?
     </span>}
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span>&lt;NaiveTime&gt;&gt; <span class="kw">for </span>PostgresCSVSourceParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, <span class="prelude-ty">Option</span>&lt;NaiveTime&gt;&gt; <span class="kw">for </span>PostgresCSVSourceParser&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">type </span>Error = PostgresSourceError;
 
     <span class="attr">#[throws(PostgresSourceError)]
     </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;NaiveTime&gt; {
         <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
         <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.rowbuf[ridx][cidx][..] {
-            <span class="string">&quot;&quot; </span>=&gt; <span class="prelude-val">None</span>,
+            <span class="string">"" </span>=&gt; <span class="prelude-val">None</span>,
             v =&gt; <span class="prelude-val">Some</span>(
-                NaiveTime::parse_from_str(v, <span class="string">&quot;%H:%M:%S&quot;</span>)
+                NaiveTime::parse_from_str(v, <span class="string">"%H:%M:%S"</span>)
                     .map_err(|<span class="kw">_</span>| ConnectorXError::cannot_produce::&lt;NaiveTime&gt;(<span class="prelude-val">Some</span>(v.into())))<span class="question-mark">?</span>,
             ),
         }
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span>str&gt; <span class="kw">for </span>PostgresCSVSourceParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, <span class="kw-2">&amp;</span><span class="lifetime">'r </span>str&gt; <span class="kw">for </span>PostgresCSVSourceParser&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">type </span>Error = PostgresSourceError;
 
     <span class="attr">#[throws(PostgresSourceError)]
-    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span>str {
+    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'r </span>str {
         <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
         <span class="kw-2">&amp;</span><span class="self">self</span>.rowbuf[ridx][cidx]
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span>str&gt;&gt; <span class="kw">for </span>PostgresCSVSourceParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'r </span>str&gt;&gt; <span class="kw">for </span>PostgresCSVSourceParser&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">type </span>Error = PostgresSourceError;
 
     <span class="attr">#[throws(PostgresSourceError)]
-    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span>str&gt; {
+    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'r </span>str&gt; {
         <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
         <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.rowbuf[ridx][cidx][..] {
-            <span class="string">&quot;&quot; </span>=&gt; <span class="prelude-val">None</span>,
+            <span class="string">"" </span>=&gt; <span class="prelude-val">None</span>,
             v =&gt; <span class="prelude-val">Some</span>(v),
         }
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, Vec&lt;u8&gt;&gt; <span class="kw">for </span>PostgresCSVSourceParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, Vec&lt;u8&gt;&gt; <span class="kw">for </span>PostgresCSVSourceParser&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">type </span>Error = PostgresSourceError;
 
     <span class="attr">#[throws(PostgresSourceError)]
-    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; Vec&lt;u8&gt; {
+    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; Vec&lt;u8&gt; {
         <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
         decode(<span class="kw-2">&amp;</span><span class="self">self</span>.rowbuf[ridx][cidx][<span class="number">2</span>..])<span class="question-mark">? </span><span class="comment">// escape \x in the beginning
     </span>}
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span>&lt;Vec&lt;u8&gt;&gt;&gt; <span class="kw">for </span>PostgresCSVSourceParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, <span class="prelude-ty">Option</span>&lt;Vec&lt;u8&gt;&gt;&gt; <span class="kw">for </span>PostgresCSVSourceParser&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">type </span>Error = PostgresSourceError;
 
     <span class="attr">#[throws(PostgresSourceError)]
-    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;Vec&lt;u8&gt;&gt; {
+    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;Vec&lt;u8&gt;&gt; {
         <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
         <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.rowbuf[ridx][cidx] {
             <span class="comment">// escape \x in the beginning, empty if None
-            </span><span class="string">&quot;&quot; </span>=&gt; <span class="prelude-val">None</span>,
+            </span><span class="string">"" </span>=&gt; <span class="prelude-val">None</span>,
             v =&gt; <span class="prelude-val">Some</span>(decode(<span class="kw-2">&amp;</span>v[<span class="number">2</span>..])<span class="question-mark">?</span>),
         }
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, Value&gt; <span class="kw">for </span>PostgresCSVSourceParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, Value&gt; <span class="kw">for </span>PostgresCSVSourceParser&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">type </span>Error = PostgresSourceError;
 
     <span class="attr">#[throws(PostgresSourceError)]
-    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; Value {
+    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; Value {
         <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
         <span class="kw">let </span>v = <span class="kw-2">&amp;</span><span class="self">self</span>.rowbuf[ridx][cidx];
         from_str(v).map_err(|<span class="kw">_</span>| ConnectorXError::cannot_produce::&lt;Value&gt;(<span class="prelude-val">Some</span>(v.into())))<span class="question-mark">?
     </span>}
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span>&lt;Value&gt;&gt; <span class="kw">for </span>PostgresCSVSourceParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, <span class="prelude-ty">Option</span>&lt;Value&gt;&gt; <span class="kw">for </span>PostgresCSVSourceParser&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">type </span>Error = PostgresSourceError;
 
     <span class="attr">#[throws(PostgresSourceError)]
-    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;Value&gt; {
+    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;Value&gt; {
         <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
 
         <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.rowbuf[ridx][cidx][..] {
-            <span class="string">&quot;&quot; </span>=&gt; <span class="prelude-val">None</span>,
+            <span class="string">"" </span>=&gt; <span class="prelude-val">None</span>,
             v =&gt; {
                 from_str(v).map_err(|<span class="kw">_</span>| ConnectorXError::cannot_produce::&lt;Value&gt;(<span class="prelude-val">Some</span>(v.into())))<span class="question-mark">?
             </span>}
@@ -2621,8 +3101,8 @@
     }
 }
 
-<span class="kw">pub struct </span>PostgresRawSourceParser&lt;<span class="lifetime">&#39;a</span>&gt; {
-    iter: RowIter&lt;<span class="lifetime">&#39;a</span>&gt;,
+<span class="kw">pub struct </span>PostgresRawSourceParser&lt;<span class="lifetime">'a</span>&gt; {
+    iter: RowIter&lt;<span class="lifetime">'a</span>&gt;,
     rowbuf: Vec&lt;Row&gt;,
     ncols: usize,
     current_col: usize,
@@ -2630,8 +3110,8 @@
     is_finished: bool,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; PostgresRawSourceParser&lt;<span class="lifetime">&#39;a</span>&gt; {
-    <span class="kw">pub fn </span>new(iter: RowIter&lt;<span class="lifetime">&#39;a</span>&gt;, schema: <span class="kw-2">&amp;</span>[PostgresTypeSystem]) -&gt; <span class="self">Self </span>{
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; PostgresRawSourceParser&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">pub fn </span>new(iter: RowIter&lt;<span class="lifetime">'a</span>&gt;, schema: <span class="kw-2">&amp;</span>[PostgresTypeSystem]) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             iter,
             rowbuf: Vec::with_capacity(DB_BUFFER_SIZE),
@@ -2651,7 +3131,7 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; PartitionParser&lt;<span class="lifetime">&#39;a</span>&gt; <span class="kw">for </span>PostgresRawSourceParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; PartitionParser&lt;<span class="lifetime">'a</span>&gt; <span class="kw">for </span>PostgresRawSourceParser&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">type </span>TypeSystem = PostgresTypeSystem;
     <span class="kw">type </span>Error = PostgresSourceError;
 
@@ -2685,11 +3165,11 @@
 <span class="macro">macro_rules! </span>impl_produce {
     ($(<span class="macro-nonterminal">$t</span>: ty,)+) =&gt; {
         $(
-            <span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, <span class="macro-nonterminal">$t</span>&gt; <span class="kw">for </span>PostgresRawSourceParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+            <span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, <span class="macro-nonterminal">$t</span>&gt; <span class="kw">for </span>PostgresRawSourceParser&lt;<span class="lifetime">'a</span>&gt; {
                 <span class="kw">type </span>Error = PostgresSourceError;
 
                 <span class="attr">#[throws(PostgresSourceError)]
-                </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="macro-nonterminal">$t </span>{
+                </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="macro-nonterminal">$t </span>{
                     <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
                     <span class="kw">let </span>row = <span class="kw-2">&amp;</span><span class="self">self</span>.rowbuf[ridx];
                     <span class="kw">let </span>val = row.try_get(cidx)<span class="question-mark">?</span>;
@@ -2697,11 +3177,11 @@
                 }
             }
 
-            <span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span>&lt;<span class="macro-nonterminal">$t</span>&gt;&gt; <span class="kw">for </span>PostgresRawSourceParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+            <span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, <span class="prelude-ty">Option</span>&lt;<span class="macro-nonterminal">$t</span>&gt;&gt; <span class="kw">for </span>PostgresRawSourceParser&lt;<span class="lifetime">'a</span>&gt; {
                 <span class="kw">type </span>Error = PostgresSourceError;
 
                 <span class="attr">#[throws(PostgresSourceError)]
-                </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="macro-nonterminal">$t</span>&gt; {
+                </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="macro-nonterminal">$t</span>&gt; {
                     <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
                     <span class="kw">let </span>row = <span class="kw-2">&amp;</span><span class="self">self</span>.rowbuf[ridx];
                     <span class="kw">let </span>val = row.try_get(cidx)<span class="question-mark">?</span>;
@@ -2728,27 +3208,126 @@
     Vec&lt;Decimal&gt;,
     bool,
     Vec&lt;bool&gt;,
-    <span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span>str,
+    <span class="kw-2">&amp;</span><span class="lifetime">'r </span>str,
     Vec&lt;u8&gt;,
     NaiveTime,
-    NaiveDateTime,
-    DateTime&lt;Utc&gt;,
-    NaiveDate,
     Uuid,
     Value,
     HashMap&lt;String, <span class="prelude-ty">Option</span>&lt;String&gt;&gt;,
     Vec&lt;String&gt;,
 );
 
+<span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, DateTime&lt;Utc&gt;&gt; <span class="kw">for </span>PostgresRawSourceParser&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">type </span>Error = PostgresSourceError;
+
+    <span class="attr">#[throws(PostgresSourceError)]
+    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; DateTime&lt;Utc&gt; {
+        <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
+        <span class="kw">let </span>row = <span class="kw-2">&amp;</span><span class="self">self</span>.rowbuf[ridx];
+        <span class="kw">let </span>val: postgres::types::Timestamp&lt;DateTime&lt;Utc&gt;&gt; = row.try_get(cidx)<span class="question-mark">?</span>;
+        <span class="kw">match </span>val {
+            postgres::types::Timestamp::PosInfinity =&gt; DateTime::&lt;Utc&gt;::MAX_UTC,
+            postgres::types::Timestamp::NegInfinity =&gt; DateTime::&lt;Utc&gt;::MIN_UTC,
+            postgres::types::Timestamp::Value(t) =&gt; t,
+        }
+    }
+}
+
+<span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;&gt; <span class="kw">for </span>PostgresRawSourceParser&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">type </span>Error = PostgresSourceError;
+
+    <span class="attr">#[throws(PostgresSourceError)]
+    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt; {
+        <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
+        <span class="kw">let </span>row = <span class="kw-2">&amp;</span><span class="self">self</span>.rowbuf[ridx];
+        <span class="kw">let </span>val = row.try_get(cidx)<span class="question-mark">?</span>;
+        <span class="kw">match </span>val {
+            <span class="prelude-val">Some</span>(postgres::types::Timestamp::PosInfinity) =&gt; <span class="prelude-val">Some</span>(DateTime::&lt;Utc&gt;::MAX_UTC),
+            <span class="prelude-val">Some</span>(postgres::types::Timestamp::NegInfinity) =&gt; <span class="prelude-val">Some</span>(DateTime::&lt;Utc&gt;::MIN_UTC),
+            <span class="prelude-val">Some</span>(postgres::types::Timestamp::Value(t)) =&gt; t,
+            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None
+        </span>}
+
+    }
+}
+
+<span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, NaiveDateTime&gt; <span class="kw">for </span>PostgresRawSourceParser&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">type </span>Error = PostgresSourceError;
+
+    <span class="attr">#[throws(PostgresSourceError)]
+    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; NaiveDateTime {
+        <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
+        <span class="kw">let </span>row = <span class="kw-2">&amp;</span><span class="self">self</span>.rowbuf[ridx];
+        <span class="kw">let </span>val: postgres::types::Timestamp&lt;NaiveDateTime&gt; = row.try_get(cidx)<span class="question-mark">?</span>;
+        <span class="kw">match </span>val {
+            postgres::types::Timestamp::PosInfinity =&gt; NaiveDateTime::MAX,
+            postgres::types::Timestamp::NegInfinity =&gt; NaiveDateTime::MIN,
+            postgres::types::Timestamp::Value(t) =&gt; t,
+        }
+    }
+}
+
+<span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, <span class="prelude-ty">Option</span>&lt;NaiveDateTime&gt;&gt; <span class="kw">for </span>PostgresRawSourceParser&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">type </span>Error = PostgresSourceError;
+
+    <span class="attr">#[throws(PostgresSourceError)]
+    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;NaiveDateTime&gt; {
+        <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
+        <span class="kw">let </span>row = <span class="kw-2">&amp;</span><span class="self">self</span>.rowbuf[ridx];
+        <span class="kw">let </span>val = row.try_get(cidx)<span class="question-mark">?</span>;
+        <span class="kw">match </span>val {
+            <span class="prelude-val">Some</span>(postgres::types::Timestamp::PosInfinity) =&gt; <span class="prelude-val">Some</span>(NaiveDateTime::MAX),
+            <span class="prelude-val">Some</span>(postgres::types::Timestamp::NegInfinity) =&gt; <span class="prelude-val">Some</span>(NaiveDateTime::MIN),
+            <span class="prelude-val">Some</span>(postgres::types::Timestamp::Value(t)) =&gt; t,
+            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None
+        </span>}
+
+    }
+}
+
+<span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, NaiveDate&gt; <span class="kw">for </span>PostgresRawSourceParser&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">type </span>Error = PostgresSourceError;
+
+    <span class="attr">#[throws(PostgresSourceError)]
+    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; NaiveDate {
+        <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
+        <span class="kw">let </span>row = <span class="kw-2">&amp;</span><span class="self">self</span>.rowbuf[ridx];
+        <span class="kw">let </span>val: postgres::types::Date&lt;NaiveDate&gt; = row.try_get(cidx)<span class="question-mark">?</span>;
+        <span class="kw">match </span>val {
+            postgres::types::Date::PosInfinity =&gt; NaiveDate::MAX,
+            postgres::types::Date::NegInfinity =&gt; NaiveDate::MIN,
+            postgres::types::Date::Value(t) =&gt; t,
+        }
+    }
+}
+
+<span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, <span class="prelude-ty">Option</span>&lt;NaiveDate&gt;&gt; <span class="kw">for </span>PostgresRawSourceParser&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">type </span>Error = PostgresSourceError;
+
+    <span class="attr">#[throws(PostgresSourceError)]
+    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;NaiveDate&gt; {
+        <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
+        <span class="kw">let </span>row = <span class="kw-2">&amp;</span><span class="self">self</span>.rowbuf[ridx];
+        <span class="kw">let </span>val = row.try_get(cidx)<span class="question-mark">?</span>;
+        <span class="kw">match </span>val {
+            <span class="prelude-val">Some</span>(postgres::types::Date::PosInfinity) =&gt; <span class="prelude-val">Some</span>(NaiveDate::MAX),
+            <span class="prelude-val">Some</span>(postgres::types::Date::NegInfinity) =&gt; <span class="prelude-val">Some</span>(NaiveDate::MIN),
+            <span class="prelude-val">Some</span>(postgres::types::Date::Value(t)) =&gt; t,
+            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None</span>,
+        }
+
+    }
+}
+
 <span class="kw">impl</span>&lt;C&gt; SourcePartition <span class="kw">for </span>PostgresSourcePartition&lt;SimpleProtocol, C&gt;
 <span class="kw">where
-    </span>C: MakeTlsConnect&lt;Socket&gt; + Clone + <span class="lifetime">&#39;static </span>+ Sync + Send,
+    </span>C: MakeTlsConnect&lt;Socket&gt; + Clone + <span class="lifetime">'static </span>+ Sync + Send,
     C::TlsConnect: Send,
     C::Stream: Send,
     &lt;C::TlsConnect <span class="kw">as </span>TlsConnect&lt;Socket&gt;&gt;::Future: Send,
 {
     <span class="kw">type </span>TypeSystem = PostgresTypeSystem;
-    <span class="kw">type </span>Parser&lt;<span class="lifetime">&#39;a</span>&gt; = PostgresSimpleSourceParser;
+    <span class="kw">type </span>Parser&lt;<span class="lifetime">'a</span>&gt; = PostgresSimpleSourceParser;
     <span class="kw">type </span>Error = PostgresSourceError;
 
     <span class="attr">#[throws(PostgresSourceError)]
@@ -2757,7 +3336,7 @@
     }
 
     <span class="attr">#[throws(PostgresSourceError)]
-    </span><span class="kw">fn </span>parser(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="self">Self</span>::Parser&lt;<span class="lifetime">&#39;_</span>&gt; {
+    </span><span class="kw">fn </span>parser(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="self">Self</span>::Parser&lt;<span class="lifetime">'_</span>&gt; {
         <span class="kw">let </span>rows = <span class="self">self</span>.conn.simple_query(<span class="self">self</span>.query.as_str())<span class="question-mark">?</span>; <span class="comment">// unless reading the data, it seems like issue the query is fast
         </span>PostgresSimpleSourceParser::new(rows, <span class="kw-2">&amp;</span><span class="self">self</span>.schema)
     }
@@ -2777,7 +3356,7 @@
     current_col: usize,
     current_row: usize,
 }
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; PostgresSimpleSourceParser {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; PostgresSimpleSourceParser {
     <span class="kw">pub fn </span>new(rows: Vec&lt;SimpleQueryMessage&gt;, schema: <span class="kw-2">&amp;</span>[PostgresTypeSystem]) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             rows,
@@ -2796,7 +3375,7 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; PartitionParser&lt;<span class="lifetime">&#39;a</span>&gt; <span class="kw">for </span>PostgresSimpleSourceParser {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; PartitionParser&lt;<span class="lifetime">'a</span>&gt; <span class="kw">for </span>PostgresSimpleSourceParser {
     <span class="kw">type </span>TypeSystem = PostgresTypeSystem;
     <span class="kw">type </span>Error = PostgresSourceError;
 
@@ -2811,21 +3390,21 @@
 <span class="macro">macro_rules! </span>impl_simple_produce_unimplemented {
     ($(<span class="macro-nonterminal">$t</span>: ty,)+) =&gt; {
         $(
-            <span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, <span class="macro-nonterminal">$t</span>&gt; <span class="kw">for </span>PostgresSimpleSourceParser {
+            <span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, <span class="macro-nonterminal">$t</span>&gt; <span class="kw">for </span>PostgresSimpleSourceParser {
                 <span class="kw">type </span>Error = PostgresSourceError;
 
                 <span class="attr">#[throws(PostgresSourceError)]
-                </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="macro-nonterminal">$t </span>{
-                   <span class="macro">unimplemented!</span>(<span class="string">&quot;not implemented!&quot;</span>);
+                </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="macro-nonterminal">$t </span>{
+                   <span class="macro">unimplemented!</span>(<span class="string">"not implemented!"</span>);
                 }
             }
 
-            <span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span>&lt;<span class="macro-nonterminal">$t</span>&gt;&gt; <span class="kw">for </span>PostgresSimpleSourceParser {
+            <span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, <span class="prelude-ty">Option</span>&lt;<span class="macro-nonterminal">$t</span>&gt;&gt; <span class="kw">for </span>PostgresSimpleSourceParser {
                 <span class="kw">type </span>Error = PostgresSourceError;
 
                 <span class="attr">#[throws(PostgresSourceError)]
-                </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="macro-nonterminal">$t</span>&gt; {
-                   <span class="macro">unimplemented!</span>(<span class="string">&quot;not implemented!&quot;</span>);
+                </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="macro-nonterminal">$t</span>&gt; {
+                   <span class="macro">unimplemented!</span>(<span class="string">"not implemented!"</span>);
                 }
             }
         )+
@@ -2835,11 +3414,11 @@
 <span class="macro">macro_rules! </span>impl_simple_produce {
     ($(<span class="macro-nonterminal">$t</span>: ty,)+) =&gt; {
         $(
-            <span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, <span class="macro-nonterminal">$t</span>&gt; <span class="kw">for </span>PostgresSimpleSourceParser {
+            <span class="kw">impl</span>&lt;<span class="lifetime">'r</span>&gt; Produce&lt;<span class="lifetime">'r</span>, <span class="macro-nonterminal">$t</span>&gt; <span class="kw">for </span>PostgresSimpleSourceParser {
                 <span class="kw">type </span>Error = PostgresSourceError;
 
                 <span class="attr">#[throws(PostgresSourceError)]
-                </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="macro-nonterminal">$t </span>{
+                </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="macro-nonterminal">$t </span>{
                     <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
                     <span class="kw">let </span>val = <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.rows[ridx] {
                         SimpleQueryMessage::Row(row) =&gt; <span class="kw">match </span>row.try_get(cidx)<span class="question-mark">? </span>{
@@ -2847,25 +3426,25 @@
                                 .parse()
                                 .map_err(|<span class="kw">_</span>| ConnectorXError::cannot_produce::&lt;<span class="macro-nonterminal">$t</span>&gt;(<span class="prelude-val">Some</span>(s.into())))<span class="question-mark">?</span>,
                             <span class="prelude-val">None </span>=&gt; <span class="macro">throw!</span>(<span class="macro">anyhow!</span>(
-                                <span class="string">&quot;Cannot parse NULL in NOT NULL column.&quot;
+                                <span class="string">"Cannot parse NULL in NOT NULL column."
                             </span>)),
                         },
                         SimpleQueryMessage::CommandComplete(c) =&gt; {
-                            <span class="macro">panic!</span>(<span class="string">&quot;get command: {}&quot;</span>, c);
+                            <span class="macro">panic!</span>(<span class="string">"get command: {}"</span>, c);
                         }
                         <span class="kw">_ </span>=&gt; {
-                            <span class="macro">panic!</span>(<span class="string">&quot;what?&quot;</span>);
+                            <span class="macro">panic!</span>(<span class="string">"what?"</span>);
                         }
                     };
                     val
                 }
             }
 
-            <span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span>&lt;<span class="macro-nonterminal">$t</span>&gt;&gt; <span class="kw">for </span>PostgresSimpleSourceParser {
+            <span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, <span class="prelude-ty">Option</span>&lt;<span class="macro-nonterminal">$t</span>&gt;&gt; <span class="kw">for </span>PostgresSimpleSourceParser {
                 <span class="kw">type </span>Error = PostgresSourceError;
 
                 <span class="attr">#[throws(PostgresSourceError)]
-                </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="macro-nonterminal">$t</span>&gt; {
+                </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="macro-nonterminal">$t</span>&gt; {
                     <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
                     <span class="kw">let </span>val = <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.rows[ridx] {
                         SimpleQueryMessage::Row(row) =&gt; <span class="kw">match </span>row.try_get(cidx)<span class="question-mark">? </span>{
@@ -2876,10 +3455,10 @@
                             <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None</span>,
                         },
                         SimpleQueryMessage::CommandComplete(c) =&gt; {
-                            <span class="macro">panic!</span>(<span class="string">&quot;get command: {}&quot;</span>, c);
+                            <span class="macro">panic!</span>(<span class="string">"get command: {}"</span>, c);
                         }
                         <span class="kw">_ </span>=&gt; {
-                            <span class="macro">panic!</span>(<span class="string">&quot;what?&quot;</span>);
+                            <span class="macro">panic!</span>(<span class="string">"what?"</span>);
                         }
                     };
                     val
@@ -2889,57 +3468,113 @@
     };
 }
 
-<span class="macro">impl_simple_produce!</span>(i8, i16, i32, i64, f32, f64, Decimal, Uuid, bool,);
+<span class="macro">impl_simple_produce!</span>(i8, i16, i32, i64, f32, f64, Uuid, bool,);
+
+<span class="kw">impl</span>&lt;<span class="lifetime">'r</span>&gt; Produce&lt;<span class="lifetime">'r</span>, Decimal&gt; <span class="kw">for </span>PostgresSimpleSourceParser {
+    <span class="kw">type </span>Error = PostgresSourceError;
+
+    <span class="attr">#[throws(PostgresSourceError)]
+    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; Decimal {
+        <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
+        <span class="kw">let </span>val = <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.rows[ridx] {
+            SimpleQueryMessage::Row(row) =&gt; <span class="kw">match </span>row.try_get(cidx)<span class="question-mark">? </span>{
+                <span class="prelude-val">Some</span>(<span class="string">"Infinity"</span>) =&gt; Decimal::MAX,
+                <span class="prelude-val">Some</span>(<span class="string">"-Infinity"</span>) =&gt; Decimal::MIN,
+                <span class="prelude-val">Some</span>(s) =&gt; s
+                    .parse()
+                    .map_err(|<span class="kw">_</span>| ConnectorXError::cannot_produce::&lt;Decimal&gt;(<span class="prelude-val">Some</span>(s.into())))<span class="question-mark">?</span>,
+                <span class="prelude-val">None </span>=&gt; <span class="macro">throw!</span>(<span class="macro">anyhow!</span>(
+                    <span class="string">"Cannot parse NULL in NOT NULL column."
+                </span>)),
+            },
+            SimpleQueryMessage::CommandComplete(c) =&gt; {
+                <span class="macro">panic!</span>(<span class="string">"get command: {}"</span>, c);
+            }
+            <span class="kw">_ </span>=&gt; {
+                <span class="macro">panic!</span>(<span class="string">"what?"</span>);
+            }
+        };
+        val
+    }
+}
+
+<span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, <span class="prelude-ty">Option</span>&lt;Decimal&gt;&gt; <span class="kw">for </span>PostgresSimpleSourceParser {
+    <span class="kw">type </span>Error = PostgresSourceError;
+
+    <span class="attr">#[throws(PostgresSourceError)]
+    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;Decimal&gt; {
+        <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
+        <span class="kw">let </span>val = <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.rows[ridx] {
+            SimpleQueryMessage::Row(row) =&gt; <span class="kw">match </span>row.try_get(cidx)<span class="question-mark">? </span>{
+                <span class="prelude-val">Some</span>(<span class="string">"Infinity"</span>) =&gt; <span class="prelude-val">Some</span>(Decimal::MAX),
+                <span class="prelude-val">Some</span>(<span class="string">"-Infinity"</span>) =&gt; <span class="prelude-val">Some</span>(Decimal::MIN),
+                <span class="prelude-val">Some</span>(s) =&gt; <span class="prelude-val">Some</span>(
+                    s.parse()
+                        .map_err(|<span class="kw">_</span>| ConnectorXError::cannot_produce::&lt;Decimal&gt;(<span class="prelude-val">Some</span>(s.into())))<span class="question-mark">?</span>,
+                ),
+                <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None</span>,
+            },
+            SimpleQueryMessage::CommandComplete(c) =&gt; {
+                <span class="macro">panic!</span>(<span class="string">"get command: {}"</span>, c);
+            }
+            <span class="kw">_ </span>=&gt; {
+                <span class="macro">panic!</span>(<span class="string">"what?"</span>);
+            }
+        };
+        val
+    }
+}
+
 <span class="macro">impl_simple_produce_unimplemented!</span>(
     Value,
     HashMap&lt;String, <span class="prelude-ty">Option</span>&lt;String&gt;&gt;,);
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span>str&gt; <span class="kw">for </span>PostgresSimpleSourceParser {
+<span class="kw">impl</span>&lt;<span class="lifetime">'r</span>&gt; Produce&lt;<span class="lifetime">'r</span>, <span class="kw-2">&amp;</span><span class="lifetime">'r </span>str&gt; <span class="kw">for </span>PostgresSimpleSourceParser {
     <span class="kw">type </span>Error = PostgresSourceError;
 
     <span class="attr">#[throws(PostgresSourceError)]
-    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span>str {
+    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'r </span>str {
         <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
         <span class="kw">let </span>val = <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.rows[ridx] {
             SimpleQueryMessage::Row(row) =&gt; <span class="kw">match </span>row.try_get(cidx)<span class="question-mark">? </span>{
                 <span class="prelude-val">Some</span>(s) =&gt; s,
-                <span class="prelude-val">None </span>=&gt; <span class="macro">throw!</span>(<span class="macro">anyhow!</span>(<span class="string">&quot;Cannot parse NULL in non-NULL column.&quot;</span>)),
+                <span class="prelude-val">None </span>=&gt; <span class="macro">throw!</span>(<span class="macro">anyhow!</span>(<span class="string">"Cannot parse NULL in non-NULL column."</span>)),
             },
             SimpleQueryMessage::CommandComplete(c) =&gt; {
-                <span class="macro">panic!</span>(<span class="string">&quot;get command: {}&quot;</span>, c);
+                <span class="macro">panic!</span>(<span class="string">"get command: {}"</span>, c);
             }
             <span class="kw">_ </span>=&gt; {
-                <span class="macro">panic!</span>(<span class="string">&quot;what?&quot;</span>);
+                <span class="macro">panic!</span>(<span class="string">"what?"</span>);
             }
         };
         val
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span>str&gt;&gt; <span class="kw">for </span>PostgresSimpleSourceParser {
+<span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'r </span>str&gt;&gt; <span class="kw">for </span>PostgresSimpleSourceParser {
     <span class="kw">type </span>Error = PostgresSourceError;
 
     <span class="attr">#[throws(PostgresSourceError)]
-    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span>str&gt; {
+    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'r </span>str&gt; {
         <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
         <span class="kw">let </span>val = <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.rows[ridx] {
             SimpleQueryMessage::Row(row) =&gt; row.try_get(cidx)<span class="question-mark">?</span>,
             SimpleQueryMessage::CommandComplete(c) =&gt; {
-                <span class="macro">panic!</span>(<span class="string">&quot;get command: {}&quot;</span>, c);
+                <span class="macro">panic!</span>(<span class="string">"get command: {}"</span>, c);
             }
             <span class="kw">_ </span>=&gt; {
-                <span class="macro">panic!</span>(<span class="string">&quot;what?&quot;</span>);
+                <span class="macro">panic!</span>(<span class="string">"what?"</span>);
             }
         };
         val
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, Vec&lt;u8&gt;&gt; <span class="kw">for </span>PostgresSimpleSourceParser {
+<span class="kw">impl</span>&lt;<span class="lifetime">'r</span>&gt; Produce&lt;<span class="lifetime">'r</span>, Vec&lt;u8&gt;&gt; <span class="kw">for </span>PostgresSimpleSourceParser {
     <span class="kw">type </span>Error = PostgresSourceError;
 
     <span class="attr">#[throws(PostgresSourceError)]
-    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; Vec&lt;u8&gt; {
+    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; Vec&lt;u8&gt; {
         <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
         <span class="kw">let </span>val = <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.rows[ridx] {
             SimpleQueryMessage::Row(row) =&gt; <span class="kw">match </span>row.try_get(cidx)<span class="question-mark">? </span>{
@@ -2949,30 +3584,30 @@
                     res.next();
                     decode(
                         res.enumerate()
-                            .fold(String::new(), |acc, (_i, c)| <span class="macro">format!</span>(<span class="string">&quot;{}{}&quot;</span>, acc, c))
+                            .fold(String::new(), |acc, (_i, c)| <span class="macro">format!</span>(<span class="string">"{}{}"</span>, acc, c))
                             .chars()
                             .map(|c| c <span class="kw">as </span>u8)
                             .collect::&lt;Vec&lt;u8&gt;&gt;(),
                     )<span class="question-mark">?
                 </span>}
-                <span class="prelude-val">None </span>=&gt; <span class="macro">throw!</span>(<span class="macro">anyhow!</span>(<span class="string">&quot;Cannot parse NULL in non-NULL column.&quot;</span>)),
+                <span class="prelude-val">None </span>=&gt; <span class="macro">throw!</span>(<span class="macro">anyhow!</span>(<span class="string">"Cannot parse NULL in non-NULL column."</span>)),
             },
             SimpleQueryMessage::CommandComplete(c) =&gt; {
-                <span class="macro">panic!</span>(<span class="string">&quot;get command: {}&quot;</span>, c);
+                <span class="macro">panic!</span>(<span class="string">"get command: {}"</span>, c);
             }
             <span class="kw">_ </span>=&gt; {
-                <span class="macro">panic!</span>(<span class="string">&quot;what?&quot;</span>);
+                <span class="macro">panic!</span>(<span class="string">"what?"</span>);
             }
         };
         val
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span>&lt;Vec&lt;u8&gt;&gt;&gt; <span class="kw">for </span>PostgresSimpleSourceParser {
+<span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, <span class="prelude-ty">Option</span>&lt;Vec&lt;u8&gt;&gt;&gt; <span class="kw">for </span>PostgresSimpleSourceParser {
     <span class="kw">type </span>Error = PostgresSourceError;
 
     <span class="attr">#[throws(PostgresSourceError)]
-    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;Vec&lt;u8&gt;&gt; {
+    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;Vec&lt;u8&gt;&gt; {
         <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
         <span class="kw">let </span>val = <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.rows[ridx] {
             SimpleQueryMessage::Row(row) =&gt; <span class="kw">match </span>row.try_get(cidx)<span class="question-mark">? </span>{
@@ -2982,7 +3617,7 @@
                     res.next();
                     <span class="prelude-val">Some</span>(decode(
                         res.enumerate()
-                            .fold(String::new(), |acc, (_i, c)| <span class="macro">format!</span>(<span class="string">&quot;{}{}&quot;</span>, acc, c))
+                            .fold(String::new(), |acc, (_i, c)| <span class="macro">format!</span>(<span class="string">"{}{}"</span>, acc, c))
                             .chars()
                             .map(|c| c <span class="kw">as </span>u8)
                             .collect::&lt;Vec&lt;u8&gt;&gt;(),
@@ -2991,10 +3626,10 @@
                 <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None</span>,
             },
             SimpleQueryMessage::CommandComplete(c) =&gt; {
-                <span class="macro">panic!</span>(<span class="string">&quot;get command: {}&quot;</span>, c);
+                <span class="macro">panic!</span>(<span class="string">"get command: {}"</span>, c);
             }
             <span class="kw">_ </span>=&gt; {
-                <span class="macro">panic!</span>(<span class="string">&quot;what?&quot;</span>);
+                <span class="macro">panic!</span>(<span class="string">"what?"</span>);
             }
         };
         val
@@ -3011,54 +3646,54 @@
 <span class="macro">macro_rules! </span>impl_simple_vec_produce {
     ($(<span class="macro-nonterminal">$t</span>: ty,)+) =&gt; {
         $(
-            <span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, Vec&lt;<span class="macro-nonterminal">$t</span>&gt;&gt; <span class="kw">for </span>PostgresSimpleSourceParser {
+            <span class="kw">impl</span>&lt;<span class="lifetime">'r</span>&gt; Produce&lt;<span class="lifetime">'r</span>, Vec&lt;<span class="macro-nonterminal">$t</span>&gt;&gt; <span class="kw">for </span>PostgresSimpleSourceParser {
                 <span class="kw">type </span>Error = PostgresSourceError;
 
                 <span class="attr">#[throws(PostgresSourceError)]
-                </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; Vec&lt;<span class="macro-nonterminal">$t</span>&gt; {
+                </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; Vec&lt;<span class="macro-nonterminal">$t</span>&gt; {
                     <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
                     <span class="kw">let </span>val = <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.rows[ridx] {
                         SimpleQueryMessage::Row(row) =&gt; <span class="kw">match </span>row.try_get(cidx)<span class="question-mark">? </span>{
                             <span class="prelude-val">Some</span>(s) =&gt; <span class="kw">match </span>s{
-                                <span class="string">&quot;&quot; </span>=&gt; <span class="macro">throw!</span>(<span class="macro">anyhow!</span>(<span class="string">&quot;Cannot parse NULL in non-NULL column.&quot;</span>)),
-                                <span class="string">&quot;{}&quot; </span>=&gt; <span class="macro">vec!</span>[],
-                                <span class="kw">_ </span>=&gt; rem_first_and_last(s).split(<span class="string">&quot;,&quot;</span>).map(|token| token.parse().map_err(|<span class="kw">_</span>| ConnectorXError::cannot_produce::&lt;Vec&lt;<span class="macro-nonterminal">$t</span>&gt;&gt;(<span class="prelude-val">Some</span>(s.into())))).collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="macro-nonterminal">$t</span>&gt;, ConnectorXError&gt;&gt;()<span class="question-mark">?
+                                <span class="string">"" </span>=&gt; <span class="macro">throw!</span>(<span class="macro">anyhow!</span>(<span class="string">"Cannot parse NULL in non-NULL column."</span>)),
+                                <span class="string">"{}" </span>=&gt; <span class="macro">vec!</span>[],
+                                <span class="kw">_ </span>=&gt; rem_first_and_last(s).split(<span class="string">","</span>).map(|token| token.parse().map_err(|<span class="kw">_</span>| ConnectorXError::cannot_produce::&lt;Vec&lt;<span class="macro-nonterminal">$t</span>&gt;&gt;(<span class="prelude-val">Some</span>(s.into())))).collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="macro-nonterminal">$t</span>&gt;, ConnectorXError&gt;&gt;()<span class="question-mark">?
                             </span>},
-                            <span class="prelude-val">None </span>=&gt; <span class="macro">throw!</span>(<span class="macro">anyhow!</span>(<span class="string">&quot;Cannot parse NULL in non-NULL column.&quot;</span>)),
+                            <span class="prelude-val">None </span>=&gt; <span class="macro">throw!</span>(<span class="macro">anyhow!</span>(<span class="string">"Cannot parse NULL in non-NULL column."</span>)),
                         },
                         SimpleQueryMessage::CommandComplete(c) =&gt; {
-                            <span class="macro">panic!</span>(<span class="string">&quot;get command: {}&quot;</span>, c);
+                            <span class="macro">panic!</span>(<span class="string">"get command: {}"</span>, c);
                         }
                         <span class="kw">_ </span>=&gt; {
-                            <span class="macro">panic!</span>(<span class="string">&quot;what?&quot;</span>);
+                            <span class="macro">panic!</span>(<span class="string">"what?"</span>);
                         }
                     };
                     val
                 }
             }
 
-            <span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>, <span class="lifetime">&#39;a</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span>&lt;Vec&lt;<span class="macro-nonterminal">$t</span>&gt;&gt;&gt; <span class="kw">for </span>PostgresSimpleSourceParser {
+            <span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, <span class="prelude-ty">Option</span>&lt;Vec&lt;<span class="macro-nonterminal">$t</span>&gt;&gt;&gt; <span class="kw">for </span>PostgresSimpleSourceParser {
                 <span class="kw">type </span>Error = PostgresSourceError;
 
                 <span class="attr">#[throws(PostgresSourceError)]
-                </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;Vec&lt;<span class="macro-nonterminal">$t</span>&gt;&gt; {
+                </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;Vec&lt;<span class="macro-nonterminal">$t</span>&gt;&gt; {
                     <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
                     <span class="kw">let </span>val = <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.rows[ridx] {
 
                         SimpleQueryMessage::Row(row) =&gt; <span class="kw">match </span>row.try_get(cidx)<span class="question-mark">? </span>{
                             <span class="prelude-val">Some</span>(s) =&gt; <span class="kw">match </span>s{
-                                <span class="string">&quot;&quot; </span>=&gt; <span class="prelude-val">None</span>,
-                                <span class="string">&quot;{}&quot; </span>=&gt; <span class="prelude-val">Some</span>(<span class="macro">vec!</span>[]),
-                                <span class="kw">_ </span>=&gt; <span class="prelude-val">Some</span>(rem_first_and_last(s).split(<span class="string">&quot;,&quot;</span>).map(|token| token.parse().map_err(|<span class="kw">_</span>| ConnectorXError::cannot_produce::&lt;Vec&lt;<span class="macro-nonterminal">$t</span>&gt;&gt;(<span class="prelude-val">Some</span>(s.into())))).collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="macro-nonterminal">$t</span>&gt;, ConnectorXError&gt;&gt;()<span class="question-mark">?</span>)
+                                <span class="string">"" </span>=&gt; <span class="prelude-val">None</span>,
+                                <span class="string">"{}" </span>=&gt; <span class="prelude-val">Some</span>(<span class="macro">vec!</span>[]),
+                                <span class="kw">_ </span>=&gt; <span class="prelude-val">Some</span>(rem_first_and_last(s).split(<span class="string">","</span>).map(|token| token.parse().map_err(|<span class="kw">_</span>| ConnectorXError::cannot_produce::&lt;Vec&lt;<span class="macro-nonterminal">$t</span>&gt;&gt;(<span class="prelude-val">Some</span>(s.into())))).collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="macro-nonterminal">$t</span>&gt;, ConnectorXError&gt;&gt;()<span class="question-mark">?</span>)
                             },
                             <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None</span>,
                         },
 
                         SimpleQueryMessage::CommandComplete(c) =&gt; {
-                            <span class="macro">panic!</span>(<span class="string">&quot;get command: {}&quot;</span>, c);
+                            <span class="macro">panic!</span>(<span class="string">"get command: {}"</span>, c);
                         }
                         <span class="kw">_ </span>=&gt; {
-                            <span class="macro">panic!</span>(<span class="string">&quot;what?&quot;</span>);
+                            <span class="macro">panic!</span>(<span class="string">"what?"</span>);
                         }
                     };
                     val
@@ -3069,58 +3704,58 @@
 }
 <span class="macro">impl_simple_vec_produce!</span>(i16, i32, i64, f32, f64, Decimal, String,);
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, Vec&lt;bool&gt;&gt; <span class="kw">for </span>PostgresSimpleSourceParser {
+<span class="kw">impl</span>&lt;<span class="lifetime">'r</span>&gt; Produce&lt;<span class="lifetime">'r</span>, Vec&lt;bool&gt;&gt; <span class="kw">for </span>PostgresSimpleSourceParser {
     <span class="kw">type </span>Error = PostgresSourceError;
 
     <span class="attr">#[throws(PostgresSourceError)]
-    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; Vec&lt;bool&gt; {
+    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; Vec&lt;bool&gt; {
         <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
         <span class="kw">let </span>val = <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.rows[ridx] {
             SimpleQueryMessage::Row(row) =&gt; <span class="kw">match </span>row.try_get(cidx)<span class="question-mark">? </span>{
                 <span class="prelude-val">Some</span>(s) =&gt; <span class="kw">match </span>s {
-                    <span class="string">&quot;&quot; </span>=&gt; <span class="macro">throw!</span>(<span class="macro">anyhow!</span>(<span class="string">&quot;Cannot parse NULL in non-NULL column.&quot;</span>)),
-                    <span class="string">&quot;{}&quot; </span>=&gt; <span class="macro">vec!</span>[],
+                    <span class="string">"" </span>=&gt; <span class="macro">throw!</span>(<span class="macro">anyhow!</span>(<span class="string">"Cannot parse NULL in non-NULL column."</span>)),
+                    <span class="string">"{}" </span>=&gt; <span class="macro">vec!</span>[],
                     <span class="kw">_ </span>=&gt; rem_first_and_last(s)
-                        .split(<span class="string">&#39;,&#39;</span>)
+                        .split(<span class="string">','</span>)
                         .map(|token| <span class="kw">match </span>token {
-                            <span class="string">&quot;t&quot; </span>=&gt; <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>),
-                            <span class="string">&quot;f&quot; </span>=&gt; <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>),
+                            <span class="string">"t" </span>=&gt; <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>),
+                            <span class="string">"f" </span>=&gt; <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>),
                             <span class="kw">_ </span>=&gt; {
                                 <span class="macro">throw!</span>(ConnectorXError::cannot_produce::&lt;Vec&lt;bool&gt;&gt;(<span class="prelude-val">Some</span>(s.into())))
                             }
                         })
                         .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;bool&gt;, ConnectorXError&gt;&gt;()<span class="question-mark">?</span>,
                 },
-                <span class="prelude-val">None </span>=&gt; <span class="macro">throw!</span>(<span class="macro">anyhow!</span>(<span class="string">&quot;Cannot parse NULL in non-NULL column.&quot;</span>)),
+                <span class="prelude-val">None </span>=&gt; <span class="macro">throw!</span>(<span class="macro">anyhow!</span>(<span class="string">"Cannot parse NULL in non-NULL column."</span>)),
             },
             SimpleQueryMessage::CommandComplete(c) =&gt; {
-                <span class="macro">panic!</span>(<span class="string">&quot;get command: {}&quot;</span>, c);
+                <span class="macro">panic!</span>(<span class="string">"get command: {}"</span>, c);
             }
             <span class="kw">_ </span>=&gt; {
-                <span class="macro">panic!</span>(<span class="string">&quot;what?&quot;</span>);
+                <span class="macro">panic!</span>(<span class="string">"what?"</span>);
             }
         };
         val
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span>&lt;Vec&lt;bool&gt;&gt;&gt; <span class="kw">for </span>PostgresSimpleSourceParser {
+<span class="kw">impl</span>&lt;<span class="lifetime">'r</span>&gt; Produce&lt;<span class="lifetime">'r</span>, <span class="prelude-ty">Option</span>&lt;Vec&lt;bool&gt;&gt;&gt; <span class="kw">for </span>PostgresSimpleSourceParser {
     <span class="kw">type </span>Error = PostgresSourceError;
 
     <span class="attr">#[throws(PostgresSourceError)]
-    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;Vec&lt;bool&gt;&gt; {
+    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;Vec&lt;bool&gt;&gt; {
         <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
         <span class="kw">let </span>val = <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.rows[ridx] {
             SimpleQueryMessage::Row(row) =&gt; <span class="kw">match </span>row.try_get(cidx)<span class="question-mark">? </span>{
                 <span class="prelude-val">Some</span>(s) =&gt; <span class="kw">match </span>s {
-                    <span class="string">&quot;&quot; </span>=&gt; <span class="prelude-val">None</span>,
-                    <span class="string">&quot;{}&quot; </span>=&gt; <span class="prelude-val">Some</span>(<span class="macro">vec!</span>[]),
+                    <span class="string">"" </span>=&gt; <span class="prelude-val">None</span>,
+                    <span class="string">"{}" </span>=&gt; <span class="prelude-val">Some</span>(<span class="macro">vec!</span>[]),
                     <span class="kw">_ </span>=&gt; <span class="prelude-val">Some</span>(
                         rem_first_and_last(s)
-                            .split(<span class="string">&#39;,&#39;</span>)
+                            .split(<span class="string">','</span>)
                             .map(|token| <span class="kw">match </span>token {
-                                <span class="string">&quot;t&quot; </span>=&gt; <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>),
-                                <span class="string">&quot;f&quot; </span>=&gt; <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>),
+                                <span class="string">"t" </span>=&gt; <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>),
+                                <span class="string">"f" </span>=&gt; <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>),
                                 <span class="kw">_ </span>=&gt; <span class="macro">throw!</span>(ConnectorXError::cannot_produce::&lt;Vec&lt;bool&gt;&gt;(<span class="prelude-val">Some</span>(
                                     s.into()
                                 ))),
@@ -3131,212 +3766,232 @@
                 <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None</span>,
             },
             SimpleQueryMessage::CommandComplete(c) =&gt; {
-                <span class="macro">panic!</span>(<span class="string">&quot;get command: {}&quot;</span>, c);
+                <span class="macro">panic!</span>(<span class="string">"get command: {}"</span>, c);
             }
             <span class="kw">_ </span>=&gt; {
-                <span class="macro">panic!</span>(<span class="string">&quot;what?&quot;</span>);
+                <span class="macro">panic!</span>(<span class="string">"what?"</span>);
             }
         };
         val
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, NaiveDate&gt; <span class="kw">for </span>PostgresSimpleSourceParser {
+<span class="kw">impl</span>&lt;<span class="lifetime">'r</span>&gt; Produce&lt;<span class="lifetime">'r</span>, NaiveDate&gt; <span class="kw">for </span>PostgresSimpleSourceParser {
     <span class="kw">type </span>Error = PostgresSourceError;
 
     <span class="attr">#[throws(PostgresSourceError)]
-    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; NaiveDate {
+    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; NaiveDate {
         <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
         <span class="kw">let </span>val = <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.rows[ridx] {
             SimpleQueryMessage::Row(row) =&gt; <span class="kw">match </span>row.try_get(cidx)<span class="question-mark">? </span>{
-                <span class="prelude-val">Some</span>(s) =&gt; NaiveDate::parse_from_str(s, <span class="string">&quot;%Y-%m-%d&quot;</span>)
-                    .map_err(|<span class="kw">_</span>| ConnectorXError::cannot_produce::&lt;NaiveDate&gt;(<span class="prelude-val">Some</span>(s.into())))<span class="question-mark">?</span>,
-                <span class="prelude-val">None </span>=&gt; <span class="macro">throw!</span>(<span class="macro">anyhow!</span>(<span class="string">&quot;Cannot parse NULL in non-NULL column.&quot;</span>)),
+                <span class="prelude-val">Some</span>(s) =&gt; <span class="kw">match </span>s {
+                    <span class="string">"infinity" </span>=&gt; NaiveDate::MAX,
+                    <span class="string">"-infinity" </span>=&gt; NaiveDate::MIN,
+                    s =&gt; NaiveDate::parse_from_str(s, <span class="string">"%Y-%m-%d"</span>)
+                        .map_err(|<span class="kw">_</span>| ConnectorXError::cannot_produce::&lt;NaiveDate&gt;(<span class="prelude-val">Some</span>(s.into())))<span class="question-mark">?</span>,
+                }
+                <span class="prelude-val">None </span>=&gt; <span class="macro">throw!</span>(<span class="macro">anyhow!</span>(<span class="string">"Cannot parse NULL in non-NULL column."</span>)),
             },
             SimpleQueryMessage::CommandComplete(c) =&gt; {
-                <span class="macro">panic!</span>(<span class="string">&quot;get command: {}&quot;</span>, c);
+                <span class="macro">panic!</span>(<span class="string">"get command: {}"</span>, c);
             }
             <span class="kw">_ </span>=&gt; {
-                <span class="macro">panic!</span>(<span class="string">&quot;what?&quot;</span>);
+                <span class="macro">panic!</span>(<span class="string">"what?"</span>);
             }
         };
         val
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span>&lt;NaiveDate&gt;&gt; <span class="kw">for </span>PostgresSimpleSourceParser {
+<span class="kw">impl</span>&lt;<span class="lifetime">'r</span>&gt; Produce&lt;<span class="lifetime">'r</span>, <span class="prelude-ty">Option</span>&lt;NaiveDate&gt;&gt; <span class="kw">for </span>PostgresSimpleSourceParser {
     <span class="kw">type </span>Error = PostgresSourceError;
 
     <span class="attr">#[throws(PostgresSourceError)]
-    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;NaiveDate&gt; {
+    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;NaiveDate&gt; {
         <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
         <span class="kw">let </span>val = <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.rows[ridx] {
             SimpleQueryMessage::Row(row) =&gt; <span class="kw">match </span>row.try_get(cidx)<span class="question-mark">? </span>{
-                <span class="prelude-val">Some</span>(s) =&gt; <span class="prelude-val">Some</span>(NaiveDate::parse_from_str(s, <span class="string">&quot;%Y-%m-%d&quot;</span>).map_err(|<span class="kw">_</span>| {
-                    ConnectorXError::cannot_produce::&lt;<span class="prelude-ty">Option</span>&lt;NaiveDate&gt;&gt;(<span class="prelude-val">Some</span>(s.into()))
-                })<span class="question-mark">?</span>),
+                <span class="prelude-val">Some</span>(s) =&gt; <span class="kw">match </span>s {
+                    <span class="string">"infinity" </span>=&gt; <span class="prelude-val">Some</span>(NaiveDate::MAX),
+                    <span class="string">"-infinity" </span>=&gt; <span class="prelude-val">Some</span>(NaiveDate::MIN),
+                    s =&gt; <span class="prelude-val">Some</span>(NaiveDate::parse_from_str(s, <span class="string">"%Y-%m-%d"</span>).map_err(|<span class="kw">_</span>| {
+                        ConnectorXError::cannot_produce::&lt;<span class="prelude-ty">Option</span>&lt;NaiveDate&gt;&gt;(<span class="prelude-val">Some</span>(s.into()))
+                    })<span class="question-mark">?</span>),
+                },
                 <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None</span>,
             },
             SimpleQueryMessage::CommandComplete(c) =&gt; {
-                <span class="macro">panic!</span>(<span class="string">&quot;get command: {}&quot;</span>, c);
+                <span class="macro">panic!</span>(<span class="string">"get command: {}"</span>, c);
             }
             <span class="kw">_ </span>=&gt; {
-                <span class="macro">panic!</span>(<span class="string">&quot;what?&quot;</span>);
+                <span class="macro">panic!</span>(<span class="string">"what?"</span>);
             }
         };
         val
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, NaiveTime&gt; <span class="kw">for </span>PostgresSimpleSourceParser {
+<span class="kw">impl</span>&lt;<span class="lifetime">'r</span>&gt; Produce&lt;<span class="lifetime">'r</span>, NaiveTime&gt; <span class="kw">for </span>PostgresSimpleSourceParser {
     <span class="kw">type </span>Error = PostgresSourceError;
 
     <span class="attr">#[throws(PostgresSourceError)]
-    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; NaiveTime {
+    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; NaiveTime {
         <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
         <span class="kw">let </span>val = <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.rows[ridx] {
             SimpleQueryMessage::Row(row) =&gt; <span class="kw">match </span>row.try_get(cidx)<span class="question-mark">? </span>{
-                <span class="prelude-val">Some</span>(s) =&gt; NaiveTime::parse_from_str(s, <span class="string">&quot;%H:%M:%S&quot;</span>)
+                <span class="prelude-val">Some</span>(s) =&gt; NaiveTime::parse_from_str(s, <span class="string">"%H:%M:%S"</span>)
                     .map_err(|<span class="kw">_</span>| ConnectorXError::cannot_produce::&lt;NaiveTime&gt;(<span class="prelude-val">Some</span>(s.into())))<span class="question-mark">?</span>,
-                <span class="prelude-val">None </span>=&gt; <span class="macro">throw!</span>(<span class="macro">anyhow!</span>(<span class="string">&quot;Cannot parse NULL in non-NULL column.&quot;</span>)),
+                <span class="prelude-val">None </span>=&gt; <span class="macro">throw!</span>(<span class="macro">anyhow!</span>(<span class="string">"Cannot parse NULL in non-NULL column."</span>)),
             },
             SimpleQueryMessage::CommandComplete(c) =&gt; {
-                <span class="macro">panic!</span>(<span class="string">&quot;get command: {}&quot;</span>, c);
+                <span class="macro">panic!</span>(<span class="string">"get command: {}"</span>, c);
             }
             <span class="kw">_ </span>=&gt; {
-                <span class="macro">panic!</span>(<span class="string">&quot;what?&quot;</span>);
+                <span class="macro">panic!</span>(<span class="string">"what?"</span>);
             }
         };
         val
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span>&lt;NaiveTime&gt;&gt; <span class="kw">for </span>PostgresSimpleSourceParser {
+<span class="kw">impl</span>&lt;<span class="lifetime">'r</span>&gt; Produce&lt;<span class="lifetime">'r</span>, <span class="prelude-ty">Option</span>&lt;NaiveTime&gt;&gt; <span class="kw">for </span>PostgresSimpleSourceParser {
     <span class="kw">type </span>Error = PostgresSourceError;
 
     <span class="attr">#[throws(PostgresSourceError)]
-    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;NaiveTime&gt; {
+    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;NaiveTime&gt; {
         <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
         <span class="kw">let </span>val = <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.rows[ridx] {
             SimpleQueryMessage::Row(row) =&gt; <span class="kw">match </span>row.try_get(cidx)<span class="question-mark">? </span>{
-                <span class="prelude-val">Some</span>(s) =&gt; <span class="prelude-val">Some</span>(NaiveTime::parse_from_str(s, <span class="string">&quot;%H:%M:%S&quot;</span>).map_err(|<span class="kw">_</span>| {
+                <span class="prelude-val">Some</span>(s) =&gt; <span class="prelude-val">Some</span>(NaiveTime::parse_from_str(s, <span class="string">"%H:%M:%S"</span>).map_err(|<span class="kw">_</span>| {
                     ConnectorXError::cannot_produce::&lt;<span class="prelude-ty">Option</span>&lt;NaiveTime&gt;&gt;(<span class="prelude-val">Some</span>(s.into()))
                 })<span class="question-mark">?</span>),
                 <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None</span>,
             },
             SimpleQueryMessage::CommandComplete(c) =&gt; {
-                <span class="macro">panic!</span>(<span class="string">&quot;get command: {}&quot;</span>, c);
+                <span class="macro">panic!</span>(<span class="string">"get command: {}"</span>, c);
             }
             <span class="kw">_ </span>=&gt; {
-                <span class="macro">panic!</span>(<span class="string">&quot;what?&quot;</span>);
+                <span class="macro">panic!</span>(<span class="string">"what?"</span>);
             }
         };
         val
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, NaiveDateTime&gt; <span class="kw">for </span>PostgresSimpleSourceParser {
+<span class="kw">impl</span>&lt;<span class="lifetime">'r</span>&gt; Produce&lt;<span class="lifetime">'r</span>, NaiveDateTime&gt; <span class="kw">for </span>PostgresSimpleSourceParser {
     <span class="kw">type </span>Error = PostgresSourceError;
 
     <span class="attr">#[throws(PostgresSourceError)]
-    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; NaiveDateTime {
+    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; NaiveDateTime {
         <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
         <span class="kw">let </span>val = <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.rows[ridx] {
             SimpleQueryMessage::Row(row) =&gt; <span class="kw">match </span>row.try_get(cidx)<span class="question-mark">? </span>{
-                <span class="prelude-val">Some</span>(s) =&gt; NaiveDateTime::parse_from_str(s, <span class="string">&quot;%Y-%m-%d %H:%M:%S&quot;</span>).map_err(|<span class="kw">_</span>| {
-                    ConnectorXError::cannot_produce::&lt;NaiveDateTime&gt;(<span class="prelude-val">Some</span>(s.into()))
-                })<span class="question-mark">?</span>,
-                <span class="prelude-val">None </span>=&gt; <span class="macro">throw!</span>(<span class="macro">anyhow!</span>(<span class="string">&quot;Cannot parse NULL in non-NULL column.&quot;</span>)),
+                <span class="prelude-val">Some</span>(s) =&gt; <span class="kw">match </span>s {
+                    <span class="string">"infinity" </span>=&gt; NaiveDateTime::MAX,
+                    <span class="string">"-infinity" </span>=&gt; NaiveDateTime::MIN,
+                    s =&gt; NaiveDateTime::parse_from_str(s, <span class="string">"%Y-%m-%d %H:%M:%S"</span>).map_err(|<span class="kw">_</span>| {
+                        ConnectorXError::cannot_produce::&lt;NaiveDateTime&gt;(<span class="prelude-val">Some</span>(s.into()))
+                    })<span class="question-mark">?</span>,
+                },
+                <span class="prelude-val">None </span>=&gt; <span class="macro">throw!</span>(<span class="macro">anyhow!</span>(<span class="string">"Cannot parse NULL in non-NULL column."</span>)),
             },
             SimpleQueryMessage::CommandComplete(c) =&gt; {
-                <span class="macro">panic!</span>(<span class="string">&quot;get command: {}&quot;</span>, c);
+                <span class="macro">panic!</span>(<span class="string">"get command: {}"</span>, c);
             }
             <span class="kw">_ </span>=&gt; {
-                <span class="macro">panic!</span>(<span class="string">&quot;what?&quot;</span>);
+                <span class="macro">panic!</span>(<span class="string">"what?"</span>);
             }
         };
         val
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span>&lt;NaiveDateTime&gt;&gt; <span class="kw">for </span>PostgresSimpleSourceParser {
+<span class="kw">impl</span>&lt;<span class="lifetime">'r</span>&gt; Produce&lt;<span class="lifetime">'r</span>, <span class="prelude-ty">Option</span>&lt;NaiveDateTime&gt;&gt; <span class="kw">for </span>PostgresSimpleSourceParser {
     <span class="kw">type </span>Error = PostgresSourceError;
 
     <span class="attr">#[throws(PostgresSourceError)]
-    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;NaiveDateTime&gt; {
+    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;NaiveDateTime&gt; {
         <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
         <span class="kw">let </span>val = <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.rows[ridx] {
             SimpleQueryMessage::Row(row) =&gt; <span class="kw">match </span>row.try_get(cidx)<span class="question-mark">? </span>{
-                <span class="prelude-val">Some</span>(s) =&gt; <span class="prelude-val">Some</span>(
-                    NaiveDateTime::parse_from_str(s, <span class="string">&quot;%Y-%m-%d %H:%M:%S&quot;</span>).map_err(|<span class="kw">_</span>| {
-                        ConnectorXError::cannot_produce::&lt;<span class="prelude-ty">Option</span>&lt;NaiveDateTime&gt;&gt;(<span class="prelude-val">Some</span>(s.into()))
-                    })<span class="question-mark">?</span>,
-                ),
+                <span class="prelude-val">Some</span>(s) =&gt; <span class="kw">match </span>s {
+                    <span class="string">"infinity" </span>=&gt; <span class="prelude-val">Some</span>(NaiveDateTime::MAX),
+                    <span class="string">"-infinity" </span>=&gt; <span class="prelude-val">Some</span>(NaiveDateTime::MIN),
+                    s =&gt; <span class="prelude-val">Some</span>(
+                        NaiveDateTime::parse_from_str(s, <span class="string">"%Y-%m-%d %H:%M:%S"</span>).map_err(|<span class="kw">_</span>| {
+                            ConnectorXError::cannot_produce::&lt;<span class="prelude-ty">Option</span>&lt;NaiveDateTime&gt;&gt;(<span class="prelude-val">Some</span>(s.into()))
+                        })<span class="question-mark">?</span>,
+                    ),
+                },
                 <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None</span>,
             },
             SimpleQueryMessage::CommandComplete(c) =&gt; {
-                <span class="macro">panic!</span>(<span class="string">&quot;get command: {}&quot;</span>, c);
+                <span class="macro">panic!</span>(<span class="string">"get command: {}"</span>, c);
             }
             <span class="kw">_ </span>=&gt; {
-                <span class="macro">panic!</span>(<span class="string">&quot;what?&quot;</span>);
+                <span class="macro">panic!</span>(<span class="string">"what?"</span>);
             }
         };
         val
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, DateTime&lt;Utc&gt;&gt; <span class="kw">for </span>PostgresSimpleSourceParser {
+<span class="kw">impl</span>&lt;<span class="lifetime">'r</span>&gt; Produce&lt;<span class="lifetime">'r</span>, DateTime&lt;Utc&gt;&gt; <span class="kw">for </span>PostgresSimpleSourceParser {
     <span class="kw">type </span>Error = PostgresSourceError;
 
     <span class="attr">#[throws(PostgresSourceError)]
-    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; DateTime&lt;Utc&gt; {
+    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; DateTime&lt;Utc&gt; {
         <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
         <span class="kw">let </span>val = <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.rows[ridx] {
             SimpleQueryMessage::Row(row) =&gt; <span class="kw">match </span>row.try_get(cidx)<span class="question-mark">? </span>{
+                <span class="prelude-val">Some</span>(<span class="string">"infinity"</span>) =&gt; DateTime::&lt;Utc&gt;::MAX_UTC,
+                <span class="prelude-val">Some</span>(<span class="string">"-infinity"</span>) =&gt; DateTime::&lt;Utc&gt;::MIN_UTC,
                 <span class="prelude-val">Some</span>(s) =&gt; {
-                    <span class="kw">let </span>time_string = <span class="macro">format!</span>(<span class="string">&quot;{}:00&quot;</span>, s).to_owned();
+                    <span class="kw">let </span>time_string = <span class="macro">format!</span>(<span class="string">"{}:00"</span>, s).to_owned();
                     <span class="kw">let </span>slice: <span class="kw-2">&amp;</span>str = <span class="kw-2">&amp;</span>time_string[..];
                     <span class="kw">let </span>time: DateTime&lt;FixedOffset&gt; =
-                        DateTime::parse_from_str(slice, <span class="string">&quot;%Y-%m-%d %H:%M:%S%:z&quot;</span>).unwrap();
+                        DateTime::parse_from_str(slice, <span class="string">"%Y-%m-%d %H:%M:%S%:z"</span>).unwrap();
 
                     time.with_timezone(<span class="kw-2">&amp;</span>Utc)
                 }
-                <span class="prelude-val">None </span>=&gt; <span class="macro">throw!</span>(<span class="macro">anyhow!</span>(<span class="string">&quot;Cannot parse NULL in non-NULL column.&quot;</span>)),
+                <span class="prelude-val">None </span>=&gt; <span class="macro">throw!</span>(<span class="macro">anyhow!</span>(<span class="string">"Cannot parse NULL in non-NULL column."</span>)),
             },
             SimpleQueryMessage::CommandComplete(c) =&gt; {
-                <span class="macro">panic!</span>(<span class="string">&quot;get command: {}&quot;</span>, c);
+                <span class="macro">panic!</span>(<span class="string">"get command: {}"</span>, c);
             }
             <span class="kw">_ </span>=&gt; {
-                <span class="macro">panic!</span>(<span class="string">&quot;what?&quot;</span>);
+                <span class="macro">panic!</span>(<span class="string">"what?"</span>);
             }
         };
         val
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;r</span>&gt; Produce&lt;<span class="lifetime">&#39;r</span>, <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;&gt; <span class="kw">for </span>PostgresSimpleSourceParser {
+<span class="kw">impl</span>&lt;<span class="lifetime">'r</span>&gt; Produce&lt;<span class="lifetime">'r</span>, <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;&gt; <span class="kw">for </span>PostgresSimpleSourceParser {
     <span class="kw">type </span>Error = PostgresSourceError;
 
     <span class="attr">#[throws(PostgresSourceError)]
-    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">&#39;r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt; {
+    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt; {
         <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
         <span class="kw">let </span>val = <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.rows[ridx] {
             SimpleQueryMessage::Row(row) =&gt; <span class="kw">match </span>row.try_get(cidx)<span class="question-mark">? </span>{
+                <span class="prelude-val">Some</span>(<span class="string">"infinity"</span>) =&gt; <span class="prelude-val">Some</span>(DateTime::&lt;Utc&gt;::MAX_UTC),
+                <span class="prelude-val">Some</span>(<span class="string">"-infinity"</span>) =&gt; <span class="prelude-val">Some</span>(DateTime::&lt;Utc&gt;::MIN_UTC),
                 <span class="prelude-val">Some</span>(s) =&gt; {
-                    <span class="kw">let </span>time_string = <span class="macro">format!</span>(<span class="string">&quot;{}:00&quot;</span>, s).to_owned();
+                    <span class="kw">let </span>time_string = <span class="macro">format!</span>(<span class="string">"{}:00"</span>, s).to_owned();
                     <span class="kw">let </span>slice: <span class="kw-2">&amp;</span>str = <span class="kw-2">&amp;</span>time_string[..];
                     <span class="kw">let </span>time: DateTime&lt;FixedOffset&gt; =
-                        DateTime::parse_from_str(slice, <span class="string">&quot;%Y-%m-%d %H:%M:%S%:z&quot;</span>).unwrap();
+                        DateTime::parse_from_str(slice, <span class="string">"%Y-%m-%d %H:%M:%S%:z"</span>).unwrap();
 
                     <span class="prelude-val">Some</span>(time.with_timezone(<span class="kw-2">&amp;</span>Utc))
                 }
                 <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None</span>,
             },
             SimpleQueryMessage::CommandComplete(c) =&gt; {
-                <span class="macro">panic!</span>(<span class="string">&quot;get command: {}&quot;</span>, c);
+                <span class="macro">panic!</span>(<span class="string">"get command: {}"</span>, c);
             }
             <span class="kw">_ </span>=&gt; {
-                <span class="macro">panic!</span>(<span class="string">&quot;what?&quot;</span>);
+                <span class="macro">panic!</span>(<span class="string">"what?"</span>);
             }
         };
         val

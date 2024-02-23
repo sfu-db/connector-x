@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `connectorx/src/partition.rs`."><title>partition.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="connectorx" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `connectorx/src/partition.rs`."><title>partition.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="connectorx" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -483,44 +484,44 @@
 <a href="#483" id="483">483</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::errors::{ConnectorXOutError, OutResult};
 <span class="kw">use </span><span class="kw">crate</span>::source_router::{SourceConn, SourceType};
-<span class="attr">#[cfg(feature = <span class="string">&quot;src_bigquery&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"src_bigquery"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::sources::bigquery::BigQueryDialect;
-<span class="attr">#[cfg(feature = <span class="string">&quot;src_mssql&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"src_mssql"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::sources::mssql::{mssql_config, FloatN, IntN, MsSQLTypeSystem};
-<span class="attr">#[cfg(feature = <span class="string">&quot;src_mysql&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"src_mysql"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::sources::mysql::{MySQLSourceError, MySQLTypeSystem};
-<span class="attr">#[cfg(feature = <span class="string">&quot;src_oracle&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"src_oracle"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::sources::oracle::{connect_oracle, OracleDialect};
-<span class="attr">#[cfg(feature = <span class="string">&quot;src_postgres&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"src_postgres"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::sources::postgres::{rewrite_tls_args, PostgresTypeSystem};
-<span class="attr">#[cfg(feature = <span class="string">&quot;src_sqlite&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"src_sqlite"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::sql::get_partition_range_query_sep;
 <span class="kw">use </span><span class="kw">crate</span>::sql::{get_partition_range_query, single_col_partition_query, CXQuery};
 <span class="kw">use </span>anyhow::anyhow;
 <span class="kw">use </span>fehler::{throw, throws};
-<span class="attr">#[cfg(feature = <span class="string">&quot;src_bigquery&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"src_bigquery"</span>)]
 </span><span class="kw">use </span>gcp_bigquery_client;
-<span class="attr">#[cfg(feature = <span class="string">&quot;src_mysql&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"src_mysql"</span>)]
 </span><span class="kw">use </span>r2d2_mysql::mysql::{prelude::Queryable, Opts, Pool, Row};
-<span class="attr">#[cfg(feature = <span class="string">&quot;src_sqlite&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"src_sqlite"</span>)]
 </span><span class="kw">use </span>rusqlite::{types::Type, Connection};
-<span class="attr">#[cfg(feature = <span class="string">&quot;src_postgres&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"src_postgres"</span>)]
 </span><span class="kw">use </span>rust_decimal::{prelude::ToPrimitive, Decimal};
-<span class="attr">#[cfg(feature = <span class="string">&quot;src_postgres&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"src_postgres"</span>)]
 </span><span class="kw">use </span>rust_decimal_macros::dec;
-<span class="attr">#[cfg(feature = <span class="string">&quot;src_mssql&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"src_mssql"</span>)]
 </span><span class="kw">use </span>sqlparser::dialect::MsSqlDialect;
-<span class="attr">#[cfg(feature = <span class="string">&quot;src_mysql&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"src_mysql"</span>)]
 </span><span class="kw">use </span>sqlparser::dialect::MySqlDialect;
-<span class="attr">#[cfg(feature = <span class="string">&quot;src_postgres&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"src_postgres"</span>)]
 </span><span class="kw">use </span>sqlparser::dialect::PostgreSqlDialect;
-<span class="attr">#[cfg(feature = <span class="string">&quot;src_sqlite&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"src_sqlite"</span>)]
 </span><span class="kw">use </span>sqlparser::dialect::SQLiteDialect;
-<span class="attr">#[cfg(feature = <span class="string">&quot;src_mssql&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"src_mssql"</span>)]
 </span><span class="kw">use </span>tiberius::Client;
-<span class="attr">#[cfg(any(feature = <span class="string">&quot;src_bigquery&quot;</span>, feature = <span class="string">&quot;src_mssql&quot;</span>))]
+<span class="attr">#[cfg(any(feature = <span class="string">"src_bigquery"</span>, feature = <span class="string">"src_mssql"</span>))]
 </span><span class="kw">use </span>tokio::{net::TcpStream, runtime::Runtime};
-<span class="attr">#[cfg(feature = <span class="string">&quot;src_mssql&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"src_mssql"</span>)]
 </span><span class="kw">use </span>tokio_util::compat::TokioAsyncWriteCompatExt;
 <span class="kw">use </span>url::Url;
 
@@ -551,7 +552,7 @@
         (<span class="prelude-val">None</span>, <span class="prelude-val">None</span>) =&gt; get_col_range(source_conn, <span class="kw-2">&amp;</span>part.query, <span class="kw-2">&amp;</span>part.column)<span class="question-mark">?</span>,
         (<span class="prelude-val">Some</span>(min), <span class="prelude-val">Some</span>(max)) =&gt; (min, max),
         <span class="kw">_ </span>=&gt; <span class="macro">throw!</span>(<span class="macro">anyhow!</span>(
-            <span class="string">&quot;partition_query range can not be partially specified&quot;</span>,
+            <span class="string">"partition_query range can not be partially specified"</span>,
         )),
     };
 
@@ -571,19 +572,19 @@
 
 <span class="kw">pub fn </span>get_col_range(source_conn: <span class="kw-2">&amp;</span>SourceConn, query: <span class="kw-2">&amp;</span>str, col: <span class="kw-2">&amp;</span>str) -&gt; OutResult&lt;(i64, i64)&gt; {
     <span class="kw">match </span>source_conn.ty {
-        <span class="attr">#[cfg(feature = <span class="string">&quot;src_postgres&quot;</span>)]
+        <span class="attr">#[cfg(feature = <span class="string">"src_postgres"</span>)]
         </span>SourceType::Postgres =&gt; pg_get_partition_range(<span class="kw-2">&amp;</span>source_conn.conn, query, col),
-        <span class="attr">#[cfg(feature = <span class="string">&quot;src_sqlite&quot;</span>)]
+        <span class="attr">#[cfg(feature = <span class="string">"src_sqlite"</span>)]
         </span>SourceType::SQLite =&gt; sqlite_get_partition_range(<span class="kw-2">&amp;</span>source_conn.conn, query, col),
-        <span class="attr">#[cfg(feature = <span class="string">&quot;src_mysql&quot;</span>)]
+        <span class="attr">#[cfg(feature = <span class="string">"src_mysql"</span>)]
         </span>SourceType::MySQL =&gt; mysql_get_partition_range(<span class="kw-2">&amp;</span>source_conn.conn, query, col),
-        <span class="attr">#[cfg(feature = <span class="string">&quot;src_mssql&quot;</span>)]
+        <span class="attr">#[cfg(feature = <span class="string">"src_mssql"</span>)]
         </span>SourceType::MsSQL =&gt; mssql_get_partition_range(<span class="kw-2">&amp;</span>source_conn.conn, query, col),
-        <span class="attr">#[cfg(feature = <span class="string">&quot;src_oracle&quot;</span>)]
+        <span class="attr">#[cfg(feature = <span class="string">"src_oracle"</span>)]
         </span>SourceType::Oracle =&gt; oracle_get_partition_range(<span class="kw-2">&amp;</span>source_conn.conn, query, col),
-        <span class="attr">#[cfg(feature = <span class="string">&quot;src_bigquery&quot;</span>)]
+        <span class="attr">#[cfg(feature = <span class="string">"src_bigquery"</span>)]
         </span>SourceType::BigQuery =&gt; bigquery_get_partition_range(<span class="kw-2">&amp;</span>source_conn.conn, query, col),
-        <span class="kw">_ </span>=&gt; <span class="macro">unimplemented!</span>(<span class="string">&quot;{:?} not implemented!&quot;</span>, source_conn.ty),
+        <span class="kw">_ </span>=&gt; <span class="macro">unimplemented!</span>(<span class="string">"{:?} not implemented!"</span>, source_conn.ty),
     }
 }
 
@@ -596,36 +597,36 @@
     upper: i64,
 ) -&gt; CXQuery&lt;String&gt; {
     <span class="kw">let </span>query = <span class="kw">match </span>source_conn.ty {
-        <span class="attr">#[cfg(feature = <span class="string">&quot;src_postgres&quot;</span>)]
+        <span class="attr">#[cfg(feature = <span class="string">"src_postgres"</span>)]
         </span>SourceType::Postgres =&gt; {
             single_col_partition_query(query, col, lower, upper, <span class="kw-2">&amp;</span>PostgreSqlDialect {})<span class="question-mark">?
         </span>}
-        <span class="attr">#[cfg(feature = <span class="string">&quot;src_sqlite&quot;</span>)]
+        <span class="attr">#[cfg(feature = <span class="string">"src_sqlite"</span>)]
         </span>SourceType::SQLite =&gt; {
             single_col_partition_query(query, col, lower, upper, <span class="kw-2">&amp;</span>SQLiteDialect {})<span class="question-mark">?
         </span>}
-        <span class="attr">#[cfg(feature = <span class="string">&quot;src_mysql&quot;</span>)]
+        <span class="attr">#[cfg(feature = <span class="string">"src_mysql"</span>)]
         </span>SourceType::MySQL =&gt; {
             single_col_partition_query(query, col, lower, upper, <span class="kw-2">&amp;</span>MySqlDialect {})<span class="question-mark">?
         </span>}
-        <span class="attr">#[cfg(feature = <span class="string">&quot;src_mssql&quot;</span>)]
+        <span class="attr">#[cfg(feature = <span class="string">"src_mssql"</span>)]
         </span>SourceType::MsSQL =&gt; {
             single_col_partition_query(query, col, lower, upper, <span class="kw-2">&amp;</span>MsSqlDialect {})<span class="question-mark">?
         </span>}
-        <span class="attr">#[cfg(feature = <span class="string">&quot;src_oracle&quot;</span>)]
+        <span class="attr">#[cfg(feature = <span class="string">"src_oracle"</span>)]
         </span>SourceType::Oracle =&gt; {
             single_col_partition_query(query, col, lower, upper, <span class="kw-2">&amp;</span>OracleDialect {})<span class="question-mark">?
         </span>}
-        <span class="attr">#[cfg(feature = <span class="string">&quot;src_bigquery&quot;</span>)]
+        <span class="attr">#[cfg(feature = <span class="string">"src_bigquery"</span>)]
         </span>SourceType::BigQuery =&gt; {
             single_col_partition_query(query, col, lower, upper, <span class="kw-2">&amp;</span>BigQueryDialect {})<span class="question-mark">?
         </span>}
-        <span class="kw">_ </span>=&gt; <span class="macro">unimplemented!</span>(<span class="string">&quot;{:?} not implemented!&quot;</span>, source_conn.ty),
+        <span class="kw">_ </span>=&gt; <span class="macro">unimplemented!</span>(<span class="string">"{:?} not implemented!"</span>, source_conn.ty),
     };
     CXQuery::Wrapped(query)
 }
 
-<span class="attr">#[cfg(feature = <span class="string">&quot;src_postgres&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"src_postgres"</span>)]
 #[throws(ConnectorXOutError)]
 </span><span class="kw">fn </span>pg_get_partition_range(conn: <span class="kw-2">&amp;</span>Url, query: <span class="kw-2">&amp;</span>str, col: <span class="kw-2">&amp;</span>str) -&gt; (i64, i64) {
     <span class="kw">let </span>(config, tls) = rewrite_tls_args(conn)<span class="question-mark">?</span>;
@@ -672,17 +673,17 @@
             )
         }
         <span class="kw">_ </span>=&gt; <span class="macro">throw!</span>(<span class="macro">anyhow!</span>(
-            <span class="string">&quot;Partition can only be done on int or float columns&quot;
+            <span class="string">"Partition can only be done on int or float columns"
         </span>)),
     };
 
     (min_v, max_v)
 }
 
-<span class="attr">#[cfg(feature = <span class="string">&quot;src_sqlite&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"src_sqlite"</span>)]
 #[throws(ConnectorXOutError)]
 </span><span class="kw">fn </span>sqlite_get_partition_range(conn: <span class="kw-2">&amp;</span>Url, query: <span class="kw-2">&amp;</span>str, col: <span class="kw-2">&amp;</span>str) -&gt; (i64, i64) {
-    <span class="comment">// remove the first &quot;sqlite://&quot; manually since url.path is not correct for windows and for relative path
+    <span class="comment">// remove the first "sqlite://" manually since url.path is not correct for windows and for relative path
     </span><span class="kw">let </span>conn = Connection::open(<span class="kw-2">&amp;</span>conn.as_str()[<span class="number">9</span>..])<span class="question-mark">?</span>;
     <span class="comment">// SQLite only optimize min max queries when there is only one aggregation
     // https://www.sqlite.org/optoverview.html#minmax
@@ -699,7 +700,7 @@
             }
             Type::Null =&gt; <span class="prelude-val">Ok</span>(<span class="number">0</span>),
             <span class="kw">_ </span>=&gt; {
-                error = <span class="prelude-val">Some</span>(<span class="macro">anyhow!</span>(<span class="string">&quot;Partition can only be done on integer columns&quot;</span>));
+                error = <span class="prelude-val">Some</span>(<span class="macro">anyhow!</span>(<span class="string">"Partition can only be done on integer columns"</span>));
                 <span class="prelude-val">Ok</span>(<span class="number">0</span>)
             }
         }
@@ -718,7 +719,7 @@
             }
             Type::Null =&gt; <span class="prelude-val">Ok</span>(<span class="number">0</span>),
             <span class="kw">_ </span>=&gt; {
-                error = <span class="prelude-val">Some</span>(<span class="macro">anyhow!</span>(<span class="string">&quot;Partition can only be done on integer columns&quot;</span>));
+                error = <span class="prelude-val">Some</span>(<span class="macro">anyhow!</span>(<span class="string">"Partition can only be done on integer columns"</span>));
                 <span class="prelude-val">Ok</span>(<span class="number">0</span>)
             }
         }
@@ -731,7 +732,7 @@
     (min_v, max_v)
 }
 
-<span class="attr">#[cfg(feature = <span class="string">&quot;src_mysql&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"src_mysql"</span>)]
 #[throws(ConnectorXOutError)]
 </span><span class="kw">fn </span>mysql_get_partition_range(conn: <span class="kw-2">&amp;</span>Url, query: <span class="kw-2">&amp;</span>str, col: <span class="kw-2">&amp;</span>str) -&gt; (i64, i64) {
     <span class="kw">let </span>pool = Pool::new(Opts::from_url(conn.as_str()).map_err(MySQLSourceError::MySQLUrlError)<span class="question-mark">?</span>)<span class="question-mark">?</span>;
@@ -739,7 +740,7 @@
     <span class="kw">let </span>range_query = get_partition_range_query(query, col, <span class="kw-2">&amp;</span>MySqlDialect {})<span class="question-mark">?</span>;
     <span class="kw">let </span>row: Row = conn
         .query_first(range_query)<span class="question-mark">?
-        </span>.ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">&quot;mysql range: no row returns&quot;</span>))<span class="question-mark">?</span>;
+        </span>.ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">"mysql range: no row returns"</span>))<span class="question-mark">?</span>;
 
     <span class="kw">let </span>col_type =
         MySQLTypeSystem::from((<span class="kw-2">&amp;</span>row.columns()[<span class="number">0</span>].column_type(), <span class="kw-2">&amp;</span>row.columns()[<span class="number">0</span>].flags()));
@@ -748,121 +749,121 @@
         MySQLTypeSystem::Tiny(<span class="kw">_</span>) =&gt; {
             <span class="kw">let </span>min_v: <span class="prelude-ty">Option</span>&lt;i8&gt; = row
                 .get(<span class="number">0</span>)
-                .ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">&quot;mysql range: cannot get min value&quot;</span>))<span class="question-mark">?</span>;
+                .ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">"mysql range: cannot get min value"</span>))<span class="question-mark">?</span>;
             <span class="kw">let </span>max_v: <span class="prelude-ty">Option</span>&lt;i8&gt; = row
                 .get(<span class="number">1</span>)
-                .ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">&quot;mysql range: cannot get max value&quot;</span>))<span class="question-mark">?</span>;
+                .ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">"mysql range: cannot get max value"</span>))<span class="question-mark">?</span>;
             (min_v.unwrap_or(<span class="number">0</span>) <span class="kw">as </span>i64, max_v.unwrap_or(<span class="number">0</span>) <span class="kw">as </span>i64)
         }
         MySQLTypeSystem::Short(<span class="kw">_</span>) =&gt; {
             <span class="kw">let </span>min_v: <span class="prelude-ty">Option</span>&lt;i16&gt; = row
                 .get(<span class="number">0</span>)
-                .ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">&quot;mysql range: cannot get min value&quot;</span>))<span class="question-mark">?</span>;
+                .ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">"mysql range: cannot get min value"</span>))<span class="question-mark">?</span>;
             <span class="kw">let </span>max_v: <span class="prelude-ty">Option</span>&lt;i16&gt; = row
                 .get(<span class="number">1</span>)
-                .ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">&quot;mysql range: cannot get max value&quot;</span>))<span class="question-mark">?</span>;
+                .ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">"mysql range: cannot get max value"</span>))<span class="question-mark">?</span>;
             (min_v.unwrap_or(<span class="number">0</span>) <span class="kw">as </span>i64, max_v.unwrap_or(<span class="number">0</span>) <span class="kw">as </span>i64)
         }
         MySQLTypeSystem::Int24(<span class="kw">_</span>) =&gt; {
             <span class="kw">let </span>min_v: <span class="prelude-ty">Option</span>&lt;i32&gt; = row
                 .get(<span class="number">0</span>)
-                .ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">&quot;mysql range: cannot get min value&quot;</span>))<span class="question-mark">?</span>;
+                .ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">"mysql range: cannot get min value"</span>))<span class="question-mark">?</span>;
             <span class="kw">let </span>max_v: <span class="prelude-ty">Option</span>&lt;i32&gt; = row
                 .get(<span class="number">1</span>)
-                .ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">&quot;mysql range: cannot get max value&quot;</span>))<span class="question-mark">?</span>;
+                .ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">"mysql range: cannot get max value"</span>))<span class="question-mark">?</span>;
             (min_v.unwrap_or(<span class="number">0</span>) <span class="kw">as </span>i64, max_v.unwrap_or(<span class="number">0</span>) <span class="kw">as </span>i64)
         }
         MySQLTypeSystem::Long(<span class="kw">_</span>) =&gt; {
             <span class="kw">let </span>min_v: <span class="prelude-ty">Option</span>&lt;i64&gt; = row
                 .get(<span class="number">0</span>)
-                .ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">&quot;mysql range: cannot get min value&quot;</span>))<span class="question-mark">?</span>;
+                .ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">"mysql range: cannot get min value"</span>))<span class="question-mark">?</span>;
             <span class="kw">let </span>max_v: <span class="prelude-ty">Option</span>&lt;i64&gt; = row
                 .get(<span class="number">1</span>)
-                .ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">&quot;mysql range: cannot get max value&quot;</span>))<span class="question-mark">?</span>;
+                .ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">"mysql range: cannot get max value"</span>))<span class="question-mark">?</span>;
             (min_v.unwrap_or(<span class="number">0</span>), max_v.unwrap_or(<span class="number">0</span>))
         }
         MySQLTypeSystem::LongLong(<span class="kw">_</span>) =&gt; {
             <span class="kw">let </span>min_v: <span class="prelude-ty">Option</span>&lt;i64&gt; = row
                 .get(<span class="number">0</span>)
-                .ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">&quot;mysql range: cannot get min value&quot;</span>))<span class="question-mark">?</span>;
+                .ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">"mysql range: cannot get min value"</span>))<span class="question-mark">?</span>;
             <span class="kw">let </span>max_v: <span class="prelude-ty">Option</span>&lt;i64&gt; = row
                 .get(<span class="number">1</span>)
-                .ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">&quot;mysql range: cannot get max value&quot;</span>))<span class="question-mark">?</span>;
+                .ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">"mysql range: cannot get max value"</span>))<span class="question-mark">?</span>;
             (min_v.unwrap_or(<span class="number">0</span>), max_v.unwrap_or(<span class="number">0</span>))
         }
         MySQLTypeSystem::UTiny(<span class="kw">_</span>) =&gt; {
             <span class="kw">let </span>min_v: <span class="prelude-ty">Option</span>&lt;u8&gt; = row
                 .get(<span class="number">0</span>)
-                .ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">&quot;mysql range: cannot get min value&quot;</span>))<span class="question-mark">?</span>;
+                .ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">"mysql range: cannot get min value"</span>))<span class="question-mark">?</span>;
             <span class="kw">let </span>max_v: <span class="prelude-ty">Option</span>&lt;u8&gt; = row
                 .get(<span class="number">1</span>)
-                .ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">&quot;mysql range: cannot get max value&quot;</span>))<span class="question-mark">?</span>;
+                .ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">"mysql range: cannot get max value"</span>))<span class="question-mark">?</span>;
             (min_v.unwrap_or(<span class="number">0</span>) <span class="kw">as </span>i64, max_v.unwrap_or(<span class="number">0</span>) <span class="kw">as </span>i64)
         }
         MySQLTypeSystem::UShort(<span class="kw">_</span>) =&gt; {
             <span class="kw">let </span>min_v: <span class="prelude-ty">Option</span>&lt;u16&gt; = row
                 .get(<span class="number">0</span>)
-                .ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">&quot;mysql range: cannot get min value&quot;</span>))<span class="question-mark">?</span>;
+                .ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">"mysql range: cannot get min value"</span>))<span class="question-mark">?</span>;
             <span class="kw">let </span>max_v: <span class="prelude-ty">Option</span>&lt;u16&gt; = row
                 .get(<span class="number">1</span>)
-                .ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">&quot;mysql range: cannot get max value&quot;</span>))<span class="question-mark">?</span>;
+                .ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">"mysql range: cannot get max value"</span>))<span class="question-mark">?</span>;
             (min_v.unwrap_or(<span class="number">0</span>) <span class="kw">as </span>i64, max_v.unwrap_or(<span class="number">0</span>) <span class="kw">as </span>i64)
         }
         MySQLTypeSystem::UInt24(<span class="kw">_</span>) =&gt; {
             <span class="kw">let </span>min_v: <span class="prelude-ty">Option</span>&lt;u32&gt; = row
                 .get(<span class="number">0</span>)
-                .ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">&quot;mysql range: cannot get min value&quot;</span>))<span class="question-mark">?</span>;
+                .ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">"mysql range: cannot get min value"</span>))<span class="question-mark">?</span>;
             <span class="kw">let </span>max_v: <span class="prelude-ty">Option</span>&lt;u32&gt; = row
                 .get(<span class="number">1</span>)
-                .ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">&quot;mysql range: cannot get max value&quot;</span>))<span class="question-mark">?</span>;
+                .ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">"mysql range: cannot get max value"</span>))<span class="question-mark">?</span>;
             (min_v.unwrap_or(<span class="number">0</span>) <span class="kw">as </span>i64, max_v.unwrap_or(<span class="number">0</span>) <span class="kw">as </span>i64)
         }
         MySQLTypeSystem::ULong(<span class="kw">_</span>) =&gt; {
             <span class="kw">let </span>min_v: <span class="prelude-ty">Option</span>&lt;u32&gt; = row
                 .get(<span class="number">0</span>)
-                .ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">&quot;mysql range: cannot get min value&quot;</span>))<span class="question-mark">?</span>;
+                .ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">"mysql range: cannot get min value"</span>))<span class="question-mark">?</span>;
             <span class="kw">let </span>max_v: <span class="prelude-ty">Option</span>&lt;u32&gt; = row
                 .get(<span class="number">1</span>)
-                .ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">&quot;mysql range: cannot get max value&quot;</span>))<span class="question-mark">?</span>;
+                .ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">"mysql range: cannot get max value"</span>))<span class="question-mark">?</span>;
             (min_v.unwrap_or(<span class="number">0</span>) <span class="kw">as </span>i64, max_v.unwrap_or(<span class="number">0</span>) <span class="kw">as </span>i64)
         }
         MySQLTypeSystem::ULongLong(<span class="kw">_</span>) =&gt; {
             <span class="kw">let </span>min_v: <span class="prelude-ty">Option</span>&lt;u64&gt; = row
                 .get(<span class="number">0</span>)
-                .ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">&quot;mysql range: cannot get min value&quot;</span>))<span class="question-mark">?</span>;
+                .ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">"mysql range: cannot get min value"</span>))<span class="question-mark">?</span>;
             <span class="kw">let </span>max_v: <span class="prelude-ty">Option</span>&lt;u64&gt; = row
                 .get(<span class="number">1</span>)
-                .ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">&quot;mysql range: cannot get max value&quot;</span>))<span class="question-mark">?</span>;
+                .ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">"mysql range: cannot get max value"</span>))<span class="question-mark">?</span>;
             (min_v.unwrap_or(<span class="number">0</span>) <span class="kw">as </span>i64, max_v.unwrap_or(<span class="number">0</span>) <span class="kw">as </span>i64)
         }
         MySQLTypeSystem::Float(<span class="kw">_</span>) =&gt; {
             <span class="kw">let </span>min_v: <span class="prelude-ty">Option</span>&lt;f32&gt; = row
                 .get(<span class="number">0</span>)
-                .ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">&quot;mysql range: cannot get min value&quot;</span>))<span class="question-mark">?</span>;
+                .ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">"mysql range: cannot get min value"</span>))<span class="question-mark">?</span>;
             <span class="kw">let </span>max_v: <span class="prelude-ty">Option</span>&lt;f32&gt; = row
                 .get(<span class="number">1</span>)
-                .ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">&quot;mysql range: cannot get max value&quot;</span>))<span class="question-mark">?</span>;
+                .ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">"mysql range: cannot get max value"</span>))<span class="question-mark">?</span>;
             (min_v.unwrap_or(<span class="number">0.0</span>) <span class="kw">as </span>i64, max_v.unwrap_or(<span class="number">0.0</span>) <span class="kw">as </span>i64)
         }
         MySQLTypeSystem::Double(<span class="kw">_</span>) =&gt; {
             <span class="kw">let </span>min_v: <span class="prelude-ty">Option</span>&lt;f64&gt; = row
                 .get(<span class="number">0</span>)
-                .ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">&quot;mysql range: cannot get min value&quot;</span>))<span class="question-mark">?</span>;
+                .ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">"mysql range: cannot get min value"</span>))<span class="question-mark">?</span>;
             <span class="kw">let </span>max_v: <span class="prelude-ty">Option</span>&lt;f64&gt; = row
                 .get(<span class="number">1</span>)
-                .ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">&quot;mysql range: cannot get max value&quot;</span>))<span class="question-mark">?</span>;
+                .ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">"mysql range: cannot get max value"</span>))<span class="question-mark">?</span>;
             (min_v.unwrap_or(<span class="number">0.0</span>) <span class="kw">as </span>i64, max_v.unwrap_or(<span class="number">0.0</span>) <span class="kw">as </span>i64)
         }
-        <span class="kw">_ </span>=&gt; <span class="macro">throw!</span>(<span class="macro">anyhow!</span>(<span class="string">&quot;Partition can only be done on int columns&quot;</span>)),
+        <span class="kw">_ </span>=&gt; <span class="macro">throw!</span>(<span class="macro">anyhow!</span>(<span class="string">"Partition can only be done on int columns"</span>)),
     };
 
     (min_v, max_v)
 }
 
-<span class="attr">#[cfg(feature = <span class="string">&quot;src_mssql&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"src_mssql"</span>)]
 #[throws(ConnectorXOutError)]
 </span><span class="kw">fn </span>mssql_get_partition_range(conn: <span class="kw-2">&amp;</span>Url, query: <span class="kw-2">&amp;</span>str, col: <span class="kw-2">&amp;</span>str) -&gt; (i64, i64) {
-    <span class="kw">let </span>rt = Runtime::new().expect(<span class="string">&quot;Failed to create runtime&quot;</span>);
+    <span class="kw">let </span>rt = Runtime::new().expect(<span class="string">"Failed to create runtime"</span>);
     <span class="kw">let </span>config = mssql_config(conn)<span class="question-mark">?</span>;
     <span class="kw">let </span>tcp = rt.block_on(TcpStream::connect(config.get_addr()))<span class="question-mark">?</span>;
     tcp.set_nodelay(<span class="bool-val">true</span>)<span class="question-mark">?</span>;
@@ -916,14 +917,14 @@
             (min_v.<span class="number">0 </span><span class="kw">as </span>i64, max_v.<span class="number">0 </span><span class="kw">as </span>i64)
         }
         <span class="kw">_ </span>=&gt; <span class="macro">throw!</span>(<span class="macro">anyhow!</span>(
-            <span class="string">&quot;Partition can only be done on int or float columns&quot;
+            <span class="string">"Partition can only be done on int or float columns"
         </span>)),
     };
 
     (min_v, max_v)
 }
 
-<span class="attr">#[cfg(feature = <span class="string">&quot;src_oracle&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"src_oracle"</span>)]
 #[throws(ConnectorXOutError)]
 </span><span class="kw">fn </span>oracle_get_partition_range(conn: <span class="kw-2">&amp;</span>Url, query: <span class="kw-2">&amp;</span>str, col: <span class="kw-2">&amp;</span>str) -&gt; (i64, i64) {
     <span class="kw">let </span>connector = connect_oracle(conn)<span class="question-mark">?</span>;
@@ -935,10 +936,10 @@
     (min_v, max_v)
 }
 
-<span class="attr">#[cfg(feature = <span class="string">&quot;src_bigquery&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"src_bigquery"</span>)]
 #[throws(ConnectorXOutError)] </span><span class="comment">// TODO
 </span><span class="kw">fn </span>bigquery_get_partition_range(conn: <span class="kw-2">&amp;</span>Url, query: <span class="kw-2">&amp;</span>str, col: <span class="kw-2">&amp;</span>str) -&gt; (i64, i64) {
-    <span class="kw">let </span>rt = Runtime::new().expect(<span class="string">&quot;Failed to create runtime&quot;</span>);
+    <span class="kw">let </span>rt = Runtime::new().expect(<span class="string">"Failed to create runtime"</span>);
     <span class="kw">let </span>url = Url::parse(conn.as_str())<span class="question-mark">?</span>;
     <span class="kw">let </span>sa_key_path = url.path();
     <span class="kw">let </span>client = rt.block_on(gcp_bigquery_client::Client::from_service_account_key_file(
@@ -948,10 +949,10 @@
     <span class="kw">let </span>auth_data = std::fs::read_to_string(sa_key_path)<span class="question-mark">?</span>;
     <span class="kw">let </span>auth_json: serde_json::Value = serde_json::from_str(<span class="kw-2">&amp;</span>auth_data)<span class="question-mark">?</span>;
     <span class="kw">let </span>project_id = auth_json
-        .get(<span class="string">&quot;project_id&quot;</span>)
-        .ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">&quot;Cannot get project_id from auth file&quot;</span>))<span class="question-mark">?
+        .get(<span class="string">"project_id"</span>)
+        .ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">"Cannot get project_id from auth file"</span>))<span class="question-mark">?
         </span>.as_str()
-        .ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">&quot;Cannot get project_id as string from auth file&quot;</span>))<span class="question-mark">?</span>;
+        .ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">"Cannot get project_id as string from auth file"</span>))<span class="question-mark">?</span>;
     <span class="kw">let </span>range_query = get_partition_range_query(query, col, <span class="kw-2">&amp;</span>BigQueryDialect {})<span class="question-mark">?</span>;
 
     <span class="kw">let </span><span class="kw-2">mut </span>query_result = rt.block_on(client.job().query(
