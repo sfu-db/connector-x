@@ -27,12 +27,12 @@ lazy_static = "1.4.0"
 libc = "0.2"
 log = "0.4"
 ndarray = "0.15"
-numpy = "0.15"
+numpy = "0.20"
 openssl = {version = "0.10", features = ["vendored"]}
 postgres = {version = "0.19", features = ["with-chrono-0_4", "with-uuid-0_8", "with-serde_json-1"]}
 postgres-native-tls = {version = "0.5"}
 postgres-openssl = {version = "0.5.0"}
-pyo3 = {version = "0.15", default-features = false, features = ["macros"]}
+pyo3 = {version = "0.20", default-features = false, features = ["macros"]}
 pyo3-built = "0.4"
 rust_decimal = {version = "1", features = ["db-postgres"]}
 serde_json = "1"
