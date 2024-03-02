@@ -12,13 +12,17 @@ jobs:
     container: quay.io/pypa/manylinux_2_28_x86_64
     strategy:
       matrix:
-        python-version: [[39, "3.9"], [310, "3.10"], [311, "3.11"], [312, "3.12"]]
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
     steps:
       - uses: actions/checkout@v2
 
+      - name: Get commit hash
+        run: echo "PYTHON_VERSION=${{matrix.python-version}}" | sed -e "s/\.//g" >> $GITHUB_ENV
+      
       - name: Set python version
         run: |
-          echo "/opt/python/cp${{ matrix.python-version[0] }}-cp${{ matrix.python-version[0] }}/bin" >> $GITHUB_PATH
+          echo ${{ env.PYTHON_VERSION }}
+          echo "/opt/python/cp${{ env.PYTHON_VERSION }}-cp${{ env.PYTHON_VERSION }}/bin" >> $GITHUB_PATH
 
       - uses: dtolnay/rust-toolchain@master
         with:
@@ -66,7 +70,7 @@ jobs:
 
       - uses: actions/upload-artifact@v3
         with:
-          name: "ubuntu-latest-${{ matrix.python-version[1] }}"
+          name: "ubuntu-latest-${{ matrix.python-version }}"
           path: connectorx-python/target/wheels/*.whl
 
   win-and-mac:
