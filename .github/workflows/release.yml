@@ -12,7 +12,7 @@ jobs:
     container: quay.io/pypa/manylinux_2_28_x86_64
     strategy:
       matrix:
-        python-version: [[38, "3.8"], [39, "3.9"], [310, "3.10"], [311, "3.11"]]
+        python-version: [[39, "3.9"], [310, "3.10"], [311, "3.11"], [312, "3.12"]]
     steps:
       - uses: actions/checkout@v2
 
@@ -20,12 +20,11 @@ jobs:
         run: |
           echo "/opt/python/cp${{ matrix.python-version[0] }}-cp${{ matrix.python-version[0] }}/bin" >> $GITHUB_PATH
 
-      - uses: actions-rs/toolchain@v1
+      - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: stable
+          targets: aarch64-unknown-linux-gnu
           components: rustfmt
-          target: aarch64-unknown-linux-gnu
-          default: true
 
       - uses: extractions/setup-just@v1
         env:
@@ -45,7 +44,7 @@ jobs:
       - uses: PyO3/maturin-action@v1
         with:
           rust-toolchain: stable
-          maturin-version: v0.14.15
+          maturin-version: v1.4.0
           command: build
           args: -m connectorx-python/Cargo.toml -i python --release --manylinux 2_28 --features integrated-auth-gssapi
         env:
@@ -59,19 +58,11 @@ jobs:
       - uses: PyO3/maturin-action@v1
         with:
           rust-toolchain: stable
-          maturin-version: v0.14.15
+          maturin-version: v1.4.0
           command: build
           args: -m connectorx-python/Cargo.toml -i python --release --manylinux 2_28 --features integrated-auth-gssapi
         env:
           SQLITE3_STATIC: 1
-
-      # - uses: PyO3/maturin-action@v1
-      #   with:
-      #     maturin-version: v0.14.15
-      #     command: build
-      #     args: -m connectorx-python/Cargo.toml --target aarch64-unknown-linux-gnu -i python --release --manylinux 2_28 --features integrated-auth-gssapi
-      #   env:
-      #     SQLITE3_STATIC: 1
 
       - uses: actions/upload-artifact@v3
         with:
@@ -82,10 +73,10 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: ["windows-latest", "macos-11"]
-        python-version: ["3.8", "3.9", "3.10", "3.11"]
+        os: ["windows-latest", "macos-latest"]
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
         include:
-          - os: "macos-11"
+          - os: "macos-latest"
             features: "--features integrated-auth-gssapi"
     steps:
       - uses: actions/checkout@v2
@@ -94,16 +85,16 @@ jobs:
         with:
           mysql-version: 8
 
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
           architecture: x64
 
-      - uses: actions-rs/toolchain@v1
+      - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: stable
+          targets: aarch64-unknown-linux-gnu
           components: rustfmt
-          default: true
 
       - uses: extractions/setup-just@v1
         env:
@@ -118,7 +109,7 @@ jobs:
       - uses: PyO3/maturin-action@v1
         with:
           rust-toolchain: stable
-          maturin-version: v0.14.15
+          maturin-version: v1.4.0
           command: build
           args: -m connectorx-python/Cargo.toml -i python --release ${{ matrix.features }}
         env:
@@ -132,13 +123,13 @@ jobs:
       - uses: PyO3/maturin-action@v1
         with:
           rust-toolchain: stable
-          maturin-version: v0.14.15
+          maturin-version: v1.4.0
           command: build
           args: -m connectorx-python/Cargo.toml -i python --release ${{ matrix.features }}
         env:
           SQLITE3_STATIC: 1
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: "${{ matrix.os }}-${{ matrix.python-version }}"
           path: connectorx-python/target/wheels/*.whl
@@ -147,7 +138,7 @@ jobs:
     runs-on: macos-latest
     strategy:
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11"]
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
     steps:
       - uses: actions/checkout@v2
 
@@ -155,16 +146,15 @@ jobs:
         with:
           mysql-version: 8
 
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
-      - uses: actions-rs/toolchain@v1
+      - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: stable
+          targets: aarch64-unknown-linux-gnu
           components: rustfmt
-          target: aarch64-apple-darwin
-          default: true
 
       - uses: extractions/setup-just@v1
         env:
@@ -193,13 +183,13 @@ jobs:
       - uses: PyO3/maturin-action@v1
         with:
           rust-toolchain: stable
-          maturin-version: v0.14.15
+          maturin-version: v1.4.0
           command: build
           args: -m connectorx-python/Cargo.toml --target aarch64-apple-darwin -i python --release  --features integrated-auth-gssapi
         env:
           SQLITE3_STATIC: 1
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: "macos-${{ matrix.python-version }}"
           path: connectorx-python/target/wheels/*.whl
@@ -209,12 +199,12 @@ jobs:
     needs: [win-and-mac, linux, apple-arm]
     strategy:
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11"]
-        os: [macos-11, ubuntu-latest, windows-latest]
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
+        os: [macos-latest, ubuntu-latest, windows-latest]
     steps:
       - uses: actions/checkout@v2
 
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
           architecture: x64
