@@ -73,7 +73,7 @@ jobs:
       #   env:
       #     SQLITE3_STATIC: 1
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: "ubuntu-latest-${{ matrix.python-version[1] }}"
           path: connectorx-python/target/wheels/*.whl
@@ -138,7 +138,7 @@ jobs:
         env:
           SQLITE3_STATIC: 1
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           name: "${{ matrix.os }}-${{ matrix.python-version }}"
           path: connectorx-python/target/wheels/*.whl
@@ -199,7 +199,7 @@ jobs:
         env:
           SQLITE3_STATIC: 1
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           name: "macos-${{ matrix.python-version }}"
           path: connectorx-python/target/wheels/*.whl
