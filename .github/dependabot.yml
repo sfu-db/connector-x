@@ -5,8 +5,22 @@
 
 version: 2
 updates:
-  - package-ecosystem: "github-actions"
-    directory: "/"
+  - package-ecosystem: github-actions
+    directory: '/'
     schedule:
       # Check for updates to GitHub Actions every week
-      interval: "weekly"
+      interval: weekly
+
+  # copy over from https://github.com/pola-rs/polars/blob/main/.github/dependabot.yml
+  # Rust Polars
+  - package-ecosystem: cargo
+    directory: '/'
+    schedule:
+      interval: weekly
+    #ignore:
+    #  - dependency-name: '*'
+    #    update-types: ['version-update:semver-patch']
+    commit-message:
+      prefix: build(rust)
+      prefix-development: chore(rust)
+    #labels: ['skip changelog']
