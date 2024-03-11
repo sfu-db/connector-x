@@ -73,7 +73,7 @@ jobs:
   #         components: rustfmt
   #         default: true
 
-  #     - uses: actions/cache@v2
+  #     - uses: actions/cache@v4
   #       with:
   #         path: |
   #           ~/.cargo/bin/
@@ -200,7 +200,7 @@ jobs:
           distribution: "temurin"
           java-version: "17"
 
-      - uses: actions/cache@v2
+      - uses: actions/cache@v4
         with:
           path: |
             ~/.cargo/bin/
@@ -238,7 +238,7 @@ jobs:
           args: --features all --all
 
       - name: Cache venv
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: ~/.cache/pypoetry/virtualenvs
           key: ${{ runner.os }}-venv-${{ secrets.CACHE_VERSION }}-${{ hashFiles('connectorx-python/poetry.lock') }}
