@@ -476,13 +476,112 @@ impl_produce!(
     &'r str,
     Vec<u8>,
     NaiveTime,
-    NaiveDateTime,
-    DateTime<Utc>,
-    NaiveDate,
+    // NaiveDateTime,
+    // DateTime<Utc>,
+    // NaiveDate,
     Uuid,
     Value,
     Vec<String>,
 );
+
+impl<'r, 'a> Produce<'r, NaiveDateTime> for PostgresBinarySourcePartitionParser<'a> {
+    type Error = PostgresSourceError;
+
+    #[throws(PostgresSourceError)]
+    fn produce(&'r mut self) -> NaiveDateTime {
+        let (ridx, cidx) = self.next_loc()?;
+        let row = &self.rowbuf[ridx];
+        let val = row.try_get(cidx)?;
+        match val {
+            postgres::types::Timestamp::PosInfinity => NaiveDateTime::MAX,
+            postgres::types::Timestamp::NegInfinity => NaiveDateTime::MIN,
+            postgres::types::Timestamp::Value(t) => t,
+        }
+    }
+}
+
+impl<'r, 'a> Produce<'r, Option<NaiveDateTime>> for PostgresBinarySourcePartitionParser<'a> {
+    type Error = PostgresSourceError;
+
+    #[throws(PostgresSourceError)]
+    fn produce(&'r mut self) -> Option<NaiveDateTime> {
+        let (ridx, cidx) = self.next_loc()?;
+        let row = &self.rowbuf[ridx];
+        let val = row.try_get(cidx)?;
+        match val {
+            Some(postgres::types::Timestamp::PosInfinity) => Some(NaiveDateTime::MAX),
+            Some(postgres::types::Timestamp::NegInfinity) => Some(NaiveDateTime::MIN),
+            Some(postgres::types::Timestamp::Value(t)) => t,
+            None => None
+        }
+    }
+}
+
+impl<'r, 'a> Produce<'r, DateTime<Utc>> for PostgresBinarySourcePartitionParser<'a> {
+    type Error = PostgresSourceError;
+
+    #[throws(PostgresSourceError)]
+    fn produce(&'r mut self) -> DateTime<Utc> {
+        let (ridx, cidx) = self.next_loc()?;
+        let row = &self.rowbuf[ridx];
+        let val = row.try_get(cidx)?;
+        match val {
+            postgres::types::Timestamp::PosInfinity => DateTime::<Utc>::MAX_UTC,
+            postgres::types::Timestamp::NegInfinity => DateTime::<Utc>::MIN_UTC,
+            postgres::types::Timestamp::Value(t) => t,
+        }
+    }
+}
+
+impl<'r, 'a> Produce<'r, Option<DateTime<Utc>>> for PostgresBinarySourcePartitionParser<'a> {
+    type Error = PostgresSourceError;
+
+    #[throws(PostgresSourceError)]
+    fn produce(&'r mut self) -> Option<DateTime<Utc>> {
+        let (ridx, cidx) = self.next_loc()?;
+        let row = &self.rowbuf[ridx];
+        let val = row.try_get(cidx)?;
+        match val {
+            Some(postgres::types::Timestamp::PosInfinity) => Some(DateTime::<Utc>::MAX_UTC),
+            Some(postgres::types::Timestamp::NegInfinity) => Some(DateTime::<Utc>::MIN_UTC),
+            Some(postgres::types::Timestamp::Value(t)) => t,
+            None => None
+        }
+    }
+}
+
+impl<'r, 'a> Produce<'r, NaiveDate> for PostgresBinarySourcePartitionParser<'a> {
+    type Error = PostgresSourceError;
+
+    #[throws(PostgresSourceError)]
+    fn produce(&'r mut self) -> NaiveDate {
+        let (ridx, cidx) = self.next_loc()?;
+        let row = &self.rowbuf[ridx];
+        let val = row.try_get(cidx)?;
+        match val {
+            postgres::types::Date::PosInfinity => NaiveDate::MAX,
+            postgres::types::Date::NegInfinity => NaiveDate::MIN,
+            postgres::types::Date::Value(t) => t,
+        }
+    }
+}
+
+impl<'r, 'a> Produce<'r, Option<NaiveDate>> for PostgresBinarySourcePartitionParser<'a> {
+    type Error = PostgresSourceError;
+
+    #[throws(PostgresSourceError)]
+    fn produce(&'r mut self) -> Option<NaiveDate> {
+        let (ridx, cidx) = self.next_loc()?;
+        let row = &self.rowbuf[ridx];
+        let val = row.try_get(cidx)?;
+        match val {
+            Some(postgres::types::Date::PosInfinity) => Some(NaiveDate::MAX),
+            Some(postgres::types::Date::NegInfinity) => Some(NaiveDate::MIN),
+            Some(postgres::types::Date::Value(t)) => t,
+            None => None
+        }
+    }
+}
 
 impl<'r, 'a> Produce<'r, HashMap<String, Option<String>>>
     for PostgresBinarySourcePartitionParser<'a>
@@ -601,7 +700,7 @@ macro_rules! impl_csv_produce {
     };
 }
 
-impl_csv_produce!(i8, i16, i32, i64, f32, f64, Decimal, Uuid,);
+impl_csv_produce!(i8, i16, i32, i64, f32, f64, Uuid,);
 
 macro_rules! impl_csv_vec_produce {
     ($($t: ty,)+) => {
@@ -754,17 +853,56 @@ impl<'r, 'a> Produce<'r, Option<Vec<bool>>> for PostgresCSVSourceParser<'a> {
     }
 }
 
+
+impl<'r, 'a> Produce<'r, Decimal> for PostgresCSVSourceParser<'a> {
+    type Error = PostgresSourceError;
+
+    #[throws(PostgresSourceError)]
+    fn produce(&'r mut self) -> Decimal {
+        let (ridx, cidx) = self.next_loc()?;
+        match &self.rowbuf[ridx][cidx][..] {
+            "Infinity" => Decimal::MAX,
+            "-Infinity" => Decimal::MIN,
+            v => v.parse().map_err(|_| {
+                ConnectorXError::cannot_produce::<Decimal>(Some(v.into()))
+            })?
+        }
+    }
+}
+
+
+impl<'r, 'a> Produce<'r, Option<Decimal>> for PostgresCSVSourceParser<'a> {
+    type Error = PostgresSourceError;
+
+    #[throws(PostgresSourceError)]
+    fn produce(&'r mut self) -> Option<Decimal> {
+        let (ridx, cidx) = self.next_loc()?;
+        match &self.rowbuf[ridx][cidx][..] {
+            "" => None,
+            "Infinity" => Some(Decimal::MAX),
+            "-Infinity" => Some(Decimal::MIN),
+            v => Some(v.parse().map_err(|_| {
+                ConnectorXError::cannot_produce::<Decimal>(Some(v.into()))
+            })?),
+        }
+    }
+}
+
+
 impl<'r, 'a> Produce<'r, DateTime<Utc>> for PostgresCSVSourceParser<'a> {
     type Error = PostgresSourceError;
 
     #[throws(PostgresSourceError)]
     fn produce(&mut self) -> DateTime<Utc> {
         let (ridx, cidx) = self.next_loc()?;
-        let s: &str = &self.rowbuf[ridx][cidx][..];
-        // postgres csv return example: 1970-01-01 00:00:01+00
-        format!("{}:00", s).parse().map_err(|_| {
-            ConnectorXError::cannot_produce::<DateTime<Utc>>(Some(self.rowbuf[ridx][cidx].into()))
-        })?
+        match &self.rowbuf[ridx][cidx][..] {
+            "infinity" => DateTime::<Utc>::MAX_UTC,
+            "-infinity" => DateTime::<Utc>::MIN_UTC,
+            // postgres csv return example: 1970-01-01 00:00:01+00
+            v => format!("{}:00", v).parse().map_err(|_| {
+                    ConnectorXError::cannot_produce::<DateTime<Utc>>(Some(v.into()))
+            })?
+        }
     }
 }
 
@@ -776,6 +914,8 @@ impl<'r, 'a> Produce<'r, Option<DateTime<Utc>>> for PostgresCSVSourceParser<'a> 
         let (ridx, cidx) = self.next_loc()?;
         match &self.rowbuf[ridx][cidx][..] {
             "" => None,
+            "infinity" => Some(DateTime::<Utc>::MAX_UTC),
+            "-infinity" => Some(DateTime::<Utc>::MIN_UTC),
             v => {
                 // postgres csv return example: 1970-01-01 00:00:01+00
                 Some(format!("{}:00", v).parse().map_err(|_| {
@@ -792,9 +932,13 @@ impl<'r, 'a> Produce<'r, NaiveDate> for PostgresCSVSourceParser<'a> {
     #[throws(PostgresSourceError)]
     fn produce(&mut self) -> NaiveDate {
         let (ridx, cidx) = self.next_loc()?;
-        NaiveDate::parse_from_str(&self.rowbuf[ridx][cidx], "%Y-%m-%d").map_err(|_| {
-            ConnectorXError::cannot_produce::<NaiveDate>(Some(self.rowbuf[ridx][cidx].into()))
-        })?
+        match &self.rowbuf[ridx][cidx][..] {
+            "infinity" => NaiveDate::MAX,
+            "-infinity" => NaiveDate::MIN,
+            v => NaiveDate::parse_from_str(v, "%Y-%m-%d").map_err(|_| {
+                ConnectorXError::cannot_produce::<NaiveDate>(Some(v.into()))
+            })?
+        }
     }
 }
 
@@ -806,6 +950,8 @@ impl<'r, 'a> Produce<'r, Option<NaiveDate>> for PostgresCSVSourceParser<'a> {
         let (ridx, cidx) = self.next_loc()?;
         match &self.rowbuf[ridx][cidx][..] {
             "" => None,
+            "infinity" => Some(NaiveDate::MAX),
+            "-infinity" => Some(NaiveDate::MIN),
             v => Some(
                 NaiveDate::parse_from_str(v, "%Y-%m-%d")
                     .map_err(|_| ConnectorXError::cannot_produce::<NaiveDate>(Some(v.into())))?,
@@ -820,13 +966,17 @@ impl<'r, 'a> Produce<'r, NaiveDateTime> for PostgresCSVSourceParser<'a> {
     #[throws(PostgresSourceError)]
     fn produce(&mut self) -> NaiveDateTime {
         let (ridx, cidx) = self.next_loc()?;
-        NaiveDateTime::parse_from_str(&self.rowbuf[ridx][cidx], "%Y-%m-%d %H:%M:%S").map_err(
-            |_| {
-                ConnectorXError::cannot_produce::<NaiveDateTime>(Some(
-                    self.rowbuf[ridx][cidx].into(),
-                ))
-            },
-        )?
+        match &self.rowbuf[ridx][cidx] {
+            "infinity" => NaiveDateTime::MAX,
+            "-infinity" => NaiveDateTime::MIN,
+            v => NaiveDateTime::parse_from_str(v, "%Y-%m-%d %H:%M:%S").map_err(
+                |_| {
+                    ConnectorXError::cannot_produce::<NaiveDateTime>(Some(
+                        v.into(),
+                    ))
+                },
+            )?
+        }
     }
 }
 
@@ -838,6 +988,8 @@ impl<'r, 'a> Produce<'r, Option<NaiveDateTime>> for PostgresCSVSourceParser<'a> 
         let (ridx, cidx) = self.next_loc()?;
         match &self.rowbuf[ridx][cidx][..] {
             "" => None,
+            "infinity" => Some(NaiveDateTime::MAX),
+            "-infinity" => Some(NaiveDateTime::MIN),
             v => Some(
                 NaiveDateTime::parse_from_str(v, "%Y-%m-%d %H:%M:%S").map_err(|_| {
                     ConnectorXError::cannot_produce::<NaiveDateTime>(Some(v.into()))
@@ -1059,14 +1211,113 @@ impl_produce!(
     &'r str,
     Vec<u8>,
     NaiveTime,
-    NaiveDateTime,
-    DateTime<Utc>,
-    NaiveDate,
     Uuid,
     Value,
     HashMap<String, Option<String>>,
     Vec<String>,
 );
+
+impl<'r, 'a> Produce<'r, DateTime<Utc>> for PostgresRawSourceParser<'a> {
+    type Error = PostgresSourceError;
+
+    #[throws(PostgresSourceError)]
+    fn produce(&'r mut self) -> DateTime<Utc> {
+        let (ridx, cidx) = self.next_loc()?;
+        let row = &self.rowbuf[ridx];
+        let val: postgres::types::Timestamp<DateTime<Utc>> = row.try_get(cidx)?;
+        match val {
+            postgres::types::Timestamp::PosInfinity => DateTime::<Utc>::MAX_UTC,
+            postgres::types::Timestamp::NegInfinity => DateTime::<Utc>::MIN_UTC,
+            postgres::types::Timestamp::Value(t) => t,
+        }
+    }
+}
+
+impl<'r, 'a> Produce<'r, Option<DateTime<Utc>>> for PostgresRawSourceParser<'a> {
+    type Error = PostgresSourceError;
+
+    #[throws(PostgresSourceError)]
+    fn produce(&'r mut self) -> Option<DateTime<Utc>> {
+        let (ridx, cidx) = self.next_loc()?;
+        let row = &self.rowbuf[ridx];
+        let val = row.try_get(cidx)?;
+        match val {
+            Some(postgres::types::Timestamp::PosInfinity) => Some(DateTime::<Utc>::MAX_UTC),
+            Some(postgres::types::Timestamp::NegInfinity) => Some(DateTime::<Utc>::MIN_UTC),
+            Some(postgres::types::Timestamp::Value(t)) => t,
+            None => None
+        }
+
+    }
+}
+
+impl<'r, 'a> Produce<'r, NaiveDateTime> for PostgresRawSourceParser<'a> {
+    type Error = PostgresSourceError;
+
+    #[throws(PostgresSourceError)]
+    fn produce(&'r mut self) -> NaiveDateTime {
+        let (ridx, cidx) = self.next_loc()?;
+        let row = &self.rowbuf[ridx];
+        let val: postgres::types::Timestamp<NaiveDateTime> = row.try_get(cidx)?;
+        match val {
+            postgres::types::Timestamp::PosInfinity => NaiveDateTime::MAX,
+            postgres::types::Timestamp::NegInfinity => NaiveDateTime::MIN,
+            postgres::types::Timestamp::Value(t) => t,
+        }
+    }
+}
+
+impl<'r, 'a> Produce<'r, Option<NaiveDateTime>> for PostgresRawSourceParser<'a> {
+    type Error = PostgresSourceError;
+
+    #[throws(PostgresSourceError)]
+    fn produce(&'r mut self) -> Option<NaiveDateTime> {
+        let (ridx, cidx) = self.next_loc()?;
+        let row = &self.rowbuf[ridx];
+        let val = row.try_get(cidx)?;
+        match val {
+            Some(postgres::types::Timestamp::PosInfinity) => Some(NaiveDateTime::MAX),
+            Some(postgres::types::Timestamp::NegInfinity) => Some(NaiveDateTime::MIN),
+            Some(postgres::types::Timestamp::Value(t)) => t,
+            None => None
+        }
+
+    }
+}
+
+impl<'r, 'a> Produce<'r, NaiveDate> for PostgresRawSourceParser<'a> {
+    type Error = PostgresSourceError;
+
+    #[throws(PostgresSourceError)]
+    fn produce(&'r mut self) -> NaiveDate {
+        let (ridx, cidx) = self.next_loc()?;
+        let row = &self.rowbuf[ridx];
+        let val: postgres::types::Date<NaiveDate> = row.try_get(cidx)?;
+        match val {
+            postgres::types::Date::PosInfinity => NaiveDate::MAX,
+            postgres::types::Date::NegInfinity => NaiveDate::MIN,
+            postgres::types::Date::Value(t) => t,
+        }
+    }
+}
+
+impl<'r, 'a> Produce<'r, Option<NaiveDate>> for PostgresRawSourceParser<'a> {
+    type Error = PostgresSourceError;
+
+    #[throws(PostgresSourceError)]
+    fn produce(&'r mut self) -> Option<NaiveDate> {
+        let (ridx, cidx) = self.next_loc()?;
+        let row = &self.rowbuf[ridx];
+        let val = row.try_get(cidx)?;
+        match val {
+            Some(postgres::types::Date::PosInfinity) => Some(NaiveDate::MAX),
+            Some(postgres::types::Date::NegInfinity) => Some(NaiveDate::MIN),
+            Some(postgres::types::Date::Value(t)) => t,
+            None => None,
+        }
+
+    }
+}
 
 impl<C> SourcePartition for PostgresSourcePartition<SimpleProtocol, C>
 where
@@ -1217,7 +1468,63 @@ macro_rules! impl_simple_produce {
     };
 }
 
-impl_simple_produce!(i8, i16, i32, i64, f32, f64, Decimal, Uuid, bool,);
+impl_simple_produce!(i8, i16, i32, i64, f32, f64, Uuid, bool,);
+
+impl<'r> Produce<'r, Decimal> for PostgresSimpleSourceParser {
+    type Error = PostgresSourceError;
+
+    #[throws(PostgresSourceError)]
+    fn produce(&'r mut self) -> Decimal {
+        let (ridx, cidx) = self.next_loc()?;
+        let val = match &self.rows[ridx] {
+            SimpleQueryMessage::Row(row) => match row.try_get(cidx)? {
+                Some("Infinity") => Decimal::MAX,
+                Some("-Infinity") => Decimal::MIN,
+                Some(s) => s
+                    .parse()
+                    .map_err(|_| ConnectorXError::cannot_produce::<Decimal>(Some(s.into())))?,
+                None => throw!(anyhow!(
+                    "Cannot parse NULL in NOT NULL column."
+                )),
+            },
+            SimpleQueryMessage::CommandComplete(c) => {
+                panic!("get command: {}", c);
+            }
+            _ => {
+                panic!("what?");
+            }
+        };
+        val
+    }
+}
+
+impl<'r, 'a> Produce<'r, Option<Decimal>> for PostgresSimpleSourceParser {
+    type Error = PostgresSourceError;
+
+    #[throws(PostgresSourceError)]
+    fn produce(&'r mut self) -> Option<Decimal> {
+        let (ridx, cidx) = self.next_loc()?;
+        let val = match &self.rows[ridx] {
+            SimpleQueryMessage::Row(row) => match row.try_get(cidx)? {
+                Some("Infinity") => Some(Decimal::MAX),
+                Some("-Infinity") => Some(Decimal::MIN),
+                Some(s) => Some(
+                    s.parse()
+                        .map_err(|_| ConnectorXError::cannot_produce::<Decimal>(Some(s.into())))?,
+                ),
+                None => None,
+            },
+            SimpleQueryMessage::CommandComplete(c) => {
+                panic!("get command: {}", c);
+            }
+            _ => {
+                panic!("what?");
+            }
+        };
+        val
+    }
+}
+
 impl_simple_produce_unimplemented!(
     Value,
     HashMap<String, Option<String>>,);
@@ -1477,8 +1784,12 @@ impl<'r> Produce<'r, NaiveDate> for PostgresSimpleSourceParser {
         let (ridx, cidx) = self.next_loc()?;
         let val = match &self.rows[ridx] {
             SimpleQueryMessage::Row(row) => match row.try_get(cidx)? {
-                Some(s) => NaiveDate::parse_from_str(s, "%Y-%m-%d")
-                    .map_err(|_| ConnectorXError::cannot_produce::<NaiveDate>(Some(s.into())))?,
+                Some(s) => match s {
+                    "infinity" => NaiveDate::MAX,
+                    "-infinity" => NaiveDate::MIN,
+                    s => NaiveDate::parse_from_str(s, "%Y-%m-%d")
+                        .map_err(|_| ConnectorXError::cannot_produce::<NaiveDate>(Some(s.into())))?,
+                }
                 None => throw!(anyhow!("Cannot parse NULL in non-NULL column.")),
             },
             SimpleQueryMessage::CommandComplete(c) => {
@@ -1500,9 +1811,13 @@ impl<'r> Produce<'r, Option<NaiveDate>> for PostgresSimpleSourceParser {
         let (ridx, cidx) = self.next_loc()?;
         let val = match &self.rows[ridx] {
             SimpleQueryMessage::Row(row) => match row.try_get(cidx)? {
-                Some(s) => Some(NaiveDate::parse_from_str(s, "%Y-%m-%d").map_err(|_| {
-                    ConnectorXError::cannot_produce::<Option<NaiveDate>>(Some(s.into()))
-                })?),
+                Some(s) => match s {
+                    "infinity" => Some(NaiveDate::MAX),
+                    "-infinity" => Some(NaiveDate::MIN),
+                    s => Some(NaiveDate::parse_from_str(s, "%Y-%m-%d").map_err(|_| {
+                        ConnectorXError::cannot_produce::<Option<NaiveDate>>(Some(s.into()))
+                    })?),
+                },
                 None => None,
             },
             SimpleQueryMessage::CommandComplete(c) => {
@@ -1571,9 +1886,13 @@ impl<'r> Produce<'r, NaiveDateTime> for PostgresSimpleSourceParser {
         let (ridx, cidx) = self.next_loc()?;
         let val = match &self.rows[ridx] {
             SimpleQueryMessage::Row(row) => match row.try_get(cidx)? {
-                Some(s) => NaiveDateTime::parse_from_str(s, "%Y-%m-%d %H:%M:%S").map_err(|_| {
-                    ConnectorXError::cannot_produce::<NaiveDateTime>(Some(s.into()))
-                })?,
+                Some(s) => match s {
+                    "infinity" => NaiveDateTime::MAX,
+                    "-infinity" => NaiveDateTime::MIN,
+                    s => NaiveDateTime::parse_from_str(s, "%Y-%m-%d %H:%M:%S").map_err(|_| {
+                        ConnectorXError::cannot_produce::<NaiveDateTime>(Some(s.into()))
+                    })?,
+                },
                 None => throw!(anyhow!("Cannot parse NULL in non-NULL column.")),
             },
             SimpleQueryMessage::CommandComplete(c) => {
@@ -1595,11 +1914,15 @@ impl<'r> Produce<'r, Option<NaiveDateTime>> for PostgresSimpleSourceParser {
         let (ridx, cidx) = self.next_loc()?;
         let val = match &self.rows[ridx] {
             SimpleQueryMessage::Row(row) => match row.try_get(cidx)? {
-                Some(s) => Some(
-                    NaiveDateTime::parse_from_str(s, "%Y-%m-%d %H:%M:%S").map_err(|_| {
-                        ConnectorXError::cannot_produce::<Option<NaiveDateTime>>(Some(s.into()))
-                    })?,
-                ),
+                Some(s) => match s {
+                    "infinity" => Some(NaiveDateTime::MAX),
+                    "-infinity" => Some(NaiveDateTime::MIN),
+                    s => Some(
+                        NaiveDateTime::parse_from_str(s, "%Y-%m-%d %H:%M:%S").map_err(|_| {
+                            ConnectorXError::cannot_produce::<Option<NaiveDateTime>>(Some(s.into()))
+                        })?,
+                    ),
+                },
                 None => None,
             },
             SimpleQueryMessage::CommandComplete(c) => {
@@ -1621,6 +1944,8 @@ impl<'r> Produce<'r, DateTime<Utc>> for PostgresSimpleSourceParser {
         let (ridx, cidx) = self.next_loc()?;
         let val = match &self.rows[ridx] {
             SimpleQueryMessage::Row(row) => match row.try_get(cidx)? {
+                Some("infinity") => DateTime::<Utc>::MAX_UTC,
+                Some("-infinity") => DateTime::<Utc>::MIN_UTC,
                 Some(s) => {
                     let time_string = format!("{}:00", s).to_owned();
                     let slice: &str = &time_string[..];
@@ -1650,6 +1975,8 @@ impl<'r> Produce<'r, Option<DateTime<Utc>>> for PostgresSimpleSourceParser {
         let (ridx, cidx) = self.next_loc()?;
         let val = match &self.rows[ridx] {
             SimpleQueryMessage::Row(row) => match row.try_get(cidx)? {
+                Some("infinity") => Some(DateTime::<Utc>::MAX_UTC),
+                Some("-infinity") => Some(DateTime::<Utc>::MIN_UTC),
                 Some(s) => {
                     let time_string = format!("{}:00", s).to_owned();
                     let slice: &str = &time_string[..];

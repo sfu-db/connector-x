@@ -31,7 +31,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: Gr1N/setup-poetry@v8
+      - uses: Gr1N/setup-poetry@v9
 
       - name: Install tools
         run: |
@@ -73,7 +73,7 @@ jobs:
       #   env:
       #     SQLITE3_STATIC: 1
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: "ubuntu-latest-${{ matrix.python-version[1] }}"
           path: connectorx-python/target/wheels/*.whl
@@ -109,7 +109,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: Gr1N/setup-poetry@v8
+      - uses: Gr1N/setup-poetry@v9
 
       - name: Setup project
         run: |
@@ -138,7 +138,7 @@ jobs:
         env:
           SQLITE3_STATIC: 1
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           name: "${{ matrix.os }}-${{ matrix.python-version }}"
           path: connectorx-python/target/wheels/*.whl
@@ -170,7 +170,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: Gr1N/setup-poetry@v8
+      - uses: Gr1N/setup-poetry@v9
 
       - name: Setup project
         run: |
@@ -199,7 +199,7 @@ jobs:
         env:
           SQLITE3_STATIC: 1
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           name: "macos-${{ matrix.python-version }}"
           path: connectorx-python/target/wheels/*.whl
@@ -219,7 +219,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
           architecture: x64
 
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: "${{ matrix.os }}-${{ matrix.python-version }}"
 
@@ -232,7 +232,7 @@ jobs:
     needs: [verify]
     steps:
       - name: Download all artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
 
       - name: Setup environment
         run: |
