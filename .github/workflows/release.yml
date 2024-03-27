@@ -27,7 +27,7 @@ jobs:
           target: aarch64-unknown-linux-gnu
           default: true
 
-      - uses: extractions/setup-just@v1
+      - uses: extractions/setup-just@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -105,7 +105,7 @@ jobs:
           components: rustfmt
           default: true
 
-      - uses: extractions/setup-just@v1
+      - uses: extractions/setup-just@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -166,7 +166,7 @@ jobs:
           target: aarch64-apple-darwin
           default: true
 
-      - uses: extractions/setup-just@v1
+      - uses: extractions/setup-just@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
