@@ -989,7 +989,7 @@ dependencies = [
  "gcp-bigquery-client",
  "hex",
  "iai",
- "itertools 0.10.5",
+ "itertools 0.11.0",
  "j4rs",
  "log",
  "mysql_common",
