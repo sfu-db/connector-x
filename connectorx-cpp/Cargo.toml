@@ -34,4 +34,5 @@ srcs = [
   "connectorx/src_mssql",
   "connectorx/src_oracle",
   "connectorx/src_bigquery",
+  "connectorx/src_trino",
 ]
