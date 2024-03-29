@@ -260,7 +260,8 @@ jobs:
   verify:
     runs-on: ${{ matrix.os }}
     # do not verify for linux-aarch for now
-    needs: [win-and-mac, linux, linux-aarch, apple-arm]
+    # needs: [win-and-mac, linux, linux-aarch, apple-arm]
+    needs: [win-and-mac, linux, apple-arm]
     strategy:
       matrix:
         python-version: ["3.8", "3.9", "3.10", "3.11"]
