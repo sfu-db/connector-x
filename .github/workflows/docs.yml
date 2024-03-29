@@ -9,17 +9,17 @@ jobs:
   docs:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: 1.71.1
+          toolchain: stable
           components: rustfmt
           default: true
 
       - name: Intall Python
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v5
         with:
           python-version: 3.7
 
@@ -46,7 +46,7 @@ jobs:
         run: touch ./docs/_build/html/.nojekyll
 
       - name: Deploy Docs 🚀
-        uses: JamesIves/github-pages-deploy-action@4.0.0
+        uses: JamesIves/github-pages-deploy-action@v4.5.0
         with:
           branch: gh-pages # The branch the action should deploy to.
           folder: ./docs/_build/html # The folder the action should deploy.

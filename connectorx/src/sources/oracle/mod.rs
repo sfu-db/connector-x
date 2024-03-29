@@ -34,13 +34,13 @@ pub struct OracleDialect {}
 // implementation copy from AnsiDialect
 impl Dialect for OracleDialect {
     fn is_identifier_start(&self, ch: char) -> bool {
-        ('a'..='z').contains(&ch) || ('A'..='Z').contains(&ch)
+        ch.is_ascii_lowercase() || ch.is_ascii_uppercase()
     }
 
     fn is_identifier_part(&self, ch: char) -> bool {
-        ('a'..='z').contains(&ch)
-            || ('A'..='Z').contains(&ch)
-            || ('0'..='9').contains(&ch)
+        ch.is_ascii_lowercase()
+            || ch.is_ascii_uppercase()
+            || ch.is_ascii_digit()
             || ch == '_'
     }
 }
@@ -264,7 +264,7 @@ impl<'a> OracleTextSourceParser<'a> {
             .build()?;
         let rows: OwningHandle<Box<Statement<'a>>, DummyBox<ResultSet<'a, Row>>> =
             OwningHandle::new_with_fn(Box::new(stmt), |stmt: *const Statement<'a>| unsafe {
-                DummyBox((&mut *(stmt as *mut Statement<'_>)).query(&[]).unwrap())
+                DummyBox((*(stmt as *mut Statement<'_>)).query(&[]).unwrap())
             });
 
         Self {

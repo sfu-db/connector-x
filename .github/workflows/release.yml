@@ -14,7 +14,7 @@ jobs:
       matrix:
         python-version: [[38, "3.8"], [39, "3.9"], [310, "3.10"], [311, "3.11"]]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Set python version
         run: |
@@ -22,16 +22,16 @@ jobs:
 
       - uses: actions-rs/toolchain@v1
         with:
-          toolchain: 1.71.1
+          toolchain: stable
           components: rustfmt
           target: aarch64-unknown-linux-gnu
           default: true
 
-      - uses: extractions/setup-just@v1
+      - uses: extractions/setup-just@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: Gr1N/setup-poetry@v8
+      - uses: Gr1N/setup-poetry@v9
 
       - name: Install tools
         run: |
@@ -44,7 +44,8 @@ jobs:
 
       - uses: PyO3/maturin-action@v1
         with:
-          rust-toolchain: 1.71.1
+          rust-toolchain: stable
+          maturin-version: v0.14.15
           command: build
           args: -m connectorx-python/Cargo.toml -i python --release --manylinux 2_28 --features integrated-auth-gssapi
         env:
@@ -57,13 +58,14 @@ jobs:
       # rebuild the wheel to incorporate j4rs dependencies
       - uses: PyO3/maturin-action@v1
         with:
-          rust-toolchain: 1.71.1
+          rust-toolchain: stable
+          maturin-version: v0.14.15
           command: build
           args: -m connectorx-python/Cargo.toml -i python --release --manylinux 2_28 --features integrated-auth-gssapi
         env:
           SQLITE3_STATIC: 1
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: "ubuntu-latest-${{ matrix.python-version[1] }}"
           path: connectorx-python/target/wheels/*.whl
@@ -139,28 +141,28 @@ jobs:
           - os: "macos-latest"
             features: "--features integrated-auth-gssapi"
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - uses: ankane/setup-mysql@v1
         with:
           mysql-version: 8
 
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
           architecture: x64
 
       - uses: actions-rs/toolchain@v1
         with:
-          toolchain: 1.71.1
+          toolchain: stable
           components: rustfmt
           default: true
 
-      - uses: extractions/setup-just@v1
+      - uses: extractions/setup-just@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: Gr1N/setup-poetry@v8
+      - uses: Gr1N/setup-poetry@v9
 
       - name: Setup project
         run: |
@@ -168,7 +170,8 @@ jobs:
 
       - uses: PyO3/maturin-action@v1
         with:
-          rust-toolchain: 1.71.1
+          rust-toolchain: stable
+          maturin-version: v0.14.15
           command: build
           args: -m connectorx-python/Cargo.toml -i python --release ${{ matrix.features }}
         env:
@@ -181,13 +184,14 @@ jobs:
       # rebuild the wheel to incorporate j4rs dependencies
       - uses: PyO3/maturin-action@v1
         with:
-          rust-toolchain: 1.71.1
+          rust-toolchain: stable
+          maturin-version: v0.14.15
           command: build
           args: -m connectorx-python/Cargo.toml -i python --release ${{ matrix.features }}
         env:
           SQLITE3_STATIC: 1
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           name: "${{ matrix.os }}-${{ matrix.python-version }}"
           path: connectorx-python/target/wheels/*.whl
@@ -198,28 +202,28 @@ jobs:
       matrix:
         python-version: ["3.8", "3.9", "3.10", "3.11"]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - uses: ankane/setup-mysql@v1
         with:
           mysql-version: 8
 
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
       - uses: actions-rs/toolchain@v1
         with:
-          toolchain: 1.71.1
+          toolchain: stable
           components: rustfmt
           target: aarch64-apple-darwin
           default: true
 
-      - uses: extractions/setup-just@v1
+      - uses: extractions/setup-just@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: Gr1N/setup-poetry@v8
+      - uses: Gr1N/setup-poetry@v9
 
       - name: Setup project
         run: |
@@ -227,7 +231,8 @@ jobs:
 
       - uses: PyO3/maturin-action@v1
         with:
-          rust-toolchain: 1.71.1
+          rust-toolchain: stable
+          maturin-version: v0.14.15
           command: build
           args: -m connectorx-python/Cargo.toml --target aarch64-apple-darwin -i python --release  --features integrated-auth-gssapi
         env:
@@ -240,13 +245,14 @@ jobs:
       # rebuild the wheel to incorporate j4rs dependencies
       - uses: PyO3/maturin-action@v1
         with:
-          rust-toolchain: 1.71.1
+          rust-toolchain: stable
+          maturin-version: v0.14.15
           command: build
           args: -m connectorx-python/Cargo.toml --target aarch64-apple-darwin -i python --release  --features integrated-auth-gssapi
         env:
           SQLITE3_STATIC: 1
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           name: "macos-${{ matrix.python-version }}"
           path: connectorx-python/target/wheels/*.whl
@@ -260,14 +266,14 @@ jobs:
         python-version: ["3.8", "3.9", "3.10", "3.11"]
         os: [macos-latest, ubuntu-latest, windows-latest]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
           architecture: x64
 
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: "${{ matrix.os }}-${{ matrix.python-version }}"
 
@@ -280,7 +286,7 @@ jobs:
     needs: [verify]
     steps:
       - name: Download all artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
 
       - name: Setup environment
         run: |

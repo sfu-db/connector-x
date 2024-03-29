@@ -1,0 +1,26 @@
+# To get started with Dependabot version updates, you'll need to specify which
+# package ecosystems to update and where the package manifests are located.
+# Please see the documentation for all configuration options:
+# https://docs.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
+
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: '/'
+    schedule:
+      # Check for updates to GitHub Actions every week
+      interval: weekly
+
+  # copy over from https://github.com/pola-rs/polars/blob/main/.github/dependabot.yml
+  # Rust Polars
+  - package-ecosystem: cargo
+    directory: '/'
+    schedule:
+      interval: weekly
+    #ignore:
+    #  - dependency-name: '*'
+    #    update-types: ['version-update:semver-patch']
+    commit-message:
+      prefix: build(rust)
+      prefix-development: chore(rust)
+    #labels: ['skip changelog']

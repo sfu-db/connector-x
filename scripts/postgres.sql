@@ -1,6 +1,7 @@
 DROP TABLE IF EXISTS test_table;
 DROP TABLE IF EXISTS test_str;
 DROP TABLE IF EXISTS test_types;
+DROP TABLE IF EXISTS test_infinite_values;
 DROP TYPE IF EXISTS happiness;
 DROP EXTENSION IF EXISTS citext;
 DROP EXTENSION IF EXISTS ltree;
@@ -19,6 +20,19 @@ INSERT INTO test_table VALUES (0, 5, 'a', 3.1, NULL);
 INSERT INTO test_table VALUES (3, 7, 'b', 3, FALSE);
 INSERT INTO test_table VALUES (4, 9, 'c', 7.8, NULL);
 INSERT INTO test_table VALUES (1314, 2, NULL, -10, TRUE);
+
+CREATE TABLE IF NOT EXISTS test_infinite_values(
+    test_int INTEGER NOT NULL,
+    test_date DATE,
+	test_timestamp TIMESTAMP,
+	test_real REAL,
+	test_timestamp_timezone TIMESTAMP WITH TIME ZONE
+);
+
+INSERT INTO test_infinite_values VALUES (1, 'infinity'::DATE, 'infinity'::TIMESTAMP, 'infinity'::REAL, 'infinity'::TIMESTAMP);
+INSERT INTO test_infinite_values VALUES (2, '-infinity'::DATE, '-infinity'::TIMESTAMP, '-infinity'::REAL, '-infinity'::TIMESTAMP);
+INSERT INTO test_infinite_values VALUES (3,NULL, NULL, NULL, NULL);
+
 
 CREATE TABLE IF NOT EXISTS test_str(
     id INTEGER NOT NULL,

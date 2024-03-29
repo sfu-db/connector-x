@@ -1,3 +1,5 @@
+*.swp
+
 **/target
 .vscode
 connectorx-python/connectorx/*.so
@@ -19,3 +21,7 @@ docs/_build
 connectorx/examples/test.rs
 *.duckdb
 federated-query/
+flake.nix
+flake.lock
+.envrc
+.direnv/

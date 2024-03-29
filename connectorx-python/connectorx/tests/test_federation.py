@@ -51,7 +51,7 @@ def test_fed_spja(db1_url: str, db2_url: str) -> None:
         index=range(3),
         data={
             "test_bool": pd.Series([True, False, None], dtype="object"),
-            "AVG_FLOAT": pd.Series([0, 3, 5.45], dtype="float64"),
+            "AVG_FLOAT": pd.Series([None, 3, 5.45], dtype="float64"),
             "SUM_INT": pd.Series([1, 3, 4], dtype="int64"),
         },
     )

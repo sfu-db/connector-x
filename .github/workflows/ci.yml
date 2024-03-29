@@ -53,7 +53,7 @@ jobs:
   #         --health-timeout 5s
   #         --health-retries 20
   #   steps:
-  #     - uses: actions/checkout@v2
+  #     - uses: actions/checkout@v4
 
   #     - name: Install tools
   #       run: |
@@ -69,11 +69,11 @@ jobs:
   #     - name: Install Rust
   #       uses: actions-rs/toolchain@v1
   #       with:
-  #         toolchain: 1.71.1
+  #         toolchain: stable
   #         components: rustfmt
   #         default: true
 
-  #     - uses: actions/cache@v2
+  #     - uses: actions/cache@v4
   #       with:
   #         path: |
   #           ~/.cargo/bin/
@@ -176,7 +176,7 @@ jobs:
           --health-retries 20
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Install tools
         run: |
@@ -191,16 +191,16 @@ jobs:
       - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: 1.71.1
+          toolchain: stable
           components: rustfmt
           default: true
 
-      - uses: actions/setup-java@v3
+      - uses: actions/setup-java@v4
         with:
           distribution: "temurin"
-          java-version: "8"
+          java-version: "17"
 
-      - uses: actions/cache@v2
+      - uses: actions/cache@v4
         with:
           path: |
             ~/.cargo/bin/
@@ -238,7 +238,7 @@ jobs:
           args: --features all --all
 
       - name: Cache venv
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: ~/.cache/pypoetry/virtualenvs
           key: ${{ runner.os }}-venv-${{ secrets.CACHE_VERSION }}-${{ hashFiles('connectorx-python/poetry.lock') }}
@@ -255,4 +255,5 @@ jobs:
           MSSQL_URL: "mssql://sa:mssql!Password@mssql:1433/tempdb"
           DB1: "postgresql://postgres:postgres@postgres:5432/postgres"
           DB2: "postgresql://postgres:postgres@postgres:5432/postgres"
+          FED_CONFIG_PATH: ${{ github.workspace }}/.github/config
           SQLITE3_STATIC: 1

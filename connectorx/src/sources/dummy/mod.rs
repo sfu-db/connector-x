@@ -8,7 +8,7 @@ use super::{PartitionParser, Produce, Source, SourcePartition};
 use crate::data_order::DataOrder;
 use crate::errors::{ConnectorXError, Result};
 use crate::sql::CXQuery;
-use chrono::{offset, Date, DateTime, Utc};
+use chrono::{offset, DateTime, Utc};
 use fehler::{throw, throws};
 use num_traits::cast::FromPrimitive;
 
@@ -239,30 +239,6 @@ impl<'r, 'a> Produce<'r, Option<DateTime<Utc>>> for DummySourcePartitionParser<'
         self.next_val();
         let ret = match self.next_val() % 2 {
             0 => Some(offset::Utc::now()),
-            1 => None,
-            _ => unreachable!(),
-        };
-        Ok(ret)
-    }
-}
-
-impl<'r, 'a> Produce<'r, Date<Utc>> for DummySourcePartitionParser<'a> {
-    type Error = ConnectorXError;
-
-    fn produce(&mut self) -> Result<Date<Utc>> {
-        self.next_val();
-        let ret = offset::Utc::now().date();
-        Ok(ret)
-    }
-}
-
-impl<'r, 'a> Produce<'r, Option<Date<Utc>>> for DummySourcePartitionParser<'a> {
-    type Error = ConnectorXError;
-
-    fn produce(&mut self) -> Result<Option<Date<Utc>>> {
-        self.next_val();
-        let ret = match self.next_val() % 2 {
-            0 => Some(offset::Utc::now().date()),
             1 => None,
             _ => unreachable!(),
         };
