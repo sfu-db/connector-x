@@ -68,66 +68,66 @@ jobs:
           name: "ubuntu-latest-${{ matrix.python-version[1] }}"
           path: connectorx-python/target/wheels/*.whl
 
-  linux-aarch:
-    runs-on: ubuntu-latest
-    container: ghcr.io/rust-cross/manylinux_2_28-cross:aarch64
-    strategy:
-      matrix:
-        python-version: [[38, "3.8"], [39, "3.9"], [310, "3.10"], [311, "3.11"]]
-    steps:
-      - uses: actions/checkout@v2
+  # linux-aarch:
+  #   runs-on: ubuntu-latest
+  #   container: ghcr.io/rust-cross/manylinux_2_28-cross:aarch64
+  #   strategy:
+  #     matrix:
+  #       python-version: [[38, "3.8"], [39, "3.9"], [310, "3.10"], [311, "3.11"]]
+  #   steps:
+  #     - uses: actions/checkout@v2
 
-      - name: Set python version
-        run: |
-          echo "/opt/python/cp${{ matrix.python-version[0] }}-cp${{ matrix.python-version[0] }}/bin" >> $GITHUB_PATH
+  #     - name: Set python version
+  #       run: |
+  #         echo "/opt/python/cp${{ matrix.python-version[0] }}-cp${{ matrix.python-version[0] }}/bin" >> $GITHUB_PATH
 
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: 1.71.1
-          components: rustfmt
-          target: aarch64-unknown-linux-gnu
-          default: true
+  #     - uses: actions-rs/toolchain@v1
+  #       with:
+  #         toolchain: 1.71.1
+  #         components: rustfmt
+  #         target: aarch64-unknown-linux-gnu
+  #         default: true
 
-      - uses: extractions/setup-just@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #     - uses: extractions/setup-just@v1
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: Gr1N/setup-poetry@v9
+  #     - uses: Gr1N/setup-poetry@v9
 
-      - name: Install tools
-        run: |
-          yum install -y epel-release
-          yum install -y mysql-devel postgresql-devel freetds-devel krb5-libs clang-devel
+  #     - name: Install tools
+  #       run: |
+  #         yum install -y epel-release
+  #         yum install -y mysql-devel postgresql-devel freetds-devel krb5-libs clang-devel
 
-      - name: Setup project
-        run: |
-          just bootstrap-python
+  #     - name: Setup project
+  #       run: |
+  #         just bootstrap-python
 
-      - uses: PyO3/maturin-action@v1
-        with:
-          rust-toolchain: 1.71.1
-          command: build
-          args: -m connectorx-python/Cargo.toml --target aarch64-unknown-linux-gnu -i python --release --manylinux 2_28 --features integrated-auth-gssapi
-        env:
-          SQLITE3_STATIC: 1
+  #     - uses: PyO3/maturin-action@v1
+  #       with:
+  #         rust-toolchain: 1.71.1
+  #         command: build
+  #         args: -m connectorx-python/Cargo.toml --target aarch64-unknown-linux-gnu -i python --release --manylinux 2_28 --features integrated-auth-gssapi
+  #       env:
+  #         SQLITE3_STATIC: 1
 
-      - name: Copy j4rs dependencies into dist
-        run: |
-          cp -rf connectorx-python/target/release/jassets connectorx-python/connectorx/dependencies
+  #     - name: Copy j4rs dependencies into dist
+  #       run: |
+  #         cp -rf connectorx-python/target/release/jassets connectorx-python/connectorx/dependencies
 
-      # rebuild the wheel to incorporate j4rs dependencies
-      - uses: PyO3/maturin-action@v1
-        with:
-          rust-toolchain: 1.71.1
-          command: build
-          args: -m connectorx-python/Cargo.toml --target aarch64-unknown-linux-gnu -i python --release --manylinux 2_28 --features integrated-auth-gssapi
-        env:
-          SQLITE3_STATIC: 1
+  #     # rebuild the wheel to incorporate j4rs dependencies
+  #     - uses: PyO3/maturin-action@v1
+  #       with:
+  #         rust-toolchain: 1.71.1
+  #         command: build
+  #         args: -m connectorx-python/Cargo.toml --target aarch64-unknown-linux-gnu -i python --release --manylinux 2_28 --features integrated-auth-gssapi
+  #       env:
+  #         SQLITE3_STATIC: 1
 
-      - uses: actions/upload-artifact@v3
-        with:
-          name: "aarch-${{ matrix.python-version[1] }}"
-          path: connectorx-python/target/wheels/*.whl
+  #     - uses: actions/upload-artifact@v3
+  #       with:
+  #         name: "aarch-${{ matrix.python-version[1] }}"
+  #         path: connectorx-python/target/wheels/*.whl
 
   win-and-mac:
     runs-on: ${{ matrix.os }}
