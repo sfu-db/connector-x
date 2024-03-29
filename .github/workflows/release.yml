@@ -45,7 +45,6 @@ jobs:
       - uses: PyO3/maturin-action@v1
         with:
           rust-toolchain: stable
-          maturin-version: v0.14.15
           command: build
           args: -m connectorx-python/Cargo.toml -i python --release --manylinux 2_28 --features integrated-auth-gssapi
         env:
@@ -59,7 +58,6 @@ jobs:
       - uses: PyO3/maturin-action@v1
         with:
           rust-toolchain: stable
-          maturin-version: v0.14.15
           command: build
           args: -m connectorx-python/Cargo.toml -i python --release --manylinux 2_28 --features integrated-auth-gssapi
         env:
