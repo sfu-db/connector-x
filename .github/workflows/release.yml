@@ -45,7 +45,6 @@ jobs:
       - uses: PyO3/maturin-action@v1
         with:
           rust-toolchain: stable
-          manylinux: auto
           command: build
           args: -m connectorx-python/Cargo.toml -i python --release --manylinux 2_28 --features integrated-auth-gssapi
           before-script-linux: |
@@ -73,7 +72,6 @@ jobs:
       - uses: PyO3/maturin-action@v1
         with:
           rust-toolchain: stable
-          manylinux: auto
           command: build
           args: -m connectorx-python/Cargo.toml -i python --release --manylinux 2_28 --features integrated-auth-gssapi
           before-script-linux: |
