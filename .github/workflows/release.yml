@@ -45,8 +45,23 @@ jobs:
       - uses: PyO3/maturin-action@v1
         with:
           rust-toolchain: stable
+          manylinux: auto
           command: build
           args: -m connectorx-python/Cargo.toml -i python --release --manylinux 2_28 --features integrated-auth-gssapi
+          before-script-linux: |
+            # If we're running on rhel centos, install needed packages.
+            if command -v yum &> /dev/null; then
+                yum update -y && yum install -y perl-core openssl openssl-devel pkgconfig libatomic
+
+                # If we're running on i686 we need to symlink libatomic
+                # in order to build openssl with -latomic flag.
+                if [[ ! -d "/usr/lib64" ]]; then
+                    ln -s /usr/lib/libatomic.so.1 /usr/lib/libatomic.so
+                fi
+            else
+                # If we're running on debian-based system.
+                apt update -y && apt-get install -y libssl-dev openssl pkg-config
+            fi
         env:
           SQLITE3_STATIC: 1
 
@@ -58,8 +73,23 @@ jobs:
       - uses: PyO3/maturin-action@v1
         with:
           rust-toolchain: stable
+          manylinux: auto
           command: build
           args: -m connectorx-python/Cargo.toml -i python --release --manylinux 2_28 --features integrated-auth-gssapi
+          before-script-linux: |
+            # If we're running on rhel centos, install needed packages.
+            if command -v yum &> /dev/null; then
+                yum update -y && yum install -y perl-core openssl openssl-devel pkgconfig libatomic
+
+                # If we're running on i686 we need to symlink libatomic
+                # in order to build openssl with -latomic flag.
+                if [[ ! -d "/usr/lib64" ]]; then
+                    ln -s /usr/lib/libatomic.so.1 /usr/lib/libatomic.so
+                fi
+            else
+                # If we're running on debian-based system.
+                apt update -y && apt-get install -y libssl-dev openssl pkg-config
+            fi
         env:
           SQLITE3_STATIC: 1
 
