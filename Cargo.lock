@@ -522,6 +522,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "asynchronous-codec"
+version = "0.6.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4057f2c32adbb2fc158e22fb38433c8e9bbf76b75a4732c7c0cbaf695fb65568"
+dependencies = [
+ "bytes",
+ "futures-sink",
+ "futures-util",
+ "memchr",
+ "pin-project-lite",
+]
+
+[[package]]
 name = "atoi"
 version = "2.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -588,18 +601,30 @@ dependencies = [
 ]
 
 [[package]]
-name = "bb8-tiberius"
-version = "0.5.2"
+name = "bb8"
+version = "0.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "648d5365b34a2a362d5b8790d3c1b230d263d2377e563c76cb79c10d326b917e"
+checksum = "df7c2093d15d6a1d33b1f972e1c5ea3177748742b97a5f392aa83a65262c6780"
 dependencies = [
  "async-trait",
- "bb8",
- "futures",
- "thiserror",
- "tiberius",
+ "futures-channel",
+ "futures-util",
+ "parking_lot 0.12.1",
  "tokio",
- "tokio-util 0.6.10",
+]
+
+[[package]]
+name = "bb8-tiberius"
+version = "0.15.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "73caefcf24fc336bd39345ee068f8cd64506f38c92a198dc2400a9693d129f33"
+dependencies = [
+ "async-trait",
+ "bb8 0.8.3",
+ "thiserror",
+ "tiberius 0.12.2",
+ "tokio",
+ "tokio-util 0.7.10",
 ]
 
 [[package]]
@@ -970,13 +995,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "connection-string"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "510ca239cf13b7f8d16a2b48f263de7b4f8c566f0af58d901031473c76afb1e3"
+
+[[package]]
 name = "connectorx"
 version = "0.3.3-alpha.2"
 dependencies = [
  "anyhow",
  "arrow",
  "arrow2",
- "bb8",
+ "bb8 0.7.1",
  "bb8-tiberius",
  "chrono",
  "criterion",
@@ -1017,7 +1048,7 @@ dependencies = [
  "serde_json",
  "sqlparser 0.37.0",
  "thiserror",
- "tiberius",
+ "tiberius 0.5.16",
  "tokio",
  "tokio-util 0.6.10",
  "url",
@@ -3784,6 +3815,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "be91bcc43e73799dc46a6c194a55e7aae1d86cc867c860fd4a436019af21bd8c"
 
 [[package]]
+name = "pretty-hex"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c6fa0831dd7cc608c38a5e323422a0077678fa5744aa2be4ad91c4ece8eec8d5"
+
+[[package]]
 name = "proc-macro-crate"
 version = "3.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4924,11 +4961,11 @@ dependencies = [
  "async-native-tls",
  "async-stream 0.2.1",
  "async-trait",
- "asynchronous-codec",
+ "asynchronous-codec 0.5.0",
  "byteorder",
  "bytes",
  "chrono",
- "connection-string",
+ "connection-string 0.1.14",
  "encoding",
  "enumflags2",
  "futures",
@@ -4939,11 +4976,38 @@ dependencies = [
  "once_cell",
  "opentls",
  "pin-project-lite",
- "pretty-hex",
+ "pretty-hex 0.1.1",
  "rust_decimal",
  "thiserror",
  "tracing",
  "uuid 0.8.2",
+ "winauth",
+]
+
+[[package]]
+name = "tiberius"
+version = "0.12.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dc6e2bf3e4b5be181a2a2ceff4b9b12e2684010d436a6958bd564fbc8094d44d"
+dependencies = [
+ "async-trait",
+ "asynchronous-codec 0.6.2",
+ "byteorder",
+ "bytes",
+ "chrono",
+ "connection-string 0.2.0",
+ "encoding",
+ "enumflags2",
+ "futures-util",
+ "num-traits",
+ "once_cell",
+ "pin-project-lite",
+ "pretty-hex 0.3.0",
+ "thiserror",
+ "tokio",
+ "tokio-util 0.7.10",
+ "tracing",
+ "uuid 1.7.0",
  "winauth",
 ]
 
@@ -5129,7 +5193,6 @@ checksum = "36943ee01a6d67977dd3f84a5a1d2efeb4ada3a1ae771cadfaa535d9d9fc6507"
 dependencies = [
  "bytes",
  "futures-core",
- "futures-io",
  "futures-sink",
  "log",
  "pin-project-lite",
@@ -5144,6 +5207,7 @@ checksum = "5419f34732d9eb6ee4c3578b7989078579b7f039cbbb9ca2c4da015749371e15"
 dependencies = [
  "bytes",
  "futures-core",
+ "futures-io",
  "futures-sink",
  "pin-project-lite",
  "tokio",
