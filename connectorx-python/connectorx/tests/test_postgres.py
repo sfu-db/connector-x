@@ -1151,3 +1151,29 @@ def test_postgres_semicolon_support_str_query(postgres_url: str) -> None:
         },
     )
     assert_frame_equal(df, expected, check_names=True)
+
+
+def test_postgres_semicolon_list_queries(postgres_url: str) -> None:
+        queries = [
+        "SELECT * FROM test_table WHERE test_int < 2;",
+        "SELECT * FROM test_table WHERE test_int >= 2;",
+    ]
+
+    df = read_sql(postgres_url, query=queries)
+
+    expected = pd.DataFrame(
+        index=range(6),
+        data={
+            "test_int": pd.Series([0, 1, 2, 3, 4, 1314], dtype="Int64"),
+            "test_nullint": pd.Series([5, 3, None, 7, 9, 2], dtype="Int64"),
+            "test_str": pd.Series(
+                ["a", "str1", "str2", "b", "c", None], dtype="object"
+            ),
+            "test_float": pd.Series([3.1, None, 2.2, 3, 7.8, -10], dtype="float64"),
+            "test_bool": pd.Series(
+                [None, True, False, False, None, True], dtype="boolean"
+            ),
+        },
+    )
+    df.sort_values(by="test_int", inplace=True, ignore_index=True)
+    assert_frame_equal(df, expected, check_names=True)
