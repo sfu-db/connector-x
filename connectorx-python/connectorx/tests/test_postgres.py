@@ -1139,3 +1139,15 @@ def test_postgres_name_type(postgres_url: str) -> None:
         },
     )
     assert_frame_equal(df, expected, check_names=True)
+
+
+
+def test_postgres_semicolon_support_str_query(postgres_url: str) -> None:
+    query = "SELECT test_name FROM test_types;"
+    df = read_sql(postgres_url, query)
+    expected = pd.DataFrame(
+        data={
+            "test_name": pd.Series(["0", "21", "someName", "101203203-1212323-22131235"]),
+        },
+    )
+    assert_frame_equal(df, expected, check_names=True)
