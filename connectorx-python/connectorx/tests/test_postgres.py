@@ -1154,7 +1154,7 @@ def test_postgres_semicolon_support_str_query(postgres_url: str) -> None:
 
 
 def test_postgres_semicolon_list_queries(postgres_url: str) -> None:
-        queries = [
+    queries = [
         "SELECT * FROM test_table WHERE test_int < 2;",
         "SELECT * FROM test_table WHERE test_int >= 2;",
     ]
