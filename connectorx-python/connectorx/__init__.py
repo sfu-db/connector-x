@@ -206,6 +206,7 @@ def read_sql(
     """
     if isinstance(query, list) and len(query) == 1:
         query = query[0]
+        query = query.replace(";","")
 
     if isinstance(conn, dict):
         assert partition_on is None and isinstance(
@@ -214,6 +215,8 @@ def read_sql(
         assert (
             protocol is None
         ), "Federated query does not support specifying protocol for now"
+
+        query = query.replace(";","")
         result = _read_sql2(query, conn)
         df = reconstruct_arrow(result)
         if return_type == "pandas":
@@ -232,6 +235,7 @@ def read_sql(
         return df
 
     if isinstance(query, str):
+        query = query.replace(";","")
         if partition_on is None:
             queries = [query]
             partition_query = None
@@ -245,7 +249,7 @@ def read_sql(
             }
             queries = None
     elif isinstance(query, list):
-        queries = query
+        queries = [subquery.replace(";","") for subquery in query]
         partition_query = None
 
         if partition_on is not None:
