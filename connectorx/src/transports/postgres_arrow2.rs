@@ -71,7 +71,7 @@ macro_rules! impl_postgres_transport {
                 { NumericArray[Vec<Decimal>]        => Float64Array[Vec<f64>]      | conversion option }
                 { VarcharArray[Vec<String>]         => Utf8Array[Vec<String>]      | conversion none }
                 { TextArray[Vec<String>]            => Utf8Array[Vec<String>]      | conversion auto }
-                { DateArray[Vec<NaiveDate>]         => DateArray32[Vec<Date32>]    | conversion auto }
+                { DateArray[Vec<NaiveDate>]         => DateArray32[Vec<NaiveDate>]    | conversion auto }
 
             }
         );
