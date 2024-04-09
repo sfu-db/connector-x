@@ -289,6 +289,57 @@ impl ArrowAssoc for NaiveDate {
     }
 }
 
+impl ArrowAssoc for Vec<NaiveDate> {
+    type Builder = MutableListArray<i32, MutablePrimitiveArray<i32>>;
+
+    fn builder(nrows: usize) -> Self::Builder {
+        MutableListArray::with_capacity(nrows)
+    }
+
+    fn push(builder: &mut Self::Builder, value: Vec<NaiveDate>) {
+        let mut date_array: Vec<Option<i32>> = vec![];
+        for sub_value in value {
+            date_array.push(Some(naive_date_to_date32(sub_value)))
+        }
+        builder.try_push(Some(date_array)).unwrap();
+    }
+
+    fn field(header: &str) -> Field {
+        Field::new(header, ArrowDataType::Date32, true)
+    }
+
+}
+
+
+impl ArrowAssoc for Option<Vec<NaiveDate>> {
+    type Builder = MutableListArray<i32, MutablePrimitiveArray<i32>>;
+
+    fn builder(nrows: usize) -> Self::Builder {
+        MutableListArray::with_capacity(nrows)
+    }
+
+    fn push(builder: &mut Self::Builder, value: Self) {
+        let mut date_array: Vec<Option<i32>> = vec![];
+        match value {
+            Some(value) => {
+                for sub_value in value {
+                    date_array.push(Some(naive_date_to_date32(sub_value)))
+                }
+                let _ = builder.try_push(Some(date_array));
+            }
+            None => {
+                let _ = builder.try_push(Some(date_array));
+            }
+        };
+    }
+
+    fn field(header: &str) -> Field {
+        Field::new(header, ArrowDataType::Date32, false)
+    }
+}
+
+
+
 impl ArrowAssoc for Option<NaiveDateTime> {
     type Builder = MutablePrimitiveArray<i64>;
 
