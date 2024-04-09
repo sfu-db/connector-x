@@ -206,6 +206,8 @@ def read_sql(
     """
     if isinstance(query, list) and len(query) == 1:
         query = query[0]
+        query = remove_ending_semicolon(query)
+
 
     if isinstance(conn, dict):
         assert partition_on is None and isinstance(
@@ -214,6 +216,9 @@ def read_sql(
         assert (
             protocol is None
         ), "Federated query does not support specifying protocol for now"
+
+        query = remove_ending_semicolon(query)
+
         result = _read_sql2(query, conn)
         df = reconstruct_arrow(result)
         if return_type == "pandas":
@@ -232,6 +237,9 @@ def read_sql(
         return df
 
     if isinstance(query, str):
+
+        query = remove_ending_semicolon(query)
+
         if partition_on is None:
             queries = [query]
             partition_query = None
@@ -245,7 +253,7 @@ def read_sql(
             }
             queries = None
     elif isinstance(query, list):
-        queries = query
+        queries = [remove_ending_semicolon(subquery) for subquery in query]
         partition_query = None
 
         if partition_on is not None:
@@ -377,3 +385,11 @@ def reconstruct_pandas(df_infos: Dict[str, Any]):
     )
     df = pd.DataFrame(block_manager)
     return df
+
+
+def remove_ending_semicolon(query: str) -> str:
+    if  query[-1] == ';':
+        query= list(query)
+        query.pop(-1)
+        query = "".join(query)
+    return query
