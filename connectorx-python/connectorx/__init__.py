@@ -16,6 +16,7 @@ except:
         from importlib_metadata import version
 
         __version__ = version(__name__)
+
     except:
         pass
 
@@ -388,8 +389,15 @@ def reconstruct_pandas(df_infos: Dict[str, Any]):
 
 
 def remove_ending_semicolon(query: str) -> str:
-    if  query[-1] == ';':
-        query= list(query)
-        query.pop(-1)
-        query = "".join(query)
+    """
+    Removes the semicolon if the query ends with it.
+
+    Parameters
+    ==========
+    query
+      SQL query
+
+    """
+    if query.endswith(';'):
+        query = query[:-1]
     return query
