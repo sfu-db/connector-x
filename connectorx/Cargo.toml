@@ -7,12 +7,12 @@ license = "MIT"
 name = "connectorx"
 readme = "../README.md"
 repository = "https://github.com/sfu-db/connector-x"
-version = "0.3.3-alpha.1"
+version = "0.3.3-alpha.2"
 
 [dependencies]
 anyhow = "1"
 fehler = "1"
-itertools = "0.10"
+itertools = "0.11"
 log = "0.4"
 rayon = "1"
 sqlparser = "0.37"
@@ -34,7 +34,7 @@ hex = {version = "0.4", optional = true}
 native-tls = {version = "0.2", optional = true}
 ndarray = {version = "0.15", optional = true}
 num-traits = {version = "0.2", optional = true}
-openssl = {version = "0.10", optional = true}
+openssl = {version = "0.10", optional = true, features = ["vendored"]}
 oracle = {version = "0.5", optional = true}
 polars = {version = "0.32", optional = true, features=["dtype-u8", "dtype-u16"]}
 postgres = {version = "0.19", features = ["with-chrono-0_4", "with-uuid-0_8", "with-serde_json-1"], optional = true}
