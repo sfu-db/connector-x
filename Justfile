@@ -63,6 +63,7 @@ seed-db-more:
     ORACLE_URL_SCRIPT=`echo ${ORACLE_URL#oracle://} | sed "s/:/\//"`
     cat scripts/oracle.sql | sqlplus $ORACLE_URL_SCRIPT
     mysql --protocol tcp -h$MARIADB_HOST -P$MARIADB_PORT -u$MARIADB_USER -p$MARIADB_PASSWORD $MARIADB_DB < scripts/mysql.sql
+    trino $TRINO_URL --catalog=$TRINO_CATALOG < scripts/trino.sql
 
 # benches 
 flame-tpch conn="POSTGRES_URL":

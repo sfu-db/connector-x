@@ -50,17 +50,25 @@ impl TrinoSource {
             .parse::<url::Url>()
             .map_err(TrinoSourceError::UrlParseError)?;
 
-        let client = ClientBuilder::new(url.username(), url.host().unwrap().to_owned())
+        let username = match url.username() {
+            "" => "connectorx",
+            username => username,
+        };
+
+        let builder = ClientBuilder::new(username, url.host().unwrap().to_owned())
             .port(url.port().unwrap_or(8080))
-            .auth(Auth::Basic(
-                url.username().to_owned(),
-                url.password().map(|x| x.to_owned()),
-            ))
             .ssl(prusto::ssl::Ssl { root_cert: None })
             .secure(url.scheme() == "trino+https")
-            .catalog(url.path_segments().unwrap().last().unwrap_or("hive"))
-            .build()
-            .map_err(TrinoSourceError::PrustoError)?;
+            .catalog(url.path_segments().unwrap().last().unwrap_or("hive"));
+
+        let builder = match url.password() {
+            None => builder,
+            Some(password) => {
+                builder.auth(Auth::Basic(username.to_owned(), Some(password.to_owned())))
+            }
+        };
+
+        let client = builder.build().map_err(TrinoSourceError::PrustoError)?;
 
         Self {
             client: Arc::new(client),
