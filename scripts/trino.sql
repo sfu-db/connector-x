@@ -44,5 +44,6 @@ CREATE TABLE IF NOT EXISTS test.test_types(
 
 DELETE FROM test.test_types;
 INSERT INTO test.test_types (test_boolean, test_int, test_bigint, test_real, test_double, test_decimal, test_date, test_time, test_timestamp, test_varchar, test_uuid) VALUES
-(TRUE, 123, 123456789012345, CAST(123.456 AS REAL), CAST(123.4567890123 AS DOUBLE), 1234567890.12, date('2023-01-01'), time '12:00:00', cast(timestamp '2023-01-01 12:00:00.123456' AS timestamp(6)), 'Sample text', UUID()),
-(FALSE, 321, 123456789012345, CAST(123.456 AS REAL), CAST(123.4567890123 AS DOUBLE), 1234567890.12, date('2023-01-01'), time '12:00:00', cast(timestamp '2023-01-01 12:00:00.123456' AS timestamp(6)), 'Sample text', UUID());
+(TRUE, 123, 1000, CAST(123.456 AS REAL), CAST(123.4567890123 AS DOUBLE), 1234567890.12, date('2023-01-01'), time '12:00:00', cast(timestamp '2023-01-01 12:00:00.123456' AS timestamp(6)), 'Sample text', CAST('f4967dbb-33e9-4242-a13a-45b56ce60dba' AS UUID)),
+(FALSE, 321, 2000, CAST(123.456 AS REAL), CAST(123.4567890123 AS DOUBLE), 1234567890.12, date('2023-01-01'), time '12:00:00', cast(timestamp '2023-01-01 12:00:00.123456' AS timestamp(6)), 'Sample text', CAST('1c8b79d0-4508-4974-b728-7651bce4a5a5' AS UUID)),
+(NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
