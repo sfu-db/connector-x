@@ -153,3 +153,8 @@ BibTeX entry:
   url       = {https://www.vldb.org/pvldb/vol15/p2994-wang.pdf},
 }
 ```
+
+# Contributors
+
+<!-- readme: contributors -start -->
+<!-- readme: contributors -end -->
