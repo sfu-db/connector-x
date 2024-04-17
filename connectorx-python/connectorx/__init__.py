@@ -21,12 +21,11 @@ if (
     not os.path.basename(os.path.abspath(os.path.join(dir_path, "..")))
     == "connectorx-python"
 ):
-    if "J4RS_BASE_PATH" not in os.environ:
-        os.environ["J4RS_BASE_PATH"] = os.path.join(dir_path, "dependencies")
-if "CX_REWRITER_PATH" not in os.environ:
-    os.environ["CX_REWRITER_PATH"] = os.path.join(
-        dir_path, "dependencies/federated-rewriter.jar"
-    )
+    os.environ.setdefault("J4RS_BASE_PATH", os.path.join(dir_path, "dependencies"))
+
+os.environ.setdefault(
+    "CX_REWRITER_PATH", os.path.join(dir_path, "dependencies/federated-rewriter.jar")
+)
 
 
 def rewrite_conn(conn: str, protocol: str | None = None):
@@ -202,7 +201,6 @@ def read_sql(
         query = query[0]
         query = remove_ending_semicolon(query)
 
-
     if isinstance(conn, dict):
         assert partition_on is None and isinstance(
             query, str
@@ -231,7 +229,6 @@ def read_sql(
         return df
 
     if isinstance(query, str):
-
         query = remove_ending_semicolon(query)
 
         if partition_on is None:
@@ -382,8 +379,8 @@ def reconstruct_pandas(df_infos: dict[str, Any]):
 
 
 def remove_ending_semicolon(query: str) -> str:
-    if  query[-1] == ';':
-        query= list(query)
+    if query[-1] == ";":
+        query = list(query)
         query.pop(-1)
         query = "".join(query)
     return query
