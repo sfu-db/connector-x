@@ -1,4 +1,8 @@
-from typing import Optional, Tuple, Union, List, Dict, Any
+from __future__ import annotations
+
+from typing import Any
+
+from importlib.metadata import version
 
 from .connectorx import (
     read_sql as _read_sql,
@@ -7,18 +11,7 @@ from .connectorx import (
     get_meta as _get_meta,
 )
 
-try:
-    from importlib.metadata import version
-
-    __version__ = version(__name__)
-except:
-    try:
-        from importlib_metadata import version
-
-        __version__ = version(__name__)
-
-    except:
-        pass
+__version__ = version(__name__)
 
 import os
 
@@ -28,15 +21,14 @@ if (
     not os.path.basename(os.path.abspath(os.path.join(dir_path, "..")))
     == "connectorx-python"
 ):
-    if "J4RS_BASE_PATH" not in os.environ:
-        os.environ["J4RS_BASE_PATH"] = os.path.join(dir_path, "dependencies")
-if "CX_REWRITER_PATH" not in os.environ:
-    os.environ["CX_REWRITER_PATH"] = os.path.join(
-        dir_path, "dependencies/federated-rewriter.jar"
-    )
+    os.environ.setdefault("J4RS_BASE_PATH", os.path.join(dir_path, "dependencies"))
+
+os.environ.setdefault(
+    "CX_REWRITER_PATH", os.path.join(dir_path, "dependencies/federated-rewriter.jar")
+)
 
 
-def rewrite_conn(conn: str, protocol: Optional[str] = None):
+def rewrite_conn(conn: str, protocol: str | None = None):
     if not protocol:
         # note: redshift/clickhouse are not compatible with the 'binary' protocol, and use other database
         # drivers to connect. set a compatible protocol and masquerade as the appropriate backend.
@@ -55,7 +47,7 @@ def rewrite_conn(conn: str, protocol: Optional[str] = None):
 def get_meta(
     conn: str,
     query: str,
-    protocol: Optional[str] = None,
+    protocol: str | None = None,
 ):
     """
     Get metadata (header) of the given query (only for pandas)
@@ -82,7 +74,7 @@ def partition_sql(
     query: str,
     partition_on: str,
     partition_num: int,
-    partition_range: Optional[Tuple[int, int]] = None,
+    partition_range: tuple[int, int] | None = None,
 ):
     """
     Partition the sql query
@@ -111,13 +103,13 @@ def partition_sql(
 
 
 def read_sql_pandas(
-    sql: Union[List[str], str],
-    con: Union[str, Dict[str, str]],
-    index_col: Optional[str] = None,
-    protocol: Optional[str] = None,
-    partition_on: Optional[str] = None,
-    partition_range: Optional[Tuple[int, int]] = None,
-    partition_num: Optional[int] = None,
+    sql: list[str] | str,
+    con: str | dict[str, str],
+    index_col: str | None = None,
+    protocol: str | None = None,
+    partition_on: str | None = None,
+    partition_range: tuple[int, int] | None = None,
+    partition_num: int | None = None,
 ):
     """
     Run the SQL query, download the data from database into a dataframe.
@@ -151,15 +143,15 @@ def read_sql_pandas(
 
 
 def read_sql(
-    conn: Union[str, Dict[str, str]],
-    query: Union[List[str], str],
+    conn: str | dict[str, str],
+    query: list[str] | str,
     *,
     return_type: str = "pandas",
-    protocol: Optional[str] = None,
-    partition_on: Optional[str] = None,
-    partition_range: Optional[Tuple[int, int]] = None,
-    partition_num: Optional[int] = None,
-    index_col: Optional[str] = None,
+    protocol: str | None = None,
+    partition_on: str | None = None,
+    partition_range: tuple[int, int] | None = None,
+    partition_num: int | None = None,
+    index_col: str | None = None,
 ):
     """
     Run the SQL query, download the data from database into a dataframe.
@@ -209,7 +201,6 @@ def read_sql(
         query = query[0]
         query = remove_ending_semicolon(query)
 
-
     if isinstance(conn, dict):
         assert partition_on is None and isinstance(
             query, str
@@ -238,7 +229,6 @@ def read_sql(
         return df
 
     if isinstance(query, str):
-
         query = remove_ending_semicolon(query)
 
         if partition_on is None:
@@ -328,7 +318,7 @@ def read_sql(
     return df
 
 
-def reconstruct_arrow(result: Tuple[List[str], List[List[Tuple[int, int]]]]):
+def reconstruct_arrow(result: tuple[list[str], list[list[tuple[int, int]]]]):
     import pyarrow as pa
 
     names, ptrs = result
@@ -344,7 +334,7 @@ def reconstruct_arrow(result: Tuple[List[str], List[List[Tuple[int, int]]]]):
     return pa.Table.from_batches(rbs)
 
 
-def reconstruct_pandas(df_infos: Dict[str, Any]):
+def reconstruct_pandas(df_infos: dict[str, Any]):
     import pandas as pd
 
     data = df_infos["data"]
