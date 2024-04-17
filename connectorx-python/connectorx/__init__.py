@@ -379,8 +379,15 @@ def reconstruct_pandas(df_infos: dict[str, Any]):
 
 
 def remove_ending_semicolon(query: str) -> str:
-    if query[-1] == ";":
-        query = list(query)
-        query.pop(-1)
-        query = "".join(query)
+    """
+    Removes the semicolon if the query ends with it.
+
+    Parameters
+    ==========
+    query
+      SQL query
+
+    """
+    if query.endswith(';'):
+        query = query[:-1]
     return query
