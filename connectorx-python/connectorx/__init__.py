@@ -1,5 +1,7 @@
 from typing import Optional, Tuple, Union, List, Dict, Any
 
+from importlib.metadata import version
+
 from .connectorx import (
     read_sql as _read_sql,
     partition_sql as _partition_sql,
@@ -7,17 +9,7 @@ from .connectorx import (
     get_meta as _get_meta,
 )
 
-try:
-    from importlib.metadata import version
-
-    __version__ = version(__name__)
-except:
-    try:
-        from importlib_metadata import version
-
-        __version__ = version(__name__)
-    except:
-        pass
+__version__ = version(__name__)
 
 import os
 
