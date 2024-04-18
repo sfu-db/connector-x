@@ -217,6 +217,13 @@ BibTeX entry:
         </a>
     </td>
     <td align="center">
+        <a href="https://github.com/jinzew">
+            <img src="https://avatars.githubusercontent.com/u/55274369?v=4" width="66;" alt="jinzew"/>
+            <br />
+            <sub><b>Null</b></sub>
+        </a>
+    </td>
+    <td align="center">
         <a href="https://github.com/zen-xu">
             <img src="https://avatars.githubusercontent.com/u/38552291?v=4" width="66;" alt="zen-xu"/>
             <br />
@@ -228,13 +235,6 @@ BibTeX entry:
             <img src="https://avatars.githubusercontent.com/u/45558892?v=4" width="66;" alt="gruuya"/>
             <br />
             <sub><b>Marko Grujic</b></sub>
-        </a>
-    </td>
-    <td align="center">
-        <a href="https://github.com/jinzew">
-            <img src="https://avatars.githubusercontent.com/u/55274369?v=4" width="66;" alt="jinzew"/>
-            <br />
-            <sub><b>Null</b></sub>
         </a>
     </td>
     <td align="center">
