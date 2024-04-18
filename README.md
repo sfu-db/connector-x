@@ -217,10 +217,10 @@ BibTeX entry:
         </a>
     </td>
     <td align="center">
-        <a href="https://github.com/jinzew">
-            <img src="https://avatars.githubusercontent.com/u/55274369?v=4" width="66;" alt="jinzew"/>
+        <a href="https://github.com/zen-xu">
+            <img src="https://avatars.githubusercontent.com/u/38552291?v=4" width="66;" alt="zen-xu"/>
             <br />
-            <sub><b>Null</b></sub>
+            <sub><b>ZhengYu, Xu</b></sub>
         </a>
     </td>
     <td align="center">
@@ -231,32 +231,32 @@ BibTeX entry:
         </a>
     </td>
     <td align="center">
+        <a href="https://github.com/jinzew">
+            <img src="https://avatars.githubusercontent.com/u/55274369?v=4" width="66;" alt="jinzew"/>
+            <br />
+            <sub><b>Null</b></sub>
+        </a>
+    </td>
+    <td align="center">
         <a href="https://github.com/alswang18">
             <img src="https://avatars.githubusercontent.com/u/44207558?v=4" width="66;" alt="alswang18"/>
             <br />
             <sub><b>Alec Wang</b></sub>
         </a>
-    </td>
+    </td></tr>
+<tr>
     <td align="center">
         <a href="https://github.com/lBilali">
             <img src="https://avatars.githubusercontent.com/u/5528169?v=4" width="66;" alt="lBilali"/>
             <br />
             <sub><b>Lulzim Bilali</b></sub>
         </a>
-    </td></tr>
-<tr>
+    </td>
     <td align="center">
         <a href="https://github.com/ritchie46">
             <img src="https://avatars.githubusercontent.com/u/3023000?v=4" width="66;" alt="ritchie46"/>
             <br />
             <sub><b>Ritchie Vink</b></sub>
-        </a>
-    </td>
-    <td align="center">
-        <a href="https://github.com/zen-xu">
-            <img src="https://avatars.githubusercontent.com/u/38552291?v=4" width="66;" alt="zen-xu"/>
-            <br />
-            <sub><b>ZhengYu, Xu</b></sub>
         </a>
     </td>
     <td align="center">
