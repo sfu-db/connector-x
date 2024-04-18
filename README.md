@@ -224,6 +224,13 @@ BibTeX entry:
         </a>
     </td>
     <td align="center">
+        <a href="https://github.com/zen-xu">
+            <img src="https://avatars.githubusercontent.com/u/38552291?v=4" width="66;" alt="zen-xu"/>
+            <br />
+            <sub><b>ZhengYu, Xu</b></sub>
+        </a>
+    </td>
+    <td align="center">
         <a href="https://github.com/gruuya">
             <img src="https://avatars.githubusercontent.com/u/45558892?v=4" width="66;" alt="gruuya"/>
             <br />
@@ -236,27 +243,20 @@ BibTeX entry:
             <br />
             <sub><b>Alec Wang</b></sub>
         </a>
-    </td>
+    </td></tr>
+<tr>
     <td align="center">
         <a href="https://github.com/lBilali">
             <img src="https://avatars.githubusercontent.com/u/5528169?v=4" width="66;" alt="lBilali"/>
             <br />
             <sub><b>Lulzim Bilali</b></sub>
         </a>
-    </td></tr>
-<tr>
+    </td>
     <td align="center">
         <a href="https://github.com/ritchie46">
             <img src="https://avatars.githubusercontent.com/u/3023000?v=4" width="66;" alt="ritchie46"/>
             <br />
             <sub><b>Ritchie Vink</b></sub>
-        </a>
-    </td>
-    <td align="center">
-        <a href="https://github.com/zen-xu">
-            <img src="https://avatars.githubusercontent.com/u/38552291?v=4" width="66;" alt="zen-xu"/>
-            <br />
-            <sub><b>ZhengYu, Xu</b></sub>
         </a>
     </td>
     <td align="center">
