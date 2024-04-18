@@ -104,8 +104,8 @@ def partition_sql(
     partition_query = {
         "query": query,
         "column": partition_on,
-        "min": partition_range[0] if partition_range else None,
-        "max": partition_range[1] if partition_range else None,
+        "min": partition_range and partition_range[0],
+        "max": partition_range and partition_range[1],
         "num": partition_num,
     }
     return _partition_sql(conn, partition_query)
