@@ -10,8 +10,6 @@ from .connectorx import (
     partition_sql as _partition_sql,
     read_sql2 as _read_sql2,
     get_meta as _get_meta,
-    _DataframeInfos,
-    _ArrowInfos,
 )
 
 if TYPE_CHECKING:
@@ -20,6 +18,10 @@ if TYPE_CHECKING:
     import modin.pandas as mpd
     import dask.dataframe as dd
     import pyarrow as pa
+
+    # only for typing hints
+    from .connectorx import  _DataframeInfos, _ArrowInfos
+
 
 __version__ = version(__name__)
 
