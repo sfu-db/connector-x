@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-
 import importlib
 from importlib.metadata import version
 
-from typing import Any, Literal, TYPE_CHECKING, overload
+from typing import Literal, TYPE_CHECKING, overload
 
 from .connectorx import (
     read_sql as _read_sql,
@@ -19,6 +18,10 @@ if TYPE_CHECKING:
     import modin.pandas as mpd
     import dask.dataframe as dd
     import pyarrow as pa
+
+    # only for typing hints
+    from .connectorx import  _DataframeInfos, _ArrowInfos
+
 
 __version__ = version(__name__)
 
@@ -394,9 +397,7 @@ def read_sql(
     return df
 
 
-def reconstruct_arrow(
-    result: tuple[list[str], list[list[tuple[int, int]]]],
-) -> pa.Table:
+def reconstruct_arrow(result: _ArrowInfos) -> pa.Table:
     import pyarrow as pa
 
     names, ptrs = result
@@ -412,7 +413,7 @@ def reconstruct_arrow(
     return pa.Table.from_batches(rbs)
 
 
-def reconstruct_pandas(df_infos: dict[str, Any]) -> pd.DataFrame:
+def reconstruct_pandas(df_infos: _DataframeInfos) -> pd.DataFrame:
     import pandas as pd
 
     data = df_infos["data"]
