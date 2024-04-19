@@ -508,7 +508,17 @@ class Connection(Generic[_BackendT], str):
         *,
         backend: Literal["sqlite"],
         db_path: str | Path,
-    ) -> Connection[Literal["sqlite"]]: ...
+    ) -> Connection[Literal["sqlite"]]:
+        """
+        Help to build sqlite connection string.
+
+        Parameters
+        ==========
+        backend:
+            must specify "sqlite".
+        db_path:
+            the path to the sqlite database file.
+        """
 
     @overload
     def __new__(
@@ -516,7 +526,17 @@ class Connection(Generic[_BackendT], str):
         *,
         backend: Literal["bigquery"],
         db_path: str | Path,
-    ) -> Connection[Literal["bigquery"]]: ...
+    ) -> Connection[Literal["bigquery"]]:
+        """
+        Help to build BigQuery connection string.
+
+        Parameters
+        ==========
+        backend:
+            must specify "bigquery".
+        db_path:
+            the path to the bigquery database file.
+        """
 
     @overload
     def __new__(
@@ -529,7 +549,27 @@ class Connection(Generic[_BackendT], str):
         port: int,
         database: str = "",
         database_options: dict[str, str] | None = None,
-    ) -> Connection[_ServerBackendT]: ...
+    ) -> Connection[_ServerBackendT]:
+        """
+        Help to build server-side backend database connection string.
+
+        Parameters
+        ==========
+        backend:
+            the database backend.
+        username:
+            the database username.
+        password:
+            the database password.
+        server:
+            the database server name.
+        port:
+            the database server port.
+        database:
+            the database name.
+        database_options:
+            the database options for connection.
+        """
 
     def __new__(
         cls,
