@@ -129,7 +129,6 @@ where
     fn fetch_metadata(&mut self) {
         assert!(!self.queries.is_empty());
 
-        // TODO: prevent from running the same query multiple times (limit1 + no limit)
         let first_query = &self.queries[0];
         let cxq = limit1_query(first_query, &GenericDialect {})?;
 
@@ -238,6 +237,9 @@ impl SourcePartition for TrinoSourcePartition {
 }
 
 pub struct TrinoSourcePartitionParser<'a> {
+    rt: Arc<Runtime>,
+    client: Arc<Client>,
+    next_uri: Option<String>,
     rows: Vec<Row>,
     ncols: usize,
     current_col: usize,
@@ -253,11 +255,19 @@ impl<'a> TrinoSourcePartitionParser<'a> {
         query: CXQuery,
         schema: &[TrinoTypeSystem],
     ) -> Self {
-        let rows = client.get_all::<Row>(query.to_string());
-        let data = rt.block_on(rows).map_err(TrinoSourceError::PrustoError)?;
-        let rows = data.clone().into_vec();
+        let results = rt
+            .block_on(client.get::<Row>(query.to_string()))
+            .map_err(TrinoSourceError::PrustoError)?;
+
+        let rows = match results.data_set {
+            Some(x) => x.into_vec(),
+            _ => vec![],
+        };
 
         Self {
+            rt,
+            client,
+            next_uri: results.next_uri,
             rows,
             ncols: schema.len(),
             current_row: 0,
@@ -283,8 +293,25 @@ impl<'a> PartitionParser<'a> for TrinoSourcePartitionParser<'a> {
     fn fetch_next(&mut self) -> (usize, bool) {
         assert!(self.current_col == 0);
 
-        // results are always fetched in a single batch for Prusto
-        (self.rows.len(), true)
+        match self.next_uri.clone() {
+            Some(uri) => {
+                let results = self
+                    .rt
+                    .block_on(self.client.get_next::<Row>(&uri))
+                    .map_err(TrinoSourceError::PrustoError)?;
+
+                self.rows = match results.data_set {
+                    Some(x) => x.into_vec(),
+                    _ => vec![],
+                };
+
+                self.current_row = 0;
+                self.next_uri = results.next_uri;
+
+                (self.rows.len(), false)
+            }
+            None => return (self.rows.len(), true),
+        }
     }
 }
 

@@ -1,10 +1,10 @@
 use super::errors::TrinoSourceError;
 use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
 use fehler::{throw, throws};
-use prusto::{Presto, PrestoFloat, PrestoInt, PrestoTy};
+use prusto::{PrestoFloat, PrestoInt, PrestoTy};
 use std::convert::TryFrom;
 
-// TODO: implement Tuple, Row, Array and Map as well as UUID
+// TODO: implement Tuple, Row, Array and Map
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum TrinoTypeSystem {
     Date(bool),
