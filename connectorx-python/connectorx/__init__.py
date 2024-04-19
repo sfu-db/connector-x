@@ -500,6 +500,8 @@ def try_import_module(name: str):
 _ServerBackendT = TypeVar(
     "_ServerBackendT",
     bound=Literal[
+        "redshift",
+        "clickhouse",
         "postgres",
         "postgresql",
         "mysql",
