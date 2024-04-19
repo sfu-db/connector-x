@@ -507,7 +507,7 @@ class Connection(Generic[_BackendT], str):
         cls,
         *,
         backend: Literal["sqlite"],
-        db_path: str,
+        db_path: str | Path,
     ) -> Connection[Literal["sqlite"]]: ...
 
     @overload
