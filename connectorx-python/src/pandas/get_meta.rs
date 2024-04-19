@@ -2,7 +2,7 @@ use super::{
     destination::PandasDestination,
     transports::{
         BigQueryPandasTransport, MsSQLPandasTransport, MysqlPandasTransport, OraclePandasTransport,
-        PostgresPandasTransport, SqlitePandasTransport,
+        PostgresPandasTransport, SqlitePandasTransport, TrinoPandasTransport,
     },
 };
 use crate::errors::ConnectorXPythonError;
@@ -18,6 +18,7 @@ use connectorx::{
             PostgresSource, SimpleProtocol,
         },
         sqlite::SQLiteSource,
+        trino::TrinoSource,
     },
     sql::CXQuery,
 };
@@ -222,6 +223,17 @@ pub fn get_meta<'a>(py: Python<'a>, conn: &str, protocol: &str, query: String) -
             );
             debug!("Running dispatcher");
             dispatcher.get_meta()?;
+        }
+        SourceType::Trino => {
+            let rt = Arc::new(tokio::runtime::Runtime::new().expect("Failed to create runtime"));
+            let source = TrinoSource::new(rt, &source_conn.conn[..])?;
+            let dispatcher = Dispatcher::<_, _, TrinoPandasTransport>::new(
+                source,
+                &mut destination,
+                queries,
+                None,
+            );
+            dispatcher.run()?;
         }
         _ => unimplemented!("{:?} not implemented!", source_conn.ty),
     }

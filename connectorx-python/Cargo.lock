@@ -1058,6 +1058,7 @@ dependencies = [
  "rusqlite",
  "rust_decimal",
  "rust_decimal_macros",
+ "serde",
  "serde_json",
  "sqlparser 0.37.0",
  "thiserror",

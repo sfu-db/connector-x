@@ -1,7 +1,7 @@
 use super::errors::TrinoSourceError;
 use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
 use fehler::{throw, throws};
-use prusto::{PrestoFloat, PrestoInt, PrestoTy};
+use prusto::{Presto, PrestoFloat, PrestoInt, PrestoTy};
 use std::convert::TryFrom;
 
 // TODO: implement Tuple, Row, Array and Map as well as UUID
@@ -64,6 +64,7 @@ impl TryFrom<PrestoTy> for TrinoTypeSystem {
             PrestoTy::Map(_, _) => Varchar(true),
             PrestoTy::Decimal(_, _) => Double(true),
             PrestoTy::IpAddress => Varchar(true),
+            PrestoTy::Uuid => Varchar(true),
             _ => throw!(TrinoSourceError::InferTypeFromNull),
         }
     }
@@ -97,6 +98,7 @@ impl TryFrom<(Option<&str>, PrestoTy)> for TrinoTypeSystem {
                     "map" => Varchar(true),
                     "decimal" => Double(true),
                     "ipaddress" => Varchar(true),
+                    "uuid" => Varchar(true),
                     _ => TrinoTypeSystem::try_from(ty)?,
                 }
             }

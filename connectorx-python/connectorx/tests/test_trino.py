@@ -154,7 +154,7 @@ def test_trino_limit_large_with_partition(trino_url: str) -> None:
 
 
 def test_trino_with_partition_without_partition_range(trino_url: str) -> None:
-    query = "SELECT * FROM test.test_table where test_float > 3 order by test_int"
+    query = "SELECT * FROM test.test_table where test_float > 3"
     df = read_sql(
         trino_url,
         query,
@@ -170,6 +170,7 @@ def test_trino_with_partition_without_partition_range(trino_url: str) -> None:
         },
     )
     df.sort_values(by="test_int", inplace=True, ignore_index=True)
+
     assert_frame_equal(df, expected, check_names=True)
 
 
@@ -210,7 +211,7 @@ def test_trino_selection_and_projection(trino_url: str) -> None:
 
 
 def test_trino_join(trino_url: str) -> None:
-    query = "SELECT T.test_int, T.test_float, S.test_str FROM test_table T INNER JOIN test_table_extra S ON T.test_int = S.test_int order by T.test_int"
+    query = "SELECT T.test_int, T.test_float, S.test_str FROM test.test_table T INNER JOIN test.test_table_extra S ON T.test_int = S.test_int order by T.test_int"
     df = read_sql(
         trino_url,
         query,
@@ -262,7 +263,7 @@ def test_trino_types_binary(trino_url: str) -> None:
             "test_real": pd.Series([123.456, 123.456, None], dtype="float64"),
             "test_double": pd.Series([123.4567890123, 123.4567890123, None], dtype="float64"),
             "test_decimal": pd.Series([1234567890.12, 1234567890.12, None], dtype="float64"),
-            "test_date": pd.Series([None, "2023-01-01", "2023-01-01"], dtype="datetime64[ns]"),
+            "test_date": pd.Series(["2023-01-01", "2023-01-01", None], dtype="datetime64[ns]"),
             "test_time": pd.Series(["12:00:00", "12:00:00", None], dtype="object"),
             "test_timestamp": pd.Series(["2023-01-01 12:00:00.123456", "2023-01-01 12:00:00.123456", None], dtype="datetime64[ns]"),
             "test_varchar": pd.Series(["Sample text", "Sample text", None], dtype="object"),
@@ -299,7 +300,7 @@ def test_empty_result_on_partition(trino_url: str) -> None:
 
 
 def test_empty_result_on_some_partition(trino_url: str) -> None:
-    query = "SELECT * FROM test_table where test_int = 6"
+    query = "SELECT * FROM test.test_table where test_int = 6"
     df = read_sql(trino_url, query, partition_on="test_int", partition_num=3)
     expected = pd.DataFrame(
         index=range(1),

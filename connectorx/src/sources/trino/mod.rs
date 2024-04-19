@@ -4,7 +4,7 @@ use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
 use fehler::{throw, throws};
 use prusto::{auth::Auth, Client, ClientBuilder, DataSet, Presto, Row};
 use serde_json::Value;
-use sqlparser::dialect::GenericDialect;
+use sqlparser::dialect::{Dialect, GenericDialect};
 use std::convert::TryFrom;
 use tokio::runtime::Runtime;
 
@@ -30,6 +30,26 @@ fn get_total_rows(rt: Arc<Runtime>, client: Arc<Client>, query: &CXQuery<String>
     rt.block_on(client.get_all::<Row>(query.to_string()))
         .map_err(TrinoSourceError::PrustoError)?
         .len()
+}
+
+#[derive(Presto, Debug)]
+pub struct TrinoPartitionQueryResult {
+    pub _col0: i64,
+    pub _col1: i64,
+}
+
+#[derive(Debug)]
+pub struct TrinoDialect {}
+
+// implementation copy from AnsiDialect
+impl Dialect for TrinoDialect {
+    fn is_identifier_start(&self, ch: char) -> bool {
+        ch.is_ascii_lowercase() || ch.is_ascii_uppercase()
+    }
+
+    fn is_identifier_part(&self, ch: char) -> bool {
+        ch.is_ascii_lowercase() || ch.is_ascii_uppercase() || ch.is_ascii_digit() || ch == '_'
+    }
 }
 
 pub struct TrinoSource {
@@ -282,12 +302,12 @@ macro_rules! impl_produce_int {
                     match value {
                         Value::Number(x) => {
                             if (x.is_i64()) {
-                                <$t>::try_from(x.as_i64().unwrap()).map_err(|_| anyhow!("Trino cannot parse Number at position: ({}, {})", ridx, cidx))?
+                                <$t>::try_from(x.as_i64().unwrap()).map_err(|_| anyhow!("Trino cannot parse i64 at position: ({}, {}) {:?}", ridx, cidx, value))?
                             } else {
-                                throw!(anyhow!("Trino cannot parse Number at position: ({}, {})", ridx, cidx))
+                                throw!(anyhow!("Trino cannot parse Number at position: ({}, {}) {:?}", ridx, cidx, x))
                             }
                         }
-                        _ => throw!(anyhow!("Trino cannot parse Number at position: ({}, {})", ridx, cidx))
+                        _ => throw!(anyhow!("Trino cannot parse Number at position: ({}, {}) {:?}", ridx, cidx, value))
                     }
                 }
             }
@@ -304,12 +324,12 @@ macro_rules! impl_produce_int {
                         Value::Null => None,
                         Value::Number(x) => {
                             if (x.is_i64()) {
-                                Some(<$t>::try_from(x.as_i64().unwrap()).map_err(|_| anyhow!("Trino cannot parse Number at position: ({}, {})", ridx, cidx))?)
+                                Some(<$t>::try_from(x.as_i64().unwrap()).map_err(|_| anyhow!("Trino cannot parse i64 at position: ({}, {}) {:?}", ridx, cidx, value))?)
                             } else {
-                                throw!(anyhow!("Trino cannot parse Number at position: ({}, {})", ridx, cidx))
+                                throw!(anyhow!("Trino cannot parse Number at position: ({}, {}) {:?}", ridx, cidx, x))
                             }
                         }
-                        _ => throw!(anyhow!("Trino cannot parse Number at position: ({}, {})", ridx, cidx))
+                        _ => throw!(anyhow!("Trino cannot parse Number at position: ({}, {}) {:?}", ridx, cidx, value))
                     }
                 }
             }
@@ -333,10 +353,11 @@ macro_rules! impl_produce_float {
                             if (x.is_f64()) {
                                 x.as_f64().unwrap() as $t
                             } else {
-                                throw!(anyhow!("Trino cannot parse Number at position: ({}, {})", ridx, cidx))
+                                throw!(anyhow!("Trino cannot parse Number at position: ({}, {}) {:?}", ridx, cidx, x))
                             }
                         }
-                        _ => throw!(anyhow!("Trino cannot parse Number at position: ({}, {})", ridx, cidx))
+                        Value::String(x) => x.parse::<$t>().map_err(|_| anyhow!("Trino cannot parse String at position: ({}, {}) {:?}", ridx, cidx, value))?,
+                        _ => throw!(anyhow!("Trino cannot parse Number at position: ({}, {}) {:?}", ridx, cidx, value))
                     }
                 }
             }
@@ -355,10 +376,11 @@ macro_rules! impl_produce_float {
                             if (x.is_f64()) {
                                 Some(x.as_f64().unwrap() as $t)
                             } else {
-                                throw!(anyhow!("Trino cannot parse Number at position: ({}, {})", ridx, cidx))
+                                throw!(anyhow!("Trino cannot parse Number at position: ({}, {}) {:?}", ridx, cidx, x))
                             }
                         }
-                        _ => throw!(anyhow!("Trino cannot parse Number at position: ({}, {})", ridx, cidx))
+                        Value::String(x) => Some(x.parse::<$t>().map_err(|_| anyhow!("Trino cannot parse String at position: ({}, {}) {:?}", ridx, cidx, value))?),
+                        _ => throw!(anyhow!("Trino cannot parse Number at position: ({}, {}) {:?}", ridx, cidx, value))
                     }
                 }
             }

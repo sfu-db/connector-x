@@ -58,6 +58,7 @@ uuid = {version = "0.8", optional = true}
 j4rs = {version = "0.15", optional = true}
 datafusion = {version = "31", optional = true}
 prusto = {version = "0.5.1", optional = true}
+serde = {optional = true}
 
 [lib]
 crate-type = ["cdylib", "rlib"]
@@ -98,7 +99,7 @@ src_postgres = [
   "postgres-openssl",
 ]
 src_sqlite = ["rusqlite", "r2d2_sqlite", "fallible-streaming-iterator", "r2d2", "urlencoding"]
-src_trino = ["prusto", "uuid", "urlencoding", "rust_decimal", "tokio", "num-traits"]
+src_trino = ["prusto", "uuid", "urlencoding", "rust_decimal", "tokio", "num-traits", "serde"]
 federation = ["j4rs"]
 fed_exec = ["datafusion", "tokio"]
 integrated-auth-gssapi = ["tiberius/integrated-auth-gssapi"]
