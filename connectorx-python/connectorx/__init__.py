@@ -66,7 +66,7 @@ def rewrite_conn(
 
 
 def get_meta(
-    conn: str,
+    conn: str | Connection,
     query: str,
     protocol: Protocol | None = None,
 ) -> pd.DataFrame:
