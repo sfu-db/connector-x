@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import importlib
-from importlib.metadata import version
+import urllib.parse
 
+from importlib.metadata import version
+from pathlib import Path
 from typing import Literal, TYPE_CHECKING, overload, Generic, TypeVar
 
 from .connectorx import (
@@ -495,15 +497,14 @@ def try_import_module(name: str):
         raise ValueError(f"You need to install {name.split('.')[0]} first")
 
 
-_BackendWithoutSqliteT = TypeVar(
-    "_BackendWithoutSqliteT",
+_ServerBackendT = TypeVar(
+    "_ServerBackendT",
     bound=Literal[
         "postgres",
         "postgresql",
         "mysql",
         "mssql",
         "oracle",
-        "bigquery",
         "duckdb",
     ],
 )
@@ -525,34 +526,51 @@ class Connection(Generic[_BackendT]):
     def __new__(
         cls,
         *,
-        backend: _BackendWithoutSqliteT,
+        backend: Literal["bigquery"],
+        db_path: str | Path,
+    ) -> Connection[Literal["bigquery"]]: ...
+
+    @overload
+    def __new__(
+        cls,
+        *,
+        backend: _ServerBackendT,
         username: str,
         password: str = "",
         server: str,
         port: int,
         database: str = "",
+<<<<<<< HEAD
     ) -> Connection[_BackendWithoutSqliteT]:
         ...
+=======
+        database_options: dict[str, str] | None = None,
+    ) -> Connection[_ServerBackendT]: ...
+>>>>>>> 1eb4250d0 (support database options)
 
     def __new__(
         cls,
         *,
-        backend: Literal["sqlite"] | _BackendWithoutSqliteT,
+        backend: str,
         username: str = "",
         password: str = "",
         server: str = "",
         port: int | None = None,
         database: str = "",
-        db_path: str = "",
-    ) -> Connection[Literal["sqlite"]] | Connection[_BackendWithoutSqliteT]:
+        database_options: dict[str, str] | None = None,
+        db_path: str | Path = "",
+    ) -> Connection:
         self = super().__new__(cls)
         if backend == "sqlite":
+            db_path = urllib.parse.quote(str(db_path))
             self.connection = f"{backend}://{db_path}"
         else:
             self.connection = (
                 f"{backend}://{username}:{password}@{server}:{port}/{database}"
             )
-        return self  # type: ignore
+            if database_options:
+                self.connection += "?" + urllib.parse.urlencode(database_options)
+        return self
 
     def __str__(self) -> str:
         return self.connection
