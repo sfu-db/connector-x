@@ -571,10 +571,25 @@ class Connection(Generic[_BackendT], str):
             the database options for connection.
         """
 
+    @overload
     def __new__(
         cls,
+        raw_connection: str,
+    ) -> Connection:
+        """
+        Build connection from raw connection string
+
+        Parameters
+        ==========
+        raw_connection:
+            raw connection string
+        """
+
+    def __new__(
+        cls,
+        raw_connection: str | None = None,
         *,
-        backend: str,
+        backend: str = "",
         username: str = "",
         password: str = "",
         server: str = "",
@@ -583,6 +598,10 @@ class Connection(Generic[_BackendT], str):
         database_options: dict[str, str] | None = None,
         db_path: str | Path = "",
     ) -> Connection:
+        if raw_connection is not None:
+            return super().__new__(cls, raw_connection)
+
+        assert backend
         if backend == "sqlite":
             db_path = urllib.parse.quote(str(db_path))
             connection = f"{backend}://{db_path}"
