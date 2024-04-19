@@ -3,7 +3,7 @@ from __future__ import annotations
 import importlib
 from importlib.metadata import version
 
-from typing import Literal, TYPE_CHECKING, overload
+from typing import Literal, TYPE_CHECKING, overload, Generic, TypeVar
 
 from .connectorx import (
     read_sql as _read_sql,
@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     import pyarrow as pa
 
     # only for typing hints
-    from .connectorx import  _DataframeInfos, _ArrowInfos
+    from .connectorx import _DataframeInfos, _ArrowInfos
 
 
 __version__ = version(__name__)
@@ -42,7 +42,14 @@ os.environ.setdefault(
 Protocol = Literal["csv", "binary", "cursor", "simple", "text"]
 
 
-def rewrite_conn(conn: str, protocol: Protocol | None = None) -> tuple[str, Protocol]:
+_BackendT = TypeVar("_BackendT")
+
+
+def rewrite_conn(
+    conn: str | Connection, protocol: Protocol | None = None
+) -> tuple[str, Protocol]:
+    conn = str(conn)
+
     if not protocol:
         # note: redshift/clickhouse are not compatible with the 'binary' protocol, and use other database
         # drivers to connect. set a compatible protocol and masquerade as the appropriate backend.
@@ -84,7 +91,7 @@ def get_meta(
 
 
 def partition_sql(
-    conn: str,
+    conn: str | Connection,
     query: str,
     partition_on: str,
     partition_num: int,
@@ -118,7 +125,7 @@ def partition_sql(
 
 def read_sql_pandas(
     sql: list[str] | str,
-    con: str | dict[str, str],
+    con: str | Connection | dict[str, str] | dict[str, Connection],
     index_col: str | None = None,
     protocol: Protocol | None = None,
     partition_on: str | None = None,
@@ -159,7 +166,7 @@ def read_sql_pandas(
 # default return pd.DataFrame
 @overload
 def read_sql(
-    conn: str | dict[str, str],
+    conn: str | Connection | dict[str, str] | dict[str, Connection],
     query: list[str] | str,
     *,
     protocol: Protocol | None = None,
@@ -167,12 +174,13 @@ def read_sql(
     partition_range: tuple[int, int] | None = None,
     partition_num: int | None = None,
     index_col: str | None = None,
-) -> pd.DataFrame: ...
+) -> pd.DataFrame:
+    ...
 
 
 @overload
 def read_sql(
-    conn: str | dict[str, str],
+    conn: str | Connection | dict[str, str] | dict[str, Connection],
     query: list[str] | str,
     *,
     return_type: Literal["pandas"],
@@ -181,12 +189,13 @@ def read_sql(
     partition_range: tuple[int, int] | None = None,
     partition_num: int | None = None,
     index_col: str | None = None,
-) -> pd.DataFrame: ...
+) -> pd.DataFrame:
+    ...
 
 
 @overload
 def read_sql(
-    conn: str | dict[str, str],
+    conn: str | Connection | dict[str, str] | dict[str, Connection],
     query: list[str] | str,
     *,
     return_type: Literal["arrow", "arrow2"],
@@ -195,12 +204,13 @@ def read_sql(
     partition_range: tuple[int, int] | None = None,
     partition_num: int | None = None,
     index_col: str | None = None,
-) -> pa.Table: ...
+) -> pa.Table:
+    ...
 
 
 @overload
 def read_sql(
-    conn: str | dict[str, str],
+    conn: str | Connection | dict[str, str] | dict[str, Connection],
     query: list[str] | str,
     *,
     return_type: Literal["modin"],
@@ -209,12 +219,13 @@ def read_sql(
     partition_range: tuple[int, int] | None = None,
     partition_num: int | None = None,
     index_col: str | None = None,
-) -> mpd.DataFrame: ...
+) -> mpd.DataFrame:
+    ...
 
 
 @overload
 def read_sql(
-    conn: str | dict[str, str],
+    conn: str | Connection | dict[str, str] | dict[str, Connection],
     query: list[str] | str,
     *,
     return_type: Literal["dask"],
@@ -223,12 +234,13 @@ def read_sql(
     partition_range: tuple[int, int] | None = None,
     partition_num: int | None = None,
     index_col: str | None = None,
-) -> dd.DataFrame: ...
+) -> dd.DataFrame:
+    ...
 
 
 @overload
 def read_sql(
-    conn: str | dict[str, str],
+    conn: str | Connection | dict[str, str] | dict[str, Connection],
     query: list[str] | str,
     *,
     return_type: Literal["polars", "polars2"],
@@ -237,11 +249,12 @@ def read_sql(
     partition_range: tuple[int, int] | None = None,
     partition_num: int | None = None,
     index_col: str | None = None,
-) -> pl.DataFrame: ...
+) -> pl.DataFrame:
+    ...
 
 
 def read_sql(
-    conn: str | dict[str, str],
+    conn: str | Connection | dict[str, str] | dict[str, Connection],
     query: list[str] | str,
     *,
     return_type: Literal[
@@ -302,6 +315,8 @@ def read_sql(
         query = remove_ending_semicolon(query)
 
     if isinstance(conn, dict):
+        conn = {k: str(v) for k, v in conn.items()}
+
         assert partition_on is None and isinstance(
             query, str
         ), "Federated query does not support query partitioning for now"
@@ -325,6 +340,7 @@ def read_sql(
                 df = pl.DataFrame.from_arrow(df)
         return df
 
+    conn = str(conn)
     if isinstance(query, str):
         query = remove_ending_semicolon(query)
 
@@ -477,3 +493,66 @@ def try_import_module(name: str):
         return importlib.import_module(name)
     except ModuleNotFoundError:
         raise ValueError(f"You need to install {name.split('.')[0]} first")
+
+
+_BackendWithoutSqliteT = TypeVar(
+    "_BackendWithoutSqliteT",
+    bound=Literal[
+        "postgres",
+        "postgresql",
+        "mysql",
+        "mssql",
+        "oracle",
+        "bigquery",
+        "duckdb",
+    ],
+)
+
+
+class Connection(Generic[_BackendT]):
+    connection: str
+
+    @overload
+    def __new__(
+        cls,
+        *,
+        backend: Literal["sqlite"],
+        db_path: str,
+    ) -> Connection[Literal["sqlite"]]:
+        ...
+
+    @overload
+    def __new__(
+        cls,
+        *,
+        backend: _BackendWithoutSqliteT,
+        username: str,
+        password: str = "",
+        server: str,
+        port: int,
+        database: str = "",
+    ) -> Connection[_BackendWithoutSqliteT]:
+        ...
+
+    def __new__(
+        cls,
+        *,
+        backend: Literal["sqlite"] | _BackendWithoutSqliteT,
+        username: str = "",
+        password: str = "",
+        server: str = "",
+        port: int | None = None,
+        database: str = "",
+        db_path: str = "",
+    ) -> Connection[Literal["sqlite"]] | Connection[_BackendWithoutSqliteT]:
+        self = super().__new__(cls)
+        if backend == "sqlite":
+            self.connection = f"{backend}://{db_path}"
+        else:
+            self.connection = (
+                f"{backend}://{username}:{password}@{server}:{port}/{database}"
+            )
+        return self  # type: ignore
+
+    def __str__(self) -> str:
+        return self.connection
