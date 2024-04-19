@@ -50,8 +50,6 @@ _BackendT = TypeVar("_BackendT")
 def rewrite_conn(
     conn: str | Connection, protocol: Protocol | None = None
 ) -> tuple[str, Protocol]:
-    conn = str(conn)
-
     if not protocol:
         # note: redshift/clickhouse are not compatible with the 'binary' protocol, and use other database
         # drivers to connect. set a compatible protocol and masquerade as the appropriate backend.
@@ -176,8 +174,7 @@ def read_sql(
     partition_range: tuple[int, int] | None = None,
     partition_num: int | None = None,
     index_col: str | None = None,
-) -> pd.DataFrame:
-    ...
+) -> pd.DataFrame: ...
 
 
 @overload
@@ -191,8 +188,7 @@ def read_sql(
     partition_range: tuple[int, int] | None = None,
     partition_num: int | None = None,
     index_col: str | None = None,
-) -> pd.DataFrame:
-    ...
+) -> pd.DataFrame: ...
 
 
 @overload
@@ -206,8 +202,7 @@ def read_sql(
     partition_range: tuple[int, int] | None = None,
     partition_num: int | None = None,
     index_col: str | None = None,
-) -> pa.Table:
-    ...
+) -> pa.Table: ...
 
 
 @overload
@@ -221,8 +216,7 @@ def read_sql(
     partition_range: tuple[int, int] | None = None,
     partition_num: int | None = None,
     index_col: str | None = None,
-) -> mpd.DataFrame:
-    ...
+) -> mpd.DataFrame: ...
 
 
 @overload
@@ -236,8 +230,7 @@ def read_sql(
     partition_range: tuple[int, int] | None = None,
     partition_num: int | None = None,
     index_col: str | None = None,
-) -> dd.DataFrame:
-    ...
+) -> dd.DataFrame: ...
 
 
 @overload
@@ -251,8 +244,7 @@ def read_sql(
     partition_range: tuple[int, int] | None = None,
     partition_num: int | None = None,
     index_col: str | None = None,
-) -> pl.DataFrame:
-    ...
+) -> pl.DataFrame: ...
 
 
 def read_sql(
@@ -317,8 +309,6 @@ def read_sql(
         query = remove_ending_semicolon(query)
 
     if isinstance(conn, dict):
-        conn = {k: str(v) for k, v in conn.items()}
-
         assert partition_on is None and isinstance(
             query, str
         ), "Federated query does not support query partitioning for now"
@@ -342,7 +332,6 @@ def read_sql(
                 df = pl.DataFrame.from_arrow(df)
         return df
 
-    conn = str(conn)
     if isinstance(query, str):
         query = remove_ending_semicolon(query)
 
@@ -512,17 +501,14 @@ _ServerBackendT = TypeVar(
 )
 
 
-class Connection(Generic[_BackendT]):
-    connection: str
-
+class Connection(Generic[_BackendT], str):
     @overload
     def __new__(
         cls,
         *,
         backend: Literal["sqlite"],
         db_path: str,
-    ) -> Connection[Literal["sqlite"]]:
-        ...
+    ) -> Connection[Literal["sqlite"]]: ...
 
     @overload
     def __new__(
@@ -542,13 +528,8 @@ class Connection(Generic[_BackendT]):
         server: str,
         port: int,
         database: str = "",
-<<<<<<< HEAD
-    ) -> Connection[_BackendWithoutSqliteT]:
-        ...
-=======
         database_options: dict[str, str] | None = None,
     ) -> Connection[_ServerBackendT]: ...
->>>>>>> 1eb4250d0 (support database options)
 
     def __new__(
         cls,
@@ -562,17 +543,11 @@ class Connection(Generic[_BackendT]):
         database_options: dict[str, str] | None = None,
         db_path: str | Path = "",
     ) -> Connection:
-        self = super().__new__(cls)
         if backend == "sqlite":
             db_path = urllib.parse.quote(str(db_path))
-            self.connection = f"{backend}://{db_path}"
+            connection = f"{backend}://{db_path}"
         else:
-            self.connection = (
-                f"{backend}://{username}:{password}@{server}:{port}/{database}"
-            )
+            connection = f"{backend}://{username}:{password}@{server}:{port}/{database}"
             if database_options:
-                self.connection += "?" + urllib.parse.urlencode(database_options)
-        return self
-
-    def __str__(self) -> str:
-        return self.connection
+                connection += "?" + urllib.parse.urlencode(database_options)
+        return super().__new__(cls, connection)
