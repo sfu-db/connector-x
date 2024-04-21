@@ -1,6 +1,6 @@
 use bitfield::bitfield;
-use numpy::{npyffi::NPY_TYPES, Element, PyArrayDescr};
-use pyo3::{ffi, Py, Python};
+use numpy::{Element, PyArrayDescr};
+use pyo3::{ffi, Bound, Py, Python};
 use std::str::from_utf8_unchecked;
 
 #[derive(Clone, Debug)]
@@ -9,9 +9,9 @@ pub struct PyString(Py<pyo3::types::PyString>);
 
 // In order to put it into a numpy array
 unsafe impl Element for PyString {
-    const DATA_TYPE: numpy::DataType = numpy::DataType::Object;
-    fn is_same_type(dtype: &PyArrayDescr) -> bool {
-        unsafe { *dtype.as_dtype_ptr() }.type_num == NPY_TYPES::NPY_OBJECT as i32
+    const IS_COPY: bool = false;
+    fn get_dtype_bound(py: Python<'_>) -> Bound<'_, PyArrayDescr> {
+        PyArrayDescr::object_bound(py)
     }
 }
 

@@ -3,8 +3,8 @@ use crate::errors::ConnectorXPythonError;
 use anyhow::anyhow;
 use fehler::throws;
 use ndarray::{ArrayViewMut2, Axis, Ix2};
-use numpy::{npyffi::NPY_TYPES, Element, PyArray, PyArrayDescr};
-use pyo3::{FromPyObject, Py, PyAny, PyResult, Python};
+use numpy::{Element, PyArray, PyArrayDescr};
+use pyo3::{Bound, FromPyObject, Py, PyAny, PyResult, Python};
 use std::any::TypeId;
 
 #[derive(Clone)]
@@ -13,9 +13,9 @@ pub struct PyBytes(Py<pyo3::types::PyBytes>);
 
 // In order to put it into a numpy array
 unsafe impl Element for PyBytes {
-    const DATA_TYPE: numpy::DataType = numpy::DataType::Object;
-    fn is_same_type(dtype: &PyArrayDescr) -> bool {
-        unsafe { *dtype.as_dtype_ptr() }.type_num == NPY_TYPES::NPY_OBJECT as i32
+    const IS_COPY: bool = false;
+    fn get_dtype_bound(py: Python<'_>) -> Bound<'_, PyArrayDescr> {
+        PyArrayDescr::object_bound(py)
     }
 }
 

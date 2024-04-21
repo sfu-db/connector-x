@@ -3,7 +3,6 @@ use connectorx::{
     source_router::parse_source,
     sql::CXQuery,
 };
-use dict_derive::FromPyObject;
 use fehler::throw;
 use pyo3::prelude::*;
 use pyo3::{exceptions::PyValueError, PyResult};
@@ -11,6 +10,7 @@ use pyo3::{exceptions::PyValueError, PyResult};
 use crate::errors::ConnectorXPythonError;
 
 #[derive(FromPyObject)]
+#[pyo3(from_item_all)]
 pub struct PyPartitionQuery {
     query: String,
     column: String,
