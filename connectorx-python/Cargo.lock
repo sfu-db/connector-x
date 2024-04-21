@@ -1094,6 +1094,7 @@ dependencies = [
  "postgres-openssl",
  "pprof",
  "pyo3",
+ "pyo3-build-config",
  "pyo3-built",
  "rayon",
  "rust_decimal",

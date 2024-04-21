@@ -45,6 +45,7 @@ uuid = "0.8"
 
 [build-dependencies]
 built = {version = "0.5", features = ["chrono"]}
+pyo3-build-config = {version = "0.21", features = ["resolve-config"]}
 
 [dev-dependencies]
 criterion = "0.3"

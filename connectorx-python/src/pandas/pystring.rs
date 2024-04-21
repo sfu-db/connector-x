@@ -128,7 +128,10 @@ bitfield! {
     kind, _: 4, 2;
     compact, _: 5, 5;
     ascii, _: 6, 6;
+    #[cfg(not(Py_3_12))]
     ready, _: 7, 7;
+    #[cfg(Py_3_12)]
+    statically_allocated, _: 7, 7;
 }
 
 #[repr(C)]
@@ -137,6 +140,7 @@ pub struct PyASCIIObject {
     length: ffi::Py_ssize_t,
     hash: ffi::Py_hash_t,
     state: PyUnicodeState,
+    #[cfg(not(Py_3_12))]
     wstr: *mut u8,
     // python string stores data right after all the fields
 }
@@ -153,6 +157,7 @@ pub struct PyCompactUnicodeObject {
     base: PyASCIIObject,
     utf8_length: ffi::Py_ssize_t,
     utf8: *mut u8,
+    #[cfg(not(Py_3_12))]
     wstr_length: ffi::Py_ssize_t,
     // python string stores data right after all the fields
 }
