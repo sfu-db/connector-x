@@ -48,7 +48,7 @@ _BackendT = TypeVar("_BackendT")
 
 
 def rewrite_conn(
-    conn: str | Connection, protocol: Protocol | None = None
+    conn: str | ConnectionUrl, protocol: Protocol | None = None
 ) -> tuple[str, Protocol]:
     if not protocol:
         # note: redshift/clickhouse are not compatible with the 'binary' protocol, and use other database
@@ -66,7 +66,7 @@ def rewrite_conn(
 
 
 def get_meta(
-    conn: str | Connection,
+    conn: str | ConnectionUrl,
     query: str,
     protocol: Protocol | None = None,
 ) -> pd.DataFrame:
@@ -91,7 +91,7 @@ def get_meta(
 
 
 def partition_sql(
-    conn: str | Connection,
+    conn: str | ConnectionUrl,
     query: str,
     partition_on: str,
     partition_num: int,
@@ -125,7 +125,7 @@ def partition_sql(
 
 def read_sql_pandas(
     sql: list[str] | str,
-    con: str | Connection | dict[str, str] | dict[str, Connection],
+    con: str | ConnectionUrl | dict[str, str] | dict[str, ConnectionUrl],
     index_col: str | None = None,
     protocol: Protocol | None = None,
     partition_on: str | None = None,
@@ -166,7 +166,7 @@ def read_sql_pandas(
 # default return pd.DataFrame
 @overload
 def read_sql(
-    conn: str | Connection | dict[str, str] | dict[str, Connection],
+    conn: str | ConnectionUrl | dict[str, str] | dict[str, ConnectionUrl],
     query: list[str] | str,
     *,
     protocol: Protocol | None = None,
@@ -179,7 +179,7 @@ def read_sql(
 
 @overload
 def read_sql(
-    conn: str | Connection | dict[str, str] | dict[str, Connection],
+    conn: str | ConnectionUrl | dict[str, str] | dict[str, ConnectionUrl],
     query: list[str] | str,
     *,
     return_type: Literal["pandas"],
@@ -193,7 +193,7 @@ def read_sql(
 
 @overload
 def read_sql(
-    conn: str | Connection | dict[str, str] | dict[str, Connection],
+    conn: str | ConnectionUrl | dict[str, str] | dict[str, ConnectionUrl],
     query: list[str] | str,
     *,
     return_type: Literal["arrow", "arrow2"],
@@ -207,7 +207,7 @@ def read_sql(
 
 @overload
 def read_sql(
-    conn: str | Connection | dict[str, str] | dict[str, Connection],
+    conn: str | ConnectionUrl | dict[str, str] | dict[str, ConnectionUrl],
     query: list[str] | str,
     *,
     return_type: Literal["modin"],
@@ -221,7 +221,7 @@ def read_sql(
 
 @overload
 def read_sql(
-    conn: str | Connection | dict[str, str] | dict[str, Connection],
+    conn: str | ConnectionUrl | dict[str, str] | dict[str, ConnectionUrl],
     query: list[str] | str,
     *,
     return_type: Literal["dask"],
@@ -235,7 +235,7 @@ def read_sql(
 
 @overload
 def read_sql(
-    conn: str | Connection | dict[str, str] | dict[str, Connection],
+    conn: str | ConnectionUrl | dict[str, str] | dict[str, ConnectionUrl],
     query: list[str] | str,
     *,
     return_type: Literal["polars", "polars2"],
@@ -248,7 +248,7 @@ def read_sql(
 
 
 def read_sql(
-    conn: str | Connection | dict[str, str] | dict[str, Connection],
+    conn: str | ConnectionUrl | dict[str, str] | dict[str, ConnectionUrl],
     query: list[str] | str,
     *,
     return_type: Literal[
@@ -501,16 +501,16 @@ _ServerBackendT = TypeVar(
 )
 
 
-class Connection(Generic[_BackendT], str):
+class ConnectionUrl(Generic[_BackendT], str):
     @overload
     def __new__(
         cls,
         *,
         backend: Literal["sqlite"],
         db_path: str | Path,
-    ) -> Connection[Literal["sqlite"]]:
+    ) -> ConnectionUrl[Literal["sqlite"]]:
         """
-        Help to build sqlite connection string.
+        Help to build sqlite connection string url.
 
         Parameters
         ==========
@@ -526,9 +526,9 @@ class Connection(Generic[_BackendT], str):
         *,
         backend: Literal["bigquery"],
         db_path: str | Path,
-    ) -> Connection[Literal["bigquery"]]:
+    ) -> ConnectionUrl[Literal["bigquery"]]:
         """
-        Help to build BigQuery connection string.
+        Help to build BigQuery connection string url.
 
         Parameters
         ==========
@@ -549,9 +549,9 @@ class Connection(Generic[_BackendT], str):
         port: int,
         database: str = "",
         database_options: dict[str, str] | None = None,
-    ) -> Connection[_ServerBackendT]:
+    ) -> ConnectionUrl[_ServerBackendT]:
         """
-        Help to build server-side backend database connection string.
+        Help to build server-side backend database connection string url.
 
         Parameters
         ==========
@@ -575,9 +575,9 @@ class Connection(Generic[_BackendT], str):
     def __new__(
         cls,
         raw_connection: str,
-    ) -> Connection:
+    ) -> ConnectionUrl:
         """
-        Build connection from raw connection string
+        Build connection from raw connection string url
 
         Parameters
         ==========
@@ -597,7 +597,7 @@ class Connection(Generic[_BackendT], str):
         database: str = "",
         database_options: dict[str, str] | None = None,
         db_path: str | Path = "",
-    ) -> Connection:
+    ) -> ConnectionUrl:
         if raw_connection is not None:
             return super().__new__(cls, raw_connection)
 

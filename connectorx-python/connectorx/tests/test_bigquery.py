@@ -4,7 +4,7 @@ import pandas as pd
 import pytest
 from pandas.testing import assert_frame_equal
 
-from .. import read_sql, Connection
+from .. import read_sql, ConnectionUrl
 
 
 @pytest.fixture(scope="module")  # type: ignore
@@ -310,5 +310,5 @@ def test_bigquery_types(bigquery_url: str) -> None:
     not os.environ.get("BIGQUERY_URL"),
     reason="Test bigquery only when `BIGQUERY_URL` is set",
 )
-def test_connection(bigquery_url: str) -> None:
-    test_bigquery_types(Connection(bigquery_url))
+def test_connection_url(bigquery_url: str) -> None:
+    test_bigquery_types(ConnectionUrl(bigquery_url))

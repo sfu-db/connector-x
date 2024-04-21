@@ -4,7 +4,7 @@ import pandas as pd
 import pytest
 from pandas.testing import assert_frame_equal
 
-from .. import read_sql, Connection
+from .. import read_sql, ConnectionUrl
 
 
 @pytest.fixture(scope="module")  # type: ignore
@@ -87,5 +87,5 @@ def test_clickhouse_types(clickhouse_url: str) -> None:
     not os.environ.get("CLICKHOUSE_URL"),
     reason="Do not test Clickhouse unless `CLICKHOUSE_URL` is set",
 )
-def test_connection(clickhouse_url: str) -> None:
-    test_clickhouse_types(Connection(clickhouse_url))
+def test_connection_url(clickhouse_url: str) -> None:
+    test_clickhouse_types(ConnectionUrl(clickhouse_url))

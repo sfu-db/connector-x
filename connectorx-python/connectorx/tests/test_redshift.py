@@ -5,7 +5,7 @@ import pandas as pd
 import pytest
 from pandas.testing import assert_frame_equal
 
-from .. import read_sql, Connection
+from .. import read_sql, ConnectionUrl
 
 
 @pytest.fixture(scope="module")  # type: ignore
@@ -140,5 +140,5 @@ def test_read_sql_on_utf8(redshift_url: str) -> None:
     not os.environ.get("REDSHIFT_URL"),
     reason="Do not test Redshift unless `REDSHIFT_URL` is set",
 )
-def test_connection(redshift_url: str) -> None:
-    test_read_sql_on_utf8(Connection(redshift_url))
+def test_connection_url(redshift_url: str) -> None:
+    test_read_sql_on_utf8(ConnectionUrl(redshift_url))

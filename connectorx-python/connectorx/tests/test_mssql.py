@@ -3,7 +3,7 @@ import os
 import pandas as pd
 import pytest
 from pandas.testing import assert_frame_equal
-from connectorx import Connection
+from connectorx import ConnectionUrl
 
 from .. import read_sql
 
@@ -498,5 +498,5 @@ def test_mssql_offset(mssql_url: str) -> None:
     assert_frame_equal(df, expected, check_names=True)
 
 
-def test_connection(mssql_url: str) -> None:
-    test_mssql_offset(Connection(mssql_url))
+def test_connection_url(mssql_url: str) -> None:
+    test_mssql_offset(ConnectionUrl(mssql_url))

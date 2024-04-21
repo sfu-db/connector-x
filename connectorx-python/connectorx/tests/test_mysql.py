@@ -4,7 +4,7 @@ import pandas as pd
 import pytest
 from pandas.testing import assert_frame_equal
 
-from .. import read_sql, Connection
+from .. import read_sql, ConnectionUrl
 
 
 @pytest.fixture(scope="module")  # type: ignore
@@ -470,5 +470,5 @@ def test_mysql_cte(mysql_url: str) -> None:
     assert_frame_equal(df, expected, check_names=True)
 
 
-def test_connection(mysql_url: str) -> None:
-    test_mysql_cte(Connection(mysql_url))
+def test_connection_url(mysql_url: str) -> None:
+    test_mysql_cte(ConnectionUrl(mysql_url))

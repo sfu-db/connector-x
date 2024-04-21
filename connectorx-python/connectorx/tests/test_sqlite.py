@@ -5,7 +5,7 @@ import pandas as pd
 import pytest
 from pandas.testing import assert_frame_equal
 
-from .. import read_sql, Connection
+from .. import read_sql, ConnectionUrl
 
 
 @pytest.fixture(scope="module")  # type: ignore
@@ -392,5 +392,5 @@ def test_sqlite_cte(sqlite_db: str) -> None:
     assert_frame_equal(df, expected, check_names=True)
 
 
-def test_connection(sqlite_db: str) -> None:
-    test_sqlite_cte(Connection(sqlite_db))
+def test_connection_url(sqlite_db: str) -> None:
+    test_sqlite_cte(ConnectionUrl(sqlite_db))
