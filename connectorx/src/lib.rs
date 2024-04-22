@@ -208,6 +208,8 @@ pub mod prelude {
     pub use crate::sources::postgres::PostgresSource;
     #[cfg(feature = "src_sqlite")]
     pub use crate::sources::sqlite::SQLiteSource;
+    #[cfg(feature = "src_trino")]
+    pub use crate::sources::trino::TrinoSource;
     pub use crate::sources::{PartitionParser, Produce, Source, SourcePartition};
     pub use crate::sql::CXQuery;
     pub use crate::transports::*;

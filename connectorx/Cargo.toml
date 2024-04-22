@@ -57,6 +57,8 @@ urlencoding = {version = "2.1", optional = true}
 uuid = {version = "0.8", optional = true}
 j4rs = {version = "0.15", optional = true}
 datafusion = {version = "31", optional = true}
+prusto = {version = "0.5.1", optional = true}
+serde = {optional = true}
 
 [lib]
 crate-type = ["cdylib", "rlib"]
@@ -69,7 +71,7 @@ iai = "0.1"
 pprof = {version = "0.5", features = ["flamegraph"]}
 
 [features]
-all = ["src_sqlite", "src_postgres", "src_mysql", "src_mssql", "src_oracle", "src_bigquery", "src_csv", "src_dummy", "dst_arrow", "dst_arrow2", "federation", "fed_exec"]
+all = ["src_sqlite", "src_postgres", "src_mysql", "src_mssql", "src_oracle", "src_bigquery", "src_csv", "src_dummy", "src_trino", "dst_arrow", "dst_arrow2", "federation", "fed_exec"]
 branch = []
 default = ["fptr"]
 dst_arrow = ["arrow"]
@@ -97,6 +99,7 @@ src_postgres = [
   "postgres-openssl",
 ]
 src_sqlite = ["rusqlite", "r2d2_sqlite", "fallible-streaming-iterator", "r2d2", "urlencoding"]
+src_trino = ["prusto", "uuid", "urlencoding", "rust_decimal", "tokio", "num-traits", "serde"]
 federation = ["j4rs"]
 fed_exec = ["datafusion", "tokio"]
 integrated-auth-gssapi = ["tiberius/integrated-auth-gssapi"]

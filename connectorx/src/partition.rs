@@ -10,6 +10,7 @@ use crate::sources::mysql::{MySQLSourceError, MySQLTypeSystem};
 use crate::sources::oracle::{connect_oracle, OracleDialect};
 #[cfg(feature = "src_postgres")]
 use crate::sources::postgres::{rewrite_tls_args, PostgresTypeSystem};
+use crate::sources::trino::TrinoDialect;
 #[cfg(feature = "src_sqlite")]
 use crate::sql::get_partition_range_query_sep;
 use crate::sql::{get_partition_range_query, single_col_partition_query, CXQuery};
@@ -35,7 +36,7 @@ use sqlparser::dialect::PostgreSqlDialect;
 use sqlparser::dialect::SQLiteDialect;
 #[cfg(feature = "src_mssql")]
 use tiberius::Client;
-#[cfg(any(feature = "src_bigquery", feature = "src_mssql"))]
+#[cfg(any(feature = "src_bigquery", feature = "src_mssql", feature = "src_trino"))]
 use tokio::{net::TcpStream, runtime::Runtime};
 #[cfg(feature = "src_mssql")]
 use tokio_util::compat::TokioAsyncWriteCompatExt;
@@ -100,6 +101,8 @@ pub fn get_col_range(source_conn: &SourceConn, query: &str, col: &str) -> OutRes
         SourceType::Oracle => oracle_get_partition_range(&source_conn.conn, query, col),
         #[cfg(feature = "src_bigquery")]
         SourceType::BigQuery => bigquery_get_partition_range(&source_conn.conn, query, col),
+        #[cfg(feature = "src_trino")]
+        SourceType::Trino => trino_get_partition_range(&source_conn.conn, query, col),
         _ => unimplemented!("{:?} not implemented!", source_conn.ty),
     }
 }
@@ -136,6 +139,10 @@ pub fn get_part_query(
         #[cfg(feature = "src_bigquery")]
         SourceType::BigQuery => {
             single_col_partition_query(query, col, lower, upper, &BigQueryDialect {})?
+        }
+        #[cfg(feature = "src_trino")]
+        SourceType::Trino => {
+            single_col_partition_query(query, col, lower, upper, &TrinoDialect {})?
         }
         _ => unimplemented!("{:?} not implemented!", source_conn.ty),
     };
@@ -480,4 +487,53 @@ fn bigquery_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64
     let max_v = query_result.get_i64(1)?.unwrap_or(0);
 
     (min_v, max_v)
+}
+
+#[cfg(feature = "src_trino")]
+#[throws(ConnectorXOutError)]
+fn trino_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
+    use prusto::{auth::Auth, ClientBuilder};
+
+    use crate::sources::trino::{TrinoDialect, TrinoPartitionQueryResult};
+
+    let rt = Runtime::new().expect("Failed to create runtime");
+
+    let username = match conn.username() {
+        "" => "connectorx",
+        username => username,
+    };
+
+    let builder = ClientBuilder::new(username, conn.host().unwrap().to_owned())
+        .port(conn.port().unwrap_or(8080))
+        .ssl(prusto::ssl::Ssl { root_cert: None })
+        .secure(conn.scheme() == "trino+https")
+        .catalog(conn.path_segments().unwrap().last().unwrap_or("hive"));
+
+    let builder = match conn.password() {
+        None => builder,
+        Some(password) => builder.auth(Auth::Basic(username.to_owned(), Some(password.to_owned()))),
+    };
+
+    let client = builder
+        .build()
+        .map_err(|e| anyhow!("Failed to build client: {}", e))?;
+
+    let range_query = get_partition_range_query(query, col, &TrinoDialect {})?;
+    let query_result = rt.block_on(client.get_all::<TrinoPartitionQueryResult>(range_query));
+
+    let query_result = match query_result {
+        Ok(query_result) => Ok(query_result.into_vec()),
+        Err(e) => match e {
+            prusto::error::Error::EmptyData => {
+                Ok(vec![TrinoPartitionQueryResult { _col0: 0, _col1: 0 }])
+            }
+            _ => Err(anyhow!("Failed to get query result: {}", e)),
+        },
+    }?;
+
+    let result = query_result
+        .first()
+        .unwrap_or(&TrinoPartitionQueryResult { _col0: 0, _col1: 0 });
+
+    (result._col0, result._col1)
 }
