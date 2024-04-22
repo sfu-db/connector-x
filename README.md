@@ -188,20 +188,27 @@ BibTeX entry:
         </a>
     </td>
     <td align="center">
+        <a href="https://github.com/zen-xu">
+            <img src="https://avatars.githubusercontent.com/u/38552291?v=4" width="66;" alt="zen-xu"/>
+            <br />
+            <sub><b>ZhengYu, Xu</b></sub>
+        </a>
+    </td>
+    <td align="center">
         <a href="https://github.com/wseaton">
             <img src="https://avatars.githubusercontent.com/u/16678729?v=4" width="66;" alt="wseaton"/>
             <br />
             <sub><b>Will Eaton</b></sub>
         </a>
-    </td>
+    </td></tr>
+<tr>
     <td align="center">
         <a href="https://github.com/AnatolyBuga">
             <img src="https://avatars.githubusercontent.com/u/60788447?v=4" width="66;" alt="AnatolyBuga"/>
             <br />
             <sub><b>Anatoly Bugakov</b></sub>
         </a>
-    </td></tr>
-<tr>
+    </td>
     <td align="center">
         <a href="https://github.com/Jordan-M-Young">
             <img src="https://avatars.githubusercontent.com/u/54070169?v=4" width="66;" alt="Jordan-M-Young"/>
@@ -214,13 +221,6 @@ BibTeX entry:
             <img src="https://avatars.githubusercontent.com/u/12375421?v=4" width="66;" alt="auyer"/>
             <br />
             <sub><b>Rafael Passos</b></sub>
-        </a>
-    </td>
-    <td align="center">
-        <a href="https://github.com/zen-xu">
-            <img src="https://avatars.githubusercontent.com/u/38552291?v=4" width="66;" alt="zen-xu"/>
-            <br />
-            <sub><b>ZhengYu, Xu</b></sub>
         </a>
     </td>
     <td align="center">
