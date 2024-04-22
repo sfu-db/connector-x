@@ -1,18 +1,21 @@
-use chrono::{NaiveDate, NaiveDateTime, DateTime, Utc};
-use rust_decimal::Decimal;
 use arrow::{
     array::{BooleanArray, Float64Array, Int64Array, StringArray},
     record_batch::RecordBatch,
 };
+use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
 use connectorx::{
     destinations::arrow::ArrowDestination,
     prelude::*,
-    sources::postgres::{rewrite_tls_args, BinaryProtocol, CSVProtocol, PostgresSource, SimpleProtocol, CursorProtocol},
+    sources::postgres::{
+        rewrite_tls_args, BinaryProtocol, CSVProtocol, CursorProtocol, PostgresSource,
+        SimpleProtocol,
+    },
     sources::PartitionParser,
     sql::CXQuery,
     transports::PostgresArrowTransport,
 };
 use postgres::NoTls;
+use rust_decimal::Decimal;
 use std::env;
 use url::Url;
 
@@ -153,17 +156,22 @@ fn test_postgres() {
 
 #[test]
 fn test_csv_infinite_values_binary_proto_option() {
-
     let _ = env_logger::builder().is_test(true).try_init();
 
     let dburl = env::var("POSTGRES_URL").unwrap();
     #[derive(Debug, PartialEq)]
-    struct Row(Option<NaiveDate>, Option<NaiveDateTime>, Option<DateTime<Utc>>);
+    struct Row(
+        Option<NaiveDate>,
+        Option<NaiveDateTime>,
+        Option<DateTime<Utc>>,
+    );
 
     let url = Url::parse(dburl.as_str()).unwrap();
     let (config, _tls) = rewrite_tls_args(&url).unwrap();
     let mut source = PostgresSource::<BinaryProtocol, NoTls>::new(config, NoTls, 1).unwrap();
-    source.set_queries(&[CXQuery::naked("SELECT test_date, test_timestamp, test_timestamp_timezone FROM test_infinite_values")]);
+    source.set_queries(&[CXQuery::naked(
+        "SELECT test_date, test_timestamp, test_timestamp_timezone FROM test_infinite_values",
+    )]);
     source.fetch_metadata().unwrap();
 
     let mut partitions = source.partition().unwrap();
@@ -192,8 +200,16 @@ fn test_csv_infinite_values_binary_proto_option() {
     }
     assert_eq!(
         vec![
-            Row(Some(NaiveDate::MAX), Some(NaiveDateTime::MAX), Some(DateTime::<Utc>::MAX_UTC)),
-            Row(Some(NaiveDate::MIN), Some(NaiveDateTime::MIN), Some(DateTime::<Utc>::MIN_UTC)),
+            Row(
+                Some(NaiveDate::MAX),
+                Some(NaiveDateTime::MAX),
+                Some(DateTime::<Utc>::MAX_UTC)
+            ),
+            Row(
+                Some(NaiveDate::MIN),
+                Some(NaiveDateTime::MIN),
+                Some(DateTime::<Utc>::MIN_UTC)
+            ),
             Row(None, None, None),
         ],
         rows
@@ -202,17 +218,22 @@ fn test_csv_infinite_values_binary_proto_option() {
 
 #[test]
 fn test_infinite_values_cursor_proto_option() {
-
     let _ = env_logger::builder().is_test(true).try_init();
 
     let dburl = env::var("POSTGRES_URL").unwrap();
     #[derive(Debug, PartialEq)]
-    struct Row(Option<NaiveDate>, Option<NaiveDateTime>, Option<DateTime<Utc>>);
+    struct Row(
+        Option<NaiveDate>,
+        Option<NaiveDateTime>,
+        Option<DateTime<Utc>>,
+    );
 
     let url = Url::parse(dburl.as_str()).unwrap();
     let (config, _tls) = rewrite_tls_args(&url).unwrap();
     let mut source = PostgresSource::<CursorProtocol, NoTls>::new(config, NoTls, 1).unwrap();
-    source.set_queries(&[CXQuery::naked("SELECT test_date, test_timestamp, test_timestamp_timezone FROM test_infinite_values")]);
+    source.set_queries(&[CXQuery::naked(
+        "SELECT test_date, test_timestamp, test_timestamp_timezone FROM test_infinite_values",
+    )]);
     source.fetch_metadata().unwrap();
 
     let mut partitions = source.partition().unwrap();
@@ -241,8 +262,16 @@ fn test_infinite_values_cursor_proto_option() {
     }
     assert_eq!(
         vec![
-            Row(Some(NaiveDate::MAX), Some(NaiveDateTime::MAX), Some(DateTime::<Utc>::MAX_UTC)),
-            Row(Some(NaiveDate::MIN), Some(NaiveDateTime::MIN), Some(DateTime::<Utc>::MIN_UTC)),
+            Row(
+                Some(NaiveDate::MAX),
+                Some(NaiveDateTime::MAX),
+                Some(DateTime::<Utc>::MAX_UTC)
+            ),
+            Row(
+                Some(NaiveDate::MIN),
+                Some(NaiveDateTime::MIN),
+                Some(DateTime::<Utc>::MIN_UTC)
+            ),
             Row(None, None, None),
         ],
         rows
@@ -251,7 +280,6 @@ fn test_infinite_values_cursor_proto_option() {
 
 #[test]
 fn test_csv_infinite_values_cursor_proto() {
-
     let _ = env_logger::builder().is_test(true).try_init();
 
     let dburl = env::var("POSTGRES_URL").unwrap();
@@ -299,7 +327,6 @@ fn test_csv_infinite_values_cursor_proto() {
 
 #[test]
 fn test_csv_infinite_values_simple_proto() {
-
     let _ = env_logger::builder().is_test(true).try_init();
 
     let dburl = env::var("POSTGRES_URL").unwrap();
@@ -309,7 +336,9 @@ fn test_csv_infinite_values_simple_proto() {
     let url = Url::parse(dburl.as_str()).unwrap();
     let (config, _tls) = rewrite_tls_args(&url).unwrap();
     let mut source = PostgresSource::<SimpleProtocol, NoTls>::new(config, NoTls, 1).unwrap();
-    source.set_queries(&[CXQuery::naked("select * from test_infinite_values WHERE test_date IS NOT NULL")]);
+    source.set_queries(&[CXQuery::naked(
+        "select * from test_infinite_values WHERE test_date IS NOT NULL",
+    )]);
     source.fetch_metadata().unwrap();
 
     let mut partitions = source.partition().unwrap();
@@ -340,8 +369,20 @@ fn test_csv_infinite_values_simple_proto() {
     }
     assert_eq!(
         vec![
-            Row(1, NaiveDate::MAX, NaiveDateTime::MAX, Decimal::MAX, DateTime::<Utc>::MAX_UTC),
-            Row(2, NaiveDate::MIN, NaiveDateTime::MIN, Decimal::MIN, DateTime::<Utc>::MIN_UTC),
+            Row(
+                1,
+                NaiveDate::MAX,
+                NaiveDateTime::MAX,
+                Decimal::MAX,
+                DateTime::<Utc>::MAX_UTC
+            ),
+            Row(
+                2,
+                NaiveDate::MIN,
+                NaiveDateTime::MIN,
+                Decimal::MIN,
+                DateTime::<Utc>::MIN_UTC
+            ),
         ],
         rows
     );
@@ -349,12 +390,17 @@ fn test_csv_infinite_values_simple_proto() {
 
 #[test]
 fn test_csv_infinite_values_simple_proto_option() {
-
     let _ = env_logger::builder().is_test(true).try_init();
 
     let dburl = env::var("POSTGRES_URL").unwrap();
     #[derive(Debug, PartialEq)]
-    struct Row(i32, Option<NaiveDate>, Option<NaiveDateTime>, Option<Decimal>, Option<DateTime<Utc>>);
+    struct Row(
+        i32,
+        Option<NaiveDate>,
+        Option<NaiveDateTime>,
+        Option<Decimal>,
+        Option<DateTime<Utc>>,
+    );
 
     let url = Url::parse(dburl.as_str()).unwrap();
     let (config, _tls) = rewrite_tls_args(&url).unwrap();
@@ -390,9 +436,21 @@ fn test_csv_infinite_values_simple_proto_option() {
     }
     assert_eq!(
         vec![
-            Row(1, Some(NaiveDate::MAX), Some(NaiveDateTime::MAX), Some(Decimal::MAX), Some(DateTime::<Utc>::MAX_UTC)),
-            Row(2, Some(NaiveDate::MIN), Some(NaiveDateTime::MIN), Some(Decimal::MIN), Some(DateTime::<Utc>::MIN_UTC)),
-            Row(3, None, None, None, None, )
+            Row(
+                1,
+                Some(NaiveDate::MAX),
+                Some(NaiveDateTime::MAX),
+                Some(Decimal::MAX),
+                Some(DateTime::<Utc>::MAX_UTC)
+            ),
+            Row(
+                2,
+                Some(NaiveDate::MIN),
+                Some(NaiveDateTime::MIN),
+                Some(Decimal::MIN),
+                Some(DateTime::<Utc>::MIN_UTC)
+            ),
+            Row(3, None, None, None, None,)
         ],
         rows
     );
@@ -400,7 +458,6 @@ fn test_csv_infinite_values_simple_proto_option() {
 
 #[test]
 fn test_csv_infinite_values() {
-
     let _ = env_logger::builder().is_test(true).try_init();
 
     let dburl = env::var("POSTGRES_URL").unwrap();
@@ -410,7 +467,9 @@ fn test_csv_infinite_values() {
     let url = Url::parse(dburl.as_str()).unwrap();
     let (config, _tls) = rewrite_tls_args(&url).unwrap();
     let mut source = PostgresSource::<CSVProtocol, NoTls>::new(config, NoTls, 1).unwrap();
-    source.set_queries(&[CXQuery::naked("select * from test_infinite_values WHERE test_date IS NOT NULL")]);
+    source.set_queries(&[CXQuery::naked(
+        "select * from test_infinite_values WHERE test_date IS NOT NULL",
+    )]);
     source.fetch_metadata().unwrap();
 
     let mut partitions = source.partition().unwrap();
@@ -441,8 +500,20 @@ fn test_csv_infinite_values() {
     }
     assert_eq!(
         vec![
-            Row(1, NaiveDate::MAX, NaiveDateTime::MAX, Decimal::MAX, DateTime::<Utc>::MAX_UTC),
-            Row(2, NaiveDate::MIN, NaiveDateTime::MIN, Decimal::MIN, DateTime::<Utc>::MIN_UTC),
+            Row(
+                1,
+                NaiveDate::MAX,
+                NaiveDateTime::MAX,
+                Decimal::MAX,
+                DateTime::<Utc>::MAX_UTC
+            ),
+            Row(
+                2,
+                NaiveDate::MIN,
+                NaiveDateTime::MIN,
+                Decimal::MIN,
+                DateTime::<Utc>::MIN_UTC
+            ),
         ],
         rows
     );
@@ -450,12 +521,17 @@ fn test_csv_infinite_values() {
 
 #[test]
 fn test_csv_infinite_values_option() {
-
     let _ = env_logger::builder().is_test(true).try_init();
 
     let dburl = env::var("POSTGRES_URL").unwrap();
     #[derive(Debug, PartialEq)]
-    struct Row(i32, Option<NaiveDate>, Option<NaiveDateTime>, Option<Decimal>, Option<DateTime<Utc>>);
+    struct Row(
+        i32,
+        Option<NaiveDate>,
+        Option<NaiveDateTime>,
+        Option<Decimal>,
+        Option<DateTime<Utc>>,
+    );
 
     let url = Url::parse(dburl.as_str()).unwrap();
     let (config, _tls) = rewrite_tls_args(&url).unwrap();
@@ -491,14 +567,25 @@ fn test_csv_infinite_values_option() {
     }
     assert_eq!(
         vec![
-            Row(1, Some(NaiveDate::MAX), Some(NaiveDateTime::MAX), Some(Decimal::MAX), Some(DateTime::<Utc>::MAX_UTC)),
-            Row(2, Some(NaiveDate::MIN), Some(NaiveDateTime::MIN), Some(Decimal::MIN), Some(DateTime::<Utc>::MIN_UTC)),
-            Row(3, None, None, None, None, )
+            Row(
+                1,
+                Some(NaiveDate::MAX),
+                Some(NaiveDateTime::MAX),
+                Some(Decimal::MAX),
+                Some(DateTime::<Utc>::MAX_UTC)
+            ),
+            Row(
+                2,
+                Some(NaiveDate::MIN),
+                Some(NaiveDateTime::MIN),
+                Some(Decimal::MIN),
+                Some(DateTime::<Utc>::MIN_UTC)
+            ),
+            Row(3, None, None, None, None,)
         ],
         rows
     );
 }
-
 
 #[test]
 fn test_postgres_csv() {

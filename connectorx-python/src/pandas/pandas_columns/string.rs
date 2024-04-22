@@ -265,27 +265,30 @@ impl StringColumn {
                 Err(_) => return,
             }
         };
-        let py = unsafe { Python::assume_gil_acquired() };
 
+        // NOTE: from Python 3.12, we have to allocate the string with a real Python<'py> token
+        // previous `let py = unsafe { Python::assume_gil_acquired() }` approach will lead to segment fault when partition is enabled
         let mut string_infos = Vec::with_capacity(self.string_lengths.len());
-        let mut start = 0;
-        for (i, &len) in self.string_lengths.iter().enumerate() {
-            if len != usize::MAX {
-                let end = start + len;
+        Python::with_gil(|py| {
+            let mut start = 0;
+            for (i, &len) in self.string_lengths.iter().enumerate() {
+                if len != usize::MAX {
+                    let end = start + len;
 
-                unsafe {
-                    let string_info = StringInfo::detect(&self.string_buf[start..end]);
-                    *self.data.add(self.row_idx[i]) = string_info.pystring(py);
-                    string_infos.push(Some(string_info));
-                };
+                    unsafe {
+                        let string_info = StringInfo::detect(&self.string_buf[start..end]);
+                        *self.data.add(self.row_idx[i]) = string_info.pystring(py);
+                        string_infos.push(Some(string_info));
+                    };
 
-                start = end;
-            } else {
-                string_infos.push(None);
+                    start = end;
+                } else {
+                    string_infos.push(None);
 
-                unsafe { *self.data.add(self.row_idx[i]) = PyString::none(py) };
+                    unsafe { *self.data.add(self.row_idx[i]) = PyString::none(py) };
+                }
             }
-        }
+        });
 
         // unlock GIL
         std::mem::drop(guard);

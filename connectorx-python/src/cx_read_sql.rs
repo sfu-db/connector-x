@@ -12,11 +12,11 @@ use crate::errors::ConnectorXPythonError;
 #[derive(FromPyObject)]
 #[pyo3(from_item_all)]
 pub struct PyPartitionQuery {
-    query: String,
-    column: String,
-    min: Option<i64>,
-    max: Option<i64>,
-    num: usize,
+    pub query: String,
+    pub column: String,
+    pub min: Option<i64>,
+    pub max: Option<i64>,
+    pub num: usize,
 }
 
 impl Into<PartitionQuery> for PyPartitionQuery {
@@ -31,14 +31,14 @@ impl Into<PartitionQuery> for PyPartitionQuery {
     }
 }
 
-pub fn read_sql<'a>(
-    py: Python<'a>,
+pub fn read_sql<'py>(
+    py: Python<'py>,
     conn: &str,
     return_type: &str,
     protocol: Option<&str>,
     queries: Option<Vec<String>>,
     partition_query: Option<PyPartitionQuery>,
-) -> PyResult<&'a PyAny> {
+) -> PyResult<Bound<'py, PyAny>> {
     let source_conn = parse_source(conn, protocol).map_err(|e| ConnectorXPythonError::from(e))?;
     let (queries, origin_query) = match (queries, partition_query) {
         (Some(queries), None) => (queries.into_iter().map(CXQuery::Naked).collect(), None),

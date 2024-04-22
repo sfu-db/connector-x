@@ -224,9 +224,7 @@ where
         let nvecs = self.lengths.len();
 
         if nvecs > 0 {
-            let py = unsafe { Python::assume_gil_acquired() };
-
-            {
+            Python::with_gil(|py| -> Result<(), ConnectorXPythonError> {
                 // allocation in python is not thread safe
                 let _guard = GIL_MUTEX
                     .lock()
@@ -237,9 +235,9 @@ where
                         let end = start + len;
                         unsafe {
                             // allocate and write in the same time
-                            *self.data.add(self.row_idx[i]) = PyList(
-                                pyo3::types::PyList::new(py, &self.buffer[start..end]).into(),
-                            );
+                            let n = pyo3::types::PyList::new_bound(py, &self.buffer[start..end])
+                                .unbind();
+                            *self.data.add(self.row_idx[i]) = PyList(n);
                         };
                         start = end;
                     } else {
@@ -249,7 +247,8 @@ where
                         }
                     }
                 }
-            }
+                Ok(())
+            })?;
 
             self.buffer.truncate(0);
             self.lengths.truncate(0);

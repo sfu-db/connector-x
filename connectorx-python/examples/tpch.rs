@@ -1,4 +1,4 @@
-use connectorx_python::read_sql::{read_sql, PartitionQuery};
+use connectorx_python::cx_read_sql::{read_sql, PyPartitionQuery};
 use pyo3::Python;
 use std::env;
 
@@ -17,12 +17,19 @@ pub fn run(nq: usize, conn: &str) {
             "pandas",
             None,
             None,
-            Some(PartitionQuery::new(QUERY, "L_ORDERKEY", None, None, nq)),
+            Some(PyPartitionQuery {
+                query: QUERY.to_string(),
+                column: "L_ORDERKEY".to_string(),
+                min: None,
+                max: None,
+                num: nq,
+            }),
         )
         .unwrap();
     });
 }
 
+#[allow(dead_code)]
 fn main() {
     run(1, "POSTGRES_URL");
 }

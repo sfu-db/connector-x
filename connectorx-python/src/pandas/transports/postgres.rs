@@ -17,6 +17,7 @@ use std::collections::HashMap;
 use std::marker::PhantomData;
 use uuid::Uuid;
 
+#[allow(dead_code)]
 pub struct PostgresPandasTransport<'py, P, C>(&'py (), PhantomData<P>, PhantomData<C>);
 
 macro_rules! impl_postgres_transport {

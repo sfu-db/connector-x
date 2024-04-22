@@ -11,6 +11,7 @@ use rust_decimal::prelude::*;
 use serde_json::{to_string, Value};
 use std::marker::PhantomData;
 
+#[allow(dead_code)]
 pub struct MysqlPandasTransport<'py, P>(&'py (), PhantomData<P>);
 
 impl_transport!(

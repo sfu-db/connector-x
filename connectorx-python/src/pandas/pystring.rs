@@ -15,7 +15,7 @@ unsafe impl Element for PyString {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub enum StringInfo {
     ASCII(usize), // len of the string, not byte length
     UCS1(usize),

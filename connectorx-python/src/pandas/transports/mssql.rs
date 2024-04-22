@@ -9,6 +9,7 @@ use connectorx::{
 use rust_decimal::prelude::*;
 use uuid::Uuid;
 
+#[allow(dead_code)]
 pub struct MsSQLPandasTransport<'py>(&'py ());
 
 impl_transport!(

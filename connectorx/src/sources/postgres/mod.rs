@@ -165,10 +165,7 @@ where
             .unzip();
 
         self.names = names;
-        self.schema = pg_types
-            .iter()
-            .map(PostgresTypeSystem::from)
-            .collect();
+        self.schema = pg_types.iter().map(PostgresTypeSystem::from).collect();
         self.pg_schema = self
             .schema
             .iter()
@@ -512,7 +509,7 @@ impl<'r, 'a> Produce<'r, Option<NaiveDateTime>> for PostgresBinarySourcePartitio
             Some(postgres::types::Timestamp::PosInfinity) => Some(NaiveDateTime::MAX),
             Some(postgres::types::Timestamp::NegInfinity) => Some(NaiveDateTime::MIN),
             Some(postgres::types::Timestamp::Value(t)) => t,
-            None => None
+            None => None,
         }
     }
 }
@@ -545,7 +542,7 @@ impl<'r, 'a> Produce<'r, Option<DateTime<Utc>>> for PostgresBinarySourcePartitio
             Some(postgres::types::Timestamp::PosInfinity) => Some(DateTime::<Utc>::MAX_UTC),
             Some(postgres::types::Timestamp::NegInfinity) => Some(DateTime::<Utc>::MIN_UTC),
             Some(postgres::types::Timestamp::Value(t)) => t,
-            None => None
+            None => None,
         }
     }
 }
@@ -578,7 +575,7 @@ impl<'r, 'a> Produce<'r, Option<NaiveDate>> for PostgresBinarySourcePartitionPar
             Some(postgres::types::Date::PosInfinity) => Some(NaiveDate::MAX),
             Some(postgres::types::Date::NegInfinity) => Some(NaiveDate::MIN),
             Some(postgres::types::Date::Value(t)) => t,
-            None => None
+            None => None,
         }
     }
 }
@@ -853,7 +850,6 @@ impl<'r, 'a> Produce<'r, Option<Vec<bool>>> for PostgresCSVSourceParser<'a> {
     }
 }
 
-
 impl<'r, 'a> Produce<'r, Decimal> for PostgresCSVSourceParser<'a> {
     type Error = PostgresSourceError;
 
@@ -863,13 +859,12 @@ impl<'r, 'a> Produce<'r, Decimal> for PostgresCSVSourceParser<'a> {
         match &self.rowbuf[ridx][cidx][..] {
             "Infinity" => Decimal::MAX,
             "-Infinity" => Decimal::MIN,
-            v => v.parse().map_err(|_| {
-                ConnectorXError::cannot_produce::<Decimal>(Some(v.into()))
-            })?
+            v => v
+                .parse()
+                .map_err(|_| ConnectorXError::cannot_produce::<Decimal>(Some(v.into())))?,
         }
     }
 }
-
 
 impl<'r, 'a> Produce<'r, Option<Decimal>> for PostgresCSVSourceParser<'a> {
     type Error = PostgresSourceError;
@@ -881,13 +876,13 @@ impl<'r, 'a> Produce<'r, Option<Decimal>> for PostgresCSVSourceParser<'a> {
             "" => None,
             "Infinity" => Some(Decimal::MAX),
             "-Infinity" => Some(Decimal::MIN),
-            v => Some(v.parse().map_err(|_| {
-                ConnectorXError::cannot_produce::<Decimal>(Some(v.into()))
-            })?),
+            v => Some(
+                v.parse()
+                    .map_err(|_| ConnectorXError::cannot_produce::<Decimal>(Some(v.into())))?,
+            ),
         }
     }
 }
-
 
 impl<'r, 'a> Produce<'r, DateTime<Utc>> for PostgresCSVSourceParser<'a> {
     type Error = PostgresSourceError;
@@ -899,9 +894,9 @@ impl<'r, 'a> Produce<'r, DateTime<Utc>> for PostgresCSVSourceParser<'a> {
             "infinity" => DateTime::<Utc>::MAX_UTC,
             "-infinity" => DateTime::<Utc>::MIN_UTC,
             // postgres csv return example: 1970-01-01 00:00:01+00
-            v => format!("{}:00", v).parse().map_err(|_| {
-                    ConnectorXError::cannot_produce::<DateTime<Utc>>(Some(v.into()))
-            })?
+            v => format!("{}:00", v)
+                .parse()
+                .map_err(|_| ConnectorXError::cannot_produce::<DateTime<Utc>>(Some(v.into())))?,
         }
     }
 }
@@ -935,9 +930,8 @@ impl<'r, 'a> Produce<'r, NaiveDate> for PostgresCSVSourceParser<'a> {
         match &self.rowbuf[ridx][cidx][..] {
             "infinity" => NaiveDate::MAX,
             "-infinity" => NaiveDate::MIN,
-            v => NaiveDate::parse_from_str(v, "%Y-%m-%d").map_err(|_| {
-                ConnectorXError::cannot_produce::<NaiveDate>(Some(v.into()))
-            })?
+            v => NaiveDate::parse_from_str(v, "%Y-%m-%d")
+                .map_err(|_| ConnectorXError::cannot_produce::<NaiveDate>(Some(v.into())))?,
         }
     }
 }
@@ -969,13 +963,8 @@ impl<'r, 'a> Produce<'r, NaiveDateTime> for PostgresCSVSourceParser<'a> {
         match &self.rowbuf[ridx][cidx] {
             "infinity" => NaiveDateTime::MAX,
             "-infinity" => NaiveDateTime::MIN,
-            v => NaiveDateTime::parse_from_str(v, "%Y-%m-%d %H:%M:%S").map_err(
-                |_| {
-                    ConnectorXError::cannot_produce::<NaiveDateTime>(Some(
-                        v.into(),
-                    ))
-                },
-            )?
+            v => NaiveDateTime::parse_from_str(v, "%Y-%m-%d %H:%M:%S")
+                .map_err(|_| ConnectorXError::cannot_produce::<NaiveDateTime>(Some(v.into())))?,
         }
     }
 }
@@ -1245,9 +1234,8 @@ impl<'r, 'a> Produce<'r, Option<DateTime<Utc>>> for PostgresRawSourceParser<'a> 
             Some(postgres::types::Timestamp::PosInfinity) => Some(DateTime::<Utc>::MAX_UTC),
             Some(postgres::types::Timestamp::NegInfinity) => Some(DateTime::<Utc>::MIN_UTC),
             Some(postgres::types::Timestamp::Value(t)) => t,
-            None => None
+            None => None,
         }
-
     }
 }
 
@@ -1279,9 +1267,8 @@ impl<'r, 'a> Produce<'r, Option<NaiveDateTime>> for PostgresRawSourceParser<'a> 
             Some(postgres::types::Timestamp::PosInfinity) => Some(NaiveDateTime::MAX),
             Some(postgres::types::Timestamp::NegInfinity) => Some(NaiveDateTime::MIN),
             Some(postgres::types::Timestamp::Value(t)) => t,
-            None => None
+            None => None,
         }
-
     }
 }
 
@@ -1315,7 +1302,6 @@ impl<'r, 'a> Produce<'r, Option<NaiveDate>> for PostgresRawSourceParser<'a> {
             Some(postgres::types::Date::Value(t)) => t,
             None => None,
         }
-
     }
 }
 
@@ -1483,9 +1469,7 @@ impl<'r> Produce<'r, Decimal> for PostgresSimpleSourceParser {
                 Some(s) => s
                     .parse()
                     .map_err(|_| ConnectorXError::cannot_produce::<Decimal>(Some(s.into())))?,
-                None => throw!(anyhow!(
-                    "Cannot parse NULL in NOT NULL column."
-                )),
+                None => throw!(anyhow!("Cannot parse NULL in NOT NULL column.")),
             },
             SimpleQueryMessage::CommandComplete(c) => {
                 panic!("get command: {}", c);
@@ -1787,9 +1771,10 @@ impl<'r> Produce<'r, NaiveDate> for PostgresSimpleSourceParser {
                 Some(s) => match s {
                     "infinity" => NaiveDate::MAX,
                     "-infinity" => NaiveDate::MIN,
-                    s => NaiveDate::parse_from_str(s, "%Y-%m-%d")
-                        .map_err(|_| ConnectorXError::cannot_produce::<NaiveDate>(Some(s.into())))?,
-                }
+                    s => NaiveDate::parse_from_str(s, "%Y-%m-%d").map_err(|_| {
+                        ConnectorXError::cannot_produce::<NaiveDate>(Some(s.into()))
+                    })?,
+                },
                 None => throw!(anyhow!("Cannot parse NULL in non-NULL column.")),
             },
             SimpleQueryMessage::CommandComplete(c) => {

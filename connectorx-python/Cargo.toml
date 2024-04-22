@@ -42,6 +42,7 @@ tokio-util = "0.6"
 url = "2"
 urlencoding = "2.1"
 uuid = "0.8"
+rayon = "1"
 
 [build-dependencies]
 built = {version = "0.5", features = ["chrono"]}

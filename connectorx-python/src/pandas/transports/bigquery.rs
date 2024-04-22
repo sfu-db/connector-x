@@ -8,6 +8,7 @@ use connectorx::{
     typesystem::TypeConversion,
 };
 
+#[allow(dead_code)]
 pub struct BigQueryPandasTransport<'py>(&'py ());
 
 impl_transport!(

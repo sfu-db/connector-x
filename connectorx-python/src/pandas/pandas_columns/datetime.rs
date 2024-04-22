@@ -65,7 +65,11 @@ impl PandasColumnObject for DateTimeColumn {
 impl PandasColumn<DateTime<Utc>> for DateTimeColumn {
     #[throws(ConnectorXPythonError)]
     fn write(&mut self, val: DateTime<Utc>, row: usize) {
-        unsafe { *self.data.add(row) = val.timestamp_nanos() };
+        unsafe {
+            *self.data.add(row) = val
+                .timestamp_nanos_opt()
+                .unwrap_or_else(|| panic!("out of range DateTime"))
+        };
     }
 }
 
@@ -74,7 +78,12 @@ impl PandasColumn<Option<DateTime<Utc>>> for DateTimeColumn {
     fn write(&mut self, val: Option<DateTime<Utc>>, row: usize) {
         // numpy use i64::MIN as NaT
         unsafe {
-            *self.data.add(row) = val.map(|t| t.timestamp_nanos()).unwrap_or(i64::MIN);
+            *self.data.add(row) = val
+                .map(|t| {
+                    t.timestamp_nanos_opt()
+                        .unwrap_or_else(|| panic!("out of range DateTime"))
+                })
+                .unwrap_or(i64::MIN);
         };
     }
 }
