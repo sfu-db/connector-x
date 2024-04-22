@@ -12,7 +12,7 @@ use crate::{
     data_order::DataOrder,
     errors::ConnectorXError,
     sources::Produce,
-    sql::{limit1_query, CXQuery},
+    sql::{count_query, limit1_query, CXQuery},
 };
 
 pub use self::{errors::TrinoSourceError, typesystem::TrinoTypeSystem};
@@ -27,9 +27,23 @@ pub mod typesystem;
 
 #[throws(TrinoSourceError)]
 fn get_total_rows(rt: Arc<Runtime>, client: Arc<Client>, query: &CXQuery<String>) -> usize {
-    rt.block_on(client.get_all::<Row>(query.to_string()))
+    let cquery = count_query(query, &TrinoDialect {})?;
+
+    let row = rt
+        .block_on(client.get_all::<Row>(cquery.to_string()))
         .map_err(TrinoSourceError::PrustoError)?
-        .len()
+        .split()
+        .1[0]
+        .clone();
+
+    let value = row
+        .value()
+        .first()
+        .ok_or_else(|| anyhow!("Trino count dataset is empty"))?;
+
+    value
+        .as_i64()
+        .ok_or_else(|| anyhow!("Trino cannot parse i64"))? as usize
 }
 
 #[derive(Presto, Debug)]

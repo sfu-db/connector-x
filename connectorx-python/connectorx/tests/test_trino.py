@@ -13,6 +13,9 @@ def trino_url() -> str:
     return conn
 
 
+@pytest.mark.skipif(
+    not os.environ.get("TRINO_URL"), reason="Test Trino only when `TRINO_URL` is set"
+)
 def test_trino_without_partition(trino_url: str) -> None:
     query = "select * from test.test_table order by test_int limit 3"
     df = read_sql(trino_url, query)
@@ -27,6 +30,9 @@ def test_trino_without_partition(trino_url: str) -> None:
     assert_frame_equal(df, expected, check_names=True)
 
 
+@pytest.mark.skipif(
+    not os.environ.get("TRINO_URL"), reason="Test Trino only when `TRINO_URL` is set"
+)
 def test_trino_with_partition(trino_url: str) -> None:
     query = "select * from test.test_table order by test_int"
     df = read_sql(
@@ -48,6 +54,9 @@ def test_trino_with_partition(trino_url: str) -> None:
     assert_frame_equal(df, expected, check_names=True)
 
 
+@pytest.mark.skipif(
+    not os.environ.get("TRINO_URL"), reason="Test Trino only when `TRINO_URL` is set"
+)
 def test_trino_without_partition(trino_url: str) -> None:
     query = "SELECT * FROM test.test_table order by test_int"
     df = read_sql(trino_url, query)
@@ -62,6 +71,9 @@ def test_trino_without_partition(trino_url: str) -> None:
     assert_frame_equal(df, expected, check_names=True)
 
 
+@pytest.mark.skipif(
+    not os.environ.get("TRINO_URL"), reason="Test Trino only when `TRINO_URL` is set"
+)
 def test_trino_limit_without_partition(trino_url: str) -> None:
     query = "SELECT * FROM test.test_table order by test_int limit 3"
     df = read_sql(trino_url, query)
@@ -76,6 +88,9 @@ def test_trino_limit_without_partition(trino_url: str) -> None:
     assert_frame_equal(df, expected, check_names=True)
 
 
+@pytest.mark.skipif(
+    not os.environ.get("TRINO_URL"), reason="Test Trino only when `TRINO_URL` is set"
+)
 def test_trino_limit_large_without_partition(trino_url: str) -> None:
     query = "SELECT * FROM test.test_table order by test_int limit 10"
     df = read_sql(trino_url, query)
@@ -90,6 +105,9 @@ def test_trino_limit_large_without_partition(trino_url: str) -> None:
     assert_frame_equal(df, expected, check_names=True)
 
 
+@pytest.mark.skipif(
+    not os.environ.get("TRINO_URL"), reason="Test Trino only when `TRINO_URL` is set"
+)
 def test_trino_with_partition(trino_url: str) -> None:
     query = "SELECT * FROM test.test_table order by test_int"
     df = read_sql(
@@ -111,6 +129,9 @@ def test_trino_with_partition(trino_url: str) -> None:
     assert_frame_equal(df, expected, check_names=True)
 
 
+@pytest.mark.skipif(
+    not os.environ.get("TRINO_URL"), reason="Test Trino only when `TRINO_URL` is set"
+)
 def test_trino_limit_with_partition(trino_url: str) -> None:
     query = "SELECT * FROM test.test_table order by test_int limit 3"
     df = read_sql(
@@ -132,6 +153,9 @@ def test_trino_limit_with_partition(trino_url: str) -> None:
     assert_frame_equal(df, expected, check_names=True)
 
 
+@pytest.mark.skipif(
+    not os.environ.get("TRINO_URL"), reason="Test Trino only when `TRINO_URL` is set"
+)
 def test_trino_limit_large_with_partition(trino_url: str) -> None:
     query = "SELECT * FROM test.test_table order by test_int limit 10"
     df = read_sql(
@@ -153,6 +177,9 @@ def test_trino_limit_large_with_partition(trino_url: str) -> None:
     assert_frame_equal(df, expected, check_names=True)
 
 
+@pytest.mark.skipif(
+    not os.environ.get("TRINO_URL"), reason="Test Trino only when `TRINO_URL` is set"
+)
 def test_trino_with_partition_without_partition_range(trino_url: str) -> None:
     query = "SELECT * FROM test.test_table where test_float > 3"
     df = read_sql(
@@ -174,6 +201,9 @@ def test_trino_with_partition_without_partition_range(trino_url: str) -> None:
     assert_frame_equal(df, expected, check_names=True)
 
 
+@pytest.mark.skipif(
+    not os.environ.get("TRINO_URL"), reason="Test Trino only when `TRINO_URL` is set"
+)
 def test_trino_manual_partition(trino_url: str) -> None:
     queries = [
         "SELECT * FROM test.test_table WHERE test_int < 2 order by test_int",
@@ -192,6 +222,9 @@ def test_trino_manual_partition(trino_url: str) -> None:
     assert_frame_equal(df, expected, check_names=True)
 
 
+@pytest.mark.skipif(
+    not os.environ.get("TRINO_URL"), reason="Test Trino only when `TRINO_URL` is set"
+)
 def test_trino_selection_and_projection(trino_url: str) -> None:
     query = "SELECT test_int FROM test.test_table WHERE test_float < 5 order by test_int"
     df = read_sql(
@@ -210,6 +243,9 @@ def test_trino_selection_and_projection(trino_url: str) -> None:
     assert_frame_equal(df, expected, check_names=True)
 
 
+@pytest.mark.skipif(
+    not os.environ.get("TRINO_URL"), reason="Test Trino only when `TRINO_URL` is set"
+)
 def test_trino_join(trino_url: str) -> None:
     query = "SELECT T.test_int, T.test_float, S.test_str FROM test.test_table T INNER JOIN test.test_table_extra S ON T.test_int = S.test_int order by T.test_int"
     df = read_sql(
@@ -237,6 +273,9 @@ def test_trino_join(trino_url: str) -> None:
     assert_frame_equal(df, expected, check_names=True)
 
 
+@pytest.mark.skipif(
+    not os.environ.get("TRINO_URL"), reason="Test Trino only when `TRINO_URL` is set"
+)
 def test_trino_aggregate(trino_url: str) -> None:
     query = "select AVG(test_float) as avg_float, SUM(T.test_int) as sum_int, SUM(test_null) as sum_null from test.test_table as T"
     df = read_sql(trino_url, query)
@@ -251,6 +290,9 @@ def test_trino_aggregate(trino_url: str) -> None:
     assert_frame_equal(df, expected, check_names=True)
 
 
+@pytest.mark.skipif(
+    not os.environ.get("TRINO_URL"), reason="Test Trino only when `TRINO_URL` is set"
+)
 def test_trino_types_binary(trino_url: str) -> None:
     query = "select test_boolean, test_int, test_bigint, test_real, test_double, test_decimal, test_date, test_time, test_timestamp, test_varchar, test_uuid from test.test_types order by test_int"
     df = read_sql(trino_url, query)
@@ -273,6 +315,9 @@ def test_trino_types_binary(trino_url: str) -> None:
     assert_frame_equal(df, expected, check_names=True)
 
 
+@pytest.mark.skipif(
+    not os.environ.get("TRINO_URL"), reason="Test Trino only when `TRINO_URL` is set"
+)
 def test_empty_result(trino_url: str) -> None:
     query = "SELECT * FROM test.test_table where test_int < -100"
     df = read_sql(trino_url, query)
@@ -286,6 +331,9 @@ def test_empty_result(trino_url: str) -> None:
     assert_frame_equal(df, expected, check_names=True)
 
 
+@pytest.mark.skipif(
+    not os.environ.get("TRINO_URL"), reason="Test Trino only when `TRINO_URL` is set"
+)
 def test_empty_result_on_partition(trino_url: str) -> None:
     query = "SELECT * FROM test.test_table where test_int < -100"
     df = read_sql(trino_url, query, partition_on="test_int", partition_num=3)
@@ -299,6 +347,9 @@ def test_empty_result_on_partition(trino_url: str) -> None:
     assert_frame_equal(df, expected, check_names=True)
 
 
+@pytest.mark.skipif(
+    not os.environ.get("TRINO_URL"), reason="Test Trino only when `TRINO_URL` is set"
+)
 def test_empty_result_on_some_partition(trino_url: str) -> None:
     query = "SELECT * FROM test.test_table where test_int = 6"
     df = read_sql(trino_url, query, partition_on="test_int", partition_num=3)
