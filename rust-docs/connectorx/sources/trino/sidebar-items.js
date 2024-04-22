@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["errors","typesystem"],"struct":["TrinoDialect","TrinoPartitionQueryResult","TrinoSource","TrinoSourcePartition","TrinoSourcePartitionParser","__TrinoPartitionQueryResultSeed"]};

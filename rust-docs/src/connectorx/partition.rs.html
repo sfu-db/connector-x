@@ -483,6 +483,62 @@
 <a href="#481" id="481">481</a>
 <a href="#482" id="482">482</a>
 <a href="#483" id="483">483</a>
+<a href="#484" id="484">484</a>
+<a href="#485" id="485">485</a>
+<a href="#486" id="486">486</a>
+<a href="#487" id="487">487</a>
+<a href="#488" id="488">488</a>
+<a href="#489" id="489">489</a>
+<a href="#490" id="490">490</a>
+<a href="#491" id="491">491</a>
+<a href="#492" id="492">492</a>
+<a href="#493" id="493">493</a>
+<a href="#494" id="494">494</a>
+<a href="#495" id="495">495</a>
+<a href="#496" id="496">496</a>
+<a href="#497" id="497">497</a>
+<a href="#498" id="498">498</a>
+<a href="#499" id="499">499</a>
+<a href="#500" id="500">500</a>
+<a href="#501" id="501">501</a>
+<a href="#502" id="502">502</a>
+<a href="#503" id="503">503</a>
+<a href="#504" id="504">504</a>
+<a href="#505" id="505">505</a>
+<a href="#506" id="506">506</a>
+<a href="#507" id="507">507</a>
+<a href="#508" id="508">508</a>
+<a href="#509" id="509">509</a>
+<a href="#510" id="510">510</a>
+<a href="#511" id="511">511</a>
+<a href="#512" id="512">512</a>
+<a href="#513" id="513">513</a>
+<a href="#514" id="514">514</a>
+<a href="#515" id="515">515</a>
+<a href="#516" id="516">516</a>
+<a href="#517" id="517">517</a>
+<a href="#518" id="518">518</a>
+<a href="#519" id="519">519</a>
+<a href="#520" id="520">520</a>
+<a href="#521" id="521">521</a>
+<a href="#522" id="522">522</a>
+<a href="#523" id="523">523</a>
+<a href="#524" id="524">524</a>
+<a href="#525" id="525">525</a>
+<a href="#526" id="526">526</a>
+<a href="#527" id="527">527</a>
+<a href="#528" id="528">528</a>
+<a href="#529" id="529">529</a>
+<a href="#530" id="530">530</a>
+<a href="#531" id="531">531</a>
+<a href="#532" id="532">532</a>
+<a href="#533" id="533">533</a>
+<a href="#534" id="534">534</a>
+<a href="#535" id="535">535</a>
+<a href="#536" id="536">536</a>
+<a href="#537" id="537">537</a>
+<a href="#538" id="538">538</a>
+<a href="#539" id="539">539</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::errors::{ConnectorXOutError, OutResult};
 <span class="kw">use </span><span class="kw">crate</span>::source_router::{SourceConn, SourceType};
 <span class="attr">#[cfg(feature = <span class="string">"src_bigquery"</span>)]
@@ -495,6 +551,7 @@
 </span><span class="kw">use </span><span class="kw">crate</span>::sources::oracle::{connect_oracle, OracleDialect};
 <span class="attr">#[cfg(feature = <span class="string">"src_postgres"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::sources::postgres::{rewrite_tls_args, PostgresTypeSystem};
+<span class="kw">use </span><span class="kw">crate</span>::sources::trino::TrinoDialect;
 <span class="attr">#[cfg(feature = <span class="string">"src_sqlite"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::sql::get_partition_range_query_sep;
 <span class="kw">use </span><span class="kw">crate</span>::sql::{get_partition_range_query, single_col_partition_query, CXQuery};
@@ -520,7 +577,7 @@
 </span><span class="kw">use </span>sqlparser::dialect::SQLiteDialect;
 <span class="attr">#[cfg(feature = <span class="string">"src_mssql"</span>)]
 </span><span class="kw">use </span>tiberius::Client;
-<span class="attr">#[cfg(any(feature = <span class="string">"src_bigquery"</span>, feature = <span class="string">"src_mssql"</span>))]
+<span class="attr">#[cfg(any(feature = <span class="string">"src_bigquery"</span>, feature = <span class="string">"src_mssql"</span>, feature = <span class="string">"src_trino"</span>))]
 </span><span class="kw">use </span>tokio::{net::TcpStream, runtime::Runtime};
 <span class="attr">#[cfg(feature = <span class="string">"src_mssql"</span>)]
 </span><span class="kw">use </span>tokio_util::compat::TokioAsyncWriteCompatExt;
@@ -585,6 +642,8 @@
         </span>SourceType::Oracle =&gt; oracle_get_partition_range(<span class="kw-2">&amp;</span>source_conn.conn, query, col),
         <span class="attr">#[cfg(feature = <span class="string">"src_bigquery"</span>)]
         </span>SourceType::BigQuery =&gt; bigquery_get_partition_range(<span class="kw-2">&amp;</span>source_conn.conn, query, col),
+        <span class="attr">#[cfg(feature = <span class="string">"src_trino"</span>)]
+        </span>SourceType::Trino =&gt; trino_get_partition_range(<span class="kw-2">&amp;</span>source_conn.conn, query, col),
         <span class="kw">_ </span>=&gt; <span class="macro">unimplemented!</span>(<span class="string">"{:?} not implemented!"</span>, source_conn.ty),
     }
 }
@@ -621,6 +680,10 @@
         <span class="attr">#[cfg(feature = <span class="string">"src_bigquery"</span>)]
         </span>SourceType::BigQuery =&gt; {
             single_col_partition_query(query, col, lower, upper, <span class="kw-2">&amp;</span>BigQueryDialect {})<span class="question-mark">?
+        </span>}
+        <span class="attr">#[cfg(feature = <span class="string">"src_trino"</span>)]
+        </span>SourceType::Trino =&gt; {
+            single_col_partition_query(query, col, lower, upper, <span class="kw-2">&amp;</span>TrinoDialect {})<span class="question-mark">?
         </span>}
         <span class="kw">_ </span>=&gt; <span class="macro">unimplemented!</span>(<span class="string">"{:?} not implemented!"</span>, source_conn.ty),
     };
@@ -965,5 +1028,54 @@
     <span class="kw">let </span>max_v = query_result.get_i64(<span class="number">1</span>)<span class="question-mark">?</span>.unwrap_or(<span class="number">0</span>);
 
     (min_v, max_v)
+}
+
+<span class="attr">#[cfg(feature = <span class="string">"src_trino"</span>)]
+#[throws(ConnectorXOutError)]
+</span><span class="kw">fn </span>trino_get_partition_range(conn: <span class="kw-2">&amp;</span>Url, query: <span class="kw-2">&amp;</span>str, col: <span class="kw-2">&amp;</span>str) -&gt; (i64, i64) {
+    <span class="kw">use </span>prusto::{auth::Auth, ClientBuilder};
+
+    <span class="kw">use </span><span class="kw">crate</span>::sources::trino::{TrinoDialect, TrinoPartitionQueryResult};
+
+    <span class="kw">let </span>rt = Runtime::new().expect(<span class="string">"Failed to create runtime"</span>);
+
+    <span class="kw">let </span>username = <span class="kw">match </span>conn.username() {
+        <span class="string">"" </span>=&gt; <span class="string">"connectorx"</span>,
+        username =&gt; username,
+    };
+
+    <span class="kw">let </span>builder = ClientBuilder::new(username, conn.host().unwrap().to_owned())
+        .port(conn.port().unwrap_or(<span class="number">8080</span>))
+        .ssl(prusto::ssl::Ssl { root_cert: <span class="prelude-val">None </span>})
+        .secure(conn.scheme() == <span class="string">"trino+https"</span>)
+        .catalog(conn.path_segments().unwrap().last().unwrap_or(<span class="string">"hive"</span>));
+
+    <span class="kw">let </span>builder = <span class="kw">match </span>conn.password() {
+        <span class="prelude-val">None </span>=&gt; builder,
+        <span class="prelude-val">Some</span>(password) =&gt; builder.auth(Auth::Basic(username.to_owned(), <span class="prelude-val">Some</span>(password.to_owned()))),
+    };
+
+    <span class="kw">let </span>client = builder
+        .build()
+        .map_err(|e| <span class="macro">anyhow!</span>(<span class="string">"Failed to build client: {}"</span>, e))<span class="question-mark">?</span>;
+
+    <span class="kw">let </span>range_query = get_partition_range_query(query, col, <span class="kw-2">&amp;</span>TrinoDialect {})<span class="question-mark">?</span>;
+    <span class="kw">let </span>query_result = rt.block_on(client.get_all::&lt;TrinoPartitionQueryResult&gt;(range_query));
+
+    <span class="kw">let </span>query_result = <span class="kw">match </span>query_result {
+        <span class="prelude-val">Ok</span>(query_result) =&gt; <span class="prelude-val">Ok</span>(query_result.into_vec()),
+        <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">match </span>e {
+            prusto::error::Error::EmptyData =&gt; {
+                <span class="prelude-val">Ok</span>(<span class="macro">vec!</span>[TrinoPartitionQueryResult { _col0: <span class="number">0</span>, _col1: <span class="number">0 </span>}])
+            }
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(<span class="macro">anyhow!</span>(<span class="string">"Failed to get query result: {}"</span>, e)),
+        },
+    }<span class="question-mark">?</span>;
+
+    <span class="kw">let </span>result = query_result
+        .first()
+        .unwrap_or(<span class="kw-2">&amp;</span>TrinoPartitionQueryResult { _col0: <span class="number">0</span>, _col1: <span class="number">0 </span>});
+
+    (result._col0, result._col1)
 }
 </code></pre></div></section></main></body></html>

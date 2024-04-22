@@ -107,6 +107,20 @@
 <a href="#105" id="105">105</a>
 <a href="#106" id="106">106</a>
 <a href="#107" id="107">107</a>
+<a href="#108" id="108">108</a>
+<a href="#109" id="109">109</a>
+<a href="#110" id="110">110</a>
+<a href="#111" id="111">111</a>
+<a href="#112" id="112">112</a>
+<a href="#113" id="113">113</a>
+<a href="#114" id="114">114</a>
+<a href="#115" id="115">115</a>
+<a href="#116" id="116">116</a>
+<a href="#117" id="117">117</a>
+<a href="#118" id="118">118</a>
+<a href="#119" id="119">119</a>
+<a href="#120" id="120">120</a>
+<a href="#121" id="121">121</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! This module contains transport definitions for the sources and destinations implemented in ConnectorX.
 
 </span><span class="attr">#[cfg(all(feature = <span class="string">"src_bigquery"</span>, feature = <span class="string">"dst_arrow"</span>))]
@@ -153,7 +167,12 @@
 </span><span class="kw">mod </span>sqlite_arrow2;
 <span class="attr">#[cfg(all(feature = <span class="string">"src_sqlite"</span>, feature = <span class="string">"dst_arrow"</span>))]
 </span><span class="kw">mod </span>sqlite_arrowstream;
-
+<span class="attr">#[cfg(all(feature = <span class="string">"src_trino"</span>, feature = <span class="string">"dst_arrow"</span>))]
+</span><span class="kw">mod </span>trino_arrow;
+<span class="attr">#[cfg(all(feature = <span class="string">"src_trino"</span>, feature = <span class="string">"dst_arrow2"</span>))]
+</span><span class="kw">mod </span>trino_arrow2;
+<span class="attr">#[cfg(all(feature = <span class="string">"src_trino"</span>, feature = <span class="string">"dst_arrow"</span>))]
+</span><span class="kw">mod </span>trino_arrowstream;
 <span class="attr">#[cfg(all(feature = <span class="string">"src_bigquery"</span>, feature = <span class="string">"dst_arrow"</span>))]
 </span><span class="kw">pub use </span>bigquery_arrow::{BigQueryArrowTransport, BigQueryArrowTransportError};
 <span class="attr">#[cfg(all(feature = <span class="string">"src_bigquery"</span>, feature = <span class="string">"dst_arrow2"</span>))]
@@ -213,5 +232,14 @@
 </span><span class="kw">pub use </span>sqlite_arrowstream::{
     SQLiteArrowTransport <span class="kw">as </span>SQLiteArrowStreamTransport,
     SQLiteArrowTransportError <span class="kw">as </span>SQLiteArrowStreamTransportError,
+};
+<span class="attr">#[cfg(all(feature = <span class="string">"src_trino"</span>, feature = <span class="string">"dst_arrow"</span>))]
+</span><span class="kw">pub use </span>trino_arrow::{TrinoArrowTransport, TrinoArrowTransportError};
+<span class="attr">#[cfg(all(feature = <span class="string">"src_trino"</span>, feature = <span class="string">"dst_arrow2"</span>))]
+</span><span class="kw">pub use </span>trino_arrow2::{TrinoArrow2Transport, TrinoArrow2TransportError};
+<span class="attr">#[cfg(all(feature = <span class="string">"src_trino"</span>, feature = <span class="string">"dst_arrow"</span>))]
+</span><span class="kw">pub use </span>trino_arrowstream::{
+    TrinoArrowTransport <span class="kw">as </span>TrinoArrowStreamTransport,
+    TrinoArrowTransportError <span class="kw">as </span>TrinoArrowStreamTransportError,
 };
 </code></pre></div></section></main></body></html>

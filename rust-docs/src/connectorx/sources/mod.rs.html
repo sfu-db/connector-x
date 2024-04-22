@@ -100,6 +100,8 @@
 <a href="#98" id="98">98</a>
 <a href="#99" id="99">99</a>
 <a href="#100" id="100">100</a>
+<a href="#101" id="101">101</a>
+<a href="#102" id="102">102</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! This module defines four traits [`Source`], [`SourcePartition`], [`PartitionParser`], and [`Produce`]  to define a source.
 //! This module also contains source implementations for various databases.
 
@@ -119,6 +121,8 @@
 </span><span class="kw">pub mod </span>postgres;
 <span class="attr">#[cfg(feature = <span class="string">"src_sqlite"</span>)]
 </span><span class="kw">pub mod </span>sqlite;
+<span class="attr">#[cfg(feature = <span class="string">"src_trino"</span>)]
+</span><span class="kw">pub mod </span>trino;
 
 <span class="kw">use </span><span class="kw">crate</span>::data_order::DataOrder;
 <span class="kw">use </span><span class="kw">crate</span>::errors::ConnectorXError;

@@ -218,6 +218,8 @@
 <a href="#216" id="216">216</a>
 <a href="#217" id="217">217</a>
 <a href="#218" id="218">218</a>
+<a href="#219" id="219">219</a>
+<a href="#220" id="220">220</a>
 </pre></div><pre class="rust"><code><span class="attr">#![allow(clippy::upper_case_acronyms)]
 
 </span><span class="doccomment">//! # ConnectorX
@@ -428,6 +430,8 @@
     </span><span class="kw">pub use </span><span class="kw">crate</span>::sources::postgres::PostgresSource;
     <span class="attr">#[cfg(feature = <span class="string">"src_sqlite"</span>)]
     </span><span class="kw">pub use </span><span class="kw">crate</span>::sources::sqlite::SQLiteSource;
+    <span class="attr">#[cfg(feature = <span class="string">"src_trino"</span>)]
+    </span><span class="kw">pub use </span><span class="kw">crate</span>::sources::trino::TrinoSource;
     <span class="kw">pub use </span><span class="kw">crate</span>::sources::{PartitionParser, Produce, Source, SourcePartition};
     <span class="kw">pub use </span><span class="kw">crate</span>::sql::CXQuery;
     <span class="kw">pub use </span><span class="kw">crate</span>::transports::<span class="kw-2">*</span>;

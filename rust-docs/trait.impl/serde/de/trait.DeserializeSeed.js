@@ -1,0 +1,3 @@
+(function() {var implementors = {
+"connectorx":[["impl&lt;'_a, '_de&gt; <a class=\"trait\" href=\"https://docs.rs/serde/1.0.198/serde/de/trait.DeserializeSeed.html\" title=\"trait serde::de::DeserializeSeed\">DeserializeSeed</a>&lt;'_de&gt; for <a class=\"struct\" href=\"connectorx/sources/trino/struct.__TrinoPartitionQueryResultSeed.html\" title=\"struct connectorx::sources::trino::__TrinoPartitionQueryResultSeed\">__TrinoPartitionQueryResultSeed</a>&lt;'_a&gt;"]]
+};if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

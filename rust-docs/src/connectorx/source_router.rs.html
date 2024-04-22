@@ -83,6 +83,8 @@
 <a href="#81" id="81">81</a>
 <a href="#82" id="82">82</a>
 <a href="#83" id="83">83</a>
+<a href="#84" id="84">84</a>
+<a href="#85" id="85">85</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::constants::CONNECTORX_PROTOCOL;
 <span class="kw">use </span><span class="kw">crate</span>::errors::{ConnectorXError, <span class="prelude-ty">Result</span>};
 <span class="kw">use </span>anyhow::anyhow;
@@ -99,6 +101,7 @@
     Oracle,
     BigQuery,
     DuckDB,
+    Trino,
     Unknown,
 }
 
@@ -143,6 +146,7 @@
             <span class="string">"oracle" </span>=&gt; <span class="prelude-val">Ok</span>(SourceConn::new(SourceType::Oracle, url, proto)),
             <span class="string">"bigquery" </span>=&gt; <span class="prelude-val">Ok</span>(SourceConn::new(SourceType::BigQuery, url, proto)),
             <span class="string">"duckdb" </span>=&gt; <span class="prelude-val">Ok</span>(SourceConn::new(SourceType::DuckDB, url, proto)),
+            <span class="string">"trino" </span>=&gt; <span class="prelude-val">Ok</span>(SourceConn::new(SourceType::Trino, url, proto)),
             <span class="kw">_ </span>=&gt; <span class="prelude-val">Ok</span>(SourceConn::new(SourceType::Unknown, url, proto)),
         }
     }
