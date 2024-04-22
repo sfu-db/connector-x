@@ -4,7 +4,7 @@ import pandas as pd
 import pytest
 from pandas.testing import assert_frame_equal
 
-from .. import read_sql
+from .. import read_sql, ConnectionUrl
 
 
 @pytest.fixture(scope="module")  # type: ignore
@@ -121,9 +121,7 @@ def test_bigquery_some_empty_partition(bigquery_url: str) -> None:
         index=range(1),
         data={
             "test_int": pd.Series([1], dtype="Int64"),
-            "test_string": pd.Series(
-                ["str1"], dtype="object"
-            ),
+            "test_string": pd.Series(["str1"], dtype="object"),
             "test_float": pd.Series([1.10], dtype="float64"),
             "test_bool": pd.Series([True], dtype="boolean"),
         },
@@ -137,10 +135,7 @@ def test_bigquery_some_empty_partition(bigquery_url: str) -> None:
 )
 def test_bigquery_join(bigquery_url: str) -> None:
     query = "SELECT T.test_int, T.test_string, S.test_str FROM `dataprep-bigquery.dataprep.test_table` T INNER JOIN `dataprep-bigquery.dataprep.test_types` S ON T.test_int = S.test_int"
-    df = read_sql(
-        bigquery_url,
-        query
-    )
+    df = read_sql(bigquery_url, query)
     df = df.sort_values("test_int").reset_index(drop=True)
     expected = pd.DataFrame(
         index=range(2),
@@ -151,14 +146,14 @@ def test_bigquery_join(bigquery_url: str) -> None:
                     "str1",
                     "str2",
                 ],
-                dtype="object"
+                dtype="object",
             ),
             "test_str": pd.Series(
                 [
                     "😁😂😜",
                     "こんにちはЗдра́в",
                 ],
-                dtype="object"
+                dtype="object",
             ),
         },
     )
@@ -188,20 +183,19 @@ def test_bigquery_join_with_partition(bigquery_url: str) -> None:
                     "str1",
                     "str2",
                 ],
-                dtype="object"
+                dtype="object",
             ),
             "test_str": pd.Series(
                 [
                     "😁😂😜",
                     "こんにちはЗдра́в",
                 ],
-                dtype="object"
+                dtype="object",
             ),
         },
     )
     df.sort_values(by="test_int", inplace=True, ignore_index=True)
     assert_frame_equal(df, expected, check_names=True)
-
 
 
 @pytest.mark.skipif(
@@ -310,3 +304,11 @@ def test_bigquery_types(bigquery_url: str) -> None:
         },
     )
     assert_frame_equal(df, expected, check_names=True)
+
+
+@pytest.mark.skipif(
+    not os.environ.get("BIGQUERY_URL"),
+    reason="Test bigquery only when `BIGQUERY_URL` is set",
+)
+def test_connection_url(bigquery_url: str) -> None:
+    test_bigquery_types(ConnectionUrl(bigquery_url))

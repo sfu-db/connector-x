@@ -5,7 +5,7 @@ import pandas as pd
 import pytest
 from pandas.testing import assert_frame_equal
 
-from .. import read_sql
+from .. import read_sql, ConnectionUrl
 
 
 @pytest.fixture(scope="module")  # type: ignore
@@ -215,7 +215,6 @@ def test_sqlite_with_partition(sqlite_db: str) -> None:
 
 
 def test_manual_partition(sqlite_db: str) -> None:
-
     queries = [
         "SELECT test_int, test_nullint, test_str, test_float, test_bool, test_date, test_time, test_datetime FROM test_table WHERE test_int < 2",
         "SELECT test_int, test_nullint, test_str, test_float, test_bool, test_date, test_time, test_datetime FROM test_table WHERE test_int >= 2",
@@ -391,3 +390,7 @@ def test_sqlite_cte(sqlite_db: str) -> None:
         },
     )
     assert_frame_equal(df, expected, check_names=True)
+
+
+def test_connection_url(sqlite_db: str) -> None:
+    test_sqlite_cte(ConnectionUrl(sqlite_db))

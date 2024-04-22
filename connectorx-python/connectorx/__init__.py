@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import importlib
-from importlib.metadata import version
+import urllib.parse
 
-from typing import Literal, TYPE_CHECKING, overload
+from importlib.metadata import version
+from pathlib import Path
+from typing import Literal, TYPE_CHECKING, overload, Generic, TypeVar
 
 from .connectorx import (
     read_sql as _read_sql,
@@ -20,7 +22,7 @@ if TYPE_CHECKING:
     import pyarrow as pa
 
     # only for typing hints
-    from .connectorx import  _DataframeInfos, _ArrowInfos
+    from .connectorx import _DataframeInfos, _ArrowInfos
 
 
 __version__ = version(__name__)
@@ -42,7 +44,12 @@ os.environ.setdefault(
 Protocol = Literal["csv", "binary", "cursor", "simple", "text"]
 
 
-def rewrite_conn(conn: str, protocol: Protocol | None = None) -> tuple[str, Protocol]:
+_BackendT = TypeVar("_BackendT")
+
+
+def rewrite_conn(
+    conn: str | ConnectionUrl, protocol: Protocol | None = None
+) -> tuple[str, Protocol]:
     if not protocol:
         # note: redshift/clickhouse are not compatible with the 'binary' protocol, and use other database
         # drivers to connect. set a compatible protocol and masquerade as the appropriate backend.
@@ -59,7 +66,7 @@ def rewrite_conn(conn: str, protocol: Protocol | None = None) -> tuple[str, Prot
 
 
 def get_meta(
-    conn: str,
+    conn: str | ConnectionUrl,
     query: str,
     protocol: Protocol | None = None,
 ) -> pd.DataFrame:
@@ -84,7 +91,7 @@ def get_meta(
 
 
 def partition_sql(
-    conn: str,
+    conn: str | ConnectionUrl,
     query: str,
     partition_on: str,
     partition_num: int,
@@ -118,7 +125,7 @@ def partition_sql(
 
 def read_sql_pandas(
     sql: list[str] | str,
-    con: str | dict[str, str],
+    con: str | ConnectionUrl | dict[str, str] | dict[str, ConnectionUrl],
     index_col: str | None = None,
     protocol: Protocol | None = None,
     partition_on: str | None = None,
@@ -159,7 +166,7 @@ def read_sql_pandas(
 # default return pd.DataFrame
 @overload
 def read_sql(
-    conn: str | dict[str, str],
+    conn: str | ConnectionUrl | dict[str, str] | dict[str, ConnectionUrl],
     query: list[str] | str,
     *,
     protocol: Protocol | None = None,
@@ -172,7 +179,7 @@ def read_sql(
 
 @overload
 def read_sql(
-    conn: str | dict[str, str],
+    conn: str | ConnectionUrl | dict[str, str] | dict[str, ConnectionUrl],
     query: list[str] | str,
     *,
     return_type: Literal["pandas"],
@@ -186,7 +193,7 @@ def read_sql(
 
 @overload
 def read_sql(
-    conn: str | dict[str, str],
+    conn: str | ConnectionUrl | dict[str, str] | dict[str, ConnectionUrl],
     query: list[str] | str,
     *,
     return_type: Literal["arrow", "arrow2"],
@@ -200,7 +207,7 @@ def read_sql(
 
 @overload
 def read_sql(
-    conn: str | dict[str, str],
+    conn: str | ConnectionUrl | dict[str, str] | dict[str, ConnectionUrl],
     query: list[str] | str,
     *,
     return_type: Literal["modin"],
@@ -214,7 +221,7 @@ def read_sql(
 
 @overload
 def read_sql(
-    conn: str | dict[str, str],
+    conn: str | ConnectionUrl | dict[str, str] | dict[str, ConnectionUrl],
     query: list[str] | str,
     *,
     return_type: Literal["dask"],
@@ -228,7 +235,7 @@ def read_sql(
 
 @overload
 def read_sql(
-    conn: str | dict[str, str],
+    conn: str | ConnectionUrl | dict[str, str] | dict[str, ConnectionUrl],
     query: list[str] | str,
     *,
     return_type: Literal["polars", "polars2"],
@@ -241,7 +248,7 @@ def read_sql(
 
 
 def read_sql(
-    conn: str | dict[str, str],
+    conn: str | ConnectionUrl | dict[str, str] | dict[str, ConnectionUrl],
     query: list[str] | str,
     *,
     return_type: Literal[
@@ -477,3 +484,129 @@ def try_import_module(name: str):
         return importlib.import_module(name)
     except ModuleNotFoundError:
         raise ValueError(f"You need to install {name.split('.')[0]} first")
+
+
+_ServerBackendT = TypeVar(
+    "_ServerBackendT",
+    bound=Literal[
+        "redshift",
+        "clickhouse",
+        "postgres",
+        "postgresql",
+        "mysql",
+        "mssql",
+        "oracle",
+        "duckdb",
+    ],
+)
+
+
+class ConnectionUrl(Generic[_BackendT], str):
+    @overload
+    def __new__(
+        cls,
+        *,
+        backend: Literal["sqlite"],
+        db_path: str | Path,
+    ) -> ConnectionUrl[Literal["sqlite"]]:
+        """
+        Help to build sqlite connection string url.
+
+        Parameters
+        ==========
+        backend:
+            must specify "sqlite".
+        db_path:
+            the path to the sqlite database file.
+        """
+
+    @overload
+    def __new__(
+        cls,
+        *,
+        backend: Literal["bigquery"],
+        db_path: str | Path,
+    ) -> ConnectionUrl[Literal["bigquery"]]:
+        """
+        Help to build BigQuery connection string url.
+
+        Parameters
+        ==========
+        backend:
+            must specify "bigquery".
+        db_path:
+            the path to the bigquery database file.
+        """
+
+    @overload
+    def __new__(
+        cls,
+        *,
+        backend: _ServerBackendT,
+        username: str,
+        password: str = "",
+        server: str,
+        port: int,
+        database: str = "",
+        database_options: dict[str, str] | None = None,
+    ) -> ConnectionUrl[_ServerBackendT]:
+        """
+        Help to build server-side backend database connection string url.
+
+        Parameters
+        ==========
+        backend:
+            the database backend.
+        username:
+            the database username.
+        password:
+            the database password.
+        server:
+            the database server name.
+        port:
+            the database server port.
+        database:
+            the database name.
+        database_options:
+            the database options for connection.
+        """
+
+    @overload
+    def __new__(
+        cls,
+        raw_connection: str,
+    ) -> ConnectionUrl:
+        """
+        Build connection from raw connection string url
+
+        Parameters
+        ==========
+        raw_connection:
+            raw connection string
+        """
+
+    def __new__(
+        cls,
+        raw_connection: str | None = None,
+        *,
+        backend: str = "",
+        username: str = "",
+        password: str = "",
+        server: str = "",
+        port: int | None = None,
+        database: str = "",
+        database_options: dict[str, str] | None = None,
+        db_path: str | Path = "",
+    ) -> ConnectionUrl:
+        if raw_connection is not None:
+            return super().__new__(cls, raw_connection)
+
+        assert backend
+        if backend == "sqlite":
+            db_path = urllib.parse.quote(str(db_path))
+            connection = f"{backend}://{db_path}"
+        else:
+            connection = f"{backend}://{username}:{password}@{server}:{port}/{database}"
+            if database_options:
+                connection += "?" + urllib.parse.urlencode(database_options)
+        return super().__new__(cls, connection)
