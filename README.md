@@ -93,8 +93,8 @@ For more planned data sources, please check out our [discussion](https://github.
 - [x] Azure SQL Database (through mssql protocol)
 - [x] Oracle
 - [x] Big Query
+- [ ] Trino (available from v0.3.3)
 - [ ] ODBC (WIP)
-- [ ] Trino (WIP)
 - [ ] ...
 
 ## Destinations
