@@ -24,6 +24,7 @@ pub enum Arrow2TypeSystem {
     Float32Array(bool),
     Float64Array(bool),
     Utf8Array(bool),
+    DateArray32(bool),
 }
 
 impl_typesystem! {
@@ -50,5 +51,6 @@ impl_typesystem! {
         { Float32Array => Vec<f32>    }
         { Float64Array => Vec<f64>    }
         { Utf8Array => Vec<String>    }
+        { DateArray32 => Vec<NaiveDate>}
     }
 }

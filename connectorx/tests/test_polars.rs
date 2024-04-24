@@ -1,3 +1,4 @@
+use chrono::NaiveDate;
 use connectorx::{
     constants::RECORD_BATCH_SIZE,
     destinations::arrow2::Arrow2Destination,
@@ -295,5 +296,36 @@ fn test_pg_pl_name() {
     .unwrap();
 
     println!("{:?}", df);
+    assert_eq!(df, test_df);
+}
+
+fn test_pg_pl_date_array() {
+    let _ = env_logger::builder().is_test(true).try_init();
+    let dburl = env::var("POSTGRES_URL").unwrap();
+    let queries = [CXQuery::naked("select test_datearray from test_types")];
+    let url = Url::parse(dburl.as_str()).unwrap();
+    let (config, _tls) = rewrite_tls_args(&url).unwrap();
+    let builder = PostgresSource::<BinaryProtocol, NoTls>::new(config, NoTls, 2).unwrap();
+    let mut destination = Arrow2Destination::new();
+    let dispatcher = Dispatcher::<_, _, PostgresArrow2Transport<BinaryProtocol, NoTls>>::new(
+        builder,
+        &mut destination,
+        &queries,
+        Some(format!("select * from test_types")),
+    );
+
+    dispatcher.run().expect("run dispatcher");
+
+    let s1: Vec<NaiveDate> = vec![NaiveDate::new("1970-01-01"), NaiveDate::new("2000-02-28")];
+    let s2 = vec![NaiveDate::new("2038-01-18"), NaiveDate::new("2038-02-18")];
+    let s3 = vec![];
+    let s4 = vec![NaiveDate::new(""), NaiveDate::new("2038-01-18")];
+
+    let df: DataFrame = destination.polars().unwrap();
+    let test_df: DataFrame = df!(
+        "test_textdatearray" => &[s1,s2,s3,s4]
+    )
+    .unwrap();
+
     assert_eq!(df, test_df);
 }

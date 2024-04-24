@@ -69,8 +69,9 @@ macro_rules! impl_postgres_transport {
                 { Float4Array[Vec<f32>]             => Float64Array[Vec<f64>]      | conversion auto_vec }
                 { Float8Array[Vec<f64>]             => Float64Array[Vec<f64>]      | conversion auto }
                 { NumericArray[Vec<Decimal>]        => Float64Array[Vec<f64>]      | conversion option }
-                { VarcharArray[Vec<String>]        => Utf8Array[Vec<String>]      | conversion none }
-                { TextArray[Vec<String>]        => Utf8Array[Vec<String>]      | conversion auto }
+                { VarcharArray[Vec<String>]         => Utf8Array[Vec<String>]      | conversion none }
+                { TextArray[Vec<String>]            => Utf8Array[Vec<String>]      | conversion auto }
+                { DateArray[Vec<NaiveDate>]         => DateArray32[Vec<NaiveDate>]    | conversion option }
 
             }
         );
@@ -85,6 +86,15 @@ impl_postgres_transport!(CursorProtocol, NoTls);
 impl_postgres_transport!(CursorProtocol, MakeTlsConnector);
 impl_postgres_transport!(SimpleProtocol, NoTls);
 impl_postgres_transport!(SimpleProtocol, MakeTlsConnector);
+
+
+impl<P, C> TypeConversion<Vec<NaiveDate>, Vec<NaiveDate>> for PostgresArrow2Transport<P, C> {
+    fn convert(val: Vec<NaiveDate>) -> Vec<NaiveDate> {
+        val
+    }
+}
+
+
 
 impl<P, C> TypeConversion<Uuid, String> for PostgresArrow2Transport<P, C> {
     fn convert(val: Uuid) -> String {

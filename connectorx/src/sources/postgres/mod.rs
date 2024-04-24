@@ -478,10 +478,11 @@ impl_produce!(
     NaiveTime,
     // NaiveDateTime,
     // DateTime<Utc>,
-    // NaiveDate,
+    NaiveDate,
     Uuid,
     Value,
     Vec<String>,
+    Vec<NaiveDate>,
 );
 
 impl<'r, 'a> Produce<'r, NaiveDateTime> for PostgresBinarySourcePartitionParser<'a> {
@@ -550,38 +551,6 @@ impl<'r, 'a> Produce<'r, Option<DateTime<Utc>>> for PostgresBinarySourcePartitio
     }
 }
 
-impl<'r, 'a> Produce<'r, NaiveDate> for PostgresBinarySourcePartitionParser<'a> {
-    type Error = PostgresSourceError;
-
-    #[throws(PostgresSourceError)]
-    fn produce(&'r mut self) -> NaiveDate {
-        let (ridx, cidx) = self.next_loc()?;
-        let row = &self.rowbuf[ridx];
-        let val = row.try_get(cidx)?;
-        match val {
-            postgres::types::Date::PosInfinity => NaiveDate::MAX,
-            postgres::types::Date::NegInfinity => NaiveDate::MIN,
-            postgres::types::Date::Value(t) => t,
-        }
-    }
-}
-
-impl<'r, 'a> Produce<'r, Option<NaiveDate>> for PostgresBinarySourcePartitionParser<'a> {
-    type Error = PostgresSourceError;
-
-    #[throws(PostgresSourceError)]
-    fn produce(&'r mut self) -> Option<NaiveDate> {
-        let (ridx, cidx) = self.next_loc()?;
-        let row = &self.rowbuf[ridx];
-        let val = row.try_get(cidx)?;
-        match val {
-            Some(postgres::types::Date::PosInfinity) => Some(NaiveDate::MAX),
-            Some(postgres::types::Date::NegInfinity) => Some(NaiveDate::MIN),
-            Some(postgres::types::Date::Value(t)) => t,
-            None => None
-        }
-    }
-}
 
 impl<'r, 'a> Produce<'r, HashMap<String, Option<String>>>
     for PostgresBinarySourcePartitionParser<'a>
@@ -805,6 +774,59 @@ impl<'r, 'a> Produce<'r, Option<bool>> for PostgresCSVSourceParser<'a> {
         ret
     }
 }
+
+impl<'r, 'a> Produce<'r, Vec<NaiveDate>> for PostgresCSVSourceParser<'a> {
+    type Error = PostgresSourceError;
+
+    #[throws(PostgresSourceError)]
+    fn produce(&'r mut self) -> Vec<NaiveDate>{
+        let (ridx, cidx) = self.next_loc()?;
+        let s = &self.rowbuf[ridx][cidx][..];
+        let naive_date_array: Vec<NaiveDate> = match s {
+            "{}" => vec![],
+             s => {
+                let mut date_array: Vec<NaiveDate> = vec![];
+                let elements = s[1..s.len()-1].split(',');
+                for e in elements {
+                    match NaiveDate::parse_from_str(e,"%Y-%m-%d") {
+                        Ok(date) => {date_array.push(date)}
+                        Err(_) => throw!(ConnectorXError::cannot_produce::<NaiveDate>(Some(s.into())))
+                    }
+                }
+                date_array
+        
+    }
+    };
+    naive_date_array
+}
+}
+
+impl<'r, 'a> Produce<'r, Option<Vec<NaiveDate>>> for PostgresCSVSourceParser<'a> {
+    type Error = PostgresSourceError;
+
+    #[throws(PostgresSourceError)]
+    fn produce(&'r mut self) -> Option<Vec<NaiveDate>>{
+        let (ridx, cidx) = self.next_loc()?;
+        let s = &self.rowbuf[ridx][cidx][..];
+        let naive_date_array: Vec<NaiveDate> = match s {
+            "{}" => vec![],
+             s => {
+                let mut date_array: Vec<NaiveDate> = vec![];
+                let elements = s[1..s.len()-1].split(',');
+                for e in elements {
+                    match NaiveDate::parse_from_str(e,"%Y-%m-%d") {
+                        Ok(date) => {date_array.push(date)}
+                        Err(_) => throw!(ConnectorXError::cannot_produce::<NaiveDate>(Some(s.into())))
+                    }
+                }
+                date_array
+        
+    }
+    };
+    Some(naive_date_array)
+}
+}
+
 
 impl<'r, 'a> Produce<'r, Vec<bool>> for PostgresCSVSourceParser<'a> {
     type Error = PostgresSourceError;
@@ -1301,6 +1323,54 @@ impl<'r, 'a> Produce<'r, NaiveDate> for PostgresRawSourceParser<'a> {
     }
 }
 
+impl<'r, 'a> Produce<'r, Vec<NaiveDate>> for PostgresRawSourceParser<'a> {
+    type Error = PostgresSourceError;
+
+    #[throws(PostgresSourceError)]
+    fn produce(&'r mut self) -> Vec<NaiveDate> {
+        let (ridx, cidx) = self.next_loc()?;
+        let row = &self.rowbuf[ridx];
+        let val: Vec<postgres::types::Date<NaiveDate>> = row.try_get(cidx)?;
+        let mut values: Vec<NaiveDate> = vec![];
+        for v in val {
+            match v {
+                postgres::types::Date::PosInfinity => {values.push(NaiveDate::MAX)}
+                postgres::types::Date::NegInfinity => {values.push(NaiveDate::MIN)}
+                postgres::types::Date::Value(t) => {values.push(t)}
+
+            }
+        }
+
+
+        values
+    }
+
+}
+
+impl<'r, 'a> Produce<'r, Option<Vec<NaiveDate>>> for PostgresRawSourceParser<'a> {
+    type Error = PostgresSourceError;
+
+    #[throws(PostgresSourceError)]
+    fn produce(&'r mut self) -> Option<Vec<NaiveDate>> {
+        let (ridx, cidx) = self.next_loc()?;
+        let row = &self.rowbuf[ridx];
+        let val: Vec<postgres::types::Date<NaiveDate>> = row.try_get(cidx)?;
+        let mut values: Vec<NaiveDate> = vec![];
+        for v in val {
+            match v {
+                postgres::types::Date::PosInfinity => {values.push(NaiveDate::MAX)}
+                postgres::types::Date::NegInfinity => {values.push(NaiveDate::MIN)}
+                postgres::types::Date::Value(t) => {values.push(t)}
+
+            }
+        }
+
+
+        Some(values)
+    }
+
+}
+
 impl<'r, 'a> Produce<'r, Option<NaiveDate>> for PostgresRawSourceParser<'a> {
     type Error = PostgresSourceError;
 
@@ -1702,7 +1772,7 @@ macro_rules! impl_simple_vec_produce {
         )+
     };
 }
-impl_simple_vec_produce!(i16, i32, i64, f32, f64, Decimal, String,);
+impl_simple_vec_produce!(i16, i32, i64, f32, f64, Decimal, String,NaiveDate,);
 
 impl<'r> Produce<'r, Vec<bool>> for PostgresSimpleSourceParser {
     type Error = PostgresSourceError;
