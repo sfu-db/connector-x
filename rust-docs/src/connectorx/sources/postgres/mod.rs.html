@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `connectorx/src/sources/postgres/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-5bc39a1768837dd0.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="connectorx" data-themes="" data-resource-suffix="" data-rustdoc-version="1.77.2 (25ef9e3d8 2024-04-09)" data-channel="1.77.2" data-search-js="search-dd67cee4cfa65049.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-48f368f3872407c8.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `connectorx/src/sources/postgres/mod.rs`."><title>mod.rs - source</title><script> if (window.location.protocol !== "file:") document.write(`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2">`)</script><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-e935ef01ae1c1829.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="connectorx" data-themes="" data-resource-suffix="" data-rustdoc-version="1.78.0 (9b00956e5 2024-04-29)" data-channel="1.78.0" data-search-js="search-42d8da7a6b9792c2.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-12cf3b4f4f9dc36d.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
             <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
     <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../../../connectorx/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
@@ -1984,21 +1984,6 @@
 <a href="#1982" id="1982">1982</a>
 <a href="#1983" id="1983">1983</a>
 <a href="#1984" id="1984">1984</a>
-<a href="#1985" id="1985">1985</a>
-<a href="#1986" id="1986">1986</a>
-<a href="#1987" id="1987">1987</a>
-<a href="#1988" id="1988">1988</a>
-<a href="#1989" id="1989">1989</a>
-<a href="#1990" id="1990">1990</a>
-<a href="#1991" id="1991">1991</a>
-<a href="#1992" id="1992">1992</a>
-<a href="#1993" id="1993">1993</a>
-<a href="#1994" id="1994">1994</a>
-<a href="#1995" id="1995">1995</a>
-<a href="#1996" id="1996">1996</a>
-<a href="#1997" id="1997">1997</a>
-<a href="#1998" id="1998">1998</a>
-<a href="#1999" id="1999">1999</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Source implementation for Postgres database, including the TLS support (client only).
 
 </span><span class="kw">mod </span>connection;
@@ -2166,10 +2151,7 @@
             .unzip();
 
         <span class="self">self</span>.names = names;
-        <span class="self">self</span>.schema = pg_types
-            .iter()
-            .map(PostgresTypeSystem::from)
-            .collect();
+        <span class="self">self</span>.schema = pg_types.iter().map(PostgresTypeSystem::from).collect();
         <span class="self">self</span>.pg_schema = <span class="self">self
             </span>.schema
             .iter()
@@ -2428,7 +2410,7 @@
     }
 }
 
-<span class="macro">macro_rules! </span>impl_produce {
+<span class="macro">macro_rules!</span> impl_produce {
     ($(<span class="macro-nonterminal">$t</span>: ty,)+) =&gt; {
         $(
             <span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, <span class="macro-nonterminal">$t</span>&gt; <span class="kw">for </span>PostgresBinarySourcePartitionParser&lt;<span class="lifetime">'a</span>&gt; {
@@ -2513,8 +2495,8 @@
             <span class="prelude-val">Some</span>(postgres::types::Timestamp::PosInfinity) =&gt; <span class="prelude-val">Some</span>(NaiveDateTime::MAX),
             <span class="prelude-val">Some</span>(postgres::types::Timestamp::NegInfinity) =&gt; <span class="prelude-val">Some</span>(NaiveDateTime::MIN),
             <span class="prelude-val">Some</span>(postgres::types::Timestamp::Value(t)) =&gt; t,
-            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None
-        </span>}
+            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None</span>,
+        }
     }
 }
 
@@ -2546,8 +2528,8 @@
             <span class="prelude-val">Some</span>(postgres::types::Timestamp::PosInfinity) =&gt; <span class="prelude-val">Some</span>(DateTime::&lt;Utc&gt;::MAX_UTC),
             <span class="prelude-val">Some</span>(postgres::types::Timestamp::NegInfinity) =&gt; <span class="prelude-val">Some</span>(DateTime::&lt;Utc&gt;::MIN_UTC),
             <span class="prelude-val">Some</span>(postgres::types::Timestamp::Value(t)) =&gt; t,
-            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None
-        </span>}
+            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None</span>,
+        }
     }
 }
 
@@ -2579,8 +2561,8 @@
             <span class="prelude-val">Some</span>(postgres::types::Date::PosInfinity) =&gt; <span class="prelude-val">Some</span>(NaiveDate::MAX),
             <span class="prelude-val">Some</span>(postgres::types::Date::NegInfinity) =&gt; <span class="prelude-val">Some</span>(NaiveDate::MIN),
             <span class="prelude-val">Some</span>(postgres::types::Date::Value(t)) =&gt; t,
-            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None
-        </span>}
+            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None</span>,
+        }
     }
 }
 
@@ -2668,7 +2650,7 @@
     }
 }
 
-<span class="macro">macro_rules! </span>impl_csv_produce {
+<span class="macro">macro_rules!</span> impl_csv_produce {
     ($(<span class="macro-nonterminal">$t</span>: ty,)+) =&gt; {
         $(
             <span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, <span class="macro-nonterminal">$t</span>&gt; <span class="kw">for </span>PostgresCSVSourceParser&lt;<span class="lifetime">'a</span>&gt; {
@@ -2703,7 +2685,7 @@
 
 <span class="macro">impl_csv_produce!</span>(i8, i16, i32, i64, f32, f64, Uuid,);
 
-<span class="macro">macro_rules! </span>impl_csv_vec_produce {
+<span class="macro">macro_rules!</span> impl_csv_vec_produce {
     ($(<span class="macro-nonterminal">$t</span>: ty,)+) =&gt; {
         $(
             <span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, Vec&lt;<span class="macro-nonterminal">$t</span>&gt;&gt; <span class="kw">for </span>PostgresCSVSourceParser&lt;<span class="lifetime">'a</span>&gt; {
@@ -2854,7 +2836,6 @@
     }
 }
 
-
 <span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, Decimal&gt; <span class="kw">for </span>PostgresCSVSourceParser&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">type </span>Error = PostgresSourceError;
 
@@ -2864,13 +2845,12 @@
         <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.rowbuf[ridx][cidx][..] {
             <span class="string">"Infinity" </span>=&gt; Decimal::MAX,
             <span class="string">"-Infinity" </span>=&gt; Decimal::MIN,
-            v =&gt; v.parse().map_err(|<span class="kw">_</span>| {
-                ConnectorXError::cannot_produce::&lt;Decimal&gt;(<span class="prelude-val">Some</span>(v.into()))
-            })<span class="question-mark">?
-        </span>}
+            v =&gt; v
+                .parse()
+                .map_err(|<span class="kw">_</span>| ConnectorXError::cannot_produce::&lt;Decimal&gt;(<span class="prelude-val">Some</span>(v.into())))<span class="question-mark">?</span>,
+        }
     }
 }
-
 
 <span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, <span class="prelude-ty">Option</span>&lt;Decimal&gt;&gt; <span class="kw">for </span>PostgresCSVSourceParser&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">type </span>Error = PostgresSourceError;
@@ -2882,13 +2862,13 @@
             <span class="string">"" </span>=&gt; <span class="prelude-val">None</span>,
             <span class="string">"Infinity" </span>=&gt; <span class="prelude-val">Some</span>(Decimal::MAX),
             <span class="string">"-Infinity" </span>=&gt; <span class="prelude-val">Some</span>(Decimal::MIN),
-            v =&gt; <span class="prelude-val">Some</span>(v.parse().map_err(|<span class="kw">_</span>| {
-                ConnectorXError::cannot_produce::&lt;Decimal&gt;(<span class="prelude-val">Some</span>(v.into()))
-            })<span class="question-mark">?</span>),
+            v =&gt; <span class="prelude-val">Some</span>(
+                v.parse()
+                    .map_err(|<span class="kw">_</span>| ConnectorXError::cannot_produce::&lt;Decimal&gt;(<span class="prelude-val">Some</span>(v.into())))<span class="question-mark">?</span>,
+            ),
         }
     }
 }
-
 
 <span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, DateTime&lt;Utc&gt;&gt; <span class="kw">for </span>PostgresCSVSourceParser&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">type </span>Error = PostgresSourceError;
@@ -2900,10 +2880,10 @@
             <span class="string">"infinity" </span>=&gt; DateTime::&lt;Utc&gt;::MAX_UTC,
             <span class="string">"-infinity" </span>=&gt; DateTime::&lt;Utc&gt;::MIN_UTC,
             <span class="comment">// postgres csv return example: 1970-01-01 00:00:01+00
-            </span>v =&gt; <span class="macro">format!</span>(<span class="string">"{}:00"</span>, v).parse().map_err(|<span class="kw">_</span>| {
-                    ConnectorXError::cannot_produce::&lt;DateTime&lt;Utc&gt;&gt;(<span class="prelude-val">Some</span>(v.into()))
-            })<span class="question-mark">?
-        </span>}
+            </span>v =&gt; <span class="macro">format!</span>(<span class="string">"{}:00"</span>, v)
+                .parse()
+                .map_err(|<span class="kw">_</span>| ConnectorXError::cannot_produce::&lt;DateTime&lt;Utc&gt;&gt;(<span class="prelude-val">Some</span>(v.into())))<span class="question-mark">?</span>,
+        }
     }
 }
 
@@ -2936,10 +2916,9 @@
         <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.rowbuf[ridx][cidx][..] {
             <span class="string">"infinity" </span>=&gt; NaiveDate::MAX,
             <span class="string">"-infinity" </span>=&gt; NaiveDate::MIN,
-            v =&gt; NaiveDate::parse_from_str(v, <span class="string">"%Y-%m-%d"</span>).map_err(|<span class="kw">_</span>| {
-                ConnectorXError::cannot_produce::&lt;NaiveDate&gt;(<span class="prelude-val">Some</span>(v.into()))
-            })<span class="question-mark">?
-        </span>}
+            v =&gt; NaiveDate::parse_from_str(v, <span class="string">"%Y-%m-%d"</span>)
+                .map_err(|<span class="kw">_</span>| ConnectorXError::cannot_produce::&lt;NaiveDate&gt;(<span class="prelude-val">Some</span>(v.into())))<span class="question-mark">?</span>,
+        }
     }
 }
 
@@ -2970,14 +2949,9 @@
         <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.rowbuf[ridx][cidx] {
             <span class="string">"infinity" </span>=&gt; NaiveDateTime::MAX,
             <span class="string">"-infinity" </span>=&gt; NaiveDateTime::MIN,
-            v =&gt; NaiveDateTime::parse_from_str(v, <span class="string">"%Y-%m-%d %H:%M:%S"</span>).map_err(
-                |<span class="kw">_</span>| {
-                    ConnectorXError::cannot_produce::&lt;NaiveDateTime&gt;(<span class="prelude-val">Some</span>(
-                        v.into(),
-                    ))
-                },
-            )<span class="question-mark">?
-        </span>}
+            v =&gt; NaiveDateTime::parse_from_str(v, <span class="string">"%Y-%m-%d %H:%M:%S"</span>)
+                .map_err(|<span class="kw">_</span>| ConnectorXError::cannot_produce::&lt;NaiveDateTime&gt;(<span class="prelude-val">Some</span>(v.into())))<span class="question-mark">?</span>,
+        }
     }
 }
 
@@ -3163,7 +3137,7 @@
     }
 }
 
-<span class="macro">macro_rules! </span>impl_produce {
+<span class="macro">macro_rules!</span> impl_produce {
     ($(<span class="macro-nonterminal">$t</span>: ty,)+) =&gt; {
         $(
             <span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, <span class="macro-nonterminal">$t</span>&gt; <span class="kw">for </span>PostgresRawSourceParser&lt;<span class="lifetime">'a</span>&gt; {
@@ -3246,9 +3220,8 @@
             <span class="prelude-val">Some</span>(postgres::types::Timestamp::PosInfinity) =&gt; <span class="prelude-val">Some</span>(DateTime::&lt;Utc&gt;::MAX_UTC),
             <span class="prelude-val">Some</span>(postgres::types::Timestamp::NegInfinity) =&gt; <span class="prelude-val">Some</span>(DateTime::&lt;Utc&gt;::MIN_UTC),
             <span class="prelude-val">Some</span>(postgres::types::Timestamp::Value(t)) =&gt; t,
-            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None
-        </span>}
-
+            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None</span>,
+        }
     }
 }
 
@@ -3280,9 +3253,8 @@
             <span class="prelude-val">Some</span>(postgres::types::Timestamp::PosInfinity) =&gt; <span class="prelude-val">Some</span>(NaiveDateTime::MAX),
             <span class="prelude-val">Some</span>(postgres::types::Timestamp::NegInfinity) =&gt; <span class="prelude-val">Some</span>(NaiveDateTime::MIN),
             <span class="prelude-val">Some</span>(postgres::types::Timestamp::Value(t)) =&gt; t,
-            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None
-        </span>}
-
+            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None</span>,
+        }
     }
 }
 
@@ -3316,7 +3288,6 @@
             <span class="prelude-val">Some</span>(postgres::types::Date::Value(t)) =&gt; t,
             <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None</span>,
         }
-
     }
 }
 
@@ -3388,7 +3359,7 @@
     </span>}
 }
 
-<span class="macro">macro_rules! </span>impl_simple_produce_unimplemented {
+<span class="macro">macro_rules!</span> impl_simple_produce_unimplemented {
     ($(<span class="macro-nonterminal">$t</span>: ty,)+) =&gt; {
         $(
             <span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, <span class="macro-nonterminal">$t</span>&gt; <span class="kw">for </span>PostgresSimpleSourceParser {
@@ -3412,7 +3383,7 @@
     };
 }
 
-<span class="macro">macro_rules! </span>impl_simple_produce {
+<span class="macro">macro_rules!</span> impl_simple_produce {
     ($(<span class="macro-nonterminal">$t</span>: ty,)+) =&gt; {
         $(
             <span class="kw">impl</span>&lt;<span class="lifetime">'r</span>&gt; Produce&lt;<span class="lifetime">'r</span>, <span class="macro-nonterminal">$t</span>&gt; <span class="kw">for </span>PostgresSimpleSourceParser {
@@ -3484,9 +3455,7 @@
                 <span class="prelude-val">Some</span>(s) =&gt; s
                     .parse()
                     .map_err(|<span class="kw">_</span>| ConnectorXError::cannot_produce::&lt;Decimal&gt;(<span class="prelude-val">Some</span>(s.into())))<span class="question-mark">?</span>,
-                <span class="prelude-val">None </span>=&gt; <span class="macro">throw!</span>(<span class="macro">anyhow!</span>(
-                    <span class="string">"Cannot parse NULL in NOT NULL column."
-                </span>)),
+                <span class="prelude-val">None </span>=&gt; <span class="macro">throw!</span>(<span class="macro">anyhow!</span>(<span class="string">"Cannot parse NULL in NOT NULL column."</span>)),
             },
             SimpleQueryMessage::CommandComplete(c) =&gt; {
                 <span class="macro">panic!</span>(<span class="string">"get command: {}"</span>, c);
@@ -3644,7 +3613,7 @@
     chars.as_str()
 }
 
-<span class="macro">macro_rules! </span>impl_simple_vec_produce {
+<span class="macro">macro_rules!</span> impl_simple_vec_produce {
     ($(<span class="macro-nonterminal">$t</span>: ty,)+) =&gt; {
         $(
             <span class="kw">impl</span>&lt;<span class="lifetime">'r</span>&gt; Produce&lt;<span class="lifetime">'r</span>, Vec&lt;<span class="macro-nonterminal">$t</span>&gt;&gt; <span class="kw">for </span>PostgresSimpleSourceParser {
@@ -3788,9 +3757,10 @@
                 <span class="prelude-val">Some</span>(s) =&gt; <span class="kw">match </span>s {
                     <span class="string">"infinity" </span>=&gt; NaiveDate::MAX,
                     <span class="string">"-infinity" </span>=&gt; NaiveDate::MIN,
-                    s =&gt; NaiveDate::parse_from_str(s, <span class="string">"%Y-%m-%d"</span>)
-                        .map_err(|<span class="kw">_</span>| ConnectorXError::cannot_produce::&lt;NaiveDate&gt;(<span class="prelude-val">Some</span>(s.into())))<span class="question-mark">?</span>,
-                }
+                    s =&gt; NaiveDate::parse_from_str(s, <span class="string">"%Y-%m-%d"</span>).map_err(|<span class="kw">_</span>| {
+                        ConnectorXError::cannot_produce::&lt;NaiveDate&gt;(<span class="prelude-val">Some</span>(s.into()))
+                    })<span class="question-mark">?</span>,
+                },
                 <span class="prelude-val">None </span>=&gt; <span class="macro">throw!</span>(<span class="macro">anyhow!</span>(<span class="string">"Cannot parse NULL in non-NULL column."</span>)),
             },
             SimpleQueryMessage::CommandComplete(c) =&gt; {
