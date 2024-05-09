@@ -161,10 +161,10 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: ["windows-latest", "macos-latest"]
+        os: ["windows-latest", "macos-13"]
         python-version: ["3.9", "3.10", "3.11", "3.12"]
         include:
-          - os: "macos-latest"
+          - os: "macos-13"
             features: "--features integrated-auth-gssapi"
     steps:
       - uses: actions/checkout@v4
@@ -280,18 +280,16 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: "macos-${{ matrix.python-version }}"
+          name: "macos-arm-${{ matrix.python-version }}"
           path: connectorx-python/target/wheels/*.whl
 
   verify:
     runs-on: ${{ matrix.os }}
-    # do not verify for linux-aarch for now
-    # needs: [win-and-mac, linux, linux-aarch, apple-arm]
-    needs: [win-and-mac, linux, apple-arm]
+    needs: [win-and-mac, linux]
     strategy:
       matrix:
         python-version: ["3.9", "3.10", "3.11", "3.12"]
-        os: [macos-latest, ubuntu-latest, windows-latest]
+        os: [macos-13, ubuntu-latest, windows-latest]
     steps:
       - uses: actions/checkout@v4
 
@@ -308,9 +306,31 @@ jobs:
           pip install *.whl
           python -c "import connectorx"
 
+  verify-arm:
+    runs-on: ${{ matrix.os }}
+    needs: [apple-arm]
+    strategy:
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
+        os: [macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: "macos-arm-${{ matrix.python-version }}"
+
+      - run: |
+          pip install *.whl
+          python -c "import connectorx"
+
   upload:
     runs-on: ubuntu-latest
-    needs: [verify]
+    needs: [verify, verify-arm]
     steps:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
