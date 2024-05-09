@@ -13,9 +13,8 @@ use fehler::{throw, throws};
 use itertools::Itertools;
 use numpy::{PyArray1, PyArray2};
 use pyo3::{
-    prelude::{pyclass, pymethods, PyResult},
+    prelude::*,
     types::{IntoPyDict, PyList, PyTuple},
-    FromPyObject, IntoPy, PyAny, PyObject, Python,
 };
 use std::{
     collections::HashMap,
@@ -42,18 +41,16 @@ impl PandasBlockInfo {
 }
 
 pub struct PandasDestination<'py> {
-    py: Python<'py>,
     nrow: usize,
     schema: Vec<PandasTypeSystem>,
     names: Vec<String>,
-    block_datas: Vec<&'py PyAny>, // either 2d array for normal blocks, or two 1d arrays for extension blocks
+    block_datas: Vec<Bound<'py, PyAny>>, // either 2d array for normal blocks, or two 1d arrays for extension blocks
     block_infos: Vec<PandasBlockInfo>,
 }
 
-impl<'a> PandasDestination<'a> {
-    pub fn new(py: Python<'a>) -> Self {
+impl<'py> PandasDestination<'py> {
+    pub fn new() -> Self {
         PandasDestination {
-            py,
             nrow: 0,
             schema: vec![],
             names: vec![],
@@ -62,47 +59,49 @@ impl<'a> PandasDestination<'a> {
         }
     }
 
-    pub fn result(self) -> Result<&'a PyAny> {
+    pub fn result(self, py: Python<'py>) -> Result<Bound<'py, PyAny>> {
         #[throws(ConnectorXPythonError)]
-        fn to_list<T: IntoPy<PyObject>>(py: Python<'_>, arr: Vec<T>) -> &'_ PyList {
-            let list = PyList::empty(py);
+        fn to_list<T: IntoPy<PyObject>>(py: Python<'_>, arr: Vec<T>) -> Bound<PyList> {
+            let list = PyList::empty_bound(py);
             for e in arr {
                 list.append(e.into_py(py))?;
             }
             list
         }
-        let block_infos = to_list(self.py, self.block_infos)?;
-        let names = to_list(self.py, self.names)?;
-        let block_datas = to_list(self.py, self.block_datas)?;
+        let block_infos = to_list(py, self.block_infos)?;
+        let names = to_list(py, self.names)?;
+        let block_datas = to_list(py, self.block_datas)?;
         let result = [
             ("data", block_datas),
             ("headers", names),
             ("block_infos", block_infos),
         ]
-        .into_py_dict(self.py);
-        Ok(result)
+        .into_py_dict_bound(py);
+        Ok(result.into_any())
     }
 
     #[throws(ConnectorXPythonError)]
-    fn allocate_array<T: numpy::Element + 'a>(
+    fn allocate_array<T: numpy::Element + 'py>(
         &mut self,
+        py: Python<'py>,
         dt: PandasBlockType,
         placement: Vec<usize>,
     ) {
         // has to use `zeros` instead of `new` for String type initialization
-        let data = PyArray2::<T>::zeros(self.py, [placement.len(), self.nrow], false);
+        let data = PyArray2::<T>::zeros_bound(py, [placement.len(), self.nrow], false);
         let block_info = PandasBlockInfo {
             dt,
             cids: placement,
         };
 
-        self.block_datas.push(data.into());
+        self.block_datas.push(data.into_any());
         self.block_infos.push(block_info);
     }
 
     #[throws(ConnectorXPythonError)]
-    fn allocate_masked_array<T: numpy::Element + 'a>(
+    fn allocate_masked_array<T: numpy::Element + 'py>(
         &mut self,
+        py: Python<'py>,
         dt: PandasBlockType,
         placement: Vec<usize>,
     ) {
@@ -111,28 +110,18 @@ impl<'a> PandasDestination<'a> {
                 dt,
                 cids: vec![pos],
             };
-            let data = PyArray1::<T>::zeros(self.py, self.nrow, false);
-            let mask = PyArray1::<bool>::zeros(self.py, self.nrow, false);
-            let obj = PyTuple::new(self.py, vec![data.as_ref(), mask.as_ref()]);
-            self.block_datas.push(obj.into());
+            let data = PyArray1::<T>::zeros_bound(py, self.nrow, false);
+            let mask = PyArray1::<bool>::zeros_bound(py, self.nrow, false);
+            let obj = PyTuple::new_bound(py, vec![data.as_any(), mask.as_any()]);
+            self.block_datas.push(obj.into_any());
             self.block_infos.push(block_info);
         }
     }
-}
-
-impl<'a> Destination for PandasDestination<'a> {
-    const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
-    type TypeSystem = PandasTypeSystem;
-    type Partition<'b> = PandasPartitionDestination<'b> where 'a: 'b;
-    type Error = ConnectorXPythonError;
-
-    fn needs_count(&self) -> bool {
-        true
-    }
 
     #[throws(ConnectorXPythonError)]
-    fn allocate<S: AsRef<str>>(
+    pub fn allocate_py<S: AsRef<str>>(
         &mut self,
+        py: Python<'py>,
         nrows: usize,
         names: &[S],
         schema: &[PandasTypeSystem],
@@ -155,40 +144,63 @@ impl<'a> Destination for PandasDestination<'a> {
         for (dt, placement) in block_indices {
             match dt {
                 PandasBlockType::Boolean(true) => {
-                    self.allocate_masked_array::<bool>(dt, placement)?;
+                    self.allocate_masked_array::<bool>(py, dt, placement)?;
                 }
                 PandasBlockType::Boolean(false) => {
-                    self.allocate_array::<bool>(dt, placement)?;
+                    self.allocate_array::<bool>(py, dt, placement)?;
                 }
                 PandasBlockType::Int64(true) => {
-                    self.allocate_masked_array::<i64>(dt, placement)?;
+                    self.allocate_masked_array::<i64>(py, dt, placement)?;
                 }
                 PandasBlockType::Int64(false) => {
-                    self.allocate_array::<i64>(dt, placement)?;
+                    self.allocate_array::<i64>(py, dt, placement)?;
                 }
                 PandasBlockType::Float64 => {
-                    self.allocate_array::<f64>(dt, placement)?;
+                    self.allocate_array::<f64>(py, dt, placement)?;
                 }
                 PandasBlockType::BooleanArray => {
-                    self.allocate_array::<super::pandas_columns::PyList>(dt, placement)?;
+                    self.allocate_array::<super::pandas_columns::PyList>(py, dt, placement)?;
                 }
                 PandasBlockType::Float64Array => {
-                    self.allocate_array::<super::pandas_columns::PyList>(dt, placement)?;
+                    self.allocate_array::<super::pandas_columns::PyList>(py, dt, placement)?;
                 }
                 PandasBlockType::Int64Array => {
-                    self.allocate_array::<super::pandas_columns::PyList>(dt, placement)?;
+                    self.allocate_array::<super::pandas_columns::PyList>(py, dt, placement)?;
                 }
                 PandasBlockType::String => {
-                    self.allocate_array::<PyString>(dt, placement)?;
+                    self.allocate_array::<PyString>(py, dt, placement)?;
                 }
                 PandasBlockType::DateTime => {
-                    self.allocate_array::<i64>(dt, placement)?;
+                    self.allocate_array::<i64>(py, dt, placement)?;
                 }
                 PandasBlockType::Bytes => {
-                    self.allocate_array::<PyBytes>(dt, placement)?;
+                    self.allocate_array::<PyBytes>(py, dt, placement)?;
                 }
             };
         }
+    }
+}
+
+impl<'py> Destination for PandasDestination<'py> {
+    const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
+    type TypeSystem = PandasTypeSystem;
+    type Partition<'b> = PandasPartitionDestination<'b> where 'py: 'b;
+    type Error = ConnectorXPythonError;
+
+    fn needs_count(&self) -> bool {
+        true
+    }
+
+    #[allow(unreachable_code)]
+    #[throws(ConnectorXPythonError)]
+    fn allocate<S: AsRef<str>>(
+        &mut self,
+        _nrows: usize,
+        _names: &[S],
+        _schema: &[PandasTypeSystem],
+        _data_order: DataOrder,
+    ) {
+        unimplemented!("not implemented for python destination!");
     }
 
     #[throws(ConnectorXPythonError)]
@@ -197,10 +209,10 @@ impl<'a> Destination for PandasDestination<'a> {
             (0..self.schema.len()).map(|_| Vec::new()).collect();
 
         for (idx, block) in self.block_infos.iter().enumerate() {
-            let buf = self.block_datas[idx];
+            let buf = &self.block_datas[idx];
             match block.dt {
                 PandasBlockType::Boolean(_) => {
-                    let bblock = BooleanBlock::extract(buf)?;
+                    let bblock = buf.extract::<BooleanBlock>()?;
 
                     let bcols = bblock.split()?;
                     for (&cid, bcol) in block.cids.iter().zip_eq(bcols) {
@@ -212,7 +224,7 @@ impl<'a> Destination for PandasDestination<'a> {
                     }
                 }
                 PandasBlockType::Float64 => {
-                    let fblock = Float64Block::extract(buf)?;
+                    let fblock = buf.extract::<Float64Block>()?;
                     let fcols = fblock.split()?;
                     for (&cid, fcol) in block.cids.iter().zip_eq(fcols) {
                         partitioned_columns[cid] = fcol
@@ -223,7 +235,7 @@ impl<'a> Destination for PandasDestination<'a> {
                     }
                 }
                 PandasBlockType::BooleanArray => {
-                    let bblock = ArrayBlock::<bool>::extract(buf)?;
+                    let bblock = buf.extract::<ArrayBlock<bool>>()?;
                     let bcols = bblock.split()?;
                     for (&cid, bcol) in block.cids.iter().zip_eq(bcols) {
                         partitioned_columns[cid] = bcol
@@ -234,7 +246,7 @@ impl<'a> Destination for PandasDestination<'a> {
                     }
                 }
                 PandasBlockType::Float64Array => {
-                    let fblock = ArrayBlock::<f64>::extract(buf)?;
+                    let fblock = buf.extract::<ArrayBlock<f64>>()?;
                     let fcols = fblock.split()?;
                     for (&cid, fcol) in block.cids.iter().zip_eq(fcols) {
                         partitioned_columns[cid] = fcol
@@ -245,7 +257,7 @@ impl<'a> Destination for PandasDestination<'a> {
                     }
                 }
                 PandasBlockType::Int64Array => {
-                    let fblock = ArrayBlock::<i64>::extract(buf)?;
+                    let fblock = buf.extract::<ArrayBlock<i64>>()?;
                     let fcols = fblock.split()?;
                     for (&cid, fcol) in block.cids.iter().zip_eq(fcols) {
                         partitioned_columns[cid] = fcol
@@ -256,7 +268,7 @@ impl<'a> Destination for PandasDestination<'a> {
                     }
                 }
                 PandasBlockType::Int64(_) => {
-                    let ublock = Int64Block::extract(buf)?;
+                    let ublock = buf.extract::<Int64Block>()?;
                     let ucols = ublock.split()?;
                     for (&cid, ucol) in block.cids.iter().zip_eq(ucols) {
                         partitioned_columns[cid] = ucol
@@ -267,7 +279,7 @@ impl<'a> Destination for PandasDestination<'a> {
                     }
                 }
                 PandasBlockType::String => {
-                    let sblock = StringBlock::extract(buf)?;
+                    let sblock = buf.extract::<StringBlock>()?;
                     let scols = sblock.split()?;
                     for (&cid, scol) in block.cids.iter().zip_eq(scols) {
                         partitioned_columns[cid] = scol
@@ -278,7 +290,7 @@ impl<'a> Destination for PandasDestination<'a> {
                     }
                 }
                 PandasBlockType::Bytes => {
-                    let bblock = BytesBlock::extract(buf)?;
+                    let bblock = buf.extract::<BytesBlock>()?;
                     let bcols = bblock.split()?;
                     for (&cid, bcol) in block.cids.iter().zip_eq(bcols) {
                         partitioned_columns[cid] = bcol
@@ -289,7 +301,7 @@ impl<'a> Destination for PandasDestination<'a> {
                     }
                 }
                 PandasBlockType::DateTime => {
-                    let dblock = DateTimeBlock::extract(buf)?;
+                    let dblock = buf.extract::<DateTimeBlock>()?;
                     let dcols = dblock.split()?;
                     for (&cid, dcol) in block.cids.iter().zip_eq(dcols) {
                         partitioned_columns[cid] = dcol
@@ -328,18 +340,18 @@ impl<'a> Destination for PandasDestination<'a> {
         self.schema.as_ref()
     }
 }
-pub struct PandasPartitionDestination<'a> {
-    columns: Vec<Box<dyn PandasColumnObject + 'a>>,
-    schema: &'a [PandasTypeSystem],
+pub struct PandasPartitionDestination<'py> {
+    columns: Vec<Box<dyn PandasColumnObject + 'py>>,
+    schema: &'py [PandasTypeSystem],
     seq: usize,
     glob_row: Arc<AtomicUsize>,
     cur_row: usize,
 }
 
-impl<'a> PandasPartitionDestination<'a> {
+impl<'py> PandasPartitionDestination<'py> {
     fn new(
-        columns: Vec<Box<dyn PandasColumnObject + 'a>>,
-        schema: &'a [PandasTypeSystem],
+        columns: Vec<Box<dyn PandasColumnObject + 'py>>,
+        schema: &'py [PandasTypeSystem],
         glob_row: Arc<AtomicUsize>,
     ) -> Self {
         Self {
@@ -361,7 +373,7 @@ impl<'a> PandasPartitionDestination<'a> {
     }
 }
 
-impl<'a> DestinationPartition<'a> for PandasPartitionDestination<'a> {
+impl<'py> DestinationPartition<'py> for PandasPartitionDestination<'py> {
     type TypeSystem = PandasTypeSystem;
     type Error = ConnectorXPythonError;
 
@@ -387,7 +399,7 @@ impl<'a> DestinationPartition<'a> for PandasPartitionDestination<'a> {
     }
 }
 
-impl<'a, T> Consume<T> for PandasPartitionDestination<'a>
+impl<'py, T> Consume<T> for PandasPartitionDestination<'py>
 where
     T: HasPandasColumn + TypeAssoc<PandasTypeSystem> + std::fmt::Debug,
 {
@@ -400,7 +412,7 @@ where
         // How do we check type id for borrowed types?
         // assert!(self.columns[col].typecheck(TypeId::of::<T>()));
 
-        let (column, _): (&mut T::PandasColumn<'a>, *const ()) =
+        let (column, _): (&mut T::PandasColumn<'py>, *const ()) =
             unsafe { transmute(&*self.columns[col]) };
         column.write(value, row)
     }

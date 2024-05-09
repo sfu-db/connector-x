@@ -83,7 +83,7 @@ def test_arrow2_type(postgres_url: str) -> None:
         index=range(4),
         data={
             "test_date": pd.Series(
-                ["1970-01-01", "2000-02-28", "2038-01-18", None], dtype="datetime64[ns]"
+                ["1970-01-01", "2000-02-28", "2038-01-18", None], dtype="datetime64[ms]"
             ),
             "test_timestamp": pd.Series(
                 [

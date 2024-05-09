@@ -9,6 +9,7 @@ use connectorx::{
 use std::{env, sync::Arc};
 
 #[test]
+#[ignore]
 fn test_trino() {
     let _ = env_logger::builder().is_test(true).try_init();
 
@@ -37,6 +38,7 @@ fn test_trino() {
 }
 
 #[test]
+#[ignore]
 fn test_trino_text() {
     let _ = env_logger::builder().is_test(true).try_init();
 

@@ -85,7 +85,7 @@ def get_meta(
 
     """
     conn, protocol = rewrite_conn(conn, protocol)
-    result = _get_meta(conn, protocol, query)
+    result = _get_meta(conn, query, protocol)
     df = reconstruct_pandas(result)
     return df
 

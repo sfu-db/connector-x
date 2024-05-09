@@ -10,4 +10,5 @@ fn main() {
 
     // built::write_built_file_with_opts(&opts, std::path::Path::new(&src), &dst)
     //     .expect("Failed to acquire build-time information");
+    pyo3_build_config::use_pyo3_cfgs();
 }

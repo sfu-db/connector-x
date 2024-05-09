@@ -1,5 +1,6 @@
 use super::{
     destination::PandasDestination,
+    dispatcher::PandasDispatcher,
     transports::{
         BigQueryPandasTransport, MsSQLPandasTransport, MysqlPandasTransport, OraclePandasTransport,
         PostgresPandasTransport, SqlitePandasTransport, TrinoPandasTransport,
@@ -31,9 +32,14 @@ use std::convert::TryFrom;
 use std::sync::Arc;
 
 #[throws(ConnectorXPythonError)]
-pub fn get_meta<'a>(py: Python<'a>, conn: &str, protocol: &str, query: String) -> &'a PyAny {
+pub fn get_meta<'py>(
+    py: Python<'py>,
+    conn: &str,
+    protocol: &str,
+    query: String,
+) -> Bound<'py, PyAny> {
     let source_conn = SourceConn::try_from(conn)?;
-    let mut destination = PandasDestination::new(py);
+    let destination = PandasDestination::new();
     let queries = &[CXQuery::Naked(query)];
 
     match source_conn.ty {
@@ -44,104 +50,81 @@ pub fn get_meta<'a>(py: Python<'a>, conn: &str, protocol: &str, query: String) -
                 ("csv", Some(tls_conn)) => {
                     let sb =
                         PostgresSource::<CSVProtocol, MakeTlsConnector>::new(config, tls_conn, 1)?;
-                    let mut dispatcher = Dispatcher::<
-                        _,
+                    let dispatcher = PandasDispatcher::<
                         _,
                         PostgresPandasTransport<CSVProtocol, MakeTlsConnector>,
-                    >::new(
-                        sb, &mut destination, queries, None
-                    );
+                    >::new(sb, destination, queries, None);
                     debug!("Running dispatcher");
-                    dispatcher.get_meta()?;
+                    dispatcher.get_meta(py)?
                 }
                 ("csv", None) => {
                     let sb = PostgresSource::<CSVProtocol, NoTls>::new(config, NoTls, 1)?;
-                    let mut dispatcher = Dispatcher::<
-                        _,
+                    let dispatcher = PandasDispatcher::<
                         _,
                         PostgresPandasTransport<CSVProtocol, NoTls>,
-                    >::new(
-                        sb, &mut destination, queries, None
-                    );
+                    >::new(sb, destination, queries, None);
                     debug!("Running dispatcher");
-                    dispatcher.get_meta()?;
+                    dispatcher.get_meta(py)?
                 }
                 ("binary", Some(tls_conn)) => {
                     let sb = PostgresSource::<PgBinaryProtocol, MakeTlsConnector>::new(
                         config, tls_conn, 1,
                     )?;
-                    let mut dispatcher =
-                        Dispatcher::<
-                            _,
-                            _,
-                            PostgresPandasTransport<PgBinaryProtocol, MakeTlsConnector>,
-                        >::new(sb, &mut destination, queries, None);
+                    let dispatcher = PandasDispatcher::<
+                        _,
+                        PostgresPandasTransport<PgBinaryProtocol, MakeTlsConnector>,
+                    >::new(sb, destination, queries, None);
                     debug!("Running dispatcher");
-                    dispatcher.get_meta()?;
+                    dispatcher.get_meta(py)?
                 }
                 ("binary", None) => {
                     let sb = PostgresSource::<PgBinaryProtocol, NoTls>::new(config, NoTls, 1)?;
-                    let mut dispatcher = Dispatcher::<
-                        _,
+                    let dispatcher = PandasDispatcher::<
                         _,
                         PostgresPandasTransport<PgBinaryProtocol, NoTls>,
-                    >::new(
-                        sb, &mut destination, queries, None
-                    );
+                    >::new(sb, destination, queries, None);
                     debug!("Running dispatcher");
-                    dispatcher.get_meta()?;
+                    dispatcher.get_meta(py)?
                 }
                 ("cursor", Some(tls_conn)) => {
                     let sb = PostgresSource::<CursorProtocol, MakeTlsConnector>::new(
                         config, tls_conn, 1,
                     )?;
-                    let mut dispatcher = Dispatcher::<
-                        _,
+                    let dispatcher = PandasDispatcher::<
                         _,
                         PostgresPandasTransport<CursorProtocol, MakeTlsConnector>,
-                    >::new(
-                        sb, &mut destination, queries, None
-                    );
+                    >::new(sb, destination, queries, None);
                     debug!("Running dispatcher");
-                    dispatcher.get_meta()?;
+                    dispatcher.get_meta(py)?
                 }
                 ("cursor", None) => {
                     let sb = PostgresSource::<CursorProtocol, NoTls>::new(config, NoTls, 1)?;
-                    let mut dispatcher = Dispatcher::<
-                        _,
+                    let dispatcher = PandasDispatcher::<
                         _,
                         PostgresPandasTransport<CursorProtocol, NoTls>,
-                    >::new(
-                        sb, &mut destination, queries, None
-                    );
+                    >::new(sb, destination, queries, None);
                     debug!("Running dispatcher");
-                    dispatcher.get_meta()?;
+                    dispatcher.get_meta(py)?
                 }
                 ("simple", Some(tls_conn)) => {
                     let sb = PostgresSource::<SimpleProtocol, MakeTlsConnector>::new(
                         config, tls_conn, 1,
                     )?;
-                    let mut dispatcher = Dispatcher::<
-                        _,
+                    let dispatcher = PandasDispatcher::<
                         _,
                         PostgresPandasTransport<SimpleProtocol, MakeTlsConnector>,
-                    >::new(
-                        sb, &mut destination, queries, None
-                    );
+                    >::new(sb, destination, queries, None);
                     debug!("Running dispatcher");
-                    dispatcher.get_meta()?;
+                    dispatcher.get_meta(py)?
                 }
                 ("simple", None) => {
                     let sb = PostgresSource::<SimpleProtocol, NoTls>::new(config, NoTls, 1)?;
-                    let mut dispatcher = Dispatcher::<
-                        _,
+                    let dispatcher = PandasDispatcher::<
                         _,
                         PostgresPandasTransport<SimpleProtocol, NoTls>,
-                    >::new(
-                        sb, &mut destination, queries, None
-                    );
+                    >::new(sb, destination, queries, None);
                     debug!("Running dispatcher");
-                    dispatcher.get_meta()?;
+                    dispatcher.get_meta(py)?
                 }
                 _ => unimplemented!("{} protocol not supported", protocol),
             }
@@ -150,41 +133,40 @@ pub fn get_meta<'a>(py: Python<'a>, conn: &str, protocol: &str, query: String) -
             // remove the first "sqlite://" manually since url.path is not correct for windows
             let path = &source_conn.conn.as_str()[9..];
             let source = SQLiteSource::new(path, 1)?;
-            let mut dispatcher = Dispatcher::<_, _, SqlitePandasTransport>::new(
+            let dispatcher = PandasDispatcher::<_, SqlitePandasTransport>::new(
                 source,
-                &mut destination,
+                destination,
                 queries,
                 None,
             );
             debug!("Running dispatcher");
-            dispatcher.get_meta()?;
+            dispatcher.get_meta(py)?
         }
         SourceType::MySQL => {
             debug!("Protocol: {}", protocol);
             match protocol {
                 "binary" => {
                     let source = MySQLSource::<MySQLBinaryProtocol>::new(&source_conn.conn[..], 1)?;
-                    let mut dispatcher = Dispatcher::<
-                        _,
-                        _,
-                        MysqlPandasTransport<MySQLBinaryProtocol>,
-                    >::new(
-                        source, &mut destination, queries, None
-                    );
-                    debug!("Running dispatcher");
-                    dispatcher.get_meta()?;
-                }
-                "text" => {
-                    let source = MySQLSource::<TextProtocol>::new(&source_conn.conn[..], 1)?;
-                    let mut dispatcher =
-                        Dispatcher::<_, _, MysqlPandasTransport<TextProtocol>>::new(
+                    let dispatcher =
+                        PandasDispatcher::<_, MysqlPandasTransport<MySQLBinaryProtocol>>::new(
                             source,
-                            &mut destination,
+                            destination,
                             queries,
                             None,
                         );
                     debug!("Running dispatcher");
-                    dispatcher.get_meta()?;
+                    dispatcher.get_meta(py)?
+                }
+                "text" => {
+                    let source = MySQLSource::<TextProtocol>::new(&source_conn.conn[..], 1)?;
+                    let dispatcher = PandasDispatcher::<_, MysqlPandasTransport<TextProtocol>>::new(
+                        source,
+                        destination,
+                        queries,
+                        None,
+                    );
+                    debug!("Running dispatcher");
+                    dispatcher.get_meta(py)?
                 }
                 _ => unimplemented!("{} protocol not supported", protocol),
             }
@@ -192,51 +174,49 @@ pub fn get_meta<'a>(py: Python<'a>, conn: &str, protocol: &str, query: String) -
         SourceType::MsSQL => {
             let rt = Arc::new(tokio::runtime::Runtime::new().expect("Failed to create runtime"));
             let source = MsSQLSource::new(rt, &source_conn.conn[..], 1)?;
-            let mut dispatcher = Dispatcher::<_, _, MsSQLPandasTransport>::new(
+            let dispatcher = PandasDispatcher::<_, MsSQLPandasTransport>::new(
                 source,
-                &mut destination,
+                destination,
                 queries,
                 None,
             );
             debug!("Running dispatcher");
-            dispatcher.get_meta()?;
+            dispatcher.get_meta(py)?
         }
         SourceType::Oracle => {
             let source = OracleSource::new(&source_conn.conn[..], 1)?;
-            let mut dispatcher = Dispatcher::<_, _, OraclePandasTransport>::new(
+            let dispatcher = PandasDispatcher::<_, OraclePandasTransport>::new(
                 source,
-                &mut destination,
+                destination,
                 queries,
                 None,
             );
             debug!("Running dispatcher");
-            dispatcher.get_meta()?;
+            dispatcher.get_meta(py)?
         }
         SourceType::BigQuery => {
             let rt = Arc::new(tokio::runtime::Runtime::new().expect("Failed to create runtime"));
             let source = BigQuerySource::new(rt, &source_conn.conn[..])?;
-            let mut dispatcher = Dispatcher::<_, _, BigQueryPandasTransport>::new(
+            let dispatcher = PandasDispatcher::<_, BigQueryPandasTransport>::new(
                 source,
-                &mut destination,
+                destination,
                 queries,
                 None,
             );
             debug!("Running dispatcher");
-            dispatcher.get_meta()?;
+            dispatcher.get_meta(py)?
         }
         SourceType::Trino => {
             let rt = Arc::new(tokio::runtime::Runtime::new().expect("Failed to create runtime"));
             let source = TrinoSource::new(rt, &source_conn.conn[..])?;
-            let dispatcher = Dispatcher::<_, _, TrinoPandasTransport>::new(
+            let dispatcher = PandasDispatcher::<_, TrinoPandasTransport>::new(
                 source,
-                &mut destination,
+                destination,
                 queries,
                 None,
             );
-            dispatcher.run()?;
+            dispatcher.get_meta(py)?
         }
         _ => unimplemented!("{:?} not implemented!", source_conn.ty),
     }
-
-    destination.result()?
 }

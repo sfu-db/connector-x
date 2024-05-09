@@ -10,6 +10,7 @@ use crate::sources::mysql::{MySQLSourceError, MySQLTypeSystem};
 use crate::sources::oracle::{connect_oracle, OracleDialect};
 #[cfg(feature = "src_postgres")]
 use crate::sources::postgres::{rewrite_tls_args, PostgresTypeSystem};
+#[cfg(feature = "src_trino")]
 use crate::sources::trino::TrinoDialect;
 #[cfg(feature = "src_sqlite")]
 use crate::sql::get_partition_range_query_sep;

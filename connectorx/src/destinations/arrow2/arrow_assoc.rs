@@ -208,7 +208,10 @@ impl ArrowAssoc for DateTime<Utc> {
 
     #[inline]
     fn push(builder: &mut Self::Builder, value: DateTime<Utc>) {
-        builder.push(Some(value).map(|x| x.timestamp_nanos()));
+        builder.push(Some(value).map(|x| {
+            x.timestamp_nanos_opt()
+                .unwrap_or_else(|| panic!("out of range DateTime"))
+        }));
     }
 
     fn field(header: &str) -> Field {
@@ -232,7 +235,10 @@ impl ArrowAssoc for Option<DateTime<Utc>> {
 
     #[inline]
     fn push(builder: &mut Self::Builder, value: Option<DateTime<Utc>>) {
-        builder.push(value.map(|x| x.timestamp_nanos()));
+        builder.push(value.map(|x| {
+            x.timestamp_nanos_opt()
+                .unwrap_or_else(|| panic!("out of range DateTime"))
+        }));
     }
 
     fn field(header: &str) -> Field {
@@ -246,7 +252,7 @@ impl ArrowAssoc for Option<DateTime<Utc>> {
 
 fn naive_date_to_date32(nd: NaiveDate) -> i32 {
     match nd.and_hms_opt(0, 0, 0) {
-        Some(dt) => (dt.timestamp() / SECONDS_IN_DAY) as i32,
+        Some(dt) => (dt.and_utc().timestamp() / SECONDS_IN_DAY) as i32,
         None => panic!("and_hms_opt got None from {:?}", nd),
     }
 }
@@ -300,7 +306,11 @@ impl ArrowAssoc for Option<NaiveDateTime> {
 
     #[inline]
     fn push(builder: &mut Self::Builder, value: Option<NaiveDateTime>) {
-        builder.push(value.map(|x| x.timestamp_nanos()));
+        builder.push(value.map(|x| {
+            x.and_utc()
+                .timestamp_nanos_opt()
+                .unwrap_or_else(|| panic!("out of range DateTime"))
+        }));
     }
 
     fn field(header: &str) -> Field {
@@ -323,7 +333,11 @@ impl ArrowAssoc for NaiveDateTime {
     }
 
     fn push(builder: &mut Self::Builder, value: NaiveDateTime) {
-        builder.push(Some(value).map(|x| x.timestamp_nanos()));
+        builder.push(Some(value).map(|x| {
+            x.and_utc()
+                .timestamp_nanos_opt()
+                .unwrap_or_else(|| panic!("out of range DateTime"))
+        }));
     }
 
     fn field(header: &str) -> Field {

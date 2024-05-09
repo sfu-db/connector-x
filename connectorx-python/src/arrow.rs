@@ -10,17 +10,21 @@ use std::convert::TryFrom;
 use std::sync::Arc;
 
 #[throws(ConnectorXPythonError)]
-pub fn write_arrow<'a>(
-    py: Python<'a>,
+pub fn write_arrow<'py>(
+    py: Python<'py>,
     source_conn: &SourceConn,
     origin_query: Option<String>,
     queries: &[CXQuery<String>],
-) -> &'a PyAny {
-    let destination = get_arrow(source_conn, origin_query, queries)?;
-    let rbs = destination.arrow()?;
-    let ptrs = to_ptrs(rbs);
+) -> Bound<'py, PyAny> {
+    let ptrs = py.allow_threads(
+        || -> Result<(Vec<String>, Vec<Vec<(uintptr_t, uintptr_t)>>), ConnectorXPythonError> {
+            let destination = get_arrow(source_conn, origin_query, queries)?;
+            let rbs = destination.arrow()?;
+            Ok(to_ptrs(rbs))
+        },
+    )?;
     let obj: PyObject = ptrs.into_py(py);
-    obj.into_ref(py)
+    obj.into_bound(py)
 }
 
 pub fn to_ptrs(rbs: Vec<RecordBatch>) -> (Vec<String>, Vec<Vec<(uintptr_t, uintptr_t)>>) {

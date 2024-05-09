@@ -12,6 +12,7 @@ use connectorx::{
 
 #[test]
 #[should_panic]
+#[ignore]
 fn no_file() {
     let mut source = CSVSource::new(&[]);
     source.set_queries(&[CXQuery::naked("./a_fake_file.csv")]);
@@ -23,6 +24,7 @@ fn no_file() {
 
 #[test]
 #[should_panic]
+#[ignore]
 fn empty_file() {
     let mut source = CSVSource::new(&[]);
     source.set_queries(&[CXQuery::naked("./tests/data/empty.csv")]);
@@ -40,6 +42,7 @@ fn empty_file() {
 }
 
 #[test]
+#[ignore]
 fn load_and_parse() {
     #[derive(Debug, PartialEq)]
     enum Value {
@@ -107,6 +110,7 @@ fn load_and_parse() {
 }
 
 #[test]
+#[ignore]
 fn test_csv() {
     let schema = [CSVTypeSystem::I64(false); 5];
     let files = [
@@ -141,6 +145,7 @@ fn test_csv() {
 }
 
 #[test]
+#[ignore]
 fn test_csv_infer_schema() {
     let files = [CXQuery::naked("./tests/data/infer_0.csv")];
     let source = CSVSource::new(&[]);

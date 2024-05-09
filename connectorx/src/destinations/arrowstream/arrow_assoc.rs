@@ -148,7 +148,11 @@ impl ArrowAssoc for DateTime<Utc> {
 
     #[throws(ArrowDestinationError)]
     fn append(builder: &mut Self::Builder, value: DateTime<Utc>) {
-        builder.append_value(value.timestamp_nanos())
+        builder.append_value(
+            value
+                .timestamp_nanos_opt()
+                .unwrap_or_else(|| panic!("out of range DateTime")),
+        )
     }
 
     fn field(header: &str) -> Field {
@@ -169,7 +173,10 @@ impl ArrowAssoc for Option<DateTime<Utc>> {
 
     #[throws(ArrowDestinationError)]
     fn append(builder: &mut Self::Builder, value: Option<DateTime<Utc>>) {
-        builder.append_option(value.map(|x| x.timestamp_nanos()))
+        builder.append_option(value.map(|x| {
+            x.timestamp_nanos_opt()
+                .unwrap_or_else(|| panic!("out of range DateTime"))
+        }))
     }
 
     fn field(header: &str) -> Field {
@@ -183,13 +190,13 @@ impl ArrowAssoc for Option<DateTime<Utc>> {
 
 fn naive_date_to_arrow(nd: NaiveDate) -> i32 {
     match nd.and_hms_opt(0, 0, 0) {
-        Some(dt) => (dt.timestamp() / SECONDS_IN_DAY) as i32,
+        Some(dt) => (dt.and_utc().timestamp() / SECONDS_IN_DAY) as i32,
         None => panic!("and_hms_opt got None from {:?}", nd),
     }
 }
 
 fn naive_datetime_to_arrow(nd: NaiveDateTime) -> i64 {
-    nd.timestamp_millis()
+    nd.and_utc().timestamp_millis()
 }
 
 impl ArrowAssoc for Option<NaiveDate> {

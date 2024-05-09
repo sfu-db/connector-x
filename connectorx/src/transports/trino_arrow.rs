@@ -1,9 +1,7 @@
 //! Transport from Trino Source to Arrow Destination.
 
 use crate::{
-    destinations::arrow::{
-        typesystem::ArrowTypeSystem, ArrowDestination, ArrowDestinationError,
-    },
+    destinations::arrow::{typesystem::ArrowTypeSystem, ArrowDestination, ArrowDestinationError},
     impl_transport,
     sources::trino::{TrinoSource, TrinoSourceError, TrinoTypeSystem},
     typesystem::TypeConversion,

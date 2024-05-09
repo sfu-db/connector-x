@@ -8,17 +8,17 @@ mod string;
 // TODO: use macro for integers
 
 use crate::errors::Result;
-pub use crate::pandas::pandas_columns::array::{ArrayBlock, ArrayColumn, PyList};
-pub use crate::pandas::pandas_columns::bytes::{BytesBlock, BytesColumn, PyBytes};
-pub use boolean::{BooleanBlock, BooleanColumn};
-pub use datetime::{DateTimeBlock, DateTimeColumn};
+pub use crate::pandas::pandas_columns::array::{ArrayBlock, PyList};
+pub use crate::pandas::pandas_columns::bytes::{BytesBlock, PyBytes};
+pub use boolean::BooleanBlock;
+pub use datetime::DateTimeBlock;
 use fehler::throw;
-pub use float64::{Float64Block, Float64Column};
-pub use int64::{Int64Block, Int64Column};
+pub use float64::Float64Block;
+pub use int64::Int64Block;
 use pyo3::{exceptions::PyRuntimeError, PyAny, PyResult};
 use std::any::TypeId;
 use std::sync::Mutex;
-pub use string::{StringBlock, StringColumn};
+pub use string::StringBlock;
 
 // A global GIL lock for Python object allocations like string, bytes and list
 lazy_static! {

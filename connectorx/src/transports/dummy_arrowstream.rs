@@ -34,8 +34,7 @@ impl_transport!(
 
 impl TypeConversion<DateTime<Utc>, NaiveDateTime> for DummyArrowTransport {
     fn convert(val: DateTime<Utc>) -> NaiveDateTime {
-        NaiveDateTime::from_timestamp_opt(val.timestamp(), val.timestamp_subsec_nanos())
-            .unwrap_or_else(|| panic!("from_timestamp_opt return None"))
+        val.naive_utc()
     }
 }
 

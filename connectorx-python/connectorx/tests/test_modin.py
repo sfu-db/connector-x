@@ -12,7 +12,9 @@ def postgres_url() -> str:
     conn = os.environ["POSTGRES_URL"]
     return conn
 
-
+@pytest.mark.skipif(
+    not os.environ.get("TEST_MODIN"), reason="Test dask only when `TEST_MODIN` is set"
+)
 def test_modin(postgres_url: str) -> None:
     query = "SELECT * FROM test_table"
     df = read_sql(

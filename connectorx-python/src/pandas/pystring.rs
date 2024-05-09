@@ -1,6 +1,6 @@
 use bitfield::bitfield;
-use numpy::{npyffi::NPY_TYPES, Element, PyArrayDescr};
-use pyo3::{ffi, Py, Python};
+use numpy::{Element, PyArrayDescr};
+use pyo3::{ffi, Bound, Py, Python};
 use std::str::from_utf8_unchecked;
 
 #[derive(Clone, Debug)]
@@ -9,13 +9,13 @@ pub struct PyString(Py<pyo3::types::PyString>);
 
 // In order to put it into a numpy array
 unsafe impl Element for PyString {
-    const DATA_TYPE: numpy::DataType = numpy::DataType::Object;
-    fn is_same_type(dtype: &PyArrayDescr) -> bool {
-        unsafe { *dtype.as_dtype_ptr() }.type_num == NPY_TYPES::NPY_OBJECT as i32
+    const IS_COPY: bool = false;
+    fn get_dtype_bound(py: Python<'_>) -> Bound<'_, PyArrayDescr> {
+        PyArrayDescr::object_bound(py)
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub enum StringInfo {
     ASCII(usize), // len of the string, not byte length
     UCS1(usize),
@@ -128,7 +128,10 @@ bitfield! {
     kind, _: 4, 2;
     compact, _: 5, 5;
     ascii, _: 6, 6;
+    #[cfg(not(Py_3_12))]
     ready, _: 7, 7;
+    #[cfg(Py_3_12)]
+    statically_allocated, _: 7, 7;
 }
 
 #[repr(C)]
@@ -137,6 +140,7 @@ pub struct PyASCIIObject {
     length: ffi::Py_ssize_t,
     hash: ffi::Py_hash_t,
     state: PyUnicodeState,
+    #[cfg(not(Py_3_12))]
     wstr: *mut u8,
     // python string stores data right after all the fields
 }
@@ -153,6 +157,7 @@ pub struct PyCompactUnicodeObject {
     base: PyASCIIObject,
     utf8_length: ffi::Py_ssize_t,
     utf8: *mut u8,
+    #[cfg(not(Py_3_12))]
     wstr_length: ffi::Py_ssize_t,
     // python string stores data right after all the fields
 }

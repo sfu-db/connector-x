@@ -8,6 +8,7 @@ use connectorx::{
     typesystem::TypeConversion,
 };
 
+#[allow(dead_code)]
 pub struct TrinoPandasTransport<'py>(&'py ());
 
 impl_transport!(

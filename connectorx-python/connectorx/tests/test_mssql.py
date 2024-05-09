@@ -16,12 +16,17 @@ def mssql_url() -> str:
 
 
 @pytest.mark.xfail
-def test_on_non_select(mssql_url: str) -> None:
+@pytest.mark.skipif(
+    not os.environ.get("MSSQL_URL"), reason="Test mssql only when `MSSQL_URL` is set"
+)
+def test_mssql_on_non_select(mssql_url: str) -> None:
     query = "CREATE TABLE non_select(id INTEGER NOT NULL)"
     df = read_sql(mssql_url, query)
 
-
-def test_aggregation(mssql_url: str) -> None:
+@pytest.mark.skipif(
+    not os.environ.get("MSSQL_URL"), reason="Test mssql only when `MSSQL_URL` is set"
+)
+def test_mssql_aggregation(mssql_url: str) -> None:
     query = (
         "SELECT test_bool, SUM(test_float) as sum FROM test_table GROUP BY test_bool"
     )
@@ -35,8 +40,10 @@ def test_aggregation(mssql_url: str) -> None:
     )
     assert_frame_equal(df, expected, check_names=True)
 
-
-def test_partition_on_aggregation(mssql_url: str) -> None:
+@pytest.mark.skipif(
+    not os.environ.get("MSSQL_URL"), reason="Test mssql only when `MSSQL_URL` is set"
+)
+def test_mssql_partition_on_aggregation(mssql_url: str) -> None:
     query = (
         "SELECT test_bool, SUM(test_int) AS test_int FROM test_table GROUP BY test_bool"
     )
@@ -51,8 +58,10 @@ def test_partition_on_aggregation(mssql_url: str) -> None:
     df.sort_values(by="test_int", inplace=True, ignore_index=True)
     assert_frame_equal(df, expected, check_names=True)
 
-
-def test_aggregation2(mssql_url: str) -> None:
+@pytest.mark.skipif(
+    not os.environ.get("MSSQL_URL"), reason="Test mssql only when `MSSQL_URL` is set"
+)
+def test_mssql_aggregation2(mssql_url: str) -> None:
     query = "select DISTINCT(test_bool) from test_table"
     df = read_sql(mssql_url, query)
     expected = pd.DataFrame(
@@ -63,8 +72,10 @@ def test_aggregation2(mssql_url: str) -> None:
     )
     assert_frame_equal(df, expected, check_names=True)
 
-
-def test_partition_on_aggregation2(mssql_url: str) -> None:
+@pytest.mark.skipif(
+    not os.environ.get("MSSQL_URL"), reason="Test mssql only when `MSSQL_URL` is set"
+)
+def test_mssql_partition_on_aggregation2(mssql_url: str) -> None:
     query = "select MAX(test_int) as max, MIN(test_int) as min from test_table"
     df = read_sql(mssql_url, query, partition_on="max", partition_num=2)
     expected = pd.DataFrame(
@@ -76,7 +87,9 @@ def test_partition_on_aggregation2(mssql_url: str) -> None:
     )
     assert_frame_equal(df, expected, check_names=True)
 
-
+@pytest.mark.skipif(
+    not os.environ.get("MSSQL_URL"), reason="Test mssql only when `MSSQL_URL` is set"
+)
 def test_mssql_udf(mssql_url: str) -> None:
     query = (
         "SELECT dbo.increment(test_int) AS test_int FROM test_table ORDER BY test_int"
@@ -91,8 +104,10 @@ def test_mssql_udf(mssql_url: str) -> None:
     df.sort_values(by="test_int", inplace=True, ignore_index=True)
     assert_frame_equal(df, expected, check_names=True)
 
-
-def test_manual_partition(mssql_url: str) -> None:
+@pytest.mark.skipif(
+    not os.environ.get("MSSQL_URL"), reason="Test mssql only when `MSSQL_URL` is set"
+)
+def test_mssql_manual_partition(mssql_url: str) -> None:
     queries = [
         "SELECT * FROM test_table WHERE test_int < 2",
         "SELECT * FROM test_table WHERE test_int >= 2",
@@ -117,7 +132,9 @@ def test_manual_partition(mssql_url: str) -> None:
     df.sort_values(by="test_int", inplace=True, ignore_index=True)
     assert_frame_equal(df, expected, check_names=True)
 
-
+@pytest.mark.skipif(
+    not os.environ.get("MSSQL_URL"), reason="Test mssql only when `MSSQL_URL` is set"
+)
 def test_mssql_without_partition(mssql_url: str) -> None:
     query = "SELECT * FROM test_table"
     df = read_sql(mssql_url, query)
@@ -137,7 +154,9 @@ def test_mssql_without_partition(mssql_url: str) -> None:
     )
     assert_frame_equal(df, expected, check_names=True)
 
-
+@pytest.mark.skipif(
+    not os.environ.get("MSSQL_URL"), reason="Test mssql only when `MSSQL_URL` is set"
+)
 def test_mssql_limit_without_partition(mssql_url: str) -> None:
     query = "SELECT top 3 * FROM test_table"
     df = read_sql(mssql_url, query)
@@ -153,7 +172,9 @@ def test_mssql_limit_without_partition(mssql_url: str) -> None:
     )
     assert_frame_equal(df, expected, check_names=True)
 
-
+@pytest.mark.skipif(
+    not os.environ.get("MSSQL_URL"), reason="Test mssql only when `MSSQL_URL` is set"
+)
 def test_mssql_limit_large_without_partition(mssql_url: str) -> None:
     query = "SELECT top 10 * FROM test_table"
     df = read_sql(mssql_url, query)
@@ -173,7 +194,9 @@ def test_mssql_limit_large_without_partition(mssql_url: str) -> None:
     )
     assert_frame_equal(df, expected, check_names=True)
 
-
+@pytest.mark.skipif(
+    not os.environ.get("MSSQL_URL"), reason="Test mssql only when `MSSQL_URL` is set"
+)
 def test_mssql_with_partition(mssql_url: str) -> None:
     query = "SELECT * FROM test_table"
     df = read_sql(
@@ -200,7 +223,9 @@ def test_mssql_with_partition(mssql_url: str) -> None:
     df.sort_values(by="test_int", inplace=True, ignore_index=True)
     assert_frame_equal(df, expected, check_names=True)
 
-
+@pytest.mark.skipif(
+    not os.environ.get("MSSQL_URL"), reason="Test mssql only when `MSSQL_URL` is set"
+)
 def test_mssql_limit_with_partition(mssql_url: str) -> None:
     query = "SELECT top 3 * FROM test_table"
     df = read_sql(
@@ -223,7 +248,9 @@ def test_mssql_limit_with_partition(mssql_url: str) -> None:
     df.sort_values(by="test_int", inplace=True, ignore_index=True)
     assert_frame_equal(df, expected, check_names=True)
 
-
+@pytest.mark.skipif(
+    not os.environ.get("MSSQL_URL"), reason="Test mssql only when `MSSQL_URL` is set"
+)
 def test_mssql_limit_large_with_partition(mssql_url: str) -> None:
     query = "SELECT top 10 * FROM test_table"
     df = read_sql(
@@ -250,7 +277,9 @@ def test_mssql_limit_large_with_partition(mssql_url: str) -> None:
     df.sort_values(by="test_int", inplace=True, ignore_index=True)
     assert_frame_equal(df, expected, check_names=True)
 
-
+@pytest.mark.skipif(
+    not os.environ.get("MSSQL_URL"), reason="Test mssql only when `MSSQL_URL` is set"
+)
 def test_mssql_with_partition_without_partition_range(mssql_url: str) -> None:
     query = "SELECT * FROM test_table where test_float > 3"
     df = read_sql(
@@ -273,7 +302,9 @@ def test_mssql_with_partition_without_partition_range(mssql_url: str) -> None:
     df.sort_values(by="test_int", inplace=True, ignore_index=True)
     assert_frame_equal(df, expected, check_names=True)
 
-
+@pytest.mark.skipif(
+    not os.environ.get("MSSQL_URL"), reason="Test mssql only when `MSSQL_URL` is set"
+)
 def test_mssql_with_partition_and_selection(mssql_url: str) -> None:
     query = "SELECT * FROM test_table WHERE 1 = 3 OR 2 = 2"
     df = read_sql(
@@ -300,7 +331,9 @@ def test_mssql_with_partition_and_selection(mssql_url: str) -> None:
     df.sort_values(by="test_int", inplace=True, ignore_index=True)
     assert_frame_equal(df, expected, check_names=True)
 
-
+@pytest.mark.skipif(
+    not os.environ.get("MSSQL_URL"), reason="Test mssql only when `MSSQL_URL` is set"
+)
 def test_mssql_with_partition_and_projection(mssql_url: str) -> None:
     query = "SELECT test_int, test_float, test_str FROM test_table"
     df = read_sql(
@@ -323,7 +356,9 @@ def test_mssql_with_partition_and_projection(mssql_url: str) -> None:
     df.sort_values(by="test_int", inplace=True, ignore_index=True)
     assert_frame_equal(df, expected, check_names=True)
 
-
+@pytest.mark.skipif(
+    not os.environ.get("MSSQL_URL"), reason="Test mssql only when `MSSQL_URL` is set"
+)
 def test_mssql_with_partition_and_spja(mssql_url: str) -> None:
     query = """
     SELECT test_bool, AVG(test_float) AS avg, SUM(test_int) AS sum 
@@ -344,8 +379,10 @@ def test_mssql_with_partition_and_spja(mssql_url: str) -> None:
     df = df.sort_values("sum").reset_index(drop=True)
     assert_frame_equal(df, expected, check_names=True)
 
-
-def test_empty_result(mssql_url: str) -> None:
+@pytest.mark.skipif(
+    not os.environ.get("MSSQL_URL"), reason="Test mssql only when `MSSQL_URL` is set"
+)
+def test_mssql_empty_result(mssql_url: str) -> None:
     query = "SELECT * FROM test_table where test_int < -100"
     df = read_sql(mssql_url, query)
     expected = pd.DataFrame(
@@ -359,8 +396,10 @@ def test_empty_result(mssql_url: str) -> None:
     )
     assert_frame_equal(df, expected, check_names=True)
 
-
-def test_empty_result_on_partition(mssql_url: str) -> None:
+@pytest.mark.skipif(
+    not os.environ.get("MSSQL_URL"), reason="Test mssql only when `MSSQL_URL` is set"
+)
+def test_mssql_empty_result_on_partition(mssql_url: str) -> None:
     query = "SELECT * FROM test_table where test_int < -100"
     df = read_sql(mssql_url, query, partition_on="test_int", partition_num=3)
     expected = pd.DataFrame(
@@ -374,8 +413,10 @@ def test_empty_result_on_partition(mssql_url: str) -> None:
     )
     assert_frame_equal(df, expected, check_names=True)
 
-
-def test_empty_result_on_some_partition(mssql_url: str) -> None:
+@pytest.mark.skipif(
+    not os.environ.get("MSSQL_URL"), reason="Test mssql only when `MSSQL_URL` is set"
+)
+def test_mssql_empty_result_on_some_partition(mssql_url: str) -> None:
     query = "SELECT * FROM test_table where test_int < 1"
     df = read_sql(mssql_url, query, partition_on="test_int", partition_num=3)
     expected = pd.DataFrame(
@@ -389,7 +430,9 @@ def test_empty_result_on_some_partition(mssql_url: str) -> None:
     )
     assert_frame_equal(df, expected, check_names=True)
 
-
+@pytest.mark.skipif(
+    not os.environ.get("MSSQL_URL"), reason="Test mssql only when `MSSQL_URL` is set"
+)
 def test_mssql_types(mssql_url: str) -> None:
     query = "SELECT * FROM test_types"
     df = read_sql(mssql_url, query)
@@ -454,7 +497,9 @@ def test_mssql_types(mssql_url: str) -> None:
     )
     assert_frame_equal(df, expected, check_names=True)
 
-
+@pytest.mark.skipif(
+    not os.environ.get("MSSQL_URL"), reason="Test mssql only when `MSSQL_URL` is set"
+)
 def test_mssql_unicode(mssql_url: str) -> None:
     query = "SELECT test_hello FROM test_str where 1 <= id and id <= 4"
     df = read_sql(mssql_url, query)
@@ -468,7 +513,9 @@ def test_mssql_unicode(mssql_url: str) -> None:
     )
     assert_frame_equal(df, expected, check_names=True)
 
-
+@pytest.mark.skipif(
+    not os.environ.get("MSSQL_URL"), reason="Test mssql only when `MSSQL_URL` is set"
+)
 def test_mssql_cte(mssql_url: str) -> None:
     query = "with test_cte (test_int, test_str) as (select test_int, test_str from test_table where test_float > 0) select test_int, test_str from test_cte"
     df = read_sql(mssql_url, query, partition_on="test_int", partition_num=3)
@@ -482,7 +529,9 @@ def test_mssql_cte(mssql_url: str) -> None:
     )
     assert_frame_equal(df, expected, check_names=True)
 
-
+@pytest.mark.skipif(
+    not os.environ.get("MSSQL_URL"), reason="Test mssql only when `MSSQL_URL` is set"
+)
 def test_mssql_offset(mssql_url: str) -> None:
     query = "SELECT * FROM (SELECT * FROM test_table) AS _ ORDER BY(SELECT NULL) OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY"
     df = read_sql(mssql_url, query)
@@ -497,6 +546,8 @@ def test_mssql_offset(mssql_url: str) -> None:
     )
     assert_frame_equal(df, expected, check_names=True)
 
-
-def test_connection_url(mssql_url: str) -> None:
+@pytest.mark.skipif(
+    not os.environ.get("MSSQL_URL"), reason="Test mssql only when `MSSQL_URL` is set"
+)
+def test_mssql_connection_url(mssql_url: str) -> None:
     test_mssql_offset(ConnectionUrl(mssql_url))

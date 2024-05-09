@@ -19,7 +19,6 @@ bitfield = "0.13"
 bytes = "1.4"
 chrono = "0.4"
 connectorx = {path = "../connectorx", default-features = false}
-dict_derive = "0.4"
 env_logger = "0.9"
 fehler = "1"
 itertools = "0.10"
@@ -27,13 +26,13 @@ lazy_static = "1.4.0"
 libc = "0.2"
 log = "0.4"
 ndarray = "0.15"
-numpy = "0.15"
+numpy = "0.21"
 openssl = {version = "0.10", features = ["vendored"]}
 postgres = {version = "0.19", features = ["with-chrono-0_4", "with-uuid-0_8", "with-serde_json-1"]}
 postgres-native-tls = {version = "0.5"}
 postgres-openssl = {version = "0.5.0"}
-pyo3 = {version = "0.15", default-features = false, features = ["macros"]}
-pyo3-built = "0.4"
+pyo3 = {version = "0.21", default-features = false, features = ["macros"]}
+pyo3-built = "0.5"
 rust_decimal = {version = "1", features = ["db-postgres"]}
 serde_json = "1"
 sqlparser = "0.37"
@@ -43,9 +42,11 @@ tokio-util = "0.6"
 url = "2"
 urlencoding = "2.1"
 uuid = "0.8"
+rayon = "1"
 
 [build-dependencies]
 built = {version = "0.5", features = ["chrono"]}
+pyo3-build-config = {version = "0.21", features = ["resolve-config"]}
 
 [dev-dependencies]
 criterion = "0.3"
