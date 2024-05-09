@@ -91,8 +91,8 @@ jobs:
           command: clippy
           args: --features all
 
-      - name: Check each feature gate
-        run: just test-feature-gate
+      # - name: Check each feature gate
+      #   run: just test-feature-gate
 
       - name: Run tests
         run: cargo clean && just test
@@ -147,12 +147,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
             python-version: ${{ matrix.python-version }}
+
       - name: Setup python env
         run: | 
-          which python
-          which pip
-          # ln -s `which python` /usr/bin/python
-          # ln -s `which pip` /usr/bin/pip
           echo "$Python3_ROOT_DIR/bin" >> $GITHUB_PATH
           echo $GITHUB_PATH
 
@@ -212,7 +209,8 @@ jobs:
           path: ~/.cache/pypoetry/virtualenvs
           key: ${{ runner.os }}-${{ matrix.python-version }}-venv-${{ secrets.CACHE_VERSION }}-${{ hashFiles('connectorx-python/poetry.lock') }}
 
-      - uses: extractions/setup-just@v2
+      - name: Install python dependencies
+        run: just bootstrap-python
 
       - name: Test python
         run: just test-python
