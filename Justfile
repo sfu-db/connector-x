@@ -15,6 +15,9 @@ build-cpp-release +ARGS="":
 test +ARGS="": 
     cargo test --features all {{ARGS}} -- --nocapture
 
+test-ci: 
+    cargo test --features all --test test_postgres --test test_polars --test test_arrow --test test_mysql
+
 test-feature-gate:
     cargo c --features src_postgres
     cargo c --features src_mysql
