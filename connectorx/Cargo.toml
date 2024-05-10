@@ -58,7 +58,7 @@ uuid = {version = "0.8", optional = true}
 j4rs = {version = "0.15", optional = true}
 datafusion = {version = "31", optional = true}
 prusto = {version = "0.5.1", optional = true}
-serde = {optional = true}
+serde = {version = "1", optional = true}
 
 [lib]
 crate-type = ["cdylib", "rlib"]
