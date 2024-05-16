@@ -597,6 +597,9 @@
 <a href="#595" id="595">595</a>
 <a href="#596" id="596">596</a>
 <a href="#597" id="597">597</a>
+<a href="#598" id="598">598</a>
+<a href="#599" id="599">599</a>
+<a href="#600" id="600">600</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::errors::ConnectorXError;
 <span class="attr">#[cfg(feature = <span class="string">"src_oracle"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::sources::oracle::OracleDialect;
@@ -1061,7 +1064,10 @@
                 .ok_or_else(|| ConnectorXError::SqlQueryNotSupported(sql.to_string()))<span class="question-mark">?
                 </span>.clone();
             <span class="kw">let </span>ast_range: Statement;
-            query.order_by = <span class="macro">vec!</span>[];
+
+            <span class="kw">if </span>query.limit.is_none() &amp;&amp; query.offset.is_none() {
+                query.order_by = <span class="macro">vec!</span>[]; <span class="comment">// only omit orderby when there is no limit and offset in the query
+            </span>}
             <span class="kw">let </span>projection = <span class="macro">vec!</span>[
                 SelectItem::UnnamedExpr(Expr::Function(Function {
                     name: ObjectName(<span class="macro">vec!</span>[Ident {
