@@ -1176,3 +1176,66 @@ def test_postgres_semicolon_list_queries(postgres_url: str) -> None:
     )
     df.sort_values(by="test_int", inplace=True, ignore_index=True)
     assert_frame_equal(df, expected, check_names=True)
+
+def test_postgres_partition_with_orderby(postgres_url: str) -> None:
+    query = "select * from test_table order by test_int"
+    df = read_sql(postgres_url, query=query, partition_on="test_int", partition_num=2)
+
+    expected = pd.DataFrame(
+        index=range(6),
+        data={
+            "test_int": pd.Series([0, 1, 2, 3, 4, 1314], dtype="Int64"),
+            "test_nullint": pd.Series([5, 3, None, 7, 9, 2], dtype="Int64"),
+            "test_str": pd.Series(
+                ["a", "str1", "str2", "b", "c", None], dtype="object"
+            ),
+            "test_float": pd.Series([3.1, None, 2.2, 3, 7.8, -10], dtype="float64"),
+            "test_bool": pd.Series(
+                [None, True, False, False, None, True], dtype="boolean"
+            ),
+        },
+    )
+    df.sort_values(by="test_int", inplace=True, ignore_index=True)
+    assert_frame_equal(df, expected, check_names=True)
+
+def test_postgres_partition_with_orderby_limit_asc(postgres_url: str) -> None:
+    query = "select * from test_table order by test_int asc limit 2"
+    df = read_sql(postgres_url, query=query, partition_on="test_int", partition_num=2)
+
+    expected = pd.DataFrame(
+        index=range(2),
+        data={
+            "test_int": pd.Series([0, 1], dtype="Int64"),
+            "test_nullint": pd.Series([5, 3], dtype="Int64"),
+            "test_str": pd.Series(
+                ["a", "str1"], dtype="object"
+            ),
+            "test_float": pd.Series([3.1, None], dtype="float64"),
+            "test_bool": pd.Series(
+                [None, True], dtype="boolean"
+            ),
+        },
+    )
+    df.sort_values(by="test_int", inplace=True, ignore_index=True)
+    assert_frame_equal(df, expected, check_names=True)
+
+def test_postgres_partition_with_orderby_limit_desc(postgres_url: str) -> None:
+    query = "select * from test_table order by test_int desc limit 2"
+    df = read_sql(postgres_url, query=query, partition_on="test_int", partition_num=2)
+
+    expected = pd.DataFrame(
+        index=range(2),
+        data={
+            "test_int": pd.Series([4, 1314], dtype="Int64"),
+            "test_nullint": pd.Series([9, 2], dtype="Int64"),
+            "test_str": pd.Series(
+                ["c", None], dtype="object"
+            ),
+            "test_float": pd.Series([7.8, -10], dtype="float64"),
+            "test_bool": pd.Series(
+                [None, True], dtype="boolean"
+            ),
+        },
+    )
+    df.sort_values(by="test_int", inplace=True, ignore_index=True)
+    assert_frame_equal(df, expected, check_names=True)

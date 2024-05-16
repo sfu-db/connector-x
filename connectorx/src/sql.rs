@@ -462,7 +462,10 @@ pub fn get_partition_range_query<T: Dialect>(sql: &str, col: &str, dialect: &T) 
                 .ok_or_else(|| ConnectorXError::SqlQueryNotSupported(sql.to_string()))?
                 .clone();
             let ast_range: Statement;
-            query.order_by = vec![];
+
+            if query.limit.is_none() && query.offset.is_none() {
+                query.order_by = vec![]; // only omit orderby when there is no limit and offset in the query
+            }
             let projection = vec![
                 SelectItem::UnnamedExpr(Expr::Function(Function {
                     name: ObjectName(vec![Ident {
