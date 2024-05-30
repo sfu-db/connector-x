@@ -30,6 +30,7 @@ csv = {version = "1", optional = true}
 fallible-streaming-iterator = {version = "0.1", optional = true}
 futures = {version = "0.3", optional = true}
 gcp-bigquery-client = {version = "0.13.0", optional = true}
+yup-oauth2 = {version = "7.0", optional = true}
 hex = {version = "0.4", optional = true}
 native-tls = {version = "0.2", optional = true}
 ndarray = {version = "0.15", optional = true}
@@ -77,7 +78,7 @@ default = ["fptr"]
 dst_arrow = ["arrow"]
 dst_arrow2 = ["polars", "arrow2"]
 fptr = []
-src_bigquery = ["gcp-bigquery-client", "tokio"]
+src_bigquery = ["gcp-bigquery-client", "tokio", "yup-oauth2"]
 src_csv = ["csv", "regex"]
 src_dummy = ["num-traits"]
 src_mssql = ["rust_decimal", "num-traits", "tiberius", "bb8-tiberius", "bb8", "tokio", "tokio-util", "uuid", "futures", "urlencoding"]

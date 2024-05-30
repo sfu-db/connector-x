@@ -23,8 +23,10 @@ use gcp_bigquery_client::{
 use sqlparser::dialect::Dialect;
 use std::sync::Arc;
 use tokio::runtime::Runtime;
-pub use typesystem::BigQueryTypeSystem;
 use url::Url;
+use yup_oauth2::{parse_service_account_key, ServiceAccountKey};
+
+pub use typesystem::BigQueryTypeSystem;
 
 #[derive(Debug)]
 pub struct BigQueryDialect {}
@@ -57,13 +59,45 @@ pub struct BigQuerySource {
 impl BigQuerySource {
     #[throws(BigQuerySourceError)]
     pub fn new(rt: Arc<Runtime>, conn: &str) -> Self {
+        if conn.starts_with("bigquery://json?key=") {
+            let url = Url::parse(conn).unwrap();
+            let key = url.query_pairs().next().unwrap().1.to_string();
+            return Self::new_from_key_json(rt, &key)?;
+        }
+
         let url = Url::parse(conn)?;
         let sa_key_path = url.path();
+
         let client = Arc::new(rt.block_on(
             gcp_bigquery_client::Client::from_service_account_key_file(sa_key_path),
         ));
         let auth_data = std::fs::read_to_string(sa_key_path)?;
         let auth_json: serde_json::Value = serde_json::from_str(&auth_data)?;
+        let project_id = auth_json
+            .get("project_id")
+            .ok_or_else(|| anyhow!("Cannot get project_id from auth file"))?
+            .as_str()
+            .ok_or_else(|| anyhow!("Cannot get project_id as string from auth file"))?
+            .to_string();
+        Self {
+            rt,
+            client,
+            project_id,
+            origin_query: None,
+            queries: vec![],
+            names: vec![],
+            schema: vec![],
+        }
+    }
+
+    #[throws(BigQuerySourceError)]
+    fn new_from_key_json(rt: Arc<Runtime>, sa_key_json: &str) -> Self {
+        let key: ServiceAccountKey = parse_service_account_key(sa_key_json)?;
+
+        let client = Arc::new(rt.block_on(
+            gcp_bigquery_client::Client::from_service_account_key(key, true),
+        )?);
+        let auth_json: serde_json::Value = serde_json::from_str(sa_key_json)?;
         let project_id = auth_json
             .get("project_id")
             .ok_or_else(|| anyhow!("Cannot get project_id from auth file"))?
@@ -1136,7 +1170,8 @@ impl<'r, 'a> Produce<'r, Option<DateTime<Utc>>> for BigQuerySourceParser {
                     * 1e9) as i64;
                 let secs = timestamp_ns / 1000000000;
                 let nsecs = (timestamp_ns % 1000000000) as u32;
-                NaiveDateTime::from_timestamp_opt(secs, nsecs).map(|ndt| DateTime::<Utc>::from_naive_utc_and_offset(ndt, Utc))
+                NaiveDateTime::from_timestamp_opt(secs, nsecs)
+                    .map(|ndt| DateTime::<Utc>::from_naive_utc_and_offset(ndt, Utc))
             }
         }
     }
