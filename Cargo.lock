@@ -1017,7 +1017,7 @@ dependencies = [
  "rust_decimal_macros",
  "serde",
  "serde_json",
- "sqlparser 0.37.0",
+ "sqlparser 0.47.0",
  "thiserror",
  "tiberius",
  "tokio",
@@ -4727,6 +4727,15 @@ checksum = "37ae05a8250b968a3f7db93155a84d68b2e6cea1583949af5ca5b5170c76c075"
 dependencies = [
  "log",
  "sqlparser_derive",
+]
+
+[[package]]
+name = "sqlparser"
+version = "0.47.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "295e9930cd7a97e58ca2a070541a3ca502b17f5d1fa7157376d0fabd85324f25"
+dependencies = [
+ "log",
 ]
 
 [[package]]
