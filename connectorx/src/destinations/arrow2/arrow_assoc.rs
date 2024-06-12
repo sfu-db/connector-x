@@ -1,3 +1,4 @@
+use super::typesystem::{DateTimeWrapperMicro, NaiveDateTimeWrapperMicro, NaiveTimeWrapperMicro};
 use arrow2::{
     array::*,
     datatypes::{DataType as ArrowDataType, Field, TimeUnit},
@@ -250,11 +251,63 @@ impl ArrowAssoc for Option<DateTime<Utc>> {
     }
 }
 
+impl ArrowAssoc for DateTimeWrapperMicro {
+    type Builder = MutablePrimitiveArray<i64>;
+
+    fn builder(nrows: usize) -> Self::Builder {
+        MutablePrimitiveArray::with_capacity(nrows).to(ArrowDataType::Timestamp(
+            TimeUnit::Microsecond,
+            Some("UTC".to_string()),
+        ))
+    }
+
+    #[inline]
+    fn push(builder: &mut Self::Builder, value: DateTimeWrapperMicro) {
+        builder.push(Some(value).map(|x| x.0.timestamp_micros()));
+    }
+
+    fn field(header: &str) -> Field {
+        Field::new(
+            header,
+            ArrowDataType::Timestamp(TimeUnit::Microsecond, Some("UTC".to_string())),
+            true,
+        )
+    }
+}
+
+impl ArrowAssoc for Option<DateTimeWrapperMicro> {
+    type Builder = MutablePrimitiveArray<i64>;
+
+    fn builder(nrows: usize) -> Self::Builder {
+        MutablePrimitiveArray::with_capacity(nrows).to(ArrowDataType::Timestamp(
+            TimeUnit::Microsecond,
+            Some("UTC".to_string()),
+        ))
+    }
+
+    #[inline]
+    fn push(builder: &mut Self::Builder, value: Option<DateTimeWrapperMicro>) {
+        builder.push(value.map(|x| x.0.timestamp_micros()));
+    }
+
+    fn field(header: &str) -> Field {
+        Field::new(
+            header,
+            ArrowDataType::Timestamp(TimeUnit::Microsecond, Some("UTC".to_string())),
+            false,
+        )
+    }
+}
+
 fn naive_date_to_date32(nd: NaiveDate) -> i32 {
     match nd.and_hms_opt(0, 0, 0) {
         Some(dt) => (dt.and_utc().timestamp() / SECONDS_IN_DAY) as i32,
         None => panic!("and_hms_opt got None from {:?}", nd),
     }
+}
+
+fn naive_time_to_time64_micros(nd: NaiveTime) -> i64 {
+    nd.num_seconds_from_midnight() as i64 * 1_000_000 + (nd.nanosecond() as i64 / 1000)
 }
 
 fn naive_time_to_time64_nanos(nd: NaiveTime) -> i64 {
@@ -292,6 +345,53 @@ impl ArrowAssoc for NaiveDate {
 
     fn field(header: &str) -> Field {
         Field::new(header, ArrowDataType::Date32, false)
+    }
+}
+
+impl ArrowAssoc for Option<NaiveDateTimeWrapperMicro> {
+    type Builder = MutablePrimitiveArray<i64>;
+
+    fn builder(nrows: usize) -> Self::Builder {
+        // naive => None
+        MutablePrimitiveArray::with_capacity(nrows)
+            .to(ArrowDataType::Timestamp(TimeUnit::Microsecond, None))
+    }
+
+    #[inline]
+    fn push(builder: &mut Self::Builder, value: Option<NaiveDateTimeWrapperMicro>) {
+        builder.push(value.map(|x| x.0.and_utc().timestamp_micros()));
+    }
+
+    fn field(header: &str) -> Field {
+        // naive => None
+        Field::new(
+            header,
+            ArrowDataType::Timestamp(TimeUnit::Microsecond, None),
+            true,
+        )
+    }
+}
+
+impl ArrowAssoc for NaiveDateTimeWrapperMicro {
+    type Builder = MutablePrimitiveArray<i64>;
+
+    fn builder(nrows: usize) -> Self::Builder {
+        // naive => None
+        MutablePrimitiveArray::with_capacity(nrows)
+            .to(ArrowDataType::Timestamp(TimeUnit::Microsecond, None))
+    }
+
+    fn push(builder: &mut Self::Builder, value: NaiveDateTimeWrapperMicro) {
+        builder.push(Some(value).map(|x| x.0.and_utc().timestamp_micros()));
+    }
+
+    fn field(header: &str) -> Field {
+        // naive => None
+        Field::new(
+            header,
+            ArrowDataType::Timestamp(TimeUnit::Microsecond, None),
+            true,
+        )
     }
 }
 
@@ -347,6 +447,41 @@ impl ArrowAssoc for NaiveDateTime {
             ArrowDataType::Timestamp(TimeUnit::Nanosecond, None),
             true,
         )
+    }
+}
+
+impl ArrowAssoc for Option<NaiveTimeWrapperMicro> {
+    type Builder = MutablePrimitiveArray<i64>;
+
+    fn builder(nrows: usize) -> Self::Builder {
+        MutablePrimitiveArray::with_capacity(nrows).to(ArrowDataType::Time64(TimeUnit::Microsecond))
+    }
+
+    fn push(builder: &mut Self::Builder, value: Option<NaiveTimeWrapperMicro>) {
+        builder.push(match value {
+            Some(val) => Some(naive_time_to_time64_micros(val.0)),
+            None => None,
+        });
+    }
+
+    fn field(header: &str) -> Field {
+        Field::new(header, ArrowDataType::Time64(TimeUnit::Microsecond), true)
+    }
+}
+
+impl ArrowAssoc for NaiveTimeWrapperMicro {
+    type Builder = MutablePrimitiveArray<i64>;
+
+    fn builder(nrows: usize) -> Self::Builder {
+        MutablePrimitiveArray::with_capacity(nrows).to(ArrowDataType::Time64(TimeUnit::Microsecond))
+    }
+
+    fn push(builder: &mut Self::Builder, value: NaiveTimeWrapperMicro) {
+        builder.push(Some(value.0).map(naive_time_to_time64_nanos));
+    }
+
+    fn field(header: &str) -> Field {
+        Field::new(header, ArrowDataType::Time64(TimeUnit::Microsecond), false)
     }
 }
 

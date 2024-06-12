@@ -1,6 +1,15 @@
 use crate::impl_typesystem;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
 
+#[derive(Debug, Clone, Copy)]
+pub struct DateTimeWrapperMicro(pub DateTime<Utc>);
+
+#[derive(Debug, Clone, Copy)]
+pub struct NaiveTimeWrapperMicro(pub NaiveTime);
+
+#[derive(Debug, Clone, Copy)]
+pub struct NaiveDateTimeWrapperMicro(pub NaiveDateTime);
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum Arrow2TypeSystem {
     Int32(bool),
@@ -14,8 +23,11 @@ pub enum Arrow2TypeSystem {
     LargeBinary(bool),
     Date32(bool),
     Date64(bool),
+    Date64Micro(bool),
     Time64(bool),
+    Time64Micro(bool),
     DateTimeTz(bool),
+    DateTimeTzMicro(bool),
     BoolArray(bool),
     Int32Array(bool),
     Int64Array(bool),
@@ -29,26 +41,29 @@ pub enum Arrow2TypeSystem {
 impl_typesystem! {
     system = Arrow2TypeSystem,
     mappings = {
-        { Int32      => i32           }
-        { Int64      => i64           }
-        { UInt32     => u32           }
-        { UInt64     => u64           }
-        { Float64    => f64           }
-        { Float32    => f32           }
-        { Boolean    => bool          }
-        { LargeUtf8  => String        }
-        { LargeBinary => Vec<u8>      }
-        { Date32     => NaiveDate     }
-        { Date64     => NaiveDateTime }
-        { Time64     => NaiveTime     }
-        { DateTimeTz => DateTime<Utc> }
-        { BoolArray  => Vec<bool>     }
-        { Int32Array => Vec<i32>      }
-        { Int64Array => Vec<i64>      }
-        { UInt32Array => Vec<u32>     }
-        { UInt64Array => Vec<u64>     }
-        { Float32Array => Vec<f32>    }
-        { Float64Array => Vec<f64>    }
-        { Utf8Array => Vec<String>    }
+        { Int32           => i32           }
+        { Int64           => i64           }
+        { UInt32          => u32           }
+        { UInt64          => u64           }
+        { Float64         => f64           }
+        { Float32         => f32           }
+        { Boolean         => bool          }
+        { LargeUtf8       => String        }
+        { LargeBinary     => Vec<u8>       }
+        { Date32          => NaiveDate     }
+        { Date64          => NaiveDateTime }
+        { Date64Micro     => NaiveDateTimeWrapperMicro }
+        { Time64          => NaiveTime     }
+        { Time64Micro     => NaiveTimeWrapperMicro }
+        { DateTimeTz      => DateTime<Utc> }
+        { DateTimeTzMicro => DateTimeWrapperMicro }
+        { BoolArray       => Vec<bool>     }
+        { Int32Array      => Vec<i32>      }
+        { Int64Array      => Vec<i64>      }
+        { UInt32Array     => Vec<u32>      }
+        { UInt64Array     => Vec<u64>      }
+        { Float32Array    => Vec<f32>      }
+        { Float64Array    => Vec<f64>      }
+        { Utf8Array       => Vec<String>   }
     }
 }

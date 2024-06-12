@@ -1,7 +1,10 @@
 //! Transport from Postgres Source to Arrow2 Destination.
 
 use crate::destinations::arrow2::{
-    typesystem::Arrow2TypeSystem, Arrow2Destination, Arrow2DestinationError,
+    typesystem::{
+        Arrow2TypeSystem, DateTimeWrapperMicro, NaiveDateTimeWrapperMicro, NaiveTimeWrapperMicro,
+    },
+    Arrow2Destination, Arrow2DestinationError,
 };
 use crate::sources::postgres::{
     BinaryProtocol, CSVProtocol, CursorProtocol, PostgresSource, PostgresSourceError,
@@ -53,10 +56,10 @@ macro_rules! impl_postgres_transport {
                 { VarChar[&'r str]                  => LargeUtf8[String]           | conversion none }
                 { Enum[&'r str]                     => LargeUtf8[String]           | conversion none }
                 { Name[&'r str]                     => LargeUtf8[String]           | conversion none }
-                { Timestamp[NaiveDateTime]          => Date64[NaiveDateTime]       | conversion auto }
+                { Timestamp[NaiveDateTime]          => Date64Micro[NaiveDateTimeWrapperMicro] | conversion option }
                 { Date[NaiveDate]                   => Date32[NaiveDate]           | conversion auto }
-                { Time[NaiveTime]                   => Time64[NaiveTime]           | conversion auto }
-                { TimestampTz[DateTime<Utc>]        => DateTimeTz[DateTime<Utc>]   | conversion auto }
+                { Time[NaiveTime]                   => Time64Micro[NaiveTimeWrapperMicro]     | conversion option }
+                { TimestampTz[DateTime<Utc>]        => DateTimeTzMicro[DateTimeWrapperMicro]  | conversion option }
                 { UUID[Uuid]                        => LargeUtf8[String]           | conversion option }
                 { Char[&'r str]                     => LargeUtf8[String]           | conversion none }
                 { ByteA[Vec<u8>]                    => LargeBinary[Vec<u8>]        | conversion auto }
@@ -85,6 +88,26 @@ impl_postgres_transport!(CursorProtocol, NoTls);
 impl_postgres_transport!(CursorProtocol, MakeTlsConnector);
 impl_postgres_transport!(SimpleProtocol, NoTls);
 impl_postgres_transport!(SimpleProtocol, MakeTlsConnector);
+
+impl<P, C> TypeConversion<NaiveTime, NaiveTimeWrapperMicro> for PostgresArrow2Transport<P, C> {
+    fn convert(val: NaiveTime) -> NaiveTimeWrapperMicro {
+        NaiveTimeWrapperMicro(val)
+    }
+}
+
+impl<P, C> TypeConversion<NaiveDateTime, NaiveDateTimeWrapperMicro>
+    for PostgresArrow2Transport<P, C>
+{
+    fn convert(val: NaiveDateTime) -> NaiveDateTimeWrapperMicro {
+        NaiveDateTimeWrapperMicro(val)
+    }
+}
+
+impl<P, C> TypeConversion<DateTime<Utc>, DateTimeWrapperMicro> for PostgresArrow2Transport<P, C> {
+    fn convert(val: DateTime<Utc>) -> DateTimeWrapperMicro {
+        DateTimeWrapperMicro(val)
+    }
+}
 
 impl<P, C> TypeConversion<Uuid, String> for PostgresArrow2Transport<P, C> {
     fn convert(val: Uuid) -> String {
