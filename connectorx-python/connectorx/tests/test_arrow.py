@@ -92,7 +92,7 @@ def test_arrow2_type(postgres_url: str) -> None:
                     "2038-01-18 23:59:59",
                     None,
                 ],
-                dtype="datetime64[ns]",
+                dtype="datetime64[us]",
             ),
             "test_timestamptz": pd.Series(
                 [
@@ -101,7 +101,7 @@ def test_arrow2_type(postgres_url: str) -> None:
                     "2038-01-18 15:59:59+00:00",
                     None,
                 ],
-                dtype="datetime64[ns, UTC]",
+                dtype="datetime64[us, UTC]",
             ),
             "test_int16": pd.Series([0, 1, 2, 3], dtype="int32"),
             "test_int64": pd.Series(
