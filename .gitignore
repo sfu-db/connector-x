@@ -1,5 +1,5 @@
 *.swp
-
+.DS_Store
 **/target
 .vscode
 connectorx-python/connectorx/*.so

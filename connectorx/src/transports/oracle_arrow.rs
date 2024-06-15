@@ -1,5 +1,8 @@
 use crate::{
-    destinations::arrow::{typesystem::ArrowTypeSystem, ArrowDestination, ArrowDestinationError},
+    destinations::arrow::{
+        typesystem::{ArrowTypeSystem, DateTimeWrapperMicro, NaiveDateTimeWrapperMicro},
+        ArrowDestination, ArrowDestinationError,
+    },
     impl_transport,
     sources::oracle::{OracleSource, OracleSourceError, OracleTypeSystem},
     typesystem::TypeConversion,
@@ -39,7 +42,21 @@ impl_transport!(
         { NVarChar[String]           => LargeUtf8[String]          | conversion none }
         { NChar[String]              => LargeUtf8[String]          | conversion none }
         { Date[NaiveDateTime]        => Date64[NaiveDateTime]      | conversion auto }
-        { Timestamp[NaiveDateTime]   => Date64[NaiveDateTime]      | conversion none }
-        { TimestampTz[DateTime<Utc>] => DateTimeTz[DateTime<Utc>]  | conversion auto }
+        { Timestamp[NaiveDateTime]   => Date64Micro[NaiveDateTimeWrapperMicro]  | conversion option }
+        { TimestampNano[NaiveDateTime]   => Date64[NaiveDateTime]      | conversion none }
+        { TimestampTz[DateTime<Utc>] => DateTimeTz[DateTimeWrapperMicro]        | conversion option }
+        { TimestampTzNano[DateTime<Utc>] => DateTimeTz[DateTime<Utc>]  | conversion auto }
     }
 );
+
+impl TypeConversion<NaiveDateTime, NaiveDateTimeWrapperMicro> for OracleArrowTransport {
+    fn convert(val: NaiveDateTime) -> NaiveDateTimeWrapperMicro {
+        NaiveDateTimeWrapperMicro(val)
+    }
+}
+
+impl TypeConversion<DateTime<Utc>, DateTimeWrapperMicro> for OracleArrowTransport {
+    fn convert(val: DateTime<Utc>) -> DateTimeWrapperMicro {
+        DateTimeWrapperMicro(val)
+    }
+}
