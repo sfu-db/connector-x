@@ -16,7 +16,7 @@ def oracle_url() -> str:
 @pytest.mark.skipif(
     not os.environ.get("ORACLE_URL"), reason="Test oracle only when `ORACLE_URL` is set"
 )
-def test_on_non_select(oracle_url: str) -> None:
+def test_oracle_on_non_select(oracle_url: str) -> None:
     query = "CREATE TABLE non_select(id INTEGER NOT NULL)"
     read_sql(oracle_url, query)
 

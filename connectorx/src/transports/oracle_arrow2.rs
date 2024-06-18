@@ -41,9 +41,9 @@ impl_transport!(
         { Char[String]                  => LargeUtf8[String]            | conversion none }
         { NVarChar[String]              => LargeUtf8[String]            | conversion none }
         { NChar[String]                 => LargeUtf8[String]            | conversion none }
-        { Date[NaiveDateTime]           => Date64[NaiveDateTime]        | conversion auto }
-        { Timestamp[NaiveDateTime]      => Date64Micro[NaiveDateTimeWrapperMicro]       | conversion option }
-        { TimestampNano[NaiveDateTime]      => Date64[NaiveDateTime]        | conversion none }
+        { Date[NaiveDateTime]           => Date64Micro[NaiveDateTimeWrapperMicro]       | conversion option }
+        { Timestamp[NaiveDateTime]      => Date64Micro[NaiveDateTimeWrapperMicro]       | conversion none }
+        { TimestampNano[NaiveDateTime]      => Date64[NaiveDateTime]        | conversion auto }
         { TimestampTz[DateTime<Utc>]    => DateTimeTzMicro[DateTimeWrapperMicro]        | conversion option }
         { TimestampTzNano[DateTime<Utc>]    => DateTimeTz[DateTime<Utc>]    | conversion auto }
     }
