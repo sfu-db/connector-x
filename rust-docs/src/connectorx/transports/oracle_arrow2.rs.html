@@ -103,9 +103,9 @@
         { Char[String]                  =&gt; LargeUtf8[String]            | conversion none }
         { NVarChar[String]              =&gt; LargeUtf8[String]            | conversion none }
         { NChar[String]                 =&gt; LargeUtf8[String]            | conversion none }
-        { Date[NaiveDateTime]           =&gt; Date64[NaiveDateTime]        | conversion auto }
-        { Timestamp[NaiveDateTime]      =&gt; Date64Micro[NaiveDateTimeWrapperMicro]       | conversion option }
-        { TimestampNano[NaiveDateTime]      =&gt; Date64[NaiveDateTime]        | conversion none }
+        { Date[NaiveDateTime]           =&gt; Date64Micro[NaiveDateTimeWrapperMicro]       | conversion option }
+        { Timestamp[NaiveDateTime]      =&gt; Date64Micro[NaiveDateTimeWrapperMicro]       | conversion none }
+        { TimestampNano[NaiveDateTime]      =&gt; Date64[NaiveDateTime]        | conversion auto }
         { TimestampTz[DateTime&lt;Utc&gt;]    =&gt; DateTimeTzMicro[DateTimeWrapperMicro]        | conversion option }
         { TimestampTzNano[DateTime&lt;Utc&gt;]    =&gt; DateTimeTz[DateTime&lt;Utc&gt;]    | conversion auto }
     }
