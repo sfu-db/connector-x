@@ -73,7 +73,7 @@ impl BigQuerySource {
 
         let client = Arc::new(rt.block_on(
             gcp_bigquery_client::Client::from_service_account_key_file(sa_key_path),
-        ));
+        )?);
         let auth_data = std::fs::read_to_string(sa_key_path)?;
         let auth_json: serde_json::Value = serde_json::from_str(&auth_data)?;
         let project_id = auth_json

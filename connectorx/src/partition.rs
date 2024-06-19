@@ -468,7 +468,7 @@ fn bigquery_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64
     let sa_key_path = url.path();
     let client = rt.block_on(gcp_bigquery_client::Client::from_service_account_key_file(
         sa_key_path,
-    ));
+    ))?;
 
     let auth_data = std::fs::read_to_string(sa_key_path)?;
     let auth_json: serde_json::Value = serde_json::from_str(&auth_data)?;
