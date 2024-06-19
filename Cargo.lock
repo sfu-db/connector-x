@@ -2106,8 +2106,7 @@ dependencies = [
 [[package]]
 name = "gcp-bigquery-client"
 version = "0.13.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "09ab5966c98f6d4e71e247cda6a6d8497bc8a1df3a4ba9ee548087842cffc21d"
+source = "git+https://github.com/magnowlia/gcp-bigquery-client?branch=magnowlia-v0.13#a43bbe9470da0af01da2d127272f4a9be613acda"
 dependencies = [
  "async-stream 0.3.5",
  "hyper",

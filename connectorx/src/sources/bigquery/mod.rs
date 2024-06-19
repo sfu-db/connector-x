@@ -21,7 +21,10 @@ use gcp_bigquery_client::{
     Client,
 };
 use sqlparser::dialect::Dialect;
-use std::sync::Arc;
+use std::{
+    io::{Error, ErrorKind},
+    sync::Arc,
+};
 use tokio::runtime::Runtime;
 use url::Url;
 use yup_oauth2::{parse_service_account_key, ServiceAccountKey};
@@ -95,7 +98,7 @@ impl BigQuerySource {
         let key: ServiceAccountKey = parse_service_account_key(sa_key_json)?;
 
         let client = Arc::new(rt.block_on(
-            gcp_bigquery_client::Client::from_service_account_key(key, true),
+            gcp_bigquery_client::Client::from_service_account_key(key, false),
         )?);
         let auth_json: serde_json::Value = serde_json::from_str(sa_key_json)?;
         let project_id = auth_json
@@ -296,6 +299,25 @@ impl SourcePartition for BigQuerySourcePartition {
                 params,
             ),
         )?;
+
+        if let Some(false) = rs.job_complete {
+            let _ = self.rt.block_on(
+                job.cancel_job(
+                    job_info
+                        .project_id
+                        .as_ref()
+                        .ok_or_else(|| anyhow!("project_id is none"))?,
+                    job_info
+                        .job_id
+                        .as_ref()
+                        .ok_or_else(|| anyhow!("job_id is none"))?,
+                    job_info.location.as_deref(),
+                ),
+            );
+            let err =
+                std::io::Error::new(ErrorKind::TimedOut, "Job took too long and was cancelled.");
+            throw!(err);
+        }
         BigQuerySourceParser::new(self.rt.clone(), self.client.clone(), rs, &self.schema)
     }
 
