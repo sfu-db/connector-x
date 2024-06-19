@@ -5,9 +5,11 @@ on:
     branches:
       - prerelease
       - release
+  pull_request:
 
 jobs:
   linux:
+    if: false
     runs-on: ubuntu-latest
     container: quay.io/pypa/manylinux_2_28_x86_64
     strategy:
@@ -96,68 +98,98 @@ jobs:
           name: "ubuntu-latest-${{ matrix.python-version[1] }}"
           path: connectorx-python/target/wheels/*.whl
 
-  # linux-aarch:
-  #   runs-on: ubuntu-latest
-  #   container: ghcr.io/rust-cross/manylinux_2_28-cross:aarch64
-  #   strategy:
-  #     matrix:
-  #       python-version: [[38, "3.8"], [39, "3.9"], [310, "3.10"], [311, "3.11"]]
-  #   steps:
-  #     - uses: actions/checkout@v2
+  linux-aarch:
+    runs-on: ubuntu-latest
+    container: quay.io/pypa/manylinux_2_28_aarch64
+    strategy:
+      matrix:
+        python-version: [[39, "3.9"], [310, "3.10"], [311, "3.11"], [312, "3.12"]]
+    steps:
+      - uses: actions/checkout@v4
 
-  #     - name: Set python version
-  #       run: |
-  #         echo "/opt/python/cp${{ matrix.python-version[0] }}-cp${{ matrix.python-version[0] }}/bin" >> $GITHUB_PATH
+      - name: Set python version
+        run: |
+          echo "/opt/python/cp${{ matrix.python-version[0] }}-cp${{ matrix.python-version[0] }}/bin" >> $GITHUB_PATH
 
-  #     - uses: actions-rs/toolchain@v1
-  #       with:
-  #         toolchain: 1.71.1
-  #         components: rustfmt
-  #         target: aarch64-unknown-linux-gnu
-  #         default: true
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          components: rustfmt
+          target: aarch64-unknown-linux-gnu
+          default: true
 
-  #     - uses: extractions/setup-just@v1
-  #       env:
-  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: extractions/setup-just@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  #     - uses: Gr1N/setup-poetry@v9
+      - uses: Gr1N/setup-poetry@v9
 
-  #     - name: Install tools
-  #       run: |
-  #         yum install -y epel-release
-  #         yum install -y mysql-devel postgresql-devel freetds-devel krb5-libs clang-devel
+      - name: Install tools
+        run: |
+          yum install -y epel-release
+          yum install -y mysql-devel postgresql-devel freetds-devel krb5-libs clang-devel
 
-  #     - name: Setup project
-  #       run: |
-  #         just bootstrap-python
+      - name: Setup project
+        run: |
+          just bootstrap-python
 
-  #     - uses: PyO3/maturin-action@v1
-  #       with:
-  #         rust-toolchain: 1.71.1
-  #         command: build
-  #         args: -m connectorx-python/Cargo.toml --target aarch64-unknown-linux-gnu -i python --release --manylinux 2_28 --features integrated-auth-gssapi
-  #       env:
-  #         SQLITE3_STATIC: 1
+      - uses: PyO3/maturin-action@v1
+        with:
+          rust-toolchain: stable
+          command: build
+          args: -m connectorx-python/Cargo.toml --target aarch64-unknown-linux-gnu -i python --release --manylinux 2_28 --features integrated-auth-gssapi
+          before-script-linux: |
+            # If we're running on rhel centos, install needed packages.
+            if command -v yum &> /dev/null; then
+                yum update -y && yum install -y perl-core openssl openssl-devel pkgconfig libatomic
 
-  #     - name: Copy j4rs dependencies into dist
-  #       run: |
-  #         cp -rf connectorx-python/target/release/jassets connectorx-python/connectorx/dependencies
+                # If we're running on i686 we need to symlink libatomic
+                # in order to build openssl with -latomic flag.
+                if [[ ! -d "/usr/lib64" ]]; then
+                    ln -s /usr/lib/libatomic.so.1 /usr/lib/libatomic.so
+                fi
+            else
+                # If we're running on debian-based system.
+                apt update -y && apt-get install -y libssl-dev openssl pkg-config
+            fi
+        env:
+          SQLITE3_STATIC: 1
 
-  #     # rebuild the wheel to incorporate j4rs dependencies
-  #     - uses: PyO3/maturin-action@v1
-  #       with:
-  #         rust-toolchain: 1.71.1
-  #         command: build
-  #         args: -m connectorx-python/Cargo.toml --target aarch64-unknown-linux-gnu -i python --release --manylinux 2_28 --features integrated-auth-gssapi
-  #       env:
-  #         SQLITE3_STATIC: 1
+      - name: Copy j4rs dependencies into dist
+        run: |
+          cp -rf connectorx-python/target/release/jassets connectorx-python/connectorx/dependencies
 
-  #     - uses: actions/upload-artifact@v3
-  #       with:
-  #         name: "aarch-${{ matrix.python-version[1] }}"
-  #         path: connectorx-python/target/wheels/*.whl
+      # rebuild the wheel to incorporate j4rs dependencies
+      - uses: PyO3/maturin-action@v1
+        with:
+          rust-toolchain: stable
+          command: build
+          args: -m connectorx-python/Cargo.toml --target aarch64-unknown-linux-gnu -i python --release --manylinux 2_28 --features integrated-auth-gssapi
+          before-script-linux: |
+            # If we're running on rhel centos, install needed packages.
+            if command -v yum &> /dev/null; then
+                yum update -y && yum install -y perl-core openssl openssl-devel pkgconfig libatomic
+
+                # If we're running on i686 we need to symlink libatomic
+                # in order to build openssl with -latomic flag.
+                if [[ ! -d "/usr/lib64" ]]; then
+                    ln -s /usr/lib/libatomic.so.1 /usr/lib/libatomic.so
+                fi
+            else
+                # If we're running on debian-based system.
+                apt update -y && apt-get install -y libssl-dev openssl pkg-config
+            fi
+        env:
+          SQLITE3_STATIC: 1
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: "aarch-${{ matrix.python-version[1] }}"
+          path: connectorx-python/target/wheels/*.whl
+
 
   win-and-mac:
+    if: false
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -223,6 +255,7 @@ jobs:
           path: connectorx-python/target/wheels/*.whl
 
   apple-arm:
+    if: false
     runs-on: macos-latest
     strategy:
       matrix:
@@ -284,6 +317,7 @@ jobs:
           path: connectorx-python/target/wheels/*.whl
 
   verify:
+    if: false
     runs-on: ${{ matrix.os }}
     needs: [win-and-mac, linux]
     strategy:
@@ -307,6 +341,7 @@ jobs:
           python -c "import connectorx"
 
   verify-arm:
+    if: false
     runs-on: ${{ matrix.os }}
     needs: [apple-arm]
     strategy:
@@ -329,6 +364,7 @@ jobs:
           python -c "import connectorx"
 
   upload:
+    if: false
     runs-on: ubuntu-latest
     needs: [verify, verify-arm]
     steps:
