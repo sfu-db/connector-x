@@ -197,10 +197,10 @@ BibTeX entry:
                 </a>
             </td>
             <td align="center">
-                <a href="https://github.com/wseaton">
-                    <img src="https://avatars.githubusercontent.com/u/16678729?v=4" width="66;" alt="wseaton"/>
+                <a href="https://github.com/Jordan-M-Young">
+                    <img src="https://avatars.githubusercontent.com/u/54070169?v=4" width="66;" alt="Jordan-M-Young"/>
                     <br />
-                    <sub><b>Will Eaton</b></sub>
+                    <sub><b>Jordan M. Young</b></sub>
                 </a>
             </td>
 		</tr>
@@ -213,10 +213,10 @@ BibTeX entry:
                 </a>
             </td>
             <td align="center">
-                <a href="https://github.com/Jordan-M-Young">
-                    <img src="https://avatars.githubusercontent.com/u/54070169?v=4" width="66;" alt="Jordan-M-Young"/>
+                <a href="https://github.com/wseaton">
+                    <img src="https://avatars.githubusercontent.com/u/16678729?v=4" width="66;" alt="wseaton"/>
                     <br />
-                    <sub><b>Jordan M. Young</b></sub>
+                    <sub><b>Will Eaton</b></sub>
                 </a>
             </td>
             <td align="center">
@@ -234,17 +234,17 @@ BibTeX entry:
                 </a>
             </td>
             <td align="center">
-                <a href="https://github.com/jinzew">
-                    <img src="https://avatars.githubusercontent.com/u/55274369?v=4" width="66;" alt="jinzew"/>
-                    <br />
-                    <sub><b>Null</b></sub>
-                </a>
-            </td>
-            <td align="center">
                 <a href="https://github.com/gruuya">
                     <img src="https://avatars.githubusercontent.com/u/45558892?v=4" width="66;" alt="gruuya"/>
                     <br />
                     <sub><b>Marko Grujic</b></sub>
+                </a>
+            </td>
+            <td align="center">
+                <a href="https://github.com/jinzew">
+                    <img src="https://avatars.githubusercontent.com/u/55274369?v=4" width="66;" alt="jinzew"/>
+                    <br />
+                    <sub><b>Null</b></sub>
                 </a>
             </td>
 		</tr>
@@ -285,21 +285,14 @@ BibTeX entry:
                 </a>
             </td>
             <td align="center">
-                <a href="https://github.com/glennpierce">
-                    <img src="https://avatars.githubusercontent.com/u/691783?v=4" width="66;" alt="glennpierce"/>
+                <a href="https://github.com/CBQu">
+                    <img src="https://avatars.githubusercontent.com/u/16992497?v=4" width="66;" alt="CBQu"/>
                     <br />
-                    <sub><b>Glenn Pierce</b></sub>
+                    <sub><b>CbQu</b></sub>
                 </a>
             </td>
 		</tr>
 		<tr>
-            <td align="center">
-                <a href="https://github.com/jorgecarleitao">
-                    <img src="https://avatars.githubusercontent.com/u/2772607?v=4" width="66;" alt="jorgecarleitao"/>
-                    <br />
-                    <sub><b>Jorge Leitao</b></sub>
-                </a>
-            </td>
             <td align="center">
                 <a href="https://github.com/quambene">
                     <img src="https://avatars.githubusercontent.com/u/33333672?v=4" width="66;" alt="quambene"/>
@@ -308,24 +301,31 @@ BibTeX entry:
                 </a>
             </td>
             <td align="center">
-                <a href="https://github.com/CBQu">
-                    <img src="https://avatars.githubusercontent.com/u/16992497?v=4" width="66;" alt="CBQu"/>
+                <a href="https://github.com/jorgecarleitao">
+                    <img src="https://avatars.githubusercontent.com/u/2772607?v=4" width="66;" alt="jorgecarleitao"/>
                     <br />
-                    <sub><b>CbQu</b></sub>
+                    <sub><b>Jorge Leitao</b></sub>
                 </a>
             </td>
             <td align="center">
-                <a href="https://github.com/tschm">
-                    <img src="https://avatars.githubusercontent.com/u/2046079?v=4" width="66;" alt="tschm"/>
+                <a href="https://github.com/glennpierce">
+                    <img src="https://avatars.githubusercontent.com/u/691783?v=4" width="66;" alt="glennpierce"/>
                     <br />
-                    <sub><b>Thomas Schmelzer</b></sub>
+                    <sub><b>Glenn Pierce</b></sub>
                 </a>
             </td>
             <td align="center">
-                <a href="https://github.com/maxb2">
-                    <img src="https://avatars.githubusercontent.com/u/9096667?v=4" width="66;" alt="maxb2"/>
+                <a href="https://github.com/alexander-beedie">
+                    <img src="https://avatars.githubusercontent.com/u/2613171?v=4" width="66;" alt="alexander-beedie"/>
                     <br />
-                    <sub><b>Matthew Anderson</b></sub>
+                    <sub><b>Alexander Beedie</b></sub>
+                </a>
+            </td>
+            <td align="center">
+                <a href="https://github.com/FerriLuli">
+                    <img src="https://avatars.githubusercontent.com/u/110925223?v=4" width="66;" alt="FerriLuli"/>
+                    <br />
+                    <sub><b>FerriLuli</b></sub>
                 </a>
             </td>
             <td align="center">
@@ -338,17 +338,17 @@ BibTeX entry:
 		</tr>
 		<tr>
             <td align="center">
-                <a href="https://github.com/FerriLuli">
-                    <img src="https://avatars.githubusercontent.com/u/110925223?v=4" width="66;" alt="FerriLuli"/>
+                <a href="https://github.com/maxb2">
+                    <img src="https://avatars.githubusercontent.com/u/9096667?v=4" width="66;" alt="maxb2"/>
                     <br />
-                    <sub><b>FerriLuli</b></sub>
+                    <sub><b>Matthew Anderson</b></sub>
                 </a>
             </td>
             <td align="center">
-                <a href="https://github.com/alexander-beedie">
-                    <img src="https://avatars.githubusercontent.com/u/2613171?v=4" width="66;" alt="alexander-beedie"/>
+                <a href="https://github.com/tschm">
+                    <img src="https://avatars.githubusercontent.com/u/2046079?v=4" width="66;" alt="tschm"/>
                     <br />
-                    <sub><b>Alexander Beedie</b></sub>
+                    <sub><b>Thomas Schmelzer</b></sub>
                 </a>
             </td>
             <td align="center">
@@ -474,6 +474,13 @@ BibTeX entry:
                     <img src="https://avatars.githubusercontent.com/u/11072061?v=4" width="66;" alt="aljazerzen"/>
                     <br />
                     <sub><b>Aljaž Mur Eržen</b></sub>
+                </a>
+            </td>
+            <td align="center">
+                <a href="https://github.com/aimtsou">
+                    <img src="https://avatars.githubusercontent.com/u/2598924?v=4" width="66;" alt="aimtsou"/>
+                    <br />
+                    <sub><b>Aimilios Tsouvelekakis</b></sub>
                 </a>
             </td>
 		</tr>
