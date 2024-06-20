@@ -483,7 +483,10 @@ def try_import_module(name: str):
     try:
         return importlib.import_module(name)
     except ModuleNotFoundError:
-        raise ValueError(f"You need to install {name.split('.')[0]} first")
+        raise ModuleNotFoundError(
+            f"You need to install the '{name.split('.')[0]}' module first "
+            "before trying to import it"
+        )
 
 
 _ServerBackendT = TypeVar(
