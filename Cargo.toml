@@ -8,5 +8,5 @@ debug = true
 lto = true
 
 [workspace.dependencies]
-arrow = {version = "46", features = ["prettyprint", "ffi"]}
+arrow = {version = "51", features = ["prettyprint", "ffi"]}
 arrow2 = {version = "0.17", default-features = false}
