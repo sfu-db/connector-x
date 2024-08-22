@@ -24,6 +24,7 @@ use sqlparser::dialect::Dialect;
 use std::{
     io::{Error, ErrorKind},
     sync::Arc,
+    time::SystemTime,
 };
 use tokio::runtime::Runtime;
 use url::Url;
@@ -154,24 +155,91 @@ where
                 self.project_id.as_str(),
                 QueryRequest::new(l1query.as_str()),
             ))?;
-            let (names, types) = rs
-                .query_response()
-                .schema
-                .as_ref()
-                .ok_or_else(|| anyhow!("TableSchema is none"))?
-                .fields
-                .as_ref()
-                .ok_or_else(|| anyhow!("TableFieldSchema is none"))?
-                .iter()
-                .map(|col| {
-                    (
-                        col.clone().name,
-                        BigQueryTypeSystem::from(&col.clone().r#type),
-                    )
-                })
-                .unzip();
-            self.names = names;
-            self.schema = types;
+
+            match rs.query_response().job_complete {
+                Some(true) => {
+                    let (names, types) = rs
+                        .query_response()
+                        .schema
+                        .as_ref()
+                        .ok_or_else(|| anyhow!("TableSchema is none"))?
+                        .fields
+                        .as_ref()
+                        .ok_or_else(|| anyhow!("TableFieldSchema is none"))?
+                        .iter()
+                        .map(|col| {
+                            (
+                                col.clone().name,
+                                BigQueryTypeSystem::from(&col.clone().r#type),
+                            )
+                        })
+                        .unzip();
+                    self.names = names;
+                    self.schema = types;
+                }
+                Some(false) => {
+                    let job_id = rs
+                        .query_response()
+                        .job_reference
+                        .as_ref()
+                        .ok_or_else(|| anyhow!("JobReference is none"))?
+                        .job_id
+                        .as_ref()
+                        .ok_or_else(|| anyhow!("JobId is none"))?;
+
+                    let params = GetQueryResultsParameters {
+                        format_options: None,
+                        location: None,
+                        max_results: None,
+                        page_token: None,
+                        start_index: None,
+                        timeout_ms: None,
+                    };
+
+                    let mut poll_count = 0;
+                    loop {
+                        let rs = self.rt.block_on(job.get_query_results(
+                            self.project_id.as_str(),
+                            job_id,
+                            params.clone(),
+                        ))?;
+
+                        if !rs.job_complete.unwrap_or(false) {
+                            poll_count += 1;
+                            if poll_count >= 10 {
+                                let _ = self.rt.block_on(job.cancel_job(
+                                    self.project_id.as_str(),
+                                    job_id,
+                                    None,
+                                ));
+                                throw!(anyhow!("Job took too long and was cancelled"));
+                            }
+                            continue;
+                        }
+
+                        let (names, types) = rs
+                            .schema
+                            .as_ref()
+                            .ok_or_else(|| anyhow!("TableSchema is none"))?
+                            .fields
+                            .as_ref()
+                            .ok_or_else(|| anyhow!("TableFieldSchema is none"))?
+                            .iter()
+                            .map(|col| {
+                                (
+                                    col.clone().name,
+                                    BigQueryTypeSystem::from(&col.clone().r#type),
+                                )
+                            })
+                            .unzip();
+                        self.names = names;
+                        self.schema = types;
+
+                        break;
+                    }
+                }
+                None => throw!(anyhow!("JobComplete is none")),
+            }
         }
     }
 
