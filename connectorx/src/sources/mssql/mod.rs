@@ -26,7 +26,7 @@ use rust_decimal::Decimal;
 use sqlparser::dialect::MsSqlDialect;
 use std::collections::HashMap;
 use std::sync::Arc;
-use tiberius::{AuthMethod, Config, EncryptionLevel, QueryResult, Row};
+use tiberius::{AuthMethod, Config, EncryptionLevel, QueryStream, Row};
 use tokio::runtime::{Handle, Runtime};
 use url::Url;
 use urlencoding::decode;
@@ -102,7 +102,11 @@ impl MsSQLSource {
     pub fn new(rt: Arc<Runtime>, conn: &str, nconn: usize) -> Self {
         let url = Url::parse(conn)?;
         let config = mssql_config(&url)?;
-        let manager = bb8_tiberius::ConnectionManager::new(config);
+        let manager = if decode(url.host_str().unwrap_or("localhost"))?.into_owned().split('\\').collect::<Vec<&str>>().len() == 2 {
+            ConnectionManager::new(config).using_named_connection()
+        } else {
+            ConnectionManager::new(config)
+        };
         let pool = rt.block_on(Pool::builder().max_size(nconn as u32).build(manager))?;
 
         Self {
@@ -118,11 +122,11 @@ impl MsSQLSource {
 
 impl Source for MsSQLSource
 where
-    MsSQLSourcePartition: SourcePartition<TypeSystem = MsSQLTypeSystem, Error = MsSQLSourceError>,
+    MsSQLSourcePartition: SourcePartition<TypeSystem=MsSQLTypeSystem, Error=MsSQLSourceError>,
 {
     const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
-    type Partition = MsSQLSourcePartition;
     type TypeSystem = MsSQLTypeSystem;
+    type Partition = MsSQLSourcePartition;
     type Error = MsSQLSourceError;
 
     #[throws(MsSQLSourceError)]
@@ -147,8 +151,8 @@ where
         let mut conn = self.rt.block_on(self.pool.get())?;
         let first_query = &self.queries[0];
         let (names, types) = match self.rt.block_on(conn.query(first_query.as_str(), &[])) {
-            Ok(stream) => {
-                let columns = stream.columns().ok_or_else(|| {
+            Ok(mut stream) => {
+                let columns = self.rt.block_on(async { stream.columns().await })?.ok_or_else(|| {
                     anyhow!("MsSQL failed to get the columns of query: {}", first_query)
                 })?;
                 columns
@@ -269,7 +273,7 @@ impl SourcePartition for MsSQLSourcePartition {
     #[throws(MsSQLSourceError)]
     fn parser<'a>(&'a mut self) -> Self::Parser<'a> {
         let conn = self.rt.block_on(self.pool.get())?;
-        let rows: OwningHandle<Box<Conn<'a>>, DummyBox<QueryResult<'a>>> =
+        let rows: OwningHandle<Box<Conn<'a>>, DummyBox<QueryStream<'a>>> =
             OwningHandle::new_with_fn(Box::new(conn), |conn: *const Conn<'a>| unsafe {
                 let conn = &mut *(conn as *mut Conn<'a>);
 
@@ -294,7 +298,7 @@ impl SourcePartition for MsSQLSourcePartition {
 
 pub struct MsSQLSourceParser<'a> {
     rt: &'a Handle,
-    iter: OwningHandle<Box<Conn<'a>>, DummyBox<QueryResult<'a>>>,
+    iter: OwningHandle<Box<Conn<'a>>, DummyBox<QueryStream<'a>>>,
     rowbuf: Vec<Row>,
     ncols: usize,
     current_col: usize,
@@ -305,7 +309,7 @@ pub struct MsSQLSourceParser<'a> {
 impl<'a> MsSQLSourceParser<'a> {
     fn new(
         rt: &'a Handle,
-        iter: OwningHandle<Box<Conn<'a>>, DummyBox<QueryResult<'a>>>,
+        iter: OwningHandle<Box<Conn<'a>>, DummyBox<QueryStream<'a>>>,
         schema: &[MsSQLTypeSystem],
     ) -> Self {
         Self {
@@ -334,7 +338,7 @@ impl<'a> PartitionParser<'a> for MsSQLSourceParser<'a> {
 
     #[throws(MsSQLSourceError)]
     fn fetch_next(&mut self) -> (usize, bool) {
-        assert!(self.current_col == 0);
+        assert_eq!(self.current_col, 0);
         let remaining_rows = self.rowbuf.len() - self.current_row;
         if remaining_rows > 0 {
             return (remaining_rows, self.is_finished);
@@ -348,7 +352,10 @@ impl<'a> PartitionParser<'a> for MsSQLSourceParser<'a> {
 
         for _ in 0..DB_BUFFER_SIZE {
             if let Some(item) = self.rt.block_on(self.iter.next()) {
-                self.rowbuf.push(item?);
+                match item?.into_row() {
+                    Some(row) => self.rowbuf.push(row),
+                    None => panic!("Expected QueryItem to contain a Row, but it did not."),
+                }
             } else {
                 self.is_finished = true;
                 break;
