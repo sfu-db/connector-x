@@ -102,7 +102,13 @@ impl MsSQLSource {
     pub fn new(rt: Arc<Runtime>, conn: &str, nconn: usize) -> Self {
         let url = Url::parse(conn)?;
         let config = mssql_config(&url)?;
-        let manager = if decode(url.host_str().unwrap_or("localhost"))?.into_owned().split('\\').collect::<Vec<&str>>().len() == 2 {
+        let manager = if decode(url.host_str().unwrap_or("localhost"))?
+            .into_owned()
+            .split('\\')
+            .collect::<Vec<&str>>()
+            .len()
+            == 2
+        {
             ConnectionManager::new(config).using_named_connection()
         } else {
             ConnectionManager::new(config)
@@ -122,7 +128,7 @@ impl MsSQLSource {
 
 impl Source for MsSQLSource
 where
-    MsSQLSourcePartition: SourcePartition<TypeSystem=MsSQLTypeSystem, Error=MsSQLSourceError>,
+    MsSQLSourcePartition: SourcePartition<TypeSystem = MsSQLTypeSystem, Error = MsSQLSourceError>,
 {
     const DATA_ORDERS: &'static [DataOrder] = &[DataOrder::RowMajor];
     type TypeSystem = MsSQLTypeSystem;
@@ -152,9 +158,12 @@ where
         let first_query = &self.queries[0];
         let (names, types) = match self.rt.block_on(conn.query(first_query.as_str(), &[])) {
             Ok(mut stream) => {
-                let columns = self.rt.block_on(async { stream.columns().await })?.ok_or_else(|| {
-                    anyhow!("MsSQL failed to get the columns of query: {}", first_query)
-                })?;
+                let columns = self
+                    .rt
+                    .block_on(async { stream.columns().await })?
+                    .ok_or_else(|| {
+                        anyhow!("MsSQL failed to get the columns of query: {}", first_query)
+                    })?;
                 columns
                     .iter()
                     .map(|col| {
