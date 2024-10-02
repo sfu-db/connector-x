@@ -65,6 +65,7 @@ impl_transport!(
         { MediumBlob[Vec<u8>]        => LargeBinary[Vec<u8>]    | conversion none }
         { LongBlob[Vec<u8>]          => LargeBinary[Vec<u8>]    | conversion none }
         { Json[Value]                => LargeUtf8[String]       | conversion option }
+        { Bit[Vec<u8>]               => LargeBinary[Vec<u8>]    | conversion none }
     }
 );
 
@@ -100,6 +101,7 @@ impl_transport!(
         { MediumBlob[Vec<u8>]        => LargeBinary[Vec<u8>]    | conversion none }
         { LongBlob[Vec<u8>]          => LargeBinary[Vec<u8>]    | conversion none }
         { Json[Value]                => LargeUtf8[String]       | conversion option }
+        { Bit[Vec<u8>]               => LargeBinary[Vec<u8>]    | conversion none }
     }
 );
 
