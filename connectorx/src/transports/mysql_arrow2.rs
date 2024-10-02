@@ -65,6 +65,7 @@ impl_transport!(
         { Blob[Vec<u8>]              => LargeBinary[Vec<u8>]    | conversion none }
         { MediumBlob[Vec<u8>]        => LargeBinary[Vec<u8>]    | conversion none }
         { LongBlob[Vec<u8>]          => LargeBinary[Vec<u8>]    | conversion none }
+        { Bit[Vec<u8>]               => LargeBinary[Vec<u8>]    | conversion none }
     }
 );
 
@@ -100,6 +101,7 @@ impl_transport!(
         { Blob[Vec<u8>]              => LargeBinary[Vec<u8>]    | conversion none }
         { MediumBlob[Vec<u8>]        => LargeBinary[Vec<u8>]    | conversion none }
         { LongBlob[Vec<u8>]          => LargeBinary[Vec<u8>]    | conversion none }
+        { Bit[Vec<u8>]               => LargeBinary[Vec<u8>]    | conversion none }
     }
 );
 

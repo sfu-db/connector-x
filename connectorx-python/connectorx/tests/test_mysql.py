@@ -337,6 +337,9 @@ def test_mysql_types_binary(mysql_url: str) -> None:
             "test_mediumtext": pd.Series(
                 [None, b"", b"medium text!!!!"], dtype="object"
             ),
+            "test_bit": pd.Series(
+                [b'\x17', b'\x18', None]
+            ),
         },
     )
     assert_frame_equal(df, expected, check_names=True)
@@ -405,6 +408,9 @@ def test_mysql_types_text(mysql_url: str) -> None:
             ),
             "test_mediumtext": pd.Series(
                 [None, b"", b"medium text!!!!"], dtype="object"
+            ),
+            "test_bit": pd.Series(
+                [b'\x17', b'\x18', None]
             ),
         },
     )

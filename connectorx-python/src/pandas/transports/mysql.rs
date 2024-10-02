@@ -46,6 +46,7 @@ impl_transport!(
         { MediumBlob[Vec<u8>]        => Bytes[Vec<u8>]          | conversion none }
         { LongBlob[Vec<u8>]          => Bytes[Vec<u8>]          | conversion none }
         { Json[Value]                => String[String]          | conversion option }
+        { Bit[Vec<u8>]               => Bytes[Vec<u8>]          | conversion none }
     }
 );
 
@@ -81,6 +82,7 @@ impl_transport!(
         { MediumBlob[Vec<u8>]        => Bytes[Vec<u8>]          | conversion none }
         { LongBlob[Vec<u8>]          => Bytes[Vec<u8>]          | conversion none }
         { Json[Value]                => String[String]          | conversion option }
+        { Bit[Vec<u8>]               => Bytes[Vec<u8>]          | conversion none }
     }
 );
 
