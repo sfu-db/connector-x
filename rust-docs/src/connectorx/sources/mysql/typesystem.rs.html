@@ -120,6 +120,8 @@
 <a href="#120" id="120">120</a>
 <a href="#121" id="121">121</a>
 <a href="#122" id="122">122</a>
+<a href="#123" id="123">123</a>
+<a href="#124" id="124">124</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>chrono::{NaiveDate, NaiveDateTime, NaiveTime};
 <span class="kw">use </span>r2d2_mysql::mysql::consts::{ColumnFlags, ColumnType};
 <span class="kw">use </span>rust_decimal::Decimal;
@@ -153,6 +155,7 @@
     MediumBlob(bool),
     LongBlob(bool),
     Json(bool),
+    Bit(bool),
 }
 
 <span class="macro">impl_typesystem!</span> {
@@ -173,7 +176,7 @@
         { Time =&gt; NaiveTime }
         { Decimal =&gt; Decimal }
         { Char | VarChar | Enum =&gt; String }
-        { TinyBlob | Blob | MediumBlob | LongBlob =&gt; Vec&lt;u8&gt;}
+        { TinyBlob | Blob | MediumBlob | LongBlob | Bit =&gt; Vec&lt;u8&gt;}
         { Json =&gt; Value }
     }
 }
@@ -238,6 +241,7 @@
             ColumnType::MYSQL_TYPE_LONG_BLOB =&gt; LongBlob(null_ok),
             ColumnType::MYSQL_TYPE_JSON =&gt; Json(null_ok),
             ColumnType::MYSQL_TYPE_VARCHAR =&gt; VarChar(null_ok),
+            ColumnType::MYSQL_TYPE_BIT =&gt; Bit(null_ok),
             <span class="kw">_ </span>=&gt; <span class="macro">unimplemented!</span>(<span class="string">"{}"</span>, <span class="macro">format!</span>(<span class="string">"{:?}"</span>, ty)),
         }
     }

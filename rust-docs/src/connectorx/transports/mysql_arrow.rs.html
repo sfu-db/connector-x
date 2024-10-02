@@ -133,6 +133,8 @@
 <a href="#133" id="133">133</a>
 <a href="#134" id="134">134</a>
 <a href="#135" id="135">135</a>
+<a href="#136" id="136">136</a>
+<a href="#137" id="137">137</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Transport from MySQL Source to Arrow Destination.
 
 </span><span class="kw">use crate</span>::{
@@ -200,6 +202,7 @@
         { MediumBlob[Vec&lt;u8&gt;]        =&gt; LargeBinary[Vec&lt;u8&gt;]    | conversion none }
         { LongBlob[Vec&lt;u8&gt;]          =&gt; LargeBinary[Vec&lt;u8&gt;]    | conversion none }
         { Json[Value]                =&gt; LargeUtf8[String]       | conversion option }
+        { Bit[Vec&lt;u8&gt;]               =&gt; LargeBinary[Vec&lt;u8&gt;]    | conversion none }
     }
 );
 
@@ -235,6 +238,7 @@
         { MediumBlob[Vec&lt;u8&gt;]        =&gt; LargeBinary[Vec&lt;u8&gt;]    | conversion none }
         { LongBlob[Vec&lt;u8&gt;]          =&gt; LargeBinary[Vec&lt;u8&gt;]    | conversion none }
         { Json[Value]                =&gt; LargeUtf8[String]       | conversion option }
+        { Bit[Vec&lt;u8&gt;]               =&gt; LargeBinary[Vec&lt;u8&gt;]    | conversion none }
     }
 );
 

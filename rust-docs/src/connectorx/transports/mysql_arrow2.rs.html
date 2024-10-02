@@ -127,6 +127,8 @@
 <a href="#127" id="127">127</a>
 <a href="#128" id="128">128</a>
 <a href="#129" id="129">129</a>
+<a href="#130" id="130">130</a>
+<a href="#131" id="131">131</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Transport from MySQL Source to Arrow2 Destination.
 
 </span><span class="kw">use crate</span>::{
@@ -194,6 +196,7 @@
         { Blob[Vec&lt;u8&gt;]              =&gt; LargeBinary[Vec&lt;u8&gt;]    | conversion none }
         { MediumBlob[Vec&lt;u8&gt;]        =&gt; LargeBinary[Vec&lt;u8&gt;]    | conversion none }
         { LongBlob[Vec&lt;u8&gt;]          =&gt; LargeBinary[Vec&lt;u8&gt;]    | conversion none }
+        { Bit[Vec&lt;u8&gt;]               =&gt; LargeBinary[Vec&lt;u8&gt;]    | conversion none }
     }
 );
 
@@ -229,6 +232,7 @@
         { Blob[Vec&lt;u8&gt;]              =&gt; LargeBinary[Vec&lt;u8&gt;]    | conversion none }
         { MediumBlob[Vec&lt;u8&gt;]        =&gt; LargeBinary[Vec&lt;u8&gt;]    | conversion none }
         { LongBlob[Vec&lt;u8&gt;]          =&gt; LargeBinary[Vec&lt;u8&gt;]    | conversion none }
+        { Bit[Vec&lt;u8&gt;]               =&gt; LargeBinary[Vec&lt;u8&gt;]    | conversion none }
     }
 );
 
