@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib
+import pathlib
 import urllib.parse
 
 from importlib.metadata import version
@@ -24,16 +25,16 @@ if TYPE_CHECKING:
     # only for typing hints
     from .connectorx import _DataframeInfos, _ArrowInfos
 
-
 __version__ = version(__name__)
 
 import os
+import sys
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 # check whether it is in development env or installed
 if (
-    not os.path.basename(os.path.abspath(os.path.join(dir_path, "..")))
-    == "connectorx-python"
+        not os.path.basename(os.path.abspath(os.path.join(dir_path, "..")))
+            == "connectorx-python"
 ):
     os.environ.setdefault("J4RS_BASE_PATH", os.path.join(dir_path, "dependencies"))
 
@@ -42,7 +43,6 @@ os.environ.setdefault(
 )
 
 Protocol = Literal["csv", "binary", "cursor", "simple", "text"]
-
 
 _BackendT = TypeVar("_BackendT")
 
@@ -247,6 +247,66 @@ def read_sql(
 ) -> pl.DataFrame: ...
 
 
+def get_passfile_content(path: pathlib.Path) -> dict:
+    # host:port:db_name:user_name:password
+    with open(path) as f:
+        contents = f.read().split(':')
+        if len(contents) != 5:
+            raise Exception('Pgpass content should follow: host:port:db_name:user_name:password')
+    return dict(zip(['hostname', 'port', 'path', 'username', 'password'], contents))
+
+
+def get_pgpass(conn) -> dict:
+    # check param or (PGPASS env or DEFAULT)
+    # DEFAULT = linux or windows
+    passfile = '%APPDATA%\postgresql\pgpass.conf' if sys.platform == 'windows' else os.path.expanduser(
+        '~/') + '.pgpass'
+    if 'passfile' in conn:
+        parsed_conn = urllib.parse.urlparse(conn)
+
+        # test if there is no '&'
+        for param in parsed_conn.params.split('&'):
+            k, v = param.split('=')
+            if k == 'passfile':
+                passfile = k
+
+    passfile_path = pathlib.Path(passfile)
+
+    if sys.platform != 'windows':
+        # In *nix platforms we check that the file is safe; it has to have 0600 permission.
+        # https://www.postgresql.org/docs/current/libpq-pgpass.html
+
+        try:
+            # We trust that the last three digits of st_mode are the permissions, e.g.
+            st_mode = int(oct(passfile_path.stat().st_mode)[-3:])
+
+        except Exception as e:
+            raise Exception(
+                'Could not check if file is safe, report to this to the maintainers please.') from e
+
+        if st_mode != 600:
+            raise Exception(
+                f'pgpass file does not have safe permissions (0600), it currently has "0{st_mode}" you can fix this buy running: $ chmod 0600 PASSFILE_PATH')
+
+    return get_passfile_content(passfile)
+
+
+def replace_conn_content(conn: str, contents: dict) -> str:
+    # We rewrite the netloc from scratch here e.g.
+    # netloc = contents['username'] or o.username + ':' + contents['password'] or o.password + ...
+    parsed_conn = urllib.parse.urlparse(conn)
+    return str(parsed_conn._replace(**contents))
+
+
+def run_per_database(conn):
+    # Todo rename to something better.
+    if 'postgresql' in conn:
+        contents = get_pgpass(conn)
+        conn = replace_conn_content(conn, contents)
+        return conn
+    return conn
+
+
 def read_sql(
     conn: str | ConnectionUrl | dict[str, str] | dict[str, ConnectionUrl],
     query: list[str] | str,
@@ -331,6 +391,9 @@ def read_sql(
             except AttributeError:
                 df = pl.DataFrame.from_arrow(df)
         return df
+
+    # Rewrite conn.
+    conn = run_per_database(conn)
 
     if isinstance(query, str):
         query = remove_ending_semicolon(query)
