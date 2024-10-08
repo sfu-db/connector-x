@@ -218,7 +218,4 @@ jobs:
           POSTGRES_URL: "postgresql://postgres:postgres@postgres:5432/postgres"
           SQLITE_URL: "sqlite:///tmp/test.db"
           MYSQL_URL: "mysql://root:mysql@mysql:3306/mysql"
-          DB1: "postgresql://postgres:postgres@postgres:5432/postgres"
-          DB2: "postgresql://postgres:postgres@postgres:5432/postgres"
-          FED_CONFIG_PATH: ${{ github.workspace }}/.github/config
           SQLITE3_STATIC: 1
