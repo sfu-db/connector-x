@@ -259,6 +259,7 @@ def read_sql(
     partition_range: tuple[int, int] | None = None,
     partition_num: int | None = None,
     index_col: str | None = None,
+    strategy: str | None = None,
 ) -> pd.DataFrame | mpd.DataFrame | dd.DataFrame | pl.DataFrame | pa.Table:
     """
     Run the SQL query, download the data from database into a dataframe.
@@ -282,6 +283,8 @@ def read_sql(
       how many partitions to generate.
     index_col
       the index column to set; only applicable for return type "pandas", "modin", "dask".
+    strategy
+      strategy of rewriting the federated query for join pushdown
 
     Examples
     ========
@@ -318,7 +321,7 @@ def read_sql(
 
         query = remove_ending_semicolon(query)
 
-        result = _read_sql2(query, conn)
+        result = _read_sql2(query, conn, strategy)
         df = reconstruct_arrow(result)
         if return_type == "pandas":
             df = df.to_pandas(date_as_object=False, split_blocks=False)

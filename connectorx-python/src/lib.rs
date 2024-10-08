@@ -68,6 +68,7 @@ pub fn read_sql2<'py>(
     py: Python<'py>,
     sql: &str,
     db_map: HashMap<String, String>,
+    strategy: Option<&str>,
 ) -> PyResult<Bound<'py, PyAny>> {
     let rbs = run(
         sql.to_string(),
@@ -77,6 +78,7 @@ pub fn read_sql2<'py>(
                 .unwrap_or(J4RS_BASE_PATH.to_string())
                 .as_str(),
         ),
+        strategy.unwrap_or("pushdown"),
     )
     .map_err(|e| PyRuntimeError::new_err(format!("{}", e)))?;
     let ptrs = arrow::to_ptrs(rbs);

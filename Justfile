@@ -34,8 +34,8 @@ bootstrap-python:
     cd connectorx-python && poetry install
 
 setup-java:
-    cd federated-query/rewriter && mvn package -Dmaven.test.skip=true
-    cp -f ./federated-query/rewriter/target/federated-rewriter-1.0-SNAPSHOT-jar-with-dependencies.jar connectorx-python/connectorx/dependencies/federated-rewriter.jar
+    cd $ACCIO_PATH/rewriter && mvn package -Dmaven.test.skip=true
+    cp -f $ACCIO_PATH/rewriter/target/accio-rewriter-1.0-SNAPSHOT-jar-with-dependencies.jar connectorx-python/connectorx/dependencies/federated-rewriter.jar
 
 setup-python:
     cd connectorx-python && poetry run maturin develop --release

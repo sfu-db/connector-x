@@ -71,6 +71,7 @@ pub unsafe extern "C" fn free_plans(res: *const CXSlice<CXFederatedPlan>) {
 pub unsafe extern "C" fn connectorx_rewrite(
     conn_list: *const CXSlice<CXConnectionInfo>,
     query: *const c_char,
+    strategy: *const c_char,
 ) -> CXSlice<CXFederatedPlan> {
     let mut db_map = HashMap::new();
     let conn_slice = unsafe { std::slice::from_raw_parts((*conn_list).ptr, (*conn_list).len) };
@@ -117,16 +118,18 @@ pub unsafe extern "C" fn connectorx_rewrite(
     }
 
     let query_str = unsafe { CStr::from_ptr(query) }.to_str().unwrap();
+    let strategy_str = unsafe { CStr::from_ptr(strategy) }.to_str().unwrap();
     let j4rs_base = match env::var("CX_LIB_PATH") {
         Ok(val) => Some(val),
         Err(_) => None,
     };
     // println!("j4rs_base: {:?}", j4rs_base);
-    let fed_plan: Vec<CXFederatedPlan> = rewrite_sql(query_str, &db_map, j4rs_base.as_deref())
-        .unwrap()
-        .into_iter()
-        .map(|p| p.into())
-        .collect();
+    let fed_plan: Vec<CXFederatedPlan> =
+        rewrite_sql(query_str, &db_map, j4rs_base.as_deref(), strategy_str)
+            .unwrap()
+            .into_iter()
+            .map(|p| p.into())
+            .collect();
 
     CXSlice::<_>::new_from_vec(fed_plan)
 }
