@@ -183,6 +183,18 @@
 <a href="#183" id="183">183</a>
 <a href="#184" id="184">184</a>
 <a href="#185" id="185">185</a>
+<a href="#186" id="186">186</a>
+<a href="#187" id="187">187</a>
+<a href="#188" id="188">188</a>
+<a href="#189" id="189">189</a>
+<a href="#190" id="190">190</a>
+<a href="#191" id="191">191</a>
+<a href="#192" id="192">192</a>
+<a href="#193" id="193">193</a>
+<a href="#194" id="194">194</a>
+<a href="#195" id="195">195</a>
+<a href="#196" id="196">196</a>
+<a href="#197" id="197">197</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     constants::{CX_REWRITER_PATH, J4RS_BASE_PATH},
     prelude::<span class="kw-2">*</span>,
@@ -268,6 +280,7 @@
     jvm: <span class="kw-2">&amp;</span>Jvm,
     db_map: <span class="kw-2">&amp;</span>HashMap&lt;String, FederatedDataSourceInfo&gt;,
 ) -&gt; (Instance, Instance) {
+    <span class="macro">debug!</span>(<span class="string">"Could not find environment variable `FED_CONFIG_PATH`, use manual configuration (c++ API only)!"</span>);
     <span class="kw">let </span><span class="kw-2">mut </span>db_config = <span class="macro">vec!</span>[];
     <span class="kw">let </span>db_manual = jvm.create_instance(<span class="string">"java.util.HashMap"</span>, <span class="kw-2">&amp;</span>[])<span class="question-mark">?</span>;
 
@@ -311,29 +324,40 @@
 
 <span class="attr">#[allow(dead_code)]
 #[throws(ConnectorXOutError)]
-</span><span class="kw">fn </span>create_sources2(jvm: <span class="kw-2">&amp;</span>Jvm, db_map: <span class="kw-2">&amp;</span>HashMap&lt;String, FederatedDataSourceInfo&gt;) -&gt; Instance {
+</span><span class="kw">fn </span>create_sources2(
+    jvm: <span class="kw-2">&amp;</span>Jvm,
+    db_map: <span class="kw-2">&amp;</span>HashMap&lt;String, FederatedDataSourceInfo&gt;,
+) -&gt; (Instance, Instance) {
+    <span class="macro">debug!</span>(<span class="string">"Found environment variable `FED_CONFIG_PATH`, use configurations!"</span>);
     <span class="kw">let </span><span class="kw-2">mut </span>dbs = <span class="macro">vec!</span>[];
+    <span class="kw">let </span>db_manual = jvm.create_instance(<span class="string">"java.util.HashMap"</span>, <span class="kw-2">&amp;</span>[])<span class="question-mark">?</span>;
     <span class="kw">for </span>db <span class="kw">in </span>db_map.keys() {
         dbs.push(String::from(db));
     }
-    jvm.java_list(<span class="string">"java.lang.String"</span>, dbs)<span class="question-mark">?
-</span>}
+    (jvm.java_list(<span class="string">"java.lang.String"</span>, dbs)<span class="question-mark">?</span>, db_manual)
+}
 
 <span class="attr">#[throws(ConnectorXOutError)]
 </span><span class="kw">pub fn </span>rewrite_sql(
     sql: <span class="kw-2">&amp;</span>str,
     db_map: <span class="kw-2">&amp;</span>HashMap&lt;String, FederatedDataSourceInfo&gt;,
     j4rs_base: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
+    strategy: <span class="kw-2">&amp;</span>str,
 ) -&gt; Vec&lt;Plan&gt; {
     <span class="kw">let </span>jvm = init_jvm(j4rs_base)<span class="question-mark">?</span>;
     <span class="macro">debug!</span>(<span class="string">"init jvm successfully!"</span>);
 
     <span class="kw">let </span>sql = InvocationArg::try_from(sql).unwrap();
-    <span class="kw">let </span>(db_config, db_manual) = create_sources(<span class="kw-2">&amp;</span>jvm, db_map)<span class="question-mark">?</span>;
-    <span class="kw">let </span>rewriter = jvm.create_instance(<span class="string">"ai.dataprep.federated.FederatedQueryRewriter"</span>, <span class="kw-2">&amp;</span>[])<span class="question-mark">?</span>;
+    <span class="kw">let </span>strategy = InvocationArg::try_from(strategy).unwrap();
+
+    <span class="kw">let </span>(db_config, db_manual) = <span class="kw">match </span>env::var(<span class="string">"FED_CONFIG_PATH"</span>) {
+        <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; create_sources2(<span class="kw-2">&amp;</span>jvm, db_map)<span class="question-mark">?</span>,
+        <span class="kw">_ </span>=&gt; create_sources(<span class="kw-2">&amp;</span>jvm, db_map)<span class="question-mark">?</span>,
+    };
+    <span class="kw">let </span>rewriter = jvm.create_instance(<span class="string">"ai.dataprep.accio.FederatedQueryRewriter"</span>, <span class="kw-2">&amp;</span>[])<span class="question-mark">?</span>;
     <span class="kw">let </span>db_config = InvocationArg::try_from(db_config).unwrap();
     <span class="kw">let </span>db_manual = InvocationArg::try_from(db_manual).unwrap();
-    <span class="kw">let </span>plan = jvm.invoke(<span class="kw-2">&amp;</span>rewriter, <span class="string">"rewrite3"</span>, <span class="kw-2">&amp;</span>[sql, db_config, db_manual])<span class="question-mark">?</span>;
+    <span class="kw">let </span>plan = jvm.invoke(<span class="kw-2">&amp;</span>rewriter, <span class="string">"rewrite"</span>, <span class="kw-2">&amp;</span>[sql, db_config, db_manual, strategy])<span class="question-mark">?</span>;
 
     <span class="kw">let </span>count = jvm.invoke(<span class="kw-2">&amp;</span>plan, <span class="string">"getCount"</span>, <span class="kw-2">&amp;</span>[])<span class="question-mark">?</span>;
     <span class="kw">let </span>count: i32 = jvm.to_rust(count)<span class="question-mark">?</span>;
