@@ -26,7 +26,9 @@ lazy_static! {
 }
 
 pub trait PandasColumnObject: Send {
+    #[allow(dead_code)]
     fn typecheck(&self, _: TypeId) -> bool;
+    #[allow(dead_code)]
     fn typename(&self) -> &'static str;
     fn finalize(&mut self) -> Result<()> {
         Ok(())

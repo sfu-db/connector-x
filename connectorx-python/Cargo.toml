@@ -55,6 +55,9 @@ iai = "0.1"
 pprof = {version = "0.5", features = ["flamegraph", "criterion", "protobuf"]}
 rayon = "1"
 
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(Py_3_12)'] }
+
 [lib]
 crate-type = ["cdylib"]
 name = "connectorx"
