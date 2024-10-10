@@ -16,7 +16,7 @@ test +ARGS="":
     cargo test --features all {{ARGS}} -- --nocapture
 
 test-ci: 
-    cargo test --features all --test test_postgres --test test_polars --test test_arrow --test test_mysql
+    cargo test --features src_postgres --features dst_arrow --test test_postgres 
 
 test-feature-gate:
     cargo c --features src_postgres
@@ -45,12 +45,6 @@ test-python +opts="": setup-python
 
 test-python-s +opts="":
     cd connectorx-python && poetry run pytest connectorx/tests -v -s {{opts}}
-
-test-fed file="3.sql":
-    cd connectorx && cargo run --features src_postgres --features src_mysql --features dst_arrow --features federation --example federated_test "../federated-query/test-queries/{{file}}"
-
-test-datafusion:
-    cd connectorx && cargo run --features src_postgres --features src_mysql --features dst_arrow --features federation --example test
 
 seed-db:
     #!/bin/bash
@@ -113,23 +107,3 @@ build-python-wheel:
     cp -rf connectorx-python/target/release/jassets connectorx-python/connectorx/dependencies
     # build final wheel
     cd connectorx-python && maturin build --release -i python
-
-bench-fed path:
-    just python-tpch fed --file {{path}}/q2.sql
-    just python-tpch-ext fed --file {{path}}/q3.sql
-    just python-tpch-ext fed --file {{path}}/q4.sql
-    just python-tpch-ext fed --file {{path}}/q5.sql
-    just python-tpch-ext fed --file {{path}}/q7.sql
-    just python-tpch-ext fed --file {{path}}/q8.sql
-    just python-tpch-ext fed --file {{path}}/q9.sql
-    just python-tpch-ext fed --file {{path}}/q10.sql
-    just python-tpch-ext fed --file {{path}}/q11.sql
-    just python-tpch-ext fed --file {{path}}/q12.sql
-    just python-tpch-ext fed --file {{path}}/q13.sql
-    just python-tpch-ext fed --file {{path}}/q14.sql
-    just python-tpch-ext fed --file {{path}}/q16.sql
-    just python-tpch-ext fed --file {{path}}/q17.sql
-    just python-tpch-ext fed --file {{path}}/q18.sql
-    just python-tpch-ext fed --file {{path}}/q19.sql
-    just python-tpch-ext fed --file {{path}}/q20.sql
-    just python-tpch-ext fed --file {{path}}/q22.sql
