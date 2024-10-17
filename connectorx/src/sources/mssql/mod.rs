@@ -84,6 +84,16 @@ pub fn mssql_config(url: &Url) -> Config {
         decode(url.password().unwrap_or(""))?.to_owned(),
     ));
 
+    match params.get("trust_server_certificate") {
+        Some(v) if v.to_lowercase() == "true" => config.trust_cert(),
+        _ => {},
+    };
+
+    match params.get("trust_server_certificate_ca") {
+        Some(v) => config.trust_cert_ca(v),
+        _ => {},
+    };
+
     match params.get("encrypt") {
         Some(v) if v.to_lowercase() == "true" => config.encryption(EncryptionLevel::Required),
         _ => config.encryption(EncryptionLevel::NotSupported),
