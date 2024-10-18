@@ -26,7 +26,7 @@ use rust_decimal::Decimal;
 use sqlparser::dialect::MsSqlDialect;
 use std::collections::HashMap;
 use std::sync::Arc;
-use tiberius::{AuthMethod, Config, EncryptionLevel, QueryResult, Row};
+use tiberius::{AuthMethod, Config, EncryptionLevel, QueryItem, QueryStream, Row};
 use tokio::runtime::{Handle, Runtime};
 use url::Url;
 use urlencoding::decode;
@@ -83,6 +83,16 @@ pub fn mssql_config(url: &Url) -> Config {
         decode(url.username())?.to_owned(),
         decode(url.password().unwrap_or(""))?.to_owned(),
     ));
+
+    match params.get("trust_server_certificate") {
+        Some(v) if v.to_lowercase() == "true" => config.trust_cert(),
+        _ => {}
+    };
+
+    match params.get("trust_server_certificate_ca") {
+        Some(v) => config.trust_cert_ca(v),
+        _ => {}
+    };
 
     match params.get("encrypt") {
         Some(v) if v.to_lowercase() == "true" => config.encryption(EncryptionLevel::Required),
@@ -147,11 +157,8 @@ where
         let mut conn = self.rt.block_on(self.pool.get())?;
         let first_query = &self.queries[0];
         let (names, types) = match self.rt.block_on(conn.query(first_query.as_str(), &[])) {
-            Ok(stream) => {
-                let columns = stream.columns().ok_or_else(|| {
-                    anyhow!("MsSQL failed to get the columns of query: {}", first_query)
-                })?;
-                columns
+            Ok(mut stream) => match self.rt.block_on(async { stream.columns().await }) {
+                Ok(Some(columns)) => columns
                     .iter()
                     .map(|col| {
                         (
@@ -159,10 +166,18 @@ where
                             MsSQLTypeSystem::from(&col.column_type()),
                         )
                     })
-                    .unzip()
-            }
+                    .unzip(),
+                Ok(None) => {
+                    throw!(anyhow!(
+                        "MsSQL returned no columns for query: {}",
+                        first_query
+                    ));
+                }
+                Err(e) => {
+                    throw!(anyhow!("Error fetching columns: {}", e));
+                }
+            },
             Err(e) => {
-                // tried the last query but still get an error
                 debug!(
                     "cannot get metadata for '{}', try next query: {}",
                     first_query, e
@@ -269,7 +284,7 @@ impl SourcePartition for MsSQLSourcePartition {
     #[throws(MsSQLSourceError)]
     fn parser<'a>(&'a mut self) -> Self::Parser<'a> {
         let conn = self.rt.block_on(self.pool.get())?;
-        let rows: OwningHandle<Box<Conn<'a>>, DummyBox<QueryResult<'a>>> =
+        let rows: OwningHandle<Box<Conn<'a>>, DummyBox<QueryStream<'a>>> =
             OwningHandle::new_with_fn(Box::new(conn), |conn: *const Conn<'a>| unsafe {
                 let conn = &mut *(conn as *mut Conn<'a>);
 
@@ -294,7 +309,7 @@ impl SourcePartition for MsSQLSourcePartition {
 
 pub struct MsSQLSourceParser<'a> {
     rt: &'a Handle,
-    iter: OwningHandle<Box<Conn<'a>>, DummyBox<QueryResult<'a>>>,
+    iter: OwningHandle<Box<Conn<'a>>, DummyBox<QueryStream<'a>>>,
     rowbuf: Vec<Row>,
     ncols: usize,
     current_col: usize,
@@ -305,7 +320,7 @@ pub struct MsSQLSourceParser<'a> {
 impl<'a> MsSQLSourceParser<'a> {
     fn new(
         rt: &'a Handle,
-        iter: OwningHandle<Box<Conn<'a>>, DummyBox<QueryResult<'a>>>,
+        iter: OwningHandle<Box<Conn<'a>>, DummyBox<QueryStream<'a>>>,
         schema: &[MsSQLTypeSystem],
     ) -> Self {
         Self {
@@ -348,7 +363,10 @@ impl<'a> PartitionParser<'a> for MsSQLSourceParser<'a> {
 
         for _ in 0..DB_BUFFER_SIZE {
             if let Some(item) = self.rt.block_on(self.iter.next()) {
-                self.rowbuf.push(item?);
+                match item.map_err(MsSQLSourceError::MsSQLError)? {
+                    QueryItem::Row(row) => self.rowbuf.push(row),
+                    _ => continue,
+                }
             } else {
                 self.is_finished = true;
                 break;
