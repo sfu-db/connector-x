@@ -388,6 +388,7 @@ document.write(`
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mssql-connection">MsSQL Connection</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#connection-parameters">Connection Parameters</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sqlserver-pandas-type-mapping">SQLServer-Pandas Type Mapping</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#performance-r5-4xlarge-docker-in-another-ec2-instance">Performance (r5.4xlarge docker in another EC2 instance)</a></li>
 </ul>
@@ -411,11 +412,6 @@ document.write(`
 <h2>MsSQL Connection<a class="headerlink" href="#mssql-connection" title="Link to this heading">#</a></h2>
 <div class="admonition hint">
 <p class="admonition-title">Hint</p>
-<p>By adding <code class="docutils literal notranslate"><span class="pre">trusted_connection=true</span></code> to connection uri parameter, windows authentication will be enabled. Example: <code class="docutils literal notranslate"><span class="pre">mssql://host:port/db?trusted_connection=true</span></code>
-By adding <code class="docutils literal notranslate"><span class="pre">encrypt=true</span></code> to connection uri parameter, SQLServer will use SSL encryption. Example: <code class="docutils literal notranslate"><span class="pre">mssql://host:port/db?encrypt=true&amp;trusted_connection=true</span></code></p>
-</div>
-<div class="admonition hint">
-<p class="admonition-title">Hint</p>
 <p>if the user password has special characters, they need to be sanitized. example: <code class="docutils literal notranslate"><span class="pre">from</span> <span class="pre">urllib</span> <span class="pre">import</span> <span class="pre">parse;</span> <span class="pre">password</span> <span class="pre">=</span> <span class="pre">parse.quote_plus(password)</span></code></p>
 </div>
 <div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">connectorx</span> <span class="k">as</span> <span class="nn">cx</span>
@@ -424,6 +420,31 @@ By adding <code class="docutils literal notranslate"><span class="pre">encrypt=t
 <span class="n">cx</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">query</span><span class="p">)</span>                                        <span class="c1"># read data from MsSQL</span>
 </pre></div>
 </div>
+</section>
+<section id="connection-parameters">
+<h2>Connection Parameters<a class="headerlink" href="#connection-parameters" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>By adding <code class="docutils literal notranslate"><span class="pre">trusted_connection=true</span></code> to connection uri parameter, windows authentication will be enabled.</p>
+<ul>
+<li><p>Example: <code class="docutils literal notranslate"><span class="pre">mssql://host:port/db?trusted_connection=true</span></code></p></li>
+</ul>
+</li>
+<li><p>By adding <code class="docutils literal notranslate"><span class="pre">encrypt=true</span></code> to connection uri parameter, SQLServer will use SSL encryption.</p>
+<ul>
+<li><p>Example: <code class="docutils literal notranslate"><span class="pre">mssql://host:port/db?encrypt=true&amp;trusted_connection=true</span></code></p></li>
+</ul>
+</li>
+<li><p>By adding <code class="docutils literal notranslate"><span class="pre">trust_server_certificate=true</span></code> to connection uri parameter, the SQLServer certificate will not be validated and it is accepted as-is.</p>
+<ul>
+<li><p>Example: <code class="docutils literal notranslate"><span class="pre">mssql://host:port/db?trust_server_certificate=true&amp;encrypt=true</span></code></p></li>
+</ul>
+</li>
+<li><p>By adding <code class="docutils literal notranslate"><span class="pre">trust_server_certificate_ca=/path/to/ca-cert.crt</span></code> to connection uri parameter, the SQLServer certificate will be validated against the given CA certificate in addition to the system-truststore.</p>
+<ul>
+<li><p>Example: <code class="docutils literal notranslate"><span class="pre">mssql://host:port/db?encrypt=true&amp;trust_server_certificate_ca=/path/to/ca-cert.crt</span></code></p></li>
+</ul>
+</li>
+</ul>
 </section>
 <section id="sqlserver-pandas-type-mapping">
 <h2>SQLServer-Pandas Type Mapping<a class="headerlink" href="#sqlserver-pandas-type-mapping" title="Link to this heading">#</a></h2>
@@ -615,6 +636,7 @@ By adding <code class="docutils literal notranslate"><span class="pre">encrypt=t
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mssql-connection">MsSQL Connection</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#connection-parameters">Connection Parameters</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sqlserver-pandas-type-mapping">SQLServer-Pandas Type Mapping</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#performance-r5-4xlarge-docker-in-another-ec2-instance">Performance (r5.4xlarge docker in another EC2 instance)</a></li>
 </ul>

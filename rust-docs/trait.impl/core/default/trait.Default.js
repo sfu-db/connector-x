@@ -1,3 +1,9 @@
-(function() {var implementors = {
-"connectorx":[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.81.0/core/default/trait.Default.html\" title=\"trait core::default::Default\">Default</a> for <a class=\"struct\" href=\"connectorx/destinations/arrow/struct.ArrowDestination.html\" title=\"struct connectorx::destinations::arrow::ArrowDestination\">ArrowDestination</a>"],["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.81.0/core/default/trait.Default.html\" title=\"trait core::default::Default\">Default</a> for <a class=\"struct\" href=\"connectorx/destinations/arrow2/struct.Arrow2Destination.html\" title=\"struct connectorx::destinations::arrow2::Arrow2Destination\">Arrow2Destination</a>"],["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.81.0/core/default/trait.Default.html\" title=\"trait core::default::Default\">Default</a> for <a class=\"struct\" href=\"connectorx/destinations/arrowstream/struct.ArrowDestination.html\" title=\"struct connectorx::destinations::arrowstream::ArrowDestination\">ArrowDestination</a>"]]
-};if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
+(function() {
+    var implementors = Object.fromEntries([["connectorx",[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.82.0/core/default/trait.Default.html\" title=\"trait core::default::Default\">Default</a> for <a class=\"struct\" href=\"connectorx/destinations/arrow/struct.ArrowDestination.html\" title=\"struct connectorx::destinations::arrow::ArrowDestination\">ArrowDestination</a>"],["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.82.0/core/default/trait.Default.html\" title=\"trait core::default::Default\">Default</a> for <a class=\"struct\" href=\"connectorx/destinations/arrow2/struct.Arrow2Destination.html\" title=\"struct connectorx::destinations::arrow2::Arrow2Destination\">Arrow2Destination</a>"],["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.82.0/core/default/trait.Default.html\" title=\"trait core::default::Default\">Default</a> for <a class=\"struct\" href=\"connectorx/destinations/arrowstream/struct.ArrowDestination.html\" title=\"struct connectorx::destinations::arrowstream::ArrowDestination\">ArrowDestination</a>"]]]]);
+    if (window.register_implementors) {
+        window.register_implementors(implementors);
+    } else {
+        window.pending_implementors = implementors;
+    }
+})()
+//{"start":57,"fragment_lengths":[1032]}
