@@ -385,17 +385,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "async-channel"
-version = "1.9.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "81953c529336010edd6d8e358f886d9581267795c61b19475b71314bffa46d35"
-dependencies = [
- "concurrent-queue",
- "event-listener",
- "futures-core",
-]
-
-[[package]]
 name = "async-compression"
 version = "0.4.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -414,54 +403,15 @@ dependencies = [
 ]
 
 [[package]]
-name = "async-lock"
-version = "2.8.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "287272293e9d8c41773cec55e365490fe034813a2f172f502d6ddcf75b2f582b"
-dependencies = [
- "event-listener",
-]
-
-[[package]]
 name = "async-native-tls"
-version = "0.3.3"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9e9e7a929bd34c68a82d58a4de7f86fffdaf97fb2af850162a7bb19dd7269b33"
+checksum = "d57d4cec3c647232e1094dc013546c0b33ce785d8aeb251e1f20dfaf8a9a13fe"
 dependencies = [
- "async-std",
+ "futures-util",
  "native-tls",
  "thiserror",
  "url",
-]
-
-[[package]]
-name = "async-std"
-version = "1.12.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "62565bb4402e926b29953c785397c6dc0391b7b446e45008b0049eb43cec6f5d"
-dependencies = [
- "async-channel",
- "async-lock",
- "crossbeam-utils",
- "futures-channel",
- "futures-core",
- "futures-io",
- "memchr",
- "once_cell",
- "pin-project-lite",
- "pin-utils",
- "slab",
- "wasm-bindgen-futures",
-]
-
-[[package]]
-name = "async-stream"
-version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "22068c0c19514942eefcfd4daf8976ef1aad84e61539f95cd200c35202f80af5"
-dependencies = [
- "async-stream-impl 0.2.1",
- "futures-core",
 ]
 
 [[package]]
@@ -470,20 +420,9 @@ version = "0.3.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cd56dd203fef61ac097dd65721a419ddccb106b2d2b70ba60a6b529f03961a51"
 dependencies = [
- "async-stream-impl 0.3.5",
+ "async-stream-impl",
  "futures-core",
  "pin-project-lite",
-]
-
-[[package]]
-name = "async-stream-impl"
-version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "25f9db3b38af870bf7e5cc649167533b493928e50744e2c30ae350230b414670"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 1.0.109",
 ]
 
 [[package]]
@@ -589,9 +528,9 @@ dependencies = [
 
 [[package]]
 name = "bb8-tiberius"
-version = "0.5.2"
+version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "648d5365b34a2a362d5b8790d3c1b230d263d2377e563c76cb79c10d326b917e"
+checksum = "d8a33c87124c1938413e45ab6a6655e49d9e4cd015e05db61d6ab5a4f96b2c83"
 dependencies = [
  "async-trait",
  "bb8",
@@ -948,15 +887,6 @@ dependencies = [
  "strum",
  "strum_macros",
  "unicode-width",
-]
-
-[[package]]
-name = "concurrent-queue"
-version = "2.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d16048cd947b08fa32c24458a22f5dc5e835264f689f4f5653210c69fd107363"
-dependencies = [
- "crossbeam-utils",
 ]
 
 [[package]]
@@ -1721,12 +1651,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b90ca2580b73ab6a1f724b76ca11ab632df820fd6040c336200d2c1df7b3c82c"
 
 [[package]]
-name = "event-listener"
-version = "2.5.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0206175f82b8d6bf6652ff7d71a1e27fd2e4efde587fd368662814d6ec1d9ce0"
-
-[[package]]
 name = "fallible-iterator"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2004,7 +1928,7 @@ version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "09ab5966c98f6d4e71e247cda6a6d8497bc8a1df3a4ba9ee548087842cffc21d"
 dependencies = [
- "async-stream 0.3.5",
+ "async-stream",
  "hyper",
  "hyper-rustls 0.23.2",
  "log",
@@ -2238,7 +2162,7 @@ dependencies = [
  "httpdate",
  "itoa",
  "pin-project-lite",
- "socket2 0.5.5",
+ "socket2 0.4.10",
  "tokio",
  "tower-service",
  "tracing",
@@ -2736,12 +2660,6 @@ name = "md5"
 version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7e6bcd6433cff03a4bfc3d9834d504467db1f1cf6d0ea765d37d330249ed629d"
-
-[[package]]
-name = "md5"
-version = "0.7.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "490cc448043f947bae3cbee9c203358d62dbee0db12107a74be5c30ccfd09771"
 
 [[package]]
 name = "memchr"
@@ -4999,12 +4917,11 @@ dependencies = [
 
 [[package]]
 name = "tiberius"
-version = "0.5.16"
+version = "0.7.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e08c782c165a53700c17e4b15a1f6facc21e40a6a80402c518e0f3a2c3fcedd4"
+checksum = "833311bc8e26e96c73ad1b5c1f488c588808c747a318905ec67e43d422ea2c08"
 dependencies = [
  "async-native-tls",
- "async-stream 0.2.1",
  "async-trait",
  "asynchronous-codec",
  "byteorder",
@@ -5024,6 +4941,8 @@ dependencies = [
  "pretty-hex",
  "rust_decimal",
  "thiserror",
+ "tokio",
+ "tokio-util 0.6.10",
  "tracing",
  "uuid 0.8.2",
  "winauth",
@@ -5380,10 +5299,6 @@ name = "uuid"
 version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bc5cf98d8186244414c848017f0e2676b3fcb46807f6668a97dfe67359a3c4b7"
-dependencies = [
- "getrandom 0.2.12",
- "md5 0.7.0",
-]
 
 [[package]]
 name = "uuid"
@@ -5598,7 +5513,7 @@ checksum = "8f820cd208ce9c6b050812dc2d724ba98c6c1e9db5ce9b3f58d925ae5723a5e6"
 dependencies = [
  "bitflags 1.2.1",
  "byteorder",
- "md5 0.6.1",
+ "md5",
  "rand 0.7.3",
  "winapi",
 ]
