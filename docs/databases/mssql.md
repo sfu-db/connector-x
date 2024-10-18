@@ -6,10 +6,6 @@ SQLServer does not need to specify protocol.
 
 ### MsSQL Connection
 ```{hint} 
-By adding `trusted_connection=true` to connection uri parameter, windows authentication will be enabled. Example: `mssql://host:port/db?trusted_connection=true`
-By adding `encrypt=true` to connection uri parameter, SQLServer will use SSL encryption. Example: `mssql://host:port/db?encrypt=true&trusted_connection=true`
-```
-```{hint} 
 if the user password has special characters, they need to be sanitized. example: `from urllib import parse; password = parse.quote_plus(password)`
 ```
 
@@ -19,6 +15,16 @@ conn = 'mssql://username:password@server:port/database?encrypt=true&trusted_conn
 query = 'SELECT * FROM table'                                   # query string
 cx.read_sql(conn, query)                                        # read data from MsSQL
 ```
+
+### Connection Parameters
+* By adding `trusted_connection=true` to connection uri parameter, windows authentication will be enabled. 
+    * Example: `mssql://host:port/db?trusted_connection=true`
+* By adding `encrypt=true` to connection uri parameter, SQLServer will use SSL encryption. 
+    * Example: `mssql://host:port/db?encrypt=true&trusted_connection=true`
+* By adding `trust_server_certificate=true` to connection uri parameter, the SQLServer certificate will not be validated and it is accepted as-is. 
+    * Example: `mssql://host:port/db?trust_server_certificate=true&encrypt=true`
+* By adding `trust_server_certificate_ca=/path/to/ca-cert.crt` to connection uri parameter, the SQLServer certificate will be validated against the given CA certificate in addition to the system-truststore.
+    * Example: `mssql://host:port/db?encrypt=true&trust_server_certificate_ca=/path/to/ca-cert.crt`
 
 ### SQLServer-Pandas Type Mapping
 | SQLServer Type  |      Pandas Type            |  Comment                           |

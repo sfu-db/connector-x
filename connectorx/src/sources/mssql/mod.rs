@@ -86,12 +86,12 @@ pub fn mssql_config(url: &Url) -> Config {
 
     match params.get("trust_server_certificate") {
         Some(v) if v.to_lowercase() == "true" => config.trust_cert(),
-        _ => {},
+        _ => {}
     };
 
     match params.get("trust_server_certificate_ca") {
         Some(v) => config.trust_cert_ca(v),
-        _ => {},
+        _ => {}
     };
 
     match params.get("encrypt") {
