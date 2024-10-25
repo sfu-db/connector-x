@@ -57,13 +57,13 @@ pub fn connect_oracle(conn: &Url) -> Connector {
     let user = decode(conn.username())?.into_owned();
     let password = decode(conn.password().unwrap_or(""))?.into_owned();
     let host = decode(conn.host_str().unwrap_or("localhost"))?.into_owned();
-    let port = conn.port().unwrap_or(1521);
 
     let params: HashMap<String, String> = conn.query_pairs().into_owned().collect();
 
     let conn_str = if params.get("alias").map_or(false, |v| v == "true") {
-        decode(conn.path())?.into_owned()
+        host.clone()
     } else {
+        let port = conn.port().unwrap_or(1521);
         let path = decode(conn.path())?.into_owned();
         format!("//{}:{}{}", host, port, path)
     };
