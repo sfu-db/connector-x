@@ -69,7 +69,7 @@ pub fn connect_oracle(conn: &Url) -> Connector {
     };
 
     let mut connector = oracle::Connector::new(user.as_str(), password.as_str(), conn_str.as_str());
-    if user.is_empty() && password.is_empty() && host == "localhost" {
+    if user.is_empty() && password.is_empty() {
         debug!("No username or password provided, assuming system auth.");
         connector.external_auth(true);
     }
