@@ -351,8 +351,19 @@
 <a href="#351" id="351">351</a>
 <a href="#352" id="352">352</a>
 <a href="#353" id="353">353</a>
+<a href="#354" id="354">354</a>
+<a href="#355" id="355">355</a>
+<a href="#356" id="356">356</a>
+<a href="#357" id="357">357</a>
+<a href="#358" id="358">358</a>
+<a href="#359" id="359">359</a>
+<a href="#360" id="360">360</a>
+<a href="#361" id="361">361</a>
+<a href="#362" id="362">362</a>
 </pre></div><pre class="rust"><code><span class="kw">mod </span>errors;
 <span class="kw">mod </span>typesystem;
+
+<span class="kw">use </span>std::collections::HashMap;
 
 <span class="kw">pub use </span><span class="self">self</span>::errors::OracleSourceError;
 <span class="kw">pub use </span><span class="self">self</span>::typesystem::OracleTypeSystem;
@@ -408,12 +419,19 @@
     <span class="kw">let </span>user = decode(conn.username())<span class="question-mark">?</span>.into_owned();
     <span class="kw">let </span>password = decode(conn.password().unwrap_or(<span class="string">""</span>))<span class="question-mark">?</span>.into_owned();
     <span class="kw">let </span>host = decode(conn.host_str().unwrap_or(<span class="string">"localhost"</span>))<span class="question-mark">?</span>.into_owned();
-    <span class="kw">let </span>port = conn.port().unwrap_or(<span class="number">1521</span>);
-    <span class="kw">let </span>path = decode(conn.path())<span class="question-mark">?</span>.into_owned();
 
-    <span class="kw">let </span>conn_str = <span class="macro">format!</span>(<span class="string">"//{}:{}{}"</span>, host, port, path);
+    <span class="kw">let </span>params: HashMap&lt;String, String&gt; = conn.query_pairs().into_owned().collect();
+
+    <span class="kw">let </span>conn_str = <span class="kw">if </span>params.get(<span class="string">"alias"</span>).map_or(<span class="bool-val">false</span>, |v| v == <span class="string">"true"</span>) {
+        host.clone()
+    } <span class="kw">else </span>{
+        <span class="kw">let </span>port = conn.port().unwrap_or(<span class="number">1521</span>);
+        <span class="kw">let </span>path = decode(conn.path())<span class="question-mark">?</span>.into_owned();
+        <span class="macro">format!</span>(<span class="string">"//{}:{}{}"</span>, host, port, path)
+    };
+
     <span class="kw">let </span><span class="kw-2">mut </span>connector = oracle::Connector::new(user.as_str(), password.as_str(), conn_str.as_str());
-    <span class="kw">if </span>user.is_empty() &amp;&amp; password.is_empty() &amp;&amp; host == <span class="string">"localhost" </span>{
+    <span class="kw">if </span>user.is_empty() &amp;&amp; password.is_empty() {
         <span class="macro">debug!</span>(<span class="string">"No username or password provided, assuming system auth."</span>);
         connector.external_auth(<span class="bool-val">true</span>);
     }
