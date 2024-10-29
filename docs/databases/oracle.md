@@ -1,10 +1,22 @@
 # Oracle
 
+### System Authentication
+```{hint}
+If you want to use system authentication to access Oracle, username & password should not present in the connection string.
+```
 
 ### Oracle Connection
 ```py
 import connectorx as cx
 conn = 'oracle://username:password@server:port/database'        # connection token
+query = 'SELECT * FROM table'                                   # query string
+cx.read_sql(conn, query)                                        # read data from Oracle
+```
+
+### Oracle TNS Alias (DNS) Connection
+```py
+import connectorx as cx
+conn = 'oracle://username:password@alias_name?alias=true'        # connection token
 query = 'SELECT * FROM table'                                   # query string
 cx.read_sql(conn, query)                                        # read data from Oracle
 ```
