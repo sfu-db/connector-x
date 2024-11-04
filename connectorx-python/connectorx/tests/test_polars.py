@@ -13,7 +13,7 @@ def postgres_url() -> str:
     return conn
 
 
-def test_modin(postgres_url: str) -> None:
+def test_polars(postgres_url: str) -> None:
     query = "SELECT * FROM test_table"
     df = read_sql(
         postgres_url,
@@ -35,4 +35,4 @@ def test_modin(postgres_url: str) -> None:
     )
 
     df = df.sort('test_int')
-    assert df.frame_equal(expected, null_equal=True)
+    assert df.equals(expected, null_equal=True)
