@@ -18,6 +18,10 @@ unsafe impl Element for PyList {
     fn get_dtype_bound(py: Python<'_>) -> Bound<'_, PyArrayDescr> {
         PyArrayDescr::object_bound(py)
     }
+
+    fn clone_ref(&self, _py: Python<'_>) -> Self {
+        Self(self.0.clone())
+    }
 }
 
 pub struct ArrayBlock<'a, V> {
@@ -36,6 +40,10 @@ impl<'a, V> FromPyObject<'a> for ArrayBlock<'a, V> {
             buf_size_mb: 16, // in MB
             _value_type: PhantomData,
         })
+    }
+
+    fn extract_bound(ob: &pyo3::Bound<'a, PyAny>) -> PyResult<Self> {
+        Self::extract(ob.clone().into_gil_ref())
     }
 }
 

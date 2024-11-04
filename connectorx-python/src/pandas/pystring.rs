@@ -13,6 +13,10 @@ unsafe impl Element for PyString {
     fn get_dtype_bound(py: Python<'_>) -> Bound<'_, PyArrayDescr> {
         PyArrayDescr::object_bound(py)
     }
+
+    fn clone_ref(&self, _py: Python<'_>) -> Self {
+        Self(self.0.clone())
+    }
 }
 
 #[derive(Clone, Copy, Debug)]

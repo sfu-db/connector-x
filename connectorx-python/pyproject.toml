@@ -33,7 +33,7 @@ numpy = ">=1.26"
 pandas = {version = "^2", optional = true}
 polars = {version = ">=0.8", optional = true}
 pyarrow = {version = ">=4", optional = true}
-python = ">=3.9,<3.13"
+python = ">=3.9,<3.14"
 
 [tool.poetry.extras]
 all = ["dask", "pandas", "modin", "polars", "pyarrow"]

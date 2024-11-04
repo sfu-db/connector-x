@@ -33,6 +33,10 @@ impl<'a> FromPyObject<'a> for BooleanBlock<'a> {
             ))
         }
     }
+
+    fn extract_bound(ob: &pyo3::Bound<'a, PyAny>) -> PyResult<Self> {
+        Self::extract(ob.clone().into_gil_ref())
+    }
 }
 
 impl<'a> BooleanBlock<'a> {
