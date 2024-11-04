@@ -30,6 +30,10 @@ impl<'a> FromPyObject<'a> for Int64Block<'a> {
             ))
         }
     }
+
+    fn extract_bound(ob: &pyo3::Bound<'a, PyAny>) -> PyResult<Self> {
+        Self::extract(ob.clone().into_gil_ref())
+    }
 }
 
 impl<'a> Int64Block<'a> {

@@ -12,7 +12,7 @@ jobs:
     container: quay.io/pypa/manylinux_2_28_x86_64
     strategy:
       matrix:
-        python-version: [[39, "3.9"], [310, "3.10"], [311, "3.11"], [312, "3.12"]]
+        python-version: [[310, "3.10"], [311, "3.11"], [312, "3.12"], [313, "3.13"]]
     steps:
       - uses: actions/checkout@v4
 
@@ -162,7 +162,7 @@ jobs:
     strategy:
       matrix:
         os: ["windows-latest", "macos-13"]
-        python-version: ["3.9", "3.10", "3.11", "3.12"]
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
         include:
           - os: "macos-13"
             features: "--features integrated-auth-gssapi"
@@ -226,7 +226,7 @@ jobs:
     runs-on: macos-latest
     strategy:
       matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12"]
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
     steps:
       - uses: actions/checkout@v4
 
@@ -288,7 +288,7 @@ jobs:
     needs: [win-and-mac, linux]
     strategy:
       matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12"]
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
         os: [macos-13, ubuntu-latest, windows-latest]
     steps:
       - uses: actions/checkout@v4
@@ -311,7 +311,7 @@ jobs:
     needs: [apple-arm]
     strategy:
       matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12"]
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
         os: [macos-latest]
     steps:
       - uses: actions/checkout@v4

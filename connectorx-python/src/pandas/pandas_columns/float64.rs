@@ -19,6 +19,10 @@ impl<'a> FromPyObject<'a> for Float64Block<'a> {
         let data = unsafe { array.as_array_mut() };
         Ok(Float64Block { data })
     }
+
+    fn extract_bound(ob: &pyo3::Bound<'a, PyAny>) -> PyResult<Self> {
+        Self::extract(ob.clone().into_gil_ref())
+    }
 }
 
 impl<'a> Float64Block<'a> {

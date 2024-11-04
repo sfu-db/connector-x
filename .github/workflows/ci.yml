@@ -112,7 +112,7 @@ jobs:
     container: ubuntu:24.04
     strategy:
       matrix:
-        python-version: ["3.12"]
+        python-version: ["3.13"]
     services:
       # Label used to access the service container
       postgres:

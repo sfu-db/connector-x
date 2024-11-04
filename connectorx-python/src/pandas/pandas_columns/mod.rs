@@ -58,3 +58,18 @@ pub fn check_dtype(ob: &PyAny, expected_dtype: &str) -> PyResult<()> {
     }
     Ok(())
 }
+
+// pub fn check_bound_dtype<'py>(ob: &pyo3::Bound<'py, PyAny>, expected_dtype: &str) -> PyResult<()> {
+//     let dtype = ob.getattr(intern!(ob.py(), "dtype"))?.str()?;
+//     // https://pyo3.rs/main/doc/pyo3/types/struct.pystring#equality
+//     if dtype != expected_dtype {
+//         throw!(PyRuntimeError::new_err(format!(
+//             "expecting ndarray to be '{}' found '{}' at {}:{}",
+//             expected_dtype,
+//             dtype,
+//             file!(),
+//             line!()
+//         )));
+//     }
+//     Ok(())
+// }

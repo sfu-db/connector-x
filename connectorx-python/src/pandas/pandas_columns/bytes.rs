@@ -17,6 +17,10 @@ unsafe impl Element for PyBytes {
     fn get_dtype_bound(py: Python<'_>) -> Bound<'_, PyArrayDescr> {
         PyArrayDescr::object_bound(py)
     }
+
+    fn clone_ref(&self, _py: Python<'_>) -> Self {
+        Self(self.0.clone())
+    }
 }
 
 pub struct BytesBlock<'a> {
@@ -33,6 +37,10 @@ impl<'a> FromPyObject<'a> for BytesBlock<'a> {
             data,
             buf_size_mb: 16, // in MB
         })
+    }
+
+    fn extract_bound(ob: &pyo3::Bound<'a, PyAny>) -> PyResult<Self> {
+        Self::extract(ob.clone().into_gil_ref())
     }
 }
 
