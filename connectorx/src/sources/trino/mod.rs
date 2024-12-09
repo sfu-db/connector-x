@@ -89,9 +89,14 @@ impl TrinoSource {
             username => username,
         };
 
+        let no_verify = url
+            .query_pairs()
+            .any(|(k, v)| k == "verify" && v == "false");
+
         let builder = ClientBuilder::new(username, url.host().unwrap().to_owned())
             .port(url.port().unwrap_or(8080))
             .ssl(prusto::ssl::Ssl { root_cert: None })
+            .no_verify(no_verify)
             .secure(url.scheme() == "trino+https")
             .catalog(url.path_segments().unwrap().last().unwrap_or("hive"));
 
