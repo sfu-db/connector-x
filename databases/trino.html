@@ -368,7 +368,7 @@
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#postgres-connection">Postgres Connection</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#connection">Connection</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#trino-pandas-type-mapping">Trino-Pandas Type Mapping</a></li>
 </ul>
             </nav>
@@ -383,12 +383,12 @@
                   
   <section class="tex2jax_ignore mathjax_ignore" id="trino">
 <h1>Trino<a class="headerlink" href="#trino" title="Link to this heading">#</a></h1>
-<section id="postgres-connection">
-<h2>Postgres Connection<a class="headerlink" href="#postgres-connection" title="Link to this heading">#</a></h2>
+<section id="connection">
+<h2>Connection<a class="headerlink" href="#connection" title="Link to this heading">#</a></h2>
 <div class="admonition hint">
 <p class="admonition-title">Hint</p>
-<p>Using <code class="docutils literal notranslate"><span class="pre">trino+http</span></code> as connection protocol disables SSL for the connection. Example: `trino+http://host:port/catalog
-Notice that basic auth requires SSL for Trino.</p>
+<p>Using <code class="docutils literal notranslate"><span class="pre">trino+http</span></code> as connection protocol disables TLS for the connection. Example: <code class="docutils literal notranslate"><span class="pre">trino+http://host:port/catalog</span></code>
+Notice that Trino requires TLS for basic auth credentials. To use self-signed certificates, add <code class="docutils literal notranslate"><span class="pre">verify=false</span></code> like this: <code class="docutils literal notranslate"><span class="pre">trino+https://host:port/catalog?verify=false</span></code></p>
 </div>
 <div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">connectorx</span> <span class="k">as</span> <span class="nn">cx</span>
 <span class="n">conn</span> <span class="o">=</span> <span class="s1">&#39;trino+https://username:password@server:port/catalog&#39;</span>     <span class="c1"># connection token</span>
@@ -524,7 +524,7 @@ Notice that basic auth requires SSL for Trino.</p>
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#postgres-connection">Postgres Connection</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#connection">Connection</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#trino-pandas-type-mapping">Trino-Pandas Type Mapping</a></li>
 </ul>
   </nav></div>

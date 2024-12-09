@@ -1,10 +1,10 @@
 # Trino
 
-## Postgres Connection
+## Connection
 
 ```{hint}
-Using `trino+http` as connection protocol disables SSL for the connection. Example: `trino+http://host:port/catalog
-Notice that basic auth requires SSL for Trino.
+Using `trino+http` as connection protocol disables TLS for the connection. Example: `trino+http://host:port/catalog`
+Notice that Trino requires TLS for basic auth credentials. To use self-signed certificates, add `verify=false` like this: `trino+https://host:port/catalog?verify=false`
 ```
 
 ```py
