@@ -208,14 +208,21 @@ BibTeX entry:
                 </a>
             </td>
             <td align="center">
+                <a href="https://github.com/domnikl">
+                    <img src="https://avatars.githubusercontent.com/u/603116?v=4" width="66;" alt="domnikl"/>
+                    <br />
+                    <sub><b>Dominik Liebler</b></sub>
+                </a>
+            </td>
+		</tr>
+		<tr>
+            <td align="center">
                 <a href="https://github.com/wseaton">
                     <img src="https://avatars.githubusercontent.com/u/16678729?v=4" width="66;" alt="wseaton"/>
                     <br />
                     <sub><b>Will Eaton</b></sub>
                 </a>
             </td>
-		</tr>
-		<tr>
             <td align="center">
                 <a href="https://github.com/AnatolyBuga">
                     <img src="https://avatars.githubusercontent.com/u/60788447?v=4" width="66;" alt="AnatolyBuga"/>
@@ -228,13 +235,6 @@ BibTeX entry:
                     <img src="https://avatars.githubusercontent.com/u/54070169?v=4" width="66;" alt="Jordan-M-Young"/>
                     <br />
                     <sub><b>Jordan M. Young</b></sub>
-                </a>
-            </td>
-            <td align="center">
-                <a href="https://github.com/domnikl">
-                    <img src="https://avatars.githubusercontent.com/u/603116?v=4" width="66;" alt="domnikl"/>
-                    <br />
-                    <sub><b>Dominik Liebler</b></sub>
                 </a>
             </td>
             <td align="center">
