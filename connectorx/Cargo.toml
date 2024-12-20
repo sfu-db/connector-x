@@ -55,7 +55,7 @@ tokio = {version = "1", features = ["rt", "rt-multi-thread", "net"], optional = 
 tokio-util = {version = "0.6", optional = true}
 urlencoding = {version = "2.1", optional = true}
 uuid = {version = "0.8", optional = true}
-j4rs = {version = "0.15", optional = true}
+j4rs = {version = "0.17", optional = true}
 datafusion = {version = "31", optional = true}
 prusto = {version = "0.5.2", optional = true}
 serde = {version = "1", optional = true}
