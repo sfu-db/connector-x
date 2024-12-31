@@ -59,7 +59,7 @@ fn test_polars() {
     )
     .unwrap();
 
-    assert!(df.frame_equal_missing(&expected) || df.frame_equal_missing(&expected2));
+    assert!(df.equals_missing(&expected) || df.equals_missing(&expected2));
 }
 
 #[test]
@@ -135,7 +135,7 @@ fn test_postgres_arrow() {
     )
     .unwrap();
 
-    assert!(df.frame_equal_missing(&expected) || df.frame_equal_missing(&expected2));
+    assert!(df.equals_missing(&expected) || df.equals_missing(&expected2));
 }
 
 #[test]
@@ -160,10 +160,10 @@ fn test_pg_pl_bool_array() {
 
     dispatcher.run().expect("run dispatcher");
 
-    let s1 = Series::new("a", [true, false]);
+    let s1 = Series::new(PlSmallStr::from("a"), [true, false]);
     let empty_vec: Vec<bool> = vec![];
-    let s2 = Series::new("b", empty_vec);
-    let s3 = Series::new("c", [true]);
+    let s2 = Series::new(PlSmallStr::from("b"), empty_vec);
+    let s3 = Series::new(PlSmallStr::from("c"), [true]);
 
     let df: DataFrame = destination.polars().unwrap();
     let test_df: DataFrame = df!(
@@ -195,18 +195,18 @@ fn test_pg_pl_varchar_array() {
 
     dispatcher.run().expect("run dispatcher");
 
-    let s1 = Series::new("a", ["str1", "str2"]);
+    let s1 = Series::new(PlSmallStr::from("a"), ["str1", "str2"]);
     let s2 = Series::new(
-        "b",
+        PlSmallStr::from("b"),
         [
             "0123456789",
             "abcdefghijklmnopqrstuvwxyz",
             "!@#$%^&*()_-+=~`:;<>?/",
         ],
     );
-    let s3 = Series::new("c", ["", "  "]);
+    let s3 = Series::new(PlSmallStr::from("c"), ["", "  "]);
     let empty_vec: Vec<&str> = vec![];
-    let s4 = Series::new("d", empty_vec);
+    let s4 = Series::new(PlSmallStr::from("d"), empty_vec);
 
     let df: DataFrame = destination.polars().unwrap();
     let test_df: DataFrame = df!(
@@ -239,18 +239,18 @@ fn test_pg_pl_text_array() {
 
     dispatcher.run().expect("run dispatcher");
 
-    let s1 = Series::new("a", ["text1", "text2"]);
+    let s1 = Series::new(PlSmallStr::from("a"), ["text1", "text2"]);
     let s2 = Series::new(
-        "b",
+        PlSmallStr::from("b"),
         [
             "0123456789",
             "abcdefghijklmnopqrstuvwxyz",
             "!@#$%^&*()_-+=~`:;<>?/",
         ],
     );
-    let s3 = Series::new("c", ["", "  "]);
+    let s3 = Series::new(PlSmallStr::from("c"), ["", "  "]);
     let empty_vec: Vec<&str> = vec![];
-    let s4 = Series::new("d", empty_vec);
+    let s4 = Series::new(PlSmallStr::from("d"), empty_vec);
 
     let df: DataFrame = destination.polars().unwrap();
     let test_df: DataFrame = df!(
