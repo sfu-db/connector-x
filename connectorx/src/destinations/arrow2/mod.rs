@@ -13,6 +13,7 @@ use anyhow::anyhow;
 use arrow2::array::{Array, MutableArray};
 use arrow2::chunk::Chunk;
 use arrow2::datatypes::Schema;
+use arrow2::ffi::{export_array_to_c, export_field_to_c};
 use arrow_assoc::ArrowAssoc;
 pub use errors::{Arrow2DestinationError, Result};
 use fehler::throw;
@@ -134,8 +135,8 @@ impl Arrow2Destination {
             // Arrow stores data by columns, therefore need to be Zero-copied by column
             for (i, col) in chunk.into_arrays().into_iter().enumerate() {
                 // From arrow2 to FFI
-                let ffi_schema = arrow2::ffi::export_field_to_c(&fields[i]);
-                let ffi_array = arrow2::ffi::export_array_to_c(col);
+                let ffi_schema = export_field_to_c(&fields[i]);
+                let ffi_array = export_array_to_c(col);
 
                 // From FFI to polars_arrow;
                 let field = unsafe {
