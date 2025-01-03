@@ -24,6 +24,8 @@ chrono = "0.4"
 
 arrow = {workspace = true, optional = true}
 arrow2 = {workspace = true, default-features = false, optional = true}
+polars = {workspace = true, optional = true, features=["dtype-u8", "dtype-u16", "lazy"]}
+polars-arrow = {workspace = true, optional = true}
 bb8 = {version = "0.7", optional = true}
 bb8-tiberius = {version = "0.8", optional = true}
 csv = {version = "1", optional = true}
@@ -36,8 +38,6 @@ ndarray = {version = "0.15", optional = true}
 num-traits = {version = "0.2", optional = true}
 openssl = {version = "0.10", optional = true, features = ["vendored"]}
 oracle = {version = "0.5", optional = true}
-polars = {version = "0.45", optional = true, features=["dtype-u8", "dtype-u16", "lazy"]}
-polars-arrow = {version = "0.45", optional = true}
 postgres = {version = "0.19", features = ["with-chrono-0_4", "with-uuid-0_8", "with-serde_json-1"], optional = true}
 postgres-native-tls = {version = "0.5", optional = true}
 postgres-openssl = {version = "0.5", optional = true}
@@ -72,11 +72,12 @@ iai = "0.1"
 pprof = {version = "0.5", features = ["flamegraph"]}
 
 [features]
-all = ["src_sqlite", "src_postgres", "src_mysql", "src_mssql", "src_oracle", "src_bigquery", "src_csv", "src_dummy", "src_trino", "dst_arrow", "dst_arrow2", "federation", "fed_exec"]
+all = ["src_sqlite", "src_postgres", "src_mysql", "src_mssql", "src_oracle", "src_bigquery", "src_csv", "src_dummy", "src_trino", "dst_arrow", "dst_arrow2", "dst_arrow", "federation", "fed_exec"]
 branch = []
 default = ["fptr"]
 dst_arrow = ["arrow"]
 dst_arrow2 = ["polars", "polars-arrow", "arrow2"]
+dst_polars = ["dst_arrow", "polars", "polars-arrow"]
 fptr = []
 src_bigquery = ["gcp-bigquery-client", "tokio"]
 src_csv = ["csv", "regex"]
