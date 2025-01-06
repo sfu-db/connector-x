@@ -221,6 +221,18 @@ pub fn get_arrow2(
             );
             dispatcher.run()?;
         }
+        #[cfg(feature = "src_trino")]
+        SourceType::Trino => {
+            let rt = Arc::new(tokio::runtime::Runtime::new().expect("Failed to create runtime"));
+            let source = TrinoSource::new(rt, &source_conn.conn[..])?;
+            let dispatcher = Dispatcher::<_, _, TrinoArrow2Transport>::new(
+                source,
+                &mut destination,
+                queries,
+                origin_query,
+            );
+            dispatcher.run()?;
+        }
         _ => throw!(ConnectorXOutError::SourceNotSupport(format!(
             "{:?}",
             source_conn.ty
