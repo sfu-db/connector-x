@@ -12,14 +12,17 @@ use crate::typesystem::{Realize, TypeAssoc, TypeSystem};
 use anyhow::anyhow;
 use arrow2::array::{Array, MutableArray};
 use arrow2::chunk::Chunk;
-use arrow2::datatypes::{Field, Schema};
+use arrow2::datatypes::Schema;
+use arrow2::ffi::{export_array_to_c, export_field_to_c};
 use arrow_assoc::ArrowAssoc;
 pub use errors::{Arrow2DestinationError, Result};
 use fehler::throw;
 use fehler::throws;
 use funcs::{FFinishBuilder, FNewBuilder, FNewField};
-use polars::prelude::{DataFrame, PolarsError, Series};
-use std::convert::TryFrom;
+use polars::prelude::{concat, DataFrame, IntoLazy, PlSmallStr, Series, UnionArgs};
+use polars_arrow::ffi::{import_array_from_c, import_field_from_c};
+use std::iter::FromIterator;
+use std::mem::transmute;
 use std::sync::{Arc, Mutex};
 pub use typesystem::Arrow2TypeSystem;
 
@@ -118,51 +121,53 @@ impl Arrow2Destination {
 
     #[throws(Arrow2DestinationError)]
     pub fn polars(self) -> DataFrame {
+        // Convert to arrow first
         let (rbs, schema): (Vec<Chunk<Box<dyn Array>>>, Arc<Schema>) = self.arrow()?;
-        //let fields = schema.fields.as_slice();
-        let fields: &[Field] = schema.fields.as_slice();
+        let fields = schema.fields.as_slice();
 
-        // This should be in polars but their version needs updating.
-        // Whave placed this here contained in an inner function until the fix is merged upstream
-        fn try_from(
-            chunks: (Vec<Chunk<Box<dyn Array>>>, &[Field]),
-        ) -> std::result::Result<DataFrame, PolarsError> {
-            use polars::prelude::NamedFrom;
+        // Ready LazyFrame vector for the chunks
+        let mut lf_vec = vec![];
 
-            let mut series: Vec<Series> = vec![];
+        for chunk in rbs.into_iter() {
+            // Column vector
+            let mut columns = Vec::with_capacity(chunk.len());
 
-            for chunk in chunks.0.into_iter() {
-                let columns_results: std::result::Result<Vec<Series>, PolarsError> = chunk
-                    .into_arrays()
-                    .into_iter()
-                    .zip(chunks.1)
-                    .map(|(arr, field)| {
-                        let a = Series::try_from((field.name.as_str(), arr)).map_err(|_| {
-                            PolarsError::ComputeError("Couldn't build Series from box".into())
-                        });
-                        a
-                    })
-                    .collect();
+            // Arrow stores data by columns, therefore need to be Zero-copied by column
+            for (i, col) in chunk.into_arrays().into_iter().enumerate() {
+                // From arrow2 to FFI
+                let ffi_schema = export_field_to_c(&fields[i]);
+                let ffi_array = export_array_to_c(col);
 
-                let columns = columns_results?;
+                // From FFI to polars_arrow;
+                let field = unsafe {
+                    import_field_from_c(transmute::<
+                        &arrow2::ffi::ArrowSchema,
+                        &polars_arrow::ffi::ArrowSchema,
+                    >(&ffi_schema))
+                }?;
+                let data = unsafe {
+                    import_array_from_c(
+                        transmute::<arrow2::ffi::ArrowArray, polars_arrow::ffi::ArrowArray>(
+                            ffi_array,
+                        ),
+                        field.dtype().clone(),
+                    )
+                }?;
 
-                if series.is_empty() {
-                    for col in columns.iter() {
-                        let name = col.name().to_string();
-                        series.push(Series::new(&name, col));
-                    }
-                    continue;
-                }
-
-                for (i, col) in columns.into_iter().enumerate() {
-                    series[i].append(&col)?;
-                }
+                // Create Polars series from arrow column
+                columns.push(Series::from_arrow(
+                    PlSmallStr::from(fields[i].name.to_string()),
+                    data,
+                )?);
             }
 
-            DataFrame::new(series)
+            // Create DataFrame from the columns
+            lf_vec.push(DataFrame::from_iter(columns).lazy());
         }
 
-        try_from((rbs, fields)).unwrap()
+        // Concat the chunks
+        let union_args = UnionArgs::default();
+        concat(lf_vec, union_args)?.collect()?
     }
 }
 

@@ -22,6 +22,15 @@ use std::{
     sync::{Arc, Mutex},
 };
 
+#[cfg(feature = "dst_polars")]
+use {
+    arrow::ffi::to_ffi,
+    polars::prelude::{concat, DataFrame, IntoLazy, PlSmallStr, Series, UnionArgs},
+    polars_arrow::ffi::{import_array_from_c, import_field_from_c},
+    std::iter::FromIterator,
+    std::mem::transmute,
+};
+
 type Builder = Box<dyn Any + Send>;
 type Builders = Vec<Builder>;
 
@@ -123,6 +132,63 @@ impl ArrowDestination {
         let lock = Arc::try_unwrap(self.data).map_err(|_| anyhow!("Partitions are not freed"))?;
         lock.into_inner()
             .map_err(|e| anyhow!("mutex poisoned {}", e))?
+    }
+
+    #[cfg(feature = "dst_polars")]
+    #[throws(ArrowDestinationError)]
+    pub fn polars(self) -> DataFrame {
+        // Convert to arrow first
+        let rbs = self.arrow()?;
+
+        // Ready LazyFrame vector for the chunks
+        let mut lf_vec = vec![];
+
+        for chunk in rbs.into_iter() {
+            // Column vector
+            let mut columns = Vec::with_capacity(chunk.num_columns());
+
+            // Arrow stores data by columns, therefore need to be Zero-copied by column
+            for (i, col) in chunk.columns().iter().enumerate() {
+                // Convert to ArrayData (arrow-rs)
+                let array = col.to_data();
+
+                // Convert to ffi with arrow-rs
+                let (out_array, out_schema) = to_ffi(&array).unwrap();
+
+                // Import field from ffi with polars
+                let field = unsafe {
+                    import_field_from_c(transmute::<
+                        &arrow::ffi::FFI_ArrowSchema,
+                        &polars_arrow::ffi::ArrowSchema,
+                    >(&out_schema))
+                }
+                .unwrap();
+
+                // Import data from ffi with polars
+                let data = unsafe {
+                    import_array_from_c(
+                        transmute::<arrow::ffi::FFI_ArrowArray, polars_arrow::ffi::ArrowArray>(
+                            out_array,
+                        ),
+                        field.dtype().clone(),
+                    )
+                }
+                .unwrap();
+
+                // Create Polars series from arrow column
+                columns.push(Series::from_arrow(
+                    PlSmallStr::from(chunk.schema().field(i).name()),
+                    data,
+                )?);
+            }
+
+            // Create DataFrame from the columns
+            lf_vec.push(DataFrame::from_iter(columns).lazy());
+        }
+
+        // Concat the chunks
+        let union_args = UnionArgs::default();
+        concat(lf_vec, union_args)?.collect()?
     }
 
     #[throws(ArrowDestinationError)]

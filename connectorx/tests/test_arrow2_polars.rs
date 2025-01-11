@@ -1,13 +1,13 @@
 use connectorx::{
     constants::RECORD_BATCH_SIZE,
-    destinations::arrow::ArrowDestination,
+    destinations::arrow2::Arrow2Destination,
     prelude::*,
     sources::{
         dummy::{DummySource, DummyTypeSystem},
         postgres::{rewrite_tls_args, BinaryProtocol, PostgresSource},
     },
     sql::CXQuery,
-    transports::{DummyArrowTransport, PostgresArrowTransport},
+    transports::{DummyArrow2Transport, PostgresArrow2Transport},
 };
 use polars::{df, prelude::*};
 use postgres::NoTls;
@@ -23,15 +23,15 @@ fn test_polars() {
         DummyTypeSystem::String(true),
         DummyTypeSystem::F64(false),
     ];
-    let nrows = [4, 7];
+    let nrows = vec![4, 7];
     let ncols = schema.len();
     let queries: Vec<CXQuery> = nrows
         .iter()
         .map(|v| CXQuery::naked(format!("{},{}", v, ncols)))
         .collect();
-    let mut destination = ArrowDestination::new();
+    let mut destination = Arrow2Destination::new();
 
-    let dispatcher = Dispatcher::<_, _, DummyArrowTransport>::new(
+    let dispatcher = Dispatcher::<_, _, DummyArrow2Transport>::new(
         DummySource::new(&["a", "b", "c", "d", "e"], &schema),
         &mut destination,
         &queries,
@@ -59,8 +59,6 @@ fn test_polars() {
     )
     .unwrap();
 
-    println!("{}", df);
-
     assert!(df.equals_missing(&expected) || df.equals_missing(&expected2));
 }
 
@@ -73,15 +71,15 @@ fn test_polars_large() {
         DummyTypeSystem::String(true),
         DummyTypeSystem::F64(false),
     ];
-    let nrows = [RECORD_BATCH_SIZE * 2 - 1, RECORD_BATCH_SIZE * 2 + 10];
+    let nrows = vec![RECORD_BATCH_SIZE * 2 - 1, RECORD_BATCH_SIZE * 2 + 10];
     let ncols = schema.len();
     let queries: Vec<CXQuery> = nrows
         .iter()
         .map(|v| CXQuery::naked(format!("{},{}", v, ncols)))
         .collect();
-    let mut destination = ArrowDestination::new();
+    let mut destination = Arrow2Destination::new();
 
-    let dispatcher = Dispatcher::<_, _, DummyArrowTransport>::new(
+    let dispatcher = Dispatcher::<_, _, DummyArrow2Transport>::new(
         DummySource::new(&["a", "b", "c", "d", "e"], &schema),
         &mut destination,
         &queries,
@@ -107,12 +105,12 @@ fn test_postgres_arrow() {
     let url = Url::parse(dburl.as_str()).unwrap();
     let (config, _tls) = rewrite_tls_args(&url).unwrap();
     let builder = PostgresSource::<BinaryProtocol, NoTls>::new(config, NoTls, 2).unwrap();
-    let mut destination = ArrowDestination::new();
-    let dispatcher = Dispatcher::<_, _, PostgresArrowTransport<BinaryProtocol, NoTls>>::new(
+    let mut destination = Arrow2Destination::new();
+    let dispatcher = Dispatcher::<_, _, PostgresArrow2Transport<BinaryProtocol, NoTls>>::new(
         builder,
         &mut destination,
         &queries,
-        Some("select * from test_table".to_string()),
+        Some(format!("select * from test_table")),
     );
 
     dispatcher.run().expect("run dispatcher");
@@ -128,7 +126,6 @@ fn test_postgres_arrow() {
     )
     .unwrap();
 
-    // order of each batch is not guaranteed
     let expected2 = df!(
         "test_int" => &[2, 3, 4, 1314, 1, 0],
         "test_nullint" => &[None, Some(7), Some(9), Some(2), Some(3), Some(5)],
@@ -141,42 +138,42 @@ fn test_postgres_arrow() {
     assert!(df.equals_missing(&expected) || df.equals_missing(&expected2));
 }
 
-// #[test]
-// fn test_pg_pl_bool_array() {
-//     let _ = env_logger::builder().is_test(true).try_init();
+#[test]
+fn test_pg_pl_bool_array() {
+    let _ = env_logger::builder().is_test(true).try_init();
 
-//     let dburl = env::var("POSTGRES_URL").unwrap();
+    let dburl = env::var("POSTGRES_URL").unwrap();
 
-//     let queries = [CXQuery::naked(
-//         "select test_boolarray from test_types where test_boolarray is not null",
-//     )];
-//     let url = Url::parse(dburl.as_str()).unwrap();
-//     let (config, _tls) = rewrite_tls_args(&url).unwrap();
-//     let builder = PostgresSource::<BinaryProtocol, NoTls>::new(config, NoTls, 2).unwrap();
-//     let mut destination = ArrowDestination::new();
-//     let dispatcher = Dispatcher::<_, _, PostgresArrowTransport<BinaryProtocol, NoTls>>::new(
-//         builder,
-//         &mut destination,
-//         &queries,
-//         Some("select * from test_types".to_string()),
-//     );
+    let queries = [CXQuery::naked(
+        "select test_boolarray from test_types where test_boolarray is not null",
+    )];
+    let url = Url::parse(dburl.as_str()).unwrap();
+    let (config, _tls) = rewrite_tls_args(&url).unwrap();
+    let builder = PostgresSource::<BinaryProtocol, NoTls>::new(config, NoTls, 2).unwrap();
+    let mut destination = Arrow2Destination::new();
+    let dispatcher = Dispatcher::<_, _, PostgresArrow2Transport<BinaryProtocol, NoTls>>::new(
+        builder,
+        &mut destination,
+        &queries,
+        Some(format!("select * from test_types")),
+    );
 
-//     dispatcher.run().expect("run dispatcher");
+    dispatcher.run().expect("run dispatcher");
 
-//     let s1 = Series::new(PlSmallStr::from("a"), [true, false]);
-//     let empty_vec: Vec<bool> = vec![];
-//     let s2 = Series::new(PlSmallStr::from("b"), empty_vec);
-//     let s3 = Series::new(PlSmallStr::from("c"), [true]);
+    let s1 = Series::new(PlSmallStr::from("a"), [true, false]);
+    let empty_vec: Vec<bool> = vec![];
+    let s2 = Series::new(PlSmallStr::from("b"), empty_vec);
+    let s3 = Series::new(PlSmallStr::from("c"), [true]);
 
-//     let df: DataFrame = destination.polars().unwrap();
-//     let test_df: DataFrame = df!(
-//         "test_boolarray" => &[s1,s2,s3]
-//     )
-//     .unwrap();
+    let df: DataFrame = destination.polars().unwrap();
+    let test_df: DataFrame = df!(
+        "test_boolarray" => &[s1,s2,s3]
+    )
+    .unwrap();
 
-//     println!("{:?}", df);
-//     assert_eq!(df, test_df);
-// }
+    println!("{:?}", df);
+    assert_eq!(df, test_df);
+}
 
 // #[test]
 // fn test_pg_pl_varchar_array() {
@@ -188,12 +185,12 @@ fn test_postgres_arrow() {
 //     let url = Url::parse(dburl.as_str()).unwrap();
 //     let (config, _tls) = rewrite_tls_args(&url).unwrap();
 //     let builder = PostgresSource::<BinaryProtocol, NoTls>::new(config, NoTls, 2).unwrap();
-//     let mut destination = ArrowDestination::new();
-//     let dispatcher = Dispatcher::<_, _, PostgresArrowTransport<BinaryProtocol, NoTls>>::new(
+//     let mut destination = Arrow2Destination::new();
+//     let dispatcher = Dispatcher::<_, _, PostgresArrow2Transport<BinaryProtocol, NoTls>>::new(
 //         builder,
 //         &mut destination,
 //         &queries,
-//         Some("select * from test_types".to_string()),
+//         Some(format!("select * from test_types")),
 //     );
 
 //     dispatcher.run().expect("run dispatcher");
@@ -232,12 +229,12 @@ fn test_postgres_arrow() {
 //     let url = Url::parse(dburl.as_str()).unwrap();
 //     let (config, _tls) = rewrite_tls_args(&url).unwrap();
 //     let builder = PostgresSource::<BinaryProtocol, NoTls>::new(config, NoTls, 2).unwrap();
-//     let mut destination = ArrowDestination::new();
-//     let dispatcher = Dispatcher::<_, _, PostgresArrowTransport<BinaryProtocol, NoTls>>::new(
+//     let mut destination = Arrow2Destination::new();
+//     let dispatcher = Dispatcher::<_, _, PostgresArrow2Transport<BinaryProtocol, NoTls>>::new(
 //         builder,
 //         &mut destination,
 //         &queries,
-//         Some("select * from test_types".to_string()),
+//         Some(format!("select * from test_types")),
 //     );
 
 //     dispatcher.run().expect("run dispatcher");
@@ -266,6 +263,7 @@ fn test_postgres_arrow() {
 // }
 
 #[test]
+
 fn test_pg_pl_name() {
     let _ = env_logger::builder().is_test(true).try_init();
 
@@ -275,12 +273,12 @@ fn test_pg_pl_name() {
     let url = Url::parse(dburl.as_str()).unwrap();
     let (config, _tls) = rewrite_tls_args(&url).unwrap();
     let builder = PostgresSource::<BinaryProtocol, NoTls>::new(config, NoTls, 2).unwrap();
-    let mut destination = ArrowDestination::new();
-    let dispatcher = Dispatcher::<_, _, PostgresArrowTransport<BinaryProtocol, NoTls>>::new(
+    let mut destination = Arrow2Destination::new();
+    let dispatcher = Dispatcher::<_, _, PostgresArrow2Transport<BinaryProtocol, NoTls>>::new(
         builder,
         &mut destination,
         &queries,
-        Some("select * from test_types".to_string()),
+        Some(format!("select * from test_types")),
     );
 
     dispatcher.run().expect("run dispatcher");
