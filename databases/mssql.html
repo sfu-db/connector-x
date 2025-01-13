@@ -30,7 +30,7 @@
   <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 <link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=a3416100" />
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css?v=13237357" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -400,7 +400,7 @@
 <p class="admonition-title">Hint</p>
 <p>if the user password has special characters, they need to be sanitized. example: <code class="docutils literal notranslate"><span class="pre">from</span> <span class="pre">urllib</span> <span class="pre">import</span> <span class="pre">parse;</span> <span class="pre">password</span> <span class="pre">=</span> <span class="pre">parse.quote_plus(password)</span></code></p>
 </div>
-<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">connectorx</span> <span class="k">as</span> <span class="nn">cx</span>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">connectorx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cx</span>
 <span class="n">conn</span> <span class="o">=</span> <span class="s1">&#39;mssql://username:password@server:port/database?encrypt=true&amp;trusted_connection=true&#39;</span>         <span class="c1"># connection token</span>
 <span class="n">query</span> <span class="o">=</span> <span class="s1">&#39;SELECT * FROM table&#39;</span>                                   <span class="c1"># query string</span>
 <span class="n">cx</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">query</span><span class="p">)</span>                                        <span class="c1"># read data from MsSQL</span>

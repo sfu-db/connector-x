@@ -30,7 +30,7 @@
   <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 <link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=a3416100" />
     <link rel="stylesheet" type="text/css" href="_static/togglebutton.css?v=13237357" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -406,13 +406,13 @@
 <p>Load data from <img src="https://raw.githubusercontent.com/sfu-db/connector-x/main/assets/sources.gif" width="6.5%" style="margin-bottom: -2px"/> to <img src="https://raw.githubusercontent.com/sfu-db/connector-x/main/assets/destinations.gif" width="7%" style="margin-bottom: -2px"/>, the fastest way.</p>
 <p>ConnectorX enables you to load data from databases into Python in the fastest and most memory efficient way. It is a Python package that provides a high-level interface to the popular database connectors. Here is our rust documentation: <a class="reference external" href="https://sfu-db.github.io/connector-x/rust-docs/connectorx/">rust-docs</a>.</p>
 <p>What you need is one line of code:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">connectorx</span> <span class="k">as</span> <span class="nn">cx</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">connectorx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cx</span>
 
 <span class="n">cx</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="s2">&quot;postgresql://username:password@server:port/database&quot;</span><span class="p">,</span> <span class="s2">&quot;SELECT * FROM lineitem&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Optionally, you can accelerate the data loading using parallelism by specifying a partition column.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">connectorx</span> <span class="k">as</span> <span class="nn">cx</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">connectorx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cx</span>
 
 <span class="n">cx</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="s2">&quot;postgresql://username:password@server:port/database&quot;</span><span class="p">,</span> <span class="s2">&quot;SELECT * FROM lineitem&quot;</span><span class="p">,</span> <span class="n">partition_on</span><span class="o">=</span><span class="s2">&quot;l_orderkey&quot;</span><span class="p">,</span> <span class="n">partition_num</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
 </pre></div>
@@ -421,7 +421,7 @@
 ConnectorX will assign one thread for each partition to load and write data in parallel.
 Currently, we support partitioning on <strong>numerical</strong> columns (<strong>cannot contain NULL</strong>) for <strong>SPJA</strong> queries.</p>
 <p><strong>Experimental: We are now providing federated query support (PostgreSQL only and do not support partition for now), you can write a single query to join tables from two or more databases! (JRE &gt;= 1.8 is required)</strong></p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">connectorx</span> <span class="k">as</span> <span class="nn">cx</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">connectorx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cx</span>
 
 <span class="n">db1</span> <span class="o">=</span> <span class="s2">&quot;postgresql://username1:password1@server1:port1/database1&quot;</span>
 <span class="n">db2</span> <span class="o">=</span> <span class="s2">&quot;postgresql://username2:password2@server2:port2/database2&quot;</span>

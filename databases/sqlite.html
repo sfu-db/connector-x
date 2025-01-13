@@ -30,7 +30,7 @@
   <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 <link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=a3416100" />
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css?v=13237357" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -397,7 +397,7 @@
 </ul>
 <section id="sqlite-connection">
 <h2>SQLite Connection<a class="headerlink" href="#sqlite-connection" title="Link to this heading">#</a></h2>
-<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">connectorx</span> <span class="k">as</span> <span class="nn">cx</span>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">connectorx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cx</span>
 <span class="n">db_path</span> <span class="o">=</span> <span class="s1">&#39;/home/user/path/test.db&#39;</span>                         <span class="c1"># path to your SQLite database</span>
 <span class="n">conn</span> <span class="o">=</span> <span class="s1">&#39;sqlite://&#39;</span> <span class="o">+</span> <span class="n">db_path</span>                                <span class="c1"># connection token</span>
 <span class="n">query</span> <span class="o">=</span> <span class="s1">&#39;SELECT * FROM `database.dataset.table`&#39;</span>            <span class="c1"># query string</span>
@@ -405,8 +405,8 @@
 </pre></div>
 </div>
 <p>Example on windows:</p>
-<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">connectorx</span> <span class="k">as</span> <span class="nn">cx</span>
-<span class="kn">import</span> <span class="nn">urllib</span>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">connectorx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cx</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">urllib</span>
 <span class="n">db_path</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">quote</span><span class="p">(</span><span class="s2">&quot;C:</span><span class="se">\\</span><span class="s2">user</span><span class="se">\\</span><span class="s2">path</span><span class="se">\\</span><span class="s2">test.db&quot;</span><span class="p">)</span>     <span class="c1"># url encode the path to your SQLite database         </span>
 <span class="n">conn</span> <span class="o">=</span> <span class="s1">&#39;sqlite://&#39;</span> <span class="o">+</span> <span class="n">db_path</span>                                <span class="c1"># connection token</span>
 <span class="n">query</span> <span class="o">=</span> <span class="s1">&#39;SELECT * FROM `database.dataset.table`&#39;</span>            <span class="c1"># query string</span>

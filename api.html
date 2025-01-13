@@ -30,7 +30,7 @@
   <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 <link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=a3416100" />
     <link rel="stylesheet" type="text/css" href="_static/togglebutton.css?v=13237357" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -417,7 +417,7 @@
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">#</a></h2>
 <ul>
 <li><p>Read a DataFrame from a SQL using a single thread</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">connectorx</span> <span class="k">as</span> <span class="nn">cx</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">connectorx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cx</span>
 
 <span class="n">postgres_url</span> <span class="o">=</span> <span class="s2">&quot;postgresql://username:password@server:port/database&quot;</span>
 <span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;SELECT * FROM lineitem&quot;</span>
@@ -427,7 +427,7 @@
 </div>
 </li>
 <li><p>Read a DataFrame parallelly using 10 threads by automatically partitioning the provided SQL on the partition column (<code class="docutils literal notranslate"><span class="pre">partition_range</span></code> will be automatically  queried if not given)</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">connectorx</span> <span class="k">as</span> <span class="nn">cx</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">connectorx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cx</span>
 
 <span class="n">postgres_url</span> <span class="o">=</span> <span class="s2">&quot;postgresql://username:password@server:port/database&quot;</span>
 <span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;SELECT * FROM lineitem&quot;</span>
@@ -437,7 +437,7 @@
 </div>
 </li>
 <li><p>Read a DataFrame parallelly using 2 threads by manually providing two partition SQLs (the schemas of all the query results should be same)</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">connectorx</span> <span class="k">as</span> <span class="nn">cx</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">connectorx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cx</span>
 
 <span class="n">postgres_url</span> <span class="o">=</span> <span class="s2">&quot;postgresql://username:password@server:port/database&quot;</span>
 <span class="n">queries</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;SELECT * FROM lineitem WHERE l_orderkey &lt;= 30000000&quot;</span><span class="p">,</span> <span class="s2">&quot;SELECT * FROM lineitem WHERE l_orderkey &gt; 30000000&quot;</span><span class="p">]</span>
@@ -448,7 +448,7 @@
 </div>
 </li>
 <li><p>Read a DataFrame parallelly using 4 threads from a more complex query</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">connectorx</span> <span class="k">as</span> <span class="nn">cx</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">connectorx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cx</span>
 
 <span class="n">postgres_url</span> <span class="o">=</span> <span class="s2">&quot;postgresql://username:password@server:port/database&quot;</span>
 <span class="n">query</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
@@ -475,7 +475,7 @@
 </div>
 </li>
 <li><p>Read a DataFrame from a SQL joined from multiple databases (experimental, only support PostgreSQL for now)</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">connectorx</span> <span class="k">as</span> <span class="nn">cx</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">connectorx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cx</span>
 
 <span class="n">db1</span> <span class="o">=</span> <span class="s2">&quot;postgresql://username1:password1@server1:port1/database1&quot;</span>
 <span class="n">db2</span> <span class="o">=</span> <span class="s2">&quot;postgresql://username2:password2@server2:port2/database2&quot;</span>

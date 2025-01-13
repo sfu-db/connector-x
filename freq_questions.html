@@ -30,7 +30,7 @@
   <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 <link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=a3416100" />
     <link rel="stylesheet" type="text/css" href="_static/togglebutton.css?v=13237357" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -400,9 +400,9 @@
 <section id="how-to-print-log-in-python">
 <h2>How to print log in Python?<a class="headerlink" href="#how-to-print-log-in-python" title="Link to this heading">#</a></h2>
 <p>Set the environment variable <code class="docutils literal notranslate"><span class="pre">RUST_LOG</span></code> to have a detailed look at Rust log.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;RUST_LOG&quot;</span><span class="p">]</span><span class="o">=</span><span class="s2">&quot;connectorx=debug,connectorx_python=debug&quot;</span>
-<span class="kn">import</span> <span class="nn">connectorx</span> <span class="k">as</span> <span class="nn">cx</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">connectorx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cx</span>
 
 <span class="n">df</span> <span class="o">=</span> <span class="n">cx</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">query</span><span class="p">)</span> <span class="o">//</span> <span class="n">It</span> <span class="n">will</span> <span class="n">be</span> <span class="n">more</span> <span class="n">clear</span> <span class="n">to</span> <span class="n">test</span> <span class="n">when</span> <span class="n">no</span> <span class="n">partitioning</span> <span class="n">first</span>
 </pre></div>
@@ -417,7 +417,7 @@
 <li><p>schema fetching query, which gets type and name for each column in the result</p></li>
 </ul>
 <p>For users who want to have pandas.DataFrame as final result. In order to avoid the costly COUNT query, one workaround is to use Arrow as an intermediate destination from ConnectorX and convert it into Pandas using Arrow’s <a class="reference external" href="https://arrow.apache.org/docs/python/generated/pyarrow.Table.html?pyarrow.Table.to_pandas">to_pandas API</a>. For example:</p>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">connectorx</span> <span class="k">as</span> <span class="nn">cx</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">connectorx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cx</span>
 
 <span class="n">table</span> <span class="o">=</span> <span class="n">cx</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">db_uri</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">return_type</span><span class="o">=</span><span class="s2">&quot;arrow&quot;</span><span class="p">)</span> <span class="c1"># or arrow2 https://github.com/jorgecarleitao/arrow2</span>
 <span class="n">df</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">to_pandas</span><span class="p">(</span><span class="n">split_blocks</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">date_as_object</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>

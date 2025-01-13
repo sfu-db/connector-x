@@ -30,7 +30,7 @@
   <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 <link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=a3416100" />
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css?v=13237357" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -400,7 +400,7 @@
 </section>
 <section id="oracle-connection">
 <h2>Oracle Connection<a class="headerlink" href="#oracle-connection" title="Link to this heading">#</a></h2>
-<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">connectorx</span> <span class="k">as</span> <span class="nn">cx</span>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">connectorx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cx</span>
 <span class="n">conn</span> <span class="o">=</span> <span class="s1">&#39;oracle://username:password@server:port/database&#39;</span>        <span class="c1"># connection token</span>
 <span class="n">query</span> <span class="o">=</span> <span class="s1">&#39;SELECT * FROM table&#39;</span>                                   <span class="c1"># query string</span>
 <span class="n">cx</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">query</span><span class="p">)</span>                                        <span class="c1"># read data from Oracle</span>
@@ -409,7 +409,7 @@
 </section>
 <section id="oracle-tns-alias-dns-connection">
 <h2>Oracle TNS Alias (DNS) Connection<a class="headerlink" href="#oracle-tns-alias-dns-connection" title="Link to this heading">#</a></h2>
-<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">connectorx</span> <span class="k">as</span> <span class="nn">cx</span>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">connectorx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cx</span>
 <span class="n">conn</span> <span class="o">=</span> <span class="s1">&#39;oracle://username:password@alias_name?alias=true&#39;</span>        <span class="c1"># connection token</span>
 <span class="n">query</span> <span class="o">=</span> <span class="s1">&#39;SELECT * FROM table&#39;</span>                                   <span class="c1"># query string</span>
 <span class="n">cx</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">query</span><span class="p">)</span>                                        <span class="c1"># read data from Oracle</span>
