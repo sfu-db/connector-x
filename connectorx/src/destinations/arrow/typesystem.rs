@@ -28,26 +28,42 @@ pub enum ArrowTypeSystem {
     Time64Micro(bool),
     DateTimeTz(bool),
     DateTimeTzMicro(bool),
+    BoolArray(bool),
+    Utf8Array(bool),
+    Int32Array(bool),
+    Int64Array(bool),
+    UInt32Array(bool),
+    UInt64Array(bool),
+    Float32Array(bool),
+    Float64Array(bool),
 }
 
 impl_typesystem! {
     system = ArrowTypeSystem,
     mappings = {
-        { Int32      => i32           }
-        { Int64      => i64           }
-        { UInt32     => u32           }
-        { UInt64     => u64           }
-        { Float64    => f64           }
-        { Float32    => f32           }
-        { Boolean    => bool          }
-        { LargeUtf8  => String        }
-        { LargeBinary => Vec<u8>      }
-        { Date32     => NaiveDate     }
-        { Date64     => NaiveDateTime }
+        { Int32           => i32                       }
+        { Int64           => i64                       }
+        { UInt32          => u32                       }
+        { UInt64          => u64                       }
+        { Float64         => f64                       }
+        { Float32         => f32                       }
+        { Boolean         => bool                      }
+        { LargeUtf8       => String                    }
+        { LargeBinary     => Vec<u8>                   }
+        { Date32          => NaiveDate                 }
+        { Date64          => NaiveDateTime             }
         { Date64Micro     => NaiveDateTimeWrapperMicro }
-        { Time64     => NaiveTime     }
-        { Time64Micro     => NaiveTimeWrapperMicro }
-        { DateTimeTz => DateTime<Utc> }
-        { DateTimeTzMicro => DateTimeWrapperMicro }
+        { Time64          => NaiveTime                 }
+        { Time64Micro     => NaiveTimeWrapperMicro     }
+        { DateTimeTz      => DateTime<Utc>             }
+        { DateTimeTzMicro => DateTimeWrapperMicro      }
+        { BoolArray       => Vec<Option<bool>>         }
+        { Utf8Array       => Vec<Option<String>>       }
+        { Int32Array      => Vec<Option<i32>>          }
+        { Int64Array      => Vec<Option<i64>>          }
+        { UInt32Array     => Vec<Option<u32>>          }
+        { UInt64Array     => Vec<Option<u64>>          }
+        { Float32Array    => Vec<Option<f32>>          }
+        { Float64Array    => Vec<Option<f64>>          }
     }
 }
