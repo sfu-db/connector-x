@@ -30,12 +30,12 @@ pub enum ArrowTypeSystem {
     DateTimeTzMicro(bool),
     BoolArray(bool),
     Utf8Array(bool),
-    // Int32Array(bool),
+    Int32Array(bool),
     Int64Array(bool),
-    // UInt32Array(bool),
-    // UInt64Array(bool),
-    // Float32Array(bool),
-    // Float64Array(bool),
+    UInt32Array(bool),
+    UInt64Array(bool),
+    Float32Array(bool),
+    Float64Array(bool),
 }
 
 impl_typesystem! {
@@ -59,11 +59,11 @@ impl_typesystem! {
         { DateTimeTzMicro => DateTimeWrapperMicro      }
         { BoolArray       => Vec<Option<bool>>         }
         { Utf8Array       => Vec<Option<String>>       }
-        // { Int32Array      => Vec<Option<i32>>          }
+        { Int32Array      => Vec<Option<i32>>          }
         { Int64Array      => Vec<Option<i64>>          }
-        // { UInt32Array     => Vec<Option<u32>>          }
-        // { UInt64Array     => Vec<Option<u64>>          }
-        // { Float32Array    => Vec<Option<f32>>          }
-        // { Float64Array    => Vec<Option<f64>>          }
+        { UInt32Array     => Vec<Option<u32>>          }
+        { UInt64Array     => Vec<Option<u64>>          }
+        { Float32Array    => Vec<Option<f32>>          }
+        { Float64Array    => Vec<Option<f64>>          }
     }
 }

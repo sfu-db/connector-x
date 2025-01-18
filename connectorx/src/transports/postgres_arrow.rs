@@ -68,11 +68,11 @@ macro_rules! impl_postgres_transport {
                 { VarcharArray[Vec<String>]  => Utf8Array[Vec<Option<String>>]         | conversion option }
                 { TextArray[Vec<String>]     => Utf8Array[Vec<Option<String>>]         | conversion none   }
                 { Int2Array[Vec<i16>]        => Int64Array[Vec<Option<i64>>]           | conversion option }
-                // { Int4Array[Vec<i32>]        => Int64Array[Vec<Option<i64>>]           | conversion option }
-                // { Int8Array[Vec<i64>]        => Int64Array[Vec<Option<i64>>]           | conversion option }
-                // { Float4Array[Vec<f32>]      => Float64Array[Vec<Option<f64>>]         | conversion option }
-                // { Float8Array[Vec<f64>]      => Float64Array[Vec<Option<f64>>]         | conversion option }
-                // { NumericArray[Vec<Decimal>] => Float64Array[Vec<Option<f64>>]         | conversion option }
+                { Int4Array[Vec<i32>]        => Int64Array[Vec<Option<i64>>]           | conversion option }
+                { Int8Array[Vec<i64>]        => Int64Array[Vec<Option<i64>>]           | conversion option }
+                { Float4Array[Vec<f32>]      => Float64Array[Vec<Option<f64>>]         | conversion option }
+                { Float8Array[Vec<f64>]      => Float64Array[Vec<Option<f64>>]         | conversion option }
+                { NumericArray[Vec<Decimal>] => Float64Array[Vec<Option<f64>>]         | conversion option }
             }
         );
     }
