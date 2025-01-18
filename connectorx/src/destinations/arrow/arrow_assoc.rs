@@ -3,14 +3,17 @@ use super::{
     typesystem::{DateTimeWrapperMicro, NaiveDateTimeWrapperMicro, NaiveTimeWrapperMicro},
 };
 use crate::constants::SECONDS_IN_DAY;
-use arrow::array::{
-    ArrayBuilder, BooleanBuilder, Date32Builder, Float32Builder, Float64Builder, Int32Builder,
-    Int64Builder, LargeBinaryBuilder, StringBuilder, Time64MicrosecondBuilder,
-    Time64NanosecondBuilder, TimestampMicrosecondBuilder, TimestampNanosecondBuilder,
-    UInt32Builder, UInt64Builder,
-};
-use arrow::datatypes::Field;
 use arrow::datatypes::{DataType as ArrowDataType, TimeUnit};
+use arrow::{array::Int8Builder, datatypes::Field};
+use arrow::{
+    array::{
+        ArrayBuilder, BooleanBuilder, Date32Builder, Float32Builder, Float64Builder, Int32Builder,
+        Int64Builder, LargeBinaryBuilder, LargeListBuilder, StringBuilder,
+        Time64MicrosecondBuilder, Time64NanosecondBuilder, TimestampMicrosecondBuilder,
+        TimestampNanosecondBuilder, UInt32Builder, UInt64Builder,
+    },
+    ipc::IntBuilder,
+};
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Timelike, Utc};
 use fehler::throws;
 
@@ -483,3 +486,54 @@ impl ArrowAssoc for Vec<u8> {
         Field::new(header, ArrowDataType::LargeBinary, false)
     }
 }
+
+macro_rules! impl_arrow_array_assoc {
+    ($T:ty, $AT:expr, $B:ident) => {
+        impl ArrowAssoc for $T {
+            type Builder = LargeListBuilder<$B>;
+
+            fn builder(nrows: usize) -> Self::Builder {
+                LargeListBuilder::with_capacity($B::new(), nrows)
+            }
+
+            #[throws(ArrowDestinationError)]
+            fn append(builder: &mut Self::Builder, value: Self) {
+                builder.append_value(value);
+            }
+
+            fn field(header: &str) -> Field {
+                Field::new(
+                    header,
+                    ArrowDataType::LargeList(std::sync::Arc::new(Field::new_list_field($AT, true))),
+                    false,
+                )
+            }
+        }
+
+        impl ArrowAssoc for Option<$T> {
+            type Builder = LargeListBuilder<$B>;
+
+            fn builder(nrows: usize) -> Self::Builder {
+                LargeListBuilder::with_capacity($B::new(), nrows)
+            }
+
+            #[throws(ArrowDestinationError)]
+            fn append(builder: &mut Self::Builder, value: Self) {
+                builder.append_option(value);
+            }
+
+            fn field(header: &str) -> Field {
+                Field::new(
+                    header,
+                    ArrowDataType::LargeList(std::sync::Arc::new(Field::new_list_field($AT, true))),
+                    true,
+                )
+            }
+        }
+    };
+}
+
+impl_arrow_array_assoc!(Vec<Option<bool>>, ArrowDataType::Boolean, BooleanBuilder);
+impl_arrow_array_assoc!(Vec<Option<String>>, ArrowDataType::Utf8, StringBuilder);
+impl_arrow_array_assoc!(Vec<Option<i64>>, ArrowDataType::Int64, Int64Builder);
+// impl_arrow_array_assoc!(Vec<Option<f64>>, ArrowDataType::Float64, Float64Builder);
