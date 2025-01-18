@@ -26,6 +26,7 @@ arrow = {workspace = true, optional = true}
 arrow2 = {workspace = true, default-features = false, optional = true}
 polars = {workspace = true, optional = true, features=["dtype-u8", "dtype-u16", "lazy"]}
 polars-arrow = {workspace = true, optional = true}
+polars_old = { package = "polars", version = "0.32", optional = true, features=["dtype-u8", "dtype-u16"]}
 bb8 = {version = "0.7", optional = true}
 bb8-tiberius = {version = "0.8", optional = true}
 csv = {version = "1", optional = true}
@@ -75,7 +76,7 @@ all = ["src_sqlite", "src_postgres", "src_mysql", "src_mssql", "src_oracle", "sr
 branch = []
 default = ["fptr"]
 dst_arrow = ["arrow"]
-dst_arrow2 = ["polars", "polars-arrow", "arrow2"]
+dst_arrow2 = ["polars_old", "arrow2"]
 dst_polars = ["dst_arrow", "polars", "polars-arrow"]
 fptr = []
 src_bigquery = ["gcp-bigquery-client", "tokio"]
