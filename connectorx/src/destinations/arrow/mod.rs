@@ -161,8 +161,7 @@ impl ArrowDestination {
                         &arrow::ffi::FFI_ArrowSchema,
                         &polars_arrow::ffi::ArrowSchema,
                     >(&out_schema))
-                }
-                .unwrap();
+                }?;
 
                 // Import data from ffi with polars
                 let data = unsafe {
@@ -172,8 +171,7 @@ impl ArrowDestination {
                         ),
                         field.dtype().clone(),
                     )
-                }
-                .unwrap();
+                }?;
 
                 // Create Polars series from arrow column
                 columns.push(Series::from_arrow(
