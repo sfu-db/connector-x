@@ -156,7 +156,7 @@ fn test_polars_name() {
         builder,
         &mut destination,
         &queries,
-        Some("select * from test_types".to_string()),
+        Some("select test_name from test_types".to_string()),
     );
 
     dispatcher.run().expect("run dispatcher");
@@ -181,9 +181,7 @@ fn test_polars_boolarray() {
 
     let dburl = env::var("POSTGRES_URL").unwrap();
 
-    let queries = [CXQuery::naked(
-        "select test_boolarray from test_types where test_boolarray is not null",
-    )];
+    let queries = [CXQuery::naked("select test_boolarray from test_types")];
     let url = Url::parse(dburl.as_str()).unwrap();
     let (config, _tls) = rewrite_tls_args(&url).unwrap();
     let builder = PostgresSource::<BinaryProtocol, NoTls>::new(config, NoTls, 2).unwrap();
@@ -192,7 +190,7 @@ fn test_polars_boolarray() {
         builder,
         &mut destination,
         &queries,
-        Some("select * from test_types".to_string()),
+        Some("select test_boolarray from test_types".to_string()),
     );
 
     dispatcher.run().expect("run dispatcher");
@@ -204,7 +202,7 @@ fn test_polars_boolarray() {
 
     let df: DataFrame = destination.polars().unwrap();
     let test_df: DataFrame = df!(
-        "test_boolarray" => &[s1,s2,s3]
+        "test_boolarray" => &[Some(s1),Some(s2),Some(s3),None]
     )
     .unwrap();
 
@@ -226,7 +224,7 @@ fn test_polars_utf8array() {
         builder,
         &mut destination,
         &queries,
-        Some("select * from test_table".to_string()),
+        Some("select test_varchararray from test_types".to_string()),
     );
     dispatcher.run().expect("run dispatcher");
 
@@ -245,7 +243,7 @@ fn test_polars_utf8array() {
     let empty_vec: Vec<&str> = vec![];
     let s4 = Series::new(PlSmallStr::from("d"), empty_vec);
     let test_df: DataFrame = df!(
-        "test_varchararray" => &[s1,s2,s3, s4]
+        "test_varchararray" => &[s1,s2,s3,s4]
     )
     .unwrap();
 
@@ -269,7 +267,7 @@ fn test_polars_intarray() {
         builder,
         &mut destination,
         &queries,
-        Some("select * from test_table".to_string()),
+        Some("select test_i2array, test_i4array, test_i8array from test_types".to_string()),
     );
     dispatcher.run().expect("run dispatcher");
 
