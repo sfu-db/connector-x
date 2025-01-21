@@ -82,6 +82,10 @@ pub enum ConnectorXOutError {
     #[error(transparent)]
     BigQueryError(#[from] gcp_bigquery_client::error::BQError),
 
+    #[cfg(feature = "src_trino")]
+    #[error(transparent)]
+    TrinoSourceError(#[from] crate::sources::trino::TrinoSourceError),
+
     #[cfg(feature = "dst_arrow")]
     #[error(transparent)]
     ArrowError(#[from] crate::destinations::arrow::ArrowDestinationError),
@@ -141,6 +145,14 @@ pub enum ConnectorXOutError {
     #[cfg(all(feature = "src_bigquery", feature = "dst_arrow2"))]
     #[error(transparent)]
     BigqueryArrow2TransportError(#[from] crate::transports::BigQueryArrow2TransportError),
+
+    #[cfg(all(feature = "src_trino", feature = "dst_arrow"))]
+    #[error(transparent)]
+    TrinoArrowTransportError(#[from] crate::transports::TrinoArrowTransportError),
+
+    #[cfg(all(feature = "src_trino", feature = "dst_arrow2"))]
+    #[error(transparent)]
+    TrinoArrow2TransportError(#[from] crate::transports::TrinoArrow2TransportError),
 
     /// Any other errors that are too trivial to be put here explicitly.
     #[error(transparent)]

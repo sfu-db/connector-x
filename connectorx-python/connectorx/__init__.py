@@ -388,7 +388,7 @@ def read_sql(
 
         result = _read_sql(
             conn,
-            "arrow2" if return_type in {"arrow2", "polars", "polars2"} else "arrow",
+            "arrow2" if return_type in {"arrow2", "polars2"} else "arrow",
             queries=queries,
             protocol=protocol,
             partition_query=partition_query,
@@ -397,10 +397,10 @@ def read_sql(
         if return_type in {"polars", "polars2"}:
             pl = try_import_module("polars")
             try:
-                df = pl.DataFrame.from_arrow(df)
-            except AttributeError:
-                # api change for polars >= 0.8.*
                 df = pl.from_arrow(df)
+            except AttributeError:
+                # previous polars api (< 0.8.*) was pl.DataFrame.from_arrow
+                df = pl.DataFrame.from_arrow(df)
     else:
         raise ValueError(return_type)
 
