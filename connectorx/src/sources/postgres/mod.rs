@@ -1369,7 +1369,16 @@ impl<'a> PartitionParser<'a> for PostgresSimpleSourceParser {
     fn fetch_next(&mut self) -> (usize, bool) {
         self.current_row = 0;
         self.current_col = 0;
-        (self.rows.len() - 1, true) // last message is command complete
+        if self.rows.len() > 0 {
+            match &self.rows[0] {
+                SimpleQueryMessage::RowDescription(_) => {
+                    self.current_row = 1;
+                }
+                _ => {}
+            }
+        }
+
+        (self.rows.len() - 1 - self.current_row, true) // last message is command complete
     }
 }
 
