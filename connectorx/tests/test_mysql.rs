@@ -29,6 +29,7 @@ fn test_mysql() {
         &mut destination,
         &queries,
         Some(String::from("select * from test_table")),
+        None
     );
     dispatcher.run().unwrap();
 
@@ -54,11 +55,57 @@ fn test_mysql_text() {
         &mut destination,
         &queries,
         None,
+        None,
     );
     dispatcher.run().unwrap();
 
     let result = destination.arrow().unwrap();
     verify_arrow_results(result);
+}
+
+#[test]
+fn test_mysql_pre_execution_queries() {
+    let _ = env_logger::builder().is_test(true).try_init();
+
+    let dburl = env::var("MYSQL_URL").unwrap();
+
+    let queries = [
+        CXQuery::naked("SELECT @@SESSION.max_execution_time, @@SESSION.wait_timeout"),
+    ];
+
+    let pre_execution_queries = [
+        String::from("SET SESSION max_execution_time = 2151"),
+        String::from("SET SESSION wait_timeout = 2252")
+    ];
+
+    let builder = MySQLSource::<BinaryProtocol>::new(&dburl, 2).unwrap();
+    let mut destination = ArrowDestination::new();
+    let dispatcher = Dispatcher::<_, _, MySQLArrowTransport<BinaryProtocol>>::new(
+        builder,
+        &mut destination,
+        &queries,
+        None,
+        Some(&pre_execution_queries),
+    );
+    dispatcher.run().unwrap();
+
+    let result = destination.arrow().unwrap();
+    
+    assert!(result.len() == 1);
+
+    assert!(result[0]
+        .column(0)
+        .as_any()
+        .downcast_ref::<Float64Array>()
+        .unwrap()
+        .eq(&Float64Array::from(vec![2151.0])));
+
+    assert!(result[0]
+        .column(1)
+        .as_any()
+        .downcast_ref::<Float64Array>()
+        .unwrap()
+        .eq(&Float64Array::from(vec![2252.0])));
 }
 
 pub fn verify_arrow_results(result: Vec<RecordBatch>) {

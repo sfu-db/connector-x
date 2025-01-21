@@ -57,6 +57,7 @@ fn test_arrow() {
         &mut destination,
         &queries,
         None,
+        None,
     );
     dispatcher.run().expect("run dispatcher");
 
@@ -163,6 +164,7 @@ fn test_arrow_large() {
         &mut destination,
         &queries,
         None,
+        None,
     );
     dispatcher.run().expect("run dispatcher");
 
@@ -204,6 +206,7 @@ fn test_postgres_arrow() {
         &mut destination,
         &queries,
         Some(format!("select * from test_table")),
+        None,
     );
 
     dispatcher.run().expect("run dispatcher");

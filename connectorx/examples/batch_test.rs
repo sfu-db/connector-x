@@ -41,8 +41,10 @@ fn main() {
 
     let destination = ArrowStreamDestination::new_with_batch_size(2048);
 
+    let pre_execution_queries = None;
+
     let mut batch_iter: ArrowBatchIter<_, PostgresArrowStreamTransport<PgBinaryProtocol, NoTls>> =
-        ArrowBatchIter::new(source, destination, origin_query, queries).unwrap();
+        ArrowBatchIter::new(source, destination, origin_query, queries, pre_execution_queries).unwrap();
 
     batch_iter.prepare();
 

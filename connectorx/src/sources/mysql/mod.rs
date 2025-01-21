@@ -50,6 +50,7 @@ pub struct MySQLSource<P> {
     queries: Vec<CXQuery<String>>,
     names: Vec<String>,
     schema: Vec<MySQLTypeSystem>,
+    pre_execution_queries: Option<Vec<String>>,
     _protocol: PhantomData<P>,
 }
 
@@ -67,6 +68,7 @@ impl<P> MySQLSource<P> {
             queries: vec![],
             names: vec![],
             schema: vec![],
+            pre_execution_queries: None,
             _protocol: PhantomData,
         }
     }
@@ -96,6 +98,10 @@ where
 
     fn set_origin_query(&mut self, query: Option<String>) {
         self.origin_query = query;
+    }
+
+    fn set_pre_execution_queries(&mut self, pre_execution_queries: Option<&[String]>) {
+        self.pre_execution_queries = pre_execution_queries.map(|s| s.to_vec());
     }
 
     #[throws(MySQLSourceError)]
@@ -219,8 +225,19 @@ where
     fn partition(self) -> Vec<Self::Partition> {
         let mut ret = vec![];
         for query in self.queries {
-            let conn = self.pool.get()?;
-            ret.push(MySQLSourcePartition::new(conn, &query, &self.schema));
+            let mut conn = self.pool.get()?;
+
+            if let Some(queries) = &self.pre_execution_queries {
+                for query in queries {
+                    conn.query_drop(query)?;
+                }
+            }
+
+            ret.push(MySQLSourcePartition::new(
+                conn,
+                &query,
+                &self.schema,
+            ));
         }
         ret
     }

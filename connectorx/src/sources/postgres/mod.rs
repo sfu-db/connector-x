@@ -92,6 +92,7 @@ where
     names: Vec<String>,
     schema: Vec<PostgresTypeSystem>,
     pg_schema: Vec<postgres::types::Type>,
+    pre_execution_queries: Option<Vec<String>>,
     _protocol: PhantomData<P>,
 }
 
@@ -114,6 +115,7 @@ where
             names: vec![],
             schema: vec![],
             pg_schema: vec![],
+            pre_execution_queries: None,
             _protocol: PhantomData,
         }
     }
@@ -147,6 +149,10 @@ where
 
     fn set_origin_query(&mut self, query: Option<String>) {
         self.origin_query = query;
+    }
+
+    fn set_pre_execution_queries(&mut self, pre_execution_queries: Option<&[String]>) {
+        self.pre_execution_queries = pre_execution_queries.map(|s| s.to_vec());
     }
 
     #[throws(PostgresSourceError)]
@@ -199,7 +205,13 @@ where
     fn partition(self) -> Vec<Self::Partition> {
         let mut ret = vec![];
         for query in self.queries {
-            let conn = self.pool.get()?;
+            let mut conn = self.pool.get()?;
+
+            if let Some(queries) = &self.pre_execution_queries {
+                for query in queries {
+                    conn.query(query,  &[])?;
+                }
+            }
 
             ret.push(PostgresSourcePartition::<P, C>::new(
                 conn,

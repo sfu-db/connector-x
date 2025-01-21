@@ -36,6 +36,7 @@ fn test_polars() {
         &mut destination,
         &queries,
         None,
+        None,
     );
     dispatcher.run().expect("run dispatcher");
 
@@ -84,6 +85,7 @@ fn test_polars_large() {
         &mut destination,
         &queries,
         None,
+        None,
     );
     dispatcher.run().expect("run dispatcher");
 
@@ -111,6 +113,7 @@ fn test_postgres_arrow() {
         &mut destination,
         &queries,
         Some(format!("select * from test_table")),
+        None,
     );
 
     dispatcher.run().expect("run dispatcher");
@@ -156,6 +159,7 @@ fn test_pg_pl_bool_array() {
         &mut destination,
         &queries,
         Some(format!("select * from test_types")),
+        None,
     );
 
     dispatcher.run().expect("run dispatcher");
@@ -191,6 +195,7 @@ fn test_pg_pl_varchar_array() {
         &mut destination,
         &queries,
         Some(format!("select * from test_types")),
+        None,
     );
 
     dispatcher.run().expect("run dispatcher");
@@ -235,6 +240,7 @@ fn test_pg_pl_text_array() {
         &mut destination,
         &queries,
         Some(format!("select * from test_types")),
+        None,
     );
 
     dispatcher.run().expect("run dispatcher");
@@ -279,6 +285,7 @@ fn test_pg_pl_name() {
         &mut destination,
         &queries,
         Some(format!("select * from test_types")),
+        None,
     );
 
     dispatcher.run().expect("run dispatcher");

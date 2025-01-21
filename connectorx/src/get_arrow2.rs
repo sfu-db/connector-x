@@ -21,6 +21,7 @@ pub fn get_arrow2(
     source_conn: &SourceConn,
     origin_query: Option<String>,
     queries: &[CXQuery<String>],
+    pre_execution_queries: Option<&[String]>,
 ) -> Arrow2Destination {
     let mut destination = Arrow2Destination::new();
     let protocol = source_conn.proto.as_str();
@@ -42,7 +43,11 @@ pub fn get_arrow2(
                         _,
                         PostgresArrow2Transport<CSVProtocol, MakeTlsConnector>,
                     >::new(
-                        sb, &mut destination, queries, origin_query
+                        sb,
+                        &mut destination,
+                        queries,
+                        origin_query,
+                        pre_execution_queries,
                     );
                     dispatcher.run()?;
                 }
@@ -55,6 +60,7 @@ pub fn get_arrow2(
                             &mut destination,
                             queries,
                             origin_query,
+                            pre_execution_queries,
                         );
                     dispatcher.run()?;
                 }
@@ -64,12 +70,17 @@ pub fn get_arrow2(
                         tls_conn,
                         queries.len(),
                     )?;
-                    let dispatcher =
-                        Dispatcher::<
-                            _,
-                            _,
-                            PostgresArrow2Transport<PgBinaryProtocol, MakeTlsConnector>,
-                        >::new(sb, &mut destination, queries, origin_query);
+                    let dispatcher = Dispatcher::<
+                        _,
+                        _,
+                        PostgresArrow2Transport<PgBinaryProtocol, MakeTlsConnector>,
+                    >::new(
+                        sb,
+                        &mut destination,
+                        queries,
+                        origin_query,
+                        pre_execution_queries,
+                    );
                     dispatcher.run()?;
                 }
                 ("binary", None) => {
@@ -78,13 +89,14 @@ pub fn get_arrow2(
                         NoTls,
                         queries.len(),
                     )?;
-                    let dispatcher = Dispatcher::<
-                        _,
-                        _,
-                        PostgresArrow2Transport<PgBinaryProtocol, NoTls>,
-                    >::new(
-                        sb, &mut destination, queries, origin_query
-                    );
+                    let dispatcher =
+                        Dispatcher::<_, _, PostgresArrow2Transport<PgBinaryProtocol, NoTls>>::new(
+                            sb,
+                            &mut destination,
+                            queries,
+                            origin_query,
+                            pre_execution_queries,
+                        );
                     dispatcher.run()?;
                 }
                 ("cursor", Some(tls_conn)) => {
@@ -98,20 +110,25 @@ pub fn get_arrow2(
                         _,
                         PostgresArrow2Transport<CursorProtocol, MakeTlsConnector>,
                     >::new(
-                        sb, &mut destination, queries, origin_query
+                        sb,
+                        &mut destination,
+                        queries,
+                        origin_query,
+                        pre_execution_queries,
                     );
                     dispatcher.run()?;
                 }
                 ("cursor", None) => {
                     let sb =
                         PostgresSource::<CursorProtocol, NoTls>::new(config, NoTls, queries.len())?;
-                    let dispatcher = Dispatcher::<
-                        _,
-                        _,
-                        PostgresArrow2Transport<CursorProtocol, NoTls>,
-                    >::new(
-                        sb, &mut destination, queries, origin_query
-                    );
+                    let dispatcher =
+                        Dispatcher::<_, _, PostgresArrow2Transport<CursorProtocol, NoTls>>::new(
+                            sb,
+                            &mut destination,
+                            queries,
+                            origin_query,
+                            pre_execution_queries,
+                        );
                     dispatcher.run()?;
                 }
                 ("simple", Some(tls_conn)) => {
@@ -125,7 +142,11 @@ pub fn get_arrow2(
                         _,
                         PostgresArrow2Transport<SimpleProtocol, MakeTlsConnector>,
                     >::new(
-                        sb, &mut destination, queries, origin_query
+                        sb,
+                        &mut destination,
+                        queries,
+                        origin_query,
+                        pre_execution_queries,
                     );
                     debug!("Running dispatcher");
                     dispatcher.run()?;
@@ -133,13 +154,14 @@ pub fn get_arrow2(
                 ("simple", None) => {
                     let sb =
                         PostgresSource::<SimpleProtocol, NoTls>::new(config, NoTls, queries.len())?;
-                    let dispatcher = Dispatcher::<
-                        _,
-                        _,
-                        PostgresArrow2Transport<SimpleProtocol, NoTls>,
-                    >::new(
-                        sb, &mut destination, queries, origin_query
-                    );
+                    let dispatcher =
+                        Dispatcher::<_, _, PostgresArrow2Transport<SimpleProtocol, NoTls>>::new(
+                            sb,
+                            &mut destination,
+                            queries,
+                            origin_query,
+                            pre_execution_queries,
+                        );
                     debug!("Running dispatcher");
                     dispatcher.run()?;
                 }
@@ -157,6 +179,7 @@ pub fn get_arrow2(
                     &mut destination,
                     queries,
                     origin_query,
+                    pre_execution_queries,
                 );
                 dispatcher.run()?;
             }
@@ -168,6 +191,7 @@ pub fn get_arrow2(
                     &mut destination,
                     queries,
                     origin_query,
+                    pre_execution_queries,
                 );
                 dispatcher.run()?;
             }
@@ -183,6 +207,7 @@ pub fn get_arrow2(
                 &mut destination,
                 queries,
                 origin_query,
+                pre_execution_queries,
             );
             dispatcher.run()?;
         }
@@ -195,6 +220,7 @@ pub fn get_arrow2(
                 &mut destination,
                 queries,
                 origin_query,
+                pre_execution_queries,
             );
             dispatcher.run()?;
         }
@@ -206,6 +232,7 @@ pub fn get_arrow2(
                 &mut destination,
                 queries,
                 origin_query,
+                pre_execution_queries,
             );
             dispatcher.run()?;
         }
@@ -218,6 +245,7 @@ pub fn get_arrow2(
                 &mut destination,
                 queries,
                 origin_query,
+                pre_execution_queries,
             );
             dispatcher.run()?;
         }
@@ -230,6 +258,7 @@ pub fn get_arrow2(
                 &mut destination,
                 queries,
                 origin_query,
+                pre_execution_queries,
             );
             dispatcher.run()?;
         }

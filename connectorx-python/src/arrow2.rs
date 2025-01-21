@@ -19,10 +19,11 @@ pub fn write_arrow<'py>(
     source_conn: &SourceConn,
     origin_query: Option<String>,
     queries: &[CXQuery<String>],
+    pre_execution_queries: Option<&[String]>,
 ) -> Bound<'py, PyAny> {
     let ptrs = py.allow_threads(
         || -> Result<(Vec<String>, Vec<Vec<(uintptr_t, uintptr_t)>>), ConnectorXPythonError> {
-            let destination = get_arrow2(source_conn, origin_query, queries)?;
+            let destination = get_arrow2(source_conn, origin_query, queries, pre_execution_queries)?;
             let (rbs, schema) = destination.arrow()?;
             Ok(to_ptrs(rbs, schema))
         },

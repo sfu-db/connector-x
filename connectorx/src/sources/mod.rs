@@ -41,6 +41,8 @@ pub trait Source {
 
     fn set_origin_query(&mut self, query: Option<String>);
 
+    fn set_pre_execution_queries(&mut self, pre_execution_queries: Option<&[String]>);
+
     fn fetch_metadata(&mut self) -> Result<(), Self::Error>;
     /// Get total number of rows if available
     fn result_rows(&mut self) -> Result<Option<usize>, Self::Error>;

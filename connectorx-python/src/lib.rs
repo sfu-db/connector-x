@@ -47,8 +47,9 @@ pub fn read_sql<'py>(
     protocol: Option<&str>,
     queries: Option<Vec<String>>,
     partition_query: Option<cx_read_sql::PyPartitionQuery>,
+    pre_execution_queries: Option<Vec<String>>,
 ) -> PyResult<Bound<'py, PyAny>> {
-    cx_read_sql::read_sql(py, conn, return_type, protocol, queries, partition_query)
+    cx_read_sql::read_sql(py, conn, return_type, protocol, queries, partition_query, pre_execution_queries)
 }
 
 #[pyfunction]

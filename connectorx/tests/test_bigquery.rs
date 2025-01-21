@@ -31,7 +31,7 @@ fn test_bigquery_partition() {
     ];
     let mut destination = ArrowDestination::new();
     let dispatcher =
-        Dispatcher::<_, _, BigQueryArrowTransport>::new(source, &mut destination, &queries, None);
+        Dispatcher::<_, _, BigQueryArrowTransport>::new(source, &mut destination, &queries, None, None);
     dispatcher.run().unwrap();
     let _result = destination.arrow().unwrap();
 }
