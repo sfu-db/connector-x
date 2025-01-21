@@ -408,7 +408,7 @@ def read_sql(
 
         result = _read_sql(
             conn,
-            "arrow2" if return_type in {"arrow2", "polars", "polars2"} else "arrow",
+            "arrow2" if return_type in {"arrow2", "polars2"} else "arrow",
             queries=queries,
             protocol=protocol,
             partition_query=partition_query,

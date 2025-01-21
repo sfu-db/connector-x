@@ -18,7 +18,7 @@ pub use errors::{Arrow2DestinationError, Result};
 use fehler::throw;
 use fehler::throws;
 use funcs::{FFinishBuilder, FNewBuilder, FNewField};
-use polars::prelude::{DataFrame, PolarsError, Series};
+use polars_old::prelude::{DataFrame, PolarsError, Series};
 use std::convert::TryFrom;
 use std::sync::{Arc, Mutex};
 pub use typesystem::Arrow2TypeSystem;
@@ -127,7 +127,7 @@ impl Arrow2Destination {
         fn try_from(
             chunks: (Vec<Chunk<Box<dyn Array>>>, &[Field]),
         ) -> std::result::Result<DataFrame, PolarsError> {
-            use polars::prelude::NamedFrom;
+            use polars_old::prelude::NamedFrom;
 
             let mut series: Vec<Series> = vec![];
 

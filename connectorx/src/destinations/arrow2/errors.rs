@@ -8,7 +8,7 @@ pub enum Arrow2DestinationError {
     ArrowError(#[from] arrow2::error::Error),
 
     #[error(transparent)]
-    PolarsError(#[from] polars::error::PolarsError),
+    PolarsError(#[from] polars_old::error::PolarsError),
 
     #[error(transparent)]
     ConnectorXError(#[from] crate::errors::ConnectorXError),

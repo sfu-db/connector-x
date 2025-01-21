@@ -1,5 +1,8 @@
 use arrow::{
-    array::{BooleanArray, Float64Array, Int64Array, StringArray},
+    array::{
+        BooleanArray, BooleanBuilder, Float64Array, Int64Array, Int64Builder, LargeListArray,
+        LargeListBuilder, StringArray, StringBuilder,
+    },
     record_batch::RecordBatch,
 };
 use connectorx::{
@@ -21,18 +24,17 @@ use url::Url;
 #[should_panic]
 fn arrow_destination_col_major() {
     let mut dw = ArrowDestination::new();
-    let _ = dw
-        .allocate(
-            11,
-            &["a", "b", "c"],
-            &[
-                ArrowTypeSystem::Int64(false),
-                ArrowTypeSystem::Float64(true),
-                ArrowTypeSystem::LargeUtf8(true),
-            ],
-            DataOrder::ColumnMajor,
-        )
-        .unwrap();
+    dw.allocate(
+        11,
+        &["a", "b", "c"],
+        &[
+            ArrowTypeSystem::Int64(false),
+            ArrowTypeSystem::Float64(true),
+            ArrowTypeSystem::LargeUtf8(true),
+        ],
+        DataOrder::ColumnMajor,
+    )
+    .unwrap();
 }
 
 #[test]
@@ -44,7 +46,7 @@ fn test_arrow() {
         DummyTypeSystem::String(true),
         DummyTypeSystem::F64(false),
     ];
-    let nrows = vec![4, 7];
+    let nrows = [4, 7];
     let ncols = schema.len();
     let queries: Vec<CXQuery> = nrows
         .iter()
@@ -151,7 +153,7 @@ fn test_arrow_large() {
         DummyTypeSystem::String(true),
         DummyTypeSystem::F64(false),
     ];
-    let nrows = vec![RECORD_BATCH_SIZE * 2 + 1, RECORD_BATCH_SIZE * 2 - 1];
+    let nrows = [RECORD_BATCH_SIZE * 2 + 1, RECORD_BATCH_SIZE * 2 - 1];
     let ncols = schema.len();
     let queries: Vec<CXQuery> = nrows
         .iter()
@@ -205,10 +207,9 @@ fn test_postgres_arrow() {
         builder,
         &mut destination,
         &queries,
-        Some(format!("select * from test_table")),
+        Some("select * from test_table".to_string()),
         None,
     );
-
     dispatcher.run().expect("run dispatcher");
 
     let records: Vec<RecordBatch> = destination.arrow().unwrap();
@@ -292,5 +293,205 @@ fn test_postgres_arrow() {
             }
             _ => unreachable!(),
         }
+    }
+}
+
+#[test]
+fn test_postgres_boolarray_arrow() {
+    let _ = env_logger::builder().is_test(true).try_init();
+
+    let dburl = env::var("POSTGRES_URL").unwrap();
+
+    let queries = [CXQuery::naked(
+        "select test_boolarray from test_types where test_boolarray is not null",
+    )];
+    let url = Url::parse(dburl.as_str()).unwrap();
+    let (config, _tls) = rewrite_tls_args(&url).unwrap();
+    let builder = PostgresSource::<BinaryProtocol, NoTls>::new(config, NoTls, 2).unwrap();
+    let mut destination = ArrowDestination::new();
+    let dispatcher = Dispatcher::<_, _, PostgresArrowTransport<BinaryProtocol, NoTls>>::new(
+        builder,
+        &mut destination,
+        &queries,
+        Some("select * from test_table".to_string()),
+    );
+    dispatcher.run().expect("run dispatcher");
+
+    let records: Vec<RecordBatch> = destination.arrow().unwrap();
+    assert_eq!(1, records.len());
+
+    for r in records {
+        let mut builder: LargeListBuilder<BooleanBuilder> =
+            LargeListBuilder::with_capacity(BooleanBuilder::new(), 3);
+        builder.append_value([Some(true), Some(false)]);
+        builder.append_value([]);
+        builder.append_value([Some(true)]);
+        let val = builder.finish();
+        assert!(r
+            .column(0)
+            .as_any()
+            .downcast_ref::<LargeListArray>()
+            .unwrap()
+            .eq(&val));
+    }
+}
+
+#[test]
+fn test_postgres_varchararray_arrow() {
+    let _ = env_logger::builder().is_test(true).try_init();
+
+    let dburl = env::var("POSTGRES_URL").unwrap();
+
+    let queries = [CXQuery::naked("select test_varchararray from test_types")];
+    let url = Url::parse(dburl.as_str()).unwrap();
+    let (config, _tls) = rewrite_tls_args(&url).unwrap();
+    let builder = PostgresSource::<BinaryProtocol, NoTls>::new(config, NoTls, 2).unwrap();
+    let mut destination = ArrowDestination::new();
+    let dispatcher = Dispatcher::<_, _, PostgresArrowTransport<BinaryProtocol, NoTls>>::new(
+        builder,
+        &mut destination,
+        &queries,
+        Some("select * from test_table".to_string()),
+    );
+    dispatcher.run().expect("run dispatcher");
+
+    let records: Vec<RecordBatch> = destination.arrow().unwrap();
+    assert_eq!(1, records.len());
+
+    for r in records {
+        let mut builder: LargeListBuilder<StringBuilder> =
+            LargeListBuilder::with_capacity(StringBuilder::new(), 4);
+        builder.append_value([Some("str1"), Some("str2")]);
+        builder.append_value([
+            Some("0123456789"),
+            Some("abcdefghijklmnopqrstuvwxyz"),
+            Some("!@#$%^&*()_-+=~`:;<>?/"),
+        ]);
+        builder.append_value([Some(""), Some("  ")]);
+        builder.append_value::<Vec<Option<String>>, String>(vec![]);
+        let val = builder.finish();
+
+        assert!(r
+            .column(0)
+            .as_any()
+            .downcast_ref::<LargeListArray>()
+            .unwrap()
+            .eq(&val));
+    }
+}
+
+#[test]
+fn test_postgres_textarray_arrow() {
+    let _ = env_logger::builder().is_test(true).try_init();
+
+    let dburl = env::var("POSTGRES_URL").unwrap();
+
+    let queries = [CXQuery::naked("select test_textarray from test_types")];
+    let url = Url::parse(dburl.as_str()).unwrap();
+    let (config, _tls) = rewrite_tls_args(&url).unwrap();
+    let builder = PostgresSource::<BinaryProtocol, NoTls>::new(config, NoTls, 2).unwrap();
+    let mut destination = ArrowDestination::new();
+    let dispatcher = Dispatcher::<_, _, PostgresArrowTransport<BinaryProtocol, NoTls>>::new(
+        builder,
+        &mut destination,
+        &queries,
+        Some("select * from test_table".to_string()),
+    );
+    dispatcher.run().expect("run dispatcher");
+
+    let records: Vec<RecordBatch> = destination.arrow().unwrap();
+    assert_eq!(1, records.len());
+
+    for r in records {
+        let mut builder: LargeListBuilder<StringBuilder> =
+            LargeListBuilder::with_capacity(StringBuilder::new(), 4);
+        builder.append_value([Some("text1"), Some("text2")]);
+        builder.append_value([
+            Some("0123456789"),
+            Some("abcdefghijklmnopqrstuvwxyz"),
+            Some("!@#$%^&*()_-+=~`:;<>?/"),
+        ]);
+        builder.append_value([Some(""), Some("  ")]);
+        builder.append_value::<Vec<Option<String>>, String>(vec![]);
+        let val = builder.finish();
+
+        assert!(r
+            .column(0)
+            .as_any()
+            .downcast_ref::<LargeListArray>()
+            .unwrap()
+            .eq(&val));
+    }
+}
+
+#[test]
+fn test_postgres_intarray_arrow() {
+    let _ = env_logger::builder().is_test(true).try_init();
+
+    let dburl = env::var("POSTGRES_URL").unwrap();
+
+    let queries = [CXQuery::naked(
+        "select test_i2array, test_i4array, test_i8array from test_types",
+    )];
+    let url = Url::parse(dburl.as_str()).unwrap();
+    let (config, _tls) = rewrite_tls_args(&url).unwrap();
+    let builder = PostgresSource::<BinaryProtocol, NoTls>::new(config, NoTls, 2).unwrap();
+    let mut destination = ArrowDestination::new();
+    let dispatcher = Dispatcher::<_, _, PostgresArrowTransport<BinaryProtocol, NoTls>>::new(
+        builder,
+        &mut destination,
+        &queries,
+        Some("select * from test_table".to_string()),
+    );
+    dispatcher.run().expect("run dispatcher");
+
+    let records: Vec<RecordBatch> = destination.arrow().unwrap();
+    assert_eq!(1, records.len());
+
+    for r in records {
+        let mut builder: LargeListBuilder<Int64Builder> =
+            LargeListBuilder::with_capacity(Int64Builder::new(), 4);
+        builder.append_value([Some(-1), Some(0), Some(1)]);
+        builder.append_value::<Vec<Option<i64>>, i64>(vec![]);
+        builder.append_value([Some(-32768), Some(32767)]);
+        builder.append_null();
+        let val = builder.finish();
+
+        assert!(r
+            .column(0)
+            .as_any()
+            .downcast_ref::<LargeListArray>()
+            .unwrap()
+            .eq(&val));
+
+        let mut builder: LargeListBuilder<Int64Builder> =
+            LargeListBuilder::with_capacity(Int64Builder::new(), 4);
+        builder.append_value([Some(-1), Some(0), Some(1123)]);
+        builder.append_value::<Vec<Option<i64>>, i64>(vec![]);
+        builder.append_value([Some(-2147483648), Some(2147483647)]);
+        builder.append_null();
+        let val = builder.finish();
+
+        assert!(r
+            .column(1)
+            .as_any()
+            .downcast_ref::<LargeListArray>()
+            .unwrap()
+            .eq(&val));
+
+        let mut builder: LargeListBuilder<Int64Builder> =
+            LargeListBuilder::with_capacity(Int64Builder::new(), 2);
+        builder.append_value([Some(-9223372036854775808), Some(9223372036854775807)]);
+        builder.append_value::<Vec<Option<i64>>, i64>(vec![]);
+        builder.append_value([Some(0)]);
+        builder.append_null();
+        let val = builder.finish();
+
+        assert!(r
+            .column(2)
+            .as_any()
+            .downcast_ref::<LargeListArray>()
+            .unwrap()
+            .eq(&val));
     }
 }
