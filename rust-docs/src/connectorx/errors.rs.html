@@ -214,7 +214,19 @@
 <a href="#213" id="213">213</a>
 <a href="#214" id="214">214</a>
 <a href="#215" id="215">215</a>
-<a href="#216" id="216">216</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::data_order::DataOrder;
+<a href="#216" id="216">216</a>
+<a href="#217" id="217">217</a>
+<a href="#218" id="218">218</a>
+<a href="#219" id="219">219</a>
+<a href="#220" id="220">220</a>
+<a href="#221" id="221">221</a>
+<a href="#222" id="222">222</a>
+<a href="#223" id="223">223</a>
+<a href="#224" id="224">224</a>
+<a href="#225" id="225">225</a>
+<a href="#226" id="226">226</a>
+<a href="#227" id="227">227</a>
+<a href="#228" id="228">228</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::data_order::DataOrder;
 <span class="kw">use </span>std::any::type_name;
 <span class="kw">use </span>std::fmt;
 <span class="kw">use </span>thiserror::Error;
@@ -298,6 +310,10 @@
     #[error(transparent)]
     </span>BigQueryError(<span class="attr">#[from] </span>gcp_bigquery_client::error::BQError),
 
+    <span class="attr">#[cfg(feature = <span class="string">"src_trino"</span>)]
+    #[error(transparent)]
+    </span>TrinoSourceError(<span class="attr">#[from] </span><span class="kw">crate</span>::sources::trino::TrinoSourceError),
+
     <span class="attr">#[cfg(feature = <span class="string">"dst_arrow"</span>)]
     #[error(transparent)]
     </span>ArrowError(<span class="attr">#[from] </span><span class="kw">crate</span>::destinations::arrow::ArrowDestinationError),
@@ -357,6 +373,14 @@
     <span class="attr">#[cfg(all(feature = <span class="string">"src_bigquery"</span>, feature = <span class="string">"dst_arrow2"</span>))]
     #[error(transparent)]
     </span>BigqueryArrow2TransportError(<span class="attr">#[from] </span><span class="kw">crate</span>::transports::BigQueryArrow2TransportError),
+
+    <span class="attr">#[cfg(all(feature = <span class="string">"src_trino"</span>, feature = <span class="string">"dst_arrow"</span>))]
+    #[error(transparent)]
+    </span>TrinoArrowTransportError(<span class="attr">#[from] </span><span class="kw">crate</span>::transports::TrinoArrowTransportError),
+
+    <span class="attr">#[cfg(all(feature = <span class="string">"src_trino"</span>, feature = <span class="string">"dst_arrow2"</span>))]
+    #[error(transparent)]
+    </span>TrinoArrow2TransportError(<span class="attr">#[from] </span><span class="kw">crate</span>::transports::TrinoArrow2TransportError),
 
     <span class="doccomment">/// Any other errors that are too trivial to be put here explicitly.
     </span><span class="attr">#[error(transparent)]

@@ -1982,7 +1982,16 @@
 <a href="#1981" id="1981">1981</a>
 <a href="#1982" id="1982">1982</a>
 <a href="#1983" id="1983">1983</a>
-<a href="#1984" id="1984">1984</a></pre></div><pre class="rust"><code><span class="doccomment">//! Source implementation for Postgres database, including the TLS support (client only).
+<a href="#1984" id="1984">1984</a>
+<a href="#1985" id="1985">1985</a>
+<a href="#1986" id="1986">1986</a>
+<a href="#1987" id="1987">1987</a>
+<a href="#1988" id="1988">1988</a>
+<a href="#1989" id="1989">1989</a>
+<a href="#1990" id="1990">1990</a>
+<a href="#1991" id="1991">1991</a>
+<a href="#1992" id="1992">1992</a>
+<a href="#1993" id="1993">1993</a></pre></div><pre class="rust"><code><span class="doccomment">//! Source implementation for Postgres database, including the TLS support (client only).
 
 </span><span class="kw">mod </span>connection;
 <span class="kw">mod </span>errors;
@@ -3353,7 +3362,16 @@
     </span><span class="kw">fn </span>fetch_next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; (usize, bool) {
         <span class="self">self</span>.current_row = <span class="number">0</span>;
         <span class="self">self</span>.current_col = <span class="number">0</span>;
-        (<span class="self">self</span>.rows.len() - <span class="number">1</span>, <span class="bool-val">true</span>) <span class="comment">// last message is command complete
+        <span class="kw">if </span><span class="self">self</span>.rows.len() &gt; <span class="number">0 </span>{
+            <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.rows[<span class="number">0</span>] {
+                SimpleQueryMessage::RowDescription(<span class="kw">_</span>) =&gt; {
+                    <span class="self">self</span>.current_row = <span class="number">1</span>;
+                }
+                <span class="kw">_ </span>=&gt; {}
+            }
+        }
+
+        (<span class="self">self</span>.rows.len() - <span class="number">1 </span>- <span class="self">self</span>.current_row, <span class="bool-val">true</span>) <span class="comment">// last message is command complete
     </span>}
 }
 

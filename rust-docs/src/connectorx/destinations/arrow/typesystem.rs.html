@@ -51,7 +51,23 @@
 <a href="#50" id="50">50</a>
 <a href="#51" id="51">51</a>
 <a href="#52" id="52">52</a>
-<a href="#53" id="53">53</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::impl_typesystem;
+<a href="#53" id="53">53</a>
+<a href="#54" id="54">54</a>
+<a href="#55" id="55">55</a>
+<a href="#56" id="56">56</a>
+<a href="#57" id="57">57</a>
+<a href="#58" id="58">58</a>
+<a href="#59" id="59">59</a>
+<a href="#60" id="60">60</a>
+<a href="#61" id="61">61</a>
+<a href="#62" id="62">62</a>
+<a href="#63" id="63">63</a>
+<a href="#64" id="64">64</a>
+<a href="#65" id="65">65</a>
+<a href="#66" id="66">66</a>
+<a href="#67" id="67">67</a>
+<a href="#68" id="68">68</a>
+<a href="#69" id="69">69</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::impl_typesystem;
 <span class="kw">use </span>chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
 
 <span class="attr">#[derive(Debug, Clone, Copy)]
@@ -81,27 +97,43 @@
     Time64Micro(bool),
     DateTimeTz(bool),
     DateTimeTzMicro(bool),
+    BoolArray(bool),
+    Utf8Array(bool),
+    Int32Array(bool),
+    Int64Array(bool),
+    UInt32Array(bool),
+    UInt64Array(bool),
+    Float32Array(bool),
+    Float64Array(bool),
 }
 
 <span class="macro">impl_typesystem!</span> {
     system = ArrowTypeSystem,
     mappings = {
-        { Int32      =&gt; i32           }
-        { Int64      =&gt; i64           }
-        { UInt32     =&gt; u32           }
-        { UInt64     =&gt; u64           }
-        { Float64    =&gt; f64           }
-        { Float32    =&gt; f32           }
-        { Boolean    =&gt; bool          }
-        { LargeUtf8  =&gt; String        }
-        { LargeBinary =&gt; Vec&lt;u8&gt;      }
-        { Date32     =&gt; NaiveDate     }
-        { Date64     =&gt; NaiveDateTime }
+        { Int32           =&gt; i32                       }
+        { Int64           =&gt; i64                       }
+        { UInt32          =&gt; u32                       }
+        { UInt64          =&gt; u64                       }
+        { Float64         =&gt; f64                       }
+        { Float32         =&gt; f32                       }
+        { Boolean         =&gt; bool                      }
+        { LargeUtf8       =&gt; String                    }
+        { LargeBinary     =&gt; Vec&lt;u8&gt;                   }
+        { Date32          =&gt; NaiveDate                 }
+        { Date64          =&gt; NaiveDateTime             }
         { Date64Micro     =&gt; NaiveDateTimeWrapperMicro }
-        { Time64     =&gt; NaiveTime     }
-        { Time64Micro     =&gt; NaiveTimeWrapperMicro }
-        { DateTimeTz =&gt; DateTime&lt;Utc&gt; }
-        { DateTimeTzMicro =&gt; DateTimeWrapperMicro }
+        { Time64          =&gt; NaiveTime                 }
+        { Time64Micro     =&gt; NaiveTimeWrapperMicro     }
+        { DateTimeTz      =&gt; DateTime&lt;Utc&gt;             }
+        { DateTimeTzMicro =&gt; DateTimeWrapperMicro      }
+        { BoolArray       =&gt; Vec&lt;<span class="prelude-ty">Option</span>&lt;bool&gt;&gt;         }
+        { Utf8Array       =&gt; Vec&lt;<span class="prelude-ty">Option</span>&lt;String&gt;&gt;       }
+        { Int32Array      =&gt; Vec&lt;<span class="prelude-ty">Option</span>&lt;i32&gt;&gt;          }
+        { Int64Array      =&gt; Vec&lt;<span class="prelude-ty">Option</span>&lt;i64&gt;&gt;          }
+        { UInt32Array     =&gt; Vec&lt;<span class="prelude-ty">Option</span>&lt;u32&gt;&gt;          }
+        { UInt64Array     =&gt; Vec&lt;<span class="prelude-ty">Option</span>&lt;u64&gt;&gt;          }
+        { Float32Array    =&gt; Vec&lt;<span class="prelude-ty">Option</span>&lt;f32&gt;&gt;          }
+        { Float64Array    =&gt; Vec&lt;<span class="prelude-ty">Option</span>&lt;f64&gt;&gt;          }
     }
 }
 </code></pre></div></section></main></body></html>

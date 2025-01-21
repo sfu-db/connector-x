@@ -302,7 +302,7 @@
 <span class="kw">use </span>fehler::throw;
 <span class="kw">use </span>fehler::throws;
 <span class="kw">use </span>funcs::{FFinishBuilder, FNewBuilder, FNewField};
-<span class="kw">use </span>polars::prelude::{DataFrame, PolarsError, Series};
+<span class="kw">use </span>polars_old::prelude::{DataFrame, PolarsError, Series};
 <span class="kw">use </span>std::convert::TryFrom;
 <span class="kw">use </span>std::sync::{Arc, Mutex};
 <span class="kw">pub use </span>typesystem::Arrow2TypeSystem;
@@ -411,7 +411,7 @@
         </span><span class="kw">fn </span>try_from(
             chunks: (Vec&lt;Chunk&lt;Box&lt;<span class="kw">dyn </span>Array&gt;&gt;&gt;, <span class="kw-2">&amp;</span>[Field]),
         ) -&gt; std::result::Result&lt;DataFrame, PolarsError&gt; {
-            <span class="kw">use </span>polars::prelude::NamedFrom;
+            <span class="kw">use </span>polars_old::prelude::NamedFrom;
 
             <span class="kw">let </span><span class="kw-2">mut </span>series: Vec&lt;Series&gt; = <span class="macro">vec!</span>[];
 

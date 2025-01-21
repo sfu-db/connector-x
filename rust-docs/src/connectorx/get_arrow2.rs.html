@@ -229,7 +229,19 @@
 <a href="#228" id="228">228</a>
 <a href="#229" id="229">229</a>
 <a href="#230" id="230">230</a>
-<a href="#231" id="231">231</a></pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"src_mysql"</span>)]
+<a href="#231" id="231">231</a>
+<a href="#232" id="232">232</a>
+<a href="#233" id="233">233</a>
+<a href="#234" id="234">234</a>
+<a href="#235" id="235">235</a>
+<a href="#236" id="236">236</a>
+<a href="#237" id="237">237</a>
+<a href="#238" id="238">238</a>
+<a href="#239" id="239">239</a>
+<a href="#240" id="240">240</a>
+<a href="#241" id="241">241</a>
+<a href="#242" id="242">242</a>
+<a href="#243" id="243">243</a></pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"src_mysql"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::sources::mysql::{BinaryProtocol <span class="kw">as </span>MySQLBinaryProtocol, TextProtocol};
 <span class="attr">#[cfg(feature = <span class="string">"src_postgres"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::sources::postgres::{
@@ -445,6 +457,18 @@
             <span class="kw">let </span>rt = Arc::new(tokio::runtime::Runtime::new().expect(<span class="string">"Failed to create runtime"</span>));
             <span class="kw">let </span>source = BigQuerySource::new(rt, <span class="kw-2">&amp;</span>source_conn.conn[..])<span class="question-mark">?</span>;
             <span class="kw">let </span>dispatcher = Dispatcher::&lt;<span class="kw">_</span>, <span class="kw">_</span>, BigQueryArrow2Transport&gt;::new(
+                source,
+                <span class="kw-2">&amp;mut </span>destination,
+                queries,
+                origin_query,
+            );
+            dispatcher.run()<span class="question-mark">?</span>;
+        }
+        <span class="attr">#[cfg(feature = <span class="string">"src_trino"</span>)]
+        </span>SourceType::Trino =&gt; {
+            <span class="kw">let </span>rt = Arc::new(tokio::runtime::Runtime::new().expect(<span class="string">"Failed to create runtime"</span>));
+            <span class="kw">let </span>source = TrinoSource::new(rt, <span class="kw-2">&amp;</span>source_conn.conn[..])<span class="question-mark">?</span>;
+            <span class="kw">let </span>dispatcher = Dispatcher::&lt;<span class="kw">_</span>, <span class="kw">_</span>, TrinoArrow2Transport&gt;::new(
                 source,
                 <span class="kw-2">&amp;mut </span>destination,
                 queries,
