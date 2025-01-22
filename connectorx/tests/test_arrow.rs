@@ -314,6 +314,7 @@ fn test_postgres_boolarray_arrow() {
         &mut destination,
         &queries,
         Some("select * from test_table".to_string()),
+        None,
     );
     dispatcher.run().expect("run dispatcher");
 
@@ -352,6 +353,7 @@ fn test_postgres_varchararray_arrow() {
         &mut destination,
         &queries,
         Some("select * from test_table".to_string()),
+        None,
     );
     dispatcher.run().expect("run dispatcher");
 
@@ -396,6 +398,7 @@ fn test_postgres_textarray_arrow() {
         &mut destination,
         &queries,
         Some("select * from test_table".to_string()),
+        None,
     );
     dispatcher.run().expect("run dispatcher");
 
@@ -442,6 +445,7 @@ fn test_postgres_intarray_arrow() {
         &mut destination,
         &queries,
         Some("select * from test_table".to_string()),
+        None,
     );
     dispatcher.run().expect("run dispatcher");
 
