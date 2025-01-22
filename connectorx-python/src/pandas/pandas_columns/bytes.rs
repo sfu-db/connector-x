@@ -1,10 +1,13 @@
-use super::{check_dtype, HasPandasColumn, PandasColumn, PandasColumnObject, GIL_MUTEX};
+use super::{
+    check_dtype, ExtractBlockFromBound, HasPandasColumn, PandasColumn, PandasColumnObject,
+    GIL_MUTEX,
+};
 use crate::errors::ConnectorXPythonError;
 use anyhow::anyhow;
 use fehler::throws;
 use ndarray::{ArrayViewMut2, Axis, Ix2};
-use numpy::{Element, PyArray, PyArrayDescr};
-use pyo3::{Bound, FromPyObject, Py, PyAny, PyResult, Python};
+use numpy::{Element, PyArray, PyArrayDescr, PyArrayMethods};
+use pyo3::{types::PyAnyMethods, Bound, Py, PyAny, PyResult, Python};
 use std::any::TypeId;
 
 #[derive(Clone)]
@@ -28,8 +31,8 @@ pub struct BytesBlock<'a> {
     buf_size_mb: usize,
 }
 
-impl<'a> FromPyObject<'a> for BytesBlock<'a> {
-    fn extract(ob: &'a PyAny) -> PyResult<Self> {
+impl<'a> ExtractBlockFromBound<'a> for BytesBlock<'a> {
+    fn extract_block<'b: 'a>(ob: &'b pyo3::Bound<'a, PyAny>) -> PyResult<Self> {
         check_dtype(ob, "object")?;
         let array = ob.downcast::<PyArray<PyBytes, Ix2>>()?;
         let data = unsafe { array.as_array_mut() };
@@ -37,10 +40,6 @@ impl<'a> FromPyObject<'a> for BytesBlock<'a> {
             data,
             buf_size_mb: 16, // in MB
         })
-    }
-
-    fn extract_bound(ob: &pyo3::Bound<'a, PyAny>) -> PyResult<Self> {
-        Self::extract(ob.clone().into_gil_ref())
     }
 }
 

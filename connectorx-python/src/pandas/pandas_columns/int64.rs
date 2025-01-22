@@ -1,38 +1,40 @@
-use super::{check_dtype, HasPandasColumn, PandasColumn, PandasColumnObject};
+use super::{
+    check_dtype, ExtractBlockFromBound, HasPandasColumn, PandasColumn, PandasColumnObject,
+};
 use crate::errors::ConnectorXPythonError;
 use anyhow::anyhow;
 use fehler::throws;
 use ndarray::{ArrayViewMut1, ArrayViewMut2, Axis, Ix2};
-use numpy::{PyArray, PyArray1};
-use pyo3::{types::PyTuple, FromPyObject, PyAny, PyResult};
+use numpy::{PyArray, PyArray1, PyArrayMethods};
+use pyo3::{
+    types::{PyAnyMethods, PyTuple, PyTupleMethods},
+    PyAny, PyResult,
+};
 use std::any::TypeId;
 
 pub enum Int64Block<'a> {
     NumPy(ArrayViewMut2<'a, i64>),
     Extention(ArrayViewMut1<'a, i64>, ArrayViewMut1<'a, bool>),
 }
-impl<'a> FromPyObject<'a> for Int64Block<'a> {
-    fn extract(ob: &'a PyAny) -> PyResult<Self> {
+
+impl<'a> ExtractBlockFromBound<'a> for Int64Block<'a> {
+    fn extract_block<'b: 'a>(ob: &'b pyo3::Bound<'a, PyAny>) -> PyResult<Self> {
         if let Ok(array) = ob.downcast::<PyArray<i64, Ix2>>() {
             check_dtype(ob, "int64")?;
             let data = unsafe { array.as_array_mut() };
             Ok(Int64Block::NumPy(data))
         } else {
             let tuple = ob.downcast::<PyTuple>()?;
-            let data = tuple.get_item(0)?;
-            let mask = tuple.get_item(1)?;
+            // let data = tuple.get_borrowed_item(0)?;
+            let data = tuple.as_slice().get(0).unwrap();
+            let mask = tuple.as_slice().get(1).unwrap();
             check_dtype(data, "int64")?;
             check_dtype(mask, "bool")?;
-
             Ok(Int64Block::Extention(
                 unsafe { data.downcast::<PyArray1<i64>>()?.as_array_mut() },
                 unsafe { mask.downcast::<PyArray1<bool>>()?.as_array_mut() },
             ))
         }
-    }
-
-    fn extract_bound(ob: &pyo3::Bound<'a, PyAny>) -> PyResult<Self> {
-        Self::extract(ob.clone().into_gil_ref())
     }
 }
 

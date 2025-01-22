@@ -1,10 +1,12 @@
-use super::{check_dtype, HasPandasColumn, PandasColumn, PandasColumnObject};
+use super::{
+    check_dtype, ExtractBlockFromBound, HasPandasColumn, PandasColumn, PandasColumnObject,
+};
 use crate::errors::ConnectorXPythonError;
 use anyhow::anyhow;
 use fehler::throws;
 use ndarray::{ArrayViewMut2, Axis, Ix2};
-use numpy::PyArray;
-use pyo3::{FromPyObject, PyAny, PyResult};
+use numpy::{PyArray, PyArrayMethods};
+use pyo3::{types::PyAnyMethods, PyAny, PyResult};
 use std::any::TypeId;
 
 // Float
@@ -12,16 +14,12 @@ pub struct Float64Block<'a> {
     data: ArrayViewMut2<'a, f64>,
 }
 
-impl<'a> FromPyObject<'a> for Float64Block<'a> {
-    fn extract(ob: &'a PyAny) -> PyResult<Self> {
+impl<'a> ExtractBlockFromBound<'a> for Float64Block<'a> {
+    fn extract_block<'b: 'a>(ob: &'b pyo3::Bound<'a, PyAny>) -> PyResult<Self> {
         check_dtype(ob, "float64")?;
-        let array = ob.downcast::<PyArray<f64, Ix2>>()?;
-        let data = unsafe { array.as_array_mut() };
+        let array: &pyo3::Bound<'a, PyArray<f64, Ix2>> = ob.downcast()?;
+        let data: ArrayViewMut2<'a, f64> = unsafe { array.as_array_mut() };
         Ok(Float64Block { data })
-    }
-
-    fn extract_bound(ob: &pyo3::Bound<'a, PyAny>) -> PyResult<Self> {
-        Self::extract(ob.clone().into_gil_ref())
     }
 }
 

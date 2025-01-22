@@ -1,10 +1,15 @@
-use super::{check_dtype, HasPandasColumn, PandasColumn, PandasColumnObject};
+use super::{
+    check_dtype, ExtractBlockFromBound, HasPandasColumn, PandasColumn, PandasColumnObject,
+};
 use crate::errors::ConnectorXPythonError;
 use anyhow::anyhow;
 use fehler::throws;
 use ndarray::{ArrayViewMut1, ArrayViewMut2, Axis, Ix2};
-use numpy::{PyArray, PyArray1};
-use pyo3::{types::PyTuple, FromPyObject, PyAny, PyResult};
+use numpy::{PyArray, PyArray1, PyArrayMethods};
+use pyo3::{
+    types::{PyAnyMethods, PyTuple, PyTupleMethods},
+    PyAny, PyResult,
+};
 use std::any::TypeId;
 
 // Boolean
@@ -12,8 +17,9 @@ pub enum BooleanBlock<'a> {
     NumPy(ArrayViewMut2<'a, bool>),
     Extention(ArrayViewMut1<'a, bool>, ArrayViewMut1<'a, bool>),
 }
-impl<'a> FromPyObject<'a> for BooleanBlock<'a> {
-    fn extract(ob: &'a PyAny) -> PyResult<Self> {
+
+impl<'a> ExtractBlockFromBound<'a> for BooleanBlock<'a> {
+    fn extract_block<'b: 'a>(ob: &'b pyo3::Bound<'a, PyAny>) -> PyResult<Self> {
         if let Ok(array) = ob.downcast::<PyArray<bool, Ix2>>() {
             // if numpy array
             check_dtype(ob, "bool")?;
@@ -22,8 +28,8 @@ impl<'a> FromPyObject<'a> for BooleanBlock<'a> {
         } else {
             // if extension array
             let tuple = ob.downcast::<PyTuple>()?;
-            let data = tuple.get_item(0)?;
-            let mask = tuple.get_item(1)?;
+            let data = tuple.as_slice().get(0).unwrap();
+            let mask = tuple.as_slice().get(1).unwrap();
             check_dtype(data, "bool")?;
             check_dtype(mask, "bool")?;
 
@@ -32,10 +38,6 @@ impl<'a> FromPyObject<'a> for BooleanBlock<'a> {
                 unsafe { mask.downcast::<PyArray1<bool>>()?.as_array_mut() },
             ))
         }
-    }
-
-    fn extract_bound(ob: &pyo3::Bound<'a, PyAny>) -> PyResult<Self> {
-        Self::extract(ob.clone().into_gil_ref())
     }
 }
 

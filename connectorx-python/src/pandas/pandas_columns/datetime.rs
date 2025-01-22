@@ -1,11 +1,13 @@
-use super::{check_dtype, HasPandasColumn, PandasColumn, PandasColumnObject};
+use super::{
+    check_dtype, ExtractBlockFromBound, HasPandasColumn, PandasColumn, PandasColumnObject,
+};
 use crate::errors::ConnectorXPythonError;
 use anyhow::anyhow;
 use chrono::{DateTime, Utc};
 use fehler::throws;
 use ndarray::{ArrayViewMut2, Axis, Ix2};
-use numpy::PyArray;
-use pyo3::{FromPyObject, PyAny, PyResult};
+use numpy::{PyArray, PyArrayMethods};
+use pyo3::{types::PyAnyMethods, PyAny, PyResult};
 use std::any::TypeId;
 
 // datetime64 is represented in int64 in numpy
@@ -14,16 +16,12 @@ pub struct DateTimeBlock<'a> {
     data: ArrayViewMut2<'a, i64>,
 }
 
-impl<'a> FromPyObject<'a> for DateTimeBlock<'a> {
-    fn extract(ob: &'a PyAny) -> PyResult<Self> {
+impl<'a> ExtractBlockFromBound<'a> for DateTimeBlock<'a> {
+    fn extract_block<'b: 'a>(ob: &'b pyo3::Bound<'a, PyAny>) -> PyResult<Self> {
         check_dtype(ob, "int64")?;
         let array = ob.downcast::<PyArray<i64, Ix2>>()?;
         let data = unsafe { array.as_array_mut() };
         Ok(DateTimeBlock { data })
-    }
-
-    fn extract_bound(ob: &pyo3::Bound<'a, PyAny>) -> PyResult<Self> {
-        Self::extract(ob.clone().into_gil_ref())
     }
 }
 
