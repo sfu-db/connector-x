@@ -25,8 +25,9 @@ chrono = "0.4"
 arrow = {workspace = true, optional = true}
 polars = {workspace = true, optional = true, features=["dtype-u8", "dtype-u16", "lazy"]}
 polars-arrow = {workspace = true, optional = true}
-bb8 = {version = "0.7", optional = true}
-bb8-tiberius = {version = "0.8", optional = true}
+polars_old = { package = "polars", version = "0.32", optional = true, features=["dtype-u8", "dtype-u16"]}
+bb8 = {version = "0.8", optional = true}
+bb8-tiberius = {version = "0.11", optional = true}
 csv = {version = "1", optional = true}
 fallible-streaming-iterator = {version = "0.1", optional = true}
 futures = {version = "0.3", optional = true}
@@ -49,7 +50,7 @@ regex = {version = "1", optional = true}
 rusqlite = {version = "0.30.0", features = ["column_decltype", "chrono", "bundled"], optional = true}
 rust_decimal = {version = "1", features = ["db-postgres"], optional = true}
 rust_decimal_macros = {version = "1", optional = true}
-tiberius = {version = "0.7.3", features = ["rust_decimal", "chrono", "integrated-auth-gssapi"], optional = true}
+tiberius = {version = "0.9", features = ["rust_decimal", "chrono", "integrated-auth-gssapi"], optional = true}
 tokio = {version = "1", features = ["rt", "rt-multi-thread", "net"], optional = true}
 tokio-util = {version = "0.6", optional = true}
 urlencoding = {version = "2.1", optional = true}
