@@ -1,13 +1,16 @@
 use super::super::pystring::{PyString, StringInfo};
-use super::{check_dtype, HasPandasColumn, PandasColumn, PandasColumnObject, GIL_MUTEX};
+use super::{
+    check_dtype, ExtractBlockFromBound, HasPandasColumn, PandasColumn, PandasColumnObject,
+    GIL_MUTEX,
+};
 use crate::constants::PYSTRING_BUFFER_SIZE;
 use crate::errors::ConnectorXPythonError;
 use anyhow::anyhow;
 use fehler::throws;
 use itertools::Itertools;
 use ndarray::{ArrayViewMut2, Axis, Ix2};
-use numpy::PyArray;
-use pyo3::{FromPyObject, PyAny, PyResult, Python};
+use numpy::{PyArray, PyArrayMethods};
+use pyo3::{types::PyAnyMethods, PyAny, PyResult, Python};
 use std::any::TypeId;
 
 pub struct StringBlock<'a> {
@@ -15,8 +18,8 @@ pub struct StringBlock<'a> {
     buf_size_mb: usize,
 }
 
-impl<'a> FromPyObject<'a> for StringBlock<'a> {
-    fn extract(ob: &'a PyAny) -> PyResult<Self> {
+impl<'a> ExtractBlockFromBound<'a> for StringBlock<'a> {
+    fn extract_block<'b: 'a>(ob: &'b pyo3::Bound<'a, PyAny>) -> PyResult<Self> {
         check_dtype(ob, "object")?;
         let array = ob.downcast::<PyArray<PyString, Ix2>>()?;
         let data = unsafe { array.as_array_mut() };
@@ -24,10 +27,6 @@ impl<'a> FromPyObject<'a> for StringBlock<'a> {
             data,
             buf_size_mb: PYSTRING_BUFFER_SIZE, // in MB
         })
-    }
-
-    fn extract_bound(ob: &pyo3::Bound<'a, PyAny>) -> PyResult<Self> {
-        Self::extract(ob.clone().into_gil_ref())
     }
 }
 
