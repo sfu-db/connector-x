@@ -23,10 +23,8 @@ serde_json = "1"
 chrono = "0.4"
 
 arrow = {workspace = true, optional = true}
-arrow2 = {workspace = true, default-features = false, optional = true}
 polars = {workspace = true, optional = true, features=["dtype-u8", "dtype-u16", "lazy"]}
 polars-arrow = {workspace = true, optional = true}
-polars_old = { package = "polars", version = "0.32", optional = true, features=["dtype-u8", "dtype-u16"]}
 bb8 = {version = "0.7", optional = true}
 bb8-tiberius = {version = "0.8", optional = true}
 csv = {version = "1", optional = true}
@@ -72,11 +70,10 @@ iai = "0.1"
 pprof = {version = "0.5", features = ["flamegraph"]}
 
 [features]
-all = ["src_sqlite", "src_postgres", "src_mysql", "src_mssql", "src_oracle", "src_bigquery", "src_csv", "src_dummy", "src_trino", "dst_arrow", "dst_arrow2", "dst_polars", "federation", "fed_exec"]
+all = ["src_sqlite", "src_postgres", "src_mysql", "src_mssql", "src_oracle", "src_bigquery", "src_csv", "src_dummy", "src_trino", "dst_arrow", "dst_polars", "federation", "fed_exec"]
 branch = []
 default = ["fptr"]
 dst_arrow = ["arrow"]
-dst_arrow2 = ["polars_old", "arrow2"]
 dst_polars = ["dst_arrow", "polars", "polars-arrow"]
 fptr = []
 src_bigquery = ["gcp-bigquery-client", "tokio"]
