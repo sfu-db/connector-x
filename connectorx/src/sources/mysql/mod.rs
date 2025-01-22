@@ -233,11 +233,7 @@ where
                 }
             }
 
-            ret.push(MySQLSourcePartition::new(
-                conn,
-                &query,
-                &self.schema,
-            ));
+            ret.push(MySQLSourcePartition::new(conn, &query, &self.schema));
         }
         ret
     }

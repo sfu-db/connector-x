@@ -209,7 +209,7 @@ where
 
             if let Some(queries) = &self.pre_execution_queries {
                 for query in queries {
-                    conn.query(query,  &[])?;
+                    conn.query(query, &[])?;
                 }
             }
 

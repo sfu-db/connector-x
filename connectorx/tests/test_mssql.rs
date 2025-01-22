@@ -25,8 +25,13 @@ fn test_mssql() {
 
     let builder = MsSQLSource::new(rt, &dburl, 2).unwrap();
     let mut destination = ArrowDestination::new();
-    let dispatcher =
-        Dispatcher::<_, _, MsSQLArrowTransport>::new(builder, &mut destination, &queries, None, None);
+    let dispatcher = Dispatcher::<_, _, MsSQLArrowTransport>::new(
+        builder,
+        &mut destination,
+        &queries,
+        None,
+        None,
+    );
     dispatcher.run().unwrap();
 
     let result = destination.arrow().unwrap();

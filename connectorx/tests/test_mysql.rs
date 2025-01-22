@@ -29,7 +29,7 @@ fn test_mysql() {
         &mut destination,
         &queries,
         Some(String::from("select * from test_table")),
-        None
+        None,
     );
     dispatcher.run().unwrap();
 
@@ -69,13 +69,13 @@ fn test_mysql_pre_execution_queries() {
 
     let dburl = env::var("MYSQL_URL").unwrap();
 
-    let queries = [
-        CXQuery::naked("SELECT @@SESSION.max_execution_time, @@SESSION.wait_timeout"),
-    ];
+    let queries = [CXQuery::naked(
+        "SELECT @@SESSION.max_execution_time, @@SESSION.wait_timeout",
+    )];
 
     let pre_execution_queries = [
         String::from("SET SESSION max_execution_time = 2151"),
-        String::from("SET SESSION wait_timeout = 2252")
+        String::from("SET SESSION wait_timeout = 2252"),
     ];
 
     let builder = MySQLSource::<BinaryProtocol>::new(&dburl, 2).unwrap();
@@ -90,7 +90,7 @@ fn test_mysql_pre_execution_queries() {
     dispatcher.run().unwrap();
 
     let result = destination.arrow().unwrap();
-    
+
     assert!(result.len() == 1);
 
     assert!(result[0]

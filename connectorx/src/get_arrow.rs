@@ -47,7 +47,11 @@ pub fn get_arrow(
                         _,
                         PostgresArrowTransport<CSVProtocol, MakeTlsConnector>,
                     >::new(
-                        source, &mut destination, queries, origin_query, pre_execution_queries
+                        source,
+                        &mut destination,
+                        queries,
+                        origin_query,
+                        pre_execution_queries,
                     );
                     dispatcher.run()?;
                 }
@@ -75,7 +79,11 @@ pub fn get_arrow(
                         _,
                         PostgresArrowTransport<PgBinaryProtocol, MakeTlsConnector>,
                     >::new(
-                        source, &mut destination, queries, origin_query, pre_execution_queries
+                        source,
+                        &mut destination,
+                        queries,
+                        origin_query,
+                        pre_execution_queries,
                     );
                     dispatcher.run()?;
                 }
@@ -85,13 +93,14 @@ pub fn get_arrow(
                         NoTls,
                         queries.len(),
                     )?;
-                    let dispatcher = Dispatcher::<
-                        _,
-                        _,
-                        PostgresArrowTransport<PgBinaryProtocol, NoTls>,
-                    >::new(
-                        source, &mut destination, queries, origin_query, pre_execution_queries
-                    );
+                    let dispatcher =
+                        Dispatcher::<_, _, PostgresArrowTransport<PgBinaryProtocol, NoTls>>::new(
+                            source,
+                            &mut destination,
+                            queries,
+                            origin_query,
+                            pre_execution_queries,
+                        );
                     dispatcher.run()?;
                 }
                 ("cursor", Some(tls_conn)) => {
@@ -105,20 +114,25 @@ pub fn get_arrow(
                         _,
                         PostgresArrowTransport<CursorProtocol, MakeTlsConnector>,
                     >::new(
-                        source, &mut destination, queries, origin_query, pre_execution_queries
+                        source,
+                        &mut destination,
+                        queries,
+                        origin_query,
+                        pre_execution_queries,
                     );
                     dispatcher.run()?;
                 }
                 ("cursor", None) => {
                     let source =
                         PostgresSource::<CursorProtocol, NoTls>::new(config, NoTls, queries.len())?;
-                    let dispatcher = Dispatcher::<
-                        _,
-                        _,
-                        PostgresArrowTransport<CursorProtocol, NoTls>,
-                    >::new(
-                        source, &mut destination, queries, origin_query, pre_execution_queries
-                    );
+                    let dispatcher =
+                        Dispatcher::<_, _, PostgresArrowTransport<CursorProtocol, NoTls>>::new(
+                            source,
+                            &mut destination,
+                            queries,
+                            origin_query,
+                            pre_execution_queries,
+                        );
                     dispatcher.run()?;
                 }
                 ("simple", Some(tls_conn)) => {
@@ -132,7 +146,11 @@ pub fn get_arrow(
                         _,
                         PostgresArrowTransport<SimpleProtocol, MakeTlsConnector>,
                     >::new(
-                        sb, &mut destination, queries, origin_query, pre_execution_queries
+                        sb,
+                        &mut destination,
+                        queries,
+                        origin_query,
+                        pre_execution_queries,
                     );
                     debug!("Running dispatcher");
                     dispatcher.run()?;
@@ -140,13 +158,14 @@ pub fn get_arrow(
                 ("simple", None) => {
                     let sb =
                         PostgresSource::<SimpleProtocol, NoTls>::new(config, NoTls, queries.len())?;
-                    let dispatcher = Dispatcher::<
-                        _,
-                        _,
-                        PostgresArrowTransport<SimpleProtocol, NoTls>,
-                    >::new(
-                        sb, &mut destination, queries, origin_query, pre_execution_queries
-                    );
+                    let dispatcher =
+                        Dispatcher::<_, _, PostgresArrowTransport<SimpleProtocol, NoTls>>::new(
+                            sb,
+                            &mut destination,
+                            queries,
+                            origin_query,
+                            pre_execution_queries,
+                        );
                     debug!("Running dispatcher");
                     dispatcher.run()?;
                 }
@@ -279,25 +298,32 @@ pub fn new_record_batch_iter(
                         queries.len(),
                     )
                     .unwrap();
-                    let batch_iter =
-                        ArrowBatchIter::<
-                            _,
-                            PostgresArrowStreamTransport<CSVProtocol, MakeTlsConnector>,
-                        >::new(source, destination, origin_query, queries, pre_execution_queries)
-                        .unwrap();
+                    let batch_iter = ArrowBatchIter::<
+                        _,
+                        PostgresArrowStreamTransport<CSVProtocol, MakeTlsConnector>,
+                    >::new(
+                        source,
+                        destination,
+                        origin_query,
+                        queries,
+                        pre_execution_queries,
+                    )
+                    .unwrap();
                     return Box::new(batch_iter);
                 }
                 ("csv", None) => {
                     let source =
                         PostgresSource::<CSVProtocol, NoTls>::new(config, NoTls, queries.len())
                             .unwrap();
-                    let batch_iter = ArrowBatchIter::<
-                        _,
-                        PostgresArrowStreamTransport<CSVProtocol, NoTls>,
-                    >::new(
-                        source, destination, origin_query, queries, pre_execution_queries
-                    )
-                    .unwrap();
+                    let batch_iter =
+                        ArrowBatchIter::<_, PostgresArrowStreamTransport<CSVProtocol, NoTls>>::new(
+                            source,
+                            destination,
+                            origin_query,
+                            queries,
+                            pre_execution_queries,
+                        )
+                        .unwrap();
                     return Box::new(batch_iter);
                 }
                 ("binary", Some(tls_conn)) => {
@@ -307,12 +333,17 @@ pub fn new_record_batch_iter(
                         queries.len(),
                     )
                     .unwrap();
-                    let batch_iter =
-                        ArrowBatchIter::<
-                            _,
-                            PostgresArrowStreamTransport<PgBinaryProtocol, MakeTlsConnector>,
-                        >::new(source, destination, origin_query, queries, pre_execution_queries)
-                        .unwrap();
+                    let batch_iter = ArrowBatchIter::<
+                        _,
+                        PostgresArrowStreamTransport<PgBinaryProtocol, MakeTlsConnector>,
+                    >::new(
+                        source,
+                        destination,
+                        origin_query,
+                        queries,
+                        pre_execution_queries,
+                    )
+                    .unwrap();
                     return Box::new(batch_iter);
                 }
                 ("binary", None) => {
@@ -326,7 +357,11 @@ pub fn new_record_batch_iter(
                         _,
                         PostgresArrowStreamTransport<PgBinaryProtocol, NoTls>,
                     >::new(
-                        source, destination, origin_query, queries, pre_execution_queries
+                        source,
+                        destination,
+                        origin_query,
+                        queries,
+                        pre_execution_queries,
                     )
                     .unwrap();
                     return Box::new(batch_iter);
@@ -338,12 +373,17 @@ pub fn new_record_batch_iter(
                         queries.len(),
                     )
                     .unwrap();
-                    let batch_iter =
-                        ArrowBatchIter::<
-                            _,
-                            PostgresArrowStreamTransport<CursorProtocol, MakeTlsConnector>,
-                        >::new(source, destination, origin_query, queries, pre_execution_queries)
-                        .unwrap();
+                    let batch_iter = ArrowBatchIter::<
+                        _,
+                        PostgresArrowStreamTransport<CursorProtocol, MakeTlsConnector>,
+                    >::new(
+                        source,
+                        destination,
+                        origin_query,
+                        queries,
+                        pre_execution_queries,
+                    )
+                    .unwrap();
                     return Box::new(batch_iter);
                 }
                 ("cursor", None) => {
@@ -354,7 +394,11 @@ pub fn new_record_batch_iter(
                         _,
                         PostgresArrowStreamTransport<CursorProtocol, NoTls>,
                     >::new(
-                        source, destination, origin_query, queries, pre_execution_queries
+                        source,
+                        destination,
+                        origin_query,
+                        queries,
+                        pre_execution_queries,
                     )
                     .unwrap();
                     return Box::new(batch_iter);

@@ -30,8 +30,13 @@ fn test_bigquery_partition() {
         CXQuery::naked("SELECT * FROM (SELECT * FROM `dataprep-bigquery.dataprep.lineitem` LIMIT 1000) AS CXTMPTAB_PART WHERE 29128610 <= CXTMPTAB_PART.L_ORDERKEY AND CXTMPTAB_PART.L_ORDERKEY < 58255940"),
     ];
     let mut destination = ArrowDestination::new();
-    let dispatcher =
-        Dispatcher::<_, _, BigQueryArrowTransport>::new(source, &mut destination, &queries, None, None);
+    let dispatcher = Dispatcher::<_, _, BigQueryArrowTransport>::new(
+        source,
+        &mut destination,
+        &queries,
+        None,
+        None,
+    );
     dispatcher.run().unwrap();
     let _result = destination.arrow().unwrap();
 }

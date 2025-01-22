@@ -68,7 +68,8 @@ where
         self.src.set_data_order(dorder)?;
         self.src.set_queries(self.queries.as_slice());
         self.src.set_origin_query(self.origin_query);
-        self.src.set_pre_execution_queries(self.pre_execution_queries.as_ref().map(|v| v.as_slice()));
+        self.src
+            .set_pre_execution_queries(self.pre_execution_queries.as_ref().map(|v| v.as_slice()));
 
         debug!("Fetching metadata");
         self.src.fetch_metadata()?;

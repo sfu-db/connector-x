@@ -151,7 +151,8 @@ fn test_csv_infer_schema() {
     let source = CSVSource::new(&[]);
 
     let mut writer = ArrowDestination::new();
-    let dispatcher = Dispatcher::<_, _, CSVArrowTransport>::new(source, &mut writer, &files, None, None);
+    let dispatcher =
+        Dispatcher::<_, _, CSVArrowTransport>::new(source, &mut writer, &files, None, None);
 
     dispatcher.run().expect("run dispatcher");
 

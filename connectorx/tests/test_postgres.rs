@@ -192,7 +192,7 @@ fn test_postgres_agg() {
         &mut destination,
         &queries,
         Some("SELECT test_bool, SUM(test_float) FROM test_table GROUP BY test_bool".to_string()),
-        None
+        None,
     );
 
     dispatcher.run().expect("run dispatcher");
@@ -233,7 +233,7 @@ fn test_postgres_pre_execution_queries() {
 
     let pre_execution_queries = [
         String::from("SET SESSION statement_timeout = 2151"),
-        String::from("SET SESSION idle_in_transaction_session_timeout = 2252")
+        String::from("SET SESSION idle_in_transaction_session_timeout = 2252"),
     ];
 
     let url = Url::parse(dburl.as_str()).unwrap();
@@ -251,7 +251,7 @@ fn test_postgres_pre_execution_queries() {
     dispatcher.run().expect("run dispatcher");
 
     let result = destination.arrow().unwrap();
-    
+
     assert!(result.len() == 1);
 
     assert!(result[0]
