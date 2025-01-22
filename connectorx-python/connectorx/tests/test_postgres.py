@@ -1245,7 +1245,7 @@ def test_postgres_single_pre_execution_queries(postgres_url: str) -> None:
     query = "SELECT CAST(name AS TEXT) AS name, CAST(setting AS INTEGER) FROM pg_settings WHERE name = 'statement_timeout'"
     df = read_sql(postgres_url, query, pre_execution_query=pre_execution_query)
     expected = pd.DataFrame(
-        index=range(2),
+        index=range(1),
         data={
             "name": pd.Series(["statement_timeout"], dtype="str"),
             "setting": pd.Series([2151], dtype="Int64"),
