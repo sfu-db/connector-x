@@ -37,7 +37,7 @@ impl<'a> DateTimeBlock<'a> {
             view = rest;
             ret.push(DateTimeColumn {
                 data: col
-                    .into_shape(nrows)?
+                    .into_shape_with_order(nrows)?
                     .into_slice()
                     .ok_or_else(|| anyhow!("get None for splitted DateTime data"))?
                     .as_mut_ptr(),

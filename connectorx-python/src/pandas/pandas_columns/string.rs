@@ -42,7 +42,7 @@ impl<'a> StringBlock<'a> {
             view = rest;
             ret.push(StringColumn {
                 data: col
-                    .into_shape(nrows)?
+                    .into_shape_with_order(nrows)?
                     .into_slice()
                     .ok_or_else(|| anyhow!("get None for splitted String data"))?
                     .as_mut_ptr(),

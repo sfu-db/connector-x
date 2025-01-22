@@ -58,7 +58,7 @@ impl<'a, V> ArrayBlock<'a, V> {
             view = rest;
             ret.push(ArrayColumn::<V> {
                 data: col
-                    .into_shape(nrows)?
+                    .into_shape_with_order(nrows)?
                     .into_slice()
                     .ok_or_else(|| anyhow!("get None for splitted FloatArray data"))?
                     .as_mut_ptr(),

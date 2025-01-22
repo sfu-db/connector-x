@@ -28,8 +28,8 @@ impl<'a> ExtractBlockFromBound<'a> for BooleanBlock<'a> {
         } else {
             // if extension array
             let tuple = ob.downcast::<PyTuple>()?;
-            let data = tuple.as_slice().get(0).unwrap();
-            let mask = tuple.as_slice().get(1).unwrap();
+            let data = &tuple.as_slice()[0];
+            let mask = &tuple.as_slice()[1];
             check_dtype(data, "bool")?;
             check_dtype(mask, "bool")?;
 
@@ -64,7 +64,7 @@ impl<'a> BooleanBlock<'a> {
                     view = rest;
                     ret.push(BooleanColumn {
                         data: col
-                            .into_shape(nrows)?
+                            .into_shape_with_order(nrows)?
                             .into_slice()
                             .ok_or_else(|| anyhow!("get None for splitted Boolean data"))?
                             .as_mut_ptr(),

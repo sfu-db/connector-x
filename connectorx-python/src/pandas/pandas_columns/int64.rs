@@ -26,8 +26,8 @@ impl<'a> ExtractBlockFromBound<'a> for Int64Block<'a> {
         } else {
             let tuple = ob.downcast::<PyTuple>()?;
             // let data = tuple.get_borrowed_item(0)?;
-            let data = tuple.as_slice().get(0).unwrap();
-            let mask = tuple.as_slice().get(1).unwrap();
+            let data = &tuple.as_slice()[0];
+            let mask = &tuple.as_slice()[1];
             check_dtype(data, "int64")?;
             check_dtype(mask, "bool")?;
             Ok(Int64Block::Extention(
@@ -61,7 +61,7 @@ impl<'a> Int64Block<'a> {
                     view = rest;
                     ret.push(Int64Column {
                         data: col
-                            .into_shape(nrows)?
+                            .into_shape_with_order(nrows)?
                             .into_slice()
                             .ok_or_else(|| anyhow!("get None for splitted Int64 data"))?
                             .as_mut_ptr(),

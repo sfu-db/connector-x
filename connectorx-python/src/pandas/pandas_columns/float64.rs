@@ -35,7 +35,7 @@ impl<'a> Float64Block<'a> {
             view = rest;
             ret.push(Float64Column {
                 data: col
-                    .into_shape(nrows)?
+                    .into_shape_with_order(nrows)?
                     .into_slice()
                     .ok_or_else(|| anyhow!("get None for splitted Float64 data"))?
                     .as_mut_ptr(),
