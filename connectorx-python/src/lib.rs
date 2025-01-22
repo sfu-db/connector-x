@@ -1,5 +1,4 @@
 pub mod arrow;
-pub mod arrow2;
 pub mod constants;
 pub mod cx_read_sql;
 mod errors;

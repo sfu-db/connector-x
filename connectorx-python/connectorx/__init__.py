@@ -196,7 +196,7 @@ def read_sql(
     conn: str | ConnectionUrl | dict[str, str] | dict[str, ConnectionUrl],
     query: list[str] | str,
     *,
-    return_type: Literal["arrow", "arrow2"],
+    return_type: Literal["arrow"],
     protocol: Protocol | None = None,
     partition_on: str | None = None,
     partition_range: tuple[int, int] | None = None,
@@ -238,7 +238,7 @@ def read_sql(
     conn: str | ConnectionUrl | dict[str, str] | dict[str, ConnectionUrl],
     query: list[str] | str,
     *,
-    return_type: Literal["polars", "polars2"],
+    return_type: Literal["polars"],
     protocol: Protocol | None = None,
     partition_on: str | None = None,
     partition_range: tuple[int, int] | None = None,
@@ -252,7 +252,7 @@ def read_sql(
     query: list[str] | str,
     *,
     return_type: Literal[
-        "pandas", "polars", "polars2", "arrow", "arrow2", "modin", "dask"
+        "pandas", "polars", "arrow", "modin", "dask"
     ] = "pandas",
     protocol: Protocol | None = None,
     partition_on: str | None = None,
@@ -383,18 +383,18 @@ def read_sql(
             dd = try_import_module("dask.dataframe")
             df = dd.from_pandas(df, npartitions=1)
 
-    elif return_type in {"arrow", "arrow2", "polars", "polars2"}:
+    elif return_type in {"arrow", "polars"}:
         try_import_module("pyarrow")
 
         result = _read_sql(
             conn,
-            "arrow2" if return_type in {"arrow2", "polars2"} else "arrow",
+            "arrow",
             queries=queries,
             protocol=protocol,
             partition_query=partition_query,
         )
         df = reconstruct_arrow(result)
-        if return_type in {"polars", "polars2"}:
+        if return_type in {"polars"}:
             pl = try_import_module("polars")
             try:
                 df = pl.from_arrow(df)

@@ -69,12 +69,6 @@ pub fn read_sql<'py>(
             origin_query,
             &queries,
         )?),
-        "arrow2" => Ok(crate::arrow2::write_arrow(
-            py,
-            &source_conn,
-            origin_query,
-            &queries,
-        )?),
         _ => Err(PyValueError::new_err(format!(
             "return type should be 'pandas' or 'arrow', got '{}'",
             return_type
