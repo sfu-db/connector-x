@@ -1,6 +1,6 @@
 [package]
 name = "connectorx-cpp"
-version = "0.4.1-alpha1"
+version = "0.4.1-alpha2"
 edition = "2021"
 license = "MIT"
 
