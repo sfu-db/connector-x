@@ -74,7 +74,7 @@ pprof = {version = "0.5", features = ["flamegraph"]}
 [features]
 all = ["src_sqlite", "src_postgres", "src_mysql", "src_mssql", "src_oracle", "src_bigquery", "src_csv", "src_dummy", "src_trino", "dst_arrow", "dst_arrow2", "dst_polars", "federation", "fed_exec"]
 branch = []
-default = ["all"]
+default = ["fptr"]
 dst_arrow = ["arrow"]
 dst_arrow2 = ["polars_old", "arrow2"]
 dst_polars = ["dst_arrow", "polars", "polars-arrow"]
