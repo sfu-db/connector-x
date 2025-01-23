@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["Arrow2TypeSystem"],"struct":["DateTimeWrapperMicro","NaiveDateTimeWrapperMicro","NaiveTimeWrapperMicro"]};

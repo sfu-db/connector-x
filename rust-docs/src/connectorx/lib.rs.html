@@ -212,13 +212,7 @@
 <a href="#211" id="211">211</a>
 <a href="#212" id="212">212</a>
 <a href="#213" id="213">213</a>
-<a href="#214" id="214">214</a>
-<a href="#215" id="215">215</a>
-<a href="#216" id="216">216</a>
-<a href="#217" id="217">217</a>
-<a href="#218" id="218">218</a>
-<a href="#219" id="219">219</a>
-<a href="#220" id="220">220</a></pre></div><pre class="rust"><code><span class="attr">#![allow(clippy::upper_case_acronyms)]
+<a href="#214" id="214">214</a></pre></div><pre class="rust"><code><span class="attr">#![allow(clippy::upper_case_acronyms)]
 
 </span><span class="doccomment">//! # ConnectorX
 //!
@@ -320,7 +314,7 @@
 //! let data = destination.arrow();
 //! ```
 //!
-//! Or simply you can directly use the [`get_arrow::get_arrow`] or [`get_arrow2::get_arrow2`] in which we wrapped the above procedures:
+//! Or simply you can directly use the [`get_arrow::get_arrow`] in which we wrapped the above procedures:
 //!
 //! ```no_run
 //! use connectorx::prelude::*;
@@ -353,11 +347,11 @@
 //!
 //! ## Destinations
 //! - [x] Arrow
-//! - [x] Arrow2
+//! - [x] Polars
 //!
 //! # Feature gates
 //! By default, ConnectorX does not enable any sources / destinations to keep the dependencies minimal.
-//! Instead, we provide following features for you to opt-in: `src_sqlite`, `src_postgres`, `src_mysql`, `src_mssql`, `src_oracle`, `dst_arrow`, `dst_arrow2`.
+//! Instead, we provide following features for you to opt-in: `src_sqlite`, `src_postgres`, `src_mysql`, `src_mssql`, `src_oracle`, `dst_arrow`, `dst_polars`.
 //! For example, if you'd like to load data from Postgres to Arrow, you can enable `src_postgres` and `dst_arrow` in `Cargo.toml`.
 //! This will enable [`sources::postgres`], [`destinations::arrow`] and [`transports::PostgresArrowTransport`].
 
@@ -377,8 +371,6 @@
 </span><span class="kw">pub mod </span>fed_rewriter;
 <span class="attr">#[cfg(feature = <span class="string">"dst_arrow"</span>)]
 </span><span class="kw">pub mod </span>get_arrow;
-<span class="attr">#[cfg(feature = <span class="string">"dst_arrow2"</span>)]
-</span><span class="kw">pub mod </span>get_arrow2;
 <span class="kw">pub mod </span>partition;
 <span class="kw">pub mod </span>source_router;
 <span class="kw">pub mod </span>sources;
@@ -394,8 +386,6 @@
     <span class="kw">pub use </span><span class="kw">crate</span>::data_order::{coordinate, DataOrder};
     <span class="attr">#[cfg(feature = <span class="string">"dst_arrow"</span>)]
     </span><span class="kw">pub use </span><span class="kw">crate</span>::destinations::arrow::{ArrowDestination, ArrowPartitionWriter, ArrowTypeSystem};
-    <span class="attr">#[cfg(feature = <span class="string">"dst_arrow2"</span>)]
-    </span><span class="kw">pub use </span><span class="kw">crate</span>::destinations::arrow2::Arrow2Destination;
     <span class="attr">#[cfg(feature = <span class="string">"dst_arrow"</span>)]
     </span><span class="kw">pub use </span><span class="kw">crate</span>::destinations::arrowstream::{
         ArrowDestination <span class="kw">as </span>ArrowStreamDestination,
@@ -409,8 +399,6 @@
     </span><span class="kw">pub use </span><span class="kw">crate</span>::fed_rewriter::{rewrite_sql, FederatedDataSourceInfo, Plan};
     <span class="attr">#[cfg(feature = <span class="string">"dst_arrow"</span>)]
     </span><span class="kw">pub use </span><span class="kw">crate</span>::get_arrow::{get_arrow, new_record_batch_iter};
-    <span class="attr">#[cfg(feature = <span class="string">"dst_arrow2"</span>)]
-    </span><span class="kw">pub use </span><span class="kw">crate</span>::get_arrow2::get_arrow2;
     <span class="kw">pub use </span><span class="kw">crate</span>::source_router::<span class="kw-2">*</span>;
     <span class="attr">#[cfg(feature = <span class="string">"src_bigquery"</span>)]
     </span><span class="kw">pub use </span><span class="kw">crate</span>::sources::bigquery::BigQuerySource;

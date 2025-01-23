@@ -38,13 +38,13 @@
 <a href="#37" id="37">37</a>
 <a href="#38" id="38">38</a>
 <a href="#39" id="39">39</a>
-<a href="#40" id="40">40</a></pre></div><pre class="rust"><code><span class="attr">#[cfg(any(feature = <span class="string">"dst_arrow"</span>, feature = <span class="string">"dst_arrow2"</span>))]
+<a href="#40" id="40">40</a></pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"dst_arrow"</span>)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>SECONDS_IN_DAY: i64 = <span class="number">86_400</span>;
 
 <span class="attr">#[allow(dead_code)]
 </span><span class="kw">const </span>KILO: usize = <span class="number">1 </span>&lt;&lt; <span class="number">10</span>;
 
-<span class="attr">#[cfg(any(feature = <span class="string">"dst_arrow"</span>, feature = <span class="string">"dst_arrow2"</span>))]
+<span class="attr">#[cfg(feature = <span class="string">"dst_arrow"</span>)]
 </span><span class="kw">pub const </span>RECORD_BATCH_SIZE: usize = <span class="number">64 </span>* KILO;
 
 <span class="attr">#[cfg(any(

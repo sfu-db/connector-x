@@ -180,7 +180,8 @@
 <a href="#179" id="179">179</a>
 <a href="#180" id="180">180</a>
 <a href="#181" id="181">181</a>
-<a href="#182" id="182">182</a></pre></div><pre class="rust"><code><span class="doccomment">//! Transport from Postgres Source to Arrow Destination.
+<a href="#182" id="182">182</a>
+<a href="#183" id="183">183</a></pre></div><pre class="rust"><code><span class="doccomment">//! Transport from Postgres Source to Arrow Destination.
 
 </span><span class="kw">use </span><span class="kw">crate</span>::destinations::arrow::{
     typesystem::{
@@ -237,6 +238,7 @@
                 { BpChar[<span class="kw-2">&amp;</span><span class="lifetime">'r </span>str]            =&gt; LargeUtf8[String]                      | conversion none   }
                 { VarChar[<span class="kw-2">&amp;</span><span class="lifetime">'r </span>str]           =&gt; LargeUtf8[String]                      | conversion none   }
                 { Name[<span class="kw-2">&amp;</span><span class="lifetime">'r </span>str]              =&gt; LargeUtf8[String]                      | conversion none   }
+                { Enum[<span class="kw-2">&amp;</span><span class="lifetime">'r </span>str]              =&gt; LargeUtf8[String]                      | conversion none   }
                 { Timestamp[NaiveDateTime]   =&gt; Date64Micro[NaiveDateTimeWrapperMicro] | conversion option }
                 { Date[NaiveDate]            =&gt; Date32[NaiveDate]                      | conversion auto   }
                 { Time[NaiveTime]            =&gt; Time64Micro[NaiveTimeWrapperMicro]     | conversion option }

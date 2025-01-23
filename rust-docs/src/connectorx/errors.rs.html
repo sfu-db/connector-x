@@ -194,39 +194,7 @@
 <a href="#193" id="193">193</a>
 <a href="#194" id="194">194</a>
 <a href="#195" id="195">195</a>
-<a href="#196" id="196">196</a>
-<a href="#197" id="197">197</a>
-<a href="#198" id="198">198</a>
-<a href="#199" id="199">199</a>
-<a href="#200" id="200">200</a>
-<a href="#201" id="201">201</a>
-<a href="#202" id="202">202</a>
-<a href="#203" id="203">203</a>
-<a href="#204" id="204">204</a>
-<a href="#205" id="205">205</a>
-<a href="#206" id="206">206</a>
-<a href="#207" id="207">207</a>
-<a href="#208" id="208">208</a>
-<a href="#209" id="209">209</a>
-<a href="#210" id="210">210</a>
-<a href="#211" id="211">211</a>
-<a href="#212" id="212">212</a>
-<a href="#213" id="213">213</a>
-<a href="#214" id="214">214</a>
-<a href="#215" id="215">215</a>
-<a href="#216" id="216">216</a>
-<a href="#217" id="217">217</a>
-<a href="#218" id="218">218</a>
-<a href="#219" id="219">219</a>
-<a href="#220" id="220">220</a>
-<a href="#221" id="221">221</a>
-<a href="#222" id="222">222</a>
-<a href="#223" id="223">223</a>
-<a href="#224" id="224">224</a>
-<a href="#225" id="225">225</a>
-<a href="#226" id="226">226</a>
-<a href="#227" id="227">227</a>
-<a href="#228" id="228">228</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::data_order::DataOrder;
+<a href="#196" id="196">196</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::data_order::DataOrder;
 <span class="kw">use </span>std::any::type_name;
 <span class="kw">use </span>std::fmt;
 <span class="kw">use </span>thiserror::Error;
@@ -322,65 +290,33 @@
     #[error(transparent)]
     </span>ArrowStreamError(<span class="attr">#[from] </span><span class="kw">crate</span>::destinations::arrowstream::ArrowDestinationError),
 
-    <span class="attr">#[cfg(feature = <span class="string">"dst_arrow2"</span>)]
-    #[error(transparent)]
-    </span>Arrow2Error(<span class="attr">#[from] </span><span class="kw">crate</span>::destinations::arrow2::Arrow2DestinationError),
-
     <span class="attr">#[cfg(all(feature = <span class="string">"src_postgres"</span>, feature = <span class="string">"dst_arrow"</span>))]
     #[error(transparent)]
     </span>PostgresArrowTransportError(<span class="attr">#[from] </span><span class="kw">crate</span>::transports::PostgresArrowTransportError),
-
-    <span class="attr">#[cfg(all(feature = <span class="string">"src_postgres"</span>, feature = <span class="string">"dst_arrow2"</span>))]
-    #[error(transparent)]
-    </span>PostgresArrow2TransportError(<span class="attr">#[from] </span><span class="kw">crate</span>::transports::PostgresArrow2TransportError),
 
     <span class="attr">#[cfg(all(feature = <span class="string">"src_mysql"</span>, feature = <span class="string">"dst_arrow"</span>))]
     #[error(transparent)]
     </span>MySQLArrowTransportError(<span class="attr">#[from] </span><span class="kw">crate</span>::transports::MySQLArrowTransportError),
 
-    <span class="attr">#[cfg(all(feature = <span class="string">"src_mysql"</span>, feature = <span class="string">"dst_arrow2"</span>))]
-    #[error(transparent)]
-    </span>MySQLArrow2TransportError(<span class="attr">#[from] </span><span class="kw">crate</span>::transports::MySQLArrow2TransportError),
-
     <span class="attr">#[cfg(all(feature = <span class="string">"src_sqlite"</span>, feature = <span class="string">"dst_arrow"</span>))]
     #[error(transparent)]
     </span>SQLiteArrowTransportError(<span class="attr">#[from] </span><span class="kw">crate</span>::transports::SQLiteArrowTransportError),
-
-    <span class="attr">#[cfg(all(feature = <span class="string">"src_sqlite"</span>, feature = <span class="string">"dst_arrow2"</span>))]
-    #[error(transparent)]
-    </span>SQLiteArrow2TransportError(<span class="attr">#[from] </span><span class="kw">crate</span>::transports::SQLiteArrow2TransportError),
 
     <span class="attr">#[cfg(all(feature = <span class="string">"src_mssql"</span>, feature = <span class="string">"dst_arrow"</span>))]
     #[error(transparent)]
     </span>MsSQLArrowTransportError(<span class="attr">#[from] </span><span class="kw">crate</span>::transports::MsSQLArrowTransportError),
 
-    <span class="attr">#[cfg(all(feature = <span class="string">"src_mssql"</span>, feature = <span class="string">"dst_arrow2"</span>))]
-    #[error(transparent)]
-    </span>MsSQLArrow2TransportError(<span class="attr">#[from] </span><span class="kw">crate</span>::transports::MsSQLArrow2TransportError),
-
     <span class="attr">#[cfg(all(feature = <span class="string">"src_oracle"</span>, feature = <span class="string">"dst_arrow"</span>))]
     #[error(transparent)]
     </span>OracleArrowTransportError(<span class="attr">#[from] </span><span class="kw">crate</span>::transports::OracleArrowTransportError),
-
-    <span class="attr">#[cfg(all(feature = <span class="string">"src_oracle"</span>, feature = <span class="string">"dst_arrow2"</span>))]
-    #[error(transparent)]
-    </span>OracleArrow2TransportError(<span class="attr">#[from] </span><span class="kw">crate</span>::transports::OracleArrow2TransportError),
 
     <span class="attr">#[cfg(all(feature = <span class="string">"src_bigquery"</span>, feature = <span class="string">"dst_arrow"</span>))]
     #[error(transparent)]
     </span>BigqueryArrowTransportError(<span class="attr">#[from] </span><span class="kw">crate</span>::transports::BigQueryArrowTransportError),
 
-    <span class="attr">#[cfg(all(feature = <span class="string">"src_bigquery"</span>, feature = <span class="string">"dst_arrow2"</span>))]
-    #[error(transparent)]
-    </span>BigqueryArrow2TransportError(<span class="attr">#[from] </span><span class="kw">crate</span>::transports::BigQueryArrow2TransportError),
-
     <span class="attr">#[cfg(all(feature = <span class="string">"src_trino"</span>, feature = <span class="string">"dst_arrow"</span>))]
     #[error(transparent)]
     </span>TrinoArrowTransportError(<span class="attr">#[from] </span><span class="kw">crate</span>::transports::TrinoArrowTransportError),
-
-    <span class="attr">#[cfg(all(feature = <span class="string">"src_trino"</span>, feature = <span class="string">"dst_arrow2"</span>))]
-    #[error(transparent)]
-    </span>TrinoArrow2TransportError(<span class="attr">#[from] </span><span class="kw">crate</span>::transports::TrinoArrow2TransportError),
 
     <span class="doccomment">/// Any other errors that are too trivial to be put here explicitly.
     </span><span class="attr">#[error(transparent)]

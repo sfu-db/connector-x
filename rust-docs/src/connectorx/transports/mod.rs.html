@@ -87,94 +87,44 @@
 <a href="#86" id="86">86</a>
 <a href="#87" id="87">87</a>
 <a href="#88" id="88">88</a>
-<a href="#89" id="89">89</a>
-<a href="#90" id="90">90</a>
-<a href="#91" id="91">91</a>
-<a href="#92" id="92">92</a>
-<a href="#93" id="93">93</a>
-<a href="#94" id="94">94</a>
-<a href="#95" id="95">95</a>
-<a href="#96" id="96">96</a>
-<a href="#97" id="97">97</a>
-<a href="#98" id="98">98</a>
-<a href="#99" id="99">99</a>
-<a href="#100" id="100">100</a>
-<a href="#101" id="101">101</a>
-<a href="#102" id="102">102</a>
-<a href="#103" id="103">103</a>
-<a href="#104" id="104">104</a>
-<a href="#105" id="105">105</a>
-<a href="#106" id="106">106</a>
-<a href="#107" id="107">107</a>
-<a href="#108" id="108">108</a>
-<a href="#109" id="109">109</a>
-<a href="#110" id="110">110</a>
-<a href="#111" id="111">111</a>
-<a href="#112" id="112">112</a>
-<a href="#113" id="113">113</a>
-<a href="#114" id="114">114</a>
-<a href="#115" id="115">115</a>
-<a href="#116" id="116">116</a>
-<a href="#117" id="117">117</a>
-<a href="#118" id="118">118</a>
-<a href="#119" id="119">119</a>
-<a href="#120" id="120">120</a>
-<a href="#121" id="121">121</a></pre></div><pre class="rust"><code><span class="doccomment">//! This module contains transport definitions for the sources and destinations implemented in ConnectorX.
+<a href="#89" id="89">89</a></pre></div><pre class="rust"><code><span class="doccomment">//! This module contains transport definitions for the sources and destinations implemented in ConnectorX.
 
 </span><span class="attr">#[cfg(all(feature = <span class="string">"src_bigquery"</span>, feature = <span class="string">"dst_arrow"</span>))]
 </span><span class="kw">mod </span>bigquery_arrow;
-<span class="attr">#[cfg(all(feature = <span class="string">"src_bigquery"</span>, feature = <span class="string">"dst_arrow2"</span>))]
-</span><span class="kw">mod </span>bigquery_arrow2;
 <span class="attr">#[cfg(all(feature = <span class="string">"src_bigquery"</span>, feature = <span class="string">"dst_arrow"</span>))]
 </span><span class="kw">mod </span>bigquery_arrowstream;
 <span class="attr">#[cfg(all(feature = <span class="string">"src_csv"</span>, feature = <span class="string">"dst_arrow"</span>))]
 </span><span class="kw">mod </span>csv_arrow;
 <span class="attr">#[cfg(all(feature = <span class="string">"src_dummy"</span>, feature = <span class="string">"dst_arrow"</span>))]
 </span><span class="kw">mod </span>dummy_arrow;
-<span class="attr">#[cfg(all(feature = <span class="string">"src_dummy"</span>, feature = <span class="string">"dst_arrow2"</span>))]
-</span><span class="kw">mod </span>dummy_arrow2;
 <span class="attr">#[cfg(all(feature = <span class="string">"src_dummy"</span>, feature = <span class="string">"dst_arrow"</span>))]
 </span><span class="kw">mod </span>dummy_arrowstream;
 <span class="attr">#[cfg(all(feature = <span class="string">"src_mssql"</span>, feature = <span class="string">"dst_arrow"</span>))]
 </span><span class="kw">mod </span>mssql_arrow;
-<span class="attr">#[cfg(all(feature = <span class="string">"src_mssql"</span>, feature = <span class="string">"dst_arrow2"</span>))]
-</span><span class="kw">mod </span>mssql_arrow2;
 <span class="attr">#[cfg(all(feature = <span class="string">"src_mssql"</span>, feature = <span class="string">"dst_arrow"</span>))]
 </span><span class="kw">mod </span>mssql_arrowstream;
 <span class="attr">#[cfg(all(feature = <span class="string">"src_mysql"</span>, feature = <span class="string">"dst_arrow"</span>))]
 </span><span class="kw">mod </span>mysql_arrow;
-<span class="attr">#[cfg(all(feature = <span class="string">"src_mysql"</span>, feature = <span class="string">"dst_arrow2"</span>))]
-</span><span class="kw">mod </span>mysql_arrow2;
 <span class="attr">#[cfg(all(feature = <span class="string">"src_mysql"</span>, feature = <span class="string">"dst_arrow"</span>))]
 </span><span class="kw">mod </span>mysql_arrowstream;
 <span class="attr">#[cfg(all(feature = <span class="string">"src_oracle"</span>, feature = <span class="string">"dst_arrow"</span>))]
 </span><span class="kw">mod </span>oracle_arrow;
-<span class="attr">#[cfg(all(feature = <span class="string">"src_oracle"</span>, feature = <span class="string">"dst_arrow2"</span>))]
-</span><span class="kw">mod </span>oracle_arrow2;
 <span class="attr">#[cfg(all(feature = <span class="string">"src_oracle"</span>, feature = <span class="string">"dst_arrow"</span>))]
 </span><span class="kw">mod </span>oracle_arrowstream;
 <span class="attr">#[cfg(all(feature = <span class="string">"src_postgres"</span>, feature = <span class="string">"dst_arrow"</span>))]
 </span><span class="kw">mod </span>postgres_arrow;
-<span class="attr">#[cfg(all(feature = <span class="string">"src_postgres"</span>, feature = <span class="string">"dst_arrow2"</span>))]
-</span><span class="kw">mod </span>postgres_arrow2;
 <span class="attr">#[cfg(all(feature = <span class="string">"src_postgres"</span>, feature = <span class="string">"dst_arrow"</span>))]
 </span><span class="kw">mod </span>postgres_arrowstream;
 <span class="attr">#[cfg(all(feature = <span class="string">"src_sqlite"</span>, feature = <span class="string">"dst_arrow"</span>))]
 </span><span class="kw">mod </span>sqlite_arrow;
-<span class="attr">#[cfg(all(feature = <span class="string">"src_sqlite"</span>, feature = <span class="string">"dst_arrow2"</span>))]
-</span><span class="kw">mod </span>sqlite_arrow2;
 <span class="attr">#[cfg(all(feature = <span class="string">"src_sqlite"</span>, feature = <span class="string">"dst_arrow"</span>))]
 </span><span class="kw">mod </span>sqlite_arrowstream;
 <span class="attr">#[cfg(all(feature = <span class="string">"src_trino"</span>, feature = <span class="string">"dst_arrow"</span>))]
 </span><span class="kw">mod </span>trino_arrow;
-<span class="attr">#[cfg(all(feature = <span class="string">"src_trino"</span>, feature = <span class="string">"dst_arrow2"</span>))]
-</span><span class="kw">mod </span>trino_arrow2;
 <span class="attr">#[cfg(all(feature = <span class="string">"src_trino"</span>, feature = <span class="string">"dst_arrow"</span>))]
 </span><span class="kw">mod </span>trino_arrowstream;
 <span class="attr">#[cfg(all(feature = <span class="string">"src_bigquery"</span>, feature = <span class="string">"dst_arrow"</span>))]
 </span><span class="kw">pub use </span>bigquery_arrow::{BigQueryArrowTransport, BigQueryArrowTransportError};
-<span class="attr">#[cfg(all(feature = <span class="string">"src_bigquery"</span>, feature = <span class="string">"dst_arrow2"</span>))]
-</span><span class="kw">pub use </span>bigquery_arrow2::{BigQueryArrow2Transport, BigQueryArrow2TransportError};
 <span class="attr">#[cfg(all(feature = <span class="string">"src_bigquery"</span>, feature = <span class="string">"dst_arrow"</span>))]
 </span><span class="kw">pub use </span>bigquery_arrowstream::{
     BigQueryArrowTransport <span class="kw">as </span>BigQueryArrowStreamTransport,
@@ -184,12 +134,8 @@
 </span><span class="kw">pub use </span>csv_arrow::CSVArrowTransport;
 <span class="attr">#[cfg(all(feature = <span class="string">"src_dummy"</span>, feature = <span class="string">"dst_arrow"</span>))]
 </span><span class="kw">pub use </span>dummy_arrow::DummyArrowTransport;
-<span class="attr">#[cfg(all(feature = <span class="string">"src_dummy"</span>, feature = <span class="string">"dst_arrow2"</span>))]
-</span><span class="kw">pub use </span>dummy_arrow2::DummyArrow2Transport;
 <span class="attr">#[cfg(all(feature = <span class="string">"src_mssql"</span>, feature = <span class="string">"dst_arrow"</span>))]
 </span><span class="kw">pub use </span>mssql_arrow::{MsSQLArrowTransport, MsSQLArrowTransportError};
-<span class="attr">#[cfg(all(feature = <span class="string">"src_mssql"</span>, feature = <span class="string">"dst_arrow2"</span>))]
-</span><span class="kw">pub use </span>mssql_arrow2::{MsSQLArrow2Transport, MsSQLArrow2TransportError};
 <span class="attr">#[cfg(all(feature = <span class="string">"src_mssql"</span>, feature = <span class="string">"dst_arrow"</span>))]
 </span><span class="kw">pub use </span>mssql_arrowstream::{
     MsSQLArrowTransport <span class="kw">as </span>MsSQLArrowStreamTransport,
@@ -197,8 +143,6 @@
 };
 <span class="attr">#[cfg(all(feature = <span class="string">"src_mysql"</span>, feature = <span class="string">"dst_arrow"</span>))]
 </span><span class="kw">pub use </span>mysql_arrow::{MySQLArrowTransport, MySQLArrowTransportError};
-<span class="attr">#[cfg(all(feature = <span class="string">"src_mysql"</span>, feature = <span class="string">"dst_arrow2"</span>))]
-</span><span class="kw">pub use </span>mysql_arrow2::{MySQLArrow2Transport, MySQLArrow2TransportError};
 <span class="attr">#[cfg(all(feature = <span class="string">"src_mysql"</span>, feature = <span class="string">"dst_arrow"</span>))]
 </span><span class="kw">pub use </span>mysql_arrowstream::{
     MySQLArrowTransport <span class="kw">as </span>MySQLArrowStreamTransport,
@@ -206,8 +150,6 @@
 };
 <span class="attr">#[cfg(all(feature = <span class="string">"src_oracle"</span>, feature = <span class="string">"dst_arrow"</span>))]
 </span><span class="kw">pub use </span>oracle_arrow::{OracleArrowTransport, OracleArrowTransportError};
-<span class="attr">#[cfg(all(feature = <span class="string">"src_oracle"</span>, feature = <span class="string">"dst_arrow2"</span>))]
-</span><span class="kw">pub use </span>oracle_arrow2::{OracleArrow2Transport, OracleArrow2TransportError};
 <span class="attr">#[cfg(all(feature = <span class="string">"src_oracle"</span>, feature = <span class="string">"dst_arrow"</span>))]
 </span><span class="kw">pub use </span>oracle_arrowstream::{
     OracleArrowTransport <span class="kw">as </span>OracleArrowStreamTransport,
@@ -215,8 +157,6 @@
 };
 <span class="attr">#[cfg(all(feature = <span class="string">"src_postgres"</span>, feature = <span class="string">"dst_arrow"</span>))]
 </span><span class="kw">pub use </span>postgres_arrow::{PostgresArrowTransport, PostgresArrowTransportError};
-<span class="attr">#[cfg(all(feature = <span class="string">"src_postgres"</span>, feature = <span class="string">"dst_arrow2"</span>))]
-</span><span class="kw">pub use </span>postgres_arrow2::{PostgresArrow2Transport, PostgresArrow2TransportError};
 <span class="attr">#[cfg(all(feature = <span class="string">"src_postgres"</span>, feature = <span class="string">"dst_arrow"</span>))]
 </span><span class="kw">pub use </span>postgres_arrowstream::{
     PostgresArrowTransport <span class="kw">as </span>PostgresArrowStreamTransport,
@@ -224,8 +164,6 @@
 };
 <span class="attr">#[cfg(all(feature = <span class="string">"src_sqlite"</span>, feature = <span class="string">"dst_arrow"</span>))]
 </span><span class="kw">pub use </span>sqlite_arrow::{SQLiteArrowTransport, SQLiteArrowTransportError};
-<span class="attr">#[cfg(all(feature = <span class="string">"src_sqlite"</span>, feature = <span class="string">"dst_arrow2"</span>))]
-</span><span class="kw">pub use </span>sqlite_arrow2::{SQLiteArrow2Transport, SQLiteArrow2TransportError};
 <span class="attr">#[cfg(all(feature = <span class="string">"src_sqlite"</span>, feature = <span class="string">"dst_arrow"</span>))]
 </span><span class="kw">pub use </span>sqlite_arrowstream::{
     SQLiteArrowTransport <span class="kw">as </span>SQLiteArrowStreamTransport,
@@ -233,8 +171,6 @@
 };
 <span class="attr">#[cfg(all(feature = <span class="string">"src_trino"</span>, feature = <span class="string">"dst_arrow"</span>))]
 </span><span class="kw">pub use </span>trino_arrow::{TrinoArrowTransport, TrinoArrowTransportError};
-<span class="attr">#[cfg(all(feature = <span class="string">"src_trino"</span>, feature = <span class="string">"dst_arrow2"</span>))]
-</span><span class="kw">pub use </span>trino_arrow2::{TrinoArrow2Transport, TrinoArrow2TransportError};
 <span class="attr">#[cfg(all(feature = <span class="string">"src_trino"</span>, feature = <span class="string">"dst_arrow"</span>))]
 </span><span class="kw">pub use </span>trino_arrowstream::{
     TrinoArrowTransport <span class="kw">as </span>TrinoArrowStreamTransport,
