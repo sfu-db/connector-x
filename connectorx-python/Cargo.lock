@@ -524,22 +524,21 @@ checksum = "72b3254f16251a8381aa12e40e3c4d2f0199f8c6508fbecb9d91f575e0fbb8c6"
 
 [[package]]
 name = "bb8"
-version = "0.7.1"
+version = "0.8.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2e9f4fa9768efd269499d8fba693260cfc670891cf6de3adc935588447a77cc8"
+checksum = "d89aabfae550a5c44b43ab941844ffcd2e993cb6900b342debf59e9ea74acdb8"
 dependencies = [
  "async-trait",
- "futures-channel",
  "futures-util",
- "parking_lot 0.11.2",
+ "parking_lot 0.12.3",
  "tokio",
 ]
 
 [[package]]
 name = "bb8-tiberius"
-version = "0.8.0"
+version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d8a33c87124c1938413e45ab6a6655e49d9e4cd015e05db61d6ab5a4f96b2c83"
+checksum = "61780ef76db8989f8fd30d9a63fcb1d7d1b8d7df3b7d4662c09e66474877b0e6"
 dependencies = [
  "async-trait",
  "bb8",
@@ -981,7 +980,7 @@ dependencies = [
 
 [[package]]
 name = "connectorx"
-version = "0.4.1-alpha1"
+version = "0.4.1-alpha2"
 dependencies = [
  "anyhow",
  "arrow",
@@ -1033,7 +1032,7 @@ dependencies = [
 
 [[package]]
 name = "connectorx-python"
-version = "0.4.1-alpha1"
+version = "0.4.1-alpha2"
 dependencies = [
  "anyhow",
  "arrow",
@@ -3728,20 +3727,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "opentls"
-version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6f561874f8d6ecfb674fc08863414040c93cc90c0b6963fe679895fab8b65560"
-dependencies = [
- "futures-util",
- "log",
- "openssl",
- "openssl-probe",
- "openssl-sys",
- "url",
-]
-
-[[package]]
 name = "option-ext"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5753,9 +5738,9 @@ dependencies = [
 
 [[package]]
 name = "tiberius"
-version = "0.7.3"
+version = "0.9.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "833311bc8e26e96c73ad1b5c1f488c588808c747a318905ec67e43d422ea2c08"
+checksum = "31d6bfb7b1de4275b4cf566bad8d0c133d800e3d8b35d256407371fab49cfed6"
 dependencies = [
  "async-native-tls",
  "async-trait",
@@ -5772,7 +5757,6 @@ dependencies = [
  "libgssapi",
  "num-traits",
  "once_cell",
- "opentls",
  "pin-project-lite",
  "pretty-hex",
  "rust_decimal",

@@ -1,7 +1,7 @@
 use super::{
     pandas_columns::{
-        ArrayBlock, BooleanBlock, BytesBlock, DateTimeBlock, Float64Block, HasPandasColumn,
-        Int64Block, PandasColumn, PandasColumnObject, PyBytes, StringBlock,
+        ArrayBlock, BooleanBlock, BytesBlock, DateTimeBlock, ExtractBlockFromBound, Float64Block,
+        HasPandasColumn, Int64Block, PandasColumn, PandasColumnObject, PyBytes, StringBlock,
     },
     pystring::PyString,
     typesystem::{PandasArrayType, PandasBlockType, PandasTypeSystem},
@@ -215,7 +215,7 @@ impl<'py> Destination for PandasDestination<'py> {
             let buf = &self.block_datas[idx];
             match block.dt {
                 PandasBlockType::Boolean(_) => {
-                    let bblock = buf.extract::<BooleanBlock>()?;
+                    let bblock = BooleanBlock::extract_block(buf)?;
 
                     let bcols = bblock.split()?;
                     for (&cid, bcol) in block.cids.iter().zip_eq(bcols) {
@@ -227,7 +227,7 @@ impl<'py> Destination for PandasDestination<'py> {
                     }
                 }
                 PandasBlockType::Float64 => {
-                    let fblock = buf.extract::<Float64Block>()?;
+                    let fblock = Float64Block::extract_block(buf)?;
                     let fcols = fblock.split()?;
                     for (&cid, fcol) in block.cids.iter().zip_eq(fcols) {
                         partitioned_columns[cid] = fcol
@@ -238,7 +238,7 @@ impl<'py> Destination for PandasDestination<'py> {
                     }
                 }
                 PandasBlockType::BooleanArray => {
-                    let bblock = buf.extract::<ArrayBlock<bool>>()?;
+                    let bblock = ArrayBlock::<bool>::extract_block(buf)?;
                     let bcols = bblock.split()?;
                     for (&cid, bcol) in block.cids.iter().zip_eq(bcols) {
                         partitioned_columns[cid] = bcol
@@ -249,7 +249,7 @@ impl<'py> Destination for PandasDestination<'py> {
                     }
                 }
                 PandasBlockType::Float64Array => {
-                    let fblock = buf.extract::<ArrayBlock<f64>>()?;
+                    let fblock = ArrayBlock::<f64>::extract_block(buf)?;
                     let fcols = fblock.split()?;
                     for (&cid, fcol) in block.cids.iter().zip_eq(fcols) {
                         partitioned_columns[cid] = fcol
@@ -260,7 +260,7 @@ impl<'py> Destination for PandasDestination<'py> {
                     }
                 }
                 PandasBlockType::Int64Array => {
-                    let fblock = buf.extract::<ArrayBlock<i64>>()?;
+                    let fblock = ArrayBlock::<i64>::extract_block(buf)?;
                     let fcols = fblock.split()?;
                     for (&cid, fcol) in block.cids.iter().zip_eq(fcols) {
                         partitioned_columns[cid] = fcol
@@ -271,7 +271,7 @@ impl<'py> Destination for PandasDestination<'py> {
                     }
                 }
                 PandasBlockType::Int64(_) => {
-                    let ublock = buf.extract::<Int64Block>()?;
+                    let ublock = Int64Block::extract_block(buf)?;
                     let ucols = ublock.split()?;
                     for (&cid, ucol) in block.cids.iter().zip_eq(ucols) {
                         partitioned_columns[cid] = ucol
@@ -282,7 +282,7 @@ impl<'py> Destination for PandasDestination<'py> {
                     }
                 }
                 PandasBlockType::String => {
-                    let sblock = buf.extract::<StringBlock>()?;
+                    let sblock = StringBlock::extract_block(buf)?;
                     let scols = sblock.split()?;
                     for (&cid, scol) in block.cids.iter().zip_eq(scols) {
                         partitioned_columns[cid] = scol
@@ -293,7 +293,7 @@ impl<'py> Destination for PandasDestination<'py> {
                     }
                 }
                 PandasBlockType::Bytes => {
-                    let bblock = buf.extract::<BytesBlock>()?;
+                    let bblock = BytesBlock::extract_block(buf)?;
                     let bcols = bblock.split()?;
                     for (&cid, bcol) in block.cids.iter().zip_eq(bcols) {
                         partitioned_columns[cid] = bcol
@@ -304,7 +304,7 @@ impl<'py> Destination for PandasDestination<'py> {
                     }
                 }
                 PandasBlockType::DateTime => {
-                    let dblock = buf.extract::<DateTimeBlock>()?;
+                    let dblock = DateTimeBlock::extract_block(buf)?;
                     let dcols = dblock.split()?;
                     for (&cid, dcol) in block.cids.iter().zip_eq(dcols) {
                         partitioned_columns[cid] = dcol

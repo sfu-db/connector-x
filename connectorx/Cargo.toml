@@ -7,7 +7,7 @@ license = "MIT"
 name = "connectorx"
 readme = "../README.md"
 repository = "https://github.com/sfu-db/connector-x"
-version = "0.4.1-alpha1"
+version = "0.4.1-alpha2"
 
 [dependencies]
 anyhow = "1"
