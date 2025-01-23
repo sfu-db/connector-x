@@ -341,7 +341,9 @@ jobs:
           echo "/home/runner/.local/bin" >> $GITHUB_PATH
 
       - name: Install Twine
-        run: pip install twine
+        run: |
+          pip install twine
+          pip install packaging -U
 
       - name: Upload to PyPI site
         if: github.ref == 'refs/heads/release'
