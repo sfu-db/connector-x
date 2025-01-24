@@ -53,7 +53,7 @@ pub fn get_meta<'py>(
                     let dispatcher = PandasDispatcher::<
                         _,
                         PostgresPandasTransport<CSVProtocol, MakeTlsConnector>,
-                    >::new(sb, destination, queries, None);
+                    >::new(sb, destination, queries, None, None);
                     debug!("Running dispatcher");
                     dispatcher.get_meta(py)?
                 }
@@ -62,7 +62,7 @@ pub fn get_meta<'py>(
                     let dispatcher = PandasDispatcher::<
                         _,
                         PostgresPandasTransport<CSVProtocol, NoTls>,
-                    >::new(sb, destination, queries, None);
+                    >::new(sb, destination, queries, None, None);
                     debug!("Running dispatcher");
                     dispatcher.get_meta(py)?
                 }
@@ -73,7 +73,7 @@ pub fn get_meta<'py>(
                     let dispatcher = PandasDispatcher::<
                         _,
                         PostgresPandasTransport<PgBinaryProtocol, MakeTlsConnector>,
-                    >::new(sb, destination, queries, None);
+                    >::new(sb, destination, queries, None, None);
                     debug!("Running dispatcher");
                     dispatcher.get_meta(py)?
                 }
@@ -82,7 +82,7 @@ pub fn get_meta<'py>(
                     let dispatcher = PandasDispatcher::<
                         _,
                         PostgresPandasTransport<PgBinaryProtocol, NoTls>,
-                    >::new(sb, destination, queries, None);
+                    >::new(sb, destination, queries, None, None);
                     debug!("Running dispatcher");
                     dispatcher.get_meta(py)?
                 }
@@ -93,7 +93,7 @@ pub fn get_meta<'py>(
                     let dispatcher = PandasDispatcher::<
                         _,
                         PostgresPandasTransport<CursorProtocol, MakeTlsConnector>,
-                    >::new(sb, destination, queries, None);
+                    >::new(sb, destination, queries, None, None);
                     debug!("Running dispatcher");
                     dispatcher.get_meta(py)?
                 }
@@ -102,7 +102,7 @@ pub fn get_meta<'py>(
                     let dispatcher = PandasDispatcher::<
                         _,
                         PostgresPandasTransport<CursorProtocol, NoTls>,
-                    >::new(sb, destination, queries, None);
+                    >::new(sb, destination, queries, None, None);
                     debug!("Running dispatcher");
                     dispatcher.get_meta(py)?
                 }
@@ -113,7 +113,7 @@ pub fn get_meta<'py>(
                     let dispatcher = PandasDispatcher::<
                         _,
                         PostgresPandasTransport<SimpleProtocol, MakeTlsConnector>,
-                    >::new(sb, destination, queries, None);
+                    >::new(sb, destination, queries, None, None);
                     debug!("Running dispatcher");
                     dispatcher.get_meta(py)?
                 }
@@ -122,7 +122,7 @@ pub fn get_meta<'py>(
                     let dispatcher = PandasDispatcher::<
                         _,
                         PostgresPandasTransport<SimpleProtocol, NoTls>,
-                    >::new(sb, destination, queries, None);
+                    >::new(sb, destination, queries, None, None);
                     debug!("Running dispatcher");
                     dispatcher.get_meta(py)?
                 }
@@ -137,6 +137,7 @@ pub fn get_meta<'py>(
                 source,
                 destination,
                 queries,
+                None,
                 None,
             );
             debug!("Running dispatcher");
@@ -153,6 +154,7 @@ pub fn get_meta<'py>(
                             destination,
                             queries,
                             None,
+                            None,
                         );
                     debug!("Running dispatcher");
                     dispatcher.get_meta(py)?
@@ -163,6 +165,7 @@ pub fn get_meta<'py>(
                         source,
                         destination,
                         queries,
+                        None,
                         None,
                     );
                     debug!("Running dispatcher");
@@ -179,6 +182,7 @@ pub fn get_meta<'py>(
                 destination,
                 queries,
                 None,
+                None,
             );
             debug!("Running dispatcher");
             dispatcher.get_meta(py)?
@@ -189,6 +193,7 @@ pub fn get_meta<'py>(
                 source,
                 destination,
                 queries,
+                None,
                 None,
             );
             debug!("Running dispatcher");
@@ -202,6 +207,7 @@ pub fn get_meta<'py>(
                 destination,
                 queries,
                 None,
+                None,
             );
             debug!("Running dispatcher");
             dispatcher.get_meta(py)?
@@ -213,6 +219,7 @@ pub fn get_meta<'py>(
                 source,
                 destination,
                 queries,
+                None,
                 None,
             );
             dispatcher.get_meta(py)?

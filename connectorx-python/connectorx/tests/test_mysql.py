@@ -478,3 +478,32 @@ def test_mysql_cte(mysql_url: str) -> None:
 
 def test_connection_url(mysql_url: str) -> None:
     test_mysql_cte(ConnectionUrl(mysql_url))
+
+def test_mysql_single_pre_execution_queries(mysql_url: str) -> None:
+    pre_execution_query = "SET SESSION max_execution_time = 2151"
+    query = "SELECT @@SESSION.max_execution_time AS max_execution_time"
+    df = read_sql(mysql_url, query, pre_execution_query=pre_execution_query)
+    expected = pd.DataFrame(
+        index=range(1),
+        data={
+            "max_execution_time": pd.Series([2151], dtype="float64")
+        },
+    )
+    assert_frame_equal(df, expected, check_names=True)
+
+
+def test_mysql_multiple_pre_execution_queries(mysql_url: str) -> None:
+    pre_execution_query = [
+        "SET SESSION max_execution_time = 2151",
+        "SET SESSION wait_timeout = 2252",
+    ]
+    query = "SELECT @@SESSION.max_execution_time AS max_execution_time, @@SESSION.wait_timeout AS wait_timeout"
+    df = read_sql(mysql_url, query, pre_execution_query=pre_execution_query)
+    expected = pd.DataFrame(
+        index=range(1),
+        data={
+            "max_execution_time": pd.Series([2151], dtype="float64"),
+            "wait_timeout": pd.Series([2252], dtype="float64")
+        },
+    )
+    assert_frame_equal(df, expected, check_names=True)

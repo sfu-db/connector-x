@@ -107,6 +107,8 @@ where
         self.origin_query = query;
     }
 
+    fn set_pre_execution_queries(&mut self, _pre_execution_queries: Option<&[String]>) {}
+
     #[throws(BigQuerySourceError)]
     fn fetch_metadata(&mut self) {
         assert!(!self.queries.is_empty());

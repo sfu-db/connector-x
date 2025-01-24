@@ -38,6 +38,7 @@ pub fn read_sql<'py>(
     protocol: Option<&str>,
     queries: Option<Vec<String>>,
     partition_query: Option<PyPartitionQuery>,
+    pre_execution_queries: Option<Vec<String>>,
 ) -> PyResult<Bound<'py, PyAny>> {
     let source_conn = parse_source(conn, protocol).map_err(|e| ConnectorXPythonError::from(e))?;
     let (queries, origin_query) = match (queries, partition_query) {
@@ -62,12 +63,14 @@ pub fn read_sql<'py>(
             &source_conn,
             origin_query,
             &queries,
+            pre_execution_queries.as_deref(),
         )?),
         "arrow" => Ok(crate::arrow::write_arrow(
             py,
             &source_conn,
             origin_query,
             &queries,
+            pre_execution_queries.as_deref(),
         )?),
         _ => Err(PyValueError::new_err(format!(
             "return type should be 'pandas' or 'arrow', got '{}'",

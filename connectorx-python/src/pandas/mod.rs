@@ -40,6 +40,7 @@ pub fn write_pandas<'a, 'py: 'a>(
     source_conn: &SourceConn,
     origin_query: Option<String>,
     queries: &[CXQuery<String>],
+    pre_execution_queries: Option<&[String]>,
 ) -> Bound<'py, PyAny> {
     let destination = PandasDestination::new();
     let protocol = source_conn.proto.as_str();
@@ -59,7 +60,7 @@ pub fn write_pandas<'a, 'py: 'a>(
                         _,
                         PostgresPandasTransport<CSVProtocol, MakeTlsConnector>,
                     >::new(
-                        sb, destination, queries, origin_query
+                        sb, destination, queries, origin_query, pre_execution_queries
                     );
                     dispatcher.run(py)?
                 }
@@ -70,7 +71,7 @@ pub fn write_pandas<'a, 'py: 'a>(
                         _,
                         PostgresPandasTransport<CSVProtocol, NoTls>,
                     >::new(
-                        sb, destination, queries, origin_query
+                        sb, destination, queries, origin_query, pre_execution_queries
                     );
                     dispatcher.run(py)?
                 }
@@ -84,7 +85,7 @@ pub fn write_pandas<'a, 'py: 'a>(
                         PandasDispatcher::<
                             _,
                             PostgresPandasTransport<PgBinaryProtocol, MakeTlsConnector>,
-                        >::new(sb, destination, queries, origin_query);
+                        >::new(sb, destination, queries, origin_query, pre_execution_queries);
                     dispatcher.run(py)?
                 }
                 ("binary", None) => {
@@ -97,7 +98,7 @@ pub fn write_pandas<'a, 'py: 'a>(
                         _,
                         PostgresPandasTransport<PgBinaryProtocol, NoTls>,
                     >::new(
-                        sb, destination, queries, origin_query
+                        sb, destination, queries, origin_query, pre_execution_queries
                     );
                     dispatcher.run(py)?
                 }
@@ -111,7 +112,7 @@ pub fn write_pandas<'a, 'py: 'a>(
                         PandasDispatcher::<
                             _,
                             PostgresPandasTransport<CursorProtocol, MakeTlsConnector>,
-                        >::new(sb, destination, queries, origin_query);
+                        >::new(sb, destination, queries, origin_query, pre_execution_queries);
                     dispatcher.run(py)?
                 }
                 ("cursor", None) => {
@@ -121,7 +122,7 @@ pub fn write_pandas<'a, 'py: 'a>(
                         _,
                         PostgresPandasTransport<CursorProtocol, NoTls>,
                     >::new(
-                        sb, destination, queries, origin_query
+                        sb, destination, queries, origin_query, pre_execution_queries
                     );
                     dispatcher.run(py)?
                 }
@@ -135,7 +136,7 @@ pub fn write_pandas<'a, 'py: 'a>(
                         PandasDispatcher::<
                             _,
                             PostgresPandasTransport<SimpleProtocol, MakeTlsConnector>,
-                        >::new(sb, destination, queries, origin_query);
+                        >::new(sb, destination, queries, origin_query, pre_execution_queries);
                     dispatcher.run(py)?
                 }
                 ("simple", None) => {
@@ -145,7 +146,7 @@ pub fn write_pandas<'a, 'py: 'a>(
                         _,
                         PostgresPandasTransport<SimpleProtocol, NoTls>,
                     >::new(
-                        sb, destination, queries, origin_query
+                        sb, destination, queries, origin_query, pre_execution_queries
                     );
                     dispatcher.run(py)?
                 }
@@ -161,6 +162,7 @@ pub fn write_pandas<'a, 'py: 'a>(
                 destination,
                 queries,
                 origin_query,
+                pre_execution_queries,
             );
             dispatcher.run(py)?
         }
@@ -174,6 +176,7 @@ pub fn write_pandas<'a, 'py: 'a>(
                         destination,
                         queries,
                         origin_query,
+                        pre_execution_queries,
                     );
                 dispatcher.run(py)?
             }
@@ -185,6 +188,7 @@ pub fn write_pandas<'a, 'py: 'a>(
                     destination,
                     queries,
                     origin_query,
+                    pre_execution_queries,
                 );
                 dispatcher.run(py)?
             }
@@ -198,6 +202,7 @@ pub fn write_pandas<'a, 'py: 'a>(
                 destination,
                 queries,
                 origin_query,
+                pre_execution_queries,
             );
             dispatcher.run(py)?
         }
@@ -208,6 +213,7 @@ pub fn write_pandas<'a, 'py: 'a>(
                 destination,
                 queries,
                 origin_query,
+                pre_execution_queries,
             );
             dispatcher.run(py)?
         }
@@ -219,6 +225,7 @@ pub fn write_pandas<'a, 'py: 'a>(
                 destination,
                 queries,
                 origin_query,
+                pre_execution_queries,
             );
             dispatcher.run(py)?
         }
@@ -230,6 +237,7 @@ pub fn write_pandas<'a, 'py: 'a>(
                 destination,
                 queries,
                 origin_query,
+                pre_execution_queries,
             );
             dispatcher.run(py)?
         }
