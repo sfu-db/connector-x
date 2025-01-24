@@ -2,7 +2,7 @@
 authors = ["Weiyuan Wu <youngw@sfu.ca>"]
 edition = "2018"
 name = "connectorx-python"
-version = "0.4.1-alpha2"
+version = "0.4.1"
 license = "MIT"
 readme = "README.md"
 
@@ -14,7 +14,6 @@ readme = "README.md"
 [dependencies]
 anyhow = "1"
 arrow = { version = "53" }
-arrow2 = {version = "0.17", default-features = false}
 bitfield = "0.13"
 bytes = "1.4"
 chrono = "0.4"
@@ -65,7 +64,7 @@ name = "connectorx"
 [features]
 branch = ["connectorx/branch"]
 default = ["extension", "fptr", "nbstr", "dsts", "srcs", "federation", "fed_exec"]
-dsts = ["connectorx/dst_arrow", "connectorx/dst_arrow2"]
+dsts = ["connectorx/dst_arrow"]
 executable = ["pyo3/auto-initialize"]
 extension = ["pyo3/extension-module"]
 fptr = ["connectorx/fptr"]

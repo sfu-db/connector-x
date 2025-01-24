@@ -1,10 +1,10 @@
-#[cfg(any(feature = "dst_arrow", feature = "dst_arrow2"))]
+#[cfg(feature = "dst_arrow")]
 pub(crate) const SECONDS_IN_DAY: i64 = 86_400;
 
 #[allow(dead_code)]
 const KILO: usize = 1 << 10;
 
-#[cfg(any(feature = "dst_arrow", feature = "dst_arrow2"))]
+#[cfg(feature = "dst_arrow")]
 pub const RECORD_BATCH_SIZE: usize = 64 * KILO;
 
 #[cfg(any(

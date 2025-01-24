@@ -32,6 +32,6 @@ For users who want to have pandas.DataFrame as final result. In order to avoid t
 ```Python
 import connectorx as cx
 
-table = cx.read_sql(db_uri, query, return_type="arrow") # or arrow2 https://github.com/jorgecarleitao/arrow2
+table = cx.read_sql(db_uri, query, return_type="arrow")
 df = table.to_pandas(split_blocks=False, date_as_object=False)
 ```

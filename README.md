@@ -201,17 +201,17 @@ BibTeX entry:
                 </a>
             </td>
             <td align="center">
-                <a href="https://github.com/zen-xu">
-                    <img src="https://avatars.githubusercontent.com/u/38552291?v=4" width="66;" alt="zen-xu"/>
-                    <br />
-                    <sub><b>ZhengYu, Xu</b></sub>
-                </a>
-            </td>
-            <td align="center">
                 <a href="https://github.com/EricFecteau">
                     <img src="https://avatars.githubusercontent.com/u/96687807?v=4" width="66;" alt="EricFecteau"/>
                     <br />
                     <sub><b>EricFecteau</b></sub>
+                </a>
+            </td>
+            <td align="center">
+                <a href="https://github.com/zen-xu">
+                    <img src="https://avatars.githubusercontent.com/u/38552291?v=4" width="66;" alt="zen-xu"/>
+                    <br />
+                    <sub><b>ZhengYu, Xu</b></sub>
                 </a>
             </td>
 		</tr>
