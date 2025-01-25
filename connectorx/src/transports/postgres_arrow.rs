@@ -44,11 +44,11 @@ macro_rules! impl_postgres_transport {
             systems = PostgresTypeSystem => ArrowTypeSystem,
             route = PostgresSource<$proto, $tls> => ArrowDestination,
             mappings = {
-                { Float4[f32]                => Float64[f64]                           | conversion auto   }
+                { Float4[f32]                => Float32[f32]                           | conversion auto   }
                 { Float8[f64]                => Float64[f64]                           | conversion auto   }
                 { Numeric[Decimal]           => Float64[f64]                           | conversion option }
-                { Int2[i16]                  => Int64[i64]                             | conversion auto   }
-                { Int4[i32]                  => Int64[i64]                             | conversion auto   }
+                { Int2[i16]                  => Int16[i16]                             | conversion auto   }
+                { Int4[i32]                  => Int32[i32]                             | conversion auto   }
                 { Int8[i64]                  => Int64[i64]                             | conversion auto   }
                 { Bool[bool]                 => Boolean[bool]                          | conversion auto   }
                 { Text[&'r str]              => LargeUtf8[String]                      | conversion owned  }
@@ -68,10 +68,10 @@ macro_rules! impl_postgres_transport {
                 { BoolArray[Vec<bool>]       => BoolArray[Vec<Option<bool>>]           | conversion option }
                 { VarcharArray[Vec<String>]  => Utf8Array[Vec<Option<String>>]         | conversion option }
                 { TextArray[Vec<String>]     => Utf8Array[Vec<Option<String>>]         | conversion none   }
-                { Int2Array[Vec<i16>]        => Int64Array[Vec<Option<i64>>]           | conversion option }
-                { Int4Array[Vec<i32>]        => Int64Array[Vec<Option<i64>>]           | conversion option }
+                { Int2Array[Vec<i16>]        => Int16Array[Vec<Option<i16>>]           | conversion option }
+                { Int4Array[Vec<i32>]        => Int32Array[Vec<Option<i32>>]           | conversion option }
                 { Int8Array[Vec<i64>]        => Int64Array[Vec<Option<i64>>]           | conversion option }
-                { Float4Array[Vec<f32>]      => Float64Array[Vec<Option<f64>>]         | conversion option }
+                { Float4Array[Vec<f32>]      => Float32Array[Vec<Option<f32>>]         | conversion option }
                 { Float8Array[Vec<f64>]      => Float64Array[Vec<Option<f64>>]         | conversion option }
                 { NumericArray[Vec<Decimal>] => Float64Array[Vec<Option<f64>>]         | conversion option }
             }
@@ -139,15 +139,15 @@ impl<P, C> TypeConversion<Vec<String>, Vec<Option<String>>> for PostgresArrowTra
     }
 }
 
-impl<P, C> TypeConversion<Vec<i16>, Vec<Option<i64>>> for PostgresArrowTransport<P, C> {
-    fn convert(val: Vec<i16>) -> Vec<Option<i64>> {
-        val.into_iter().map(|v| Some(v as i64)).collect()
+impl<P, C> TypeConversion<Vec<i16>, Vec<Option<i16>>> for PostgresArrowTransport<P, C> {
+    fn convert(val: Vec<i16>) -> Vec<Option<i16>> {
+        val.into_iter().map(Some).collect()
     }
 }
 
-impl<P, C> TypeConversion<Vec<i32>, Vec<Option<i64>>> for PostgresArrowTransport<P, C> {
-    fn convert(val: Vec<i32>) -> Vec<Option<i64>> {
-        val.into_iter().map(|v| Some(v as i64)).collect()
+impl<P, C> TypeConversion<Vec<i32>, Vec<Option<i32>>> for PostgresArrowTransport<P, C> {
+    fn convert(val: Vec<i32>) -> Vec<Option<i32>> {
+        val.into_iter().map(Some).collect()
     }
 }
 
@@ -170,9 +170,9 @@ impl<P, C> TypeConversion<Vec<Decimal>, Vec<Option<f64>>> for PostgresArrowTrans
     }
 }
 
-impl<P, C> TypeConversion<Vec<f32>, Vec<Option<f64>>> for PostgresArrowTransport<P, C> {
-    fn convert(val: Vec<f32>) -> Vec<Option<f64>> {
-        val.into_iter().map(|v| Some(v as f64)).collect()
+impl<P, C> TypeConversion<Vec<f32>, Vec<Option<f32>>> for PostgresArrowTransport<P, C> {
+    fn convert(val: Vec<f32>) -> Vec<Option<f32>> {
+        val.into_iter().map(Some).collect()
     }
 }
 

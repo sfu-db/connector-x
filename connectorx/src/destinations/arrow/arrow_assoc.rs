@@ -4,10 +4,10 @@ use super::{
 };
 use crate::constants::SECONDS_IN_DAY;
 use arrow::array::{
-    ArrayBuilder, BooleanBuilder, Date32Builder, Float32Builder, Float64Builder, Int32Builder,
-    Int64Builder, LargeBinaryBuilder, LargeListBuilder, StringBuilder, Time64MicrosecondBuilder,
-    Time64NanosecondBuilder, TimestampMicrosecondBuilder, TimestampNanosecondBuilder,
-    UInt32Builder, UInt64Builder,
+    ArrayBuilder, BooleanBuilder, Date32Builder, Float32Builder, Float64Builder, Int16Builder,
+    Int32Builder, Int64Builder, LargeBinaryBuilder, LargeListBuilder, StringBuilder,
+    Time64MicrosecondBuilder, Time64NanosecondBuilder, TimestampMicrosecondBuilder,
+    TimestampNanosecondBuilder, UInt16Builder, UInt32Builder, UInt64Builder,
 };
 use arrow::datatypes::Field;
 use arrow::datatypes::{DataType as ArrowDataType, TimeUnit};
@@ -61,8 +61,10 @@ macro_rules! impl_arrow_assoc {
     };
 }
 
+impl_arrow_assoc!(u16, ArrowDataType::UInt16, UInt16Builder);
 impl_arrow_assoc!(u32, ArrowDataType::UInt32, UInt32Builder);
 impl_arrow_assoc!(u64, ArrowDataType::UInt64, UInt64Builder);
+impl_arrow_assoc!(i16, ArrowDataType::Int16, Int16Builder);
 impl_arrow_assoc!(i32, ArrowDataType::Int32, Int32Builder);
 impl_arrow_assoc!(i64, ArrowDataType::Int64, Int64Builder);
 impl_arrow_assoc!(f32, ArrowDataType::Float32, Float32Builder);
@@ -532,8 +534,10 @@ macro_rules! impl_arrow_array_assoc {
 
 impl_arrow_array_assoc!(Vec<Option<bool>>, ArrowDataType::Boolean, BooleanBuilder);
 impl_arrow_array_assoc!(Vec<Option<String>>, ArrowDataType::Utf8, StringBuilder);
+impl_arrow_array_assoc!(Vec<Option<i16>>, ArrowDataType::Int16, Int16Builder);
 impl_arrow_array_assoc!(Vec<Option<i32>>, ArrowDataType::Int32, Int32Builder);
 impl_arrow_array_assoc!(Vec<Option<i64>>, ArrowDataType::Int64, Int64Builder);
+impl_arrow_array_assoc!(Vec<Option<u16>>, ArrowDataType::UInt16, UInt16Builder);
 impl_arrow_array_assoc!(Vec<Option<u32>>, ArrowDataType::UInt32, UInt32Builder);
 impl_arrow_array_assoc!(Vec<Option<u64>>, ArrowDataType::UInt64, UInt64Builder);
 impl_arrow_array_assoc!(Vec<Option<f32>>, ArrowDataType::Float32, Float32Builder);
