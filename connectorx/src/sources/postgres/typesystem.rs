@@ -59,7 +59,8 @@ impl_typesystem! {
         { VarcharArray | TextArray => Vec<String>}
         { Bool => bool }
         { Char => i8 }
-        { Text | BpChar | VarChar | Enum | Name => &'r str }        { ByteA => Vec<u8> }
+        { Text | BpChar | VarChar | Enum | Name => &'r str }
+        { ByteA => Vec<u8> }
         { Time => NaiveTime }
         { Timestamp => NaiveDateTime }
         { TimestampTz => DateTime<Utc> }
