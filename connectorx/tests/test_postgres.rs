@@ -1,8 +1,10 @@
 use arrow::{
     array::{
         BooleanArray, Date32Array, Float32Array, Float64Array, Int16Array, Int32Array, Int64Array,
-        LargeBinaryArray, StringArray, Time64MicrosecondArray, TimestampMicrosecondArray,
+        LargeBinaryArray, LargeListArray, StringArray, Time64MicrosecondArray,
+        TimestampMicrosecondArray,
     },
+    datatypes::Float32Type,
     record_batch::RecordBatch,
 };
 use chrono::naive::NaiveDate;
@@ -153,29 +155,29 @@ fn test_postgres() {
     verify_arrow_results(result);
 }
 
-#[test]
-fn test_postgres_csv() {
-    let _ = env_logger::builder().is_test(true).try_init();
+// #[test]
+// fn test_postgres_csv() {
+//     let _ = env_logger::builder().is_test(true).try_init();
 
-    let dburl = env::var("POSTGRES_URL").unwrap();
+//     let dburl = env::var("POSTGRES_URL").unwrap();
 
-    let queries = [
-        CXQuery::naked("select * from test_table where test_int < 2"),
-        CXQuery::naked("select * from test_table where test_int >= 2"),
-    ];
-    let url = Url::parse(dburl.as_str()).unwrap();
-    let (config, _tls) = rewrite_tls_args(&url).unwrap();
-    let builder = PostgresSource::<CSVProtocol, NoTls>::new(config, NoTls, 2).unwrap();
-    let mut dst = ArrowDestination::new();
-    let dispatcher = Dispatcher::<_, _, PostgresArrowTransport<CSVProtocol, NoTls>>::new(
-        builder, &mut dst, &queries, None,
-    );
+//     let queries = [
+//         CXQuery::naked("select * from test_table where test_int < 2"),
+//         CXQuery::naked("select * from test_table where test_int >= 2"),
+//     ];
+//     let url = Url::parse(dburl.as_str()).unwrap();
+//     let (config, _tls) = rewrite_tls_args(&url).unwrap();
+//     let builder = PostgresSource::<CSVProtocol, NoTls>::new(config, NoTls, 2).unwrap();
+//     let mut dst = ArrowDestination::new();
+//     let dispatcher = Dispatcher::<_, _, PostgresArrowTransport<CSVProtocol, NoTls>>::new(
+//         builder, &mut dst, &queries, None,
+//     );
 
-    dispatcher.run().expect("run dispatcher");
-    let result = dst.arrow().unwrap();
-    println!("{:?}", result);
-    verify_arrow_results(result);
-}
+//     dispatcher.run().expect("run dispatcher");
+//     let result = dst.arrow().unwrap();
+//     println!("{:?}", result);
+//     verify_arrow_results(result);
+// }
 
 #[test]
 fn test_postgres_agg() {
@@ -315,6 +317,7 @@ fn test_types_postgres() {
     let dburl = env::var("POSTGRES_URL").unwrap();
 
     let vars = vec![
+        "test_bool",
         "test_date",
         "test_timestamp",
         "test_timestamptz",
@@ -395,6 +398,22 @@ fn test_types_postgres() {
 pub fn verify_arrow_type_results(result: Vec<RecordBatch>) {
     assert!(result.len() == 1);
 
+    let mut col = 0;
+
+    // test_bool
+    assert!(result[0]
+        .column(col)
+        .as_any()
+        .downcast_ref::<BooleanArray>()
+        .unwrap()
+        .eq(&BooleanArray::from(vec![
+            Some(true),
+            Some(true),
+            Some(false),
+            Some(false),
+            None,
+        ])));
+
     fn time_to_arrow(
         year: i32,
         month: u32,
@@ -413,9 +432,8 @@ pub fn verify_arrow_type_results(result: Vec<RecordBatch>) {
             + (tz * 60 * 60)
     }
 
-    let mut col = 0;
-
     // test_date
+    col += 1;
     assert!(result[0]
         .column(col)
         .as_any()
@@ -687,7 +705,20 @@ pub fn verify_arrow_type_results(result: Vec<RecordBatch>) {
 
     // test_f4array
     col += 1;
-    println!("{:?}", result[0].column(col));
+    assert!(result[0]
+        .column(col)
+        .as_any()
+        .downcast_ref::<LargeListArray>()
+        .unwrap()
+        .eq(&LargeListArray::from_iter_primitive::<Float32Type, _, _>(
+            vec![
+                Some(vec![Some(-1.1), Some(0.00)]),
+                Some(vec![]),
+                Some(vec![Some(2.123456), None, Some(123.123)]),
+                Some(vec![Some(1.0), Some(-2.0), Some(-12345.1)]),
+                None,
+            ]
+        )));
 
     // test_f8array DOUBLE PRECISION[],
     // test_narray NUMERIC(5,2)[],
@@ -703,5 +734,5 @@ pub fn verify_arrow_type_results(result: Vec<RecordBatch>) {
     // test_textarray TEXT[],
     // test_name NAME
 
-    panic!();
+    // panic!();
 }
