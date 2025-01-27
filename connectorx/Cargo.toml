@@ -67,7 +67,7 @@ name = "connectorx"
 criterion = "0.3"
 env_logger = "0.9"
 iai = "0.1"
-pprof = {version = "0.5", features = ["flamegraph"]}
+pprof = {version = "0.14", features = ["flamegraph"]}
 
 [features]
 all = ["src_sqlite", "src_postgres", "src_mysql", "src_mssql", "src_oracle", "src_bigquery", "src_csv", "src_dummy", "src_trino", "dst_arrow", "dst_polars", "federation", "fed_exec"]
