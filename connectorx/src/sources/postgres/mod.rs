@@ -1474,7 +1474,80 @@ macro_rules! impl_simple_produce {
     };
 }
 
-impl_simple_produce!(i8, i16, i32, i64, f32, f64, Uuid, bool,);
+impl_simple_produce!(i8, i16, i32, i64, f32, f64, Uuid,);
+
+// SimpleQueryMessage::Row(row) => match row.try_get(cidx)? {
+//     Some("Infinity") => Decimal::MAX,
+//     Some("-Infinity") => Decimal::MIN,
+//     Some(s) => s
+//         .parse()
+//         .map_err(|_| ConnectorXError::cannot_produce::<Decimal>(Some(s.into())))?,
+//     None => throw!(anyhow!("Cannot parse NULL in NOT NULL column.")),
+// },
+
+// fn produce(&mut self) -> bool {
+//     let (ridx, cidx) = self.next_loc()?;
+//     let ret = match &self.rowbuf[ridx][cidx][..] {
+//         "t" => true,
+//         "f" => false,
+//         _ => throw!(ConnectorXError::cannot_produce::<bool>(Some(
+//             self.rowbuf[ridx][cidx].into()
+//         ))),
+//     };
+//     ret
+// }
+
+impl<'r> Produce<'r, bool> for PostgresSimpleSourceParser {
+    type Error = PostgresSourceError;
+
+    #[throws(PostgresSourceError)]
+    fn produce(&'r mut self) -> bool {
+        let (ridx, cidx) = self.next_loc()?;
+        let val = match &self.rows[ridx] {
+            SimpleQueryMessage::Row(row) => match row.try_get(cidx)? {
+                Some(s) => match s {
+                    "t" => true,
+                    "f" => false,
+                    _ => throw!(ConnectorXError::cannot_produce::<bool>(Some(s.into()))),
+                },
+                None => throw!(anyhow!("Cannot parse NULL in non-NULL column.")),
+            },
+            SimpleQueryMessage::CommandComplete(c) => {
+                panic!("get command: {}", c);
+            }
+            _ => {
+                panic!("what?");
+            }
+        };
+        val
+    }
+}
+
+impl<'r> Produce<'r, Option<bool>> for PostgresSimpleSourceParser {
+    type Error = PostgresSourceError;
+
+    #[throws(PostgresSourceError)]
+    fn produce(&'r mut self) -> Option<bool> {
+        let (ridx, cidx) = self.next_loc()?;
+        let val = match &self.rows[ridx] {
+            SimpleQueryMessage::Row(row) => match row.try_get(cidx)? {
+                Some(s) => match s {
+                    "t" => Some(true),
+                    "f" => Some(false),
+                    _ => throw!(ConnectorXError::cannot_produce::<bool>(Some(s.into()))),
+                },
+                None => None,
+            },
+            SimpleQueryMessage::CommandComplete(c) => {
+                panic!("get command: {}", c);
+            }
+            _ => {
+                panic!("what?");
+            }
+        };
+        val
+    }
+}
 
 impl<'r> Produce<'r, Decimal> for PostgresSimpleSourceParser {
     type Error = PostgresSourceError;
@@ -1650,18 +1723,27 @@ fn rem_first_and_last(value: &str) -> &str {
 macro_rules! impl_simple_vec_produce {
     ($($t: ty,)+) => {
         $(
-            impl<'r> Produce<'r, Vec<$t>> for PostgresSimpleSourceParser {
+            impl<'r> Produce<'r, Vec<Option<$t>>> for PostgresSimpleSourceParser {
                 type Error = PostgresSourceError;
 
                 #[throws(PostgresSourceError)]
-                fn produce(&'r mut self) -> Vec<$t> {
+                fn produce(&'r mut self) -> Vec<Option<$t>> {
                     let (ridx, cidx) = self.next_loc()?;
                     let val = match &self.rows[ridx] {
                         SimpleQueryMessage::Row(row) => match row.try_get(cidx)? {
                             Some(s) => match s{
                                 "" => throw!(anyhow!("Cannot parse NULL in non-NULL column.")),
                                 "{}" => vec![],
-                                _ => rem_first_and_last(s).split(",").map(|token| token.parse().map_err(|_| ConnectorXError::cannot_produce::<Vec<$t>>(Some(s.into())))).collect::<Result<Vec<$t>, ConnectorXError>>()?
+                                _ => rem_first_and_last(s).split(",").map(|v| {
+                                    if v == "NULL" {
+                                        Ok(None)
+                                    } else {
+                                        match v.parse() {
+                                            Ok(v) => Ok(Some(v)),
+                                            Err(e) => Err(e).map_err(|_| ConnectorXError::cannot_produce::<Vec<$t>>(Some(s.into())))
+                                        }
+                                    }
+                                }).collect::<Result<Vec<Option<$t>>, ConnectorXError>>()?
                             },
                             None => throw!(anyhow!("Cannot parse NULL in non-NULL column.")),
                         },
@@ -1676,11 +1758,11 @@ macro_rules! impl_simple_vec_produce {
                 }
             }
 
-            impl<'r, 'a> Produce<'r, Option<Vec<$t>>> for PostgresSimpleSourceParser {
+            impl<'r, 'a> Produce<'r, Option<Vec<Option<$t>>>> for PostgresSimpleSourceParser {
                 type Error = PostgresSourceError;
 
                 #[throws(PostgresSourceError)]
-                fn produce(&'r mut self) -> Option<Vec<$t>> {
+                fn produce(&'r mut self) -> Option<Vec<Option<$t>>> {
                     let (ridx, cidx) = self.next_loc()?;
                     let val = match &self.rows[ridx] {
 
@@ -1688,7 +1770,16 @@ macro_rules! impl_simple_vec_produce {
                             Some(s) => match s{
                                 "" => None,
                                 "{}" => Some(vec![]),
-                                _ => Some(rem_first_and_last(s).split(",").map(|token| token.parse().map_err(|_| ConnectorXError::cannot_produce::<Vec<$t>>(Some(s.into())))).collect::<Result<Vec<$t>, ConnectorXError>>()?)
+                                _ => Some(rem_first_and_last(s).split(",").map(|v| {
+                                    if v == "NULL" {
+                                        Ok(None)
+                                    } else {
+                                        match v.parse() {
+                                            Ok(v) => Ok(Some(v)),
+                                            Err(e) => Err(e).map_err(|_| ConnectorXError::cannot_produce::<Vec<$t>>(Some(s.into())))
+                                        }
+                                    }
+                                }).collect::<Result<Vec<Option<$t>>, ConnectorXError>>()?)
                             },
                             None => None,
                         },
@@ -1708,11 +1799,11 @@ macro_rules! impl_simple_vec_produce {
 }
 impl_simple_vec_produce!(i16, i32, i64, f32, f64, Decimal, String,);
 
-impl<'r> Produce<'r, Vec<bool>> for PostgresSimpleSourceParser {
+impl<'r> Produce<'r, Vec<Option<bool>>> for PostgresSimpleSourceParser {
     type Error = PostgresSourceError;
 
     #[throws(PostgresSourceError)]
-    fn produce(&'r mut self) -> Vec<bool> {
+    fn produce(&'r mut self) -> Vec<Option<bool>> {
         let (ridx, cidx) = self.next_loc()?;
         let val = match &self.rows[ridx] {
             SimpleQueryMessage::Row(row) => match row.try_get(cidx)? {
@@ -1722,13 +1813,14 @@ impl<'r> Produce<'r, Vec<bool>> for PostgresSimpleSourceParser {
                     _ => rem_first_and_last(s)
                         .split(',')
                         .map(|token| match token {
-                            "t" => Ok(true),
-                            "f" => Ok(false),
+                            "NULL" => Ok(None),
+                            "t" => Ok(Some(true)),
+                            "f" => Ok(Some(false)),
                             _ => {
                                 throw!(ConnectorXError::cannot_produce::<Vec<bool>>(Some(s.into())))
                             }
                         })
-                        .collect::<Result<Vec<bool>, ConnectorXError>>()?,
+                        .collect::<Result<Vec<Option<bool>>, ConnectorXError>>()?,
                 },
                 None => throw!(anyhow!("Cannot parse NULL in non-NULL column.")),
             },
@@ -1743,11 +1835,11 @@ impl<'r> Produce<'r, Vec<bool>> for PostgresSimpleSourceParser {
     }
 }
 
-impl<'r> Produce<'r, Option<Vec<bool>>> for PostgresSimpleSourceParser {
+impl<'r> Produce<'r, Option<Vec<Option<bool>>>> for PostgresSimpleSourceParser {
     type Error = PostgresSourceError;
 
     #[throws(PostgresSourceError)]
-    fn produce(&'r mut self) -> Option<Vec<bool>> {
+    fn produce(&'r mut self) -> Option<Vec<Option<bool>>> {
         let (ridx, cidx) = self.next_loc()?;
         let val = match &self.rows[ridx] {
             SimpleQueryMessage::Row(row) => match row.try_get(cidx)? {
@@ -1758,13 +1850,16 @@ impl<'r> Produce<'r, Option<Vec<bool>>> for PostgresSimpleSourceParser {
                         rem_first_and_last(s)
                             .split(',')
                             .map(|token| match token {
-                                "t" => Ok(true),
-                                "f" => Ok(false),
-                                _ => throw!(ConnectorXError::cannot_produce::<Vec<bool>>(Some(
-                                    s.into()
-                                ))),
+                                "NULL" => Ok(None),
+                                "t" => Ok(Some(true)),
+                                "f" => Ok(Some(false)),
+                                _ => {
+                                    throw!(ConnectorXError::cannot_produce::<Vec<bool>>(Some(
+                                        s.into()
+                                    )))
+                                }
                             })
-                            .collect::<Result<Vec<bool>, ConnectorXError>>()?,
+                            .collect::<Result<Vec<Option<bool>>, ConnectorXError>>()?,
                     ),
                 },
                 None => None,
