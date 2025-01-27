@@ -198,7 +198,7 @@ impl ArrowAssoc for DateTimeWrapperMicro {
     type Builder = TimestampMicrosecondBuilder;
 
     fn builder(nrows: usize) -> Self::Builder {
-        TimestampMicrosecondBuilder::with_capacity(nrows).with_timezone("UTC")
+        TimestampMicrosecondBuilder::with_capacity(nrows).with_timezone("+00:00")
     }
 
     #[throws(ArrowDestinationError)]
@@ -209,7 +209,7 @@ impl ArrowAssoc for DateTimeWrapperMicro {
     fn field(header: &str) -> Field {
         Field::new(
             header,
-            ArrowDataType::Timestamp(TimeUnit::Microsecond, Some("UTC".into())),
+            ArrowDataType::Timestamp(TimeUnit::Microsecond, Some("+00:00".into())),
             false,
         )
     }
@@ -219,7 +219,7 @@ impl ArrowAssoc for Option<DateTimeWrapperMicro> {
     type Builder = TimestampMicrosecondBuilder;
 
     fn builder(nrows: usize) -> Self::Builder {
-        TimestampMicrosecondBuilder::with_capacity(nrows).with_timezone("UTC")
+        TimestampMicrosecondBuilder::with_capacity(nrows).with_timezone("+00:00")
     }
 
     #[throws(ArrowDestinationError)]
@@ -230,7 +230,7 @@ impl ArrowAssoc for Option<DateTimeWrapperMicro> {
     fn field(header: &str) -> Field {
         Field::new(
             header,
-            ArrowDataType::Timestamp(TimeUnit::Microsecond, Some("UTC".into())),
+            ArrowDataType::Timestamp(TimeUnit::Microsecond, Some("+00:00".into())),
             true,
         )
     }
