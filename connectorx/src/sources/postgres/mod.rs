@@ -974,7 +974,7 @@ impl<'r, 'a> Produce<'r, NaiveDateTime> for PostgresCSVSourceParser<'a> {
         match &self.rowbuf[ridx][cidx] {
             "infinity" => NaiveDateTime::MAX,
             "-infinity" => NaiveDateTime::MIN,
-            v => NaiveDateTime::parse_from_str(v, "%Y-%m-%d %H:%M:%S")
+            v => NaiveDateTime::parse_from_str(v, "%Y-%m-%d %H:%M:%S%.f")
                 .map_err(|_| ConnectorXError::cannot_produce::<NaiveDateTime>(Some(v.into())))?,
         }
     }
@@ -991,7 +991,7 @@ impl<'r, 'a> Produce<'r, Option<NaiveDateTime>> for PostgresCSVSourceParser<'a> 
             "infinity" => Some(NaiveDateTime::MAX),
             "-infinity" => Some(NaiveDateTime::MIN),
             v => Some(
-                NaiveDateTime::parse_from_str(v, "%Y-%m-%d %H:%M:%S").map_err(|_| {
+                NaiveDateTime::parse_from_str(v, "%Y-%m-%d %H:%M:%S%.f").map_err(|_| {
                     ConnectorXError::cannot_produce::<NaiveDateTime>(Some(v.into()))
                 })?,
             ),
@@ -1005,7 +1005,7 @@ impl<'r, 'a> Produce<'r, NaiveTime> for PostgresCSVSourceParser<'a> {
     #[throws(PostgresSourceError)]
     fn produce(&mut self) -> NaiveTime {
         let (ridx, cidx) = self.next_loc()?;
-        NaiveTime::parse_from_str(&self.rowbuf[ridx][cidx], "%H:%M:%S").map_err(|_| {
+        NaiveTime::parse_from_str(&self.rowbuf[ridx][cidx], "%H:%M:%S%.f").map_err(|_| {
             ConnectorXError::cannot_produce::<NaiveTime>(Some(self.rowbuf[ridx][cidx].into()))
         })?
     }
@@ -1020,7 +1020,7 @@ impl<'r, 'a> Produce<'r, Option<NaiveTime>> for PostgresCSVSourceParser<'a> {
         match &self.rowbuf[ridx][cidx][..] {
             "" => None,
             v => Some(
-                NaiveTime::parse_from_str(v, "%H:%M:%S")
+                NaiveTime::parse_from_str(v, "%H:%M:%S%.f")
                     .map_err(|_| ConnectorXError::cannot_produce::<NaiveTime>(Some(v.into())))?,
             ),
         }
