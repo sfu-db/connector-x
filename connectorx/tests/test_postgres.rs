@@ -11,8 +11,13 @@ use chrono::naive::NaiveDate;
 use connectorx::{
     destinations::arrow::ArrowDestination,
     prelude::*,
-    sources::postgres::{rewrite_tls_args, BinaryProtocol, CSVProtocol, PostgresSource},
-    sources::PartitionParser,
+    sources::{
+        postgres::{
+            rewrite_tls_args, BinaryProtocol, CSVProtocol, CursorProtocol, PostgresSource,
+            SimpleProtocol,
+        },
+        PartitionParser,
+    },
     sql::CXQuery,
     transports::PostgresArrowTransport,
 };
@@ -155,29 +160,29 @@ fn test_postgres() {
     verify_arrow_results(result);
 }
 
-// #[test]
-// fn test_postgres_csv() {
-//     let _ = env_logger::builder().is_test(true).try_init();
+#[test]
+fn test_postgres_csv() {
+    let _ = env_logger::builder().is_test(true).try_init();
 
-//     let dburl = env::var("POSTGRES_URL").unwrap();
+    let dburl = env::var("POSTGRES_URL").unwrap();
 
-//     let queries = [
-//         CXQuery::naked("select * from test_table where test_int < 2"),
-//         CXQuery::naked("select * from test_table where test_int >= 2"),
-//     ];
-//     let url = Url::parse(dburl.as_str()).unwrap();
-//     let (config, _tls) = rewrite_tls_args(&url).unwrap();
-//     let builder = PostgresSource::<CSVProtocol, NoTls>::new(config, NoTls, 2).unwrap();
-//     let mut dst = ArrowDestination::new();
-//     let dispatcher = Dispatcher::<_, _, PostgresArrowTransport<CSVProtocol, NoTls>>::new(
-//         builder, &mut dst, &queries, None,
-//     );
+    let queries = [
+        CXQuery::naked("select * from test_table where test_int < 2"),
+        CXQuery::naked("select * from test_table where test_int >= 2"),
+    ];
+    let url = Url::parse(dburl.as_str()).unwrap();
+    let (config, _tls) = rewrite_tls_args(&url).unwrap();
+    let builder = PostgresSource::<CSVProtocol, NoTls>::new(config, NoTls, 2).unwrap();
+    let mut dst = ArrowDestination::new();
+    let dispatcher = Dispatcher::<_, _, PostgresArrowTransport<CSVProtocol, NoTls>>::new(
+        builder, &mut dst, &queries, None,
+    );
 
-//     dispatcher.run().expect("run dispatcher");
-//     let result = dst.arrow().unwrap();
-//     println!("{:?}", result);
-//     verify_arrow_results(result);
-// }
+    dispatcher.run().expect("run dispatcher");
+    let result = dst.arrow().unwrap();
+    println!("{:?}", result);
+    verify_arrow_results(result);
+}
 
 #[test]
 fn test_postgres_agg() {
@@ -311,7 +316,7 @@ pub fn verify_arrow_results(result: Vec<RecordBatch>) {
 }
 
 #[test]
-fn test_types_postgres() {
+fn test_types_binary_postgres() {
     let _ = env_logger::builder().is_test(true).try_init();
 
     let dburl = env::var("POSTGRES_URL").unwrap();
@@ -368,34 +373,189 @@ fn test_types_postgres() {
     dispatcher.run().expect("run dispatcher");
 
     let result = destination.arrow().unwrap();
-    verify_arrow_type_results(result);
+    verify_arrow_type_results(result, "binary");
 }
 
-// #[test]
-// fn test_types_postgres_csv() {
-//     let _ = env_logger::builder().is_test(true).try_init();
+#[test]
+fn test_types_csv_postgres() {
+    let _ = env_logger::builder().is_test(true).try_init();
 
-//     let dburl = env::var("POSTGRES_URL").unwrap();
+    let dburl = env::var("POSTGRES_URL").unwrap();
 
-//     let queries = [
-//         CXQuery::naked("select * from test_table where test_int < 2"),
-//         CXQuery::naked("select * from test_table where test_int >= 2"),
-//     ];
-//     let url = Url::parse(dburl.as_str()).unwrap();
-//     let (config, _tls) = rewrite_tls_args(&url).unwrap();
-//     let builder = PostgresSource::<CSVProtocol, NoTls>::new(config, NoTls, 2).unwrap();
-//     let mut dst = ArrowDestination::new();
-//     let dispatcher = Dispatcher::<_, _, PostgresArrowTransport<CSVProtocol, NoTls>>::new(
-//         builder, &mut dst, &queries, None,
-//     );
+    let vars = vec![
+        "test_bool",
+        "test_date",
+        "test_timestamp",
+        "test_timestamptz",
+        "test_int2",
+        "test_int4",
+        "test_int8",
+        "test_float4",
+        "test_float8",
+        "test_numeric",
+        "test_bpchar",
+        "test_char",
+        "test_varchar",
+        "test_uuid",
+        "test_time",
+        "test_json",
+        "test_jsonb",
+        "test_bytea",
+        "test_enum",
+        "test_f4array",
+        "test_f8array",
+        "test_narray",
+        "test_boolarray",
+        "test_i2array",
+        "test_i4array",
+        "test_i8array",
+        "test_citext",
+        "test_ltree",
+        "test_lquery",
+        "test_ltxtquery",
+        "test_varchararray",
+        "test_textarray",
+        "test_name",
+    ]
+    .join(",");
 
-//     dispatcher.run().expect("run dispatcher");
-//     let result = dst.arrow().unwrap();
-//     println!("{:?}", result);
-//     verify_arrow_results(result);
-// }
+    let queries = [CXQuery::naked(format!("select {vars} from test_types"))];
+    let url = Url::parse(dburl.as_str()).unwrap();
+    let (config, _tls) = rewrite_tls_args(&url).unwrap();
+    let builder = PostgresSource::<CSVProtocol, NoTls>::new(config, NoTls, 2).unwrap();
+    let mut destination = ArrowDestination::new();
+    let dispatcher = Dispatcher::<_, _, PostgresArrowTransport<CSVProtocol, NoTls>>::new(
+        builder,
+        &mut destination,
+        &queries,
+        Some(String::from("select * from test_types")),
+    );
 
-pub fn verify_arrow_type_results(result: Vec<RecordBatch>) {
+    dispatcher.run().expect("run dispatcher");
+
+    let result = destination.arrow().unwrap();
+    verify_arrow_type_results(result, "csv");
+}
+
+#[test]
+fn test_types_cursor_postgres() {
+    let _ = env_logger::builder().is_test(true).try_init();
+
+    let dburl = env::var("POSTGRES_URL").unwrap();
+
+    let vars = vec![
+        "test_bool",
+        "test_date",
+        "test_timestamp",
+        "test_timestamptz",
+        "test_int2",
+        "test_int4",
+        "test_int8",
+        "test_float4",
+        "test_float8",
+        "test_numeric",
+        "test_bpchar",
+        "test_char",
+        "test_varchar",
+        "test_uuid",
+        "test_time",
+        "test_json",
+        "test_jsonb",
+        "test_bytea",
+        "test_f4array",
+        "test_f8array",
+        "test_narray",
+        "test_boolarray",
+        "test_i2array",
+        "test_i4array",
+        "test_i8array",
+        "test_citext",
+        "test_ltree",
+        "test_lquery",
+        "test_ltxtquery",
+        "test_varchararray",
+        "test_textarray",
+        "test_name",
+    ]
+    .join(",");
+
+    let queries = [CXQuery::naked(format!("select {vars} from test_types"))];
+    let url = Url::parse(dburl.as_str()).unwrap();
+    let (config, _tls) = rewrite_tls_args(&url).unwrap();
+    let builder = PostgresSource::<CursorProtocol, NoTls>::new(config, NoTls, 2).unwrap();
+    let mut destination = ArrowDestination::new();
+    let dispatcher = Dispatcher::<_, _, PostgresArrowTransport<CursorProtocol, NoTls>>::new(
+        builder,
+        &mut destination,
+        &queries,
+        Some(String::from("select * from test_types")),
+    );
+
+    dispatcher.run().expect("run dispatcher");
+
+    let result = destination.arrow().unwrap();
+    verify_arrow_type_results(result, "cursor");
+}
+
+#[test]
+fn test_types_simple_postgres() {
+    let _ = env_logger::builder().is_test(true).try_init();
+
+    let dburl = env::var("POSTGRES_URL").unwrap();
+
+    let vars = vec![
+        "test_bool",
+        "test_date",
+        "test_timestamp",
+        "test_timestamptz",
+        "test_int2",
+        "test_int4",
+        "test_int8",
+        "test_float4",
+        "test_float8",
+        "test_numeric",
+        "test_bpchar",
+        "test_char",
+        "test_varchar",
+        "test_uuid",
+        "test_time",
+        "test_bytea",
+        "test_f4array",
+        "test_f8array",
+        "test_narray",
+        "test_boolarray",
+        "test_i2array",
+        "test_i4array",
+        "test_i8array",
+        "test_citext",
+        "test_ltree",
+        "test_lquery",
+        "test_ltxtquery",
+        "test_varchararray",
+        "test_textarray",
+        "test_name",
+    ]
+    .join(",");
+
+    let queries = [CXQuery::naked(format!("select {vars} from test_types"))];
+    let url = Url::parse(dburl.as_str()).unwrap();
+    let (config, _tls) = rewrite_tls_args(&url).unwrap();
+    let builder = PostgresSource::<SimpleProtocol, NoTls>::new(config, NoTls, 2).unwrap();
+    let mut destination = ArrowDestination::new();
+    let dispatcher = Dispatcher::<_, _, PostgresArrowTransport<SimpleProtocol, NoTls>>::new(
+        builder,
+        &mut destination,
+        &queries,
+        Some(String::from("select * from test_types")),
+    );
+
+    dispatcher.run().expect("run dispatcher");
+
+    let result = destination.arrow().unwrap();
+    verify_arrow_type_results(result, "simple");
+}
+
+pub fn verify_arrow_type_results(result: Vec<RecordBatch>, protocol: &str) {
     assert!(result.len() == 1);
 
     let mut col = 0;
@@ -464,19 +624,19 @@ pub fn verify_arrow_type_results(result: Vec<RecordBatch>) {
 
     // test_timestamptz
     col += 1;
-    // assert!(result[0]
-    //     .column(col)
-    //     .as_any()
-    //     .downcast_ref::<TimestampMicrosecondArray>()
-    //     .unwrap()
-    //     .eq(&TimestampMicrosecondArray::from(vec![
-    //         Some(time_to_arrow(1970, 1, 1, 0, 0, 1, 0) * 1000000),
-    //         Some(time_to_arrow(2000, 2, 28, 12, 0, 10, 4) * 1000000),
-    //         Some(time_to_arrow(2038, 1, 18, 23, 59, 59, -8) * 1000000),
-    //         Some(time_to_arrow(1901, 12, 14, 0, 0, 0, 12) * 1000000 + 62547),
-    // None,
-    //     ])
-    //     .with_timezone("+00:00")));
+    assert!(result[0]
+        .column(col)
+        .as_any()
+        .downcast_ref::<TimestampMicrosecondArray>()
+        .unwrap()
+        .eq(&TimestampMicrosecondArray::from(vec![
+            Some(time_to_arrow(1970, 1, 1, 0, 0, 1, 0) * 1000000),
+            Some(time_to_arrow(2000, 2, 28, 12, 0, 10, 4) * 1000000),
+            Some(time_to_arrow(2038, 1, 18, 23, 59, 59, -8) * 1000000),
+            Some(time_to_arrow(1901, 12, 14, 0, 0, 0, 12) * 1000000 + 62547),
+            None,
+        ])
+        .with_timezone("+00:00")));
 
     // test_int2
     col += 1;
@@ -600,18 +760,33 @@ pub fn verify_arrow_type_results(result: Vec<RecordBatch>) {
 
     // test_varchar
     col += 1;
-    assert!(result[0]
-        .column(col)
-        .as_any()
-        .downcast_ref::<StringArray>()
-        .unwrap()
-        .eq(&StringArray::from(vec![
-            Some("abcdefghij"),
-            Some(""),
-            Some("👨‍🍳👨‍🍳👨‍🍳👨"),
-            Some("@"),
-            None,
-        ])));
+    if protocol == "csv" {
+        assert!(result[0]
+            .column(col)
+            .as_any()
+            .downcast_ref::<StringArray>()
+            .unwrap()
+            .eq(&StringArray::from(vec![
+                Some("abcdefghij"),
+                None, // CSV Protocol can't distinguish "" from NULL
+                Some("👨‍🍳👨‍🍳👨‍🍳👨"),
+                Some("@"),
+                None,
+            ])));
+    } else {
+        assert!(result[0]
+            .column(col)
+            .as_any()
+            .downcast_ref::<StringArray>()
+            .unwrap()
+            .eq(&StringArray::from(vec![
+                Some("abcdefghij"),
+                Some(""),
+                Some("👨‍🍳👨‍🍳👨‍🍳👨"),
+                Some("@"),
+                None,
+            ])));
+    }
 
     // test_uuid
     col += 1;
@@ -643,35 +818,41 @@ pub fn verify_arrow_type_results(result: Vec<RecordBatch>) {
             None,
         ])));
 
-    // test_json
-    col += 1;
-    assert!(result[0]
-        .column(col)
-        .as_any()
-        .downcast_ref::<StringArray>()
-        .unwrap()
-        .eq(&StringArray::from(vec![
-            Some("{\"customer\":\"John Doe\",\"items\":{\"product\":\"Beer\",\"qty\":6}}"),
-            Some("{\"customer\":\"Lily Bush\",\"items\":{\"product\":\"Diaper\",\"qty\":24}}"),
-            Some("{\"customer\":\"Josh William\",\"items\":{\"product\":\"Toy Car\",\"qty\":1}}"),
-            Some("{}"),
-            None,
-        ])));
+    if protocol != "simple" {
+        // test_json
+        col += 1;
+        assert!(result[0]
+            .column(col)
+            .as_any()
+            .downcast_ref::<StringArray>()
+            .unwrap()
+            .eq(&StringArray::from(vec![
+                Some("{\"customer\":\"John Doe\",\"items\":{\"product\":\"Beer\",\"qty\":6}}"),
+                Some("{\"customer\":\"Lily Bush\",\"items\":{\"product\":\"Diaper\",\"qty\":24}}"),
+                Some(
+                    "{\"customer\":\"Josh William\",\"items\":{\"product\":\"Toy Car\",\"qty\":1}}"
+                ),
+                Some("{}"),
+                None,
+            ])));
 
-    // test_jsonb
-    col += 1;
-    assert!(result[0]
-        .column(col)
-        .as_any()
-        .downcast_ref::<StringArray>()
-        .unwrap()
-        .eq(&StringArray::from(vec![
-            Some("{\"customer\":\"John Doe\",\"items\":{\"product\":\"Beer\",\"qty\":6}}"),
-            Some("{\"customer\":\"Lily Bush\",\"items\":{\"product\":\"Diaper\",\"qty\":24}}"),
-            Some("{\"customer\":\"Josh William\",\"items\":{\"product\":\"Toy Car\",\"qty\":1}}"),
-            Some("{}"),
-            None,
-        ])));
+        // test_jsonb
+        col += 1;
+        assert!(result[0]
+            .column(col)
+            .as_any()
+            .downcast_ref::<StringArray>()
+            .unwrap()
+            .eq(&StringArray::from(vec![
+                Some("{\"customer\":\"John Doe\",\"items\":{\"product\":\"Beer\",\"qty\":6}}"),
+                Some("{\"customer\":\"Lily Bush\",\"items\":{\"product\":\"Diaper\",\"qty\":24}}"),
+                Some(
+                    "{\"customer\":\"Josh William\",\"items\":{\"product\":\"Toy Car\",\"qty\":1}}"
+                ),
+                Some("{}"),
+                None,
+            ])));
+    }
 
     // test_bytea
     col += 1;
@@ -689,19 +870,21 @@ pub fn verify_arrow_type_results(result: Vec<RecordBatch>) {
         ])));
 
     // test_enum
-    col += 1;
-    assert!(result[0]
-        .column(col)
-        .as_any()
-        .downcast_ref::<StringArray>()
-        .unwrap()
-        .eq(&StringArray::from(vec![
-            Some("happy"),
-            Some("very happy"),
-            Some("ecstatic"),
-            Some("ecstatic"),
-            None,
-        ])));
+    if protocol != "cursor" && protocol != "simple" {
+        col += 1;
+        assert!(result[0]
+            .column(col)
+            .as_any()
+            .downcast_ref::<StringArray>()
+            .unwrap()
+            .eq(&StringArray::from(vec![
+                Some("happy"),
+                Some("very happy"),
+                Some("ecstatic"),
+                Some("ecstatic"),
+                None,
+            ])));
+    }
 
     // test_f4array
     col += 1;
