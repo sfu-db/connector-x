@@ -1939,7 +1939,7 @@ impl<'r> Produce<'r, NaiveTime> for PostgresSimpleSourceParser {
         let (ridx, cidx) = self.next_loc()?;
         let val = match &self.rows[ridx] {
             SimpleQueryMessage::Row(row) => match row.try_get(cidx)? {
-                Some(s) => NaiveTime::parse_from_str(s, "%H:%M:%S")
+                Some(s) => NaiveTime::parse_from_str(s, "%H:%M:%S%.f")
                     .map_err(|_| ConnectorXError::cannot_produce::<NaiveTime>(Some(s.into())))?,
                 None => throw!(anyhow!("Cannot parse NULL in non-NULL column.")),
             },
@@ -1962,7 +1962,7 @@ impl<'r> Produce<'r, Option<NaiveTime>> for PostgresSimpleSourceParser {
         let (ridx, cidx) = self.next_loc()?;
         let val = match &self.rows[ridx] {
             SimpleQueryMessage::Row(row) => match row.try_get(cidx)? {
-                Some(s) => Some(NaiveTime::parse_from_str(s, "%H:%M:%S").map_err(|_| {
+                Some(s) => Some(NaiveTime::parse_from_str(s, "%H:%M:%S%.f").map_err(|_| {
                     ConnectorXError::cannot_produce::<Option<NaiveTime>>(Some(s.into()))
                 })?),
                 None => None,
@@ -1984,24 +1984,25 @@ impl<'r> Produce<'r, NaiveDateTime> for PostgresSimpleSourceParser {
     #[throws(PostgresSourceError)]
     fn produce(&'r mut self) -> NaiveDateTime {
         let (ridx, cidx) = self.next_loc()?;
-        let val = match &self.rows[ridx] {
-            SimpleQueryMessage::Row(row) => match row.try_get(cidx)? {
-                Some(s) => match s {
-                    "infinity" => NaiveDateTime::MAX,
-                    "-infinity" => NaiveDateTime::MIN,
-                    s => NaiveDateTime::parse_from_str(s, "%Y-%m-%d %H:%M:%S").map_err(|_| {
-                        ConnectorXError::cannot_produce::<NaiveDateTime>(Some(s.into()))
-                    })?,
+        let val =
+            match &self.rows[ridx] {
+                SimpleQueryMessage::Row(row) => match row.try_get(cidx)? {
+                    Some(s) => match s {
+                        "infinity" => NaiveDateTime::MAX,
+                        "-infinity" => NaiveDateTime::MIN,
+                        s => NaiveDateTime::parse_from_str(s, "%Y-%m-%d %H:%M:%S%.f").map_err(
+                            |_| ConnectorXError::cannot_produce::<NaiveDateTime>(Some(s.into())),
+                        )?,
+                    },
+                    None => throw!(anyhow!("Cannot parse NULL in non-NULL column.")),
                 },
-                None => throw!(anyhow!("Cannot parse NULL in non-NULL column.")),
-            },
-            SimpleQueryMessage::CommandComplete(c) => {
-                panic!("get command: {}", c);
-            }
-            _ => {
-                panic!("what?");
-            }
-        };
+                SimpleQueryMessage::CommandComplete(c) => {
+                    panic!("get command: {}", c);
+                }
+                _ => {
+                    panic!("what?");
+                }
+            };
         val
     }
 }
@@ -2018,7 +2019,7 @@ impl<'r> Produce<'r, Option<NaiveDateTime>> for PostgresSimpleSourceParser {
                     "infinity" => Some(NaiveDateTime::MAX),
                     "-infinity" => Some(NaiveDateTime::MIN),
                     s => Some(
-                        NaiveDateTime::parse_from_str(s, "%Y-%m-%d %H:%M:%S").map_err(|_| {
+                        NaiveDateTime::parse_from_str(s, "%Y-%m-%d %H:%M:%S%.f").map_err(|_| {
                             ConnectorXError::cannot_produce::<Option<NaiveDateTime>>(Some(s.into()))
                         })?,
                     ),
@@ -2050,7 +2051,7 @@ impl<'r> Produce<'r, DateTime<Utc>> for PostgresSimpleSourceParser {
                     let time_string = format!("{}:00", s).to_owned();
                     let slice: &str = &time_string[..];
                     let time: DateTime<FixedOffset> =
-                        DateTime::parse_from_str(slice, "%Y-%m-%d %H:%M:%S%:z").unwrap();
+                        DateTime::parse_from_str(slice, "%Y-%m-%d %H:%M:%S%.f%:z").unwrap();
 
                     time.with_timezone(&Utc)
                 }
@@ -2081,7 +2082,7 @@ impl<'r> Produce<'r, Option<DateTime<Utc>>> for PostgresSimpleSourceParser {
                     let time_string = format!("{}:00", s).to_owned();
                     let slice: &str = &time_string[..];
                     let time: DateTime<FixedOffset> =
-                        DateTime::parse_from_str(slice, "%Y-%m-%d %H:%M:%S%:z").unwrap();
+                        DateTime::parse_from_str(slice, "%Y-%m-%d %H:%M:%S%.f%:z").unwrap();
 
                     Some(time.with_timezone(&Utc))
                 }
