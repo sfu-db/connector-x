@@ -945,8 +945,8 @@ pub fn verify_arrow_type_results(result: Vec<RecordBatch>, protocol: &str) {
             vec![
                 Some(vec![Some(-1.1), Some(0.00)]),
                 Some(vec![]),
-                Some(vec![Some(2.123456), None, Some(123.123)]),
                 Some(vec![Some(1.0), Some(-2.0), Some(-12345.1)]),
+                Some(vec![Some(2.123456), None, Some(123.123)]),
                 None,
             ]
         )));
@@ -962,8 +962,8 @@ pub fn verify_arrow_type_results(result: Vec<RecordBatch>, protocol: &str) {
             vec![
                 Some(vec![Some(-1.1), Some(0.00)]),
                 Some(vec![]),
-                Some(vec![Some(2.123456), None, Some(123.123)]),
                 Some(vec![Some(2.12345678901), Some(-12345678901.1)]),
+                Some(vec![Some(2.123456), None, Some(123.123)]),
                 None,
             ]
         )));
@@ -979,8 +979,8 @@ pub fn verify_arrow_type_results(result: Vec<RecordBatch>, protocol: &str) {
             vec![
                 Some(vec![Some(0.01), Some(521.23)]),
                 Some(vec![Some(0.12), Some(333.33), Some(22.22)]),
-                Some(vec![Some(0.0), None, Some(-112.1)]),
                 Some(vec![]),
+                Some(vec![Some(0.0), None, Some(-112.1)]),
                 None,
             ]
         )));
@@ -988,10 +988,10 @@ pub fn verify_arrow_type_results(result: Vec<RecordBatch>, protocol: &str) {
     // test_boolarray (from_iter_primitive not available for boolean)
     col += 1;
     let b0: BooleanArray = vec![Some(true), Some(false)].into();
-    let b1: BooleanArray = vec![Some(true), Some(false), None].into();
-    let b2: BooleanArray = vec![Some(true)].into();
     let empty_vec: Vec<bool> = vec![];
-    let b3: BooleanArray = empty_vec.into();
+    let b1: BooleanArray = empty_vec.into();
+    let b2: BooleanArray = vec![Some(true)].into();
+    let b3: BooleanArray = vec![Some(true), Some(false), None].into();
 
     let mut builder: LargeListBuilder<BooleanBuilder> =
         LargeListBuilder::with_capacity(BooleanBuilder::new(), 5);
@@ -1019,10 +1019,10 @@ pub fn verify_arrow_type_results(result: Vec<RecordBatch>, protocol: &str) {
         .unwrap()
         .eq(&LargeListArray::from_iter_primitive::<Int16Type, _, _>(
             vec![
-                Some(vec![Some(-1), Some(0), Some(1), None]),
+                Some(vec![Some(12)]),
                 Some(vec![]),
                 Some(vec![Some(-32768), Some(32767)]),
-                Some(vec![Some(12)]),
+                Some(vec![Some(-1), Some(0), Some(1), None]),
                 None,
             ]
         )));
@@ -1036,10 +1036,10 @@ pub fn verify_arrow_type_results(result: Vec<RecordBatch>, protocol: &str) {
         .unwrap()
         .eq(&LargeListArray::from_iter_primitive::<Int32Type, _, _>(
             vec![
-                Some(vec![Some(-1), Some(0), Some(1123), None]),
+                Some(vec![Some(-1)]),
                 Some(vec![]),
                 Some(vec![Some(-2147483648), Some(2147483647)]),
-                Some(vec![Some(-1)]),
+                Some(vec![Some(-1), Some(0), Some(1123), None]),
                 None,
             ]
         )));
