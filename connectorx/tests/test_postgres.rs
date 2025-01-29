@@ -1,10 +1,10 @@
 use arrow::{
     array::{
-        BooleanArray, Date32Array, Float32Array, Float64Array, Int16Array, Int32Array, Int64Array,
-        LargeBinaryArray, LargeListArray, StringArray, Time64MicrosecondArray,
-        TimestampMicrosecondArray,
+        BooleanArray, BooleanBuilder, Date32Array, Float32Array, Float64Array, Int16Array,
+        Int32Array, Int64Array, LargeBinaryArray, LargeListArray, LargeListBuilder, StringArray,
+        StringBuilder, Time64MicrosecondArray, TimestampMicrosecondArray,
     },
-    datatypes::Float32Type,
+    datatypes::{Float32Type, Float64Type, Int16Type, Int32Type, Int64Type},
     record_batch::RecordBatch,
 };
 use chrono::naive::NaiveDate;
@@ -903,19 +903,263 @@ pub fn verify_arrow_type_results(result: Vec<RecordBatch>, protocol: &str) {
             ]
         )));
 
-    // test_f8array DOUBLE PRECISION[],
-    // test_narray NUMERIC(5,2)[],
-    // test_boolarray BOOLEAN[],
-    // test_i2array SMALLINT[],
-    // test_i4array Integer[],
-    // test_i8array BIGINT[],
-    // test_citext CITEXT,
-    // test_ltree ltree,
-    // test_lquery lquery,
-    // test_ltxtquery ltxtquery,
-    // test_varchararray VARCHAR[],
-    // test_textarray TEXT[],
-    // test_name NAME
+    // test_f8array
+    col += 1;
+    assert!(result[0]
+        .column(col)
+        .as_any()
+        .downcast_ref::<LargeListArray>()
+        .unwrap()
+        .eq(&LargeListArray::from_iter_primitive::<Float64Type, _, _>(
+            vec![
+                Some(vec![Some(-1.1), Some(0.00)]),
+                Some(vec![]),
+                Some(vec![Some(2.123456), None, Some(123.123)]),
+                Some(vec![Some(2.12345678901), Some(-12345678901.1)]),
+                None,
+            ]
+        )));
 
-    // panic!();
+    // test_narray
+    col += 1;
+    assert!(result[0]
+        .column(col)
+        .as_any()
+        .downcast_ref::<LargeListArray>()
+        .unwrap()
+        .eq(&LargeListArray::from_iter_primitive::<Float64Type, _, _>(
+            vec![
+                Some(vec![Some(0.01), Some(521.23)]),
+                Some(vec![Some(0.12), Some(333.33), Some(22.22)]),
+                Some(vec![Some(0.0), None, Some(-112.1)]),
+                Some(vec![]),
+                None,
+            ]
+        )));
+
+    // test_boolarray (from_iter_primitive not available for boolean)
+    col += 1;
+    let b0: BooleanArray = vec![Some(true), Some(false)].into();
+    let b1: BooleanArray = vec![Some(true), Some(false), None].into();
+    let b2: BooleanArray = vec![Some(true)].into();
+    let empty_vec: Vec<bool> = vec![];
+    let b3: BooleanArray = empty_vec.into();
+
+    let mut builder: LargeListBuilder<BooleanBuilder> =
+        LargeListBuilder::with_capacity(BooleanBuilder::new(), 5);
+    builder.append_value(&b0);
+    builder.append_value(&b1);
+    builder.append_value(&b2);
+    builder.append_value(&b3);
+    builder.append_null();
+
+    let bool_array = builder.finish();
+
+    assert!(result[0]
+        .column(col)
+        .as_any()
+        .downcast_ref::<LargeListArray>()
+        .unwrap()
+        .eq(&bool_array));
+
+    // test_i2array
+    col += 1;
+    assert!(result[0]
+        .column(col)
+        .as_any()
+        .downcast_ref::<LargeListArray>()
+        .unwrap()
+        .eq(&LargeListArray::from_iter_primitive::<Int16Type, _, _>(
+            vec![
+                Some(vec![Some(-1), Some(0), Some(1), None]),
+                Some(vec![]),
+                Some(vec![Some(-32768), Some(32767)]),
+                Some(vec![Some(12)]),
+                None,
+            ]
+        )));
+
+    // test_i4array
+    col += 1;
+    assert!(result[0]
+        .column(col)
+        .as_any()
+        .downcast_ref::<LargeListArray>()
+        .unwrap()
+        .eq(&LargeListArray::from_iter_primitive::<Int32Type, _, _>(
+            vec![
+                Some(vec![Some(-1), Some(0), Some(1123), None]),
+                Some(vec![]),
+                Some(vec![Some(-2147483648), Some(2147483647)]),
+                Some(vec![Some(-1)]),
+                None,
+            ]
+        )));
+
+    // test_i8array
+    col += 1;
+    assert!(result[0]
+        .column(col)
+        .as_any()
+        .downcast_ref::<LargeListArray>()
+        .unwrap()
+        .eq(&LargeListArray::from_iter_primitive::<Int64Type, _, _>(
+            vec![
+                Some(vec![Some(-9223372036854775808), Some(9223372036854775807)]),
+                Some(vec![]),
+                Some(vec![Some(-0)]),
+                Some(vec![Some(-1), Some(0), Some(1), None]),
+                None,
+            ]
+        )));
+
+    // test_citext
+    col += 1;
+    if protocol == "csv" {
+        assert!(result[0]
+            .column(col)
+            .as_any()
+            .downcast_ref::<StringArray>()
+            .unwrap()
+            .eq(&StringArray::from(vec![
+                Some("str_citext"),
+                None, // CSV Protocol can't distinguish "" from NULL
+                Some("abcdef"),
+                Some("1234"),
+                None,
+            ])));
+    } else {
+        assert!(result[0]
+            .column(col)
+            .as_any()
+            .downcast_ref::<StringArray>()
+            .unwrap()
+            .eq(&StringArray::from(vec![
+                Some("str_citext"),
+                Some(""),
+                Some("abcdef"),
+                Some("1234"),
+                None,
+            ])));
+    }
+
+    // test_ltree
+    col += 1;
+    if protocol == "csv" {
+        assert!(result[0]
+            .column(col)
+            .as_any()
+            .downcast_ref::<StringArray>()
+            .unwrap()
+            .eq(&StringArray::from(vec![
+                Some("A.B.C.D"),
+                Some("A.B.E"),
+                Some("A"),
+                None, // CSV Protocol can't distinguish "" from NULL
+                None,
+            ])));
+    } else {
+        assert!(result[0]
+            .column(col)
+            .as_any()
+            .downcast_ref::<StringArray>()
+            .unwrap()
+            .eq(&StringArray::from(vec![
+                Some("A.B.C.D"),
+                Some("A.B.E"),
+                Some("A"),
+                Some(""),
+                None,
+            ])));
+    }
+
+    // test_lquery
+    col += 1;
+    assert!(result[0]
+        .column(col)
+        .as_any()
+        .downcast_ref::<StringArray>()
+        .unwrap()
+        .eq(&StringArray::from(vec![
+            Some("*.B.*"),
+            Some("A.*"),
+            Some("*"),
+            Some("*.A"),
+            None,
+        ])));
+
+    // test_ltxtquery
+    col += 1;
+    assert!(result[0]
+        .column(col)
+        .as_any()
+        .downcast_ref::<StringArray>()
+        .unwrap()
+        .eq(&StringArray::from(vec![
+            Some("A & B*"),
+            Some("A | B"),
+            Some("A@"),
+            Some("A & B*"),
+            None,
+        ])));
+
+    // test_varchararray (does not implement from_iter_primitive)
+    col += 1;
+    let b0: StringArray = vec![Some("str1"), Some("str2")].into();
+    let b1: StringArray = vec![
+        Some("0123456789"),
+        Some("abcdefghijklmnopqrstuvwxyz"),
+        Some("!@#$%^&*()_-+=~`:;<>?/"),
+    ]
+    .into();
+    let b2: StringArray;
+    let b3: StringArray;
+    if protocol == "csv" || protocol == "simple" {
+        // Interpret the '' as \"
+        b2 = vec![Some("\"\""), Some("\"  \"")].into();
+        b3 = vec![Some("👨‍🍳👨‍🍳👨‍🍳👨"), Some("\"\""), None].into();
+    } else {
+        b2 = vec![Some(""), Some("  ")].into();
+        b3 = vec![Some("👨‍🍳👨‍🍳👨‍🍳👨"), Some(""), None].into();
+    }
+    let mut builder: LargeListBuilder<StringBuilder> =
+        LargeListBuilder::with_capacity(StringBuilder::new(), 5);
+    builder.append_value(&b0);
+    builder.append_value(&b1);
+    builder.append_value(&b2);
+    builder.append_value(&b3);
+    builder.append_null();
+
+    let array = builder.finish();
+
+    assert!(result[0]
+        .column(col)
+        .as_any()
+        .downcast_ref::<LargeListArray>()
+        .unwrap()
+        .eq(&array));
+
+    // test_textarray (does not implement from_iter_primitive)
+    col += 1;
+    assert!(result[0]
+        .column(col)
+        .as_any()
+        .downcast_ref::<LargeListArray>()
+        .unwrap()
+        .eq(&array));
+
+    // test_name (does not implement from_iter_primitive)
+    col += 1;
+    assert!(result[0]
+        .column(col)
+        .as_any()
+        .downcast_ref::<StringArray>()
+        .unwrap()
+        .eq(&StringArray::from(vec![
+            Some("0"), // 👨‍🍳 is 3 char
+            Some("21"),
+            Some("someName"),
+            Some("101203203-1212323-22131235"),
+            None,
+        ])));
 }
