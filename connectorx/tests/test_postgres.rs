@@ -134,7 +134,7 @@ fn load_and_parse_csv() {
 }
 
 #[test]
-fn test_postgres() {
+fn test_postgres_binary() {
     let _ = env_logger::builder().is_test(true).try_init();
 
     let dburl = env::var("POSTGRES_URL").unwrap();
@@ -185,50 +185,51 @@ fn test_postgres_csv() {
 }
 
 #[test]
-fn test_postgres_agg() {
+fn test_postgres_cursor() {
     let _ = env_logger::builder().is_test(true).try_init();
 
     let dburl = env::var("POSTGRES_URL").unwrap();
 
-    let queries = [CXQuery::naked(
-        "SELECT test_bool, SUM(test_float) FROM test_table GROUP BY test_bool",
-    )];
-
+    let queries = [
+        CXQuery::naked("select * from test_table where test_int < 2"),
+        CXQuery::naked("select * from test_table where test_int >= 2"),
+    ];
     let url = Url::parse(dburl.as_str()).unwrap();
     let (config, _tls) = rewrite_tls_args(&url).unwrap();
-    let builder = PostgresSource::<BinaryProtocol, NoTls>::new(config, NoTls, 1).unwrap();
-    let mut destination = ArrowDestination::new();
-    let dispatcher = Dispatcher::<_, _, PostgresArrowTransport<BinaryProtocol, NoTls>>::new(
-        builder,
-        &mut destination,
-        &queries,
-        Some("SELECT test_bool, SUM(test_float) FROM test_table GROUP BY test_bool".to_string()),
+    let builder = PostgresSource::<CursorProtocol, NoTls>::new(config, NoTls, 2).unwrap();
+    let mut dst = ArrowDestination::new();
+    let dispatcher = Dispatcher::<_, _, PostgresArrowTransport<CursorProtocol, NoTls>>::new(
+        builder, &mut dst, &queries, None,
     );
 
     dispatcher.run().expect("run dispatcher");
+    let result = dst.arrow().unwrap();
+    println!("{:?}", result);
+    verify_arrow_results(result);
+}
 
-    let mut result = destination.arrow().unwrap();
-    assert!(result.len() == 1);
-    let rb = result.pop().unwrap();
-    assert!(rb.columns().len() == 2);
+#[test]
+fn test_postgres_simple() {
+    let _ = env_logger::builder().is_test(true).try_init();
 
-    assert!(rb
-        .column(0)
-        .as_any()
-        .downcast_ref::<BooleanArray>()
-        .unwrap()
-        .eq(&BooleanArray::from(vec![None, Some(false), Some(true)])));
+    let dburl = env::var("POSTGRES_URL").unwrap();
 
-    assert!(rb
-        .column(1)
-        .as_any()
-        .downcast_ref::<Float64Array>()
-        .unwrap()
-        .eq(&Float64Array::from(vec![
-            Some(10.9),
-            Some(5.2),
-            Some(-10.0),
-        ])));
+    let queries = [
+        CXQuery::naked("select * from test_table where test_int < 2"),
+        CXQuery::naked("select * from test_table where test_int >= 2"),
+    ];
+    let url = Url::parse(dburl.as_str()).unwrap();
+    let (config, _tls) = rewrite_tls_args(&url).unwrap();
+    let builder = PostgresSource::<SimpleProtocol, NoTls>::new(config, NoTls, 2).unwrap();
+    let mut dst = ArrowDestination::new();
+    let dispatcher = Dispatcher::<_, _, PostgresArrowTransport<SimpleProtocol, NoTls>>::new(
+        builder, &mut dst, &queries, None,
+    );
+
+    dispatcher.run().expect("run dispatcher");
+    let result = dst.arrow().unwrap();
+    println!("{:?}", result);
+    verify_arrow_results(result);
 }
 
 pub fn verify_arrow_results(result: Vec<RecordBatch>) {
@@ -313,6 +314,53 @@ pub fn verify_arrow_results(result: Vec<RecordBatch>) {
             _ => unreachable!(),
         }
     }
+}
+
+#[test]
+fn test_postgres_agg() {
+    let _ = env_logger::builder().is_test(true).try_init();
+
+    let dburl = env::var("POSTGRES_URL").unwrap();
+
+    let queries = [CXQuery::naked(
+        "SELECT test_bool, SUM(test_float) FROM test_table GROUP BY test_bool",
+    )];
+
+    let url = Url::parse(dburl.as_str()).unwrap();
+    let (config, _tls) = rewrite_tls_args(&url).unwrap();
+    let builder = PostgresSource::<BinaryProtocol, NoTls>::new(config, NoTls, 1).unwrap();
+    let mut destination = ArrowDestination::new();
+    let dispatcher = Dispatcher::<_, _, PostgresArrowTransport<BinaryProtocol, NoTls>>::new(
+        builder,
+        &mut destination,
+        &queries,
+        Some("SELECT test_bool, SUM(test_float) FROM test_table GROUP BY test_bool".to_string()),
+    );
+
+    dispatcher.run().expect("run dispatcher");
+
+    let mut result = destination.arrow().unwrap();
+    assert!(result.len() == 1);
+    let rb = result.pop().unwrap();
+    assert!(rb.columns().len() == 2);
+
+    assert!(rb
+        .column(0)
+        .as_any()
+        .downcast_ref::<BooleanArray>()
+        .unwrap()
+        .eq(&BooleanArray::from(vec![None, Some(false), Some(true)])));
+
+    assert!(rb
+        .column(1)
+        .as_any()
+        .downcast_ref::<Float64Array>()
+        .unwrap()
+        .eq(&Float64Array::from(vec![
+            Some(10.9),
+            Some(5.2),
+            Some(-10.0),
+        ])));
 }
 
 #[test]
