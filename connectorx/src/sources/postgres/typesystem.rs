@@ -115,7 +115,7 @@ impl<'a> From<&'a Type> for PostgresTypeSystem {
 pub struct PostgresTypePairs<'a>(pub &'a Type, pub &'a PostgresTypeSystem);
 
 // Link (postgres::Type, connectorx::PostgresTypes) back to the one defiend by the postgres crate.
-impl<'a> From<PostgresTypePairs<'a>> for Type {
+impl From<PostgresTypePairs<'_>> for Type {
     fn from(ty: PostgresTypePairs) -> Type {
         use PostgresTypeSystem::*;
         match ty.1 {

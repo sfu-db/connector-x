@@ -162,12 +162,11 @@ impl<P, C> TypeConversion<Vec<Option<i64>>, Vec<Option<i64>>> for PostgresArrowT
 impl<P, C> TypeConversion<Vec<Option<Decimal>>, Vec<Option<f64>>> for PostgresArrowTransport<P, C> {
     fn convert(val: Vec<Option<Decimal>>) -> Vec<Option<f64>> {
         val.into_iter()
-            .map(|v| match v {
-                Some(v) => Some(
+            .map(|v| {
+                v.map(|v| {
                     v.to_f64()
-                        .unwrap_or_else(|| panic!("cannot convert decimal {:?} to float64", v)),
-                ),
-                None => None,
+                        .unwrap_or_else(|| panic!("cannot convert decimal {:?} to float64", v))
+                })
             })
             .collect()
     }
