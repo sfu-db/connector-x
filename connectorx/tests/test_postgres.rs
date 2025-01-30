@@ -694,9 +694,9 @@ pub fn verify_arrow_type_results(result: Vec<RecordBatch>, protocol: &str) {
         .downcast_ref::<Int16Array>()
         .unwrap()
         .eq(&Int16Array::from(vec![
+            Some(-32768),
             Some(0),
             Some(1),
-            Some(-32768),
             Some(32767),
             None,
         ])));
