@@ -452,46 +452,49 @@ def test_postgres_with_index_col(postgres_url: str) -> None:
 def test_postgres_types_binary(postgres_url: str) -> None:
     query = "SELECT test_date, test_timestamp, test_timestamptz, test_int2, test_int4, test_int8, test_float4, test_float8, test_numeric, test_bpchar, test_char, test_varchar, test_uuid, test_time, test_json, test_jsonb, test_bytea, test_enum, test_citext, test_ltree, test_lquery, test_ltxtquery, test_name FROM test_types"
     df = read_sql(postgres_url, query)
-    verify_data_types(df)
+    verify_data_types(df, "binary")
 
-# def test_postgres_types_vec_binary(postgres_url: str) -> None:
-#     query = "SELECT test_f4array, test_f8array, test_narray, test_boolarray, test_i2array, test_i4array, test_i8array FROM test_types where test_int2 is not NULL and test_int2 <> 32767"
-#     df = read_sql(postgres_url, query)
-#     verify_data_types_vec(df)
+def test_postgres_types_vec_binary(postgres_url: str) -> None:
+    query = "SELECT test_boolarray, test_i2array, test_i4array, test_i8array, test_f4array, test_f8array, test_narray FROM test_types where test_int2 is not NULL and test_int2 <> 32767"
+    df = read_sql(postgres_url, query)
+    verify_data_types_vec(df)
 
-# def test_postgres_types_csv(postgres_url: str) -> None:
-#     query = "SELECT test_date, test_timestamp, test_timestamptz, test_int2, test_int4, test_int8, test_float4, test_numeric, test_bpchar, test_char, test_varchar, test_uuid, test_time, test_json, test_jsonb, test_bytea, test_enum, test_citext, test_ltree, test_lquery, test_ltxtquery, test_name FROM test_types"
-#     df = read_sql(postgres_url, query, protocol="csv")
+def test_postgres_types_csv(postgres_url: str) -> None:
+    query = "SELECT test_date, test_timestamp, test_timestamptz, test_int2, test_int4, test_int8, test_float4, test_float8, test_numeric, test_bpchar, test_char, test_varchar, test_uuid, test_time, test_json, test_jsonb, test_bytea, test_enum, test_citext, test_ltree, test_lquery, test_ltxtquery, test_name FROM test_types"
+    df = read_sql(postgres_url, query, protocol="csv")
+    verify_data_types(df, "csv")
 
-# def test_postgres_types_vec_csv(postgres_url: str) -> None:
-#     query = "SELECT test_f4array, test_f8array, test_narray, test_boolarray, test_i2array, test_i4array, test_i8array FROM test_types where test_bool is not NULL and test_int2 <> 32767"
-#     df = read_sql(postgres_url, query, protocol="csv")
-#     verify_data_types_vec(df)
+def test_postgres_types_vec_csv(postgres_url: str) -> None:
+    query = "SELECT test_boolarray, test_i2array, test_i4array, test_i8array, test_f4array, test_f8array, test_narray FROM test_types where test_int2 is not NULL and test_int2 <> 32767"
+    df = read_sql(postgres_url, query, protocol="csv")
+    verify_data_types_vec(df)
 
-# def test_postgres_types_cursor(postgres_url: str) -> None:
-#     query = "SELECT test_date, test_timestamp, test_timestamptz, test_int2, test_int4, test_int8, test_float4, test_numeric, test_bpchar, test_char, test_varchar, test_uuid, test_time, test_json, test_jsonb, test_bytea, test_enum, test_citext, test_ltree, test_lquery, test_ltxtquery, test_name FROM test_types"
-#     df = read_sql(postgres_url, query, protocol="cursor")
+def test_postgres_types_cursor(postgres_url: str) -> None:
+    query = "SELECT test_date, test_timestamp, test_timestamptz, test_int2, test_int4, test_int8, test_float4, test_float8, test_numeric, test_bpchar, test_char, test_varchar, test_uuid, test_time, test_json, test_jsonb, test_bytea, test_citext, test_ltree, test_lquery, test_ltxtquery, test_name FROM test_types"
+    df = read_sql(postgres_url, query, protocol="cursor")
+    verify_data_types(df, "cursor")
 
-# def test_postgres_types_vec_cursor(postgres_url: str) -> None:
-#     query = "SELECT test_f4array, test_f8array, test_narray, test_boolarray, test_i2array, test_i4array, test_i8array FROM test_types where test_bool is not NULL and test_int2 <> 32767"
-#     df = read_sql(postgres_url, query, protocol="cursor")
-#     verify_data_types_vec(df)
+def test_postgres_types_vec_cursor(postgres_url: str) -> None:
+    query = "SELECT test_boolarray, test_i2array, test_i4array, test_i8array, test_f4array, test_f8array, test_narray FROM test_types where test_int2 is not NULL and test_int2 <> 32767"
+    df = read_sql(postgres_url, query, protocol="cursor")
+    verify_data_types_vec(df)
 
-# def test_postgres_types_simple(postgres_url: str) -> None:
-#     query = "SELECT test_date, test_timestamp, test_timestamptz, test_int2, test_int4, test_int8, test_float4, test_numeric, test_bpchar, test_char, test_varchar, test_uuid, test_time, test_json, test_jsonb, test_bytea, test_enum, test_citext, test_ltree, test_lquery, test_ltxtquery, test_name FROM test_types"
-#     df = read_sql(postgres_url, query, protocol="simple")
+def test_postgres_types_simple(postgres_url: str) -> None:
+    query = "SELECT test_date, test_timestamp, test_timestamptz, test_int2, test_int4, test_int8, test_float4, test_float8, test_numeric, test_bpchar, test_char, test_varchar, test_uuid, test_time, test_bytea, test_citext, test_ltree, test_lquery, test_ltxtquery, test_name FROM test_types"
+    df = read_sql(postgres_url, query, protocol="simple")
+    verify_data_types(df, "simple")
 
-# def test_postgres_types_vec_simple(postgres_url: str) -> None:
-#     query = "SELECT test_f4array, test_f8array, test_narray, test_boolarray, test_i2array, test_i4array, test_i8array FROM test_types where test_bool is not NULL and test_int2 <> 32767"
-#     df = read_sql(postgres_url, query, protocol="simple")
-#     verify_data_types_vec(df)
+def test_postgres_types_vec_simple(postgres_url: str) -> None:
+    query = "SELECT test_boolarray, test_i2array, test_i4array, test_i8array, test_f4array, test_f8array, test_narray FROM test_types where test_int2 is not NULL and test_int2 <> 32767"
+    df = read_sql(postgres_url, query, protocol="simple")
+    verify_data_types_vec(df)
 
-def verify_data_types(df) -> None:
+def verify_data_types(df, protocol) -> None:
     expected = pd.DataFrame(
         index=range(5),
         data={
             "test_date": pd.Series(
-                ["1970-01-01", "2000-02-28", "2038-01-18", "1901-12-14", None], dtype="datetime64[ms]"
+                ["1970-01-01", "2000-02-28", "2038-01-18", "1901-12-14", None], dtype="datetime64[ns]"
             ),
             "test_timestamp": pd.Series(
                 [
@@ -501,25 +504,25 @@ def verify_data_types(df) -> None:
                     "1901-12-14 00:00:00.062547",
                     None,
                 ],
-                dtype="datetime64[us]",
+                dtype="datetime64[ns]",
             ),
             "test_timestamptz": pd.Series(
                 [
-                    "1970-01-01 00:00:01+00:00",
-                    "2000-02-28 12:00:10-04:00",
-                    "2038-01-18 23:59:59+08:00",
-                    "1901-12-14 00:00:00.062547-12:00",
+                    "1970-01-01 00:00:01",
+                    "2000-02-28 16:00:10",
+                    "2038-01-18 15:59:59",
+                    "1901-12-14 12:00:00.062547",
                     None,
                 ],
-                dtype="datetime64[us, UTC]",
+                dtype="datetime64[ns]",
             ),
-            "test_int2": pd.Series([-32768, 0, 1, 32767], dtype="int16"),
-            "test_int4": pd.Series([0, 1, -2147483648, 2147483647], dtype="int32"),
+            "test_int2": pd.Series([-32768, 0, 1, 32767], dtype="Int64"),
+            "test_int4": pd.Series([0, 1, -2147483648, 2147483647], dtype="Int64"),
             "test_int8": pd.Series(
-                [-9223372036854775808, 0, 9223372036854775807, 1], dtype="float64"
+                [-9223372036854775808, 0, 9223372036854775807, 1], dtype="Int64"
             ),
             "test_float4": pd.Series(
-                [-1.1, 0.00, 2.123456, -12345.1, None], dtype="float32"
+                [-1.1, 0.00, 2.123456, -12345.1, None], dtype="float64"
             ),
             "test_float8": pd.Series(
                 [-1.1, 0.00, 2.12345678901, -12345678901.1, None], dtype="float64"
@@ -539,14 +542,7 @@ def verify_data_types(df) -> None:
                 dtype="object",
             ),
             "test_time": pd.Series(
-                [
-                    datetime.time(8, 12, 40),
-                    datetime.time(18, 30),
-                    datetime.time(23, 0, 10),
-                    datetime.time(0, 0, 59, 62547),
-                    None,
-                ],
-                dtype="object",
+                ["08:12:40", "18:30:00", "23:00:10", "00:00:59.062547", None], dtype="object"
             ),
             "test_json": pd.Series(
                 [
@@ -598,121 +594,52 @@ def verify_data_types(df) -> None:
             ),
         },
     )
+
+    # Unimplemented
+    if protocol == "cursor" or protocol == "simple": 
+        expected = expected.drop(columns=['test_enum'])
+
+    # Unimplemented
+    if protocol == "simple": 
+        expected = expected.drop(columns=['test_json', 'test_jsonb'])
+
+    # CSV protocol can't distinguish "" from NULL
+    if protocol == "csv":
+        expected.loc[expected.test_varchar == "", 'test_varchar'] = None
+        expected.loc[expected.test_citext == "", 'test_citext'] = None
+        expected.loc[expected.test_ltree == "", 'test_ltree'] = None
+
     assert_frame_equal(df, expected, check_names=True)
 
 def verify_data_types_vec(df) -> None:
-    print("true")
-
-#     expected = pd.DataFrame(
-#         index=range(4),
-#         data={
-#             "test_date": pd.Series(
-#                 ["1970-01-01", "2000-02-28", "2038-01-18", None], dtype="datetime64[ns]"
-#             ),
-#             "test_timestamp": pd.Series(
-#                 [
-#                     "1970-01-01 00:00:01",
-#                     "2000-02-28 12:00:10",
-#                     "2038-01-18 23:59:59",
-#                     None,
-#                 ],
-#                 dtype="datetime64[ns]",
-#             ),
-#             "test_timestamptz": pd.Series(
-#                 [
-#                     "1970-01-01 00:00:01",
-#                     "2000-02-28 16:00:10",
-#                     "2038-01-18 15:59:59",
-#                     None,
-#                 ],
-#                 dtype="datetime64[ns]",
-#             ),
-#             "test_int16": pd.Series([0, 1, 2, 3], dtype="Int64"),
-#             "test_int64": pd.Series(
-#                 [-9223372036854775808, 0, 9223372036854775807, None], dtype="Int64"
-#             ),
-#             "test_float32": pd.Series(
-#                 [None, 3.1415926535, 2.71, -1e-37], dtype="float64"
-#             ),
-#             "test_numeric": pd.Series([None, 521.34, 0.00, 0.00], dtype="float64"),
-#             "test_bpchar": pd.Series(["a    ", "bb   ", "ccc  ", None], dtype="object"),
-#             "test_char": pd.Series(["a", "b", None, "d"], dtype="object"),
-#             "test_varchar": pd.Series([None, "bb", "c", "defghijklm"], dtype="object"),
-#             "test_uuid": pd.Series(
-#                 [
-#                     "86b494cc-96b2-11eb-9298-3e22fbb9fe9d",
-#                     "86b49b84-96b2-11eb-9298-3e22fbb9fe9d",
-#                     "86b49c42-96b2-11eb-9298-3e22fbb9fe9d",
-#                     None,
-#                 ],
-#                 dtype="object",
-#             ),
-#             "test_time": pd.Series(
-#                 ["08:12:40", None, "23:00:10", "18:30:00"], dtype="object"
-#             ),
-#             "test_json": pd.Series(
-#                 [
-#                     '{"customer":"John Doe","items":{"product":"Beer","qty":6}}',
-#                     '{"customer":"Lily Bush","items":{"product":"Diaper","qty":24}}',
-#                     '{"customer":"Josh William","items":{"product":"Toy Car","qty":1}}',
-#                     None,
-#                 ],
-#                 dtype="object",
-#             ),
-#             "test_jsonb": pd.Series(
-#                 [
-#                     '{"product":"Beer","qty":6}',
-#                     '{"product":"Diaper","qty":24}',
-#                     '{"product":"Toy Car","qty":1}',
-#                     None,
-#                 ],
-#                 dtype="object",
-#             ),
-#             "test_bytea": pd.Series(
-#                 [
-#                     None,
-#                     b"\xd0\x97\xd0\xb4\xd1\x80\xd0\xb0\xcc\x81\xd0\xb2\xd1\x81\xd1\x82\xd0\xb2\xd1\x83\xd0\xb9\xd1\x82\xd0\xb5",
-#                     b"",
-#                     b"\xf0\x9f\x98\x9c",
-#                 ],
-#                 dtype="object",
-#             ),
-#             "test_enum": pd.Series(
-#                 ["happy", "very happy", "ecstatic", None], dtype="object"
-#             ),
-#             "test_f4array": pd.Series(
-#                 [[], None, [123.123], [-1e-37, 1e37]], dtype="object"
-#             ),
-#             "test_f8array": pd.Series(
-#                 [[], None, [-1e-307, 1e308], [0.000234, -12.987654321]], dtype="object"
-#             ),
-#             "test_narray": pd.Series(
-#                 [[], None, [521.34], [0.12, 333.33, 22.22]], dtype="object"
-#             ),
-#             "test_boolarray": pd.Series(
-#                 [[True, False], [], [True], None], dtype="object"
-#             ),
-#             "test_i2array": pd.Series(
-#                 [[-1, 0, 1], [], [-32768, 32767], None], dtype="object"
-#             ),
-#             "test_i4array": pd.Series(
-#                 [[-1, 0, 1123], [], [-2147483648, 2147483647], None], dtype="object"
-#             ),
-#             "test_i8array": pd.Series(
-#                 [[-9223372036854775808, 9223372036854775807], [], [0], None],
-#                 dtype="object",
-#             ),
-#             "test_citext": pd.Series(["str_citext", "", "s", None], dtype="object"),
-#             "test_ltree": pd.Series(["A.B.C.D", "A.B.E", "A", None], dtype="object"),
-#             "test_lquery": pd.Series(["*.B.*", "A.*", "*", None], dtype="object"),
-#             "test_ltxtquery": pd.Series(
-#                 ["A & B*", "A | B", "A@", None], dtype="object"
-#             ),
-#         },
-#     )
-#     assert_frame_equal(df, expected, check_names=True)
-
-
+    expected = pd.DataFrame(
+        index=range(3),
+        data={
+            "test_boolarray": pd.Series(
+                [[True, False], [], [True]], dtype="object"
+            ),
+            "test_i2array": pd.Series(
+                [[12], [], [-32768, 32767]], dtype="object"
+            ),
+            "test_i4array": pd.Series(
+                [[-1], [], [-2147483648, 2147483647]], dtype="object"
+            ),
+            "test_i8array": pd.Series(
+                [[-9223372036854775808, 9223372036854775807], [], [0]],
+                dtype="object",
+            ),
+            "test_f4array": pd.Series(
+                [[-1.1, 0.00], [], [1, -2, -12345.1]], dtype="object"
+            ),
+            "test_f8array": pd.Series(
+                [[-1.1, 0.00], [], [2.12345678901, -12345678901.1]], dtype="object"
+            ),
+            "test_narray": pd.Series(
+                [[0.01, 521.23], [0.12, 333.33, 22.22], []], dtype="object"
+            ),
+        },
+    )
+    assert_frame_equal(df, expected, check_names=True)
 
 def test_postgres_empty_result(postgres_url: str) -> None:
     query = "SELECT * FROM test_table where test_int < -100"
