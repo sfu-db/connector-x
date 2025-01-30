@@ -12,7 +12,7 @@ version = "0.4.1"
 [dependencies]
 anyhow = "1"
 fehler = "1"
-itertools = "0.11"
+itertools = "0.13"
 log = "0.4"
 rayon = "1"
 sqlparser = "0.37"
@@ -67,7 +67,7 @@ name = "connectorx"
 criterion = "0.3"
 env_logger = "0.9"
 iai = "0.1"
-pprof = {version = "0.5", features = ["flamegraph"]}
+pprof = {version = "0.14", features = ["flamegraph"]}
 
 [features]
 all = ["src_sqlite", "src_postgres", "src_mysql", "src_mssql", "src_oracle", "src_bigquery", "src_csv", "src_dummy", "src_trino", "dst_arrow", "dst_polars", "federation", "fed_exec"]
