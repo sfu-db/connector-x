@@ -65,14 +65,14 @@ macro_rules! impl_postgres_transport {
                 { ByteA[Vec<u8>]                     => LargeBinary[Vec<u8>]                   | conversion auto   }
                 { JSON[Value]                        => LargeUtf8[String]                      | conversion option }
                 { JSONB[Value]                       => LargeUtf8[String]                      | conversion none   }
-                { BoolArray[Vec<Option<bool>>]       => BoolArray[Vec<Option<bool>>]           | conversion option }
-                { VarcharArray[Vec<Option<String>>]  => Utf8Array[Vec<Option<String>>]         | conversion option }
+                { BoolArray[Vec<Option<bool>>]       => BoolArray[Vec<Option<bool>>]           | conversion auto   }
+                { VarcharArray[Vec<Option<String>>]  => Utf8Array[Vec<Option<String>>]         | conversion auto   }
                 { TextArray[Vec<Option<String>>]     => Utf8Array[Vec<Option<String>>]         | conversion none   }
-                { Int2Array[Vec<Option<i16>>]        => Int16Array[Vec<Option<i16>>]           | conversion option }
-                { Int4Array[Vec<Option<i32>>]        => Int32Array[Vec<Option<i32>>]           | conversion option }
-                { Int8Array[Vec<Option<i64>>]        => Int64Array[Vec<Option<i64>>]           | conversion option }
-                { Float4Array[Vec<Option<f32>>]      => Float32Array[Vec<Option<f32>>]         | conversion option }
-                { Float8Array[Vec<Option<f64>>]      => Float64Array[Vec<Option<f64>>]         | conversion option }
+                { Int2Array[Vec<Option<i16>>]        => Int16Array[Vec<Option<i16>>]           | conversion auto   }
+                { Int4Array[Vec<Option<i32>>]        => Int32Array[Vec<Option<i32>>]           | conversion auto   }
+                { Int8Array[Vec<Option<i64>>]        => Int64Array[Vec<Option<i64>>]           | conversion auto   }
+                { Float4Array[Vec<Option<f32>>]      => Float32Array[Vec<Option<f32>>]         | conversion auto   }
+                { Float8Array[Vec<Option<f64>>]      => Float64Array[Vec<Option<f64>>]         | conversion auto   }
                 { NumericArray[Vec<Option<Decimal>>] => Float64Array[Vec<Option<f64>>]         | conversion option }
             }
         );
@@ -127,38 +127,6 @@ impl<P, C> TypeConversion<Value, String> for PostgresArrowTransport<P, C> {
     }
 }
 
-impl<P, C> TypeConversion<Vec<Option<bool>>, Vec<Option<bool>>> for PostgresArrowTransport<P, C> {
-    fn convert(val: Vec<Option<bool>>) -> Vec<Option<bool>> {
-        val
-    }
-}
-
-impl<P, C> TypeConversion<Vec<Option<String>>, Vec<Option<String>>>
-    for PostgresArrowTransport<P, C>
-{
-    fn convert(val: Vec<Option<String>>) -> Vec<Option<String>> {
-        val
-    }
-}
-
-impl<P, C> TypeConversion<Vec<Option<i16>>, Vec<Option<i16>>> for PostgresArrowTransport<P, C> {
-    fn convert(val: Vec<Option<i16>>) -> Vec<Option<i16>> {
-        val
-    }
-}
-
-impl<P, C> TypeConversion<Vec<Option<i32>>, Vec<Option<i32>>> for PostgresArrowTransport<P, C> {
-    fn convert(val: Vec<Option<i32>>) -> Vec<Option<i32>> {
-        val
-    }
-}
-
-impl<P, C> TypeConversion<Vec<Option<i64>>, Vec<Option<i64>>> for PostgresArrowTransport<P, C> {
-    fn convert(val: Vec<Option<i64>>) -> Vec<Option<i64>> {
-        val
-    }
-}
-
 impl<P, C> TypeConversion<Vec<Option<Decimal>>, Vec<Option<f64>>> for PostgresArrowTransport<P, C> {
     fn convert(val: Vec<Option<Decimal>>) -> Vec<Option<f64>> {
         val.into_iter()
@@ -169,17 +137,5 @@ impl<P, C> TypeConversion<Vec<Option<Decimal>>, Vec<Option<f64>>> for PostgresAr
                 })
             })
             .collect()
-    }
-}
-
-impl<P, C> TypeConversion<Vec<Option<f32>>, Vec<Option<f32>>> for PostgresArrowTransport<P, C> {
-    fn convert(val: Vec<Option<f32>>) -> Vec<Option<f32>> {
-        val
-    }
-}
-
-impl<P, C> TypeConversion<Vec<Option<f64>>, Vec<Option<f64>>> for PostgresArrowTransport<P, C> {
-    fn convert(val: Vec<Option<f64>>) -> Vec<Option<f64>> {
-        val
     }
 }
