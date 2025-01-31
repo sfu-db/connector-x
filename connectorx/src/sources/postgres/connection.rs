@@ -74,10 +74,7 @@ impl TryFrom<TlsConfig> for MakeTlsConnector {
 fn strip_bad_opts(url: &Url) -> Url {
     let stripped_query: Vec<(_, _)> = url
         .query_pairs()
-        .filter(|p| match &*p.0 {
-            "sslkey" | "sslcert" | "sslrootcert" => false,
-            _ => true,
-        })
+        .filter(|p| !matches!(&*p.0, "sslkey" | "sslcert" | "sslrootcert"))
         .collect();
 
     let mut url2 = url.clone();
