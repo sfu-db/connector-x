@@ -49,10 +49,6 @@ impl Source for DummySource {
 
     fn set_origin_query(&mut self, _query: Option<String>) {}
 
-    fn set_pre_execution_queries(&mut self, _pre_execution_queries: Option<&[String]>) {
-        unimplemented!("pre_execution_queries is not implemented in dummy Source");
-    }
-
     fn fetch_metadata(&mut self) -> Result<()> {
         Ok(())
     }
