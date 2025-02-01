@@ -72,13 +72,6 @@ pub fn read_sql<'py>(
             &queries,
             pre_execution_queries.as_deref(),
         )?),
-        "arrow2" => Ok(crate::arrow2::write_arrow(
-            py,
-            &source_conn,
-            origin_query,
-            &queries,
-            pre_execution_queries.as_deref(),
-        )?),
         _ => Err(PyValueError::new_err(format!(
             "return type should be 'pandas' or 'arrow', got '{}'",
             return_type

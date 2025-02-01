@@ -12,8 +12,10 @@ pub struct NaiveDateTimeWrapperMicro(pub NaiveDateTime);
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum ArrowTypeSystem {
+    Int16(bool),
     Int32(bool),
     Int64(bool),
+    UInt16(bool),
     UInt32(bool),
     UInt64(bool),
     Float32(bool),
@@ -30,8 +32,10 @@ pub enum ArrowTypeSystem {
     DateTimeTzMicro(bool),
     BoolArray(bool),
     Utf8Array(bool),
+    Int16Array(bool),
     Int32Array(bool),
     Int64Array(bool),
+    UInt16Array(bool),
     UInt32Array(bool),
     UInt64Array(bool),
     Float32Array(bool),
@@ -41,12 +45,14 @@ pub enum ArrowTypeSystem {
 impl_typesystem! {
     system = ArrowTypeSystem,
     mappings = {
+        { Int16           => i16                       }
         { Int32           => i32                       }
         { Int64           => i64                       }
+        { UInt16          => u16                       }
         { UInt32          => u32                       }
         { UInt64          => u64                       }
-        { Float64         => f64                       }
         { Float32         => f32                       }
+        { Float64         => f64                       }
         { Boolean         => bool                      }
         { LargeUtf8       => String                    }
         { LargeBinary     => Vec<u8>                   }
@@ -59,8 +65,10 @@ impl_typesystem! {
         { DateTimeTzMicro => DateTimeWrapperMicro      }
         { BoolArray       => Vec<Option<bool>>         }
         { Utf8Array       => Vec<Option<String>>       }
+        { Int16Array      => Vec<Option<i16>>          }
         { Int32Array      => Vec<Option<i32>>          }
         { Int64Array      => Vec<Option<i64>>          }
+        { UInt16Array     => Vec<Option<u16>>          }
         { UInt32Array     => Vec<Option<u32>>          }
         { UInt64Array     => Vec<Option<u64>>          }
         { Float32Array    => Vec<Option<f32>>          }

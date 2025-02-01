@@ -48,9 +48,6 @@ pub enum ConnectorXPythonError {
     #[error(transparent)]
     ArrowDestinationError(#[from] connectorx::destinations::arrow::ArrowDestinationError),
 
-    #[error(transparent)]
-    Arrow2DestinationError(#[from] connectorx::destinations::arrow2::Arrow2DestinationError),
-
     /// Any other errors that are too trivial to be put here explicitly.
     #[error(transparent)]
     Other(#[from] anyhow::Error),

@@ -28,7 +28,6 @@ test-feature-gate:
     cargo c --features src_dummy
     cargo c --features src_trino
     cargo c --features dst_arrow
-    cargo c --features dst_arrow2
 
 bootstrap-python:
     cd connectorx-python && poetry install

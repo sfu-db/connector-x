@@ -1,6 +1,6 @@
 [package]
 name = "connectorx-cpp"
-version = "0.4.1-alpha1"
+version = "0.4.1"
 edition = "2021"
 license = "MIT"
 
@@ -22,7 +22,7 @@ light = ["fptr", "nbstr", "dsts_light" , "srcs_light", "federation"]
 srcs_light = ["connectorx/src_postgres"]
 dsts_light = ["connectorx/dst_arrow"]
 
-dsts = ["connectorx/dst_arrow", "connectorx/dst_arrow2"]
+dsts = ["connectorx/dst_arrow"]
 fptr = ["connectorx/fptr"]
 branch = ["connectorx/branch"]
 federation = ["connectorx/federation"]

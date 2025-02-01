@@ -15,7 +15,7 @@ pub use datetime::DateTimeBlock;
 use fehler::throw;
 pub use float64::Float64Block;
 pub use int64::Int64Block;
-use pyo3::{exceptions::PyRuntimeError, PyAny, PyResult};
+use pyo3::{exceptions::PyRuntimeError, intern, types::PyAnyMethods, PyAny, PyResult};
 use std::any::TypeId;
 use std::sync::Mutex;
 pub use string::StringBlock;
@@ -44,9 +44,13 @@ pub trait HasPandasColumn: Sized {
     type PandasColumn<'a>: PandasColumn<Self>;
 }
 
-pub fn check_dtype(ob: &PyAny, expected_dtype: &str) -> PyResult<()> {
-    let dtype = ob.getattr("dtype")?.str()?;
-    let dtype = dtype.to_str()?;
+pub trait ExtractBlockFromBound<'a>: Sized {
+    fn extract_block<'b: 'a>(ob: &'b pyo3::Bound<'a, PyAny>) -> PyResult<Self>;
+}
+
+pub fn check_dtype<'py>(ob: &pyo3::Bound<'py, PyAny>, expected_dtype: &str) -> PyResult<()> {
+    let dtype = ob.getattr(intern!(ob.py(), "dtype"))?.str()?;
+    // https://pyo3.rs/main/doc/pyo3/types/struct.pystring#equality
     if dtype != expected_dtype {
         throw!(PyRuntimeError::new_err(format!(
             "expecting ndarray to be '{}' found '{}' at {}:{}",
@@ -58,18 +62,3 @@ pub fn check_dtype(ob: &PyAny, expected_dtype: &str) -> PyResult<()> {
     }
     Ok(())
 }
-
-// pub fn check_bound_dtype<'py>(ob: &pyo3::Bound<'py, PyAny>, expected_dtype: &str) -> PyResult<()> {
-//     let dtype = ob.getattr(intern!(ob.py(), "dtype"))?.str()?;
-//     // https://pyo3.rs/main/doc/pyo3/types/struct.pystring#equality
-//     if dtype != expected_dtype {
-//         throw!(PyRuntimeError::new_err(format!(
-//             "expecting ndarray to be '{}' found '{}' at {}:{}",
-//             expected_dtype,
-//             dtype,
-//             file!(),
-//             line!()
-//         )));
-//     }
-//     Ok(())
-// }

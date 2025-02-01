@@ -1,5 +1,4 @@
 pub mod arrow;
-pub mod arrow2;
 pub mod constants;
 pub mod cx_read_sql;
 mod errors;
@@ -40,6 +39,7 @@ fn connectorx(_: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
 }
 
 #[pyfunction]
+#[pyo3(signature = (conn, return_type, protocol=None, queries=None, partition_query=None))]
 pub fn read_sql<'py>(
     py: Python<'py>,
     conn: &str,
@@ -65,6 +65,7 @@ pub fn partition_sql(
 }
 
 #[pyfunction]
+#[pyo3(signature = (sql, db_map, strategy=None))]
 pub fn read_sql2<'py>(
     py: Python<'py>,
     sql: &str,
@@ -88,6 +89,7 @@ pub fn read_sql2<'py>(
 }
 
 #[pyfunction]
+#[pyo3(signature = (conn, query, protocol=None))]
 pub fn get_meta<'py>(
     py: Python<'py>,
     conn: &str,
