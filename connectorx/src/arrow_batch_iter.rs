@@ -50,15 +50,8 @@ where
         mut dst: ArrowStreamDestination,
         origin_query: Option<String>,
         queries: &[CXQuery<String>],
-        pre_execution_queries: Option<&[String]>,
     ) -> Result<Self, TP::Error> {
-        let dispatcher = Dispatcher::<_, _, TP>::new(
-            src,
-            &mut dst,
-            queries,
-            origin_query,
-            pre_execution_queries,
-        );
+        let dispatcher = Dispatcher::<_, _, TP>::new(src, &mut dst, queries, origin_query);
         let (dorder, src_parts, dst_parts, src_schema, dst_schema) = dispatcher.prepare()?;
 
         Ok(Self {

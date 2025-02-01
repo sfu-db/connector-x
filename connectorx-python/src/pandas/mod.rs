@@ -56,23 +56,25 @@ pub fn write_pandas<'a, 'py: 'a>(
                         tls_conn,
                         queries.len(),
                     )?;
-                    let dispatcher = PandasDispatcher::<
+                    let mut dispatcher = PandasDispatcher::<
                         _,
                         PostgresPandasTransport<CSVProtocol, MakeTlsConnector>,
                     >::new(
-                        sb, destination, queries, origin_query, pre_execution_queries
+                        sb, destination, queries, origin_query
                     );
+                    dispatcher.set_pre_execution_queries(pre_execution_queries);
                     dispatcher.run(py)?
                 }
                 ("csv", None) => {
                     let sb =
                         PostgresSource::<CSVProtocol, NoTls>::new(config, NoTls, queries.len())?;
-                    let dispatcher = PandasDispatcher::<
+                    let mut dispatcher = PandasDispatcher::<
                         _,
                         PostgresPandasTransport<CSVProtocol, NoTls>,
                     >::new(
-                        sb, destination, queries, origin_query, pre_execution_queries
+                        sb, destination, queries, origin_query
                     );
+                    dispatcher.set_pre_execution_queries(pre_execution_queries);
                     dispatcher.run(py)?
                 }
                 ("binary", Some(tls_conn)) => {
@@ -81,11 +83,12 @@ pub fn write_pandas<'a, 'py: 'a>(
                         tls_conn,
                         queries.len(),
                     )?;
-                    let dispatcher =
+                    let mut dispatcher =
                         PandasDispatcher::<
                             _,
                             PostgresPandasTransport<PgBinaryProtocol, MakeTlsConnector>,
-                        >::new(sb, destination, queries, origin_query, pre_execution_queries);
+                        >::new(sb, destination, queries, origin_query);
+                    dispatcher.set_pre_execution_queries(pre_execution_queries);
                     dispatcher.run(py)?
                 }
                 ("binary", None) => {
@@ -94,12 +97,13 @@ pub fn write_pandas<'a, 'py: 'a>(
                         NoTls,
                         queries.len(),
                     )?;
-                    let dispatcher = PandasDispatcher::<
+                    let mut dispatcher = PandasDispatcher::<
                         _,
                         PostgresPandasTransport<PgBinaryProtocol, NoTls>,
                     >::new(
-                        sb, destination, queries, origin_query, pre_execution_queries
+                        sb, destination, queries, origin_query
                     );
+                    dispatcher.set_pre_execution_queries(pre_execution_queries);
                     dispatcher.run(py)?
                 }
                 ("cursor", Some(tls_conn)) => {
@@ -108,22 +112,24 @@ pub fn write_pandas<'a, 'py: 'a>(
                         tls_conn,
                         queries.len(),
                     )?;
-                    let dispatcher =
+                    let mut dispatcher =
                         PandasDispatcher::<
                             _,
                             PostgresPandasTransport<CursorProtocol, MakeTlsConnector>,
-                        >::new(sb, destination, queries, origin_query, pre_execution_queries);
+                        >::new(sb, destination, queries, origin_query);
+                    dispatcher.set_pre_execution_queries(pre_execution_queries);
                     dispatcher.run(py)?
                 }
                 ("cursor", None) => {
                     let sb =
                         PostgresSource::<CursorProtocol, NoTls>::new(config, NoTls, queries.len())?;
-                    let dispatcher = PandasDispatcher::<
+                    let mut dispatcher = PandasDispatcher::<
                         _,
                         PostgresPandasTransport<CursorProtocol, NoTls>,
                     >::new(
-                        sb, destination, queries, origin_query, pre_execution_queries
+                        sb, destination, queries, origin_query
                     );
+                    dispatcher.set_pre_execution_queries(pre_execution_queries);
                     dispatcher.run(py)?
                 }
                 ("simple", Some(tls_conn)) => {
@@ -132,22 +138,24 @@ pub fn write_pandas<'a, 'py: 'a>(
                         tls_conn,
                         queries.len(),
                     )?;
-                    let dispatcher =
+                    let mut dispatcher =
                         PandasDispatcher::<
                             _,
                             PostgresPandasTransport<SimpleProtocol, MakeTlsConnector>,
-                        >::new(sb, destination, queries, origin_query, pre_execution_queries);
+                        >::new(sb, destination, queries, origin_query);
+                    dispatcher.set_pre_execution_queries(pre_execution_queries);
                     dispatcher.run(py)?
                 }
                 ("simple", None) => {
                     let sb =
                         PostgresSource::<SimpleProtocol, NoTls>::new(config, NoTls, queries.len())?;
-                    let dispatcher = PandasDispatcher::<
+                    let mut dispatcher = PandasDispatcher::<
                         _,
                         PostgresPandasTransport<SimpleProtocol, NoTls>,
                     >::new(
-                        sb, destination, queries, origin_query, pre_execution_queries
+                        sb, destination, queries, origin_query
                     );
+                    dispatcher.set_pre_execution_queries(pre_execution_queries);
                     dispatcher.run(py)?
                 }
                 _ => unimplemented!("{} protocol not supported", protocol),
@@ -162,7 +170,6 @@ pub fn write_pandas<'a, 'py: 'a>(
                 destination,
                 queries,
                 origin_query,
-                pre_execution_queries,
             );
             dispatcher.run(py)?
         }
@@ -170,26 +177,26 @@ pub fn write_pandas<'a, 'py: 'a>(
             "binary" => {
                 let source =
                     MySQLSource::<MySQLBinaryProtocol>::new(&source_conn.conn[..], queries.len())?;
-                let dispatcher =
+                let mut dispatcher =
                     PandasDispatcher::<_, MysqlPandasTransport<MySQLBinaryProtocol>>::new(
                         source,
                         destination,
                         queries,
                         origin_query,
-                        pre_execution_queries,
                     );
+                dispatcher.set_pre_execution_queries(pre_execution_queries);
                 dispatcher.run(py)?
             }
             "text" => {
                 let source =
                     MySQLSource::<TextProtocol>::new(&source_conn.conn[..], queries.len())?;
-                let dispatcher = PandasDispatcher::<_, MysqlPandasTransport<TextProtocol>>::new(
+                let mut dispatcher = PandasDispatcher::<_, MysqlPandasTransport<TextProtocol>>::new(
                     source,
                     destination,
                     queries,
                     origin_query,
-                    pre_execution_queries,
                 );
+                dispatcher.set_pre_execution_queries(pre_execution_queries);
                 dispatcher.run(py)?
             }
             _ => unimplemented!("{} protocol not supported", protocol),
@@ -202,7 +209,6 @@ pub fn write_pandas<'a, 'py: 'a>(
                 destination,
                 queries,
                 origin_query,
-                pre_execution_queries,
             );
             dispatcher.run(py)?
         }
@@ -213,7 +219,6 @@ pub fn write_pandas<'a, 'py: 'a>(
                 destination,
                 queries,
                 origin_query,
-                pre_execution_queries,
             );
             dispatcher.run(py)?
         }
@@ -225,7 +230,6 @@ pub fn write_pandas<'a, 'py: 'a>(
                 destination,
                 queries,
                 origin_query,
-                pre_execution_queries,
             );
             dispatcher.run(py)?
         }
@@ -237,7 +241,6 @@ pub fn write_pandas<'a, 'py: 'a>(
                 destination,
                 queries,
                 origin_query,
-                pre_execution_queries,
             );
             dispatcher.run(py)?
         }

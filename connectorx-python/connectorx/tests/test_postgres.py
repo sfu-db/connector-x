@@ -1038,3 +1038,23 @@ def test_postgres_multiple_pre_execution_queries(postgres_url: str) -> None:
         },
     )
     assert_frame_equal(df, expected, check_names=True)
+
+def test_postgres_partitioned_pre_execution_queries(postgres_url: str) -> None:
+    pre_execution_query = [
+        "SET SESSION statement_timeout = 2151",
+        "SET SESSION idle_in_transaction_session_timeout = 2252",
+    ]
+    query = [
+        "SELECT CAST(name AS TEXT) AS name, CAST(setting AS INTEGER) AS setting FROM pg_settings WHERE name = 'statement_timeout'", 
+        "SELECT CAST(name AS TEXT) AS name, CAST(setting AS INTEGER) AS setting FROM pg_settings WHERE name = 'idle_in_transaction_session_timeout'"
+    ]
+
+    df = read_sql(postgres_url, query, pre_execution_query=pre_execution_query).sort_values(by=['name'])
+    expected = pd.DataFrame(
+        index=range(2),
+        data={
+            "name": pd.Series(["statement_timeout", "idle_in_transaction_session_timeout"], dtype="str"),
+            "setting": pd.Series([2151, 2252], dtype="Int64"),
+        },
+    ).sort_values(by=['name'])
+    assert_frame_equal(df, expected, check_names=True)

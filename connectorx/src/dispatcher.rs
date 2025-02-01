@@ -20,7 +20,6 @@ pub struct Dispatcher<'a, S, D, TP> {
     dst: &'a mut D,
     queries: Vec<CXQuery<String>>,
     origin_query: Option<String>,
-    pre_execution_queries: Option<Vec<String>>,
     _phantom: PhantomData<TP>,
 }
 
@@ -31,13 +30,7 @@ where
     TP: Transport<TSS = S::TypeSystem, TSD = D::TypeSystem, S = S, D = D>,
 {
     /// Create a new dispatcher by providing a source, a destination and the queries.
-    pub fn new<Q>(
-        src: S,
-        dst: &'w mut D,
-        queries: &[Q],
-        origin_query: Option<String>,
-        pre_execution_queries: Option<&[String]>,
-    ) -> Self
+    pub fn new<Q>(src: S, dst: &'w mut D, queries: &[Q], origin_query: Option<String>) -> Self
     where
         for<'a> &'a Q: Into<CXQuery>,
     {
@@ -46,9 +39,12 @@ where
             dst,
             queries: queries.iter().map(Into::into).collect(),
             origin_query,
-            pre_execution_queries: pre_execution_queries.map(|s| s.to_vec()),
             _phantom: PhantomData,
         }
+    }
+
+    pub fn set_pre_execution_queries(&mut self, pre_execution_queries: Option<&[String]>) {
+        self.src.set_pre_execution_queries(pre_execution_queries);
     }
 
     pub fn prepare(
@@ -68,8 +64,6 @@ where
         self.src.set_data_order(dorder)?;
         self.src.set_queries(self.queries.as_slice());
         self.src.set_origin_query(self.origin_query);
-        self.src
-            .set_pre_execution_queries(self.pre_execution_queries.as_ref().map(|v| v.as_slice()));
 
         debug!("Fetching metadata");
         self.src.fetch_metadata()?;

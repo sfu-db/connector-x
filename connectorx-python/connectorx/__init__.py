@@ -296,7 +296,7 @@ def read_sql(
       strategy of rewriting the federated query for join pushdown
     pre_execution_query
       SQL query or list of SQL queries executed before main query; can be used to set runtime
-      configurations using SET statements; only applicable for source "Postgres" and MySQL".
+      configurations using SET statements; only applicable for source "Postgres" and "MySQL".
 
     Examples
     ========

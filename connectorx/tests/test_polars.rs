@@ -36,7 +36,6 @@ fn test_polars() {
         &mut destination,
         &queries,
         None,
-        None,
     );
     dispatcher.run().expect("run dispatcher");
 
@@ -87,7 +86,6 @@ fn test_polars_large() {
         &mut destination,
         &queries,
         None,
-        None,
     );
     dispatcher.run().expect("run dispatcher");
 
@@ -115,7 +113,6 @@ fn test_postgres_arrow() {
         &mut destination,
         &queries,
         Some("select * from test_table".to_string()),
-        None,
     );
 
     dispatcher.run().expect("run dispatcher");
@@ -160,7 +157,6 @@ fn test_polars_name() {
         &mut destination,
         &queries,
         Some("select test_name from test_types".to_string()),
-        None,
     );
 
     dispatcher.run().expect("run dispatcher");
@@ -195,7 +191,6 @@ fn test_polars_boolarray() {
         &mut destination,
         &queries,
         Some("select test_boolarray from test_types".to_string()),
-        None,
     );
 
     dispatcher.run().expect("run dispatcher");
@@ -231,7 +226,6 @@ fn test_polars_utf8array() {
         &mut destination,
         &queries,
         Some("select test_varchararray from test_types".to_string()),
-        None,
     );
     dispatcher.run().expect("run dispatcher");
 
@@ -274,7 +268,6 @@ fn test_polars_intarray() {
         &mut destination,
         &queries,
         Some("select test_i2array, test_i4array, test_i8array from test_types".to_string()),
-        None,
     );
     dispatcher.run().expect("run dispatcher");
 

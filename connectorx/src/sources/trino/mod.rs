@@ -144,7 +144,9 @@ where
         self.origin_query = query;
     }
 
-    fn set_pre_execution_queries(&mut self, _pre_execution_queries: Option<&[String]>) {}
+    fn set_pre_execution_queries(&mut self, _pre_execution_queries: Option<&[String]>) {
+        unimplemented!("pre_execution_queries is not implemented in Oracle Source");
+    }
 
     #[throws(TrinoSourceError)]
     fn fetch_metadata(&mut self) {

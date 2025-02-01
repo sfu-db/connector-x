@@ -39,7 +39,7 @@ fn connectorx(_: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
 }
 
 #[pyfunction]
-#[pyo3(signature = (conn, return_type, protocol=None, queries=None, partition_query=None))]
+#[pyo3(signature = (conn, return_type, protocol=None, queries=None, partition_query=None, pre_execution_queries=None))]
 pub fn read_sql<'py>(
     py: Python<'py>,
     conn: &str,

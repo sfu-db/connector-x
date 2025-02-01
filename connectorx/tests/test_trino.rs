@@ -30,7 +30,6 @@ fn test_trino() {
         Some(String::from(
             "select * from test.test_table order by test_int",
         )),
-        None,
     );
     dispatcher.run().unwrap();
 
@@ -53,13 +52,8 @@ fn test_trino_text() {
     let rt = Arc::new(tokio::runtime::Runtime::new().expect("Failed to create runtime"));
     let builder = TrinoSource::new(rt, &dburl).unwrap();
     let mut destination = ArrowDestination::new();
-    let dispatcher = Dispatcher::<_, _, TrinoArrowTransport>::new(
-        builder,
-        &mut destination,
-        &queries,
-        None,
-        None,
-    );
+    let dispatcher =
+        Dispatcher::<_, _, TrinoArrowTransport>::new(builder, &mut destination, &queries, None);
     dispatcher.run().unwrap();
 
     let result = destination.arrow().unwrap();

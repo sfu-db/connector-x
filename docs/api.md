@@ -16,7 +16,7 @@ connectorx.read_sql(conn: Union[str, Dict[str, str]], query: Union[List[str], st
 - `partition_range: Optional[Tuple[int, int]]`: The value range of the partition column.
 - `partition_num: Optional[int]`: The number of partitions to generate.
 - `index_col: Optional[str]`: The index column to set for the result dataframe. Only applicable when `return_type` is `pandas`, `modin` or `dask`. 
-- `pre_execution_query: Optional[Union[str, List[str]]]`: SQL query or list of SQL queries executed before main query. Can be used to set runtime configurations using SET statements. Only applicable for source "Postgres" and MySQL"
+- `pre_execution_query: Optional[Union[str, List[str]]]`: SQL query or list of SQL queries executed before main query. Can be used to set runtime configurations using SET statements. Only applicable for source "Postgres" and "MySQL"
 
 ## Examples
 - Read a DataFrame from a SQL using a single thread

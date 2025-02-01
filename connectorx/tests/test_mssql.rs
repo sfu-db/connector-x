@@ -25,13 +25,8 @@ fn test_mssql() {
 
     let builder = MsSQLSource::new(rt, &dburl, 2).unwrap();
     let mut destination = ArrowDestination::new();
-    let dispatcher = Dispatcher::<_, _, MsSQLArrowTransport>::new(
-        builder,
-        &mut destination,
-        &queries,
-        None,
-        None,
-    );
+    let dispatcher =
+        Dispatcher::<_, _, MsSQLArrowTransport>::new(builder, &mut destination, &queries, None);
     dispatcher.run().unwrap();
 
     let result = destination.arrow().unwrap();
@@ -59,7 +54,6 @@ fn test_mssql_agg() {
         Some(String::from(
             "SELECT test_bool, SUM(test_float) AS SUM FROM test_table GROUP BY test_bool",
         )),
-        None,
     );
     dispatcher.run().unwrap();
 

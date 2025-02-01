@@ -43,7 +43,6 @@ fn main() {
         &mut destination,
         &queries,
         None,
-        None,
     );
     println!("run dispatcher");
     dispatcher.run().unwrap();
