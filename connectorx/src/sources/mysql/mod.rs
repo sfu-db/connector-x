@@ -227,9 +227,9 @@ where
         for query in self.queries {
             let mut conn = self.pool.get()?;
 
-            if let Some(queries) = &self.pre_execution_queries {
-                for query in queries {
-                    conn.query_drop(query)?;
+            if let Some(pre_queries) = &self.pre_execution_queries {
+                for pre_query in pre_queries {
+                    conn.query_drop(pre_query)?;
                 }
             }
 
