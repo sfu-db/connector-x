@@ -176,7 +176,7 @@ pub unsafe extern "C" fn connectorx_scan(conn: *const c_char, query: *const c_ch
     let conn_str = unsafe { CStr::from_ptr(conn) }.to_str().unwrap();
     let query_str = unsafe { CStr::from_ptr(query) }.to_str().unwrap();
     let source_conn = SourceConn::try_from(conn_str).unwrap();
-    let record_batches = get_arrow(&source_conn, None, &[CXQuery::from(query_str)])
+    let record_batches = get_arrow(&source_conn, None, &[CXQuery::from(query_str)], None)
         .unwrap()
         .arrow()
         .unwrap();
@@ -281,7 +281,7 @@ pub unsafe extern "C" fn connectorx_scan_iter(
     }
 
     let arrow_iter: Box<dyn RecordBatchIterator> =
-        new_record_batch_iter(&source_conn, None, query_vec.as_slice(), batch_size);
+        new_record_batch_iter(&source_conn, None, query_vec.as_slice(), batch_size, None);
 
     Box::into_raw(Box::new(arrow_iter))
 }

@@ -1211,3 +1211,105 @@ pub fn verify_arrow_type_results(result: Vec<RecordBatch>, protocol: &str) {
             None,
         ])));
 }
+
+#[test]
+fn test_postgres_pre_execution_queries() {
+    let _ = env_logger::builder().is_test(true).try_init();
+
+    let dburl = env::var("POSTGRES_URL").unwrap();
+
+    let queries = [
+        CXQuery::naked("SELECT CAST(name AS TEXT) AS name, CAST(setting AS INTEGER) AS setting FROM pg_settings WHERE name IN ('statement_timeout', 'idle_in_transaction_session_timeout') ORDER BY name"),
+    ];
+
+    let pre_execution_queries = [
+        String::from("SET SESSION statement_timeout = 2151"),
+        String::from("SET SESSION idle_in_transaction_session_timeout = 2252"),
+    ];
+
+    let url = Url::parse(dburl.as_str()).unwrap();
+    let (config, _tls) = rewrite_tls_args(&url).unwrap();
+    let builder = PostgresSource::<BinaryProtocol, NoTls>::new(config, NoTls, 2).unwrap();
+    let mut destination = ArrowDestination::new();
+    let mut dispatcher = Dispatcher::<_, _, PostgresArrowTransport<BinaryProtocol, NoTls>>::new(
+        builder,
+        &mut destination,
+        &queries,
+        None,
+    );
+
+    dispatcher.set_pre_execution_queries(Some(&pre_execution_queries));
+
+    dispatcher.run().expect("run dispatcher");
+
+    let result = destination.arrow().unwrap();
+
+    assert!(result.len() == 1);
+
+    assert!(result[0]
+        .column(1)
+        .as_any()
+        .downcast_ref::<Int32Array>()
+        .unwrap()
+        .eq(&Int32Array::from(vec![2252, 2151])));
+}
+
+#[test]
+fn test_postgres_partitioned_pre_execution_queries() {
+    let _ = env_logger::builder().is_test(true).try_init();
+
+    let dburl = env::var("POSTGRES_URL").unwrap();
+
+    let queries = [
+        "SELECT CAST(name AS TEXT) AS name, CAST(setting AS INTEGER) AS setting FROM pg_settings WHERE name = 'statement_timeout'", 
+        "SELECT CAST(name AS TEXT) AS name, CAST(setting AS INTEGER) AS setting FROM pg_settings WHERE name = 'idle_in_transaction_session_timeout'"
+    ];
+
+    let pre_execution_queries = [
+        String::from("SET SESSION statement_timeout = 2151"),
+        String::from("SET SESSION idle_in_transaction_session_timeout = 2252"),
+    ];
+
+    let url = Url::parse(dburl.as_str()).unwrap();
+    let (config, _tls) = rewrite_tls_args(&url).unwrap();
+    let builder = PostgresSource::<BinaryProtocol, NoTls>::new(config, NoTls, 2).unwrap();
+    let mut destination = ArrowDestination::new();
+    let mut dispatcher = Dispatcher::<_, _, PostgresArrowTransport<BinaryProtocol, NoTls>>::new(
+        builder,
+        &mut destination,
+        &queries,
+        None,
+    );
+
+    dispatcher.set_pre_execution_queries(Some(&pre_execution_queries));
+
+    dispatcher.run().expect("run dispatcher");
+
+    let result = destination.arrow().unwrap();
+
+    assert!(result.len() == 2);
+
+    let mut result_map = std::collections::HashMap::new();
+    for record_batch in result {
+        let name = record_batch
+            .column(0)
+            .as_any()
+            .downcast_ref::<StringArray>()
+            .unwrap()
+            .value(0)
+            .to_string();
+        let setting = record_batch
+            .column(1)
+            .as_any()
+            .downcast_ref::<Int32Array>()
+            .unwrap()
+            .value(0);
+        result_map.insert(name, setting);
+    }
+
+    assert_eq!(result_map.get("statement_timeout"), Some(&2151));
+    assert_eq!(
+        result_map.get("idle_in_transaction_session_timeout"),
+        Some(&2252)
+    );
+}
