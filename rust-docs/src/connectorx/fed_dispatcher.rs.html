@@ -144,7 +144,7 @@
                         .as_ref()
                         .unwrap();
 
-                    <span class="kw">let </span>destination = get_arrow(source_conn, <span class="prelude-val">None</span>, queries.as_slice())<span class="question-mark">?</span>;
+                    <span class="kw">let </span>destination = get_arrow(source_conn, <span class="prelude-val">None</span>, queries.as_slice(), <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
                     <span class="kw">let </span>rbs = destination.arrow()<span class="question-mark">?</span>;
 
                     <span class="kw">let </span>provider = MemTable::try_new(rbs[<span class="number">0</span>].schema(), <span class="macro">vec!</span>[rbs])<span class="question-mark">?</span>;

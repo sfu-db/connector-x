@@ -438,7 +438,44 @@
 <a href="#437" id="437">437</a>
 <a href="#438" id="438">438</a>
 <a href="#439" id="439">439</a>
-<a href="#440" id="440">440</a></pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"src_mysql"</span>)]
+<a href="#440" id="440">440</a>
+<a href="#441" id="441">441</a>
+<a href="#442" id="442">442</a>
+<a href="#443" id="443">443</a>
+<a href="#444" id="444">444</a>
+<a href="#445" id="445">445</a>
+<a href="#446" id="446">446</a>
+<a href="#447" id="447">447</a>
+<a href="#448" id="448">448</a>
+<a href="#449" id="449">449</a>
+<a href="#450" id="450">450</a>
+<a href="#451" id="451">451</a>
+<a href="#452" id="452">452</a>
+<a href="#453" id="453">453</a>
+<a href="#454" id="454">454</a>
+<a href="#455" id="455">455</a>
+<a href="#456" id="456">456</a>
+<a href="#457" id="457">457</a>
+<a href="#458" id="458">458</a>
+<a href="#459" id="459">459</a>
+<a href="#460" id="460">460</a>
+<a href="#461" id="461">461</a>
+<a href="#462" id="462">462</a>
+<a href="#463" id="463">463</a>
+<a href="#464" id="464">464</a>
+<a href="#465" id="465">465</a>
+<a href="#466" id="466">466</a>
+<a href="#467" id="467">467</a>
+<a href="#468" id="468">468</a>
+<a href="#469" id="469">469</a>
+<a href="#470" id="470">470</a>
+<a href="#471" id="471">471</a>
+<a href="#472" id="472">472</a>
+<a href="#473" id="473">473</a>
+<a href="#474" id="474">474</a>
+<a href="#475" id="475">475</a>
+<a href="#476" id="476">476</a>
+<a href="#477" id="477">477</a></pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"src_mysql"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::sources::mysql::{BinaryProtocol <span class="kw">as </span>MySQLBinaryProtocol, TextProtocol};
 <span class="attr">#[cfg(feature = <span class="string">"src_postgres"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::sources::postgres::{
@@ -465,6 +502,7 @@
     source_conn: <span class="kw-2">&amp;</span>SourceConn,
     origin_query: <span class="prelude-ty">Option</span>&lt;String&gt;,
     queries: <span class="kw-2">&amp;</span>[CXQuery&lt;String&gt;],
+    pre_execution_queries: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>[String]&gt;,
 ) -&gt; ArrowDestination {
     <span class="kw">let </span><span class="kw-2">mut </span>destination = ArrowDestination::new();
     <span class="kw">let </span>protocol = source_conn.proto.as_str();
@@ -481,25 +519,27 @@
                         tls_conn,
                         queries.len(),
                     )<span class="question-mark">?</span>;
-                    <span class="kw">let </span>dispatcher = Dispatcher::&lt;
+                    <span class="kw">let </span><span class="kw-2">mut </span>dispatcher = Dispatcher::&lt;
                         <span class="kw">_</span>,
                         <span class="kw">_</span>,
                         PostgresArrowTransport&lt;CSVProtocol, MakeTlsConnector&gt;,
                     &gt;::new(
                         source, <span class="kw-2">&amp;mut </span>destination, queries, origin_query
                     );
+                    dispatcher.set_pre_execution_queries(pre_execution_queries);
                     dispatcher.run()<span class="question-mark">?</span>;
                 }
                 (<span class="string">"csv"</span>, <span class="prelude-val">None</span>) =&gt; {
                     <span class="kw">let </span>source =
                         PostgresSource::&lt;CSVProtocol, NoTls&gt;::new(config, NoTls, queries.len())<span class="question-mark">?</span>;
-                    <span class="kw">let </span>dispatcher =
-                        Dispatcher::&lt;<span class="kw">_</span>, <span class="kw">_</span>, PostgresArrowTransport&lt;CSVProtocol, NoTls&gt;&gt;::new(
-                            source,
-                            <span class="kw-2">&amp;mut </span>destination,
-                            queries,
-                            origin_query,
-                        );
+                    <span class="kw">let </span><span class="kw-2">mut </span>dispatcher = Dispatcher::&lt;
+                        <span class="kw">_</span>,
+                        <span class="kw">_</span>,
+                        PostgresArrowTransport&lt;CSVProtocol, NoTls&gt;,
+                    &gt;::new(
+                        source, <span class="kw-2">&amp;mut </span>destination, queries, origin_query
+                    );
+                    dispatcher.set_pre_execution_queries(pre_execution_queries);
                     dispatcher.run()<span class="question-mark">?</span>;
                 }
                 (<span class="string">"binary"</span>, <span class="prelude-val">Some</span>(tls_conn)) =&gt; {
@@ -508,13 +548,14 @@
                         tls_conn,
                         queries.len(),
                     )<span class="question-mark">?</span>;
-                    <span class="kw">let </span>dispatcher = Dispatcher::&lt;
+                    <span class="kw">let </span><span class="kw-2">mut </span>dispatcher = Dispatcher::&lt;
                         <span class="kw">_</span>,
                         <span class="kw">_</span>,
                         PostgresArrowTransport&lt;PgBinaryProtocol, MakeTlsConnector&gt;,
                     &gt;::new(
                         source, <span class="kw-2">&amp;mut </span>destination, queries, origin_query
                     );
+                    dispatcher.set_pre_execution_queries(pre_execution_queries);
                     dispatcher.run()<span class="question-mark">?</span>;
                 }
                 (<span class="string">"binary"</span>, <span class="prelude-val">None</span>) =&gt; {
@@ -523,13 +564,14 @@
                         NoTls,
                         queries.len(),
                     )<span class="question-mark">?</span>;
-                    <span class="kw">let </span>dispatcher = Dispatcher::&lt;
+                    <span class="kw">let </span><span class="kw-2">mut </span>dispatcher = Dispatcher::&lt;
                         <span class="kw">_</span>,
                         <span class="kw">_</span>,
                         PostgresArrowTransport&lt;PgBinaryProtocol, NoTls&gt;,
                     &gt;::new(
                         source, <span class="kw-2">&amp;mut </span>destination, queries, origin_query
                     );
+                    dispatcher.set_pre_execution_queries(pre_execution_queries);
                     dispatcher.run()<span class="question-mark">?</span>;
                 }
                 (<span class="string">"cursor"</span>, <span class="prelude-val">Some</span>(tls_conn)) =&gt; {
@@ -538,25 +580,27 @@
                         tls_conn,
                         queries.len(),
                     )<span class="question-mark">?</span>;
-                    <span class="kw">let </span>dispatcher = Dispatcher::&lt;
+                    <span class="kw">let </span><span class="kw-2">mut </span>dispatcher = Dispatcher::&lt;
                         <span class="kw">_</span>,
                         <span class="kw">_</span>,
                         PostgresArrowTransport&lt;CursorProtocol, MakeTlsConnector&gt;,
                     &gt;::new(
                         source, <span class="kw-2">&amp;mut </span>destination, queries, origin_query
                     );
+                    dispatcher.set_pre_execution_queries(pre_execution_queries);
                     dispatcher.run()<span class="question-mark">?</span>;
                 }
                 (<span class="string">"cursor"</span>, <span class="prelude-val">None</span>) =&gt; {
                     <span class="kw">let </span>source =
                         PostgresSource::&lt;CursorProtocol, NoTls&gt;::new(config, NoTls, queries.len())<span class="question-mark">?</span>;
-                    <span class="kw">let </span>dispatcher = Dispatcher::&lt;
+                    <span class="kw">let </span><span class="kw-2">mut </span>dispatcher = Dispatcher::&lt;
                         <span class="kw">_</span>,
                         <span class="kw">_</span>,
                         PostgresArrowTransport&lt;CursorProtocol, NoTls&gt;,
                     &gt;::new(
                         source, <span class="kw-2">&amp;mut </span>destination, queries, origin_query
                     );
+                    dispatcher.set_pre_execution_queries(pre_execution_queries);
                     dispatcher.run()<span class="question-mark">?</span>;
                 }
                 (<span class="string">"simple"</span>, <span class="prelude-val">Some</span>(tls_conn)) =&gt; {
@@ -565,7 +609,7 @@
                         tls_conn,
                         queries.len(),
                     )<span class="question-mark">?</span>;
-                    <span class="kw">let </span>dispatcher = Dispatcher::&lt;
+                    <span class="kw">let </span><span class="kw-2">mut </span>dispatcher = Dispatcher::&lt;
                         <span class="kw">_</span>,
                         <span class="kw">_</span>,
                         PostgresArrowTransport&lt;SimpleProtocol, MakeTlsConnector&gt;,
@@ -573,12 +617,13 @@
                         sb, <span class="kw-2">&amp;mut </span>destination, queries, origin_query
                     );
                     <span class="macro">debug!</span>(<span class="string">"Running dispatcher"</span>);
+                    dispatcher.set_pre_execution_queries(pre_execution_queries);
                     dispatcher.run()<span class="question-mark">?</span>;
                 }
                 (<span class="string">"simple"</span>, <span class="prelude-val">None</span>) =&gt; {
                     <span class="kw">let </span>sb =
                         PostgresSource::&lt;SimpleProtocol, NoTls&gt;::new(config, NoTls, queries.len())<span class="question-mark">?</span>;
-                    <span class="kw">let </span>dispatcher = Dispatcher::&lt;
+                    <span class="kw">let </span><span class="kw-2">mut </span>dispatcher = Dispatcher::&lt;
                         <span class="kw">_</span>,
                         <span class="kw">_</span>,
                         PostgresArrowTransport&lt;SimpleProtocol, NoTls&gt;,
@@ -586,6 +631,7 @@
                         sb, <span class="kw-2">&amp;mut </span>destination, queries, origin_query
                     );
                     <span class="macro">debug!</span>(<span class="string">"Running dispatcher"</span>);
+                    dispatcher.set_pre_execution_queries(pre_execution_queries);
                     dispatcher.run()<span class="question-mark">?</span>;
                 }
                 <span class="kw">_ </span>=&gt; <span class="macro">unimplemented!</span>(<span class="string">"{} protocol not supported"</span>, protocol),
@@ -596,23 +642,26 @@
             <span class="string">"binary" </span>=&gt; {
                 <span class="kw">let </span>source =
                     MySQLSource::&lt;MySQLBinaryProtocol&gt;::new(<span class="kw-2">&amp;</span>source_conn.conn[..], queries.len())<span class="question-mark">?</span>;
-                <span class="kw">let </span>dispatcher = Dispatcher::&lt;<span class="kw">_</span>, <span class="kw">_</span>, MySQLArrowTransport&lt;MySQLBinaryProtocol&gt;&gt;::new(
-                    source,
-                    <span class="kw-2">&amp;mut </span>destination,
-                    queries,
-                    origin_query,
-                );
+                <span class="kw">let </span><span class="kw-2">mut </span>dispatcher =
+                    Dispatcher::&lt;<span class="kw">_</span>, <span class="kw">_</span>, MySQLArrowTransport&lt;MySQLBinaryProtocol&gt;&gt;::new(
+                        source,
+                        <span class="kw-2">&amp;mut </span>destination,
+                        queries,
+                        origin_query,
+                    );
+                dispatcher.set_pre_execution_queries(pre_execution_queries);
                 dispatcher.run()<span class="question-mark">?</span>;
             }
             <span class="string">"text" </span>=&gt; {
                 <span class="kw">let </span>source =
                     MySQLSource::&lt;TextProtocol&gt;::new(<span class="kw-2">&amp;</span>source_conn.conn[..], queries.len())<span class="question-mark">?</span>;
-                <span class="kw">let </span>dispatcher = Dispatcher::&lt;<span class="kw">_</span>, <span class="kw">_</span>, MySQLArrowTransport&lt;TextProtocol&gt;&gt;::new(
+                <span class="kw">let </span><span class="kw-2">mut </span>dispatcher = Dispatcher::&lt;<span class="kw">_</span>, <span class="kw">_</span>, MySQLArrowTransport&lt;TextProtocol&gt;&gt;::new(
                     source,
                     <span class="kw-2">&amp;mut </span>destination,
                     queries,
                     origin_query,
                 );
+                dispatcher.set_pre_execution_queries(pre_execution_queries);
                 dispatcher.run()<span class="question-mark">?</span>;
             }
             <span class="kw">_ </span>=&gt; <span class="macro">unimplemented!</span>(<span class="string">"{} protocol not supported"</span>, protocol),
@@ -692,6 +741,7 @@
     origin_query: <span class="prelude-ty">Option</span>&lt;String&gt;,
     queries: <span class="kw-2">&amp;</span>[CXQuery&lt;String&gt;],
     batch_size: usize,
+    pre_execution_queries: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>[String]&gt;,
 ) -&gt; Box&lt;<span class="kw">dyn </span>RecordBatchIterator&gt; {
     <span class="kw">let </span>destination = ArrowStreamDestination::new_with_batch_size(batch_size);
     <span class="kw">let </span>protocol = source_conn.proto.as_str();
@@ -703,12 +753,15 @@
             <span class="kw">let </span>(config, tls) = rewrite_tls_args(<span class="kw-2">&amp;</span>source_conn.conn).unwrap();
             <span class="kw">match </span>(protocol, tls) {
                 (<span class="string">"csv"</span>, <span class="prelude-val">Some</span>(tls_conn)) =&gt; {
-                    <span class="kw">let </span>source = PostgresSource::&lt;CSVProtocol, MakeTlsConnector&gt;::new(
+                    <span class="kw">let </span><span class="kw-2">mut </span>source = PostgresSource::&lt;CSVProtocol, MakeTlsConnector&gt;::new(
                         config,
                         tls_conn,
                         queries.len(),
                     )
                     .unwrap();
+
+                    source.set_pre_execution_queries(pre_execution_queries);
+
                     <span class="kw">let </span>batch_iter =
                         ArrowBatchIter::&lt;
                             <span class="kw">_</span>,
@@ -718,9 +771,12 @@
                     <span class="kw">return </span>Box::new(batch_iter);
                 }
                 (<span class="string">"csv"</span>, <span class="prelude-val">None</span>) =&gt; {
-                    <span class="kw">let </span>source =
+                    <span class="kw">let </span><span class="kw-2">mut </span>source =
                         PostgresSource::&lt;CSVProtocol, NoTls&gt;::new(config, NoTls, queries.len())
                             .unwrap();
+
+                    source.set_pre_execution_queries(pre_execution_queries);
+
                     <span class="kw">let </span>batch_iter = ArrowBatchIter::&lt;
                         <span class="kw">_</span>,
                         PostgresArrowStreamTransport&lt;CSVProtocol, NoTls&gt;,
@@ -731,12 +787,15 @@
                     <span class="kw">return </span>Box::new(batch_iter);
                 }
                 (<span class="string">"binary"</span>, <span class="prelude-val">Some</span>(tls_conn)) =&gt; {
-                    <span class="kw">let </span>source = PostgresSource::&lt;PgBinaryProtocol, MakeTlsConnector&gt;::new(
+                    <span class="kw">let </span><span class="kw-2">mut </span>source = PostgresSource::&lt;PgBinaryProtocol, MakeTlsConnector&gt;::new(
                         config,
                         tls_conn,
                         queries.len(),
                     )
                     .unwrap();
+
+                    source.set_pre_execution_queries(pre_execution_queries);
+
                     <span class="kw">let </span>batch_iter =
                         ArrowBatchIter::&lt;
                             <span class="kw">_</span>,
@@ -746,12 +805,15 @@
                     <span class="kw">return </span>Box::new(batch_iter);
                 }
                 (<span class="string">"binary"</span>, <span class="prelude-val">None</span>) =&gt; {
-                    <span class="kw">let </span>source = PostgresSource::&lt;PgBinaryProtocol, NoTls&gt;::new(
+                    <span class="kw">let </span><span class="kw-2">mut </span>source = PostgresSource::&lt;PgBinaryProtocol, NoTls&gt;::new(
                         config,
                         NoTls,
                         queries.len(),
                     )
                     .unwrap();
+
+                    source.set_pre_execution_queries(pre_execution_queries);
+
                     <span class="kw">let </span>batch_iter = ArrowBatchIter::&lt;
                         <span class="kw">_</span>,
                         PostgresArrowStreamTransport&lt;PgBinaryProtocol, NoTls&gt;,
@@ -762,12 +824,15 @@
                     <span class="kw">return </span>Box::new(batch_iter);
                 }
                 (<span class="string">"cursor"</span>, <span class="prelude-val">Some</span>(tls_conn)) =&gt; {
-                    <span class="kw">let </span>source = PostgresSource::&lt;CursorProtocol, MakeTlsConnector&gt;::new(
+                    <span class="kw">let </span><span class="kw-2">mut </span>source = PostgresSource::&lt;CursorProtocol, MakeTlsConnector&gt;::new(
                         config,
                         tls_conn,
                         queries.len(),
                     )
                     .unwrap();
+
+                    source.set_pre_execution_queries(pre_execution_queries);
+
                     <span class="kw">let </span>batch_iter =
                         ArrowBatchIter::&lt;
                             <span class="kw">_</span>,
@@ -777,9 +842,12 @@
                     <span class="kw">return </span>Box::new(batch_iter);
                 }
                 (<span class="string">"cursor"</span>, <span class="prelude-val">None</span>) =&gt; {
-                    <span class="kw">let </span>source =
+                    <span class="kw">let </span><span class="kw-2">mut </span>source =
                         PostgresSource::&lt;CursorProtocol, NoTls&gt;::new(config, NoTls, queries.len())
                             .unwrap();
+
+                    source.set_pre_execution_queries(pre_execution_queries);
+
                     <span class="kw">let </span>batch_iter = ArrowBatchIter::&lt;
                         <span class="kw">_</span>,
                         PostgresArrowStreamTransport&lt;CursorProtocol, NoTls&gt;,
@@ -795,9 +863,12 @@
         <span class="attr">#[cfg(feature = <span class="string">"src_mysql"</span>)]
         </span>SourceType::MySQL =&gt; <span class="kw">match </span>protocol {
             <span class="string">"binary" </span>=&gt; {
-                <span class="kw">let </span>source =
+                <span class="kw">let </span><span class="kw-2">mut </span>source =
                     MySQLSource::&lt;MySQLBinaryProtocol&gt;::new(<span class="kw-2">&amp;</span>source_conn.conn[..], queries.len())
                         .unwrap();
+
+                source.set_pre_execution_queries(pre_execution_queries);
+
                 <span class="kw">let </span>batch_iter =
                     ArrowBatchIter::&lt;<span class="kw">_</span>, MySQLArrowStreamTransport&lt;MySQLBinaryProtocol&gt;&gt;::new(
                         source,
@@ -809,8 +880,11 @@
                 <span class="kw">return </span>Box::new(batch_iter);
             }
             <span class="string">"text" </span>=&gt; {
-                <span class="kw">let </span>source =
+                <span class="kw">let </span><span class="kw-2">mut </span>source =
                     MySQLSource::&lt;TextProtocol&gt;::new(<span class="kw-2">&amp;</span>source_conn.conn[..], queries.len()).unwrap();
+
+                source.set_pre_execution_queries(pre_execution_queries);
+
                 <span class="kw">let </span>batch_iter = ArrowBatchIter::&lt;<span class="kw">_</span>, MySQLArrowStreamTransport&lt;TextProtocol&gt;&gt;::new(
                     source,
                     destination,

@@ -411,6 +411,7 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">partition_range:</span> <span class="pre">Optional[Tuple[int,</span> <span class="pre">int]]</span></code>: The value range of the partition column.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">partition_num:</span> <span class="pre">Optional[int]</span></code>: The number of partitions to generate.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">index_col:</span> <span class="pre">Optional[str]</span></code>: The index column to set for the result dataframe. Only applicable when <code class="docutils literal notranslate"><span class="pre">return_type</span></code> is <code class="docutils literal notranslate"><span class="pre">pandas</span></code>, <code class="docutils literal notranslate"><span class="pre">modin</span></code> or <code class="docutils literal notranslate"><span class="pre">dask</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pre_execution_query:</span> <span class="pre">Optional[Union[str,</span> <span class="pre">List[str]]]</span></code>: SQL query or list of SQL queries executed before main query. Can be used to set runtime configurations using SET statements. Only applicable for source “Postgres” and “MySQL”</p></li>
 </ul>
 </section>
 <section id="examples">

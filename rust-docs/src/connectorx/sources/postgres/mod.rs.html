@@ -2072,7 +2072,19 @@
 <a href="#2071" id="2071">2071</a>
 <a href="#2072" id="2072">2072</a>
 <a href="#2073" id="2073">2073</a>
-<a href="#2074" id="2074">2074</a></pre></div><pre class="rust"><code><span class="doccomment">//! Source implementation for Postgres database, including the TLS support (client only).
+<a href="#2074" id="2074">2074</a>
+<a href="#2075" id="2075">2075</a>
+<a href="#2076" id="2076">2076</a>
+<a href="#2077" id="2077">2077</a>
+<a href="#2078" id="2078">2078</a>
+<a href="#2079" id="2079">2079</a>
+<a href="#2080" id="2080">2080</a>
+<a href="#2081" id="2081">2081</a>
+<a href="#2082" id="2082">2082</a>
+<a href="#2083" id="2083">2083</a>
+<a href="#2084" id="2084">2084</a>
+<a href="#2085" id="2085">2085</a>
+<a href="#2086" id="2086">2086</a></pre></div><pre class="rust"><code><span class="doccomment">//! Source implementation for Postgres database, including the TLS support (client only).
 
 </span><span class="kw">mod </span>connection;
 <span class="kw">mod </span>errors;
@@ -2166,6 +2178,7 @@
     names: Vec&lt;String&gt;,
     schema: Vec&lt;PostgresTypeSystem&gt;,
     pg_schema: Vec&lt;postgres::types::Type&gt;,
+    pre_execution_queries: <span class="prelude-ty">Option</span>&lt;Vec&lt;String&gt;&gt;,
     _protocol: PhantomData&lt;P&gt;,
 }
 
@@ -2188,6 +2201,7 @@
             names: <span class="macro">vec!</span>[],
             schema: <span class="macro">vec!</span>[],
             pg_schema: <span class="macro">vec!</span>[],
+            pre_execution_queries: <span class="prelude-val">None</span>,
             _protocol: PhantomData,
         }
     }
@@ -2221,6 +2235,10 @@
 
     <span class="kw">fn </span>set_origin_query(<span class="kw-2">&amp;mut </span><span class="self">self</span>, query: <span class="prelude-ty">Option</span>&lt;String&gt;) {
         <span class="self">self</span>.origin_query = query;
+    }
+
+    <span class="kw">fn </span>set_pre_execution_queries(<span class="kw-2">&amp;mut </span><span class="self">self</span>, pre_execution_queries: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>[String]&gt;) {
+        <span class="self">self</span>.pre_execution_queries = pre_execution_queries.map(|s| s.to_vec());
     }
 
     <span class="attr">#[throws(PostgresSourceError)]
@@ -2273,7 +2291,13 @@
     </span><span class="kw">fn </span>partition(<span class="self">self</span>) -&gt; Vec&lt;<span class="self">Self</span>::Partition&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>ret = <span class="macro">vec!</span>[];
         <span class="kw">for </span>query <span class="kw">in </span><span class="self">self</span>.queries {
-            <span class="kw">let </span>conn = <span class="self">self</span>.pool.get()<span class="question-mark">?</span>;
+            <span class="kw">let </span><span class="kw-2">mut </span>conn = <span class="self">self</span>.pool.get()<span class="question-mark">?</span>;
+
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(pre_queries) = <span class="kw-2">&amp;</span><span class="self">self</span>.pre_execution_queries {
+                <span class="kw">for </span>pre_query <span class="kw">in </span>pre_queries {
+                    conn.query(pre_query, <span class="kw-2">&amp;</span>[])<span class="question-mark">?</span>;
+                }
+            }
 
             ret.push(PostgresSourcePartition::&lt;P, C&gt;::new(
                 conn,

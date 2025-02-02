@@ -215,7 +215,11 @@
 <a href="#214" id="214">214</a>
 <a href="#215" id="215">215</a>
 <a href="#216" id="216">216</a>
-<a href="#217" id="217">217</a></pre></div><pre class="rust"><code><span class="doccomment">///! This module provides [`dispatcher::Dispatcher`], the core struct in ConnectorX
+<a href="#217" id="217">217</a>
+<a href="#218" id="218">218</a>
+<a href="#219" id="219">219</a>
+<a href="#220" id="220">220</a>
+<a href="#221" id="221">221</a></pre></div><pre class="rust"><code><span class="doccomment">///! This module provides [`dispatcher::Dispatcher`], the core struct in ConnectorX
 ///! that drives the data loading from a source to a destination.
 </span><span class="kw">use crate</span>::{
     data_order::{coordinate, DataOrder},
@@ -258,6 +262,10 @@
             origin_query,
             _phantom: PhantomData,
         }
+    }
+
+    <span class="kw">pub fn </span>set_pre_execution_queries(<span class="kw-2">&amp;mut </span><span class="self">self</span>, pre_execution_queries: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>[String]&gt;) {
+        <span class="self">self</span>.src.set_pre_execution_queries(pre_execution_queries);
     }
 
     <span class="kw">pub fn </span>prepare(

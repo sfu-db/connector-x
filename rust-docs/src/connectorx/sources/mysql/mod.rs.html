@@ -519,7 +519,20 @@
 <a href="#518" id="518">518</a>
 <a href="#519" id="519">519</a>
 <a href="#520" id="520">520</a>
-<a href="#521" id="521">521</a></pre></div><pre class="rust"><code><span class="doccomment">//! Source implementation for MySQL database.
+<a href="#521" id="521">521</a>
+<a href="#522" id="522">522</a>
+<a href="#523" id="523">523</a>
+<a href="#524" id="524">524</a>
+<a href="#525" id="525">525</a>
+<a href="#526" id="526">526</a>
+<a href="#527" id="527">527</a>
+<a href="#528" id="528">528</a>
+<a href="#529" id="529">529</a>
+<a href="#530" id="530">530</a>
+<a href="#531" id="531">531</a>
+<a href="#532" id="532">532</a>
+<a href="#533" id="533">533</a>
+<a href="#534" id="534">534</a></pre></div><pre class="rust"><code><span class="doccomment">//! Source implementation for MySQL database.
 
 </span><span class="kw">mod </span>errors;
 <span class="kw">mod </span>typesystem;
@@ -571,6 +584,7 @@
     queries: Vec&lt;CXQuery&lt;String&gt;&gt;,
     names: Vec&lt;String&gt;,
     schema: Vec&lt;MySQLTypeSystem&gt;,
+    pre_execution_queries: <span class="prelude-ty">Option</span>&lt;Vec&lt;String&gt;&gt;,
     _protocol: PhantomData&lt;P&gt;,
 }
 
@@ -588,6 +602,7 @@
             queries: <span class="macro">vec!</span>[],
             names: <span class="macro">vec!</span>[],
             schema: <span class="macro">vec!</span>[],
+            pre_execution_queries: <span class="prelude-val">None</span>,
             _protocol: PhantomData,
         }
     }
@@ -617,6 +632,10 @@
 
     <span class="kw">fn </span>set_origin_query(<span class="kw-2">&amp;mut </span><span class="self">self</span>, query: <span class="prelude-ty">Option</span>&lt;String&gt;) {
         <span class="self">self</span>.origin_query = query;
+    }
+
+    <span class="kw">fn </span>set_pre_execution_queries(<span class="kw-2">&amp;mut </span><span class="self">self</span>, pre_execution_queries: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>[String]&gt;) {
+        <span class="self">self</span>.pre_execution_queries = pre_execution_queries.map(|s| s.to_vec());
     }
 
     <span class="attr">#[throws(MySQLSourceError)]
@@ -740,7 +759,14 @@
     </span><span class="kw">fn </span>partition(<span class="self">self</span>) -&gt; Vec&lt;<span class="self">Self</span>::Partition&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>ret = <span class="macro">vec!</span>[];
         <span class="kw">for </span>query <span class="kw">in </span><span class="self">self</span>.queries {
-            <span class="kw">let </span>conn = <span class="self">self</span>.pool.get()<span class="question-mark">?</span>;
+            <span class="kw">let </span><span class="kw-2">mut </span>conn = <span class="self">self</span>.pool.get()<span class="question-mark">?</span>;
+
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(pre_queries) = <span class="kw-2">&amp;</span><span class="self">self</span>.pre_execution_queries {
+                <span class="kw">for </span>pre_query <span class="kw">in </span>pre_queries {
+                    conn.query_drop(pre_query)<span class="question-mark">?</span>;
+                }
+            }
+
             ret.push(MySQLSourcePartition::new(conn, <span class="kw-2">&amp;</span>query, <span class="kw-2">&amp;</span><span class="self">self</span>.schema));
         }
         ret

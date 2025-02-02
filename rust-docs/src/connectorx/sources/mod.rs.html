@@ -100,7 +100,11 @@
 <a href="#99" id="99">99</a>
 <a href="#100" id="100">100</a>
 <a href="#101" id="101">101</a>
-<a href="#102" id="102">102</a></pre></div><pre class="rust"><code><span class="doccomment">//! This module defines four traits [`Source`], [`SourcePartition`], [`PartitionParser`], and [`Produce`]  to define a source.
+<a href="#102" id="102">102</a>
+<a href="#103" id="103">103</a>
+<a href="#104" id="104">104</a>
+<a href="#105" id="105">105</a>
+<a href="#106" id="106">106</a></pre></div><pre class="rust"><code><span class="doccomment">//! This module defines four traits [`Source`], [`SourcePartition`], [`PartitionParser`], and [`Produce`]  to define a source.
 //! This module also contains source implementations for various databases.
 
 </span><span class="attr">#[cfg(feature = <span class="string">"src_bigquery"</span>)]
@@ -142,6 +146,10 @@
     <span class="kw">fn </span>set_queries&lt;Q: ToString&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, queries: <span class="kw-2">&amp;</span>[CXQuery&lt;Q&gt;]);
 
     <span class="kw">fn </span>set_origin_query(<span class="kw-2">&amp;mut </span><span class="self">self</span>, query: <span class="prelude-ty">Option</span>&lt;String&gt;);
+
+    <span class="kw">fn </span>set_pre_execution_queries(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _pre_execution_queries: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>[String]&gt;) {
+        <span class="macro">unimplemented!</span>(<span class="string">"pre_execution_queries is not implemented in this source type"</span>);
+    }
 
     <span class="kw">fn </span>fetch_metadata(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt;;
     <span class="doccomment">/// Get total number of rows if available
