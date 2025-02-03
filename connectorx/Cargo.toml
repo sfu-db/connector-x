@@ -12,7 +12,7 @@ version = "0.4.1"
 [dependencies]
 anyhow = "1"
 fehler = "1"
-itertools = "0.13"
+itertools = "0.14"
 log = "0.4"
 rayon = "1"
 sqlparser = "0.37"
