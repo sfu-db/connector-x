@@ -1010,7 +1010,7 @@ dependencies = [
  "tokio-util 0.6.10",
  "url",
  "urlencoding",
- "uuid 0.8.2",
+ "uuid 1.12.1",
 ]
 
 [[package]]
