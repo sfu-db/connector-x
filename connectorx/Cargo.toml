@@ -53,7 +53,7 @@ tiberius = {version = "0.9", features = ["rust_decimal", "chrono", "integrated-a
 tokio = {version = "1", features = ["rt", "rt-multi-thread", "net"], optional = true}
 tokio-util = {version = "0.6", optional = true}
 urlencoding = {version = "2.1", optional = true}
-uuid = {version = "0.8", optional = true}
+uuid = {version = "1.12", optional = true}
 j4rs = {version = "0.17", optional = true}
 datafusion = {version = "44", optional = true}
 prusto = {version = "0.5.2", optional = true}
