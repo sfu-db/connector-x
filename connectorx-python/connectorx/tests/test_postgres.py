@@ -1049,12 +1049,12 @@ def test_postgres_partitioned_pre_execution_queries(postgres_url: str) -> None:
         "SELECT CAST(name AS TEXT) AS name, CAST(setting AS INTEGER) AS setting FROM pg_settings WHERE name = 'idle_in_transaction_session_timeout'"
     ]
 
-    df = read_sql(postgres_url, query, pre_execution_query=pre_execution_query).sort_values(by=['name'])
+    df = read_sql(postgres_url, query, pre_execution_query=pre_execution_query).sort_values(by=['name']).reset_index(drop=True)
     expected = pd.DataFrame(
         index=range(2),
         data={
             "name": pd.Series(["statement_timeout", "idle_in_transaction_session_timeout"], dtype="str"),
             "setting": pd.Series([2151, 2252], dtype="Int64"),
         },
-    ).sort_values(by=['name'])
+    ).sort_values(by=['name']).reset_index(drop=True)
     assert_frame_equal(df, expected, check_names=True)

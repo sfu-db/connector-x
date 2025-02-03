@@ -517,13 +517,13 @@ def test_mysql_partitioned_pre_execution_queries(mysql_url: str) -> None:
         'SELECT "max_execution_time" AS name, @@SESSION.max_execution_time AS setting',
         'SELECT "wait_timeout" AS name, @@SESSION.wait_timeout AS setting'
     ]
-    df = read_sql(mysql_url, query, pre_execution_query=pre_execution_query).sort_values(by=['name'])
+    df = read_sql(mysql_url, query, pre_execution_query=pre_execution_query).sort_values(by=['name']).reset_index(drop=True)
     expected = pd.DataFrame(
         index=range(2),
         data={
             "name": pd.Series(["max_execution_time", "wait_timeout"], dtype="str"),
             "setting": pd.Series([2151, 2252], dtype="float64"),
         },
-    ).sort_values(by=['name'])
+    ).sort_values(by=['name']).reset_index(drop=True)
     
     assert_frame_equal(df, expected, check_like=False)
