@@ -100,6 +100,10 @@ benchmark-report: setup-python
     
 # releases
 build-python-wheel:
+    cd connectorx-python && maturin build --release -i python
+
+# release with federation enabled
+build-python-wheel-fed:
     # need to get the j4rs dependency first
     cd connectorx-python && maturin build --release -i python
     # copy files
