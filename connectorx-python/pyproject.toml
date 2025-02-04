@@ -27,6 +27,12 @@ license = { text = "MIT" }
 requires-python = ">=3.10"
 dynamic = ["version"]
 
+[project.urls]
+Homepage = "https://github.com/sfu-db/connector-x"
+Repository = "https://github.com/sfu-db/connector-x"
+Issues = "https://github.com/sfu-db/connector-x/issues"
+Documentation = "https://sfu-db.github.io/connector-x/intro.html"
+
 [tool.poetry.dependencies]
 dask = {version = "^2021", optional = true, extras = ["dataframe"]}
 modin = {version = ">=0.10", optional = true}
