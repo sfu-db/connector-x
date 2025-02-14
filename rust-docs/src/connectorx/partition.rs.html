@@ -538,7 +538,10 @@
 <a href="#537" id="537">537</a>
 <a href="#538" id="538">538</a>
 <a href="#539" id="539">539</a>
-<a href="#540" id="540">540</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::errors::{ConnectorXOutError, OutResult};
+<a href="#540" id="540">540</a>
+<a href="#541" id="541">541</a>
+<a href="#542" id="542">542</a>
+<a href="#543" id="543">543</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::errors::{ConnectorXOutError, OutResult};
 <span class="kw">use </span><span class="kw">crate</span>::source_router::{SourceConn, SourceType};
 <span class="attr">#[cfg(feature = <span class="string">"src_bigquery"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::sources::bigquery::BigQueryDialect;
@@ -1008,7 +1011,7 @@
     <span class="kw">let </span>sa_key_path = url.path();
     <span class="kw">let </span>client = rt.block_on(gcp_bigquery_client::Client::from_service_account_key_file(
         sa_key_path,
-    ));
+    ))<span class="question-mark">?</span>;
 
     <span class="kw">let </span>auth_data = std::fs::read_to_string(sa_key_path)<span class="question-mark">?</span>;
     <span class="kw">let </span>auth_json: serde_json::Value = serde_json::from_str(<span class="kw-2">&amp;</span>auth_data)<span class="question-mark">?</span>;
@@ -1019,13 +1022,16 @@
         .ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">"Cannot get project_id as string from auth file"</span>))<span class="question-mark">?</span>;
     <span class="kw">let </span>range_query = get_partition_range_query(query, col, <span class="kw-2">&amp;</span>BigQueryDialect {})<span class="question-mark">?</span>;
 
-    <span class="kw">let </span><span class="kw-2">mut </span>query_result = rt.block_on(client.job().query(
+    <span class="kw">let </span>query_result = rt.block_on(client.job().query(
         project_id,
         gcp_bigquery_client::model::query_request::QueryRequest::new(range_query.as_str()),
     ))<span class="question-mark">?</span>;
-    query_result.next_row();
-    <span class="kw">let </span>min_v = query_result.get_i64(<span class="number">0</span>)<span class="question-mark">?</span>.unwrap_or(<span class="number">0</span>);
-    <span class="kw">let </span>max_v = query_result.get_i64(<span class="number">1</span>)<span class="question-mark">?</span>.unwrap_or(<span class="number">0</span>);
+    <span class="kw">let </span><span class="kw-2">mut </span>rs = gcp_bigquery_client::model::query_response::ResultSet::new_from_query_response(
+        query_result,
+    );
+    rs.next_row();
+    <span class="kw">let </span>min_v = rs.get_i64(<span class="number">0</span>)<span class="question-mark">?</span>.unwrap_or(<span class="number">0</span>);
+    <span class="kw">let </span>max_v = rs.get_i64(<span class="number">1</span>)<span class="question-mark">?</span>.unwrap_or(<span class="number">0</span>);
 
     (min_v, max_v)
 }

@@ -1157,6 +1157,7 @@
     model::{
         get_query_results_parameters::GetQueryResultsParameters,
         get_query_results_response::GetQueryResultsResponse, query_request::QueryRequest,
+        query_response::ResultSet,
     },
     Client,
 };
@@ -1201,7 +1202,7 @@
         <span class="kw">let </span>sa_key_path = url.path();
         <span class="kw">let </span>client = Arc::new(rt.block_on(
             gcp_bigquery_client::Client::from_service_account_key_file(sa_key_path),
-        ));
+        )<span class="question-mark">?</span>);
         <span class="kw">let </span>auth_data = std::fs::read_to_string(sa_key_path)<span class="question-mark">?</span>;
         <span class="kw">let </span>auth_json: serde_json::Value = serde_json::from_str(<span class="kw-2">&amp;</span>auth_data)<span class="question-mark">?</span>;
         <span class="kw">let </span>project_id = auth_json
@@ -1258,7 +1259,6 @@
                 QueryRequest::new(l1query.as_str()),
             ))<span class="question-mark">?</span>;
             <span class="kw">let </span>(names, types) = rs
-                .query_response()
                 .schema
                 .as_ref()
                 .ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">"TableSchema is none"</span>))<span class="question-mark">?
@@ -1285,9 +1285,9 @@
                 <span class="kw">let </span>cxq = CXQuery::Naked(q.clone());
                 <span class="kw">let </span>cquery = count_query(<span class="kw-2">&amp;</span>cxq, <span class="kw-2">&amp;</span>BigQueryDialect {})<span class="question-mark">?</span>;
                 <span class="kw">let </span>job = <span class="self">self</span>.client.job();
-                <span class="kw">let </span><span class="kw-2">mut </span>rs = <span class="self">self</span>.rt.block_on(
+                <span class="kw">let </span><span class="kw-2">mut </span>rs = ResultSet::new_from_query_response(<span class="self">self</span>.rt.block_on(
                     job.query(<span class="self">self</span>.project_id.as_str(), QueryRequest::new(cquery.as_str())),
-                )<span class="question-mark">?</span>;
+                )<span class="question-mark">?</span>);
                 rs.next_row();
                 <span class="kw">let </span>nrows = rs
                     .get_i64(<span class="number">0</span>)<span class="question-mark">?
@@ -1361,9 +1361,10 @@
     </span><span class="kw">fn </span>result_rows(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">let </span>cquery = count_query(<span class="kw-2">&amp;</span><span class="self">self</span>.query, <span class="kw-2">&amp;</span>BigQueryDialect {})<span class="question-mark">?</span>;
         <span class="kw">let </span>job = <span class="self">self</span>.client.job();
-        <span class="kw">let </span><span class="kw-2">mut </span>rs = <span class="self">self
-            </span>.rt
-            .block_on(job.query(<span class="self">self</span>.project_id.as_str(), QueryRequest::new(cquery.as_str())))<span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>rs =
+            ResultSet::new_from_query_response(<span class="self">self</span>.rt.block_on(
+                job.query(<span class="self">self</span>.project_id.as_str(), QueryRequest::new(cquery.as_str())),
+            )<span class="question-mark">?</span>);
         rs.next_row();
         <span class="kw">let </span>nrows = rs
             .get_i64(<span class="number">0</span>)<span class="question-mark">?
@@ -1379,7 +1380,6 @@
             QueryRequest::new(<span class="self">self</span>.query.as_str()),
         ))<span class="question-mark">?</span>;
         <span class="kw">let </span>job_info = qry
-            .query_response()
             .job_reference
             .as_ref()
             .ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">"job_reference is none"</span>))<span class="question-mark">?</span>;
