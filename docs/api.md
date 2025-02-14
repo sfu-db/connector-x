@@ -10,13 +10,13 @@ connectorx.read_sql(conn: Union[str, Dict[str, str]], query: Union[List[str], st
 - `conn: Union[str, Dict[str, str]]`: Connection string URI for querying single database or dict of database names (key) and connection string URIs (value) for querying multiple databases.
   - Please check out [here](https://sfu-db.github.io/connector-x/databases.html) for connection string examples of each database
 - `query: Union[str, List[str]]`: SQL query or list of partitioned SQL queries for fetching data.
-- `return_type: str = "pandas"`: The return type of this function. It can be `arrow` (`arrow2`), `pandas`, `modin`, `dask` or `polars`.
+- `return_type: str = "pandas"`: The return type of this function. It can be `arrow`, `pandas`, `modin`, `dask` or `polars`.
 - `protocol: str = "binary"`: The protocol used to fetch data from source, default is `binary`. Check out [here](./databases.md) to see more details.
 - `partition_on: Optional[str]`: The column to partition the result.
 - `partition_range: Optional[Tuple[int, int]]`: The value range of the partition column.
 - `partition_num: Optional[int]`: The number of partitions to generate.
 - `index_col: Optional[str]`: The index column to set for the result dataframe. Only applicable when `return_type` is `pandas`, `modin` or `dask`. 
-
+- `pre_execution_query: Optional[Union[str, List[str]]]`: SQL query or list of SQL queries executed before main query. Can be used to set runtime configurations using SET statements. Only applicable for source "Postgres" and "MySQL"
 
 ## Examples
 - Read a DataFrame from a SQL using a single thread

@@ -41,6 +41,10 @@ where
         }
     }
 
+    pub fn set_pre_execution_queries(&mut self, pre_execution_queries: Option<&[String]>) {
+        self.src.set_pre_execution_queries(pre_execution_queries);
+    }
+
     /// Start the data loading process.
     pub fn run(mut self, py: Python<'py>) -> Result<Bound<'py, PyAny>, TP::Error> {
         debug!("Run dispatcher");

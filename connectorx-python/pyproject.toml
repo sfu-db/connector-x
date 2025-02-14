@@ -18,7 +18,7 @@ license = "MIT"
 maintainers = ["Weiyuan Wu <youngw@sfu.ca>"] 
 name = "connectorx" 
 readme = "README.md" # Markdown files are supported
-version = "0.4.1" 
+version = "0.4.2" 
 
 [project]
 name = "connectorx" # Target file name of maturin build
@@ -26,6 +26,12 @@ readme = "README.md"
 license = { text = "MIT" }
 requires-python = ">=3.10"
 dynamic = ["version"]
+
+[project.urls]
+Homepage = "https://github.com/sfu-db/connector-x"
+Repository = "https://github.com/sfu-db/connector-x"
+Issues = "https://github.com/sfu-db/connector-x/issues"
+Documentation = "https://sfu-db.github.io/connector-x/intro.html"
 
 [tool.poetry.dependencies]
 dask = {version = "^2021", optional = true, extras = ["dataframe"]}

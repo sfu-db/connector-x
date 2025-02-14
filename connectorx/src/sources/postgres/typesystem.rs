@@ -49,17 +49,18 @@ impl_typesystem! {
         { Float4 => f32 }
         { Float8 => f64 }
         { Numeric => Decimal }
-        { BoolArray => Vec<bool> }
-        { Int2Array => Vec<i16> }
-        { Int4Array => Vec<i32> }
-        { Int8Array => Vec<i64> }
-        { Float4Array => Vec<f32> }
-        { Float8Array => Vec<f64> }
-        { NumericArray => Vec<Decimal> }
-        { VarcharArray | TextArray => Vec<String>}
+        { BoolArray => Vec<Option<bool>> }
+        { Int2Array => Vec<Option<i16>> }
+        { Int4Array => Vec<Option<i32>> }
+        { Int8Array => Vec<Option<i64>> }
+        { Float4Array => Vec<Option<f32>> }
+        { Float8Array => Vec<Option<f64>> }
+        { NumericArray => Vec<Option<Decimal>> }
+        { VarcharArray | TextArray => Vec<Option<String>>}
         { Bool => bool }
         { Char => i8 }
-        { Text | BpChar | VarChar | Enum | Name => &'r str }        { ByteA => Vec<u8> }
+        { Text | BpChar | VarChar | Enum | Name => &'r str }
+        { ByteA => Vec<u8> }
         { Time => NaiveTime }
         { Timestamp => NaiveDateTime }
         { TimestampTz => DateTime<Utc> }
@@ -114,7 +115,7 @@ impl<'a> From<&'a Type> for PostgresTypeSystem {
 pub struct PostgresTypePairs<'a>(pub &'a Type, pub &'a PostgresTypeSystem);
 
 // Link (postgres::Type, connectorx::PostgresTypes) back to the one defiend by the postgres crate.
-impl<'a> From<PostgresTypePairs<'a>> for Type {
+impl From<PostgresTypePairs<'_>> for Type {
     fn from(ty: PostgresTypePairs) -> Type {
         use PostgresTypeSystem::*;
         match ty.1 {

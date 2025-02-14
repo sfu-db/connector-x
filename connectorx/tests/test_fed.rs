@@ -16,6 +16,6 @@ fn test_fed() {
     println!("db_map: {:?}", db_map);
 
     // make sure no error here
-    let rbs = run(sql.to_string(), db_map, None).unwrap();
+    let rbs = run(sql.to_string(), db_map, None, "pushdown").unwrap();
     arrow::util::pretty::print_batches(&rbs).unwrap();
 }

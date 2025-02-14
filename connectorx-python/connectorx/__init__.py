@@ -131,6 +131,7 @@ def read_sql_pandas(
     partition_on: str | None = None,
     partition_range: tuple[int, int] | None = None,
     partition_num: int | None = None,
+    pre_execution_queries: list[str] | str | None = None,
 ) -> pd.DataFrame:
     """
     Run the SQL query, download the data from database into a dataframe.
@@ -160,6 +161,7 @@ def read_sql_pandas(
         partition_range=partition_range,
         partition_num=partition_num,
         index_col=index_col,
+        pre_execution_queries=pre_execution_queries,
     )
 
 
@@ -174,6 +176,7 @@ def read_sql(
     partition_range: tuple[int, int] | None = None,
     partition_num: int | None = None,
     index_col: str | None = None,
+    pre_execution_query: list[str] | str | None = None,
 ) -> pd.DataFrame: ...
 
 
@@ -188,6 +191,7 @@ def read_sql(
     partition_range: tuple[int, int] | None = None,
     partition_num: int | None = None,
     index_col: str | None = None,
+    pre_execution_query: list[str] | str | None = None,
 ) -> pd.DataFrame: ...
 
 
@@ -196,12 +200,13 @@ def read_sql(
     conn: str | ConnectionUrl | dict[str, str] | dict[str, ConnectionUrl],
     query: list[str] | str,
     *,
-    return_type: Literal["arrow", "arrow2"],
+    return_type: Literal["arrow"],
     protocol: Protocol | None = None,
     partition_on: str | None = None,
     partition_range: tuple[int, int] | None = None,
     partition_num: int | None = None,
     index_col: str | None = None,
+    pre_execution_query: list[str] | str | None = None,
 ) -> pa.Table: ...
 
 
@@ -216,6 +221,7 @@ def read_sql(
     partition_range: tuple[int, int] | None = None,
     partition_num: int | None = None,
     index_col: str | None = None,
+    pre_execution_query: list[str] | str | None = None,
 ) -> mpd.DataFrame: ...
 
 
@@ -230,6 +236,7 @@ def read_sql(
     partition_range: tuple[int, int] | None = None,
     partition_num: int | None = None,
     index_col: str | None = None,
+    pre_execution_query: list[str] | str | None = None,
 ) -> dd.DataFrame: ...
 
 
@@ -238,12 +245,13 @@ def read_sql(
     conn: str | ConnectionUrl | dict[str, str] | dict[str, ConnectionUrl],
     query: list[str] | str,
     *,
-    return_type: Literal["polars", "polars2"],
+    return_type: Literal["polars"],
     protocol: Protocol | None = None,
     partition_on: str | None = None,
     partition_range: tuple[int, int] | None = None,
     partition_num: int | None = None,
     index_col: str | None = None,
+    pre_execution_query: list[str] | str | None = None,
 ) -> pl.DataFrame: ...
 
 
@@ -252,7 +260,7 @@ def read_sql(
     query: list[str] | str,
     *,
     return_type: Literal[
-        "pandas", "polars", "polars2", "arrow", "arrow2", "modin", "dask"
+        "pandas", "polars", "arrow", "modin", "dask"
     ] = "pandas",
     protocol: Protocol | None = None,
     partition_on: str | None = None,
@@ -260,6 +268,7 @@ def read_sql(
     partition_num: int | None = None,
     index_col: str | None = None,
     strategy: str | None = None,
+    pre_execution_query: list[str] | str | None = None,
 ) -> pd.DataFrame | mpd.DataFrame | dd.DataFrame | pl.DataFrame | pa.Table:
     """
     Run the SQL query, download the data from database into a dataframe.
@@ -285,6 +294,9 @@ def read_sql(
       the index column to set; only applicable for return type "pandas", "modin", "dask".
     strategy
       strategy of rewriting the federated query for join pushdown
+    pre_execution_query
+      SQL query or list of SQL queries executed before main query; can be used to set runtime
+      configurations using SET statements; only applicable for source "Postgres" and "MySQL".
 
     Examples
     ========
@@ -358,6 +370,13 @@ def read_sql(
             raise ValueError("Partition on multiple queries is not supported.")
     else:
         raise ValueError("query must be either str or a list of str")
+    
+    if isinstance(pre_execution_query, list):
+        pre_execution_queries = [remove_ending_semicolon(subquery) for subquery in pre_execution_query]
+    elif isinstance(pre_execution_query, str):
+        pre_execution_queries = [remove_ending_semicolon(pre_execution_query)]
+    else:
+        pre_execution_queries = None
 
     conn, protocol = rewrite_conn(conn, protocol)
 
@@ -370,6 +389,7 @@ def read_sql(
             queries=queries,
             protocol=protocol,
             partition_query=partition_query,
+            pre_execution_queries=pre_execution_queries,
         )
         df = reconstruct_pandas(result)
 
@@ -383,18 +403,19 @@ def read_sql(
             dd = try_import_module("dask.dataframe")
             df = dd.from_pandas(df, npartitions=1)
 
-    elif return_type in {"arrow", "arrow2", "polars", "polars2"}:
+    elif return_type in {"arrow", "polars"}:
         try_import_module("pyarrow")
 
         result = _read_sql(
             conn,
-            "arrow2" if return_type in {"arrow2", "polars2"} else "arrow",
+            "arrow",
             queries=queries,
             protocol=protocol,
             partition_query=partition_query,
+            pre_execution_queries=pre_execution_queries,
         )
         df = reconstruct_arrow(result)
-        if return_type in {"polars", "polars2"}:
+        if return_type in {"polars"}:
             pl = try_import_module("polars")
             try:
                 df = pl.from_arrow(df)
