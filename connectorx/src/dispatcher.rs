@@ -43,6 +43,10 @@ where
         }
     }
 
+    pub fn set_pre_execution_queries(&mut self, pre_execution_queries: Option<&[String]>) {
+        self.src.set_pre_execution_queries(pre_execution_queries);
+    }
+
     pub fn prepare(
         mut self,
     ) -> Result<

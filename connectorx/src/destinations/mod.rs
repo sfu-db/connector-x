@@ -6,9 +6,6 @@ pub mod arrow;
 #[cfg(feature = "dst_arrow")]
 pub mod arrowstream;
 
-#[cfg(feature = "dst_arrow2")]
-pub mod arrow2;
-
 use crate::data_order::DataOrder;
 use crate::errors::ConnectorXError;
 use crate::typesystem::{TypeAssoc, TypeSystem};

@@ -28,7 +28,6 @@ test-feature-gate:
     cargo c --features src_dummy
     cargo c --features src_trino
     cargo c --features dst_arrow
-    cargo c --features dst_arrow2
 
 bootstrap-python:
     cd connectorx-python && poetry install
@@ -101,6 +100,10 @@ benchmark-report: setup-python
     
 # releases
 build-python-wheel:
+    cd connectorx-python && maturin build --release -i python
+
+# release with federation enabled
+build-python-wheel-fed:
     # need to get the j4rs dependency first
     cd connectorx-python && maturin build --release -i python
     # copy files

@@ -100,7 +100,7 @@
 //! let data = destination.arrow();
 //! ```
 //!
-//! Or simply you can directly use the [`get_arrow::get_arrow`] or [`get_arrow2::get_arrow2`] in which we wrapped the above procedures:
+//! Or simply you can directly use the [`get_arrow::get_arrow`] in which we wrapped the above procedures:
 //!
 //! ```no_run
 //! use connectorx::prelude::*;
@@ -133,11 +133,11 @@
 //!
 //! ## Destinations
 //! - [x] Arrow
-//! - [x] Arrow2
+//! - [x] Polars
 //!
 //! # Feature gates
 //! By default, ConnectorX does not enable any sources / destinations to keep the dependencies minimal.
-//! Instead, we provide following features for you to opt-in: `src_sqlite`, `src_postgres`, `src_mysql`, `src_mssql`, `src_oracle`, `dst_arrow`, `dst_arrow2`.
+//! Instead, we provide following features for you to opt-in: `src_sqlite`, `src_postgres`, `src_mysql`, `src_mssql`, `src_oracle`, `dst_arrow`, `dst_polars`.
 //! For example, if you'd like to load data from Postgres to Arrow, you can enable `src_postgres` and `dst_arrow` in `Cargo.toml`.
 //! This will enable [`sources::postgres`], [`destinations::arrow`] and [`transports::PostgresArrowTransport`].
 
@@ -157,8 +157,6 @@ pub mod fed_dispatcher;
 pub mod fed_rewriter;
 #[cfg(feature = "dst_arrow")]
 pub mod get_arrow;
-#[cfg(feature = "dst_arrow2")]
-pub mod get_arrow2;
 pub mod partition;
 pub mod source_router;
 pub mod sources;
@@ -174,8 +172,6 @@ pub mod prelude {
     pub use crate::data_order::{coordinate, DataOrder};
     #[cfg(feature = "dst_arrow")]
     pub use crate::destinations::arrow::{ArrowDestination, ArrowPartitionWriter, ArrowTypeSystem};
-    #[cfg(feature = "dst_arrow2")]
-    pub use crate::destinations::arrow2::Arrow2Destination;
     #[cfg(feature = "dst_arrow")]
     pub use crate::destinations::arrowstream::{
         ArrowDestination as ArrowStreamDestination,
@@ -189,8 +185,6 @@ pub mod prelude {
     pub use crate::fed_rewriter::{rewrite_sql, FederatedDataSourceInfo, Plan};
     #[cfg(feature = "dst_arrow")]
     pub use crate::get_arrow::{get_arrow, new_record_batch_iter};
-    #[cfg(feature = "dst_arrow2")]
-    pub use crate::get_arrow2::get_arrow2;
     pub use crate::source_router::*;
     #[cfg(feature = "src_bigquery")]
     pub use crate::sources::bigquery::BigQuerySource;

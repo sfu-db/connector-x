@@ -168,7 +168,7 @@ fn test_polars_name() {
 
     let df: DataFrame = destination.polars().unwrap();
     let test_df: DataFrame = df!(
-        "test_name" => &[s1,s2,s3,s4]
+        "test_name" => &[Some(s1),Some(s2),Some(s3),Some(s4),None]
     )
     .unwrap();
 
@@ -199,10 +199,11 @@ fn test_polars_boolarray() {
     let empty_vec: Vec<bool> = vec![];
     let s2 = Series::new(PlSmallStr::from("b"), empty_vec);
     let s3 = Series::new(PlSmallStr::from("c"), [true]);
+    let s4 = Series::new(PlSmallStr::from("c"), [Some(true), Some(false), None]);
 
     let df: DataFrame = destination.polars().unwrap();
     let test_df: DataFrame = df!(
-        "test_boolarray" => &[Some(s1),Some(s2),Some(s3),None]
+        "test_boolarray" => &[Some(s1),Some(s2),Some(s3),Some(s4),None]
     )
     .unwrap();
 
@@ -240,10 +241,9 @@ fn test_polars_utf8array() {
         ],
     );
     let s3 = Series::new(PlSmallStr::from("c"), ["", "  "]);
-    let empty_vec: Vec<&str> = vec![];
-    let s4 = Series::new(PlSmallStr::from("d"), empty_vec);
+    let s4 = Series::new(PlSmallStr::from("d"), [Some("👨‍🍳👨‍🍳👨‍🍳👨"), Some(""), None]);
     let test_df: DataFrame = df!(
-        "test_varchararray" => &[s1,s2,s3,s4]
+        "test_varchararray" => &[Some(s1),Some(s2),Some(s3),Some(s4),None]
     )
     .unwrap();
 
@@ -273,15 +273,20 @@ fn test_polars_intarray() {
 
     let df: DataFrame = destination.polars().unwrap();
 
-    let v1_s1 = Series::new(PlSmallStr::from("a"), [-1i64, 0, 1]);
-    let empty_vec: Vec<i64> = vec![];
+    let v1_s1 = Series::new(PlSmallStr::from("a"), [12i16]);
+    let empty_vec: Vec<i16> = vec![];
     let v1_s2 = Series::new(PlSmallStr::from("b"), empty_vec);
-    let v1_s3 = Series::new(PlSmallStr::from("c"), [-32768i64, 32767]);
+    let v1_s3 = Series::new(PlSmallStr::from("c"), [-32768i16, 32767]);
+    let v1_s4 = Series::new(PlSmallStr::from("d"), [Some(-1i16), Some(0), Some(1), None]);
 
-    let v2_s1 = Series::new(PlSmallStr::from("a"), [-1i64, 0, 1123]);
-    let empty_vec: Vec<i64> = vec![];
+    let v2_s1 = Series::new(PlSmallStr::from("a"), [-1i32]);
+    let empty_vec: Vec<i32> = vec![];
     let v2_s2 = Series::new(PlSmallStr::from("b"), empty_vec);
-    let v2_s3 = Series::new(PlSmallStr::from("c"), [-2147483648i64, 2147483647]);
+    let v2_s3 = Series::new(PlSmallStr::from("c"), [-2147483648i32, 2147483647]);
+    let v2_s4 = Series::new(
+        PlSmallStr::from("d"),
+        [Some(-1i32), Some(0), Some(1123), None],
+    );
 
     let v3_s1 = Series::new(
         PlSmallStr::from("a"),
@@ -290,11 +295,12 @@ fn test_polars_intarray() {
     let empty_vec: Vec<i64> = vec![];
     let v3_s2 = Series::new(PlSmallStr::from("b"), empty_vec);
     let v3_s3 = Series::new(PlSmallStr::from("c"), [0i64]);
+    let v3_s4 = Series::new(PlSmallStr::from("d"), [Some(-1i64), Some(0), Some(1), None]);
 
     let test_df: DataFrame = df!(
-        "test_i2array" => &[Some(v1_s1),Some(v1_s2),Some(v1_s3),None],
-        "test_i4array" =>  &[Some(v2_s1),Some(v2_s2),Some(v2_s3),None],
-        "test_i8array" =>  &[Some(v3_s1),Some(v3_s2),Some(v3_s3),None],
+        "test_i2array" => &[Some(v1_s1),Some(v1_s2),Some(v1_s3),Some(v1_s4),None],
+        "test_i4array" =>  &[Some(v2_s1),Some(v2_s2),Some(v2_s3),Some(v2_s4),None],
+        "test_i8array" =>  &[Some(v3_s1),Some(v3_s2),Some(v3_s3),Some(v3_s4),None],
     )
     .unwrap();
 

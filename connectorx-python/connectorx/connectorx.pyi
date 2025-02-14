@@ -25,14 +25,16 @@ def read_sql(
     protocol: str | None,
     queries: list[str] | None,
     partition_query: dict[str, Any] | None,
+    pre_execution_queries: list[str] | None,
 ) -> _DataframeInfos: ...
 @overload
 def read_sql(
     conn: str,
-    return_type: Literal["arrow", "arrow2"],
+    return_type: Literal["arrow"],
     protocol: str | None,
     queries: list[str] | None,
     partition_query: dict[str, Any] | None,
+    pre_execution_queries: list[str] | None,
 ) -> _ArrowInfos: ...
 def partition_sql(conn: str, partition_query: dict[str, Any]) -> list[str]: ...
 def read_sql2(sql: str, db_map: dict[str, str]) -> _ArrowInfos: ...
