@@ -614,7 +614,7 @@
 <span class="kw">unsafe impl</span>&lt;<span class="lifetime">'a</span>&gt; Send <span class="kw">for </span>OracleTextSourceParser&lt;<span class="lifetime">'a</span>&gt; {}
 
 <span class="kw">pub struct </span>OracleTextSourceParser&lt;<span class="lifetime">'a</span>&gt; {
-    rows: OwningHandle&lt;Box&lt;Statement&lt;<span class="lifetime">'a</span>&gt;&gt;, DummyBox&lt;ResultSet&lt;<span class="lifetime">'a</span>, Row&gt;&gt;&gt;,
+    rows: OwningHandle&lt;Box&lt;Statement&gt;, DummyBox&lt;ResultSet&lt;<span class="lifetime">'a</span>, Row&gt;&gt;&gt;,
     rowbuf: Vec&lt;Row&gt;,
     ncols: usize,
     current_col: usize,
@@ -630,9 +630,9 @@
             .prefetch_rows(ORACLE_ARRAY_SIZE)
             .fetch_array_size(ORACLE_ARRAY_SIZE)
             .build()<span class="question-mark">?</span>;
-        <span class="kw">let </span>rows: OwningHandle&lt;Box&lt;Statement&lt;<span class="lifetime">'a</span>&gt;&gt;, DummyBox&lt;ResultSet&lt;<span class="lifetime">'a</span>, Row&gt;&gt;&gt; =
-            OwningHandle::new_with_fn(Box::new(stmt), |stmt: <span class="kw-2">*const </span>Statement&lt;<span class="lifetime">'a</span>&gt;| <span class="kw">unsafe </span>{
-                DummyBox((<span class="kw-2">*</span>(stmt <span class="kw">as </span><span class="kw-2">*mut </span>Statement&lt;<span class="lifetime">'_</span>&gt;)).query(<span class="kw-2">&amp;</span>[]).unwrap())
+        <span class="kw">let </span>rows: OwningHandle&lt;Box&lt;Statement&gt;, DummyBox&lt;ResultSet&lt;<span class="lifetime">'a</span>, Row&gt;&gt;&gt; =
+            OwningHandle::new_with_fn(Box::new(stmt), |stmt: <span class="kw-2">*const </span>Statement| <span class="kw">unsafe </span>{
+                DummyBox((<span class="kw-2">*</span>(stmt <span class="kw">as </span><span class="kw-2">*mut </span>Statement)).query(<span class="kw-2">&amp;</span>[]).unwrap())
             });
 
         <span class="self">Self </span>{
