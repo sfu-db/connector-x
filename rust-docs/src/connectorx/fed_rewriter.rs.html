@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `connectorx/src/fed_rewriter.rs`."><title>fed_rewriter.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-42caa33d.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="connectorx" data-themes="" data-resource-suffix="" data-rustdoc-version="1.84.1 (e71f9a9a9 2025-01-27)" data-channel="1.84.1" data-search-js="search-92e6798f.js" data-settings-js="settings-0f613d39.js" ><script src="../../static.files/storage-59e33391.js"></script><script defer src="../../static.files/src-script-56102188.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">connectorx/</div>fed_rewriter.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `connectorx/src/fed_rewriter.rs`."><title>fed_rewriter.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-46132b98.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="connectorx" data-themes="" data-resource-suffix="" data-rustdoc-version="1.85.0 (4d91de4e4 2025-02-17)" data-channel="1.85.0" data-search-js="search-75f5ac3e.js" data-settings-js="settings-0f613d39.js" ><script src="../../static.files/storage-59e33391.js"></script><script defer src="../../static.files/src-script-56102188.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">connectorx/</div>fed_rewriter.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
 <a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
@@ -195,7 +195,10 @@
 <a href="#194" id="194">194</a>
 <a href="#195" id="195">195</a>
 <a href="#196" id="196">196</a>
-<a href="#197" id="197">197</a></pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
+<a href="#197" id="197">197</a>
+<a href="#198" id="198">198</a>
+<a href="#199" id="199">199</a>
+<a href="#200" id="200">200</a></pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     constants::{CX_REWRITER_PATH, J4RS_BASE_PATH},
     prelude::<span class="kw-2">*</span>,
 };
@@ -282,12 +285,12 @@
 ) -&gt; (Instance, Instance) {
     <span class="macro">debug!</span>(<span class="string">"Could not find environment variable `FED_CONFIG_PATH`, use manual configuration (c++ API only)!"</span>);
     <span class="kw">let </span><span class="kw-2">mut </span>db_config = <span class="macro">vec!</span>[];
-    <span class="kw">let </span>db_manual = jvm.create_instance(<span class="string">"java.util.HashMap"</span>, <span class="kw-2">&amp;</span>[])<span class="question-mark">?</span>;
+    <span class="kw">let </span>db_manual = jvm.create_instance(<span class="string">"java.util.HashMap"</span>, InvocationArg::empty())<span class="question-mark">?</span>;
 
     <span class="kw">for </span>(db_name, db_info) <span class="kw">in </span>db_map.iter() {
         <span class="kw">if </span>db_info.manual_info.is_some() {
             <span class="kw">let </span>manual_info = db_info.manual_info.as_ref().unwrap();
-            <span class="kw">let </span>schema_info = jvm.create_instance(<span class="string">"java.util.HashMap"</span>, <span class="kw-2">&amp;</span>[])<span class="question-mark">?</span>;
+            <span class="kw">let </span>schema_info = jvm.create_instance(<span class="string">"java.util.HashMap"</span>, InvocationArg::empty())<span class="question-mark">?</span>;
             <span class="kw">for </span>(name, columns) <span class="kw">in </span>manual_info {
                 <span class="kw">let </span>arr_instance = jvm.java_list(<span class="string">"java.lang.String"</span>, columns.to_vec())<span class="question-mark">?</span>;
                 jvm.invoke(
@@ -330,7 +333,7 @@
 ) -&gt; (Instance, Instance) {
     <span class="macro">debug!</span>(<span class="string">"Found environment variable `FED_CONFIG_PATH`, use configurations!"</span>);
     <span class="kw">let </span><span class="kw-2">mut </span>dbs = <span class="macro">vec!</span>[];
-    <span class="kw">let </span>db_manual = jvm.create_instance(<span class="string">"java.util.HashMap"</span>, <span class="kw-2">&amp;</span>[])<span class="question-mark">?</span>;
+    <span class="kw">let </span>db_manual = jvm.create_instance(<span class="string">"java.util.HashMap"</span>, InvocationArg::empty())<span class="question-mark">?</span>;
     <span class="kw">for </span>db <span class="kw">in </span>db_map.keys() {
         dbs.push(String::from(db));
     }
@@ -354,12 +357,15 @@
         <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; create_sources2(<span class="kw-2">&amp;</span>jvm, db_map)<span class="question-mark">?</span>,
         <span class="kw">_ </span>=&gt; create_sources(<span class="kw-2">&amp;</span>jvm, db_map)<span class="question-mark">?</span>,
     };
-    <span class="kw">let </span>rewriter = jvm.create_instance(<span class="string">"ai.dataprep.accio.FederatedQueryRewriter"</span>, <span class="kw-2">&amp;</span>[])<span class="question-mark">?</span>;
+    <span class="kw">let </span>rewriter = jvm.create_instance(
+        <span class="string">"ai.dataprep.accio.FederatedQueryRewriter"</span>,
+        InvocationArg::empty(),
+    )<span class="question-mark">?</span>;
     <span class="kw">let </span>db_config = InvocationArg::try_from(db_config).unwrap();
     <span class="kw">let </span>db_manual = InvocationArg::try_from(db_manual).unwrap();
     <span class="kw">let </span>plan = jvm.invoke(<span class="kw-2">&amp;</span>rewriter, <span class="string">"rewrite"</span>, <span class="kw-2">&amp;</span>[sql, db_config, db_manual, strategy])<span class="question-mark">?</span>;
 
-    <span class="kw">let </span>count = jvm.invoke(<span class="kw-2">&amp;</span>plan, <span class="string">"getCount"</span>, <span class="kw-2">&amp;</span>[])<span class="question-mark">?</span>;
+    <span class="kw">let </span>count = jvm.invoke(<span class="kw-2">&amp;</span>plan, <span class="string">"getCount"</span>, InvocationArg::empty())<span class="question-mark">?</span>;
     <span class="kw">let </span>count: i32 = jvm.to_rust(count)<span class="question-mark">?</span>;
     <span class="macro">debug!</span>(<span class="string">"rewrite finished, got {} queries"</span>, count);
 
