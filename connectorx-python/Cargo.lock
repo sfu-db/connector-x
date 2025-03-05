@@ -902,7 +902,7 @@ checksum = "510ca239cf13b7f8d16a2b48f263de7b4f8c566f0af58d901031473c76afb1e3"
 
 [[package]]
 name = "connectorx"
-version = "0.4.2"
+version = "0.4.3-alpha.1"
 dependencies = [
  "anyhow",
  "arrow",
@@ -952,7 +952,7 @@ dependencies = [
 
 [[package]]
 name = "connectorx-python"
-version = "0.4.2"
+version = "0.4.3-alpha.1"
 dependencies = [
  "anyhow",
  "arrow",
