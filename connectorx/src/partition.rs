@@ -468,7 +468,7 @@ fn bigquery_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64
     let sa_key_path = url.path();
     let client = rt.block_on(gcp_bigquery_client::Client::from_service_account_key_file(
         sa_key_path,
-    ));
+    ))?;
 
     let auth_data = std::fs::read_to_string(sa_key_path)?;
     let auth_json: serde_json::Value = serde_json::from_str(&auth_data)?;
@@ -479,13 +479,16 @@ fn bigquery_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64
         .ok_or_else(|| anyhow!("Cannot get project_id as string from auth file"))?;
     let range_query = get_partition_range_query(query, col, &BigQueryDialect {})?;
 
-    let mut query_result = rt.block_on(client.job().query(
+    let query_result = rt.block_on(client.job().query(
         project_id,
         gcp_bigquery_client::model::query_request::QueryRequest::new(range_query.as_str()),
     ))?;
-    query_result.next_row();
-    let min_v = query_result.get_i64(0)?.unwrap_or(0);
-    let max_v = query_result.get_i64(1)?.unwrap_or(0);
+    let mut rs = gcp_bigquery_client::model::query_response::ResultSet::new_from_query_response(
+        query_result,
+    );
+    rs.next_row();
+    let min_v = rs.get_i64(0)?.unwrap_or(0);
+    let max_v = rs.get_i64(1)?.unwrap_or(0);
 
     (min_v, max_v)
 }

@@ -252,7 +252,7 @@ impl SourcePartition for OracleSourcePartition {
 unsafe impl<'a> Send for OracleTextSourceParser<'a> {}
 
 pub struct OracleTextSourceParser<'a> {
-    rows: OwningHandle<Box<Statement<'a>>, DummyBox<ResultSet<'a, Row>>>,
+    rows: OwningHandle<Box<Statement>, DummyBox<ResultSet<'a, Row>>>,
     rowbuf: Vec<Row>,
     ncols: usize,
     current_col: usize,
@@ -268,9 +268,9 @@ impl<'a> OracleTextSourceParser<'a> {
             .prefetch_rows(ORACLE_ARRAY_SIZE)
             .fetch_array_size(ORACLE_ARRAY_SIZE)
             .build()?;
-        let rows: OwningHandle<Box<Statement<'a>>, DummyBox<ResultSet<'a, Row>>> =
-            OwningHandle::new_with_fn(Box::new(stmt), |stmt: *const Statement<'a>| unsafe {
-                DummyBox((*(stmt as *mut Statement<'_>)).query(&[]).unwrap())
+        let rows: OwningHandle<Box<Statement>, DummyBox<ResultSet<'a, Row>>> =
+            OwningHandle::new_with_fn(Box::new(stmt), |stmt: *const Statement| unsafe {
+                DummyBox((*(stmt as *mut Statement)).query(&[]).unwrap())
             });
 
         Self {
