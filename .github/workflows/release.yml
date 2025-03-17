@@ -70,10 +70,10 @@ jobs:
           path: connectorx-python/target/wheels/*.whl
 
   linux-aarch:
-    runs-on: ubuntu-22.04-arm
+    runs-on: ubuntu-24.04-arm
     strategy:
       matrix:
-        python-version: ["3.9", "3.10", "3.11"]
+        python-version: ["3.10", "3.11", "3.12"]
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -122,7 +122,7 @@ jobs:
         env:
           SQLITE3_STATIC: 1
           KRB5_INCLUDE_DIR: /usr/include
-          KRB5_LIB_DIR: /usr/lib/aarch64-linux-gnu  # ✅ Ensured correct library path
+          KRB5_LIB_DIR: /usr/lib/aarch64-linux-gnu
 
       - name: Copy J4RS Dependencies
         run: |
@@ -284,11 +284,11 @@ jobs:
           python -c "import connectorx"
 
   verify-linux-arm:
-    runs-on: ubuntu-22.04-arm  # Use native ARM64 runner instead of emulation
+    runs-on: ubuntu-22.04-arm
     needs: [linux-aarch]
     strategy:
       matrix:
-        python-version: ["3.9", "3.10", "3.11"]
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
