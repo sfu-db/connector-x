@@ -104,11 +104,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Install Tools
-        run: |
-          sudo apt-get update -y
-          sudo apt-get install -y mysql-client libpq-dev freetds-dev krb5-locales clang libkrb5-dev build-essential gcc musl-tools libsasl2-modules-gssapi-mit libgssapi-krb5-2 krb5-user
-      
       - name: Setup Poetry
         uses: Gr1N/setup-poetry@v9
 
@@ -117,23 +112,18 @@ jobs:
           just bootstrap-python
           python -m pip install --upgrade pip
           pip install maturin
+
       - name: Build Wheel (Native)
         run: |
           maturin build -m connectorx-python/Cargo.toml --target aarch64-unknown-linux-gnu -i python${{ matrix.python-version }} --release
-        env:
-          SQLITE3_STATIC: 1
-          KRB5_INCLUDE_DIR: /usr/include
-          KRB5_LIB_DIR: /usr/lib/aarch64-linux-gnu
 
       - name: Copy J4RS Dependencies
         run: |
           cp -rf connectorx-python/target/aarch64-unknown-linux-gnu/release/jassets connectorx-python/connectorx/dependencies
+      
       - name: Rebuild Wheel (Native)
         run: |
           maturin build -m connectorx-python/Cargo.toml --target aarch64-unknown-linux-gnu -i python${{ matrix.python-version }} --release
-        env:
-          SQLITE3_STATIC: 1
-          KRB5_LIB_DIR: /usr/lib/aarch64-linux-gnu
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
