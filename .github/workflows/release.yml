@@ -70,7 +70,7 @@ jobs:
   #         path: connectorx-python/target/wheels/*.whl
 
   linux-aarch:
-    runs-on: ubuntu-24.04-arm
+    runs-on: ubuntu-22.04-arm
     strategy:
       matrix:
         python-version: ["3.10", "3.11", "3.12", "3.13"]
@@ -108,6 +108,7 @@ jobs:
         run: |
           sudo apt-get update -y
           sudo apt-get install -y mysql-client libpq-dev freetds-dev krb5-locales clang libkrb5-dev build-essential gcc musl-tools libsasl2-modules-gssapi-mit libgssapi-krb5-2 krb5-user
+      
       - name: Setup Poetry
         uses: Gr1N/setup-poetry@v9
 
