@@ -7,7 +7,7 @@ use connectorx::{
     typesystem::TypeConversion,
 };
 use rust_decimal::prelude::*;
-use uuid::Uuid;
+use uuid_old::Uuid;
 
 #[allow(dead_code)]
 pub struct MsSQLPandasTransport<'py>(&'py ());
