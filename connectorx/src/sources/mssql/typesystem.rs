@@ -1,7 +1,7 @@
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
 use rust_decimal::Decimal;
 use tiberius::{ColumnData, ColumnType, FromSql};
-use uuid::Uuid;
+use uuid_old::Uuid;
 
 // https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-tds/ce3183a6-9d89-47e8-a02f-de5a1a1303de
 #[derive(Copy, Clone, Debug)]

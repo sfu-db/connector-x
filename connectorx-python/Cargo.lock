@@ -352,6 +352,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "async-native-tls"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d57d4cec3c647232e1094dc013546c0b33ce785d8aeb251e1f20dfaf8a9a13fe"
+dependencies = [
+ "futures-util",
+ "native-tls",
+ "thiserror 1.0.69",
+ "url",
+]
+
+[[package]]
 name = "async-stream"
 version = "0.3.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -386,9 +398,9 @@ dependencies = [
 
 [[package]]
 name = "asynchronous-codec"
-version = "0.6.2"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4057f2c32adbb2fc158e22fb38433c8e9bbf76b75a4732c7c0cbaf695fb65568"
+checksum = "fb4401f0a3622dad2e0763fa79e0eb328bc70fb7dccfdd645341f00d671247d6"
 dependencies = [
  "bytes",
  "futures-sink",
@@ -458,26 +470,30 @@ checksum = "72b3254f16251a8381aa12e40e3c4d2f0199f8c6508fbecb9d91f575e0fbb8c6"
 
 [[package]]
 name = "bb8"
-version = "0.9.0"
+version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "212d8b8e1a22743d9241575c6ba822cf9c8fef34771c86ab7e477a4fbfd254e5"
+checksum = "2e9f4fa9768efd269499d8fba693260cfc670891cf6de3adc935588447a77cc8"
 dependencies = [
+ "async-trait",
+ "futures-channel",
  "futures-util",
- "parking_lot 0.12.3",
+ "parking_lot 0.11.2",
  "tokio",
 ]
 
 [[package]]
 name = "bb8-tiberius"
-version = "0.16.0"
+version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3a5023b318f47a294d02b46ce0d82ac8e7df0afce2257f041ba7316566d6cd56"
+checksum = "d8a33c87124c1938413e45ab6a6655e49d9e4cd015e05db61d6ab5a4f96b2c83"
 dependencies = [
+ "async-trait",
  "bb8",
+ "futures",
  "thiserror 1.0.69",
  "tiberius",
  "tokio",
- "tokio-util",
+ "tokio-util 0.6.10",
 ]
 
 [[package]]
@@ -896,9 +912,12 @@ dependencies = [
 
 [[package]]
 name = "connection-string"
-version = "0.2.0"
+version = "0.1.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "510ca239cf13b7f8d16a2b48f263de7b4f8c566f0af58d901031473c76afb1e3"
+checksum = "b97faeec45f49581c458f8bf81992c5e3ec17d82cda99f59d3cea14eff62698d"
+dependencies = [
+ "wasm-bindgen",
+]
 
 [[package]]
 name = "connectorx"
@@ -944,9 +963,10 @@ dependencies = [
  "thiserror 1.0.69",
  "tiberius",
  "tokio",
- "tokio-util",
+ "tokio-util 0.7.13",
  "url",
  "urlencoding",
+ "uuid 0.8.2",
  "uuid 1.12.1",
 ]
 
@@ -988,6 +1008,7 @@ dependencies = [
  "tokio",
  "url",
  "urlencoding",
+ "uuid 0.8.2",
  "uuid 1.12.1",
 ]
 
@@ -1344,7 +1365,7 @@ dependencies = [
  "sqlparser 0.53.0",
  "tempfile",
  "tokio",
- "tokio-util",
+ "tokio-util 0.7.13",
  "url",
  "uuid 1.12.1",
  "xz2",
@@ -1808,6 +1829,70 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "60b1af1c220855b6ceac025d3f6ecdd2b7c4894bfe9cd9bda4fbb4bc7c0d4cf0"
 
 [[package]]
+name = "encoding"
+version = "0.2.33"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6b0d943856b990d12d3b55b359144ff341533e516d94098b1d3fc1ac666d36ec"
+dependencies = [
+ "encoding-index-japanese",
+ "encoding-index-korean",
+ "encoding-index-simpchinese",
+ "encoding-index-singlebyte",
+ "encoding-index-tradchinese",
+]
+
+[[package]]
+name = "encoding-index-japanese"
+version = "1.20141219.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "04e8b2ff42e9a05335dbf8b5c6f7567e5591d0d916ccef4e0b1710d32a0d0c91"
+dependencies = [
+ "encoding_index_tests",
+]
+
+[[package]]
+name = "encoding-index-korean"
+version = "1.20141219.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4dc33fb8e6bcba213fe2f14275f0963fd16f0a02c878e3095ecfdf5bee529d81"
+dependencies = [
+ "encoding_index_tests",
+]
+
+[[package]]
+name = "encoding-index-simpchinese"
+version = "1.20141219.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d87a7194909b9118fc707194baa434a4e3b0fb6a5a757c73c3adb07aa25031f7"
+dependencies = [
+ "encoding_index_tests",
+]
+
+[[package]]
+name = "encoding-index-singlebyte"
+version = "1.20141219.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3351d5acffb224af9ca265f435b859c7c01537c0849754d3db3fdf2bfe2ae84a"
+dependencies = [
+ "encoding_index_tests",
+]
+
+[[package]]
+name = "encoding-index-tradchinese"
+version = "1.20141219.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fd0e20d5688ce3cab59eb3ef3a2083a5c77bf496cb798dc6fcdb75f323890c18"
+dependencies = [
+ "encoding_index_tests",
+]
+
+[[package]]
+name = "encoding_index_tests"
+version = "0.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a246d82be1c9d791c5dfde9a2bd045fc3cbba3fa2b11ad558f27d01712f00569"
+
+[[package]]
 name = "encoding_rs"
 version = "0.8.35"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2236,7 +2321,7 @@ dependencies = [
  "indexmap 2.7.1",
  "slab",
  "tokio",
- "tokio-util",
+ "tokio-util 0.7.13",
  "tracing",
 ]
 
@@ -2255,7 +2340,7 @@ dependencies = [
  "indexmap 2.7.1",
  "slab",
  "tokio",
- "tokio-util",
+ "tokio-util 0.7.13",
  "tracing",
 ]
 
@@ -2507,7 +2592,7 @@ dependencies = [
  "hyper 1.6.0",
  "hyper-util",
  "rustls 0.23.23",
- "rustls-native-certs 0.8.1",
+ "rustls-native-certs",
  "rustls-pki-types",
  "tokio",
  "tokio-rustls 0.26.1",
@@ -3567,6 +3652,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "opentls"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6f561874f8d6ecfb674fc08863414040c93cc90c0b6963fe679895fab8b65560"
+dependencies = [
+ "futures-util",
+ "log",
+ "openssl",
+ "openssl-probe",
+ "openssl-sys",
+ "url",
+]
+
+[[package]]
 name = "oracle"
 version = "0.6.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3983,9 +4082,9 @@ dependencies = [
 
 [[package]]
 name = "pretty-hex"
-version = "0.3.0"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c6fa0831dd7cc608c38a5e323422a0077678fa5744aa2be4ad91c4ece8eec8d5"
+checksum = "be91bcc43e73799dc46a6c194a55e7aae1d86cc867c860fd4a436019af21bd8c"
 
 [[package]]
 name = "prettyplease"
@@ -4847,18 +4946,6 @@ dependencies = [
 
 [[package]]
 name = "rustls-native-certs"
-version = "0.6.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a9aace74cb666635c918e9c12bc0d348266037aa8eb599b5cba565709a8dff00"
-dependencies = [
- "openssl-probe",
- "rustls-pemfile 1.0.4",
- "schannel",
- "security-framework 2.11.1",
-]
-
-[[package]]
-name = "rustls-native-certs"
 version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7fcff2dd52b58a8d98a70243663a0d234c4e2b79235637849d15913394a247d3"
@@ -5510,33 +5597,34 @@ dependencies = [
 
 [[package]]
 name = "tiberius"
-version = "0.12.3"
+version = "0.7.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a1446cb4198848d1562301a3340424b4f425ef79f35ef9ee034769a9dd92c10d"
+checksum = "833311bc8e26e96c73ad1b5c1f488c588808c747a318905ec67e43d422ea2c08"
 dependencies = [
+ "async-native-tls",
  "async-trait",
  "asynchronous-codec",
  "byteorder",
  "bytes",
  "chrono",
  "connection-string",
- "encoding_rs",
+ "encoding",
  "enumflags2",
+ "futures",
+ "futures-sink",
  "futures-util",
  "libgssapi",
  "num-traits",
  "once_cell",
+ "opentls",
  "pin-project-lite",
  "pretty-hex",
  "rust_decimal",
- "rustls-native-certs 0.6.3",
- "rustls-pemfile 1.0.4",
  "thiserror 1.0.69",
  "tokio",
- "tokio-rustls 0.24.1",
- "tokio-util",
+ "tokio-util 0.6.10",
  "tracing",
- "uuid 1.12.1",
+ "uuid 0.8.2",
  "winauth",
 ]
 
@@ -5689,7 +5777,7 @@ dependencies = [
  "rand 0.8.5",
  "socket2",
  "tokio",
- "tokio-util",
+ "tokio-util 0.7.13",
  "whoami",
 ]
 
@@ -5720,6 +5808,21 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "eca58d7bba4a75707817a2c44174253f9236b2d5fbd055602e9d5c07c139a047"
 dependencies = [
  "futures-core",
+ "pin-project-lite",
+ "tokio",
+]
+
+[[package]]
+name = "tokio-util"
+version = "0.6.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "36943ee01a6d67977dd3f84a5a1d2efeb4ada3a1ae771cadfaa535d9d9fc6507"
+dependencies = [
+ "bytes",
+ "futures-core",
+ "futures-io",
+ "futures-sink",
+ "log",
  "pin-project-lite",
  "tokio",
 ]
@@ -5782,7 +5885,7 @@ dependencies = [
  "percent-encoding",
  "pin-project",
  "prost 0.13.5",
- "rustls-native-certs 0.8.1",
+ "rustls-native-certs",
  "rustls-pemfile 2.2.0",
  "tokio",
  "tokio-rustls 0.26.1",
@@ -5821,7 +5924,7 @@ dependencies = [
  "rand 0.8.5",
  "slab",
  "tokio",
- "tokio-util",
+ "tokio-util 0.7.13",
  "tower-layer",
  "tower-service",
  "tracing",

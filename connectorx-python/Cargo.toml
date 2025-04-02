@@ -40,6 +40,7 @@ tokio = {version = "1", features = ["rt", "rt-multi-thread", "net"]}
 url = "2"
 urlencoding = "2.1"
 uuid = "1"
+uuid_old = {package="uuid", version = "0.8"}
 rayon = "1"
 
 [build-dependencies]
