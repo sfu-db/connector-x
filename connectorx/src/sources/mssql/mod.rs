@@ -30,7 +30,7 @@ use tiberius::{AuthMethod, Config, EncryptionLevel, QueryItem, QueryStream, Row}
 use tokio::runtime::{Handle, Runtime};
 use url::Url;
 use urlencoding::decode;
-use uuid::Uuid;
+use uuid_old::Uuid;
 
 type Conn<'a> = PooledConnection<'a, ConnectionManager>;
 pub struct MsSQLSource {
@@ -59,7 +59,7 @@ pub fn mssql_config(url: &Url) -> Config {
     }
     config.port(url.port().unwrap_or(1433));
     // remove the leading "/"
-    config.database(&url.path()[1..]);
+    config.database(decode(&url.path()[1..])?.to_owned());
     // Using SQL Server authentication.
     #[allow(unused)]
     let params: HashMap<String, String> = url.query_pairs().into_owned().collect();

@@ -74,7 +74,7 @@ This allows it to make full use of the CPU by becoming cache and branch predicto
 
 ## How does ConnectorX download the data?
 
-Upon receiving the query, e.g. `SELECT * FROM lineitem`, ConnectorX will first issue a `LIMIT 1` query `SELECT * FROM lineitem LIMIT 1` to get the schema of the result set.
+Upon receiving the query, e.g. `SELECT * FROM lineitem`, ConnectorX will first get the schema of the result set. Depending on the data source, this process may envolve issuing a `LIMIT 1` query `SELECT * FROM lineitem LIMIT 1`.
 
 Then, if `partition_on` is specified, ConnectorX will issue `SELECT MIN($partition_on), MAX($partition_on) FROM (SELECT * FROM lineitem)` to know the range of the partition column.
 After that, the original query is split into partitions based on the min/max information, e.g. `SELECT * FROM (SELECT * FROM lineitem) WHERE $partition_on > 0 AND $partition_on < 10000`.
