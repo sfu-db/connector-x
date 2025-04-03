@@ -126,16 +126,6 @@ jobs:
           KRB5_INCLUDE_DIR: /usr/include
           KRB5_LIB_DIR: /usr/lib/aarch64-linux-gnu
 
-      - name: Copy J4RS Dependencies
-        run: |
-          cp -rf connectorx-python/target/aarch64-unknown-linux-gnu/release/jassets connectorx-python/connectorx/dependencies
-      - name: Rebuild Wheel (Native)
-        run: |
-          maturin build -m connectorx-python/Cargo.toml --target aarch64-unknown-linux-gnu -i python${{ matrix.python-version }} --release
-        env:
-          SQLITE3_STATIC: 1
-          KRB5_LIB_DIR: /usr/lib/aarch64-linux-gnu
-
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
