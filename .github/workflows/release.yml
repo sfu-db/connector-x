@@ -7,67 +7,67 @@ on:
       - release
 
 jobs:
-  # linux:
-  #   runs-on: ubuntu-latest
-  #   container: quay.io/pypa/manylinux_2_28_x86_64
-  #   strategy:
-  #     matrix:
-  #       python-version: [[310, "3.10"], [311, "3.11"], [312, "3.12"], [313, "3.13"]]
-  #   steps:
-  #     - uses: actions/checkout@v4
+  linux:
+    runs-on: ubuntu-latest
+    container: quay.io/pypa/manylinux_2_28_x86_64
+    strategy:
+      matrix:
+        python-version: [[310, "3.10"], [311, "3.11"], [312, "3.12"], [313, "3.13"]]
+    steps:
+      - uses: actions/checkout@v4
 
-  #     - name: Set python version
-  #       run: |
-  #         echo "/opt/python/cp${{ matrix.python-version[0] }}-cp${{ matrix.python-version[0] }}/bin" >> $GITHUB_PATH
+      - name: Set python version
+        run: |
+          echo "/opt/python/cp${{ matrix.python-version[0] }}-cp${{ matrix.python-version[0] }}/bin" >> $GITHUB_PATH
 
-  #     - uses: actions-rs/toolchain@v1
-  #       with:
-  #         toolchain: stable
-  #         components: rustfmt
-  #         target: aarch64-unknown-linux-gnu
-  #         default: true
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          components: rustfmt
+          target: aarch64-unknown-linux-gnu
+          default: true
 
-  #     - uses: extractions/setup-just@v2
-  #       env:
-  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: extractions/setup-just@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  #     - uses: Gr1N/setup-poetry@v9
+      - uses: Gr1N/setup-poetry@v9
 
-  #     - name: Install tools
-  #       run: |
-  #         yum install -y epel-release
-  #         yum install -y mysql-devel postgresql-devel freetds-devel krb5-libs clang-devel
+      - name: Install tools
+        run: |
+          yum install -y epel-release
+          yum install -y mysql-devel postgresql-devel freetds-devel krb5-libs clang-devel
 
-  #     - name: Setup project
-  #       run: |
-  #         just bootstrap-python
+      - name: Setup project
+        run: |
+          just bootstrap-python
 
-  #     - uses: PyO3/maturin-action@v1
-  #       with:
-  #         rust-toolchain: stable
-  #         command: build
-  #         args: -m connectorx-python/Cargo.toml -i python --release --manylinux 2_28 --features integrated-auth-gssapi
-  #         before-script-linux: |
-  #           # If we're running on rhel centos, install needed packages.
-  #           if command -v yum &> /dev/null; then
-  #               yum update -y && yum install -y perl-core openssl openssl-devel pkgconfig libatomic
+      - uses: PyO3/maturin-action@v1
+        with:
+          rust-toolchain: stable
+          command: build
+          args: -m connectorx-python/Cargo.toml -i python --release --manylinux 2_28 --features integrated-auth-gssapi
+          before-script-linux: |
+            # If we're running on rhel centos, install needed packages.
+            if command -v yum &> /dev/null; then
+                yum update -y && yum install -y perl-core openssl openssl-devel pkgconfig libatomic
 
-  #               # If we're running on i686 we need to symlink libatomic
-  #               # in order to build openssl with -latomic flag.
-  #               if [[ ! -d "/usr/lib64" ]]; then
-  #                   ln -s /usr/lib/libatomic.so.1 /usr/lib/libatomic.so
-  #               fi
-  #           else
-  #               # If we're running on debian-based system.
-  #               apt update -y && apt-get install -y libssl-dev openssl pkg-config
-  #           fi
-  #       env:
-  #         SQLITE3_STATIC: 1
+                # If we're running on i686 we need to symlink libatomic
+                # in order to build openssl with -latomic flag.
+                if [[ ! -d "/usr/lib64" ]]; then
+                    ln -s /usr/lib/libatomic.so.1 /usr/lib/libatomic.so
+                fi
+            else
+                # If we're running on debian-based system.
+                apt update -y && apt-get install -y libssl-dev openssl pkg-config
+            fi
+        env:
+          SQLITE3_STATIC: 1
 
-  #     - uses: actions/upload-artifact@v4
-  #       with:
-  #         name: "ubuntu-latest-${{ matrix.python-version[1] }}"
-  #         path: connectorx-python/target/wheels/*.whl
+      - uses: actions/upload-artifact@v4
+        with:
+          name: "ubuntu-latest-${{ matrix.python-version[1] }}"
+          path: connectorx-python/target/wheels/*.whl
 
   linux-aarch:
     runs-on: ubuntu-22.04-arm
@@ -105,6 +105,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Install Tools
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y mysql-client libpq-dev freetds-dev krb5-locales clang libkrb5-dev build-essential gcc musl-tools libsasl2-modules-gssapi-mit libgssapi-krb5-2 krb5-user
       - name: Setup Poetry
         uses: Gr1N/setup-poetry@v9
 
@@ -117,6 +121,10 @@ jobs:
       - name: Build Wheel (Native)
         run: |
           maturin build -m connectorx-python/Cargo.toml --target aarch64-unknown-linux-gnu -i python${{ matrix.python-version }} --release
+        env:
+          SQLITE3_STATIC: 1
+          KRB5_INCLUDE_DIR: /usr/include
+          KRB5_LIB_DIR: /usr/lib/aarch64-linux-gnu
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
@@ -124,148 +132,148 @@ jobs:
           name: "linux-arm-${{ matrix.python-version }}"
           path: connectorx-python/target/wheels/*.whl
 
-  # win-and-mac:
-  #   runs-on: ${{ matrix.os }}
-  #   strategy:
-  #     matrix:
-  #       os: ["windows-latest", "macos-13"]
-  #       python-version: ["3.10", "3.11", "3.12", "3.13"]
-  #       include:
-  #         - os: "macos-13"
-  #           features: "--features integrated-auth-gssapi"
-  #   steps:
-  #     - uses: actions/checkout@v4
+  win-and-mac:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: ["windows-latest", "macos-13"]
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+        include:
+          - os: "macos-13"
+            features: "--features integrated-auth-gssapi"
+    steps:
+      - uses: actions/checkout@v4
 
-  #     - uses: ankane/setup-mysql@v1
-  #       with:
-  #         mysql-version: 8
+      - uses: ankane/setup-mysql@v1
+        with:
+          mysql-version: 8
 
-  #     - uses: actions/setup-python@v5
-  #       with:
-  #         python-version: ${{ matrix.python-version }}
-  #         architecture: x64
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          architecture: x64
 
-  #     - uses: actions-rs/toolchain@v1
-  #       with:
-  #         toolchain: stable
-  #         components: rustfmt
-  #         default: true
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          components: rustfmt
+          default: true
 
-  #     - uses: extractions/setup-just@v2
-  #       env:
-  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: extractions/setup-just@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  #     - uses: Gr1N/setup-poetry@v9
+      - uses: Gr1N/setup-poetry@v9
 
-  #     - name: Setup project
-  #       run: |
-  #         just bootstrap-python
+      - name: Setup project
+        run: |
+          just bootstrap-python
 
-  #     - uses: PyO3/maturin-action@v1
-  #       with:
-  #         rust-toolchain: stable
-  #         maturin-version: v0.14.15
-  #         command: build
-  #         args: -m connectorx-python/Cargo.toml -i python --release ${{ matrix.features }}
-  #       env:
-  #         SQLITE3_STATIC: 1
+      - uses: PyO3/maturin-action@v1
+        with:
+          rust-toolchain: stable
+          maturin-version: v0.14.15
+          command: build
+          args: -m connectorx-python/Cargo.toml -i python --release ${{ matrix.features }}
+        env:
+          SQLITE3_STATIC: 1
 
-  #     - uses: actions/upload-artifact@v4
-  #       with:
-  #         name: "${{ matrix.os }}-${{ matrix.python-version }}"
-  #         path: connectorx-python/target/wheels/*.whl
+      - uses: actions/upload-artifact@v4
+        with:
+          name: "${{ matrix.os }}-${{ matrix.python-version }}"
+          path: connectorx-python/target/wheels/*.whl
 
-  # apple-arm:
-  #   runs-on: macos-latest
-  #   strategy:
-  #     matrix:
-  #       python-version: ["3.10", "3.11", "3.12", "3.13"]
-  #   steps:
-  #     - uses: actions/checkout@v4
+  apple-arm:
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
 
-  #     - uses: ankane/setup-mysql@v1
-  #       with:
-  #         mysql-version: 8
+      - uses: ankane/setup-mysql@v1
+        with:
+          mysql-version: 8
 
-  #     - uses: actions/setup-python@v5
-  #       with:
-  #         python-version: ${{ matrix.python-version }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
 
-  #     - uses: actions-rs/toolchain@v1
-  #       with:
-  #         toolchain: stable
-  #         components: rustfmt
-  #         target: aarch64-apple-darwin
-  #         default: true
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          components: rustfmt
+          target: aarch64-apple-darwin
+          default: true
 
-  #     - uses: extractions/setup-just@v2
-  #       env:
-  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: extractions/setup-just@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  #     - uses: Gr1N/setup-poetry@v9
+      - uses: Gr1N/setup-poetry@v9
 
-  #     - name: Setup project
-  #       run: |
-  #         just bootstrap-python
+      - name: Setup project
+        run: |
+          just bootstrap-python
 
-  #     - uses: PyO3/maturin-action@v1
-  #       with:
-  #         rust-toolchain: stable
-  #         maturin-version: v0.14.15
-  #         command: build
-  #         args: -m connectorx-python/Cargo.toml --target aarch64-apple-darwin -i python --release  --features integrated-auth-gssapi
-  #       env:
-  #         SQLITE3_STATIC: 1
+      - uses: PyO3/maturin-action@v1
+        with:
+          rust-toolchain: stable
+          maturin-version: v0.14.15
+          command: build
+          args: -m connectorx-python/Cargo.toml --target aarch64-apple-darwin -i python --release  --features integrated-auth-gssapi
+        env:
+          SQLITE3_STATIC: 1
 
-  #     - uses: actions/upload-artifact@v4
-  #       with:
-  #         name: "macos-arm-${{ matrix.python-version }}"
-  #         path: connectorx-python/target/wheels/*.whl
+      - uses: actions/upload-artifact@v4
+        with:
+          name: "macos-arm-${{ matrix.python-version }}"
+          path: connectorx-python/target/wheels/*.whl
 
-  # verify:
-  #   runs-on: ${{ matrix.os }}
-  #   needs: [win-and-mac, linux]
-  #   strategy:
-  #     matrix:
-  #       python-version: ["3.10", "3.11", "3.12", "3.13"]
-  #       os: [macos-13, ubuntu-latest, windows-latest]
-  #   steps:
-  #     - uses: actions/checkout@v4
+  verify:
+    runs-on: ${{ matrix.os }}
+    needs: [win-and-mac, linux]
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+        os: [macos-13, ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
 
-  #     - uses: actions/setup-python@v5
-  #       with:
-  #         python-version: ${{ matrix.python-version }}
-  #         architecture: x64
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          architecture: x64
 
-  #     - uses: actions/download-artifact@v4
-  #       with:
-  #         name: "${{ matrix.os }}-${{ matrix.python-version }}"
+      - uses: actions/download-artifact@v4
+        with:
+          name: "${{ matrix.os }}-${{ matrix.python-version }}"
 
-  #     - run: |
-  #         pip install *.whl
-  #         python -c "import connectorx"
+      - run: |
+          pip install *.whl
+          python -c "import connectorx"
 
-  # verify-apple-arm:
-  #   runs-on: ${{ matrix.os }}
-  #   needs: [apple-arm]
-  #   strategy:
-  #     matrix:
-  #       python-version: ["3.10", "3.11", "3.12", "3.13"]
-  #       os: [macos-latest]
-  #   steps:
-  #     - uses: actions/checkout@v4
+  verify-apple-arm:
+    runs-on: ${{ matrix.os }}
+    needs: [apple-arm]
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+        os: [macos-latest]
+    steps:
+      - uses: actions/checkout@v4
 
-  #     - uses: actions/setup-python@v5
-  #       with:
-  #         python-version: ${{ matrix.python-version }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
 
-  #     - uses: actions/download-artifact@v4
-  #       with:
-  #         name: "macos-arm-${{ matrix.python-version }}"
+      - uses: actions/download-artifact@v4
+        with:
+          name: "macos-arm-${{ matrix.python-version }}"
 
-  #     - run: |
-  #         pip install *.whl
-  #         python -c "import connectorx"
+      - run: |
+          pip install *.whl
+          python -c "import connectorx"
 
   verify-linux-arm:
     runs-on: ubuntu-22.04-arm
@@ -302,39 +310,39 @@ jobs:
           pip install *.whl
           python -c 'import connectorx'
 
-  # upload:
-  #   runs-on: ubuntu-latest
-  #   needs: [verify, verify-apple-arm, verify-linux-arm]
-  #   steps:
-  #     - name: Download all artifacts
-  #       uses: actions/download-artifact@v4
+  upload:
+    runs-on: ubuntu-latest
+    needs: [verify, verify-apple-arm, verify-linux-arm]
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
 
-  #     - name: Setup environment
-  #       run: |
-  #         tree .
-  #         echo "/home/runner/.local/bin" >> $GITHUB_PATH
+      - name: Setup environment
+        run: |
+          tree .
+          echo "/home/runner/.local/bin" >> $GITHUB_PATH
 
-  #     - name: Install Twine
-  #       run: |
-  #         pip install twine
-  #         pip install packaging -U
+      - name: Install Twine
+        run: |
+          pip install twine
+          pip install packaging -U
 
-  #     - name: Upload to PyPI site
-  #       if: github.ref == 'refs/heads/release'
-  #       env:
-  #         PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
-  #       run: |
-  #         for file in $(ls **/*)
-  #         do
-  #           twine upload --non-interactive -u __token__ -p $PYPI_TOKEN $file || continue
-  #         done
+      - name: Upload to PyPI site
+        if: github.ref == 'refs/heads/release'
+        env:
+          PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
+        run: |
+          for file in $(ls **/*)
+          do
+            twine upload --non-interactive -u __token__ -p $PYPI_TOKEN $file || continue
+          done
 
-  #     - name: Upload to PyPI test site
-  #       if: github.ref == 'refs/heads/prerelease'
-  #       env:
-  #         PYPI_TEST_TOKEN: ${{ secrets.PYPI_TEST_TOKEN }}
-  #       run: |
-  #         for file in $(ls **/*)
-  #         do
-  #           twine upload --non-interactive --repository-url https://test.pypi.org/legacy/ -u __token__ -p $PYPI_TEST_TOKEN $file --verbose || continue
-  #         done
+      - name: Upload to PyPI test site
+        if: github.ref == 'refs/heads/prerelease'
+        env:
+          PYPI_TEST_TOKEN: ${{ secrets.PYPI_TEST_TOKEN }}
+        run: |
+          for file in $(ls **/*)
+          do
+            twine upload --non-interactive --repository-url https://test.pypi.org/legacy/ -u __token__ -p $PYPI_TEST_TOKEN $file --verbose || continue
+          done
