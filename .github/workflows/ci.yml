@@ -66,7 +66,7 @@ jobs:
             target/
           key: ${{ runner.os }}-cargo-${{ secrets.CACHE_VERSION }}-${{ hashFiles('**/Cargo.lock') }}
 
-      - uses: extractions/setup-just@v2
+      - uses: extractions/setup-just@v3
 
       - name: Seed the database
         run: just seed-db
@@ -162,7 +162,7 @@ jobs:
 
       - uses: Gr1N/setup-poetry@v9
 
-      - uses: extractions/setup-just@v2
+      - uses: extractions/setup-just@v3
 
       - name: Install Rust
         uses: actions-rs/toolchain@v1
