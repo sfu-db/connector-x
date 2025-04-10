@@ -50,3 +50,28 @@ cx.read_sql(conn, query)                                        # read data from
 <p align="center"><img alt="memory chart" src="https://raw.githubusercontent.com/sfu-db/connector-x/main/assets/oracle-mem.png"/></p>
 
 In conclusion, ConnectorX uses **3x** less memory and **3x** less time compared with Pandas.
+
+### Development Setup
+
+To load the database seed data into the database, you will need `sqlplus`.
+
+Install it from Oracle's website's InstantClient page: https://www.oracle.com/database/technologies/instant-client/linux-x86-64-downloads.html.
+
+On Linux, this can be done by:
+
+```bash
+wget https://download.oracle.com/otn_software/linux/instantclient/2370000/instantclient-sqlplus-linux.x64-23.7.0.25.01.zip
+unzip instantclient-sqlplus-linux.x64-23.7.0.25.01.zip
+mkdir /opt/oracle/instantclient_23_7/
+mv instantclient_23_7/*.so /opt/oracle/instantclient_23_7/
+mv instantclient_23_7/* /usr/bin/
+export LD_LIBRARY_PATH=/opt/oracle/instantclient_23_7:$LD_LIBRARY_PATH
+sqlplus -h
+```
+
+Run the Oracle tests with:
+```bash
+cat scripts/oracle.sql | sqlplus $ORACLE_URL_SCRIPT
+
+cargo test --features all  --test test_oracle -- --ignored
+```
