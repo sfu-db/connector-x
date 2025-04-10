@@ -18,7 +18,7 @@ license = "MIT"
 maintainers = ["Weiyuan Wu <youngw@sfu.ca>"] 
 name = "connectorx" 
 readme = "README.md" # Markdown files are supported
-version = "0.4.3-alpha.1" 
+version = "0.4.3" 
 
 [project]
 name = "connectorx" # Target file name of maturin build

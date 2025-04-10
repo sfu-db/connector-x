@@ -1023,7 +1023,7 @@ dependencies = [
 
 [[package]]
 name = "connectorx"
-version = "0.4.3-alpha.1"
+version = "0.4.3"
 dependencies = [
  "anyhow",
  "arrow",
@@ -1081,7 +1081,7 @@ dependencies = [
 
 [[package]]
 name = "connectorx-cpp"
-version = "0.4.3-alpha.1"
+version = "0.4.3"
 dependencies = [
  "arrow",
  "connectorx",
