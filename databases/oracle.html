@@ -392,6 +392,7 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#oracle-tns-alias-dns-connection">Oracle TNS Alias (DNS) Connection</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#oracle-pandas-type-mapping">Oracle-Pandas Type Mapping</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#performance-db-r5-4xlarge-rds">Performance (db.r5.4xlarge RDS)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#development-setup">Development Setup</a></li>
 </ul>
             </nav>
         </div>
@@ -505,6 +506,27 @@ document.write(`
 <p align="center"><img alt="memory chart" src="https://raw.githubusercontent.com/sfu-db/connector-x/main/assets/oracle-mem.png"/></p>
 <p>In conclusion, ConnectorX uses <strong>3x</strong> less memory and <strong>3x</strong> less time compared with Pandas.</p>
 </section>
+<section id="development-setup">
+<h2>Development Setup<a class="headerlink" href="#development-setup" title="Link to this heading">#</a></h2>
+<p>To load the database seed data into the database, you will need <code class="docutils literal notranslate"><span class="pre">sqlplus</span></code>.</p>
+<p>Install it from Oracle’s website’s InstantClient page: <a class="reference external" href="https://www.oracle.com/database/technologies/instant-client/linux-x86-64-downloads.html">https://www.oracle.com/database/technologies/instant-client/linux-x86-64-downloads.html</a>.</p>
+<p>On Linux, this can be done by:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>wget<span class="w"> </span>https://download.oracle.com/otn_software/linux/instantclient/2370000/instantclient-sqlplus-linux.x64-23.7.0.25.01.zip
+unzip<span class="w"> </span>instantclient-sqlplus-linux.x64-23.7.0.25.01.zip
+mkdir<span class="w"> </span>/opt/oracle/instantclient_23_7/
+mv<span class="w"> </span>instantclient_23_7/*.so<span class="w"> </span>/opt/oracle/instantclient_23_7/
+mv<span class="w"> </span>instantclient_23_7/*<span class="w"> </span>/usr/bin/
+<span class="nb">export</span><span class="w"> </span><span class="nv">LD_LIBRARY_PATH</span><span class="o">=</span>/opt/oracle/instantclient_23_7:<span class="nv">$LD_LIBRARY_PATH</span>
+sqlplus<span class="w"> </span>-h
+</pre></div>
+</div>
+<p>Run the Oracle tests with:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cat<span class="w"> </span>scripts/oracle.sql<span class="w"> </span><span class="p">|</span><span class="w"> </span>sqlplus<span class="w"> </span><span class="nv">$ORACLE_URL_SCRIPT</span>
+
+cargo<span class="w"> </span><span class="nb">test</span><span class="w"> </span>--features<span class="w"> </span>all<span class="w">  </span>--test<span class="w"> </span>test_oracle<span class="w"> </span>--<span class="w"> </span>--ignored
+</pre></div>
+</div>
+</section>
 </section>
 
     <script type="text/x-thebe-config">
@@ -576,6 +598,7 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#oracle-tns-alias-dns-connection">Oracle TNS Alias (DNS) Connection</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#oracle-pandas-type-mapping">Oracle-Pandas Type Mapping</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#performance-db-r5-4xlarge-rds">Performance (db.r5.4xlarge RDS)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#development-setup">Development Setup</a></li>
 </ul>
   </nav></div>
 
