@@ -268,17 +268,17 @@ BibTeX entry:
                 </a>
             </td>
             <td align="center">
-                <a href="https://github.com/gruuya">
-                    <img src="https://avatars.githubusercontent.com/u/45558892?v=4" width="66;" alt="gruuya"/>
-                    <br />
-                    <sub><b>Marko Grujic</b></sub>
-                </a>
-            </td>
-            <td align="center">
                 <a href="https://github.com/jinzew">
                     <img src="https://avatars.githubusercontent.com/u/55274369?v=4" width="66;" alt="jinzew"/>
                     <br />
                     <sub><b>Null</b></sub>
+                </a>
+            </td>
+            <td align="center">
+                <a href="https://github.com/gruuya">
+                    <img src="https://avatars.githubusercontent.com/u/45558892?v=4" width="66;" alt="gruuya"/>
+                    <br />
+                    <sub><b>Marko Grujic</b></sub>
                 </a>
             </td>
             <td align="center">
@@ -384,14 +384,21 @@ BibTeX entry:
                 </a>
             </td>
             <td align="center">
+                <a href="https://github.com/DeflateAwning">
+                    <img src="https://avatars.githubusercontent.com/u/11021263?v=4" width="66;" alt="DeflateAwning"/>
+                    <br />
+                    <sub><b>DeflateAwning</b></sub>
+                </a>
+            </td>
+		</tr>
+		<tr>
+            <td align="center">
                 <a href="https://github.com/alexander-beedie">
                     <img src="https://avatars.githubusercontent.com/u/2613171?v=4" width="66;" alt="alexander-beedie"/>
                     <br />
                     <sub><b>Alexander Beedie</b></sub>
                 </a>
             </td>
-		</tr>
-		<tr>
             <td align="center">
                 <a href="https://github.com/zzzdong">
                     <img src="https://avatars.githubusercontent.com/u/5125482?v=4" width="66;" alt="zzzdong"/>
@@ -427,6 +434,8 @@ BibTeX entry:
                     <sub><b>Ivan</b></sub>
                 </a>
             </td>
+		</tr>
+		<tr>
             <td align="center">
                 <a href="https://github.com/phanindra-ramesh">
                     <img src="https://avatars.githubusercontent.com/u/16794420?v=4" width="66;" alt="phanindra-ramesh"/>
@@ -434,8 +443,6 @@ BibTeX entry:
                     <sub><b>Null</b></sub>
                 </a>
             </td>
-		</tr>
-		<tr>
             <td align="center">
                 <a href="https://github.com/messense">
                     <img src="https://avatars.githubusercontent.com/u/1556054?v=4" width="66;" alt="messense"/>
@@ -471,6 +478,8 @@ BibTeX entry:
                     <sub><b>Mats Eikeland Mollestad</b></sub>
                 </a>
             </td>
+		</tr>
+		<tr>
             <td align="center">
                 <a href="https://github.com/marianoguerra">
                     <img src="https://avatars.githubusercontent.com/u/68463?v=4" width="66;" alt="marianoguerra"/>
@@ -478,8 +487,6 @@ BibTeX entry:
                     <sub><b>Mariano Guerra</b></sub>
                 </a>
             </td>
-		</tr>
-		<tr>
             <td align="center">
                 <a href="https://github.com/kevinheavey">
                     <img src="https://avatars.githubusercontent.com/u/24635973?v=4" width="66;" alt="kevinheavey"/>
@@ -492,13 +499,6 @@ BibTeX entry:
                     <img src="https://avatars.githubusercontent.com/u/22837350?v=4" width="66;" alt="kayhoogland"/>
                     <br />
                     <sub><b>Kay Hoogland</b></sub>
-                </a>
-            </td>
-            <td align="center">
-                <a href="https://github.com/DeflateAwning">
-                    <img src="https://avatars.githubusercontent.com/u/11021263?v=4" width="66;" alt="DeflateAwning"/>
-                    <br />
-                    <sub><b>DeflateAwning</b></sub>
                 </a>
             </td>
             <td align="center">
