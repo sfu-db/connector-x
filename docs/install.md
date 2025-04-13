@@ -11,7 +11,7 @@ pip install connectorx
 ```
 
 ```{note}
-For AArch64 or ARM64 Linux users, connectorx==0.4.3 and above is only available for distributions using `glibc 2.35` and above. Specifically, the re-release for this architecture was tested on Ubuntu 22.04. For older distributions, the latest version available is connectorx==0.2.3 due to dependency limitations.
+For AArch64 or ARM64 Linux users, `connectorx==0.4.3 & above` is only available for distributions using `glibc 2.35` and above. Specifically, the re-release for this architecture was tested on Ubuntu 22.04. For older distributions, the latest version available is `connectorx==0.2.3` due to dependency limitations.
 ```
 
 ### Build from source code
