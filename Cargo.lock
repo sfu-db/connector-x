@@ -1043,7 +1043,7 @@ dependencies = [
  "itertools 0.14.0",
  "j4rs",
  "log",
- "mysql_common",
+ "mysql_common 0.35.1",
  "native-tls",
  "num-traits",
  "openssl",
@@ -3533,7 +3533,7 @@ dependencies = [
  "io-enum",
  "libc",
  "lru",
- "mysql_common",
+ "mysql_common 0.32.4",
  "named_pipe",
  "native-tls",
  "pem",
@@ -3564,6 +3564,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "mysql-common-derive"
+version = "0.32.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "deb6d9ff4094f6d58d3f892fc558e60048476213dd17dcf904b62202e9029da6"
+dependencies = [
+ "darling 0.20.11",
+ "heck",
+ "num-bigint",
+ "proc-macro-crate",
+ "proc-macro-error2",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.100",
+ "termcolor",
+ "thiserror 1.0.69",
+]
+
+[[package]]
 name = "mysql_common"
 version = "0.32.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3578,13 +3596,12 @@ dependencies = [
  "byteorder",
  "bytes",
  "cc",
- "chrono",
  "cmake",
  "crc32fast",
  "flate2",
  "frunk",
  "lazy_static",
- "mysql-common-derive",
+ "mysql-common-derive 0.31.2",
  "num-bigint",
  "num-traits",
  "rand 0.8.5",
@@ -3599,6 +3616,38 @@ dependencies = [
  "subprocess",
  "thiserror 1.0.69",
  "time",
+ "uuid 1.16.0",
+ "zstd",
+]
+
+[[package]]
+name = "mysql_common"
+version = "0.35.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "05cb54012445ed90405f9781f5cf730fa3651d00b5d9f3f740cf6dad517945e8"
+dependencies = [
+ "base64 0.22.1",
+ "bitflags 2.9.0",
+ "btoi",
+ "byteorder",
+ "bytes",
+ "cc",
+ "chrono",
+ "cmake",
+ "crc32fast",
+ "flate2",
+ "getrandom 0.3.2",
+ "mysql-common-derive 0.32.0",
+ "num-bigint",
+ "num-traits",
+ "regex",
+ "saturating",
+ "serde",
+ "serde_json",
+ "sha1",
+ "sha2",
+ "subprocess",
+ "thiserror 2.0.12",
  "uuid 1.16.0",
  "zstd",
 ]
