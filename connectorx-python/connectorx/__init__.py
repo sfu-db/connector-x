@@ -459,20 +459,16 @@ def reconstruct_pandas(df_infos: _DataframeInfos) -> pd.DataFrame:
                 pd.core.internals.make_block(block_data, placement=binfo.cids)
             )
         elif binfo.dt == 1:  # IntegerArray
-            integer_array = pd.core.arrays.IntegerArray._from_sequence(block_data[0])
-            integer_array._mask = block_data[1]
             blocks.append(
                 pd.core.internals.make_block(
-                    integer_array,
+                    pd.core.arrays.IntegerArray(block_data[0], block_data[1]),
                     placement=binfo.cids[0],
                 )
             )
         elif binfo.dt == 2:  # BooleanArray
-            bool_array = pd.core.arrays.BooleanArray._from_sequence(block_data[0])
-            bool_array._mask = block_data[1]
             blocks.append(
                 pd.core.internals.make_block(
-                    bool_array,
+                    pd.core.arrays.BooleanArray(block_data[0], block_data[1]),
                     placement=binfo.cids[0],
                 )
             )
