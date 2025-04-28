@@ -210,19 +210,19 @@ BibTeX entry:
                 </a>
             </td>
             <td align="center">
-                <a href="https://github.com/zen-xu">
-                    <img src="https://avatars.githubusercontent.com/u/38552291?v=4" width="66;" alt="zen-xu"/>
+                <a href="https://github.com/pangjunrong">
+                    <img src="https://avatars.githubusercontent.com/u/61274749?v=4" width="66;" alt="pangjunrong"/>
                     <br />
-                    <sub><b>ZhengYu, Xu</b></sub>
+                    <sub><b>Pang Jun Rong (Jayden)</b></sub>
                 </a>
             </td>
 		</tr>
 		<tr>
             <td align="center">
-                <a href="https://github.com/pangjunrong">
-                    <img src="https://avatars.githubusercontent.com/u/61274749?v=4" width="66;" alt="pangjunrong"/>
+                <a href="https://github.com/zen-xu">
+                    <img src="https://avatars.githubusercontent.com/u/38552291?v=4" width="66;" alt="zen-xu"/>
                     <br />
-                    <sub><b>Pang Jun Rong (Jayden)</b></sub>
+                    <sub><b>ZhengYu, Xu</b></sub>
                 </a>
             </td>
             <td align="center">
