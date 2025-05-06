@@ -196,17 +196,17 @@ BibTeX entry:
                 </a>
             </td>
             <td align="center">
-                <a href="https://github.com/Yizhou150">
-                    <img src="https://avatars.githubusercontent.com/u/62522644?v=4" width="66;" alt="Yizhou150"/>
-                    <br />
-                    <sub><b>Yizhou</b></sub>
-                </a>
-            </td>
-            <td align="center">
                 <a href="https://github.com/EricFecteau">
                     <img src="https://avatars.githubusercontent.com/u/96687807?v=4" width="66;" alt="EricFecteau"/>
                     <br />
                     <sub><b>EricFecteau</b></sub>
+                </a>
+            </td>
+            <td align="center">
+                <a href="https://github.com/Yizhou150">
+                    <img src="https://avatars.githubusercontent.com/u/62522644?v=4" width="66;" alt="Yizhou150"/>
+                    <br />
+                    <sub><b>Yizhou</b></sub>
                 </a>
             </td>
             <td align="center">
