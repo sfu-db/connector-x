@@ -13,7 +13,7 @@ readme = "README.md"
 
 [dependencies]
 anyhow = "1"
-arrow = { version = "53" }
+arrow = { version = "54" }
 bitfield = "0.13"
 bytes = "1.4"
 chrono = "0.4"
