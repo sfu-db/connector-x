@@ -1,8 +1,9 @@
 use arrow::{
     array::{
-        BooleanArray, BooleanBuilder, Date32Array, Float32Array, Float64Array, Int16Array,
-        Int32Array, Int64Array, LargeBinaryArray, LargeListArray, LargeListBuilder, StringArray,
-        StringBuilder, Time64MicrosecondArray, TimestampMicrosecondArray,
+        Array, BooleanArray, BooleanBuilder, Date32Array, Decimal128Array, Decimal128Builder,
+        Float32Array, Float64Array, Int16Array, Int32Array, Int64Array, LargeBinaryArray,
+        LargeListArray, LargeListBuilder, StringArray, StringBuilder, Time64MicrosecondArray,
+        TimestampMicrosecondArray,
     },
     datatypes::{Float32Type, Float64Type, Int16Type, Int32Type, Int64Type},
     record_batch::RecordBatch,
@@ -24,6 +25,46 @@ use connectorx::{
 use postgres::NoTls;
 use std::env;
 use url::Url;
+
+#[test]
+fn test_types_simple_postgres_aa() {
+    let _ = env_logger::builder().is_test(true).try_init();
+
+    let dburl = env::var("POSTGRES_URL").unwrap();
+
+    let vars = vec!["test_numeric"].join(",");
+
+    let queries = [CXQuery::naked(format!("select {vars} from test_types"))];
+    let url = Url::parse(dburl.as_str()).unwrap();
+    let (config, _tls) = rewrite_tls_args(&url).unwrap();
+    let builder = PostgresSource::<SimpleProtocol, NoTls>::new(config, NoTls, 2).unwrap();
+    let mut destination = ArrowDestination::new();
+    let dispatcher = Dispatcher::<_, _, PostgresArrowTransport<SimpleProtocol, NoTls>>::new(
+        builder,
+        &mut destination,
+        &queries,
+        Some(String::from("select * from test_types")),
+    );
+
+    dispatcher.run().expect("run dispatcher");
+
+    let result = destination.arrow().unwrap();
+
+    arrow::util::pretty::print_batches(&result).unwrap();
+}
+
+#[test]
+fn test_decimal_128() {
+    let mut builder = Decimal128Builder::new();
+    builder.append_value(1);
+    builder.append_value(1234567890);
+    builder.append_value(1234567890);
+    builder.append_value(1234567890);
+    builder.append_value(1234567890);
+    let decimal = builder.finish();
+
+    println!("decimal: {:#?}", decimal.value_as_string(0));
+}
 
 #[test]
 fn load_and_parse() {
@@ -763,18 +804,19 @@ pub fn verify_arrow_type_results(result: Vec<RecordBatch>, protocol: &str) {
 
     // test_numeric
     col += 1;
-    assert!(result[0]
+    let actual = result[0]
         .column(col)
         .as_any()
-        .downcast_ref::<Float64Array>()
-        .unwrap()
-        .eq(&Float64Array::from(vec![
-            Some(0.01),
-            Some(521.34),
-            Some(0.0),
-            Some(-112.3),
-            None,
-        ])));
+        .downcast_ref::<Decimal128Array>()
+        .unwrap();
+    let expected = build_decimal_array(vec![
+        Some(100000000),
+        Some(5213400000000),
+        Some(0),
+        Some(-1123000000000),
+        None,
+    ]);
+    assert_eq!(actual, &expected);
 
     // test_bpchar
     col += 1;
@@ -970,20 +1012,28 @@ pub fn verify_arrow_type_results(result: Vec<RecordBatch>, protocol: &str) {
 
     // test_narray
     col += 1;
-    assert!(result[0]
+    let actual = result[0]
         .column(col)
         .as_any()
         .downcast_ref::<LargeListArray>()
-        .unwrap()
-        .eq(&LargeListArray::from_iter_primitive::<Float64Type, _, _>(
-            vec![
-                Some(vec![Some(0.01), Some(521.23)]),
-                Some(vec![Some(0.12), Some(333.33), Some(22.22)]),
-                Some(vec![]),
-                Some(vec![Some(0.0), None, Some(-112.1)]),
-                None,
-            ]
-        )));
+        .unwrap();
+
+    let mut expected = LargeListBuilder::new(
+        Decimal128Builder::new()
+            .with_precision_and_scale(38, 10)
+            .unwrap(),
+    );
+    expected.append_value(vec![Some(100000000), Some(5212300000000)]);
+    expected.append_value(vec![
+        Some(1200000000),
+        Some(3333300000000),
+        Some(222200000000),
+    ]);
+    expected.append_value(vec![]);
+    expected.append_value(vec![Some(0), None, Some(-1121000000000)]);
+    expected.append_null();
+
+    assert!(actual.eq(&expected.finish()));
 
     // test_boolarray (from_iter_primitive not available for boolean)
     col += 1;
@@ -1312,4 +1362,19 @@ fn test_postgres_partitioned_pre_execution_queries() {
         result_map.get("idle_in_transaction_session_timeout"),
         Some(&2252)
     );
+}
+
+fn build_decimal_array(vals: Vec<Option<i128>>) -> Decimal128Array {
+    let mut builder = Decimal128Builder::new()
+        .with_precision_and_scale(38, 10)
+        .unwrap();
+
+    for val in vals {
+        match val {
+            Some(v) => builder.append_value(v),
+            None => builder.append_null(),
+        }
+    }
+
+    builder.finish()
 }
