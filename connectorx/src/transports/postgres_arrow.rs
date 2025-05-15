@@ -46,7 +46,7 @@ macro_rules! impl_postgres_transport {
             mappings = {
                 { Float4[f32]                        => Float32[f32]                           | conversion auto   }
                 { Float8[f64]                        => Float64[f64]                           | conversion auto   }
-                { Numeric[Decimal]                   => Decimal[Decimal]                       | conversion option }
+                { Numeric[Decimal]                   => Decimal[Decimal]                       | conversion auto   }
                 { Int2[i16]                          => Int16[i16]                             | conversion auto   }
                 { Int4[i32]                          => Int32[i32]                             | conversion auto   }
                 { Int8[i64]                          => Int64[i64]                             | conversion auto   }
@@ -73,7 +73,7 @@ macro_rules! impl_postgres_transport {
                 { Int8Array[Vec<Option<i64>>]        => Int64Array[Vec<Option<i64>>]           | conversion auto   }
                 { Float4Array[Vec<Option<f32>>]      => Float32Array[Vec<Option<f32>>]         | conversion auto   }
                 { Float8Array[Vec<Option<f64>>]      => Float64Array[Vec<Option<f64>>]         | conversion auto   }
-                { NumericArray[Vec<Option<Decimal>>] => DecimalArray[Vec<Option<Decimal>>]     | conversion option }
+                { NumericArray[Vec<Option<Decimal>>] => DecimalArray[Vec<Option<Decimal>>]     | conversion auto   }
             }
         );
     }
@@ -114,12 +114,6 @@ impl<P, C> TypeConversion<Uuid, String> for PostgresArrowTransport<P, C> {
     }
 }
 
-impl<P, C> TypeConversion<Decimal, Decimal> for PostgresArrowTransport<P, C> {
-    fn convert(val: Decimal) -> Decimal {
-        val
-    }
-}
-
 impl<P, C> TypeConversion<Decimal, f64> for PostgresArrowTransport<P, C> {
     fn convert(val: Decimal) -> f64 {
         val.to_f64()
@@ -130,11 +124,5 @@ impl<P, C> TypeConversion<Decimal, f64> for PostgresArrowTransport<P, C> {
 impl<P, C> TypeConversion<Value, String> for PostgresArrowTransport<P, C> {
     fn convert(val: Value) -> String {
         val.to_string()
-    }
-}
-
-impl<P, C> TypeConversion<Vec<Option<Decimal>>, Vec<Option<Decimal>>> for PostgresArrowTransport<P, C> {
-    fn convert(val: Vec<Option<Decimal>>) -> Vec<Option<Decimal>> {
-        val
     }
 }
