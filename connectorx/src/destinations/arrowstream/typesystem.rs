@@ -1,5 +1,6 @@
 use crate::impl_typesystem;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
+use rust_decimal::Decimal;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum ArrowTypeSystem {
@@ -9,6 +10,7 @@ pub enum ArrowTypeSystem {
     UInt64(bool),
     Float32(bool),
     Float64(bool),
+    Decimal(bool),
     Boolean(bool),
     LargeUtf8(bool),
     LargeBinary(bool),
@@ -27,6 +29,7 @@ impl_typesystem! {
         { UInt64     => u64           }
         { Float64    => f64           }
         { Float32    => f32           }
+        { Decimal    => Decimal       }
         { Boolean    => bool          }
         { LargeUtf8  => String        }
         { LargeBinary => Vec<u8>      }

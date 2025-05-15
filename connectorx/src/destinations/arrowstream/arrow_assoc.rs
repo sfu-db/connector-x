@@ -1,15 +1,21 @@
 use super::errors::{ArrowDestinationError, Result};
 use crate::constants::SECONDS_IN_DAY;
+use crate::utils::decimal_to_i128;
 use arrow::array::{
-    ArrayBuilder, BooleanBuilder, Date32Builder, Date64Builder, Float32Builder, Float64Builder,
-    Int32Builder, Int64Builder, LargeBinaryBuilder, StringBuilder, Time64NanosecondBuilder,
-    TimestampNanosecondBuilder, UInt32Builder, UInt64Builder,
+    ArrayBuilder, BooleanBuilder, Date32Builder, Date64Builder, Decimal128Builder, Float32Builder,
+    Float64Builder, Int32Builder, Int64Builder, LargeBinaryBuilder, StringBuilder,
+    Time64NanosecondBuilder, TimestampNanosecondBuilder, UInt32Builder, UInt64Builder,
 };
 use arrow::datatypes::Field;
 use arrow::datatypes::{DataType as ArrowDataType, TimeUnit};
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Timelike, Utc};
 use fehler::throws;
+use rust_decimal::Decimal;
 
+const DEFAULT_ARROW_DECIMAL_PRECISION: u8 = 38;
+const DEFAULT_ARROW_DECIMAL_SCALE: i8 = 10;
+const DEFAULT_ARROW_DECIMAL: ArrowDataType =
+    ArrowDataType::Decimal128(DEFAULT_ARROW_DECIMAL_PRECISION, DEFAULT_ARROW_DECIMAL_SCALE);
 /// Associate arrow builder with native type
 pub trait ArrowAssoc {
     type Builder: ArrayBuilder + Send;
@@ -64,6 +70,46 @@ impl_arrow_assoc!(i64, ArrowDataType::Int64, Int64Builder);
 impl_arrow_assoc!(f32, ArrowDataType::Float32, Float32Builder);
 impl_arrow_assoc!(f64, ArrowDataType::Float64, Float64Builder);
 impl_arrow_assoc!(bool, ArrowDataType::Boolean, BooleanBuilder);
+
+impl ArrowAssoc for Decimal {
+    type Builder = Decimal128Builder;
+
+    fn builder(nrows: usize) -> Self::Builder {
+        Decimal128Builder::with_capacity(nrows).with_data_type(DEFAULT_ARROW_DECIMAL)
+    }
+
+    fn append(builder: &mut Self::Builder, value: Self) -> Result<()> {
+        builder.append_value(decimal_to_i128(value, DEFAULT_ARROW_DECIMAL_SCALE as u32)?);
+        Ok(())
+    }
+
+    fn field(header: &str) -> Field {
+        Field::new(header, DEFAULT_ARROW_DECIMAL, false)
+    }
+}
+
+impl ArrowAssoc for Option<Decimal> {
+    type Builder = Decimal128Builder;
+
+    fn builder(nrows: usize) -> Self::Builder {
+        Decimal128Builder::with_capacity(nrows).with_data_type(DEFAULT_ARROW_DECIMAL)
+    }
+
+    fn append(builder: &mut Self::Builder, value: Self) -> Result<()> {
+        match value {
+            Some(v) => builder.append_option(Some(decimal_to_i128(
+                v,
+                DEFAULT_ARROW_DECIMAL_SCALE as u32,
+            )?)),
+            None => builder.append_null(),
+        }
+        Ok(())
+    }
+
+    fn field(header: &str) -> Field {
+        Field::new(header, DEFAULT_ARROW_DECIMAL, true)
+    }
+}
 
 impl ArrowAssoc for &str {
     type Builder = StringBuilder;
