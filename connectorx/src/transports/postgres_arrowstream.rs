@@ -9,7 +9,6 @@ use crate::sources::postgres::{
 };
 use crate::typesystem::TypeConversion;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
-use num_traits::ToPrimitive;
 use postgres::NoTls;
 use postgres_openssl::MakeTlsConnector;
 use rust_decimal::Decimal;
@@ -43,7 +42,7 @@ macro_rules! impl_postgres_transport {
             mappings = {
                 { Float4[f32]                => Float64[f64]              | conversion auto }
                 { Float8[f64]                => Float64[f64]              | conversion auto }
-                { Numeric[Decimal]           => Float64[f64]              | conversion option }
+                { Numeric[Decimal]           => Decimal[Decimal]          | conversion auto }
                 { Int2[i16]                  => Int64[i64]                | conversion auto }
                 { Int4[i32]                  => Int64[i64]                | conversion auto }
                 { Int8[i64]                  => Int64[i64]                | conversion auto }
@@ -78,13 +77,6 @@ impl_postgres_transport!(SimpleProtocol, MakeTlsConnector);
 impl<P, C> TypeConversion<Uuid, String> for PostgresArrowTransport<P, C> {
     fn convert(val: Uuid) -> String {
         val.to_string()
-    }
-}
-
-impl<P, C> TypeConversion<Decimal, f64> for PostgresArrowTransport<P, C> {
-    fn convert(val: Decimal) -> f64 {
-        val.to_f64()
-            .unwrap_or_else(|| panic!("cannot convert decimal {:?} to float64", val))
     }
 }
 
