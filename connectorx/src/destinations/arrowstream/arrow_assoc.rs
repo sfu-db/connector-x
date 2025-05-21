@@ -1,5 +1,5 @@
 use super::errors::{ArrowDestinationError, Result};
-use crate::constants::SECONDS_IN_DAY;
+use crate::constants::{DEFAULT_ARROW_DECIMAL, DEFAULT_ARROW_DECIMAL_SCALE, SECONDS_IN_DAY};
 use crate::utils::decimal_to_i128;
 use arrow::array::{
     ArrayBuilder, BooleanBuilder, Date32Builder, Date64Builder, Decimal128Builder, Float32Builder,
@@ -11,11 +11,6 @@ use arrow::datatypes::{DataType as ArrowDataType, TimeUnit};
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Timelike, Utc};
 use fehler::throws;
 use rust_decimal::Decimal;
-
-const DEFAULT_ARROW_DECIMAL_PRECISION: u8 = 38;
-const DEFAULT_ARROW_DECIMAL_SCALE: i8 = 10;
-const DEFAULT_ARROW_DECIMAL: ArrowDataType =
-    ArrowDataType::Decimal128(DEFAULT_ARROW_DECIMAL_PRECISION, DEFAULT_ARROW_DECIMAL_SCALE);
 /// Associate arrow builder with native type
 pub trait ArrowAssoc {
     type Builder: ArrayBuilder + Send;

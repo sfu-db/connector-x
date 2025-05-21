@@ -42,7 +42,7 @@ macro_rules! impl_postgres_transport {
             mappings = {
                 { Float4[f32]                => Float64[f64]              | conversion auto }
                 { Float8[f64]                => Float64[f64]              | conversion auto }
-                { Numeric[Decimal]           => Decimal[Decimal]          | conversion option }
+                { Numeric[Decimal]           => Decimal[Decimal]          | conversion auto }
                 { Int2[i16]                  => Int64[i64]                | conversion auto }
                 { Int4[i32]                  => Int64[i64]                | conversion auto }
                 { Int8[i64]                  => Int64[i64]                | conversion auto }
@@ -77,12 +77,6 @@ impl_postgres_transport!(SimpleProtocol, MakeTlsConnector);
 impl<P, C> TypeConversion<Uuid, String> for PostgresArrowTransport<P, C> {
     fn convert(val: Uuid) -> String {
         val.to_string()
-    }
-}
-
-impl<P, C> TypeConversion<Decimal, Decimal> for PostgresArrowTransport<P, C> {
-    fn convert(val: Decimal) -> Decimal {
-        val
     }
 }
 

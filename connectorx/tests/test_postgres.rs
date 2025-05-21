@@ -27,46 +27,6 @@ use std::env;
 use url::Url;
 
 #[test]
-fn test_types_simple_postgres_aa() {
-    let _ = env_logger::builder().is_test(true).try_init();
-
-    let dburl = env::var("POSTGRES_URL").unwrap();
-
-    let vars = vec!["test_numeric"].join(",");
-
-    let queries = [CXQuery::naked(format!("select {vars} from test_types"))];
-    let url = Url::parse(dburl.as_str()).unwrap();
-    let (config, _tls) = rewrite_tls_args(&url).unwrap();
-    let builder = PostgresSource::<SimpleProtocol, NoTls>::new(config, NoTls, 2).unwrap();
-    let mut destination = ArrowDestination::new();
-    let dispatcher = Dispatcher::<_, _, PostgresArrowTransport<SimpleProtocol, NoTls>>::new(
-        builder,
-        &mut destination,
-        &queries,
-        Some(String::from("select * from test_types")),
-    );
-
-    dispatcher.run().expect("run dispatcher");
-
-    let result = destination.arrow().unwrap();
-
-    arrow::util::pretty::print_batches(&result).unwrap();
-}
-
-#[test]
-fn test_decimal_128() {
-    let mut builder = Decimal128Builder::new();
-    builder.append_value(1);
-    builder.append_value(1234567890);
-    builder.append_value(1234567890);
-    builder.append_value(1234567890);
-    builder.append_value(1234567890);
-    let decimal = builder.finish();
-
-    println!("decimal: {:#?}", decimal.value_as_string(0));
-}
-
-#[test]
 fn load_and_parse() {
     let _ = env_logger::builder().is_test(true).try_init();
 
