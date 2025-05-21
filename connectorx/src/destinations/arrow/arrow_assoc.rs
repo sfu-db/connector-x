@@ -2,7 +2,10 @@ use super::{
     errors::{ArrowDestinationError, Result},
     typesystem::{DateTimeWrapperMicro, NaiveDateTimeWrapperMicro, NaiveTimeWrapperMicro},
 };
-use crate::{constants::{DEFAULT_ARROW_DECIMAL, DEFAULT_ARROW_DECIMAL_SCALE, SECONDS_IN_DAY}, utils::decimal_to_i128};
+use crate::{
+    constants::{DEFAULT_ARROW_DECIMAL, DEFAULT_ARROW_DECIMAL_SCALE, SECONDS_IN_DAY},
+    utils::decimal_to_i128,
+};
 use arrow::array::{
     ArrayBuilder, BooleanBuilder, Date32Builder, Decimal128Builder, Float32Builder, Float64Builder,
     Int16Builder, Int32Builder, Int64Builder, LargeBinaryBuilder, LargeListBuilder, StringBuilder,
@@ -71,8 +74,6 @@ impl_arrow_assoc!(i64, ArrowDataType::Int64, Int64Builder);
 impl_arrow_assoc!(f32, ArrowDataType::Float32, Float32Builder);
 impl_arrow_assoc!(f64, ArrowDataType::Float64, Float64Builder);
 impl_arrow_assoc!(bool, ArrowDataType::Boolean, BooleanBuilder);
-
-
 
 impl ArrowAssoc for Decimal {
     type Builder = Decimal128Builder;
