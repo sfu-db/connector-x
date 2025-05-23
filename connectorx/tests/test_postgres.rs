@@ -404,6 +404,7 @@ fn test_types_binary_postgres() {
         "test_varchararray",
         "test_textarray",
         "test_name",
+        "test_inet",
     ]
     .join(",");
 
@@ -465,6 +466,7 @@ fn test_types_csv_postgres() {
         "test_varchararray",
         "test_textarray",
         "test_name",
+        "test_inet",
     ]
     .join(",");
 
@@ -525,6 +527,7 @@ fn test_types_cursor_postgres() {
         "test_varchararray",
         "test_textarray",
         "test_name",
+        "test_inet",
     ]
     .join(",");
 
@@ -583,6 +586,7 @@ fn test_types_simple_postgres() {
         "test_varchararray",
         "test_textarray",
         "test_name",
+        "test_inet",
     ]
     .join(",");
 
@@ -1218,6 +1222,21 @@ pub fn verify_arrow_type_results(result: Vec<RecordBatch>, protocol: &str) {
             Some("21"),
             Some("someName"),
             Some("101203203-1212323-22131235"),
+            None,
+        ])));
+
+    // test_inet
+    col += 1;
+    assert!(result[0]
+        .column(col)
+        .as_any()
+        .downcast_ref::<StringArray>()
+        .unwrap()
+        .eq(&StringArray::from(vec![
+            Some("192.168.1.1"),
+            Some("10.0.0.0/24"),
+            Some("2001:db8::1"),
+            Some("2001:db8::/32"),
             None,
         ])));
 }
