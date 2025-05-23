@@ -5,6 +5,7 @@ mod errors;
 mod typesystem;
 
 pub use self::errors::PostgresSourceError;
+use cidr_02::IpInet;
 pub use connection::rewrite_tls_args;
 pub use typesystem::{PostgresTypePairs, PostgresTypeSystem};
 
@@ -480,6 +481,7 @@ impl_produce!(
     NaiveTime,
     Uuid,
     Value,
+    IpInet,
     Vec<Option<bool>>,
     Vec<Option<i16>>,
     Vec<Option<i32>>,
@@ -704,7 +706,7 @@ macro_rules! impl_csv_produce {
     };
 }
 
-impl_csv_produce!(i8, i16, i32, i64, f32, f64, Uuid,);
+impl_csv_produce!(i8, i16, i32, i64, f32, f64, Uuid, IpInet,);
 
 macro_rules! impl_csv_vec_produce {
     ($($t: ty,)+) => {
@@ -1216,6 +1218,7 @@ impl_produce!(
     NaiveTime,
     Uuid,
     Value,
+    IpInet,
     HashMap<String, Option<String>>,
     Vec<Option<bool>>,
     Vec<Option<String>>,
@@ -1481,7 +1484,7 @@ macro_rules! impl_simple_produce {
     };
 }
 
-impl_simple_produce!(i8, i16, i32, i64, f32, f64, Uuid,);
+impl_simple_produce!(i8, i16, i32, i64, f32, f64, Uuid, IpInet,);
 
 impl<'r> Produce<'r, bool> for PostgresSimpleSourceParser {
     type Error = PostgresSourceError;

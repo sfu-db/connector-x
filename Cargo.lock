@@ -940,6 +940,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "cidr"
+version = "0.2.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6bdf600c45bd958cf2945c445264471cca8b6c8e67bc87b71affd6d7e5682621"
+
+[[package]]
 name = "clang-sys"
 version = "1.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1024,6 +1030,7 @@ dependencies = [
  "bb8",
  "bb8-tiberius",
  "chrono",
+ "cidr",
  "criterion",
  "csv",
  "datafusion",
@@ -4780,6 +4787,7 @@ checksum = "613283563cd90e1dfc3518d548caee47e0e725455ed619881f5cf21f36de4b48"
 dependencies = [
  "bytes",
  "chrono",
+ "cidr",
  "fallible-iterator 0.2.0",
  "postgres-protocol",
  "serde",
