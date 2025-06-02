@@ -12,6 +12,7 @@ use crate::sources::postgres::{
 };
 use crate::typesystem::TypeConversion;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
+use cidr_02::IpInet;
 use num_traits::ToPrimitive;
 use postgres::NoTls;
 use postgres_openssl::MakeTlsConnector;
@@ -65,6 +66,7 @@ macro_rules! impl_postgres_transport {
                 { ByteA[Vec<u8>]                     => LargeBinary[Vec<u8>]                   | conversion auto   }
                 { JSON[Value]                        => LargeUtf8[String]                      | conversion option }
                 { JSONB[Value]                       => LargeUtf8[String]                      | conversion none   }
+                { Inet[IpInet]                       => LargeUtf8[String]                      | conversion none   }
                 { BoolArray[Vec<Option<bool>>]       => BoolArray[Vec<Option<bool>>]           | conversion auto   }
                 { VarcharArray[Vec<Option<String>>]  => Utf8Array[Vec<Option<String>>]         | conversion auto   }
                 { TextArray[Vec<Option<String>>]     => Utf8Array[Vec<Option<String>>]         | conversion none   }
@@ -87,6 +89,18 @@ impl_postgres_transport!(CursorProtocol, NoTls);
 impl_postgres_transport!(CursorProtocol, MakeTlsConnector);
 impl_postgres_transport!(SimpleProtocol, NoTls);
 impl_postgres_transport!(SimpleProtocol, MakeTlsConnector);
+
+impl<P, C> TypeConversion<IpInet, String> for PostgresArrowTransport<P, C> {
+    fn convert(val: IpInet) -> String {
+        val.to_string()
+    }
+}
+
+impl<P, C> TypeConversion<Option<IpInet>, Option<String>> for PostgresArrowTransport<P, C> {
+    fn convert(val: Option<IpInet>) -> Option<String> {
+        val.map(|val| val.to_string())
+    }
+}
 
 impl<P, C> TypeConversion<NaiveTime, NaiveTimeWrapperMicro> for PostgresArrowTransport<P, C> {
     fn convert(val: NaiveTime) -> NaiveTimeWrapperMicro {

@@ -1,4 +1,5 @@
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
+use cidr_02::IpInet;
 use postgres::types::Type;
 use rust_decimal::Decimal;
 use serde_json::Value;
@@ -38,6 +39,7 @@ pub enum PostgresTypeSystem {
     Enum(bool),
     HSTORE(bool),
     Name(bool),
+    Inet(bool),
 }
 
 impl_typesystem! {
@@ -68,6 +70,7 @@ impl_typesystem! {
         { UUID => Uuid }
         { JSON | JSONB => Value }
         { HSTORE => HashMap<String, Option<String>> }
+        { Inet => IpInet }
     }
 }
 
@@ -104,6 +107,7 @@ impl<'a> From<&'a Type> for PostgresTypeSystem {
             "json" => JSON(true),
             "jsonb" => JSONB(true),
             "hstore" => HSTORE(true),
+            "inet" => Inet(true),
             _ => match ty.kind() {
                 postgres::types::Kind::Enum(_) => Enum(true),
                 _ => unimplemented!("{}", ty.name()),
