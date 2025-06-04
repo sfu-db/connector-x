@@ -7,6 +7,7 @@ mod typesystem;
 pub use self::errors::PostgresSourceError;
 use cidr_02::IpInet;
 pub use connection::rewrite_tls_args;
+use pgvector::{Bit, HalfVector, SparseVector, Vector};
 pub use typesystem::{PostgresTypePairs, PostgresTypeSystem};
 
 use crate::constants::DB_BUFFER_SIZE;
@@ -51,6 +52,47 @@ pub enum SimpleProtocol {}
 
 type PgManager<C> = PostgresConnectionManager<C>;
 type PgConn<C> = PooledConnection<PgManager<C>>;
+
+macro_rules! impl_produce_unimplemented {
+    ($(($protocol: ty, $t: ty, $msg: expr),)+) => {
+        $(
+            impl<'r> Produce<'r, $t> for $protocol {
+                type Error = PostgresSourceError;
+
+                #[throws(PostgresSourceError)]
+                fn produce(&'r mut self) -> $t {
+                   unimplemented!($msg);
+                }
+            }
+
+            impl<'r> Produce<'r, Option<$t>> for $protocol {
+                type Error = PostgresSourceError;
+
+                #[throws(PostgresSourceError)]
+                fn produce(&'r mut self) -> Option<$t> {
+                   unimplemented!($msg);
+                }
+            }
+        )+
+    };
+}
+
+impl_produce_unimplemented!(
+    (PostgresCSVSourceParser<'_>, HashMap<String, Option<String>>, "Please use `cursor` protocol for hstore type"),
+    (PostgresCSVSourceParser<'_>, Vector, "Please use `binary` protocol for vector type"),
+    (PostgresCSVSourceParser<'_>, HalfVector, "Please use `binary` protocol for halfvector type"),
+    (PostgresCSVSourceParser<'_>, Bit, "Please use `binary` protocol for bit type"),
+    (PostgresCSVSourceParser<'_>, SparseVector, "Please use `binary` protocol for sparsevector type"),
+
+
+    (PostgresSimpleSourceParser,HashMap<String, Option<String>>, "unimplemented"),
+    (PostgresSimpleSourceParser,Value, "unimplemented"),
+    (PostgresSimpleSourceParser, Vector, "Please use `binary` protocol for vector type"),
+    (PostgresSimpleSourceParser, HalfVector, "Please use `binary` protocol for halfvector type"),
+    (PostgresSimpleSourceParser, Bit, "Please use `binary` protocol for bit type"),
+    (PostgresSimpleSourceParser, SparseVector, "Please use `binary` protocol for sparsevector type"),
+
+);
 
 // take a row and unwrap the interior field from column 0
 fn convert_row<'b, R: TryFrom<usize> + postgres::types::FromSql<'b> + Clone>(row: &'b Row) -> R {
@@ -482,6 +524,10 @@ impl_produce!(
     Uuid,
     Value,
     IpInet,
+    Vector,
+    HalfVector,
+    Bit,
+    SparseVector,
     Vec<Option<bool>>,
     Vec<Option<i16>>,
     Vec<Option<i32>>,
@@ -772,22 +818,6 @@ macro_rules! impl_csv_vec_produce {
 }
 
 impl_csv_vec_produce!(i8, i16, i32, i64, f32, f64, Decimal, String,);
-
-impl Produce<'_, HashMap<String, Option<String>>> for PostgresCSVSourceParser<'_> {
-    type Error = PostgresSourceError;
-    #[throws(PostgresSourceError)]
-    fn produce(&mut self) -> HashMap<String, Option<String>> {
-        unimplemented!("Please use `cursor` protocol for hstore type");
-    }
-}
-
-impl Produce<'_, Option<HashMap<String, Option<String>>>> for PostgresCSVSourceParser<'_> {
-    type Error = PostgresSourceError;
-    #[throws(PostgresSourceError)]
-    fn produce(&mut self) -> Option<HashMap<String, Option<String>>> {
-        unimplemented!("Please use `cursor` protocol for hstore type");
-    }
-}
 
 impl Produce<'_, bool> for PostgresCSVSourceParser<'_> {
     type Error = PostgresSourceError;
@@ -1219,6 +1249,10 @@ impl_produce!(
     Uuid,
     Value,
     IpInet,
+    Vector,
+    HalfVector,
+    Bit,
+    SparseVector,
     HashMap<String, Option<String>>,
     Vec<Option<bool>>,
     Vec<Option<String>>,
@@ -1403,30 +1437,6 @@ impl PartitionParser<'_> for PostgresSimpleSourceParser {
     }
 }
 
-macro_rules! impl_simple_produce_unimplemented {
-    ($($t: ty,)+) => {
-        $(
-            impl<'r, 'a> Produce<'r, $t> for PostgresSimpleSourceParser {
-                type Error = PostgresSourceError;
-
-                #[throws(PostgresSourceError)]
-                fn produce(&'r mut self) -> $t {
-                   unimplemented!("not implemented!");
-                }
-            }
-
-            impl<'r, 'a> Produce<'r, Option<$t>> for PostgresSimpleSourceParser {
-                type Error = PostgresSourceError;
-
-                #[throws(PostgresSourceError)]
-                fn produce(&'r mut self) -> Option<$t> {
-                   unimplemented!("not implemented!");
-                }
-            }
-        )+
-    };
-}
-
 macro_rules! impl_simple_produce {
     ($($t: ty,)+) => {
         $(
@@ -1590,10 +1600,6 @@ impl<'r> Produce<'r, Option<Decimal>> for PostgresSimpleSourceParser {
         val
     }
 }
-
-impl_simple_produce_unimplemented!(
-    Value,
-    HashMap<String, Option<String>>,);
 
 impl<'r> Produce<'r, &'r str> for PostgresSimpleSourceParser {
     type Error = PostgresSourceError;
