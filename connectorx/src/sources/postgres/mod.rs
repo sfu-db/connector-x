@@ -5,9 +5,9 @@ mod errors;
 mod typesystem;
 
 pub use self::errors::PostgresSourceError;
-use cidr_02::IpInet;
+pub use cidr_02::IpInet;
 pub use connection::rewrite_tls_args;
-use pgvector::{Bit, HalfVector, SparseVector, Vector};
+pub use pgvector::{Bit, HalfVector, SparseVector, Vector};
 pub use typesystem::{PostgresTypePairs, PostgresTypeSystem};
 
 use crate::constants::DB_BUFFER_SIZE;

@@ -1,5 +1,5 @@
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
-use cidr_02::IpInet;
+use crate::sources::postgres::IpInet;
 use postgres::types::Type;
 use rust_decimal::Decimal;
 use serde_json::Value;
