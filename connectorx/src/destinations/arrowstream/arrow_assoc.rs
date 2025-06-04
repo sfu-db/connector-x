@@ -3,8 +3,9 @@ use crate::constants::{DEFAULT_ARROW_DECIMAL, DEFAULT_ARROW_DECIMAL_SCALE, SECON
 use crate::utils::decimal_to_i128;
 use arrow::array::{
     ArrayBuilder, BooleanBuilder, Date32Builder, Date64Builder, Decimal128Builder, Float32Builder,
-    Float64Builder, Int32Builder, Int64Builder, LargeBinaryBuilder, StringBuilder,
-    Time64NanosecondBuilder, TimestampNanosecondBuilder, UInt32Builder, UInt64Builder,
+    Float64Builder, Int32Builder, Int64Builder, LargeBinaryBuilder, LargeListBuilder,
+    StringBuilder, Time64NanosecondBuilder, TimestampNanosecondBuilder, UInt32Builder,
+    UInt64Builder,
 };
 use arrow::datatypes::Field;
 use arrow::datatypes::{DataType as ArrowDataType, TimeUnit};
@@ -384,3 +385,51 @@ impl ArrowAssoc for Vec<u8> {
         Field::new(header, ArrowDataType::LargeBinary, false)
     }
 }
+
+macro_rules! impl_arrow_array_assoc {
+    ($T:ty, $AT:expr, $B:ident) => {
+        impl ArrowAssoc for $T {
+            type Builder = LargeListBuilder<$B>;
+
+            fn builder(nrows: usize) -> Self::Builder {
+                LargeListBuilder::with_capacity($B::new(), nrows)
+            }
+
+            #[throws(ArrowDestinationError)]
+            fn append(builder: &mut Self::Builder, value: Self) {
+                builder.append_value(value);
+            }
+
+            fn field(header: &str) -> Field {
+                Field::new(
+                    header,
+                    ArrowDataType::LargeList(std::sync::Arc::new(Field::new_list_field($AT, true))),
+                    false,
+                )
+            }
+        }
+
+        impl ArrowAssoc for Option<$T> {
+            type Builder = LargeListBuilder<$B>;
+
+            fn builder(nrows: usize) -> Self::Builder {
+                LargeListBuilder::with_capacity($B::new(), nrows)
+            }
+
+            #[throws(ArrowDestinationError)]
+            fn append(builder: &mut Self::Builder, value: Self) {
+                builder.append_option(value);
+            }
+
+            fn field(header: &str) -> Field {
+                Field::new(
+                    header,
+                    ArrowDataType::LargeList(std::sync::Arc::new(Field::new_list_field($AT, true))),
+                    true,
+                )
+            }
+        }
+    };
+}
+
+impl_arrow_array_assoc!(Vec<Option<f32>>, ArrowDataType::Float32, Float32Builder);
