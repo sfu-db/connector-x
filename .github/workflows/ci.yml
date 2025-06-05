@@ -15,7 +15,7 @@ jobs:
     container: ubuntu:24.04
     services:
       postgres:
-        image: postgres
+        image: pgvector/pgvector:pg17
         env:
           POSTGRES_PASSWORD: postgres
         # Set health checks to wait until postgres has started
@@ -117,7 +117,7 @@ jobs:
       # Label used to access the service container
       postgres:
         # Docker Hub image
-        image: postgres
+        image: pgvector/pgvector:pg17
         env:
           POSTGRES_PASSWORD: postgres
         # Set health checks to wait until postgres has started
