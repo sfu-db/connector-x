@@ -58,7 +58,7 @@ macro_rules! impl_postgres_transport {
                 { UUID[Uuid]                                    => String[String]                         | conversion option }
                 { JSON[Value]                                   => String[String]                         | conversion option }
                 { JSONB[Value]                                  => String[String]                         | conversion none }
-                { Inet[IpInet]                                  => String[String]                         | conversion none   }
+                { Inet[IpInet]                                  => String[String]                         | conversion option }
                 { Time[NaiveTime]                               => String[String]                         | conversion option }
                 { ByteA[Vec<u8>]                                => Bytes[Vec<u8>]                         | conversion auto }
                 { Enum[&'r str]                                 => Str[&'r str]                           | conversion none }
@@ -76,7 +76,6 @@ impl_postgres_transport!(CursorProtocol, NoTls);
 impl_postgres_transport!(CursorProtocol, MakeTlsConnector);
 impl_postgres_transport!(SimpleProtocol, NoTls);
 impl_postgres_transport!(SimpleProtocol, MakeTlsConnector);
-
 
 impl<'py, P, C> TypeConversion<Vector, Vec<f64>> for PostgresPandasTransport<'py, P, C> {
     fn convert(val: Vector) -> Vec<f64> {
@@ -105,14 +104,6 @@ impl<'py, P, C> TypeConversion<SparseVector, Vec<f64>> for PostgresPandasTranspo
 impl<'py, P, C> TypeConversion<IpInet, String> for PostgresPandasTransport<'py, P, C> {
     fn convert(val: IpInet) -> String {
         val.to_string()
-    }
-}
-
-impl<'py, P, C> TypeConversion<Option<IpInet>, Option<String>>
-    for PostgresPandasTransport<'py, P, C>
-{
-    fn convert(val: Option<IpInet>) -> Option<String> {
-        val.map(|val| val.to_string())
     }
 }
 
@@ -147,7 +138,7 @@ impl<'py, P, C> TypeConversion<Vec<Option<bool>>, Vec<bool>>
     fn convert(val: Vec<Option<bool>>) -> Vec<bool> {
         val.into_iter()
             .map(|v| match v {
-                Some(v) => v as bool,
+                Some(v) => v,
                 None => {
                     unimplemented!("In-array nullable not implemented for Vec<bool> for Pandas")
                 }
@@ -173,7 +164,7 @@ impl<'py, P, C> TypeConversion<Vec<Option<f64>>, Vec<f64>> for PostgresPandasTra
     fn convert(val: Vec<Option<f64>>) -> Vec<f64> {
         val.into_iter()
             .map(|v| match v {
-                Some(v) => v as f64,
+                Some(v) => v,
                 None => {
                     unimplemented!("In-array nullable not implemented for Vec<f64> for Pandas")
                 }
@@ -212,7 +203,7 @@ impl<'py, P, C> TypeConversion<Vec<Option<i64>>, Vec<i64>> for PostgresPandasTra
     fn convert(val: Vec<Option<i64>>) -> Vec<i64> {
         val.into_iter()
             .map(|v| match v {
-                Some(v) => v as i64,
+                Some(v) => v,
                 None => {
                     unimplemented!("In-array nullable not implemented for Vec<i64> for Pandas")
                 }

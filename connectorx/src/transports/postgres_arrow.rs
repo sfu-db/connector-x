@@ -77,10 +77,10 @@ macro_rules! impl_postgres_transport {
                 { Float4Array[Vec<Option<f32>>]      => Float32Array[Vec<Option<f32>>]         | conversion auto   }
                 { Float8Array[Vec<Option<f64>>]      => Float64Array[Vec<Option<f64>>]         | conversion auto   }
                 { NumericArray[Vec<Option<Decimal>>] => DecimalArray[Vec<Option<Decimal>>]     | conversion auto   }
-                { Vector[Vector]                     => Float32Array[Vec<Option<f32>>]         | conversion none   }
-                { HalfVec[HalfVector]                => Float32Array[Vec<Option<f32>>]         | conversion none   }
-                { Bit[Bit]                           => LargeBinary[Vec<u8>]                   | conversion none   }
-                { SparseVec[SparseVector]            => Float32Array[Vec<Option<f32>>]         | conversion none   }
+                { Vector[Vector]                     => Float32Array[Vec<Option<f32>>]         | conversion option }
+                { HalfVec[HalfVector]                => Float32Array[Vec<Option<f32>>]         | conversion option }
+                { Bit[Bit]                           => LargeBinary[Vec<u8>]                   | conversion option }
+                { SparseVec[SparseVector]            => Float32Array[Vec<Option<f32>>]         | conversion option }
             }
         );
     }
@@ -152,13 +152,6 @@ impl<P, C> TypeConversion<Vector, Vec<Option<f32>>> for PostgresArrowTransport<P
     }
 }
 
-impl<P, C> TypeConversion<Option<Vector>, Option<Vec<Option<f32>>>>
-    for PostgresArrowTransport<P, C>
-{
-    fn convert(val: Option<Vector>) -> Option<Vec<Option<f32>>> {
-        val.map(|val| val.to_vec().into_iter().map(Some).collect())
-    }
-}
 
 impl<P, C> TypeConversion<HalfVector, Vec<Option<f32>>> for PostgresArrowTransport<P, C> {
     fn convert(val: HalfVector) -> Vec<Option<f32>> {
@@ -166,13 +159,6 @@ impl<P, C> TypeConversion<HalfVector, Vec<Option<f32>>> for PostgresArrowTranspo
     }
 }
 
-impl<P, C> TypeConversion<Option<HalfVector>, Option<Vec<Option<f32>>>>
-    for PostgresArrowTransport<P, C>
-{
-    fn convert(val: Option<HalfVector>) -> Option<Vec<Option<f32>>> {
-        val.map(|val| val.to_vec().into_iter().map(|v| Some(v.to_f32())).collect())
-    }
-}
 
 impl<P, C> TypeConversion<Bit, Vec<u8>> for PostgresArrowTransport<P, C> {
     fn convert(val: Bit) -> Vec<u8> {
@@ -180,22 +166,9 @@ impl<P, C> TypeConversion<Bit, Vec<u8>> for PostgresArrowTransport<P, C> {
     }
 }
 
-impl<P, C> TypeConversion<Option<Bit>, Option<Vec<u8>>> for PostgresArrowTransport<P, C> {
-    fn convert(val: Option<Bit>) -> Option<Vec<u8>> {
-        val.map(|val| val.as_bytes().into())
-    }
-}
 
 impl<P, C> TypeConversion<SparseVector, Vec<Option<f32>>> for PostgresArrowTransport<P, C> {
     fn convert(val: SparseVector) -> Vec<Option<f32>> {
         val.to_vec().into_iter().map(Some).collect()
-    }
-}
-
-impl<P, C> TypeConversion<Option<SparseVector>, Option<Vec<Option<f32>>>>
-    for PostgresArrowTransport<P, C>
-{
-    fn convert(val: Option<SparseVector>) -> Option<Vec<Option<f32>>> {
-        val.map(|val| val.to_vec().into_iter().map(Some).collect())
     }
 }
