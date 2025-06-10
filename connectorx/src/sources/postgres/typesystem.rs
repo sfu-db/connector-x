@@ -1,10 +1,12 @@
+use crate::sources::postgres::IpInet;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
-use cidr_02::IpInet;
 use postgres::types::Type;
 use rust_decimal::Decimal;
 use serde_json::Value;
 use std::collections::HashMap;
 use uuid::Uuid;
+
+use pgvector::{Bit, HalfVector, SparseVector, Vector};
 
 #[derive(Copy, Clone, Debug)]
 pub enum PostgresTypeSystem {
@@ -40,6 +42,10 @@ pub enum PostgresTypeSystem {
     HSTORE(bool),
     Name(bool),
     Inet(bool),
+    Vector(bool),
+    HalfVec(bool),
+    Bit(bool),
+    SparseVec(bool),
 }
 
 impl_typesystem! {
@@ -71,6 +77,10 @@ impl_typesystem! {
         { JSON | JSONB => Value }
         { HSTORE => HashMap<String, Option<String>> }
         { Inet => IpInet }
+        { Vector => Vector }
+        { HalfVec => HalfVector }
+        { Bit => Bit }
+        { SparseVec => SparseVector }
     }
 }
 
@@ -108,6 +118,10 @@ impl<'a> From<&'a Type> for PostgresTypeSystem {
             "jsonb" => JSONB(true),
             "hstore" => HSTORE(true),
             "inet" => Inet(true),
+            "vector" => Vector(true),
+            "halfvec" => HalfVec(true),
+            "bit" => Bit(true),
+            "sparsevec" => SparseVec(true),
             _ => match ty.kind() {
                 postgres::types::Kind::Enum(_) => Enum(true),
                 _ => unimplemented!("{}", ty.name()),

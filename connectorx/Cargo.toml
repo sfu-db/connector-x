@@ -60,6 +60,7 @@ datafusion = {version = "46", optional = true}
 prusto = {version = "0.5", optional = true}
 serde = {version = "1", optional = true}
 cidr-02 = { version = "0.2", package = "cidr", optional = true }
+pgvector = { version = "0.4", features = [ "postgres", "halfvec"], optional = true }
 
 [lib]
 crate-type = ["cdylib", "rlib"]
@@ -99,6 +100,7 @@ src_postgres = [
   "openssl",
   "postgres-openssl",
   "cidr-02",
+  "pgvector",
 ]
 src_sqlite = ["rusqlite", "r2d2_sqlite", "fallible-streaming-iterator", "r2d2", "urlencoding"]
 src_trino = ["prusto", "uuid", "urlencoding", "rust_decimal", "tokio", "num-traits", "serde"]

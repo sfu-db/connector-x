@@ -865,6 +865,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "cidr"
+version = "0.2.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6bdf600c45bd958cf2945c445264471cca8b6c8e67bc87b71affd6d7e5682621"
+
+[[package]]
 name = "clang-sys"
 version = "1.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -927,6 +933,7 @@ dependencies = [
  "bb8",
  "bb8-tiberius",
  "chrono",
+ "cidr",
  "csv",
  "datafusion",
  "fallible-streaming-iterator",
@@ -943,6 +950,7 @@ dependencies = [
  "openssl",
  "oracle",
  "owning_ref",
+ "pgvector",
  "postgres",
  "postgres-native-tls",
  "postgres-openssl",
@@ -3922,6 +3930,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "pgvector"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fc58e2d255979a31caa7cabfa7aac654af0354220719ab7a68520ae7a91e8c0b"
+dependencies = [
+ "bytes",
+ "half 2.6.0",
+ "postgres-types",
+]
+
+[[package]]
 name = "phf"
 version = "0.11.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4104,6 +4123,7 @@ checksum = "613283563cd90e1dfc3518d548caee47e0e725455ed619881f5cf21f36de4b48"
 dependencies = [
  "bytes",
  "chrono",
+ "cidr",
  "fallible-iterator 0.2.0",
  "postgres-protocol",
  "serde",

@@ -14,6 +14,7 @@ use crate::typesystem::TypeConversion;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
 use cidr_02::IpInet;
 use num_traits::ToPrimitive;
+use pgvector::{Bit, HalfVector, SparseVector, Vector};
 use postgres::NoTls;
 use postgres_openssl::MakeTlsConnector;
 use rust_decimal::Decimal;
@@ -76,6 +77,10 @@ macro_rules! impl_postgres_transport {
                 { Float4Array[Vec<Option<f32>>]      => Float32Array[Vec<Option<f32>>]         | conversion auto   }
                 { Float8Array[Vec<Option<f64>>]      => Float64Array[Vec<Option<f64>>]         | conversion auto   }
                 { NumericArray[Vec<Option<Decimal>>] => DecimalArray[Vec<Option<Decimal>>]     | conversion auto   }
+                { Vector[Vector]                     => Float32Array[Vec<Option<f32>>]         | conversion option }
+                { HalfVec[HalfVector]                => Float32Array[Vec<Option<f32>>]         | conversion option }
+                { Bit[Bit]                           => LargeBinary[Vec<u8>]                   | conversion option }
+                { SparseVec[SparseVector]            => Float32Array[Vec<Option<f32>>]         | conversion option }
             }
         );
     }
@@ -138,5 +143,29 @@ impl<P, C> TypeConversion<Decimal, f64> for PostgresArrowTransport<P, C> {
 impl<P, C> TypeConversion<Value, String> for PostgresArrowTransport<P, C> {
     fn convert(val: Value) -> String {
         val.to_string()
+    }
+}
+
+impl<P, C> TypeConversion<Vector, Vec<Option<f32>>> for PostgresArrowTransport<P, C> {
+    fn convert(val: Vector) -> Vec<Option<f32>> {
+        val.to_vec().into_iter().map(Some).collect()
+    }
+}
+
+impl<P, C> TypeConversion<HalfVector, Vec<Option<f32>>> for PostgresArrowTransport<P, C> {
+    fn convert(val: HalfVector) -> Vec<Option<f32>> {
+        val.to_vec().into_iter().map(|v| Some(v.to_f32())).collect()
+    }
+}
+
+impl<P, C> TypeConversion<Bit, Vec<u8>> for PostgresArrowTransport<P, C> {
+    fn convert(val: Bit) -> Vec<u8> {
+        val.as_bytes().into()
+    }
+}
+
+impl<P, C> TypeConversion<SparseVector, Vec<Option<f32>>> for PostgresArrowTransport<P, C> {
+    fn convert(val: SparseVector) -> Vec<Option<f32>> {
+        val.to_vec().into_iter().map(Some).collect()
     }
 }

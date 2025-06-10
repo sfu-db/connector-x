@@ -46,6 +46,11 @@ cx.read_sql(conn, query)                                        # read data from
 | ltree           | object                    | binary protocol supported only after Postgres version 13 |
 | lquery          | object                    | binary protocol supported only after Postgres version 13 |
 | ltxtquery       | object                    | binary protocol supported only after Postgres version 13 |
+| Inet            | object                    |                                    |
+| Vector          | object                    | list of f32                        |
+| HalfVec         | object                    | list of f32                        |
+| Bit             | object                    |                                    |
+| SparseVec       | object                    | list of f32                        |
 | INT2[]          | object                    | list of i64                        |
 | INT4[]          | object                    | list of i64                        |
 | INT8[]          | object                    | list of i64                        |

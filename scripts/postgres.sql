@@ -104,3 +104,26 @@ CREATE OR REPLACE FUNCTION increment(i integer) RETURNS integer AS $$
         RETURN i + 1;
     END;
 $$ LANGUAGE plpgsql;
+
+DROP TABLE IF EXISTS vector_types;
+DROP EXTENSION IF EXISTS vector;
+
+CREATE EXTENSION vector;
+CREATE TABLE vector_types (
+    id SERIAL PRIMARY KEY,
+    dense_vector vector(10),      
+    half_vector halfvec(10),      
+    binary_vector bit(10),     
+    sparse_vector sparsevec(5)
+);
+
+INSERT INTO vector_types (dense_vector, half_vector, binary_vector, sparse_vector) VALUES
+    (
+        '[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]',  
+        '[1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0]',  
+        '1010101010',                                          
+        '{1:1,3:2,5:3}/5'                          
+    ),
+    (
+        NULL,NULL,NULL,NULL
+    );
