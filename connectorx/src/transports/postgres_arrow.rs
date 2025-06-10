@@ -152,20 +152,17 @@ impl<P, C> TypeConversion<Vector, Vec<Option<f32>>> for PostgresArrowTransport<P
     }
 }
 
-
 impl<P, C> TypeConversion<HalfVector, Vec<Option<f32>>> for PostgresArrowTransport<P, C> {
     fn convert(val: HalfVector) -> Vec<Option<f32>> {
         val.to_vec().into_iter().map(|v| Some(v.to_f32())).collect()
     }
 }
 
-
 impl<P, C> TypeConversion<Bit, Vec<u8>> for PostgresArrowTransport<P, C> {
     fn convert(val: Bit) -> Vec<u8> {
         val.as_bytes().into()
     }
 }
-
 
 impl<P, C> TypeConversion<SparseVector, Vec<Option<f32>>> for PostgresArrowTransport<P, C> {
     fn convert(val: SparseVector) -> Vec<Option<f32>> {
