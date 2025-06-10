@@ -2,10 +2,13 @@ use super::{
     errors::{ArrowDestinationError, Result},
     typesystem::{DateTimeWrapperMicro, NaiveDateTimeWrapperMicro, NaiveTimeWrapperMicro},
 };
-use crate::constants::SECONDS_IN_DAY;
+use crate::{
+    constants::{DEFAULT_ARROW_DECIMAL, DEFAULT_ARROW_DECIMAL_SCALE, SECONDS_IN_DAY},
+    utils::decimal_to_i128,
+};
 use arrow::array::{
-    ArrayBuilder, BooleanBuilder, Date32Builder, Float32Builder, Float64Builder, Int16Builder,
-    Int32Builder, Int64Builder, LargeBinaryBuilder, LargeListBuilder, StringBuilder,
+    ArrayBuilder, BooleanBuilder, Date32Builder, Decimal128Builder, Float32Builder, Float64Builder,
+    Int16Builder, Int32Builder, Int64Builder, LargeBinaryBuilder, LargeListBuilder, StringBuilder,
     Time64MicrosecondBuilder, Time64NanosecondBuilder, TimestampMicrosecondBuilder,
     TimestampNanosecondBuilder, UInt16Builder, UInt32Builder, UInt64Builder,
 };
@@ -13,6 +16,7 @@ use arrow::datatypes::Field;
 use arrow::datatypes::{DataType as ArrowDataType, TimeUnit};
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Timelike, Utc};
 use fehler::throws;
+use rust_decimal::Decimal;
 
 /// Associate arrow builder with native type
 pub trait ArrowAssoc {
@@ -70,6 +74,46 @@ impl_arrow_assoc!(i64, ArrowDataType::Int64, Int64Builder);
 impl_arrow_assoc!(f32, ArrowDataType::Float32, Float32Builder);
 impl_arrow_assoc!(f64, ArrowDataType::Float64, Float64Builder);
 impl_arrow_assoc!(bool, ArrowDataType::Boolean, BooleanBuilder);
+
+impl ArrowAssoc for Decimal {
+    type Builder = Decimal128Builder;
+
+    fn builder(nrows: usize) -> Self::Builder {
+        Decimal128Builder::with_capacity(nrows).with_data_type(DEFAULT_ARROW_DECIMAL)
+    }
+
+    fn append(builder: &mut Self::Builder, value: Self) -> Result<()> {
+        builder.append_value(decimal_to_i128(value, DEFAULT_ARROW_DECIMAL_SCALE as u32)?);
+        Ok(())
+    }
+
+    fn field(header: &str) -> Field {
+        Field::new(header, DEFAULT_ARROW_DECIMAL, false)
+    }
+}
+
+impl ArrowAssoc for Option<Decimal> {
+    type Builder = Decimal128Builder;
+
+    fn builder(nrows: usize) -> Self::Builder {
+        Decimal128Builder::with_capacity(nrows).with_data_type(DEFAULT_ARROW_DECIMAL)
+    }
+
+    fn append(builder: &mut Self::Builder, value: Self) -> Result<()> {
+        match value {
+            Some(v) => builder.append_option(Some(decimal_to_i128(
+                v,
+                DEFAULT_ARROW_DECIMAL_SCALE as u32,
+            )?)),
+            None => builder.append_null(),
+        }
+        Ok(())
+    }
+
+    fn field(header: &str) -> Field {
+        Field::new(header, DEFAULT_ARROW_DECIMAL, true)
+    }
+}
 
 impl ArrowAssoc for &str {
     type Builder = StringBuilder;
@@ -483,6 +527,93 @@ impl ArrowAssoc for Vec<u8> {
 
     fn field(header: &str) -> Field {
         Field::new(header, ArrowDataType::LargeBinary, false)
+    }
+}
+
+impl ArrowAssoc for Option<Vec<Option<Decimal>>> {
+    type Builder = LargeListBuilder<Decimal128Builder>;
+
+    fn builder(nrows: usize) -> Self::Builder {
+        LargeListBuilder::with_capacity(
+            Decimal128Builder::with_capacity(nrows).with_data_type(DEFAULT_ARROW_DECIMAL),
+            nrows,
+        )
+    }
+
+    fn append(builder: &mut Self::Builder, value: Self) -> Result<()> {
+        match value {
+            Some(vals) => {
+                let mut list = vec![];
+
+                for val in vals {
+                    match val {
+                        Some(v) => {
+                            list.push(Some(decimal_to_i128(
+                                v,
+                                DEFAULT_ARROW_DECIMAL_SCALE as u32,
+                            )?));
+                        }
+                        None => list.push(None),
+                    }
+                }
+
+                builder.append_value(list);
+            }
+            None => builder.append_null(),
+        };
+        Ok(())
+    }
+
+    fn field(header: &str) -> Field {
+        Field::new(
+            header,
+            ArrowDataType::LargeList(std::sync::Arc::new(Field::new_list_field(
+                DEFAULT_ARROW_DECIMAL,
+                true,
+            ))),
+            true,
+        )
+    }
+}
+
+impl ArrowAssoc for Vec<Option<Decimal>> {
+    type Builder = LargeListBuilder<Decimal128Builder>;
+
+    fn builder(nrows: usize) -> Self::Builder {
+        LargeListBuilder::with_capacity(
+            Decimal128Builder::with_capacity(nrows).with_data_type(DEFAULT_ARROW_DECIMAL),
+            nrows,
+        )
+    }
+
+    fn append(builder: &mut Self::Builder, vals: Self) -> Result<()> {
+        let mut list = vec![];
+
+        for val in vals {
+            match val {
+                Some(v) => {
+                    list.push(Some(decimal_to_i128(
+                        v,
+                        DEFAULT_ARROW_DECIMAL_SCALE as u32,
+                    )?));
+                }
+                None => list.push(None),
+            }
+        }
+
+        builder.append_value(list);
+        Ok(())
+    }
+
+    fn field(header: &str) -> Field {
+        Field::new(
+            header,
+            ArrowDataType::LargeList(std::sync::Arc::new(Field::new_list_field(
+                DEFAULT_ARROW_DECIMAL,
+                false,
+            ))),
+            false,
+        )
     }
 }
 

@@ -1,0 +1,21 @@
+{
+    "name": "ConnectorX Development",
+    "dockerComposeFile": [
+        "docker-compose.yml"
+    ],
+    "service": "connectorx",
+    "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "rust-lang.rust-analyzer"
+            ],
+            "settings": {
+                "rust-analyzer.checkOnSave.command": "clippy"
+            }
+        }
+    },
+    "features": {
+        "ghcr.io/devcontainers/features/rust:1": "latest"
+    }
+}

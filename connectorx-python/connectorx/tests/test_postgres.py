@@ -4,6 +4,8 @@ import pandas as pd
 import pytest
 from pandas.testing import assert_frame_equal
 import datetime
+import numpy as np
+import ast
 
 from .. import read_sql
 
@@ -1058,3 +1060,84 @@ def test_postgres_partitioned_pre_execution_queries(postgres_url: str) -> None:
         },
     ).sort_values(by=['name']).reset_index(drop=True)
     assert_frame_equal(df, expected, check_names=True)
+
+def test_postgres_inet_type(postgres_url: str) -> None:
+    query = "SELECT test_inet FROM test_types"
+    df = read_sql(postgres_url, query)
+    expected = pd.DataFrame(
+        data={
+            "test_inet": pd.Series(
+                ["192.168.1.1", "10.0.0.0/24", "2001:db8::1", "2001:db8::/32", None],
+                dtype="object"
+            ),
+        },
+    )
+    assert_frame_equal(df, expected, check_names=True)
+
+def test_postgres_vector_types(postgres_url: str) -> None:
+    query = "SELECT dense_vector, half_vector, binary_vector, sparse_vector FROM vector_types"
+    df = read_sql(postgres_url, query)
+    
+    # Parse string vectors into numpy arrays
+    def parse_vector(vec_str):
+        if vec_str is None:
+            return None
+        # Handle both string and list inputs
+        if isinstance(vec_str, str):
+            # Remove brackets and split string
+            vec_str = vec_str.strip('[]')
+            return np.array([float(x) for x in vec_str.split(',')])
+        elif isinstance(vec_str, list):
+            return np.array([float(x) for x in vec_str])
+        else:
+            raise TypeError(f"Unexpected type for vector: {type(vec_str)}")
+    
+    # Convert dense_vector and half_vector to numpy arrays
+    df['dense_vector'] = df['dense_vector'].apply(parse_vector)
+    df['half_vector'] = df['half_vector'].apply(parse_vector)
+    
+    # Verify dense_vector
+    expected_dense = np.array([0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0])
+    assert df['dense_vector'].iloc[0] is not None
+    assert np.allclose(df['dense_vector'].iloc[0], expected_dense, rtol=1e-5)
+    assert df['dense_vector'].iloc[1] is None
+    
+    # Verify half_vector
+    expected_half = np.array([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0])
+    assert df['half_vector'].iloc[0] is not None
+    assert np.allclose(df['half_vector'].iloc[0], expected_half, rtol=1e-5)
+    assert df['half_vector'].iloc[1] is None
+    
+    # Verify binary_vector and sparse_vector
+    # Convert binary_vector to string representation for comparison
+    def binary_to_string(binary):
+        if binary is None:
+            return None
+        # Convert binary to string of 1s and 0s
+        return ''.join(format(b, '08b') for b in binary)[:10]  # Take first 10 bits
+    
+    df['binary_vector'] = df['binary_vector'].apply(binary_to_string)
+    
+    # Convert sparse vector array to string format
+    def sparse_to_string(sparse_vec):
+        if sparse_vec is None:
+            return None
+        # Convert array to sparse format string with integer values
+        non_zero = {i+1: int(val) for i, val in enumerate(sparse_vec) if val != 0}
+        return f"{non_zero}/{len(sparse_vec)}"
+    
+    df['sparse_vector'] = df['sparse_vector'].apply(sparse_to_string)
+    
+    expected = pd.DataFrame(
+        data={
+            "binary_vector": pd.Series(
+                ["1010101010", None],
+                dtype="object"
+            ),
+            "sparse_vector": pd.Series(
+                ["{1: 1, 3: 2, 5: 3}/5", None],
+                dtype="object"
+            ),
+        },
+    )
+    assert_frame_equal(df[['binary_vector', 'sparse_vector']], expected[['binary_vector', 'sparse_vector']], check_names=True)

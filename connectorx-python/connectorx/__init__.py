@@ -475,7 +475,7 @@ def reconstruct_pandas(df_infos: _DataframeInfos) -> pd.DataFrame:
         elif binfo.dt == 3:  # DatetimeArray
             blocks.append(
                 pd.core.internals.make_block(
-                    pd.core.arrays.DatetimeArray(block_data), placement=binfo.cids
+                    pd.core.arrays.DatetimeArray._from_sequence(block_data), placement=binfo.cids
                 )
             )
         else:
@@ -484,7 +484,7 @@ def reconstruct_pandas(df_infos: _DataframeInfos) -> pd.DataFrame:
     block_manager = pd.core.internals.BlockManager(
         blocks, [pd.Index(headers), pd.RangeIndex(start=0, stop=nrows, step=1)]
     )
-    df = pd.DataFrame(block_manager)
+    df = pd.DataFrame._from_mgr(block_manager, axes=[headers, range(nrows)])
     return df
 
 
