@@ -8,6 +8,6 @@ debug = true
 lto = true
 
 [workspace.dependencies]
-arrow = {version = "53", features = ["prettyprint", "ffi"]}
+arrow = {version = "54", features = ["prettyprint", "ffi"]}
 polars = {version = "0.45", features=["dtype-u8", "dtype-u16", "lazy"]}
 polars-arrow = {version = "0.45"}

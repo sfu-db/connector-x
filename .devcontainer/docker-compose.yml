@@ -1,0 +1,48 @@
+services:
+  connectorx:
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
+    volumes:
+      - ..:/workspaces/connectorx:cached
+    command: sleep infinity
+    depends_on:
+      - postgres
+      - mysql
+    networks:
+      - connectorx-network
+
+  postgres:
+    image: pgvector/pgvector:pg17
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: connectorx
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - connectorx-network
+
+  mysql:
+    image: ghcr.io/wangxiaoying/mysql:latest
+    environment:
+      MYSQL_DATABASE: mysql
+      MYSQL_ROOT_PASSWORD: mysql
+      LANG: C.UTF-8
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - connectorx-network
+
+networks:
+  connectorx-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  mysql_data:
+    

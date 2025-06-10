@@ -12,7 +12,9 @@ use crate::sources::postgres::{
 };
 use crate::typesystem::TypeConversion;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
+use cidr_02::IpInet;
 use num_traits::ToPrimitive;
+use pgvector::{Bit, HalfVector, SparseVector, Vector};
 use postgres::NoTls;
 use postgres_openssl::MakeTlsConnector;
 use rust_decimal::Decimal;
@@ -46,7 +48,7 @@ macro_rules! impl_postgres_transport {
             mappings = {
                 { Float4[f32]                        => Float32[f32]                           | conversion auto   }
                 { Float8[f64]                        => Float64[f64]                           | conversion auto   }
-                { Numeric[Decimal]                   => Float64[f64]                           | conversion option }
+                { Numeric[Decimal]                   => Decimal[Decimal]                       | conversion auto   }
                 { Int2[i16]                          => Int16[i16]                             | conversion auto   }
                 { Int4[i32]                          => Int32[i32]                             | conversion auto   }
                 { Int8[i64]                          => Int64[i64]                             | conversion auto   }
@@ -65,6 +67,7 @@ macro_rules! impl_postgres_transport {
                 { ByteA[Vec<u8>]                     => LargeBinary[Vec<u8>]                   | conversion auto   }
                 { JSON[Value]                        => LargeUtf8[String]                      | conversion option }
                 { JSONB[Value]                       => LargeUtf8[String]                      | conversion none   }
+                { Inet[IpInet]                       => LargeUtf8[String]                      | conversion none   }
                 { BoolArray[Vec<Option<bool>>]       => BoolArray[Vec<Option<bool>>]           | conversion auto   }
                 { VarcharArray[Vec<Option<String>>]  => Utf8Array[Vec<Option<String>>]         | conversion auto   }
                 { TextArray[Vec<Option<String>>]     => Utf8Array[Vec<Option<String>>]         | conversion none   }
@@ -73,7 +76,11 @@ macro_rules! impl_postgres_transport {
                 { Int8Array[Vec<Option<i64>>]        => Int64Array[Vec<Option<i64>>]           | conversion auto   }
                 { Float4Array[Vec<Option<f32>>]      => Float32Array[Vec<Option<f32>>]         | conversion auto   }
                 { Float8Array[Vec<Option<f64>>]      => Float64Array[Vec<Option<f64>>]         | conversion auto   }
-                { NumericArray[Vec<Option<Decimal>>] => Float64Array[Vec<Option<f64>>]         | conversion option }
+                { NumericArray[Vec<Option<Decimal>>] => DecimalArray[Vec<Option<Decimal>>]     | conversion auto   }
+                { Vector[Vector]                     => Float32Array[Vec<Option<f32>>]         | conversion option }
+                { HalfVec[HalfVector]                => Float32Array[Vec<Option<f32>>]         | conversion option }
+                { Bit[Bit]                           => LargeBinary[Vec<u8>]                   | conversion option }
+                { SparseVec[SparseVector]            => Float32Array[Vec<Option<f32>>]         | conversion option }
             }
         );
     }
@@ -87,6 +94,18 @@ impl_postgres_transport!(CursorProtocol, NoTls);
 impl_postgres_transport!(CursorProtocol, MakeTlsConnector);
 impl_postgres_transport!(SimpleProtocol, NoTls);
 impl_postgres_transport!(SimpleProtocol, MakeTlsConnector);
+
+impl<P, C> TypeConversion<IpInet, String> for PostgresArrowTransport<P, C> {
+    fn convert(val: IpInet) -> String {
+        val.to_string()
+    }
+}
+
+impl<P, C> TypeConversion<Option<IpInet>, Option<String>> for PostgresArrowTransport<P, C> {
+    fn convert(val: Option<IpInet>) -> Option<String> {
+        val.map(|val| val.to_string())
+    }
+}
 
 impl<P, C> TypeConversion<NaiveTime, NaiveTimeWrapperMicro> for PostgresArrowTransport<P, C> {
     fn convert(val: NaiveTime) -> NaiveTimeWrapperMicro {
@@ -127,15 +146,26 @@ impl<P, C> TypeConversion<Value, String> for PostgresArrowTransport<P, C> {
     }
 }
 
-impl<P, C> TypeConversion<Vec<Option<Decimal>>, Vec<Option<f64>>> for PostgresArrowTransport<P, C> {
-    fn convert(val: Vec<Option<Decimal>>) -> Vec<Option<f64>> {
-        val.into_iter()
-            .map(|v| {
-                v.map(|v| {
-                    v.to_f64()
-                        .unwrap_or_else(|| panic!("cannot convert decimal {:?} to float64", v))
-                })
-            })
-            .collect()
+impl<P, C> TypeConversion<Vector, Vec<Option<f32>>> for PostgresArrowTransport<P, C> {
+    fn convert(val: Vector) -> Vec<Option<f32>> {
+        val.to_vec().into_iter().map(Some).collect()
+    }
+}
+
+impl<P, C> TypeConversion<HalfVector, Vec<Option<f32>>> for PostgresArrowTransport<P, C> {
+    fn convert(val: HalfVector) -> Vec<Option<f32>> {
+        val.to_vec().into_iter().map(|v| Some(v.to_f32())).collect()
+    }
+}
+
+impl<P, C> TypeConversion<Bit, Vec<u8>> for PostgresArrowTransport<P, C> {
+    fn convert(val: Bit) -> Vec<u8> {
+        val.as_bytes().into()
+    }
+}
+
+impl<P, C> TypeConversion<SparseVector, Vec<Option<f32>>> for PostgresArrowTransport<P, C> {
+    fn convert(val: SparseVector) -> Vec<Option<f32>> {
+        val.to_vec().into_iter().map(Some).collect()
     }
 }

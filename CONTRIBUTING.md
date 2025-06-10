@@ -9,6 +9,38 @@ This doc describes how you can get started at developing ConnectorX.
 Please check out [here](https://sfu-db.github.io/connector-x/install.html#build-from-source-code)
 
 
+### Run In Vscode Dev-Container
+
+1. Install required tools:
+   - [Docker](https://docs.docker.com/get-docker/)
+   - [VSCode](https://code.visualstudio.com/)
+   - [VSCode Remote - Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
+
+2. Clone the repository and open it in VSCode:
+   ```bash
+   git clone https://github.com/sfu-db/connector-x.git
+   code connector-x
+   ```
+
+3. When prompted, click "Reopen in Container" or use the command palette (F1) and select "Remote-Containers: Reopen in Container"
+
+4. The dev container includes:
+   - Rust development environment with rust-analyzer
+   - PostgreSQL (pgvector) running on port 5433
+   - MySQL running on port 3306
+   - All necessary build tools and dependencies
+
+5. The container will automatically:
+   - Mount your local repository into the container
+   - Install Rust toolchain and dependencies
+   - Configure rust-analyzer with clippy for code analysis
+   - Set up the development workspace
+
+6. You can now start developing with:
+   - Full Rust development support
+   - Integrated database services
+   - All development tools pre-configured
+
 ### Run tests
 
 * Set up environment variables by creating a `.env` file under project directory. Here is an example:

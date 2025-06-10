@@ -1,8 +1,9 @@
 use arrow::{
     array::{
-        BooleanArray, BooleanBuilder, Date32Array, Float32Array, Float64Array, Int16Array,
-        Int32Array, Int64Array, LargeBinaryArray, LargeListArray, LargeListBuilder, StringArray,
-        StringBuilder, Time64MicrosecondArray, TimestampMicrosecondArray,
+        Array, BooleanArray, BooleanBuilder, Date32Array, Decimal128Array, Decimal128Builder,
+        Float32Array, Float64Array, Int16Array, Int32Array, Int64Array, LargeBinaryArray,
+        LargeListArray, LargeListBuilder, StringArray, StringBuilder, Time64MicrosecondArray,
+        TimestampMicrosecondArray,
     },
     datatypes::{Float32Type, Float64Type, Int16Type, Int32Type, Int64Type},
     record_batch::RecordBatch,
@@ -363,244 +364,77 @@ fn test_postgres_agg() {
         ])));
 }
 
+macro_rules! test_types {
+    ($protocol: expr, $sql: expr, $P: ty, $verify: expr) => {
+        let _ = env_logger::builder().is_test(true).try_init();
+        let dburl = env::var("POSTGRES_URL").unwrap();
+        let queries = [CXQuery::naked($sql)];
+        let url = Url::parse(dburl.as_str()).unwrap();
+        let (config, _tls) = rewrite_tls_args(&url).unwrap();
+        let builder = PostgresSource::<$P, NoTls>::new(config, NoTls, 2).unwrap();
+        let mut destination = ArrowDestination::new();
+        let dispatcher = Dispatcher::<_, _, PostgresArrowTransport<$P, NoTls>>::new(
+            builder,
+            &mut destination,
+            &queries,
+            Some(String::from("select * from test_types")),
+        );
+
+        dispatcher.run().expect("run dispatcher");
+
+        let result = destination.arrow().unwrap();
+        $verify(result, $protocol);
+    };
+}
+
 #[test]
 fn test_types_binary_postgres() {
-    let _ = env_logger::builder().is_test(true).try_init();
-
-    let dburl = env::var("POSTGRES_URL").unwrap();
-
-    let vars = vec![
-        "test_bool",
-        "test_date",
-        "test_timestamp",
-        "test_timestamptz",
-        "test_int2",
-        "test_int4",
-        "test_int8",
-        "test_float4",
-        "test_float8",
-        "test_numeric",
-        "test_bpchar",
-        "test_char",
-        "test_varchar",
-        "test_uuid",
-        "test_time",
-        "test_json",
-        "test_jsonb",
-        "test_bytea",
-        "test_enum",
-        "test_f4array",
-        "test_f8array",
-        "test_narray",
-        "test_boolarray",
-        "test_i2array",
-        "test_i4array",
-        "test_i8array",
-        "test_citext",
-        "test_ltree",
-        "test_lquery",
-        "test_ltxtquery",
-        "test_varchararray",
-        "test_textarray",
-        "test_name",
-    ]
-    .join(",");
-
-    let queries = [CXQuery::naked(format!("select {vars} from test_types"))];
-    let url = Url::parse(dburl.as_str()).unwrap();
-    let (config, _tls) = rewrite_tls_args(&url).unwrap();
-    let builder = PostgresSource::<BinaryProtocol, NoTls>::new(config, NoTls, 2).unwrap();
-    let mut destination = ArrowDestination::new();
-    let dispatcher = Dispatcher::<_, _, PostgresArrowTransport<BinaryProtocol, NoTls>>::new(
-        builder,
-        &mut destination,
-        &queries,
-        Some(String::from("select * from test_types")),
+    test_types!(
+        "binary",
+        "select test_bool,test_date,test_timestamp,test_timestamptz,test_int2,test_int4,test_int8,test_float4,test_float8,test_numeric,test_bpchar,test_char,test_varchar,test_uuid,test_time,test_json,test_jsonb,test_bytea,test_enum,test_f4array,test_f8array,test_narray,test_boolarray,test_i2array,test_i4array,test_i8array,test_citext,test_ltree,test_lquery,test_ltxtquery,test_varchararray,test_textarray,test_name,test_inet from test_types",
+        BinaryProtocol,
+        verify_arrow_type_results
     );
+}
 
-    dispatcher.run().expect("run dispatcher");
-
-    let result = destination.arrow().unwrap();
-    verify_arrow_type_results(result, "binary");
+#[test]
+fn test_pgvector_types_binary_postgres() {
+    test_types!(
+        "binary",
+        "select * from vector_types",
+        BinaryProtocol,
+        verfiy_pgvector_results
+    );
 }
 
 #[test]
 fn test_types_csv_postgres() {
-    let _ = env_logger::builder().is_test(true).try_init();
-
-    let dburl = env::var("POSTGRES_URL").unwrap();
-
-    let vars = vec![
-        "test_bool",
-        "test_date",
-        "test_timestamp",
-        "test_timestamptz",
-        "test_int2",
-        "test_int4",
-        "test_int8",
-        "test_float4",
-        "test_float8",
-        "test_numeric",
-        "test_bpchar",
-        "test_char",
-        "test_varchar",
-        "test_uuid",
-        "test_time",
-        "test_json",
-        "test_jsonb",
-        "test_bytea",
-        "test_enum",
-        "test_f4array",
-        "test_f8array",
-        "test_narray",
-        "test_boolarray",
-        "test_i2array",
-        "test_i4array",
-        "test_i8array",
-        "test_citext",
-        "test_ltree",
-        "test_lquery",
-        "test_ltxtquery",
-        "test_varchararray",
-        "test_textarray",
-        "test_name",
-    ]
-    .join(",");
-
-    let queries = [CXQuery::naked(format!("select {vars} from test_types"))];
-    let url = Url::parse(dburl.as_str()).unwrap();
-    let (config, _tls) = rewrite_tls_args(&url).unwrap();
-    let builder = PostgresSource::<CSVProtocol, NoTls>::new(config, NoTls, 2).unwrap();
-    let mut destination = ArrowDestination::new();
-    let dispatcher = Dispatcher::<_, _, PostgresArrowTransport<CSVProtocol, NoTls>>::new(
-        builder,
-        &mut destination,
-        &queries,
-        Some(String::from("select * from test_types")),
+    test_types!(
+        "csv",
+        "select test_bool,test_date,test_timestamp,test_timestamptz,test_int2,test_int4,test_int8,test_float4,test_float8,test_numeric,test_bpchar,test_char,test_varchar,test_uuid,test_time,test_json,test_jsonb,test_bytea,test_enum,test_f4array,test_f8array,test_narray,test_boolarray,test_i2array,test_i4array,test_i8array,test_citext,test_ltree,test_lquery,test_ltxtquery,test_varchararray,test_textarray,test_name,test_inet from test_types",
+        CSVProtocol,
+        verify_arrow_type_results
     );
-
-    dispatcher.run().expect("run dispatcher");
-
-    let result = destination.arrow().unwrap();
-    verify_arrow_type_results(result, "csv");
 }
 
 #[test]
 fn test_types_cursor_postgres() {
-    let _ = env_logger::builder().is_test(true).try_init();
-
-    let dburl = env::var("POSTGRES_URL").unwrap();
-
-    let vars = vec![
-        "test_bool",
-        "test_date",
-        "test_timestamp",
-        "test_timestamptz",
-        "test_int2",
-        "test_int4",
-        "test_int8",
-        "test_float4",
-        "test_float8",
-        "test_numeric",
-        "test_bpchar",
-        "test_char",
-        "test_varchar",
-        "test_uuid",
-        "test_time",
-        "test_json",
-        "test_jsonb",
-        "test_bytea",
-        "test_f4array",
-        "test_f8array",
-        "test_narray",
-        "test_boolarray",
-        "test_i2array",
-        "test_i4array",
-        "test_i8array",
-        "test_citext",
-        "test_ltree",
-        "test_lquery",
-        "test_ltxtquery",
-        "test_varchararray",
-        "test_textarray",
-        "test_name",
-    ]
-    .join(",");
-
-    let queries = [CXQuery::naked(format!("select {vars} from test_types"))];
-    let url = Url::parse(dburl.as_str()).unwrap();
-    let (config, _tls) = rewrite_tls_args(&url).unwrap();
-    let builder = PostgresSource::<CursorProtocol, NoTls>::new(config, NoTls, 2).unwrap();
-    let mut destination = ArrowDestination::new();
-    let dispatcher = Dispatcher::<_, _, PostgresArrowTransport<CursorProtocol, NoTls>>::new(
-        builder,
-        &mut destination,
-        &queries,
-        Some(String::from("select * from test_types")),
+    test_types!(
+        "cursor",
+        "select test_bool,test_date,test_timestamp,test_timestamptz,test_int2,test_int4,test_int8,test_float4,test_float8,test_numeric,test_bpchar,test_char,test_varchar,test_uuid,test_time,test_json,test_jsonb,test_bytea,test_f4array,test_f8array,test_narray,test_boolarray,test_i2array,test_i4array,test_i8array,test_citext,test_ltree,test_lquery,test_ltxtquery,test_varchararray,test_textarray,test_name,test_inet from test_types",
+        CursorProtocol,
+        verify_arrow_type_results
     );
-
-    dispatcher.run().expect("run dispatcher");
-
-    let result = destination.arrow().unwrap();
-    verify_arrow_type_results(result, "cursor");
 }
 
 #[test]
 fn test_types_simple_postgres() {
-    let _ = env_logger::builder().is_test(true).try_init();
-
-    let dburl = env::var("POSTGRES_URL").unwrap();
-
-    let vars = vec![
-        "test_bool",
-        "test_date",
-        "test_timestamp",
-        "test_timestamptz",
-        "test_int2",
-        "test_int4",
-        "test_int8",
-        "test_float4",
-        "test_float8",
-        "test_numeric",
-        "test_bpchar",
-        "test_char",
-        "test_varchar",
-        "test_uuid",
-        "test_time",
-        "test_bytea",
-        "test_f4array",
-        "test_f8array",
-        "test_narray",
-        "test_boolarray",
-        "test_i2array",
-        "test_i4array",
-        "test_i8array",
-        "test_citext",
-        "test_ltree",
-        "test_lquery",
-        "test_ltxtquery",
-        "test_varchararray",
-        "test_textarray",
-        "test_name",
-    ]
-    .join(",");
-
-    let queries = [CXQuery::naked(format!("select {vars} from test_types"))];
-    let url = Url::parse(dburl.as_str()).unwrap();
-    let (config, _tls) = rewrite_tls_args(&url).unwrap();
-    let builder = PostgresSource::<SimpleProtocol, NoTls>::new(config, NoTls, 2).unwrap();
-    let mut destination = ArrowDestination::new();
-    let dispatcher = Dispatcher::<_, _, PostgresArrowTransport<SimpleProtocol, NoTls>>::new(
-        builder,
-        &mut destination,
-        &queries,
-        Some(String::from("select * from test_types")),
+    test_types!(
+        "simple",
+        "select test_bool,test_date,test_timestamp,test_timestamptz,test_int2,test_int4,test_int8,test_float4,test_float8,test_numeric,test_bpchar,test_char,test_varchar,test_uuid,test_time,test_bytea,test_f4array,test_f8array,test_narray,test_boolarray,test_i2array,test_i4array,test_i8array,test_citext,test_ltree,test_lquery,test_ltxtquery,test_varchararray,test_textarray,test_name,test_inet from test_types",
+        SimpleProtocol,
+        verify_arrow_type_results
     );
-
-    dispatcher.run().expect("run dispatcher");
-
-    let result = destination.arrow().unwrap();
-    verify_arrow_type_results(result, "simple");
 }
 
 pub fn verify_arrow_type_results(result: Vec<RecordBatch>, protocol: &str) {
@@ -763,18 +597,19 @@ pub fn verify_arrow_type_results(result: Vec<RecordBatch>, protocol: &str) {
 
     // test_numeric
     col += 1;
-    assert!(result[0]
+    let actual = result[0]
         .column(col)
         .as_any()
-        .downcast_ref::<Float64Array>()
-        .unwrap()
-        .eq(&Float64Array::from(vec![
-            Some(0.01),
-            Some(521.34),
-            Some(0.0),
-            Some(-112.3),
-            None,
-        ])));
+        .downcast_ref::<Decimal128Array>()
+        .unwrap();
+    let expected = build_decimal_array(vec![
+        Some(100000000),
+        Some(5213400000000),
+        Some(0),
+        Some(-1123000000000),
+        None,
+    ]);
+    assert_eq!(actual, &expected);
 
     // test_bpchar
     col += 1;
@@ -970,20 +805,28 @@ pub fn verify_arrow_type_results(result: Vec<RecordBatch>, protocol: &str) {
 
     // test_narray
     col += 1;
-    assert!(result[0]
+    let actual = result[0]
         .column(col)
         .as_any()
         .downcast_ref::<LargeListArray>()
-        .unwrap()
-        .eq(&LargeListArray::from_iter_primitive::<Float64Type, _, _>(
-            vec![
-                Some(vec![Some(0.01), Some(521.23)]),
-                Some(vec![Some(0.12), Some(333.33), Some(22.22)]),
-                Some(vec![]),
-                Some(vec![Some(0.0), None, Some(-112.1)]),
-                None,
-            ]
-        )));
+        .unwrap();
+
+    let mut expected = LargeListBuilder::new(
+        Decimal128Builder::new()
+            .with_precision_and_scale(38, 10)
+            .unwrap(),
+    );
+    expected.append_value(vec![Some(100000000), Some(5212300000000)]);
+    expected.append_value(vec![
+        Some(1200000000),
+        Some(3333300000000),
+        Some(222200000000),
+    ]);
+    expected.append_value(vec![]);
+    expected.append_value(vec![Some(0), None, Some(-1121000000000)]);
+    expected.append_null();
+
+    assert!(actual.eq(&expected.finish()));
 
     // test_boolarray (from_iter_primitive not available for boolean)
     col += 1;
@@ -1210,6 +1053,105 @@ pub fn verify_arrow_type_results(result: Vec<RecordBatch>, protocol: &str) {
             Some("101203203-1212323-22131235"),
             None,
         ])));
+
+    // test_inet
+    col += 1;
+    assert!(result[0]
+        .column(col)
+        .as_any()
+        .downcast_ref::<StringArray>()
+        .unwrap()
+        .eq(&StringArray::from(vec![
+            Some("192.168.1.1"),
+            Some("10.0.0.0/24"),
+            Some("2001:db8::1"),
+            Some("2001:db8::/32"),
+            None,
+        ])));
+}
+
+fn verfiy_pgvector_results(result: Vec<RecordBatch>, _protocol: &str) {
+    let rb = &result[0];
+    let mut col = 0;
+
+    assert!(result.len() == 1);
+    assert!(rb.columns().len() == 5); // id + 4 vector types
+
+    // Verify id column
+    assert!(rb
+        .column(col)
+        .as_any()
+        .downcast_ref::<Int32Array>()
+        .unwrap()
+        .eq(&Int32Array::from(vec![1, 2])));
+
+    // Verify dense_vector column
+    col += 1;
+    let dense_vector = rb
+        .column(col)
+        .as_any()
+        .downcast_ref::<LargeListArray>()
+        .unwrap();
+    let dense_vector_value = dense_vector.value(0);
+    let dense_vector_values = dense_vector_value
+        .as_any()
+        .downcast_ref::<Float32Array>()
+        .unwrap();
+    let expected = vec![0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0];
+    for (i, val) in expected.iter().enumerate() {
+        assert_eq!(dense_vector_values.value(i), *val);
+    }
+    assert!(dense_vector.is_null(1));
+
+    // Verify half_vector column
+    col += 1;
+    let half_vector = rb
+        .column(col)
+        .as_any()
+        .downcast_ref::<LargeListArray>()
+        .unwrap();
+    let half_vector_value = half_vector.value(0);
+    let half_vector_values = half_vector_value
+        .as_any()
+        .downcast_ref::<Float32Array>()
+        .unwrap();
+    let expected = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
+    for (i, val) in expected.iter().enumerate() {
+        assert_eq!(half_vector_values.value(i), *val);
+    }
+    assert!(half_vector.is_null(1));
+
+    // Verify binary_vector column
+    col += 1;
+    let binary_vector = rb
+        .column(col)
+        .as_any()
+        .downcast_ref::<LargeBinaryArray>()
+        .unwrap();
+    let binary_vector_value = binary_vector.value(0);
+    let expected = vec![170, 128];
+    for (i, val) in expected.iter().enumerate() {
+        assert_eq!(binary_vector_value[i], *val);
+    }
+    assert!(binary_vector.is_null(1));
+
+    // Verify sparse_vector column
+    col += 1;
+    let sparse_vector = rb
+        .column(col)
+        .as_any()
+        .downcast_ref::<LargeListArray>()
+        .unwrap();
+    let sparse_vector_value = sparse_vector.value(0);
+    let sparse_vector_value = sparse_vector_value
+        .as_any()
+        .downcast_ref::<Float32Array>()
+        .unwrap();
+    let expected = vec![1.0, 0.0, 2.0, 0.0, 3.0];
+    for (i, val) in expected.iter().enumerate() {
+        assert_eq!(sparse_vector_value.value(i), *val);
+    }
+    assert!(sparse_vector.is_null(1));
 }
 
 #[test]
@@ -1312,4 +1254,19 @@ fn test_postgres_partitioned_pre_execution_queries() {
         result_map.get("idle_in_transaction_session_timeout"),
         Some(&2252)
     );
+}
+
+fn build_decimal_array(vals: Vec<Option<i128>>) -> Decimal128Array {
+    let mut builder = Decimal128Builder::new()
+        .with_precision_and_scale(38, 10)
+        .unwrap();
+
+    for val in vals {
+        match val {
+            Some(v) => builder.append_value(v),
+            None => builder.append_null(),
+        }
+    }
+
+    builder.finish()
 }
