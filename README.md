@@ -504,6 +504,13 @@ BibTeX entry:
                 </a>
             </td>
             <td align="center">
+                <a href="https://github.com/holicc">
+                    <img src="https://avatars.githubusercontent.com/u/19146591?v=4" width="66;" alt="holicc"/>
+                    <br />
+                    <sub><b>Joe</b></sub>
+                </a>
+            </td>
+            <td align="center">
                 <a href="https://github.com/deepsourcebot">
                     <img src="https://avatars.githubusercontent.com/u/60907429?v=4" width="66;" alt="deepsourcebot"/>
                     <br />
@@ -517,6 +524,8 @@ BibTeX entry:
                     <sub><b>David Beal</b></sub>
                 </a>
             </td>
+		</tr>
+		<tr>
             <td align="center">
                 <a href="https://github.com/AndrewJackson2020">
                     <img src="https://avatars.githubusercontent.com/u/46945903?v=4" width="66;" alt="AndrewJackson2020"/>
@@ -524,8 +533,6 @@ BibTeX entry:
                     <sub><b>Andrew Jackson</b></sub>
                 </a>
             </td>
-		</tr>
-		<tr>
             <td align="center">
                 <a href="https://github.com/Cabbagec">
                     <img src="https://avatars.githubusercontent.com/u/14164987?v=4" width="66;" alt="Cabbagec"/>
