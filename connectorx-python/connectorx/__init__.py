@@ -442,7 +442,7 @@ def read_sql(
     return df
 
 
-def reconstruct_arrow_rb(results) -> Iterator[pa.RecordBatch]:
+def reconstruct_arrow_rb(results) -> pa.RecordBatchReader:
     import pyarrow as pa
 
     # Get Schema

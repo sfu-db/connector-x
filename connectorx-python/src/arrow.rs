@@ -43,7 +43,6 @@ impl PyRecordBatch {
 
 #[pymethods]
 impl PyRecordBatchIterator {
-
     #[throws(ConnectorXPythonError)]
     fn schema_ptr<'py>(&self, py: Python<'py>) -> Bound<'py, PyAny> {
         let (rb, _) = self.0.get_schema();
