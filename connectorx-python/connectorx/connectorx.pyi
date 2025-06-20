@@ -26,15 +26,17 @@ def read_sql(
     queries: list[str] | None,
     partition_query: dict[str, Any] | None,
     pre_execution_queries: list[str] | None,
+    **kwargs
 ) -> _DataframeInfos: ...
 @overload
 def read_sql(
     conn: str,
-    return_type: Literal["arrow"],
+    return_type: Literal["arrow", "arrow_record_batches"],
     protocol: str | None,
     queries: list[str] | None,
     partition_query: dict[str, Any] | None,
     pre_execution_queries: list[str] | None,
+    **kwargs
 ) -> _ArrowInfos: ...
 def partition_sql(conn: str, partition_query: dict[str, Any]) -> list[str]: ...
 def read_sql2(sql: str, db_map: dict[str, str]) -> _ArrowInfos: ...

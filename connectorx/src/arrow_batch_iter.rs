@@ -149,7 +149,7 @@ where
     type Item = RecordBatch;
     /// NOTE: not thread safe
     fn next(&mut self) -> Option<Self::Item> {
-        self.dst.record_batch().unwrap()
+        self.dst.record_batch().ok().flatten()
     }
 }
 
