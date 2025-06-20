@@ -15,7 +15,7 @@ use std::sync::Arc;
 pub struct PyRecordBatch(RecordBatch);
 
 /// Python-exposed iterator over RecordBatches
-#[pyclass(unsendable, module = "connectorx")]
+#[pyclass(module = "connectorx")]
 pub struct PyRecordBatchIterator(Box<dyn RecordBatchIterator>);
 
 #[pymethods]

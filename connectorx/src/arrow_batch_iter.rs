@@ -153,7 +153,7 @@ where
     }
 }
 
-pub trait RecordBatchIterator {
+pub trait RecordBatchIterator: Send {
     fn get_schema(&self) -> (RecordBatch, &[String]);
     fn prepare(&mut self);
     fn next_batch(&mut self) -> Option<RecordBatch>;
@@ -167,7 +167,7 @@ where
         TSD = ArrowStreamTypeSystem,
         S = S,
         D = ArrowStreamDestination,
-    >,
+    >+ std::marker::Send,
 {
     fn get_schema(&self) -> (RecordBatch, &[String]) {
         (self.dst.empty_batch(), self.dst.names())
