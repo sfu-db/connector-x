@@ -163,11 +163,11 @@ impl<'a, S, TP> RecordBatchIterator for ArrowBatchIter<S, TP>
 where
     S: Source + 'a,
     TP: Transport<
-        TSS = S::TypeSystem,
-        TSD = ArrowStreamTypeSystem,
-        S = S,
-        D = ArrowStreamDestination,
-    >+ std::marker::Send,
+            TSS = S::TypeSystem,
+            TSD = ArrowStreamTypeSystem,
+            S = S,
+            D = ArrowStreamDestination,
+        > + std::marker::Send,
 {
     fn get_schema(&self) -> (RecordBatch, &[String]) {
         (self.dst.empty_batch(), self.dst.names())
