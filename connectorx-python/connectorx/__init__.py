@@ -411,9 +411,27 @@ def read_sql(
             dd = try_import_module("dask.dataframe")
             df = dd.from_pandas(df, npartitions=1)
 
-    elif return_type in {"arrow", "polars", "arrow_record_batches"}:
+    elif return_type in {"arrow", "polars"}:
         try_import_module("pyarrow")
 
+        result = _read_sql(
+            conn,
+            "arrow",
+            queries=queries,
+            protocol=protocol,
+            partition_query=partition_query,
+            pre_execution_queries=pre_execution_queries,
+        )
+
+        df = reconstruct_arrow(result)
+        if return_type in {"polars"}:
+            pl = try_import_module("polars")
+            try:
+                df = pl.from_arrow(df)
+            except AttributeError:
+                # previous polars api (< 0.8.*) was pl.DataFrame.from_arrow
+                df = pl.DataFrame.from_arrow(df)
+    elif return_type in {"arrow_record_batches"}:
         record_batch_size = int(kwargs.get("record_batch_size", 10000))
         result = _read_sql(
             conn,
@@ -425,17 +443,7 @@ def read_sql(
             record_batch_size=record_batch_size
         )
 
-        if return_type == "arrow_record_batches":
-            df = reconstruct_arrow_rb(result)
-        else:
-            df = reconstruct_arrow(result)
-            if return_type in {"polars"}:
-                pl = try_import_module("polars")
-                try:
-                    df = pl.from_arrow(df)
-                except AttributeError:
-                    # previous polars api (< 0.8.*) was pl.DataFrame.from_arrow
-                    df = pl.DataFrame.from_arrow(df)
+        df = reconstruct_arrow_rb(result)
     else:
         raise ValueError(return_type)
 
@@ -455,11 +463,10 @@ def reconstruct_arrow_rb(results) -> pa.RecordBatchReader:
 
     def generate_batches(iterator) -> Iterator[pa.RecordBatch]:
         for rb_ptrs in iterator:
-            names, chunk_ptrs_list = rb_ptrs.to_ptrs()
-            for chunk_ptrs in chunk_ptrs_list:
-                yield pa.RecordBatch.from_arrays(
-                    [pa.Array._import_from_c(*col_ptr) for col_ptr in chunk_ptrs], names
-                )
+            chunk_ptrs = rb_ptrs.to_ptrs()
+            yield pa.RecordBatch.from_arrays(
+                [pa.Array._import_from_c(*col_ptr) for col_ptr in chunk_ptrs], names
+            )
 
     return pa.RecordBatchReader.from_batches(schema=schema, batches=generate_batches(results))
 
