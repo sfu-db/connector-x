@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import importlib
 import urllib.parse
-
+from collections.abc import Iterator
 from importlib.metadata import version
 from pathlib import Path
 from typing import Literal, TYPE_CHECKING, overload, Generic, TypeVar
@@ -177,6 +177,7 @@ def read_sql(
     partition_num: int | None = None,
     index_col: str | None = None,
     pre_execution_query: list[str] | str | None = None,
+    **kwargs
 ) -> pd.DataFrame: ...
 
 
@@ -192,6 +193,7 @@ def read_sql(
     partition_num: int | None = None,
     index_col: str | None = None,
     pre_execution_query: list[str] | str | None = None,
+    **kwargs
 ) -> pd.DataFrame: ...
 
 
@@ -207,6 +209,7 @@ def read_sql(
     partition_num: int | None = None,
     index_col: str | None = None,
     pre_execution_query: list[str] | str | None = None,
+    **kwargs
 ) -> pa.Table: ...
 
 
@@ -222,6 +225,7 @@ def read_sql(
     partition_num: int | None = None,
     index_col: str | None = None,
     pre_execution_query: list[str] | str | None = None,
+    **kwargs
 ) -> mpd.DataFrame: ...
 
 
@@ -237,6 +241,7 @@ def read_sql(
     partition_num: int | None = None,
     index_col: str | None = None,
     pre_execution_query: list[str] | str | None = None,
+    **kwargs
 ) -> dd.DataFrame: ...
 
 
@@ -252,6 +257,7 @@ def read_sql(
     partition_num: int | None = None,
     index_col: str | None = None,
     pre_execution_query: list[str] | str | None = None,
+    **kwargs
 ) -> pl.DataFrame: ...
 
 
@@ -260,7 +266,7 @@ def read_sql(
     query: list[str] | str,
     *,
     return_type: Literal[
-        "pandas", "polars", "arrow", "modin", "dask"
+        "pandas", "polars", "arrow", "modin", "dask", "arrow_stream"
     ] = "pandas",
     protocol: Protocol | None = None,
     partition_on: str | None = None,
@@ -269,18 +275,20 @@ def read_sql(
     index_col: str | None = None,
     strategy: str | None = None,
     pre_execution_query: list[str] | str | None = None,
-) -> pd.DataFrame | mpd.DataFrame | dd.DataFrame | pl.DataFrame | pa.Table:
+    **kwargs
+
+) -> pd.DataFrame | mpd.DataFrame | dd.DataFrame | pl.DataFrame | pa.Table | pa.RecordBatchReader:
     """
     Run the SQL query, download the data from database into a dataframe.
 
     Parameters
     ==========
     conn
-      the connection string, or dict of connection string mapping for federated query.
+      the connection string, or dict of connection string mapping for a federated query.
     query
       a SQL query or a list of SQL queries.
     return_type
-      the return type of this function; one of "arrow(2)", "pandas", "modin", "dask" or "polars(2)".
+      the return type of this function; one of "arrow", "arrow_stream", "pandas", "modin", "dask" or "polars".
     protocol
       backend-specific transfer protocol directive; defaults to 'binary' (except for redshift
       connection strings, where 'cursor' will be used instead).
@@ -293,10 +301,12 @@ def read_sql(
     index_col
       the index column to set; only applicable for return type "pandas", "modin", "dask".
     strategy
-      strategy of rewriting the federated query for join pushdown
+      strategy of rewriting the federated query for join pushdown.
     pre_execution_query
       SQL query or list of SQL queries executed before main query; can be used to set runtime
       configurations using SET statements; only applicable for source "Postgres" and "MySQL".
+    batch_size
+      the maximum size of each batch when return type is `arrow_stream`.
 
     Examples
     ========
@@ -414,6 +424,7 @@ def read_sql(
             partition_query=partition_query,
             pre_execution_queries=pre_execution_queries,
         )
+
         df = reconstruct_arrow(result)
         if return_type in {"polars"}:
             pl = try_import_module("polars")
@@ -422,10 +433,44 @@ def read_sql(
             except AttributeError:
                 # previous polars api (< 0.8.*) was pl.DataFrame.from_arrow
                 df = pl.DataFrame.from_arrow(df)
+    elif return_type in {"arrow_stream"}:
+        batch_size = int(kwargs.get("batch_size", 10000))
+        result = _read_sql(
+            conn,
+            "arrow_stream",
+            queries=queries,
+            protocol=protocol,
+            partition_query=partition_query,
+            pre_execution_queries=pre_execution_queries,
+            batch_size=batch_size
+        )
+
+        df = reconstruct_arrow_rb(result)
     else:
         raise ValueError(return_type)
 
     return df
+
+
+def reconstruct_arrow_rb(results) -> pa.RecordBatchReader:
+    import pyarrow as pa
+
+    # Get Schema
+    names, chunk_ptrs_list = results.schema_ptr()
+    for chunk_ptrs in chunk_ptrs_list:
+        arrays = [pa.Array._import_from_c(*col_ptr) for col_ptr in chunk_ptrs]
+        empty_rb = pa.RecordBatch.from_arrays(arrays, names)
+
+    schema = empty_rb.schema
+
+    def generate_batches(iterator) -> Iterator[pa.RecordBatch]:
+        for rb_ptrs in iterator:
+            chunk_ptrs = rb_ptrs.to_ptrs()
+            yield pa.RecordBatch.from_arrays(
+                [pa.Array._import_from_c(*col_ptr) for col_ptr in chunk_ptrs], names
+            )
+
+    return pa.RecordBatchReader.from_batches(schema=schema, batches=generate_batches(results))
 
 
 def reconstruct_arrow(result: _ArrowInfos) -> pa.Table:
