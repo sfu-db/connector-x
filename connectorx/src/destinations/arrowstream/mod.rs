@@ -221,7 +221,7 @@ impl ArrowPartitionWriter {
             .map(|(builder, &dt)| Realize::<FFinishBuilder>::realize(dt)?(builder))
             .collect::<std::result::Result<Vec<_>, crate::errors::ConnectorXError>>()?;
         let rb = RecordBatch::try_new(Arc::clone(&self.arrow_schema), columns)?;
-        self.sender.as_ref().unwrap().send(rb).unwrap();
+        self.sender.as_ref().and_then(|s| s.send(rb).ok());
 
         self.current_row = 0;
         self.current_col = 0;

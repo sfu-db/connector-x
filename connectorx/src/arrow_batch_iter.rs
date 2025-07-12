@@ -149,11 +149,11 @@ where
     type Item = RecordBatch;
     /// NOTE: not thread safe
     fn next(&mut self) -> Option<Self::Item> {
-        self.dst.record_batch().unwrap()
+        self.dst.record_batch().ok().flatten()
     }
 }
 
-pub trait RecordBatchIterator {
+pub trait RecordBatchIterator: Send {
     fn get_schema(&self) -> (RecordBatch, &[String]);
     fn prepare(&mut self);
     fn next_batch(&mut self) -> Option<RecordBatch>;
@@ -163,11 +163,11 @@ impl<'a, S, TP> RecordBatchIterator for ArrowBatchIter<S, TP>
 where
     S: Source + 'a,
     TP: Transport<
-        TSS = S::TypeSystem,
-        TSD = ArrowStreamTypeSystem,
-        S = S,
-        D = ArrowStreamDestination,
-    >,
+            TSS = S::TypeSystem,
+            TSD = ArrowStreamTypeSystem,
+            S = S,
+            D = ArrowStreamDestination,
+        > + std::marker::Send,
 {
     fn get_schema(&self) -> (RecordBatch, &[String]) {
         (self.dst.empty_batch(), self.dst.names())
