@@ -50,8 +50,8 @@ def test_arrow_stream(postgres_url: str) -> None:
     reader = read_sql(
         postgres_url,
         query,
-        return_type="arrow_record_batches",
-        record_batch_size=2,
+        return_type="arrow_stream",
+        batch_size=2,
     )
     batches = []
     for batch in reader:
@@ -85,8 +85,8 @@ def test_arrow_stream_with_partition(postgres_url: str) -> None:
         partition_on="test_int",
         partition_range=(0, 2000),
         partition_num=3,
-        return_type="arrow_record_batches",
-        record_batch_size=2,
+        return_type="arrow_stream",
+        batch_size=2,
     )
     batches = []
     for batch in reader:

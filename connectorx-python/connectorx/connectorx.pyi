@@ -31,7 +31,7 @@ def read_sql(
 @overload
 def read_sql(
     conn: str,
-    return_type: Literal["arrow", "arrow_record_batches"],
+    return_type: Literal["arrow", "arrow_stream"],
     protocol: str | None,
     queries: list[str] | None,
     partition_query: dict[str, Any] | None,

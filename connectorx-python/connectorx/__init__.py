@@ -266,7 +266,7 @@ def read_sql(
     query: list[str] | str,
     *,
     return_type: Literal[
-        "pandas", "polars", "arrow", "modin", "dask", "arrow_record_batches"
+        "pandas", "polars", "arrow", "modin", "dask", "arrow_stream"
     ] = "pandas",
     protocol: Protocol | None = None,
     partition_on: str | None = None,
@@ -288,7 +288,7 @@ def read_sql(
     query
       a SQL query or a list of SQL queries.
     return_type
-      the return type of this function; one of "arrow(2)", "arrow_record_batches", "pandas", "modin", "dask" or "polars(2)".
+      the return type of this function; one of "arrow", "arrow_stream", "pandas", "modin", "dask" or "polars".
     protocol
       backend-specific transfer protocol directive; defaults to 'binary' (except for redshift
       connection strings, where 'cursor' will be used instead).
@@ -301,10 +301,12 @@ def read_sql(
     index_col
       the index column to set; only applicable for return type "pandas", "modin", "dask".
     strategy
-      strategy of rewriting the federated query for join pushdown
+      strategy of rewriting the federated query for join pushdown.
     pre_execution_query
       SQL query or list of SQL queries executed before main query; can be used to set runtime
       configurations using SET statements; only applicable for source "Postgres" and "MySQL".
+    batch_size
+      the maximum size of each batch when return type is `arrow_stream`.
 
     Examples
     ========
@@ -431,16 +433,16 @@ def read_sql(
             except AttributeError:
                 # previous polars api (< 0.8.*) was pl.DataFrame.from_arrow
                 df = pl.DataFrame.from_arrow(df)
-    elif return_type in {"arrow_record_batches"}:
-        record_batch_size = int(kwargs.get("record_batch_size", 10000))
+    elif return_type in {"arrow_stream"}:
+        batch_size = int(kwargs.get("batch_size", 10000))
         result = _read_sql(
             conn,
-            "arrow_record_batches",
+            "arrow_stream",
             queries=queries,
             protocol=protocol,
             partition_query=partition_query,
             pre_execution_queries=pre_execution_queries,
-            record_batch_size=record_batch_size
+            batch_size=batch_size
         )
 
         df = reconstruct_arrow_rb(result)

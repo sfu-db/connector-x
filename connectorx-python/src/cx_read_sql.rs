@@ -74,9 +74,9 @@ pub fn read_sql<'py>(
             &queries,
             pre_execution_queries.as_deref(),
         )?),
-        "arrow_record_batches" => {
+        "arrow_stream" => {
             let batch_size = kwargs
-                .and_then(|dict| dict.get_item("record_batch_size").ok().flatten())
+                .and_then(|dict| dict.get_item("batch_size").ok().flatten())
                 .and_then(|obj| obj.extract::<usize>().ok())
                 .unwrap_or(10000);
 
