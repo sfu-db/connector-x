@@ -996,7 +996,6 @@ dependencies = [
  "tokio",
  "url",
  "urlencoding",
- "uuid 0.8.2",
  "uuid 1.17.0",
 ]
 
