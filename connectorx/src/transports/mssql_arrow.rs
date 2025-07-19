@@ -10,7 +10,7 @@ use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
 use num_traits::ToPrimitive;
 use rust_decimal::Decimal;
 use thiserror::Error;
-use uuid_old::Uuid;
+use uuid::Uuid;
 
 /// Convert MsSQL data types to Arrow data types.
 pub struct MsSQLArrowTransport;

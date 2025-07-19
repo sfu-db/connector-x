@@ -30,7 +30,7 @@ use tiberius::{AuthMethod, Config, EncryptionLevel, QueryItem, QueryStream, Row}
 use tokio::runtime::{Handle, Runtime};
 use url::Url;
 use urlencoding::decode;
-use uuid_old::Uuid;
+use uuid::Uuid;
 
 type Conn<'a> = PooledConnection<'a, ConnectionManager>;
 pub struct MsSQLSource {
