@@ -768,7 +768,7 @@ impl<'r, 'a> Produce<'r, NaiveDateTime> for BigQuerySourceParser {
             .as_str()
             .ok_or_else(|| anyhow!("cannot get str from json value"))?;
         NaiveDateTime::parse_from_str(s, "%Y-%m-%dT%H:%M:%S")
-            .or_else(|_| NaiveDateTime::parse_from_str(s, "%Y-%m-%dT%H:%M:%S%.F"))
+            .or_else(|_| NaiveDateTime::parse_from_str(s, "%Y-%m-%dT%H:%M:%S%.f"))
             .map_err(|_| ConnectorXError::cannot_produce::<NaiveDateTime>(Some(s.into())))?
     }
 }
@@ -840,10 +840,10 @@ impl<'r, 'a> Produce<'r, Option<NaiveDateTime>> for BigQuerySourceParser {
                     .ok_or_else(|| anyhow!("cannot get str from json value"))?;
                 Some(
                     NaiveDateTime::parse_from_str(s, "%Y-%m-%dT%H:%M:%S")
-                    .or_else(|_| NaiveDateTime::parse_from_str(s, "%Y-%m-%dT%H:%M:%S%.F"))
-                    .map_err(|_| {
-                        ConnectorXError::cannot_produce::<NaiveDateTime>(Some(s.into()))
-                    })?,
+                        .or_else(|_| NaiveDateTime::parse_from_str(s, "%Y-%m-%dT%H:%M:%S%.f"))
+                        .map_err(|_| {
+                            ConnectorXError::cannot_produce::<NaiveDateTime>(Some(s.into()))
+                        })?,
                 )
             }
         }
