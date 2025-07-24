@@ -81,6 +81,22 @@ impl BigQuerySource {
             schema: vec![],
         }
     }
+
+    #[throws(BigQuerySourceError)]
+    pub fn new_with_user_adc(rt: Arc<Runtime>, secret_path: String, project_id: String) -> Self {
+        let client = Arc::new(rt.block_on(
+            gcp_bigquery_client::Client::from_authorized_user_secret(&secret_path),
+        )?);
+        Self {
+            rt,
+            client,
+            project_id,
+            origin_query: None,
+            queries: vec![],
+            names: vec![],
+            schema: vec![],
+        }
+    }
 }
 
 impl Source for BigQuerySource
