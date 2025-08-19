@@ -52,6 +52,7 @@ macro_rules! impl_postgres_transport {
                 { Int2[i16]                          => Int16[i16]                             | conversion auto   }
                 { Int4[i32]                          => Int32[i32]                             | conversion auto   }
                 { Int8[i64]                          => Int64[i64]                             | conversion auto   }
+                { UInt4[u32]                         => UInt32[u32]                            | conversion auto   }
                 { Bool[bool]                         => Boolean[bool]                          | conversion auto   }
                 { Text[&'r str]                      => LargeUtf8[String]                      | conversion owned  }
                 { BpChar[&'r str]                    => LargeUtf8[String]                      | conversion none   }

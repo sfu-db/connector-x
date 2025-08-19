@@ -514,6 +514,7 @@ impl_produce!(
     i16,
     i32,
     i64,
+    u32,
     f32,
     f64,
     Decimal,
@@ -752,7 +753,7 @@ macro_rules! impl_csv_produce {
     };
 }
 
-impl_csv_produce!(i8, i16, i32, i64, f32, f64, Uuid, IpInet,);
+impl_csv_produce!(i8, i16, i32, i64, u32, f32, f64, Uuid, IpInet,);
 
 macro_rules! impl_csv_vec_produce {
     ($($t: ty,)+) => {
@@ -1239,6 +1240,7 @@ impl_produce!(
     i16,
     i32,
     i64,
+    u32,
     f32,
     f64,
     Decimal,
@@ -1494,7 +1496,7 @@ macro_rules! impl_simple_produce {
     };
 }
 
-impl_simple_produce!(i8, i16, i32, i64, f32, f64, Uuid, IpInet,);
+impl_simple_produce!(i8, i16, i32, i64, u32, f32, f64, Uuid, IpInet,);
 
 impl<'r> Produce<'r, bool> for PostgresSimpleSourceParser {
     type Error = PostgresSourceError;

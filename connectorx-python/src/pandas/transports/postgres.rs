@@ -35,6 +35,7 @@ macro_rules! impl_postgres_transport {
                 { Int2[i16]                                     => I64[i64]                               | conversion auto }
                 { Int4[i32]                                     => I64[i64]                               | conversion auto }
                 { Int8[i64]                                     => I64[i64]                               | conversion auto }
+                { UInt4[u32]                                    => I64[i64]                               | conversion auto }
                 { BoolArray[Vec<Option<bool>>]                  => BoolArray[Vec<bool>]                   | conversion option }
                 { Int2Array[Vec<Option<i16>>]                   => I64Array[Vec<i64>]                     | conversion option }
                 { Int4Array[Vec<Option<i32>>]                   => I64Array[Vec<i64>]                     | conversion option }
