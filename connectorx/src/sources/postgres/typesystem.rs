@@ -17,6 +17,7 @@ pub enum PostgresTypeSystem {
     Int2(bool),
     Int4(bool),
     Int8(bool),
+    UInt4(bool),
     Float4Array(bool),
     Float8Array(bool),
     NumericArray(bool),
@@ -54,6 +55,7 @@ impl_typesystem! {
         { Int2 => i16 }
         { Int4 => i32 }
         { Int8 => i64 }
+        { UInt4 => u32 }
         { Float4 => f32 }
         { Float8 => f64 }
         { Numeric => Decimal }
@@ -91,6 +93,7 @@ impl<'a> From<&'a Type> for PostgresTypeSystem {
             "int2" => Int2(true),
             "int4" => Int4(true),
             "int8" => Int8(true),
+            "oid" => UInt4(true),
             "float4" => Float4(true),
             "float8" => Float8(true),
             "numeric" => Numeric(true),
@@ -132,7 +135,7 @@ impl<'a> From<&'a Type> for PostgresTypeSystem {
 
 pub struct PostgresTypePairs<'a>(pub &'a Type, pub &'a PostgresTypeSystem);
 
-// Link (postgres::Type, connectorx::PostgresTypes) back to the one defiend by the postgres crate.
+// Link (postgres::Type, connectorx::PostgresTypes) back to the one defined by the postgres crate.
 impl From<PostgresTypePairs<'_>> for Type {
     fn from(ty: PostgresTypePairs) -> Type {
         use PostgresTypeSystem::*;
