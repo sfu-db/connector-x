@@ -76,7 +76,7 @@ pprof = {version = "0.14", features = ["flamegraph"]}
 all = ["src_sqlite", "src_postgres", "src_mysql", "src_mssql", "src_oracle", "src_bigquery", "src_csv", "src_dummy", "src_trino", "dst_arrow", "dst_polars", "federation", "fed_exec"]
 branch = []
 default = ["fptr"]
-dst_arrow = ["arrow"]
+dst_arrow = ["arrow", "rust_decimal"]
 dst_polars = ["dst_arrow", "polars", "polars-arrow"]
 fptr = []
 src_bigquery = ["gcp-bigquery-client", "tokio"]
