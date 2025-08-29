@@ -358,6 +358,13 @@ BibTeX entry:
                 </a>
             </td>
             <td align="center">
+                <a href="https://github.com/tvandelooij">
+                    <img src="https://avatars.githubusercontent.com/u/128473860?v=4" width="66;" alt="tvandelooij"/>
+                    <br />
+                    <sub><b>tvandelooij</b></sub>
+                </a>
+            </td>
+            <td align="center">
                 <a href="https://github.com/tschm">
                     <img src="https://avatars.githubusercontent.com/u/2046079?v=4" width="66;" alt="tschm"/>
                     <br />
@@ -385,6 +392,8 @@ BibTeX entry:
                     <sub><b>Hieu Minh Nguyen</b></sub>
                 </a>
             </td>
+		</tr>
+		<tr>
             <td align="center">
                 <a href="https://github.com/FerriLuli">
                     <img src="https://avatars.githubusercontent.com/u/110925223?v=4" width="66;" alt="FerriLuli"/>
@@ -392,8 +401,6 @@ BibTeX entry:
                     <sub><b>FerriLuli</b></sub>
                 </a>
             </td>
-		</tr>
-		<tr>
             <td align="center">
                 <a href="https://github.com/quixoten">
                     <img src="https://avatars.githubusercontent.com/u/63675?v=4" width="66;" alt="quixoten"/>
@@ -429,20 +436,13 @@ BibTeX entry:
                     <sub><b>zemel leong</b></sub>
                 </a>
             </td>
+		</tr>
+		<tr>
             <td align="center">
                 <a href="https://github.com/venkashank">
                     <img src="https://avatars.githubusercontent.com/u/27744439?v=4" width="66;" alt="venkashank"/>
                     <br />
                     <sub><b>Null</b></sub>
-                </a>
-            </td>
-		</tr>
-		<tr>
-            <td align="center">
-                <a href="https://github.com/tvandelooij">
-                    <img src="https://avatars.githubusercontent.com/u/128473860?v=4" width="66;" alt="tvandelooij"/>
-                    <br />
-                    <sub><b>tvandelooij</b></sub>
                 </a>
             </td>
             <td align="center">
