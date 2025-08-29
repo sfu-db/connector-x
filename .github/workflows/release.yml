@@ -245,7 +245,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
           architecture: x64
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
           name: "${{ matrix.os }}-${{ matrix.python-version }}"
 
@@ -267,7 +267,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
           name: "macos-arm-${{ matrix.python-version }}"
 
@@ -300,7 +300,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Download Artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: "linux-arm-${{ matrix.python-version }}"
 
@@ -315,7 +315,7 @@ jobs:
     needs: [verify, verify-apple-arm, verify-linux-arm]
     steps:
       - name: Download all artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
 
       - name: Setup environment
         run: |
