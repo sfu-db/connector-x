@@ -57,7 +57,7 @@ jobs:
     name: A job to automate contrib in readme
     steps:
         - name: Contribute List
-          uses: akhilmhdh/contributors-readme-action@v2.3.10
+          uses: akhilmhdh/contributors-readme-action@v2.3.11
           with:
               image_size: 66
           env:
