@@ -19,10 +19,17 @@ pub enum SourceType {
 }
 
 #[derive(Debug, Clone)]
+pub struct BigQueryAdcConfig {
+    pub secret_path: String,
+    pub project_id: String,
+}
+
+#[derive(Debug, Clone)]
 pub struct SourceConn {
     pub ty: SourceType,
     pub conn: Url,
     pub proto: String,
+    pub bq_adc_config: Option<BigQueryAdcConfig>,
 }
 
 impl TryFrom<&str> for SourceConn {
@@ -67,10 +74,24 @@ impl TryFrom<&str> for SourceConn {
 
 impl SourceConn {
     pub fn new(ty: SourceType, conn: Url, proto: String) -> Self {
-        Self { ty, conn, proto }
+        Self {
+            ty,
+            conn,
+            proto,
+            bq_adc_config: None,
+        }
     }
     pub fn set_protocol(&mut self, protocol: &str) {
         self.proto = protocol.to_string();
+    }
+    pub fn new_bq_user_adc(ty: SourceType, proto: String, config: BigQueryAdcConfig) -> Self {
+        let secret_path_url = url::from_file_path(config.secret_path.clone());
+        Self {
+            ty,
+            conn: secret_path_url,
+            proto,
+            bq_adc_config: Some(config),
+        }
     }
 }
 
