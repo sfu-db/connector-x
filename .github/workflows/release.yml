@@ -12,7 +12,7 @@ jobs:
     container: quay.io/pypa/manylinux_2_28_x86_64
     strategy:
       matrix:
-        python-version: [[310, "3.10"], [311, "3.11"], [312, "3.12"], [313, "3.13"]]
+        python-version: [[310, "3.10"], [311, "3.11"], [312, "3.12"], [313, "3.13"], [314, "3.14"]]
     steps:
       - uses: actions/checkout@v5
 
@@ -73,7 +73,7 @@ jobs:
     runs-on: ubuntu-22.04-arm
     strategy:
       matrix:
-        python-version: ["3.10", "3.11", "3.12", "3.13"]
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v5
@@ -137,7 +137,7 @@ jobs:
     strategy:
       matrix:
         os: ["windows-latest", "macos-13"]
-        python-version: ["3.10", "3.11", "3.12", "3.13"]
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
         include:
           - os: "macos-13"
             features: "--features integrated-auth-gssapi"
@@ -187,7 +187,7 @@ jobs:
     runs-on: macos-latest
     strategy:
       matrix:
-        python-version: ["3.10", "3.11", "3.12", "3.13"]
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
     steps:
       - uses: actions/checkout@v5
 
@@ -235,7 +235,7 @@ jobs:
     needs: [win-and-mac, linux]
     strategy:
       matrix:
-        python-version: ["3.10", "3.11", "3.12", "3.13"]
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
         os: [macos-13, ubuntu-latest, windows-latest]
     steps:
       - uses: actions/checkout@v5
@@ -258,7 +258,7 @@ jobs:
     needs: [apple-arm]
     strategy:
       matrix:
-        python-version: ["3.10", "3.11", "3.12", "3.13"]
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
         os: [macos-latest]
     steps:
       - uses: actions/checkout@v5
@@ -280,7 +280,7 @@ jobs:
     needs: [linux-aarch]
     strategy:
       matrix:
-        python-version: ["3.10", "3.11", "3.12", "3.13"]
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v5
