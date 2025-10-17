@@ -8,11 +8,17 @@ on:
 
 jobs:
   linux:
-    runs-on: ubuntu-latest
-    container: quay.io/pypa/manylinux_2_28_x86_64
+    runs-on: ${{ matrix.platform.runs-on }}
+    container: quay.io/pypa/manylinux_2_28_${{ matrix.platform.arch }}
     strategy:
       matrix:
-        python-version: [[310, "3.10"], [311, "3.11"], [312, "3.12"], [313, "3.13"]]
+        platform:
+          [
+            { "arch": "x86_64", "runs-on": "ubuntu-latest" },
+            { "arch": "aarch64", "runs-on": "ubuntu-22.04-arm" },
+          ]
+        python-version:
+          [[310, "3.10"], [311, "3.11"], [312, "3.12"], [313, "3.13"]]
     steps:
       - uses: actions/checkout@v5
 
@@ -66,70 +72,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: "ubuntu-latest-${{ matrix.python-version[1] }}"
-          path: connectorx-python/target/wheels/*.whl
-
-  linux-aarch:
-    runs-on: ubuntu-22.04-arm
-    strategy:
-      matrix:
-        python-version: ["3.10", "3.11", "3.12", "3.13"]
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v5
-
-      # Check architecture of the target machine
-      - name: Check Target Architecture
-        run: |
-          echo "Architecture: $(uname -m)"
-          if [[ $(uname -m) != "aarch64" ]]; then
-            echo "Error: This workflow requires ARM architecture (aarch64)."
-            exit 1
-          fi
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Setup Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          components: rustfmt
-          target: aarch64-unknown-linux-gnu
-          default: true
-
-      - name: Setup Just
-        uses: extractions/setup-just@v3
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Install Tools
-        run: |
-          sudo apt-get update -y
-          sudo apt-get install -y mysql-client libpq-dev freetds-dev krb5-locales clang libkrb5-dev build-essential gcc musl-tools libsasl2-modules-gssapi-mit libgssapi-krb5-2 krb5-user
-      - name: Setup Poetry
-        uses: Gr1N/setup-poetry@v9
-
-      - name: Setup Project
-        run: |
-          just bootstrap-python
-          python -m pip install --upgrade pip
-          pip install maturin
-
-      - name: Build Wheel (Native)
-        run: |
-          maturin build -m connectorx-python/Cargo.toml --target aarch64-unknown-linux-gnu -i python${{ matrix.python-version }} --release
-        env:
-          SQLITE3_STATIC: 1
-          KRB5_INCLUDE_DIR: /usr/include
-          KRB5_LIB_DIR: /usr/lib/aarch64-linux-gnu
-
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: "linux-arm-${{ matrix.python-version }}"
+          name: "linux-${{matrix.platform.arch}}-${{ matrix.python-version[1] }}"
           path: connectorx-python/target/wheels/*.whl
 
   win-and-mac:
@@ -277,7 +220,7 @@ jobs:
 
   verify-linux-arm:
     runs-on: ubuntu-22.04-arm
-    needs: [linux-aarch]
+    needs: [linux]
     strategy:
       matrix:
         python-version: ["3.10", "3.11", "3.12", "3.13"]
@@ -302,7 +245,7 @@ jobs:
       - name: Download Artifact
         uses: actions/download-artifact@v5
         with:
-          name: "linux-arm-${{ matrix.python-version }}"
+          name: "linux-aarch64-${{ matrix.python-version }}"
 
       - name: Install and Test
         run: |

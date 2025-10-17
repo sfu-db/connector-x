@@ -29,7 +29,7 @@ cx.read_sql("postgresql://username:password@server:port/database", "SELECT * FRO
 
 The function will partition the query by **evenly** splitting the specified column to the amount of partitions.
 ConnectorX will assign one thread for each partition to load and write data in parallel.
-Currently, we support partitioning on **numerical** columns (**cannot contain NULL**) for **SPJA** queries. 
+Currently, we support partitioning on **numerical** columns (**cannot contain NULL**) for **SPJA** queries.
 
 **Experimental: We are now providing federated query support, you can write a single query to join tables from two or more databases!**
 ```python
@@ -47,8 +47,6 @@ Check out more detailed usage and examples [here](https://sfu-db.github.io/conne
 ```bash
 pip install connectorx
 ```
-
-_For AArch64 or ARM64 Linux users, `connectorx==0.4.3 & above` is only available for distributions using `glibc 2.35` and above. Specifically, the re-release for this architecture was tested on Ubuntu 22.04. For older distributions, the latest version available is `connectorx==0.2.3` due to dependency limitations._
 
 Check out [here](https://sfu-db.github.io/connector-x/install.html#build-from-source-code) to see how to build python wheel from source.
 
@@ -86,7 +84,7 @@ is not specified, the count query will be `SELECT COUNT(*) FROM (SELECT * FROM l
 Finally, ConnectorX will use the schema info as well as the count info to allocate memory and download data by executing the queries normally.
 
 Once the downloading begins, there will be one thread for each partition so that the data are downloaded in parallel at the partition level. The thread will issue the query of the corresponding
-partition to the database and then write the returned data to the destination row-wise or column-wise (depends on the database) in a streaming fashion. 
+partition to the database and then write the returned data to the destination row-wise or column-wise (depends on the database) in a streaming fashion.
 
 
 # Supported Sources & Destinations
