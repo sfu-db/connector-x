@@ -390,6 +390,7 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#system-authentication">System Authentication</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#oracle-connection">Oracle Connection</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#oracle-tns-alias-dns-connection">Oracle TNS Alias (DNS) Connection</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#specifying-default-schema">Specifying Default Schema</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#oracle-pandas-type-mapping">Oracle-Pandas Type Mapping</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#performance-db-r5-4xlarge-rds">Performance (db.r5.4xlarge RDS)</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#development-setup">Development Setup</a></li>
@@ -428,6 +429,17 @@ document.write(`
 <span class="n">conn</span> <span class="o">=</span> <span class="s1">&#39;oracle://username:password@alias_name?alias=true&#39;</span>        <span class="c1"># connection token</span>
 <span class="n">query</span> <span class="o">=</span> <span class="s1">&#39;SELECT * FROM table&#39;</span>                                   <span class="c1"># query string</span>
 <span class="n">cx</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">query</span><span class="p">)</span>                                        <span class="c1"># read data from Oracle</span>
+</pre></div>
+</div>
+</section>
+<section id="specifying-default-schema">
+<h2>Specifying Default Schema<a class="headerlink" href="#specifying-default-schema" title="Link to this heading">#</a></h2>
+<p>With version&gt;=0.4.5 you can specify a default schema by adding the <code class="docutils literal notranslate"><span class="pre">schema</span></code> query parameter to the connection URL. This automatically sets the current schema for all connections, eliminating the need to prefix table names with the schema in your queries.</p>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">connectorx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cx</span>
+<span class="c1"># Specify schema in the connection URL</span>
+<span class="n">conn</span> <span class="o">=</span> <span class="s1">&#39;oracle://username:password@server:port/database?schema=MY_SCHEMA&#39;</span>
+<span class="n">query</span> <span class="o">=</span> <span class="s1">&#39;SELECT * FROM table&#39;</span>  <span class="c1"># No need to use MY_SCHEMA.table</span>
+<span class="n">cx</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">query</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -596,6 +608,7 @@ cargo<span class="w"> </span><span class="nb">test</span><span class="w"> </span
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#system-authentication">System Authentication</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#oracle-connection">Oracle Connection</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#oracle-tns-alias-dns-connection">Oracle TNS Alias (DNS) Connection</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#specifying-default-schema">Specifying Default Schema</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#oracle-pandas-type-mapping">Oracle-Pandas Type Mapping</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#performance-db-r5-4xlarge-rds">Performance (db.r5.4xlarge RDS)</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#development-setup">Development Setup</a></li>
