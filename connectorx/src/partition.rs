@@ -7,7 +7,7 @@ use crate::sources::mssql::{mssql_config, FloatN, IntN, MsSQLTypeSystem};
 #[cfg(feature = "src_mysql")]
 use crate::sources::mysql::{MySQLSourceError, MySQLTypeSystem};
 #[cfg(feature = "src_oracle")]
-use crate::sources::oracle::{connect_oracle, OracleDialect};
+use crate::sources::oracle::{connect_oracle, OracleDialect, OracleSource};
 #[cfg(feature = "src_postgres")]
 use crate::sources::postgres::{rewrite_tls_args, PostgresTypeSystem};
 #[cfg(feature = "src_trino")]
@@ -451,8 +451,8 @@ fn mssql_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
 #[cfg(feature = "src_oracle")]
 #[throws(ConnectorXOutError)]
 fn oracle_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
-    let connector = connect_oracle(conn)?;
-    let conn = connector.connect()?;
+    let source = OracleSource::new(conn.as_str(), 1)?;
+    let conn = source.get_conn()?;
     let range_query = get_partition_range_query(query, col, &OracleDialect {})?;
     let row = conn.query_row(range_query.as_str(), &[])?;
     let min_v: i64 = row.get(0).unwrap_or(0);
