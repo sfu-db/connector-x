@@ -19,6 +19,8 @@ pub enum OracleTypeSystem {
     TimestampTz(bool),
     TimestampNano(bool),
     TimestampTzNano(bool),
+    TimestampLTZ(bool),
+    TimestampLTZNano(bool),
 }
 
 impl_typesystem! {
@@ -29,7 +31,7 @@ impl_typesystem! {
         { Blob => Vec<u8>}
         { Clob | VarChar | Char | NVarChar | NChar => String }
         { Date | Timestamp | TimestampNano => NaiveDateTime }
-        { TimestampTz | TimestampTzNano => DateTime<Utc> }
+        { TimestampTz | TimestampTzNano | TimestampLTZ | TimestampLTZNano => DateTime<Utc> }
     }
 }
 
@@ -58,6 +60,10 @@ impl<'a> From<&'a OracleType> for OracleTypeSystem {
             | OracleType::TimestampTZ(8)
             | OracleType::TimestampTZ(9) => TimestampTzNano(true),
             OracleType::TimestampTZ(_) => TimestampTz(true),
+            OracleType::TimestampLTZ(7)
+            | OracleType::TimestampLTZ(8)
+            | OracleType::TimestampLTZ(9) => TimestampLTZNano(true),
+            OracleType::TimestampLTZ(_) => TimestampLTZ(true),
             _ => unimplemented!("{}", format!("Type {:?} not implemented for oracle!", ty)),
         }
     }
