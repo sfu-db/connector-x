@@ -14,7 +14,7 @@ use itertools::Itertools;
 use numpy::{PyArray1, PyArray2};
 use pyo3::{
     prelude::*,
-    types::{PyList, PyTuple, IntoPyDict},
+    types::{IntoPyDict, PyList, PyTuple},
 };
 use std::{
     collections::HashMap,
