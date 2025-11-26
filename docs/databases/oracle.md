@@ -21,6 +21,18 @@ query = 'SELECT * FROM table'                                   # query string
 cx.read_sql(conn, query)                                        # read data from Oracle
 ```
 
+### Specifying Default Schema
+
+With version>=0.4.5 you can specify a default schema by adding the `schema` query parameter to the connection URL. This automatically sets the current schema for all connections, eliminating the need to prefix table names with the schema in your queries.
+
+```py
+import connectorx as cx
+# Specify schema in the connection URL
+conn = 'oracle://username:password@server:port/database?schema=MY_SCHEMA'
+query = 'SELECT * FROM table'  # No need to use MY_SCHEMA.table
+cx.read_sql(conn, query)
+```
+
 ### Oracle-Pandas Type Mapping
 | Oracle Type               |      Pandas Type            |  Comment                           |
 |:-------------------------:|:---------------------------:|:----------------------------------:|

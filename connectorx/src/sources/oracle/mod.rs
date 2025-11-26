@@ -50,6 +50,7 @@ pub struct OracleSource {
     queries: Vec<CXQuery<String>>,
     names: Vec<String>,
     schema: Vec<OracleTypeSystem>,
+    current_schema: Option<String>,
 }
 
 #[throws(OracleSourceError)]
@@ -86,13 +87,24 @@ impl OracleSource {
             .max_size(nconn as u32)
             .build(manager)?;
 
+        let params: HashMap<String, String> = conn.query_pairs().into_owned().collect();
+        let current_schema = params.get("schema").cloned();
+
         Self {
             pool,
             origin_query: None,
             queries: vec![],
             names: vec![],
             schema: vec![],
+            current_schema,
         }
+    }
+    pub fn get_conn(&self) -> Result<OracleConn, OracleSourceError> {
+        let conn = self.pool.get()?;
+        if let Some(schema) = &self.current_schema {
+            conn.set_current_schema(schema)?;
+        }
+        Ok(conn)
     }
 }
 
@@ -125,7 +137,7 @@ where
     fn fetch_metadata(&mut self) {
         assert!(!self.queries.is_empty());
 
-        let conn = self.pool.get()?;
+        let conn = self.get_conn()?;
         for (i, query) in self.queries.iter().enumerate() {
             // assuming all the partition queries yield same schema
             // without rownum = 1, derived type might be wrong
@@ -171,7 +183,7 @@ where
         match &self.origin_query {
             Some(q) => {
                 let cxq = CXQuery::Naked(q.clone());
-                let conn = self.pool.get()?;
+                let conn = self.get_conn()?;
 
                 let nrows = conn
                     .query_row_as::<usize>(count_query(&cxq, &OracleDialect {})?.as_str(), &[])?;
@@ -192,8 +204,8 @@ where
     #[throws(OracleSourceError)]
     fn partition(self) -> Vec<Self::Partition> {
         let mut ret = vec![];
-        for query in self.queries {
-            let conn = self.pool.get()?;
+        for query in &self.queries {
+            let conn = self.get_conn()?;
             ret.push(OracleSourcePartition::new(conn, &query, &self.schema));
         }
         ret
