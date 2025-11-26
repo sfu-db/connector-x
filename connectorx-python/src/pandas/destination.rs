@@ -14,7 +14,7 @@ use itertools::Itertools;
 use numpy::{PyArray1, PyArray2};
 use pyo3::{
     prelude::*,
-    types::{IntoPyDict, PyList, PyTuple},
+    types::{PyList, PyTuple, IntoPyDict},
 };
 use std::{
     collections::HashMap,
@@ -61,12 +61,11 @@ impl<'py> PandasDestination<'py> {
 
     pub fn result(self, py: Python<'py>) -> Result<Bound<'py, PyAny>> {
         #[throws(ConnectorXPythonError)]
-        fn to_list<T: IntoPy<PyObject>>(py: Python<'_>, arr: Vec<T>) -> Bound<PyList> {
-            let list = PyList::empty_bound(py);
-            for e in arr {
-                list.append(e.into_py(py))?;
-            }
-            list
+        fn to_list<'py, T>(py: Python<'py>, arr: Vec<T>) -> Bound<'py, PyList> 
+        where 
+            T: IntoPyObject<'py> 
+        {
+            PyList::new(py, arr)?
         }
         let block_infos = to_list(py, self.block_infos)?;
         let names = to_list(py, self.names)?;
@@ -76,7 +75,7 @@ impl<'py> PandasDestination<'py> {
             ("headers", names),
             ("block_infos", block_infos),
         ]
-        .into_py_dict_bound(py);
+        .into_py_dict(py)?;
         Ok(result.into_any())
     }
 
@@ -88,7 +87,7 @@ impl<'py> PandasDestination<'py> {
         placement: Vec<usize>,
     ) {
         // has to use `zeros` instead of `new` for String type initialization
-        let data = PyArray2::<T>::zeros_bound(py, [placement.len(), self.nrow], false);
+        let data = PyArray2::<T>::zeros(py, [placement.len(), self.nrow], false);
         let block_info = PandasBlockInfo {
             dt,
             cids: placement,
@@ -110,9 +109,9 @@ impl<'py> PandasDestination<'py> {
                 dt,
                 cids: vec![pos],
             };
-            let data = PyArray1::<T>::zeros_bound(py, self.nrow, false);
-            let mask = PyArray1::<bool>::zeros_bound(py, self.nrow, false);
-            let obj = PyTuple::new_bound(py, vec![data.as_any(), mask.as_any()]);
+            let data: Bound<'_, numpy::PyArray<T, ndarray::Dim<[usize; 1]>>> = PyArray1::<T>::zeros(py, self.nrow, false);
+            let mask = PyArray1::<bool>::zeros(py, self.nrow, false);
+            let obj = PyTuple::new(py, vec![data.as_any(), mask.as_any()])?;
             self.block_datas.push(obj.into_any());
             self.block_infos.push(block_info);
         }

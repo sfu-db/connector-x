@@ -7,7 +7,7 @@ use fehler::throws;
 use ndarray::{ArrayViewMut1, ArrayViewMut2, Axis, Ix2};
 use numpy::{PyArray, PyArray1, PyArrayMethods};
 use pyo3::{
-    types::{PyAnyMethods, PyTuple, PyTupleMethods},
+    types::{PyTuple, PyTupleMethods},
     PyAny, PyResult,
 };
 use std::any::TypeId;
@@ -19,20 +19,20 @@ pub enum Int64Block<'a> {
 
 impl<'a> ExtractBlockFromBound<'a> for Int64Block<'a> {
     fn extract_block<'b: 'a>(ob: &'b pyo3::Bound<'a, PyAny>) -> PyResult<Self> {
-        if let Ok(array) = ob.downcast::<PyArray<i64, Ix2>>() {
+        if let Ok(array) = ob.cast::<PyArray<i64, Ix2>>() {
             check_dtype(ob, "int64")?;
             let data = unsafe { array.as_array_mut() };
             Ok(Int64Block::NumPy(data))
         } else {
-            let tuple = ob.downcast::<PyTuple>()?;
+            let tuple = ob.cast::<PyTuple>()?;
             // let data = tuple.get_borrowed_item(0)?;
             let data = &tuple.as_slice()[0];
             let mask = &tuple.as_slice()[1];
             check_dtype(data, "int64")?;
             check_dtype(mask, "bool")?;
             Ok(Int64Block::Extention(
-                unsafe { data.downcast::<PyArray1<i64>>()?.as_array_mut() },
-                unsafe { mask.downcast::<PyArray1<bool>>()?.as_array_mut() },
+                unsafe { data.cast::<PyArray1<i64>>()?.as_array_mut() },
+                unsafe { mask.cast::<PyArray1<bool>>()?.as_array_mut() },
             ))
         }
     }
