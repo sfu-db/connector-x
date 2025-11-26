@@ -17,7 +17,7 @@ pub struct PyRecordBatch(Option<RecordBatch>);
 
 /// Python-exposed iterator over RecordBatches
 #[pyclass(module = "connectorx")]
-pub struct PyRecordBatchIterator(Box<dyn RecordBatchIterator>);
+pub struct PyRecordBatchIterator(Box<dyn RecordBatchIterator + Send + Sync>);
 
 #[pymethods]
 impl PyRecordBatch {
@@ -115,7 +115,12 @@ pub fn get_arrow_rb_iter<'py>(
     );
 
     arrow_iter.prepare();
-    let py_rb_iter = PyRecordBatchIterator(arrow_iter);
+    let py_rb_iter = PyRecordBatchIterator(unsafe {
+        std::mem::transmute::<
+            Box<dyn RecordBatchIterator>,
+            Box<dyn RecordBatchIterator + Send + Sync>,
+        >(arrow_iter)
+    });
 
     let obj: Py<PyAny> = py_rb_iter.into_py_any(py)?;
     obj.into_bound(py)

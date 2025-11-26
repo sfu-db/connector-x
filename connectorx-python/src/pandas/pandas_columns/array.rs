@@ -86,7 +86,7 @@ unsafe impl<V> Sync for ArrayColumn<V> {}
 
 impl<V> PandasColumnObject for ArrayColumn<V>
 where
-    V: Send + for<'a> IntoPyObject<'a>,
+    V: Send + for<'a> IntoPyObject<'a> + Clone,
 {
     fn typecheck(&self, id: TypeId) -> bool {
         id == TypeId::of::<PyList>() || id == TypeId::of::<Option<PyList>>()
@@ -210,7 +210,7 @@ impl HasPandasColumn for Option<Vec<i64>> {
 }
 impl<V> ArrayColumn<V>
 where
-    V: Send + for<'a> IntoPyObject<'a>,
+    V: Send + for<'a> IntoPyObject<'a> + Clone,
 {
     pub fn partition(self, counts: usize) -> Vec<ArrayColumn<V>> {
         let mut partitions = vec![];
@@ -243,7 +243,7 @@ where
                         let end = start + len;
                         unsafe {
                             // allocate and write in the same time
-                            let n = pyo3::types::PyList::new(py, &self.buffer[start..end])?
+                            let n = pyo3::types::PyList::new(py, self.buffer[start..end].iter().cloned().collect::<Vec<V>>())?
                                 .unbind();
                             *self.data.add(self.row_idx[i]) = PyList(n);
                         };
