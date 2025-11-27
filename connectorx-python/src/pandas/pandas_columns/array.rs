@@ -243,7 +243,7 @@ where
                         let end = start + len;
                         unsafe {
                             // allocate and write in the same time
-                            let n = pyo3::types::PyList::new(py, self.buffer[start..end].iter().cloned().collect::<Vec<V>>())?
+                            let n = pyo3::types::PyList::new(py, self.buffer[start..end].to_vec())?
                                 .unbind();
                             *self.data.add(self.row_idx[i]) = PyList(n);
                         };
