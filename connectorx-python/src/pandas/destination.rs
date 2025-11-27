@@ -109,7 +109,7 @@ impl<'py> PandasDestination<'py> {
                 dt,
                 cids: vec![pos],
             };
-            let data: Bound<'_, numpy::PyArray<T, ndarray::Dim<[usize; 1]>>> = PyArray1::<T>::zeros(py, self.nrow, false);
+            let data = PyArray1::<T>::zeros(py, self.nrow, false);
             let mask = PyArray1::<bool>::zeros(py, self.nrow, false);
             let obj = PyTuple::new(py, vec![data.as_any(), mask.as_any()])?;
             self.block_datas.push(obj.into_any());
