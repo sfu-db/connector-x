@@ -39,7 +39,7 @@ modin = {version = ">=0.10", optional = true}
 numpy = ">=2.1"
 pandas = {version = ">=2", optional = true}
 polars = {version = ">=1", optional = true}
-pyarrow = {version = ">=4", optional = true}
+pyarrow = {version = ">=22", optional = true}
 python = ">=3.10,<3.15"
 
 [tool.poetry.extras]
@@ -59,7 +59,7 @@ ipython = "^7.31.1"
 maturin = ">=1.0,<2.0"
 modin = {extras = ["dask"], version = ">=0.10.1"}
 polars = ">=0.20"
-pyarrow = ">=4"
+pyarrow = ">=22"
 pytest = "^6.2"
 pytest-benchmark = "^3.4.1"
 twine = "^3.4.1"
