@@ -42,31 +42,42 @@ macro_rules! impl_postgres_transport {
             systems = PostgresTypeSystem => ArrowTypeSystem,
             route = PostgresSource<$proto, $tls> => ArrowDestination,
             mappings = {
-                { Float4[f32]                => Float64[f64]                           | conversion auto   }
-                { Float8[f64]                => Float64[f64]                           | conversion auto   }
-                { Numeric[Decimal]           => Decimal[Decimal]                       | conversion auto   }
-                { Int2[i16]                  => Int64[i64]                             | conversion auto   }
-                { Int4[i32]                  => Int64[i64]                             | conversion auto   }
-                { Int8[i64]                  => Int64[i64]                             | conversion auto   }
-                { Bool[bool]                 => Boolean[bool]                          | conversion auto   }
-                { Text[&'r str]              => LargeUtf8[String]                      | conversion owned  }
-                { BpChar[&'r str]            => LargeUtf8[String]                      | conversion none   }
-                { VarChar[&'r str]           => LargeUtf8[String]                      | conversion none   }
-                { Name[&'r str]              => LargeUtf8[String]                      | conversion none   }
-                { Timestamp[NaiveDateTime]   => Date64[NaiveDateTime]                  | conversion auto   }
-                { Date[NaiveDate]            => Date32[NaiveDate]                      | conversion auto   }
-                { Time[NaiveTime]            => Time64[NaiveTime]                      | conversion auto   }
-                { TimestampTz[DateTime<Utc>] => DateTimeTz[DateTime<Utc>]              | conversion auto   }
-                { UUID[Uuid]                 => LargeUtf8[String]                      | conversion option }
-                { Char[&'r str]              => LargeUtf8[String]                      | conversion none   }
-                { ByteA[Vec<u8>]             => LargeBinary[Vec<u8>]                   | conversion auto   }
-                { JSON[Value]                => LargeUtf8[String]                      | conversion option }
-                { JSONB[Value]               => LargeUtf8[String]                      | conversion none   }
-                { Inet[IpInet]               => LargeUtf8[String]                      | conversion none   }
-                { Vector[Vector]             => Float32Array[Vec<Option<f32>>]         | conversion option }
-                { HalfVec[HalfVector]        => Float32Array[Vec<Option<f32>>]         | conversion option }
-                { Bit[Bit]                   => LargeBinary[Vec<u8>]                   | conversion option }
-                { SparseVec[SparseVector]    => Float32Array[Vec<Option<f32>>]         | conversion option }
+                { Float4[f32]                        => Float64[f64]                       | conversion auto   }
+                { Float8[f64]                        => Float64[f64]                       | conversion auto   }
+                { Numeric[Decimal]                   => Decimal[Decimal]                   | conversion auto   }
+                { Int2[i16]                          => Int64[i64]                         | conversion auto   }
+                { Int4[i32]                          => Int64[i64]                         | conversion auto   }
+                { Int8[i64]                          => Int64[i64]                         | conversion auto   }
+                { UInt4[u32]                         => UInt64[u64]                        | conversion auto   }
+                { Bool[bool]                         => Boolean[bool]                      | conversion auto   }
+                { Text[&'r str]                      => LargeUtf8[String]                  | conversion owned  }
+                { BpChar[&'r str]                    => LargeUtf8[String]                  | conversion none   }
+                { VarChar[&'r str]                   => LargeUtf8[String]                  | conversion none   }
+                { Name[&'r str]                      => LargeUtf8[String]                  | conversion none   }
+                { Enum[&'r str]                      => LargeUtf8[String]                  | conversion none   }
+                { Timestamp[NaiveDateTime]           => Date64[NaiveDateTime]              | conversion auto   }
+                { Date[NaiveDate]                    => Date32[NaiveDate]                  | conversion auto   }
+                { Time[NaiveTime]                    => Time64[NaiveTime]                  | conversion auto   }
+                { TimestampTz[DateTime<Utc>]         => DateTimeTz[DateTime<Utc>]          | conversion auto   }
+                { UUID[Uuid]                         => LargeUtf8[String]                  | conversion option }
+                { Char[&'r str]                      => LargeUtf8[String]                  | conversion none   }
+                { ByteA[Vec<u8>]                     => LargeBinary[Vec<u8>]               | conversion auto   }
+                { JSON[Value]                        => LargeUtf8[String]                  | conversion option }
+                { JSONB[Value]                       => LargeUtf8[String]                  | conversion none   }
+                { Inet[IpInet]                       => LargeUtf8[String]                  | conversion none   }
+                { BoolArray[Vec<Option<bool>>]       => BoolArray[Vec<Option<bool>>]       | conversion auto   }
+                { VarcharArray[Vec<Option<String>>]  => Utf8Array[Vec<Option<String>>]     | conversion auto   }
+                { TextArray[Vec<Option<String>>]     => Utf8Array[Vec<Option<String>>]     | conversion none   }
+                { Int2Array[Vec<Option<i16>>]        => Int16Array[Vec<Option<i16>>]       | conversion auto   }
+                { Int4Array[Vec<Option<i32>>]        => Int32Array[Vec<Option<i32>>]       | conversion auto   }
+                { Int8Array[Vec<Option<i64>>]        => Int64Array[Vec<Option<i64>>]       | conversion auto   }
+                { Float4Array[Vec<Option<f32>>]      => Float32Array[Vec<Option<f32>>]     | conversion auto   }
+                { Float8Array[Vec<Option<f64>>]      => Float64Array[Vec<Option<f64>>]     | conversion auto   }
+                { NumericArray[Vec<Option<Decimal>>] => DecimalArray[Vec<Option<Decimal>>] | conversion auto   }
+                { Vector[Vector]                     => Float32Array[Vec<Option<f32>>]     | conversion option }
+                { HalfVec[HalfVector]                => Float32Array[Vec<Option<f32>>]     | conversion option }
+                { Bit[Bit]                           => LargeBinary[Vec<u8>]               | conversion option }
+                { SparseVec[SparseVector]            => Float32Array[Vec<Option<f32>>]     | conversion option }
             }
         );
     }
