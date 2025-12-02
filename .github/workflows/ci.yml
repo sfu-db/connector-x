@@ -44,7 +44,7 @@ jobs:
       - name: Install tools
         run: |
           apt-get update
-          apt-get install -y curl postgresql-client build-essential pkg-config libssl-dev git sqlite3 libsqlite3-dev mysql-client python3 python3-pip libkrb5-dev libclang-dev libffi-dev
+          apt-get install -y curl postgresql-client build-essential pkg-config libssl-dev git sqlite3 libsqlite3-dev mysql-client python3 python3-pip libkrb5-dev libclang-dev
           echo "Cache Version ${{ secrets.CACHE_VERSION }}"
         env:
           DEBIAN_FRONTEND: noninteractive
@@ -156,7 +156,7 @@ jobs:
       - name: Install tools
         run: |
           apt-get update
-          apt-get install -y wget curl postgresql-client build-essential pkg-config libssl-dev git sqlite3 libsqlite3-dev mysql-client libmysqlclient-dev libkrb5-dev libclang-dev
+          apt-get install -y wget curl postgresql-client build-essential pkg-config libssl-dev git sqlite3 libsqlite3-dev mysql-client libmysqlclient-dev libkrb5-dev libclang-dev libffi-dev
         env:
           DEBIAN_FRONTEND: noninteractive
 
