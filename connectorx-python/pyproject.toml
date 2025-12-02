@@ -60,12 +60,12 @@ maturin = ">=1.0,<2.0"
 modin = {extras = ["dask"], version = ">=0.10.1"}
 polars = ">=0.20"
 pyarrow = ">=22"
-pytest = "^6.2"
+pytest = "^9.0"
 pytest-benchmark = "^3.4.1"
 twine = "^3.4.1"
 
 [tool.pytest.ini_options]
-minversion = "6.0"
+minversion = "9.0"
 python_functions = "test_* bench_*"
 # python_files = check_*.py
 # python_classes = Check
