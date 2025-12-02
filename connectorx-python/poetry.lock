@@ -1564,24 +1564,24 @@ dev = ["argcomplete", "attrs (>=19.2)", "hypothesis (>=3.56)", "mock", "requests
 
 [[package]]
 name = "pytest-benchmark"
-version = "3.4.1"
+version = "5.2.3"
 description = "A ``pytest`` fixture for benchmarking code. It will group the tests into rounds that are calibrated to the chosen timer."
 optional = false
-python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
+python-versions = ">=3.9"
 groups = ["dev"]
 files = [
-    {file = "pytest-benchmark-3.4.1.tar.gz", hash = "sha256:40e263f912de5a81d891619032983557d62a3d85843f9a9f30b98baea0cd7b47"},
-    {file = "pytest_benchmark-3.4.1-py2.py3-none-any.whl", hash = "sha256:36d2b08c4882f6f997fd3126a3d6dfd70f3249cde178ed8bbc0b73db7c20f809"},
+    {file = "pytest_benchmark-5.2.3-py3-none-any.whl", hash = "sha256:bc839726ad20e99aaa0d11a127445457b4219bdb9e80a1afc4b51da7f96b0803"},
+    {file = "pytest_benchmark-5.2.3.tar.gz", hash = "sha256:deb7317998a23c650fd4ff76e1230066a76cb45dcece0aca5607143c619e7779"},
 ]
 
 [package.dependencies]
 py-cpuinfo = "*"
-pytest = ">=3.8"
+pytest = ">=8.1"
 
 [package.extras]
 aspect = ["aspectlib"]
 elasticsearch = ["elasticsearch"]
-histogram = ["pygal", "pygaljs"]
+histogram = ["pygal", "pygaljs", "setuptools"]
 
 [[package]]
 name = "python-dateutil"
@@ -2037,4 +2037,4 @@ pyarrow = ["pyarrow"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<3.15"
-content-hash = "fef652795c8998503b9f43527b217708785ac8514638d543b1fb9410ff4ba8ff"
+content-hash = "f06b0416bf5c93521b7d054519239cbdcf867398a7bf7d4e1168fae7c7865f42"

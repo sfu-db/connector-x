@@ -61,7 +61,7 @@ modin = {extras = ["dask"], version = ">=0.10.1"}
 polars = ">=0.20"
 pyarrow = ">=22"
 pytest = "^9.0"
-pytest-benchmark = "^3.4.1"
+pytest-benchmark = "^5.2"
 twine = "^3.4.1"
 
 [tool.pytest.ini_options]
