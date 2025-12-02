@@ -84,7 +84,7 @@ src_csv = ["csv", "regex"]
 src_dummy = ["num-traits"]
 src_mssql = ["rust_decimal", "num-traits", "tiberius", "bb8-tiberius", "bb8", "tokio", "tokio-util", "uuid_old", "futures", "urlencoding"]
 src_mysql = ["r2d2_mysql", "mysql_common", "rust_decimal", "num-traits", "r2d2"]
-src_oracle = ["oracle", "r2d2-oracle","r2d2", "urlencoding"]
+src_oracle = ["oracle", "r2d2-oracle","r2d2", "urlencoding", "rust_decimal"]
 src_postgres = [
   "postgres",
   "r2d2_postgres",

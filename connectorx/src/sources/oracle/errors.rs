@@ -18,6 +18,9 @@ pub enum OracleSourceError {
     #[error(transparent)]
     OracleUrlDecodeError(#[from] FromUtf8Error),
 
+    #[error(transparent)]
+    DecimalError(#[from] rust_decimal::Error),
+
     /// Any other errors that are too trivial to be put here explicitly.
     #[error(transparent)]
     Other(#[from] anyhow::Error),
