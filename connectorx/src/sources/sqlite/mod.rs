@@ -277,7 +277,7 @@ impl<'a> SQLiteSourcePartitionParser<'a> {
     }
 
     #[throws(SQLiteSourceError)]
-    fn next_loc(&mut self) -> (&Row<'_>, usize) {
+    fn next_loc(&mut self) -> (&Row, usize) {
         self.current_consumed = true;
         let row: &Row = (*self.rows)
             .get()
