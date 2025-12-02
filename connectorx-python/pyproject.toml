@@ -36,7 +36,7 @@ Documentation = "https://sfu-db.github.io/connector-x/intro.html"
 [tool.poetry.dependencies]
 dask = {version = "^2021", optional = true, extras = ["dataframe"]}
 modin = {version = ">=0.10", optional = true}
-numpy = ">=2.3"
+numpy = ">=2.2"
 pandas = {version = ">=2", optional = true}
 polars = {version = ">=1", optional = true}
 pyarrow = {version = ">=22", optional = true}
