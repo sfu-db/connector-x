@@ -23,6 +23,7 @@ cx.read_sql(conn, query)                                        # read data from
 
 | Postgres Type   |      Pandas Type          |  Comment                           |
 |:---------------:|:-------------------------:|:----------------------------------:|
+| OID             | u32                       | a data type for identifying internal objects |
 | BOOL            | bool, boolean(nullable)   |                                    |
 | INT2            | int64, Int64(nullable)    |                                    |
 | INT4            | int64, Int64(nullable)    |                                    |
@@ -51,6 +52,7 @@ cx.read_sql(conn, query)                                        # read data from
 | HalfVec         | object                    | list of f32                        |
 | Bit             | object                    |                                    |
 | SparseVec       | object                    | list of f32                        |
+| BOOL[]          | object                    | list of bool                       |
 | INT2[]          | object                    | list of i64                        |
 | INT4[]          | object                    | list of i64                        |
 | INT8[]          | object                    | list of i64                        |
