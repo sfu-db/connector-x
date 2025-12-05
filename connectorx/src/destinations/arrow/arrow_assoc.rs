@@ -288,9 +288,7 @@ fn naive_date_to_arrow(nd: NaiveDate) -> i32 {
 }
 
 fn naive_datetime_to_arrow(nd: NaiveDateTime) -> i64 {
-    nd.and_utc()
-        .timestamp_nanos_opt()
-        .unwrap_or_else(|| panic!("out of range DateTime"))
+    nd.and_utc().timestamp_micros()
 }
 
 impl ArrowAssoc for Option<NaiveDate> {
@@ -328,10 +326,10 @@ impl ArrowAssoc for NaiveDate {
 }
 
 impl ArrowAssoc for Option<NaiveDateTime> {
-    type Builder = TimestampNanosecondBuilder;
+    type Builder = TimestampMicrosecondBuilder;
 
     fn builder(nrows: usize) -> Self::Builder {
-        TimestampNanosecondBuilder::with_capacity(nrows)
+        TimestampMicrosecondBuilder::with_capacity(nrows)
     }
 
     fn append(builder: &mut Self::Builder, value: Option<NaiveDateTime>) -> Result<()> {
@@ -342,17 +340,17 @@ impl ArrowAssoc for Option<NaiveDateTime> {
     fn field(header: &str) -> Field {
         Field::new(
             header,
-            ArrowDataType::Timestamp(TimeUnit::Nanosecond, None),
+            ArrowDataType::Timestamp(TimeUnit::Microsecond, None),
             true,
         )
     }
 }
 
 impl ArrowAssoc for NaiveDateTime {
-    type Builder = TimestampNanosecondBuilder;
+    type Builder = TimestampMicrosecondBuilder;
 
     fn builder(nrows: usize) -> Self::Builder {
-        TimestampNanosecondBuilder::with_capacity(nrows)
+        TimestampMicrosecondBuilder::with_capacity(nrows)
     }
 
     fn append(builder: &mut Self::Builder, value: NaiveDateTime) -> Result<()> {
@@ -363,7 +361,7 @@ impl ArrowAssoc for NaiveDateTime {
     fn field(header: &str) -> Field {
         Field::new(
             header,
-            ArrowDataType::Timestamp(TimeUnit::Nanosecond, None),
+            ArrowDataType::Timestamp(TimeUnit::Microsecond, None),
             false,
         )
     }
