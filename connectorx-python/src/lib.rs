@@ -7,7 +7,7 @@ pub mod pandas;
 use crate::constants::J4RS_BASE_PATH;
 use ::connectorx::{fed_dispatcher::run, partition::partition, source_router::parse_source};
 use pyo3::exceptions::PyRuntimeError;
-use pyo3::prelude::*;
+use pyo3::{IntoPyObjectExt, prelude::*};
 use pyo3::types::PyDict;
 use pyo3::{wrap_pyfunction, PyResult};
 use std::collections::HashMap;
@@ -97,7 +97,7 @@ pub fn read_sql2<'py>(
     )
     .map_err(|e| PyRuntimeError::new_err(format!("{}", e)))?;
     let ptrs = arrow::to_ptrs(rbs);
-    let obj: PyObject = ptrs.into_py(py);
+    let obj: Py<PyAny> = ptrs.into_py_any(py)?;
     Ok(obj.into_bound(py))
 }
 
