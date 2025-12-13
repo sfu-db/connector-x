@@ -10,7 +10,7 @@ use fehler::throws;
 use itertools::Itertools;
 use ndarray::{ArrayViewMut2, Axis, Ix2};
 use numpy::{PyArray, PyArrayMethods};
-use pyo3::{types::PyAnyMethods, PyAny, PyResult, Python};
+use pyo3::{PyAny, PyResult, Python};
 use std::any::TypeId;
 
 pub struct StringBlock<'a> {
@@ -21,7 +21,7 @@ pub struct StringBlock<'a> {
 impl<'a> ExtractBlockFromBound<'a> for StringBlock<'a> {
     fn extract_block<'b: 'a>(ob: &'b pyo3::Bound<'a, PyAny>) -> PyResult<Self> {
         check_dtype(ob, "object")?;
-        let array = ob.downcast::<PyArray<PyString, Ix2>>()?;
+        let array = ob.cast::<PyArray<PyString, Ix2>>()?;
         let data = unsafe { array.as_array_mut() };
         Ok(StringBlock {
             data,
@@ -272,7 +272,7 @@ impl StringColumn {
         // NOTE: from Python 3.12, we have to allocate the string with a real Python<'py> token
         // previous `let py = unsafe { Python::assume_gil_acquired() }` approach will lead to segment fault when partition is enabled
         let mut string_infos = Vec::with_capacity(self.string_lengths.len());
-        Python::with_gil(|py| {
+        Python::attach(|py| {
             let mut start = 0;
             for (i, &len) in self.string_lengths.iter().enumerate() {
                 if len != usize::MAX {

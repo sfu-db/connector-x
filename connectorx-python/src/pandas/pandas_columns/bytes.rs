@@ -7,7 +7,7 @@ use anyhow::anyhow;
 use fehler::throws;
 use ndarray::{ArrayViewMut2, Axis, Ix2};
 use numpy::{Element, PyArray, PyArrayDescr, PyArrayMethods};
-use pyo3::{types::PyAnyMethods, Bound, Py, PyAny, PyResult, Python};
+use pyo3::{Bound, Py, PyAny, PyResult, Python};
 use std::any::TypeId;
 
 #[derive(Clone)]
@@ -17,8 +17,8 @@ pub struct PyBytes(Py<pyo3::types::PyBytes>);
 // In order to put it into a numpy array
 unsafe impl Element for PyBytes {
     const IS_COPY: bool = false;
-    fn get_dtype_bound(py: Python<'_>) -> Bound<'_, PyArrayDescr> {
-        PyArrayDescr::object_bound(py)
+    fn get_dtype(py: Python<'_>) -> Bound<'_, PyArrayDescr> {
+        PyArrayDescr::object(py)
     }
 
     fn clone_ref(&self, _py: Python<'_>) -> Self {
@@ -34,7 +34,7 @@ pub struct BytesBlock<'a> {
 impl<'a> ExtractBlockFromBound<'a> for BytesBlock<'a> {
     fn extract_block<'b: 'a>(ob: &'b pyo3::Bound<'a, PyAny>) -> PyResult<Self> {
         check_dtype(ob, "object")?;
-        let array = ob.downcast::<PyArray<PyBytes, Ix2>>()?;
+        let array = ob.cast::<PyArray<PyBytes, Ix2>>()?;
         let data = unsafe { array.as_array_mut() };
         Ok(BytesBlock {
             data,
@@ -187,7 +187,7 @@ impl BytesColumn {
         let nstrings = self.bytes_lengths.len();
 
         if nstrings > 0 {
-            Python::with_gil(|py| -> Result<(), ConnectorXPythonError> {
+            Python::attach(|py| -> Result<(), ConnectorXPythonError> {
                 // allocation in python is not thread safe
                 let _guard = GIL_MUTEX
                     .lock()
@@ -199,7 +199,7 @@ impl BytesColumn {
                         unsafe {
                             // allocate and write in the same time
                             let b =
-                                pyo3::types::PyBytes::new_bound(py, &self.bytes_buf[start..end])
+                                pyo3::types::PyBytes::new(py, &self.bytes_buf[start..end])
                                     .unbind();
                             *self.data.add(self.row_idx[i]) = PyBytes(b);
                         };

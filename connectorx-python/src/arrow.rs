@@ -5,7 +5,7 @@ use connectorx::source_router::SourceConn;
 use connectorx::{prelude::*, sql::CXQuery};
 use fehler::throws;
 use libc::uintptr_t;
-use pyo3::prelude::*;
+use pyo3::{IntoPyObjectExt, prelude::*};
 use pyo3::pyclass;
 use pyo3::{PyAny, Python};
 use std::convert::TryFrom;
@@ -17,7 +17,7 @@ pub struct PyRecordBatch(Option<RecordBatch>);
 
 /// Python-exposed iterator over RecordBatches
 #[pyclass(module = "connectorx")]
-pub struct PyRecordBatchIterator(Box<dyn RecordBatchIterator>);
+pub struct PyRecordBatchIterator(Box<dyn RecordBatchIterator + Send + Sync>);
 
 #[pymethods]
 impl PyRecordBatch {
@@ -36,10 +36,10 @@ impl PyRecordBatch {
             .0
             .take()
             .ok_or_else(|| anyhow!("RecordBatch is None, cannot convert to pointers"))?;
-        let ptrs = py.allow_threads(
+        let ptrs = py.detach(
             || -> Result<Vec<(uintptr_t, uintptr_t)>, ConnectorXPythonError> { Ok(to_ptrs_rb(rb)) },
         )?;
-        let obj: PyObject = ptrs.into_py(py);
+        let obj: Py<PyAny> = ptrs.into_py_any(py)?;
         obj.into_bound(py)
     }
 }
@@ -49,13 +49,13 @@ impl PyRecordBatchIterator {
     #[throws(ConnectorXPythonError)]
     fn schema_ptr<'py>(&self, py: Python<'py>) -> Bound<'py, PyAny> {
         let (rb, _) = self.0.get_schema();
-        let ptrs = py.allow_threads(
+        let ptrs = py.detach(
             || -> Result<(Vec<String>, Vec<Vec<(uintptr_t, uintptr_t)>>), ConnectorXPythonError> {
                 let rbs = vec![rb];
                 Ok(to_ptrs(rbs))
             },
         )?;
-        let obj: PyObject = ptrs.into_py(py);
+        let obj: Py<PyAny> = ptrs.into_py_any(py)?;
         obj.into_bound(py)
     }
     fn __iter__(slf: PyRef<'_, Self>) -> PyRef<'_, Self> {
@@ -86,14 +86,14 @@ pub fn write_arrow<'py>(
     queries: &[CXQuery<String>],
     pre_execution_queries: Option<&[String]>,
 ) -> Bound<'py, PyAny> {
-    let ptrs = py.allow_threads(
+    let ptrs = py.detach(
         || -> Result<(Vec<String>, Vec<Vec<(uintptr_t, uintptr_t)>>), ConnectorXPythonError> {
             let destination = get_arrow(source_conn, origin_query, queries, pre_execution_queries)?;
             let rbs = destination.arrow()?;
             Ok(to_ptrs(rbs))
         },
     )?;
-    let obj: PyObject = ptrs.into_py(py);
+    let obj: Py<PyAny> = ptrs.into_py_any(py)?;
     obj.into_bound(py)
 }
 
@@ -115,9 +115,14 @@ pub fn get_arrow_rb_iter<'py>(
     );
 
     arrow_iter.prepare();
-    let py_rb_iter = PyRecordBatchIterator(arrow_iter);
+    let py_rb_iter = PyRecordBatchIterator(unsafe {
+        std::mem::transmute::<
+            Box<dyn RecordBatchIterator>,
+            Box<dyn RecordBatchIterator + Send + Sync>,
+        >(arrow_iter)
+    });
 
-    let obj: PyObject = py_rb_iter.into_py(py);
+    let obj: Py<PyAny> = py_rb_iter.into_py_any(py)?;
     obj.into_bound(py)
 }
 
