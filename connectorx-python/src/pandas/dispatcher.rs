@@ -113,7 +113,7 @@ where
         debug!("Start writing");
 
         // release GIL
-        py.allow_threads(move || -> Result<(), TP::Error> {
+        py.detach(move || -> Result<(), TP::Error> {
             // parse and write
             dst_partitions
                 .into_par_iter()

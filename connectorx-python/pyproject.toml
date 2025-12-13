@@ -18,7 +18,7 @@ license = "MIT"
 maintainers = ["Weiyuan Wu <youngw@sfu.ca>"] 
 name = "connectorx" 
 readme = "README.md" # Markdown files are supported
-version = "0.4.5-alpha.1" 
+version = "0.4.5-alpha.2" 
 
 [project]
 name = "connectorx" # Target file name of maturin build
@@ -36,11 +36,11 @@ Documentation = "https://sfu-db.github.io/connector-x/intro.html"
 [tool.poetry.dependencies]
 dask = {version = "^2021", optional = true, extras = ["dataframe"]}
 modin = {version = ">=0.10", optional = true}
-numpy = ">=2.1"
-pandas = {version = ">=2", optional = true}
+numpy = ">=2.3"
+pandas = {version = ">=2.3", optional = true}
 polars = {version = ">=1", optional = true}
-pyarrow = {version = ">=4", optional = true}
-python = ">=3.10,<3.14"
+pyarrow = {version = ">=22", optional = true}
+python = ">=3.11,<3.15"
 
 [tool.poetry.extras]
 all = ["dask", "pandas", "modin", "polars", "pyarrow"]
@@ -59,13 +59,13 @@ ipython = "^7.31.1"
 maturin = ">=1.0,<2.0"
 modin = {extras = ["dask"], version = ">=0.10.1"}
 polars = ">=0.20"
-pyarrow = ">=4"
-pytest = "^6.2"
-pytest-benchmark = "^3.4.1"
+pyarrow = ">=22"
+pytest = "^9.0"
+pytest-benchmark = "^5.2"
 twine = "^3.4.1"
 
 [tool.pytest.ini_options]
-minversion = "6.0"
+minversion = "9.0"
 python_functions = "test_* bench_*"
 # python_files = check_*.py
 # python_classes = Check

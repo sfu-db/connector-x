@@ -18,7 +18,7 @@ jobs:
             { "arch": "aarch64", "runs-on": "ubuntu-22.04-arm" },
           ]
         python-version:
-          [[310, "3.10"], [311, "3.11"], [312, "3.12"], [313, "3.13"]]
+          [[310, "3.10"], [311, "3.11"], [312, "3.12"], [313, "3.13"], [314, "3.14"]]
     steps:
       - uses: actions/checkout@v5
 
@@ -42,7 +42,7 @@ jobs:
       - name: Install tools
         run: |
           yum install -y epel-release
-          yum install -y mysql-devel postgresql-devel freetds-devel krb5-libs clang-devel
+          yum install -y mysql-devel postgresql-devel freetds-devel krb5-libs clang-devel libffi-devel
 
       - name: Setup project
         run: |
@@ -80,7 +80,7 @@ jobs:
     strategy:
       matrix:
         os: ["windows-latest", "macos-15-intel"]
-        python-version: ["3.10", "3.11", "3.12", "3.13"]
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
         include:
           - os: "macos-15-intel"
             features: "--features integrated-auth-gssapi"
@@ -130,7 +130,7 @@ jobs:
     runs-on: macos-latest
     strategy:
       matrix:
-        python-version: ["3.10", "3.11", "3.12", "3.13"]
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
     steps:
       - uses: actions/checkout@v5
 
@@ -178,7 +178,7 @@ jobs:
     needs: [win-and-mac, linux]
     strategy:
       matrix:
-        python-version: ["3.10", "3.11", "3.12", "3.13"]
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
         os:
           [
             macos-15-intel,

@@ -7,7 +7,8 @@ use anyhow::anyhow;
 use fehler::throws;
 use ndarray::{ArrayViewMut2, Axis, Ix2};
 use numpy::{Element, PyArray, PyArrayDescr, PyArrayMethods};
-use pyo3::{types::PyAnyMethods, Bound, Py, PyAny, PyResult, Python, ToPyObject};
+use pyo3::IntoPyObject;
+use pyo3::{Bound, Py, PyAny, PyResult, Python};
 use std::any::TypeId;
 use std::marker::PhantomData;
 
@@ -18,8 +19,8 @@ pub struct PyList(Py<pyo3::types::PyList>);
 // In order to put it into a numpy array
 unsafe impl Element for PyList {
     const IS_COPY: bool = false;
-    fn get_dtype_bound(py: Python<'_>) -> Bound<'_, PyArrayDescr> {
-        PyArrayDescr::object_bound(py)
+    fn get_dtype(py: Python<'_>) -> Bound<'_, PyArrayDescr> {
+        PyArrayDescr::object(py)
     }
 
     fn clone_ref(&self, _py: Python<'_>) -> Self {
@@ -36,7 +37,7 @@ pub struct ArrayBlock<'a, V> {
 impl<'a, V> ExtractBlockFromBound<'a> for ArrayBlock<'a, V> {
     fn extract_block<'b: 'a>(ob: &'b pyo3::Bound<'a, PyAny>) -> PyResult<Self> {
         check_dtype(ob, "object")?;
-        let array = ob.downcast::<PyArray<PyList, Ix2>>()?;
+        let array = ob.cast::<PyArray<PyList, Ix2>>()?;
         let data = unsafe { array.as_array_mut() };
         Ok(ArrayBlock::<V> {
             data,
@@ -85,7 +86,7 @@ unsafe impl<V> Sync for ArrayColumn<V> {}
 
 impl<V> PandasColumnObject for ArrayColumn<V>
 where
-    V: Send + ToPyObject,
+    V: Send + for<'a> IntoPyObject<'a> + Clone,
 {
     fn typecheck(&self, id: TypeId) -> bool {
         id == TypeId::of::<PyList>() || id == TypeId::of::<Option<PyList>>()
@@ -209,7 +210,7 @@ impl HasPandasColumn for Option<Vec<i64>> {
 }
 impl<V> ArrayColumn<V>
 where
-    V: Send + ToPyObject,
+    V: Send + for<'a> IntoPyObject<'a> + Clone,
 {
     pub fn partition(self, counts: usize) -> Vec<ArrayColumn<V>> {
         let mut partitions = vec![];
@@ -231,7 +232,7 @@ where
         let nvecs = self.lengths.len();
 
         if nvecs > 0 {
-            Python::with_gil(|py| -> Result<(), ConnectorXPythonError> {
+            Python::attach(|py| -> Result<(), ConnectorXPythonError> {
                 // allocation in python is not thread safe
                 let _guard = GIL_MUTEX
                     .lock()
@@ -242,7 +243,7 @@ where
                         let end = start + len;
                         unsafe {
                             // allocate and write in the same time
-                            let n = pyo3::types::PyList::new_bound(py, &self.buffer[start..end])
+                            let n = pyo3::types::PyList::new(py, self.buffer[start..end].to_vec())?
                                 .unbind();
                             *self.data.add(self.row_idx[i]) = PyList(n);
                         };

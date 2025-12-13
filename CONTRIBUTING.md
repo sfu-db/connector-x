@@ -96,6 +96,7 @@ MODIN_ENGINE=dask
   * Add the source to the [source_router](https://github.com/sfu-db/connector-x/blob/main/connectorx-python/src/source_router.rs)
   * Add the source to writing functions of each destination. Here are examples for [pandas](https://github.com/sfu-db/connector-x/blob/main/connectorx-python/src/pandas/mod.rs) and [arrow](https://github.com/sfu-db/connector-x/blob/main/connectorx-python/src/arrow.rs)
 * Add corresponding unit tests under `connectorx/tests` for Rust and `connectorx-python/connectorx/tests` for Python
+* Add the new source to the [docs](./docs/)
 
 **Please check out [here](https://sfu-db.github.io/connector-x/connectorx/#extending-connectorx) for more detailed implementation instructions of how to extend ConnectorX.**
 

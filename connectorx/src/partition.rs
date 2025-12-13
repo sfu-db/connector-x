@@ -7,7 +7,7 @@ use crate::sources::mssql::{mssql_config, FloatN, IntN, MsSQLTypeSystem};
 #[cfg(feature = "src_mysql")]
 use crate::sources::mysql::{MySQLSourceError, MySQLTypeSystem};
 #[cfg(feature = "src_oracle")]
-use crate::sources::oracle::{connect_oracle, OracleDialect, OracleSource};
+use crate::sources::oracle::{OracleDialect, OracleSource};
 #[cfg(feature = "src_postgres")]
 use crate::sources::postgres::{rewrite_tls_args, PostgresTypeSystem};
 #[cfg(feature = "src_trino")]
