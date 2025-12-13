@@ -436,117 +436,125 @@ document.write(`
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td class="text-center"><p>BOOL</p></td>
+<tr class="row-even"><td class="text-center"><p>OID</p></td>
+<td class="text-center"><p>u32</p></td>
+<td class="text-center"><p>a data type for identifying internal objects</p></td>
+</tr>
+<tr class="row-odd"><td class="text-center"><p>BOOL</p></td>
 <td class="text-center"><p>bool, boolean(nullable)</p></td>
 <td class="text-center"><p></p></td>
 </tr>
-<tr class="row-odd"><td class="text-center"><p>INT2</p></td>
+<tr class="row-even"><td class="text-center"><p>INT2</p></td>
 <td class="text-center"><p>int64, Int64(nullable)</p></td>
 <td class="text-center"><p></p></td>
 </tr>
-<tr class="row-even"><td class="text-center"><p>INT4</p></td>
+<tr class="row-odd"><td class="text-center"><p>INT4</p></td>
 <td class="text-center"><p>int64, Int64(nullable)</p></td>
 <td class="text-center"><p></p></td>
 </tr>
-<tr class="row-odd"><td class="text-center"><p>INT8</p></td>
+<tr class="row-even"><td class="text-center"><p>INT8</p></td>
 <td class="text-center"><p>int64, Int64(nullable)</p></td>
 <td class="text-center"><p></p></td>
 </tr>
-<tr class="row-even"><td class="text-center"><p>FLOAT4</p></td>
+<tr class="row-odd"><td class="text-center"><p>FLOAT4</p></td>
 <td class="text-center"><p>float64</p></td>
 <td class="text-center"><p></p></td>
 </tr>
-<tr class="row-odd"><td class="text-center"><p>FLOAT8</p></td>
+<tr class="row-even"><td class="text-center"><p>FLOAT8</p></td>
 <td class="text-center"><p>float64</p></td>
 <td class="text-center"><p></p></td>
 </tr>
-<tr class="row-even"><td class="text-center"><p>NUMERIC</p></td>
+<tr class="row-odd"><td class="text-center"><p>NUMERIC</p></td>
 <td class="text-center"><p>float64</p></td>
 <td class="text-center"><p>cannot support precision larger than 28</p></td>
 </tr>
-<tr class="row-odd"><td class="text-center"><p>TEXT</p></td>
+<tr class="row-even"><td class="text-center"><p>TEXT</p></td>
 <td class="text-center"><p>object</p></td>
 <td class="text-center"><p></p></td>
 </tr>
-<tr class="row-even"><td class="text-center"><p>BPCHAR</p></td>
+<tr class="row-odd"><td class="text-center"><p>BPCHAR</p></td>
 <td class="text-center"><p>object</p></td>
 <td class="text-center"><p></p></td>
 </tr>
-<tr class="row-odd"><td class="text-center"><p>VARCHAR</p></td>
+<tr class="row-even"><td class="text-center"><p>VARCHAR</p></td>
 <td class="text-center"><p>object</p></td>
 <td class="text-center"><p></p></td>
 </tr>
-<tr class="row-even"><td class="text-center"><p>CHAR</p></td>
+<tr class="row-odd"><td class="text-center"><p>CHAR</p></td>
 <td class="text-center"><p>object</p></td>
 <td class="text-center"><p></p></td>
 </tr>
-<tr class="row-odd"><td class="text-center"><p>BYTEA</p></td>
+<tr class="row-even"><td class="text-center"><p>BYTEA</p></td>
 <td class="text-center"><p>object</p></td>
 <td class="text-center"><p></p></td>
 </tr>
-<tr class="row-even"><td class="text-center"><p>DATE</p></td>
+<tr class="row-odd"><td class="text-center"><p>DATE</p></td>
 <td class="text-center"><p>datetime64[ns]</p></td>
 <td class="text-center"><p></p></td>
 </tr>
-<tr class="row-odd"><td class="text-center"><p>TIME</p></td>
+<tr class="row-even"><td class="text-center"><p>TIME</p></td>
 <td class="text-center"><p>object</p></td>
 <td class="text-center"><p></p></td>
 </tr>
-<tr class="row-even"><td class="text-center"><p>TIMESTAMP</p></td>
+<tr class="row-odd"><td class="text-center"><p>TIMESTAMP</p></td>
 <td class="text-center"><p>datetime64[ns]</p></td>
 <td class="text-center"><p></p></td>
 </tr>
-<tr class="row-odd"><td class="text-center"><p>TIMESTAMPZ</p></td>
+<tr class="row-even"><td class="text-center"><p>TIMESTAMPZ</p></td>
 <td class="text-center"><p>datetime64[ns]</p></td>
 <td class="text-center"><p></p></td>
 </tr>
-<tr class="row-even"><td class="text-center"><p>UUID</p></td>
+<tr class="row-odd"><td class="text-center"><p>UUID</p></td>
 <td class="text-center"><p>object</p></td>
 <td class="text-center"><p></p></td>
 </tr>
-<tr class="row-odd"><td class="text-center"><p>JSON</p></td>
+<tr class="row-even"><td class="text-center"><p>JSON</p></td>
 <td class="text-center"><p>object</p></td>
 <td class="text-center"><p></p></td>
 </tr>
-<tr class="row-even"><td class="text-center"><p>JSONB</p></td>
+<tr class="row-odd"><td class="text-center"><p>JSONB</p></td>
 <td class="text-center"><p>object</p></td>
 <td class="text-center"><p></p></td>
 </tr>
-<tr class="row-odd"><td class="text-center"><p>ENUM</p></td>
+<tr class="row-even"><td class="text-center"><p>ENUM</p></td>
 <td class="text-center"><p>object</p></td>
 <td class="text-center"><p>need to convert enum column to text manually (<code class="docutils literal notranslate"><span class="pre">::text</span></code>) when using <code class="docutils literal notranslate"><span class="pre">csv</span></code> and <code class="docutils literal notranslate"><span class="pre">cursor</span></code> protocol</p></td>
 </tr>
-<tr class="row-even"><td class="text-center"><p>ltree</p></td>
+<tr class="row-odd"><td class="text-center"><p>ltree</p></td>
 <td class="text-center"><p>object</p></td>
 <td class="text-center"><p>binary protocol supported only after Postgres version 13</p></td>
 </tr>
-<tr class="row-odd"><td class="text-center"><p>lquery</p></td>
+<tr class="row-even"><td class="text-center"><p>lquery</p></td>
 <td class="text-center"><p>object</p></td>
 <td class="text-center"><p>binary protocol supported only after Postgres version 13</p></td>
 </tr>
-<tr class="row-even"><td class="text-center"><p>ltxtquery</p></td>
+<tr class="row-odd"><td class="text-center"><p>ltxtquery</p></td>
 <td class="text-center"><p>object</p></td>
 <td class="text-center"><p>binary protocol supported only after Postgres version 13</p></td>
 </tr>
-<tr class="row-odd"><td class="text-center"><p>Inet</p></td>
+<tr class="row-even"><td class="text-center"><p>Inet</p></td>
 <td class="text-center"><p>object</p></td>
 <td class="text-center"><p></p></td>
 </tr>
-<tr class="row-even"><td class="text-center"><p>Vector</p></td>
+<tr class="row-odd"><td class="text-center"><p>Vector</p></td>
 <td class="text-center"><p>object</p></td>
 <td class="text-center"><p>list of f32</p></td>
 </tr>
-<tr class="row-odd"><td class="text-center"><p>HalfVec</p></td>
+<tr class="row-even"><td class="text-center"><p>HalfVec</p></td>
 <td class="text-center"><p>object</p></td>
 <td class="text-center"><p>list of f32</p></td>
 </tr>
-<tr class="row-even"><td class="text-center"><p>Bit</p></td>
+<tr class="row-odd"><td class="text-center"><p>Bit</p></td>
 <td class="text-center"><p>object</p></td>
 <td class="text-center"><p></p></td>
 </tr>
-<tr class="row-odd"><td class="text-center"><p>SparseVec</p></td>
+<tr class="row-even"><td class="text-center"><p>SparseVec</p></td>
 <td class="text-center"><p>object</p></td>
 <td class="text-center"><p>list of f32</p></td>
+</tr>
+<tr class="row-odd"><td class="text-center"><p>BOOL[]</p></td>
+<td class="text-center"><p>object</p></td>
+<td class="text-center"><p>list of bool</p></td>
 </tr>
 <tr class="row-even"><td class="text-center"><p>INT2[]</p></td>
 <td class="text-center"><p>object</p></td>
