@@ -20,7 +20,7 @@ jobs:
         python-version:
           [[310, "3.10"], [311, "3.11"], [312, "3.12"], [313, "3.13"], [314, "3.14"]]
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Set python version
         run: |
@@ -85,7 +85,7 @@ jobs:
           - os: "macos-15-intel"
             features: "--features integrated-auth-gssapi"
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - uses: ankane/setup-mysql@v1
         with:
@@ -132,7 +132,7 @@ jobs:
       matrix:
         python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - uses: ankane/setup-mysql@v1
         with:
@@ -196,7 +196,7 @@ jobs:
           - os: "macos-latest"
             artifact-prefix: "macos-arm"
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - uses: actions/setup-python@v5
         with:
