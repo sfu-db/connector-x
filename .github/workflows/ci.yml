@@ -109,24 +109,23 @@ jobs:
 
   python:
     runs-on: ubuntu-latest
-    container: ubuntu:24.04
+    # Note: No 'container' - we run directly on the VM to access Docker for Testcontainers
     strategy:
       matrix:
         python-version: ["3.14"]
     services:
-      # Label used to access the service container
+      # PostgreSQL and MySQL services for legacy tests
       postgres:
-        # Docker Hub image
         image: pgvector/pgvector:pg17
         env:
           POSTGRES_PASSWORD: postgres
-        # Set health checks to wait until postgres has started
+        ports:
+          - 5432:5432
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-      # mysql
       mysql:
         image: ghcr.io/wangxiaoying/mysql:latest
         env:
@@ -148,17 +147,34 @@ jobs:
         with:
             python-version: ${{ matrix.python-version }}
 
-      - name: Setup python env
-        run: | 
-          echo "$Python3_ROOT_DIR/bin" >> $GITHUB_PATH
-          echo $GITHUB_PATH
-
-      - name: Install tools
+      - name: Install system dependencies
         run: |
-          apt-get update
-          apt-get install -y wget curl postgresql-client build-essential pkg-config libssl-dev git sqlite3 libsqlite3-dev mysql-client libmysqlclient-dev libkrb5-dev libclang-dev libffi-dev
-        env:
-          DEBIAN_FRONTEND: noninteractive
+          sudo apt-get update
+          sudo apt-get install -y wget curl postgresql-client build-essential pkg-config libssl-dev git sqlite3 libsqlite3-dev mysql-client libmysqlclient-dev libkrb5-dev libclang-dev libffi-dev libaio1t64
+          
+          # Create symlink for libaio.so.1 (Oracle expects libaio.so.1, but Ubuntu 24.04 provides libaio.so.1t64)
+          sudo ln -sf /lib/x86_64-linux-gnu/libaio.so.1t64 /lib/x86_64-linux-gnu/libaio.so.1
+
+      - name: Install Oracle Instant Client
+        run: |
+          # Download Oracle Instant Client
+          mkdir -p /opt/oracle
+          cd /opt/oracle
+          wget https://download.oracle.com/otn_software/linux/instantclient/2340000/instantclient-basic-linux.x64-23.4.0.24.05.zip
+          wget https://download.oracle.com/otn_software/linux/instantclient/2340000/instantclient-sdk-linux.x64-23.4.0.24.05.zip
+          
+          # Unzip
+          sudo unzip -o instantclient-basic-linux.x64-23.4.0.24.05.zip -d /opt/oracle
+          sudo unzip -o instantclient-sdk-linux.x64-23.4.0.24.05.zip -d /opt/oracle
+          
+          # Set environment variables
+          echo "LD_LIBRARY_PATH=/opt/oracle/instantclient_23_4:$LD_LIBRARY_PATH" >> $GITHUB_ENV
+          echo "/opt/oracle/instantclient_23_4" >> $GITHUB_PATH
+
+      - name: Verify Docker access for Testcontainers
+        run: |
+          docker --version
+          docker ps
 
       - uses: Gr1N/setup-poetry@v9
 
@@ -189,9 +205,9 @@ jobs:
       - name: Seed the database
         run: just seed-db
         env:
-          POSTGRES_URL: "postgresql://postgres:postgres@postgres:5432/postgres"
+          POSTGRES_URL: "postgresql://postgres:postgres@localhost:5432/postgres"
           SQLITE_URL: "sqlite:///tmp/test.db"
-          MYSQL_HOST: mysql
+          MYSQL_HOST: localhost
           MYSQL_PORT: 3306
           MYSQL_DB: mysql
           MYSQL_USER: root
@@ -215,7 +231,8 @@ jobs:
       - name: Test python
         run: just test-python
         env:
-          POSTGRES_URL: "postgresql://postgres:postgres@postgres:5432/postgres"
+          POSTGRES_URL: "postgresql://postgres:postgres@localhost:5432/postgres"
           SQLITE_URL: "sqlite:///tmp/test.db"
-          MYSQL_URL: "mysql://root:mysql@mysql:3306/mysql"
+          MYSQL_URL: "mysql://root:mysql@localhost:3306/mysql"
           SQLITE3_STATIC: 1
+          # Oracle tests use Testcontainers - Docker is automatically detected
