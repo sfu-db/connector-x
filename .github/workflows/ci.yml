@@ -150,7 +150,23 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y wget curl postgresql-client build-essential pkg-config libssl-dev git sqlite3 libsqlite3-dev mysql-client libmysqlclient-dev libkrb5-dev libclang-dev libffi-dev
+          sudo apt-get install -y wget curl postgresql-client build-essential pkg-config libssl-dev git sqlite3 libsqlite3-dev mysql-client libmysqlclient-dev libkrb5-dev libclang-dev libffi-dev libaio1
+
+      - name: Install Oracle Instant Client
+        run: |
+          # Download Oracle Instant Client
+          mkdir -p /opt/oracle
+          cd /opt/oracle
+          wget https://download.oracle.com/otn_software/linux/instantclient/2340000/instantclient-basic-linux.x64-23.4.0.24.05.zip
+          wget https://download.oracle.com/otn_software/linux/instantclient/2340000/instantclient-sdk-linux.x64-23.4.0.24.05.zip
+          
+          # Unzip
+          sudo unzip -o instantclient-basic-linux.x64-23.4.0.24.05.zip -d /opt/oracle
+          sudo unzip -o instantclient-sdk-linux.x64-23.4.0.24.05.zip -d /opt/oracle
+          
+          # Set environment variables
+          echo "LD_LIBRARY_PATH=/opt/oracle/instantclient_23_4:$LD_LIBRARY_PATH" >> $GITHUB_ENV
+          echo "/opt/oracle/instantclient_23_4" >> $GITHUB_PATH
 
       - name: Verify Docker access for Testcontainers
         run: |
