@@ -28,6 +28,11 @@ test-feature-gate:
     cargo c --features src_trino
     cargo c --features dst_arrow
 
+cleanup:
+    cargo clean
+    cd connectorx-python && cargo clean
+    rm connectorx-python/connectorx/connectorx*.so
+
 bootstrap-python:
     cd connectorx-python && poetry install
 
