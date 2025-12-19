@@ -31,7 +31,6 @@ def test_oracle_complex_join(oracle_url: str) -> None:
     assert_frame_equal(df, expected, check_names=True)
 
 
-@pytest.mark.xfail(reason="NumDecimal conversion to Pandas not yet implemented")
 def test_oracle_aggregation(oracle_url: str) -> None:
     query = "select avg(test_int), test_char from test_table group by test_char"
     df = read_sql(oracle_url, query)
@@ -45,7 +44,6 @@ def test_oracle_aggregation(oracle_url: str) -> None:
     assert_frame_equal(df, expected, check_names=True)
 
 
-@pytest.mark.xfail(reason="NumDecimal conversion to Pandas not yet implemented")
 def test_oracle_partition_on_aggregation(oracle_url: str) -> None:
     query = "select sum(test_int) cid, test_char from test_table group by test_char"
     df = read_sql(oracle_url, query, partition_on="cid", partition_num=3)
@@ -60,7 +58,6 @@ def test_oracle_partition_on_aggregation(oracle_url: str) -> None:
     assert_frame_equal(df, expected, check_names=True)
 
 
-@pytest.mark.xfail(reason="NumDecimal conversion to Pandas not yet implemented")
 def test_oracle_aggregation2(oracle_url: str) -> None:
     query = "select DISTINCT(test_char) from test_table"
     df = read_sql(oracle_url, query)
@@ -73,7 +70,6 @@ def test_oracle_aggregation2(oracle_url: str) -> None:
     assert_frame_equal(df, expected, check_names=True)
 
 
-@pytest.mark.xfail(reason="NumDecimal conversion to Pandas not yet implemented")
 def test_oracle_partition_on_aggregation2(oracle_url: str) -> None:
     query = "select MAX(test_int) MAX, MIN(test_int) MIN from test_table"
     df = read_sql(oracle_url, query, partition_on="MAX", partition_num=2)
@@ -211,7 +207,6 @@ def test_oracle_with_partition_and_selection(oracle_url: str) -> None:
     assert_frame_equal(df, expected, check_names=True)
 
 
-@pytest.mark.xfail(reason="NumDecimal conversion to Pandas not yet implemented")
 def test_oracle_with_partition_and_spja(oracle_url: str) -> None:
     query = "select test_table.test_int cid, SUM(test_types.test_num_float) sfloat from test_table, test_types where test_table.test_int=test_types.test_num_int group by test_table.test_int"
     df = read_sql(oracle_url, query, partition_on="cid", partition_num=2)
@@ -225,7 +220,6 @@ def test_oracle_with_partition_and_spja(oracle_url: str) -> None:
     assert_frame_equal(df, expected, check_names=True)
 
 
-@pytest.mark.xfail(reason="NumDecimal conversion to Pandas not yet implemented")
 def test_oracle_types(oracle_url: str) -> None:
     query = "SELECT * FROM test_types"
     df = read_sql(oracle_url, query)
@@ -348,5 +342,5 @@ def test_oracle_round_function(oracle_url: str) -> None:
     assert_frame_equal(df, expected, check_names=True)
 
 
-def test_connection_url(oracle_url: str) -> None:
+def test_oralce_connection_url(oracle_url: str) -> None:
     test_oracle_round_function(ConnectionUrl(oracle_url))
