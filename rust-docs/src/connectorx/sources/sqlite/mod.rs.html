@@ -277,7 +277,7 @@
 <a href=#277 id=277 data-nosnippet>277</a>    }
 <a href=#278 id=278 data-nosnippet>278</a>
 <a href=#279 id=279 data-nosnippet>279</a>    <span class="attr">#[throws(SQLiteSourceError)]
-<a href=#280 id=280 data-nosnippet>280</a>    </span><span class="kw">fn </span>next_loc(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; (<span class="kw-2">&amp;</span>Row, usize) {
+<a href=#280 id=280 data-nosnippet>280</a>    </span><span class="kw">fn </span>next_loc(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; (<span class="kw-2">&amp;</span>Row&lt;<span class="lifetime">'_</span>&gt;, usize) {
 <a href=#281 id=281 data-nosnippet>281</a>        <span class="self">self</span>.current_consumed = <span class="bool-val">true</span>;
 <a href=#282 id=282 data-nosnippet>282</a>        <span class="kw">let </span>row: <span class="kw-2">&amp;</span>Row = (<span class="kw-2">*</span><span class="self">self</span>.rows)
 <a href=#283 id=283 data-nosnippet>283</a>            .get()
