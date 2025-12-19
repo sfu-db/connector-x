@@ -151,6 +151,9 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y wget curl postgresql-client build-essential pkg-config libssl-dev git sqlite3 libsqlite3-dev mysql-client libmysqlclient-dev libkrb5-dev libclang-dev libffi-dev libaio1t64
+          
+          # Create symlink for libaio.so.1 (Oracle expects libaio.so.1, but Ubuntu 24.04 provides libaio.so.1t64)
+          sudo ln -sf /lib/x86_64-linux-gnu/libaio.so.1t64 /lib/x86_64-linux-gnu/libaio.so.1
 
       - name: Install Oracle Instant Client
         run: |
