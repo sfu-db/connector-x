@@ -61,9 +61,9 @@ impl<'py> PandasDestination<'py> {
 
     pub fn result(self, py: Python<'py>) -> Result<Bound<'py, PyAny>> {
         #[throws(ConnectorXPythonError)]
-        fn to_list<'py, T>(py: Python<'py>, arr: Vec<T>) -> Bound<'py, PyList> 
-        where 
-            T: IntoPyObject<'py> 
+        fn to_list<'py, T>(py: Python<'py>, arr: Vec<T>) -> Bound<'py, PyList>
+        where
+            T: IntoPyObject<'py>,
         {
             PyList::new(py, arr)?
         }

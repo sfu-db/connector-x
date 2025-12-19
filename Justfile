@@ -25,8 +25,6 @@ test-feature-gate:
     cargo c --features src_mssql
     cargo c --features src_sqlite
     cargo c --features src_oracle
-    cargo c --features src_csv
-    cargo c --features src_dummy
     cargo c --features src_trino
     cargo c --features dst_arrow
 

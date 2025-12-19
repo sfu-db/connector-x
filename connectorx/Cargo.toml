@@ -102,7 +102,7 @@ src_postgres = [
   "cidr-02",
   "pgvector",
 ]
-src_sqlite = ["rusqlite", "r2d2_sqlite", "fallible-streaming-iterator", "r2d2", "urlencoding"]
+src_sqlite = ["rusqlite", "r2d2_sqlite", "fallible-streaming-iterator", "r2d2", "urlencoding", "rust_decimal"]
 src_trino = ["prusto", "uuid", "urlencoding", "rust_decimal", "tokio", "num-traits", "serde"]
 federation = ["j4rs"]
 fed_exec = ["datafusion", "tokio"]
