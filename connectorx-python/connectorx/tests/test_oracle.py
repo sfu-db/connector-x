@@ -223,7 +223,6 @@ def test_oracle_with_partition_and_spja(oracle_url: str) -> None:
 def test_oracle_types(oracle_url: str) -> None:
     query = "SELECT * FROM test_types"
     df = read_sql(oracle_url, query)
-    print(df)
     expected = pd.DataFrame(
         data={
             "TEST_NUM_INT": pd.Series([1, 5, 5, None], dtype="Int64"),
@@ -294,7 +293,6 @@ def test_oracle_empty_result(oracle_url: str) -> None:
 def test_oracle_empty_result_on_partition(oracle_url: str) -> None:
     query = "SELECT * FROM test_table where test_int < -100"
     df = read_sql(oracle_url, query, partition_on="test_int", partition_num=3)
-    print(df)
     expected = pd.DataFrame(
         data={
             "TEST_INT": pd.Series([], dtype="Int64"),
