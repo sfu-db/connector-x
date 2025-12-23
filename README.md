@@ -168,7 +168,7 @@ BibTeX entry:
 
 # Contributors
 
-<!-- readme: contributors -start -->
+<!-- readme: collaborators,contributors -start -->
 <table>
 	<tbody>
 		<tr>
@@ -613,4 +613,4 @@ BibTeX entry:
 		</tr>
 	<tbody>
 </table>
-<!-- readme: contributors -end -->
+<!-- readme: collaborators,contributors -end -->
