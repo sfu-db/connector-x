@@ -18,7 +18,7 @@ license = "MIT"
 maintainers = ["Weiyuan Wu <youngw@sfu.ca>"] 
 name = "connectorx" 
 readme = "README.md" # Markdown files are supported
-version = "0.4.5-alpha.2" 
+version = "0.4.5" 
 
 [project]
 name = "connectorx" # Target file name of maturin build
@@ -62,6 +62,7 @@ polars = ">=0.20"
 pyarrow = ">=22"
 pytest = "^9.0"
 pytest-benchmark = "^5.2"
+testcontainers = {extras = ["oracle-free"], version = "^4.0"}
 twine = "^3.4.1"
 
 [tool.pytest.ini_options]
