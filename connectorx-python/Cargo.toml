@@ -2,7 +2,7 @@
 authors = ["Weiyuan Wu <youngw@sfu.ca>"]
 edition = "2018"
 name = "connectorx-python"
-version = "0.4.5-alpha.2"
+version = "0.4.5"
 license = "MIT"
 readme = "README.md"
 
