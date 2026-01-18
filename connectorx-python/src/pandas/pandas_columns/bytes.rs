@@ -199,8 +199,7 @@ impl BytesColumn {
                         unsafe {
                             // allocate and write in the same time
                             let b =
-                                pyo3::types::PyBytes::new(py, &self.bytes_buf[start..end])
-                                    .unbind();
+                                pyo3::types::PyBytes::new(py, &self.bytes_buf[start..end]).unbind();
                             *self.data.add(self.row_idx[i]) = PyBytes(b);
                         };
                         start = end;
