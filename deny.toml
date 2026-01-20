@@ -9,35 +9,7 @@ db-urls = ["https://github.com/rustsec/advisory-db"]
 # Advisories to ignore - these are from transitive dependencies that require
 # upstream updates and cannot be fixed directly in this project.
 ignore = [
-    # ansi_term - unmaintained
-    # Path: tiberius -> libgssapi-sys -> bindgen v0.59 -> clap v2
-    # Requires: tiberius to update to newer libgssapi which uses newer bindgen
-    "RUSTSEC-2021-0139",
 
-    # atty - unmaintained
-    # Path: tiberius -> libgssapi-sys -> bindgen v0.59 -> clap v2/env_logger v0.9
-    # Requires: same as ansi_term - tiberius needs to update libgssapi dependency
-    "RUSTSEC-2024-0375",
-
-    # encoding - unmaintained
-    # Path: tiberius v0.7
-    # Requires: tiberius v0.12+ but that has breaking API changes (uuid support)
-    "RUSTSEC-2021-0153",
-
-    # instant - unmaintained
-    # Path: bb8 v0.7 -> parking_lot v0.11
-    # Requires: bb8 v0.9+ but that requires tiberius v0.12+
-    "RUSTSEC-2024-0384",
-
-    # paste - unmaintained
-    # Path: oracle, prusto
-    # Requires: upstream oracle and prusto crates to migrate to pastey
-    "RUSTSEC-2024-0436",
-
-    # rustls-pemfile - unmaintained (archived Aug 2025)
-    # Path: prusto -> reqwest v0.11, gcp-bigquery-client -> tonic/yup-oauth2
-    # Requires: upstream prusto and gcp-bigquery-client to update dependencies
-    "RUSTSEC-2025-0134",
 ]
 
 [licenses]
