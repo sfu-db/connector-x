@@ -48,8 +48,7 @@ built = {version = "0.5", features = ["chrono"]}
 pyo3-build-config = {version = "0.22", features = ["resolve-config"]}
 
 [dev-dependencies]
-criterion = "0.3"
-criterion-macro = "0.3"
+criterion = "0.5"
 iai = "0.1"
 pprof = {version = "0.5", features = ["flamegraph", "criterion", "protobuf"]}
 rayon = "1"
