@@ -3,7 +3,7 @@ use connectorx::{
     source_router::parse_source,
     sql::CXQuery,
 };
-use fehler::throw;
+use culpa::throw;
 use pyo3::prelude::*;
 use pyo3::{exceptions::PyValueError, PyResult};
 

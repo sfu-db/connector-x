@@ -2,7 +2,7 @@ use crate::{prelude::*, sql::CXQuery};
 use arrow::record_batch::RecordBatch;
 use datafusion::datasource::MemTable;
 use datafusion::prelude::*;
-use fehler::throws;
+use culpa::throws;
 use log::debug;
 use rayon::prelude::*;
 use std::collections::HashMap;

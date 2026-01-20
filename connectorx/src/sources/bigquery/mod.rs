@@ -12,7 +12,7 @@ use crate::{
 };
 use anyhow::anyhow;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
-use fehler::{throw, throws};
+use culpa::{throw, throws};
 use gcp_bigquery_client::{
     model::{
         get_query_results_parameters::GetQueryResultsParameters,

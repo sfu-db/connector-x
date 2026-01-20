@@ -1,6 +1,6 @@
 use super::errors::TrinoSourceError;
 use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
-use fehler::{throw, throws};
+use culpa::{throw, throws};
 use prusto::{PrestoFloat, PrestoInt, PrestoTy};
 use std::convert::TryFrom;
 

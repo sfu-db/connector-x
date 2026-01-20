@@ -3,7 +3,7 @@ use super::{
 };
 use crate::errors::ConnectorXPythonError;
 use anyhow::anyhow;
-use fehler::throws;
+use culpa::throws;
 use ndarray::{ArrayViewMut2, Axis, Ix2};
 use numpy::{PyArray, PyArrayMethods};
 use pyo3::{PyAny, PyResult};

@@ -9,7 +9,7 @@ use crate::data_order::DataOrder;
 use crate::errors::{ConnectorXError, Result};
 use crate::sql::CXQuery;
 use chrono::{offset, DateTime, Utc};
-use fehler::{throw, throws};
+use culpa::{throw, throws};
 use num_traits::cast::FromPrimitive;
 
 pub struct DummySource {

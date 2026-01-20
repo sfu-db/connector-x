@@ -13,7 +13,7 @@ use arrow::array::{
 use arrow::datatypes::Field;
 use arrow::datatypes::{DataType as ArrowDataType, TimeUnit};
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Timelike, Utc};
-use fehler::throws;
+use culpa::throws;
 use rust_decimal::Decimal;
 /// Associate arrow builder with native type
 pub trait ArrowAssoc {

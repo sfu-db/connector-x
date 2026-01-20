@@ -6,7 +6,7 @@ use super::{
 use crate::constants::PYSTRING_BUFFER_SIZE;
 use crate::errors::ConnectorXPythonError;
 use anyhow::anyhow;
-use fehler::throws;
+use culpa::throws;
 use itertools::Itertools;
 use ndarray::{ArrayViewMut2, Axis, Ix2};
 use numpy::{PyArray, PyArrayMethods};

@@ -9,7 +9,7 @@ use super::{
 use crate::errors::{ConnectorXPythonError, Result};
 use anyhow::anyhow;
 use connectorx::prelude::*;
-use fehler::{throw, throws};
+use culpa::{throw, throws};
 use itertools::Itertools;
 use numpy::{PyArray1, PyArray2};
 use pyo3::{

@@ -4,7 +4,7 @@ use super::{
 use crate::errors::ConnectorXPythonError;
 use anyhow::anyhow;
 use chrono::{DateTime, Utc};
-use fehler::throws;
+use culpa::throws;
 use ndarray::{ArrayViewMut2, Axis, Ix2};
 use numpy::{PyArray, PyArrayMethods};
 use pyo3::{PyAny, PyResult};

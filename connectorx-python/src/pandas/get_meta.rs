@@ -23,7 +23,7 @@ use connectorx::{
     },
     sql::CXQuery,
 };
-use fehler::throws;
+use culpa::throws;
 use log::debug;
 use postgres::NoTls;
 use postgres_openssl::MakeTlsConnector;

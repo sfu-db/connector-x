@@ -16,7 +16,7 @@ use crate::sources::trino::TrinoDialect;
 use crate::sql::get_partition_range_query_sep;
 use crate::sql::{get_partition_range_query, single_col_partition_query, CXQuery};
 use anyhow::anyhow;
-use fehler::{throw, throws};
+use culpa::{throw, throws};
 #[cfg(feature = "src_bigquery")]
 use gcp_bigquery_client;
 #[cfg(feature = "src_mysql")]

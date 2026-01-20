@@ -65,7 +65,7 @@ macro_rules! impl_typesystem {
                     $(
                         $TS::$V(false) => Ok(()),
                     )+
-                    _ => fehler::throw!($crate::errors::ConnectorXError::TypeCheckFailed(format!("{:?}", ts), std::any::type_name::<$NT>()))
+                    _ => culpa::throw!($crate::errors::ConnectorXError::TypeCheckFailed(format!("{:?}", ts), std::any::type_name::<$NT>()))
                 }
             }
         }
@@ -76,7 +76,7 @@ macro_rules! impl_typesystem {
                     $(
                         $TS::$V(true) => Ok(()),
                     )+
-                    _ => fehler::throw!($crate::errors::ConnectorXError::TypeCheckFailed(format!("{:?}", ts), std::any::type_name::<$NT>()))
+                    _ => culpa::throw!($crate::errors::ConnectorXError::TypeCheckFailed(format!("{:?}", ts), std::any::type_name::<$NT>()))
                 }
             }
         }
@@ -188,7 +188,7 @@ macro_rules! impl_transport {
                     $TSS::$V1(false) => Ok($TSD::$V2(false)),
                 )*
                 #[allow(unreachable_patterns)]
-                _ => fehler::throw!($crate::errors::ConnectorXError::NoConversionRule(
+                _ => culpa::throw!($crate::errors::ConnectorXError::NoConversionRule(
                     format!("{:?}", ts), format!("{}", std::any::type_name::<Self::TSD>())
                 ))
             }
@@ -219,7 +219,7 @@ macro_rules! impl_transport {
                     }
                 )*
                 #[allow(unreachable_patterns)]
-                _ => fehler::throw!($crate::errors::ConnectorXError::NoConversionRule(
+                _ => culpa::throw!($crate::errors::ConnectorXError::NoConversionRule(
                     format!("{:?}", ts1), format!("{:?}", ts1))
                 )
             }
@@ -248,7 +248,7 @@ macro_rules! impl_transport {
                     }
                 )*
                 #[allow(unreachable_patterns)]
-                _ => fehler::throw!($crate::errors::ConnectorXError::NoConversionRule(
+                _ => culpa::throw!($crate::errors::ConnectorXError::NoConversionRule(
                     format!("{:?}", ts1), format!("{:?}", ts1))
                 )
             }

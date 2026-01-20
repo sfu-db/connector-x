@@ -9,7 +9,7 @@ use super::{PartitionParser, Produce, Source, SourcePartition};
 use crate::{data_order::DataOrder, errors::ConnectorXError, sql::CXQuery};
 use anyhow::anyhow;
 use chrono::{DateTime, Utc};
-use fehler::{throw, throws};
+use culpa::{throw, throws};
 #[cfg(feature = "src_csv")]
 use regex::{Regex, RegexBuilder};
 use std::collections::HashSet;

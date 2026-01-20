@@ -18,7 +18,7 @@ use bb8::{Pool, PooledConnection};
 use bb8_tiberius::ConnectionManager;
 use chrono::{DateTime, Utc};
 use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
-use fehler::{throw, throws};
+use culpa::{throw, throws};
 use futures::StreamExt;
 use log::debug;
 use owning_ref::OwningHandle;

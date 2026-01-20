@@ -2,7 +2,7 @@ use crate::{
     constants::{CX_REWRITER_PATH, J4RS_BASE_PATH},
     prelude::*,
 };
-use fehler::throws;
+use culpa::throws;
 use j4rs::{ClasspathEntry, Instance, InvocationArg, Jvm, JvmBuilder};
 use log::debug;
 use std::collections::HashMap;

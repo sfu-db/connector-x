@@ -14,7 +14,7 @@ use crate::typesystem::{Realize, TypeAssoc, TypeSystem};
 use anyhow::anyhow;
 use arrow::{datatypes::Schema, record_batch::RecordBatch};
 use arrow_assoc::ArrowAssoc;
-use fehler::{throw, throws};
+use culpa::{throw, throws};
 use funcs::{FFinishBuilder, FNewBuilder, FNewField};
 use itertools::Itertools;
 use std::{

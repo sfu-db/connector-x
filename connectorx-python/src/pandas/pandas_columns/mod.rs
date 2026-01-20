@@ -12,7 +12,7 @@ pub use crate::pandas::pandas_columns::array::{ArrayBlock, PyList};
 pub use crate::pandas::pandas_columns::bytes::{BytesBlock, PyBytes};
 pub use boolean::BooleanBlock;
 pub use datetime::DateTimeBlock;
-use fehler::throw;
+use culpa::throw;
 pub use float64::Float64Block;
 pub use int64::Int64Block;
 use pyo3::{exceptions::PyRuntimeError, intern, types::PyAnyMethods, PyAny, PyResult};

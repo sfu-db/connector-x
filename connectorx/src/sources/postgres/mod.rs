@@ -20,7 +20,7 @@ use crate::{
 use anyhow::anyhow;
 use chrono::{DateTime, FixedOffset, NaiveDate, NaiveDateTime, NaiveTime, Utc};
 use csv::{ReaderBuilder, StringRecord, StringRecordsIntoIter};
-use fehler::{throw, throws};
+use culpa::{throw, throws};
 use hex::decode;
 use postgres::{
     binary_copy::{BinaryCopyOutIter, BinaryCopyOutRow},

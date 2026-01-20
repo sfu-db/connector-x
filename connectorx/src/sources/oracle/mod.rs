@@ -14,7 +14,7 @@ use crate::{
     utils::DummyBox,
 };
 use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
-use fehler::{throw, throws};
+use culpa::{throw, throws};
 use log::debug;
 use owning_ref::OwningHandle;
 use r2d2::{Pool, PooledConnection};

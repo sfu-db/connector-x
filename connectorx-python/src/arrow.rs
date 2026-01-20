@@ -3,7 +3,7 @@ use anyhow::anyhow;
 use arrow::record_batch::RecordBatch;
 use connectorx::source_router::SourceConn;
 use connectorx::{prelude::*, sql::CXQuery};
-use fehler::throws;
+use culpa::throws;
 use libc::uintptr_t;
 use pyo3::pyclass;
 use pyo3::{prelude::*, IntoPyObjectExt};

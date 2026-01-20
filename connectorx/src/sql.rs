@@ -1,7 +1,7 @@
 use crate::errors::ConnectorXError;
 #[cfg(feature = "src_oracle")]
 use crate::sources::oracle::OracleDialect;
-use fehler::{throw, throws};
+use culpa::{throw, throws};
 use log::{debug, trace, warn};
 use sqlparser::ast::{
     BinaryOperator, Expr, Function, FunctionArg, FunctionArgExpr, Ident, ObjectName, Query, Select,

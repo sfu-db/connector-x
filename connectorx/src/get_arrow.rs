@@ -10,7 +10,7 @@ use crate::{
     prelude::*,
     sql::CXQuery,
 };
-use fehler::{throw, throws};
+use culpa::{throw, throws};
 use log::debug;
 #[cfg(feature = "src_postgres")]
 use postgres::NoTls;

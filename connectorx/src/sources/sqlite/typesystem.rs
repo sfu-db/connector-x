@@ -1,6 +1,6 @@
 use super::errors::SQLiteSourceError;
 use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
-use fehler::{throw, throws};
+use culpa::{throw, throws};
 use rusqlite::types::Type;
 use std::convert::TryFrom;
 

@@ -19,7 +19,7 @@ bytes = "1.4"
 chrono = "0.4"
 connectorx = {path = "../connectorx", default-features = false}
 env_logger = "0.9"
-fehler = "1"
+culpa = "1"
 itertools = "0.14"
 lazy_static = "1.4"
 libc = "0.2"

@@ -1,7 +1,7 @@
 use std::{marker::PhantomData, sync::Arc};
 
 use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
-use fehler::{throw, throws};
+use culpa::{throw, throws};
 use prusto::{auth::Auth, Client, ClientBuilder, DataSet, Presto, Row};
 use serde_json::Value;
 use sqlparser::dialect::{Dialect, GenericDialect};

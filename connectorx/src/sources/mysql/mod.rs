@@ -13,7 +13,7 @@ use crate::{
 };
 use anyhow::anyhow;
 use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
-use fehler::{throw, throws};
+use culpa::{throw, throws};
 use log::{debug, warn};
 use r2d2::{Pool, PooledConnection};
 use r2d2_mysql::{

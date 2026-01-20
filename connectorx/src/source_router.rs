@@ -1,7 +1,7 @@
 use crate::constants::CONNECTORX_PROTOCOL;
 use crate::errors::{ConnectorXError, Result};
 use anyhow::anyhow;
-use fehler::throws;
+use culpa::throws;
 use std::convert::TryFrom;
 use url::Url;
 
