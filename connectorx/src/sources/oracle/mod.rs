@@ -16,7 +16,7 @@ use crate::{
 use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
 use culpa::{throw, throws};
 use log::debug;
-use safer_owning_ref::OwningHandle;
+use owning_ref::OwningHandle;
 use r2d2::{Pool, PooledConnection};
 use r2d2_oracle::oracle::ResultSet;
 use r2d2_oracle::{

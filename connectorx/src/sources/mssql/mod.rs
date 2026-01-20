@@ -21,7 +21,7 @@ use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
 use culpa::{throw, throws};
 use futures::StreamExt;
 use log::debug;
-use safer_owning_ref::OwningHandle;
+use owning_ref::OwningHandle;
 use rust_decimal::Decimal;
 use sqlparser::dialect::MsSqlDialect;
 use std::collections::HashMap;
@@ -30,7 +30,7 @@ use tiberius::{AuthMethod, Config, EncryptionLevel, QueryItem, QueryStream, Row}
 use tokio::runtime::{Handle, Runtime};
 use url::Url;
 use urlencoding::decode;
-use uuid_old::Uuid;
+use uuid::Uuid;
 
 type Conn<'a> = PooledConnection<'a, ConnectionManager>;
 pub struct MsSQLSource {
