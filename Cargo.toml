@@ -11,3 +11,8 @@ lto = true
 arrow = {version = "54", features = ["prettyprint", "ffi"]}
 polars = {version = "0.49", features=["dtype-u8", "dtype-u16", "lazy"]}
 polars-arrow = {version = "0.49"}
+
+[patch.crates-io]
+tiberius = {git = "https://github.com/fathom-io/tiberius", rev = "59db579"}
+oracle = {git = "https://github.com/fathom-io/rust-oracle", rev = "0b0e293"}
+prusto = {git = "https://github.com/fathom-io/prusto", rev = "5e71e59"}
