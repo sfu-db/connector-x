@@ -16,7 +16,7 @@ use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
 use fallible_streaming_iterator::FallibleStreamingIterator;
 use culpa::{throw, throws};
 use log::debug;
-use owning_ref::OwningHandle;
+use safer_owning_ref::OwningHandle;
 use r2d2::{Pool, PooledConnection};
 use r2d2_sqlite::SqliteConnectionManager;
 use rusqlite::{Row, Rows, Statement};

@@ -21,7 +21,7 @@ use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
 use culpa::{throw, throws};
 use futures::StreamExt;
 use log::debug;
-use owning_ref::OwningHandle;
+use safer_owning_ref::OwningHandle;
 use rust_decimal::Decimal;
 use sqlparser::dialect::MsSqlDialect;
 use std::collections::HashMap;

@@ -18,7 +18,7 @@ rayon = "1"
 sqlparser = "0.37"
 thiserror = "1"
 url = "2"
-owning_ref = "0.4"
+safer_owning_ref = "0.5"
 serde_json = "1"
 chrono = "0.4"
 
