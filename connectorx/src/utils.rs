@@ -1,5 +1,3 @@
-use anyhow::Result;
-use rust_decimal::Decimal;
 use std::ops::{Deref, DerefMut};
 
 pub struct DummyBox<T>(pub T);
@@ -18,7 +16,8 @@ impl<T> DerefMut for DummyBox<T> {
     }
 }
 
-pub fn decimal_to_i128(mut v: Decimal, scale: u32) -> Result<i128> {
+#[cfg(feature = "dst_arrow")]
+pub fn decimal_to_i128(mut v: rust_decimal::Decimal, scale: u32) -> anyhow::Result<i128> {
     v.rescale(scale);
 
     let v_scale = v.scale();
