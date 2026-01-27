@@ -551,3 +551,80 @@ def test_mssql_offset(mssql_url: str) -> None:
 )
 def test_mssql_connection_url(mssql_url: str) -> None:
     test_mssql_offset(ConnectionUrl(mssql_url))
+
+
+@pytest.mark.skipif(
+    not os.environ.get("MSSQL_URL"), reason="Test mssql only when `MSSQL_URL` is set"
+)
+def test_mssql_decimal_arrow(mssql_url: str) -> None:
+    """Test that DECIMAL/NUMERIC types return as Decimal128 in Arrow."""
+    import pyarrow as pa
+    from decimal import Decimal
+
+    query = "SELECT test_new_decimal, test_decimal FROM test_types"
+    table = read_sql(mssql_url, query, return_type="arrow")
+
+    # Verify schema - should be Decimal128
+    assert table.schema.field('test_new_decimal').type == pa.decimal128(38, 10)
+    assert table.schema.field('test_decimal').type == pa.decimal128(38, 10)
+
+    # Verify values
+    df = table.to_pandas()
+    assert df['test_new_decimal'][0] == Decimal('1.1')
+    assert df['test_new_decimal'][1] == Decimal('2.2')
+    assert df['test_new_decimal'][2] is None or pd.isna(df['test_new_decimal'][2])
+
+    assert df['test_decimal'][0] == Decimal('1')
+    assert df['test_decimal'][1] == Decimal('2')
+    assert df['test_decimal'][2] is None or pd.isna(df['test_decimal'][2])
+
+
+@pytest.mark.skipif(
+    not os.environ.get("MSSQL_URL"), reason="Test mssql only when `MSSQL_URL` is set"
+)
+def test_mssql_decimal_arrow_stream(mssql_url: str) -> None:
+    """Test that DECIMAL/NUMERIC types return as Decimal128 in ArrowStream."""
+    import pyarrow as pa
+    from decimal import Decimal
+
+    query = "SELECT test_new_decimal, test_decimal FROM test_types"
+    reader = read_sql(mssql_url, query, return_type="arrow_stream", batch_size=10)
+
+    batches = list(reader)
+    table = pa.Table.from_batches(batches)
+
+    # Verify schema - should be Decimal128
+    assert table.schema.field('test_new_decimal').type == pa.decimal128(38, 10)
+    assert table.schema.field('test_decimal').type == pa.decimal128(38, 10)
+
+    # Verify values
+    df = table.to_pandas()
+    assert df['test_new_decimal'][0] == Decimal('1.1')
+    assert df['test_new_decimal'][1] == Decimal('2.2')
+    assert df['test_new_decimal'][2] is None or pd.isna(df['test_new_decimal'][2])
+
+    assert df['test_decimal'][0] == Decimal('1')
+    assert df['test_decimal'][1] == Decimal('2')
+    assert df['test_decimal'][2] is None or pd.isna(df['test_decimal'][2])
+
+
+@pytest.mark.skipif(
+    not os.environ.get("MSSQL_URL"), reason="Test mssql only when `MSSQL_URL` is set"
+)
+def test_mssql_decimal_pandas_unchanged(mssql_url: str) -> None:
+    """Test that DECIMAL/NUMERIC types still return as float in Pandas (default, backward compatibility)."""
+    query = "SELECT test_new_decimal, test_decimal FROM test_types"
+    df = read_sql(mssql_url, query)  # Default return_type="pandas"
+
+    # Verify that Pandas still uses float (backward compatibility)
+    assert df['test_new_decimal'].dtype == 'float64'
+    assert df['test_decimal'].dtype == 'float64'
+
+    # Verify values (with float precision limitations)
+    assert abs(df['test_new_decimal'][0] - 1.1) < 0.01
+    assert abs(df['test_new_decimal'][1] - 2.2) < 0.01
+    assert pd.isna(df['test_new_decimal'][2])
+
+    assert df['test_decimal'][0] == 1.0
+    assert df['test_decimal'][1] == 2.0
+    assert pd.isna(df['test_decimal'][2])
