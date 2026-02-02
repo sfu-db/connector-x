@@ -25,7 +25,7 @@ chrono = "0.4"
 arrow = {workspace = true, optional = true}
 polars = {workspace = true, optional = true, features=["dtype-u8", "dtype-u16", "lazy"]}
 polars-arrow = {workspace = true, optional = true}
-bb8 = {version = "0.7", optional = true}
+bb8 = {version = "0.9", optional = true}
 bb8-tiberius = {version = "0.8", optional = true}
 csv = {version = "1", optional = true}
 fallible-streaming-iterator = {version = "0.1", optional = true}
