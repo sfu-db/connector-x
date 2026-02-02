@@ -1,3 +1,5 @@
+#![cfg(all(feature = "src_mysql", feature = "dst_arrow"))]
+
 use arrow::{
     array::{Float64Array, Int64Array, StringArray},
     record_batch::RecordBatch,
@@ -223,5 +225,79 @@ pub fn verify_arrow_results(result: Vec<RecordBatch>) {
                 unreachable!()
             }
         }
+    }
+}
+
+// Unit tests for BINARY_FLAG detection logic
+// These tests don't require a database connection
+
+use connectorx::sources::mysql::MySQLTypeSystem;
+use r2d2_mysql::mysql::consts::{ColumnFlags, ColumnType};
+
+/// Test that BINARY_FLAG correctly distinguishes BINARY from CHAR
+#[test]
+fn test_mysql_binary_flag_for_binary_type() {
+    // Simulate BINARY(10): MYSQL_TYPE_STRING + BINARY_FLAG
+    let col_type = ColumnType::MYSQL_TYPE_STRING;
+    let mut flags = ColumnFlags::empty();
+    flags.insert(ColumnFlags::BINARY_FLAG);
+
+    let result = MySQLTypeSystem::from((&col_type, &flags));
+
+    // Should be TinyBlob (Vec<u8>), not Char (String)
+    // This prevents "Could not convert Bytes(...) to desired type" panic
+    match result {
+        MySQLTypeSystem::TinyBlob(true) => {} // OK
+        _ => panic!("BINARY should map to TinyBlob, got {:?}", result),
+    }
+}
+
+/// Test that CHAR without BINARY_FLAG maps to Char
+#[test]
+fn test_mysql_binary_flag_for_char_type() {
+    // Simulate CHAR(10): MYSQL_TYPE_STRING without BINARY_FLAG
+    let col_type = ColumnType::MYSQL_TYPE_STRING;
+    let flags = ColumnFlags::empty();
+
+    let result = MySQLTypeSystem::from((&col_type, &flags));
+
+    // Should be Char (String), not TinyBlob (Vec<u8>)
+    match result {
+        MySQLTypeSystem::Char(true) => {} // OK
+        _ => panic!("CHAR should map to Char, got {:?}", result),
+    }
+}
+
+/// Test that BINARY_FLAG correctly distinguishes VARBINARY from VARCHAR
+#[test]
+fn test_mysql_binary_flag_for_varbinary_type() {
+    // Simulate VARBINARY(10): MYSQL_TYPE_VAR_STRING + BINARY_FLAG
+    let col_type = ColumnType::MYSQL_TYPE_VAR_STRING;
+    let mut flags = ColumnFlags::empty();
+    flags.insert(ColumnFlags::BINARY_FLAG);
+
+    let result = MySQLTypeSystem::from((&col_type, &flags));
+
+    // Should be Blob (Vec<u8>), not VarChar (String)
+    // This prevents "Could not convert Bytes(...) to desired type" panic
+    match result {
+        MySQLTypeSystem::Blob(true) => {} // OK
+        _ => panic!("VARBINARY should map to Blob, got {:?}", result),
+    }
+}
+
+/// Test that VARCHAR without BINARY_FLAG maps to VarChar
+#[test]
+fn test_mysql_binary_flag_for_varchar_type() {
+    // Simulate VARCHAR(10): MYSQL_TYPE_VAR_STRING without BINARY_FLAG
+    let col_type = ColumnType::MYSQL_TYPE_VAR_STRING;
+    let flags = ColumnFlags::empty();
+
+    let result = MySQLTypeSystem::from((&col_type, &flags));
+
+    // Should be VarChar (String), not Blob (Vec<u8>)
+    match result {
+        MySQLTypeSystem::VarChar(true) => {} // OK
+        _ => panic!("VARCHAR should map to VarChar, got {:?}", result),
     }
 }

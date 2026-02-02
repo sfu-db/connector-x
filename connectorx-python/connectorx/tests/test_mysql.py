@@ -315,6 +315,14 @@ def test_mysql_types_binary(mysql_url: str) -> None:
             "test_double": pd.Series([-2.2e-308, None, 1.7e308], dtype="float"),
             "test_double_notnull": pd.Series([1.2345, -1.1e-3, 1.7e30], dtype="float"),
             "test_year": pd.Series([1901, 2155, None], dtype="Int64"),
+            "test_binary": pd.Series(
+                [None, b'MySQLBinar', b'\x00\x01\x02\x03\x00\x00\x00\x00\x00\x00'],
+                dtype="object"
+            ),
+            "test_varbinary": pd.Series(
+                [None, b'DB', b'\x00'],
+                dtype="object"
+            ),
             "test_tinyblob": pd.Series(
                 [None, b"tinyblob2", b"tinyblob3"], dtype="object"
             ),
@@ -387,6 +395,14 @@ def test_mysql_types_text(mysql_url: str) -> None:
             "test_double": pd.Series([-2.2e-308, None, 1.7e308], dtype="float"),
             "test_double_notnull": pd.Series([1.2345, -1.1e-3, 1.7e30], dtype="float"),
             "test_year": pd.Series([1901, 2155, None], dtype="Int64"),
+            "test_binary": pd.Series(
+                [None, b'MySQLBinar', b'\x00\x01\x02\x03\x00\x00\x00\x00\x00\x00'],
+                dtype="object"
+            ),
+            "test_varbinary": pd.Series(
+                [None, b'DB', b'\x00'],
+                dtype="object"
+            ),
             "test_tinyblob": pd.Series(
                 [None, b"tinyblob2", b"tinyblob3"], dtype="object"
             ),
