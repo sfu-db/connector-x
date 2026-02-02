@@ -106,20 +106,35 @@
 <a href=#106 id=106 data-nosnippet>106</a>            ColumnType::MYSQL_TYPE_TIME =&gt; Time(null_ok),
 <a href=#107 id=107 data-nosnippet>107</a>            ColumnType::MYSQL_TYPE_DECIMAL =&gt; Decimal(null_ok),
 <a href=#108 id=108 data-nosnippet>108</a>            ColumnType::MYSQL_TYPE_NEWDECIMAL =&gt; Decimal(null_ok),
-<a href=#109 id=109 data-nosnippet>109</a>            ColumnType::MYSQL_TYPE_STRING =&gt; Char(null_ok),
-<a href=#110 id=110 data-nosnippet>110</a>            ColumnType::MYSQL_TYPE_VAR_STRING =&gt; VarChar(null_ok),
-<a href=#111 id=111 data-nosnippet>111</a>            ColumnType::MYSQL_TYPE_TIMESTAMP =&gt; Timestamp(null_ok),
-<a href=#112 id=112 data-nosnippet>112</a>            ColumnType::MYSQL_TYPE_YEAR =&gt; Year(null_ok),
-<a href=#113 id=113 data-nosnippet>113</a>            ColumnType::MYSQL_TYPE_ENUM =&gt; Enum(null_ok),
-<a href=#114 id=114 data-nosnippet>114</a>            ColumnType::MYSQL_TYPE_TINY_BLOB =&gt; TinyBlob(null_ok),
-<a href=#115 id=115 data-nosnippet>115</a>            ColumnType::MYSQL_TYPE_BLOB =&gt; Blob(null_ok),
-<a href=#116 id=116 data-nosnippet>116</a>            ColumnType::MYSQL_TYPE_MEDIUM_BLOB =&gt; MediumBlob(null_ok),
-<a href=#117 id=117 data-nosnippet>117</a>            ColumnType::MYSQL_TYPE_LONG_BLOB =&gt; LongBlob(null_ok),
-<a href=#118 id=118 data-nosnippet>118</a>            ColumnType::MYSQL_TYPE_JSON =&gt; Json(null_ok),
-<a href=#119 id=119 data-nosnippet>119</a>            ColumnType::MYSQL_TYPE_VARCHAR =&gt; VarChar(null_ok),
-<a href=#120 id=120 data-nosnippet>120</a>            ColumnType::MYSQL_TYPE_BIT =&gt; Bit(null_ok),
-<a href=#121 id=121 data-nosnippet>121</a>            <span class="kw">_ </span>=&gt; <span class="macro">unimplemented!</span>(<span class="string">"{}"</span>, <span class="macro">format!</span>(<span class="string">"{:?}"</span>, ty)),
-<a href=#122 id=122 data-nosnippet>122</a>        }
-<a href=#123 id=123 data-nosnippet>123</a>    }
-<a href=#124 id=124 data-nosnippet>124</a>}
+<a href=#109 id=109 data-nosnippet>109</a>            ColumnType::MYSQL_TYPE_STRING =&gt; {
+<a href=#110 id=110 data-nosnippet>110</a>                <span class="comment">// BINARY/CHAR share the same type code, distinguished by BINARY flag
+<a href=#111 id=111 data-nosnippet>111</a>                </span><span class="kw">if </span>flag.contains(ColumnFlags::BINARY_FLAG) {
+<a href=#112 id=112 data-nosnippet>112</a>                    TinyBlob(null_ok)
+<a href=#113 id=113 data-nosnippet>113</a>                } <span class="kw">else </span>{
+<a href=#114 id=114 data-nosnippet>114</a>                    Char(null_ok)
+<a href=#115 id=115 data-nosnippet>115</a>                }
+<a href=#116 id=116 data-nosnippet>116</a>            }
+<a href=#117 id=117 data-nosnippet>117</a>            ColumnType::MYSQL_TYPE_VAR_STRING =&gt; {
+<a href=#118 id=118 data-nosnippet>118</a>                <span class="comment">// VARBINARY/VARCHAR share the same type code, distinguished by BINARY flag
+<a href=#119 id=119 data-nosnippet>119</a>                </span><span class="kw">if </span>flag.contains(ColumnFlags::BINARY_FLAG) {
+<a href=#120 id=120 data-nosnippet>120</a>                    Blob(null_ok)
+<a href=#121 id=121 data-nosnippet>121</a>                } <span class="kw">else </span>{
+<a href=#122 id=122 data-nosnippet>122</a>                    VarChar(null_ok)
+<a href=#123 id=123 data-nosnippet>123</a>                }
+<a href=#124 id=124 data-nosnippet>124</a>            }
+<a href=#125 id=125 data-nosnippet>125</a>
+<a href=#126 id=126 data-nosnippet>126</a>            ColumnType::MYSQL_TYPE_TIMESTAMP =&gt; Timestamp(null_ok),
+<a href=#127 id=127 data-nosnippet>127</a>            ColumnType::MYSQL_TYPE_YEAR =&gt; Year(null_ok),
+<a href=#128 id=128 data-nosnippet>128</a>            ColumnType::MYSQL_TYPE_ENUM =&gt; Enum(null_ok),
+<a href=#129 id=129 data-nosnippet>129</a>            ColumnType::MYSQL_TYPE_TINY_BLOB =&gt; TinyBlob(null_ok),
+<a href=#130 id=130 data-nosnippet>130</a>            ColumnType::MYSQL_TYPE_BLOB =&gt; Blob(null_ok),
+<a href=#131 id=131 data-nosnippet>131</a>            ColumnType::MYSQL_TYPE_MEDIUM_BLOB =&gt; MediumBlob(null_ok),
+<a href=#132 id=132 data-nosnippet>132</a>            ColumnType::MYSQL_TYPE_LONG_BLOB =&gt; LongBlob(null_ok),
+<a href=#133 id=133 data-nosnippet>133</a>            ColumnType::MYSQL_TYPE_JSON =&gt; Json(null_ok),
+<a href=#134 id=134 data-nosnippet>134</a>            ColumnType::MYSQL_TYPE_VARCHAR =&gt; VarChar(null_ok),
+<a href=#135 id=135 data-nosnippet>135</a>            ColumnType::MYSQL_TYPE_BIT =&gt; Bit(null_ok),
+<a href=#136 id=136 data-nosnippet>136</a>            <span class="kw">_ </span>=&gt; <span class="macro">unimplemented!</span>(<span class="string">"{}"</span>, <span class="macro">format!</span>(<span class="string">"{:?}"</span>, ty)),
+<a href=#137 id=137 data-nosnippet>137</a>        }
+<a href=#138 id=138 data-nosnippet>138</a>    }
+<a href=#139 id=139 data-nosnippet>139</a>}
 </code></pre></div></section></main></body></html>
