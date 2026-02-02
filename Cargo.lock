@@ -1105,7 +1105,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sqlparser 0.37.0",
- "thiserror 1.0.69",
+ "thiserror 2.0.12",
  "tiberius",
  "tokio",
  "tokio-util 0.7.15",
