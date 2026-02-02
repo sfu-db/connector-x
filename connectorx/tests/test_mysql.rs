@@ -247,7 +247,7 @@ fn test_mysql_binary_flag_for_binary_type() {
     // Should be TinyBlob (Vec<u8>), not Char (String)
     // This prevents "Could not convert Bytes(...) to desired type" panic
     match result {
-        MySQLTypeSystem::TinyBlob(true) => {}, // OK
+        MySQLTypeSystem::TinyBlob(true) => {} // OK
         _ => panic!("BINARY should map to TinyBlob, got {:?}", result),
     }
 }
@@ -263,7 +263,7 @@ fn test_mysql_binary_flag_for_char_type() {
 
     // Should be Char (String), not TinyBlob (Vec<u8>)
     match result {
-        MySQLTypeSystem::Char(true) => {}, // OK
+        MySQLTypeSystem::Char(true) => {} // OK
         _ => panic!("CHAR should map to Char, got {:?}", result),
     }
 }
@@ -281,7 +281,7 @@ fn test_mysql_binary_flag_for_varbinary_type() {
     // Should be Blob (Vec<u8>), not VarChar (String)
     // This prevents "Could not convert Bytes(...) to desired type" panic
     match result {
-        MySQLTypeSystem::Blob(true) => {}, // OK
+        MySQLTypeSystem::Blob(true) => {} // OK
         _ => panic!("VARBINARY should map to Blob, got {:?}", result),
     }
 }
@@ -297,7 +297,7 @@ fn test_mysql_binary_flag_for_varchar_type() {
 
     // Should be VarChar (String), not Blob (Vec<u8>)
     match result {
-        MySQLTypeSystem::VarChar(true) => {}, // OK
+        MySQLTypeSystem::VarChar(true) => {} // OK
         _ => panic!("VARCHAR should map to VarChar, got {:?}", result),
     }
 }

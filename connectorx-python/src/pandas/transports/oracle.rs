@@ -2,12 +2,12 @@ use crate::errors::ConnectorXPythonError;
 use crate::pandas::destination::PandasDestination;
 use crate::pandas::typesystem::PandasTypeSystem;
 use chrono::{DateTime, NaiveDateTime, Utc};
-use rust_decimal::prelude::*;
 use connectorx::{
     impl_transport,
     sources::oracle::{OracleSource, OracleTypeSystem},
     typesystem::TypeConversion,
 };
+use rust_decimal::prelude::*;
 
 #[allow(dead_code)]
 pub struct OraclePandasTransport<'py>(&'py ());
