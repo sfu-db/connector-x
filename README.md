@@ -400,6 +400,13 @@ BibTeX entry:
                 </a>
             </td>
             <td align="center">
+                <a href="https://github.com/yuansuentw">
+                    <img src="https://avatars.githubusercontent.com/u/136064271?v=4" width="66;" alt="yuansuentw"/>
+                    <br />
+                    <sub><b>Yuan</b></sub>
+                </a>
+            </td>
+            <td align="center">
                 <a href="https://github.com/tvandelooij">
                     <img src="https://avatars.githubusercontent.com/u/128473860?v=4" width="66;" alt="tvandelooij"/>
                     <br />
@@ -427,6 +434,8 @@ BibTeX entry:
                     <sub><b>Matthew Anderson</b></sub>
                 </a>
             </td>
+		</tr>
+		<tr>
             <td align="center">
                 <a href="https://github.com/JakkuSakura">
                     <img src="https://avatars.githubusercontent.com/u/33482468?v=4" width="66;" alt="JakkuSakura"/>
@@ -434,8 +443,6 @@ BibTeX entry:
                     <sub><b>Jakku Sakura</b></sub>
                 </a>
             </td>
-		</tr>
-		<tr>
             <td align="center">
                 <a href="https://github.com/therealhieu">
                     <img src="https://avatars.githubusercontent.com/u/38937534?v=4" width="66;" alt="therealhieu"/>
@@ -471,6 +478,15 @@ BibTeX entry:
                     <sub><b>Alexander Beedie</b></sub>
                 </a>
             </td>
+		</tr>
+		<tr>
+            <td align="center">
+                <a href="https://github.com/MatsMoll">
+                    <img src="https://avatars.githubusercontent.com/u/4439131?v=4" width="66;" alt="MatsMoll"/>
+                    <br />
+                    <sub><b>Mats Eikeland Mollestad</b></sub>
+                </a>
+            </td>
             <td align="center">
                 <a href="https://github.com/rursprung">
                     <img src="https://avatars.githubusercontent.com/u/39383228?v=4" width="66;" alt="rursprung"/>
@@ -478,8 +494,6 @@ BibTeX entry:
                     <sub><b>Ralph Ursprung</b></sub>
                 </a>
             </td>
-		</tr>
-		<tr>
             <td align="center">
                 <a href="https://github.com/albcunha">
                     <img src="https://avatars.githubusercontent.com/u/13671325?v=4" width="66;" alt="albcunha"/>
@@ -508,6 +522,8 @@ BibTeX entry:
                     <sub><b>Null</b></sub>
                 </a>
             </td>
+		</tr>
+		<tr>
             <td align="center">
                 <a href="https://github.com/surister">
                     <img src="https://avatars.githubusercontent.com/u/37985796?v=4" width="66;" alt="surister"/>
@@ -520,15 +536,6 @@ BibTeX entry:
                     <img src="https://avatars.githubusercontent.com/u/27744439?v=4" width="66;" alt="venkashank"/>
                     <br />
                     <sub><b>Null</b></sub>
-                </a>
-            </td>
-		</tr>
-		<tr>
-            <td align="center">
-                <a href="https://github.com/yuansuentw">
-                    <img src="https://avatars.githubusercontent.com/u/136064271?v=4" width="66;" alt="yuansuentw"/>
-                    <br />
-                    <sub><b>Yuan</b></sub>
                 </a>
             </td>
             <td align="center">
@@ -550,13 +557,6 @@ BibTeX entry:
                     <img src="https://avatars.githubusercontent.com/u/5125482?v=4" width="66;" alt="zzzdong"/>
                     <br />
                     <sub><b>Null</b></sub>
-                </a>
-            </td>
-            <td align="center">
-                <a href="https://github.com/MatsMoll">
-                    <img src="https://avatars.githubusercontent.com/u/4439131?v=4" width="66;" alt="MatsMoll"/>
-                    <br />
-                    <sub><b>Mats Eikeland Mollestad</b></sub>
                 </a>
             </td>
             <td align="center">
