@@ -48,8 +48,8 @@ impl_transport!(
         { Binary[&'r [u8]]              => LargeBinary[Vec<u8>]      | conversion owned }
         { Varbinary[&'r [u8]]           => LargeBinary[Vec<u8>]      | conversion none }
         { Image[&'r [u8]]               => LargeBinary[Vec<u8>]      | conversion none }
-        { Numeric[Decimal]              => Float64[f64]              | conversion option }
-        { Decimal[Decimal]              => Float64[f64]              | conversion none }
+        { Numeric[Decimal]              => Decimal[Decimal]          | conversion auto }
+        { Decimal[Decimal]              => Decimal[Decimal]          | conversion none }
         { Datetime[NaiveDateTime]       => Date64[NaiveDateTime]     | conversion auto }
         { Datetime2[NaiveDateTime]      => Date64[NaiveDateTime]     | conversion none }
         { Smalldatetime[NaiveDateTime]  => Date64[NaiveDateTime]     | conversion none }
