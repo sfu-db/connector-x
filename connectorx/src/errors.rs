@@ -122,6 +122,14 @@ pub enum ConnectorXOutError {
     #[error(transparent)]
     TrinoArrowTransportError(#[from] crate::transports::TrinoArrowTransportError),
 
+    #[cfg(feature = "src_clickhouse")]
+    #[error(transparent)]
+    ClickHouseSourceError(#[from] crate::sources::clickhouse::ClickHouseSourceError),
+
+    #[cfg(all(feature = "src_clickhouse", feature = "dst_arrow"))]
+    #[error(transparent)]
+    ClickHouseArrowTransportError(#[from] crate::transports::ClickHouseArrowTransportError),
+
     /// Any other errors that are too trivial to be put here explicitly.
     #[error(transparent)]
     Other(#[from] anyhow::Error),
