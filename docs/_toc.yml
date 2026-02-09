@@ -15,4 +15,5 @@ chapters:
     - file: databases/oracle
     - file: databases/postgres
     - file: databases/sqlite
+    - file: databases/clickhouse
   - file: freq_questions

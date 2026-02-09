@@ -1,7 +1,14 @@
+use std::sync::Arc;
+
 use crate::errors::{ConnectorXOutError, OutResult};
 use crate::source_router::{SourceConn, SourceType};
 #[cfg(feature = "src_bigquery")]
 use crate::sources::bigquery::BigQueryDialect;
+#[cfg(feature = "src_clickhouse")]
+use crate::sources::clickhouse::ClickHouseSource;
+use crate::sources::clickhouse::ClickHouseSourceError;
+use serde::Deserialize;
+use serde_json::Value as JsonValue;
 #[cfg(feature = "src_mssql")]
 use crate::sources::mssql::{mssql_config, FloatN, IntN, MsSQLTypeSystem};
 #[cfg(feature = "src_mysql")]
@@ -104,6 +111,8 @@ pub fn get_col_range(source_conn: &SourceConn, query: &str, col: &str) -> OutRes
         SourceType::BigQuery => bigquery_get_partition_range(&source_conn.conn, query, col),
         #[cfg(feature = "src_trino")]
         SourceType::Trino => trino_get_partition_range(&source_conn.conn, query, col),
+        #[cfg(feature = "src_clickhouse")]
+        SourceType::ClickHouse => clickhouse_get_partition_range(&source_conn.conn, query, col),
         _ => unimplemented!("{:?} not implemented!", source_conn.ty),
     }
 }
@@ -540,4 +549,48 @@ fn trino_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
         .unwrap_or(&TrinoPartitionQueryResult { _col0: 0, _col1: 0 });
 
     (result._col0, result._col1)
+}
+
+#[cfg(feature = "src_clickhouse")]
+#[throws(ConnectorXOutError)]
+fn clickhouse_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
+    use sqlparser::dialect::ClickHouseDialect;
+
+    let rt = Arc::new(tokio::runtime::Runtime::new().expect("Failed to create runtime"));
+    let clickhouse_source = ClickHouseSource::new(rt.clone(), conn.as_str())
+        .expect("Failed to create ClickHouse client");
+
+    let range_query = get_partition_range_query(query, col, &ClickHouseDialect {})?;
+
+    let response = rt.block_on(async {
+        let mut cursor = clickhouse_source
+            .client
+            .query(range_query.as_str())
+            .fetch_bytes("JSONCompact")
+            .map_err(|e| anyhow!("ClickHouse error: {}", e))?;
+        let bytes = cursor
+            .collect()
+            .await
+            .map_err(|e| anyhow!("ClickHouse error: {}", e))?;
+        Ok::<_, ClickHouseSourceError>(bytes)
+    })?;
+
+    #[derive(Debug, Deserialize)]
+    struct MinMaxResponse {
+        data: Vec<Vec<JsonValue>>,
+    }
+
+    let parsed: MinMaxResponse = serde_json::from_slice(&response)
+        .map_err(|e| anyhow!("Failed to parse min max response: {}", e))?;
+
+    let (min_v, max_v) = if let Some(row) = parsed.data.first() {
+        let min_v = row.get(0).and_then(|v| v.as_i64()).unwrap_or(0);
+        let max_v = row.get(1).and_then(|v| v.as_i64()).unwrap_or(0);
+
+        (min_v, max_v)
+    } else {
+        (0, 0)
+    };
+
+    (min_v, max_v)
 }

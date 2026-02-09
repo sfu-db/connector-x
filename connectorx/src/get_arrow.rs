@@ -249,6 +249,18 @@ pub fn get_arrow(
             );
             dispatcher.run()?;
         }
+        #[cfg(feature = "src_clickhouse")]
+        SourceType::ClickHouse => {
+            let rt = Arc::new(tokio::runtime::Runtime::new().expect("Failed to create runtime"));
+            let source = ClickHouseSource::new(rt, &source_conn.conn[..])?;
+            let dispatcher = Dispatcher::<_, _, ClickHouseArrowTransport>::new(
+                source,
+                &mut destination,
+                queries,
+                origin_query,
+            );
+            dispatcher.run()?;
+        }
         _ => throw!(ConnectorXOutError::SourceNotSupport(format!(
             "{:?}",
             source_conn.ty
@@ -463,6 +475,19 @@ pub fn new_record_batch_iter(
             let rt = Arc::new(tokio::runtime::Runtime::new().expect("Failed to create runtime"));
             let source = BigQuerySource::new(rt, &source_conn.conn[..]).unwrap();
             let batch_iter = ArrowBatchIter::<_, BigQueryArrowStreamTransport>::new(
+                source,
+                destination,
+                origin_query,
+                queries,
+            )
+            .unwrap();
+            return Box::new(batch_iter);
+        }
+        #[cfg(feature = "src_clickhouse")]
+        SourceType::ClickHouse => {
+            let rt = Arc::new(tokio::runtime::Runtime::new().expect("Failed to create runtime"));
+            let source = ClickHouseSource::new(rt, &source_conn.conn[..]).unwrap();
+            let batch_iter = ArrowBatchIter::<_, ClickHouseArrowStreamTransport>::new(
                 source,
                 destination,
                 origin_query,

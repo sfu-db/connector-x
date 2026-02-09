@@ -48,6 +48,9 @@ pub enum ConnectorXPythonError {
     #[error(transparent)]
     ArrowDestinationError(#[from] connectorx::destinations::arrow::ArrowDestinationError),
 
+    #[error(transparent)]
+    ClickHouseSourceError(#[from] connectorx::sources::clickhouse::ClickHouseSourceError),
+
     /// Any other errors that are too trivial to be put here explicitly.
     #[error(transparent)]
     Other(#[from] anyhow::Error),

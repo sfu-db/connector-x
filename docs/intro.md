@@ -84,7 +84,7 @@ For more planned data sources, please check out our [discussion](https://github.
 - [x] Mariadb (through mysql protocol)
 - [x] Sqlite
 - [x] Redshift (through postgres protocol)
-- [x] Clickhouse (through mysql protocol)
+- [x] Clickhouse
 - [x] SQL Server
 - [x] Azure SQL Database (through mssql protocol)
 - [x] Oracle
