@@ -7,8 +7,6 @@ use crate::sources::bigquery::BigQueryDialect;
 #[cfg(feature = "src_clickhouse")]
 use crate::sources::clickhouse::ClickHouseSource;
 use crate::sources::clickhouse::ClickHouseSourceError;
-use serde::Deserialize;
-use serde_json::Value as JsonValue;
 #[cfg(feature = "src_mssql")]
 use crate::sources::mssql::{mssql_config, FloatN, IntN, MsSQLTypeSystem};
 #[cfg(feature = "src_mysql")]
@@ -34,6 +32,8 @@ use rusqlite::{types::Type, Connection};
 use rust_decimal::{prelude::ToPrimitive, Decimal};
 #[cfg(feature = "src_postgres")]
 use rust_decimal_macros::dec;
+use serde::Deserialize;
+use serde_json::Value as JsonValue;
 #[cfg(feature = "src_mssql")]
 use sqlparser::dialect::MsSqlDialect;
 #[cfg(feature = "src_mysql")]
