@@ -5,8 +5,7 @@ use crate::source_router::{SourceConn, SourceType};
 #[cfg(feature = "src_bigquery")]
 use crate::sources::bigquery::BigQueryDialect;
 #[cfg(feature = "src_clickhouse")]
-use crate::sources::clickhouse::ClickHouseSource;
-use crate::sources::clickhouse::ClickHouseSourceError;
+use crate::sources::clickhouse::{ClickHouseSource, ClickHouseSourceError};
 #[cfg(feature = "src_mssql")]
 use crate::sources::mssql::{mssql_config, FloatN, IntN, MsSQLTypeSystem};
 #[cfg(feature = "src_mysql")]
@@ -34,6 +33,8 @@ use rust_decimal::{prelude::ToPrimitive, Decimal};
 use rust_decimal_macros::dec;
 use serde::Deserialize;
 use serde_json::Value as JsonValue;
+#[cfg(feature = "src_clickhouse")]
+use sqlparser::dialect::ClickHouseDialect;
 #[cfg(feature = "src_mssql")]
 use sqlparser::dialect::MsSqlDialect;
 #[cfg(feature = "src_mysql")]
@@ -153,6 +154,10 @@ pub fn get_part_query(
         #[cfg(feature = "src_trino")]
         SourceType::Trino => {
             single_col_partition_query(query, col, lower, upper, &TrinoDialect {})?
+        }
+        #[cfg(feature = "src_clickhouse")]
+        SourceType::ClickHouse => {
+            single_col_partition_query(query, col, lower, upper, &ClickHouseDialect {})?
         }
         _ => unimplemented!("{:?} not implemented!", source_conn.ty),
     };
