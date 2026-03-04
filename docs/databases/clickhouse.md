@@ -1,5 +1,9 @@
 # ClickHouse
 
+* Official client driver with [clickhouse-rs](https://github.com/ClickHouse/clickhouse-rs).
+* Currently only support HTTP driver.
+* Another way to connect to ClickHouse is through [MySQL](./mysql.md).
+
 ## ClickHouse Connection
 
 ```{hint}
@@ -12,5 +16,3 @@ conn = 'clickhouse://username:password@server:port/database'    # connection tok
 query = 'SELECT * FROM table'                                   # query string
 cx.read_sql(conn, query)                                        # read data from ClickHouse
 ```
-
-## ClickHouse-Pandas Type Mapping
