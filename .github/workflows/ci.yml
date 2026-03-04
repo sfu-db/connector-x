@@ -12,15 +12,14 @@ on:
 jobs:
   rust:
     runs-on: ubuntu-latest
-    container: ubuntu:24.04
 
     steps:
       - uses: actions/checkout@v6
 
       - name: Install tools
         run: |
-          apt-get update
-          apt-get install -y curl postgresql-client build-essential pkg-config libssl-dev git sqlite3 libsqlite3-dev mysql-client python3 python3-pip libkrb5-dev libclang-dev
+          sudo apt-get update
+          sudo apt-get install -y curl postgresql-client build-essential pkg-config libssl-dev git sqlite3 libsqlite3-dev mysql-client python3 python3-pip libkrb5-dev libclang-dev
           echo "Cache Version ${{ secrets.CACHE_VERSION }}"
         env:
           DEBIAN_FRONTEND: noninteractive
