@@ -193,7 +193,4 @@ jobs:
 
       - name: Test python
         run: just test-python
-        env:
-          SQLITE_URL: "sqlite:///tmp/test.db"
-          SQLITE3_STATIC: 1
-          # Oracle tests use Testcontainers - Docker is automatically detected
+        # Integration tests provision required services at test time via Testcontainers
