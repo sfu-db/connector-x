@@ -1,7 +1,10 @@
 """Pytest configuration for tests with testcontainers."""
+import json
 import os
 from pathlib import Path
 from typing import Generator, Any, Optional
+import urllib.error
+import urllib.request
 
 import pytest
 
@@ -11,6 +14,7 @@ try:
     from testcontainers.clickhouse import ClickHouseContainer
     from testcontainers.postgres import PostgresContainer
     from testcontainers.mysql import MySqlContainer
+    from testcontainers.trino import TrinoContainer
     TESTCONTAINERS_AVAILABLE = True
 except ImportError:
     TESTCONTAINERS_AVAILABLE = False
@@ -18,6 +22,7 @@ except ImportError:
     ClickHouseContainer = None
     PostgresContainer = None
     MySqlContainer = None
+    TrinoContainer = None
 
 
 @pytest.fixture(scope="session")
@@ -131,6 +136,117 @@ def mysql_url(mysql_container: Optional[Any]) -> str:
         return mysql_container.get_connection_url()
 
     pytest.skip("No MySQL database available for tests")
+
+
+def _run_trino_statement(host: str, port: str, statement: str) -> None:
+    if not statement.strip():
+        return
+
+    url = f"http://{host}:{port}/v1/statement"
+    headers = {
+        "X-Trino-User": "test",
+        "X-Trino-Catalog": "test",
+        "X-Trino-Schema": "test",
+    }
+    request = urllib.request.Request(
+        url,
+        data=statement.encode("utf-8"),
+        headers=headers,
+        method="POST",
+    )
+
+    try:
+        with urllib.request.urlopen(request) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+    except urllib.error.HTTPError as e:
+        raise RuntimeError(f"Trino initialization query failed: {statement}") from e
+
+    if payload.get("error"):
+        raise RuntimeError(f"Trino initialization query error: {payload['error']}")
+
+    next_uri = payload.get("nextUri")
+    while next_uri:
+        poll_request = urllib.request.Request(next_uri, headers=headers, method="GET")
+        with urllib.request.urlopen(poll_request) as poll_response:
+            payload = json.loads(poll_response.read().decode("utf-8"))
+        if payload.get("error"):
+            raise RuntimeError(f"Trino initialization query error: {payload['error']}")
+        next_uri = payload.get("nextUri")
+
+
+def _iter_trino_init_statements(script: str) -> Generator[str, None, None]:
+    for raw in script.split(";"):
+        statement = raw.strip()
+        if not statement:
+            continue
+        # Trino memory connector does not support row-level DELETE.
+        if statement.upper().startswith("DELETE FROM"):
+            continue
+        yield statement
+
+
+@pytest.fixture(scope="session")
+def trino_container() -> Generator[Optional[Any], None, None]:
+    """
+    Fixture that starts a Trino container for tests.
+
+    This fixture is used at session level to avoid restarting the container
+    for each test.
+    """
+    # If TRINO_URL is already defined, use it (for backward compatibility)
+    if os.environ.get("TRINO_URL"):
+        yield None
+        return
+
+    # If testcontainers is not available, skip
+    if not TESTCONTAINERS_AVAILABLE:
+        pytest.skip("testcontainers is not installed. Install with: pip install testcontainers")
+
+    trino_catalog = Path(__file__).with_name("trino-test.properties")
+    trino_catalog.write_text("connector.name=memory\n", encoding="utf-8")
+
+    trino_container = TrinoContainer(
+        image="trinodb/trino:latest",
+        user="test",
+    ).with_volume_mapping(str(trino_catalog), "/etc/trino/catalog/test.properties", mode="ro")
+
+    init_script = Path(__file__).parent.parent.parent.parent / "scripts" / "trino.sql"
+
+    with trino_container as trino:
+        host = trino.get_container_host_ip()
+        port = trino.get_exposed_port(8080)
+        os.environ["TRINO_URL"] = f"trino://test@{host}:{port}/test"
+
+        if init_script.exists():
+            script = init_script.read_text(encoding="utf-8")
+            for statement in _iter_trino_init_statements(script):
+                _run_trino_statement(host, port, statement)
+
+        try:
+            yield trino
+        finally:
+            if "TRINO_URL" in os.environ:
+                del os.environ["TRINO_URL"]
+            trino_catalog.unlink(missing_ok=True)
+
+
+@pytest.fixture(scope="module")
+def trino_url(trino_container: Optional[Any]) -> str:
+    """
+    Fixture that returns the Trino connection URL.
+
+    This fixture uses either the testcontainers container or a URL
+    defined in the TRINO_URL environment variable.
+    """
+    if os.environ.get("TRINO_URL"):
+        return os.environ["TRINO_URL"]
+
+    if trino_container is not None:
+        host = trino_container.get_container_host_ip()
+        port = trino_container.get_exposed_port(8080)
+        return f"trino://test@{host}:{port}/test"
+
+    pytest.skip("No Trino database available for tests")
 
 
 
