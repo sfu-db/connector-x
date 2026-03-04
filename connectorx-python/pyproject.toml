@@ -41,6 +41,7 @@ pandas = {version = ">=2.3", optional = true}
 polars = {version = ">=1", optional = true}
 pyarrow = {version = ">=22", optional = true}
 python = ">=3.11,<3.15"
+testcontainers = {version = "^4.0", extras = ["oracle-free", "clickhouse"]}
 
 [tool.poetry.extras]
 all = ["dask", "pandas", "modin", "polars", "pyarrow"]
@@ -62,8 +63,8 @@ polars = ">=0.20"
 pyarrow = ">=22"
 pytest = "^9.0"
 pytest-benchmark = "^5.2"
-testcontainers = {extras = ["oracle-free"], version = "^4.0"}
 twine = "^3.4.1"
+clickhouse-sqlalchemy = "^0.3.2"
 
 [tool.pytest.ini_options]
 minversion = "9.0"

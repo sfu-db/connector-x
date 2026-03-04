@@ -22,45 +22,72 @@ owning_ref = "0.4"
 serde_json = "1"
 chrono = "0.4"
 
-arrow = {workspace = true, optional = true}
-polars = {workspace = true, optional = true, features=["dtype-u8", "dtype-u16", "lazy"]}
-polars-arrow = {workspace = true, optional = true}
-bb8 = {version = "0.7", optional = true}
-bb8-tiberius = {version = "0.8", optional = true}
-csv = {version = "1", optional = true}
-fallible-streaming-iterator = {version = "0.1", optional = true}
-futures = {version = "0.3", optional = true}
-gcp-bigquery-client = {version = "0.25", optional = true}
-hex = {version = "0.4", optional = true}
-native-tls = {version = "0.2", optional = true}
-num-traits = {version = "0.2", optional = true}
-openssl = {version = "0.10", optional = true, features = ["vendored"]}
-oracle = {version = "0.6", optional = true}
-postgres = {version = "0.19", features = ["with-chrono-0_4", "with-uuid-1", "with-serde_json-1","with-cidr-0_2"], optional = true}
-postgres-native-tls = {version = "0.5", optional = true}
-postgres-openssl = {version = "0.5", optional = true}
-mysql_common = {version = "0.32", features = ["chrono"], optional = true}
-r2d2 = {version = "0.8", optional = true}
-r2d2-oracle = {version = "0.7", features = ["chrono"], optional = true}
-r2d2_mysql = {version = "25", optional = true}
-r2d2_postgres = {version = "0.18", optional = true}
-r2d2_sqlite = {version = "0.26", optional = true}
-regex = {version = "1", optional = true}
-rusqlite = {version = "0.33", features = ["column_decltype", "chrono", "bundled"], optional = true}
-rust_decimal = {version = "1", features = ["db-postgres"], optional = true}
-rust_decimal_macros = {version = "1", optional = true}
-tiberius = {version = "0.7", features = ["rust_decimal", "chrono", "integrated-auth-gssapi"], optional = true}
-tokio = {version = "1", features = ["rt", "rt-multi-thread", "net"], optional = true}
-tokio-util = {version = "0.7", features = ["compat"], optional = true}
-urlencoding = {version = "2.1", optional = true}
-uuid = {version = "1", optional = true}
-uuid_old = {package="uuid", version = "0.8", optional = true}
-j4rs = {version = "0.22", optional = true}
-datafusion = {version = "46", optional = true}
-prusto = {version = "0.5", optional = true}
-serde = {version = "1", optional = true}
+arrow = { workspace = true, optional = true }
+polars = { workspace = true, optional = true, features = [
+  "dtype-u8",
+  "dtype-u16",
+  "lazy",
+] }
+polars-arrow = { workspace = true, optional = true }
+bb8 = { version = "0.7", optional = true }
+bb8-tiberius = { version = "0.8", optional = true }
+csv = { version = "1", optional = true }
+fallible-streaming-iterator = { version = "0.1", optional = true }
+futures = { version = "0.3", optional = true }
+gcp-bigquery-client = { version = "0.25", optional = true }
+hex = { version = "0.4", optional = true }
+native-tls = { version = "0.2", optional = true }
+num-traits = { version = "0.2", optional = true }
+openssl = { version = "0.10", optional = true, features = ["vendored"] }
+oracle = { version = "0.6", optional = true }
+postgres = { version = "0.19", features = [
+  "with-chrono-0_4",
+  "with-uuid-1",
+  "with-serde_json-1",
+  "with-cidr-0_2",
+], optional = true }
+postgres-native-tls = { version = "0.5", optional = true }
+postgres-openssl = { version = "0.5", optional = true }
+mysql_common = { version = "0.32", features = ["chrono"], optional = true }
+r2d2 = { version = "0.8", optional = true }
+r2d2-oracle = { version = "0.7", features = ["chrono"], optional = true }
+r2d2_mysql = { version = "25", optional = true }
+r2d2_postgres = { version = "0.18", optional = true }
+r2d2_sqlite = { version = "0.26", optional = true }
+regex = { version = "1", optional = true }
+rusqlite = { version = "0.33", features = [
+  "column_decltype",
+  "chrono",
+  "bundled",
+], optional = true }
+rust_decimal = { version = "1", features = ["db-postgres"], optional = true }
+rust_decimal_macros = { version = "1", optional = true }
+tiberius = { version = "0.7", features = [
+  "rust_decimal",
+  "chrono",
+  "integrated-auth-gssapi",
+], optional = true }
+tokio = { version = "1", features = [
+  "rt",
+  "rt-multi-thread",
+  "net",
+], optional = true }
+tokio-util = { version = "0.7", features = ["compat"], optional = true }
+urlencoding = { version = "2.1", optional = true }
+uuid = { version = "1", optional = true }
+uuid_old = { package = "uuid", version = "0.8", optional = true }
+j4rs = { version = "0.22", optional = true }
+datafusion = { version = "46", optional = true }
+prusto = { version = "0.5", optional = true }
+serde = { version = "1", features = ["derive"], optional = true }
+clickhouse = { version = "0.13", features = ["lz4"], optional = true }
 cidr-02 = { version = "0.2", package = "cidr", optional = true }
-pgvector = { version = "0.4", features = [ "postgres", "halfvec"], optional = true }
+pgvector = { version = "0.4", features = [
+  "postgres",
+  "halfvec",
+], optional = true }
+chrono-tz = { version = "0.10.4", optional = true }
+rustc-hash = { version = "2.1.1", optional = true }
 
 [lib]
 crate-type = ["cdylib", "rlib"]
@@ -70,10 +97,25 @@ name = "connectorx"
 criterion = "0.3"
 env_logger = "0.11"
 iai = "0.1"
-pprof = {version = "0.14", features = ["flamegraph"]}
+pprof = { version = "0.14", features = ["flamegraph"] }
 
 [features]
-all = ["src_sqlite", "src_postgres", "src_mysql", "src_mssql", "src_oracle", "src_bigquery", "src_csv", "src_dummy", "src_trino", "dst_arrow", "dst_polars", "federation", "fed_exec"]
+all = [
+  "src_sqlite",
+  "src_postgres",
+  "src_mysql",
+  "src_mssql",
+  "src_oracle",
+  "src_bigquery",
+  "src_csv",
+  "src_dummy",
+  "src_trino",
+  "src_clickhouse",
+  "dst_arrow",
+  "dst_polars",
+  "federation",
+  "fed_exec",
+]
 branch = []
 default = ["fptr"]
 dst_arrow = ["arrow", "rust_decimal"]
@@ -82,9 +124,20 @@ fptr = []
 src_bigquery = ["gcp-bigquery-client", "tokio"]
 src_csv = ["csv", "regex"]
 src_dummy = ["num-traits"]
-src_mssql = ["rust_decimal", "num-traits", "tiberius", "bb8-tiberius", "bb8", "tokio", "tokio-util", "uuid_old", "futures", "urlencoding"]
+src_mssql = [
+  "rust_decimal",
+  "num-traits",
+  "tiberius",
+  "bb8-tiberius",
+  "bb8",
+  "tokio",
+  "tokio-util",
+  "uuid_old",
+  "futures",
+  "urlencoding",
+]
 src_mysql = ["r2d2_mysql", "mysql_common", "rust_decimal", "num-traits", "r2d2"]
-src_oracle = ["oracle", "r2d2-oracle","r2d2", "urlencoding", "rust_decimal"]
+src_oracle = ["oracle", "r2d2-oracle", "r2d2", "urlencoding", "rust_decimal"]
 src_postgres = [
   "postgres",
   "r2d2_postgres",
@@ -102,8 +155,33 @@ src_postgres = [
   "cidr-02",
   "pgvector",
 ]
-src_sqlite = ["rusqlite", "r2d2_sqlite", "fallible-streaming-iterator", "r2d2", "urlencoding", "rust_decimal"]
-src_trino = ["prusto", "uuid", "urlencoding", "rust_decimal", "tokio", "num-traits", "serde"]
+src_sqlite = [
+  "rusqlite",
+  "r2d2_sqlite",
+  "fallible-streaming-iterator",
+  "r2d2",
+  "urlencoding",
+  "rust_decimal",
+]
+src_trino = [
+  "prusto",
+  "uuid",
+  "urlencoding",
+  "rust_decimal",
+  "tokio",
+  "num-traits",
+  "serde",
+]
+src_clickhouse = [
+  "clickhouse",
+  "tokio",
+  "uuid",
+  "rust_decimal",
+  "serde",
+  "chrono-tz",
+  "regex",
+  "rustc-hash",
+]
 federation = ["j4rs"]
 fed_exec = ["datafusion", "tokio"]
 integrated-auth-gssapi = ["tiberius/integrated-auth-gssapi"]

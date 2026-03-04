@@ -9,4 +9,4 @@ ConnectorX supports retrieving data from Postgres, MsSQL, MySQL, Oracle, SQLite,
 * [Postgres](./databases/postgres.md)
 * [SQLite](./databases/sqlite.md)
 * [Trino](./databases/trino.md)
-
+* [ClickHouse](./databases/clickhouse.md)

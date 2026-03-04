@@ -35,4 +35,5 @@ srcs = [
   "connectorx/src_oracle",
   "connectorx/src_bigquery",
   "connectorx/src_trino",
+  "connectorx/src_clickhouse",
 ]
