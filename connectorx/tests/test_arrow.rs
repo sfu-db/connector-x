@@ -388,7 +388,9 @@ fn test_postgres_textarray_arrow() {
 
     let dburl = test_db::postgres_url();
 
-    let queries = [CXQuery::naked("select test_textarray from test_types order by ctid")];
+    let queries = [CXQuery::naked(
+        "select test_textarray from test_types order by ctid",
+    )];
     let url = Url::parse(dburl.as_str()).unwrap();
     let (config, _tls) = rewrite_tls_args(&url).unwrap();
     let builder = PostgresSource::<BinaryProtocol, NoTls>::new(config, NoTls, 2).unwrap();

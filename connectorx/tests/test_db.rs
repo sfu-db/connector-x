@@ -1,10 +1,4 @@
-use std::{
-    env,
-    fs,
-    path::PathBuf,
-    sync::Once,
-    time::Duration,
-};
+use std::{env, fs, path::PathBuf, sync::Once, time::Duration};
 
 use testcontainers::{
     core::{CmdWaitFor, ExecCommand, IntoContainerPort, Mount, WaitFor},
@@ -95,7 +89,10 @@ pub fn mysql_url() -> String {
             .get_host_port_ipv4(3306)
             .expect("get mysql exposed port");
 
-        env::set_var("MYSQL_URL", format!("mysql://root:mysql@{host}:{port}/mysql"));
+        env::set_var(
+            "MYSQL_URL",
+            format!("mysql://root:mysql@{host}:{port}/mysql"),
+        );
 
         // Keep the container alive for the test process lifetime.
         std::mem::forget(container);
