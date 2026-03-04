@@ -23,14 +23,15 @@ use connectorx::{
     transports::PostgresArrowTransport,
 };
 use postgres::NoTls;
-use std::env;
 use url::Url;
+
+mod test_db;
 
 #[test]
 fn load_and_parse() {
     let _ = env_logger::builder().is_test(true).try_init();
 
-    let dburl = env::var("POSTGRES_URL").unwrap();
+    let dburl = test_db::postgres_url();
     #[derive(Debug, PartialEq)]
     struct Row(i32, Option<i32>, Option<String>, Option<f64>, Option<bool>);
 
@@ -83,7 +84,7 @@ fn load_and_parse() {
 fn load_and_parse_csv() {
     let _ = env_logger::builder().is_test(true).try_init();
 
-    let dburl = env::var("POSTGRES_URL").unwrap();
+    let dburl = test_db::postgres_url();
     #[derive(Debug, PartialEq)]
     struct Row(i32, Option<i32>, Option<String>, Option<f64>, Option<bool>);
 
@@ -138,7 +139,7 @@ fn load_and_parse_csv() {
 fn test_postgres_binary() {
     let _ = env_logger::builder().is_test(true).try_init();
 
-    let dburl = env::var("POSTGRES_URL").unwrap();
+    let dburl = test_db::postgres_url();
 
     let queries = [
         CXQuery::naked("select * from test_table where test_int < 2"),
@@ -165,7 +166,7 @@ fn test_postgres_binary() {
 fn test_postgres_csv() {
     let _ = env_logger::builder().is_test(true).try_init();
 
-    let dburl = env::var("POSTGRES_URL").unwrap();
+    let dburl = test_db::postgres_url();
 
     let queries = [
         CXQuery::naked("select * from test_table where test_int < 2"),
@@ -189,7 +190,7 @@ fn test_postgres_csv() {
 fn test_postgres_cursor() {
     let _ = env_logger::builder().is_test(true).try_init();
 
-    let dburl = env::var("POSTGRES_URL").unwrap();
+    let dburl = test_db::postgres_url();
 
     let queries = [
         CXQuery::naked("select * from test_table where test_int < 2"),
@@ -213,7 +214,7 @@ fn test_postgres_cursor() {
 fn test_postgres_simple() {
     let _ = env_logger::builder().is_test(true).try_init();
 
-    let dburl = env::var("POSTGRES_URL").unwrap();
+    let dburl = test_db::postgres_url();
 
     let queries = [
         CXQuery::naked("select * from test_table where test_int < 2"),
@@ -321,7 +322,7 @@ pub fn verify_arrow_results(result: Vec<RecordBatch>) {
 fn test_postgres_agg() {
     let _ = env_logger::builder().is_test(true).try_init();
 
-    let dburl = env::var("POSTGRES_URL").unwrap();
+    let dburl = test_db::postgres_url();
 
     let queries = [CXQuery::naked(
         "SELECT test_bool, SUM(test_float) FROM test_table GROUP BY test_bool",
@@ -367,7 +368,7 @@ fn test_postgres_agg() {
 macro_rules! test_types {
     ($protocol: expr, $sql: expr, $P: ty, $verify: expr) => {
         let _ = env_logger::builder().is_test(true).try_init();
-        let dburl = env::var("POSTGRES_URL").unwrap();
+        let dburl = test_db::postgres_url();
         let queries = [CXQuery::naked($sql)];
         let url = Url::parse(dburl.as_str()).unwrap();
         let (config, _tls) = rewrite_tls_args(&url).unwrap();
@@ -1158,7 +1159,7 @@ fn verfiy_pgvector_results(result: Vec<RecordBatch>, _protocol: &str) {
 fn test_postgres_pre_execution_queries() {
     let _ = env_logger::builder().is_test(true).try_init();
 
-    let dburl = env::var("POSTGRES_URL").unwrap();
+    let dburl = test_db::postgres_url();
 
     let queries = [
         CXQuery::naked("SELECT CAST(name AS TEXT) AS name, CAST(setting AS INTEGER) AS setting FROM pg_settings WHERE name IN ('statement_timeout', 'idle_in_transaction_session_timeout') ORDER BY name"),
@@ -1200,7 +1201,7 @@ fn test_postgres_pre_execution_queries() {
 fn test_postgres_partitioned_pre_execution_queries() {
     let _ = env_logger::builder().is_test(true).try_init();
 
-    let dburl = env::var("POSTGRES_URL").unwrap();
+    let dburl = test_db::postgres_url();
 
     let queries = [
         "SELECT CAST(name AS TEXT) AS name, CAST(setting AS INTEGER) AS setting FROM pg_settings WHERE name = 'statement_timeout'", 

@@ -6,16 +6,17 @@ use connectorx::{
     destinations::arrow::ArrowDestination, prelude::*, sources::mssql::MsSQLSource, sql::CXQuery,
     transports::MsSQLArrowTransport,
 };
-use std::env;
 use std::sync::Arc;
 use tokio::runtime::Runtime;
+
+mod test_db;
 
 #[test]
 #[ignore]
 fn test_mssql() {
     let _ = env_logger::builder().is_test(true).try_init();
 
-    let dburl = env::var("MSSQL_URL").unwrap();
+    let dburl = test_db::mssql_url();
 
     let queries = [
         CXQuery::naked("select * from test_table where test_int < 2"),
@@ -38,7 +39,7 @@ fn test_mssql() {
 fn test_mssql_agg() {
     let _ = env_logger::builder().is_test(true).try_init();
 
-    let dburl = env::var("MSSQL_URL").unwrap();
+    let dburl = test_db::mssql_url();
 
     let queries = [CXQuery::naked(
         "SELECT test_bool, SUM(test_float) AS SUM FROM test_table GROUP BY test_bool",

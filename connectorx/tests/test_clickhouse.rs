@@ -7,10 +7,11 @@ use connectorx::{
     sql::CXQuery, transports::ClickHouseArrowTransport,
 };
 use rust_decimal::Decimal;
-use std::env;
 use std::str::FromStr;
 use std::sync::Arc;
 use tokio::runtime::Runtime;
+
+mod test_db;
 
 macro_rules! col {
     ($batch:expr, $idx:expr, $ty:ty) => {
@@ -145,7 +146,7 @@ macro_rules! assert_list_strings {
 }
 
 fn run_clickhouse_query(query: &str) -> Vec<RecordBatch> {
-    let dburl = env::var("CLICKHOUSE_URL").unwrap();
+    let dburl = test_db::clickhouse_url();
     let rt = Arc::new(Runtime::new().unwrap());
     let builder = ClickHouseSource::new(rt, &dburl).unwrap();
     let mut destination = ArrowDestination::new();
