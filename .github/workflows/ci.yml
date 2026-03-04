@@ -176,12 +176,6 @@ jobs:
             target/
           key: ${{ runner.os }}-cargo-python-${{ matrix.python-version }}-${{ secrets.CACHE_VERSION }}-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Seed SQLite
-        run: |
-          sqlite3 ${SQLITE_URL#sqlite://} < scripts/sqlite.sql
-        env:
-          SQLITE_URL: "sqlite:///tmp/test.db"
-
       - name: Clippy linting
         uses: actions-rs/cargo@v1
         with:

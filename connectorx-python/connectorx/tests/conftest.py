@@ -2,6 +2,7 @@
 import json
 import os
 from pathlib import Path
+import sqlite3
 from typing import Generator, Any, Optional
 import urllib.error
 import urllib.request
@@ -138,6 +139,39 @@ def mysql_url(mysql_container: Optional[Any]) -> str:
         return mysql_container.get_connection_url()
 
     pytest.skip("No MySQL database available for tests")
+
+
+@pytest.fixture(scope="session")
+def sqlite_db_session() -> str:
+    """
+    Fixture that initializes a SQLite database for tests.
+
+    The database is seeded from scripts/sqlite.sql at test time.
+    """
+    sqlite_url = os.environ.get("SQLITE_URL", "sqlite:///tmp/test.db")
+    db_path = sqlite_url.removeprefix("sqlite://")
+    if not db_path:
+        raise ValueError(f"Invalid SQLITE_URL: {sqlite_url}")
+
+    init_script = Path(__file__).parent.parent.parent.parent / "scripts" / "sqlite.sql"
+    if not init_script.exists():
+        raise FileNotFoundError(f"SQLite init script not found: {init_script}")
+
+    conn = sqlite3.connect(db_path)
+    try:
+        conn.executescript(init_script.read_text(encoding="utf-8"))
+        conn.commit()
+    finally:
+        conn.close()
+
+    os.environ["SQLITE_URL"] = sqlite_url
+    return sqlite_url
+
+
+@pytest.fixture(scope="module")
+def sqlite_db(sqlite_db_session: str) -> str:
+    """Fixture that returns the SQLite connection URL."""
+    return sqlite_db_session
 
 
 @pytest.fixture(scope="session")

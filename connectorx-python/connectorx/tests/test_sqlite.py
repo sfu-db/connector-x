@@ -1,18 +1,8 @@
-import os
-
 import numpy as np
 import pandas as pd
-import pytest
 from pandas.testing import assert_frame_equal
 
 from .. import read_sql, ConnectionUrl
-
-
-@pytest.fixture(scope="module")  # type: ignore
-def sqlite_db() -> str:
-    conn = os.environ["SQLITE_URL"]
-    return conn
-
 
 def test_sqlite_without_partition(sqlite_db: str) -> None:
     query = "SELECT test_int, test_nullint, test_str, test_float, test_bool, test_date, test_time, test_datetime FROM test_table"
