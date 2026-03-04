@@ -31,7 +31,9 @@ use rusqlite::{types::Type, Connection};
 use rust_decimal::{prelude::ToPrimitive, Decimal};
 #[cfg(feature = "src_postgres")]
 use rust_decimal_macros::dec;
+#[cfg(feature = "src_clickhouse")]
 use serde::Deserialize;
+#[cfg(feature = "src_clickhouse")]
 use serde_json::Value as JsonValue;
 #[cfg(feature = "src_clickhouse")]
 use sqlparser::dialect::ClickHouseDialect;
