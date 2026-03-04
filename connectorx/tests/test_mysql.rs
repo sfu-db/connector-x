@@ -1,5 +1,7 @@
 #![cfg(all(feature = "src_mysql", feature = "dst_arrow"))]
 
+mod test_db;
+
 use arrow::{
     array::{Float64Array, Int64Array, StringArray},
     record_batch::RecordBatch,
@@ -11,13 +13,12 @@ use connectorx::{
     sql::CXQuery,
     transports::MySQLArrowTransport,
 };
-use std::env;
 
 #[test]
 fn test_mysql() {
     let _ = env_logger::builder().is_test(true).try_init();
 
-    let dburl = env::var("MYSQL_URL").unwrap();
+    let dburl = test_db::mysql_url();
 
     let queries = [
         CXQuery::naked("select * from test_table where test_int <= 2"),
@@ -42,7 +43,7 @@ fn test_mysql() {
 fn test_mysql_text() {
     let _ = env_logger::builder().is_test(true).try_init();
 
-    let dburl = env::var("MYSQL_URL").unwrap();
+    let dburl = test_db::mysql_url();
 
     let queries = [
         CXQuery::naked("select * from test_table where test_int <= 2"),
@@ -67,7 +68,7 @@ fn test_mysql_text() {
 fn test_mysql_pre_execution_queries() {
     let _ = env_logger::builder().is_test(true).try_init();
 
-    let dburl = env::var("MYSQL_URL").unwrap();
+    let dburl = test_db::mysql_url();
 
     let queries = [CXQuery::naked(
         "SELECT @@SESSION.max_execution_time, @@SESSION.wait_timeout",
@@ -112,7 +113,7 @@ fn test_mysql_pre_execution_queries() {
 fn test_mysql_partitioned_pre_execution_queries() {
     let _ = env_logger::builder().is_test(true).try_init();
 
-    let dburl = env::var("MYSQL_URL").unwrap();
+    let dburl = test_db::mysql_url();
 
     let queries = [
         CXQuery::naked(
