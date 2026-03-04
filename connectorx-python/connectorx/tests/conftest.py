@@ -14,6 +14,7 @@ try:
     from testcontainers.clickhouse import ClickHouseContainer
     from testcontainers.postgres import PostgresContainer
     from testcontainers.mysql import MySqlContainer
+    from testcontainers.mssql import SqlServerContainer
     from testcontainers.trino import TrinoContainer
     TESTCONTAINERS_AVAILABLE = True
 except ImportError:
@@ -22,6 +23,7 @@ except ImportError:
     ClickHouseContainer = None
     PostgresContainer = None
     MySqlContainer = None
+    SqlServerContainer = None
     TrinoContainer = None
 
 
@@ -136,6 +138,81 @@ def mysql_url(mysql_container: Optional[Any]) -> str:
         return mysql_container.get_connection_url()
 
     pytest.skip("No MySQL database available for tests")
+
+
+@pytest.fixture(scope="session")
+def mssql_container() -> Generator[Optional[Any], None, None]:
+    """
+    Fixture that starts a SQL Server container for tests.
+
+    This fixture is used at session level to avoid restarting the container
+    for each test.
+    """
+    # If MSSQL_URL is already defined, use it (for backward compatibility)
+    if os.environ.get("MSSQL_URL"):
+        yield None
+        return
+
+    # If testcontainers is not available, skip
+    if not TESTCONTAINERS_AVAILABLE:
+        pytest.skip("testcontainers is not installed. Install with: pip install testcontainers")
+
+    init_script = Path(__file__).parent.parent.parent.parent / "scripts" / "mssql.sql"
+    if not init_script.exists():
+        raise FileNotFoundError(f"MSSQL init script not found: {init_script}")
+
+    # sqlcmd needs GO batch separator before CREATE FUNCTION in this script.
+    mssql_init_script = Path(__file__).with_name("mssql-test.sql")
+    mssql_init_script.write_text(
+        init_script.read_text(encoding="utf-8").replace(
+            "\nCREATE FUNCTION increment", "\nGO\n\nCREATE FUNCTION increment"
+        ),
+        encoding="utf-8",
+    )
+
+    mssql_container = SqlServerContainer(
+        image="mcr.microsoft.com/mssql/server:2022-CU12-ubuntu-22.04",
+        username="SA",
+        password="1Secure*Password1",
+        dbname="tempdb",
+    ).with_volume_mapping(str(mssql_init_script), "/tmp/mssql.sql", mode="ro")
+
+    with mssql_container as mssql:
+        status, output = mssql.exec(
+            [
+                "bash",
+                "-c",
+                '/opt/mssql-tools*/bin/sqlcmd -S localhost -U "$SQLSERVER_USER" -P "$SA_PASSWORD" -d "$SQLSERVER_DBNAME" -C -b -i /tmp/mssql.sql',
+            ]
+        )
+        if status != 0:
+            raise RuntimeError(f"Could not initialize MSSQL database: {output.decode('utf-8', errors='ignore')}")
+
+        os.environ["MSSQL_URL"] = mssql.get_connection_url()
+
+        try:
+            yield mssql
+        finally:
+            if "MSSQL_URL" in os.environ:
+                del os.environ["MSSQL_URL"]
+            mssql_init_script.unlink(missing_ok=True)
+
+
+@pytest.fixture(scope="module")
+def mssql_url(mssql_container: Optional[Any]) -> str:
+    """
+    Fixture that returns the MSSQL connection URL.
+
+    This fixture uses either the testcontainers container or a URL
+    defined in the MSSQL_URL environment variable.
+    """
+    if os.environ.get("MSSQL_URL"):
+        return os.environ["MSSQL_URL"]
+
+    if mssql_container is not None:
+        return mssql_container.get_connection_url()
+
+    pytest.skip("No MSSQL database available for tests")
 
 
 def _run_trino_statement(host: str, port: str, statement: str) -> None:
