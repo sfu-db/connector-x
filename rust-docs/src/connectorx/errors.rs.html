@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `connectorx/src/errors.rs`."><title>errors.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="connectorx" data-themes="" data-resource-suffix="" data-rustdoc-version="1.93.0 (254b59607 2026-01-19)" data-channel="1.93.0" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-a3946164.js" data-settings-js="settings-c38705f0.js" ><script src="../../static.files/storage-e2aeef58.js"></script><script defer src="../../static.files/src-script-813739b1.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-a410ff4d.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">connectorx/</div>errors.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span><span class="kw">crate</span>::data_order::DataOrder;
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `connectorx/src/errors.rs`."><title>errors.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="connectorx" data-themes="" data-resource-suffix="" data-rustdoc-version="1.93.1 (01f6ddf75 2026-02-11)" data-channel="1.93.1" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-a3946164.js" data-settings-js="settings-c38705f0.js" ><script src="../../static.files/storage-e2aeef58.js"></script><script defer src="../../static.files/src-script-813739b1.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-a410ff4d.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">connectorx/</div>errors.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span><span class="kw">crate</span>::data_order::DataOrder;
 <a href=#2 id=2 data-nosnippet>2</a><span class="kw">use </span>std::any::type_name;
 <a href=#3 id=3 data-nosnippet>3</a><span class="kw">use </span>std::fmt;
 <a href=#4 id=4 data-nosnippet>4</a><span class="kw">use </span>thiserror::Error;
@@ -122,76 +122,84 @@
 <a href=#122 id=122 data-nosnippet>122</a>    #[error(transparent)]
 <a href=#123 id=123 data-nosnippet>123</a>    </span>TrinoArrowTransportError(<span class="attr">#[from] </span><span class="kw">crate</span>::transports::TrinoArrowTransportError),
 <a href=#124 id=124 data-nosnippet>124</a>
-<a href=#125 id=125 data-nosnippet>125</a>    <span class="doccomment">/// Any other errors that are too trivial to be put here explicitly.
-<a href=#126 id=126 data-nosnippet>126</a>    </span><span class="attr">#[error(transparent)]
-<a href=#127 id=127 data-nosnippet>127</a>    </span>Other(<span class="attr">#[from] </span>anyhow::Error),
-<a href=#128 id=128 data-nosnippet>128</a>}
-<a href=#129 id=129 data-nosnippet>129</a>
-<a href=#130 id=130 data-nosnippet>130</a><span class="doccomment">/// Errors that can be raised from this library.
-<a href=#131 id=131 data-nosnippet>131</a></span><span class="attr">#[derive(Error, Debug)]
-<a href=#132 id=132 data-nosnippet>132</a></span><span class="kw">pub enum </span>ConnectorXError {
-<a href=#133 id=133 data-nosnippet>133</a>    <span class="doccomment">/// The required type does not same as the schema defined.
-<a href=#134 id=134 data-nosnippet>134</a>    </span><span class="attr">#[error(<span class="string">"Data type unexpected: {0:?} expected, {1} found."</span>)]
-<a href=#135 id=135 data-nosnippet>135</a>    </span>TypeCheckFailed(String, <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str),
-<a href=#136 id=136 data-nosnippet>136</a>
-<a href=#137 id=137 data-nosnippet>137</a>    <span class="attr">#[error(<span class="string">"Data order not supported {0:?}."</span>)]
-<a href=#138 id=138 data-nosnippet>138</a>    </span>UnsupportedDataOrder(DataOrder),
-<a href=#139 id=139 data-nosnippet>139</a>
-<a href=#140 id=140 data-nosnippet>140</a>    <span class="attr">#[error(<span class="string">"Cannot resolve data order: got {0:?} from source, {1:?} from destination."</span>)]
-<a href=#141 id=141 data-nosnippet>141</a>    </span>CannotResolveDataOrder(Vec&lt;DataOrder&gt;, Vec&lt;DataOrder&gt;),
-<a href=#142 id=142 data-nosnippet>142</a>
-<a href=#143 id=143 data-nosnippet>143</a>    <span class="attr">#[error(<span class="string">"Cannot produce a {0}, context: {1}."</span>)]
-<a href=#144 id=144 data-nosnippet>144</a>    </span>CannotProduce(<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str, ProduceContext),
-<a href=#145 id=145 data-nosnippet>145</a>
-<a href=#146 id=146 data-nosnippet>146</a>    <span class="attr">#[error(<span class="string">"No conversion rule from {0} to {1}."</span>)]
-<a href=#147 id=147 data-nosnippet>147</a>    </span>NoConversionRule(String, String),
-<a href=#148 id=148 data-nosnippet>148</a>
-<a href=#149 id=149 data-nosnippet>149</a>    <span class="attr">#[error(<span class="string">"Only support single query with SELECT statement, got {0}."</span>)]
-<a href=#150 id=150 data-nosnippet>150</a>    </span>SqlQueryNotSupported(String),
-<a href=#151 id=151 data-nosnippet>151</a>
-<a href=#152 id=152 data-nosnippet>152</a>    <span class="attr">#[error(<span class="string">"Cannot get total number of rows in advance."</span>)]
-<a href=#153 id=153 data-nosnippet>153</a>    </span>CountError(),
-<a href=#154 id=154 data-nosnippet>154</a>
-<a href=#155 id=155 data-nosnippet>155</a>    <span class="attr">#[error(transparent)]
-<a href=#156 id=156 data-nosnippet>156</a>    </span>SQLParserError(<span class="attr">#[from] </span>sqlparser::parser::ParserError),
-<a href=#157 id=157 data-nosnippet>157</a>
-<a href=#158 id=158 data-nosnippet>158</a>    <span class="attr">#[error(transparent)]
-<a href=#159 id=159 data-nosnippet>159</a>    </span>StdIOError(<span class="attr">#[from] </span>std::io::Error),
-<a href=#160 id=160 data-nosnippet>160</a>
-<a href=#161 id=161 data-nosnippet>161</a>    <span class="attr">#[error(transparent)]
-<a href=#162 id=162 data-nosnippet>162</a>    </span>StdVarError(<span class="attr">#[from] </span>std::env::VarError),
-<a href=#163 id=163 data-nosnippet>163</a>
-<a href=#164 id=164 data-nosnippet>164</a>    <span class="attr">#[error(transparent)]
-<a href=#165 id=165 data-nosnippet>165</a>    </span>Other(<span class="attr">#[from] </span>anyhow::Error),
-<a href=#166 id=166 data-nosnippet>166</a>}
-<a href=#167 id=167 data-nosnippet>167</a>
-<a href=#168 id=168 data-nosnippet>168</a><span class="kw">impl </span>ConnectorXError {
-<a href=#169 id=169 data-nosnippet>169</a>    <span class="kw">pub fn </span>cannot_produce&lt;T&gt;(context: <span class="prelude-ty">Option</span>&lt;String&gt;) -&gt; <span class="self">Self </span>{
-<a href=#170 id=170 data-nosnippet>170</a>        ConnectorXError::CannotProduce(type_name::&lt;T&gt;(), context.into())
-<a href=#171 id=171 data-nosnippet>171</a>    }
-<a href=#172 id=172 data-nosnippet>172</a>}
-<a href=#173 id=173 data-nosnippet>173</a>
-<a href=#174 id=174 data-nosnippet>174</a><span class="attr">#[derive(Debug)]
-<a href=#175 id=175 data-nosnippet>175</a></span><span class="kw">pub enum </span>ProduceContext {
-<a href=#176 id=176 data-nosnippet>176</a>    NoContext,
-<a href=#177 id=177 data-nosnippet>177</a>    Context(String),
-<a href=#178 id=178 data-nosnippet>178</a>}
-<a href=#179 id=179 data-nosnippet>179</a>
-<a href=#180 id=180 data-nosnippet>180</a><span class="kw">impl </span>From&lt;<span class="prelude-ty">Option</span>&lt;String&gt;&gt; <span class="kw">for </span>ProduceContext {
-<a href=#181 id=181 data-nosnippet>181</a>    <span class="kw">fn </span>from(val: <span class="prelude-ty">Option</span>&lt;String&gt;) -&gt; <span class="self">Self </span>{
-<a href=#182 id=182 data-nosnippet>182</a>        <span class="kw">match </span>val {
-<a href=#183 id=183 data-nosnippet>183</a>            <span class="prelude-val">Some</span>(c) =&gt; ProduceContext::Context(c),
-<a href=#184 id=184 data-nosnippet>184</a>            <span class="prelude-val">None </span>=&gt; ProduceContext::NoContext,
-<a href=#185 id=185 data-nosnippet>185</a>        }
-<a href=#186 id=186 data-nosnippet>186</a>    }
-<a href=#187 id=187 data-nosnippet>187</a>}
-<a href=#188 id=188 data-nosnippet>188</a>
-<a href=#189 id=189 data-nosnippet>189</a><span class="kw">impl </span>fmt::Display <span class="kw">for </span>ProduceContext {
-<a href=#190 id=190 data-nosnippet>190</a>    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
-<a href=#191 id=191 data-nosnippet>191</a>        <span class="kw">match </span><span class="self">self </span>{
-<a href=#192 id=192 data-nosnippet>192</a>            ProduceContext::NoContext =&gt; <span class="macro">write!</span>(f, <span class="string">"No Context"</span>),
-<a href=#193 id=193 data-nosnippet>193</a>            ProduceContext::Context(s) =&gt; <span class="macro">write!</span>(f, <span class="string">"{}"</span>, s),
-<a href=#194 id=194 data-nosnippet>194</a>        }
-<a href=#195 id=195 data-nosnippet>195</a>    }
-<a href=#196 id=196 data-nosnippet>196</a>}
+<a href=#125 id=125 data-nosnippet>125</a>    <span class="attr">#[cfg(feature = <span class="string">"src_clickhouse"</span>)]
+<a href=#126 id=126 data-nosnippet>126</a>    #[error(transparent)]
+<a href=#127 id=127 data-nosnippet>127</a>    </span>ClickHouseSourceError(<span class="attr">#[from] </span><span class="kw">crate</span>::sources::clickhouse::ClickHouseSourceError),
+<a href=#128 id=128 data-nosnippet>128</a>
+<a href=#129 id=129 data-nosnippet>129</a>    <span class="attr">#[cfg(all(feature = <span class="string">"src_clickhouse"</span>, feature = <span class="string">"dst_arrow"</span>))]
+<a href=#130 id=130 data-nosnippet>130</a>    #[error(transparent)]
+<a href=#131 id=131 data-nosnippet>131</a>    </span>ClickHouseArrowTransportError(<span class="attr">#[from] </span><span class="kw">crate</span>::transports::ClickHouseArrowTransportError),
+<a href=#132 id=132 data-nosnippet>132</a>
+<a href=#133 id=133 data-nosnippet>133</a>    <span class="doccomment">/// Any other errors that are too trivial to be put here explicitly.
+<a href=#134 id=134 data-nosnippet>134</a>    </span><span class="attr">#[error(transparent)]
+<a href=#135 id=135 data-nosnippet>135</a>    </span>Other(<span class="attr">#[from] </span>anyhow::Error),
+<a href=#136 id=136 data-nosnippet>136</a>}
+<a href=#137 id=137 data-nosnippet>137</a>
+<a href=#138 id=138 data-nosnippet>138</a><span class="doccomment">/// Errors that can be raised from this library.
+<a href=#139 id=139 data-nosnippet>139</a></span><span class="attr">#[derive(Error, Debug)]
+<a href=#140 id=140 data-nosnippet>140</a></span><span class="kw">pub enum </span>ConnectorXError {
+<a href=#141 id=141 data-nosnippet>141</a>    <span class="doccomment">/// The required type does not same as the schema defined.
+<a href=#142 id=142 data-nosnippet>142</a>    </span><span class="attr">#[error(<span class="string">"Data type unexpected: {0:?} expected, {1} found."</span>)]
+<a href=#143 id=143 data-nosnippet>143</a>    </span>TypeCheckFailed(String, <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str),
+<a href=#144 id=144 data-nosnippet>144</a>
+<a href=#145 id=145 data-nosnippet>145</a>    <span class="attr">#[error(<span class="string">"Data order not supported {0:?}."</span>)]
+<a href=#146 id=146 data-nosnippet>146</a>    </span>UnsupportedDataOrder(DataOrder),
+<a href=#147 id=147 data-nosnippet>147</a>
+<a href=#148 id=148 data-nosnippet>148</a>    <span class="attr">#[error(<span class="string">"Cannot resolve data order: got {0:?} from source, {1:?} from destination."</span>)]
+<a href=#149 id=149 data-nosnippet>149</a>    </span>CannotResolveDataOrder(Vec&lt;DataOrder&gt;, Vec&lt;DataOrder&gt;),
+<a href=#150 id=150 data-nosnippet>150</a>
+<a href=#151 id=151 data-nosnippet>151</a>    <span class="attr">#[error(<span class="string">"Cannot produce a {0}, context: {1}."</span>)]
+<a href=#152 id=152 data-nosnippet>152</a>    </span>CannotProduce(<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str, ProduceContext),
+<a href=#153 id=153 data-nosnippet>153</a>
+<a href=#154 id=154 data-nosnippet>154</a>    <span class="attr">#[error(<span class="string">"No conversion rule from {0} to {1}."</span>)]
+<a href=#155 id=155 data-nosnippet>155</a>    </span>NoConversionRule(String, String),
+<a href=#156 id=156 data-nosnippet>156</a>
+<a href=#157 id=157 data-nosnippet>157</a>    <span class="attr">#[error(<span class="string">"Only support single query with SELECT statement, got {0}."</span>)]
+<a href=#158 id=158 data-nosnippet>158</a>    </span>SqlQueryNotSupported(String),
+<a href=#159 id=159 data-nosnippet>159</a>
+<a href=#160 id=160 data-nosnippet>160</a>    <span class="attr">#[error(<span class="string">"Cannot get total number of rows in advance."</span>)]
+<a href=#161 id=161 data-nosnippet>161</a>    </span>CountError(),
+<a href=#162 id=162 data-nosnippet>162</a>
+<a href=#163 id=163 data-nosnippet>163</a>    <span class="attr">#[error(transparent)]
+<a href=#164 id=164 data-nosnippet>164</a>    </span>SQLParserError(<span class="attr">#[from] </span>sqlparser::parser::ParserError),
+<a href=#165 id=165 data-nosnippet>165</a>
+<a href=#166 id=166 data-nosnippet>166</a>    <span class="attr">#[error(transparent)]
+<a href=#167 id=167 data-nosnippet>167</a>    </span>StdIOError(<span class="attr">#[from] </span>std::io::Error),
+<a href=#168 id=168 data-nosnippet>168</a>
+<a href=#169 id=169 data-nosnippet>169</a>    <span class="attr">#[error(transparent)]
+<a href=#170 id=170 data-nosnippet>170</a>    </span>StdVarError(<span class="attr">#[from] </span>std::env::VarError),
+<a href=#171 id=171 data-nosnippet>171</a>
+<a href=#172 id=172 data-nosnippet>172</a>    <span class="attr">#[error(transparent)]
+<a href=#173 id=173 data-nosnippet>173</a>    </span>Other(<span class="attr">#[from] </span>anyhow::Error),
+<a href=#174 id=174 data-nosnippet>174</a>}
+<a href=#175 id=175 data-nosnippet>175</a>
+<a href=#176 id=176 data-nosnippet>176</a><span class="kw">impl </span>ConnectorXError {
+<a href=#177 id=177 data-nosnippet>177</a>    <span class="kw">pub fn </span>cannot_produce&lt;T&gt;(context: <span class="prelude-ty">Option</span>&lt;String&gt;) -&gt; <span class="self">Self </span>{
+<a href=#178 id=178 data-nosnippet>178</a>        ConnectorXError::CannotProduce(type_name::&lt;T&gt;(), context.into())
+<a href=#179 id=179 data-nosnippet>179</a>    }
+<a href=#180 id=180 data-nosnippet>180</a>}
+<a href=#181 id=181 data-nosnippet>181</a>
+<a href=#182 id=182 data-nosnippet>182</a><span class="attr">#[derive(Debug)]
+<a href=#183 id=183 data-nosnippet>183</a></span><span class="kw">pub enum </span>ProduceContext {
+<a href=#184 id=184 data-nosnippet>184</a>    NoContext,
+<a href=#185 id=185 data-nosnippet>185</a>    Context(String),
+<a href=#186 id=186 data-nosnippet>186</a>}
+<a href=#187 id=187 data-nosnippet>187</a>
+<a href=#188 id=188 data-nosnippet>188</a><span class="kw">impl </span>From&lt;<span class="prelude-ty">Option</span>&lt;String&gt;&gt; <span class="kw">for </span>ProduceContext {
+<a href=#189 id=189 data-nosnippet>189</a>    <span class="kw">fn </span>from(val: <span class="prelude-ty">Option</span>&lt;String&gt;) -&gt; <span class="self">Self </span>{
+<a href=#190 id=190 data-nosnippet>190</a>        <span class="kw">match </span>val {
+<a href=#191 id=191 data-nosnippet>191</a>            <span class="prelude-val">Some</span>(c) =&gt; ProduceContext::Context(c),
+<a href=#192 id=192 data-nosnippet>192</a>            <span class="prelude-val">None </span>=&gt; ProduceContext::NoContext,
+<a href=#193 id=193 data-nosnippet>193</a>        }
+<a href=#194 id=194 data-nosnippet>194</a>    }
+<a href=#195 id=195 data-nosnippet>195</a>}
+<a href=#196 id=196 data-nosnippet>196</a>
+<a href=#197 id=197 data-nosnippet>197</a><span class="kw">impl </span>fmt::Display <span class="kw">for </span>ProduceContext {
+<a href=#198 id=198 data-nosnippet>198</a>    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
+<a href=#199 id=199 data-nosnippet>199</a>        <span class="kw">match </span><span class="self">self </span>{
+<a href=#200 id=200 data-nosnippet>200</a>            ProduceContext::NoContext =&gt; <span class="macro">write!</span>(f, <span class="string">"No Context"</span>),
+<a href=#201 id=201 data-nosnippet>201</a>            ProduceContext::Context(s) =&gt; <span class="macro">write!</span>(f, <span class="string">"{}"</span>, s),
+<a href=#202 id=202 data-nosnippet>202</a>        }
+<a href=#203 id=203 data-nosnippet>203</a>    }
+<a href=#204 id=204 data-nosnippet>204</a>}
 </code></pre></div></section></main></body></html>

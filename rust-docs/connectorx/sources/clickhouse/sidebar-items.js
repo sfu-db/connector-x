@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["ClickHouseSourceError","ClickHouseTypeSystem"],"struct":["ClickHouseSource","ClickHouseSourceParser","ClickHouseSourcePartition","TypeMetadata"]};
