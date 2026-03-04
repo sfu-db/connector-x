@@ -231,6 +231,13 @@ BibTeX entry:
                 </a>
             </td>
             <td align="center">
+                <a href="https://github.com/yuansuentw">
+                    <img src="https://avatars.githubusercontent.com/u/136064271?v=4" width="66;" alt="yuansuentw"/>
+                    <br />
+                    <sub><b>Yuan</b></sub>
+                </a>
+            </td>
+            <td align="center">
                 <a href="https://github.com/dbascoules">
                     <img src="https://avatars.githubusercontent.com/u/155983332?v=4" width="66;" alt="dbascoules"/>
                     <br />
@@ -251,6 +258,8 @@ BibTeX entry:
                     <sub><b>Weiyuan Wu</b></sub>
                 </a>
             </td>
+		</tr>
+		<tr>
             <td align="center">
                 <a href="https://github.com/Wukkkinz-0725">
                     <img src="https://avatars.githubusercontent.com/u/60677420?v=4" width="66;" alt="Wukkkinz-0725"/>
@@ -258,8 +267,6 @@ BibTeX entry:
                     <sub><b>Null</b></sub>
                 </a>
             </td>
-		</tr>
-		<tr>
             <td align="center">
                 <a href="https://github.com/Yizhou150">
                     <img src="https://avatars.githubusercontent.com/u/62522644?v=4" width="66;" alt="Yizhou150"/>
@@ -295,6 +302,8 @@ BibTeX entry:
                     <sub><b>Jordan M. Young</b></sub>
                 </a>
             </td>
+		</tr>
+		<tr>
             <td align="center">
                 <a href="https://github.com/auyer">
                     <img src="https://avatars.githubusercontent.com/u/12375421?v=4" width="66;" alt="auyer"/>
@@ -302,8 +311,6 @@ BibTeX entry:
                     <sub><b>Rafael Passos</b></sub>
                 </a>
             </td>
-		</tr>
-		<tr>
             <td align="center">
                 <a href="https://github.com/jinzew">
                     <img src="https://avatars.githubusercontent.com/u/55274369?v=4" width="66;" alt="jinzew"/>
@@ -339,6 +346,8 @@ BibTeX entry:
                     <sub><b>Ritchie Vink</b></sub>
                 </a>
             </td>
+		</tr>
+		<tr>
             <td align="center">
                 <a href="https://github.com/davidhewitt">
                     <img src="https://avatars.githubusercontent.com/u/1939362?v=4" width="66;" alt="davidhewitt"/>
@@ -346,8 +355,6 @@ BibTeX entry:
                     <sub><b>David Hewitt</b></sub>
                 </a>
             </td>
-		</tr>
-		<tr>
             <td align="center">
                 <a href="https://github.com/houqp">
                     <img src="https://avatars.githubusercontent.com/u/670302?v=4" width="66;" alt="houqp"/>
@@ -383,6 +390,8 @@ BibTeX entry:
                     <sub><b>Chitral Verma</b></sub>
                 </a>
             </td>
+		</tr>
+		<tr>
             <td align="center">
                 <a href="https://github.com/jorgecarleitao">
                     <img src="https://avatars.githubusercontent.com/u/2772607?v=4" width="66;" alt="jorgecarleitao"/>
@@ -390,20 +399,11 @@ BibTeX entry:
                     <sub><b>Jorge Leitao</b></sub>
                 </a>
             </td>
-		</tr>
-		<tr>
             <td align="center">
                 <a href="https://github.com/glennpierce">
                     <img src="https://avatars.githubusercontent.com/u/691783?v=4" width="66;" alt="glennpierce"/>
                     <br />
                     <sub><b>Glenn Pierce</b></sub>
-                </a>
-            </td>
-            <td align="center">
-                <a href="https://github.com/yuansuentw">
-                    <img src="https://avatars.githubusercontent.com/u/136064271?v=4" width="66;" alt="yuansuentw"/>
-                    <br />
-                    <sub><b>Yuan</b></sub>
                 </a>
             </td>
             <td align="center">
@@ -481,10 +481,10 @@ BibTeX entry:
 		</tr>
 		<tr>
             <td align="center">
-                <a href="https://github.com/MatsMoll">
-                    <img src="https://avatars.githubusercontent.com/u/4439131?v=4" width="66;" alt="MatsMoll"/>
+                <a href="https://github.com/meirdev">
+                    <img src="https://avatars.githubusercontent.com/u/21178966?v=4" width="66;" alt="meirdev"/>
                     <br />
-                    <sub><b>Mats Eikeland Mollestad</b></sub>
+                    <sub><b>Meir</b></sub>
                 </a>
             </td>
             <td align="center">
@@ -560,14 +560,21 @@ BibTeX entry:
                 </a>
             </td>
             <td align="center">
+                <a href="https://github.com/MatsMoll">
+                    <img src="https://avatars.githubusercontent.com/u/4439131?v=4" width="66;" alt="MatsMoll"/>
+                    <br />
+                    <sub><b>Mats Eikeland Mollestad</b></sub>
+                </a>
+            </td>
+		</tr>
+		<tr>
+            <td align="center">
                 <a href="https://github.com/marianoguerra">
                     <img src="https://avatars.githubusercontent.com/u/68463?v=4" width="66;" alt="marianoguerra"/>
                     <br />
                     <sub><b>Mariano Guerra</b></sub>
                 </a>
             </td>
-		</tr>
-		<tr>
             <td align="center">
                 <a href="https://github.com/kevinheavey">
                     <img src="https://avatars.githubusercontent.com/u/24635973?v=4" width="66;" alt="kevinheavey"/>
@@ -603,6 +610,8 @@ BibTeX entry:
                     <sub><b>Andrew Jackson</b></sub>
                 </a>
             </td>
+		</tr>
+		<tr>
             <td align="center">
                 <a href="https://github.com/Cabbagec">
                     <img src="https://avatars.githubusercontent.com/u/14164987?v=4" width="66;" alt="Cabbagec"/>
@@ -610,8 +619,6 @@ BibTeX entry:
                     <sub><b>Brandon</b></sub>
                 </a>
             </td>
-		</tr>
-		<tr>
             <td align="center">
                 <a href="https://github.com/Amar1729">
                     <img src="https://avatars.githubusercontent.com/u/15623522?v=4" width="66;" alt="Amar1729"/>
