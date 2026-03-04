@@ -9,11 +9,130 @@ import pytest
 try:
     from testcontainers.oracle import OracleDbContainer
     from testcontainers.clickhouse import ClickHouseContainer
+    from testcontainers.postgres import PostgresContainer
+    from testcontainers.mysql import MySqlContainer
     TESTCONTAINERS_AVAILABLE = True
 except ImportError:
     TESTCONTAINERS_AVAILABLE = False
     OracleDbContainer = None  # Avoid type hint errors
     ClickHouseContainer = None
+    PostgresContainer = None
+    MySqlContainer = None
+
+
+@pytest.fixture(scope="session")
+def postgres_container() -> Generator[Optional[Any], None, None]:
+    """
+    Fixture that starts a PostgreSQL container for tests.
+
+    This fixture is used at session level to avoid restarting the container
+    for each test.
+    """
+    # If POSTGRES_URL is already defined, use it (for backward compatibility)
+    if os.environ.get("POSTGRES_URL"):
+        yield None
+        return
+
+    # If testcontainers is not available, skip
+    if not TESTCONTAINERS_AVAILABLE:
+        pytest.skip("testcontainers is not installed. Install with: pip install testcontainers")
+
+    init_script = Path(__file__).parent.parent.parent.parent / "scripts" / "postgres.sql"
+    if not init_script.exists():
+        raise FileNotFoundError(f"PostgreSQL init script not found: {init_script}")
+
+    # Use pgvector image because scripts/postgres.sql creates the vector extension.
+    postgres_container = PostgresContainer(
+        image="pgvector/pgvector:pg17",
+        username="postgres",
+        password="postgres",
+        dbname="postgres",
+    ).with_volume_mapping(str(init_script), "/docker-entrypoint-initdb.d/postgres.sql", mode="ro")
+
+    with postgres_container as postgres:
+
+        # connectorx expects a URL without SQLAlchemy driver suffix.
+        os.environ["POSTGRES_URL"] = postgres.get_connection_url(driver=None)
+
+        try:
+            yield postgres
+        finally:
+            if "POSTGRES_URL" in os.environ:
+                del os.environ["POSTGRES_URL"]
+
+
+@pytest.fixture(scope="module")
+def postgres_url(postgres_container: Optional[Any]) -> str:
+    """
+    Fixture that returns the PostgreSQL connection URL.
+
+    This fixture uses either the testcontainers container or a URL
+    defined in the POSTGRES_URL environment variable.
+    """
+    if os.environ.get("POSTGRES_URL"):
+        return os.environ["POSTGRES_URL"]
+
+    if postgres_container is not None:
+        return postgres_container.get_connection_url(driver=None)
+
+    pytest.skip("No PostgreSQL database available for tests")
+
+
+@pytest.fixture(scope="session")
+def mysql_container() -> Generator[Optional[Any], None, None]:
+    """
+    Fixture that starts a MySQL container for tests.
+
+    This fixture is used at session level to avoid restarting the container
+    for each test.
+    """
+    # If MYSQL_URL is already defined, use it (for backward compatibility)
+    if os.environ.get("MYSQL_URL"):
+        yield None
+        return
+
+    # If testcontainers is not available, skip
+    if not TESTCONTAINERS_AVAILABLE:
+        pytest.skip("testcontainers is not installed. Install with: pip install testcontainers")
+
+    init_script = Path(__file__).parent.parent.parent.parent / "scripts" / "mysql.sql"
+    if not init_script.exists():
+        raise FileNotFoundError(f"MySQL init script not found: {init_script}")
+
+    mysql_container = MySqlContainer(
+        image="ghcr.io/wangxiaoying/mysql:latest",
+        username="root",
+        password="mysql",
+        dbname="mysql",
+    ).with_volume_mapping(str(init_script), "/docker-entrypoint-initdb.d/mysql.sql", mode="ro")
+
+    with mysql_container as mysql:
+        os.environ["MYSQL_URL"] = mysql.get_connection_url()
+
+        try:
+            yield mysql
+        finally:
+            if "MYSQL_URL" in os.environ:
+                del os.environ["MYSQL_URL"]
+
+
+@pytest.fixture(scope="module")
+def mysql_url(mysql_container: Optional[Any]) -> str:
+    """
+    Fixture that returns the MySQL connection URL.
+
+    This fixture uses either the testcontainers container or a URL
+    defined in the MYSQL_URL environment variable.
+    """
+    if os.environ.get("MYSQL_URL"):
+        return os.environ["MYSQL_URL"]
+
+    if mysql_container is not None:
+        return mysql_container.get_connection_url()
+
+    pytest.skip("No MySQL database available for tests")
+
+
 
 
 @pytest.fixture(scope="session")

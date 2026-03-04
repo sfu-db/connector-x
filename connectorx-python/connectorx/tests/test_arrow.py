@@ -1,18 +1,9 @@
-import os
-
 import pandas as pd
-import pytest
 from pandas.testing import assert_frame_equal
 import datetime
 from decimal import localcontext, Decimal
 
 from .. import read_sql
-
-
-@pytest.fixture(scope="module")  # type: ignore
-def postgres_url() -> str:
-    conn = os.environ["POSTGRES_URL"]
-    return conn
 
 
 def test_arrow(postgres_url: str) -> None:
