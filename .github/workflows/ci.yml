@@ -13,30 +13,6 @@ jobs:
   rust:
     runs-on: ubuntu-latest
     container: ubuntu:24.04
-    services:
-      postgres:
-        image: pgvector/pgvector:pg17
-        env:
-          POSTGRES_PASSWORD: postgres
-        # Set health checks to wait until postgres has started
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-      mysql:
-        image: ghcr.io/wangxiaoying/mysql:latest
-        env:
-          MYSQL_DATABASE: mysql
-          MYSQL_ROOT_PASSWORD: mysql
-          LANG: C.UTF-8
-        ports:
-          - 3306:3306
-        options: >-
-          --health-cmd "mysqladmin ping"
-          --health-interval 10s
-          --health-timeout 10s
-          --health-retries 5
 
     steps:
       - uses: actions/checkout@v6
@@ -68,17 +44,6 @@ jobs:
 
       - uses: extractions/setup-just@v3
 
-      - name: Seed the database
-        run: just seed-db
-        env:
-          POSTGRES_URL: "postgresql://postgres:postgres@postgres:5432/postgres"
-          SQLITE_URL: "sqlite:///tmp/test.db"
-          MYSQL_HOST: mysql
-          MYSQL_PORT: 3306
-          MYSQL_DB: mysql
-          MYSQL_USER: root
-          MYSQL_PASSWORD: mysql
-
       - name: Is the code formatted?
         uses: actions-rs/cargo@v1
         with:
@@ -96,10 +61,6 @@ jobs:
 
       - name: Run tests
         run: cargo clean && just test-ci
-        env:
-          POSTGRES_URL: "postgresql://postgres:postgres@postgres:5432/postgres"
-          SQLITE_URL: "sqlite:///tmp/test.db"
-          MYSQL_URL: "mysql://root:mysql@mysql:3306/mysql"
 
       - name: Test build docs
         uses: actions-rs/cargo@v1
