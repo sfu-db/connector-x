@@ -1,9 +1,9 @@
 (function() {
-    var implementors = Object.fromEntries([["connectorx",[["impl Presto for <a class=\"struct\" href=\"connectorx/sources/trino/struct.TrinoPartitionQueryResult.html\" title=\"struct connectorx::sources::trino::TrinoPartitionQueryResult\">TrinoPartitionQueryResult</a>"]]]]);
+    const implementors = Object.fromEntries([["connectorx",[["impl Presto for <a class=\"struct\" href=\"connectorx/sources/trino/struct.TrinoPartitionQueryResult.html\" title=\"struct connectorx::sources::trino::TrinoPartitionQueryResult\">TrinoPartitionQueryResult</a>",0]]]]);
     if (window.register_implementors) {
         window.register_implementors(implementors);
     } else {
         window.pending_implementors = implementors;
     }
 })()
-//{"start":57,"fragment_lengths":[229]}
+//{"start":59,"fragment_lengths":[231]}
