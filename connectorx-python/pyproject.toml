@@ -60,7 +60,7 @@ maturin = ">=1.0,<2.0"
 modin = {extras = ["dask"], version = ">=0.10.1"}
 polars = ">=0.20"
 pyarrow = ">=22"
-pytest = "^9.0"
+pytest = "^9"
 pytest-benchmark = "^5.2"
 testcontainers = {version = "^4.0", extras = ["oracle-free", "clickhouse"]}
 psycopg2-binary = "^2.9"
