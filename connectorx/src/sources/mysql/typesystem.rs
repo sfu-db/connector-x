@@ -106,8 +106,23 @@ impl<'a> From<(&'a ColumnType, &'a ColumnFlags)> for MySQLTypeSystem {
             ColumnType::MYSQL_TYPE_TIME => Time(null_ok),
             ColumnType::MYSQL_TYPE_DECIMAL => Decimal(null_ok),
             ColumnType::MYSQL_TYPE_NEWDECIMAL => Decimal(null_ok),
-            ColumnType::MYSQL_TYPE_STRING => Char(null_ok),
-            ColumnType::MYSQL_TYPE_VAR_STRING => VarChar(null_ok),
+            ColumnType::MYSQL_TYPE_STRING => {
+                // BINARY/CHAR share the same type code, distinguished by BINARY flag
+                if flag.contains(ColumnFlags::BINARY_FLAG) {
+                    TinyBlob(null_ok)
+                } else {
+                    Char(null_ok)
+                }
+            }
+            ColumnType::MYSQL_TYPE_VAR_STRING => {
+                // VARBINARY/VARCHAR share the same type code, distinguished by BINARY flag
+                if flag.contains(ColumnFlags::BINARY_FLAG) {
+                    Blob(null_ok)
+                } else {
+                    VarChar(null_ok)
+                }
+            }
+
             ColumnType::MYSQL_TYPE_TIMESTAMP => Timestamp(null_ok),
             ColumnType::MYSQL_TYPE_YEAR => Year(null_ok),
             ColumnType::MYSQL_TYPE_ENUM => Enum(null_ok),

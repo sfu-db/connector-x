@@ -188,6 +188,8 @@ pub mod prelude {
     pub use crate::source_router::*;
     #[cfg(feature = "src_bigquery")]
     pub use crate::sources::bigquery::BigQuerySource;
+    #[cfg(feature = "src_clickhouse")]
+    pub use crate::sources::clickhouse::ClickHouseSource;
     #[cfg(feature = "src_csv")]
     pub use crate::sources::csv::CSVSource;
     #[cfg(feature = "src_dummy")]

@@ -55,7 +55,7 @@ impl_transport!(
         { Datetime[NaiveDateTime]    => Date64[NaiveDateTime]   | conversion auto }
         { Year[i16]                  => Int64[i64]              | conversion none}
         { Timestamp[NaiveDateTime]   => Date64[NaiveDateTime]   | conversion none }
-        { Decimal[Decimal]           => Float64[f64]            | conversion option }
+        { Decimal[Decimal]           => Decimal[Decimal]        | conversion auto }
         { VarChar[String]            => LargeUtf8[String]       | conversion auto }
         { Char[String]               => LargeUtf8[String]       | conversion none }
         { Enum[String]               => LargeUtf8[String]       | conversion none }
@@ -91,7 +91,7 @@ impl_transport!(
         { Datetime[NaiveDateTime]    => Date64[NaiveDateTime]   | conversion auto }
         { Year[i16]                  => Int64[i64]              | conversion none}
         { Timestamp[NaiveDateTime]   => Date64[NaiveDateTime]   | conversion none }
-        { Decimal[Decimal]           => Float64[f64]            | conversion option }
+        { Decimal[Decimal]           => Decimal[Decimal]        | conversion auto }
         { VarChar[String]            => LargeUtf8[String]       | conversion auto }
         { Char[String]               => LargeUtf8[String]       | conversion none }
         { Enum[String]               => LargeUtf8[String]       | conversion none }

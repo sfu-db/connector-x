@@ -57,9 +57,6 @@ def rewrite_conn(
         if "redshift" in backend:
             conn = f"postgresql:{connection_details}"
             protocol = "cursor"
-        elif "clickhouse" in backend:
-            conn = f"mysql:{connection_details}"
-            protocol = "text"
         else:
             protocol = "binary"
     return conn, protocol

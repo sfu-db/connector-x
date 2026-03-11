@@ -9,7 +9,7 @@ jobs:
   docs:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install Rust
         uses: actions-rs/toolchain@v1
@@ -46,7 +46,7 @@ jobs:
         run: touch ./docs/_build/html/.nojekyll
 
       - name: Deploy Docs 🚀
-        uses: JamesIves/github-pages-deploy-action@v4.7.3
+        uses: JamesIves/github-pages-deploy-action@v4.8.0
         with:
           branch: gh-pages # The branch the action should deploy to.
           folder: ./docs/_build/html # The folder the action should deploy.
@@ -57,7 +57,7 @@ jobs:
     name: A job to automate contrib in readme
     steps:
         - name: Contribute List
-          uses: akhilmhdh/contributors-readme-action@v2.3.10
+          uses: akhilmhdh/contributors-readme-action@v2.3.11
           with:
               image_size: 66
           env:

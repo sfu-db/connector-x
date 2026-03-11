@@ -9,12 +9,8 @@ import ast
 
 from .. import read_sql
 
-
-@pytest.fixture(scope="module")  # type: ignore
-def postgres_url() -> str:
-    conn = os.environ["POSTGRES_URL"]
-    return conn
-
+# postgres_url fixture is now defined in conftest.py
+# It uses testcontainers if available, otherwise the POSTGRES_URL environment variable
 
 @pytest.fixture(scope="module")  # type: ignore
 def postgres_url_tls() -> str:

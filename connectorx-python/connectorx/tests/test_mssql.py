@@ -1,5 +1,3 @@
-import os
-
 import pandas as pd
 import pytest
 from pandas.testing import assert_frame_equal
@@ -8,24 +6,11 @@ from connectorx import ConnectionUrl
 from .. import read_sql
 
 
-@pytest.fixture(scope="module")  # type: ignore
-def mssql_url() -> str:
-    conn = os.environ["MSSQL_URL"]
-    # conn = os.environ["AZURE_MSSQL_URL"]
-    return conn
-
-
 @pytest.mark.xfail
-@pytest.mark.skipif(
-    not os.environ.get("MSSQL_URL"), reason="Test mssql only when `MSSQL_URL` is set"
-)
 def test_mssql_on_non_select(mssql_url: str) -> None:
     query = "CREATE TABLE non_select(id INTEGER NOT NULL)"
     df = read_sql(mssql_url, query)
 
-@pytest.mark.skipif(
-    not os.environ.get("MSSQL_URL"), reason="Test mssql only when `MSSQL_URL` is set"
-)
 def test_mssql_aggregation(mssql_url: str) -> None:
     query = (
         "SELECT test_bool, SUM(test_float) as sum FROM test_table GROUP BY test_bool"
@@ -40,9 +25,6 @@ def test_mssql_aggregation(mssql_url: str) -> None:
     )
     assert_frame_equal(df, expected, check_names=True)
 
-@pytest.mark.skipif(
-    not os.environ.get("MSSQL_URL"), reason="Test mssql only when `MSSQL_URL` is set"
-)
 def test_mssql_partition_on_aggregation(mssql_url: str) -> None:
     query = (
         "SELECT test_bool, SUM(test_int) AS test_int FROM test_table GROUP BY test_bool"
@@ -58,9 +40,6 @@ def test_mssql_partition_on_aggregation(mssql_url: str) -> None:
     df.sort_values(by="test_int", inplace=True, ignore_index=True)
     assert_frame_equal(df, expected, check_names=True)
 
-@pytest.mark.skipif(
-    not os.environ.get("MSSQL_URL"), reason="Test mssql only when `MSSQL_URL` is set"
-)
 def test_mssql_aggregation2(mssql_url: str) -> None:
     query = "select DISTINCT(test_bool) from test_table"
     df = read_sql(mssql_url, query)
@@ -72,9 +51,6 @@ def test_mssql_aggregation2(mssql_url: str) -> None:
     )
     assert_frame_equal(df, expected, check_names=True)
 
-@pytest.mark.skipif(
-    not os.environ.get("MSSQL_URL"), reason="Test mssql only when `MSSQL_URL` is set"
-)
 def test_mssql_partition_on_aggregation2(mssql_url: str) -> None:
     query = "select MAX(test_int) as max, MIN(test_int) as min from test_table"
     df = read_sql(mssql_url, query, partition_on="max", partition_num=2)
@@ -87,9 +63,6 @@ def test_mssql_partition_on_aggregation2(mssql_url: str) -> None:
     )
     assert_frame_equal(df, expected, check_names=True)
 
-@pytest.mark.skipif(
-    not os.environ.get("MSSQL_URL"), reason="Test mssql only when `MSSQL_URL` is set"
-)
 def test_mssql_udf(mssql_url: str) -> None:
     query = (
         "SELECT dbo.increment(test_int) AS test_int FROM test_table ORDER BY test_int"
@@ -104,9 +77,6 @@ def test_mssql_udf(mssql_url: str) -> None:
     df.sort_values(by="test_int", inplace=True, ignore_index=True)
     assert_frame_equal(df, expected, check_names=True)
 
-@pytest.mark.skipif(
-    not os.environ.get("MSSQL_URL"), reason="Test mssql only when `MSSQL_URL` is set"
-)
 def test_mssql_manual_partition(mssql_url: str) -> None:
     queries = [
         "SELECT * FROM test_table WHERE test_int < 2",
@@ -132,9 +102,6 @@ def test_mssql_manual_partition(mssql_url: str) -> None:
     df.sort_values(by="test_int", inplace=True, ignore_index=True)
     assert_frame_equal(df, expected, check_names=True)
 
-@pytest.mark.skipif(
-    not os.environ.get("MSSQL_URL"), reason="Test mssql only when `MSSQL_URL` is set"
-)
 def test_mssql_without_partition(mssql_url: str) -> None:
     query = "SELECT * FROM test_table"
     df = read_sql(mssql_url, query)
@@ -154,9 +121,6 @@ def test_mssql_without_partition(mssql_url: str) -> None:
     )
     assert_frame_equal(df, expected, check_names=True)
 
-@pytest.mark.skipif(
-    not os.environ.get("MSSQL_URL"), reason="Test mssql only when `MSSQL_URL` is set"
-)
 def test_mssql_limit_without_partition(mssql_url: str) -> None:
     query = "SELECT top 3 * FROM test_table"
     df = read_sql(mssql_url, query)
@@ -172,9 +136,6 @@ def test_mssql_limit_without_partition(mssql_url: str) -> None:
     )
     assert_frame_equal(df, expected, check_names=True)
 
-@pytest.mark.skipif(
-    not os.environ.get("MSSQL_URL"), reason="Test mssql only when `MSSQL_URL` is set"
-)
 def test_mssql_limit_large_without_partition(mssql_url: str) -> None:
     query = "SELECT top 10 * FROM test_table"
     df = read_sql(mssql_url, query)
@@ -194,9 +155,6 @@ def test_mssql_limit_large_without_partition(mssql_url: str) -> None:
     )
     assert_frame_equal(df, expected, check_names=True)
 
-@pytest.mark.skipif(
-    not os.environ.get("MSSQL_URL"), reason="Test mssql only when `MSSQL_URL` is set"
-)
 def test_mssql_with_partition(mssql_url: str) -> None:
     query = "SELECT * FROM test_table"
     df = read_sql(
@@ -223,9 +181,6 @@ def test_mssql_with_partition(mssql_url: str) -> None:
     df.sort_values(by="test_int", inplace=True, ignore_index=True)
     assert_frame_equal(df, expected, check_names=True)
 
-@pytest.mark.skipif(
-    not os.environ.get("MSSQL_URL"), reason="Test mssql only when `MSSQL_URL` is set"
-)
 def test_mssql_limit_with_partition(mssql_url: str) -> None:
     query = "SELECT top 3 * FROM test_table"
     df = read_sql(
@@ -248,9 +203,6 @@ def test_mssql_limit_with_partition(mssql_url: str) -> None:
     df.sort_values(by="test_int", inplace=True, ignore_index=True)
     assert_frame_equal(df, expected, check_names=True)
 
-@pytest.mark.skipif(
-    not os.environ.get("MSSQL_URL"), reason="Test mssql only when `MSSQL_URL` is set"
-)
 def test_mssql_limit_large_with_partition(mssql_url: str) -> None:
     query = "SELECT top 10 * FROM test_table"
     df = read_sql(
@@ -277,9 +229,6 @@ def test_mssql_limit_large_with_partition(mssql_url: str) -> None:
     df.sort_values(by="test_int", inplace=True, ignore_index=True)
     assert_frame_equal(df, expected, check_names=True)
 
-@pytest.mark.skipif(
-    not os.environ.get("MSSQL_URL"), reason="Test mssql only when `MSSQL_URL` is set"
-)
 def test_mssql_with_partition_without_partition_range(mssql_url: str) -> None:
     query = "SELECT * FROM test_table where test_float > 3"
     df = read_sql(
@@ -302,9 +251,6 @@ def test_mssql_with_partition_without_partition_range(mssql_url: str) -> None:
     df.sort_values(by="test_int", inplace=True, ignore_index=True)
     assert_frame_equal(df, expected, check_names=True)
 
-@pytest.mark.skipif(
-    not os.environ.get("MSSQL_URL"), reason="Test mssql only when `MSSQL_URL` is set"
-)
 def test_mssql_with_partition_and_selection(mssql_url: str) -> None:
     query = "SELECT * FROM test_table WHERE 1 = 3 OR 2 = 2"
     df = read_sql(
@@ -331,9 +277,6 @@ def test_mssql_with_partition_and_selection(mssql_url: str) -> None:
     df.sort_values(by="test_int", inplace=True, ignore_index=True)
     assert_frame_equal(df, expected, check_names=True)
 
-@pytest.mark.skipif(
-    not os.environ.get("MSSQL_URL"), reason="Test mssql only when `MSSQL_URL` is set"
-)
 def test_mssql_with_partition_and_projection(mssql_url: str) -> None:
     query = "SELECT test_int, test_float, test_str FROM test_table"
     df = read_sql(
@@ -356,9 +299,6 @@ def test_mssql_with_partition_and_projection(mssql_url: str) -> None:
     df.sort_values(by="test_int", inplace=True, ignore_index=True)
     assert_frame_equal(df, expected, check_names=True)
 
-@pytest.mark.skipif(
-    not os.environ.get("MSSQL_URL"), reason="Test mssql only when `MSSQL_URL` is set"
-)
 def test_mssql_with_partition_and_spja(mssql_url: str) -> None:
     query = """
     SELECT test_bool, AVG(test_float) AS avg, SUM(test_int) AS sum 
@@ -379,9 +319,6 @@ def test_mssql_with_partition_and_spja(mssql_url: str) -> None:
     df = df.sort_values("sum").reset_index(drop=True)
     assert_frame_equal(df, expected, check_names=True)
 
-@pytest.mark.skipif(
-    not os.environ.get("MSSQL_URL"), reason="Test mssql only when `MSSQL_URL` is set"
-)
 def test_mssql_empty_result(mssql_url: str) -> None:
     query = "SELECT * FROM test_table where test_int < -100"
     df = read_sql(mssql_url, query)
@@ -396,9 +333,6 @@ def test_mssql_empty_result(mssql_url: str) -> None:
     )
     assert_frame_equal(df, expected, check_names=True)
 
-@pytest.mark.skipif(
-    not os.environ.get("MSSQL_URL"), reason="Test mssql only when `MSSQL_URL` is set"
-)
 def test_mssql_empty_result_on_partition(mssql_url: str) -> None:
     query = "SELECT * FROM test_table where test_int < -100"
     df = read_sql(mssql_url, query, partition_on="test_int", partition_num=3)
@@ -413,9 +347,6 @@ def test_mssql_empty_result_on_partition(mssql_url: str) -> None:
     )
     assert_frame_equal(df, expected, check_names=True)
 
-@pytest.mark.skipif(
-    not os.environ.get("MSSQL_URL"), reason="Test mssql only when `MSSQL_URL` is set"
-)
 def test_mssql_empty_result_on_some_partition(mssql_url: str) -> None:
     query = "SELECT * FROM test_table where test_int < 1"
     df = read_sql(mssql_url, query, partition_on="test_int", partition_num=3)
@@ -430,9 +361,6 @@ def test_mssql_empty_result_on_some_partition(mssql_url: str) -> None:
     )
     assert_frame_equal(df, expected, check_names=True)
 
-@pytest.mark.skipif(
-    not os.environ.get("MSSQL_URL"), reason="Test mssql only when `MSSQL_URL` is set"
-)
 def test_mssql_types(mssql_url: str) -> None:
     query = "SELECT * FROM test_types"
     df = read_sql(mssql_url, query)
@@ -497,9 +425,6 @@ def test_mssql_types(mssql_url: str) -> None:
     )
     assert_frame_equal(df, expected, check_names=True)
 
-@pytest.mark.skipif(
-    not os.environ.get("MSSQL_URL"), reason="Test mssql only when `MSSQL_URL` is set"
-)
 def test_mssql_unicode(mssql_url: str) -> None:
     query = "SELECT test_hello FROM test_str where 1 <= id and id <= 4"
     df = read_sql(mssql_url, query)
@@ -513,9 +438,6 @@ def test_mssql_unicode(mssql_url: str) -> None:
     )
     assert_frame_equal(df, expected, check_names=True)
 
-@pytest.mark.skipif(
-    not os.environ.get("MSSQL_URL"), reason="Test mssql only when `MSSQL_URL` is set"
-)
 def test_mssql_cte(mssql_url: str) -> None:
     query = "with test_cte (test_int, test_str) as (select test_int, test_str from test_table where test_float > 0) select test_int, test_str from test_cte"
     df = read_sql(mssql_url, query, partition_on="test_int", partition_num=3)
@@ -529,9 +451,6 @@ def test_mssql_cte(mssql_url: str) -> None:
     )
     assert_frame_equal(df, expected, check_names=True)
 
-@pytest.mark.skipif(
-    not os.environ.get("MSSQL_URL"), reason="Test mssql only when `MSSQL_URL` is set"
-)
 def test_mssql_offset(mssql_url: str) -> None:
     query = "SELECT * FROM (SELECT * FROM test_table) AS _ ORDER BY(SELECT NULL) OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY"
     df = read_sql(mssql_url, query)
@@ -546,8 +465,73 @@ def test_mssql_offset(mssql_url: str) -> None:
     )
     assert_frame_equal(df, expected, check_names=True)
 
-@pytest.mark.skipif(
-    not os.environ.get("MSSQL_URL"), reason="Test mssql only when `MSSQL_URL` is set"
-)
 def test_mssql_connection_url(mssql_url: str) -> None:
     test_mssql_offset(ConnectionUrl(mssql_url))
+
+
+def test_mssql_decimal_arrow(mssql_url: str) -> None:
+    """Test that DECIMAL/NUMERIC types return as Decimal128 in Arrow."""
+    import pyarrow as pa
+    from decimal import Decimal
+
+    query = "SELECT test_new_decimal, test_decimal FROM test_types"
+    table = read_sql(mssql_url, query, return_type="arrow")
+
+    # Verify schema - should be Decimal128
+    assert table.schema.field('test_new_decimal').type == pa.decimal128(38, 10)
+    assert table.schema.field('test_decimal').type == pa.decimal128(38, 10)
+
+    # Verify values
+    df = table.to_pandas()
+    assert df['test_new_decimal'][0] == Decimal('1.1')
+    assert df['test_new_decimal'][1] == Decimal('2.2')
+    assert df['test_new_decimal'][2] is None or pd.isna(df['test_new_decimal'][2])
+
+    assert df['test_decimal'][0] == Decimal('1')
+    assert df['test_decimal'][1] == Decimal('2')
+    assert df['test_decimal'][2] is None or pd.isna(df['test_decimal'][2])
+
+
+def test_mssql_decimal_arrow_stream(mssql_url: str) -> None:
+    """Test that DECIMAL/NUMERIC types return as Decimal128 in ArrowStream."""
+    import pyarrow as pa
+    from decimal import Decimal
+
+    query = "SELECT test_new_decimal, test_decimal FROM test_types"
+    reader = read_sql(mssql_url, query, return_type="arrow_stream", batch_size=10)
+
+    batches = list(reader)
+    table = pa.Table.from_batches(batches)
+
+    # Verify schema - should be Decimal128
+    assert table.schema.field('test_new_decimal').type == pa.decimal128(38, 10)
+    assert table.schema.field('test_decimal').type == pa.decimal128(38, 10)
+
+    # Verify values
+    df = table.to_pandas()
+    assert df['test_new_decimal'][0] == Decimal('1.1')
+    assert df['test_new_decimal'][1] == Decimal('2.2')
+    assert df['test_new_decimal'][2] is None or pd.isna(df['test_new_decimal'][2])
+
+    assert df['test_decimal'][0] == Decimal('1')
+    assert df['test_decimal'][1] == Decimal('2')
+    assert df['test_decimal'][2] is None or pd.isna(df['test_decimal'][2])
+
+
+def test_mssql_decimal_pandas_unchanged(mssql_url: str) -> None:
+    """Test that DECIMAL/NUMERIC types still return as float in Pandas (default, backward compatibility)."""
+    query = "SELECT test_new_decimal, test_decimal FROM test_types"
+    df = read_sql(mssql_url, query)  # Default return_type="pandas"
+
+    # Verify that Pandas still uses float (backward compatibility)
+    assert df['test_new_decimal'].dtype == 'float64'
+    assert df['test_decimal'].dtype == 'float64'
+
+    # Verify values (with float precision limitations)
+    assert abs(df['test_new_decimal'][0] - 1.1) < 0.01
+    assert abs(df['test_new_decimal'][1] - 2.2) < 0.01
+    assert pd.isna(df['test_new_decimal'][2])
+
+    assert df['test_decimal'][0] == 1.0
+    assert df['test_decimal'][1] == 2.0
+    assert pd.isna(df['test_decimal'][2])

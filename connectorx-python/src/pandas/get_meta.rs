@@ -2,8 +2,9 @@ use super::{
     destination::PandasDestination,
     dispatcher::PandasDispatcher,
     transports::{
-        BigQueryPandasTransport, MsSQLPandasTransport, MysqlPandasTransport, OraclePandasTransport,
-        PostgresPandasTransport, SqlitePandasTransport, TrinoPandasTransport,
+        BigQueryPandasTransport, ClickHousePandasTransport, MsSQLPandasTransport,
+        MysqlPandasTransport, OraclePandasTransport, PostgresPandasTransport,
+        SqlitePandasTransport, TrinoPandasTransport,
     },
 };
 use crate::errors::ConnectorXPythonError;
@@ -12,6 +13,7 @@ use connectorx::{
     prelude::*,
     sources::{
         bigquery::BigQuerySource,
+        clickhouse::ClickHouseSource,
         mssql::MsSQLSource,
         mysql::{BinaryProtocol as MySQLBinaryProtocol, MySQLSource, TextProtocol},
         postgres::{
@@ -210,6 +212,17 @@ pub fn get_meta<'py>(
             let rt = Arc::new(tokio::runtime::Runtime::new().expect("Failed to create runtime"));
             let source = TrinoSource::new(rt, &source_conn.conn[..])?;
             let dispatcher = PandasDispatcher::<_, TrinoPandasTransport>::new(
+                source,
+                destination,
+                queries,
+                None,
+            );
+            dispatcher.get_meta(py)?
+        }
+        SourceType::ClickHouse => {
+            let rt = Arc::new(tokio::runtime::Runtime::new().expect("Failed to create runtime"));
+            let source = ClickHouseSource::new(rt, &source_conn.conn[..])?;
+            let dispatcher = PandasDispatcher::<_, ClickHousePandasTransport>::new(
                 source,
                 destination,
                 queries,

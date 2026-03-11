@@ -7,7 +7,7 @@ use chrono::{DateTime, Utc};
 use fehler::throws;
 use ndarray::{ArrayViewMut2, Axis, Ix2};
 use numpy::{PyArray, PyArrayMethods};
-use pyo3::{types::PyAnyMethods, PyAny, PyResult};
+use pyo3::{PyAny, PyResult};
 use std::any::TypeId;
 
 // datetime64 is represented in int64 in numpy
@@ -19,7 +19,7 @@ pub struct DateTimeBlock<'a> {
 impl<'a> ExtractBlockFromBound<'a> for DateTimeBlock<'a> {
     fn extract_block<'b: 'a>(ob: &'b pyo3::Bound<'a, PyAny>) -> PyResult<Self> {
         check_dtype(ob, "int64")?;
-        let array = ob.downcast::<PyArray<i64, Ix2>>()?;
+        let array = ob.cast::<PyArray<i64, Ix2>>()?;
         let data = unsafe { array.as_array_mut() };
         Ok(DateTimeBlock { data })
     }

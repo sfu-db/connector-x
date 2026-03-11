@@ -96,6 +96,7 @@ pub fn mssql_config(url: &Url) -> Config {
 
     match params.get("encrypt") {
         Some(v) if v.to_lowercase() == "true" => config.encryption(EncryptionLevel::Required),
+        Some(v) if v.to_lowercase() == "false" => config.encryption(EncryptionLevel::Off),
         _ => config.encryption(EncryptionLevel::NotSupported),
     };
 

@@ -10,10 +10,6 @@ The easiest way to install ConnectorX is using pip, with the following command:
 pip install connectorx
 ```
 
-```{note}
-For AArch64 or ARM64 Linux users, `connectorx==0.4.3 & above` is only available for distributions using `glibc 2.35` and above. Specifically, the re-release for this architecture was tested on Ubuntu 22.04. For older distributions, the latest version available is `connectorx==0.2.3` due to dependency limitations.
-```
-
 ### Build from source code
 
 * Step 0: Install tools.
@@ -47,4 +43,3 @@ just build-python-wheel
 NOTES:
 * `OPENSSL_NO_VENDOR=1` might required to compile for windows users.
 * Dynamic library is required for the python installation. (e.g. If you are using `pyenv`, use command `PYTHON_CONFIGURE_OPTS=“--enable-shared” pyenv install {version}` to install python since dylib is not enabled by default.)
-
