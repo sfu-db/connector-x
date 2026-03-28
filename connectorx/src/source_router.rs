@@ -57,7 +57,11 @@ impl TryFrom<&str> for SourceConn {
         match url.scheme().split('+').collect::<Vec<&str>>()[0] {
             "postgres" | "postgresql" => Ok(SourceConn::new(SourceType::Postgres, url, proto)),
             #[cfg(feature = "src_postgres")]
-            "redshift-iam" => Ok(SourceConn::new(SourceType::Postgres, redshift_to_postgres(url), "cursor".to_string())),
+            "redshift-iam" => Ok(SourceConn::new(
+                SourceType::Postgres,
+                redshift_to_postgres(url),
+                "cursor".to_string(),
+            )),
             "sqlite" => Ok(SourceConn::new(SourceType::SQLite, url, proto)),
             "mysql" => Ok(SourceConn::new(SourceType::MySQL, url, proto)),
             "mssql" => Ok(SourceConn::new(SourceType::MsSQL, url, proto)),
