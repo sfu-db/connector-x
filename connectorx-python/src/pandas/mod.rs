@@ -28,6 +28,7 @@ use connectorx::{
     },
     sql::CXQuery,
 };
+use anyhow::anyhow;
 use fehler::throws;
 use log::debug;
 use postgres::NoTls;
@@ -164,7 +165,13 @@ pub fn write_pandas<'a, 'py: 'a>(
         }
         SourceType::SQLite => {
             // remove the first "sqlite://" manually since url.path is not correct for windows
-            let path = &source_conn.conn.as_str()[9..];
+            let conn_str = source_conn.conn.as_str();
+            let path = conn_str.get(9..).ok_or_else(|| {
+                ConnectorXPythonError::from(anyhow::anyhow!(
+                    "invalid sqlite connection string: {}",
+                    conn_str
+                ))
+            })?;
             let source = SQLiteSource::new(path, queries.len())?;
             let dispatcher = PandasDispatcher::<_, SqlitePandasTransport>::new(
                 source,
