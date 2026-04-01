@@ -72,7 +72,7 @@ where
         let dst_partitions = self.dst_parts.take().unwrap();
         let dorder = self.dorder;
 
-        std::thread::spawn(move || -> Result<(), TP::Error> {
+        let handle = std::thread::spawn(move || -> Result<(), TP::Error> {
             let schemas: Vec<_> = src_schema
                 .iter()
                 .zip_eq(&dst_schema)
@@ -133,6 +133,10 @@ where
 
             Ok(())
         });
+        // Propagate thread panic if the spawned thread crashed
+        if let Err(payload) = handle.join() {
+            std::panic::panic_any(payload);
+        }
     }
 }
 
