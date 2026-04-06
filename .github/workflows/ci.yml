@@ -41,7 +41,7 @@ jobs:
             target/
           key: ${{ runner.os }}-cargo-${{ secrets.CACHE_VERSION }}-${{ hashFiles('**/Cargo.lock') }}
 
-      - uses: extractions/setup-just@v3
+      - uses: extractions/setup-just@v4
 
       - name: Is the code formatted?
         uses: actions-rs/cargo@v1
@@ -112,7 +112,7 @@ jobs:
 
       - uses: Gr1N/setup-poetry@v9
 
-      - uses: extractions/setup-just@v3
+      - uses: extractions/setup-just@v4
 
       - name: Install Rust
         uses: actions-rs/toolchain@v1
