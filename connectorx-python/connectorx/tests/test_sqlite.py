@@ -28,7 +28,7 @@ def test_sqlite_without_partition(sqlite_db: str) -> None:
                     np.datetime64("1996-04-20"),
                     None,
                 ],
-                dtype="datetime64[ns]",
+                dtype="datetime64[us]",
             ),
             "test_time": pd.Series(
                 [
@@ -48,9 +48,9 @@ def test_sqlite_without_partition(sqlite_db: str) -> None:
                     None,
                     np.datetime64("1987-01-01T11:00:00"),
                     None,
-                    np.datetime64("2007-10-01T10:32:00"),
+                    np.datetime64("9999-12-31T10:32:00"),
                 ],
-                dtype="datetime64[ns]",
+                dtype="datetime64[us]",
             ),
         },
     )
@@ -74,7 +74,7 @@ def test_sqlite_limit_without_partition(sqlite_db: str) -> None:
                     np.datetime64("1996-01-30"),
                     np.datetime64("1996-02-28"),
                 ],
-                dtype="datetime64[ns]",
+                dtype="datetime64[us]",
             ),
             "test_time": pd.Series(
                 ["08:12:40", "10:03:00", "23:00:10"], dtype="object"
@@ -85,7 +85,7 @@ def test_sqlite_limit_without_partition(sqlite_db: str) -> None:
                     np.datetime64("2005-01-01T22:03:00"),
                     None,
                 ],
-                dtype="datetime64[ns]",
+                dtype="datetime64[us]",
             ),
         },
     )
@@ -116,7 +116,7 @@ def test_sqlite_limit_large_without_partition(sqlite_db: str) -> None:
                     np.datetime64("1996-04-20"),
                     None,
                 ],
-                dtype="datetime64[ns]",
+                dtype="datetime64[us]",
             ),
             "test_time": pd.Series(
                 [
@@ -136,9 +136,9 @@ def test_sqlite_limit_large_without_partition(sqlite_db: str) -> None:
                     None,
                     np.datetime64("1987-01-01T11:00:00"),
                     None,
-                    np.datetime64("2007-10-01T10:32:00"),
+                    np.datetime64("9999-12-31T10:32:00"),
                 ],
-                dtype="datetime64[ns]",
+                dtype="datetime64[us]",
             ),
         },
     )
@@ -174,7 +174,7 @@ def test_sqlite_with_partition(sqlite_db: str) -> None:
                     np.datetime64("1996-04-20"),
                     None,
                 ],
-                dtype="datetime64[ns]",
+                dtype="datetime64[us]",
             ),
             "test_time": pd.Series(
                 [
@@ -194,9 +194,9 @@ def test_sqlite_with_partition(sqlite_db: str) -> None:
                     np.datetime64("2005-01-01T22:03:00"),
                     np.datetime64("1987-01-01T11:00:00"),
                     None,
-                    np.datetime64("2007-10-01T10:32:00"),
+                    np.datetime64("9999-12-31T10:32:00"),
                 ],
-                dtype="datetime64[ns]",
+                dtype="datetime64[us]",
             ),
         },
     )
@@ -233,7 +233,7 @@ def test_manual_partition(sqlite_db: str) -> None:
                     np.datetime64("1996-04-20"),
                     None,
                 ],
-                dtype="datetime64[ns]",
+                dtype="datetime64[us]",
             ),
             "test_time": pd.Series(
                 [
@@ -253,9 +253,9 @@ def test_manual_partition(sqlite_db: str) -> None:
                     np.datetime64("2005-01-01T22:03:00"),
                     np.datetime64("1987-01-01T11:00:00"),
                     None,
-                    np.datetime64("2007-10-01T10:32:00"),
+                    np.datetime64("9999-12-31T10:32:00"),
                 ],
-                dtype="datetime64[ns]",
+                dtype="datetime64[us]",
             ),
         },
     )
@@ -354,14 +354,14 @@ def test_empty_result_on_some_partition(sqlite_db: str) -> None:
                 [
                     np.datetime64("1996-02-28"),
                 ],
-                dtype="datetime64[ns]",
+                dtype="datetime64[us]",
             ),
             "test_time": pd.Series(["23:00:10"], dtype="object"),
             "test_datetime": pd.Series(
                 [
                     None,
                 ],
-                dtype="datetime64[ns]",
+                dtype="datetime64[us]",
             ),
         }
     )

@@ -1,6 +1,6 @@
 use crate::errors::ConnectorXPythonError;
 use crate::pandas::destination::PandasDestination;
-use crate::pandas::typesystem::PandasTypeSystem;
+use crate::pandas::typesystem::{DateTimeWrapperMicro, PandasTypeSystem};
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
 use connectorx::{
     impl_transport,
@@ -32,11 +32,11 @@ impl_transport!(
         { ULong[u32]                 => I64[i64]                | conversion auto }
         { UInt24[u32]                => I64[i64]                | conversion none }
         { ULongLong[u64]             => F64[f64]                | conversion auto }
-        { Date[NaiveDate]            => DateTime[DateTime<Utc>] | conversion option }
+        { Date[NaiveDate]            => DateTimeMicro[DateTimeWrapperMicro] | conversion option }
         { Time[NaiveTime]            => String[String]          | conversion option }
         { Year[i16]                  => I64[i64]                | conversion none}
-        { Datetime[NaiveDateTime]    => DateTime[DateTime<Utc>] | conversion option }
-        { Timestamp[NaiveDateTime]   => DateTime[DateTime<Utc>] | conversion none }
+        { Datetime[NaiveDateTime]    => DateTimeMicro[DateTimeWrapperMicro] | conversion option }
+        { Timestamp[NaiveDateTime]   => DateTimeMicro[DateTimeWrapperMicro] | conversion none }
         { Decimal[Decimal]           => F64[f64]                | conversion option }
         { VarChar[String]            => String[String]          | conversion auto }
         { Char[String]               => String[String]          | conversion none }
@@ -68,10 +68,10 @@ impl_transport!(
         { ULong[u32]                 => I64[i64]                | conversion auto }
         { UInt24[u32]                => I64[i64]                | conversion none }
         { ULongLong[u64]             => F64[f64]                | conversion auto }
-        { Date[NaiveDate]            => DateTime[DateTime<Utc>] | conversion option }
+        { Date[NaiveDate]            => DateTimeMicro[DateTimeWrapperMicro] | conversion option }
         { Time[NaiveTime]            => String[String]          | conversion option }
-        { Datetime[NaiveDateTime]    => DateTime[DateTime<Utc>] | conversion option }
-        { Timestamp[NaiveDateTime]   => DateTime[DateTime<Utc>] | conversion none }
+        { Datetime[NaiveDateTime]    => DateTimeMicro[DateTimeWrapperMicro] | conversion option }
+        { Timestamp[NaiveDateTime]   => DateTimeMicro[DateTimeWrapperMicro] | conversion none }
         { Year[i16]                  => I64[i64]                | conversion none}
         { Decimal[Decimal]           => F64[f64]                | conversion option }
         { VarChar[String]            => String[String]          | conversion auto }
@@ -86,13 +86,13 @@ impl_transport!(
     }
 );
 
-impl<'py, P> TypeConversion<NaiveDate, DateTime<Utc>> for MysqlPandasTransport<'py, P> {
-    fn convert(val: NaiveDate) -> DateTime<Utc> {
-        DateTime::from_naive_utc_and_offset(
+impl<'py, P> TypeConversion<NaiveDate, DateTimeWrapperMicro> for MysqlPandasTransport<'py, P> {
+    fn convert(val: NaiveDate) -> DateTimeWrapperMicro {
+        DateTimeWrapperMicro(DateTime::from_naive_utc_and_offset(
             val.and_hms_opt(0, 0, 0)
                 .unwrap_or_else(|| panic!("and_hms_opt got None from {:?}", val)),
             Utc,
-        )
+        ))
     }
 }
 
@@ -102,9 +102,9 @@ impl<'py, P> TypeConversion<NaiveTime, String> for MysqlPandasTransport<'py, P> 
     }
 }
 
-impl<'py, P> TypeConversion<NaiveDateTime, DateTime<Utc>> for MysqlPandasTransport<'py, P> {
-    fn convert(val: NaiveDateTime) -> DateTime<Utc> {
-        DateTime::from_naive_utc_and_offset(val, Utc)
+impl<'py, P> TypeConversion<NaiveDateTime, DateTimeWrapperMicro> for MysqlPandasTransport<'py, P> {
+    fn convert(val: NaiveDateTime) -> DateTimeWrapperMicro {
+        DateTimeWrapperMicro(DateTime::from_naive_utc_and_offset(val, Utc))
     }
 }
 

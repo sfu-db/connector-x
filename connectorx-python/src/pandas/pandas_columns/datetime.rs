@@ -2,6 +2,7 @@ use super::{
     check_dtype, ExtractBlockFromBound, HasPandasColumn, PandasColumn, PandasColumnObject,
 };
 use crate::errors::ConnectorXPythonError;
+use crate::pandas::typesystem::DateTimeWrapperMicro;
 use anyhow::anyhow;
 use chrono::{DateTime, Utc};
 use fehler::throws;
@@ -56,7 +57,10 @@ unsafe impl Sync for DateTimeColumn {}
 
 impl PandasColumnObject for DateTimeColumn {
     fn typecheck(&self, id: TypeId) -> bool {
-        id == TypeId::of::<DateTime<Utc>>() || id == TypeId::of::<Option<DateTime<Utc>>>()
+        id == TypeId::of::<DateTime<Utc>>()
+            || id == TypeId::of::<Option<DateTime<Utc>>>()
+            || id == TypeId::of::<DateTimeWrapperMicro>()
+            || id == TypeId::of::<Option<DateTimeWrapperMicro>>()
     }
 
     fn typename(&self) -> &'static str {
@@ -95,6 +99,32 @@ impl HasPandasColumn for DateTime<Utc> {
 }
 
 impl HasPandasColumn for Option<DateTime<Utc>> {
+    type PandasColumn<'a> = DateTimeColumn;
+}
+
+impl PandasColumn<DateTimeWrapperMicro> for DateTimeColumn {
+    #[throws(ConnectorXPythonError)]
+    fn write(&mut self, val: DateTimeWrapperMicro, row: usize) {
+        unsafe {
+            *self.data.add(row) = val.0.timestamp_micros();
+        };
+    }
+}
+
+impl PandasColumn<Option<DateTimeWrapperMicro>> for DateTimeColumn {
+    #[throws(ConnectorXPythonError)]
+    fn write(&mut self, val: Option<DateTimeWrapperMicro>, row: usize) {
+        unsafe {
+            *self.data.add(row) = val.map(|t| t.0.timestamp_micros()).unwrap_or(i64::MIN);
+        };
+    }
+}
+
+impl HasPandasColumn for DateTimeWrapperMicro {
+    type PandasColumn<'a> = DateTimeColumn;
+}
+
+impl HasPandasColumn for Option<DateTimeWrapperMicro> {
     type PandasColumn<'a> = DateTimeColumn;
 }
 

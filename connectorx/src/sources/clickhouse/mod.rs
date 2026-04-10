@@ -463,11 +463,14 @@ impl<'a> BinaryReader<'a> {
             return Err(anyhow!("Unsupported DateTime64 precision: {}", precision).into());
         }
         let ticks = self.read_i64()?;
-        let nanos = ticks * 10_i64.pow(9 - precision as u32);
+        let scale = 10_i64.pow(precision as u32);
+        let seconds = ticks.div_euclid(scale);
+        let fractional_ticks = ticks.rem_euclid(scale) as u32;
+        let nanos = fractional_ticks * 10_u32.pow(9 - precision as u32);
 
-        Ok(DateTime::from_timestamp_nanos(nanos)
-            .with_timezone(tz.unwrap_or(&Tz::UTC))
-            .to_utc())
+        DateTime::from_timestamp(seconds, nanos)
+            .map(|dt| dt.with_timezone(tz.unwrap_or(&Tz::UTC)).to_utc())
+            .ok_or_else(|| anyhow!("Invalid datetime64 value: {} ticks", ticks).into())
     }
 
     fn read_decimal(&mut self, precision: u8, scale: u8) -> Result<Decimal, ClickHouseSourceError> {

@@ -1,8 +1,11 @@
 """Pytest configuration for tests with testcontainers."""
+from contextlib import contextmanager
 import json
 import os
 from pathlib import Path
+import platform
 import sqlite3
+import time
 from typing import Generator, Any, Optional
 import urllib.error
 import urllib.request
@@ -26,6 +29,32 @@ except ImportError:
     MySqlContainer = None
     SqlServerContainer = None
     TrinoContainer = None
+
+
+def _is_arm64_host() -> bool:
+    return platform.machine().lower() in {"arm64", "aarch64"}
+
+
+@contextmanager
+def _docker_platform_env(platform_value: str) -> Generator[None, None, None]:
+    old_value = os.environ.get("DOCKER_DEFAULT_PLATFORM")
+    os.environ["DOCKER_DEFAULT_PLATFORM"] = platform_value
+    try:
+        yield
+    finally:
+        if old_value is None:
+            os.environ.pop("DOCKER_DEFAULT_PLATFORM", None)
+        else:
+            os.environ["DOCKER_DEFAULT_PLATFORM"] = old_value
+
+
+@contextmanager
+def _docker_amd64_on_arm64() -> Generator[None, None, None]:
+    if _is_arm64_host():
+        with _docker_platform_env("linux/amd64"):
+            yield
+    else:
+        yield
 
 
 @pytest.fixture(scope="session")
@@ -115,7 +144,7 @@ def mysql_container() -> Generator[Optional[Any], None, None]:
     ).with_volume_mapping(str(init_script), "/docker-entrypoint-initdb.d/mysql.sql", mode="ro")
 
     with mysql_container as mysql:
-        os.environ["MYSQL_URL"] = mysql.get_connection_url()
+        os.environ["MYSQL_URL"] = mysql.get_connection_url().replace("localhost", "127.0.0.1")
 
         try:
             yield mysql
@@ -211,25 +240,26 @@ def mssql_container() -> Generator[Optional[Any], None, None]:
         dbname="tempdb",
     ).with_volume_mapping(str(mssql_init_script), "/tmp/mssql.sql", mode="ro")
 
-    with mssql_container as mssql:
-        status, output = mssql.exec(
-            [
-                "bash",
-                "-c",
-                '/opt/mssql-tools*/bin/sqlcmd -S localhost -U "$SQLSERVER_USER" -P "$SA_PASSWORD" -d "$SQLSERVER_DBNAME" -C -b -i /tmp/mssql.sql',
-            ]
-        )
-        if status != 0:
-            raise RuntimeError(f"Could not initialize MSSQL database: {output.decode('utf-8', errors='ignore')}")
+    with _docker_amd64_on_arm64():
+        with mssql_container as mssql:
+            status, output = mssql.exec(
+                [
+                    "bash",
+                    "-c",
+                    '/opt/mssql-tools*/bin/sqlcmd -S localhost -U "$SQLSERVER_USER" -P "$SA_PASSWORD" -d "$SQLSERVER_DBNAME" -C -b -i /tmp/mssql.sql',
+                ]
+            )
+            if status != 0:
+                raise RuntimeError(f"Could not initialize MSSQL database: {output.decode('utf-8', errors='ignore')}")
 
-        os.environ["MSSQL_URL"] = mssql.get_connection_url()
+            os.environ["MSSQL_URL"] = mssql.get_connection_url()
 
-        try:
-            yield mssql
-        finally:
-            if "MSSQL_URL" in os.environ:
-                del os.environ["MSSQL_URL"]
-            mssql_init_script.unlink(missing_ok=True)
+            try:
+                yield mssql
+            finally:
+                if "MSSQL_URL" in os.environ:
+                    del os.environ["MSSQL_URL"]
+                mssql_init_script.unlink(missing_ok=True)
 
 
 @pytest.fixture(scope="module")
@@ -380,54 +410,55 @@ def oracle_container() -> Generator[Optional[Any], None, None]:
         pytest.skip("testcontainers[oracle-free] is not installed. Install with: pip install testcontainers[oracle-free]")
     
     # Start Oracle container with context manager (recommended)
-    with OracleDbContainer() as oracle:
+    with _docker_amd64_on_arm64():
+        with OracleDbContainer() as oracle:
         # Execute initialization script
-        init_script = Path(__file__).parent.parent.parent.parent / "scripts" / "oracle.sql"
-        if init_script.exists():
+            init_script = Path(__file__).parent.parent.parent.parent / "scripts" / "oracle.sql"
+            if init_script.exists():
+                try:
+                    import sqlalchemy
+
+                    # Use the connection URL provided by testcontainers
+                    engine = sqlalchemy.create_engine(oracle.get_connection_url())
+
+                    # Read SQL script
+                    with init_script.open('r') as f:
+                        sql_content = f.read()
+
+                    # Remove DROP TABLE statements (tables don't exist yet in fresh container)
+                    lines = sql_content.split('\n')
+                    cleaned_lines = [line for line in lines if not line.strip().upper().startswith('DROP TABLE')]
+                    cleaned_sql = '\n'.join(cleaned_lines)
+
+                    # Execute using sqlalchemy - split by semicolon
+                    with engine.begin() as connection:
+                        for statement in cleaned_sql.split(';'):
+                            statement = statement.strip()
+                            if statement:
+                                connection.execute(sqlalchemy.text(statement))
+                        # Ensure commit happens
+                        connection.commit()
+                except Exception as e:
+                    print(f"Warning: Could not initialize database: {e}")
+                    import traceback
+                    traceback.print_exc()
+
+            # Convert SQLAlchemy URL to connectorx format
+            # From: oracle+oracledb://system:pass@localhost:port/?service_name=FREEPDB1
+            # To: oracle://system:pass@localhost:port/FREEPDB1
+            sqlalchemy_url = oracle.get_connection_url()
+            connectorx_url = sqlalchemy_url.replace("oracle+oracledb://", "oracle://")
+            connectorx_url = connectorx_url.replace("/?service_name=", "/")
+
+            # Set ORACLE_URL for tests
+            os.environ["ORACLE_URL"] = connectorx_url
+
             try:
-                import sqlalchemy
-                
-                # Use the connection URL provided by testcontainers
-                engine = sqlalchemy.create_engine(oracle.get_connection_url())
-                
-                # Read SQL script
-                with init_script.open('r') as f:
-                    sql_content = f.read()
-                
-                # Remove DROP TABLE statements (tables don't exist yet in fresh container)
-                lines = sql_content.split('\n')
-                cleaned_lines = [line for line in lines if not line.strip().upper().startswith('DROP TABLE')]
-                cleaned_sql = '\n'.join(cleaned_lines)
-                
-                # Execute using sqlalchemy - split by semicolon
-                with engine.begin() as connection:
-                    for statement in cleaned_sql.split(';'):
-                        statement = statement.strip()
-                        if statement:
-                            connection.execute(sqlalchemy.text(statement))
-                    # Ensure commit happens
-                    connection.commit()
-            except Exception as e:
-                print(f"Warning: Could not initialize database: {e}")
-                import traceback
-                traceback.print_exc()
-        
-        # Convert SQLAlchemy URL to connectorx format
-        # From: oracle+oracledb://system:pass@localhost:port/?service_name=FREEPDB1
-        # To: oracle://system:pass@localhost:port/FREEPDB1
-        sqlalchemy_url = oracle.get_connection_url()
-        connectorx_url = sqlalchemy_url.replace("oracle+oracledb://", "oracle://")
-        connectorx_url = connectorx_url.replace("/?service_name=", "/")
-        
-        # Set ORACLE_URL for tests
-        os.environ["ORACLE_URL"] = connectorx_url
-        
-        try:
-            yield oracle
-        finally:
-            # Clean up environment variable
-            if "ORACLE_URL" in os.environ:
-                del os.environ["ORACLE_URL"]
+                yield oracle
+            finally:
+                # Clean up environment variable
+                if "ORACLE_URL" in os.environ:
+                    del os.environ["ORACLE_URL"]
 
 
 @pytest.fixture(scope="module")

@@ -514,10 +514,16 @@ def reconstruct_pandas(df_infos: _DataframeInfos) -> pd.DataFrame:
                     placement=binfo.cids[0],
                 )
             )
-        elif binfo.dt == 3:  # DatetimeArray
+        elif binfo.dt == 3:  # DatetimeArray (ns)
             blocks.append(
                 pd.core.internals.make_block(
                     pd.core.arrays.DatetimeArray._from_sequence(block_data), placement=binfo.cids
+                )
+            )
+        elif binfo.dt == 4:  # DatetimeArray (us)
+            blocks.append(
+                pd.core.internals.make_block(
+                    pd.array(block_data, dtype="datetime64[us]"), placement=binfo.cids
                 )
             )
         else:

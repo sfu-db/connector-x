@@ -16,4 +16,4 @@ INSERT INTO test_table VALUES (2, NULL, 'str2', 2.2, False, '1996-01-30', '10:03
 INSERT INTO test_table VALUES (0, 5, 'こんにちは', 3.1, NULL, '1996-02-28', '23:00:10', NULL);
 INSERT INTO test_table VALUES (3, 7, 'b', 3, False, '2020-01-12', '23:00:10', '1987-01-01 11:00:00');
 INSERT INTO test_table VALUES (4, 9, 'Ha好ち😁ðy̆', 7.8, NULL, '1996-04-20', '18:30:00', NULL);
-INSERT INTO test_table VALUES (1314, 2, NULL, -10, True, NULL, '18:30:00', '2007-10-01 10:32:00');
+INSERT INTO test_table VALUES (1314, 2, NULL, -10, True, NULL, '18:30:00', '9999-12-31 10:32:00');

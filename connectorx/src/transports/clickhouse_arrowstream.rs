@@ -2,7 +2,8 @@
 
 use crate::{
     destinations::arrowstream::{
-        typesystem::ArrowTypeSystem, ArrowDestination, ArrowDestinationError,
+        typesystem::{ArrowTypeSystem, DateTimeWrapperMicro, NaiveTimeWrapperMicro},
+        ArrowDestination, ArrowDestinationError,
     },
     impl_transport,
     sources::clickhouse::{ClickHouseSource, ClickHouseSourceError, ClickHouseTypeSystem},
@@ -58,10 +59,10 @@ impl_transport!(
 
         { Date[NaiveDate]            => Date32[NaiveDate]                       | conversion auto }
         { Date32[NaiveDate]          => Date32[NaiveDate]                       | conversion none }
-        { DateTime[DateTime<Utc>]    => DateTimeTz[DateTime<Utc>]               | conversion auto }
-        { DateTime64[DateTime<Utc>]  => DateTimeTz[DateTime<Utc>]               | conversion none }
-        { Time[NaiveTime]            => Time64[NaiveTime]                       | conversion auto }
-        { Time64[NaiveTime]          => Time64[NaiveTime]                       | conversion none }
+        { DateTime[DateTime<Utc>]    => DateTimeTzMicro[DateTimeWrapperMicro]   | conversion option }
+        { DateTime64[DateTime<Utc>]  => DateTimeTzMicro[DateTimeWrapperMicro]   | conversion none }
+        { Time[NaiveTime]            => Time64Micro[NaiveTimeWrapperMicro]      | conversion option }
+        { Time64[NaiveTime]          => Time64Micro[NaiveTimeWrapperMicro]      | conversion none }
 
         { UUID[Uuid]                 => LargeUtf8[String]                       | conversion option }
         { IPv4[IpAddr]               => LargeUtf8[String]                       | conversion option }
@@ -121,5 +122,17 @@ impl TypeConversion<Option<Vec<Option<u8>>>, Option<Vec<Option<u16>>>>
 {
     fn convert(val: Option<Vec<Option<u8>>>) -> Option<Vec<Option<u16>>> {
         val.map(Self::convert)
+    }
+}
+
+impl TypeConversion<DateTime<Utc>, DateTimeWrapperMicro> for ClickHouseArrowStreamTransport {
+    fn convert(val: DateTime<Utc>) -> DateTimeWrapperMicro {
+        DateTimeWrapperMicro(val)
+    }
+}
+
+impl TypeConversion<NaiveTime, NaiveTimeWrapperMicro> for ClickHouseArrowStreamTransport {
+    fn convert(val: NaiveTime) -> NaiveTimeWrapperMicro {
+        NaiveTimeWrapperMicro(val)
     }
 }

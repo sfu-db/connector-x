@@ -274,15 +274,15 @@ def test_mysql_types_binary(mysql_url: str) -> None:
         data={
             "test_timestamp": pd.Series(
                 ["1970-01-01 00:00:01", "2038-01-19 00:00:00", None],
-                dtype="datetime64[ns]",
+                dtype="datetime64[us]",
             ),
             "test_date": pd.Series(
-                [None, "1970-01-01", "2038-01-19"], dtype="datetime64[ns]"
+                [None, "1970-01-01", "9999-12-31"], dtype="datetime64[us]"
             ),
             "test_time": pd.Series(["00:00:00", None, "23:59:59"], dtype="object"),
             "test_datetime": pd.Series(
-                ["1970-01-01 00:00:01", "2038-01-19 00:0:00", None],
-                dtype="datetime64[ns]",
+                ["1970-01-01 00:00:01", "9999-12-31 14:30:00", None],
+                dtype="datetime64[us]",
             ),
             "test_new_decimal": pd.Series([1.1, None, 3.3], dtype="float"),
             "test_decimal": pd.Series([1, 2, None], dtype="float"),
@@ -354,15 +354,15 @@ def test_mysql_types_text(mysql_url: str) -> None:
         data={
             "test_timestamp": pd.Series(
                 ["1970-01-01 00:00:01", "2038-01-19 00:00:00", None],
-                dtype="datetime64[ns]",
+                dtype="datetime64[us]",
             ),
             "test_date": pd.Series(
-                [None, "1970-01-01", "2038-01-19"], dtype="datetime64[ns]"
+                [None, "1970-01-01", "9999-12-31"], dtype="datetime64[us]"
             ),
             "test_time": pd.Series(["00:00:00", None, "23:59:59"], dtype="object"),
             "test_datetime": pd.Series(
-                ["1970-01-01 00:00:01", "2038-01-19 00:00:00", None],
-                dtype="datetime64[ns]",
+                ["1970-01-01 00:00:01", "9999-12-31 14:30:00", None],
+                dtype="datetime64[us]",
             ),
             "test_new_decimal": pd.Series([1.1, None, 3.3], dtype="float"),
             "test_decimal": pd.Series([1, 2, None], dtype="float"),

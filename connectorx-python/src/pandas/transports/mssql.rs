@@ -1,5 +1,8 @@
 use crate::errors::ConnectorXPythonError;
-use crate::pandas::{destination::PandasDestination, typesystem::PandasTypeSystem};
+use crate::pandas::{
+    destination::PandasDestination,
+    typesystem::{DateTimeWrapperMicro, PandasTypeSystem},
+};
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
 use connectorx::{
     impl_transport,
@@ -38,11 +41,11 @@ impl_transport!(
         { Image[&'r [u8]]               => ByteSlice[&'r [u8]]     | conversion none }
         { Numeric[Decimal]              => F64[f64]                | conversion option }
         { Decimal[Decimal]              => F64[f64]                | conversion none }
-        { Datetime[NaiveDateTime]       => DateTime[DateTime<Utc>] | conversion option }
-        { Datetime2[NaiveDateTime]      => DateTime[DateTime<Utc>] | conversion none }
-        { Smalldatetime[NaiveDateTime]  => DateTime[DateTime<Utc>] | conversion none }
-        { Date[NaiveDate]               => DateTime[DateTime<Utc>] | conversion option }
-        { Datetimeoffset[DateTime<Utc>] => DateTime[DateTime<Utc>] | conversion auto }
+        { Datetime[NaiveDateTime]       => DateTimeMicro[DateTimeWrapperMicro] | conversion option }
+        { Datetime2[NaiveDateTime]      => DateTimeMicro[DateTimeWrapperMicro] | conversion none }
+        { Smalldatetime[NaiveDateTime]  => DateTimeMicro[DateTimeWrapperMicro] | conversion none }
+        { Date[NaiveDate]               => DateTimeMicro[DateTimeWrapperMicro] | conversion option }
+        { Datetimeoffset[DateTime<Utc>] => DateTimeMicro[DateTimeWrapperMicro] | conversion option }
         { Uniqueidentifier[Uuid]        => String[String]          | conversion option }
         { Time[NaiveTime]               => String[String]          | conversion option }
         { SmallMoney[f32]               => F64[f64]                | conversion none }
@@ -62,19 +65,25 @@ impl<'py> TypeConversion<FloatN, f64> for MsSQLPandasTransport<'py> {
     }
 }
 
-impl<'py> TypeConversion<NaiveDateTime, DateTime<Utc>> for MsSQLPandasTransport<'py> {
-    fn convert(val: NaiveDateTime) -> DateTime<Utc> {
-        DateTime::from_naive_utc_and_offset(val, Utc)
+impl<'py> TypeConversion<NaiveDateTime, DateTimeWrapperMicro> for MsSQLPandasTransport<'py> {
+    fn convert(val: NaiveDateTime) -> DateTimeWrapperMicro {
+        DateTimeWrapperMicro(DateTime::from_naive_utc_and_offset(val, Utc))
     }
 }
 
-impl<'py> TypeConversion<NaiveDate, DateTime<Utc>> for MsSQLPandasTransport<'py> {
-    fn convert(val: NaiveDate) -> DateTime<Utc> {
-        DateTime::from_naive_utc_and_offset(
+impl<'py> TypeConversion<NaiveDate, DateTimeWrapperMicro> for MsSQLPandasTransport<'py> {
+    fn convert(val: NaiveDate) -> DateTimeWrapperMicro {
+        DateTimeWrapperMicro(DateTime::from_naive_utc_and_offset(
             val.and_hms_opt(0, 0, 0)
                 .unwrap_or_else(|| panic!("and_hms_opt got None from {:?}", val)),
             Utc,
-        )
+        ))
+    }
+}
+
+impl<'py> TypeConversion<DateTime<Utc>, DateTimeWrapperMicro> for MsSQLPandasTransport<'py> {
+    fn convert(val: DateTime<Utc>) -> DateTimeWrapperMicro {
+        DateTimeWrapperMicro(val)
     }
 }
 
