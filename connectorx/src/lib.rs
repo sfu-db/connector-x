@@ -108,7 +108,7 @@
 //!
 //! let mut source_conn = SourceConn::try_from("postgresql://username:password@host:port/db?cxprotocol=binary").expect("parse conn str failed");
 //! let queries = &[CXQuery::from("SELECT * FROM table WHERE id < 100"), CXQuery::from("SELECT * FROM table WHERE id >= 100")];
-//! let destination = get_arrow(&source_conn, None, queries).expect("run failed");
+//! let destination = get_arrow(&source_conn, None, queries, None).expect("run failed");
 //!
 //! let data = destination.arrow();
 //! ```
