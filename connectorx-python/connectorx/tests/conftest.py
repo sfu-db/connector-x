@@ -15,6 +15,7 @@ import pytest
 
 # Check if Docker is available
 try:
+    from testcontainers.core.container import DockerContainer
     from testcontainers.oracle import OracleDbContainer
     from testcontainers.clickhouse import ClickHouseContainer
     from testcontainers.postgres import PostgresContainer
@@ -24,6 +25,7 @@ try:
     TESTCONTAINERS_AVAILABLE = True
 except ImportError:
     TESTCONTAINERS_AVAILABLE = False
+    DockerContainer = None
     OracleDbContainer = None  # Avoid type hint errors
     ClickHouseContainer = None
     PostgresContainer = None
@@ -86,6 +88,22 @@ def _wait_for_sqlalchemy_connectivity(db_url: str, probe_sql: str, timeout_s: fl
             last_error = exc
             time.sleep(1.0)
     raise TimeoutError(f"Database at {db_url} not ready after {timeout_s}s") from last_error
+
+
+def _wait_for_http_ready(url: str, timeout_s: float = 240.0, interval_s: float = 1.0) -> None:
+    deadline = time.time() + timeout_s
+    last_error: Optional[Exception] = None
+    while time.time() < deadline:
+        try:
+            request = urllib.request.Request(url, method="GET")
+            with urllib.request.urlopen(request, timeout=5) as response:
+                status = getattr(response, "status", response.getcode())
+                if status == 200:
+                    return
+        except Exception as exc:
+            last_error = exc
+            time.sleep(interval_s)
+    raise TimeoutError(f"HTTP endpoint {url} is not ready after {timeout_s}s") from last_error
 
 
 @pytest.fixture(scope="session")
@@ -335,23 +353,49 @@ def _run_trino_statement(host: str, port: str, statement: str) -> None:
         method="POST",
     )
 
-    try:
-        with urllib.request.urlopen(request) as response:
-            payload = json.loads(response.read().decode("utf-8"))
-    except urllib.error.HTTPError as e:
-        raise RuntimeError(f"Trino initialization query failed: {statement}") from e
+    def _is_server_starting(error_payload: dict) -> bool:
+        if not error_payload:
+            return False
+        name = str(error_payload.get("errorName", ""))
+        message = str(error_payload.get("message", "")).lower()
+        return name == "SERVER_STARTING_UP" or "still initializing" in message
 
-    if payload.get("error"):
-        raise RuntimeError(f"Trino initialization query error: {payload['error']}")
+    deadline = time.time() + 180.0
+    while True:
+        try:
+            with urllib.request.urlopen(request) as response:
+                payload = json.loads(response.read().decode("utf-8"))
+        except urllib.error.HTTPError as e:
+            if e.code in (503, 502) and time.time() < deadline:
+                time.sleep(1.0)
+                continue
+            raise RuntimeError(f"Trino initialization query failed: {statement}") from e
 
-    next_uri = payload.get("nextUri")
-    while next_uri:
-        poll_request = urllib.request.Request(next_uri, headers=headers, method="GET")
-        with urllib.request.urlopen(poll_request) as poll_response:
-            payload = json.loads(poll_response.read().decode("utf-8"))
-        if payload.get("error"):
-            raise RuntimeError(f"Trino initialization query error: {payload['error']}")
+        error_payload = payload.get("error")
+        if error_payload:
+            if _is_server_starting(error_payload) and time.time() < deadline:
+                time.sleep(1.0)
+                continue
+            raise RuntimeError(f"Trino initialization query error: {error_payload}")
+
         next_uri = payload.get("nextUri")
+        while next_uri:
+            poll_request = urllib.request.Request(next_uri, headers=headers, method="GET")
+            with urllib.request.urlopen(poll_request) as poll_response:
+                payload = json.loads(poll_response.read().decode("utf-8"))
+
+            error_payload = payload.get("error")
+            if error_payload:
+                if _is_server_starting(error_payload) and time.time() < deadline:
+                    time.sleep(1.0)
+                    # restart the statement from scratch while Trino is warming up
+                    break
+                raise RuntimeError(f"Trino initialization query error: {error_payload}")
+
+            next_uri = payload.get("nextUri")
+
+        if not next_uri:
+            return
 
 
 def _iter_trino_init_statements(script: str) -> Generator[str, None, None]:
@@ -385,16 +429,22 @@ def trino_container() -> Generator[Optional[Any], None, None]:
     trino_catalog = Path(__file__).with_name("trino-test.properties")
     trino_catalog.write_text("connector.name=memory\n", encoding="utf-8")
 
-    trino_container = TrinoContainer(
-        image="trinodb/trino:latest",
-        user="test",
-    ).with_volume_mapping(str(trino_catalog), "/etc/trino/catalog/test.properties", mode="ro")
+    trino_container = DockerContainer("trinodb/trino:latest")
+    trino_container = trino_container.with_volume_mapping(
+        str(trino_catalog),
+        "/etc/trino/catalog/test.properties",
+        mode="ro",
+    )
+    trino_container = trino_container.with_env("USER", "test")
+    trino_container = trino_container.with_exposed_ports(8080)
 
     init_script = Path(__file__).parent.parent.parent.parent / "scripts" / "trino.sql"
 
     with trino_container as trino:
         host = trino.get_container_host_ip()
         port = trino.get_exposed_port(8080)
+        _wait_for_tcp(host, int(port), timeout_s=240.0)
+        _wait_for_http_ready(f"http://{host}:{port}/v1/info", timeout_s=300.0)
         os.environ["TRINO_URL"] = f"trino://test@{host}:{port}/test"
 
         if init_script.exists():
