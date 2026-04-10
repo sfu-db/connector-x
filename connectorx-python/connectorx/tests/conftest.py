@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 import platform
 import sqlite3
+import socket
 import time
 from typing import Generator, Any, Optional
 import urllib.error
@@ -55,6 +56,36 @@ def _docker_amd64_on_arm64() -> Generator[None, None, None]:
             yield
     else:
         yield
+
+
+def _wait_for_tcp(host: str, port: int, timeout_s: float = 120.0, interval_s: float = 0.5) -> None:
+    deadline = time.time() + timeout_s
+    last_error: Optional[Exception] = None
+    while time.time() < deadline:
+        try:
+            with socket.create_connection((host, int(port)), timeout=2.0):
+                return
+        except OSError as exc:
+            last_error = exc
+            time.sleep(interval_s)
+    raise TimeoutError(f"TCP endpoint {host}:{port} is not reachable after {timeout_s}s") from last_error
+
+
+def _wait_for_sqlalchemy_connectivity(db_url: str, probe_sql: str, timeout_s: float = 120.0) -> None:
+    import sqlalchemy
+
+    deadline = time.time() + timeout_s
+    last_error: Optional[Exception] = None
+    while time.time() < deadline:
+        try:
+            engine = sqlalchemy.create_engine(db_url)
+            with engine.connect() as connection:
+                connection.execute(sqlalchemy.text(probe_sql))
+            return
+        except Exception as exc:
+            last_error = exc
+            time.sleep(1.0)
+    raise TimeoutError(f"Database at {db_url} not ready after {timeout_s}s") from last_error
 
 
 @pytest.fixture(scope="session")
@@ -144,7 +175,15 @@ def mysql_container() -> Generator[Optional[Any], None, None]:
     ).with_volume_mapping(str(init_script), "/docker-entrypoint-initdb.d/mysql.sql", mode="ro")
 
     with mysql_container as mysql:
-        os.environ["MYSQL_URL"] = mysql.get_connection_url().replace("localhost", "127.0.0.1")
+        mysql_url = mysql.get_connection_url().replace("localhost", "127.0.0.1")
+        host = mysql.get_container_host_ip()
+        port = int(mysql.get_exposed_port(3306))
+        _wait_for_tcp(host, port, timeout_s=180.0)
+        # MySQL init scripts can still be applying right after TCP opens.
+        # Keep this lightweight and driver-agnostic (no SQLAlchemy MySQLdb dependency).
+        time.sleep(5.0)
+
+        os.environ["MYSQL_URL"] = mysql_url
 
         try:
             yield mysql
@@ -409,56 +448,73 @@ def oracle_container() -> Generator[Optional[Any], None, None]:
     if not TESTCONTAINERS_AVAILABLE:
         pytest.skip("testcontainers[oracle-free] is not installed. Install with: pip install testcontainers[oracle-free]")
     
-    # Start Oracle container with context manager (recommended)
-    with _docker_amd64_on_arm64():
-        with OracleDbContainer() as oracle:
-        # Execute initialization script
-            init_script = Path(__file__).parent.parent.parent.parent / "scripts" / "oracle.sql"
-            if init_script.exists():
-                try:
-                    import sqlalchemy
+    # Oracle startup is flaky in CI/local Docker; retry full container bootstrap a few times.
+    max_attempts = 3
+    last_error: Optional[Exception] = None
+    for attempt in range(1, max_attempts + 1):
+        try:
+            with _docker_amd64_on_arm64():
+                with OracleDbContainer() as oracle:
+                    host = oracle.get_container_host_ip()
+                    port = int(oracle.get_exposed_port(1521))
+                    _wait_for_tcp(host, port, timeout_s=240.0)
 
-                    # Use the connection URL provided by testcontainers
-                    engine = sqlalchemy.create_engine(oracle.get_connection_url())
+                    # Execute initialization script
+                    init_script = Path(__file__).parent.parent.parent.parent / "scripts" / "oracle.sql"
+                    if init_script.exists():
+                        import sqlalchemy
 
-                    # Read SQL script
-                    with init_script.open('r') as f:
-                        sql_content = f.read()
+                        sqlalchemy_url = oracle.get_connection_url()
+                        _wait_for_sqlalchemy_connectivity(sqlalchemy_url, "SELECT 1 FROM dual", timeout_s=240.0)
+                        engine = sqlalchemy.create_engine(sqlalchemy_url)
 
-                    # Remove DROP TABLE statements (tables don't exist yet in fresh container)
-                    lines = sql_content.split('\n')
-                    cleaned_lines = [line for line in lines if not line.strip().upper().startswith('DROP TABLE')]
-                    cleaned_sql = '\n'.join(cleaned_lines)
+                        # Read SQL script
+                        with init_script.open("r", encoding="utf-8") as f:
+                            sql_content = f.read()
 
-                    # Execute using sqlalchemy - split by semicolon
-                    with engine.begin() as connection:
-                        for statement in cleaned_sql.split(';'):
-                            statement = statement.strip()
-                            if statement:
-                                connection.execute(sqlalchemy.text(statement))
-                        # Ensure commit happens
-                        connection.commit()
-                except Exception as e:
-                    print(f"Warning: Could not initialize database: {e}")
-                    import traceback
-                    traceback.print_exc()
+                        # Remove DROP TABLE statements (tables don't exist yet in fresh container)
+                        lines = sql_content.split("\n")
+                        cleaned_lines = [
+                            line
+                            for line in lines
+                            if not line.strip().upper().startswith("DROP TABLE")
+                        ]
+                        cleaned_sql = "\n".join(cleaned_lines)
 
-            # Convert SQLAlchemy URL to connectorx format
-            # From: oracle+oracledb://system:pass@localhost:port/?service_name=FREEPDB1
-            # To: oracle://system:pass@localhost:port/FREEPDB1
-            sqlalchemy_url = oracle.get_connection_url()
-            connectorx_url = sqlalchemy_url.replace("oracle+oracledb://", "oracle://")
-            connectorx_url = connectorx_url.replace("/?service_name=", "/")
+                        # Execute using sqlalchemy - split by semicolon
+                        with engine.begin() as connection:
+                            for statement in cleaned_sql.split(";"):
+                                statement = statement.strip()
+                                if statement:
+                                    connection.execute(sqlalchemy.text(statement))
+                            # Ensure commit happens
+                            connection.commit()
 
-            # Set ORACLE_URL for tests
-            os.environ["ORACLE_URL"] = connectorx_url
+                    # Convert SQLAlchemy URL to connectorx format
+                    # From: oracle+oracledb://system:pass@localhost:port/?service_name=FREEPDB1
+                    # To: oracle://system:pass@localhost:port/FREEPDB1
+                    sqlalchemy_url = oracle.get_connection_url()
+                    connectorx_url = sqlalchemy_url.replace("oracle+oracledb://", "oracle://")
+                    connectorx_url = connectorx_url.replace("/?service_name=", "/")
 
-            try:
-                yield oracle
-            finally:
-                # Clean up environment variable
-                if "ORACLE_URL" in os.environ:
-                    del os.environ["ORACLE_URL"]
+                    # Set ORACLE_URL for tests
+                    os.environ["ORACLE_URL"] = connectorx_url
+
+                    try:
+                        yield oracle
+                    finally:
+                        if "ORACLE_URL" in os.environ:
+                            del os.environ["ORACLE_URL"]
+                    return
+        except Exception as exc:
+            last_error = exc
+            if attempt == max_attempts:
+                raise
+            time.sleep(5.0)
+
+    # Unreachable in practice, but keeps type checkers happy.
+    if last_error is not None:
+        raise last_error
 
 
 @pytest.fixture(scope="module")

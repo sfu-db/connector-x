@@ -1,4 +1,11 @@
-use std::{env, fs, path::PathBuf, sync::Once, time::Duration};
+use std::{
+    env, fs,
+    net::{SocketAddr, TcpStream, ToSocketAddrs},
+    path::PathBuf,
+    sync::Once,
+    thread,
+    time::{Duration, Instant},
+};
 
 use testcontainers::{
     core::{CmdWaitFor, ExecCommand, IntoContainerPort, Mount, WaitFor},
@@ -15,6 +22,32 @@ static ORACLE_INIT: Once = Once::new();
 
 fn scripts_dir() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../scripts")
+}
+
+fn wait_for_tcp_ready(host: &str, port: u16, timeout: Duration, label: &str) {
+    let deadline = Instant::now() + timeout;
+    let addr_str = format!("{host}:{port}");
+    let addrs: Vec<SocketAddr> = addr_str
+        .to_socket_addrs()
+        .expect("resolve service address")
+        .collect();
+
+    loop {
+        for addr in &addrs {
+            if TcpStream::connect_timeout(addr, Duration::from_secs(2)).is_ok() {
+                return;
+            }
+        }
+
+        if Instant::now() >= deadline {
+            panic!(
+                "{label} is not reachable at {host}:{port} after {:?}",
+                timeout
+            );
+        }
+
+        thread::sleep(Duration::from_millis(500));
+    }
 }
 
 #[cfg(feature = "src_postgres")]
@@ -89,9 +122,16 @@ pub fn mysql_url() -> String {
             .get_host_port_ipv4(3306)
             .expect("get mysql exposed port");
 
+        wait_for_tcp_ready(&host, port, Duration::from_secs(180), "mysql");
+        let mysql_host_for_url = if host.eq_ignore_ascii_case("localhost") {
+            "127.0.0.1"
+        } else {
+            host.as_str()
+        };
+
         env::set_var(
             "MYSQL_URL",
-            format!("mysql://root:mysql@{host}:{port}/mysql"),
+            format!("mysql://root:mysql@{mysql_host_for_url}:{port}/mysql"),
         );
 
         // Keep the container alive for the test process lifetime.
@@ -346,6 +386,8 @@ EXIT;\n"
 
         let host = container.get_host().expect("get oracle container host").to_string();
         let port = container.get_host_port_ipv4(1521).expect("get oracle exposed port");
+
+        wait_for_tcp_ready(&host, port, Duration::from_secs(300), "oracle");
 
         env::set_var("ORACLE_URL", format!("oracle://admin:admin@{host}:{port}/FREEPDB1"));
         std::mem::forget(container);
