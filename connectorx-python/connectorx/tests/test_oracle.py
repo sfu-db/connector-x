@@ -257,6 +257,15 @@ def test_oracle_types(oracle_url: str) -> None:
                 ],
                 dtype="datetime64[us]",
             ),
+            "TEST_TIMESTAMP9": pd.Series(
+                [
+                    "2019-05-21 01:02:33.123456789",
+                    "2020-05-21 01:02:33.223344556",
+                    "2021-01-01 03:04:05.999999999",
+                    None,
+                ],
+                dtype="datetime64[ns]",
+            ),
             "TEST_TIMESTAMPTZ": pd.Series(
                 [
                     "1999-12-01 11:00:00",
@@ -265,6 +274,15 @@ def test_oracle_types(oracle_url: str) -> None:
                     None,
                 ],
                 dtype="datetime64[us]",
+            ),
+            "TEST_TIMESTAMPTZ9": pd.Series(
+                [
+                    "1999-12-01 11:00:00.987654321",
+                    "1899-12-01 11:00:00.123456789",
+                    "2021-01-01 03:04:05.999999999",
+                    None,
+                ],
+                dtype="datetime64[ns]",
             ),
             "TEST_CLOB": pd.Series(
                 ["13ab", "13ab", "13ab", None], dtype="object"
