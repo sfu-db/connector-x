@@ -1,6 +1,6 @@
 use crate::errors::ConnectorXPythonError;
 use crate::pandas::destination::PandasDestination;
-use crate::pandas::typesystem::PandasTypeSystem;
+use crate::pandas::typesystem::{DateTimeWrapperMicro, PandasTypeSystem};
 use chrono::{DateTime, NaiveDate, NaiveTime, Utc};
 use connectorx::{
     impl_transport,
@@ -39,10 +39,10 @@ impl_transport!(
         { Enum8[String]              => String[String]                       | conversion none }
         { Enum16[String]             => String[String]                       | conversion none }
 
-        { Date[NaiveDate]            => DateTime[DateTime<Utc>]              | conversion option }
-        { Date32[NaiveDate]          => DateTime[DateTime<Utc>]              | conversion none }
-        { DateTime[DateTime<Utc>]    => DateTime[DateTime<Utc>]              | conversion auto }
-        { DateTime64[DateTime<Utc>]  => DateTime[DateTime<Utc>]              | conversion none }
+        { Date[NaiveDate]            => DateTimeMicro[DateTimeWrapperMicro]  | conversion option }
+        { Date32[NaiveDate]          => DateTimeMicro[DateTimeWrapperMicro]  | conversion none }
+        { DateTime[DateTime<Utc>]    => DateTimeMicro[DateTimeWrapperMicro]  | conversion option }
+        { DateTime64[DateTime<Utc>]  => DateTimeMicro[DateTimeWrapperMicro]  | conversion none }
         { Time[NaiveTime]            => String[String]                       | conversion option }
         { Time64[NaiveTime]          => String[String]                       | conversion none }
 
@@ -73,13 +73,19 @@ impl<'py> TypeConversion<Decimal, f64> for ClickHousePandasTransport<'py> {
     }
 }
 
-impl<'py> TypeConversion<NaiveDate, DateTime<Utc>> for ClickHousePandasTransport<'py> {
-    fn convert(val: NaiveDate) -> DateTime<Utc> {
-        DateTime::from_naive_utc_and_offset(
+impl<'py> TypeConversion<NaiveDate, DateTimeWrapperMicro> for ClickHousePandasTransport<'py> {
+    fn convert(val: NaiveDate) -> DateTimeWrapperMicro {
+        DateTimeWrapperMicro(DateTime::from_naive_utc_and_offset(
             val.and_hms_opt(0, 0, 0)
                 .unwrap_or_else(|| panic!("and_hms_opt got None from {:?}", val)),
             Utc,
-        )
+        ))
+    }
+}
+
+impl<'py> TypeConversion<DateTime<Utc>, DateTimeWrapperMicro> for ClickHousePandasTransport<'py> {
+    fn convert(val: DateTime<Utc>) -> DateTimeWrapperMicro {
+        DateTimeWrapperMicro(val)
     }
 }
 

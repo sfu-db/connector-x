@@ -2,7 +2,8 @@
 
 use crate::{
     destinations::arrowstream::{
-        typesystem::ArrowTypeSystem, ArrowDestination, ArrowDestinationError,
+        typesystem::{ArrowTypeSystem, NaiveDateTimeWrapperMicro, NaiveTimeWrapperMicro},
+        ArrowDestination, ArrowDestinationError,
     },
     impl_transport,
     sources::mysql::{
@@ -51,10 +52,10 @@ impl_transport!(
         { UInt24[u32]                => Int64[i64]              | conversion none }
         { ULongLong[u64]             => Float64[f64]            | conversion auto }
         { Date[NaiveDate]            => Date32[NaiveDate]       | conversion auto }
-        { Time[NaiveTime]            => Time64[NaiveTime]       | conversion auto }
-        { Datetime[NaiveDateTime]    => Date64[NaiveDateTime]   | conversion auto }
+        { Time[NaiveTime]            => Time64Micro[NaiveTimeWrapperMicro]       | conversion option }
+        { Datetime[NaiveDateTime]    => Date64Micro[NaiveDateTimeWrapperMicro]   | conversion option }
         { Year[i16]                  => Int64[i64]              | conversion none}
-        { Timestamp[NaiveDateTime]   => Date64[NaiveDateTime]   | conversion none }
+        { Timestamp[NaiveDateTime]   => Date64Micro[NaiveDateTimeWrapperMicro]   | conversion none }
         { Decimal[Decimal]           => Decimal[Decimal]        | conversion auto }
         { VarChar[String]            => LargeUtf8[String]       | conversion auto }
         { Char[String]               => LargeUtf8[String]       | conversion none }
@@ -87,10 +88,10 @@ impl_transport!(
         { UInt24[u32]                => Int64[i64]              | conversion none }
         { ULongLong[u64]             => Float64[f64]            | conversion auto }
         { Date[NaiveDate]            => Date32[NaiveDate]       | conversion auto }
-        { Time[NaiveTime]            => Time64[NaiveTime]       | conversion auto }
-        { Datetime[NaiveDateTime]    => Date64[NaiveDateTime]   | conversion auto }
+        { Time[NaiveTime]            => Time64Micro[NaiveTimeWrapperMicro]       | conversion option }
+        { Datetime[NaiveDateTime]    => Date64Micro[NaiveDateTimeWrapperMicro]   | conversion option }
         { Year[i16]                  => Int64[i64]              | conversion none}
-        { Timestamp[NaiveDateTime]   => Date64[NaiveDateTime]   | conversion none }
+        { Timestamp[NaiveDateTime]   => Date64Micro[NaiveDateTimeWrapperMicro]   | conversion none }
         { Decimal[Decimal]           => Decimal[Decimal]        | conversion auto }
         { VarChar[String]            => LargeUtf8[String]       | conversion auto }
         { Char[String]               => LargeUtf8[String]       | conversion none }
@@ -120,5 +121,17 @@ impl<P> TypeConversion<Value, String> for MySQLArrowTransport<P> {
 impl<P> TypeConversion<i8, bool> for MySQLArrowTransport<P> {
     fn convert(val: i8) -> bool {
         val != 0
+    }
+}
+
+impl<P> TypeConversion<NaiveTime, NaiveTimeWrapperMicro> for MySQLArrowTransport<P> {
+    fn convert(val: NaiveTime) -> NaiveTimeWrapperMicro {
+        NaiveTimeWrapperMicro(val)
+    }
+}
+
+impl<P> TypeConversion<NaiveDateTime, NaiveDateTimeWrapperMicro> for MySQLArrowTransport<P> {
+    fn convert(val: NaiveDateTime) -> NaiveDateTimeWrapperMicro {
+        NaiveDateTimeWrapperMicro(val)
     }
 }

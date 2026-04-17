@@ -492,27 +492,27 @@ def verify_data_types(df, protocol) -> None:
         index=range(5),
         data={
             "test_date": pd.Series(
-                ["1970-01-01", "2000-02-28", "2038-01-18", "1901-12-14", None], dtype="datetime64[ns]"
+                ["1970-01-01", "2000-02-28", "9999-12-31", "1901-12-14", None], dtype="datetime64[us]"
             ),
             "test_timestamp": pd.Series(
                 [
                     "1970-01-01 00:00:01",
                     "2000-02-28 12:00:10",
-                    "2038-01-18 23:59:59",
+                    "9999-12-31 20:30:00",
                     "1901-12-14 00:00:00.062547",
                     None,
                 ],
-                dtype="datetime64[ns]",
+                dtype="datetime64[us]",
             ),
             "test_timestamptz": pd.Series(
                 [
                     "1970-01-01 00:00:01",
                     "2000-02-28 16:00:10",
-                    "2038-01-18 15:59:59",
+                    "9999-12-31 12:00:00",
                     "1901-12-14 12:00:00.062547",
                     None,
                 ],
-                dtype="datetime64[ns]",
+                dtype="datetime64[us]",
             ),
             "test_int2": pd.Series([-32768, 0, 1, 32767], dtype="Int64"),
             "test_int4": pd.Series([0, 1, -2147483648, 2147483647], dtype="Int64"),

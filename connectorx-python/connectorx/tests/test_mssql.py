@@ -377,24 +377,24 @@ def test_mssql_types(mssql_url: str) -> None:
             "test_float53": pd.Series([None, -2.23e-308, 1.79e308], dtype="float"),
             "test_floatn": pd.Series([None, 0, 123.1234567], dtype="float"),
             "test_date": pd.Series(
-                ["1999-07-25", None, "2021-01-28"], dtype="datetime64[ns]"
+                ["1999-07-25", None, "9999-12-31"], dtype="datetime64[us]"
             ),
             "test_time": pd.Series(["00:00:00", "23:59:59", None], dtype="object"),
             "test_datetime": pd.Series(
                 [None, "2020-12-31 23:59:59", "2021-01-28 10:30:30"],
-                dtype="datetime64[ns]",
+                dtype="datetime64[us]",
             ),
             "test_smalldatetime": pd.Series(
                 ["1990-01-01 10:00:00", None, "2079-06-05 23:00:00"],
-                dtype="datetime64[ns]",
+                dtype="datetime64[us]",
             ),
             "test_naivedatetime": pd.Series(
                 ["1753-01-01 12:00:00", "2038-12-31 01:00:00", None],
-                dtype="datetime64[ns]",
+                dtype="datetime64[us]",
             ),
             "test_naivedatetime2": pd.Series(
-                ["1900-01-01 12:00:00.12345", None, "2027-03-18 14:30:30.54321"],
-                dtype="datetime64[ns]",
+                ["1900-01-01 12:00:00.12345", None, "9999-12-31 14:30:30.54321"],
+                dtype="datetime64[us]",
             ),
             "test_new_decimal": pd.Series([1.1, 2.2, None], dtype="float"),
             "test_decimal": pd.Series([1, 2, None], dtype="float"),

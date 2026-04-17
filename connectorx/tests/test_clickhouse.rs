@@ -253,11 +253,11 @@ fn test_clickhouse_datetime_types() {
     let times = ["14:30:25", "14:35:25", "23:59:59", "12:00:00", "08:15:30"]
         .map(|t| NaiveTime::parse_from_str(t, "%H:%M:%S").unwrap());
 
-    let arr = col!(batch, 1, Time64NanosecondArray);
+    let arr = col!(batch, 1, Time64MicrosecondArray);
     for (i, t) in times.iter().enumerate() {
         let actual = NaiveTime::from_num_seconds_from_midnight_opt(
-            (arr.value(i) / 1_000_000_000) as u32,
-            (arr.value(i) % 1_000_000_000) as u32,
+            (arr.value(i) / 1_000_000) as u32,
+            ((arr.value(i) % 1_000_000) * 1_000) as u32,
         )
         .unwrap();
         assert_eq!(actual, *t);
@@ -266,7 +266,7 @@ fn test_clickhouse_datetime_types() {
     let dates = [
         "2024-01-15",
         "1970-01-01",
-        "2099-12-31",
+        "2149-01-01",
         "2000-06-15",
         "2023-11-28",
     ]
@@ -280,7 +280,7 @@ fn test_clickhouse_datetime_types() {
     let datetimes = [
         "2024-01-15 10:30:45",
         "1970-01-01 00:00:00",
-        "2099-12-31 23:59:59",
+        "2106-01-01 00:00:00",
         "2000-06-15 12:00:00",
         "2023-11-28 08:15:30",
     ]
@@ -290,9 +290,9 @@ fn test_clickhouse_datetime_types() {
             .and_utc()
     });
 
-    let arr = col!(batch, 5, TimestampNanosecondArray);
+    let arr = col!(batch, 5, TimestampMicrosecondArray);
     for (i, dt) in datetimes.iter().enumerate() {
-        assert_eq!(Utc.timestamp_nanos(arr.value(i)), *dt);
+        assert_eq!(Utc.timestamp_micros(arr.value(i)).single().unwrap(), *dt);
     }
 }
 

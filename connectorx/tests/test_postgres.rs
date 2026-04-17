@@ -483,10 +483,10 @@ pub fn verify_arrow_type_results(result: Vec<RecordBatch>, protocol: &str) {
         .downcast_ref::<Date32Array>()
         .unwrap()
         .eq(&Date32Array::from(vec![
-            Some(time_to_arrow(1970, 1, 1, 0, 0, 0, 0) as i32 / 86_400),
-            Some(time_to_arrow(2000, 2, 28, 0, 0, 0, 0) as i32 / 86_400),
-            Some(time_to_arrow(2038, 1, 18, 0, 0, 0, 0) as i32 / 86_400),
-            Some(time_to_arrow(1901, 12, 14, 0, 0, 0, 0) as i32 / 86_400),
+            Some((time_to_arrow(1970, 1, 1, 0, 0, 0, 0) / 86_400) as i32),
+            Some((time_to_arrow(2000, 2, 28, 0, 0, 0, 0) / 86_400) as i32),
+            Some((time_to_arrow(9999, 12, 31, 0, 0, 0, 0) / 86_400) as i32),
+            Some((time_to_arrow(1901, 12, 14, 0, 0, 0, 0) / 86_400) as i32),
             None,
         ])));
 
@@ -500,7 +500,7 @@ pub fn verify_arrow_type_results(result: Vec<RecordBatch>, protocol: &str) {
         .eq(&TimestampMicrosecondArray::from(vec![
             Some(time_to_arrow(1970, 1, 1, 0, 0, 1, 0) * 1_000_000),
             Some(time_to_arrow(2000, 2, 28, 12, 0, 10, 0) * 1_000_000),
-            Some(time_to_arrow(2038, 1, 18, 23, 59, 59, 0) * 1_000_000),
+            Some(time_to_arrow(9999, 12, 31, 20, 30, 0, 0) * 1_000_000),
             Some(time_to_arrow(1901, 12, 14, 0, 0, 0, 0) * 1_000_000 + 62_547),
             None,
         ])));
@@ -515,7 +515,7 @@ pub fn verify_arrow_type_results(result: Vec<RecordBatch>, protocol: &str) {
         .eq(&TimestampMicrosecondArray::from(vec![
             Some(time_to_arrow(1970, 1, 1, 0, 0, 1, 0) * 1000000),
             Some(time_to_arrow(2000, 2, 28, 12, 0, 10, 4) * 1000000),
-            Some(time_to_arrow(2038, 1, 18, 23, 59, 59, -8) * 1000000),
+            Some(time_to_arrow(9999, 12, 31, 12, 0, 0, 0) * 1000000),
             Some(time_to_arrow(1901, 12, 14, 0, 0, 0, 12) * 1000000 + 62547),
             None,
         ])

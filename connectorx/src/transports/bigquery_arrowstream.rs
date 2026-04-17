@@ -2,7 +2,10 @@
 
 use crate::{
     destinations::arrowstream::{
-        typesystem::ArrowTypeSystem, ArrowDestination, ArrowDestinationError,
+        typesystem::{
+            ArrowTypeSystem, DateTimeWrapperMicro, NaiveDateTimeWrapperMicro, NaiveTimeWrapperMicro,
+        },
+        ArrowDestination, ArrowDestinationError,
     },
     impl_transport,
     sources::bigquery::{BigQuerySource, BigQuerySourceError, BigQueryTypeSystem},
@@ -43,8 +46,26 @@ impl_transport!(
         { String[String]             => LargeUtf8[String]         | conversion auto }
         { Bytes[String]              => LargeUtf8[String]         | conversion none }
         { Date[NaiveDate]            => Date32[NaiveDate]         | conversion auto }
-        { Datetime[NaiveDateTime]    => Date64[NaiveDateTime]     | conversion auto }
-        { Time[NaiveTime]            => Time64[NaiveTime]         | conversion auto }
-        { Timestamp[DateTime<Utc>]   => DateTimeTz[DateTime<Utc>] | conversion auto }
+        { Datetime[NaiveDateTime]    => Date64Micro[NaiveDateTimeWrapperMicro] | conversion option }
+        { Time[NaiveTime]            => Time64Micro[NaiveTimeWrapperMicro]     | conversion option }
+        { Timestamp[DateTime<Utc>]   => DateTimeTzMicro[DateTimeWrapperMicro]  | conversion option }
     }
 );
+
+impl TypeConversion<NaiveDateTime, NaiveDateTimeWrapperMicro> for BigQueryArrowTransport {
+    fn convert(val: NaiveDateTime) -> NaiveDateTimeWrapperMicro {
+        NaiveDateTimeWrapperMicro(val)
+    }
+}
+
+impl TypeConversion<NaiveTime, NaiveTimeWrapperMicro> for BigQueryArrowTransport {
+    fn convert(val: NaiveTime) -> NaiveTimeWrapperMicro {
+        NaiveTimeWrapperMicro(val)
+    }
+}
+
+impl TypeConversion<DateTime<Utc>, DateTimeWrapperMicro> for BigQueryArrowTransport {
+    fn convert(val: DateTime<Utc>) -> DateTimeWrapperMicro {
+        DateTimeWrapperMicro(val)
+    }
+}

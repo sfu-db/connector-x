@@ -2,6 +2,9 @@
 use chrono::{DateTime, Utc};
 use connectorx::impl_typesystem;
 
+#[derive(Debug, Clone, Copy)]
+pub struct DateTimeWrapperMicro(pub DateTime<Utc>);
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum PandasTypeSystem {
     F64(bool),
@@ -17,6 +20,7 @@ pub enum PandasTypeSystem {
     Bytes(bool),
     ByteSlice(bool),
     DateTime(bool),
+    DateTimeMicro(bool),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -29,6 +33,7 @@ pub enum PandasBlockType {
     Float64Array,
     String,
     DateTime,
+    DateTimeMicro,
     Bytes,
 }
 
@@ -37,6 +42,7 @@ pub enum PandasArrayType {
     IntegerArray,
     BooleanArray,
     DatetimeArray,
+    DatetimeArrayMicro,
 }
 
 impl From<PandasBlockType> for PandasArrayType {
@@ -45,6 +51,7 @@ impl From<PandasBlockType> for PandasArrayType {
             PandasBlockType::Boolean(true) => PandasArrayType::BooleanArray,
             PandasBlockType::Int64(true) => PandasArrayType::IntegerArray,
             PandasBlockType::DateTime => PandasArrayType::DatetimeArray,
+            PandasBlockType::DateTimeMicro => PandasArrayType::DatetimeArrayMicro,
             _ => PandasArrayType::NumpyArray,
         }
     }
@@ -65,6 +72,7 @@ impl From<PandasTypeSystem> for PandasBlockType {
             | PandasTypeSystem::Char(_) => PandasBlockType::String,
             PandasTypeSystem::Bytes(_) | PandasTypeSystem::ByteSlice(_) => PandasBlockType::Bytes,
             PandasTypeSystem::DateTime(_) => PandasBlockType::DateTime,
+            PandasTypeSystem::DateTimeMicro(_) => PandasBlockType::DateTimeMicro,
         }
     }
 }
@@ -85,6 +93,7 @@ impl_typesystem! {
         { Bytes => Vec<u8> }
         { ByteSlice => &'r [u8] }
         { DateTime => DateTime<Utc> }
+        { DateTimeMicro => DateTimeWrapperMicro }
     }
 }
 
@@ -106,7 +115,7 @@ impl PandasDType for PandasBlockType {
         match *self {
             PandasBlockType::Boolean(true) => "BooleanArray",
             PandasBlockType::Int64(true) => "IntegerArray",
-            PandasBlockType::DateTime => "DatetimeArray",
+            PandasBlockType::DateTime | PandasBlockType::DateTimeMicro => "DatetimeArray",
             _ => "",
         }
     }
