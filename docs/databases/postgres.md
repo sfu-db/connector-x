@@ -9,8 +9,10 @@
 ```{hint}
 Adding `sslmode=require` to connection uri parameter force SSL connection. Example: `postgresql://username:password@host:port/db?sslmode=require`. `sslmode=disable` to disable SSL connection.
 
-To connect to redshift, replace `postgresql://` with `redshift://`.
+To connect to redshift using username and password, replace `postgresql://` with `redshift://`.
 ```
+
+To connect to redshift via PingFed, replace `postgresql://` with `redshift-iam://` and provide the required arguments as query string parameters (see [AWS docs](https://docs.aws.amazon.com/redshift/latest/mgmt/options-for-providing-iam-credentials.html)). Other custom identity providers can be supported as well, feel free to contribute to [redshift-iam](https://github.com/antivirak/redshift-iam-rs) crate.
 
 ```py
 import connectorx as cx

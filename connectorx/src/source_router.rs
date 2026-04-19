@@ -2,6 +2,8 @@ use crate::constants::CONNECTORX_PROTOCOL;
 use crate::errors::{ConnectorXError, Result};
 use anyhow::anyhow;
 use fehler::throws;
+#[cfg(feature = "src_postgres")]
+use redshift_iam::redshift_to_postgres;
 use std::convert::TryFrom;
 use url::Url;
 
@@ -54,6 +56,12 @@ impl TryFrom<&str> for SourceConn {
         // only for compatablility, we don't use the same engine
         match url.scheme().split('+').collect::<Vec<&str>>()[0] {
             "postgres" | "postgresql" => Ok(SourceConn::new(SourceType::Postgres, url, proto)),
+            #[cfg(feature = "src_postgres")]
+            "redshift-iam" => Ok(SourceConn::new(
+                SourceType::Postgres,
+                redshift_to_postgres(url),
+                "cursor".to_string(),
+            )),
             "sqlite" => Ok(SourceConn::new(SourceType::SQLite, url, proto)),
             "mysql" => Ok(SourceConn::new(SourceType::MySQL, url, proto)),
             "mssql" => Ok(SourceConn::new(SourceType::MsSQL, url, proto)),

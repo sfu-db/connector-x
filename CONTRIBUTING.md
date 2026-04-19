@@ -93,12 +93,12 @@ MODIN_ENGINE=dask
 * Define the conversion between the new source and existing destinations
   * Examples can be found [here](https://github.com/sfu-db/connector-x/tree/main/connectorx/src/transports) and [here](https://github.com/sfu-db/connector-x/tree/main/connectorx-python/src/pandas/transports)
 * Make the new source visable to destinations, including:
-  * Add the source to the [source_router](https://github.com/sfu-db/connector-x/blob/main/connectorx-python/src/source_router.rs)
+  * Add the source to the [source_router](https://github.com/sfu-db/connector-x/blob/main/connectorx/src/source_router.rs)
   * Add the source to writing functions of each destination. Here are examples for [pandas](https://github.com/sfu-db/connector-x/blob/main/connectorx-python/src/pandas/mod.rs) and [arrow](https://github.com/sfu-db/connector-x/blob/main/connectorx-python/src/arrow.rs)
 * Add corresponding unit tests under `connectorx/tests` for Rust and `connectorx-python/connectorx/tests` for Python
 * Add the new source to the [docs](./docs/)
 
-**Please check out [here](https://sfu-db.github.io/connector-x/connectorx/#extending-connectorx) for more detailed implementation instructions of how to extend ConnectorX.**
+**Please check out [here](https://docs.rs/connectorx/latest/connectorx/#extending-connectorx) for more detailed implementation instructions of how to extend ConnectorX.**
 
 ## How to Add a New Destination
 
@@ -111,4 +111,4 @@ MODIN_ENGINE=dask
   * Examples can be found [here](https://github.com/sfu-db/connector-x/tree/main/connectorx/src/transports) and [here](https://github.com/sfu-db/connector-x/tree/main/connectorx-python/src/pandas/transports)
 * Add corresponding unit tests under `connectorx/tests` for Rust and `connectorx-python/connectorx/tests` for Python
 
-**Please check out [here](https://sfu-db.github.io/connector-x/connectorx/#extending-connectorx) for more detailed implementation instructions of how to extend ConnectorX.**
+**Please check out [here](https://docs.rs/connectorx/latest/connectorx/#extending-connectorx) for more detailed implementation instructions of how to extend ConnectorX.**

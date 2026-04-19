@@ -54,6 +54,7 @@ r2d2-oracle = { version = "0.7", features = ["chrono"], optional = true }
 r2d2_mysql = { version = "25", optional = true }
 r2d2_postgres = { version = "0.18", optional = true }
 r2d2_sqlite = { version = "0.31", optional = true }
+redshift-iam = { version = "0.3", optional = true }
 regex = { version = "1", optional = true }
 rusqlite = { version = "0.37", features = [
   "column_decltype",
@@ -157,6 +158,7 @@ src_postgres = [
   "postgres-openssl",
   "cidr-02",
   "pgvector",
+  "redshift-iam",
 ]
 src_sqlite = [
   "rusqlite",
