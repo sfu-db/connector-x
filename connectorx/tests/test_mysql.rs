@@ -3,7 +3,7 @@
 mod test_db;
 
 use arrow::{
-    array::{Float64Array, Int64Array, StringArray},
+    array::{Float64Array, Int16Array, Int64Array, StringArray},
     record_batch::RecordBatch,
 };
 use connectorx::{
@@ -301,4 +301,66 @@ fn test_mysql_binary_flag_for_varchar_type() {
         MySQLTypeSystem::VarChar(true) => {} // OK
         _ => panic!("VARCHAR should map to VarChar, got {:?}", result),
     }
+}
+
+#[test]
+fn test_mysql_tinyint_not_bool() {
+    let _ = env_logger::builder().is_test(true).try_init();
+    let dburl = test_db::mysql_url();
+
+    let queries = [CXQuery::naked(
+        "SELECT test_tiny FROM test_types WHERE test_tiny IS NOT NULL ORDER BY test_tiny",
+    )];
+
+    let builder = MySQLSource::<BinaryProtocol>::new(&dburl, 1).unwrap();
+    let mut destination = ArrowDestination::new();
+    let dispatcher = Dispatcher::<_, _, MySQLArrowTransport<BinaryProtocol>>::new(
+        builder,
+        &mut destination,
+        &queries,
+        None,
+    );
+    dispatcher.run().unwrap();
+
+    let result = destination.arrow().unwrap();
+    assert!(result.len() == 1);
+
+    // TINYINT values must be preserved as Int16, not collapsed to Boolean.
+    // Before this fix, -128 and 127 would both become `true`.
+    assert!(result[0]
+        .column(0)
+        .as_any()
+        .downcast_ref::<Int16Array>()
+        .unwrap()
+        .eq(&Int16Array::from(vec![-128i16, 127])));
+}
+
+#[test]
+fn test_mysql_tinyint_not_bool_text() {
+    let _ = env_logger::builder().is_test(true).try_init();
+    let dburl = test_db::mysql_url();
+
+    let queries = [CXQuery::naked(
+        "SELECT test_tiny FROM test_types WHERE test_tiny IS NOT NULL ORDER BY test_tiny",
+    )];
+
+    let builder = MySQLSource::<TextProtocol>::new(&dburl, 1).unwrap();
+    let mut destination = ArrowDestination::new();
+    let dispatcher = Dispatcher::<_, _, MySQLArrowTransport<TextProtocol>>::new(
+        builder,
+        &mut destination,
+        &queries,
+        None,
+    );
+    dispatcher.run().unwrap();
+
+    let result = destination.arrow().unwrap();
+    assert!(result.len() == 1);
+
+    assert!(result[0]
+        .column(0)
+        .as_any()
+        .downcast_ref::<Int16Array>()
+        .unwrap()
+        .eq(&Int16Array::from(vec![-128i16, 127])));
 }
