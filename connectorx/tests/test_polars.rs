@@ -11,8 +11,9 @@ use connectorx::{
 };
 use polars::{df, prelude::*};
 use postgres::NoTls;
-use std::env;
 use url::Url;
+
+mod test_db;
 
 #[test]
 fn test_polars() {
@@ -98,7 +99,7 @@ fn test_polars_large() {
 fn test_postgres_arrow() {
     let _ = env_logger::builder().is_test(true).try_init();
 
-    let dburl = env::var("POSTGRES_URL").unwrap();
+    let dburl = test_db::postgres_url();
 
     let queries = [
         CXQuery::naked("select * from test_table where test_int < 2"),
@@ -145,7 +146,7 @@ fn test_postgres_arrow() {
 fn test_polars_name() {
     let _ = env_logger::builder().is_test(true).try_init();
 
-    let dburl = env::var("POSTGRES_URL").unwrap();
+    let dburl = test_db::postgres_url();
 
     let queries = [CXQuery::naked("select test_name from test_types")];
     let url = Url::parse(dburl.as_str()).unwrap();
@@ -179,7 +180,7 @@ fn test_polars_name() {
 fn test_polars_boolarray() {
     let _ = env_logger::builder().is_test(true).try_init();
 
-    let dburl = env::var("POSTGRES_URL").unwrap();
+    let dburl = test_db::postgres_url();
 
     let queries = [CXQuery::naked("select test_boolarray from test_types")];
     let url = Url::parse(dburl.as_str()).unwrap();
@@ -214,7 +215,7 @@ fn test_polars_boolarray() {
 fn test_polars_utf8array() {
     let _ = env_logger::builder().is_test(true).try_init();
 
-    let dburl = env::var("POSTGRES_URL").unwrap();
+    let dburl = test_db::postgres_url();
 
     let queries = [CXQuery::naked("select test_varchararray from test_types")];
     let url = Url::parse(dburl.as_str()).unwrap();
@@ -254,7 +255,7 @@ fn test_polars_utf8array() {
 fn test_polars_intarray() {
     let _ = env_logger::builder().is_test(true).try_init();
 
-    let dburl = env::var("POSTGRES_URL").unwrap();
+    let dburl = test_db::postgres_url();
 
     let queries = [CXQuery::naked(
         "select test_i2array, test_i4array, test_i8array from test_types",

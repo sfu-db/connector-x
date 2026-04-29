@@ -6,7 +6,7 @@ use anyhow::anyhow;
 use fehler::throws;
 use ndarray::{ArrayViewMut2, Axis, Ix2};
 use numpy::{PyArray, PyArrayMethods};
-use pyo3::{types::PyAnyMethods, PyAny, PyResult};
+use pyo3::{PyAny, PyResult};
 use std::any::TypeId;
 
 // Float
@@ -17,7 +17,7 @@ pub struct Float64Block<'a> {
 impl<'a> ExtractBlockFromBound<'a> for Float64Block<'a> {
     fn extract_block<'b: 'a>(ob: &'b pyo3::Bound<'a, PyAny>) -> PyResult<Self> {
         check_dtype(ob, "float64")?;
-        let array: &pyo3::Bound<'a, PyArray<f64, Ix2>> = ob.downcast()?;
+        let array: &pyo3::Bound<'a, PyArray<f64, Ix2>> = ob.cast()?;
         let data: ArrayViewMut2<'a, f64> = unsafe { array.as_array_mut() };
         Ok(Float64Block { data })
     }

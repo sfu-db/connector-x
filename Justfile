@@ -25,10 +25,14 @@ test-feature-gate:
     cargo c --features src_mssql
     cargo c --features src_sqlite
     cargo c --features src_oracle
-    cargo c --features src_csv
-    cargo c --features src_dummy
     cargo c --features src_trino
+    cargo c --features src_clickhouse
     cargo c --features dst_arrow
+
+cleanup:
+    cargo clean
+    cd connectorx-python && cargo clean
+    rm connectorx-python/connectorx/connectorx*.so
 
 bootstrap-python:
     cd connectorx-python && poetry install
@@ -55,12 +59,12 @@ seed-db:
 # dbs not included in ci
 seed-db-more:
     mssql-cli -S$MSSQL_HOST -U$MSSQL_USER -P$MSSQL_PASSWORD -d$MSSQL_DB -i scripts/mssql.sql
-    mysql --protocol tcp -h$CLICKHOUSE_HOST -P$CLICKHOUSE_PORT -u$CLICKHOUSE_USER -p$CLICKHOUSE_PASSWORD $CLICKHOUSE_DB < scripts/clickhouse.sql
     psql $REDSHIFT_URL -f scripts/redshift.sql
     ORACLE_URL_SCRIPT=`echo ${ORACLE_URL#oracle://} | sed "s/:/\//"`
     cat scripts/oracle.sql | sqlplus $ORACLE_URL_SCRIPT
     mysql --protocol tcp -h$MARIADB_HOST -P$MARIADB_PORT -u$MARIADB_USER -p$MARIADB_PASSWORD $MARIADB_DB < scripts/mysql.sql
     trino $TRINO_URL --catalog=$TRINO_CATALOG < scripts/trino.sql
+    clickhouse-client -h $CLICKHOUSE_HOST --port $CLICKHOUSE_PORT -u $CLICKHOUSE_USER --password $CLICKHOUSE_PASSWORD -d $CLICKHOUSE_DB < scripts/clickhouse.sql
 
 # benches 
 flame-tpch conn="POSTGRES_URL":

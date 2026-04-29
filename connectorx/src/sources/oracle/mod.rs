@@ -23,6 +23,7 @@ use r2d2_oracle::{
     oracle::{Connector, Row, Statement},
     OracleConnectionManager,
 };
+use rust_decimal::Decimal;
 use sqlparser::dialect::Dialect;
 use url::Url;
 use urlencoding::decode;
@@ -372,3 +373,30 @@ impl_produce_text!(
     DateTime<Utc>,
     Vec<u8>,
 );
+
+// Manual implementation for Decimal since Oracle doesn't support it directly via FromSql
+impl<'r, 'a> Produce<'r, Decimal> for OracleTextSourceParser<'a> {
+    type Error = OracleSourceError;
+
+    #[throws(OracleSourceError)]
+    fn produce(&'r mut self) -> Decimal {
+        let (ridx, cidx) = self.next_loc()?;
+        let s: String = self.rowbuf[ridx].get(cidx)?;
+        let res = s.parse::<Decimal>()?;
+        res
+    }
+}
+
+impl<'r, 'a> Produce<'r, Option<Decimal>> for OracleTextSourceParser<'a> {
+    type Error = OracleSourceError;
+
+    #[throws(OracleSourceError)]
+    fn produce(&'r mut self) -> Option<Decimal> {
+        let (ridx, cidx) = self.next_loc()?;
+        let s: Option<String> = self.rowbuf[ridx].get(cidx)?;
+        match s {
+            Some(val) => Some(val.parse::<Decimal>()?),
+            None => None,
+        }
+    }
+}

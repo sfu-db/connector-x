@@ -2,12 +2,13 @@ use super::{
     check_dtype, ExtractBlockFromBound, HasPandasColumn, PandasColumn, PandasColumnObject,
 };
 use crate::errors::ConnectorXPythonError;
+use crate::pandas::typesystem::DateTimeWrapperMicro;
 use anyhow::anyhow;
 use chrono::{DateTime, Utc};
 use fehler::throws;
 use ndarray::{ArrayViewMut2, Axis, Ix2};
 use numpy::{PyArray, PyArrayMethods};
-use pyo3::{types::PyAnyMethods, PyAny, PyResult};
+use pyo3::{PyAny, PyResult};
 use std::any::TypeId;
 
 // datetime64 is represented in int64 in numpy
@@ -19,7 +20,7 @@ pub struct DateTimeBlock<'a> {
 impl<'a> ExtractBlockFromBound<'a> for DateTimeBlock<'a> {
     fn extract_block<'b: 'a>(ob: &'b pyo3::Bound<'a, PyAny>) -> PyResult<Self> {
         check_dtype(ob, "int64")?;
-        let array = ob.downcast::<PyArray<i64, Ix2>>()?;
+        let array = ob.cast::<PyArray<i64, Ix2>>()?;
         let data = unsafe { array.as_array_mut() };
         Ok(DateTimeBlock { data })
     }
@@ -56,7 +57,10 @@ unsafe impl Sync for DateTimeColumn {}
 
 impl PandasColumnObject for DateTimeColumn {
     fn typecheck(&self, id: TypeId) -> bool {
-        id == TypeId::of::<DateTime<Utc>>() || id == TypeId::of::<Option<DateTime<Utc>>>()
+        id == TypeId::of::<DateTime<Utc>>()
+            || id == TypeId::of::<Option<DateTime<Utc>>>()
+            || id == TypeId::of::<DateTimeWrapperMicro>()
+            || id == TypeId::of::<Option<DateTimeWrapperMicro>>()
     }
 
     fn typename(&self) -> &'static str {
@@ -95,6 +99,32 @@ impl HasPandasColumn for DateTime<Utc> {
 }
 
 impl HasPandasColumn for Option<DateTime<Utc>> {
+    type PandasColumn<'a> = DateTimeColumn;
+}
+
+impl PandasColumn<DateTimeWrapperMicro> for DateTimeColumn {
+    #[throws(ConnectorXPythonError)]
+    fn write(&mut self, val: DateTimeWrapperMicro, row: usize) {
+        unsafe {
+            *self.data.add(row) = val.0.timestamp_micros();
+        };
+    }
+}
+
+impl PandasColumn<Option<DateTimeWrapperMicro>> for DateTimeColumn {
+    #[throws(ConnectorXPythonError)]
+    fn write(&mut self, val: Option<DateTimeWrapperMicro>, row: usize) {
+        unsafe {
+            *self.data.add(row) = val.map(|t| t.0.timestamp_micros()).unwrap_or(i64::MIN);
+        };
+    }
+}
+
+impl HasPandasColumn for DateTimeWrapperMicro {
+    type PandasColumn<'a> = DateTimeColumn;
+}
+
+impl HasPandasColumn for Option<DateTimeWrapperMicro> {
     type PandasColumn<'a> = DateTimeColumn;
 }
 

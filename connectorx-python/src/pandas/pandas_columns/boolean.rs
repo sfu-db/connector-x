@@ -7,7 +7,7 @@ use fehler::throws;
 use ndarray::{ArrayViewMut1, ArrayViewMut2, Axis, Ix2};
 use numpy::{PyArray, PyArray1, PyArrayMethods};
 use pyo3::{
-    types::{PyAnyMethods, PyTuple, PyTupleMethods},
+    types::{PyTuple, PyTupleMethods},
     PyAny, PyResult,
 };
 use std::any::TypeId;
@@ -20,22 +20,22 @@ pub enum BooleanBlock<'a> {
 
 impl<'a> ExtractBlockFromBound<'a> for BooleanBlock<'a> {
     fn extract_block<'b: 'a>(ob: &'b pyo3::Bound<'a, PyAny>) -> PyResult<Self> {
-        if let Ok(array) = ob.downcast::<PyArray<bool, Ix2>>() {
+        if let Ok(array) = ob.cast::<PyArray<bool, Ix2>>() {
             // if numpy array
             check_dtype(ob, "bool")?;
             let data = unsafe { array.as_array_mut() };
             Ok(BooleanBlock::NumPy(data))
         } else {
             // if extension array
-            let tuple = ob.downcast::<PyTuple>()?;
+            let tuple = ob.cast::<PyTuple>()?;
             let data = &tuple.as_slice()[0];
             let mask = &tuple.as_slice()[1];
             check_dtype(data, "bool")?;
             check_dtype(mask, "bool")?;
 
             Ok(BooleanBlock::Extention(
-                unsafe { data.downcast::<PyArray1<bool>>()?.as_array_mut() },
-                unsafe { mask.downcast::<PyArray1<bool>>()?.as_array_mut() },
+                unsafe { data.cast::<PyArray1<bool>>()?.as_array_mut() },
+                unsafe { mask.cast::<PyArray1<bool>>()?.as_array_mut() },
             ))
         }
     }

@@ -4,6 +4,10 @@
 mod bigquery_arrow;
 #[cfg(all(feature = "src_bigquery", feature = "dst_arrow"))]
 mod bigquery_arrowstream;
+#[cfg(all(feature = "src_clickhouse", feature = "dst_arrow"))]
+mod clickhouse_arrow;
+#[cfg(all(feature = "src_clickhouse", feature = "dst_arrow"))]
+mod clickhouse_arrowstream;
 #[cfg(all(feature = "src_csv", feature = "dst_arrow"))]
 mod csv_arrow;
 #[cfg(all(feature = "src_dummy", feature = "dst_arrow"))]
@@ -40,6 +44,13 @@ pub use bigquery_arrow::{BigQueryArrowTransport, BigQueryArrowTransportError};
 pub use bigquery_arrowstream::{
     BigQueryArrowTransport as BigQueryArrowStreamTransport,
     BigQueryArrowTransportError as BigQueryArrowStreamTransportError,
+};
+#[cfg(all(feature = "src_clickhouse", feature = "dst_arrow"))]
+pub use clickhouse_arrow::{ClickHouseArrowTransport, ClickHouseArrowTransportError};
+#[cfg(all(feature = "src_clickhouse", feature = "dst_arrow"))]
+pub use clickhouse_arrowstream::{
+    ClickHouseArrowStreamTransport,
+    ClickHouseArrowTransportError as ClickHouseArrowStreamTransportError,
 };
 #[cfg(all(feature = "src_csv", feature = "dst_arrow"))]
 pub use csv_arrow::CSVArrowTransport;

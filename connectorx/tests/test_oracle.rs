@@ -1,25 +1,28 @@
 use connectorx::prelude::*;
 use connectorx::sources::oracle::OracleSource;
 use connectorx::sql::CXQuery;
-use std::env;
+
+mod test_db;
 
 #[test]
 #[ignore]
 fn test_types() {
     let _ = env_logger::builder().is_test(true).try_init();
-    let dburl = env::var("ORACLE_URL").unwrap();
+    let dburl = test_db::oracle_url();
     let mut source = OracleSource::new(&dburl, 1).unwrap();
     #[derive(Debug, PartialEq)]
-    struct Row(i64, i64, f64, f64, String, String, String, String);
+    struct Row(i64, Option<String>, Option<f64>);
 
-    source.set_queries(&[CXQuery::naked("select * from admin.test_table")]);
+    source.set_queries(&[CXQuery::naked(
+        "select test_int, test_char, test_float from admin.test_table order by test_int",
+    )]);
     source.fetch_metadata().unwrap();
     let mut partitions = source.partition().unwrap();
     assert!(partitions.len() == 1);
     let mut partition = partitions.remove(0);
     partition.result_rows().expect("run query");
-    assert_eq!(3, partition.nrows());
-    assert_eq!(8, partition.ncols());
+    assert_eq!(5, partition.nrows());
+    assert_eq!(3, partition.ncols());
 
     let mut parser = partition.parser().unwrap();
 
@@ -28,11 +31,6 @@ fn test_types() {
         let (n, is_last) = parser.fetch_next().unwrap();
         for _i in 0..n {
             rows.push(Row(
-                parser.produce().unwrap(),
-                parser.produce().unwrap(),
-                parser.produce().unwrap(),
-                parser.produce().unwrap(),
-                parser.produce().unwrap(),
                 parser.produce().unwrap(),
                 parser.produce().unwrap(),
                 parser.produce().unwrap(),
@@ -45,36 +43,11 @@ fn test_types() {
 
     assert_eq!(
         vec![
-            Row(
-                1,
-                1,
-                1.1,
-                1.1,
-                "varchar1".to_string(),
-                "char1".to_string(),
-                "nvarchar1".to_string(),
-                "nchar1".to_string()
-            ),
-            Row(
-                2,
-                2,
-                2.2,
-                2.2,
-                "varchar2".to_string(),
-                "char2".to_string(),
-                "nvarchar2".to_string(),
-                "nchar2".to_string()
-            ),
-            Row(
-                3,
-                3,
-                3.3,
-                3.3,
-                "varchar3".to_string(),
-                "char3".to_string(),
-                "nvarchar3".to_string(),
-                "nchar3".to_string()
-            )
+            Row(1, Some("str1 ".to_string()), Some(1.1)),
+            Row(2, Some("str2 ".to_string()), Some(2.2)),
+            Row(4, None, Some(-4.44)),
+            Row(5, Some("str05".to_string()), None),
+            Row(2333, None, None),
         ],
         rows
     );

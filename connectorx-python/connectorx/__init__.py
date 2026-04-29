@@ -54,12 +54,9 @@ def rewrite_conn(
         # note: redshift/clickhouse are not compatible with the 'binary' protocol, and use other database
         # drivers to connect. set a compatible protocol and masquerade as the appropriate backend.
         backend, connection_details = conn.split(":", 1) if conn else ("", "")
-        if "redshift" in backend:
+        if "redshift" in backend and "-iam" not in backend:
             conn = f"postgresql:{connection_details}"
             protocol = "cursor"
-        elif "clickhouse" in backend:
-            conn = f"mysql:{connection_details}"
-            protocol = "text"
         else:
             protocol = "binary"
     return conn, protocol
@@ -517,10 +514,16 @@ def reconstruct_pandas(df_infos: _DataframeInfos) -> pd.DataFrame:
                     placement=binfo.cids[0],
                 )
             )
-        elif binfo.dt == 3:  # DatetimeArray
+        elif binfo.dt == 3:  # DatetimeArray (ns)
             blocks.append(
                 pd.core.internals.make_block(
                     pd.core.arrays.DatetimeArray._from_sequence(block_data), placement=binfo.cids
+                )
+            )
+        elif binfo.dt == 4:  # DatetimeArray (us)
+            blocks.append(
+                pd.core.internals.make_block(
+                    pd.array(block_data, dtype="datetime64[us]"), placement=binfo.cids
                 )
             )
         else:

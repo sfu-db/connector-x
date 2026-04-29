@@ -3,6 +3,8 @@
 
 #[cfg(feature = "src_bigquery")]
 pub mod bigquery;
+#[cfg(feature = "src_clickhouse")]
+pub mod clickhouse;
 #[cfg(feature = "src_csv")]
 pub mod csv;
 #[cfg(feature = "src_dummy")]

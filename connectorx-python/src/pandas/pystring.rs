@@ -10,8 +10,8 @@ pub struct PyString(Py<pyo3::types::PyString>);
 // In order to put it into a numpy array
 unsafe impl Element for PyString {
     const IS_COPY: bool = false;
-    fn get_dtype_bound(py: Python<'_>) -> Bound<'_, PyArrayDescr> {
-        PyArrayDescr::object_bound(py)
+    fn get_dtype(py: Python<'_>) -> Bound<'_, PyArrayDescr> {
+        PyArrayDescr::object(py)
     }
 
     fn clone_ref(&self, _py: Python<'_>) -> Self {
