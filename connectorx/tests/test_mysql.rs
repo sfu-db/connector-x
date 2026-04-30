@@ -3,7 +3,7 @@
 mod test_db;
 
 use arrow::{
-    array::{Float64Array, Int16Array, Int64Array, StringArray},
+    array::{Float64Array, Int16Array, Int64Array, StringArray, UInt64Array},
     record_batch::RecordBatch,
 };
 use connectorx::{
@@ -363,4 +363,68 @@ fn test_mysql_tinyint_not_bool_text() {
         .downcast_ref::<Int16Array>()
         .unwrap()
         .eq(&Int16Array::from(vec![-128i16, 127])));
+}
+
+#[test]
+fn test_mysql_bigint_unsigned_not_float() {
+    let _ = env_logger::builder().is_test(true).try_init();
+    let dburl = test_db::mysql_url();
+
+    let queries = [CXQuery::naked(
+        "SELECT test_longlong_unsigned FROM test_types WHERE test_longlong_unsigned IS NOT NULL ORDER BY test_longlong_unsigned",
+    )];
+
+    let builder = MySQLSource::<BinaryProtocol>::new(&dburl, 1).unwrap();
+    let mut destination = ArrowDestination::new();
+    let dispatcher = Dispatcher::<_, _, MySQLArrowTransport<BinaryProtocol>>::new(
+        builder,
+        &mut destination,
+        &queries,
+        None,
+    );
+    dispatcher.run().unwrap();
+
+    let result = destination.arrow().unwrap();
+    assert!(result.len() == 1);
+
+    // BIGINT UNSIGNED must be UInt64, not Float64.
+    // Float64 loses precision for values exceeding 2^53 (see #890).
+    let col = result[0]
+        .column(0)
+        .as_any()
+        .downcast_ref::<UInt64Array>()
+        .unwrap();
+
+    assert_eq!(col.value(0), 0u64);
+}
+
+#[test]
+fn test_mysql_bigint_unsigned_not_float_text() {
+    let _ = env_logger::builder().is_test(true).try_init();
+    let dburl = test_db::mysql_url();
+
+    let queries = [CXQuery::naked(
+        "SELECT test_longlong_unsigned FROM test_types WHERE test_longlong_unsigned IS NOT NULL ORDER BY test_longlong_unsigned",
+    )];
+
+    let builder = MySQLSource::<TextProtocol>::new(&dburl, 1).unwrap();
+    let mut destination = ArrowDestination::new();
+    let dispatcher = Dispatcher::<_, _, MySQLArrowTransport<TextProtocol>>::new(
+        builder,
+        &mut destination,
+        &queries,
+        None,
+    );
+    dispatcher.run().unwrap();
+
+    let result = destination.arrow().unwrap();
+    assert!(result.len() == 1);
+
+    let col = result[0]
+        .column(0)
+        .as_any()
+        .downcast_ref::<UInt64Array>()
+        .unwrap();
+
+    assert_eq!(col.value(0), 0u64);
 }
