@@ -1,7 +1,7 @@
 use arrow::{
     array::{
-        BooleanArray, BooleanBuilder, Float64Array, Int64Array, Int64Builder, LargeListArray,
-        LargeListBuilder, StringArray, StringBuilder,
+        BooleanArray, BooleanBuilder, Float64Array, Int16Builder, Int32Array, Int32Builder,
+        Int64Array, Int64Builder, LargeListArray, LargeListBuilder, StringArray, StringBuilder,
     },
     record_batch::RecordBatch,
 };
@@ -17,8 +17,9 @@ use connectorx::{
     transports::{DummyArrowTransport, PostgresArrowTransport},
 };
 use postgres::NoTls;
-use std::env;
 use url::Url;
+
+mod test_db;
 
 #[test]
 #[should_panic]
@@ -191,7 +192,7 @@ fn test_arrow_large() {
 fn test_postgres_arrow() {
     let _ = env_logger::builder().is_test(true).try_init();
 
-    let dburl = env::var("POSTGRES_URL").unwrap();
+    let dburl = test_db::postgres_url();
 
     let queries = [
         CXQuery::naked("select * from test_table where test_int < 2"),
@@ -218,15 +219,15 @@ fn test_postgres_arrow() {
                 assert!(r
                     .column(0)
                     .as_any()
-                    .downcast_ref::<Int64Array>()
+                    .downcast_ref::<Int32Array>()
                     .unwrap()
-                    .eq(&Int64Array::from(vec![1, 0])));
+                    .eq(&Int32Array::from(vec![1, 0])));
                 assert!(r
                     .column(1)
                     .as_any()
-                    .downcast_ref::<Int64Array>()
+                    .downcast_ref::<Int32Array>()
                     .unwrap()
-                    .eq(&Int64Array::from(vec![3, 5])));
+                    .eq(&Int32Array::from(vec![3, 5])));
                 assert!(r
                     .column(2)
                     .as_any()
@@ -250,15 +251,15 @@ fn test_postgres_arrow() {
                 assert!(r
                     .column(0)
                     .as_any()
-                    .downcast_ref::<Int64Array>()
+                    .downcast_ref::<Int32Array>()
                     .unwrap()
-                    .eq(&Int64Array::from(vec![2, 3, 4, 1314])));
+                    .eq(&Int32Array::from(vec![2, 3, 4, 1314])));
                 assert!(r
                     .column(1)
                     .as_any()
-                    .downcast_ref::<Int64Array>()
+                    .downcast_ref::<Int32Array>()
                     .unwrap()
-                    .eq(&Int64Array::from(vec![None, Some(7), Some(9), Some(2)])));
+                    .eq(&Int32Array::from(vec![None, Some(7), Some(9), Some(2)])));
                 assert!(r
                     .column(2)
                     .as_any()
@@ -297,10 +298,10 @@ fn test_postgres_arrow() {
 fn test_postgres_boolarray_arrow() {
     let _ = env_logger::builder().is_test(true).try_init();
 
-    let dburl = env::var("POSTGRES_URL").unwrap();
+    let dburl = test_db::postgres_url();
 
     let queries = [CXQuery::naked(
-        "select test_boolarray from test_types where test_boolarray is not null",
+        "select test_boolarray from test_types where test_boolarray is not null order by ctid",
     )];
     let url = Url::parse(dburl.as_str()).unwrap();
     let (config, _tls) = rewrite_tls_args(&url).unwrap();
@@ -319,10 +320,11 @@ fn test_postgres_boolarray_arrow() {
 
     for r in records {
         let mut builder: LargeListBuilder<BooleanBuilder> =
-            LargeListBuilder::with_capacity(BooleanBuilder::new(), 3);
+            LargeListBuilder::with_capacity(BooleanBuilder::new(), 4);
         builder.append_value([Some(true), Some(false)]);
         builder.append_value([]);
         builder.append_value([Some(true)]);
+        builder.append_value([Some(true), Some(false), None]);
         let val = builder.finish();
         assert!(r
             .column(0)
@@ -337,98 +339,10 @@ fn test_postgres_boolarray_arrow() {
 fn test_postgres_varchararray_arrow() {
     let _ = env_logger::builder().is_test(true).try_init();
 
-    let dburl = env::var("POSTGRES_URL").unwrap();
-
-    let queries = [CXQuery::naked("select test_varchararray from test_types")];
-    let url = Url::parse(dburl.as_str()).unwrap();
-    let (config, _tls) = rewrite_tls_args(&url).unwrap();
-    let builder = PostgresSource::<BinaryProtocol, NoTls>::new(config, NoTls, 2).unwrap();
-    let mut destination = ArrowDestination::new();
-    let dispatcher = Dispatcher::<_, _, PostgresArrowTransport<BinaryProtocol, NoTls>>::new(
-        builder,
-        &mut destination,
-        &queries,
-        Some("select * from test_table".to_string()),
-    );
-    dispatcher.run().expect("run dispatcher");
-
-    let records: Vec<RecordBatch> = destination.arrow().unwrap();
-    assert_eq!(1, records.len());
-
-    for r in records {
-        let mut builder: LargeListBuilder<StringBuilder> =
-            LargeListBuilder::with_capacity(StringBuilder::new(), 4);
-        builder.append_value([Some("str1"), Some("str2")]);
-        builder.append_value([
-            Some("0123456789"),
-            Some("abcdefghijklmnopqrstuvwxyz"),
-            Some("!@#$%^&*()_-+=~`:;<>?/"),
-        ]);
-        builder.append_value([Some(""), Some("  ")]);
-        builder.append_value::<Vec<Option<String>>, String>(vec![]);
-        let val = builder.finish();
-
-        assert!(r
-            .column(0)
-            .as_any()
-            .downcast_ref::<LargeListArray>()
-            .unwrap()
-            .eq(&val));
-    }
-}
-
-#[test]
-fn test_postgres_textarray_arrow() {
-    let _ = env_logger::builder().is_test(true).try_init();
-
-    let dburl = env::var("POSTGRES_URL").unwrap();
-
-    let queries = [CXQuery::naked("select test_textarray from test_types")];
-    let url = Url::parse(dburl.as_str()).unwrap();
-    let (config, _tls) = rewrite_tls_args(&url).unwrap();
-    let builder = PostgresSource::<BinaryProtocol, NoTls>::new(config, NoTls, 2).unwrap();
-    let mut destination = ArrowDestination::new();
-    let dispatcher = Dispatcher::<_, _, PostgresArrowTransport<BinaryProtocol, NoTls>>::new(
-        builder,
-        &mut destination,
-        &queries,
-        Some("select * from test_table".to_string()),
-    );
-    dispatcher.run().expect("run dispatcher");
-
-    let records: Vec<RecordBatch> = destination.arrow().unwrap();
-    assert_eq!(1, records.len());
-
-    for r in records {
-        let mut builder: LargeListBuilder<StringBuilder> =
-            LargeListBuilder::with_capacity(StringBuilder::new(), 4);
-        builder.append_value([Some("text1"), Some("text2")]);
-        builder.append_value([
-            Some("0123456789"),
-            Some("abcdefghijklmnopqrstuvwxyz"),
-            Some("!@#$%^&*()_-+=~`:;<>?/"),
-        ]);
-        builder.append_value([Some(""), Some("  ")]);
-        builder.append_value::<Vec<Option<String>>, String>(vec![]);
-        let val = builder.finish();
-
-        assert!(r
-            .column(0)
-            .as_any()
-            .downcast_ref::<LargeListArray>()
-            .unwrap()
-            .eq(&val));
-    }
-}
-
-#[test]
-fn test_postgres_intarray_arrow() {
-    let _ = env_logger::builder().is_test(true).try_init();
-
-    let dburl = env::var("POSTGRES_URL").unwrap();
+    let dburl = test_db::postgres_url();
 
     let queries = [CXQuery::naked(
-        "select test_i2array, test_i4array, test_i8array from test_types",
+        "select test_varchararray from test_types order by ctid",
     )];
     let url = Url::parse(dburl.as_str()).unwrap();
     let (config, _tls) = rewrite_tls_args(&url).unwrap();
@@ -446,11 +360,106 @@ fn test_postgres_intarray_arrow() {
     assert_eq!(1, records.len());
 
     for r in records {
-        let mut builder: LargeListBuilder<Int64Builder> =
-            LargeListBuilder::with_capacity(Int64Builder::new(), 4);
-        builder.append_value([Some(-1), Some(0), Some(1)]);
-        builder.append_value::<Vec<Option<i64>>, i64>(vec![]);
+        let mut builder: LargeListBuilder<StringBuilder> =
+            LargeListBuilder::with_capacity(StringBuilder::new(), 5);
+        builder.append_value([Some("str1"), Some("str2")]);
+        builder.append_value([
+            Some("0123456789"),
+            Some("abcdefghijklmnopqrstuvwxyz"),
+            Some("!@#$%^&*()_-+=~`:;<>?/"),
+        ]);
+        builder.append_value([Some(""), Some("  ")]);
+        builder.append_value([Some("👨‍🍳👨‍🍳👨‍🍳👨"), Some(""), None]);
+        builder.append_null();
+        let val = builder.finish();
+
+        assert!(r
+            .column(0)
+            .as_any()
+            .downcast_ref::<LargeListArray>()
+            .unwrap()
+            .eq(&val));
+    }
+}
+
+#[test]
+fn test_postgres_textarray_arrow() {
+    let _ = env_logger::builder().is_test(true).try_init();
+
+    let dburl = test_db::postgres_url();
+
+    let queries = [CXQuery::naked(
+        "select test_textarray from test_types order by ctid",
+    )];
+    let url = Url::parse(dburl.as_str()).unwrap();
+    let (config, _tls) = rewrite_tls_args(&url).unwrap();
+    let builder = PostgresSource::<BinaryProtocol, NoTls>::new(config, NoTls, 2).unwrap();
+    let mut destination = ArrowDestination::new();
+    let dispatcher = Dispatcher::<_, _, PostgresArrowTransport<BinaryProtocol, NoTls>>::new(
+        builder,
+        &mut destination,
+        &queries,
+        Some("select * from test_table".to_string()),
+    );
+    dispatcher.run().expect("run dispatcher");
+
+    let records: Vec<RecordBatch> = destination.arrow().unwrap();
+    assert_eq!(1, records.len());
+
+    for r in records {
+        let mut builder: LargeListBuilder<StringBuilder> =
+            LargeListBuilder::with_capacity(StringBuilder::new(), 5);
+        builder.append_value([Some("str1"), Some("str2")]);
+        builder.append_value([
+            Some("0123456789"),
+            Some("abcdefghijklmnopqrstuvwxyz"),
+            Some("!@#$%^&*()_-+=~`:;<>?/"),
+        ]);
+        builder.append_value([Some(""), Some("  ")]);
+        builder.append_value([Some("👨‍🍳👨‍🍳👨‍🍳👨"), Some(""), None]);
+        builder.append_null();
+        let val = builder.finish();
+
+        assert!(r
+            .column(0)
+            .as_any()
+            .downcast_ref::<LargeListArray>()
+            .unwrap()
+            .eq(&val));
+    }
+}
+
+#[test]
+fn test_postgres_intarray_arrow() {
+    let _ = env_logger::builder().is_test(true).try_init();
+
+    let dburl = test_db::postgres_url();
+
+    let queries = [CXQuery::naked(
+        "select test_i2array, test_i4array, test_i8array from test_types order by ctid",
+    )];
+    let url = Url::parse(dburl.as_str()).unwrap();
+    let (config, _tls) = rewrite_tls_args(&url).unwrap();
+    let builder = PostgresSource::<BinaryProtocol, NoTls>::new(config, NoTls, 2).unwrap();
+    let mut destination = ArrowDestination::new();
+    let dispatcher = Dispatcher::<_, _, PostgresArrowTransport<BinaryProtocol, NoTls>>::new(
+        builder,
+        &mut destination,
+        &queries,
+        Some("select * from test_table".to_string()),
+    );
+    dispatcher.run().expect("run dispatcher");
+
+    let records: Vec<RecordBatch> = destination.arrow().unwrap();
+    assert_eq!(1, records.len());
+
+    for r in records {
+        let mut builder: LargeListBuilder<Int16Builder> =
+            LargeListBuilder::with_capacity(Int16Builder::new(), 5);
+        builder.append_value([Some(12)]);
+        builder.append_value::<Vec<Option<i16>>, i16>(vec![]);
         builder.append_value([Some(-32768), Some(32767)]);
+        builder.append_value([Some(-1), Some(0), Some(1), None]);
         builder.append_null();
         let val = builder.finish();
 
@@ -461,11 +470,12 @@ fn test_postgres_intarray_arrow() {
             .unwrap()
             .eq(&val));
 
-        let mut builder: LargeListBuilder<Int64Builder> =
-            LargeListBuilder::with_capacity(Int64Builder::new(), 4);
-        builder.append_value([Some(-1), Some(0), Some(1123)]);
-        builder.append_value::<Vec<Option<i64>>, i64>(vec![]);
+        let mut builder: LargeListBuilder<Int32Builder> =
+            LargeListBuilder::with_capacity(Int32Builder::new(), 5);
+        builder.append_value([Some(-1)]);
+        builder.append_value::<Vec<Option<i32>>, i32>(vec![]);
         builder.append_value([Some(-2147483648), Some(2147483647)]);
+        builder.append_value([Some(-1), Some(0), Some(1123), None]);
         builder.append_null();
         let val = builder.finish();
 
@@ -477,10 +487,11 @@ fn test_postgres_intarray_arrow() {
             .eq(&val));
 
         let mut builder: LargeListBuilder<Int64Builder> =
-            LargeListBuilder::with_capacity(Int64Builder::new(), 2);
+            LargeListBuilder::with_capacity(Int64Builder::new(), 5);
         builder.append_value([Some(-9223372036854775808), Some(9223372036854775807)]);
         builder.append_value::<Vec<Option<i64>>, i64>(vec![]);
         builder.append_value([Some(0)]);
+        builder.append_value([Some(-1), Some(0), Some(1), None]);
         builder.append_null();
         let val = builder.finish();
 

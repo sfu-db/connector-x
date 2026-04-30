@@ -1,17 +1,10 @@
-import os
-
 import pandas as pd
-import pytest
 from pandas.testing import assert_frame_equal
 
 from .. import read_sql, ConnectionUrl
 
-
-@pytest.fixture(scope="module")  # type: ignore
-def mysql_url() -> str:
-    conn = os.environ["MYSQL_URL"]
-    # conn = os.environ["MARIADB_URL"]
-    return conn
+# mysql_url fixture is now defined in conftest.py
+# It uses testcontainers if available, otherwise the MYSQL_URL environment variable
 
 
 def test_mysql_without_partition(mysql_url: str) -> None:
@@ -281,15 +274,15 @@ def test_mysql_types_binary(mysql_url: str) -> None:
         data={
             "test_timestamp": pd.Series(
                 ["1970-01-01 00:00:01", "2038-01-19 00:00:00", None],
-                dtype="datetime64[ns]",
+                dtype="datetime64[us]",
             ),
             "test_date": pd.Series(
-                [None, "1970-01-01", "2038-01-19"], dtype="datetime64[ns]"
+                [None, "1970-01-01", "9999-12-31"], dtype="datetime64[us]"
             ),
             "test_time": pd.Series(["00:00:00", None, "23:59:59"], dtype="object"),
             "test_datetime": pd.Series(
-                ["1970-01-01 00:00:01", "2038-01-19 00:0:00", None],
-                dtype="datetime64[ns]",
+                ["1970-01-01 00:00:01", "9999-12-31 14:30:00", None],
+                dtype="datetime64[us]",
             ),
             "test_new_decimal": pd.Series([1.1, None, 3.3], dtype="float"),
             "test_decimal": pd.Series([1, 2, None], dtype="float"),
@@ -315,6 +308,14 @@ def test_mysql_types_binary(mysql_url: str) -> None:
             "test_double": pd.Series([-2.2e-308, None, 1.7e308], dtype="float"),
             "test_double_notnull": pd.Series([1.2345, -1.1e-3, 1.7e30], dtype="float"),
             "test_year": pd.Series([1901, 2155, None], dtype="Int64"),
+            "test_binary": pd.Series(
+                [None, b'MySQLBinar', b'\x00\x01\x02\x03\x00\x00\x00\x00\x00\x00'],
+                dtype="object"
+            ),
+            "test_varbinary": pd.Series(
+                [None, b'DB', b'\x00'],
+                dtype="object"
+            ),
             "test_tinyblob": pd.Series(
                 [None, b"tinyblob2", b"tinyblob3"], dtype="object"
             ),
@@ -353,15 +354,15 @@ def test_mysql_types_text(mysql_url: str) -> None:
         data={
             "test_timestamp": pd.Series(
                 ["1970-01-01 00:00:01", "2038-01-19 00:00:00", None],
-                dtype="datetime64[ns]",
+                dtype="datetime64[us]",
             ),
             "test_date": pd.Series(
-                [None, "1970-01-01", "2038-01-19"], dtype="datetime64[ns]"
+                [None, "1970-01-01", "9999-12-31"], dtype="datetime64[us]"
             ),
             "test_time": pd.Series(["00:00:00", None, "23:59:59"], dtype="object"),
             "test_datetime": pd.Series(
-                ["1970-01-01 00:00:01", "2038-01-19 00:00:00", None],
-                dtype="datetime64[ns]",
+                ["1970-01-01 00:00:01", "9999-12-31 14:30:00", None],
+                dtype="datetime64[us]",
             ),
             "test_new_decimal": pd.Series([1.1, None, 3.3], dtype="float"),
             "test_decimal": pd.Series([1, 2, None], dtype="float"),
@@ -387,6 +388,14 @@ def test_mysql_types_text(mysql_url: str) -> None:
             "test_double": pd.Series([-2.2e-308, None, 1.7e308], dtype="float"),
             "test_double_notnull": pd.Series([1.2345, -1.1e-3, 1.7e30], dtype="float"),
             "test_year": pd.Series([1901, 2155, None], dtype="Int64"),
+            "test_binary": pd.Series(
+                [None, b'MySQLBinar', b'\x00\x01\x02\x03\x00\x00\x00\x00\x00\x00'],
+                dtype="object"
+            ),
+            "test_varbinary": pd.Series(
+                [None, b'DB', b'\x00'],
+                dtype="object"
+            ),
             "test_tinyblob": pd.Series(
                 [None, b"tinyblob2", b"tinyblob3"], dtype="object"
             ),
@@ -525,5 +534,122 @@ def test_mysql_partitioned_pre_execution_queries(mysql_url: str) -> None:
             "setting": pd.Series([2151, 2252], dtype="float64"),
         },
     ).sort_values(by=['name']).reset_index(drop=True)
-    
+
     assert_frame_equal(df, expected, check_like=False)
+
+
+def test_mysql_decimal_arrow_binary(mysql_url: str) -> None:
+    """Test that DECIMAL types return as Decimal128 in Arrow (binary protocol)."""
+    import pyarrow as pa
+    from decimal import Decimal
+
+    query = "SELECT test_new_decimal, test_decimal FROM test_types"
+    table = read_sql(mysql_url, query, protocol="binary", return_type="arrow")
+
+    # Verify schema - should be Decimal128
+    assert table.schema.field('test_new_decimal').type == pa.decimal128(38, 10)
+    assert table.schema.field('test_decimal').type == pa.decimal128(38, 10)
+
+    # Verify values
+    df = table.to_pandas()
+    assert df['test_new_decimal'][0] == Decimal('1.1')
+    assert df['test_new_decimal'][1] is None or pd.isna(df['test_new_decimal'][1])
+    assert df['test_new_decimal'][2] == Decimal('3.3')
+
+    assert df['test_decimal'][0] == Decimal('1')
+    assert df['test_decimal'][1] == Decimal('2')
+    assert df['test_decimal'][2] is None or pd.isna(df['test_decimal'][2])
+
+
+def test_mysql_decimal_arrow_text(mysql_url: str) -> None:
+    """Test that DECIMAL types return as Decimal128 in Arrow (text protocol)."""
+    import pyarrow as pa
+    from decimal import Decimal
+
+    query = "SELECT test_new_decimal, test_decimal FROM test_types"
+    table = read_sql(mysql_url, query, protocol="text", return_type="arrow")
+
+    # Verify schema - should be Decimal128
+    assert table.schema.field('test_new_decimal').type == pa.decimal128(38, 10)
+    assert table.schema.field('test_decimal').type == pa.decimal128(38, 10)
+
+    # Verify values
+    df = table.to_pandas()
+    assert df['test_new_decimal'][0] == Decimal('1.1')
+    assert df['test_new_decimal'][1] is None or pd.isna(df['test_new_decimal'][1])
+    assert df['test_new_decimal'][2] == Decimal('3.3')
+
+    assert df['test_decimal'][0] == Decimal('1')
+    assert df['test_decimal'][1] == Decimal('2')
+    assert df['test_decimal'][2] is None or pd.isna(df['test_decimal'][2])
+
+
+def test_mysql_decimal_arrow_stream_binary(mysql_url: str) -> None:
+    """Test that DECIMAL types return as Decimal128 in ArrowStream (binary protocol)."""
+    import pyarrow as pa
+    from decimal import Decimal
+
+    query = "SELECT test_new_decimal, test_decimal FROM test_types"
+    reader = read_sql(mysql_url, query, protocol="binary", return_type="arrow_stream", batch_size=10)
+
+    batches = list(reader)
+    table = pa.Table.from_batches(batches)
+
+    # Verify schema - should be Decimal128
+    assert table.schema.field('test_new_decimal').type == pa.decimal128(38, 10)
+    assert table.schema.field('test_decimal').type == pa.decimal128(38, 10)
+
+    # Verify values
+    df = table.to_pandas()
+    assert df['test_new_decimal'][0] == Decimal('1.1')
+    assert df['test_new_decimal'][1] is None or pd.isna(df['test_new_decimal'][1])
+    assert df['test_new_decimal'][2] == Decimal('3.3')
+
+    assert df['test_decimal'][0] == Decimal('1')
+    assert df['test_decimal'][1] == Decimal('2')
+    assert df['test_decimal'][2] is None or pd.isna(df['test_decimal'][2])
+
+
+def test_mysql_decimal_arrow_stream_text(mysql_url: str) -> None:
+    """Test that DECIMAL types return as Decimal128 in ArrowStream (text protocol)."""
+    import pyarrow as pa
+    from decimal import Decimal
+
+    query = "SELECT test_new_decimal, test_decimal FROM test_types"
+    reader = read_sql(mysql_url, query, protocol="text", return_type="arrow_stream", batch_size=10)
+
+    batches = list(reader)
+    table = pa.Table.from_batches(batches)
+
+    # Verify schema - should be Decimal128
+    assert table.schema.field('test_new_decimal').type == pa.decimal128(38, 10)
+    assert table.schema.field('test_decimal').type == pa.decimal128(38, 10)
+
+    # Verify values
+    df = table.to_pandas()
+    assert df['test_new_decimal'][0] == Decimal('1.1')
+    assert df['test_new_decimal'][1] is None or pd.isna(df['test_new_decimal'][1])
+    assert df['test_new_decimal'][2] == Decimal('3.3')
+
+    assert df['test_decimal'][0] == Decimal('1')
+    assert df['test_decimal'][1] == Decimal('2')
+    assert df['test_decimal'][2] is None or pd.isna(df['test_decimal'][2])
+
+
+def test_mysql_decimal_pandas_unchanged(mysql_url: str) -> None:
+    """Test that DECIMAL types still return as float in Pandas (default, backward compatibility)."""
+    query = "SELECT test_new_decimal, test_decimal FROM test_types"
+    df = read_sql(mysql_url, query, protocol="binary")  # Default return_type="pandas"
+
+    # Verify that Pandas still uses float (backward compatibility)
+    assert df['test_new_decimal'].dtype == 'float64'
+    assert df['test_decimal'].dtype == 'float64'
+
+    # Verify values (with float precision limitations)
+    assert abs(df['test_new_decimal'][0] - 1.1) < 0.01
+    assert pd.isna(df['test_new_decimal'][1])
+    assert abs(df['test_new_decimal'][2] - 3.3) < 0.01
+
+    assert df['test_decimal'][0] == 1.0
+    assert df['test_decimal'][1] == 2.0
+    assert pd.isna(df['test_decimal'][2])

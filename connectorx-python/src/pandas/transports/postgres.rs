@@ -1,5 +1,8 @@
 use crate::errors::ConnectorXPythonError;
-use crate::pandas::{destination::PandasDestination, typesystem::PandasTypeSystem};
+use crate::pandas::{
+    destination::PandasDestination,
+    typesystem::{DateTimeWrapperMicro, PandasTypeSystem},
+};
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
 use connectorx::sources::postgres::{Bit, HalfVector, IpInet, SparseVector, Vector};
 use connectorx::{
@@ -53,9 +56,9 @@ macro_rules! impl_postgres_transport {
                 { BpChar[&'r str]                               => Str[&'r str]                           | conversion none }
                 { VarChar[&'r str]                              => Str[&'r str]                           | conversion none }
                 { Name[&'r str]                                 => Str[&'r str]                           | conversion none }
-                { Timestamp[NaiveDateTime]                      => DateTime[DateTime<Utc>]                | conversion option }
-                { TimestampTz[DateTime<Utc>]                    => DateTime[DateTime<Utc>]                | conversion auto }
-                { Date[NaiveDate]                               => DateTime[DateTime<Utc>]                | conversion option }
+                { Timestamp[NaiveDateTime]                      => DateTimeMicro[DateTimeWrapperMicro]    | conversion option }
+                { TimestampTz[DateTime<Utc>]                    => DateTimeMicro[DateTimeWrapperMicro]    | conversion option }
+                { Date[NaiveDate]                               => DateTimeMicro[DateTimeWrapperMicro]    | conversion option }
                 { UUID[Uuid]                                    => String[String]                         | conversion option }
                 { JSON[Value]                                   => String[String]                         | conversion option }
                 { JSONB[Value]                                  => String[String]                         | conversion none }
@@ -232,21 +235,31 @@ impl<'py, P, C> TypeConversion<i8, char> for PostgresPandasTransport<'py, P, C> 
     }
 }
 
-impl<'py, P, C> TypeConversion<NaiveDateTime, DateTime<Utc>>
+impl<'py, P, C> TypeConversion<NaiveDateTime, DateTimeWrapperMicro>
     for PostgresPandasTransport<'py, P, C>
 {
-    fn convert(val: NaiveDateTime) -> DateTime<Utc> {
-        DateTime::from_naive_utc_and_offset(val, Utc)
+    fn convert(val: NaiveDateTime) -> DateTimeWrapperMicro {
+        DateTimeWrapperMicro(DateTime::from_naive_utc_and_offset(val, Utc))
     }
 }
 
-impl<'py, P, C> TypeConversion<NaiveDate, DateTime<Utc>> for PostgresPandasTransport<'py, P, C> {
-    fn convert(val: NaiveDate) -> DateTime<Utc> {
-        DateTime::from_naive_utc_and_offset(
+impl<'py, P, C> TypeConversion<NaiveDate, DateTimeWrapperMicro>
+    for PostgresPandasTransport<'py, P, C>
+{
+    fn convert(val: NaiveDate) -> DateTimeWrapperMicro {
+        DateTimeWrapperMicro(DateTime::from_naive_utc_and_offset(
             val.and_hms_opt(0, 0, 0)
                 .unwrap_or_else(|| panic!("and_hms_opt got None from {:?}", val)),
             Utc,
-        )
+        ))
+    }
+}
+
+impl<'py, P, C> TypeConversion<DateTime<Utc>, DateTimeWrapperMicro>
+    for PostgresPandasTransport<'py, P, C>
+{
+    fn convert(val: DateTime<Utc>) -> DateTimeWrapperMicro {
+        DateTimeWrapperMicro(val)
     }
 }
 

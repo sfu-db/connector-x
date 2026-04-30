@@ -1,13 +1,13 @@
 use crate::errors::ConnectorXPythonError;
 use crate::pandas::destination::PandasDestination;
-use crate::pandas::typesystem::PandasTypeSystem;
+use crate::pandas::typesystem::{DateTimeWrapperMicro, PandasTypeSystem};
 use chrono::{DateTime, NaiveDateTime, Utc};
-use rust_decimal::prelude::*;
 use connectorx::{
     impl_transport,
     sources::oracle::{OracleSource, OracleTypeSystem},
     typesystem::TypeConversion,
 };
+use rust_decimal::prelude::*;
 
 #[allow(dead_code)]
 pub struct OraclePandasTransport<'py>(&'py ());
@@ -29,11 +29,11 @@ impl_transport!(
         { Char[String]                      => String[String]               | conversion none }
         { NVarChar[String]                  => String[String]               | conversion none }
         { NChar[String]                     => String[String]               | conversion none }
-        { Date[NaiveDateTime]               => DateTime[DateTime<Utc>]      | conversion option }
-        { Timestamp[NaiveDateTime]          => DateTime[DateTime<Utc>]      | conversion none }
-        { TimestampNano[NaiveDateTime]      => DateTime[DateTime<Utc>]      | conversion none }
-        { TimestampTz[DateTime<Utc>]        => DateTime[DateTime<Utc>]      | conversion auto }
-        { TimestampTzNano[DateTime<Utc>]    => DateTime[DateTime<Utc>]      | conversion none }
+        { Date[NaiveDateTime]               => DateTimeMicro[DateTimeWrapperMicro] | conversion option }
+        { Timestamp[NaiveDateTime]          => DateTimeMicro[DateTimeWrapperMicro] | conversion none }
+        { TimestampNano[NaiveDateTime]      => DateTime[DateTime<Utc>]      | conversion option }
+        { TimestampTz[DateTime<Utc>]        => DateTimeMicro[DateTimeWrapperMicro] | conversion option }
+        { TimestampTzNano[DateTime<Utc>]    => DateTime[DateTime<Utc>]      | conversion option }
         { NumDecimal[Decimal]               => F64[f64]                     | conversion option }
     }
 );
@@ -41,6 +41,24 @@ impl_transport!(
 impl<'py> TypeConversion<NaiveDateTime, DateTime<Utc>> for OraclePandasTransport<'py> {
     fn convert(val: NaiveDateTime) -> DateTime<Utc> {
         DateTime::from_naive_utc_and_offset(val, Utc)
+    }
+}
+
+impl<'py> TypeConversion<DateTime<Utc>, DateTime<Utc>> for OraclePandasTransport<'py> {
+    fn convert(val: DateTime<Utc>) -> DateTime<Utc> {
+        val
+    }
+}
+
+impl<'py> TypeConversion<NaiveDateTime, DateTimeWrapperMicro> for OraclePandasTransport<'py> {
+    fn convert(val: NaiveDateTime) -> DateTimeWrapperMicro {
+        DateTimeWrapperMicro(DateTime::from_naive_utc_and_offset(val, Utc))
+    }
+}
+
+impl<'py> TypeConversion<DateTime<Utc>, DateTimeWrapperMicro> for OraclePandasTransport<'py> {
+    fn convert(val: DateTime<Utc>) -> DateTimeWrapperMicro {
+        DateTimeWrapperMicro(val)
     }
 }
 

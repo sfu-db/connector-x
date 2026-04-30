@@ -6,14 +6,16 @@ use connectorx::{
     destinations::arrow::ArrowDestination, prelude::*, sources::trino::TrinoSource, sql::CXQuery,
     transports::TrinoArrowTransport,
 };
-use std::{env, sync::Arc};
+use std::sync::Arc;
+
+mod test_db;
 
 #[test]
 #[ignore]
 fn test_trino() {
     let _ = env_logger::builder().is_test(true).try_init();
 
-    let dburl = env::var("TRINO_URL").unwrap();
+    let dburl = test_db::trino_url();
 
     let queries = [
         CXQuery::naked("select * from test.test_table where test_int <= 2 order by test_int"),
@@ -42,7 +44,7 @@ fn test_trino() {
 fn test_trino_text() {
     let _ = env_logger::builder().is_test(true).try_init();
 
-    let dburl = env::var("TRINO_URL").unwrap();
+    let dburl = test_db::trino_url();
 
     let queries = [
         CXQuery::naked("select * from test.test_table where test_int <= 2 order by test_int"),

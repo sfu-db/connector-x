@@ -2,7 +2,7 @@
 authors = ["Weiyuan Wu <youngw@sfu.ca>"]
 edition = "2018"
 name = "connectorx-python"
-version = "0.4.5"
+version = "0.4.6-alpha.1"
 license = "MIT"
 readme = "README.md"
 
@@ -79,5 +79,6 @@ srcs = [
   "connectorx/src_oracle",
   "connectorx/src_bigquery",
   "connectorx/src_trino",
+  "connectorx/src_clickhouse",
 ]
 integrated-auth-gssapi = ["connectorx/integrated-auth-gssapi"]

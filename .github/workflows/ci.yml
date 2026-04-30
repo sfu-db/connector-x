@@ -12,39 +12,14 @@ on:
 jobs:
   rust:
     runs-on: ubuntu-latest
-    container: ubuntu:24.04
-    services:
-      postgres:
-        image: pgvector/pgvector:pg17
-        env:
-          POSTGRES_PASSWORD: postgres
-        # Set health checks to wait until postgres has started
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-      mysql:
-        image: ghcr.io/wangxiaoying/mysql:latest
-        env:
-          MYSQL_DATABASE: mysql
-          MYSQL_ROOT_PASSWORD: mysql
-          LANG: C.UTF-8
-        ports:
-          - 3306:3306
-        options: >-
-          --health-cmd "mysqladmin ping"
-          --health-interval 10s
-          --health-timeout 10s
-          --health-retries 5
 
     steps:
       - uses: actions/checkout@v6
 
       - name: Install tools
         run: |
-          apt-get update
-          apt-get install -y curl postgresql-client build-essential pkg-config libssl-dev git sqlite3 libsqlite3-dev mysql-client python3 python3-pip libkrb5-dev libclang-dev
+          sudo apt-get update
+          sudo apt-get install -y curl postgresql-client build-essential pkg-config libssl-dev git sqlite3 libsqlite3-dev mysql-client python3 python3-pip libkrb5-dev libclang-dev
           echo "Cache Version ${{ secrets.CACHE_VERSION }}"
         env:
           DEBIAN_FRONTEND: noninteractive
@@ -66,18 +41,7 @@ jobs:
             target/
           key: ${{ runner.os }}-cargo-${{ secrets.CACHE_VERSION }}-${{ hashFiles('**/Cargo.lock') }}
 
-      - uses: extractions/setup-just@v3
-
-      - name: Seed the database
-        run: just seed-db
-        env:
-          POSTGRES_URL: "postgresql://postgres:postgres@postgres:5432/postgres"
-          SQLITE_URL: "sqlite:///tmp/test.db"
-          MYSQL_HOST: mysql
-          MYSQL_PORT: 3306
-          MYSQL_DB: mysql
-          MYSQL_USER: root
-          MYSQL_PASSWORD: mysql
+      - uses: extractions/setup-just@v4
 
       - name: Is the code formatted?
         uses: actions-rs/cargo@v1
@@ -96,10 +60,6 @@ jobs:
 
       - name: Run tests
         run: cargo clean && just test-ci
-        env:
-          POSTGRES_URL: "postgresql://postgres:postgres@postgres:5432/postgres"
-          SQLITE_URL: "sqlite:///tmp/test.db"
-          MYSQL_URL: "mysql://root:mysql@mysql:3306/mysql"
 
       - name: Test build docs
         uses: actions-rs/cargo@v1
@@ -113,32 +73,6 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.14"]
-    services:
-      # PostgreSQL and MySQL services for legacy tests
-      postgres:
-        image: pgvector/pgvector:pg17
-        env:
-          POSTGRES_PASSWORD: postgres
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-      mysql:
-        image: ghcr.io/wangxiaoying/mysql:latest
-        env:
-          MYSQL_DATABASE: mysql
-          MYSQL_ROOT_PASSWORD: mysql
-          LANG: C.UTF-8
-        ports:
-          - 3306:3306
-        options: >-
-          --health-cmd "mysqladmin ping"
-          --health-interval 10s
-          --health-timeout 10s
-          --health-retries 5
 
     steps:
       - uses: actions/checkout@v6
@@ -178,7 +112,7 @@ jobs:
 
       - uses: Gr1N/setup-poetry@v9
 
-      - uses: extractions/setup-just@v3
+      - uses: extractions/setup-just@v4
 
       - name: Install Rust
         uses: actions-rs/toolchain@v1
@@ -202,17 +136,6 @@ jobs:
             target/
           key: ${{ runner.os }}-cargo-python-${{ matrix.python-version }}-${{ secrets.CACHE_VERSION }}-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Seed the database
-        run: just seed-db
-        env:
-          POSTGRES_URL: "postgresql://postgres:postgres@localhost:5432/postgres"
-          SQLITE_URL: "sqlite:///tmp/test.db"
-          MYSQL_HOST: localhost
-          MYSQL_PORT: 3306
-          MYSQL_DB: mysql
-          MYSQL_USER: root
-          MYSQL_PASSWORD: mysql
-
       - name: Clippy linting
         uses: actions-rs/cargo@v1
         with:
@@ -230,9 +153,4 @@ jobs:
 
       - name: Test python
         run: just test-python
-        env:
-          POSTGRES_URL: "postgresql://postgres:postgres@localhost:5432/postgres"
-          SQLITE_URL: "sqlite:///tmp/test.db"
-          MYSQL_URL: "mysql://root:mysql@localhost:3306/mysql"
-          SQLITE3_STATIC: 1
-          # Oracle tests use Testcontainers - Docker is automatically detected
+        # Integration tests provision required services at test time via Testcontainers

@@ -18,7 +18,7 @@ license = "MIT"
 maintainers = ["Weiyuan Wu <youngw@sfu.ca>"] 
 name = "connectorx" 
 readme = "README.md" # Markdown files are supported
-version = "0.4.5" 
+version = "0.4.6-alpha.1" 
 
 [project]
 name = "connectorx" # Target file name of maturin build
@@ -60,10 +60,12 @@ maturin = ">=1.0,<2.0"
 modin = {extras = ["dask"], version = ">=0.10.1"}
 polars = ">=0.20"
 pyarrow = ">=22"
-pytest = "^9.0"
+pytest = "^9"
 pytest-benchmark = "^5.2"
-testcontainers = {extras = ["oracle-free"], version = "^4.0"}
+testcontainers = {version = "^4.0", extras = ["oracle-free", "clickhouse"]}
+psycopg2-binary = "^2.9"
 twine = "^3.4.1"
+clickhouse-sqlalchemy = "^0.3.2"
 
 [tool.pytest.ini_options]
 minversion = "9.0"

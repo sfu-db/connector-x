@@ -1,6 +1,9 @@
 //! Transport from CSV Source to Arrow Destination.
 
-use crate::destinations::arrow::{ArrowDestination, ArrowDestinationError, ArrowTypeSystem};
+use crate::destinations::arrow::{
+    typesystem::{ArrowTypeSystem, DateTimeWrapperMicro},
+    ArrowDestination, ArrowDestinationError,
+};
 use crate::sources::csv::{CSVSource, CSVSourceError, CSVTypeSystem};
 use crate::typesystem::TypeConversion;
 use chrono::{DateTime, Utc};
@@ -31,6 +34,12 @@ impl_transport!(
         { I64[i64]                => Int64[i64]                | conversion auto}
         { Bool[bool]              => Boolean[bool]             | conversion auto}
         { String[String]          => LargeUtf8[String]         | conversion auto}
-        { DateTime[DateTime<Utc>] => DateTimeTz[DateTime<Utc>] | conversion auto}
+        { DateTime[DateTime<Utc>] => DateTimeTzMicro[DateTimeWrapperMicro] | conversion option}
     }
 );
+
+impl TypeConversion<DateTime<Utc>, DateTimeWrapperMicro> for CSVArrowTransport {
+    fn convert(val: DateTime<Utc>) -> DateTimeWrapperMicro {
+        DateTimeWrapperMicro(val)
+    }
+}

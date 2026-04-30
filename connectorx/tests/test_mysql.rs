@@ -1,5 +1,9 @@
+#![cfg(all(feature = "src_mysql", feature = "dst_arrow"))]
+
+mod test_db;
+
 use arrow::{
-    array::{Float64Array, Int64Array, StringArray},
+    array::{Float64Array, Int16Array, Int64Array, StringArray},
     record_batch::RecordBatch,
 };
 use connectorx::{
@@ -9,13 +13,12 @@ use connectorx::{
     sql::CXQuery,
     transports::MySQLArrowTransport,
 };
-use std::env;
 
 #[test]
 fn test_mysql() {
     let _ = env_logger::builder().is_test(true).try_init();
 
-    let dburl = env::var("MYSQL_URL").unwrap();
+    let dburl = test_db::mysql_url();
 
     let queries = [
         CXQuery::naked("select * from test_table where test_int <= 2"),
@@ -40,7 +43,7 @@ fn test_mysql() {
 fn test_mysql_text() {
     let _ = env_logger::builder().is_test(true).try_init();
 
-    let dburl = env::var("MYSQL_URL").unwrap();
+    let dburl = test_db::mysql_url();
 
     let queries = [
         CXQuery::naked("select * from test_table where test_int <= 2"),
@@ -65,7 +68,7 @@ fn test_mysql_text() {
 fn test_mysql_pre_execution_queries() {
     let _ = env_logger::builder().is_test(true).try_init();
 
-    let dburl = env::var("MYSQL_URL").unwrap();
+    let dburl = test_db::mysql_url();
 
     let queries = [CXQuery::naked(
         "SELECT @@SESSION.max_execution_time, @@SESSION.wait_timeout",
@@ -110,7 +113,7 @@ fn test_mysql_pre_execution_queries() {
 fn test_mysql_partitioned_pre_execution_queries() {
     let _ = env_logger::builder().is_test(true).try_init();
 
-    let dburl = env::var("MYSQL_URL").unwrap();
+    let dburl = test_db::mysql_url();
 
     let queries = [
         CXQuery::naked(
@@ -224,4 +227,140 @@ pub fn verify_arrow_results(result: Vec<RecordBatch>) {
             }
         }
     }
+}
+
+// Unit tests for BINARY_FLAG detection logic
+// These tests don't require a database connection
+
+use connectorx::sources::mysql::MySQLTypeSystem;
+use r2d2_mysql::mysql::consts::{ColumnFlags, ColumnType};
+
+/// Test that BINARY_FLAG correctly distinguishes BINARY from CHAR
+#[test]
+fn test_mysql_binary_flag_for_binary_type() {
+    // Simulate BINARY(10): MYSQL_TYPE_STRING + BINARY_FLAG
+    let col_type = ColumnType::MYSQL_TYPE_STRING;
+    let mut flags = ColumnFlags::empty();
+    flags.insert(ColumnFlags::BINARY_FLAG);
+
+    let result = MySQLTypeSystem::from((&col_type, &flags));
+
+    // Should be TinyBlob (Vec<u8>), not Char (String)
+    // This prevents "Could not convert Bytes(...) to desired type" panic
+    match result {
+        MySQLTypeSystem::TinyBlob(true) => {} // OK
+        _ => panic!("BINARY should map to TinyBlob, got {:?}", result),
+    }
+}
+
+/// Test that CHAR without BINARY_FLAG maps to Char
+#[test]
+fn test_mysql_binary_flag_for_char_type() {
+    // Simulate CHAR(10): MYSQL_TYPE_STRING without BINARY_FLAG
+    let col_type = ColumnType::MYSQL_TYPE_STRING;
+    let flags = ColumnFlags::empty();
+
+    let result = MySQLTypeSystem::from((&col_type, &flags));
+
+    // Should be Char (String), not TinyBlob (Vec<u8>)
+    match result {
+        MySQLTypeSystem::Char(true) => {} // OK
+        _ => panic!("CHAR should map to Char, got {:?}", result),
+    }
+}
+
+/// Test that BINARY_FLAG correctly distinguishes VARBINARY from VARCHAR
+#[test]
+fn test_mysql_binary_flag_for_varbinary_type() {
+    // Simulate VARBINARY(10): MYSQL_TYPE_VAR_STRING + BINARY_FLAG
+    let col_type = ColumnType::MYSQL_TYPE_VAR_STRING;
+    let mut flags = ColumnFlags::empty();
+    flags.insert(ColumnFlags::BINARY_FLAG);
+
+    let result = MySQLTypeSystem::from((&col_type, &flags));
+
+    // Should be Blob (Vec<u8>), not VarChar (String)
+    // This prevents "Could not convert Bytes(...) to desired type" panic
+    match result {
+        MySQLTypeSystem::Blob(true) => {} // OK
+        _ => panic!("VARBINARY should map to Blob, got {:?}", result),
+    }
+}
+
+/// Test that VARCHAR without BINARY_FLAG maps to VarChar
+#[test]
+fn test_mysql_binary_flag_for_varchar_type() {
+    // Simulate VARCHAR(10): MYSQL_TYPE_VAR_STRING without BINARY_FLAG
+    let col_type = ColumnType::MYSQL_TYPE_VAR_STRING;
+    let flags = ColumnFlags::empty();
+
+    let result = MySQLTypeSystem::from((&col_type, &flags));
+
+    // Should be VarChar (String), not Blob (Vec<u8>)
+    match result {
+        MySQLTypeSystem::VarChar(true) => {} // OK
+        _ => panic!("VARCHAR should map to VarChar, got {:?}", result),
+    }
+}
+
+#[test]
+fn test_mysql_tinyint_not_bool() {
+    let _ = env_logger::builder().is_test(true).try_init();
+    let dburl = test_db::mysql_url();
+
+    let queries = [CXQuery::naked(
+        "SELECT test_tiny FROM test_types WHERE test_tiny IS NOT NULL ORDER BY test_tiny",
+    )];
+
+    let builder = MySQLSource::<BinaryProtocol>::new(&dburl, 1).unwrap();
+    let mut destination = ArrowDestination::new();
+    let dispatcher = Dispatcher::<_, _, MySQLArrowTransport<BinaryProtocol>>::new(
+        builder,
+        &mut destination,
+        &queries,
+        None,
+    );
+    dispatcher.run().unwrap();
+
+    let result = destination.arrow().unwrap();
+    assert!(result.len() == 1);
+
+    // TINYINT values must be preserved as Int16, not collapsed to Boolean.
+    // Before this fix, -128 and 127 would both become `true`.
+    assert!(result[0]
+        .column(0)
+        .as_any()
+        .downcast_ref::<Int16Array>()
+        .unwrap()
+        .eq(&Int16Array::from(vec![-128i16, 127])));
+}
+
+#[test]
+fn test_mysql_tinyint_not_bool_text() {
+    let _ = env_logger::builder().is_test(true).try_init();
+    let dburl = test_db::mysql_url();
+
+    let queries = [CXQuery::naked(
+        "SELECT test_tiny FROM test_types WHERE test_tiny IS NOT NULL ORDER BY test_tiny",
+    )];
+
+    let builder = MySQLSource::<TextProtocol>::new(&dburl, 1).unwrap();
+    let mut destination = ArrowDestination::new();
+    let dispatcher = Dispatcher::<_, _, MySQLArrowTransport<TextProtocol>>::new(
+        builder,
+        &mut destination,
+        &queries,
+        None,
+    );
+    dispatcher.run().unwrap();
+
+    let result = destination.arrow().unwrap();
+    assert!(result.len() == 1);
+
+    assert!(result[0]
+        .column(0)
+        .as_any()
+        .downcast_ref::<Int16Array>()
+        .unwrap()
+        .eq(&Int16Array::from(vec![-128i16, 127])));
 }

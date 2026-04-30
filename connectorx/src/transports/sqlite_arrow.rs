@@ -1,7 +1,10 @@
 //! Transport from SQLite Source to Arrow Destination.
 
 use crate::{
-    destinations::arrow::{typesystem::ArrowTypeSystem, ArrowDestination, ArrowDestinationError},
+    destinations::arrow::{
+        typesystem::{ArrowTypeSystem, NaiveDateTimeWrapperMicro, NaiveTimeWrapperMicro},
+        ArrowDestination, ArrowDestinationError,
+    },
     impl_transport,
     sources::sqlite::{SQLiteSource, SQLiteSourceError, SQLiteTypeSystem},
     typesystem::TypeConversion,
@@ -38,13 +41,25 @@ impl_transport!(
         { Text[Box<str>]             => LargeUtf8[String]       | conversion option }
         { Blob[Vec<u8>]              => LargeBinary[Vec<u8>]    | conversion auto }
         { Date[NaiveDate]            => Date32[NaiveDate]       | conversion auto }
-        { Time[NaiveTime]            => Time64[NaiveTime]       | conversion auto }
-        { Timestamp[NaiveDateTime]   => Date64[NaiveDateTime]   | conversion auto }
+        { Time[NaiveTime]            => Time64Micro[NaiveTimeWrapperMicro]       | conversion option }
+        { Timestamp[NaiveDateTime]   => Date64Micro[NaiveDateTimeWrapperMicro]   | conversion option }
     }
 );
 
 impl TypeConversion<Box<str>, String> for SQLiteArrowTransport {
     fn convert(val: Box<str>) -> String {
         val.to_string()
+    }
+}
+
+impl TypeConversion<NaiveTime, NaiveTimeWrapperMicro> for SQLiteArrowTransport {
+    fn convert(val: NaiveTime) -> NaiveTimeWrapperMicro {
+        NaiveTimeWrapperMicro(val)
+    }
+}
+
+impl TypeConversion<NaiveDateTime, NaiveDateTimeWrapperMicro> for SQLiteArrowTransport {
+    fn convert(val: NaiveDateTime) -> NaiveDateTimeWrapperMicro {
+        NaiveDateTimeWrapperMicro(val)
     }
 }

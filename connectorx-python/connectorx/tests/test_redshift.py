@@ -87,7 +87,7 @@ def test_redshift_types(redshift_url: str) -> None:
                     np.datetime64("2005-01-01T22:03:00"),
                     None,
                     np.datetime64("1987-01-01T11:00:00"),
-                ], dtype="datetime64[ns]"
+                ], dtype="datetime64[us]"
             ),
 
         },
