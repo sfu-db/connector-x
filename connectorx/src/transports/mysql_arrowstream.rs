@@ -50,7 +50,7 @@ impl_transport!(
         { UShort[u16]                => Int64[i64]              | conversion auto }
         { ULong[u32]                 => Int64[i64]              | conversion auto }
         { UInt24[u32]                => Int64[i64]              | conversion none }
-        { ULongLong[u64]             => Float64[f64]            | conversion auto }
+        { ULongLong[u64]             => UInt64[u64]             | conversion auto }
         { Date[NaiveDate]            => Date32[NaiveDate]       | conversion auto }
         { Time[NaiveTime]            => Time64Micro[NaiveTimeWrapperMicro]       | conversion option }
         { Datetime[NaiveDateTime]    => Date64Micro[NaiveDateTimeWrapperMicro]   | conversion option }
@@ -86,7 +86,7 @@ impl_transport!(
         { UShort[u16]                => Int64[i64]              | conversion auto }
         { ULong[u32]                 => Int64[i64]              | conversion auto }
         { UInt24[u32]                => Int64[i64]              | conversion none }
-        { ULongLong[u64]             => Float64[f64]            | conversion auto }
+        { ULongLong[u64]             => UInt64[u64]             | conversion auto }
         { Date[NaiveDate]            => Date32[NaiveDate]       | conversion auto }
         { Time[NaiveTime]            => Time64Micro[NaiveTimeWrapperMicro]       | conversion option }
         { Datetime[NaiveDateTime]    => Date64Micro[NaiveDateTimeWrapperMicro]   | conversion option }
