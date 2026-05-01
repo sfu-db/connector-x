@@ -111,8 +111,12 @@ pub fn mssql_config(url: &Url) -> Config {
 impl MsSQLSource {
     #[throws(MsSQLSourceError)]
     pub fn new(rt: Arc<Runtime>, conn: &str, nconn: usize) -> Self {
-        let url = Url::parse(conn)?;
-        let config = mssql_config(&url)?;
+        // If it doesn't look like a URL, then it might be an ADO string
+        let config = if let Ok(url) = Url::parse(conn) {
+            mssql_config(&url)?
+        } else {
+            Config::from_ado_string(conn)?
+        };
         let manager = bb8_tiberius::ConnectionManager::new(config);
         let pool = rt.block_on(Pool::builder().max_size(nconn as u32).build(manager))?;
 
