@@ -38,12 +38,12 @@ pub fn run(
         |s, (i, p)| -> Result<(), ConnectorXOutError> {
             match p.db_name.as_str() {
                 "LOCAL" => {
-                    s.send((p.sql, None)).expect("send error local");
+                    s.send((p.sql, None)).map_err(|_| ConnectorXOutError::Anyhow(anyhow::anyhow!("local send channel disconnected")))?;
                 }
                 _ => {
                     debug!("start query {}: {}", i, p.sql);
                     let mut queries = vec![];
-                    p.sql.split(';').for_each(|ss| {
+                    p.sql.split(';').filter(|ss| !ss.trim().is_empty()).for_each(|ss| {
                         queries.push(CXQuery::naked(ss));
                     });
                     let source_conn = &db_conn_map[p.db_name.as_str()]
@@ -56,7 +56,7 @@ pub fn run(
 
                     let provider = MemTable::try_new(rbs[0].schema(), vec![rbs])?;
                     s.send((p.db_alias, Some(Arc::new(provider))))
-                        .expect(&format!("send error {}", i));
+                        .map_err(|_| ConnectorXOutError::Anyhow(anyhow::anyhow!("result send channel disconnected for query {}", i)))?;
                     debug!("query {} finished", i);
                 }
             }
