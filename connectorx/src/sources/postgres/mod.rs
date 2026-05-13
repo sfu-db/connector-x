@@ -94,6 +94,46 @@ impl_produce_unimplemented!(
 
 );
 
+/// If any columns are range types, wrap the query in a subquery that casts
+/// range columns to `::text`. For example:
+///   SELECT * FROM orders WHERE id < 2
+/// becomes:
+///   SELECT "id", "period"::text, "name" FROM (SELECT * FROM orders WHERE id < 2) AS _cx_sub
+///
+/// This forces PG to serialize ranges as text, which makes binary and cursor
+/// protocols work without needing range-specific FromSql impls.
+/// For CSV and simple protocols the rewrite is harmless (text cast on text is a no-op).
+fn maybe_rewrite_range_query(
+    query: &CXQuery<String>,
+    names: &[String],
+    schema: &[PostgresTypeSystem],
+) -> CXQuery<String> {
+    let range_mask: Vec<bool> = schema
+        .iter()
+        .map(|ts| matches!(ts, PostgresTypeSystem::Range(_)))
+        .collect();
+
+    if !range_mask.iter().any(|&r| r) {
+        return query.clone();
+    }
+
+    let cols: String = names
+        .iter()
+        .zip(range_mask.iter())
+        .map(|(name, is_range)| {
+            if *is_range {
+                format!("\"{}\"::text", name)
+            } else {
+                format!("\"{}\"", name)
+            }
+        })
+        .collect::<Vec<_>>()
+        .join(", ");
+
+    let rewritten = format!("SELECT {} FROM ({}) AS _cx_sub", cols, query.as_str());
+    CXQuery::Wrapped(rewritten)
+}
+
 // take a row and unwrap the interior field from column 0
 fn convert_row<'b, R: TryFrom<usize> + postgres::types::FromSql<'b> + Clone>(row: &'b Row) -> R {
     let nrows: Option<R> = row.get(0);
@@ -249,6 +289,7 @@ where
         let mut ret = vec![];
         for query in self.queries {
             let mut conn = self.pool.get()?;
+            let rewritten = maybe_rewrite_range_query(&query, &self.names, &self.schema);
 
             if let Some(pre_queries) = &self.pre_execution_queries {
                 for pre_query in pre_queries {
@@ -258,7 +299,7 @@ where
 
             ret.push(PostgresSourcePartition::<P, C>::new(
                 conn,
-                &query,
+                &rewritten,
                 &self.schema,
                 &self.pg_schema,
             ));

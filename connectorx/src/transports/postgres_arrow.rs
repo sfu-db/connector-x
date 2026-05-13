@@ -69,6 +69,7 @@ macro_rules! impl_postgres_transport {
                 { JSON[Value]                        => LargeUtf8[String]                      | conversion option }
                 { JSONB[Value]                       => LargeUtf8[String]                      | conversion none   }
                 { Inet[IpInet]                       => LargeUtf8[String]                      | conversion none   }
+                { Range[&'r str]                     => LargeUtf8[String]                      | conversion none   }
                 { BoolArray[Vec<Option<bool>>]       => BoolArray[Vec<Option<bool>>]           | conversion auto   }
                 { VarcharArray[Vec<Option<String>>]  => Utf8Array[Vec<Option<String>>]         | conversion auto   }
                 { TextArray[Vec<Option<String>>]     => Utf8Array[Vec<Option<String>>]         | conversion none   }

@@ -399,6 +399,106 @@ fn test_types_binary_postgres() {
 }
 
 #[test]
+fn test_range_types_binary_postgres() {
+    test_types!(
+        "binary",
+        "select test_int4range, test_int8range, test_numrange, test_tsrange, test_tstzrange, test_daterange from range_types ORDER BY id",
+        BinaryProtocol,
+        verify_range_type_results
+    );
+}
+
+pub fn verify_range_type_results(result: Vec<RecordBatch>, _protocol: &str) {
+    assert!(result.len() == 1);
+    let rb = &result[0];
+    assert!(rb.columns().len() == 6);
+
+    // test_int4range (discrete: normalizes bounds, e.g. [1,10] -> [1,11))
+    assert!(rb
+        .column(0)
+        .as_any()
+        .downcast_ref::<StringArray>()
+        .unwrap()
+        .eq(&StringArray::from(vec![
+            Some("[1,11)"),
+            Some("[-5,5)"),
+            None,
+            Some("empty"),
+            Some("(,)"),
+        ])));
+
+    // test_int8range (discrete: normalizes bounds, e.g. [100,1000] -> [100,1001))
+    assert!(rb
+        .column(1)
+        .as_any()
+        .downcast_ref::<StringArray>()
+        .unwrap()
+        .eq(&StringArray::from(vec![
+            Some("[100,1001)"),
+            Some("[-9223372036854775808,1)"),
+            None,
+            Some("empty"),
+            Some("(,)"),
+        ])));
+
+    // test_numrange (continuous: preserves original bounds)
+    assert!(rb
+        .column(2)
+        .as_any()
+        .downcast_ref::<StringArray>()
+        .unwrap()
+        .eq(&StringArray::from(vec![
+            Some("[1.5,10.0)"),
+            Some("(-infinity,100]"),
+            None,
+            Some("empty"),
+            Some("(,)"),
+        ])));
+
+    // test_tsrange (continuous: preserves bounds, quotes values)
+    assert!(rb
+        .column(3)
+        .as_any()
+        .downcast_ref::<StringArray>()
+        .unwrap()
+        .eq(&StringArray::from(vec![
+            Some("[\"2020-01-01 00:00:00\",\"2020-12-31 23:59:59\")"),
+            Some("[\"2010-01-01 00:00:00\",\"2015-06-15 12:00:00\")"),
+            None,
+            Some("empty"),
+            Some("(,)"),
+        ])));
+
+    // test_tstzrange (timezone-dependent, verify non-null structure)
+    let tstz_col = rb
+        .column(4)
+        .as_any()
+        .downcast_ref::<StringArray>()
+        .unwrap();
+    assert!(tstz_col.is_null(2));
+    assert!(!tstz_col.is_null(0));
+    assert!(!tstz_col.is_null(1));
+    assert!(!tstz_col.is_null(3)); // empty
+    assert!(!tstz_col.is_null(4)); // unbounded
+    assert!(tstz_col.value(3) == "empty");
+    assert!(tstz_col.value(4) == "(,)");
+
+    // test_daterange (discrete: normalizes bounds)
+    assert!(rb
+        .column(5)
+        .as_any()
+        .downcast_ref::<StringArray>()
+        .unwrap()
+        .eq(&StringArray::from(vec![
+            Some("[2020-01-01,2021-01-01)"),
+            Some("[2010-01-01,2015-07-01)"),
+            None,
+            Some("empty"),
+            Some("(,)"),
+        ])));
+}
+
+#[test]
 fn test_pgvector_types_binary_postgres() {
     test_types!(
         "binary",
@@ -419,6 +519,16 @@ fn test_types_csv_postgres() {
 }
 
 #[test]
+fn test_range_types_csv_postgres() {
+    test_types!(
+        "csv",
+        "select test_int4range, test_int8range, test_numrange, test_tsrange, test_tstzrange, test_daterange from range_types ORDER BY id",
+        CSVProtocol,
+        verify_range_type_results
+    );
+}
+
+#[test]
 fn test_types_cursor_postgres() {
     test_types!(
         "cursor",
@@ -429,12 +539,32 @@ fn test_types_cursor_postgres() {
 }
 
 #[test]
+fn test_range_types_cursor_postgres() {
+    test_types!(
+        "cursor",
+        "select test_int4range, test_int8range, test_numrange, test_tsrange, test_tstzrange, test_daterange from range_types ORDER BY id",
+        CursorProtocol,
+        verify_range_type_results
+    );
+}
+
+#[test]
 fn test_types_simple_postgres() {
     test_types!(
         "simple",
         "select test_bool,test_date,test_timestamp,test_timestamptz,test_int2,test_int4,test_int8,test_float4,test_float8,test_numeric,test_bpchar,test_char,test_varchar,test_uuid,test_time,test_bytea,test_f4array,test_f8array,test_narray,test_boolarray,test_i2array,test_i4array,test_i8array,test_citext,test_ltree,test_lquery,test_ltxtquery,test_varchararray,test_textarray,test_name,test_inet from test_types",
         SimpleProtocol,
         verify_arrow_type_results
+    );
+}
+
+#[test]
+fn test_range_types_simple_postgres() {
+    test_types!(
+        "simple",
+        "select test_int4range, test_int8range, test_numrange, test_tsrange, test_tstzrange, test_daterange from range_types ORDER BY id",
+        SimpleProtocol,
+        verify_range_type_results
     );
 }
 
