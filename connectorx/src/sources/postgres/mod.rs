@@ -121,10 +121,11 @@ fn maybe_rewrite_range_query(
         .iter()
         .zip(range_mask.iter())
         .map(|(name, is_range)| {
+            let quoted = quote_ident(name);
             if *is_range {
-                format!("\"{}\"::text", name)
+                format!("{}::text", quoted)
             } else {
-                format!("\"{}\"", name)
+                quoted
             }
         })
         .collect::<Vec<_>>()
@@ -132,6 +133,33 @@ fn maybe_rewrite_range_query(
 
     let rewritten = format!("SELECT {} FROM ({}) AS _cx_sub", cols, query.as_str());
     CXQuery::Wrapped(rewritten)
+}
+
+fn quote_ident(ident: &str) -> String {
+    format!("\"{}\"", ident.replace('\"', "\"\""))
+}
+
+#[cfg(test)]
+mod range_rewrite_tests {
+    use super::{maybe_rewrite_range_query, quote_ident, PostgresTypeSystem};
+    use crate::sql::CXQuery;
+
+    #[test]
+    fn quote_ident_escapes_embedded_quotes() {
+        assert_eq!(quote_ident("a\"b"), "\"a\"\"b\"");
+    }
+
+    #[test]
+    fn rewrite_escapes_column_names_and_casts_only_ranges() {
+        let q = CXQuery::Naked("SELECT 1".to_string());
+        let names = vec!["plain".to_string(), "a\"b".to_string()];
+        let schema = vec![PostgresTypeSystem::Int4(true), PostgresTypeSystem::Range(true)];
+        let rewritten = maybe_rewrite_range_query(&q, &names, &schema);
+        assert_eq!(
+            rewritten.as_str(),
+            "SELECT \"plain\", \"a\"\"b\"::text FROM (SELECT 1) AS _cx_sub"
+        );
+    }
 }
 
 // take a row and unwrap the interior field from column 0
