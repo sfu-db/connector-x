@@ -888,6 +888,33 @@ def test_postgres_tls_disable(postgres_url_tls: str) -> None:
     not os.environ.get("POSTGRES_URL_TLS"),
     reason="Do not test Postgres TLS unless `POSTGRES_URL_TLS` is set",
 )
+def test_postgres_tls_arrow_stream(postgres_url_tls: str) -> None:
+    query = "SELECT * FROM test_table"
+    reader = read_sql(
+        f"{postgres_url_tls}?sslmode=require",
+        query,
+        return_type="arrow_stream",
+    )
+    batches = list(reader)
+    assert len(batches) > 0
+    assert batches[0].num_columns > 0
+
+
+@pytest.mark.skipif(
+    not os.environ.get("POSTGRES_URL_TLS"),
+    reason="Do not test Postgres TLS unless `POSTGRES_URL_TLS` is set",
+)
+def test_postgres_tls_arrow_stream_bad_host_raises(postgres_url_tls: str) -> None:
+    bad_url = "postgresql://user:pass@127.0.0.1:1?sslmode=require"
+    with pytest.raises(RuntimeError):
+        reader = read_sql(bad_url, "SELECT 1", return_type="arrow_stream")
+        list(reader)
+
+
+@pytest.mark.skipif(
+    not os.environ.get("POSTGRES_URL_TLS"),
+    reason="Do not test Postgres TLS unless `POSTGRES_URL_TLS` is set",
+)
 @pytest.mark.xfail
 def test_postgres_tls_fail(postgres_url_tls: str) -> None:
     query = "SELECT * FROM test_table"
