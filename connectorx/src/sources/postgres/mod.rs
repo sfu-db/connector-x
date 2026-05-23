@@ -153,7 +153,10 @@ mod range_rewrite_tests {
     fn rewrite_escapes_column_names_and_casts_only_ranges() {
         let q = CXQuery::Naked("SELECT 1".to_string());
         let names = vec!["plain".to_string(), "a\"b".to_string()];
-        let schema = vec![PostgresTypeSystem::Int4(true), PostgresTypeSystem::Range(true)];
+        let schema = vec![
+            PostgresTypeSystem::Int4(true),
+            PostgresTypeSystem::Range(true),
+        ];
         let rewritten = maybe_rewrite_range_query(&q, &names, &schema);
         assert_eq!(
             rewritten.as_str(),

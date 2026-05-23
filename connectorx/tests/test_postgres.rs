@@ -511,11 +511,7 @@ pub fn verify_range_type_results(result: Vec<RecordBatch>, _protocol: &str) {
     );
 
     // test_tstzrange (timezone-dependent, verify non-null structure)
-    let tstz_col = rb
-        .column(4)
-        .as_any()
-        .downcast_ref::<StringArray>()
-        .unwrap();
+    let tstz_col = rb.column(4).as_any().downcast_ref::<StringArray>().unwrap();
     assert!(tstz_col.is_null(2));
     assert!(!tstz_col.is_null(0));
     assert!(!tstz_col.is_null(1));
