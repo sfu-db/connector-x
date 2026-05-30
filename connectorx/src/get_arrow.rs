@@ -228,7 +228,12 @@ pub fn get_arrow(
         #[cfg(feature = "src_bigquery")]
         SourceType::BigQuery => {
             let rt = Arc::new(tokio::runtime::Runtime::new().expect("Failed to create runtime"));
-            let source = BigQuerySource::new(rt, &source_conn.conn[..])?;
+            let source = match &source_conn.bq_adc_config {
+                Some(cfg) => {
+                    BigQuerySource::new_with_user_adc(rt, cfg.secret_path, cfg.project_id)?
+                }
+                None => BigQuerySource::new(rt, &source_conn.conn[..])?,
+            };
             let dispatcher = Dispatcher::<_, _, BigQueryArrowTransport>::new(
                 source,
                 &mut destination,
