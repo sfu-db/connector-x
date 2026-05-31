@@ -17,14 +17,7 @@ use fehler::{throw, throws};
 use log::{debug, warn};
 use r2d2::{Pool, PooledConnection};
 use r2d2_mysql::{
-    mysql::{
-        consts::{
-            ColumnFlags as MySQLColumnFlags, ColumnType as MySQLColumnType, UTF8MB4_GENERAL_CI,
-            UTF8_GENERAL_CI,
-        },
-        prelude::Queryable,
-        Binary, Opts, OptsBuilder, QueryResult, Row, Text,
-    },
+    mysql::{prelude::Queryable, Binary, Opts, OptsBuilder, QueryResult, Row, Text},
     MySqlConnectionManager,
 };
 use rust_decimal::Decimal;
@@ -109,8 +102,6 @@ where
         assert!(!self.queries.is_empty());
 
         let mut conn = self.pool.get()?;
-        let server_version_post_5_5_3 = conn.server_version() >= (5, 5, 3);
-
         let first_query = &self.queries[0];
 
         match conn.prep(first_query) {
@@ -120,26 +111,11 @@ where
                     .iter()
                     .map(|col| {
                         let col_name = col.name_str().to_string();
-                        let col_type = col.column_type();
-                        let col_flags = col.flags();
-                        let charset = col.character_set();
-                        let charset_is_utf8 = (server_version_post_5_5_3
-                            && charset == UTF8MB4_GENERAL_CI)
-                            || (!server_version_post_5_5_3 && charset == UTF8_GENERAL_CI);
-                        if charset_is_utf8
-                            && (col_type == MySQLColumnType::MYSQL_TYPE_LONG_BLOB
-                                || col_type == MySQLColumnType::MYSQL_TYPE_BLOB
-                                || col_type == MySQLColumnType::MYSQL_TYPE_MEDIUM_BLOB
-                                || col_type == MySQLColumnType::MYSQL_TYPE_TINY_BLOB)
-                        {
-                            return (
-                                col_name,
-                                MySQLTypeSystem::Char(
-                                    !col_flags.contains(MySQLColumnFlags::NOT_NULL_FLAG),
-                                ),
-                            );
-                        }
-                        let d = MySQLTypeSystem::from((&col_type, &col_flags));
+                        let d = MySQLTypeSystem::from((
+                            &col.column_type(),
+                            &col.flags(),
+                            col.character_set(),
+                        ));
                         (col_name, d)
                     })
                     .unzip();
@@ -163,7 +139,11 @@ where
                                 .map(|col| {
                                     (
                                         col.name_str().to_string(),
-                                        MySQLTypeSystem::from((&col.column_type(), &col.flags())),
+                                        MySQLTypeSystem::from((
+                                            &col.column_type(),
+                                            &col.flags(),
+                                            col.character_set(),
+                                        )),
                                     )
                                 })
                                 .unzip();
