@@ -3,7 +3,7 @@
 mod test_db;
 
 use arrow::{
-    array::{Float64Array, Int16Array, Int32Array, Int64Array, StringArray, UInt64Array},
+    array::{Float64Array, Int16Array, Int32Array, StringArray, UInt64Array},
     datatypes::DataType,
     record_batch::RecordBatch,
 };
