@@ -3,6 +3,7 @@ use crate::{
         typesystem::{ArrowTypeSystem, DateTimeWrapperMicro, NaiveDateTimeWrapperMicro},
         ArrowDestination, ArrowDestinationError,
     },
+    impl_transport,
     sources::oracle::{OracleSource, OracleSourceError, OracleTypeSystem},
     typesystem::TypeConversion,
 };

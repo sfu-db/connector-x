@@ -5,6 +5,7 @@ use crate::{
         typesystem::{ArrowTypeSystem, DateTimeWrapperMicro, NaiveTimeWrapperMicro},
         ArrowDestination, ArrowDestinationError,
     },
+    impl_transport,
     sources::clickhouse::{ClickHouseSource, ClickHouseSourceError, ClickHouseTypeSystem},
     typesystem::TypeConversion,
 };

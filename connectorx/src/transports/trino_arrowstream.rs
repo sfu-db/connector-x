@@ -5,6 +5,7 @@ use crate::{
         typesystem::{ArrowTypeSystem, NaiveDateTimeWrapperMicro, NaiveTimeWrapperMicro},
         ArrowDestination, ArrowDestinationError,
     },
+    impl_transport,
     sources::trino::{TrinoSource, TrinoSourceError, TrinoTypeSystem},
     typesystem::TypeConversion,
 };

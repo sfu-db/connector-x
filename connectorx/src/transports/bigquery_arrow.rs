@@ -7,6 +7,7 @@ use crate::{
         },
         ArrowDestination, ArrowDestinationError,
     },
+    impl_transport,
     sources::bigquery::{BigQuerySource, BigQuerySourceError, BigQueryTypeSystem},
     typesystem::TypeConversion,
 };
