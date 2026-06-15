@@ -61,7 +61,8 @@ impl StringInfo {
             }
         };
 
-        let s: Py<pyo3::types::PyString> = unsafe { Py::from_owned_ptr(py, objptr) };
+        let s: Py<pyo3::types::PyString> =
+            unsafe { Bound::from_owned_ptr(py, objptr).cast_into_unchecked().unbind() };
 
         PyString(s)
     }
@@ -72,7 +73,11 @@ impl PyString {
     pub fn none(py: Python) -> PyString {
         // this is very unsafe because Py_None is not a PyString from Rust's perspective. But it is fine because
         // later these stuff will all be converted to a python object
-        let s = unsafe { Py::from_borrowed_ptr(py, ffi::Py_None()) };
+        let s = unsafe {
+            Bound::from_borrowed_ptr(py, ffi::Py_None())
+                .cast_into_unchecked::<pyo3::types::PyString>()
+                .unbind()
+        };
         PyString(s)
     }
 
