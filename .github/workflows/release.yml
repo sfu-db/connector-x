@@ -5,6 +5,9 @@ on:
     branches:
       - prerelease
       - release
+  pull_request:
+    branches:
+      - main
 
 jobs:
   linux:
@@ -18,13 +21,13 @@ jobs:
             { "arch": "aarch64", "runs-on": "ubuntu-22.04-arm" },
           ]
         python-version:
-          [[310, "3.10"], [311, "3.11"], [312, "3.12"], [313, "3.13"], [314, "3.14"], [314, "3.14t"]]
+          [["cp310-cp310", "3.10"], ["cp311-cp311", "3.11"], ["cp312-cp312", "3.12"], ["cp313-cp313", "3.13"], ["cp314-cp314", "3.14"], ["cp314-cp314t", "3.14t"]]
     steps:
       - uses: actions/checkout@v6
 
       - name: Set python version
         run: |
-          echo "/opt/python/cp${{ matrix.python-version[0] }}-cp${{ matrix.python-version[0] }}/bin" >> $GITHUB_PATH
+          echo "/opt/python/${{ matrix.python-version[0] }}/bin" >> $GITHUB_PATH
 
       - uses: actions-rs/toolchain@v1
         with:
