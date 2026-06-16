@@ -154,3 +154,5 @@ jobs:
       - name: Test python
         run: just test-python
         # Integration tests provision required services at test time via Testcontainers
+        env:
+          PYTHON_GIL: ${{ matrix.python-version == '3.14t' && '0' || '1' }}
