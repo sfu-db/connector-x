@@ -3,7 +3,10 @@
 mod test_db;
 
 use arrow::{
-    array::{Float64Array, Int16Array, Int32Array, StringArray, UInt64Array},
+    array::{
+        Float32Array, Float64Array, Int16Array, Int32Array, Int64Array, Int8Array, StringArray,
+        UInt16Array, UInt32Array, UInt64Array, UInt8Array,
+    },
     datatypes::DataType,
     record_batch::RecordBatch,
 };
@@ -93,7 +96,7 @@ fn test_mysql_pre_execution_queries() {
 
     let result = destination.arrow().unwrap();
 
-    assert!(result.len() == 1);
+    assert_eq!(result.len(), 1);
 
     assert!(result[0]
         .column(0)
@@ -329,87 +332,45 @@ fn test_blob_is_binary() {
 
 #[test]
 fn test_mysql_tinyint_not_bool() {
-    let _ = env_logger::builder().is_test(true).try_init();
-    let dburl = test_db::mysql_url();
-
-    let queries = [CXQuery::naked(
+    let result = run_mysql_query(
         "SELECT test_tiny FROM test_types WHERE test_tiny IS NOT NULL ORDER BY test_tiny",
-    )];
-
-    let builder = MySQLSource::<BinaryProtocol>::new(&dburl, 1).unwrap();
-    let mut destination = ArrowDestination::new();
-    let dispatcher = Dispatcher::<_, _, MySQLArrowTransport<BinaryProtocol>>::new(
-        builder,
-        &mut destination,
-        &queries,
-        None,
+        true,
     );
-    dispatcher.run().unwrap();
+    assert_eq!(result.len(), 1);
 
-    let result = destination.arrow().unwrap();
-    assert!(result.len() == 1);
-
-    // TINYINT values must be preserved as Int16, not collapsed to Boolean.
+    // TINYINT values must be preserved as Int8, not collapsed to Boolean.
     // Before this fix, -128 and 127 would both become `true`.
     assert!(result[0]
         .column(0)
         .as_any()
-        .downcast_ref::<Int16Array>()
+        .downcast_ref::<Int8Array>()
         .unwrap()
-        .eq(&Int16Array::from(vec![-128i16, 127])));
+        .eq(&Int8Array::from(vec![-128i8, 127])));
 }
 
 #[test]
 fn test_mysql_tinyint_not_bool_text() {
-    let _ = env_logger::builder().is_test(true).try_init();
-    let dburl = test_db::mysql_url();
-
-    let queries = [CXQuery::naked(
+    let result = run_mysql_query(
         "SELECT test_tiny FROM test_types WHERE test_tiny IS NOT NULL ORDER BY test_tiny",
-    )];
-
-    let builder = MySQLSource::<TextProtocol>::new(&dburl, 1).unwrap();
-    let mut destination = ArrowDestination::new();
-    let dispatcher = Dispatcher::<_, _, MySQLArrowTransport<TextProtocol>>::new(
-        builder,
-        &mut destination,
-        &queries,
-        None,
+        false,
     );
-    dispatcher.run().unwrap();
-
-    let result = destination.arrow().unwrap();
-    assert!(result.len() == 1);
+    assert_eq!(result.len(), 1);
 
     assert!(result[0]
         .column(0)
         .as_any()
-        .downcast_ref::<Int16Array>()
+        .downcast_ref::<Int8Array>()
         .unwrap()
-        .eq(&Int16Array::from(vec![-128i16, 127])));
+        .eq(&Int8Array::from(vec![-128i8, 127])));
 }
 
 #[test]
 fn test_mysql_bigint_unsigned_not_float() {
-    let _ = env_logger::builder().is_test(true).try_init();
-    let dburl = test_db::mysql_url();
-
-    let queries = [CXQuery::naked(
+    let result = run_mysql_query(
         "SELECT test_longlong_unsigned FROM test_types WHERE test_longlong_unsigned IS NOT NULL ORDER BY test_longlong_unsigned",
-    )];
-
-    let builder = MySQLSource::<BinaryProtocol>::new(&dburl, 1).unwrap();
-    let mut destination = ArrowDestination::new();
-    let dispatcher = Dispatcher::<_, _, MySQLArrowTransport<BinaryProtocol>>::new(
-        builder,
-        &mut destination,
-        &queries,
-        None,
+        true,
     );
-    dispatcher.run().unwrap();
-
-    let result = destination.arrow().unwrap();
-    assert!(result.len() == 1);
+    assert_eq!(result.len(), 1);
 
     // BIGINT UNSIGNED must be UInt64, not Float64.
     // Float64 loses precision for values exceeding 2^53 (see #890).
@@ -424,25 +385,11 @@ fn test_mysql_bigint_unsigned_not_float() {
 
 #[test]
 fn test_mysql_bigint_unsigned_not_float_text() {
-    let _ = env_logger::builder().is_test(true).try_init();
-    let dburl = test_db::mysql_url();
-
-    let queries = [CXQuery::naked(
+    let result = run_mysql_query(
         "SELECT test_longlong_unsigned FROM test_types WHERE test_longlong_unsigned IS NOT NULL ORDER BY test_longlong_unsigned",
-    )];
-
-    let builder = MySQLSource::<TextProtocol>::new(&dburl, 1).unwrap();
-    let mut destination = ArrowDestination::new();
-    let dispatcher = Dispatcher::<_, _, MySQLArrowTransport<TextProtocol>>::new(
-        builder,
-        &mut destination,
-        &queries,
-        None,
+        false,
     );
-    dispatcher.run().unwrap();
-
-    let result = destination.arrow().unwrap();
-    assert!(result.len() == 1);
+    assert_eq!(result.len(), 1);
 
     let col = result[0]
         .column(0)
@@ -476,6 +423,58 @@ fn assert_str_collation_schema(result: &[RecordBatch]) {
             col,
             dt
         );
+    }
+}
+
+/// Run a single naked query through the Arrow transport using either the
+/// binary or text protocol.
+fn run_mysql_query(query: &str, binary: bool) -> Vec<RecordBatch> {
+    let _ = env_logger::builder().is_test(true).try_init();
+    let dburl = test_db::mysql_url();
+    let queries = [CXQuery::naked(query)];
+    let mut destination = ArrowDestination::new();
+
+    if binary {
+        let builder = MySQLSource::<BinaryProtocol>::new(&dburl, 1).unwrap();
+        Dispatcher::<_, _, MySQLArrowTransport<BinaryProtocol>>::new(
+            builder,
+            &mut destination,
+            &queries,
+            None,
+        )
+        .run()
+        .unwrap();
+    } else {
+        let builder = MySQLSource::<TextProtocol>::new(&dburl, 1).unwrap();
+        Dispatcher::<_, _, MySQLArrowTransport<TextProtocol>>::new(
+            builder,
+            &mut destination,
+            &queries,
+            None,
+        )
+        .run()
+        .unwrap();
+    }
+
+    destination.arrow().unwrap()
+}
+
+#[test]
+fn test_mysql_year() {
+    // YEAR is mapped to Int16. The value 2155 exceeds i8::MAX (127), so this
+    // test immediately catches any regression that narrows YEAR to Int8.
+    for binary in [true, false] {
+        let result = run_mysql_query(
+            "SELECT test_year FROM test_types WHERE test_year IS NOT NULL ORDER BY test_year",
+            binary,
+        );
+        assert_eq!(result.len(), 1);
+        assert!(result[0]
+            .column(0)
+            .as_any()
+            .downcast_ref::<Int16Array>()
+            .unwrap()
+            .eq(&Int16Array::from(vec![1901i16, 2155])));
     }
 }
 
@@ -532,4 +531,170 @@ fn test_mysql_string_collation_types_text() {
     assert_eq!(result.len(), 1);
 
     assert_str_collation_schema(&result);
+}
+
+#[test]
+fn test_mysql_tiny_unsigned() {
+    // TINYINT UNSIGNED -> UInt8. 255 = u8::MAX, so any accidental narrowing to
+    // i8 or signed conversion makes this test fail.
+    for binary in [true, false] {
+        let result = run_mysql_query(
+            "SELECT test_tiny_unsigned FROM test_types \
+             WHERE test_tiny_unsigned IS NOT NULL ORDER BY test_tiny_unsigned",
+            binary,
+        );
+        assert_eq!(result.len(), 1);
+        assert!(result[0]
+            .column(0)
+            .as_any()
+            .downcast_ref::<UInt8Array>()
+            .unwrap()
+            .eq(&UInt8Array::from(vec![0u8, 255])));
+    }
+}
+
+#[test]
+fn test_mysql_float() {
+    // FLOAT -> Float32. Compare with f32 literals so both sides are parsed at
+    // the same single precision.
+    for binary in [true, false] {
+        let result = run_mysql_query(
+            "SELECT test_float FROM test_types WHERE test_float IS NOT NULL ORDER BY test_float",
+            binary,
+        );
+        assert_eq!(result.len(), 1);
+        assert!(result[0]
+            .column(0)
+            .as_any()
+            .downcast_ref::<Float32Array>()
+            .unwrap()
+            .eq(&Float32Array::from(vec![-1.1E-38f32, 3.4E38f32])));
+    }
+}
+
+#[test]
+fn test_mysql_short() {
+    for binary in [true, false] {
+        let result = run_mysql_query(
+            "SELECT test_short FROM test_types WHERE test_short IS NOT NULL ORDER BY test_short",
+            binary,
+        );
+        assert_eq!(result.len(), 1);
+        assert!(result[0]
+            .column(0)
+            .as_any()
+            .downcast_ref::<Int16Array>()
+            .unwrap()
+            .eq(&Int16Array::from(vec![-32768i16, 32767])));
+    }
+}
+
+#[test]
+fn test_mysql_int24() {
+    // MEDIUMINT has no i24 representation, so it is mapped to Int32.
+    for binary in [true, false] {
+        let result = run_mysql_query(
+            "SELECT test_int24 FROM test_types WHERE test_int24 IS NOT NULL ORDER BY test_int24",
+            binary,
+        );
+        assert_eq!(result.len(), 1);
+        assert!(result[0]
+            .column(0)
+            .as_any()
+            .downcast_ref::<Int32Array>()
+            .unwrap()
+            .eq(&Int32Array::from(vec![-8388608i32, 8388607])));
+    }
+}
+
+#[test]
+fn test_mysql_long() {
+    for binary in [true, false] {
+        let result = run_mysql_query(
+            "SELECT test_long FROM test_types WHERE test_long IS NOT NULL ORDER BY test_long",
+            binary,
+        );
+        assert_eq!(result.len(), 1);
+        assert!(result[0]
+            .column(0)
+            .as_any()
+            .downcast_ref::<Int32Array>()
+            .unwrap()
+            .eq(&Int32Array::from(vec![-2147483648i32, 2147483647])));
+    }
+}
+
+#[test]
+fn test_mysql_longlong() {
+    for binary in [true, false] {
+        let result = run_mysql_query(
+            "SELECT test_longlong FROM test_types \
+             WHERE test_longlong IS NOT NULL ORDER BY test_longlong",
+            binary,
+        );
+        assert_eq!(result.len(), 1);
+        assert!(result[0]
+            .column(0)
+            .as_any()
+            .downcast_ref::<Int64Array>()
+            .unwrap()
+            .eq(&Int64Array::from(vec![
+                -9223372036854775808i64,
+                9223372036854775807,
+            ])));
+    }
+}
+
+#[test]
+fn test_mysql_short_unsigned() {
+    for binary in [true, false] {
+        let result = run_mysql_query(
+            "SELECT test_short_unsigned FROM test_types \
+             WHERE test_short_unsigned IS NOT NULL ORDER BY test_short_unsigned",
+            binary,
+        );
+        assert_eq!(result.len(), 1);
+        assert!(result[0]
+            .column(0)
+            .as_any()
+            .downcast_ref::<UInt16Array>()
+            .unwrap()
+            .eq(&UInt16Array::from(vec![0u16, 65535])));
+    }
+}
+
+#[test]
+fn test_mysql_int24_unsigned() {
+    for binary in [true, false] {
+        let result = run_mysql_query(
+            "SELECT test_int24_unsigned FROM test_types \
+             WHERE test_int24_unsigned IS NOT NULL ORDER BY test_int24_unsigned",
+            binary,
+        );
+        assert_eq!(result.len(), 1);
+        assert!(result[0]
+            .column(0)
+            .as_any()
+            .downcast_ref::<UInt32Array>()
+            .unwrap()
+            .eq(&UInt32Array::from(vec![0u32, 16777215])));
+    }
+}
+
+#[test]
+fn test_mysql_long_unsigned() {
+    for binary in [true, false] {
+        let result = run_mysql_query(
+            "SELECT test_long_unsigned FROM test_types \
+             WHERE test_long_unsigned IS NOT NULL ORDER BY test_long_unsigned",
+            binary,
+        );
+        assert_eq!(result.len(), 1);
+        assert!(result[0]
+            .column(0)
+            .as_any()
+            .downcast_ref::<UInt32Array>()
+            .unwrap()
+            .eq(&UInt32Array::from(vec![0u32, 4294967295])));
+    }
 }
