@@ -1,8 +1,10 @@
 //! Source implementation for MySQL database.
 
+mod connection;
 mod errors;
 mod typesystem;
 
+pub use self::connection::build_opts;
 pub use self::errors::MySQLSourceError;
 use crate::constants::DB_BUFFER_SIZE;
 use crate::{
@@ -23,7 +25,7 @@ use r2d2_mysql::{
             UTF8_GENERAL_CI,
         },
         prelude::Queryable,
-        Binary, Opts, OptsBuilder, QueryResult, Row, Text,
+        Binary, QueryResult, Row, Text,
     },
     MySqlConnectionManager,
 };
@@ -57,7 +59,7 @@ pub struct MySQLSource<P> {
 impl<P> MySQLSource<P> {
     #[throws(MySQLSourceError)]
     pub fn new(conn: &str, nconn: usize) -> Self {
-        let manager = MySqlConnectionManager::new(OptsBuilder::from_opts(Opts::from_url(conn)?));
+        let manager = MySqlConnectionManager::new(build_opts(conn)?);
         let pool = r2d2::Pool::builder()
             .max_size(nconn as u32)
             .build(manager)?;
