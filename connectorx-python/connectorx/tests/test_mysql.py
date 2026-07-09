@@ -1,10 +1,23 @@
+import os
+
 import pandas as pd
+import pytest
 from pandas.testing import assert_frame_equal
 
 from .. import read_sql, ConnectionUrl
 
 # mysql_url fixture is now defined in conftest.py
 # It uses testcontainers if available, otherwise the MYSQL_URL environment variable
+
+
+@pytest.fixture(scope="module")
+def mysql_url_tls() -> str:
+    return os.environ["MYSQL_URL_TLS"]
+
+
+@pytest.fixture(scope="module")
+def mysql_rootcert() -> str:
+    return os.environ["MYSQL_ROOTCERT"]
 
 
 def test_mysql_without_partition(mysql_url: str) -> None:
@@ -653,3 +666,62 @@ def test_mysql_decimal_pandas_unchanged(mysql_url: str) -> None:
     assert df['test_decimal'][0] == 1.0
     assert df['test_decimal'][1] == 2.0
     assert pd.isna(df['test_decimal'][2])
+
+
+def _expected_test_table() -> pd.DataFrame:
+    return pd.DataFrame(
+        index=range(6),
+        data={
+            "test_int": pd.Series([1, 2, 3, 4, 5, 6], dtype="Int64"),
+            "test_float": pd.Series([1.1, 2.2, 3.3, 4.4, 5.5, 6.6], dtype="float64"),
+            "test_enum": pd.Series(
+                ["odd", "even", "odd", "even", "odd", "even"], dtype="object"
+            ),
+            "test_null": pd.Series([None, None, None, None, None, None], dtype="Int64"),
+        },
+    )
+
+
+@pytest.mark.skipif(
+    not os.environ.get("MYSQL_URL_TLS"),
+    reason="Do not test MySQL TLS unless `MYSQL_URL_TLS` is set",
+)
+def test_mysql_tls_required(mysql_url_tls: str) -> None:
+    df = read_sql(f"{mysql_url_tls}?ssl-mode=REQUIRED", "SELECT * FROM test_table")
+    df.sort_values(by="test_int", inplace=True, ignore_index=True)
+    assert_frame_equal(df, _expected_test_table(), check_names=True)
+
+
+@pytest.mark.skipif(
+    not os.environ.get("MYSQL_URL_TLS"),
+    reason="Do not test MySQL TLS unless `MYSQL_URL_TLS` is set",
+)
+def test_mysql_tls_verify_ca(mysql_url_tls: str, mysql_rootcert: str) -> None:
+    df = read_sql(
+        f"{mysql_url_tls}?ssl-mode=VERIFY_CA&ssl-ca={mysql_rootcert}",
+        "SELECT * FROM test_table",
+    )
+    df.sort_values(by="test_int", inplace=True, ignore_index=True)
+    assert_frame_equal(df, _expected_test_table(), check_names=True)
+
+
+@pytest.mark.skipif(
+    not os.environ.get("MYSQL_URL_TLS"),
+    reason="Do not test MySQL TLS unless `MYSQL_URL_TLS` is set",
+)
+def test_mysql_tls_disabled(mysql_url_tls: str) -> None:
+    df = read_sql(f"{mysql_url_tls}?ssl-mode=DISABLED", "SELECT * FROM test_table")
+    df.sort_values(by="test_int", inplace=True, ignore_index=True)
+    assert_frame_equal(df, _expected_test_table(), check_names=True)
+
+
+@pytest.mark.skipif(
+    not os.environ.get("MYSQL_URL_TLS"),
+    reason="Do not test MySQL TLS unless `MYSQL_URL_TLS` is set",
+)
+def test_mysql_tls_verify_ca_rejects_untrusted_ca(mysql_url_tls: str) -> None:
+    with pytest.raises(RuntimeError):
+        read_sql(
+            f"{mysql_url_tls}?ssl-mode=VERIFY_CA&ssl-ca=fake.cert",
+            "SELECT * FROM test_table",
+        )
