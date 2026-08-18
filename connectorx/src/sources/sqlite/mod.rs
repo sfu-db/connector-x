@@ -8,7 +8,7 @@ use crate::{
     data_order::DataOrder,
     errors::ConnectorXError,
     sources::{PartitionParser, Produce, Source, SourcePartition},
-    sql::{count_query, limit1_query, CXQuery},
+    sql::{count_query, limit0_query, CXQuery},
     utils::DummyBox,
 };
 use anyhow::anyhow;
@@ -87,7 +87,7 @@ where
 
         // assuming all the partition queries yield same schema
         for (i, query) in self.queries.iter().enumerate() {
-            let l1query = limit1_query(query, &SQLiteDialect {})?;
+            let l1query = limit0_query(query, &SQLiteDialect {})?;
 
             let is_sucess = conn.query_row(l1query.as_str(), [], |row| {
                 for (j, col) in row.as_ref().columns().iter().enumerate() {

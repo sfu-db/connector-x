@@ -259,7 +259,7 @@ pub fn count_query<T: Dialect>(sql: &CXQuery<String>, dialect: &T) -> CXQuery<St
 }
 
 #[throws(ConnectorXError)]
-pub fn limit1_query<T: Dialect>(sql: &CXQuery<String>, dialect: &T) -> CXQuery<String> {
+pub fn limit0_query<T: Dialect>(sql: &CXQuery<String>, dialect: &T) -> CXQuery<String> {
     trace!("Incoming query: {}", sql);
 
     let sql = match Parser::parse_sql(dialect, sql.as_str()) {
@@ -289,10 +289,10 @@ pub fn limit1_query<T: Dialect>(sql: &CXQuery<String>, dialect: &T) -> CXQuery<S
 
 #[throws(ConnectorXError)]
 #[cfg(feature = "src_oracle")]
-pub fn limit1_query_oracle(sql: &CXQuery<String>) -> CXQuery<String> {
+pub fn limit0_query_oracle(sql: &CXQuery<String>) -> CXQuery<String> {
     trace!("Incoming oracle query: {}", sql);
 
-    CXQuery::Wrapped(format!("SELECT * FROM ({}) WHERE rownum = 1", sql))
+    CXQuery::Wrapped(format!("SELECT * FROM ({}) WHERE 1=0", sql))
 
     // let ast = Parser::parse_sql(&OracleDialect {}, sql.as_str())?;
     // if ast.len() != 1 {
