@@ -515,31 +515,12 @@ fn bigquery_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64
 #[cfg(feature = "src_trino")]
 #[throws(ConnectorXOutError)]
 fn trino_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
-    use prusto::{auth::Auth, ClientBuilder};
-
-    use crate::sources::trino::{TrinoDialect, TrinoPartitionQueryResult};
+    use crate::sources::trino::{build_client_from_url, TrinoDialect, TrinoPartitionQueryResult};
 
     let rt = Runtime::new().expect("Failed to create runtime");
 
-    let username = match conn.username() {
-        "" => "connectorx",
-        username => username,
-    };
-
-    let builder = ClientBuilder::new(username, conn.host().unwrap().to_owned())
-        .port(conn.port().unwrap_or(8080))
-        .ssl(prusto::ssl::Ssl { root_cert: None })
-        .secure(conn.scheme() == "trino+https")
-        .catalog(conn.path_segments().unwrap().last().unwrap_or("hive"));
-
-    let builder = match conn.password() {
-        None => builder,
-        Some(password) => builder.auth(Auth::Basic(username.to_owned(), Some(password.to_owned()))),
-    };
-
-    let client = builder
-        .build()
-        .map_err(|e| anyhow!("Failed to build client: {}", e))?;
+    let client =
+        build_client_from_url(conn).map_err(|e| anyhow!("Failed to build Trino client: {}", e))?;
 
     let range_query = get_partition_range_query(query, col, &TrinoDialect {})?;
     let query_result = rt.block_on(client.get_all::<TrinoPartitionQueryResult>(range_query));
