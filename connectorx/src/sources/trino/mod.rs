@@ -521,6 +521,12 @@ macro_rules! impl_produce_text {
                         Value::String(x) => {
                             x.parse().map_err(|_| anyhow!("Trino cannot parse String at position: ({}, {}): {:?}", ridx, cidx, value))?
                         }
+                        Value::Array(_) | Value::Object(_) | Value::Number(_) | Value::Bool(_) => {
+                            serde_json::to_string(value)
+                                .unwrap_or_else(|_| value.to_string())
+                                .parse()
+                                .map_err(|_| anyhow!("Trino cannot convert complex value at ({}, {}): {:?}", ridx, cidx, value))?
+                        }
                         _ => throw!(anyhow!("Trino unknown value at position: ({}, {}): {:?}", ridx, cidx, value))
                     }
                 }
@@ -538,6 +544,12 @@ macro_rules! impl_produce_text {
                         Value::Null => None,
                         Value::String(x) => {
                             Some(x.parse().map_err(|_| anyhow!("Trino cannot parse String at position: ({}, {}): {:?}", ridx, cidx, value))?)
+                        }
+                        Value::Array(_) | Value::Object(_) | Value::Number(_) | Value::Bool(_) => {
+                            Some(serde_json::to_string(value)
+                                .unwrap_or_else(|_| value.to_string())
+                                .parse()
+                                .map_err(|_| anyhow!("Trino cannot convert complex value at ({}, {}): {:?}", ridx, cidx, value))?)
                         }
                         _ => throw!(anyhow!("Trino unknown value at position: ({}, {}): {:?}", ridx, cidx, value))
                     }
