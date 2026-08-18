@@ -270,7 +270,7 @@ pub fn limit1_query<T: Dialect>(sql: &CXQuery<String>, dialect: &T) -> CXQuery<S
 
             match &mut ast[0] {
                 Statement::Query(q) => {
-                    q.limit = Some(Expr::Value(Value::Number("1".to_string(), false)));
+                    q.limit = Some(Expr::Value(Value::Number("0".to_string(), false)));
                 }
                 _ => throw!(ConnectorXError::SqlQueryNotSupported(sql.to_string())),
             };
@@ -279,11 +279,11 @@ pub fn limit1_query<T: Dialect>(sql: &CXQuery<String>, dialect: &T) -> CXQuery<S
         }
         Err(e) => {
             warn!("parser error: {:?}, manually compose query string", e);
-            format!("{} LIMIT 1", sql.as_str())
+            format!("{} LIMIT 0", sql.as_str())
         }
     };
 
-    debug!("Transformed limit 1 query: {}", sql);
+    debug!("Transformed limit 0 query: {}", sql);
     CXQuery::Wrapped(sql)
 }
 
