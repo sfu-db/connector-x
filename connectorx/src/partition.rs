@@ -282,8 +282,11 @@ fn mysql_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
         .query_first(range_query)?
         .ok_or_else(|| anyhow!("mysql range: no row returns"))?;
 
-    let col_type =
-        MySQLTypeSystem::from((&row.columns()[0].column_type(), &row.columns()[0].flags()));
+    let col_type = MySQLTypeSystem::from((
+        &row.columns()[0].column_type(),
+        &row.columns()[0].flags(),
+        row.columns()[0].character_set(),
+    ));
 
     let (min_v, max_v) = match col_type {
         MySQLTypeSystem::Tiny(_) => {

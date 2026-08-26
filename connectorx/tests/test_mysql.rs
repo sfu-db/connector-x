@@ -3,7 +3,8 @@
 mod test_db;
 
 use arrow::{
-    array::{Float64Array, Int16Array, Int32Array, Int64Array, StringArray, UInt64Array},
+    array::{Float64Array, Int16Array, Int32Array, StringArray, UInt64Array},
+    datatypes::DataType,
     record_batch::RecordBatch,
 };
 use connectorx::{
@@ -229,77 +230,100 @@ pub fn verify_arrow_results(result: Vec<RecordBatch>) {
     }
 }
 
-// Unit tests for BINARY_FLAG detection logic
-// These tests don't require a database connection
+// Unit tests for MySQL binary-vs-text type detection (no DB required).
+// Detection keys on the "binary" charset (collation id 63), not BINARY_FLAG:
+// charset 63 => binary data (BINARY/VARBINARY/BLOB), any other id => text.
+// Charset ids used below: 63 = binary, 45 = utf8mb4_general_ci, 46 = utf8mb4_bin, 65 = ascii_bin.
 
 use connectorx::sources::mysql::MySQLTypeSystem;
 use r2d2_mysql::mysql::consts::{ColumnFlags, ColumnType};
 
-/// Test that BINARY_FLAG correctly distinguishes BINARY from CHAR
+/// BINARY shares its type code with CHAR (MYSQL_TYPE_STRING). The binary charset
+/// (63) is what marks it as binary, so it must map to TinyBlob, not Char.
 #[test]
-fn test_mysql_binary_flag_for_binary_type() {
-    // Simulate BINARY(10): MYSQL_TYPE_STRING + BINARY_FLAG
-    let col_type = ColumnType::MYSQL_TYPE_STRING;
-    let mut flags = ColumnFlags::empty();
-    flags.insert(ColumnFlags::BINARY_FLAG);
-
-    let result = MySQLTypeSystem::from((&col_type, &flags));
-
-    // Should be TinyBlob (Vec<u8>), not Char (String)
-    // This prevents "Could not convert Bytes(...) to desired type" panic
-    match result {
-        MySQLTypeSystem::TinyBlob(true) => {} // OK
-        _ => panic!("BINARY should map to TinyBlob, got {:?}", result),
+fn test_binary_is_binary() {
+    let mut f = ColumnFlags::empty();
+    f.insert(ColumnFlags::BINARY_FLAG);
+    match MySQLTypeSystem::from((&ColumnType::MYSQL_TYPE_STRING, &f, 63)) {
+        MySQLTypeSystem::TinyBlob(true) => {}
+        o => panic!("BINARY should be TinyBlob, got {:?}", o),
     }
 }
 
-/// Test that CHAR without BINARY_FLAG maps to Char
+/// CHAR uses a real (non-binary) charset, so MYSQL_TYPE_STRING maps to Char.
 #[test]
-fn test_mysql_binary_flag_for_char_type() {
-    // Simulate CHAR(10): MYSQL_TYPE_STRING without BINARY_FLAG
-    let col_type = ColumnType::MYSQL_TYPE_STRING;
-    let flags = ColumnFlags::empty();
-
-    let result = MySQLTypeSystem::from((&col_type, &flags));
-
-    // Should be Char (String), not TinyBlob (Vec<u8>)
-    match result {
-        MySQLTypeSystem::Char(true) => {} // OK
-        _ => panic!("CHAR should map to Char, got {:?}", result),
+fn test_char_is_text() {
+    match MySQLTypeSystem::from((&ColumnType::MYSQL_TYPE_STRING, &ColumnFlags::empty(), 45)) {
+        MySQLTypeSystem::Char(true) => {}
+        o => panic!("CHAR should be Char, got {:?}", o),
     }
 }
 
-/// Test that BINARY_FLAG correctly distinguishes VARBINARY from VARCHAR
+/// VARBINARY shares its type code with VARCHAR (MYSQL_TYPE_VAR_STRING). The binary
+/// charset (63) marks it as binary, so it must map to Blob, not VarChar.
 #[test]
-fn test_mysql_binary_flag_for_varbinary_type() {
-    // Simulate VARBINARY(10): MYSQL_TYPE_VAR_STRING + BINARY_FLAG
-    let col_type = ColumnType::MYSQL_TYPE_VAR_STRING;
-    let mut flags = ColumnFlags::empty();
-    flags.insert(ColumnFlags::BINARY_FLAG);
-
-    let result = MySQLTypeSystem::from((&col_type, &flags));
-
-    // Should be Blob (Vec<u8>), not VarChar (String)
-    // This prevents "Could not convert Bytes(...) to desired type" panic
-    match result {
-        MySQLTypeSystem::Blob(true) => {} // OK
-        _ => panic!("VARBINARY should map to Blob, got {:?}", result),
+fn test_varbinary_is_binary() {
+    let mut f = ColumnFlags::empty();
+    f.insert(ColumnFlags::BINARY_FLAG);
+    match MySQLTypeSystem::from((&ColumnType::MYSQL_TYPE_VAR_STRING, &f, 63)) {
+        MySQLTypeSystem::Blob(true) => {}
+        o => panic!("VARBINARY should be Blob, got {:?}", o),
     }
 }
 
-/// Test that VARCHAR without BINARY_FLAG maps to VarChar
+/// VARCHAR uses a real (non-binary) charset, so MYSQL_TYPE_VAR_STRING maps to VarChar.
 #[test]
-fn test_mysql_binary_flag_for_varchar_type() {
-    // Simulate VARCHAR(10): MYSQL_TYPE_VAR_STRING without BINARY_FLAG
-    let col_type = ColumnType::MYSQL_TYPE_VAR_STRING;
-    let flags = ColumnFlags::empty();
+fn test_varchar_is_text() {
+    match MySQLTypeSystem::from((
+        &ColumnType::MYSQL_TYPE_VAR_STRING,
+        &ColumnFlags::empty(),
+        45,
+    )) {
+        MySQLTypeSystem::VarChar(true) => {}
+        o => panic!("VARCHAR should be VarChar, got {:?}", o),
+    }
+}
 
-    let result = MySQLTypeSystem::from((&col_type, &flags));
+/// Regression: a *_bin collation sets BINARY_FLAG but the column is still text.
+/// charset != 63 must win over the flag, so VARCHAR ... COLLATE *_bin => VarChar.
+#[test]
+fn test_varchar_bin_collation_is_text() {
+    let mut f = ColumnFlags::empty();
+    f.insert(ColumnFlags::BINARY_FLAG); // *_bin collations DO set BINARY_FLAG
+    match MySQLTypeSystem::from((&ColumnType::MYSQL_TYPE_VAR_STRING, &f, 65)) {
+        MySQLTypeSystem::VarChar(true) => {}
+        o => panic!("VARCHAR COLLATE *_bin must be VarChar, got {:?}", o),
+    }
+}
 
-    // Should be VarChar (String), not Blob (Vec<u8>)
-    match result {
-        MySQLTypeSystem::VarChar(true) => {} // OK
-        _ => panic!("VARCHAR should map to VarChar, got {:?}", result),
+/// CHAR ... COLLATE *_bin is still text (charset != 63), despite BINARY_FLAG.
+#[test]
+fn test_char_bin_collation_is_text() {
+    let mut f = ColumnFlags::empty();
+    f.insert(ColumnFlags::BINARY_FLAG);
+    match MySQLTypeSystem::from((&ColumnType::MYSQL_TYPE_STRING, &f, 46)) {
+        MySQLTypeSystem::Char(true) => {}
+        o => panic!("CHAR COLLATE *_bin must be Char, got {:?}", o),
+    }
+}
+
+/// TEXT shares its type code with BLOB; a *_bin collation (charset != 63) is still text.
+#[test]
+fn test_text_bin_collation_is_text() {
+    let mut f = ColumnFlags::empty();
+    f.insert(ColumnFlags::BINARY_FLAG);
+    match MySQLTypeSystem::from((&ColumnType::MYSQL_TYPE_BLOB, &f, 46)) {
+        MySQLTypeSystem::VarChar(true) => {}
+        o => panic!("TEXT COLLATE *_bin must be text, got {:?}", o),
+    }
+}
+
+/// BLOB has the binary charset (63), so it must map to Blob.
+#[test]
+fn test_blob_is_binary() {
+    match MySQLTypeSystem::from((&ColumnType::MYSQL_TYPE_BLOB, &ColumnFlags::empty(), 63)) {
+        MySQLTypeSystem::Blob(true) => {}
+        o => panic!("BLOB should be Blob, got {:?}", o),
     }
 }
 
@@ -427,4 +451,85 @@ fn test_mysql_bigint_unsigned_not_float_text() {
         .unwrap();
 
     assert_eq!(col.value(0), 0u64);
+}
+
+fn assert_str_collation_schema(result: &[RecordBatch]) {
+    let schema = result[0].schema();
+
+    // Text columns, including *_bin collations, must be UTF-8 strings (not binary).
+    for col in ["vc_general", "vc_bin", "vc_ascii", "txt_general", "txt_bin"] {
+        let dt = schema.field_with_name(col).unwrap().data_type();
+        assert!(
+            matches!(dt, DataType::Utf8 | DataType::LargeUtf8),
+            "{} should be a string type, got {:?}",
+            col,
+            dt
+        );
+    }
+
+    // Genuine binary types must stay binary.
+    for col in ["vb", "bin_col", "bl"] {
+        let dt = schema.field_with_name(col).unwrap().data_type();
+        assert!(
+            matches!(dt, DataType::Binary | DataType::LargeBinary),
+            "{} should be a binary type, got {:?}",
+            col,
+            dt
+        );
+    }
+}
+
+#[test]
+fn test_mysql_string_collation_types() {
+    let _ = env_logger::builder().is_test(true).try_init();
+    let dburl = test_db::mysql_url();
+
+    let queries = [CXQuery::naked(
+        "SELECT vc_general, vc_bin, vc_ascii, txt_general, txt_bin, vb, bin_col, bl \
+         FROM test_str_collation ORDER BY test_id",
+    )];
+
+    let builder = MySQLSource::<BinaryProtocol>::new(&dburl, 1).unwrap();
+    let mut destination = ArrowDestination::new();
+    let dispatcher = Dispatcher::<_, _, MySQLArrowTransport<BinaryProtocol>>::new(
+        builder,
+        &mut destination,
+        &queries,
+        None,
+    );
+    dispatcher.run().unwrap();
+
+    let result = destination.arrow().unwrap();
+    assert_eq!(result.len(), 1);
+
+    // Text columns (including *_bin collations) must map to strings; only the
+    // binary charset (charsetnr == 63) is binary. Guards against the regression
+    // where BINARY_FLAG-based detection turned *_bin text into LargeBinary.
+    assert_str_collation_schema(&result);
+}
+
+#[test]
+fn test_mysql_string_collation_types_text() {
+    let _ = env_logger::builder().is_test(true).try_init();
+    let dburl = test_db::mysql_url();
+
+    let queries = [CXQuery::naked(
+        "SELECT vc_general, vc_bin, vc_ascii, txt_general, txt_bin, vb, bin_col, bl \
+         FROM test_str_collation ORDER BY test_id",
+    )];
+
+    let builder = MySQLSource::<TextProtocol>::new(&dburl, 1).unwrap();
+    let mut destination = ArrowDestination::new();
+    let dispatcher = Dispatcher::<_, _, MySQLArrowTransport<TextProtocol>>::new(
+        builder,
+        &mut destination,
+        &queries,
+        None,
+    );
+    dispatcher.run().unwrap();
+
+    let result = destination.arrow().unwrap();
+    assert_eq!(result.len(), 1);
+
+    assert_str_collation_schema(&result);
 }
