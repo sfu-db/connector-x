@@ -363,6 +363,13 @@ BibTeX entry:
                 </a>
             </td>
             <td align="center">
+                <a href="https://github.com/santosh-d3vpl3x">
+                    <img src="https://avatars.githubusercontent.com/u/3813695?v=4" width="66;" alt="santosh-d3vpl3x"/>
+                    <br />
+                    <sub><b>Santosh Pingale</b></sub>
+                </a>
+            </td>
+            <td align="center">
                 <a href="https://github.com/wKollendorf">
                     <img src="https://avatars.githubusercontent.com/u/83725977?v=4" width="66;" alt="wKollendorf"/>
                     <br />
@@ -383,6 +390,8 @@ BibTeX entry:
                     <sub><b>Null</b></sub>
                 </a>
             </td>
+		</tr>
+		<tr>
             <td align="center">
                 <a href="https://github.com/chitralverma">
                     <img src="https://avatars.githubusercontent.com/u/11135032?v=4" width="66;" alt="chitralverma"/>
@@ -390,8 +399,6 @@ BibTeX entry:
                     <sub><b>Chitral Verma</b></sub>
                 </a>
             </td>
-		</tr>
-		<tr>
             <td align="center">
                 <a href="https://github.com/lmmx">
                     <img src="https://avatars.githubusercontent.com/u/2979452?v=4" width="66;" alt="lmmx"/>
@@ -404,13 +411,6 @@ BibTeX entry:
                     <img src="https://avatars.githubusercontent.com/u/2772607?v=4" width="66;" alt="jorgecarleitao"/>
                     <br />
                     <sub><b>Jorge Leitao</b></sub>
-                </a>
-            </td>
-            <td align="center">
-                <a href="https://github.com/glennpierce">
-                    <img src="https://avatars.githubusercontent.com/u/691783?v=4" width="66;" alt="glennpierce"/>
-                    <br />
-                    <sub><b>Glenn Pierce</b></sub>
                 </a>
             </td>
             <td align="center">
@@ -569,10 +569,10 @@ BibTeX entry:
 		</tr>
 		<tr>
             <td align="center">
-                <a href="https://github.com/zemelLeong">
-                    <img src="https://avatars.githubusercontent.com/u/26835087?v=4" width="66;" alt="zemelLeong"/>
+                <a href="https://github.com/knota-lab">
+                    <img src="https://avatars.githubusercontent.com/u/26835087?v=4" width="66;" alt="knota-lab"/>
                     <br />
-                    <sub><b>zemel leong</b></sub>
+                    <sub><b>Knota Lab</b></sub>
                 </a>
             </td>
             <td align="center">
