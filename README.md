@@ -224,6 +224,13 @@ BibTeX entry:
                 </a>
             </td>
             <td align="center">
+                <a href="https://github.com/oystersuki">
+                    <img src="https://avatars.githubusercontent.com/u/94948026?v=4" width="66;" alt="oystersuki"/>
+                    <br />
+                    <sub><b>oystersuki</b></sub>
+                </a>
+            </td>
+            <td align="center">
                 <a href="https://github.com/EricFecteau">
                     <img src="https://avatars.githubusercontent.com/u/96687807?v=4" width="66;" alt="EricFecteau"/>
                     <br />
@@ -251,6 +258,8 @@ BibTeX entry:
                     <sub><b>Xiaoying Wang</b></sub>
                 </a>
             </td>
+		</tr>
+		<tr>
             <td align="center">
                 <a href="https://github.com/dovahcrow">
                     <img src="https://avatars.githubusercontent.com/u/998606?v=4" width="66;" alt="dovahcrow"/>
@@ -258,8 +267,6 @@ BibTeX entry:
                     <sub><b>Weiyuan Wu</b></sub>
                 </a>
             </td>
-		</tr>
-		<tr>
             <td align="center">
                 <a href="https://github.com/Wukkkinz-0725">
                     <img src="https://avatars.githubusercontent.com/u/60677420?v=4" width="66;" alt="Wukkkinz-0725"/>
@@ -295,6 +302,8 @@ BibTeX entry:
                     <sub><b>Anatoly Bugakov</b></sub>
                 </a>
             </td>
+		</tr>
+		<tr>
             <td align="center">
                 <a href="https://github.com/domnikl">
                     <img src="https://avatars.githubusercontent.com/u/603116?v=4" width="66;" alt="domnikl"/>
@@ -302,8 +311,6 @@ BibTeX entry:
                     <sub><b>Dominik Liebler</b></sub>
                 </a>
             </td>
-		</tr>
-		<tr>
             <td align="center">
                 <a href="https://github.com/auyer">
                     <img src="https://avatars.githubusercontent.com/u/12375421?v=4" width="66;" alt="auyer"/>
@@ -330,13 +337,6 @@ BibTeX entry:
                     <img src="https://avatars.githubusercontent.com/u/55274369?v=4" width="66;" alt="jinzew"/>
                     <br />
                     <sub><b>Null</b></sub>
-                </a>
-            </td>
-            <td align="center">
-                <a href="https://github.com/oystersuki">
-                    <img src="https://avatars.githubusercontent.com/u/94948026?v=4" width="66;" alt="oystersuki"/>
-                    <br />
-                    <sub><b>oystersuki</b></sub>
                 </a>
             </td>
             <td align="center">
