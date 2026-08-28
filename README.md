@@ -319,10 +319,10 @@ BibTeX entry:
                 </a>
             </td>
             <td align="center">
-                <a href="https://github.com/kumaraditya303">
-                    <img src="https://avatars.githubusercontent.com/u/59607654?v=4" width="66;" alt="kumaraditya303"/>
+                <a href="https://github.com/jinzew">
+                    <img src="https://avatars.githubusercontent.com/u/55274369?v=4" width="66;" alt="jinzew"/>
                     <br />
-                    <sub><b>Kumar Aditya</b></sub>
+                    <sub><b>Null</b></sub>
                 </a>
             </td>
             <td align="center">
@@ -333,17 +333,17 @@ BibTeX entry:
                 </a>
             </td>
             <td align="center">
-                <a href="https://github.com/jinzew">
-                    <img src="https://avatars.githubusercontent.com/u/55274369?v=4" width="66;" alt="jinzew"/>
+                <a href="https://github.com/kumaraditya303">
+                    <img src="https://avatars.githubusercontent.com/u/59607654?v=4" width="66;" alt="kumaraditya303"/>
                     <br />
-                    <sub><b>Null</b></sub>
+                    <sub><b>Kumar Aditya</b></sub>
                 </a>
             </td>
             <td align="center">
-                <a href="https://github.com/ritchie46">
-                    <img src="https://avatars.githubusercontent.com/u/3023000?v=4" width="66;" alt="ritchie46"/>
+                <a href="https://github.com/alswang18">
+                    <img src="https://avatars.githubusercontent.com/u/44207558?v=4" width="66;" alt="alswang18"/>
                     <br />
-                    <sub><b>Ritchie Vink</b></sub>
+                    <sub><b>Alec Wang</b></sub>
                 </a>
             </td>
 		</tr>
@@ -356,10 +356,10 @@ BibTeX entry:
                 </a>
             </td>
             <td align="center">
-                <a href="https://github.com/alswang18">
-                    <img src="https://avatars.githubusercontent.com/u/44207558?v=4" width="66;" alt="alswang18"/>
+                <a href="https://github.com/ritchie46">
+                    <img src="https://avatars.githubusercontent.com/u/3023000?v=4" width="66;" alt="ritchie46"/>
                     <br />
-                    <sub><b>Alec Wang</b></sub>
+                    <sub><b>Ritchie Vink</b></sub>
                 </a>
             </td>
             <td align="center">
