@@ -515,93 +515,74 @@
 <a href=#515 id=515 data-nosnippet>515</a><span class="attr">#[cfg(feature = <span class="string">"src_trino"</span>)]
 <a href=#516 id=516 data-nosnippet>516</a>#[throws(ConnectorXOutError)]
 <a href=#517 id=517 data-nosnippet>517</a></span><span class="kw">fn </span>trino_get_partition_range(conn: <span class="kw-2">&amp;</span>Url, query: <span class="kw-2">&amp;</span>str, col: <span class="kw-2">&amp;</span>str) -&gt; (i64, i64) {
-<a href=#518 id=518 data-nosnippet>518</a>    <span class="kw">use </span>prusto::{auth::Auth, ClientBuilder};
+<a href=#518 id=518 data-nosnippet>518</a>    <span class="kw">use </span><span class="kw">crate</span>::sources::trino::{build_client_from_url, TrinoDialect, TrinoPartitionQueryResult};
 <a href=#519 id=519 data-nosnippet>519</a>
-<a href=#520 id=520 data-nosnippet>520</a>    <span class="kw">use </span><span class="kw">crate</span>::sources::trino::{TrinoDialect, TrinoPartitionQueryResult};
+<a href=#520 id=520 data-nosnippet>520</a>    <span class="kw">let </span>rt = Runtime::new().expect(<span class="string">"Failed to create runtime"</span>);
 <a href=#521 id=521 data-nosnippet>521</a>
-<a href=#522 id=522 data-nosnippet>522</a>    <span class="kw">let </span>rt = Runtime::new().expect(<span class="string">"Failed to create runtime"</span>);
-<a href=#523 id=523 data-nosnippet>523</a>
-<a href=#524 id=524 data-nosnippet>524</a>    <span class="kw">let </span>username = <span class="kw">match </span>conn.username() {
-<a href=#525 id=525 data-nosnippet>525</a>        <span class="string">"" </span>=&gt; <span class="string">"connectorx"</span>,
-<a href=#526 id=526 data-nosnippet>526</a>        username =&gt; username,
-<a href=#527 id=527 data-nosnippet>527</a>    };
-<a href=#528 id=528 data-nosnippet>528</a>
-<a href=#529 id=529 data-nosnippet>529</a>    <span class="kw">let </span>builder = ClientBuilder::new(username, conn.host().unwrap().to_owned())
-<a href=#530 id=530 data-nosnippet>530</a>        .port(conn.port().unwrap_or(<span class="number">8080</span>))
-<a href=#531 id=531 data-nosnippet>531</a>        .ssl(prusto::ssl::Ssl { root_cert: <span class="prelude-val">None </span>})
-<a href=#532 id=532 data-nosnippet>532</a>        .secure(conn.scheme() == <span class="string">"trino+https"</span>)
-<a href=#533 id=533 data-nosnippet>533</a>        .catalog(conn.path_segments().unwrap().last().unwrap_or(<span class="string">"hive"</span>));
-<a href=#534 id=534 data-nosnippet>534</a>
-<a href=#535 id=535 data-nosnippet>535</a>    <span class="kw">let </span>builder = <span class="kw">match </span>conn.password() {
-<a href=#536 id=536 data-nosnippet>536</a>        <span class="prelude-val">None </span>=&gt; builder,
-<a href=#537 id=537 data-nosnippet>537</a>        <span class="prelude-val">Some</span>(password) =&gt; builder.auth(Auth::Basic(username.to_owned(), <span class="prelude-val">Some</span>(password.to_owned()))),
-<a href=#538 id=538 data-nosnippet>538</a>    };
-<a href=#539 id=539 data-nosnippet>539</a>
-<a href=#540 id=540 data-nosnippet>540</a>    <span class="kw">let </span>client = builder
-<a href=#541 id=541 data-nosnippet>541</a>        .build()
-<a href=#542 id=542 data-nosnippet>542</a>        .map_err(|e| <span class="macro">anyhow!</span>(<span class="string">"Failed to build client: {}"</span>, e))<span class="question-mark">?</span>;
-<a href=#543 id=543 data-nosnippet>543</a>
-<a href=#544 id=544 data-nosnippet>544</a>    <span class="kw">let </span>range_query = get_partition_range_query(query, col, <span class="kw-2">&amp;</span>TrinoDialect {})<span class="question-mark">?</span>;
-<a href=#545 id=545 data-nosnippet>545</a>    <span class="kw">let </span>query_result = rt.block_on(client.get_all::&lt;TrinoPartitionQueryResult&gt;(range_query));
-<a href=#546 id=546 data-nosnippet>546</a>
-<a href=#547 id=547 data-nosnippet>547</a>    <span class="kw">let </span>query_result = <span class="kw">match </span>query_result {
-<a href=#548 id=548 data-nosnippet>548</a>        <span class="prelude-val">Ok</span>(query_result) =&gt; <span class="prelude-val">Ok</span>(query_result.into_vec()),
-<a href=#549 id=549 data-nosnippet>549</a>        <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">match </span>e {
-<a href=#550 id=550 data-nosnippet>550</a>            prusto::error::Error::EmptyData =&gt; {
-<a href=#551 id=551 data-nosnippet>551</a>                <span class="prelude-val">Ok</span>(<span class="macro">vec!</span>[TrinoPartitionQueryResult { _col0: <span class="number">0</span>, _col1: <span class="number">0 </span>}])
-<a href=#552 id=552 data-nosnippet>552</a>            }
-<a href=#553 id=553 data-nosnippet>553</a>            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(<span class="macro">anyhow!</span>(<span class="string">"Failed to get query result: {}"</span>, e)),
-<a href=#554 id=554 data-nosnippet>554</a>        },
-<a href=#555 id=555 data-nosnippet>555</a>    }<span class="question-mark">?</span>;
-<a href=#556 id=556 data-nosnippet>556</a>
-<a href=#557 id=557 data-nosnippet>557</a>    <span class="kw">let </span>result = query_result
-<a href=#558 id=558 data-nosnippet>558</a>        .first()
-<a href=#559 id=559 data-nosnippet>559</a>        .unwrap_or(<span class="kw-2">&amp;</span>TrinoPartitionQueryResult { _col0: <span class="number">0</span>, _col1: <span class="number">0 </span>});
-<a href=#560 id=560 data-nosnippet>560</a>
-<a href=#561 id=561 data-nosnippet>561</a>    (result._col0, result._col1)
-<a href=#562 id=562 data-nosnippet>562</a>}
-<a href=#563 id=563 data-nosnippet>563</a>
-<a href=#564 id=564 data-nosnippet>564</a><span class="attr">#[cfg(feature = <span class="string">"src_clickhouse"</span>)]
-<a href=#565 id=565 data-nosnippet>565</a>#[throws(ConnectorXOutError)]
-<a href=#566 id=566 data-nosnippet>566</a></span><span class="kw">fn </span>clickhouse_get_partition_range(conn: <span class="kw-2">&amp;</span>Url, query: <span class="kw-2">&amp;</span>str, col: <span class="kw-2">&amp;</span>str) -&gt; (i64, i64) {
-<a href=#567 id=567 data-nosnippet>567</a>    <span class="kw">use </span>sqlparser::dialect::ClickHouseDialect;
+<a href=#522 id=522 data-nosnippet>522</a>    <span class="kw">let </span>client =
+<a href=#523 id=523 data-nosnippet>523</a>        build_client_from_url(conn).map_err(|e| <span class="macro">anyhow!</span>(<span class="string">"Failed to build Trino client: {}"</span>, e))<span class="question-mark">?</span>;
+<a href=#524 id=524 data-nosnippet>524</a>
+<a href=#525 id=525 data-nosnippet>525</a>    <span class="kw">let </span>range_query = get_partition_range_query(query, col, <span class="kw-2">&amp;</span>TrinoDialect {})<span class="question-mark">?</span>;
+<a href=#526 id=526 data-nosnippet>526</a>    <span class="kw">let </span>query_result = rt.block_on(client.get_all::&lt;TrinoPartitionQueryResult&gt;(range_query));
+<a href=#527 id=527 data-nosnippet>527</a>
+<a href=#528 id=528 data-nosnippet>528</a>    <span class="kw">let </span>query_result = <span class="kw">match </span>query_result {
+<a href=#529 id=529 data-nosnippet>529</a>        <span class="prelude-val">Ok</span>(query_result) =&gt; <span class="prelude-val">Ok</span>(query_result.into_vec()),
+<a href=#530 id=530 data-nosnippet>530</a>        <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">match </span>e {
+<a href=#531 id=531 data-nosnippet>531</a>            prusto::error::Error::EmptyData =&gt; {
+<a href=#532 id=532 data-nosnippet>532</a>                <span class="prelude-val">Ok</span>(<span class="macro">vec!</span>[TrinoPartitionQueryResult { _col0: <span class="number">0</span>, _col1: <span class="number">0 </span>}])
+<a href=#533 id=533 data-nosnippet>533</a>            }
+<a href=#534 id=534 data-nosnippet>534</a>            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(<span class="macro">anyhow!</span>(<span class="string">"Failed to get query result: {}"</span>, e)),
+<a href=#535 id=535 data-nosnippet>535</a>        },
+<a href=#536 id=536 data-nosnippet>536</a>    }<span class="question-mark">?</span>;
+<a href=#537 id=537 data-nosnippet>537</a>
+<a href=#538 id=538 data-nosnippet>538</a>    <span class="kw">let </span>result = query_result
+<a href=#539 id=539 data-nosnippet>539</a>        .first()
+<a href=#540 id=540 data-nosnippet>540</a>        .unwrap_or(<span class="kw-2">&amp;</span>TrinoPartitionQueryResult { _col0: <span class="number">0</span>, _col1: <span class="number">0 </span>});
+<a href=#541 id=541 data-nosnippet>541</a>
+<a href=#542 id=542 data-nosnippet>542</a>    (result._col0, result._col1)
+<a href=#543 id=543 data-nosnippet>543</a>}
+<a href=#544 id=544 data-nosnippet>544</a>
+<a href=#545 id=545 data-nosnippet>545</a><span class="attr">#[cfg(feature = <span class="string">"src_clickhouse"</span>)]
+<a href=#546 id=546 data-nosnippet>546</a>#[throws(ConnectorXOutError)]
+<a href=#547 id=547 data-nosnippet>547</a></span><span class="kw">fn </span>clickhouse_get_partition_range(conn: <span class="kw-2">&amp;</span>Url, query: <span class="kw-2">&amp;</span>str, col: <span class="kw-2">&amp;</span>str) -&gt; (i64, i64) {
+<a href=#548 id=548 data-nosnippet>548</a>    <span class="kw">use </span>sqlparser::dialect::ClickHouseDialect;
+<a href=#549 id=549 data-nosnippet>549</a>
+<a href=#550 id=550 data-nosnippet>550</a>    <span class="kw">let </span>rt = Arc::new(tokio::runtime::Runtime::new().expect(<span class="string">"Failed to create runtime"</span>));
+<a href=#551 id=551 data-nosnippet>551</a>    <span class="kw">let </span>clickhouse_source = ClickHouseSource::new(rt.clone(), conn.as_str())
+<a href=#552 id=552 data-nosnippet>552</a>        .expect(<span class="string">"Failed to create ClickHouse client"</span>);
+<a href=#553 id=553 data-nosnippet>553</a>
+<a href=#554 id=554 data-nosnippet>554</a>    <span class="kw">let </span>range_query = get_partition_range_query(query, col, <span class="kw-2">&amp;</span>ClickHouseDialect {})<span class="question-mark">?</span>;
+<a href=#555 id=555 data-nosnippet>555</a>
+<a href=#556 id=556 data-nosnippet>556</a>    <span class="kw">let </span>response = rt.block_on(<span class="kw">async </span>{
+<a href=#557 id=557 data-nosnippet>557</a>        <span class="kw">let </span><span class="kw-2">mut </span>cursor = clickhouse_source
+<a href=#558 id=558 data-nosnippet>558</a>            .client
+<a href=#559 id=559 data-nosnippet>559</a>            .query(range_query.as_str())
+<a href=#560 id=560 data-nosnippet>560</a>            .fetch_bytes(<span class="string">"JSONCompact"</span>)
+<a href=#561 id=561 data-nosnippet>561</a>            .map_err(|e| <span class="macro">anyhow!</span>(<span class="string">"ClickHouse error: {}"</span>, e))<span class="question-mark">?</span>;
+<a href=#562 id=562 data-nosnippet>562</a>        <span class="kw">let </span>bytes = cursor
+<a href=#563 id=563 data-nosnippet>563</a>            .collect()
+<a href=#564 id=564 data-nosnippet>564</a>            .<span class="kw">await
+<a href=#565 id=565 data-nosnippet>565</a>            </span>.map_err(|e| <span class="macro">anyhow!</span>(<span class="string">"ClickHouse error: {}"</span>, e))<span class="question-mark">?</span>;
+<a href=#566 id=566 data-nosnippet>566</a>        <span class="prelude-val">Ok</span>::&lt;<span class="kw">_</span>, ClickHouseSourceError&gt;(bytes)
+<a href=#567 id=567 data-nosnippet>567</a>    })<span class="question-mark">?</span>;
 <a href=#568 id=568 data-nosnippet>568</a>
-<a href=#569 id=569 data-nosnippet>569</a>    <span class="kw">let </span>rt = Arc::new(tokio::runtime::Runtime::new().expect(<span class="string">"Failed to create runtime"</span>));
-<a href=#570 id=570 data-nosnippet>570</a>    <span class="kw">let </span>clickhouse_source = ClickHouseSource::new(rt.clone(), conn.as_str())
-<a href=#571 id=571 data-nosnippet>571</a>        .expect(<span class="string">"Failed to create ClickHouse client"</span>);
-<a href=#572 id=572 data-nosnippet>572</a>
-<a href=#573 id=573 data-nosnippet>573</a>    <span class="kw">let </span>range_query = get_partition_range_query(query, col, <span class="kw-2">&amp;</span>ClickHouseDialect {})<span class="question-mark">?</span>;
-<a href=#574 id=574 data-nosnippet>574</a>
-<a href=#575 id=575 data-nosnippet>575</a>    <span class="kw">let </span>response = rt.block_on(<span class="kw">async </span>{
-<a href=#576 id=576 data-nosnippet>576</a>        <span class="kw">let </span><span class="kw-2">mut </span>cursor = clickhouse_source
-<a href=#577 id=577 data-nosnippet>577</a>            .client
-<a href=#578 id=578 data-nosnippet>578</a>            .query(range_query.as_str())
-<a href=#579 id=579 data-nosnippet>579</a>            .fetch_bytes(<span class="string">"JSONCompact"</span>)
-<a href=#580 id=580 data-nosnippet>580</a>            .map_err(|e| <span class="macro">anyhow!</span>(<span class="string">"ClickHouse error: {}"</span>, e))<span class="question-mark">?</span>;
-<a href=#581 id=581 data-nosnippet>581</a>        <span class="kw">let </span>bytes = cursor
-<a href=#582 id=582 data-nosnippet>582</a>            .collect()
-<a href=#583 id=583 data-nosnippet>583</a>            .<span class="kw">await
-<a href=#584 id=584 data-nosnippet>584</a>            </span>.map_err(|e| <span class="macro">anyhow!</span>(<span class="string">"ClickHouse error: {}"</span>, e))<span class="question-mark">?</span>;
-<a href=#585 id=585 data-nosnippet>585</a>        <span class="prelude-val">Ok</span>::&lt;<span class="kw">_</span>, ClickHouseSourceError&gt;(bytes)
-<a href=#586 id=586 data-nosnippet>586</a>    })<span class="question-mark">?</span>;
-<a href=#587 id=587 data-nosnippet>587</a>
-<a href=#588 id=588 data-nosnippet>588</a>    <span class="attr">#[derive(Debug, Deserialize)]
-<a href=#589 id=589 data-nosnippet>589</a>    </span><span class="kw">struct </span>MinMaxResponse {
-<a href=#590 id=590 data-nosnippet>590</a>        data: Vec&lt;Vec&lt;JsonValue&gt;&gt;,
-<a href=#591 id=591 data-nosnippet>591</a>    }
-<a href=#592 id=592 data-nosnippet>592</a>
-<a href=#593 id=593 data-nosnippet>593</a>    <span class="kw">let </span>parsed: MinMaxResponse = serde_json::from_slice(<span class="kw-2">&amp;</span>response)
-<a href=#594 id=594 data-nosnippet>594</a>        .map_err(|e| <span class="macro">anyhow!</span>(<span class="string">"Failed to parse min max response: {}"</span>, e))<span class="question-mark">?</span>;
-<a href=#595 id=595 data-nosnippet>595</a>
-<a href=#596 id=596 data-nosnippet>596</a>    <span class="kw">let </span>(min_v, max_v) = <span class="kw">if let </span><span class="prelude-val">Some</span>(row) = parsed.data.first() {
-<a href=#597 id=597 data-nosnippet>597</a>        <span class="kw">let </span>min_v = row.get(<span class="number">0</span>).and_then(|v| v.as_i64()).unwrap_or(<span class="number">0</span>);
-<a href=#598 id=598 data-nosnippet>598</a>        <span class="kw">let </span>max_v = row.get(<span class="number">1</span>).and_then(|v| v.as_i64()).unwrap_or(<span class="number">0</span>);
-<a href=#599 id=599 data-nosnippet>599</a>
-<a href=#600 id=600 data-nosnippet>600</a>        (min_v, max_v)
-<a href=#601 id=601 data-nosnippet>601</a>    } <span class="kw">else </span>{
-<a href=#602 id=602 data-nosnippet>602</a>        (<span class="number">0</span>, <span class="number">0</span>)
-<a href=#603 id=603 data-nosnippet>603</a>    };
-<a href=#604 id=604 data-nosnippet>604</a>
-<a href=#605 id=605 data-nosnippet>605</a>    (min_v, max_v)
-<a href=#606 id=606 data-nosnippet>606</a>}
+<a href=#569 id=569 data-nosnippet>569</a>    <span class="attr">#[derive(Debug, Deserialize)]
+<a href=#570 id=570 data-nosnippet>570</a>    </span><span class="kw">struct </span>MinMaxResponse {
+<a href=#571 id=571 data-nosnippet>571</a>        data: Vec&lt;Vec&lt;JsonValue&gt;&gt;,
+<a href=#572 id=572 data-nosnippet>572</a>    }
+<a href=#573 id=573 data-nosnippet>573</a>
+<a href=#574 id=574 data-nosnippet>574</a>    <span class="kw">let </span>parsed: MinMaxResponse = serde_json::from_slice(<span class="kw-2">&amp;</span>response)
+<a href=#575 id=575 data-nosnippet>575</a>        .map_err(|e| <span class="macro">anyhow!</span>(<span class="string">"Failed to parse min max response: {}"</span>, e))<span class="question-mark">?</span>;
+<a href=#576 id=576 data-nosnippet>576</a>
+<a href=#577 id=577 data-nosnippet>577</a>    <span class="kw">let </span>(min_v, max_v) = <span class="kw">if let </span><span class="prelude-val">Some</span>(row) = parsed.data.first() {
+<a href=#578 id=578 data-nosnippet>578</a>        <span class="kw">let </span>min_v = row.get(<span class="number">0</span>).and_then(|v| v.as_i64()).unwrap_or(<span class="number">0</span>);
+<a href=#579 id=579 data-nosnippet>579</a>        <span class="kw">let </span>max_v = row.get(<span class="number">1</span>).and_then(|v| v.as_i64()).unwrap_or(<span class="number">0</span>);
+<a href=#580 id=580 data-nosnippet>580</a>
+<a href=#581 id=581 data-nosnippet>581</a>        (min_v, max_v)
+<a href=#582 id=582 data-nosnippet>582</a>    } <span class="kw">else </span>{
+<a href=#583 id=583 data-nosnippet>583</a>        (<span class="number">0</span>, <span class="number">0</span>)
+<a href=#584 id=584 data-nosnippet>584</a>    };
+<a href=#585 id=585 data-nosnippet>585</a>
+<a href=#586 id=586 data-nosnippet>586</a>    (min_v, max_v)
+<a href=#587 id=587 data-nosnippet>587</a>}
 </code></pre></div></section></main></body></html>
