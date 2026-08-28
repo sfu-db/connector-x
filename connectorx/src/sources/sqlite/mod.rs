@@ -8,7 +8,7 @@ use crate::{
     data_order::DataOrder,
     errors::ConnectorXError,
     sources::{PartitionParser, Produce, Source, SourcePartition},
-    sql::{count_query, limit0_query, CXQuery},
+    sql::{count_query, limit1_query, CXQuery},
     utils::DummyBox,
 };
 use anyhow::anyhow;
@@ -81,40 +81,55 @@ where
     fn fetch_metadata(&mut self) {
         assert!(!self.queries.is_empty());
         let conn = self.pool.get()?;
-        let mut names = vec![];
-        let mut types = vec![];
+
+        // Use prepare + stmt.columns() to get schema without executing the query.
+        // This gives us column names and decl_type from the DDL, which is sufficient
+        // for most cases and avoids running the query at all (issue #768).
+        let stmt = conn.prepare(self.queries[0].as_str())?;
+        let columns = stmt.columns();
+
+        let mut names: Vec<String> = Vec::with_capacity(columns.len());
+        let mut types: Vec<Option<SQLiteTypeSystem>> = Vec::with_capacity(columns.len());
+
+        for col in &columns {
+            names.push(col.name().to_string());
+            let decl_type = col.decl_type();
+            match SQLiteTypeSystem::try_from((decl_type, rusqlite::types::Type::Null)) {
+                Ok(t) => types.push(Some(t)),
+                Err(_) => types.push(None),
+            }
+        }
+
+        // If all types were resolved from decl_type, we're done
+        if !types.contains(&None) {
+            self.names = names;
+            self.schema = types.into_iter().map(|t| t.unwrap()).collect();
+            return;
+        }
+
+        // Some columns lack decl_type (computed expressions, aggregates, etc.).
+        // Fall back to executing with LIMIT 1 to infer types from actual values.
+        drop(columns);
+        drop(stmt);
+
         let mut num_empty = 0;
-
-        // assuming all the partition queries yield same schema
         for (i, query) in self.queries.iter().enumerate() {
-            let l1query = limit0_query(query, &SQLiteDialect {})?;
+            let l1query = limit1_query(query, &SQLiteDialect {})?;
 
-            let is_sucess = conn.query_row(l1query.as_str(), [], |row| {
+            let is_success = conn.query_row(l1query.as_str(), [], |row| {
                 for (j, col) in row.as_ref().columns().iter().enumerate() {
-                    if j >= names.len() {
-                        names.push(col.name().to_string());
-                    }
-                    if j >= types.len() {
-                        let vr = row.get_ref(j)?;
-                        match SQLiteTypeSystem::try_from((col.decl_type(), vr.data_type())) {
-                            Ok(t) => types.push(Some(t)),
-                            Err(_) => {
-                                types.push(None);
-                            }
-                        }
-                    } else if types[j].is_none() {
-                        // We didn't get the type in the previous round
+                    if types[j].is_none() {
                         let vr = row.get_ref(j)?;
                         if let Ok(t) = SQLiteTypeSystem::try_from((col.decl_type(), vr.data_type()))
                         {
-                            types[j] = Some(t)
+                            types[j] = Some(t);
                         }
                     }
                 }
                 Ok(())
             });
 
-            match is_sucess {
+            match is_success {
                 Ok(()) => {
                     if !types.contains(&None) {
                         self.names = names;
@@ -130,10 +145,9 @@ where
                 }
                 Err(e) => {
                     if let rusqlite::Error::QueryReturnedNoRows = e {
-                        num_empty += 1; // make sure when all partition results are empty, do not throw error
+                        num_empty += 1;
                     }
                     if i == self.queries.len() - 1 && num_empty < self.queries.len() {
-                        // tried the last query but still get an error
                         debug!("cannot get metadata for '{}': {}", query, e);
                         throw!(e)
                     }
@@ -141,16 +155,13 @@ where
             }
         }
 
-        // tried all queries but all get empty result set
-        let stmt = conn.prepare(self.queries[0].as_str())?;
-
-        self.names = stmt
-            .column_names()
+        // All partitions returned empty results - use decl_type where available,
+        // fall back to Text for columns without type info
+        self.names = names;
+        self.schema = types
             .into_iter()
-            .map(|s| s.to_string())
+            .map(|t| t.unwrap_or(SQLiteTypeSystem::Text(false)))
             .collect();
-        // set all columns as string (align with pandas)
-        self.schema = vec![SQLiteTypeSystem::Text(false); self.names.len()];
     }
 
     #[throws(SQLiteSourceError)]
