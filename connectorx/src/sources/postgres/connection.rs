@@ -1,4 +1,5 @@
 use crate::sources::postgres::errors::PostgresSourceError;
+use crate::utils::remove_query_params;
 use openssl::ssl::{SslConnector, SslFiletype, SslMethod, SslVerifyMode};
 use postgres::{config::SslMode, Config};
 use postgres_openssl::MakeTlsConnector;
@@ -72,20 +73,7 @@ impl TryFrom<TlsConfig> for MakeTlsConnector {
 
 // Strip URL params not accepted by upstream rust-postgres
 fn strip_bad_opts(url: &Url) -> Url {
-    let stripped_query: Vec<(_, _)> = url
-        .query_pairs()
-        .filter(|p| !matches!(&*p.0, "sslkey" | "sslcert" | "sslrootcert"))
-        .collect();
-
-    let mut url2 = url.clone();
-    url2.set_query(None);
-
-    for pair in stripped_query {
-        url2.query_pairs_mut()
-            .append_pair(&pair.0.to_string()[..], &pair.1.to_string()[..]);
-    }
-
-    url2
+    remove_query_params(url, &["sslkey", "sslcert", "sslrootcert"])
 }
 
 pub fn rewrite_tls_args(
@@ -108,7 +96,7 @@ pub fn rewrite_tls_args(
     };
 
     let stripped_url = strip_bad_opts(conn);
-    let pg_config: Config = stripped_url.as_str().parse().unwrap();
+    let pg_config: Config = stripped_url.as_str().parse()?;
 
     let tls_config = TlsConfig {
         pg_config: pg_config.clone(),
