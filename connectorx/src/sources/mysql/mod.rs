@@ -9,7 +9,7 @@ use crate::{
     data_order::DataOrder,
     errors::ConnectorXError,
     sources::{PartitionParser, Produce, Source, SourcePartition},
-    sql::{count_query, limit1_query, CXQuery},
+    sql::{count_query, limit0_query, CXQuery},
 };
 use anyhow::anyhow;
 use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
@@ -130,7 +130,7 @@ where
                 for (i, query) in self.queries.iter().enumerate() {
                     // assuming all the partition queries yield same schema
                     match conn
-                        .query_first::<Row, _>(limit1_query(query, &MySqlDialect {})?.as_str())
+                        .query_first::<Row, _>(limit0_query(query, &MySqlDialect {})?.as_str())
                     {
                         Ok(Some(row)) => {
                             let (names, types) = row

@@ -12,7 +12,7 @@ use crate::{
     data_order::DataOrder,
     errors::ConnectorXError,
     sources::Produce,
-    sql::{count_query, limit1_query, CXQuery},
+    sql::{count_query, limit0_query, CXQuery},
 };
 
 pub use self::{errors::TrinoSourceError, typesystem::TrinoTypeSystem};
@@ -221,7 +221,7 @@ where
         assert!(!self.queries.is_empty());
 
         let first_query = &self.queries[0];
-        let cxq = limit1_query(first_query, &GenericDialect {})?;
+        let cxq = limit0_query(first_query, &GenericDialect {})?;
 
         let dataset: DataSet<Row> = self
             .rt
