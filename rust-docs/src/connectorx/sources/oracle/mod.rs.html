@@ -10,7 +10,7 @@
 <a href=#10 id=10 data-nosnippet>10</a>    data_order::DataOrder,
 <a href=#11 id=11 data-nosnippet>11</a>    errors::ConnectorXError,
 <a href=#12 id=12 data-nosnippet>12</a>    sources::{PartitionParser, Produce, Source, SourcePartition},
-<a href=#13 id=13 data-nosnippet>13</a>    sql::{count_query, limit1_query_oracle, CXQuery},
+<a href=#13 id=13 data-nosnippet>13</a>    sql::{count_query, limit0_query_oracle, CXQuery},
 <a href=#14 id=14 data-nosnippet>14</a>    utils::DummyBox,
 <a href=#15 id=15 data-nosnippet>15</a>};
 <a href=#16 id=16 data-nosnippet>16</a><span class="kw">use </span>chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
@@ -144,7 +144,7 @@
 <a href=#144 id=144 data-nosnippet>144</a>            // without rownum = 1, derived type might be wrong
 <a href=#145 id=145 data-nosnippet>145</a>            // example: select avg(test_int), test_char from test_table group by test_char
 <a href=#146 id=146 data-nosnippet>146</a>            // -&gt; (NumInt, Char) instead of (NumtFloat, Char)
-<a href=#147 id=147 data-nosnippet>147</a>            </span><span class="kw">match </span>conn.query(limit1_query_oracle(query)<span class="question-mark">?</span>.as_str(), <span class="kw-2">&amp;</span>[]) {
+<a href=#147 id=147 data-nosnippet>147</a>            </span><span class="kw">match </span>conn.query(limit0_query_oracle(query)<span class="question-mark">?</span>.as_str(), <span class="kw-2">&amp;</span>[]) {
 <a href=#148 id=148 data-nosnippet>148</a>                <span class="prelude-val">Ok</span>(rows) =&gt; {
 <a href=#149 id=149 data-nosnippet>149</a>                    <span class="kw">let </span>(names, types) = rows
 <a href=#150 id=150 data-nosnippet>150</a>                        .column_info()

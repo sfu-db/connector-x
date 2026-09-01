@@ -37,7 +37,7 @@ Each thread will own exactly 1 query, 1 partitioned source, and 1 partitioned de
                     |                                                            |
                     +------------------------------------------------------------+
 </code></pre></div><h3 id="how-does-connectorx-download-the-data"><a class="doc-anchor" href="#how-does-connectorx-download-the-data">§</a>How does ConnectorX download the data?</h3>
-<p>Upon receiving the query, e.g. SELECT * FROM lineitem, ConnectorX will first issue a LIMIT 1 query SELECT * FROM lineitem LIMIT 1 to get the schema of the result set.</p>
+<p>Upon receiving the query, e.g. SELECT * FROM lineitem, ConnectorX will first issue a LIMIT 0 query SELECT * FROM lineitem LIMIT 0 to get the schema of the result set.</p>
 <p>Then, if partition_on is specified, ConnectorX will issue <code>SELECT MIN($partition_on), MAX($partition_on) FROM (SELECT * FROM lineitem)</code> to know the range of the partition column.
 After that, the original query is split into partitions based on the min/max information, e.g. <code>SELECT * FROM (SELECT * FROM lineitem) WHERE $partition_on &gt; 0 AND $partition_on &lt; 10000</code>.
 ConnectorX will then run a count query to get the partition size (e.g. <code>SELECT COUNT(*) FROM (SELECT * FROM lineitem) WHERE $partition_on &gt; 0 AND $partition_on &lt; 10000</code>).

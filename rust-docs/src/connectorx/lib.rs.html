@@ -49,7 +49,7 @@
 <a href=#49 id=49 data-nosnippet>49</a>//! ```
 <a href=#50 id=50 data-nosnippet>50</a>//! ## How does ConnectorX download the data?
 <a href=#51 id=51 data-nosnippet>51</a>//!
-<a href=#52 id=52 data-nosnippet>52</a>//! Upon receiving the query, e.g. SELECT * FROM lineitem, ConnectorX will first issue a LIMIT 1 query SELECT * FROM lineitem LIMIT 1 to get the schema of the result set.
+<a href=#52 id=52 data-nosnippet>52</a>//! Upon receiving the query, e.g. SELECT * FROM lineitem, ConnectorX will first issue a LIMIT 0 query SELECT * FROM lineitem LIMIT 0 to get the schema of the result set.
 <a href=#53 id=53 data-nosnippet>53</a>//!
 <a href=#54 id=54 data-nosnippet>54</a>//! Then, if partition_on is specified, ConnectorX will issue `SELECT MIN($partition_on), MAX($partition_on) FROM (SELECT * FROM lineitem)` to know the range of the partition column.
 <a href=#55 id=55 data-nosnippet>55</a>//! After that, the original query is split into partitions based on the min/max information, e.g. `SELECT * FROM (SELECT * FROM lineitem) WHERE $partition_on &gt; 0 AND $partition_on &lt; 10000`.
