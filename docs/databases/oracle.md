@@ -37,7 +37,8 @@ cx.read_sql(conn, query)
 | Oracle Type               |      Pandas Type            |  Comment                           |
 |:-------------------------:|:---------------------------:|:----------------------------------:|
 | Number(\*,0)              | int64, Int64(nullable)      |                                    |
-| Number(\*,>0)             | float64                     |                                    |
+| Number(0,0)               | object (Decimal)            | Unconstrained `NUMBER` (no precision/scale declared). Backed by `rust_decimal::Decimal`: exact, but limited to ~28-29 significant digits and a max scale of 28 — narrower than Oracle's own NUMBER limit (38 digits, scale -84..127). A value exceeding this will error rather than silently lose precision. |
+| Number(\*,>0)             | object (Decimal)            | Backed by `rust_decimal::Decimal`, same precision limit as above.  |
 | Float                     | float64                     |                                    |
 | BINARY_FLOAT              | float64                     |                                    |
 | BINARY_DOUBLE             | float64                     |                                    |
