@@ -23,6 +23,7 @@ use connectorx::{
     transports::PostgresArrowTransport,
 };
 use postgres::NoTls;
+use std::convert::TryFrom;
 use url::Url;
 
 mod test_db;
@@ -1442,4 +1443,62 @@ fn build_decimal_array(vals: Vec<Option<i128>>) -> Decimal128Array {
     }
 
     builder.finish()
+}
+
+fn query_single_string(url: &str, query: &str) -> String {
+    let source_conn = SourceConn::try_from(url).unwrap();
+    let destination = get_arrow(&source_conn, None, &[CXQuery::naked(query)], None).unwrap();
+    let batches = destination.arrow().unwrap();
+    batches[0]
+        .column(0)
+        .as_any()
+        .downcast_ref::<StringArray>()
+        .unwrap()
+        .value(0)
+        .to_string()
+}
+
+/// A value containing a space must survive the URL rewriting: serializing the query
+/// as `application/x-www-form-urlencoded` would turn the space into a literal `+`.
+#[test]
+fn url_param_with_space_reaches_the_server() {
+    let _ = env_logger::builder().is_test(true).try_init();
+
+    let Some(dburl) = postgres_url_or_skip() else {
+        return;
+    };
+
+    let url = format!("{dburl}?application_name=cx%20e2e&cxprotocol=binary");
+    let application_name = query_single_string(
+        &url,
+        "SELECT application_name FROM pg_stat_activity WHERE pid = pg_backend_pid()",
+    );
+
+    assert_eq!(application_name, "cx e2e");
+}
+
+/// Session settings are passed as `options=-c name=value`, so the space between the
+/// `-c` flag and its argument has to reach the server intact.
+#[test]
+fn url_options_param_is_applied_by_the_server() {
+    let _ = env_logger::builder().is_test(true).try_init();
+
+    let Some(dburl) = postgres_url_or_skip() else {
+        return;
+    };
+
+    let url = format!("{dburl}?options=-c%20statement_timeout%3D1234ms");
+    let statement_timeout =
+        query_single_string(&url, "SELECT current_setting('statement_timeout')");
+
+    assert_eq!(statement_timeout, "1234ms");
+}
+
+/// An option upstream rust-postgres does not know about is a configuration error,
+/// not a reason to panic.
+#[test]
+fn unknown_url_param_is_reported_as_an_error() {
+    let url = Url::parse("postgresql://user:pass@localhost:5432/db?not_a_pg_option=1").unwrap();
+
+    assert!(rewrite_tls_args(&url).is_err());
 }
