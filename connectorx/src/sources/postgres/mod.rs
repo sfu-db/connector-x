@@ -94,6 +94,77 @@ impl_produce_unimplemented!(
 
 );
 
+/// If any columns are range types, wrap the query in a subquery that casts
+/// range columns to `::text`. For example:
+///   SELECT * FROM orders WHERE id < 2
+/// becomes:
+///   SELECT "id", "period"::text, "name" FROM (SELECT * FROM orders WHERE id < 2) AS _cx_sub
+///
+/// This forces PG to serialize ranges as text, which makes binary and cursor
+/// protocols work without needing range-specific FromSql impls.
+/// For CSV and simple protocols the rewrite is harmless (text cast on text is a no-op).
+fn maybe_rewrite_range_query(
+    query: &CXQuery<String>,
+    names: &[String],
+    schema: &[PostgresTypeSystem],
+) -> CXQuery<String> {
+    let range_mask: Vec<bool> = schema
+        .iter()
+        .map(|ts| matches!(ts, PostgresTypeSystem::Range(_)))
+        .collect();
+
+    if !range_mask.iter().any(|&r| r) {
+        return query.clone();
+    }
+
+    let cols: String = names
+        .iter()
+        .zip(range_mask.iter())
+        .map(|(name, is_range)| {
+            let quoted = quote_ident(name);
+            if *is_range {
+                format!("{}::text", quoted)
+            } else {
+                quoted
+            }
+        })
+        .collect::<Vec<_>>()
+        .join(", ");
+
+    let rewritten = format!("SELECT {} FROM ({}) AS _cx_sub", cols, query.as_str());
+    CXQuery::Wrapped(rewritten)
+}
+
+fn quote_ident(ident: &str) -> String {
+    format!("\"{}\"", ident.replace('\"', "\"\""))
+}
+
+#[cfg(test)]
+mod range_rewrite_tests {
+    use super::{maybe_rewrite_range_query, quote_ident, PostgresTypeSystem};
+    use crate::sql::CXQuery;
+
+    #[test]
+    fn quote_ident_escapes_embedded_quotes() {
+        assert_eq!(quote_ident("a\"b"), "\"a\"\"b\"");
+    }
+
+    #[test]
+    fn rewrite_escapes_column_names_and_casts_only_ranges() {
+        let q = CXQuery::Naked("SELECT 1".to_string());
+        let names = vec!["plain".to_string(), "a\"b".to_string()];
+        let schema = vec![
+            PostgresTypeSystem::Int4(true),
+            PostgresTypeSystem::Range(true),
+        ];
+        let rewritten = maybe_rewrite_range_query(&q, &names, &schema);
+        assert_eq!(
+            rewritten.as_str(),
+            "SELECT \"plain\", \"a\"\"b\"::text FROM (SELECT 1) AS _cx_sub"
+        );
+    }
+}
+
 // take a row and unwrap the interior field from column 0
 fn convert_row<'b, R: TryFrom<usize> + postgres::types::FromSql<'b> + Clone>(row: &'b Row) -> R {
     let nrows: Option<R> = row.get(0);
@@ -249,6 +320,7 @@ where
         let mut ret = vec![];
         for query in self.queries {
             let mut conn = self.pool.get()?;
+            let rewritten = maybe_rewrite_range_query(&query, &self.names, &self.schema);
 
             if let Some(pre_queries) = &self.pre_execution_queries {
                 for pre_query in pre_queries {
@@ -258,7 +330,7 @@ where
 
             ret.push(PostgresSourcePartition::<P, C>::new(
                 conn,
-                &query,
+                &rewritten,
                 &self.schema,
                 &self.pg_schema,
             ));

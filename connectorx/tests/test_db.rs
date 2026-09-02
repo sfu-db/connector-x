@@ -2,7 +2,7 @@ use std::{
     env, fs,
     net::{SocketAddr, TcpStream, ToSocketAddrs},
     path::PathBuf,
-    sync::Once,
+    sync::{Once, OnceLock},
     thread,
     time::{Duration, Instant},
 };
@@ -13,7 +13,7 @@ use testcontainers::{
     GenericImage, ImageExt,
 };
 
-static POSTGRES_INIT: Once = Once::new();
+static POSTGRES_URL_CACHE: OnceLock<Result<String, String>> = OnceLock::new();
 static MYSQL_INIT: Once = Once::new();
 static MSSQL_INIT: Once = Once::new();
 static TRINO_INIT: Once = Once::new();
@@ -52,9 +52,17 @@ fn wait_for_tcp_ready(host: &str, port: u16, timeout: Duration, label: &str) {
 
 #[cfg(feature = "src_postgres")]
 pub fn postgres_url() -> String {
-    POSTGRES_INIT.call_once(|| {
-        if env::var("POSTGRES_URL").is_ok() {
-            return;
+    if let Ok(url) = env::var("POSTGRES_URL") {
+        return url;
+    }
+
+    let result = POSTGRES_URL_CACHE.get_or_init(|| {
+        let sock = PathBuf::from("/var/run/docker.sock");
+        if !sock.exists() {
+            return Err(format!(
+                "postgres testcontainer unavailable: docker socket not found at {}. Start Docker or set POSTGRES_URL explicitly.",
+                sock.display()
+            ));
         }
 
         let init_script = scripts_dir().join("postgres.sql");
@@ -72,25 +80,29 @@ pub fn postgres_url() -> String {
                 "/docker-entrypoint-initdb.d/postgres.sql".to_string(),
             ));
 
-        let container = image.start().expect("start postgres testcontainer");
+        let container = image
+            .start()
+            .map_err(|e| format!("start postgres testcontainer: {e}"))?;
         let host = container
             .get_host()
-            .expect("get postgres container host")
+            .map_err(|e| format!("get postgres container host: {e}"))?
             .to_string();
         let port = container
             .get_host_port_ipv4(5432)
-            .expect("get postgres exposed port");
+            .map_err(|e| format!("get postgres exposed port: {e}"))?;
 
-        env::set_var(
-            "POSTGRES_URL",
-            format!("postgresql://postgres:postgres@{host}:{port}/postgres"),
-        );
+        let url = format!("postgresql://postgres:postgres@{host}:{port}/postgres");
+        env::set_var("POSTGRES_URL", &url);
 
         // Keep the container alive for the test process lifetime.
         std::mem::forget(container);
+        Ok(url)
     });
 
-    env::var("POSTGRES_URL").expect("POSTGRES_URL must be set")
+    match result {
+        Ok(url) => url.clone(),
+        Err(msg) => panic!("{msg}", msg = msg),
+    }
 }
 
 #[cfg(feature = "src_mysql")]

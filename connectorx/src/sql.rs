@@ -259,6 +259,37 @@ pub fn count_query<T: Dialect>(sql: &CXQuery<String>, dialect: &T) -> CXQuery<St
 }
 
 #[throws(ConnectorXError)]
+pub fn limit0_query<T: Dialect>(sql: &CXQuery<String>, dialect: &T) -> CXQuery<String> {
+    trace!("Incoming query: {}", sql);
+
+    let sql = match Parser::parse_sql(dialect, sql.as_str()) {
+        Ok(mut ast) => {
+            if ast.len() != 1 {
+                throw!(ConnectorXError::SqlQueryNotSupported(sql.to_string()));
+            }
+
+            match &mut ast[0] {
+                Statement::Query(q) => {
+                    q.limit = Some(Expr::Value(Value::Number("0".to_string(), false)));
+                }
+                _ => throw!(ConnectorXError::SqlQueryNotSupported(sql.to_string())),
+            };
+
+            format!("{}", ast[0])
+        }
+        Err(e) => {
+            warn!("parser error: {:?}, manually compose query string", e);
+            format!("{} LIMIT 0", sql.as_str())
+        }
+    };
+
+    debug!("Transformed limit 0 query: {}", sql);
+    CXQuery::Wrapped(sql)
+}
+
+/// Like limit0_query but with LIMIT 1. Used by SQLite where schema inference
+/// requires at least one row when decl_type is not available.
+#[throws(ConnectorXError)]
 pub fn limit1_query<T: Dialect>(sql: &CXQuery<String>, dialect: &T) -> CXQuery<String> {
     trace!("Incoming query: {}", sql);
 
@@ -289,10 +320,10 @@ pub fn limit1_query<T: Dialect>(sql: &CXQuery<String>, dialect: &T) -> CXQuery<S
 
 #[throws(ConnectorXError)]
 #[cfg(feature = "src_oracle")]
-pub fn limit1_query_oracle(sql: &CXQuery<String>) -> CXQuery<String> {
+pub fn limit0_query_oracle(sql: &CXQuery<String>) -> CXQuery<String> {
     trace!("Incoming oracle query: {}", sql);
 
-    CXQuery::Wrapped(format!("SELECT * FROM ({}) WHERE rownum = 1", sql))
+    CXQuery::Wrapped(format!("SELECT * FROM ({}) WHERE 1=0", sql))
 
     // let ast = Parser::parse_sql(&OracleDialect {}, sql.as_str())?;
     // if ast.len() != 1 {
