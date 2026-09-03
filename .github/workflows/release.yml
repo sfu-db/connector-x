@@ -46,7 +46,7 @@ jobs:
 
       - name: Setup project
         run: |
-          just bootstrap-python
+          just bootstrap-python-release
 
       - uses: PyO3/maturin-action@v1
         with:
@@ -110,7 +110,7 @@ jobs:
 
       - name: Setup project
         run: |
-          just bootstrap-python
+          just bootstrap-python-release
 
       - uses: PyO3/maturin-action@v1
         with:
@@ -157,7 +157,7 @@ jobs:
 
       - name: Setup project
         run: |
-          just bootstrap-python
+          just bootstrap-python-release
 
       - uses: PyO3/maturin-action@v1
         with:
