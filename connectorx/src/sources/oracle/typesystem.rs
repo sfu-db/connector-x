@@ -40,7 +40,7 @@ impl<'a> From<&'a OracleType> for OracleTypeSystem {
     fn from(ty: &'a OracleType) -> OracleTypeSystem {
         use OracleTypeSystem::*;
         match ty {
-            OracleType::Number(0, 0) => NumFloat(true),
+            OracleType::Number(0, 0) => NumDecimal(true),
             OracleType::Number(_, 0) => NumInt(true),
             OracleType::Number(_, _) => NumDecimal(true),
             OracleType::Float(_) => Float(true),
