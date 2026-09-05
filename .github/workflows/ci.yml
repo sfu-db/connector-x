@@ -111,6 +111,8 @@ jobs:
           docker ps
 
       - uses: Gr1N/setup-poetry@v9
+        with:
+          poetry-version: "2.4.1"
 
       - uses: extractions/setup-just@v4
 
