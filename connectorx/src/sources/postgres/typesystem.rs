@@ -43,6 +43,7 @@ pub enum PostgresTypeSystem {
     HSTORE(bool),
     Name(bool),
     Inet(bool),
+    Range(bool),
     Vector(bool),
     HalfVec(bool),
     Bit(bool),
@@ -69,7 +70,7 @@ impl_typesystem! {
         { VarcharArray | TextArray => Vec<Option<String>>}
         { Bool => bool }
         { Char => i8 }
-        { Text | BpChar | VarChar | Enum | Name => &'r str }
+        { Text | BpChar | VarChar | Enum | Name | Range => &'r str }
         { ByteA => Vec<u8> }
         { Time => NaiveTime }
         { Timestamp => NaiveDateTime }
@@ -121,6 +122,9 @@ impl<'a> From<&'a Type> for PostgresTypeSystem {
             "jsonb" => JSONB(true),
             "hstore" => HSTORE(true),
             "inet" => Inet(true),
+            "int4range" | "int8range" | "numrange" | "tsrange" | "tstzrange" | "daterange" => {
+                Range(true)
+            }
             "vector" => Vector(true),
             "halfvec" => HalfVec(true),
             "bit" => Bit(true),
@@ -142,6 +146,7 @@ impl From<PostgresTypePairs<'_>> for Type {
         match ty.1 {
             Enum(_) => Type::TEXT,
             HSTORE(_) => Type::TEXT, // hstore is not supported in binary protocol (since no corresponding inner TYPE)
+            Range(_) => Type::TEXT,
             _ => ty.0.clone(),
         }
     }

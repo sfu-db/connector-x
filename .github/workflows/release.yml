@@ -18,13 +18,13 @@ jobs:
             { "arch": "aarch64", "runs-on": "ubuntu-22.04-arm" },
           ]
         python-version:
-          [[310, "3.10"], [311, "3.11"], [312, "3.12"], [313, "3.13"], [314, "3.14"]]
+          [["cp310-cp310", "3.10"], ["cp311-cp311", "3.11"], ["cp312-cp312", "3.12"], ["cp313-cp313", "3.13"], ["cp314-cp314", "3.14"], ["cp314-cp314t", "3.14t"]]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Set python version
         run: |
-          echo "/opt/python/cp${{ matrix.python-version[0] }}-cp${{ matrix.python-version[0] }}/bin" >> $GITHUB_PATH
+          echo "/opt/python/${{ matrix.python-version[0] }}/bin" >> $GITHUB_PATH
 
       - uses: actions-rs/toolchain@v1
         with:
@@ -38,6 +38,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: Gr1N/setup-poetry@v9
+        with:
+          poetry-version: "2.4.1"
 
       - name: Install tools
         run: |
@@ -46,7 +48,7 @@ jobs:
 
       - name: Setup project
         run: |
-          just bootstrap-python
+          just bootstrap-python-release
 
       - uses: PyO3/maturin-action@v1
         with:
@@ -80,18 +82,18 @@ jobs:
     strategy:
       matrix:
         os: ["windows-latest", "macos-15-intel"]
-        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14", "3.14t"]
         include:
           - os: "macos-15-intel"
             features: "--features integrated-auth-gssapi"
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - uses: ankane/setup-mysql@v1
         with:
           mysql-version: 8
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
           architecture: x64
@@ -107,15 +109,17 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: Gr1N/setup-poetry@v9
+        with:
+          poetry-version: "2.4.1"
 
       - name: Setup project
         run: |
-          just bootstrap-python
+          just bootstrap-python-release
 
       - uses: PyO3/maturin-action@v1
         with:
           rust-toolchain: stable
-          maturin-version: v0.14.15
+          maturin-version: v1.15.0
           command: build
           args: -m connectorx-python/Cargo.toml -i python --release ${{ matrix.features }}
         env:
@@ -130,15 +134,15 @@ jobs:
     runs-on: macos-latest
     strategy:
       matrix:
-        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14", "3.14t"]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - uses: ankane/setup-mysql@v1
         with:
           mysql-version: 8
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -154,15 +158,17 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: Gr1N/setup-poetry@v9
+        with:
+          poetry-version: "2.4.1"
 
       - name: Setup project
         run: |
-          just bootstrap-python
+          just bootstrap-python-release
 
       - uses: PyO3/maturin-action@v1
         with:
           rust-toolchain: stable
-          maturin-version: v0.14.15
+          maturin-version: v1.15.0
           command: build
           args: -m connectorx-python/Cargo.toml --target aarch64-apple-darwin -i python --release  --features integrated-auth-gssapi
         env:
@@ -178,7 +184,7 @@ jobs:
     needs: [win-and-mac, linux]
     strategy:
       matrix:
-        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14", "3.14t"]
         os:
           [
             macos-15-intel,
@@ -196,9 +202,9 @@ jobs:
           - os: "macos-latest"
             artifact-prefix: "macos-arm"
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
 

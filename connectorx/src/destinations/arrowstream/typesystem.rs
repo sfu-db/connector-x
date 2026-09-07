@@ -13,9 +13,11 @@ pub struct NaiveDateTimeWrapperMicro(pub NaiveDateTime);
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum ArrowTypeSystem {
+    Int8(bool),
     Int16(bool),
     Int32(bool),
     Int64(bool),
+    UInt8(bool),
     UInt16(bool),
     UInt32(bool),
     UInt64(bool),
@@ -48,9 +50,11 @@ pub enum ArrowTypeSystem {
 impl_typesystem! {
     system = ArrowTypeSystem,
     mappings = {
+        { Int8            => i8                        }
         { Int16           => i16                       }
         { Int32           => i32                       }
         { Int64           => i64                       }
+        { UInt8           => u8                        }
         { UInt16          => u16                       }
         { UInt32          => u32                       }
         { UInt64          => u64                       }

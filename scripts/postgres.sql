@@ -127,3 +127,28 @@ INSERT INTO vector_types (dense_vector, half_vector, binary_vector, sparse_vecto
     (
         NULL,NULL,NULL,NULL
     );
+
+DROP TABLE IF EXISTS range_types;
+CREATE TABLE range_types (
+    id SERIAL PRIMARY KEY,
+    test_int4range int4range,
+    test_int8range int8range,
+    test_numrange numrange,
+    test_tsrange tsrange,
+    test_tstzrange tstzrange,
+    test_daterange daterange
+);
+
+INSERT INTO range_types (
+    test_int4range,
+    test_int8range,
+    test_numrange,
+    test_tsrange,
+    test_tstzrange,
+    test_daterange
+) VALUES
+    ('[1,10]', '[100,1000]', '[1.5,10.0)', '[2020-01-01 00:00:00,2020-12-31 23:59:59)', '[2020-01-01 00:00:00+00,2020-12-31 23:59:59+00)', '[2020-01-01,2021-01-01)'),
+    ('[-5,5)', '[-9223372036854775808,0)', '(-infinity,100]', '[2010-01-01 00:00:00,2015-06-15 12:00:00)', '[2010-01-01 00:00:00+05,2015-06-15 12:00:00+05)', '[2010-01-01,2015-07-01)'),
+    (NULL, NULL, NULL, NULL, NULL, NULL),
+    ('empty', 'empty', 'empty', 'empty', 'empty', 'empty'),
+    ('(,)', '(,)', '(,)', '(,)', '(,)', '(,)');

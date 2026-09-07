@@ -336,7 +336,7 @@ def test_mysql_types_binary(mysql_url: str) -> None:
                 dtype="object",
             ),
             "test_mediumtext": pd.Series(
-                [None, b"", b"medium text!!!!"], dtype="object"
+                [None, "", "medium text!!!!"], dtype="object"
             ),
             "test_bit": pd.Series(
                 [b'\x17', b'\x18', None]
@@ -416,7 +416,7 @@ def test_mysql_types_text(mysql_url: str) -> None:
                 dtype="object",
             ),
             "test_mediumtext": pd.Series(
-                [None, b"", b"medium text!!!!"], dtype="object"
+                [None, "", "medium text!!!!"], dtype="object"
             ),
             "test_bit": pd.Series(
                 [b'\x17', b'\x18', None]

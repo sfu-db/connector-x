@@ -250,7 +250,9 @@ where
                         start = end;
                     } else {
                         unsafe {
-                            let n = Py::from_borrowed_ptr(py, pyo3::ffi::Py_None());
+                            let n = Bound::from_borrowed_ptr(py, pyo3::ffi::Py_None())
+                                .cast_into_unchecked::<pyo3::types::PyList>()
+                                .unbind();
                             *self.data.add(self.row_idx[i]) = PyList(n);
                         }
                     }

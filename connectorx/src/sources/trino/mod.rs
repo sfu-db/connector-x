@@ -1,4 +1,4 @@
-use std::{marker::PhantomData, sync::Arc};
+use std::{collections::HashMap, marker::PhantomData, sync::Arc};
 
 use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
 use fehler::{throw, throws};
@@ -12,7 +12,7 @@ use crate::{
     data_order::DataOrder,
     errors::ConnectorXError,
     sources::Produce,
-    sql::{count_query, limit1_query, CXQuery},
+    sql::{count_query, limit0_query, CXQuery},
 };
 
 pub use self::{errors::TrinoSourceError, typesystem::TrinoTypeSystem};
@@ -73,6 +73,78 @@ pub struct TrinoSource {
     queries: Vec<CXQuery<String>>,
     names: Vec<String>,
     schema: Vec<TrinoTypeSystem>,
+}
+
+/// Build a prusto Client from a Trino connection URL, parsing all supported query parameters.
+///
+/// Supported URL params:
+///   source, schema, client_tags (comma-separated), client_info, trace_token,
+///   session.<key>=<value>, extra_credential.<key>=<value>, verify=false
+#[throws(TrinoSourceError)]
+pub fn build_client_from_url(url: &url::Url) -> Client {
+    let username = match url.username() {
+        "" => "connectorx",
+        username => username,
+    };
+
+    let no_verify = url
+        .query_pairs()
+        .any(|(k, v)| k == "verify" && v == "false");
+
+    let mut builder = ClientBuilder::new(username, url.host().unwrap().to_owned())
+        .port(url.port().unwrap_or(8080))
+        .ssl(prusto::ssl::Ssl { root_cert: None })
+        .no_verify(no_verify)
+        .secure(url.scheme() == "trino+https")
+        .catalog(url.path_segments().unwrap().last().unwrap_or("hive"));
+
+    let mut session_props: HashMap<String, String> = HashMap::new();
+    let mut extra_creds: HashMap<String, String> = HashMap::new();
+
+    for (key, value) in url.query_pairs() {
+        match key.as_ref() {
+            "source" => builder = builder.source(value.as_ref()),
+            "schema" => builder = builder.schema(value.as_ref()),
+            "client_tags" => {
+                for tag in value.split(',') {
+                    let tag = tag.trim();
+                    if !tag.is_empty() {
+                        builder = builder.client_tag(tag);
+                    }
+                }
+            }
+            "client_info" => builder = builder.client_info(value.as_ref()),
+            "trace_token" => builder = builder.trace_token(value.as_ref()),
+            k if k.starts_with("session.") => {
+                if let Some(prop) = k.strip_prefix("session.").filter(|s| !s.is_empty()) {
+                    session_props.insert(prop.to_string(), value.to_string());
+                }
+            }
+            k if k.starts_with("extra_credential.") => {
+                if let Some(cred) = k
+                    .strip_prefix("extra_credential.")
+                    .filter(|s| !s.is_empty())
+                {
+                    extra_creds.insert(cred.to_string(), value.to_string());
+                }
+            }
+            _ => {}
+        }
+    }
+
+    if !session_props.is_empty() {
+        builder = builder.properties(session_props);
+    }
+    if !extra_creds.is_empty() {
+        builder = builder.extra_credentials(extra_creds);
+    }
+
+    let builder = match url.password() {
+        None => builder,
+        Some(password) => builder.auth(Auth::Basic(username.to_owned(), Some(password.to_owned()))),
+    };
+
+    builder.build().map_err(TrinoSourceError::PrustoError)?
 }
 
 impl TrinoSource {
@@ -149,7 +221,7 @@ where
         assert!(!self.queries.is_empty());
 
         let first_query = &self.queries[0];
-        let cxq = limit1_query(first_query, &GenericDialect {})?;
+        let cxq = limit0_query(first_query, &GenericDialect {})?;
 
         let dataset: DataSet<Row> = self
             .rt
@@ -449,6 +521,12 @@ macro_rules! impl_produce_text {
                         Value::String(x) => {
                             x.parse().map_err(|_| anyhow!("Trino cannot parse String at position: ({}, {}): {:?}", ridx, cidx, value))?
                         }
+                        Value::Array(_) | Value::Object(_) | Value::Number(_) | Value::Bool(_) => {
+                            serde_json::to_string(value)
+                                .unwrap_or_else(|_| value.to_string())
+                                .parse()
+                                .map_err(|_| anyhow!("Trino cannot convert complex value at ({}, {}): {:?}", ridx, cidx, value))?
+                        }
                         _ => throw!(anyhow!("Trino unknown value at position: ({}, {}): {:?}", ridx, cidx, value))
                     }
                 }
@@ -466,6 +544,12 @@ macro_rules! impl_produce_text {
                         Value::Null => None,
                         Value::String(x) => {
                             Some(x.parse().map_err(|_| anyhow!("Trino cannot parse String at position: ({}, {}): {:?}", ridx, cidx, value))?)
+                        }
+                        Value::Array(_) | Value::Object(_) | Value::Number(_) | Value::Bool(_) => {
+                            Some(serde_json::to_string(value)
+                                .unwrap_or_else(|_| value.to_string())
+                                .parse()
+                                .map_err(|_| anyhow!("Trino cannot convert complex value at ({}, {}): {:?}", ridx, cidx, value))?)
                         }
                         _ => throw!(anyhow!("Trino unknown value at position: ({}, {}): {:?}", ridx, cidx, value))
                     }
@@ -664,5 +748,35 @@ impl<'r, 'a> Produce<'r, Option<NaiveDate>> for TrinoSourcePartitionParser<'a> {
                 value
             )),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_new_with_all_params() {
+        let rt = Arc::new(Runtime::new().unwrap());
+        let conn = "trino+https://myuser:mypass@localhost:8443/mycatalog?\
+            source=connectorx-test&schema=myschema&\
+            client_tags=tag1,tag2,tag3&client_info=test-run&\
+            trace_token=abc123&\
+            session.query_max_execution_time=10m&\
+            extra_credential.token=secret123&verify=false";
+        assert!(TrinoSource::new(rt, conn).is_ok());
+    }
+
+    #[test]
+    fn test_new_minimal_url() {
+        let rt = Arc::new(Runtime::new().unwrap());
+        assert!(TrinoSource::new(rt, "trino://test@localhost:8080/memory").is_ok());
+    }
+
+    #[test]
+    fn test_new_ignores_empty_keys() {
+        let rt = Arc::new(Runtime::new().unwrap());
+        let conn = "trino://test@localhost:8080/memory?session.=val&extra_credential.=x";
+        assert!(TrinoSource::new(rt, conn).is_ok());
     }
 }

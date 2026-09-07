@@ -1,5 +1,6 @@
 use crate::constants::CONNECTORX_PROTOCOL;
 use crate::errors::{ConnectorXError, Result};
+use crate::utils::remove_query_params;
 use anyhow::anyhow;
 use fehler::throws;
 #[cfg(feature = "src_postgres")]
@@ -41,16 +42,7 @@ impl TryFrom<&str> for SourceConn {
         };
 
         // create url by removing connectorx protocol
-        let stripped_query: Vec<(_, _)> = old_url
-            .query_pairs()
-            .filter(|p| &*p.0 != CONNECTORX_PROTOCOL)
-            .collect();
-        let mut url = old_url.clone();
-        url.set_query(None);
-        for pair in stripped_query {
-            url.query_pairs_mut()
-                .append_pair(&pair.0.to_string()[..], &pair.1.to_string()[..]);
-        }
+        let url = remove_query_params(&old_url, &[CONNECTORX_PROTOCOL]);
 
         // users from sqlalchemy may set engine in connection url (e.g. mssql+pymssql://...)
         // only for compatablility, we don't use the same engine
@@ -92,4 +84,36 @@ pub fn parse_source(conn: &str, protocol: Option<&str>) -> SourceConn {
         None => {}
     }
     source_conn
+}
+
+#[cfg(test)]
+mod tests {
+    use super::SourceConn;
+    use std::convert::TryFrom;
+
+    /// Removing the connectorx protocol must not re-encode the remaining parameters:
+    /// sources that percent-decode the query would otherwise receive a literal `+`
+    /// wherever the caller wrote a space.
+    #[test]
+    fn keeps_remaining_query_params_verbatim() {
+        let source_conn = SourceConn::try_from(
+            "postgresql://u:p@host:5432/db?options=-c%20statement_timeout%3D1s&cxprotocol=cursor",
+        )
+        .unwrap();
+
+        assert_eq!(
+            source_conn.conn.query(),
+            Some("options=-c%20statement_timeout%3D1s")
+        );
+        assert_eq!(source_conn.proto, "cursor");
+    }
+
+    /// The query is left alone even when there is no protocol parameter to remove.
+    #[test]
+    fn leaves_the_query_alone_when_there_is_nothing_to_remove() {
+        let source_conn = SourceConn::try_from("mysql://host:3306/db?a=x%20y&b=%2Fz").unwrap();
+
+        assert_eq!(source_conn.conn.query(), Some("a=x%20y&b=%2Fz"));
+        assert_eq!(source_conn.proto, "binary");
+    }
 }

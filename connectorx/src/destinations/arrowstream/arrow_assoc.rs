@@ -6,9 +6,9 @@ use crate::constants::{DEFAULT_ARROW_DECIMAL, DEFAULT_ARROW_DECIMAL_SCALE, SECON
 use crate::utils::decimal_to_i128;
 use arrow::array::{
     ArrayBuilder, BooleanBuilder, Date32Builder, Decimal128Builder, Float32Builder, Float64Builder,
-    Int16Builder, Int32Builder, Int64Builder, LargeBinaryBuilder, LargeListBuilder, StringBuilder,
-    Time64MicrosecondBuilder, Time64NanosecondBuilder, TimestampMicrosecondBuilder,
-    TimestampNanosecondBuilder, UInt16Builder, UInt32Builder, UInt64Builder,
+    Int16Builder, Int32Builder, Int64Builder, Int8Builder, LargeBinaryBuilder, LargeListBuilder,
+    StringBuilder, Time64MicrosecondBuilder, Time64NanosecondBuilder, TimestampMicrosecondBuilder,
+    TimestampNanosecondBuilder, UInt16Builder, UInt32Builder, UInt64Builder, UInt8Builder,
 };
 use arrow::datatypes::Field;
 use arrow::datatypes::{DataType as ArrowDataType, TimeUnit};
@@ -62,9 +62,11 @@ macro_rules! impl_arrow_assoc {
     };
 }
 
+impl_arrow_assoc!(u8, ArrowDataType::UInt8, UInt8Builder);
 impl_arrow_assoc!(u16, ArrowDataType::UInt16, UInt16Builder);
 impl_arrow_assoc!(u32, ArrowDataType::UInt32, UInt32Builder);
 impl_arrow_assoc!(u64, ArrowDataType::UInt64, UInt64Builder);
+impl_arrow_assoc!(i8, ArrowDataType::Int8, Int8Builder);
 impl_arrow_assoc!(i16, ArrowDataType::Int16, Int16Builder);
 impl_arrow_assoc!(i32, ArrowDataType::Int32, Int32Builder);
 impl_arrow_assoc!(i64, ArrowDataType::Int64, Int64Builder);
