@@ -38,6 +38,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: Gr1N/setup-poetry@v9
+        with:
+          poetry-version: "2.4.1"
 
       - name: Install tools
         run: |
@@ -46,7 +48,7 @@ jobs:
 
       - name: Setup project
         run: |
-          just bootstrap-python
+          just bootstrap-python-release
 
       - uses: PyO3/maturin-action@v1
         with:
@@ -91,7 +93,7 @@ jobs:
         with:
           mysql-version: 8
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
           architecture: x64
@@ -107,15 +109,17 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: Gr1N/setup-poetry@v9
+        with:
+          poetry-version: "2.4.1"
 
       - name: Setup project
         run: |
-          just bootstrap-python
+          just bootstrap-python-release
 
       - uses: PyO3/maturin-action@v1
         with:
           rust-toolchain: stable
-          maturin-version: v0.14.15
+          maturin-version: v1.15.0
           command: build
           args: -m connectorx-python/Cargo.toml -i python --release ${{ matrix.features }}
         env:
@@ -138,7 +142,7 @@ jobs:
         with:
           mysql-version: 8
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -154,15 +158,17 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: Gr1N/setup-poetry@v9
+        with:
+          poetry-version: "2.4.1"
 
       - name: Setup project
         run: |
-          just bootstrap-python
+          just bootstrap-python-release
 
       - uses: PyO3/maturin-action@v1
         with:
           rust-toolchain: stable
-          maturin-version: v0.14.15
+          maturin-version: v1.15.0
           command: build
           args: -m connectorx-python/Cargo.toml --target aarch64-apple-darwin -i python --release  --features integrated-auth-gssapi
         env:
@@ -198,7 +204,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
 
