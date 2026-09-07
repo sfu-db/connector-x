@@ -495,47 +495,51 @@
 <td class="text-center"><p>int64, Int64(nullable)</p></td>
 <td class="text-center"><p></p></td>
 </tr>
-<tr class="row-odd"><td class="text-center"><p>Number(*,&gt;0)</p></td>
+<tr class="row-odd"><td class="text-center"><p>Number(0,0)</p></td>
+<td class="text-center"><p>object (Decimal)</p></td>
+<td class="text-center"><p>Unconstrained <code class="docutils literal notranslate"><span class="pre">NUMBER</span></code> (no precision/scale declared). Backed by <code class="docutils literal notranslate"><span class="pre">rust_decimal::Decimal</span></code>: exact, but limited to ~28-29 significant digits and a max scale of 28 — narrower than Oracle’s own NUMBER limit (38 digits, scale -84..127). A value exceeding this will error rather than silently lose precision.</p></td>
+</tr>
+<tr class="row-even"><td class="text-center"><p>Number(*,&gt;0)</p></td>
+<td class="text-center"><p>object (Decimal)</p></td>
+<td class="text-center"><p>Backed by <code class="docutils literal notranslate"><span class="pre">rust_decimal::Decimal</span></code>, same precision limit as above.</p></td>
+</tr>
+<tr class="row-odd"><td class="text-center"><p>Float</p></td>
 <td class="text-center"><p>float64</p></td>
 <td class="text-center"><p></p></td>
 </tr>
-<tr class="row-even"><td class="text-center"><p>Float</p></td>
+<tr class="row-even"><td class="text-center"><p>BINARY_FLOAT</p></td>
 <td class="text-center"><p>float64</p></td>
 <td class="text-center"><p></p></td>
 </tr>
-<tr class="row-odd"><td class="text-center"><p>BINARY_FLOAT</p></td>
+<tr class="row-odd"><td class="text-center"><p>BINARY_DOUBLE</p></td>
 <td class="text-center"><p>float64</p></td>
 <td class="text-center"><p></p></td>
 </tr>
-<tr class="row-even"><td class="text-center"><p>BINARY_DOUBLE</p></td>
-<td class="text-center"><p>float64</p></td>
-<td class="text-center"><p></p></td>
-</tr>
-<tr class="row-odd"><td class="text-center"><p>VARCHAR2</p></td>
+<tr class="row-even"><td class="text-center"><p>VARCHAR2</p></td>
 <td class="text-center"><p>object</p></td>
 <td class="text-center"><p></p></td>
 </tr>
-<tr class="row-even"><td class="text-center"><p>CHAR</p></td>
+<tr class="row-odd"><td class="text-center"><p>CHAR</p></td>
 <td class="text-center"><p>object</p></td>
 <td class="text-center"><p></p></td>
 </tr>
-<tr class="row-odd"><td class="text-center"><p>NCHAR</p></td>
+<tr class="row-even"><td class="text-center"><p>NCHAR</p></td>
 <td class="text-center"><p>object</p></td>
 <td class="text-center"><p></p></td>
 </tr>
-<tr class="row-even"><td class="text-center"><p>NVarchar2</p></td>
+<tr class="row-odd"><td class="text-center"><p>NVarchar2</p></td>
 <td class="text-center"><p>object</p></td>
 <td class="text-center"><p></p></td>
 </tr>
-<tr class="row-odd"><td class="text-center"><p>DATE</p></td>
+<tr class="row-even"><td class="text-center"><p>DATE</p></td>
 <td class="text-center"><p>datetime64[ns]</p></td>
 <td class="text-center"><p></p></td>
 </tr>
-<tr class="row-even"><td class="text-center"><p>TIMESTAMP</p></td>
+<tr class="row-odd"><td class="text-center"><p>TIMESTAMP</p></td>
 <td class="text-center"><p>datetime64[ns]</p></td>
 <td class="text-center"><p></p></td>
 </tr>
-<tr class="row-odd"><td class="text-center"><p>TIMESTAMP WITH TIME ZONE</p></td>
+<tr class="row-even"><td class="text-center"><p>TIMESTAMP WITH TIME ZONE</p></td>
 <td class="text-center"><p>datetime64[ns]</p></td>
 <td class="text-center"><p></p></td>
 </tr>

@@ -40,7 +40,7 @@
 <a href=#40 id=40 data-nosnippet>40</a>    <span class="kw">fn </span>from(ty: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>OracleType) -&gt; OracleTypeSystem {
 <a href=#41 id=41 data-nosnippet>41</a>        <span class="kw">use </span>OracleTypeSystem::<span class="kw-2">*</span>;
 <a href=#42 id=42 data-nosnippet>42</a>        <span class="kw">match </span>ty {
-<a href=#43 id=43 data-nosnippet>43</a>            OracleType::Number(<span class="number">0</span>, <span class="number">0</span>) =&gt; NumFloat(<span class="bool-val">true</span>),
+<a href=#43 id=43 data-nosnippet>43</a>            OracleType::Number(<span class="number">0</span>, <span class="number">0</span>) =&gt; NumDecimal(<span class="bool-val">true</span>),
 <a href=#44 id=44 data-nosnippet>44</a>            OracleType::Number(<span class="kw">_</span>, <span class="number">0</span>) =&gt; NumInt(<span class="bool-val">true</span>),
 <a href=#45 id=45 data-nosnippet>45</a>            OracleType::Number(<span class="kw">_</span>, <span class="kw">_</span>) =&gt; NumDecimal(<span class="bool-val">true</span>),
 <a href=#46 id=46 data-nosnippet>46</a>            OracleType::Float(<span class="kw">_</span>) =&gt; Float(<span class="bool-val">true</span>),
