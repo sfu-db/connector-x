@@ -29,7 +29,7 @@ polars = { workspace = true, optional = true, features = [
   "lazy",
 ] }
 polars-arrow = { workspace = true, optional = true }
-bb8 = { version = "0.7", optional = true }
+bb8 = { version = "0.9", optional = true }
 bb8-tiberius = { version = "0.8", optional = true }
 csv = { version = "1", optional = true }
 fallible-streaming-iterator = { version = "0.1", optional = true }
