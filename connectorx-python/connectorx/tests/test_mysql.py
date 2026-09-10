@@ -693,8 +693,8 @@ def test_mysql_tls_required(mysql_url_tls: str) -> None:
 
 
 @pytest.mark.skipif(
-    not os.environ.get("MYSQL_URL_TLS"),
-    reason="Do not test MySQL TLS unless `MYSQL_URL_TLS` is set",
+    not (os.environ.get("MYSQL_URL_TLS") and os.environ.get("MYSQL_ROOTCERT")),
+    reason="Do not test MySQL TLS CA verification unless `MYSQL_URL_TLS` and `MYSQL_ROOTCERT` are set",
 )
 def test_mysql_tls_verify_ca(mysql_url_tls: str, mysql_rootcert: str) -> None:
     df = read_sql(
