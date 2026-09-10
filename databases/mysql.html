@@ -427,6 +427,7 @@
                 <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#protocols">Protocols</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mysql-connection">MySQL Connection</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mysql-ssl-tls">MySQL SSL/TLS</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mysql-pandas-type-mapping">MySQL-Pandas Type Mapping</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#performance-db-m6g-4xlarge-rds">Performance (db.m6g.4xlarge RDS)</a></li>
 </ul>
@@ -459,6 +460,47 @@
 <span class="n">cx</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">query</span><span class="p">)</span>                                        <span class="c1"># read data from MySQL</span>
 </pre></div>
 </div>
+</section>
+<section id="mysql-ssl-tls">
+<h2>MySQL SSL/TLS<a class="headerlink" href="#mysql-ssl-tls" title="Link to this heading">#</a></h2>
+<p>Add an <code class="docutils literal notranslate"><span class="pre">ssl-mode</span></code> parameter to the connection URI to negotiate a TLS connection, e.g.
+<code class="docutils literal notranslate"><span class="pre">mysql://username:password&#64;server:port/database?ssl-mode=REQUIRED</span></code>. Values are case-insensitive and
+follow MySQL’s semantics:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head text-center"><p><code class="docutils literal notranslate"><span class="pre">ssl-mode</span></code></p></th>
+<th class="head text-left"><p>Behavior</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td class="text-center"><p><code class="docutils literal notranslate"><span class="pre">DISABLED</span></code></p></td>
+<td class="text-left"><p>No TLS. Same as omitting <code class="docutils literal notranslate"><span class="pre">ssl-mode</span></code> (the default).</p></td>
+</tr>
+<tr class="row-odd"><td class="text-center"><p><code class="docutils literal notranslate"><span class="pre">PREFERRED</span></code></p></td>
+<td class="text-left"><p>Encrypt without verifying the server certificate. See the note below.</p></td>
+</tr>
+<tr class="row-even"><td class="text-center"><p><code class="docutils literal notranslate"><span class="pre">REQUIRED</span></code></p></td>
+<td class="text-left"><p>Encrypt without verifying the server certificate.</p></td>
+</tr>
+<tr class="row-odd"><td class="text-center"><p><code class="docutils literal notranslate"><span class="pre">VERIFY_CA</span></code></p></td>
+<td class="text-left"><p>Encrypt and verify the server certificate against a CA.</p></td>
+</tr>
+<tr class="row-even"><td class="text-center"><p><code class="docutils literal notranslate"><span class="pre">VERIFY_IDENTITY</span></code></p></td>
+<td class="text-left"><p>Encrypt and verify both the CA and the server hostname.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>For <code class="docutils literal notranslate"><span class="pre">VERIFY_CA</span></code> and <code class="docutils literal notranslate"><span class="pre">VERIFY_IDENTITY</span></code>, supply the CA certificate with <code class="docutils literal notranslate"><span class="pre">ssl-ca</span></code> (a path to a PEM or DER
+file), e.g. <code class="docutils literal notranslate"><span class="pre">?ssl-mode=VERIFY_CA&amp;ssl-ca=/path/to/ca.pem</span></code>. When <code class="docutils literal notranslate"><span class="pre">ssl-ca</span></code> is omitted, verification uses
+the system trust store.</p>
+<blockquote>
+<div><p><strong>Note:</strong> <code class="docutils literal notranslate"><span class="pre">PREFERRED</span></code> is treated the same as <code class="docutils literal notranslate"><span class="pre">REQUIRED</span></code> (the connection is always encrypted); unlike
+the MySQL client, it does not fall back to an unencrypted connection when the server lacks TLS.</p>
+</div></blockquote>
+<blockquote>
+<div><p><strong>Note:</strong> Client-certificate (mutual TLS) authentication is not yet supported.</p>
+</div></blockquote>
 </section>
 <section id="mysql-pandas-type-mapping">
 <h2>MySQL-Pandas Type Mapping<a class="headerlink" href="#mysql-pandas-type-mapping" title="Link to this heading">#</a></h2>
@@ -640,6 +682,7 @@
     <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#protocols">Protocols</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mysql-connection">MySQL Connection</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mysql-ssl-tls">MySQL SSL/TLS</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mysql-pandas-type-mapping">MySQL-Pandas Type Mapping</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#performance-db-m6g-4xlarge-rds">Performance (db.m6g.4xlarge RDS)</a></li>
 </ul>
