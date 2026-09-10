@@ -281,7 +281,8 @@ pub unsafe extern "C" fn connectorx_scan_iter(
     }
 
     let arrow_iter: Box<dyn RecordBatchIterator> =
-        new_record_batch_iter(&source_conn, None, query_vec.as_slice(), batch_size, None);
+        new_record_batch_iter(&source_conn, None, query_vec.as_slice(), batch_size, None)
+            .unwrap();
 
     Box::into_raw(Box::new(arrow_iter))
 }

@@ -98,29 +98,61 @@ pub enum ConnectorXOutError {
     #[error(transparent)]
     PostgresArrowTransportError(#[from] crate::transports::PostgresArrowTransportError),
 
+    #[cfg(all(feature = "src_postgres", feature = "dst_arrow"))]
+    #[error(transparent)]
+    PostgresArrowStreamTransportError(
+        #[from] crate::transports::PostgresArrowStreamTransportError,
+    ),
+
     #[cfg(all(feature = "src_mysql", feature = "dst_arrow"))]
     #[error(transparent)]
     MySQLArrowTransportError(#[from] crate::transports::MySQLArrowTransportError),
+
+    #[cfg(all(feature = "src_mysql", feature = "dst_arrow"))]
+    #[error(transparent)]
+    MySQLArrowStreamTransportError(#[from] crate::transports::MySQLArrowStreamTransportError),
 
     #[cfg(all(feature = "src_sqlite", feature = "dst_arrow"))]
     #[error(transparent)]
     SQLiteArrowTransportError(#[from] crate::transports::SQLiteArrowTransportError),
 
+    #[cfg(all(feature = "src_sqlite", feature = "dst_arrow"))]
+    #[error(transparent)]
+    SQLiteArrowStreamTransportError(#[from] crate::transports::SQLiteArrowStreamTransportError),
+
     #[cfg(all(feature = "src_mssql", feature = "dst_arrow"))]
     #[error(transparent)]
     MsSQLArrowTransportError(#[from] crate::transports::MsSQLArrowTransportError),
+
+    #[cfg(all(feature = "src_mssql", feature = "dst_arrow"))]
+    #[error(transparent)]
+    MsSQLArrowStreamTransportError(#[from] crate::transports::MsSQLArrowStreamTransportError),
 
     #[cfg(all(feature = "src_oracle", feature = "dst_arrow"))]
     #[error(transparent)]
     OracleArrowTransportError(#[from] crate::transports::OracleArrowTransportError),
 
+    #[cfg(all(feature = "src_oracle", feature = "dst_arrow"))]
+    #[error(transparent)]
+    OracleArrowStreamTransportError(#[from] crate::transports::OracleArrowStreamTransportError),
+
     #[cfg(all(feature = "src_bigquery", feature = "dst_arrow"))]
     #[error(transparent)]
     BigqueryArrowTransportError(#[from] crate::transports::BigQueryArrowTransportError),
 
+    #[cfg(all(feature = "src_bigquery", feature = "dst_arrow"))]
+    #[error(transparent)]
+    BigqueryArrowStreamTransportError(
+        #[from] crate::transports::BigQueryArrowStreamTransportError,
+    ),
+
     #[cfg(all(feature = "src_trino", feature = "dst_arrow"))]
     #[error(transparent)]
     TrinoArrowTransportError(#[from] crate::transports::TrinoArrowTransportError),
+
+    #[cfg(all(feature = "src_trino", feature = "dst_arrow"))]
+    #[error(transparent)]
+    TrinoArrowStreamTransportError(#[from] crate::transports::TrinoArrowStreamTransportError),
 
     #[cfg(feature = "src_clickhouse")]
     #[error(transparent)]
@@ -129,6 +161,12 @@ pub enum ConnectorXOutError {
     #[cfg(all(feature = "src_clickhouse", feature = "dst_arrow"))]
     #[error(transparent)]
     ClickHouseArrowTransportError(#[from] crate::transports::ClickHouseArrowTransportError),
+
+    #[cfg(all(feature = "src_clickhouse", feature = "dst_arrow"))]
+    #[error(transparent)]
+    ClickHouseArrowStreamTransportError(
+        #[from] crate::transports::ClickHouseArrowStreamTransportError,
+    ),
 
     /// Any other errors that are too trivial to be put here explicitly.
     #[error(transparent)]
