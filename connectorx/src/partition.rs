@@ -9,7 +9,7 @@ use crate::sources::clickhouse::{ClickHouseSource, ClickHouseSourceError};
 #[cfg(feature = "src_mssql")]
 use crate::sources::mssql::{mssql_config, FloatN, IntN, MsSQLTypeSystem};
 #[cfg(feature = "src_mysql")]
-use crate::sources::mysql::{MySQLSourceError, MySQLTypeSystem};
+use crate::sources::mysql::{build_opts, MySQLTypeSystem};
 #[cfg(feature = "src_oracle")]
 use crate::sources::oracle::{OracleDialect, OracleSource};
 #[cfg(feature = "src_postgres")]
@@ -24,7 +24,7 @@ use fehler::{throw, throws};
 #[cfg(feature = "src_bigquery")]
 use gcp_bigquery_client;
 #[cfg(feature = "src_mysql")]
-use r2d2_mysql::mysql::{prelude::Queryable, Opts, Pool, Row};
+use r2d2_mysql::mysql::{prelude::Queryable, Pool, Row};
 #[cfg(feature = "src_sqlite")]
 use rusqlite::{types::Type, Connection};
 #[cfg(feature = "src_postgres")]
@@ -275,7 +275,7 @@ fn sqlite_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) 
 #[cfg(feature = "src_mysql")]
 #[throws(ConnectorXOutError)]
 fn mysql_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
-    let pool = Pool::new(Opts::from_url(conn.as_str()).map_err(MySQLSourceError::MySQLUrlError)?)?;
+    let pool = Pool::new(build_opts(conn.as_str())?)?;
     let mut conn = pool.get_conn()?;
     let range_query = get_partition_range_query(query, col, &MySqlDialect {})?;
     let row: Row = conn
