@@ -305,10 +305,10 @@ BibTeX entry:
 		</tr>
 		<tr>
             <td align="center">
-                <a href="https://github.com/Jordan-M-Young">
-                    <img src="https://avatars.githubusercontent.com/u/54070169?v=4" width="66;" alt="Jordan-M-Young"/>
+                <a href="https://github.com/domnikl">
+                    <img src="https://avatars.githubusercontent.com/u/603116?v=4" width="66;" alt="domnikl"/>
                     <br />
-                    <sub><b>Jordan M. Young</b></sub>
+                    <sub><b>Dominik Liebler</b></sub>
                 </a>
             </td>
             <td align="center">
@@ -319,10 +319,10 @@ BibTeX entry:
                 </a>
             </td>
             <td align="center">
-                <a href="https://github.com/domnikl">
-                    <img src="https://avatars.githubusercontent.com/u/603116?v=4" width="66;" alt="domnikl"/>
+                <a href="https://github.com/Jordan-M-Young">
+                    <img src="https://avatars.githubusercontent.com/u/54070169?v=4" width="66;" alt="Jordan-M-Young"/>
                     <br />
-                    <sub><b>Dominik Liebler</b></sub>
+                    <sub><b>Jordan M. Young</b></sub>
                 </a>
             </td>
             <td align="center">
