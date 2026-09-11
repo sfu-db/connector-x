@@ -26,7 +26,12 @@ services:
       - connectorx-network
 
   mysql:
-    image: ghcr.io/wangxiaoying/mysql:latest
+    image: mysql:8.0.25
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --skip-character-set-client-handshake
+      - --init-connect=SET NAMES utf8mb4
     environment:
       MYSQL_DATABASE: mysql
       MYSQL_ROOT_PASSWORD: mysql

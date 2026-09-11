@@ -186,10 +186,16 @@ def mysql_container() -> Generator[Optional[Any], None, None]:
         raise FileNotFoundError(f"MySQL init script not found: {init_script}")
 
     mysql_container = MySqlContainer(
-        image="ghcr.io/wangxiaoying/mysql:latest",
+        image="mysql:8.0.25",
         username="root",
         password="mysql",
         dbname="mysql",
+        command=[
+            "--character-set-server=utf8mb4",
+            "--collation-server=utf8mb4_unicode_ci",
+            "--skip-character-set-client-handshake",
+            "--init-connect=SET NAMES utf8mb4",
+        ],
     ).with_volume_mapping(str(init_script), "/docker-entrypoint-initdb.d/mysql.sql", mode="ro")
 
     with mysql_container as mysql:
