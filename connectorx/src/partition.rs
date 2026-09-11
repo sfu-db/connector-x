@@ -84,13 +84,60 @@ pub fn partition(part: &PartitionQuery, source_conn: &SourceConn) -> OutResult<V
         )),
     };
 
-    let partition_size = (max - min + 1) / num;
+    // Guard against division by zero (num must be > 0)
+    if num == 0 {
+        throw!(anyhow!("partition count (num) must be greater than zero"));
+    }
+
+    // Guard against empty or inverted range (max < min).
+    // When max < min, the range is empty or invalid; return a single empty query.
+    if max < min {
+        // Return one partition spanning the invalid range so callers receive a result
+        // rather than panicking or looping indefinitely.
+        let lower = min;
+        let upper = max.saturating_add(1);
+        let partition_query = get_part_query(source_conn, &part.query, &part.column, lower, upper)?;
+        queries.push(partition_query);
+        return Ok(queries);
+    }
+
+    // Use checked arithmetic to avoid overflow when computing partition boundaries.
+    let range_len = max.checked_sub(min).and_then(|r| r.checked_add(1));
+    let partition_size = match range_len {
+        Some(len) => len / num,
+        None => {
+            // Overflow occurred in (max - min + 1); treat range as zero to avoid bad partitions.
+            throw!(anyhow!(
+                "partition range overflow: min={}, max={} is too large",
+                min,
+                max
+            ));
+        }
+    };
+
+    // partition_size == 0 means the range is smaller than the number of partitions.
+    // In this case we still create num partitions, but some will be empty.
+    let partition_size = partition_size.max(1);
 
     for i in 0..num {
-        let lower = min + i * partition_size;
-        let upper = match i == num - 1 {
-            true => max + 1,
-            false => min + (i + 1) * partition_size,
+        let lower = match min.checked_add((i as i64).saturating_mul(partition_size)) {
+            Some(l) => l,
+            None => {
+                // Overflow computing lower bound; clamp to min.
+                min
+            }
+        };
+        let upper = if i as i64 == num - 1 {
+            // Last partition goes up to and including max.
+            match max.checked_add(1) {
+                Some(u) => u,
+                None => max, // Saturating case; max is i64::MAX, last partition upper stays at max.
+            }
+        } else {
+            match min.checked_add(((i + 1) as i64).saturating_mul(partition_size)) {
+                Some(u) => u,
+                None => max, // Clamp to max on overflow.
+            }
         };
         let partition_query = get_part_query(source_conn, &part.query, &part.column, lower, upper)?;
         queries.push(partition_query);
