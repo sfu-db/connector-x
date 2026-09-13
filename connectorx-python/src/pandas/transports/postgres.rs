@@ -64,6 +64,7 @@ macro_rules! impl_postgres_transport {
                 { JSONB[Value]                                  => String[String]                         | conversion none }
                 { Inet[IpInet]                                  => String[String]                         | conversion option }
                 { Range[&'r str]                                => Str[&'r str]                           | conversion none }
+                { TsVector[&'r str]                             => Str[&'r str]                           | conversion none }
                 { Time[NaiveTime]                               => String[String]                         | conversion option }
                 { ByteA[Vec<u8>]                                => Bytes[Vec<u8>]                         | conversion auto }
                 { Enum[&'r str]                                 => Str[&'r str]                           | conversion none }
