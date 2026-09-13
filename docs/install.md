@@ -31,6 +31,12 @@ the application's OpenSSL environment or host FIPS settings. This is an
 import-compatibility fix, **not a claim of FIPS-compliant or certified
 cryptographic operation**.
 
+These Linux wheels retain the manylinux Kerberos plugin directories
+(`/usr/lib64/krb5/plugins` and `/usr/lib64/gss`), rather than looking under
+the build-only prefix. Existing `plugin_base_dir` overrides and relative
+plugin registrations remain supported. Plugins are not bundled; applications
+using them must still supply compatible plugins and their dependencies.
+
 To check a candidate Python 3.12 Linux x86_64 wheel on a machine with Bash
 and Docker's Linux engine:
 

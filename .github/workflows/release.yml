@@ -80,6 +80,12 @@ jobs:
           LD_LIBRARY_PATH: /opt/connectorx-krb5/lib
           BINDGEN_EXTRA_CLANG_ARGS: "-I/opt/connectorx-krb5/include"
 
+      - name: Check packaged Kerberos plugin discovery
+        run: |
+          python -m venv /tmp/connectorx-plugin-test
+          /tmp/connectorx-plugin-test/bin/python -m pip install --no-index --no-deps connectorx-python/target/wheels/*.whl
+          /tmp/connectorx-plugin-test/bin/python scripts/check-wheel-plugins.py
+
       - uses: actions/upload-artifact@v7
         with:
           name: "linux-${{matrix.platform.arch}}-${{ matrix.python-version[1] }}"

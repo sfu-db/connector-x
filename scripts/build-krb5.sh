@@ -6,6 +6,9 @@ set -euo pipefail
 version=1.22.2
 sha256=3243ffbc8ea4d4ac22ddc7dd2a1dc54c57874c40648b60ff97009763554eaf13
 prefix=/opt/connectorx-krb5
+runtime_libdir=/usr/lib64
+# Wheel repair must resolve our rebuilt libraries, not the system Kerberos.
+link_paths=(SHLIB_RDIRS="$prefix/lib" PROG_RPATH="$prefix/lib")
 build_dir=$(mktemp -d)
 trap 'rm -rf "$build_dir"' EXIT
 
@@ -18,18 +21,22 @@ cd "$build_dir/krb5-${version}/src"
 
 CPPFLAGS=-I/usr/include/openssl3 \
 LDFLAGS=-L/usr/lib64/openssl3 \
-    ./configure --prefix="$prefix" --sysconfdir=/etc \
+    ./configure --prefix="$prefix" --libdir="$runtime_libdir" --sysconfdir=/etc \
     --localstatedir=/var --runstatedir=/run --with-crypto-impl=openssl
-make -j"$(nproc)"
-make -C lib/crypto check
-make runenv.py
-if ! make -C tests/gssapi check; then
+make "${link_paths[@]}" -j"$(nproc)"
+make "${link_paths[@]}" -C lib/crypto check
+make "${link_paths[@]}" runenv.py
+if ! make "${link_paths[@]}" -C tests/gssapi check; then
     cat tests/gssapi/testlog >&2
     find tests/gssapi/testdir -maxdepth 1 -name '*.log' -exec cat {} \; >&2
     ldd kdc/krb5kdc >&2
     exit 1
 fi
-make install
+# Preserve system plugin paths at runtime, but install only into the build prefix.
+make "${link_paths[@]}" install DESTDIR="$build_dir/stage"
+mkdir -p "$prefix/lib"
+cp -a "$build_dir/stage$prefix/." "$prefix/"
+cp -a "$build_dir/stage$runtime_libdir/." "$prefix/lib/"
 install -D -m 644 ../NOTICE "$prefix/share/licenses/MIT-Kerberos-NOTICE"
 install -m 644 /usr/share/licenses/openssl3-libs/LICENSE.txt \
     "$prefix/share/licenses/OpenSSL-LICENSE.txt"
