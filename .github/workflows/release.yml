@@ -1,6 +1,7 @@
 name: release
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - prerelease
@@ -78,6 +79,7 @@ jobs:
           path: connectorx-python/target/wheels/*.whl
 
   win-and-mac:
+    if: github.event_name == 'push'
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -131,6 +133,7 @@ jobs:
           path: connectorx-python/target/wheels/*.whl
 
   apple-arm:
+    if: github.event_name == 'push'
     runs-on: macos-latest
     strategy:
       matrix:
@@ -180,6 +183,7 @@ jobs:
           path: connectorx-python/target/wheels/*.whl
 
   verify:
+    if: github.event_name == 'push'
     runs-on: ${{ matrix.os }}
     needs: [win-and-mac, linux]
     strategy:
@@ -217,6 +221,7 @@ jobs:
           python -c "import connectorx"
 
   upload:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     needs: [verify]
     steps:
