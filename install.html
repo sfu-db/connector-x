@@ -427,6 +427,7 @@
                 <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">Installation</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pip">Pip</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#databricks-containers">Databricks containers</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#build-from-source-code">Build from source code</a></li>
 </ul>
 </li>
@@ -451,6 +452,40 @@
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>connectorx
 </pre></div>
 </div>
+</section>
+<section id="databricks-containers">
+<h3>Databricks containers<a class="headerlink" href="#databricks-containers" title="Link to this heading">#</a></h3>
+<p>On <code class="docutils literal notranslate"><span class="pre">databricksruntime/minimal:16.4-LTS</span></code>, some Linux wheels abort during
+<code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">connectorx</span></code> with:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>crypto/fips/fips.c:154: OpenSSL internal error: FATAL FIPS SELFTEST FAILURE
+</pre></div>
+</div>
+<p>This was reproduced with the Linux x86_64 wheels for 0.4.3 and 0.4.6a1,
+using Python 3.12.11. Those wheels bundle a distribution-specific OpenSSL
+1.1 library through Kerberos/GSSAPI. Its initializer aborts even with the
+container’s inherited <code class="docutils literal notranslate"><span class="pre">OPENSSL_FORCE_FIPS_MODE=0</span></code>. This happens before a
+database connection; changing PostgreSQL connection options will not fix it.</p>
+<p>The Linux release build now builds MIT Kerberos against OpenSSL 3 before
+packaging the wheel. GSSAPI remains enabled, and ConnectorX does not change
+the application’s OpenSSL environment or host FIPS settings. This is an
+import-compatibility fix, <strong>not a claim of FIPS-compliant or certified
+cryptographic operation</strong>.</p>
+<p>These Linux wheels retain the manylinux Kerberos plugin directories
+(<code class="docutils literal notranslate"><span class="pre">/usr/lib64/krb5/plugins</span></code> and <code class="docutils literal notranslate"><span class="pre">/usr/lib64/gss</span></code>), rather than looking under
+the build-only prefix. Existing <code class="docutils literal notranslate"><span class="pre">plugin_base_dir</span></code> overrides and relative
+plugin registrations remain supported. Plugins are not bundled; applications
+using them must still supply compatible plugins and their dependencies.</p>
+<p>To check a candidate Python 3.12 Linux x86_64 wheel on a machine with Bash
+and Docker’s Linux engine:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bash<span class="w"> </span>scripts/check-databricks-wheel.sh<span class="w"> </span>path/to/connectorx-wheel.whl
+</pre></div>
+</div>
+<p>The check uses the image digest from the original report, installs the supplied
+wheel without querying PyPI, and checks repeated imports and both import orders
+with Python’s <code class="docutils literal notranslate"><span class="pre">ssl</span></code> module in fresh processes. It leaves inherited crypto
+settings unchanged. The <code class="docutils literal notranslate"><span class="pre">release</span></code> workflow can also be run manually to build
+and check a candidate Linux x86_64/Python 3.12 wheel without publishing it.
+Do not assume an older published wheel contains this build change.</p>
 </section>
 <section id="build-from-source-code">
 <h3>Build from source code<a class="headerlink" href="#build-from-source-code" title="Link to this heading">#</a></h3>
@@ -564,6 +599,7 @@ rustup<span class="w"> </span>override<span class="w"> </span><span class="nb">s
     <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">Installation</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pip">Pip</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#databricks-containers">Databricks containers</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#build-from-source-code">Build from source code</a></li>
 </ul>
 </li>
