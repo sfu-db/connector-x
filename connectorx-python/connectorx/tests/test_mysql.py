@@ -692,9 +692,11 @@ def test_mysql_tls_disabled(mysql_url_tls: str) -> None:
     assert_frame_equal(df, _expected_test_table(), check_names=True)
 
 
-def test_mysql_tls_verify_ca_rejects_untrusted_ca(mysql_url_tls: str) -> None:
-    with pytest.raises(RuntimeError):
+def test_mysql_tls_verify_ca_rejects_untrusted_ca(
+    mysql_url_tls: str, mysql_untrusted_ca: str
+) -> None:
+    with pytest.raises(RuntimeError, match="certificate"):
         read_sql(
-            f"{mysql_url_tls}?ssl-mode=VERIFY_CA&ssl-ca=fake.cert",
+            f"{mysql_url_tls}?ssl-mode=VERIFY_CA&ssl-ca={mysql_untrusted_ca}",
             "SELECT * FROM test_table",
         )

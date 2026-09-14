@@ -6,6 +6,7 @@ from pathlib import Path
 import platform
 import sqlite3
 import socket
+import subprocess
 import time
 from typing import Generator, Any, Optional
 import urllib.error
@@ -258,6 +259,24 @@ def mysql_tls(
     ca_path = tmp_path_factory.mktemp("mysql-tls") / "ca.pem"
     ca_path.write_bytes(result.output)
     return os.environ["MYSQL_URL"], str(ca_path)
+
+
+@pytest.fixture(scope="session")
+def mysql_untrusted_ca(tmp_path_factory: pytest.TempPathFactory) -> str:
+    """
+    Fixture that returns the path of a self-signed CA certificate that did not
+    sign the MySQL server certificate. Requires the openssl CLI.
+    """
+    ca_path = tmp_path_factory.mktemp("mysql-tls") / "untrusted-ca.pem"
+    subprocess.run(
+        [
+            "openssl", "req", "-x509", "-newkey", "rsa:2048", "-nodes",
+            "-subj", "/CN=untrusted-ca", "-keyout", os.devnull, "-out", str(ca_path),
+        ],
+        check=True,
+        capture_output=True,
+    )
+    return str(ca_path)
 
 
 @pytest.fixture(scope="module")
