@@ -1,0 +1,8 @@
+FROM ghcr.io/astral-sh/uv:0.8.14@sha256:f3660c56d5b08d6c516360981bedc439f499b9bf37f46a216018da3777a74011 AS uv
+FROM databricksruntime/minimal:16.4-LTS@sha256:d1092be719617a6a89cc343fc75ef69936944737f3315315a56ad09e908cfe22
+COPY --from=uv /uv /usr/local/bin/uv
+RUN uv python install 3.12.11 && uv venv --python 3.12.11 /opt/venv
+COPY *.whl /wheels/
+RUN uv pip install --python /opt/venv/bin/python --no-index /wheels/*.whl
+COPY check-wheel-import.py /check-wheel-import.py
+CMD ["sh", "-c", "/opt/venv/bin/python /check-wheel-import.py /wheels/*.whl --databricks"]

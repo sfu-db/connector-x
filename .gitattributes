@@ -1,0 +1,2 @@
+scripts/build-krb5.sh text eol=lf
+scripts/check-databricks-wheel.sh text eol=lf
