@@ -9,7 +9,7 @@ use crate::sources::clickhouse::{ClickHouseSource, ClickHouseSourceError};
 #[cfg(feature = "src_mssql")]
 use crate::sources::mssql::{mssql_config, FloatN, IntN, MsSQLTypeSystem};
 #[cfg(feature = "src_mysql")]
-use crate::sources::mysql::{MySQLSourceError, MySQLTypeSystem};
+use crate::sources::mysql::{build_opts, MySQLTypeSystem};
 #[cfg(feature = "src_oracle")]
 use crate::sources::oracle::{OracleDialect, OracleSource};
 #[cfg(feature = "src_postgres")]
@@ -24,7 +24,7 @@ use fehler::{throw, throws};
 #[cfg(feature = "src_bigquery")]
 use gcp_bigquery_client;
 #[cfg(feature = "src_mysql")]
-use r2d2_mysql::mysql::{prelude::Queryable, Opts, Pool, Row};
+use r2d2_mysql::mysql::{prelude::Queryable, Pool, Row};
 #[cfg(feature = "src_sqlite")]
 use rusqlite::{types::Type, Connection};
 #[cfg(feature = "src_postgres")]
@@ -275,15 +275,18 @@ fn sqlite_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) 
 #[cfg(feature = "src_mysql")]
 #[throws(ConnectorXOutError)]
 fn mysql_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
-    let pool = Pool::new(Opts::from_url(conn.as_str()).map_err(MySQLSourceError::MySQLUrlError)?)?;
+    let pool = Pool::new(build_opts(conn.as_str())?)?;
     let mut conn = pool.get_conn()?;
     let range_query = get_partition_range_query(query, col, &MySqlDialect {})?;
     let row: Row = conn
         .query_first(range_query)?
         .ok_or_else(|| anyhow!("mysql range: no row returns"))?;
 
-    let col_type =
-        MySQLTypeSystem::from((&row.columns()[0].column_type(), &row.columns()[0].flags()));
+    let col_type = MySQLTypeSystem::from((
+        &row.columns()[0].column_type(),
+        &row.columns()[0].flags(),
+        row.columns()[0].character_set(),
+    ));
 
     let (min_v, max_v) = match col_type {
         MySQLTypeSystem::Tiny(_) => {
@@ -512,31 +515,12 @@ fn bigquery_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64
 #[cfg(feature = "src_trino")]
 #[throws(ConnectorXOutError)]
 fn trino_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
-    use prusto::{auth::Auth, ClientBuilder};
-
-    use crate::sources::trino::{TrinoDialect, TrinoPartitionQueryResult};
+    use crate::sources::trino::{build_client_from_url, TrinoDialect, TrinoPartitionQueryResult};
 
     let rt = Runtime::new().expect("Failed to create runtime");
 
-    let username = match conn.username() {
-        "" => "connectorx",
-        username => username,
-    };
-
-    let builder = ClientBuilder::new(username, conn.host().unwrap().to_owned())
-        .port(conn.port().unwrap_or(8080))
-        .ssl(prusto::ssl::Ssl { root_cert: None })
-        .secure(conn.scheme() == "trino+https")
-        .catalog(conn.path_segments().unwrap().last().unwrap_or("hive"));
-
-    let builder = match conn.password() {
-        None => builder,
-        Some(password) => builder.auth(Auth::Basic(username.to_owned(), Some(password.to_owned()))),
-    };
-
-    let client = builder
-        .build()
-        .map_err(|e| anyhow!("Failed to build client: {}", e))?;
+    let client =
+        build_client_from_url(conn).map_err(|e| anyhow!("Failed to build Trino client: {}", e))?;
 
     let range_query = get_partition_range_query(query, col, &TrinoDialect {})?;
     let query_result = rt.block_on(client.get_all::<TrinoPartitionQueryResult>(range_query));

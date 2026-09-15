@@ -8,7 +8,7 @@ use crate::{
     data_order::DataOrder,
     errors::ConnectorXError,
     sources::{PartitionParser, Produce, Source, SourcePartition},
-    sql::{count_query, limit1_query, CXQuery},
+    sql::{count_query, limit0_query, CXQuery},
 };
 use anyhow::anyhow;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
@@ -113,7 +113,7 @@ where
         assert!(!self.queries.is_empty());
         let job = self.client.job();
         for (_, query) in self.queries.iter().enumerate() {
-            let l1query = limit1_query(query, &BigQueryDialect {})?;
+            let l1query = limit0_query(query, &BigQueryDialect {})?;
             let rs = self.rt.block_on(job.query(
                 self.project_id.as_str(),
                 QueryRequest::new(l1query.as_str()),

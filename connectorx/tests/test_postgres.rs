@@ -23,15 +23,30 @@ use connectorx::{
     transports::PostgresArrowTransport,
 };
 use postgres::NoTls;
+use std::convert::TryFrom;
 use url::Url;
 
 mod test_db;
+
+fn postgres_url_or_skip() -> Option<String> {
+    match std::panic::catch_unwind(test_db::postgres_url) {
+        Ok(url) => Some(url),
+        Err(_) => {
+            eprintln!(
+                "Skipping postgres test: unable to initialize postgres test environment. Ensure Docker is running or set POSTGRES_URL."
+            );
+            None
+        }
+    }
+}
 
 #[test]
 fn load_and_parse() {
     let _ = env_logger::builder().is_test(true).try_init();
 
-    let dburl = test_db::postgres_url();
+    let Some(dburl) = postgres_url_or_skip() else {
+        return;
+    };
     #[derive(Debug, PartialEq)]
     struct Row(i32, Option<i32>, Option<String>, Option<f64>, Option<bool>);
 
@@ -84,7 +99,9 @@ fn load_and_parse() {
 fn load_and_parse_csv() {
     let _ = env_logger::builder().is_test(true).try_init();
 
-    let dburl = test_db::postgres_url();
+    let Some(dburl) = postgres_url_or_skip() else {
+        return;
+    };
     #[derive(Debug, PartialEq)]
     struct Row(i32, Option<i32>, Option<String>, Option<f64>, Option<bool>);
 
@@ -139,7 +156,9 @@ fn load_and_parse_csv() {
 fn test_postgres_binary() {
     let _ = env_logger::builder().is_test(true).try_init();
 
-    let dburl = test_db::postgres_url();
+    let Some(dburl) = postgres_url_or_skip() else {
+        return;
+    };
 
     let queries = [
         CXQuery::naked("select * from test_table where test_int < 2"),
@@ -166,7 +185,9 @@ fn test_postgres_binary() {
 fn test_postgres_csv() {
     let _ = env_logger::builder().is_test(true).try_init();
 
-    let dburl = test_db::postgres_url();
+    let Some(dburl) = postgres_url_or_skip() else {
+        return;
+    };
 
     let queries = [
         CXQuery::naked("select * from test_table where test_int < 2"),
@@ -190,7 +211,9 @@ fn test_postgres_csv() {
 fn test_postgres_cursor() {
     let _ = env_logger::builder().is_test(true).try_init();
 
-    let dburl = test_db::postgres_url();
+    let Some(dburl) = postgres_url_or_skip() else {
+        return;
+    };
 
     let queries = [
         CXQuery::naked("select * from test_table where test_int < 2"),
@@ -214,7 +237,9 @@ fn test_postgres_cursor() {
 fn test_postgres_simple() {
     let _ = env_logger::builder().is_test(true).try_init();
 
-    let dburl = test_db::postgres_url();
+    let Some(dburl) = postgres_url_or_skip() else {
+        return;
+    };
 
     let queries = [
         CXQuery::naked("select * from test_table where test_int < 2"),
@@ -322,7 +347,9 @@ pub fn verify_arrow_results(result: Vec<RecordBatch>) {
 fn test_postgres_agg() {
     let _ = env_logger::builder().is_test(true).try_init();
 
-    let dburl = test_db::postgres_url();
+    let Some(dburl) = postgres_url_or_skip() else {
+        return;
+    };
 
     let queries = [CXQuery::naked(
         "SELECT test_bool, SUM(test_float) FROM test_table GROUP BY test_bool",
@@ -368,7 +395,9 @@ fn test_postgres_agg() {
 macro_rules! test_types {
     ($protocol: expr, $sql: expr, $P: ty, $verify: expr) => {
         let _ = env_logger::builder().is_test(true).try_init();
-        let dburl = test_db::postgres_url();
+        let Some(dburl) = postgres_url_or_skip() else {
+            return;
+        };
         let queries = [CXQuery::naked($sql)];
         let url = Url::parse(dburl.as_str()).unwrap();
         let (config, _tls) = rewrite_tls_args(&url).unwrap();
@@ -399,6 +428,116 @@ fn test_types_binary_postgres() {
 }
 
 #[test]
+fn test_range_types_binary_postgres() {
+    test_types!(
+        "binary",
+        "select test_int4range, test_int8range, test_numrange, test_tsrange, test_tstzrange, test_daterange from range_types ORDER BY id",
+        BinaryProtocol,
+        verify_range_type_results
+    );
+}
+
+pub fn verify_range_type_results(result: Vec<RecordBatch>, _protocol: &str) {
+    assert!(result.len() == 1);
+    let rb = &result[0];
+    assert!(rb.columns().len() == 6);
+    let as_vec = |idx: usize| {
+        rb.column(idx)
+            .as_any()
+            .downcast_ref::<StringArray>()
+            .unwrap()
+            .iter()
+            .map(|v| v.map(str::to_string))
+            .collect::<Vec<Option<String>>>()
+    };
+
+    // test_int4range (discrete: normalizes bounds, e.g. [1,10] -> [1,11))
+    assert_eq!(
+        as_vec(0),
+        vec![
+            Some("[1,11)"),
+            Some("[-5,5)"),
+            None,
+            Some("empty"),
+            Some("(,)"),
+        ]
+        .into_iter()
+        .map(|v| v.map(str::to_string))
+        .collect::<Vec<Option<String>>>()
+    );
+
+    // test_int8range (discrete: normalizes bounds, e.g. [100,1000] -> [100,1001))
+    assert_eq!(
+        as_vec(1),
+        vec![
+            Some("[100,1001)"),
+            Some("[-9223372036854775808,0)"),
+            None,
+            Some("empty"),
+            Some("(,)"),
+        ]
+        .into_iter()
+        .map(|v| v.map(str::to_string))
+        .collect::<Vec<Option<String>>>()
+    );
+
+    // test_numrange (continuous: preserves original bounds)
+    assert_eq!(
+        as_vec(2),
+        vec![
+            Some("[1.5,10.0)"),
+            Some("(-Infinity,100]"),
+            None,
+            Some("empty"),
+            Some("(,)"),
+        ]
+        .into_iter()
+        .map(|v| v.map(str::to_string))
+        .collect::<Vec<Option<String>>>()
+    );
+
+    // test_tsrange (continuous: preserves bounds, quotes values)
+    assert_eq!(
+        as_vec(3),
+        vec![
+            Some("[\"2020-01-01 00:00:00\",\"2020-12-31 23:59:59\")"),
+            Some("[\"2010-01-01 00:00:00\",\"2015-06-15 12:00:00\")"),
+            None,
+            Some("empty"),
+            Some("(,)"),
+        ]
+        .into_iter()
+        .map(|v| v.map(str::to_string))
+        .collect::<Vec<Option<String>>>()
+    );
+
+    // test_tstzrange (timezone-dependent, verify non-null structure)
+    let tstz_col = rb.column(4).as_any().downcast_ref::<StringArray>().unwrap();
+    assert!(tstz_col.is_null(2));
+    assert!(!tstz_col.is_null(0));
+    assert!(!tstz_col.is_null(1));
+    assert!(!tstz_col.is_null(3)); // empty
+    assert!(!tstz_col.is_null(4)); // unbounded
+    assert!(tstz_col.value(3) == "empty");
+    assert!(tstz_col.value(4) == "(,)");
+
+    // test_daterange (discrete: normalizes bounds)
+    assert_eq!(
+        as_vec(5),
+        vec![
+            Some("[2020-01-01,2021-01-01)"),
+            Some("[2010-01-01,2015-07-01)"),
+            None,
+            Some("empty"),
+            Some("(,)"),
+        ]
+        .into_iter()
+        .map(|v| v.map(str::to_string))
+        .collect::<Vec<Option<String>>>()
+    );
+}
+
+#[test]
 fn test_pgvector_types_binary_postgres() {
     test_types!(
         "binary",
@@ -419,6 +558,16 @@ fn test_types_csv_postgres() {
 }
 
 #[test]
+fn test_range_types_csv_postgres() {
+    test_types!(
+        "csv",
+        "select test_int4range, test_int8range, test_numrange, test_tsrange, test_tstzrange, test_daterange from range_types ORDER BY id",
+        CSVProtocol,
+        verify_range_type_results
+    );
+}
+
+#[test]
 fn test_types_cursor_postgres() {
     test_types!(
         "cursor",
@@ -429,12 +578,32 @@ fn test_types_cursor_postgres() {
 }
 
 #[test]
+fn test_range_types_cursor_postgres() {
+    test_types!(
+        "cursor",
+        "select test_int4range, test_int8range, test_numrange, test_tsrange, test_tstzrange, test_daterange from range_types ORDER BY id",
+        CursorProtocol,
+        verify_range_type_results
+    );
+}
+
+#[test]
 fn test_types_simple_postgres() {
     test_types!(
         "simple",
         "select test_bool,test_date,test_timestamp,test_timestamptz,test_int2,test_int4,test_int8,test_float4,test_float8,test_numeric,test_bpchar,test_char,test_varchar,test_uuid,test_time,test_bytea,test_f4array,test_f8array,test_narray,test_boolarray,test_i2array,test_i4array,test_i8array,test_citext,test_ltree,test_lquery,test_ltxtquery,test_varchararray,test_textarray,test_name,test_inet from test_types",
         SimpleProtocol,
         verify_arrow_type_results
+    );
+}
+
+#[test]
+fn test_range_types_simple_postgres() {
+    test_types!(
+        "simple",
+        "select test_int4range, test_int8range, test_numrange, test_tsrange, test_tstzrange, test_daterange from range_types ORDER BY id",
+        SimpleProtocol,
+        verify_range_type_results
     );
 }
 
@@ -1159,7 +1328,9 @@ fn verfiy_pgvector_results(result: Vec<RecordBatch>, _protocol: &str) {
 fn test_postgres_pre_execution_queries() {
     let _ = env_logger::builder().is_test(true).try_init();
 
-    let dburl = test_db::postgres_url();
+    let Some(dburl) = postgres_url_or_skip() else {
+        return;
+    };
 
     let queries = [
         CXQuery::naked("SELECT CAST(name AS TEXT) AS name, CAST(setting AS INTEGER) AS setting FROM pg_settings WHERE name IN ('statement_timeout', 'idle_in_transaction_session_timeout') ORDER BY name"),
@@ -1201,7 +1372,9 @@ fn test_postgres_pre_execution_queries() {
 fn test_postgres_partitioned_pre_execution_queries() {
     let _ = env_logger::builder().is_test(true).try_init();
 
-    let dburl = test_db::postgres_url();
+    let Some(dburl) = postgres_url_or_skip() else {
+        return;
+    };
 
     let queries = [
         "SELECT CAST(name AS TEXT) AS name, CAST(setting AS INTEGER) AS setting FROM pg_settings WHERE name = 'statement_timeout'", 
@@ -1270,4 +1443,62 @@ fn build_decimal_array(vals: Vec<Option<i128>>) -> Decimal128Array {
     }
 
     builder.finish()
+}
+
+fn query_single_string(url: &str, query: &str) -> String {
+    let source_conn = SourceConn::try_from(url).unwrap();
+    let destination = get_arrow(&source_conn, None, &[CXQuery::naked(query)], None).unwrap();
+    let batches = destination.arrow().unwrap();
+    batches[0]
+        .column(0)
+        .as_any()
+        .downcast_ref::<StringArray>()
+        .unwrap()
+        .value(0)
+        .to_string()
+}
+
+/// A value containing a space must survive the URL rewriting: serializing the query
+/// as `application/x-www-form-urlencoded` would turn the space into a literal `+`.
+#[test]
+fn url_param_with_space_reaches_the_server() {
+    let _ = env_logger::builder().is_test(true).try_init();
+
+    let Some(dburl) = postgres_url_or_skip() else {
+        return;
+    };
+
+    let url = format!("{dburl}?application_name=cx%20e2e&cxprotocol=binary");
+    let application_name = query_single_string(
+        &url,
+        "SELECT application_name FROM pg_stat_activity WHERE pid = pg_backend_pid()",
+    );
+
+    assert_eq!(application_name, "cx e2e");
+}
+
+/// Session settings are passed as `options=-c name=value`, so the space between the
+/// `-c` flag and its argument has to reach the server intact.
+#[test]
+fn url_options_param_is_applied_by_the_server() {
+    let _ = env_logger::builder().is_test(true).try_init();
+
+    let Some(dburl) = postgres_url_or_skip() else {
+        return;
+    };
+
+    let url = format!("{dburl}?options=-c%20statement_timeout%3D1234ms");
+    let statement_timeout =
+        query_single_string(&url, "SELECT current_setting('statement_timeout')");
+
+    assert_eq!(statement_timeout, "1234ms");
+}
+
+/// An option upstream rust-postgres does not know about is a configuration error,
+/// not a reason to panic.
+#[test]
+fn unknown_url_param_is_reported_as_an_error() {
+    let url = Url::parse("postgresql://user:pass@localhost:5432/db?not_a_pg_option=1").unwrap();
+
+    assert!(rewrite_tls_args(&url).is_err());
 }

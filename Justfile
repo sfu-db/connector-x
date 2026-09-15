@@ -37,6 +37,9 @@ cleanup:
 bootstrap-python:
     cd connectorx-python && poetry install
 
+bootstrap-python-release:
+    cd connectorx-python && poetry install --only main --no-root
+
 setup-java:
     cd $ACCIO_PATH/rewriter && mvn package -Dmaven.test.skip=true
     cp -f $ACCIO_PATH/rewriter/target/accio-rewriter-1.0-SNAPSHOT-jar-with-dependencies.jar connectorx-python/connectorx/dependencies/federated-rewriter.jar

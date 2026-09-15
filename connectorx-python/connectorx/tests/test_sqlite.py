@@ -309,14 +309,14 @@ def test_empty_result(sqlite_db: str) -> None:
     df = read_sql(sqlite_db, query)
     expected = pd.DataFrame(
         data={
-            "test_int": pd.Series([], dtype="object"),
-            "test_nullint": pd.Series([], dtype="object"),
+            "test_int": pd.Series([], dtype="Int64"),
+            "test_nullint": pd.Series([], dtype="Int64"),
             "test_str": pd.Series([], dtype="object"),
-            "test_float": pd.Series([], dtype="object"),
-            "test_bool": pd.Series([], dtype="object"),
-            "test_date": pd.Series([], dtype="object"),
+            "test_float": pd.Series([], dtype="float64"),
+            "test_bool": pd.Series([], dtype="boolean"),
+            "test_date": pd.Series([], dtype="datetime64[us]"),
             "test_time": pd.Series([], dtype="object"),
-            "test_datetime": pd.Series([], dtype="object"),
+            "test_datetime": pd.Series([], dtype="datetime64[us]"),
         }
     )
     assert_frame_equal(df, expected, check_names=True)
@@ -327,14 +327,14 @@ def test_empty_result_on_partition(sqlite_db: str) -> None:
     df = read_sql(sqlite_db, query, partition_on="test_int", partition_num=3)
     expected = pd.DataFrame(
         data={
-            "test_int": pd.Series([], dtype="object"),
-            "test_nullint": pd.Series([], dtype="object"),
+            "test_int": pd.Series([], dtype="Int64"),
+            "test_nullint": pd.Series([], dtype="Int64"),
             "test_str": pd.Series([], dtype="object"),
-            "test_float": pd.Series([], dtype="object"),
-            "test_bool": pd.Series([], dtype="object"),
-            "test_date": pd.Series([], dtype="object"),
+            "test_float": pd.Series([], dtype="float64"),
+            "test_bool": pd.Series([], dtype="boolean"),
+            "test_date": pd.Series([], dtype="datetime64[us]"),
             "test_time": pd.Series([], dtype="object"),
-            "test_datetime": pd.Series([], dtype="object"),
+            "test_datetime": pd.Series([], dtype="datetime64[us]"),
         }
     )
     assert_frame_equal(df, expected, check_names=True)

@@ -1,10 +1,12 @@
 import pandas as pd
+import pytest
 from pandas.testing import assert_frame_equal
 
 from .. import read_sql, ConnectionUrl
 
-# mysql_url fixture is now defined in conftest.py
-# It uses testcontainers if available, otherwise the MYSQL_URL environment variable
+# mysql_url, mysql_url_tls and mysql_rootcert fixtures are now defined in conftest.py
+# They use testcontainers if available, otherwise the MYSQL_URL / MYSQL_URL_TLS /
+# MYSQL_ROOTCERT environment variables
 
 
 def test_mysql_without_partition(mysql_url: str) -> None:
@@ -336,7 +338,7 @@ def test_mysql_types_binary(mysql_url: str) -> None:
                 dtype="object",
             ),
             "test_mediumtext": pd.Series(
-                [None, b"", b"medium text!!!!"], dtype="object"
+                [None, "", "medium text!!!!"], dtype="object"
             ),
             "test_bit": pd.Series(
                 [b'\x17', b'\x18', None]
@@ -416,7 +418,7 @@ def test_mysql_types_text(mysql_url: str) -> None:
                 dtype="object",
             ),
             "test_mediumtext": pd.Series(
-                [None, b"", b"medium text!!!!"], dtype="object"
+                [None, "", "medium text!!!!"], dtype="object"
             ),
             "test_bit": pd.Series(
                 [b'\x17', b'\x18', None]
@@ -653,3 +655,48 @@ def test_mysql_decimal_pandas_unchanged(mysql_url: str) -> None:
     assert df['test_decimal'][0] == 1.0
     assert df['test_decimal'][1] == 2.0
     assert pd.isna(df['test_decimal'][2])
+
+
+def _expected_test_table() -> pd.DataFrame:
+    return pd.DataFrame(
+        index=range(6),
+        data={
+            "test_int": pd.Series([1, 2, 3, 4, 5, 6], dtype="Int64"),
+            "test_float": pd.Series([1.1, 2.2, 3.3, 4.4, 5.5, 6.6], dtype="float64"),
+            "test_enum": pd.Series(
+                ["odd", "even", "odd", "even", "odd", "even"], dtype="object"
+            ),
+            "test_null": pd.Series([None, None, None, None, None, None], dtype="Int64"),
+        },
+    )
+
+
+def test_mysql_tls_required(mysql_url_tls: str) -> None:
+    df = read_sql(f"{mysql_url_tls}?ssl-mode=REQUIRED", "SELECT * FROM test_table")
+    df.sort_values(by="test_int", inplace=True, ignore_index=True)
+    assert_frame_equal(df, _expected_test_table(), check_names=True)
+
+
+def test_mysql_tls_verify_ca(mysql_url_tls: str, mysql_rootcert: str) -> None:
+    df = read_sql(
+        f"{mysql_url_tls}?ssl-mode=VERIFY_CA&ssl-ca={mysql_rootcert}",
+        "SELECT * FROM test_table",
+    )
+    df.sort_values(by="test_int", inplace=True, ignore_index=True)
+    assert_frame_equal(df, _expected_test_table(), check_names=True)
+
+
+def test_mysql_tls_disabled(mysql_url_tls: str) -> None:
+    df = read_sql(f"{mysql_url_tls}?ssl-mode=DISABLED", "SELECT * FROM test_table")
+    df.sort_values(by="test_int", inplace=True, ignore_index=True)
+    assert_frame_equal(df, _expected_test_table(), check_names=True)
+
+
+def test_mysql_tls_verify_ca_rejects_untrusted_ca(
+    mysql_url_tls: str, mysql_untrusted_ca: str
+) -> None:
+    with pytest.raises(RuntimeError, match="certificate"):
+        read_sql(
+            f"{mysql_url_tls}?ssl-mode=VERIFY_CA&ssl-ca={mysql_untrusted_ca}",
+            "SELECT * FROM test_table",
+        )

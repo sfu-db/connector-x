@@ -47,3 +47,16 @@ INSERT INTO test.test_types (test_boolean, test_int, test_bigint, test_real, tes
 (TRUE, 123, 1000, CAST(123.456 AS REAL), CAST(123.4567890123 AS DOUBLE), 1234567890.12, date('9999-12-31'), time '12:00:00', cast(timestamp '9999-12-31 12:00:00.123456' AS timestamp(6)), 'Sample text', CAST('f4967dbb-33e9-4242-a13a-45b56ce60dba' AS UUID)),
 (FALSE, 321, 2000, CAST(123.456 AS REAL), CAST(123.4567890123 AS DOUBLE), 1234567890.12, date('9999-12-31'), time '12:00:00', cast(timestamp '9999-12-31 12:00:00.123456' AS timestamp(6)), 'Sample text', CAST('1c8b79d0-4508-4974-b728-7651bce4a5a5' AS UUID)),
 (NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+
+DROP TABLE IF EXISTS test.test_complex_types;
+
+CREATE TABLE IF NOT EXISTS test.test_complex_types(
+    test_int INTEGER,
+    test_array ARRAY(VARCHAR),
+    test_map MAP(VARCHAR, VARCHAR),
+    test_row ROW(street VARCHAR, city VARCHAR)
+);
+
+INSERT INTO test.test_complex_types VALUES (1, ARRAY['rust','python'], MAP(ARRAY['team'], ARRAY['data']), ROW('123 Main','SF'));
+INSERT INTO test.test_complex_types VALUES (2, ARRAY['java'], MAP(ARRAY['dept'], ARRAY['eng']), ROW('456 Oak','NYC'));
+INSERT INTO test.test_complex_types VALUES (3, ARRAY['go','rust','scala'], MAP(ARRAY['org','level'], ARRAY['platform','senior']), ROW('789 Pine','LA'));

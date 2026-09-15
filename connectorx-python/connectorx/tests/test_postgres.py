@@ -452,6 +452,14 @@ def test_postgres_types_binary(postgres_url: str) -> None:
     df = read_sql(postgres_url, query)
     verify_data_types(df, "binary")
 
+def test_postgres_range_types(postgres_url: str) -> None:
+    query = (
+        "SELECT test_int4range, test_int8range, test_numrange, test_tsrange, "
+        "test_tstzrange, test_daterange FROM range_types ORDER BY id"
+    )
+    df = read_sql(postgres_url, query)
+    verify_range_types(df)
+
 def test_postgres_types_vec_binary(postgres_url: str) -> None:
     query = "SELECT test_boolarray, test_i2array, test_i4array, test_i8array, test_f4array, test_f8array, test_narray FROM test_types where test_int2 is not NULL and test_int2 <> 32767"
     df = read_sql(postgres_url, query)
@@ -638,6 +646,50 @@ def verify_data_types_vec(df) -> None:
         },
     )
     assert_frame_equal(df, expected, check_names=True)
+
+def verify_range_types(df) -> None:
+    expected = pd.DataFrame(
+        index=range(5),
+        data={
+            "test_int4range": pd.Series(
+                ["[1,11)", "[-5,5)", None, "empty", "(,)"], dtype="object"
+            ),
+            "test_int8range": pd.Series(
+                ["[100,1001)", "[-9223372036854775808,0)", None, "empty", "(,)"],
+                dtype="object",
+            ),
+            "test_numrange": pd.Series(
+                ["[1.5,10.0)", "(-Infinity,100]", None, "empty", "(,)"],
+                dtype="object",
+            ),
+            "test_tsrange": pd.Series(
+                [
+                    "[\"2020-01-01 00:00:00\",\"2020-12-31 23:59:59\")",
+                    "[\"2010-01-01 00:00:00\",\"2015-06-15 12:00:00\")",
+                    None,
+                    "empty",
+                    "(,)",
+                ],
+                dtype="object",
+            ),
+            "test_daterange": pd.Series(
+                ["[2020-01-01,2021-01-01)", "[2010-01-01,2015-07-01)", None, "empty", "(,)"],
+                dtype="object",
+            ),
+        },
+    )
+    assert_frame_equal(
+        df.drop(columns=["test_tstzrange"]),
+        expected,
+        check_names=True,
+    )
+
+    tstz = df["test_tstzrange"]
+    assert tstz.iloc[2] is None
+    assert tstz.iloc[3] == "empty"
+    assert tstz.iloc[4] == "(,)"
+    assert tstz.iloc[0] is not None
+    assert tstz.iloc[1] is not None
 
 def test_postgres_empty_result(postgres_url: str) -> None:
     query = "SELECT * FROM test_table where test_int < -100"
