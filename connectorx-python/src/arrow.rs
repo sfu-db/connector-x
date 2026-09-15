@@ -112,7 +112,7 @@ pub fn get_arrow_rb_iter<'py>(
         queries,
         batch_size,
         pre_execution_queries,
-    );
+    )?;
 
     arrow_iter.prepare();
     let py_rb_iter = PyRecordBatchIterator(unsafe {
