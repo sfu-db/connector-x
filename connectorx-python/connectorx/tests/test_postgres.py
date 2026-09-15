@@ -952,15 +952,13 @@ def test_postgres_tls_arrow_stream(postgres_url_tls: str) -> None:
     assert batches[0].num_columns > 0
 
 
-@pytest.mark.skipif(
-    not os.environ.get("POSTGRES_URL_TLS"),
-    reason="Do not test Postgres TLS unless `POSTGRES_URL_TLS` is set",
-)
-def test_postgres_tls_arrow_stream_bad_host_raises(postgres_url_tls: str) -> None:
-    bad_url = "postgresql://user:pass@127.0.0.1:1?sslmode=require"
-    with pytest.raises(RuntimeError):
-        reader = read_sql(bad_url, "SELECT 1", return_type="arrow_stream")
-        list(reader)
+def test_postgres_arrow_stream_invalid_url_raises() -> None:
+    # An invalid sslmode fails while parsing the connection string, before any
+    # network access, so this exercises the error path of new_record_batch_iter
+    # without a database. Before the fix this surfaced as a PanicException.
+    bad_url = "postgresql://user:pass@127.0.0.1:1/db?sslmode=bogus"
+    with pytest.raises(RuntimeError, match="sslmode"):
+        read_sql(bad_url, "SELECT 1", return_type="arrow_stream")
 
 
 @pytest.mark.skipif(
