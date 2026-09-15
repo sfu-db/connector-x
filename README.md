@@ -546,6 +546,13 @@ BibTeX entry:
                 </a>
             </td>
             <td align="center">
+                <a href="https://github.com/ricardo-valero">
+                    <img src="https://avatars.githubusercontent.com/u/55701657?v=4" width="66;" alt="ricardo-valero"/>
+                    <br />
+                    <sub><b>Ricardo Valero de la Rosa</b></sub>
+                </a>
+            </td>
+            <td align="center">
                 <a href="https://github.com/albcunha">
                     <img src="https://avatars.githubusercontent.com/u/13671325?v=4" width="66;" alt="albcunha"/>
                     <br />
@@ -559,6 +566,8 @@ BibTeX entry:
                     <sub><b>Kotval</b></sub>
                 </a>
             </td>
+		</tr>
+		<tr>
             <td align="center">
                 <a href="https://github.com/messense">
                     <img src="https://avatars.githubusercontent.com/u/1556054?v=4" width="66;" alt="messense"/>
@@ -566,8 +575,6 @@ BibTeX entry:
                     <sub><b>Messense</b></sub>
                 </a>
             </td>
-		</tr>
-		<tr>
             <td align="center">
                 <a href="https://github.com/phanindra-ramesh">
                     <img src="https://avatars.githubusercontent.com/u/16794420?v=4" width="66;" alt="phanindra-ramesh"/>
@@ -603,6 +610,8 @@ BibTeX entry:
                     <sub><b>Knota Lab</b></sub>
                 </a>
             </td>
+		</tr>
+		<tr>
             <td align="center">
                 <a href="https://github.com/zzzdong">
                     <img src="https://avatars.githubusercontent.com/u/5125482?v=4" width="66;" alt="zzzdong"/>
@@ -610,8 +619,6 @@ BibTeX entry:
                     <sub><b>Null</b></sub>
                 </a>
             </td>
-		</tr>
-		<tr>
             <td align="center">
                 <a href="https://github.com/marianoguerra">
                     <img src="https://avatars.githubusercontent.com/u/68463?v=4" width="66;" alt="marianoguerra"/>
@@ -647,6 +654,8 @@ BibTeX entry:
                     <sub><b>Jaroslav Cerman</b></sub>
                 </a>
             </td>
+		</tr>
+		<tr>
             <td align="center">
                 <a href="https://github.com/deepsourcebot">
                     <img src="https://avatars.githubusercontent.com/u/60907429?v=4" width="66;" alt="deepsourcebot"/>
@@ -654,8 +663,6 @@ BibTeX entry:
                     <sub><b>DeepSource Bot</b></sub>
                 </a>
             </td>
-		</tr>
-		<tr>
             <td align="center">
                 <a href="https://github.com/bealdav">
                     <img src="https://avatars.githubusercontent.com/u/1853434?v=4" width="66;" alt="bealdav"/>
@@ -691,6 +698,8 @@ BibTeX entry:
                     <sub><b>Aljaž Mur Eržen</b></sub>
                 </a>
             </td>
+		</tr>
+		<tr>
             <td align="center">
                 <a href="https://github.com/aimtsou">
                     <img src="https://avatars.githubusercontent.com/u/2598924?v=4" width="66;" alt="aimtsou"/>
