@@ -100,9 +100,7 @@ pub enum ConnectorXOutError {
 
     #[cfg(all(feature = "src_postgres", feature = "dst_arrow"))]
     #[error(transparent)]
-    PostgresArrowStreamTransportError(
-        #[from] crate::transports::PostgresArrowStreamTransportError,
-    ),
+    PostgresArrowStreamTransportError(#[from] crate::transports::PostgresArrowStreamTransportError),
 
     #[cfg(all(feature = "src_mysql", feature = "dst_arrow"))]
     #[error(transparent)]
@@ -142,9 +140,7 @@ pub enum ConnectorXOutError {
 
     #[cfg(all(feature = "src_bigquery", feature = "dst_arrow"))]
     #[error(transparent)]
-    BigqueryArrowStreamTransportError(
-        #[from] crate::transports::BigQueryArrowStreamTransportError,
-    ),
+    BigqueryArrowStreamTransportError(#[from] crate::transports::BigQueryArrowStreamTransportError),
 
     #[cfg(all(feature = "src_trino", feature = "dst_arrow"))]
     #[error(transparent)]
