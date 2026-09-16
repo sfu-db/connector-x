@@ -406,7 +406,7 @@ pub unsafe extern "C" fn connectorx_iter_next(
 ) -> *mut CXSlice<CXArray> {
     let arrow_iter = unsafe { &mut *iter };
     match arrow_iter.next_batch() {
-        Some(rb) => {
+        Some(Ok(rb)) => {
             let mut cols = vec![];
 
             for array in rb.columns() {
@@ -427,6 +427,10 @@ pub unsafe extern "C" fn connectorx_iter_next(
             let cx_rb = Box::new(CXSlice::<CXArray>::new_from_vec(cols));
             Box::into_raw(cx_rb)
         }
+        // The C API has no error channel, and a panic cannot unwind through
+        // `extern "C"`, so this aborts the process like every other failure
+        // in this crate, as soon as a partition fails.
+        Some(Err(e)) => panic!("cx writer failed: {}", e),
         None => std::ptr::null_mut(),
     }
 }
