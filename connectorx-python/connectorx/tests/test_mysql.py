@@ -1,3 +1,6 @@
+from contextlib import contextmanager
+from typing import Iterator
+
 import pandas as pd
 import pytest
 from pandas.testing import assert_frame_equal
@@ -700,3 +703,81 @@ def test_mysql_tls_verify_ca_rejects_untrusted_ca(
             f"{mysql_url_tls}?ssl-mode=VERIFY_CA&ssl-ca={mysql_untrusted_ca}",
             "SELECT * FROM test_table",
         )
+
+
+@contextmanager
+def _server_side_prepare_disabled(mysql_url: str) -> Iterator[None]:
+    """Make COM_STMT_PREPARE fail (ER_MAX_PREPARED_STMT_COUNT_REACHED) so that the
+    MySQL source has to take its schema-discovery fallback path.
+
+    The toggle itself is issued through ``pre_execution_query`` with the text
+    protocol: schema discovery happens before pre-execution queries run and the
+    text protocol never prepares, so the toggle works in both states.
+
+    Note: this flips a *server-wide* variable (needs SUPER or
+    SYSTEM_VARIABLES_ADMIN), so it must not run concurrently with other MySQL
+    tests or against a shared server.
+
+    While the variable is 0, every ``read_sql`` -- including the one that
+    restores it -- goes through the fallback path under test. If that path is
+    broken the restore fails too and the server keeps rejecting prepared
+    statements, so the failure is reported explicitly instead of letting later
+    tests fail with a misleading error.
+    """
+    var = "max_prepared_stmt_count"
+
+    def set_global(value: int) -> None:
+        read_sql(
+            mysql_url,
+            "SELECT 1",
+            protocol="text",
+            return_type="arrow",
+            pre_execution_query=f"SET GLOBAL {var} = {value}",
+        )
+
+    original = read_sql(
+        mysql_url, f"SELECT @@GLOBAL.{var} AS v", protocol="text", return_type="arrow"
+    ).column("v")[0].as_py()
+    set_global(0)
+    try:
+        yield
+    finally:
+        try:
+            set_global(int(original))
+        except (KeyboardInterrupt, SystemExit, GeneratorExit):
+            raise
+        except BaseException as e:  # a Rust panic surfaces as a BaseException
+            pytest.fail(
+                f"could not restore {var} (the schema fallback itself is likely "
+                f"broken); run `SET GLOBAL {var} = {original}` on the server "
+                f"manually before running other MySQL tests: {e!r}"
+            )
+
+
+def test_mysql_schema_fallback_without_server_side_prepare(mysql_url: str) -> None:
+    """When the server cannot prepare statements, schema discovery must still
+    infer the real column types (from the LIMIT 0 result set metadata) instead
+    of degrading every column to string."""
+    import pyarrow as pa
+
+    columns = "test_long, test_new_decimal, test_datetime, test_varchar, test_varbinary"
+    query = f"SELECT {columns} FROM test_types ORDER BY test_long_notnull"
+    empty_query = f"SELECT {columns} FROM test_types WHERE 1 = 0"
+
+    expected = read_sql(mysql_url, query, protocol="text", return_type="arrow")
+    expected_empty = read_sql(mysql_url, empty_query, protocol="text", return_type="arrow")
+    assert expected.schema.field("test_long").type == pa.int32()
+    assert expected.schema.field("test_varbinary").type == pa.large_binary()
+
+    with _server_side_prepare_disabled(mysql_url):
+        with pytest.raises(RuntimeError, match="max_prepared_stmt_count"):
+            read_sql(mysql_url, query, protocol="binary", return_type="arrow")
+
+        table = read_sql(mysql_url, query, protocol="text", return_type="arrow")
+        assert table.schema == expected.schema
+        assert table.equals(expected)
+
+        # No rows at all: the types still come from the result set metadata.
+        empty = read_sql(mysql_url, empty_query, protocol="text", return_type="arrow")
+        assert empty.schema == expected_empty.schema
+        assert empty.num_rows == 0
