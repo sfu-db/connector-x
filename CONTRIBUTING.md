@@ -55,6 +55,9 @@ MYSQL_DB=db
 MYSQL_USER=username
 MYSQL_PASSWORD=password
 MYSQL_URL=mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@${MYSQL_HOST}:${MYSQL_PORT}/${MYSQL_DB}
+# mysql TLS tests (optional; a TLS-enabled server and its CA certificate)
+MYSQL_URL_TLS=mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@${MYSQL_HOST}:${MYSQL_PORT}/${MYSQL_DB}
+MYSQL_ROOTCERT=/path/to/ca.pem
 
 # sqlite
 SQLITE_URL=sqlite://db_dir
@@ -79,6 +82,8 @@ MODIN_ENGINE=dask
 * Seed database: `just seed-db`
 * Run Rust tests: `just test`
 * Run Python tests: `just test-python [-k {test case keyword}]`
+  * When `MYSQL_URL` is not set, the MySQL tests (including the TLS tests) start a container via testcontainers.
+  * The MySQL TLS tests require the `openssl` CLI.
 
 ### Other commands
 

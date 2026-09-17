@@ -1,8 +1,10 @@
 //! Source implementation for MySQL database.
 
+mod connection;
 mod errors;
 mod typesystem;
 
+pub use self::connection::build_opts;
 pub use self::errors::MySQLSourceError;
 use crate::constants::DB_BUFFER_SIZE;
 use crate::{
@@ -17,7 +19,7 @@ use fehler::{throw, throws};
 use log::{debug, warn};
 use r2d2::{Pool, PooledConnection};
 use r2d2_mysql::{
-    mysql::{prelude::Queryable, Binary, Opts, OptsBuilder, QueryResult, Row, Text},
+    mysql::{prelude::Queryable, Binary, Column, QueryResult, Row, Text},
     MySqlConnectionManager,
 };
 use rust_decimal::Decimal;
@@ -47,10 +49,51 @@ pub struct MySQLSource<P> {
     _protocol: PhantomData<P>,
 }
 
+fn column_metadata(columns: &[Column]) -> (Vec<String>, Vec<MySQLTypeSystem>) {
+    columns
+        .iter()
+        .map(|col| {
+            (
+                col.name_str().to_string(),
+                MySQLTypeSystem::from((&col.column_type(), &col.flags(), col.character_set())),
+            )
+        })
+        .unzip()
+}
+
+/// Derive the schema by running each query with `LIMIT 0`. MySQL sends the
+/// column definitions even when the result set is empty, so no row is read.
+fn limit0_metadata(
+    conn: &mut MysqlConn,
+    queries: &[CXQuery<String>],
+) -> Result<(Vec<String>, Vec<MySQLTypeSystem>), MySQLSourceError> {
+    for (i, query) in queries.iter().enumerate() {
+        // assuming all the partition queries yield same schema
+        match conn.query_iter(limit0_query(query, &MySqlDialect {})?.as_str()) {
+            Ok(iter) => {
+                let (names, types) = column_metadata(iter.columns().as_ref());
+                if !names.is_empty() {
+                    return Ok((names, types));
+                }
+                debug!("no result columns for '{}', try next query", query);
+            }
+            Err(e) if i == queries.len() - 1 => {
+                // tried the last query but still get an error
+                debug!("cannot get metadata for '{}': {}", query, e);
+                return Err(e.into());
+            }
+            Err(e) => {
+                debug!("cannot get metadata for '{}', try next query: {}", query, e);
+            }
+        }
+    }
+    Err(anyhow!("cannot get metadata: no query returned a result set with columns").into())
+}
+
 impl<P> MySQLSource<P> {
     #[throws(MySQLSourceError)]
     pub fn new(conn: &str, nconn: usize) -> Self {
-        let manager = MySqlConnectionManager::new(OptsBuilder::from_opts(Opts::from_url(conn)?));
+        let manager = MySqlConnectionManager::new(build_opts(conn)?);
         let pool = r2d2::Pool::builder()
             .max_size(nconn as u32)
             .build(manager)?;
@@ -104,80 +147,18 @@ where
         let mut conn = self.pool.get()?;
         let first_query = &self.queries[0];
 
-        match conn.prep(first_query) {
-            Ok(stmt) => {
-                let (names, types) = stmt
-                    .columns()
-                    .iter()
-                    .map(|col| {
-                        let col_name = col.name_str().to_string();
-                        let d = MySQLTypeSystem::from((
-                            &col.column_type(),
-                            &col.flags(),
-                            col.character_set(),
-                        ));
-                        (col_name, d)
-                    })
-                    .unzip();
-                self.names = names;
-                self.schema = types;
-            }
+        let (names, types) = match conn.prep(first_query) {
+            Ok(stmt) => column_metadata(stmt.columns()),
             Err(e) => {
                 warn!(
-                    "mysql text prepared statement error: {:?}, switch to limit1 method",
+                    "mysql prepared statement error: {:?}, switch to limit 0 method",
                     e
                 );
-                for (i, query) in self.queries.iter().enumerate() {
-                    // assuming all the partition queries yield same schema
-                    match conn
-                        .query_first::<Row, _>(limit0_query(query, &MySqlDialect {})?.as_str())
-                    {
-                        Ok(Some(row)) => {
-                            let (names, types) = row
-                                .columns_ref()
-                                .iter()
-                                .map(|col| {
-                                    (
-                                        col.name_str().to_string(),
-                                        MySQLTypeSystem::from((
-                                            &col.column_type(),
-                                            &col.flags(),
-                                            col.character_set(),
-                                        )),
-                                    )
-                                })
-                                .unzip();
-                            self.names = names;
-                            self.schema = types;
-                            return;
-                        }
-                        Ok(None) => {}
-                        Err(e) if i == self.queries.len() - 1 => {
-                            // tried the last query but still get an error
-                            debug!("cannot get metadata for '{}', try next query: {}", query, e);
-                            throw!(e)
-                        }
-                        Err(_) => {}
-                    }
-                }
-
-                // tried all queries but all get empty result set
-                let iter = conn.query_iter(self.queries[0].as_str())?;
-                let (names, types) = iter
-                    .columns()
-                    .as_ref()
-                    .iter()
-                    .map(|col| {
-                        (
-                            col.name_str().to_string(),
-                            MySQLTypeSystem::VarChar(false), // set all columns as string (align with pandas)
-                        )
-                    })
-                    .unzip();
-                self.names = names;
-                self.schema = types;
+                limit0_metadata(&mut conn, &self.queries)?
             }
-        }
+        };
+        self.names = names;
+        self.schema = types;
     }
 
     #[throws(MySQLSourceError)]

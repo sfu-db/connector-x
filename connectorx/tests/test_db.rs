@@ -113,10 +113,16 @@ pub fn mysql_url() -> String {
         }
 
         let init_script = scripts_dir().join("mysql.sql");
-        let image = GenericImage::new("ghcr.io/wangxiaoying/mysql", "latest")
+        let image = GenericImage::new("mysql", "8.0.25")
             .with_exposed_port(3306.tcp())
             .with_wait_for(WaitFor::message_on_stderr("ready for connections"))
             .with_startup_timeout(Duration::from_secs(180))
+            .with_cmd([
+                "--character-set-server=utf8mb4",
+                "--collation-server=utf8mb4_unicode_ci",
+                "--skip-character-set-client-handshake",
+                "--init-connect=SET NAMES utf8mb4",
+            ])
             .with_env_var("MYSQL_ROOT_PASSWORD", "mysql")
             .with_env_var("MYSQL_DATABASE", "mysql")
             .with_env_var("LANG", "C.UTF-8")
