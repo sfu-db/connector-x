@@ -98,7 +98,7 @@
 <a href=#98 id=98 data-nosnippet>98</a>                    <span class="string">"put"</span>,
 <a href=#99 id=99 data-nosnippet>99</a>                    <span class="kw-2">&amp;</span>[
 <a href=#100 id=100 data-nosnippet>100</a>                        InvocationArg::try_from(name).unwrap(),
-<a href=#101 id=101 data-nosnippet>101</a>                        InvocationArg::try_from(arr_instance).unwrap(),
+<a href=#101 id=101 data-nosnippet>101</a>                        InvocationArg::from(arr_instance),
 <a href=#102 id=102 data-nosnippet>102</a>                    ],
 <a href=#103 id=103 data-nosnippet>103</a>                )<span class="question-mark">?</span>;
 <a href=#104 id=104 data-nosnippet>104</a>            }
@@ -106,7 +106,7 @@
 <a href=#106 id=106 data-nosnippet>106</a>                <span class="string">"ai.dataprep.federated.FederatedDataSource"</span>,
 <a href=#107 id=107 data-nosnippet>107</a>                <span class="kw-2">&amp;</span>[
 <a href=#108 id=108 data-nosnippet>108</a>                    InvocationArg::try_from(db_info.is_local).unwrap(),
-<a href=#109 id=109 data-nosnippet>109</a>                    InvocationArg::try_from(schema_info).unwrap(),
+<a href=#109 id=109 data-nosnippet>109</a>                    InvocationArg::from(schema_info),
 <a href=#110 id=110 data-nosnippet>110</a>                ],
 <a href=#111 id=111 data-nosnippet>111</a>            )<span class="question-mark">?</span>;
 <a href=#112 id=112 data-nosnippet>112</a>            jvm.invoke(
@@ -114,7 +114,7 @@
 <a href=#114 id=114 data-nosnippet>114</a>                <span class="string">"put"</span>,
 <a href=#115 id=115 data-nosnippet>115</a>                <span class="kw-2">&amp;</span>[
 <a href=#116 id=116 data-nosnippet>116</a>                    InvocationArg::try_from(db_name).unwrap(),
-<a href=#117 id=117 data-nosnippet>117</a>                    InvocationArg::try_from(fed_ds).unwrap(),
+<a href=#117 id=117 data-nosnippet>117</a>                    InvocationArg::from(fed_ds),
 <a href=#118 id=118 data-nosnippet>118</a>                ],
 <a href=#119 id=119 data-nosnippet>119</a>            )<span class="question-mark">?</span>;
 <a href=#120 id=120 data-nosnippet>120</a>        } <span class="kw">else </span>{
@@ -161,8 +161,8 @@
 <a href=#161 id=161 data-nosnippet>161</a>        <span class="string">"ai.dataprep.accio.FederatedQueryRewriter"</span>,
 <a href=#162 id=162 data-nosnippet>162</a>        InvocationArg::empty(),
 <a href=#163 id=163 data-nosnippet>163</a>    )<span class="question-mark">?</span>;
-<a href=#164 id=164 data-nosnippet>164</a>    <span class="kw">let </span>db_config = InvocationArg::try_from(db_config).unwrap();
-<a href=#165 id=165 data-nosnippet>165</a>    <span class="kw">let </span>db_manual = InvocationArg::try_from(db_manual).unwrap();
+<a href=#164 id=164 data-nosnippet>164</a>    <span class="kw">let </span>db_config = InvocationArg::from(db_config);
+<a href=#165 id=165 data-nosnippet>165</a>    <span class="kw">let </span>db_manual = InvocationArg::from(db_manual);
 <a href=#166 id=166 data-nosnippet>166</a>    <span class="kw">let </span>plan = jvm.invoke(<span class="kw-2">&amp;</span>rewriter, <span class="string">"rewrite"</span>, <span class="kw-2">&amp;</span>[sql, db_config, db_manual, strategy])<span class="question-mark">?</span>;
 <a href=#167 id=167 data-nosnippet>167</a>
 <a href=#168 id=168 data-nosnippet>168</a>    <span class="kw">let </span>count = jvm.invoke(<span class="kw-2">&amp;</span>plan, <span class="string">"getCount"</span>, InvocationArg::empty())<span class="question-mark">?</span>;

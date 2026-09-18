@@ -56,46 +56,51 @@
 <a href=#56 id=56 data-nosnippet>56</a></span><span class="kw">pub use </span>csv_arrow::CSVArrowTransport;
 <a href=#57 id=57 data-nosnippet>57</a><span class="attr">#[cfg(all(feature = <span class="string">"src_dummy"</span>, feature = <span class="string">"dst_arrow"</span>))]
 <a href=#58 id=58 data-nosnippet>58</a></span><span class="kw">pub use </span>dummy_arrow::DummyArrowTransport;
-<a href=#59 id=59 data-nosnippet>59</a><span class="attr">#[cfg(all(feature = <span class="string">"src_mssql"</span>, feature = <span class="string">"dst_arrow"</span>))]
-<a href=#60 id=60 data-nosnippet>60</a></span><span class="kw">pub use </span>mssql_arrow::{MsSQLArrowTransport, MsSQLArrowTransportError};
-<a href=#61 id=61 data-nosnippet>61</a><span class="attr">#[cfg(all(feature = <span class="string">"src_mssql"</span>, feature = <span class="string">"dst_arrow"</span>))]
-<a href=#62 id=62 data-nosnippet>62</a></span><span class="kw">pub use </span>mssql_arrowstream::{
-<a href=#63 id=63 data-nosnippet>63</a>    MsSQLArrowTransport <span class="kw">as </span>MsSQLArrowStreamTransport,
-<a href=#64 id=64 data-nosnippet>64</a>    MsSQLArrowTransportError <span class="kw">as </span>MsSQLArrowStreamTransportError,
-<a href=#65 id=65 data-nosnippet>65</a>};
-<a href=#66 id=66 data-nosnippet>66</a><span class="attr">#[cfg(all(feature = <span class="string">"src_mysql"</span>, feature = <span class="string">"dst_arrow"</span>))]
-<a href=#67 id=67 data-nosnippet>67</a></span><span class="kw">pub use </span>mysql_arrow::{MySQLArrowTransport, MySQLArrowTransportError};
-<a href=#68 id=68 data-nosnippet>68</a><span class="attr">#[cfg(all(feature = <span class="string">"src_mysql"</span>, feature = <span class="string">"dst_arrow"</span>))]
-<a href=#69 id=69 data-nosnippet>69</a></span><span class="kw">pub use </span>mysql_arrowstream::{
-<a href=#70 id=70 data-nosnippet>70</a>    MySQLArrowTransport <span class="kw">as </span>MySQLArrowStreamTransport,
-<a href=#71 id=71 data-nosnippet>71</a>    MySQLArrowTransportError <span class="kw">as </span>MySQLArrowStreamTransportError,
-<a href=#72 id=72 data-nosnippet>72</a>};
-<a href=#73 id=73 data-nosnippet>73</a><span class="attr">#[cfg(all(feature = <span class="string">"src_oracle"</span>, feature = <span class="string">"dst_arrow"</span>))]
-<a href=#74 id=74 data-nosnippet>74</a></span><span class="kw">pub use </span>oracle_arrow::{OracleArrowTransport, OracleArrowTransportError};
-<a href=#75 id=75 data-nosnippet>75</a><span class="attr">#[cfg(all(feature = <span class="string">"src_oracle"</span>, feature = <span class="string">"dst_arrow"</span>))]
-<a href=#76 id=76 data-nosnippet>76</a></span><span class="kw">pub use </span>oracle_arrowstream::{
-<a href=#77 id=77 data-nosnippet>77</a>    OracleArrowTransport <span class="kw">as </span>OracleArrowStreamTransport,
-<a href=#78 id=78 data-nosnippet>78</a>    OracleArrowTransportError <span class="kw">as </span>OracleArrowStreamTransportError,
-<a href=#79 id=79 data-nosnippet>79</a>};
-<a href=#80 id=80 data-nosnippet>80</a><span class="attr">#[cfg(all(feature = <span class="string">"src_postgres"</span>, feature = <span class="string">"dst_arrow"</span>))]
-<a href=#81 id=81 data-nosnippet>81</a></span><span class="kw">pub use </span>postgres_arrow::{PostgresArrowTransport, PostgresArrowTransportError};
-<a href=#82 id=82 data-nosnippet>82</a><span class="attr">#[cfg(all(feature = <span class="string">"src_postgres"</span>, feature = <span class="string">"dst_arrow"</span>))]
-<a href=#83 id=83 data-nosnippet>83</a></span><span class="kw">pub use </span>postgres_arrowstream::{
-<a href=#84 id=84 data-nosnippet>84</a>    PostgresArrowTransport <span class="kw">as </span>PostgresArrowStreamTransport,
-<a href=#85 id=85 data-nosnippet>85</a>    PostgresArrowTransportError <span class="kw">as </span>PostgresArrowStreamTransportError,
-<a href=#86 id=86 data-nosnippet>86</a>};
-<a href=#87 id=87 data-nosnippet>87</a><span class="attr">#[cfg(all(feature = <span class="string">"src_sqlite"</span>, feature = <span class="string">"dst_arrow"</span>))]
-<a href=#88 id=88 data-nosnippet>88</a></span><span class="kw">pub use </span>sqlite_arrow::{SQLiteArrowTransport, SQLiteArrowTransportError};
-<a href=#89 id=89 data-nosnippet>89</a><span class="attr">#[cfg(all(feature = <span class="string">"src_sqlite"</span>, feature = <span class="string">"dst_arrow"</span>))]
-<a href=#90 id=90 data-nosnippet>90</a></span><span class="kw">pub use </span>sqlite_arrowstream::{
-<a href=#91 id=91 data-nosnippet>91</a>    SQLiteArrowTransport <span class="kw">as </span>SQLiteArrowStreamTransport,
-<a href=#92 id=92 data-nosnippet>92</a>    SQLiteArrowTransportError <span class="kw">as </span>SQLiteArrowStreamTransportError,
-<a href=#93 id=93 data-nosnippet>93</a>};
-<a href=#94 id=94 data-nosnippet>94</a><span class="attr">#[cfg(all(feature = <span class="string">"src_trino"</span>, feature = <span class="string">"dst_arrow"</span>))]
-<a href=#95 id=95 data-nosnippet>95</a></span><span class="kw">pub use </span>trino_arrow::{TrinoArrowTransport, TrinoArrowTransportError};
-<a href=#96 id=96 data-nosnippet>96</a><span class="attr">#[cfg(all(feature = <span class="string">"src_trino"</span>, feature = <span class="string">"dst_arrow"</span>))]
-<a href=#97 id=97 data-nosnippet>97</a></span><span class="kw">pub use </span>trino_arrowstream::{
-<a href=#98 id=98 data-nosnippet>98</a>    TrinoArrowTransport <span class="kw">as </span>TrinoArrowStreamTransport,
-<a href=#99 id=99 data-nosnippet>99</a>    TrinoArrowTransportError <span class="kw">as </span>TrinoArrowStreamTransportError,
-<a href=#100 id=100 data-nosnippet>100</a>};
+<a href=#59 id=59 data-nosnippet>59</a><span class="attr">#[cfg(all(feature = <span class="string">"src_dummy"</span>, feature = <span class="string">"dst_arrow"</span>))]
+<a href=#60 id=60 data-nosnippet>60</a></span><span class="kw">pub use </span>dummy_arrowstream::{
+<a href=#61 id=61 data-nosnippet>61</a>    DummyArrowTransport <span class="kw">as </span>DummyArrowStreamTransport,
+<a href=#62 id=62 data-nosnippet>62</a>    DummyArrowTransportError <span class="kw">as </span>DummyArrowStreamTransportError,
+<a href=#63 id=63 data-nosnippet>63</a>};
+<a href=#64 id=64 data-nosnippet>64</a><span class="attr">#[cfg(all(feature = <span class="string">"src_mssql"</span>, feature = <span class="string">"dst_arrow"</span>))]
+<a href=#65 id=65 data-nosnippet>65</a></span><span class="kw">pub use </span>mssql_arrow::{MsSQLArrowTransport, MsSQLArrowTransportError};
+<a href=#66 id=66 data-nosnippet>66</a><span class="attr">#[cfg(all(feature = <span class="string">"src_mssql"</span>, feature = <span class="string">"dst_arrow"</span>))]
+<a href=#67 id=67 data-nosnippet>67</a></span><span class="kw">pub use </span>mssql_arrowstream::{
+<a href=#68 id=68 data-nosnippet>68</a>    MsSQLArrowTransport <span class="kw">as </span>MsSQLArrowStreamTransport,
+<a href=#69 id=69 data-nosnippet>69</a>    MsSQLArrowTransportError <span class="kw">as </span>MsSQLArrowStreamTransportError,
+<a href=#70 id=70 data-nosnippet>70</a>};
+<a href=#71 id=71 data-nosnippet>71</a><span class="attr">#[cfg(all(feature = <span class="string">"src_mysql"</span>, feature = <span class="string">"dst_arrow"</span>))]
+<a href=#72 id=72 data-nosnippet>72</a></span><span class="kw">pub use </span>mysql_arrow::{MySQLArrowTransport, MySQLArrowTransportError};
+<a href=#73 id=73 data-nosnippet>73</a><span class="attr">#[cfg(all(feature = <span class="string">"src_mysql"</span>, feature = <span class="string">"dst_arrow"</span>))]
+<a href=#74 id=74 data-nosnippet>74</a></span><span class="kw">pub use </span>mysql_arrowstream::{
+<a href=#75 id=75 data-nosnippet>75</a>    MySQLArrowTransport <span class="kw">as </span>MySQLArrowStreamTransport,
+<a href=#76 id=76 data-nosnippet>76</a>    MySQLArrowTransportError <span class="kw">as </span>MySQLArrowStreamTransportError,
+<a href=#77 id=77 data-nosnippet>77</a>};
+<a href=#78 id=78 data-nosnippet>78</a><span class="attr">#[cfg(all(feature = <span class="string">"src_oracle"</span>, feature = <span class="string">"dst_arrow"</span>))]
+<a href=#79 id=79 data-nosnippet>79</a></span><span class="kw">pub use </span>oracle_arrow::{OracleArrowTransport, OracleArrowTransportError};
+<a href=#80 id=80 data-nosnippet>80</a><span class="attr">#[cfg(all(feature = <span class="string">"src_oracle"</span>, feature = <span class="string">"dst_arrow"</span>))]
+<a href=#81 id=81 data-nosnippet>81</a></span><span class="kw">pub use </span>oracle_arrowstream::{
+<a href=#82 id=82 data-nosnippet>82</a>    OracleArrowTransport <span class="kw">as </span>OracleArrowStreamTransport,
+<a href=#83 id=83 data-nosnippet>83</a>    OracleArrowTransportError <span class="kw">as </span>OracleArrowStreamTransportError,
+<a href=#84 id=84 data-nosnippet>84</a>};
+<a href=#85 id=85 data-nosnippet>85</a><span class="attr">#[cfg(all(feature = <span class="string">"src_postgres"</span>, feature = <span class="string">"dst_arrow"</span>))]
+<a href=#86 id=86 data-nosnippet>86</a></span><span class="kw">pub use </span>postgres_arrow::{PostgresArrowTransport, PostgresArrowTransportError};
+<a href=#87 id=87 data-nosnippet>87</a><span class="attr">#[cfg(all(feature = <span class="string">"src_postgres"</span>, feature = <span class="string">"dst_arrow"</span>))]
+<a href=#88 id=88 data-nosnippet>88</a></span><span class="kw">pub use </span>postgres_arrowstream::{
+<a href=#89 id=89 data-nosnippet>89</a>    PostgresArrowTransport <span class="kw">as </span>PostgresArrowStreamTransport,
+<a href=#90 id=90 data-nosnippet>90</a>    PostgresArrowTransportError <span class="kw">as </span>PostgresArrowStreamTransportError,
+<a href=#91 id=91 data-nosnippet>91</a>};
+<a href=#92 id=92 data-nosnippet>92</a><span class="attr">#[cfg(all(feature = <span class="string">"src_sqlite"</span>, feature = <span class="string">"dst_arrow"</span>))]
+<a href=#93 id=93 data-nosnippet>93</a></span><span class="kw">pub use </span>sqlite_arrow::{SQLiteArrowTransport, SQLiteArrowTransportError};
+<a href=#94 id=94 data-nosnippet>94</a><span class="attr">#[cfg(all(feature = <span class="string">"src_sqlite"</span>, feature = <span class="string">"dst_arrow"</span>))]
+<a href=#95 id=95 data-nosnippet>95</a></span><span class="kw">pub use </span>sqlite_arrowstream::{
+<a href=#96 id=96 data-nosnippet>96</a>    SQLiteArrowTransport <span class="kw">as </span>SQLiteArrowStreamTransport,
+<a href=#97 id=97 data-nosnippet>97</a>    SQLiteArrowTransportError <span class="kw">as </span>SQLiteArrowStreamTransportError,
+<a href=#98 id=98 data-nosnippet>98</a>};
+<a href=#99 id=99 data-nosnippet>99</a><span class="attr">#[cfg(all(feature = <span class="string">"src_trino"</span>, feature = <span class="string">"dst_arrow"</span>))]
+<a href=#100 id=100 data-nosnippet>100</a></span><span class="kw">pub use </span>trino_arrow::{TrinoArrowTransport, TrinoArrowTransportError};
+<a href=#101 id=101 data-nosnippet>101</a><span class="attr">#[cfg(all(feature = <span class="string">"src_trino"</span>, feature = <span class="string">"dst_arrow"</span>))]
+<a href=#102 id=102 data-nosnippet>102</a></span><span class="kw">pub use </span>trino_arrowstream::{
+<a href=#103 id=103 data-nosnippet>103</a>    TrinoArrowTransport <span class="kw">as </span>TrinoArrowStreamTransport,
+<a href=#104 id=104 data-nosnippet>104</a>    TrinoArrowTransportError <span class="kw">as </span>TrinoArrowStreamTransportError,
+<a href=#105 id=105 data-nosnippet>105</a>};
 </code></pre></div></section></main></body></html>

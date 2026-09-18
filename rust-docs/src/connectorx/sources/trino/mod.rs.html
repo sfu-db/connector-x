@@ -96,7 +96,7 @@
 <a href=#96 id=96 data-nosnippet>96</a>        .ssl(prusto::ssl::Ssl { root_cert: <span class="prelude-val">None </span>})
 <a href=#97 id=97 data-nosnippet>97</a>        .no_verify(no_verify)
 <a href=#98 id=98 data-nosnippet>98</a>        .secure(url.scheme() == <span class="string">"trino+https"</span>)
-<a href=#99 id=99 data-nosnippet>99</a>        .catalog(url.path_segments().unwrap().last().unwrap_or(<span class="string">"hive"</span>));
+<a href=#99 id=99 data-nosnippet>99</a>        .catalog(url.path_segments().unwrap().next_back().unwrap_or(<span class="string">"hive"</span>));
 <a href=#100 id=100 data-nosnippet>100</a>
 <a href=#101 id=101 data-nosnippet>101</a>    <span class="kw">let </span><span class="kw-2">mut </span>session_props: HashMap&lt;String, String&gt; = HashMap::new();
 <a href=#102 id=102 data-nosnippet>102</a>    <span class="kw">let </span><span class="kw-2">mut </span>extra_creds: HashMap&lt;String, String&gt; = HashMap::new();
@@ -170,7 +170,7 @@
 <a href=#170 id=170 data-nosnippet>170</a>            .ssl(prusto::ssl::Ssl { root_cert: <span class="prelude-val">None </span>})
 <a href=#171 id=171 data-nosnippet>171</a>            .no_verify(no_verify)
 <a href=#172 id=172 data-nosnippet>172</a>            .secure(url.scheme() == <span class="string">"trino+https"</span>)
-<a href=#173 id=173 data-nosnippet>173</a>            .catalog(url.path_segments().unwrap().last().unwrap_or(<span class="string">"hive"</span>));
+<a href=#173 id=173 data-nosnippet>173</a>            .catalog(url.path_segments().unwrap().next_back().unwrap_or(<span class="string">"hive"</span>));
 <a href=#174 id=174 data-nosnippet>174</a>
 <a href=#175 id=175 data-nosnippet>175</a>        <span class="kw">let </span>builder = <span class="kw">match </span>url.password() {
 <a href=#176 id=176 data-nosnippet>176</a>            <span class="prelude-val">None </span>=&gt; builder,

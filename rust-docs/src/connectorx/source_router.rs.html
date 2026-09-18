@@ -37,7 +37,7 @@
 <a href=#37 id=37 data-nosnippet>37</a>
 <a href=#38 id=38 data-nosnippet>38</a>        <span class="comment">// parse connectorx protocol
 <a href=#39 id=39 data-nosnippet>39</a>        </span><span class="kw">let </span>proto = <span class="kw">match </span>old_url.query_pairs().find(|p| p.<span class="number">0 </span>== CONNECTORX_PROTOCOL) {
-<a href=#40 id=40 data-nosnippet>40</a>            <span class="prelude-val">Some</span>((<span class="kw">_</span>, proto)) =&gt; proto.to_owned().to_string(),
+<a href=#40 id=40 data-nosnippet>40</a>            <span class="prelude-val">Some</span>((<span class="kw">_</span>, proto)) =&gt; proto.to_string(),
 <a href=#41 id=41 data-nosnippet>41</a>            <span class="prelude-val">None </span>=&gt; <span class="string">"binary"</span>.to_string(),
 <a href=#42 id=42 data-nosnippet>42</a>        };
 <a href=#43 id=43 data-nosnippet>43</a>
@@ -79,42 +79,41 @@
 <a href=#79 id=79 data-nosnippet>79</a><span class="attr">#[throws(ConnectorXError)]
 <a href=#80 id=80 data-nosnippet>80</a></span><span class="kw">pub fn </span>parse_source(conn: <span class="kw-2">&amp;</span>str, protocol: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;) -&gt; SourceConn {
 <a href=#81 id=81 data-nosnippet>81</a>    <span class="kw">let </span><span class="kw-2">mut </span>source_conn = SourceConn::try_from(conn)<span class="question-mark">?</span>;
-<a href=#82 id=82 data-nosnippet>82</a>    <span class="kw">match </span>protocol {
-<a href=#83 id=83 data-nosnippet>83</a>        <span class="prelude-val">Some</span>(p) =&gt; source_conn.set_protocol(p),
-<a href=#84 id=84 data-nosnippet>84</a>        <span class="prelude-val">None </span>=&gt; {}
-<a href=#85 id=85 data-nosnippet>85</a>    }
-<a href=#86 id=86 data-nosnippet>86</a>    source_conn
-<a href=#87 id=87 data-nosnippet>87</a>}
-<a href=#88 id=88 data-nosnippet>88</a>
-<a href=#89 id=89 data-nosnippet>89</a><span class="attr">#[cfg(test)]
-<a href=#90 id=90 data-nosnippet>90</a></span><span class="kw">mod </span>tests {
-<a href=#91 id=91 data-nosnippet>91</a>    <span class="kw">use </span><span class="kw">super</span>::SourceConn;
-<a href=#92 id=92 data-nosnippet>92</a>    <span class="kw">use </span>std::convert::TryFrom;
-<a href=#93 id=93 data-nosnippet>93</a>
-<a href=#94 id=94 data-nosnippet>94</a>    <span class="doccomment">/// Removing the connectorx protocol must not re-encode the remaining parameters:
-<a href=#95 id=95 data-nosnippet>95</a>    /// sources that percent-decode the query would otherwise receive a literal `+`
-<a href=#96 id=96 data-nosnippet>96</a>    /// wherever the caller wrote a space.
-<a href=#97 id=97 data-nosnippet>97</a>    </span><span class="attr">#[test]
-<a href=#98 id=98 data-nosnippet>98</a>    </span><span class="kw">fn </span>keeps_remaining_query_params_verbatim() {
-<a href=#99 id=99 data-nosnippet>99</a>        <span class="kw">let </span>source_conn = SourceConn::try_from(
-<a href=#100 id=100 data-nosnippet>100</a>            <span class="string">"postgresql://u:p@host:5432/db?options=-c%20statement_timeout%3D1s&amp;cxprotocol=cursor"</span>,
-<a href=#101 id=101 data-nosnippet>101</a>        )
-<a href=#102 id=102 data-nosnippet>102</a>        .unwrap();
-<a href=#103 id=103 data-nosnippet>103</a>
-<a href=#104 id=104 data-nosnippet>104</a>        <span class="macro">assert_eq!</span>(
-<a href=#105 id=105 data-nosnippet>105</a>            source_conn.conn.query(),
-<a href=#106 id=106 data-nosnippet>106</a>            <span class="prelude-val">Some</span>(<span class="string">"options=-c%20statement_timeout%3D1s"</span>)
-<a href=#107 id=107 data-nosnippet>107</a>        );
-<a href=#108 id=108 data-nosnippet>108</a>        <span class="macro">assert_eq!</span>(source_conn.proto, <span class="string">"cursor"</span>);
-<a href=#109 id=109 data-nosnippet>109</a>    }
-<a href=#110 id=110 data-nosnippet>110</a>
-<a href=#111 id=111 data-nosnippet>111</a>    <span class="doccomment">/// The query is left alone even when there is no protocol parameter to remove.
-<a href=#112 id=112 data-nosnippet>112</a>    </span><span class="attr">#[test]
-<a href=#113 id=113 data-nosnippet>113</a>    </span><span class="kw">fn </span>leaves_the_query_alone_when_there_is_nothing_to_remove() {
-<a href=#114 id=114 data-nosnippet>114</a>        <span class="kw">let </span>source_conn = SourceConn::try_from(<span class="string">"mysql://host:3306/db?a=x%20y&amp;b=%2Fz"</span>).unwrap();
-<a href=#115 id=115 data-nosnippet>115</a>
-<a href=#116 id=116 data-nosnippet>116</a>        <span class="macro">assert_eq!</span>(source_conn.conn.query(), <span class="prelude-val">Some</span>(<span class="string">"a=x%20y&amp;b=%2Fz"</span>));
-<a href=#117 id=117 data-nosnippet>117</a>        <span class="macro">assert_eq!</span>(source_conn.proto, <span class="string">"binary"</span>);
-<a href=#118 id=118 data-nosnippet>118</a>    }
-<a href=#119 id=119 data-nosnippet>119</a>}
+<a href=#82 id=82 data-nosnippet>82</a>    <span class="kw">if let </span><span class="prelude-val">Some</span>(p) = protocol {
+<a href=#83 id=83 data-nosnippet>83</a>        source_conn.set_protocol(p)
+<a href=#84 id=84 data-nosnippet>84</a>    }
+<a href=#85 id=85 data-nosnippet>85</a>    source_conn
+<a href=#86 id=86 data-nosnippet>86</a>}
+<a href=#87 id=87 data-nosnippet>87</a>
+<a href=#88 id=88 data-nosnippet>88</a><span class="attr">#[cfg(test)]
+<a href=#89 id=89 data-nosnippet>89</a></span><span class="kw">mod </span>tests {
+<a href=#90 id=90 data-nosnippet>90</a>    <span class="kw">use </span><span class="kw">super</span>::SourceConn;
+<a href=#91 id=91 data-nosnippet>91</a>    <span class="kw">use </span>std::convert::TryFrom;
+<a href=#92 id=92 data-nosnippet>92</a>
+<a href=#93 id=93 data-nosnippet>93</a>    <span class="doccomment">/// Removing the connectorx protocol must not re-encode the remaining parameters:
+<a href=#94 id=94 data-nosnippet>94</a>    /// sources that percent-decode the query would otherwise receive a literal `+`
+<a href=#95 id=95 data-nosnippet>95</a>    /// wherever the caller wrote a space.
+<a href=#96 id=96 data-nosnippet>96</a>    </span><span class="attr">#[test]
+<a href=#97 id=97 data-nosnippet>97</a>    </span><span class="kw">fn </span>keeps_remaining_query_params_verbatim() {
+<a href=#98 id=98 data-nosnippet>98</a>        <span class="kw">let </span>source_conn = SourceConn::try_from(
+<a href=#99 id=99 data-nosnippet>99</a>            <span class="string">"postgresql://u:p@host:5432/db?options=-c%20statement_timeout%3D1s&amp;cxprotocol=cursor"</span>,
+<a href=#100 id=100 data-nosnippet>100</a>        )
+<a href=#101 id=101 data-nosnippet>101</a>        .unwrap();
+<a href=#102 id=102 data-nosnippet>102</a>
+<a href=#103 id=103 data-nosnippet>103</a>        <span class="macro">assert_eq!</span>(
+<a href=#104 id=104 data-nosnippet>104</a>            source_conn.conn.query(),
+<a href=#105 id=105 data-nosnippet>105</a>            <span class="prelude-val">Some</span>(<span class="string">"options=-c%20statement_timeout%3D1s"</span>)
+<a href=#106 id=106 data-nosnippet>106</a>        );
+<a href=#107 id=107 data-nosnippet>107</a>        <span class="macro">assert_eq!</span>(source_conn.proto, <span class="string">"cursor"</span>);
+<a href=#108 id=108 data-nosnippet>108</a>    }
+<a href=#109 id=109 data-nosnippet>109</a>
+<a href=#110 id=110 data-nosnippet>110</a>    <span class="doccomment">/// The query is left alone even when there is no protocol parameter to remove.
+<a href=#111 id=111 data-nosnippet>111</a>    </span><span class="attr">#[test]
+<a href=#112 id=112 data-nosnippet>112</a>    </span><span class="kw">fn </span>leaves_the_query_alone_when_there_is_nothing_to_remove() {
+<a href=#113 id=113 data-nosnippet>113</a>        <span class="kw">let </span>source_conn = SourceConn::try_from(<span class="string">"mysql://host:3306/db?a=x%20y&amp;b=%2Fz"</span>).unwrap();
+<a href=#114 id=114 data-nosnippet>114</a>
+<a href=#115 id=115 data-nosnippet>115</a>        <span class="macro">assert_eq!</span>(source_conn.conn.query(), <span class="prelude-val">Some</span>(<span class="string">"a=x%20y&amp;b=%2Fz"</span>));
+<a href=#116 id=116 data-nosnippet>116</a>        <span class="macro">assert_eq!</span>(source_conn.proto, <span class="string">"binary"</span>);
+<a href=#117 id=117 data-nosnippet>117</a>    }
+<a href=#118 id=118 data-nosnippet>118</a>}
 </code></pre></div></section></main></body></html>
