@@ -575,7 +575,7 @@ fn clickhouse_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i
         .map_err(|e| anyhow!("Failed to parse min max response: {}", e))?;
 
     let (min_v, max_v) = if let Some(row) = parsed.data.first() {
-        let min_v = row.get(0).and_then(|v| v.as_i64()).unwrap_or(0);
+        let min_v = row.first().and_then(|v| v.as_i64()).unwrap_or(0);
         let max_v = row.get(1).and_then(|v| v.as_i64()).unwrap_or(0);
 
         (min_v, max_v)
