@@ -56,6 +56,11 @@ pub struct CXFederatedPlan {
     cardinality: usize,
 }
 
+/// # Safety
+///
+/// `res` must be a non-null pointer to a `CXSlice<CXFederatedPlan>` produced by
+/// [`connectorx_rewrite`], and must not have been freed already. Calling this more
+/// than once for the same slice is undefined behaviour.
 #[cfg(feature = "federation")]
 #[no_mangle]
 pub unsafe extern "C" fn free_plans(res: *const CXSlice<CXFederatedPlan>) {
@@ -67,6 +72,14 @@ pub unsafe extern "C" fn free_plans(res: *const CXSlice<CXFederatedPlan>) {
     });
 }
 
+/// # Safety
+///
+/// `conn_list` must be a non-null pointer to a `CXSlice<CXConnectionInfo>` whose
+/// `ptr`/`len` describe an initialized array, and every C string it references
+/// (`name`, `conn`, `jdbc_url`, `jdbc_driver`, and the nested table/column names)
+/// must be a valid NUL-terminated string. `query` and `strategy` must likewise be
+/// valid NUL-terminated C strings. The returned slice must be released with
+/// [`free_plans`].
 #[no_mangle]
 pub unsafe extern "C" fn connectorx_rewrite(
     conn_list: *const CXSlice<CXConnectionInfo>,
@@ -119,10 +132,7 @@ pub unsafe extern "C" fn connectorx_rewrite(
 
     let query_str = unsafe { CStr::from_ptr(query) }.to_str().unwrap();
     let strategy_str = unsafe { CStr::from_ptr(strategy) }.to_str().unwrap();
-    let j4rs_base = match env::var("CX_LIB_PATH") {
-        Ok(val) => Some(val),
-        Err(_) => None,
-    };
+    let j4rs_base = env::var("CX_LIB_PATH").ok();
     // println!("j4rs_base: {:?}", j4rs_base);
     let fed_plan: Vec<CXFederatedPlan> =
         rewrite_sql(query_str, &db_map, j4rs_base.as_deref(), strategy_str)
@@ -146,14 +156,27 @@ pub struct CXResult {
     header: CXSlice<*const c_char>,
 }
 
+/// # Safety
+///
+/// `ptr`, `len` and `capacity` must be exactly the parts of a `Vec<T>` that was
+/// leaked (for example via [`CXSlice::new_from_vec`]). Ownership is taken back
+/// here, so this must be called at most once for a given allocation.
 pub unsafe fn get_vec<T>(ptr: *const T, len: usize, capacity: usize) -> Vec<T> {
     Vec::from_raw_parts(ptr as *mut T, len, capacity)
 }
 
+/// # Safety
+///
+/// `ptr` must have been produced by `CString::into_raw` and must not have been
+/// freed already.
 pub unsafe fn free_str(ptr: *const c_char) {
     let _ = CString::from_raw(ptr as *mut _);
 }
 
+/// # Safety
+///
+/// `res` must be a non-null pointer to a `CXResult` returned by
+/// [`connectorx_scan`], and must not have been freed already.
 #[no_mangle]
 pub unsafe extern "C" fn free_result(res: *const CXResult) {
     let header = get_vec::<_>((*res).header.ptr, (*res).header.len, (*res).header.capacity);
@@ -171,6 +194,16 @@ pub unsafe extern "C" fn free_result(res: *const CXResult) {
     });
 }
 
+/// # Safety
+///
+/// `conn` and `query` must be valid NUL-terminated C strings. The returned
+/// `CXResult` owns its buffers and must be released with [`free_result`].
+// The `Arc`s below are only used as FFI ownership handles: each is created,
+// immediately turned into a raw pointer for the C caller, and later reclaimed by
+// `Arc::from_raw` in the matching free function. They are never cloned or moved
+// across threads, so `FFI_ArrowArray`/`FFI_ArrowSchema` not being `Send + Sync`
+// is not a problem here.
+#[allow(clippy::arc_with_non_send_sync)]
 #[no_mangle]
 pub unsafe extern "C" fn connectorx_scan(conn: *const c_char, query: *const c_char) -> CXResult {
     let conn_str = unsafe { CStr::from_ptr(conn) }.to_str().unwrap();
@@ -232,11 +265,19 @@ pub struct CXSchema {
     headers: CXSlice<*const c_char>,
 }
 
+/// # Safety
+///
+/// `iter` must be a non-null pointer returned by [`connectorx_scan_iter`] that has
+/// not been freed yet.
 #[no_mangle]
 pub unsafe extern "C" fn free_iter(iter: *mut Box<dyn RecordBatchIterator>) {
     let _ = Box::from_raw(iter);
 }
 
+/// # Safety
+///
+/// `schema` must be a non-null pointer returned by [`connectorx_get_schema`] that
+/// has not been freed yet.
 #[no_mangle]
 pub unsafe extern "C" fn free_schema(schema: *mut CXSchema) {
     let res = Box::from_raw(schema);
@@ -252,6 +293,10 @@ pub unsafe extern "C" fn free_schema(schema: *mut CXSchema) {
         });
 }
 
+/// # Safety
+///
+/// `rb` must be a non-null pointer returned by [`connectorx_iter_next`] that has
+/// not been freed yet.
 #[no_mangle]
 pub unsafe extern "C" fn free_record_batch(rb: *mut CXSlice<CXArray>) {
     let slice = Box::from_raw(rb);
@@ -263,6 +308,11 @@ pub unsafe extern "C" fn free_record_batch(rb: *mut CXSlice<CXArray>) {
         })
 }
 
+/// # Safety
+///
+/// `conn` must be a valid NUL-terminated C string, and `queries` must be a
+/// non-null pointer to a `CXSlice` whose entries are all valid NUL-terminated C
+/// strings. The returned iterator must be released with [`free_iter`].
 #[no_mangle]
 pub unsafe extern "C" fn connectorx_scan_iter(
     conn: *const c_char,
@@ -286,6 +336,12 @@ pub unsafe extern "C" fn connectorx_scan_iter(
     Box::into_raw(Box::new(arrow_iter))
 }
 
+/// # Safety
+///
+/// `iter` must be a non-null pointer returned by [`connectorx_scan_iter`] that has
+/// not been freed yet. The returned schema must be released with [`free_schema`].
+// See the note on `connectorx_scan` for why these `Arc`s are fine.
+#[allow(clippy::arc_with_non_send_sync)]
 #[no_mangle]
 pub unsafe extern "C" fn connectorx_get_schema(
     iter: *mut Box<dyn RecordBatchIterator>,
@@ -325,12 +381,25 @@ pub unsafe extern "C" fn connectorx_get_schema(
     Box::into_raw(res)
 }
 
+/// # Safety
+///
+/// `iter` must be a non-null pointer returned by [`connectorx_scan_iter`] that has
+/// not been freed yet, and no other reference to it may be live for the duration
+/// of the call.
 #[no_mangle]
 pub unsafe extern "C" fn connectorx_prepare(iter: *mut Box<dyn RecordBatchIterator>) {
     let arrow_iter = unsafe { &mut *iter };
     arrow_iter.prepare();
 }
 
+/// # Safety
+///
+/// `iter` must be a non-null pointer returned by [`connectorx_scan_iter`] that has
+/// not been freed yet, and no other reference to it may be live for the duration
+/// of the call. Returns null once the iterator is exhausted; any non-null result
+/// must be released with [`free_record_batch`].
+// See the note on `connectorx_scan` for why these `Arc`s are fine.
+#[allow(clippy::arc_with_non_send_sync)]
 #[no_mangle]
 pub unsafe extern "C" fn connectorx_iter_next(
     iter: *mut Box<dyn RecordBatchIterator>,
@@ -362,6 +431,10 @@ pub unsafe extern "C" fn connectorx_iter_next(
     }
 }
 
+/// # Safety
+///
+/// This takes no pointers and is safe to call from C at any time. It is declared
+/// `unsafe` only for consistency with the rest of this C API surface.
 #[no_mangle]
 pub unsafe extern "C" fn connectorx_set_thread_num(num: usize) {
     set_global_num_thread(num);

@@ -96,7 +96,7 @@ pub fn build_client_from_url(url: &url::Url) -> Client {
         .ssl(prusto::ssl::Ssl { root_cert: None })
         .no_verify(no_verify)
         .secure(url.scheme() == "trino+https")
-        .catalog(url.path_segments().unwrap().last().unwrap_or("hive"));
+        .catalog(url.path_segments().unwrap().next_back().unwrap_or("hive"));
 
     let mut session_props: HashMap<String, String> = HashMap::new();
     let mut extra_creds: HashMap<String, String> = HashMap::new();
@@ -170,7 +170,7 @@ impl TrinoSource {
             .ssl(prusto::ssl::Ssl { root_cert: None })
             .no_verify(no_verify)
             .secure(url.scheme() == "trino+https")
-            .catalog(url.path_segments().unwrap().last().unwrap_or("hive"));
+            .catalog(url.path_segments().unwrap().next_back().unwrap_or("hive"));
 
         let builder = match url.password() {
             None => builder,

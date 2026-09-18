@@ -275,7 +275,7 @@ impl ClickHouseTypeSystem {
     fn parse_length(params: Option<&str>) -> usize {
         let params = params.and_then(|p| p.split(',').map(|i| i.trim()).collect::<Vec<_>>().into());
         params
-            .and_then(|p| p.get(0).and_then(|s| s.parse::<usize>().ok()))
+            .and_then(|p| p.first().and_then(|s| s.parse::<usize>().ok()))
             .unwrap_or(1)
     }
 
@@ -285,11 +285,11 @@ impl ClickHouseTypeSystem {
         match params {
             None => (None, None),
             Some(p) => {
-                if let Some(precision) = p.get(0).and_then(|s| s.parse::<u8>().ok()) {
+                if let Some(precision) = p.first().and_then(|s| s.parse::<u8>().ok()) {
                     let timezone = p.get(1).and_then(|s| Self::parse_timezone(s));
                     (Some(precision), timezone)
                 } else {
-                    (None, p.get(0).and_then(|s| Self::parse_timezone(s)))
+                    (None, p.first().and_then(|s| Self::parse_timezone(s)))
                 }
             }
         }
@@ -299,7 +299,7 @@ impl ClickHouseTypeSystem {
     fn parse_time64_precision(params: Option<&str>) -> u8 {
         let params = params.and_then(|p| p.split(',').map(|i| i.trim()).collect::<Vec<_>>().into());
         params
-            .and_then(|p| p.get(0).and_then(|s| s.parse::<u8>().ok()))
+            .and_then(|p| p.first().and_then(|s| s.parse::<u8>().ok()))
             .unwrap_or(3)
     }
 
@@ -308,7 +308,7 @@ impl ClickHouseTypeSystem {
         let params = params.and_then(|p| p.split(',').map(|i| i.trim()).collect::<Vec<_>>().into());
         params
             .and_then(|p| {
-                let precision = p.get(0).and_then(|s| s.parse::<u8>().ok());
+                let precision = p.first().and_then(|s| s.parse::<u8>().ok());
                 let scale = p.get(1).and_then(|s| s.parse::<u8>().ok());
                 Some((precision.unwrap_or(0), scale.unwrap_or(0)))
             })

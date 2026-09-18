@@ -147,10 +147,7 @@ impl ArrowDestination {
 
     #[throws(ArrowDestinationError)]
     pub fn record_batch(&mut self) -> Option<RecordBatch> {
-        match self.receiver.recv() {
-            Ok(rb) => Some(rb),
-            Err(_) => None,
-        }
+        self.receiver.recv().ok()
     }
 
     pub fn empty_batch(&self) -> RecordBatch {
