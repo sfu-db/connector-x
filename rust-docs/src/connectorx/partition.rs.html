@@ -575,7 +575,7 @@
 <a href=#575 id=575 data-nosnippet>575</a>        .map_err(|e| <span class="macro">anyhow!</span>(<span class="string">"Failed to parse min max response: {}"</span>, e))<span class="question-mark">?</span>;
 <a href=#576 id=576 data-nosnippet>576</a>
 <a href=#577 id=577 data-nosnippet>577</a>    <span class="kw">let </span>(min_v, max_v) = <span class="kw">if let </span><span class="prelude-val">Some</span>(row) = parsed.data.first() {
-<a href=#578 id=578 data-nosnippet>578</a>        <span class="kw">let </span>min_v = row.get(<span class="number">0</span>).and_then(|v| v.as_i64()).unwrap_or(<span class="number">0</span>);
+<a href=#578 id=578 data-nosnippet>578</a>        <span class="kw">let </span>min_v = row.first().and_then(|v| v.as_i64()).unwrap_or(<span class="number">0</span>);
 <a href=#579 id=579 data-nosnippet>579</a>        <span class="kw">let </span>max_v = row.get(<span class="number">1</span>).and_then(|v| v.as_i64()).unwrap_or(<span class="number">0</span>);
 <a href=#580 id=580 data-nosnippet>580</a>
 <a href=#581 id=581 data-nosnippet>581</a>        (min_v, max_v)
