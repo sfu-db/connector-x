@@ -437,6 +437,73 @@ fn test_range_types_binary_postgres() {
     );
 }
 
+const TSVECTOR_QUERY: &str = r#"
+    SELECT * FROM (VALUES
+        (1, $$'fat':2A,4 'rat':3B$$::tsvector),
+        (2, $$'fat' 'rat'$$::tsvector),
+        (3, ''::tsvector),
+        (4, NULL::tsvector),
+        (5, array_to_tsvector(ARRAY['a,b', 'a"b']))
+    ) AS documents(id, "search""vector") ORDER BY id
+"#;
+
+#[test]
+fn test_tsvector_binary_postgres() {
+    test_types!(
+        "binary",
+        TSVECTOR_QUERY,
+        BinaryProtocol,
+        verify_tsvector_results
+    );
+}
+
+#[test]
+fn test_tsvector_csv_postgres() {
+    test_types!("csv", TSVECTOR_QUERY, CSVProtocol, verify_tsvector_results);
+}
+
+#[test]
+fn test_tsvector_cursor_postgres() {
+    test_types!(
+        "cursor",
+        TSVECTOR_QUERY,
+        CursorProtocol,
+        verify_tsvector_results
+    );
+}
+
+#[test]
+fn test_tsvector_simple_postgres() {
+    test_types!(
+        "simple",
+        TSVECTOR_QUERY,
+        SimpleProtocol,
+        verify_tsvector_results
+    );
+}
+
+fn verify_tsvector_results(result: Vec<RecordBatch>, protocol: &str) {
+    assert_eq!(result.len(), 1);
+    let rb = &result[0];
+    assert_eq!(rb.num_columns(), 2);
+    assert_eq!(rb.schema().field(1).name(), "search\"vector");
+    assert_eq!(
+        rb.column(0).as_any().downcast_ref::<Int32Array>().unwrap(),
+        &Int32Array::from(vec![1, 2, 3, 4, 5])
+    );
+    let values = rb.column(1).as_any().downcast_ref::<StringArray>().unwrap();
+    assert_eq!(
+        values.iter().collect::<Vec<_>>(),
+        vec![
+            Some("'fat':2A,4 'rat':3B"),
+            Some("'fat' 'rat'"),
+            if protocol == "csv" { None } else { Some("") },
+            None,
+            Some("'a\"b' 'a,b'"),
+        ]
+    );
+}
+
 pub fn verify_range_type_results(result: Vec<RecordBatch>, _protocol: &str) {
     assert!(result.len() == 1);
     let rb = &result[0];
