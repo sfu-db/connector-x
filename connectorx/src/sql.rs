@@ -402,8 +402,6 @@ pub fn single_col_partition_query<T: Dialect>(
                 .ok_or_else(|| ConnectorXError::SqlQueryNotSupported(sql.to_string()))?
                 .clone();
 
-            let ast_part: Statement;
-
             let lb = Expr::BinaryOp {
                 left: Box::new(Expr::Value(Value::Number(lower.to_string(), false))),
                 op: BinaryOperator::LtEq,
@@ -429,7 +427,7 @@ pub fn single_col_partition_query<T: Dialect>(
                 query.order_by.clear();
             }
 
-            ast_part = wrap_query(
+            let ast_part: Statement = wrap_query(
                 &mut query,
                 vec![SelectItem::Wildcard(WildcardAdditionalOptions::default())],
                 Some(selection),
@@ -492,7 +490,6 @@ pub fn get_partition_range_query<T: Dialect>(sql: &str, col: &str, dialect: &T) 
                 .as_query()
                 .ok_or_else(|| ConnectorXError::SqlQueryNotSupported(sql.to_string()))?
                 .clone();
-            let ast_range: Statement;
 
             if query.limit.is_none() && query.offset.is_none() {
                 query.order_by = vec![]; // only omit orderby when there is no limit and offset in the query
@@ -521,7 +518,7 @@ pub fn get_partition_range_query<T: Dialect>(sql: &str, col: &str, dialect: &T) 
                     special: false,
                 })),
             ];
-            ast_range = wrap_query(&mut query, projection, None, table_alias);
+            let ast_range: Statement = wrap_query(&mut query, projection, None, table_alias);
             format!("{}", ast_range)
         }
         Err(e) => {
@@ -556,9 +553,6 @@ pub fn get_partition_range_query_sep<T: Dialect>(
                 .as_query()
                 .ok_or_else(|| ConnectorXError::SqlQueryNotSupported(sql.to_string()))?
                 .clone();
-
-            let ast_range_min: Statement;
-            let ast_range_max: Statement;
 
             query.order_by = vec![];
             let min_proj = vec![SelectItem::UnnamedExpr(Expr::Function(Function {
@@ -605,8 +599,10 @@ pub fn get_partition_range_query_sep<T: Dialect>(
                 order_by: vec![],
                 special: false,
             }))];
-            ast_range_min = wrap_query(&mut query.clone(), min_proj, None, RANGE_TMP_TAB_NAME);
-            ast_range_max = wrap_query(&mut query, max_proj, None, RANGE_TMP_TAB_NAME);
+            let ast_range_min: Statement =
+                wrap_query(&mut query.clone(), min_proj, None, RANGE_TMP_TAB_NAME);
+            let ast_range_max: Statement =
+                wrap_query(&mut query, max_proj, None, RANGE_TMP_TAB_NAME);
             (format!("{}", ast_range_min), format!("{}", ast_range_max))
         }
         Err(e) => {

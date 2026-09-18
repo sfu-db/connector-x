@@ -376,10 +376,7 @@ impl ArrowAssoc for Option<NaiveDateTimeWrapperMicro> {
     }
 
     fn append(builder: &mut Self::Builder, value: Option<NaiveDateTimeWrapperMicro>) -> Result<()> {
-        builder.append_option(match value {
-            Some(v) => Some(v.0.and_utc().timestamp_micros()),
-            None => None,
-        });
+        builder.append_option(value.map(|v| v.0.and_utc().timestamp_micros()));
         Ok(())
     }
 

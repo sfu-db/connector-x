@@ -62,21 +62,19 @@ impl CSVSource {
                     if string.is_empty() {
                         nulls[field_counter] = true;
                     } else {
-                        let dt: CSVTypeSystem;
-
-                        if string.starts_with('"') {
-                            dt = CSVTypeSystem::String(false);
+                        let dt: CSVTypeSystem = if string.starts_with('"') {
+                            CSVTypeSystem::String(false)
                         } else if boolean_re.is_match(string) {
-                            dt = CSVTypeSystem::Bool(false);
+                            CSVTypeSystem::Bool(false)
                         } else if decimal_re.is_match(string) {
-                            dt = CSVTypeSystem::F64(false);
+                            CSVTypeSystem::F64(false)
                         } else if integer_re.is_match(string) {
-                            dt = CSVTypeSystem::I64(false);
+                            CSVTypeSystem::I64(false)
                         } else if datetime_re.is_match(string) {
-                            dt = CSVTypeSystem::DateTime(false);
+                            CSVTypeSystem::DateTime(false)
                         } else {
-                            dt = CSVTypeSystem::String(false);
-                        }
+                            CSVTypeSystem::String(false)
+                        };
                         column_types[field_counter].insert(dt);
                     }
                 }
