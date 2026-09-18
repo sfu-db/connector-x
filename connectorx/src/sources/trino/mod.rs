@@ -756,6 +756,51 @@ mod tests {
     use super::*;
 
     #[test]
+    fn mocked_bigint_response_preserves_full_i64_range() {
+        let response = r#"{
+            "columns": [{
+                "name": "user_id_fast",
+                "type": "bigint",
+                "typeSignature": {"rawType": "bigint", "arguments": []}
+            }],
+            "data": [
+                [-9223372036854775808],
+                [-9007199254740993],
+                [9007199254740993],
+                [2518422941645303032],
+                [9223372036854775807]
+            ]
+        }"#;
+        let dataset: DataSet<Row> = serde_json::from_str(response).unwrap();
+        let (schema, rows) = dataset.split();
+
+        assert_eq!(
+            schema,
+            vec![(
+                "user_id_fast".to_owned(),
+                prusto::PrestoTy::PrestoInt(prusto::PrestoInt::I64)
+            )]
+        );
+        for (row, expected) in rows.iter().zip([
+            i64::MIN,
+            -(1_i64 << 53) - 1,
+            (1_i64 << 53) + 1,
+            2_518_422_941_645_303_032,
+            i64::MAX,
+        ]) {
+            assert_eq!(row.value()[0].as_i64(), Some(expected));
+        }
+    }
+
+    #[test]
+    fn observed_bigint_reproduces_the_old_i32_narrowing_failure() {
+        let value: Value = serde_json::from_str("2518422941645303032").unwrap();
+        let decoded = value.as_i64().unwrap();
+
+        assert!(i32::try_from(decoded).is_err());
+    }
+
+    #[test]
     fn test_new_with_all_params() {
         let rt = Arc::new(Runtime::new().unwrap());
         let conn = "trino+https://myuser:mypass@localhost:8443/mycatalog?\
