@@ -56,7 +56,7 @@ impl<'a> From<&'a FieldType> for BigQueryTypeSystem {
     }
 }
 
-impl<'a> From<BigQueryTypeSystem> for FieldType {
+impl From<BigQueryTypeSystem> for FieldType {
     fn from(ty: BigQueryTypeSystem) -> FieldType {
         use BigQueryTypeSystem::*;
         match ty {
