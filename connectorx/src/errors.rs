@@ -54,7 +54,7 @@ pub enum ConnectorXOutError {
     #[error(transparent)]
     MsSQLSourceError(#[from] crate::sources::mssql::MsSQLSourceError),
 
-    #[cfg(feature = "src_mssql")]
+    #[cfg(feature = "src_mssql_tiberius")]
     #[error(transparent)]
     MsSQL(#[from] tiberius::error::Error),
 

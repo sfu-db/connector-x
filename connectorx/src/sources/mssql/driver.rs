@@ -1,38 +1,40 @@
 //! Internal MSSQL driver seam.
 //!
-//! ConnectorX currently talks to SQL Server exclusively through `tiberius` +
-//! `bb8-tiberius`. This module introduces the seam that a future `mssql-tds`
-//! backend will plug into (see the phased migration plan tracked against
-//! sfu-db/connector-x#942), without changing any observable behavior today.
+//! ConnectorX can talk to SQL Server through either `tiberius` + `bb8-tiberius`
+//! (the original, default implementation) or `mssql-tds` (Microsoft's own TDS
+//! client), following the phased migration plan tracked against
+//! sfu-db/connector-x#942.
 //!
-//! Phase 0 (this change): define [`MsSQLDriverKind`] and wire an
-//! [`active_driver`] accessor into the existing Tiberius path. Only
-//! [`MsSQLDriverKind::Tiberius`] exists, so behavior is unchanged.
-//!
-//! Phase 2 will add an `mssql-tds`-backed implementation behind an opt-in
-//! Cargo feature and extend this module with the actual connection/query
-//! trait boundary once the second implementation's real shape is known.
-//! Designing that trait now, against a single implementation with the
-//! existing self-referential `OwningHandle`-based row iterator, would risk
-//! locking in the wrong abstraction before `mssql-tds`'s row/result-set API
-//! is exercised for real.
+//! Phase 2 (this change): add the `mssql-tds`-backed implementation behind
+//! the opt-in `src_mssql_tds` Cargo feature, mutually exclusive with
+//! `src_mssql_tiberius`. [`active_driver`] reflects whichever backend was
+//! compiled in; there is no runtime switch yet (Phase 3 adds that, plus the
+//! Python-facing module property).
 
 /// Which MSSQL wire-protocol driver ConnectorX uses for a given source.
 ///
-/// Only `Tiberius` is implemented today. `MssqlTds` is reserved for Phase 2
-/// and intentionally not constructible yet.
+/// Exactly one of `Tiberius` or `MssqlTds` is compiled in today, selected by
+/// the `src_mssql_tiberius` / `src_mssql_tds` Cargo features (a
+/// `compile_error!` in this crate enforces that both cannot be enabled at
+/// once). Phase 3 will turn this into a real runtime choice.
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
 pub enum MsSQLDriverKind {
-    /// The current, sole implementation: `tiberius` + `bb8-tiberius`.
+    /// `tiberius` + `bb8-tiberius`.
     Tiberius,
+    /// `mssql-tds`.
+    MssqlTds,
 }
 
-/// Returns the MSSQL driver ConnectorX will use.
-///
-/// Always returns [`MsSQLDriverKind::Tiberius`] until Phase 2 lands a second
-/// implementation and Phase 3 makes the choice configurable.
+/// Returns the MSSQL driver ConnectorX was compiled with.
+#[cfg(feature = "src_mssql_tiberius")]
 pub(crate) fn active_driver() -> MsSQLDriverKind {
     MsSQLDriverKind::Tiberius
+}
+
+/// Returns the MSSQL driver ConnectorX was compiled with.
+#[cfg(all(feature = "src_mssql_tds", not(feature = "src_mssql_tiberius")))]
+pub(crate) fn active_driver() -> MsSQLDriverKind {
+    MsSQLDriverKind::MssqlTds
 }
 
 #[cfg(test)]
@@ -40,7 +42,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn active_driver_defaults_to_tiberius() {
+    #[cfg(feature = "src_mssql_tiberius")]
+    fn active_driver_is_tiberius() {
         assert_eq!(active_driver(), MsSQLDriverKind::Tiberius);
+    }
+
+    #[test]
+    #[cfg(all(feature = "src_mssql_tds", not(feature = "src_mssql_tiberius")))]
+    fn active_driver_is_mssql_tds() {
+        assert_eq!(active_driver(), MsSQLDriverKind::MssqlTds);
     }
 }
