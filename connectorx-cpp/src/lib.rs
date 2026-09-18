@@ -75,11 +75,11 @@ pub unsafe extern "C" fn free_plans(res: *const CXSlice<CXFederatedPlan>) {
 /// # Safety
 ///
 /// `conn_list` must be a non-null pointer to a `CXSlice<CXConnectionInfo>` whose
-/// `ptr`/`len` describe an initialized array, and every C string it references
-/// (`name`, `conn`, `jdbc_url`, `jdbc_driver`, and the nested table/column names)
-/// must be a valid NUL-terminated string. `query` and `strategy` must likewise be
-/// valid NUL-terminated C strings. The returned slice must be released with
-/// [`free_plans`].
+/// `ptr`/`len` describe an initialized array. Every `name` and every non-null
+/// `conn`, `jdbc_url`, and `jdbc_driver` must be a valid NUL-terminated string.
+/// When `conn` is null, its `schema` and nested table/column names must be valid.
+/// `query` and `strategy` must likewise be valid NUL-terminated C strings. The
+/// returned slice must be released with [`free_plans`].
 #[no_mangle]
 pub unsafe extern "C" fn connectorx_rewrite(
     conn_list: *const CXSlice<CXConnectionInfo>,
