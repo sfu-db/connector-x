@@ -511,117 +511,126 @@
 <td class="text-center"><p>object</p></td>
 <td class="text-center"><p></p></td>
 </tr>
-<tr class="row-odd"><td class="text-center"><p>BPCHAR</p></td>
+<tr class="row-odd"><td class="text-center"><p>TSVECTOR</p></td>
+<td class="text-center"><p>object</p></td>
+<td class="text-center"><p>PostgreSQL text representation, retaining lexemes, positions, and weights</p></td>
+</tr>
+<tr class="row-even"><td class="text-center"><p>BPCHAR</p></td>
 <td class="text-center"><p>object</p></td>
 <td class="text-center"><p></p></td>
 </tr>
-<tr class="row-even"><td class="text-center"><p>VARCHAR</p></td>
+<tr class="row-odd"><td class="text-center"><p>VARCHAR</p></td>
 <td class="text-center"><p>object</p></td>
 <td class="text-center"><p></p></td>
 </tr>
-<tr class="row-odd"><td class="text-center"><p>CHAR</p></td>
+<tr class="row-even"><td class="text-center"><p>CHAR</p></td>
 <td class="text-center"><p>object</p></td>
 <td class="text-center"><p></p></td>
 </tr>
-<tr class="row-even"><td class="text-center"><p>BYTEA</p></td>
+<tr class="row-odd"><td class="text-center"><p>BYTEA</p></td>
 <td class="text-center"><p>object</p></td>
 <td class="text-center"><p></p></td>
 </tr>
-<tr class="row-odd"><td class="text-center"><p>DATE</p></td>
+<tr class="row-even"><td class="text-center"><p>DATE</p></td>
 <td class="text-center"><p>datetime64[ns]</p></td>
 <td class="text-center"><p></p></td>
 </tr>
-<tr class="row-even"><td class="text-center"><p>TIME</p></td>
+<tr class="row-odd"><td class="text-center"><p>TIME</p></td>
 <td class="text-center"><p>object</p></td>
 <td class="text-center"><p></p></td>
 </tr>
-<tr class="row-odd"><td class="text-center"><p>TIMESTAMP</p></td>
+<tr class="row-even"><td class="text-center"><p>TIMESTAMP</p></td>
 <td class="text-center"><p>datetime64[ns]</p></td>
 <td class="text-center"><p></p></td>
 </tr>
-<tr class="row-even"><td class="text-center"><p>TIMESTAMPZ</p></td>
+<tr class="row-odd"><td class="text-center"><p>TIMESTAMPZ</p></td>
 <td class="text-center"><p>datetime64[ns]</p></td>
 <td class="text-center"><p></p></td>
 </tr>
-<tr class="row-odd"><td class="text-center"><p>UUID</p></td>
+<tr class="row-even"><td class="text-center"><p>UUID</p></td>
 <td class="text-center"><p>object</p></td>
 <td class="text-center"><p></p></td>
 </tr>
-<tr class="row-even"><td class="text-center"><p>JSON</p></td>
+<tr class="row-odd"><td class="text-center"><p>JSON</p></td>
 <td class="text-center"><p>object</p></td>
 <td class="text-center"><p></p></td>
 </tr>
-<tr class="row-odd"><td class="text-center"><p>JSONB</p></td>
+<tr class="row-even"><td class="text-center"><p>JSONB</p></td>
 <td class="text-center"><p>object</p></td>
 <td class="text-center"><p></p></td>
 </tr>
-<tr class="row-even"><td class="text-center"><p>ENUM</p></td>
+<tr class="row-odd"><td class="text-center"><p>ENUM</p></td>
 <td class="text-center"><p>object</p></td>
 <td class="text-center"><p>need to convert enum column to text manually (<code class="docutils literal notranslate"><span class="pre">::text</span></code>) when using <code class="docutils literal notranslate"><span class="pre">csv</span></code> and <code class="docutils literal notranslate"><span class="pre">cursor</span></code> protocol</p></td>
 </tr>
-<tr class="row-odd"><td class="text-center"><p>ltree</p></td>
+<tr class="row-even"><td class="text-center"><p>ltree</p></td>
 <td class="text-center"><p>object</p></td>
 <td class="text-center"><p>binary protocol supported only after Postgres version 13</p></td>
 </tr>
-<tr class="row-even"><td class="text-center"><p>lquery</p></td>
+<tr class="row-odd"><td class="text-center"><p>lquery</p></td>
 <td class="text-center"><p>object</p></td>
 <td class="text-center"><p>binary protocol supported only after Postgres version 13</p></td>
 </tr>
-<tr class="row-odd"><td class="text-center"><p>ltxtquery</p></td>
+<tr class="row-even"><td class="text-center"><p>ltxtquery</p></td>
 <td class="text-center"><p>object</p></td>
 <td class="text-center"><p>binary protocol supported only after Postgres version 13</p></td>
 </tr>
-<tr class="row-even"><td class="text-center"><p>Inet</p></td>
+<tr class="row-odd"><td class="text-center"><p>Inet</p></td>
 <td class="text-center"><p>object</p></td>
 <td class="text-center"><p></p></td>
 </tr>
-<tr class="row-odd"><td class="text-center"><p>Vector</p></td>
+<tr class="row-even"><td class="text-center"><p>Vector</p></td>
 <td class="text-center"><p>object</p></td>
 <td class="text-center"><p>list of f32</p></td>
 </tr>
-<tr class="row-even"><td class="text-center"><p>HalfVec</p></td>
+<tr class="row-odd"><td class="text-center"><p>HalfVec</p></td>
 <td class="text-center"><p>object</p></td>
 <td class="text-center"><p>list of f32</p></td>
 </tr>
-<tr class="row-odd"><td class="text-center"><p>Bit</p></td>
+<tr class="row-even"><td class="text-center"><p>Bit</p></td>
 <td class="text-center"><p>object</p></td>
 <td class="text-center"><p></p></td>
 </tr>
-<tr class="row-even"><td class="text-center"><p>SparseVec</p></td>
+<tr class="row-odd"><td class="text-center"><p>SparseVec</p></td>
 <td class="text-center"><p>object</p></td>
 <td class="text-center"><p>list of f32</p></td>
 </tr>
-<tr class="row-odd"><td class="text-center"><p>BOOL[]</p></td>
+<tr class="row-even"><td class="text-center"><p>BOOL[]</p></td>
 <td class="text-center"><p>object</p></td>
 <td class="text-center"><p>list of bool</p></td>
 </tr>
-<tr class="row-even"><td class="text-center"><p>INT2[]</p></td>
+<tr class="row-odd"><td class="text-center"><p>INT2[]</p></td>
 <td class="text-center"><p>object</p></td>
 <td class="text-center"><p>list of i64</p></td>
 </tr>
-<tr class="row-odd"><td class="text-center"><p>INT4[]</p></td>
+<tr class="row-even"><td class="text-center"><p>INT4[]</p></td>
 <td class="text-center"><p>object</p></td>
 <td class="text-center"><p>list of i64</p></td>
 </tr>
-<tr class="row-even"><td class="text-center"><p>INT8[]</p></td>
+<tr class="row-odd"><td class="text-center"><p>INT8[]</p></td>
 <td class="text-center"><p>object</p></td>
 <td class="text-center"><p>list of i64</p></td>
 </tr>
-<tr class="row-odd"><td class="text-center"><p>FLOAT4[]</p></td>
+<tr class="row-even"><td class="text-center"><p>FLOAT4[]</p></td>
 <td class="text-center"><p>object</p></td>
 <td class="text-center"><p>list of f64</p></td>
 </tr>
-<tr class="row-even"><td class="text-center"><p>FLOAT8[]</p></td>
+<tr class="row-odd"><td class="text-center"><p>FLOAT8[]</p></td>
 <td class="text-center"><p>object</p></td>
 <td class="text-center"><p>list of f64</p></td>
 </tr>
-<tr class="row-odd"><td class="text-center"><p>NUMERIC[]</p></td>
+<tr class="row-even"><td class="text-center"><p>NUMERIC[]</p></td>
 <td class="text-center"><p>object</p></td>
 <td class="text-center"><p>list of f64</p></td>
 </tr>
 </tbody>
 </table>
 </div>
+<p><code class="docutils literal notranslate"><span class="pre">TSVECTOR</span></code> is returned as strings in Pandas, Arrow, and Polars without requiring
+an explicit cast in the query. Binary, CSV, cursor, and simple protocols are
+supported. As with other string columns, the CSV protocol cannot distinguish an
+empty vector (<code class="docutils literal notranslate"><span class="pre">''::tsvector</span></code>) from <code class="docutils literal notranslate"><span class="pre">NULL</span></code>; use binary, cursor, or simple to preserve
+that distinction. <code class="docutils literal notranslate"><span class="pre">TSQUERY</span></code> and <code class="docutils literal notranslate"><span class="pre">TSVECTOR[]</span></code> are not supported.</p>
 </section>
 <section id="performance-db-m6g-4xlarge-rds">
 <h2>Performance (db.m6g.4xlarge RDS)<a class="headerlink" href="#performance-db-m6g-4xlarge-rds" title="Link to this heading">#</a></h2>
