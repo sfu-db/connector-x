@@ -16,6 +16,7 @@ test +ARGS="":
     cargo test --features all {{ARGS}} -- --nocapture
 
 test-ci: 
+    cargo test --lib --features all
     cargo test --features src_postgres --features dst_arrow --test test_postgres
     cargo test --features src_postgres --features src_dummy --features dst_polars --test test_polars
 
