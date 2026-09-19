@@ -154,11 +154,7 @@ fn test_mssql_types_matrix() {
     assert_eq!(binary.value(2), [49u8, 50, 0, 0, 0]);
 
     // nchar / text / ntext -> Utf8
-    assert!(col!(19, StringArray).eq(&StringArray::from(vec![
-        Some("12  "),
-        Some("1234"),
-        None,
-    ])));
+    assert!(col!(19, StringArray).eq(&StringArray::from(vec![Some("12  "), Some("1234"), None,])));
     assert!(col!(20, StringArray).eq(&StringArray::from(vec![None, Some("text"), Some("t")])));
     assert!(col!(21, StringArray).eq(&StringArray::from(vec![None, Some("ntext"), Some("nt")])));
 
