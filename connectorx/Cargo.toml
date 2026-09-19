@@ -69,6 +69,7 @@ tiberius = { version = "0.7", features = [
   "chrono",
   "integrated-auth-gssapi",
 ], optional = true }
+mssql-tds = { version = "0.1", optional = true }
 tokio = { version = "1", features = [
   "rt",
   "rt-multi-thread",
@@ -108,7 +109,7 @@ all = [
   "src_sqlite",
   "src_postgres",
   "src_mysql",
-  "src_mssql",
+  "src_mssql_tiberius",
   "src_oracle",
   "src_bigquery",
   "src_csv",
@@ -128,7 +129,9 @@ fptr = []
 src_bigquery = ["gcp-bigquery-client", "tokio"]
 src_csv = ["csv", "regex"]
 src_dummy = ["num-traits"]
-src_mssql = [
+src_mssql = []
+src_mssql_tiberius = [
+  "src_mssql",
   "rust_decimal",
   "num-traits",
   "tiberius",
@@ -137,6 +140,18 @@ src_mssql = [
   "tokio",
   "tokio-util",
   "uuid_old",
+  "futures",
+  "urlencoding",
+]
+src_mssql_tds = [
+  "src_mssql",
+  "rust_decimal",
+  "num-traits",
+  "mssql-tds",
+  "tokio",
+  "tokio-util",
+  "uuid_old",
+  "uuid",
   "futures",
   "urlencoding",
 ]

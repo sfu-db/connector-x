@@ -6,7 +6,7 @@ use crate::source_router::{SourceConn, SourceType};
 use crate::sources::bigquery::BigQueryDialect;
 #[cfg(feature = "src_clickhouse")]
 use crate::sources::clickhouse::{ClickHouseSource, ClickHouseSourceError};
-#[cfg(feature = "src_mssql")]
+#[cfg(feature = "src_mssql_tiberius")]
 use crate::sources::mssql::{mssql_config, FloatN, IntN, MsSQLTypeSystem};
 #[cfg(feature = "src_mysql")]
 use crate::sources::mysql::{build_opts, MySQLTypeSystem};
@@ -45,11 +45,11 @@ use sqlparser::dialect::MySqlDialect;
 use sqlparser::dialect::PostgreSqlDialect;
 #[cfg(feature = "src_sqlite")]
 use sqlparser::dialect::SQLiteDialect;
-#[cfg(feature = "src_mssql")]
+#[cfg(feature = "src_mssql_tiberius")]
 use tiberius::Client;
-#[cfg(any(feature = "src_bigquery", feature = "src_mssql", feature = "src_trino"))]
+#[cfg(any(feature = "src_bigquery", feature = "src_mssql_tiberius", feature = "src_trino"))]
 use tokio::{net::TcpStream, runtime::Runtime};
-#[cfg(feature = "src_mssql")]
+#[cfg(feature = "src_mssql_tiberius")]
 use tokio_util::compat::TokioAsyncWriteCompatExt;
 use url::Url;
 
@@ -106,8 +106,12 @@ pub fn get_col_range(source_conn: &SourceConn, query: &str, col: &str) -> OutRes
         SourceType::SQLite => sqlite_get_partition_range(&source_conn.conn, query, col),
         #[cfg(feature = "src_mysql")]
         SourceType::MySQL => mysql_get_partition_range(&source_conn.conn, query, col),
-        #[cfg(feature = "src_mssql")]
+        #[cfg(feature = "src_mssql_tiberius")]
         SourceType::MsSQL => mssql_get_partition_range(&source_conn.conn, query, col),
+        #[cfg(all(feature = "src_mssql_tds", not(feature = "src_mssql_tiberius")))]
+        SourceType::MsSQL => unimplemented!(
+            "partition_on is not yet supported with the src_mssql_tds backend (sfu-db/connector-x#942)"
+        ),
         #[cfg(feature = "src_oracle")]
         SourceType::Oracle => oracle_get_partition_range(&source_conn.conn, query, col),
         #[cfg(feature = "src_bigquery")]
@@ -403,7 +407,7 @@ fn mysql_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
     (min_v, max_v)
 }
 
-#[cfg(feature = "src_mssql")]
+#[cfg(feature = "src_mssql_tiberius")]
 #[throws(ConnectorXOutError)]
 fn mssql_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
     let rt = Runtime::new().expect("Failed to create runtime");
