@@ -532,6 +532,13 @@ BibTeX entry:
                 </a>
             </td>
             <td align="center">
+                <a href="https://github.com/MatsMoll">
+                    <img src="https://avatars.githubusercontent.com/u/4439131?v=4" width="66;" alt="MatsMoll"/>
+                    <br />
+                    <sub><b>Mats Eikeland Mollestad</b></sub>
+                </a>
+            </td>
+            <td align="center">
                 <a href="https://github.com/meirdev">
                     <img src="https://avatars.githubusercontent.com/u/21178966?v=4" width="66;" alt="meirdev"/>
                     <br />
@@ -559,6 +566,8 @@ BibTeX entry:
                     <sub><b>Null</b></sub>
                 </a>
             </td>
+		</tr>
+		<tr>
             <td align="center">
                 <a href="https://github.com/kotval">
                     <img src="https://avatars.githubusercontent.com/u/11917243?v=4" width="66;" alt="kotval"/>
@@ -566,8 +575,6 @@ BibTeX entry:
                     <sub><b>Kotval</b></sub>
                 </a>
             </td>
-		</tr>
-		<tr>
             <td align="center">
                 <a href="https://github.com/messense">
                     <img src="https://avatars.githubusercontent.com/u/1556054?v=4" width="66;" alt="messense"/>
@@ -603,6 +610,8 @@ BibTeX entry:
                     <sub><b>Alexander Butler</b></sub>
                 </a>
             </td>
+		</tr>
+		<tr>
             <td align="center">
                 <a href="https://github.com/knota-lab">
                     <img src="https://avatars.githubusercontent.com/u/26835087?v=4" width="66;" alt="knota-lab"/>
@@ -610,20 +619,11 @@ BibTeX entry:
                     <sub><b>Knota Lab</b></sub>
                 </a>
             </td>
-		</tr>
-		<tr>
             <td align="center">
                 <a href="https://github.com/zzzdong">
                     <img src="https://avatars.githubusercontent.com/u/5125482?v=4" width="66;" alt="zzzdong"/>
                     <br />
                     <sub><b>Null</b></sub>
-                </a>
-            </td>
-            <td align="center">
-                <a href="https://github.com/MatsMoll">
-                    <img src="https://avatars.githubusercontent.com/u/4439131?v=4" width="66;" alt="MatsMoll"/>
-                    <br />
-                    <sub><b>Mats Eikeland Mollestad</b></sub>
                 </a>
             </td>
             <td align="center">
