@@ -20,11 +20,6 @@ test-ci:
     cargo test --features src_postgres --features dst_arrow --test test_postgres
     cargo test --features src_postgres --features src_dummy --features dst_polars --test test_polars
 
-# integration tests only, for CI jobs that get --lib coverage from cargo-llvm-cov instead
-test-ci-integration:
-    cargo test --features src_postgres --features dst_arrow --test test_postgres
-    cargo test --features src_postgres --features src_dummy --features dst_polars --test test_polars
-
 # Coverage is split into a unit and an integration report so each shows up
 # separately in Codecov. Both stay under cargo-llvm-cov's instrumented build
 # the whole time (only --profraw-only is cleaned between runs, never the
