@@ -30,11 +30,21 @@ coverage-unit:
     cargo llvm-cov --no-report --lib --features all
     cargo llvm-cov report --lcov --output-path lcov-unit.info
 
+# Removes any testcontainers-managed container/image left behind by the
+# just-finished test invocation, so disk usage stays at "one DB's footprint"
+# instead of stacking across postgres/polars/mssql within the same job.
+_reap-test-containers:
+    docker rm -f $(docker ps -aq --filter "label=org.testcontainers.managed-by=testcontainers") 2>/dev/null || true
+    docker image prune -af
+
 coverage-integration:
     cargo llvm-cov clean --workspace --profraw-only
     cargo llvm-cov --no-report --features src_postgres --features dst_arrow --test test_postgres
+    just _reap-test-containers
     cargo llvm-cov --no-report --features src_postgres --features src_dummy --features dst_polars --test test_polars
+    just _reap-test-containers
     cargo llvm-cov --no-report --features src_mssql --features dst_arrow --test test_mssql
+    just _reap-test-containers
     cargo llvm-cov report --lcov --output-path lcov-integration.info
 
 test-feature-gate:
