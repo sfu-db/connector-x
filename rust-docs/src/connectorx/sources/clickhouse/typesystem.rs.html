@@ -307,10 +307,10 @@
 <a href=#307 id=307 data-nosnippet>307</a>    </span><span class="kw">fn </span>parse_decimal_precision_scale(params: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;) -&gt; (u8, u8) {
 <a href=#308 id=308 data-nosnippet>308</a>        <span class="kw">let </span>params = params.and_then(|p| p.split(<span class="string">','</span>).map(|i| i.trim()).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;().into());
 <a href=#309 id=309 data-nosnippet>309</a>        params
-<a href=#310 id=310 data-nosnippet>310</a>            .and_then(|p| {
+<a href=#310 id=310 data-nosnippet>310</a>            .map(|p| {
 <a href=#311 id=311 data-nosnippet>311</a>                <span class="kw">let </span>precision = p.first().and_then(|s| s.parse::&lt;u8&gt;().ok());
 <a href=#312 id=312 data-nosnippet>312</a>                <span class="kw">let </span>scale = p.get(<span class="number">1</span>).and_then(|s| s.parse::&lt;u8&gt;().ok());
-<a href=#313 id=313 data-nosnippet>313</a>                <span class="prelude-val">Some</span>((precision.unwrap_or(<span class="number">0</span>), scale.unwrap_or(<span class="number">0</span>)))
+<a href=#313 id=313 data-nosnippet>313</a>                (precision.unwrap_or(<span class="number">0</span>), scale.unwrap_or(<span class="number">0</span>))
 <a href=#314 id=314 data-nosnippet>314</a>            })
 <a href=#315 id=315 data-nosnippet>315</a>            .unwrap_or((<span class="number">0</span>, <span class="number">0</span>))
 <a href=#316 id=316 data-nosnippet>316</a>    }

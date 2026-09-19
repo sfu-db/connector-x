@@ -62,7 +62,7 @@
 <a href=#62 id=62 data-nosnippet>62</a>
 <a href=#63 id=63 data-nosnippet>63</a>    <span class="kw">let </span>params: HashMap&lt;String, String&gt; = conn.query_pairs().into_owned().collect();
 <a href=#64 id=64 data-nosnippet>64</a>
-<a href=#65 id=65 data-nosnippet>65</a>    <span class="kw">let </span>conn_str = <span class="kw">if </span>params.get(<span class="string">"alias"</span>).map_or(<span class="bool-val">false</span>, |v| v == <span class="string">"true"</span>) {
+<a href=#65 id=65 data-nosnippet>65</a>    <span class="kw">let </span>conn_str = <span class="kw">if </span>params.get(<span class="string">"alias"</span>).is_some_and(|v| v == <span class="string">"true"</span>) {
 <a href=#66 id=66 data-nosnippet>66</a>        host.clone()
 <a href=#67 id=67 data-nosnippet>67</a>    } <span class="kw">else </span>{
 <a href=#68 id=68 data-nosnippet>68</a>        <span class="kw">let </span>port = conn.port().unwrap_or(<span class="number">1521</span>);
@@ -207,7 +207,7 @@
 <a href=#207 id=207 data-nosnippet>207</a>        <span class="kw">let </span><span class="kw-2">mut </span>ret = <span class="macro">vec!</span>[];
 <a href=#208 id=208 data-nosnippet>208</a>        <span class="kw">for </span>query <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.queries {
 <a href=#209 id=209 data-nosnippet>209</a>            <span class="kw">let </span>conn = <span class="self">self</span>.get_conn()<span class="question-mark">?</span>;
-<a href=#210 id=210 data-nosnippet>210</a>            ret.push(OracleSourcePartition::new(conn, <span class="kw-2">&amp;</span>query, <span class="kw-2">&amp;</span><span class="self">self</span>.schema));
+<a href=#210 id=210 data-nosnippet>210</a>            ret.push(OracleSourcePartition::new(conn, query, <span class="kw-2">&amp;</span><span class="self">self</span>.schema));
 <a href=#211 id=211 data-nosnippet>211</a>        }
 <a href=#212 id=212 data-nosnippet>212</a>        ret
 <a href=#213 id=213 data-nosnippet>213</a>    }

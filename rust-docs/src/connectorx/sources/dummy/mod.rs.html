@@ -201,7 +201,7 @@
 <a href=#201 id=201 data-nosnippet>201</a>    <span class="kw">type </span>Error = ConnectorXError;
 <a href=#202 id=202 data-nosnippet>202</a>
 <a href=#203 id=203 data-nosnippet>203</a>    <span class="kw">fn </span>produce(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;bool&gt; {
-<a href=#204 id=204 data-nosnippet>204</a>        <span class="kw">let </span>ret = <span class="self">self</span>.next_val() % <span class="number">2 </span>== <span class="number">0</span>;
+<a href=#204 id=204 data-nosnippet>204</a>        <span class="kw">let </span>ret = <span class="self">self</span>.next_val().is_multiple_of(<span class="number">2</span>);
 <a href=#205 id=205 data-nosnippet>205</a>        <span class="prelude-val">Ok</span>(ret)
 <a href=#206 id=206 data-nosnippet>206</a>    }
 <a href=#207 id=207 data-nosnippet>207</a>}
