@@ -22,7 +22,7 @@
 /// Only `Tiberius` is implemented today. `MssqlTds` is reserved for Phase 2
 /// and intentionally not constructible yet.
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
-pub enum MsSQLDriverKind {
+pub(crate) enum MsSQLDriverKind {
     /// The current, sole implementation: `tiberius` + `bb8-tiberius`.
     Tiberius,
 }

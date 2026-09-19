@@ -4,7 +4,6 @@ mod driver;
 mod errors;
 mod typesystem;
 
-pub use self::driver::MsSQLDriverKind;
 pub use self::errors::MsSQLSourceError;
 pub use self::typesystem::{FloatN, IntN, MsSQLTypeSystem};
 use crate::constants::DB_BUFFER_SIZE;
