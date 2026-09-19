@@ -65,14 +65,20 @@ jobs:
         uses: taiki-e/install-action@cargo-llvm-cov
 
       - name: Generate unit test coverage
-        run: cargo llvm-cov --lib --features all --lcov --output-path lcov.info
+        run: |
+          cargo llvm-cov --lib --features all --lcov --output-path lcov.info
+          {
+            echo "### Rust unit test coverage"
+            echo '```text'
+            cargo llvm-cov report --summary-only
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
+      - name: Publish coverage report
+        uses: actions/upload-artifact@v4
         with:
-          files: lcov.info
-          fail_ci_if_error: false
-          token: ${{ secrets.CODECOV_TOKEN }}
+          name: rust-unit-test-coverage
+          path: lcov.info
 
       - name: Test build docs
         uses: actions-rs/cargo@v1
