@@ -86,12 +86,14 @@ jobs:
 
       # test_db.rs leaks each testcontainers::Container (std::mem::forget) so
       # they survive across the postgres/polars/mssql runs above sharing this
-      # job, instead of stopping on drop. Remove them explicitly once tests
-      # are done, so the mssql image's disk footprint doesn't stack on top of
-      # containers other steps already finished with.
+      # job, instead of stopping on drop. This crate version has no built-in
+      # reaper, so remove them explicitly, filtered to the label
+      # testcontainers always tags its containers with, so this only ever
+      # touches containers testcontainers itself started.
       - name: Clean up test containers
         if: always()
-        run: docker rm -f $(docker ps -aq) 2>/dev/null || true
+        run: |
+          docker rm -f $(docker ps -aq --filter "label=org.testcontainers.managed-by=testcontainers") 2>/dev/null || true
 
       - name: Upload unit coverage to Codecov
         uses: codecov/codecov-action@v5
