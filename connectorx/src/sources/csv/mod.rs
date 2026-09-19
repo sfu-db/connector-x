@@ -111,16 +111,11 @@ impl CSVSource {
                         }
                     }
                 }
-                2 => {
-                    if possibilities.contains(&CSVTypeSystem::I64(false))
-                        && possibilities.contains(&CSVTypeSystem::F64(false))
-                    {
-                        // Integer && Float -> Float
-                        schema.push(CSVTypeSystem::F64(has_nulls));
-                    } else {
-                        // Conflicting CSVTypeSystems -> String
-                        schema.push(CSVTypeSystem::String(has_nulls));
-                    }
+                2 if possibilities.contains(&CSVTypeSystem::I64(false))
+                    && possibilities.contains(&CSVTypeSystem::F64(false)) =>
+                {
+                    // Integer && Float -> Float
+                    schema.push(CSVTypeSystem::F64(has_nulls));
                 }
                 _ => {
                     // Conflicting CSVTypeSystems -> String
