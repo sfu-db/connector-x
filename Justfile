@@ -20,6 +20,11 @@ test-ci:
     cargo test --features src_postgres --features dst_arrow --test test_postgres
     cargo test --features src_postgres --features src_dummy --features dst_polars --test test_polars
 
+# integration tests only, for CI jobs that get --lib coverage from cargo-llvm-cov instead
+test-ci-integration:
+    cargo test --features src_postgres --features dst_arrow --test test_postgres
+    cargo test --features src_postgres --features src_dummy --features dst_polars --test test_polars
+
 test-feature-gate:
     cargo c --features src_postgres
     cargo c --features src_mysql

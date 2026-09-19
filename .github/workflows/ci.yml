@@ -58,14 +58,16 @@ jobs:
       # - name: Check each feature gate
       #   run: just test-feature-gate
 
-      - name: Run tests
-        run: cargo clean && just test-ci
-
       - name: Install cargo-llvm-cov
         uses: taiki-e/install-action@cargo-llvm-cov
 
-      - name: Generate unit test coverage
+      - name: Run unit tests and generate coverage
+        # cargo-llvm-cov compiles and runs `--lib` under coverage instrumentation,
+        # which requires different RUSTFLAGS than a plain `cargo test` and so
+        # cannot reuse its build cache. Let this be the only run of the --lib
+        # suite in CI instead of duplicating a full build+test pass.
         run: |
+          cargo clean
           cargo llvm-cov --lib --features all --lcov --output-path lcov.info
           {
             echo "### Rust unit test coverage"
@@ -74,7 +76,11 @@ jobs:
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Run integration tests
+        run: just test-ci-integration
+
       - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
         uses: codecov/codecov-action@v5
         with:
           files: lcov.info
