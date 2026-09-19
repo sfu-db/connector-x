@@ -359,7 +359,7 @@ def mssql_container() -> Generator[Optional[Any], None, None]:
     )
 
     mssql_container = SqlServerContainer(
-        image="mcr.microsoft.com/mssql/server:2022-CU12-ubuntu-22.04",
+        image="mcr.microsoft.com/mssql/server:2025-latest",
         username="SA",
         password="1Secure*Password1",
         dbname="tempdb",

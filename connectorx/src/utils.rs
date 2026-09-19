@@ -58,7 +58,7 @@ pub fn decimal_to_i128(mut v: rust_decimal::Decimal, scale: u32) -> anyhow::Resu
     v.rescale(scale);
 
     let v_scale = v.scale();
-    if v_scale != scale as u32 {
+    if v_scale != scale {
         return Err(anyhow::anyhow!(
             "decimal scale is not equal to expected scale, got: {} expected: {}",
             v_scale,

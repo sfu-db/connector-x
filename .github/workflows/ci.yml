@@ -58,8 +58,59 @@ jobs:
       # - name: Check each feature gate
       #   run: just test-feature-gate
 
-      - name: Run tests
-        run: cargo clean && just test-ci
+      - name: Install cargo-llvm-cov
+        uses: taiki-e/install-action@cargo-llvm-cov
+
+      - name: Run unit tests and generate coverage
+        # Both this and the integration step below run under cargo-llvm-cov's
+        # instrumented build the whole time (RUSTFLAGS never changes between
+        # them), so despite two `just` invocations this is still one compile.
+        run: |
+          just coverage-unit
+          {
+            echo "### Rust unit test coverage"
+            echo '```text'
+            cargo llvm-cov report --summary-only
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Run integration tests and generate coverage
+        run: |
+          just coverage-integration
+          {
+            echo "### Rust integration test coverage"
+            echo '```text'
+            cargo llvm-cov report --summary-only
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # test_db.rs leaks each testcontainers::Container (std::mem::forget), and
+      # every pulled image (postgres, mysql, mssql, ...) stays on the runner's
+      # disk too, so the images accumulate across coverage-unit +
+      # coverage-integration within this same job. Stop/remove the leaked
+      # containers (label filter matches only containers testcontainers
+      # started), then prune now-unreferenced images to reclaim that space.
+      - name: Clean up test containers and images
+        if: always()
+        run: |
+          docker rm -f $(docker ps -aq --filter "label=org.testcontainers.managed-by=testcontainers") 2>/dev/null || true
+          docker image prune -af
+
+      - name: Upload unit coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          files: lcov-unit.info
+          flags: unit-tests
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Upload integration coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          files: lcov-integration.info
+          flags: integration-tests
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Test build docs
         uses: actions-rs/cargo@v1

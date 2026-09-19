@@ -98,7 +98,7 @@ fn create_sources(
                     "put",
                     &[
                         InvocationArg::try_from(name).unwrap(),
-                        InvocationArg::try_from(arr_instance).unwrap(),
+                        InvocationArg::from(arr_instance),
                     ],
                 )?;
             }
@@ -106,7 +106,7 @@ fn create_sources(
                 "ai.dataprep.federated.FederatedDataSource",
                 &[
                     InvocationArg::try_from(db_info.is_local).unwrap(),
-                    InvocationArg::try_from(schema_info).unwrap(),
+                    InvocationArg::from(schema_info),
                 ],
             )?;
             jvm.invoke(
@@ -114,7 +114,7 @@ fn create_sources(
                 "put",
                 &[
                     InvocationArg::try_from(db_name).unwrap(),
-                    InvocationArg::try_from(fed_ds).unwrap(),
+                    InvocationArg::from(fed_ds),
                 ],
             )?;
         } else {
@@ -161,8 +161,8 @@ pub fn rewrite_sql(
         "ai.dataprep.accio.FederatedQueryRewriter",
         InvocationArg::empty(),
     )?;
-    let db_config = InvocationArg::try_from(db_config).unwrap();
-    let db_manual = InvocationArg::try_from(db_manual).unwrap();
+    let db_config = InvocationArg::from(db_config);
+    let db_manual = InvocationArg::from(db_manual);
     let plan = jvm.invoke(&rewriter, "rewrite", &[sql, db_config, db_manual, strategy])?;
 
     let count = jvm.invoke(&plan, "getCount", InvocationArg::empty())?;

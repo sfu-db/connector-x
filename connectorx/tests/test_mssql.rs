@@ -12,7 +12,6 @@ use tokio::runtime::Runtime;
 mod test_db;
 
 #[test]
-#[ignore]
 fn test_mssql() {
     let _ = env_logger::builder().is_test(true).try_init();
 
@@ -35,7 +34,6 @@ fn test_mssql() {
 }
 
 #[test]
-#[ignore]
 fn test_mssql_agg() {
     let _ = env_logger::builder().is_test(true).try_init();
 
