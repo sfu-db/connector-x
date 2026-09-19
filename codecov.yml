@@ -1,0 +1,11 @@
+coverage:
+  status:
+    project:
+      default:
+        informational: true
+    patch:
+      default:
+        target: 60%
+
+comment:
+  layout: "diff, files"
