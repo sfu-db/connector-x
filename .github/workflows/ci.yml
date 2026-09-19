@@ -58,15 +58,15 @@ jobs:
       # - name: Check each feature gate
       #   run: just test-feature-gate
 
-      - name: Run tests
-        run: cargo clean && just test-ci
-
       - name: Install cargo-llvm-cov
         uses: taiki-e/install-action@cargo-llvm-cov
 
-      - name: Generate unit test coverage
+      - name: Run unit tests and generate coverage
+        # Both this and the integration step below run under cargo-llvm-cov's
+        # instrumented build the whole time (RUSTFLAGS never changes between
+        # them), so despite two `just` invocations this is still one compile.
         run: |
-          cargo llvm-cov --lib --features all --lcov --output-path lcov.info
+          just coverage-unit
           {
             echo "### Rust unit test coverage"
             echo '```text'
@@ -74,10 +74,29 @@ jobs:
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Upload coverage to Codecov
+      - name: Run integration tests and generate coverage
+        run: |
+          just coverage-integration
+          {
+            echo "### Rust integration test coverage"
+            echo '```text'
+            cargo llvm-cov report --summary-only
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload unit coverage to Codecov
         uses: codecov/codecov-action@v5
         with:
-          files: lcov.info
+          files: lcov-unit.info
+          flags: unit-tests
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Upload integration coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          files: lcov-integration.info
+          flags: integration-tests
           fail_ci_if_error: false
           token: ${{ secrets.CODECOV_TOKEN }}
 
