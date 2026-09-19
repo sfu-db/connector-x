@@ -36,7 +36,6 @@ fn run_query(query: &str) -> Vec<arrow::record_batch::RecordBatch> {
 /// Full type-matrix characterization: every column of `test_types`, ordered so nulls in
 /// `test_int1` sort first (SQL Server's default NULLS FIRST for ASC).
 #[test]
-#[ignore]
 fn test_mssql_types_matrix() {
     let result = run_query("select * from test_types order by test_int1");
     assert_eq!(result.len(), 1);
@@ -192,7 +191,6 @@ const DT2_ROW1: i64 = -2208945599_876550; // 1900-01-01T12:00:00.123450
 /// A query that returns zero rows should still yield a well-formed (empty) result with the
 /// correct schema, rather than an error or a missing RecordBatch.
 #[test]
-#[ignore]
 fn test_mssql_empty_result() {
     let result = run_query("select * from test_types where 1 = 0");
     assert_eq!(result.len(), 1);
@@ -203,7 +201,6 @@ fn test_mssql_empty_result() {
 
 /// An invalid query should surface as an error from `dispatcher.run()`, not a panic.
 #[test]
-#[ignore]
 fn test_mssql_sql_error() {
     let _ = env_logger::builder().is_test(true).try_init();
     let dburl = test_db::mssql_url();
