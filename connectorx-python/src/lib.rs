@@ -35,41 +35,9 @@ fn connectorx(_: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(read_sql2))?;
     m.add_wrapped(wrap_pyfunction!(partition_sql))?;
     m.add_wrapped(wrap_pyfunction!(get_meta))?;
-    #[cfg(feature = "srcs")]
-    {
-        m.add_wrapped(wrap_pyfunction!(get_mssql_driver))?;
-        m.add_wrapped(wrap_pyfunction!(set_mssql_driver))?;
-    }
     m.add_class::<pandas::PandasBlockInfo>()?;
     m.add_class::<arrow::PyRecordBatch>()?;
     m.add_class::<arrow::PyRecordBatchIterator>()?;
-    Ok(())
-}
-
-/// Returns the MSSQL driver ConnectorX currently uses: `"tiberius"` or
-/// `"mssql-tds"`. Backs the `connectorx.mssql_driver` module property; see
-/// sfu-db/connector-x#942 Phase 3.
-#[cfg(feature = "srcs")]
-#[pyfunction]
-pub fn get_mssql_driver() -> &'static str {
-    ::connectorx::sources::mssql::active_driver().as_str()
-}
-
-
-/// Switches the MSSQL driver ConnectorX uses for `MsSQLSource`s created from
-/// now on (existing in-flight reads are unaffected). `driver` must be
-/// `"tiberius"` or `"mssql-tds"`. Backs the `connectorx.mssql_driver` module
-/// property; see sfu-db/connector-x#942 Phase 3.
-#[cfg(feature = "srcs")]
-#[pyfunction]
-pub fn set_mssql_driver(driver: &str) -> PyResult<()> {
-    let kind = ::connectorx::sources::mssql::MsSQLDriverKind::from_name(driver).ok_or_else(|| {
-        pyo3::exceptions::PyValueError::new_err(format!(
-            "invalid mssql driver {:?}: expected \"tiberius\" or \"mssql-tds\"",
-            driver
-        ))
-    })?;
-    ::connectorx::sources::mssql::set_active_driver(kind);
     Ok(())
 }
 

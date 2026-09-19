@@ -29,8 +29,6 @@ polars = { workspace = true, optional = true, features = [
   "lazy",
 ] }
 polars-arrow = { workspace = true, optional = true }
-bb8 = { version = "0.7", optional = true }
-bb8-tiberius = { version = "0.8", optional = true }
 csv = { version = "1", optional = true }
 fallible-streaming-iterator = { version = "0.1", optional = true }
 futures = { version = "0.3", optional = true }
@@ -64,11 +62,6 @@ rusqlite = { version = "0.37", features = [
 ], optional = true }
 rust_decimal = { version = "1", features = ["db-postgres"], optional = true }
 rust_decimal_macros = { version = "1", optional = true }
-tiberius = { version = "0.7", features = [
-  "rust_decimal",
-  "chrono",
-  "integrated-auth-gssapi",
-], optional = true }
 mssql-tds = { version = "0.1", optional = true }
 tokio = { version = "1", features = [
   "rt",
@@ -109,7 +102,7 @@ all = [
   "src_sqlite",
   "src_postgres",
   "src_mysql",
-  "src_mssql_tds",
+  "src_mssql",
   "src_oracle",
   "src_bigquery",
   "src_csv",
@@ -129,22 +122,7 @@ fptr = []
 src_bigquery = ["gcp-bigquery-client", "tokio"]
 src_csv = ["csv", "regex"]
 src_dummy = ["num-traits"]
-src_mssql = []
-src_mssql_tiberius = [
-  "src_mssql",
-  "rust_decimal",
-  "num-traits",
-  "tiberius",
-  "bb8-tiberius",
-  "bb8",
-  "tokio",
-  "tokio-util",
-  "uuid_old",
-  "futures",
-  "urlencoding",
-]
-src_mssql_tds = [
-  "src_mssql",
+src_mssql = [
   "rust_decimal",
   "num-traits",
   "mssql-tds",
@@ -204,7 +182,7 @@ src_clickhouse = [
 ]
 federation = ["j4rs"]
 fed_exec = ["datafusion", "tokio"]
-integrated-auth-gssapi = ["tiberius/integrated-auth-gssapi"]
+integrated-auth-gssapi = ["mssql-tds/gssapi"]
 
 [package.metadata.docs.rs]
 features = ["all"]

@@ -18,19 +18,7 @@ cx.read_sql(conn, query)                                        # read data from
 
 ### MSSQL Driver
 
-ConnectorX uses `mssql-tds` by default. Pre-built Python wheels also include
-the previous Tiberius backend for compatibility:
-
-```py
-import connectorx as cx
-
-cx.mssql_driver = "tiberius"  # opt in before starting a query
-cx.mssql_driver = "mssql-tds" # restore the default
-```
-
-Changing `mssql_driver` only affects queries started after the assignment.
-Rust builds can select one backend with the `src_mssql_tds` or
-`src_mssql_tiberius` Cargo feature; enabling both exposes the runtime switch.
+ConnectorX uses `mssql-tds` for SQL Server connections.
 
 ### Connection Parameters
 * By adding `trusted_connection=true` to connection uri parameter, windows authentication will be enabled. 
