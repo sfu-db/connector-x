@@ -1366,7 +1366,7 @@ fn verfiy_pgvector_results(result: Vec<RecordBatch>, _protocol: &str) {
         .downcast_ref::<LargeBinaryArray>()
         .unwrap();
     let binary_vector_value = binary_vector.value(0);
-    let expected = vec![170, 128];
+    let expected = [170, 128];
     for (i, val) in expected.iter().enumerate() {
         assert_eq!(binary_vector_value[i], *val);
     }
@@ -1384,7 +1384,7 @@ fn verfiy_pgvector_results(result: Vec<RecordBatch>, _protocol: &str) {
         .as_any()
         .downcast_ref::<Float32Array>()
         .unwrap();
-    let expected = vec![1.0, 0.0, 2.0, 0.0, 3.0];
+    let expected = [1.0, 0.0, 2.0, 0.0, 3.0];
     for (i, val) in expected.iter().enumerate() {
         assert_eq!(sparse_vector_value.value(i), *val);
     }

@@ -307,10 +307,10 @@ impl ClickHouseTypeSystem {
     fn parse_decimal_precision_scale(params: Option<&str>) -> (u8, u8) {
         let params = params.and_then(|p| p.split(',').map(|i| i.trim()).collect::<Vec<_>>().into());
         params
-            .and_then(|p| {
+            .map(|p| {
                 let precision = p.first().and_then(|s| s.parse::<u8>().ok());
                 let scale = p.get(1).and_then(|s| s.parse::<u8>().ok());
-                Some((precision.unwrap_or(0), scale.unwrap_or(0)))
+                (precision.unwrap_or(0), scale.unwrap_or(0))
             })
             .unwrap_or((0, 0))
     }

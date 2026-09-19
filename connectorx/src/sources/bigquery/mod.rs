@@ -112,7 +112,7 @@ where
     fn fetch_metadata(&mut self) {
         assert!(!self.queries.is_empty());
         let job = self.client.job();
-        for (_, query) in self.queries.iter().enumerate() {
+        for query in self.queries.iter() {
             let l1query = limit0_query(query, &BigQueryDialect {})?;
             let rs = self.rt.block_on(job.query(
                 self.project_id.as_str(),

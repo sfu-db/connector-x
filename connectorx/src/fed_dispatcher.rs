@@ -56,7 +56,7 @@ pub fn run(
 
                     let provider = MemTable::try_new(rbs[0].schema(), vec![rbs])?;
                     s.send((p.db_alias, Some(Arc::new(provider))))
-                        .expect(&format!("send error {}", i));
+                        .unwrap_or_else(|_| panic!("send error {}", i));
                     debug!("query {} finished", i);
                 }
             }
