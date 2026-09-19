@@ -84,6 +84,18 @@ jobs:
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
+      # test_db.rs leaks each testcontainers::Container (std::mem::forget), and
+      # every pulled image (postgres, mysql, mssql, ...) stays on the runner's
+      # disk too, so the images accumulate across coverage-unit +
+      # coverage-integration within this same job. Stop/remove the leaked
+      # containers (label filter matches only containers testcontainers
+      # started), then prune now-unreferenced images to reclaim that space.
+      - name: Clean up test containers and images
+        if: always()
+        run: |
+          docker rm -f $(docker ps -aq --filter "label=org.testcontainers.managed-by=testcontainers") 2>/dev/null || true
+          docker image prune -af
+
       - name: Upload unit coverage to Codecov
         uses: codecov/codecov-action@v5
         with:
