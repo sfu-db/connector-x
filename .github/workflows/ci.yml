@@ -61,6 +61,19 @@ jobs:
       - name: Run tests
         run: cargo clean && just test-ci
 
+      - name: Install cargo-llvm-cov
+        uses: taiki-e/install-action@cargo-llvm-cov
+
+      - name: Generate unit test coverage
+        run: cargo llvm-cov --lib --features all --lcov --output-path lcov.info
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: lcov.info
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
+
       - name: Test build docs
         uses: actions-rs/cargo@v1
         with:

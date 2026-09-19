@@ -1,0 +1,11 @@
+coverage:
+  status:
+    project:
+      default:
+        informational: true   # Report project coverage without failing the check.
+    patch:
+      default:
+        target: 60%           # Coverage required on lines changed in a pull request.
+
+comment:
+  layout: "diff, files"
