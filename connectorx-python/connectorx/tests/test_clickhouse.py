@@ -53,11 +53,11 @@ def test_clickhouse_types(clickhouse_url: str) -> None:
             "test_int": pd.Series([1, 2, 3], dtype="int64"),
             "test_float": pd.Series([2.3, 3.3, 4.3], dtype="float64"),
             "test_date": pd.Series(
-                ["1999-07-25", "1979-04-07", "1999-09-22"], dtype="datetime64[ns]"
+                ["1999-07-25", "1979-04-07", "2149-01-01"], dtype="datetime64[us]"
             ),
             "test_datetime": pd.Series(
-                ["1999-07-25 23:14:07", "1979-04-07 03:04:37", "1999-07-25 20:21:14"],
-                dtype="datetime64[ns]",
+                ["1999-07-25 23:14:07", "1979-04-07 03:04:37", "2106-01-01 00:00:00"],
+                dtype="datetime64[us]",
             ),
             "test_decimal": pd.Series(["2.22", "3.33", "4.44"], dtype="float64"),
             "test_varchar": pd.Series(["こんにちは", "Ha好ち😁ðy", "b"], dtype="object"),

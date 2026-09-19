@@ -57,12 +57,20 @@ impl_typesystem! {
     }
 }
 
-impl<'a> From<(&'a ColumnType, &'a ColumnFlags)> for MySQLTypeSystem {
-    fn from(col: (&'a ColumnType, &'a ColumnFlags)) -> MySQLTypeSystem {
+impl<'a> From<(&'a ColumnType, &'a ColumnFlags, u16)> for MySQLTypeSystem {
+    fn from(col: (&'a ColumnType, &'a ColumnFlags, u16)) -> MySQLTypeSystem {
         use MySQLTypeSystem::*;
-        let (ty, flag) = col;
+        let (ty, flag, charset) = col;
         let null_ok = !flag.contains(ColumnFlags::NOT_NULL_FLAG);
         let unsigned = flag.contains(ColumnFlags::UNSIGNED_FLAG);
+
+        // The "binary" pseudo-charset (collation id 63) is the only reliable signal
+        // that a string/blob column holds raw bytes rather than text. BINARY_FLAG is
+        // also set for any *_bin collation (e.g. ascii_bin, utf8mb4_bin), which are
+        // still TEXT columns, so it must not be used to decide binary-ness.
+        const MYSQL_BINARY_CHARSET: u16 = 63;
+        let is_binary = charset == MYSQL_BINARY_CHARSET;
+
         match ty {
             ColumnType::MYSQL_TYPE_TINY => {
                 if unsigned {
@@ -106,17 +114,17 @@ impl<'a> From<(&'a ColumnType, &'a ColumnFlags)> for MySQLTypeSystem {
             ColumnType::MYSQL_TYPE_TIME => Time(null_ok),
             ColumnType::MYSQL_TYPE_DECIMAL => Decimal(null_ok),
             ColumnType::MYSQL_TYPE_NEWDECIMAL => Decimal(null_ok),
+
+            // CHAR/BINARY, VARCHAR/VARBINARY, and TEXT/BLOB share identical type codes, with the actual type determined by the charset.
             ColumnType::MYSQL_TYPE_STRING => {
-                // BINARY/CHAR share the same type code, distinguished by BINARY flag
-                if flag.contains(ColumnFlags::BINARY_FLAG) {
+                if is_binary {
                     TinyBlob(null_ok)
                 } else {
                     Char(null_ok)
                 }
             }
             ColumnType::MYSQL_TYPE_VAR_STRING => {
-                // VARBINARY/VARCHAR share the same type code, distinguished by BINARY flag
-                if flag.contains(ColumnFlags::BINARY_FLAG) {
+                if is_binary {
                     Blob(null_ok)
                 } else {
                     VarChar(null_ok)
@@ -126,10 +134,36 @@ impl<'a> From<(&'a ColumnType, &'a ColumnFlags)> for MySQLTypeSystem {
             ColumnType::MYSQL_TYPE_TIMESTAMP => Timestamp(null_ok),
             ColumnType::MYSQL_TYPE_YEAR => Year(null_ok),
             ColumnType::MYSQL_TYPE_ENUM => Enum(null_ok),
-            ColumnType::MYSQL_TYPE_TINY_BLOB => TinyBlob(null_ok),
-            ColumnType::MYSQL_TYPE_BLOB => Blob(null_ok),
-            ColumnType::MYSQL_TYPE_MEDIUM_BLOB => MediumBlob(null_ok),
-            ColumnType::MYSQL_TYPE_LONG_BLOB => LongBlob(null_ok),
+
+            ColumnType::MYSQL_TYPE_TINY_BLOB => {
+                if is_binary {
+                    TinyBlob(null_ok)
+                } else {
+                    VarChar(null_ok)
+                }
+            } // TINYTEXT
+            ColumnType::MYSQL_TYPE_BLOB => {
+                if is_binary {
+                    Blob(null_ok)
+                } else {
+                    VarChar(null_ok)
+                }
+            } // TEXT
+            ColumnType::MYSQL_TYPE_MEDIUM_BLOB => {
+                if is_binary {
+                    MediumBlob(null_ok)
+                } else {
+                    VarChar(null_ok)
+                }
+            } // MEDIUMTEXT
+            ColumnType::MYSQL_TYPE_LONG_BLOB => {
+                if is_binary {
+                    LongBlob(null_ok)
+                } else {
+                    VarChar(null_ok)
+                }
+            } // LONGTEXT
+
             ColumnType::MYSQL_TYPE_JSON => Json(null_ok),
             ColumnType::MYSQL_TYPE_VARCHAR => VarChar(null_ok),
             ColumnType::MYSQL_TYPE_BIT => Bit(null_ok),

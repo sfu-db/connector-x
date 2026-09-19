@@ -16,6 +16,7 @@ test +ARGS="":
     cargo test --features all {{ARGS}} -- --nocapture
 
 test-ci: 
+    cargo test --lib --features all
     cargo test --features src_postgres --features dst_arrow --test test_postgres
     cargo test --features src_postgres --features src_dummy --features dst_polars --test test_polars
 
@@ -36,6 +37,9 @@ cleanup:
 
 bootstrap-python:
     cd connectorx-python && poetry install
+
+bootstrap-python-release:
+    cd connectorx-python && poetry install --only main --no-root
 
 setup-java:
     cd $ACCIO_PATH/rewriter && mvn package -Dmaven.test.skip=true

@@ -285,16 +285,16 @@ def test_bigquery_types(bigquery_url: str) -> None:
             "test_numeric": pd.Series([1.23, 234.56, None], dtype="float"),
             "test_bool": pd.Series([True, None, False], dtype="boolean"),
             "test_date": pd.Series(
-                ["1937-01-28", "2053-07-25", None], dtype="datetime64[ns]"
+                ["1937-01-28", "2053-07-25", None], dtype="datetime64[us]"
             ),
             "test_time": pd.Series(["00:00:00", "12:59:59", None], dtype="object"),
             "test_datetime": pd.Series(
                 [None, "2053-07-25 12:59:59", "1937-01-28 00:00:00"],
-                dtype="datetime64[ns]",
+                dtype="datetime64[us]",
             ),
             "test_timestamp": pd.Series(
                 ["1970-01-01 00:00:01.000", None, "2004-02-29 09:00:01.300"],
-                dtype="datetime64[ns]",
+                dtype="datetime64[us]",
             ),
             "test_str": pd.Series(["😁😂😜", "こんにちはЗдра́в", None], dtype="object"),
             "test_bytes": pd.Series(

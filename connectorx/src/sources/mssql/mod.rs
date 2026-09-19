@@ -59,7 +59,7 @@ pub fn mssql_config(url: &Url) -> Config {
     }
     config.port(url.port().unwrap_or(1433));
     // remove the leading "/"
-    config.database(decode(&url.path()[1..])?.to_owned());
+    config.database(decode(&url.path()[1..])?.into_owned());
     // Using SQL Server authentication.
     #[allow(unused)]
     let params: HashMap<String, String> = url.query_pairs().into_owned().collect();
@@ -73,15 +73,15 @@ pub fn mssql_config(url: &Url) -> Config {
         _ => {
             debug!("mssql auth through sqlserver authentication");
             config.authentication(AuthMethod::sql_server(
-                decode(url.username())?.to_owned(),
-                decode(url.password().unwrap_or(""))?.to_owned(),
+                decode(url.username())?.into_owned(),
+                decode(url.password().unwrap_or(""))?.into_owned(),
             ));
         }
     };
     #[cfg(all(not(windows), not(feature = "integrated-auth-gssapi")))]
     config.authentication(AuthMethod::sql_server(
-        decode(url.username())?.to_owned(),
-        decode(url.password().unwrap_or(""))?.to_owned(),
+        decode(url.username())?.into_owned(),
+        decode(url.password().unwrap_or(""))?.into_owned(),
     ));
 
     match params.get("trust_server_certificate") {
@@ -89,9 +89,8 @@ pub fn mssql_config(url: &Url) -> Config {
         _ => {}
     };
 
-    match params.get("trust_server_certificate_ca") {
-        Some(v) => config.trust_cert_ca(v),
-        _ => {}
+    if let Some(v) = params.get("trust_server_certificate_ca") {
+        config.trust_cert_ca(v)
     };
 
     match params.get("encrypt") {
@@ -100,9 +99,8 @@ pub fn mssql_config(url: &Url) -> Config {
         _ => config.encryption(EncryptionLevel::NotSupported),
     };
 
-    match params.get("appname") {
-        Some(appname) => config.application_name(decode(appname)?.to_owned()),
-        _ => {}
+    if let Some(appname) = params.get("appname") {
+        config.application_name(decode(appname)?.into_owned())
     };
 
     config

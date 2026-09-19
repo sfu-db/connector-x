@@ -452,6 +452,80 @@ def test_postgres_types_binary(postgres_url: str) -> None:
     df = read_sql(postgres_url, query)
     verify_data_types(df, "binary")
 
+@pytest.mark.parametrize(
+    "protocol,return_type",
+    [
+        (protocol, return_type)
+        for return_type in ["pandas", "arrow", "polars", "arrow_stream"]
+        for protocol in ["binary", "csv", "cursor", "simple"]
+        if (return_type, protocol) != ("arrow_stream", "simple")
+    ],
+)
+@pytest.mark.parametrize("query_mode", ["plain", "partitioned", "empty", "limit"])
+def test_postgres_tsvector(
+    postgres_url: str, protocol: str, return_type: str, query_mode: str
+) -> None:
+    query = """
+        SELECT *, int4range(1, 3) AS period FROM (VALUES
+            (1, $$'fat':2A,4 'rat':3B$$::tsvector),
+            (2, $$'fat' 'rat'$$::tsvector),
+            (3, ''::tsvector),
+            (4, NULL::tsvector),
+            (5, array_to_tsvector(ARRAY['a,b', 'a"b']))
+        ) AS documents(id, "search""vector")
+    """
+    id_dtype = {"pandas": "Int64", "arrow_stream": "int64"}.get(return_type, "int32")
+    string_dtype = "object" if return_type == "pandas" else None
+    expected = pd.DataFrame(
+        {
+            "id": pd.Series([1, 2, 3, 4, 5], dtype=id_dtype),
+            'search"vector': pd.Series(
+                [
+                    "'fat':2A,4 'rat':3B",
+                    "'fat' 'rat'",
+                    None if protocol == "csv" else "",
+                    None,
+                    "'a\"b' 'a,b'",
+                ],
+                dtype=string_dtype,
+            ),
+            "period": pd.Series(["[1,3)"] * 5, dtype=string_dtype),
+        }
+    )
+    kwargs = {}
+    if query_mode == "partitioned":
+        kwargs = {"partition_on": "id", "partition_num": 2}
+    elif query_mode == "empty":
+        query = f'SELECT id, "search""vector" FROM ({query}) AS empty_documents WHERE id < 0'
+        expected = expected.drop(columns="period").iloc[:0]
+    elif query_mode == "limit":
+        query += " ORDER BY id LIMIT 2"
+        expected = expected.iloc[:2]
+
+    result = read_sql(
+        postgres_url,
+        query,
+        protocol=protocol,
+        return_type=return_type,
+        batch_size=2,
+        **kwargs,
+    )
+    if return_type == "arrow_stream":
+        result = result.read_all()
+    if return_type != "pandas":
+        result = result.to_pandas()
+    result = result.sort_values("id").reset_index(drop=True)
+    assert_frame_equal(result, expected)
+
+
+def test_postgres_range_types(postgres_url: str) -> None:
+    query = (
+        "SELECT test_int4range, test_int8range, test_numrange, test_tsrange, "
+        "test_tstzrange, test_daterange FROM range_types ORDER BY id"
+    )
+    df = read_sql(postgres_url, query)
+    verify_range_types(df)
+
 def test_postgres_types_vec_binary(postgres_url: str) -> None:
     query = "SELECT test_boolarray, test_i2array, test_i4array, test_i8array, test_f4array, test_f8array, test_narray FROM test_types where test_int2 is not NULL and test_int2 <> 32767"
     df = read_sql(postgres_url, query)
@@ -492,27 +566,27 @@ def verify_data_types(df, protocol) -> None:
         index=range(5),
         data={
             "test_date": pd.Series(
-                ["1970-01-01", "2000-02-28", "2038-01-18", "1901-12-14", None], dtype="datetime64[ns]"
+                ["1970-01-01", "2000-02-28", "9999-12-31", "1901-12-14", None], dtype="datetime64[us]"
             ),
             "test_timestamp": pd.Series(
                 [
                     "1970-01-01 00:00:01",
                     "2000-02-28 12:00:10",
-                    "2038-01-18 23:59:59",
+                    "9999-12-31 20:30:00",
                     "1901-12-14 00:00:00.062547",
                     None,
                 ],
-                dtype="datetime64[ns]",
+                dtype="datetime64[us]",
             ),
             "test_timestamptz": pd.Series(
                 [
                     "1970-01-01 00:00:01",
                     "2000-02-28 16:00:10",
-                    "2038-01-18 15:59:59",
+                    "9999-12-31 12:00:00",
                     "1901-12-14 12:00:00.062547",
                     None,
                 ],
-                dtype="datetime64[ns]",
+                dtype="datetime64[us]",
             ),
             "test_int2": pd.Series([-32768, 0, 1, 32767], dtype="Int64"),
             "test_int4": pd.Series([0, 1, -2147483648, 2147483647], dtype="Int64"),
@@ -638,6 +712,50 @@ def verify_data_types_vec(df) -> None:
         },
     )
     assert_frame_equal(df, expected, check_names=True)
+
+def verify_range_types(df) -> None:
+    expected = pd.DataFrame(
+        index=range(5),
+        data={
+            "test_int4range": pd.Series(
+                ["[1,11)", "[-5,5)", None, "empty", "(,)"], dtype="object"
+            ),
+            "test_int8range": pd.Series(
+                ["[100,1001)", "[-9223372036854775808,0)", None, "empty", "(,)"],
+                dtype="object",
+            ),
+            "test_numrange": pd.Series(
+                ["[1.5,10.0)", "(-Infinity,100]", None, "empty", "(,)"],
+                dtype="object",
+            ),
+            "test_tsrange": pd.Series(
+                [
+                    "[\"2020-01-01 00:00:00\",\"2020-12-31 23:59:59\")",
+                    "[\"2010-01-01 00:00:00\",\"2015-06-15 12:00:00\")",
+                    None,
+                    "empty",
+                    "(,)",
+                ],
+                dtype="object",
+            ),
+            "test_daterange": pd.Series(
+                ["[2020-01-01,2021-01-01)", "[2010-01-01,2015-07-01)", None, "empty", "(,)"],
+                dtype="object",
+            ),
+        },
+    )
+    assert_frame_equal(
+        df.drop(columns=["test_tstzrange"]),
+        expected,
+        check_names=True,
+    )
+
+    tstz = df["test_tstzrange"]
+    assert tstz.iloc[2] is None
+    assert tstz.iloc[3] == "empty"
+    assert tstz.iloc[4] == "(,)"
+    assert tstz.iloc[0] is not None
+    assert tstz.iloc[1] is not None
 
 def test_postgres_empty_result(postgres_url: str) -> None:
     query = "SELECT * FROM test_table where test_int < -100"
@@ -882,6 +1000,31 @@ def test_postgres_tls_disable(postgres_url_tls: str) -> None:
     )
     df.sort_values(by="test_int", inplace=True, ignore_index=True)
     assert_frame_equal(df, expected, check_names=True)
+
+
+@pytest.mark.skipif(
+    not os.environ.get("POSTGRES_URL_TLS"),
+    reason="Do not test Postgres TLS unless `POSTGRES_URL_TLS` is set",
+)
+def test_postgres_tls_arrow_stream(postgres_url_tls: str) -> None:
+    query = "SELECT * FROM test_table"
+    reader = read_sql(
+        f"{postgres_url_tls}?sslmode=require",
+        query,
+        return_type="arrow_stream",
+    )
+    batches = list(reader)
+    assert len(batches) > 0
+    assert batches[0].num_columns > 0
+
+
+def test_postgres_arrow_stream_invalid_url_raises() -> None:
+    # An invalid sslmode fails while parsing the connection string, before any
+    # network access, so this exercises the error path of new_record_batch_iter
+    # without a database. Before the fix this surfaced as a PanicException.
+    bad_url = "postgresql://user:pass@127.0.0.1:1/db?sslmode=bogus"
+    with pytest.raises(RuntimeError, match="sslmode"):
+        read_sql(bad_url, "SELECT 1", return_type="arrow_stream")
 
 
 @pytest.mark.skipif(

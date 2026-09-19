@@ -172,6 +172,9 @@ impl<'py> PandasDestination<'py> {
                 PandasBlockType::DateTime => {
                     self.allocate_array::<i64>(py, dt, placement)?;
                 }
+                PandasBlockType::DateTimeMicro => {
+                    self.allocate_array::<i64>(py, dt, placement)?;
+                }
                 PandasBlockType::Bytes => {
                     self.allocate_array::<PyBytes>(py, dt, placement)?;
                 }
@@ -303,6 +306,17 @@ impl<'py> Destination for PandasDestination<'py> {
                     }
                 }
                 PandasBlockType::DateTime => {
+                    let dblock = DateTimeBlock::extract_block(buf)?;
+                    let dcols = dblock.split()?;
+                    for (&cid, dcol) in block.cids.iter().zip_eq(dcols) {
+                        partitioned_columns[cid] = dcol
+                            .partition(counts)
+                            .into_iter()
+                            .map(|c| Box::new(c) as _)
+                            .collect()
+                    }
+                }
+                PandasBlockType::DateTimeMicro => {
                     let dblock = DateTimeBlock::extract_block(buf)?;
                     let dcols = dblock.split()?;
                     for (&cid, dcol) in block.cids.iter().zip_eq(dcols) {

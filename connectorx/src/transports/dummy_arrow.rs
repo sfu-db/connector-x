@@ -1,6 +1,9 @@
 //! Transport from Dummy Source to Arrow Destination.
 
-use crate::destinations::arrow::{ArrowDestination, ArrowDestinationError, ArrowTypeSystem};
+use crate::destinations::arrow::{
+    typesystem::{ArrowTypeSystem, NaiveDateTimeWrapperMicro},
+    ArrowDestination, ArrowDestinationError,
+};
 use crate::sources::dummy::{DummySource, DummyTypeSystem};
 use crate::typesystem::TypeConversion;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
@@ -28,13 +31,13 @@ impl_transport!(
         { I64[i64]                => Int64[i64]                 | conversion auto}
         { Bool[bool]              => Boolean[bool]              | conversion auto}
         { String[String]          => LargeUtf8[String]          | conversion auto}
-        { DateTime[DateTime<Utc>] => Date64[NaiveDateTime]      | conversion option}
+        { DateTime[DateTime<Utc>] => Date64Micro[NaiveDateTimeWrapperMicro]      | conversion option}
     }
 );
 
-impl TypeConversion<DateTime<Utc>, NaiveDateTime> for DummyArrowTransport {
-    fn convert(val: DateTime<Utc>) -> NaiveDateTime {
-        val.naive_utc()
+impl TypeConversion<DateTime<Utc>, NaiveDateTimeWrapperMicro> for DummyArrowTransport {
+    fn convert(val: DateTime<Utc>) -> NaiveDateTimeWrapperMicro {
+        NaiveDateTimeWrapperMicro(val.naive_utc())
     }
 }
 

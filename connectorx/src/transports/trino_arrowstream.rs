@@ -2,9 +2,9 @@
 
 use crate::{
     destinations::arrowstream::{
-        typesystem::ArrowTypeSystem, ArrowDestination, ArrowDestinationError,
+        typesystem::{ArrowTypeSystem, NaiveDateTimeWrapperMicro, NaiveTimeWrapperMicro},
+        ArrowDestination, ArrowDestinationError,
     },
-    impl_transport,
     sources::trino::{TrinoSource, TrinoSourceError, TrinoTypeSystem},
     typesystem::TypeConversion,
 };
@@ -36,8 +36,8 @@ impl_transport!(
     route = TrinoSource => ArrowDestination,
     mappings = {
         { Date[NaiveDate]            => Date32[NaiveDate]       | conversion auto }
-        { Time[NaiveTime]            => Time64[NaiveTime]       | conversion auto }
-        { Timestamp[NaiveDateTime]   => Date64[NaiveDateTime]   | conversion auto }
+        { Time[NaiveTime]            => Time64Micro[NaiveTimeWrapperMicro]       | conversion option }
+        { Timestamp[NaiveDateTime]   => Date64Micro[NaiveDateTimeWrapperMicro]   | conversion option }
         { Boolean[bool]              => Boolean[bool]           | conversion auto }
         { Bigint[i32]                => Int64[i64]              | conversion auto }
         { Integer[i32]               => Int64[i64]              | conversion none }
@@ -60,5 +60,17 @@ impl TypeConversion<Decimal, f64> for TrinoArrowTransport {
 impl TypeConversion<Value, String> for TrinoArrowTransport {
     fn convert(val: Value) -> String {
         to_string(&val).unwrap()
+    }
+}
+
+impl TypeConversion<NaiveTime, NaiveTimeWrapperMicro> for TrinoArrowTransport {
+    fn convert(val: NaiveTime) -> NaiveTimeWrapperMicro {
+        NaiveTimeWrapperMicro(val)
+    }
+}
+
+impl TypeConversion<NaiveDateTime, NaiveDateTimeWrapperMicro> for TrinoArrowTransport {
+    fn convert(val: NaiveDateTime) -> NaiveDateTimeWrapperMicro {
+        NaiveDateTimeWrapperMicro(val)
     }
 }

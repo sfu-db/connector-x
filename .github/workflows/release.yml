@@ -1,6 +1,7 @@
 name: release
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - prerelease
@@ -12,19 +13,15 @@ jobs:
     container: quay.io/pypa/manylinux_2_28_${{ matrix.platform.arch }}
     strategy:
       matrix:
-        platform:
-          [
-            { "arch": "x86_64", "runs-on": "ubuntu-latest" },
-            { "arch": "aarch64", "runs-on": "ubuntu-22.04-arm" },
-          ]
+        platform: ${{ fromJSON(github.event_name == 'workflow_dispatch' && '[{"arch":"x86_64","runs-on":"ubuntu-latest"}]' || '[{"arch":"x86_64","runs-on":"ubuntu-latest"},{"arch":"aarch64","runs-on":"ubuntu-22.04-arm"}]') }}
         python-version:
-          [[310, "3.10"], [311, "3.11"], [312, "3.12"], [313, "3.13"], [314, "3.14"]]
+          ${{ fromJSON(github.event_name == 'workflow_dispatch' && '[["cp312-cp312","3.12"]]' || '[["cp310-cp310","3.10"],["cp311-cp311","3.11"],["cp312-cp312","3.12"],["cp313-cp313","3.13"],["cp314-cp314","3.14"],["cp314-cp314t","3.14t"]]') }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Set python version
         run: |
-          echo "/opt/python/cp${{ matrix.python-version[0] }}-cp${{ matrix.python-version[0] }}/bin" >> $GITHUB_PATH
+          echo "/opt/python/${{ matrix.python-version[0] }}/bin" >> $GITHUB_PATH
 
       - uses: actions-rs/toolchain@v1
         with:
@@ -33,24 +30,34 @@ jobs:
           target: aarch64-unknown-linux-gnu
           default: true
 
-      - uses: extractions/setup-just@v3
+      - uses: extractions/setup-just@v4
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: Gr1N/setup-poetry@v9
+        with:
+          poetry-version: "2.4.1"
 
       - name: Install tools
         run: |
           yum install -y epel-release
           yum install -y mysql-devel postgresql-devel freetds-devel krb5-libs clang-devel libffi-devel
+          yum install -y openssl3-devel bison libverto-libev
+
+      - name: Build portable Kerberos libraries
+        run: |
+          bash scripts/build-krb5.sh
+          mkdir -p connectorx-python/connectorx/dependencies/licenses
+          cp /opt/connectorx-krb5/share/licenses/* connectorx-python/connectorx/dependencies/licenses/
 
       - name: Setup project
         run: |
-          just bootstrap-python
+          just bootstrap-python-release
 
       - uses: PyO3/maturin-action@v1
         with:
           rust-toolchain: stable
+          container: "off"
           command: build
           args: -m connectorx-python/Cargo.toml -i python --release --manylinux 2_28 --features integrated-auth-gssapi
           before-script-linux: |
@@ -69,6 +76,15 @@ jobs:
             fi
         env:
           SQLITE3_STATIC: 1
+          RUSTFLAGS: "-L native=/opt/connectorx-krb5/lib"
+          LD_LIBRARY_PATH: /opt/connectorx-krb5/lib
+          BINDGEN_EXTRA_CLANG_ARGS: "-I/opt/connectorx-krb5/include"
+
+      - name: Check packaged Kerberos plugin discovery
+        run: |
+          python -m venv /tmp/connectorx-plugin-test
+          /tmp/connectorx-plugin-test/bin/python -m pip install --no-index --no-deps connectorx-python/target/wheels/*.whl
+          /tmp/connectorx-plugin-test/bin/python scripts/check-wheel-plugins.py
 
       - uses: actions/upload-artifact@v7
         with:
@@ -76,22 +92,23 @@ jobs:
           path: connectorx-python/target/wheels/*.whl
 
   win-and-mac:
+    if: github.event_name == 'push'
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: ["windows-latest", "macos-15-intel"]
-        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14", "3.14t"]
         include:
           - os: "macos-15-intel"
             features: "--features integrated-auth-gssapi"
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - uses: ankane/setup-mysql@v1
         with:
           mysql-version: 8
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
           architecture: x64
@@ -102,20 +119,22 @@ jobs:
           components: rustfmt
           default: true
 
-      - uses: extractions/setup-just@v3
+      - uses: extractions/setup-just@v4
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: Gr1N/setup-poetry@v9
+        with:
+          poetry-version: "2.4.1"
 
       - name: Setup project
         run: |
-          just bootstrap-python
+          just bootstrap-python-release
 
       - uses: PyO3/maturin-action@v1
         with:
           rust-toolchain: stable
-          maturin-version: v0.14.15
+          maturin-version: v1.15.0
           command: build
           args: -m connectorx-python/Cargo.toml -i python --release ${{ matrix.features }}
         env:
@@ -127,18 +146,19 @@ jobs:
           path: connectorx-python/target/wheels/*.whl
 
   apple-arm:
+    if: github.event_name == 'push'
     runs-on: macos-latest
     strategy:
       matrix:
-        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14", "3.14t"]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - uses: ankane/setup-mysql@v1
         with:
           mysql-version: 8
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -149,20 +169,22 @@ jobs:
           target: aarch64-apple-darwin
           default: true
 
-      - uses: extractions/setup-just@v3
+      - uses: extractions/setup-just@v4
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: Gr1N/setup-poetry@v9
+        with:
+          poetry-version: "2.4.1"
 
       - name: Setup project
         run: |
-          just bootstrap-python
+          just bootstrap-python-release
 
       - uses: PyO3/maturin-action@v1
         with:
           rust-toolchain: stable
-          maturin-version: v0.14.15
+          maturin-version: v1.15.0
           command: build
           args: -m connectorx-python/Cargo.toml --target aarch64-apple-darwin -i python --release  --features integrated-auth-gssapi
         env:
@@ -174,11 +196,12 @@ jobs:
           path: connectorx-python/target/wheels/*.whl
 
   verify:
+    if: github.event_name == 'push'
     runs-on: ${{ matrix.os }}
     needs: [win-and-mac, linux]
     strategy:
       matrix:
-        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14", "3.14t"]
         os:
           [
             macos-15-intel,
@@ -196,9 +219,9 @@ jobs:
           - os: "macos-latest"
             artifact-prefix: "macos-arm"
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -210,9 +233,33 @@ jobs:
           pip install *.whl
           python -c "import connectorx"
 
-  upload:
+  verify-databricks:
     runs-on: ubuntu-latest
-    needs: [verify]
+    needs: [linux]
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: linux-x86_64-3.12
+          path: wheels
+
+      - name: Check wheel on ordinary Linux
+        run: |
+          pip install wheels/*.whl polars pyarrow
+          python scripts/check-wheel-import.py wheels/*.whl --sqlite
+
+      - name: Check wheel in Databricks 16.4
+        run: bash scripts/check-databricks-wheel.sh wheels/*.whl
+
+  upload:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    needs: [verify, verify-databricks]
     steps:
       - name: Download all artifacts
         uses: actions/download-artifact@v8

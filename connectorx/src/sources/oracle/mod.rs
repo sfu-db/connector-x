@@ -10,7 +10,7 @@ use crate::{
     data_order::DataOrder,
     errors::ConnectorXError,
     sources::{PartitionParser, Produce, Source, SourcePartition},
-    sql::{count_query, limit1_query_oracle, CXQuery},
+    sql::{count_query, limit0_query_oracle, CXQuery},
     utils::DummyBox,
 };
 use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
@@ -62,7 +62,7 @@ pub fn connect_oracle(conn: &Url) -> Connector {
 
     let params: HashMap<String, String> = conn.query_pairs().into_owned().collect();
 
-    let conn_str = if params.get("alias").map_or(false, |v| v == "true") {
+    let conn_str = if params.get("alias").is_some_and(|v| v == "true") {
         host.clone()
     } else {
         let port = conn.port().unwrap_or(1521);
@@ -144,7 +144,7 @@ where
             // without rownum = 1, derived type might be wrong
             // example: select avg(test_int), test_char from test_table group by test_char
             // -> (NumInt, Char) instead of (NumtFloat, Char)
-            match conn.query(limit1_query_oracle(query)?.as_str(), &[]) {
+            match conn.query(limit0_query_oracle(query)?.as_str(), &[]) {
                 Ok(rows) => {
                     let (names, types) = rows
                         .column_info()
@@ -207,7 +207,7 @@ where
         let mut ret = vec![];
         for query in &self.queries {
             let conn = self.get_conn()?;
-            ret.push(OracleSourcePartition::new(conn, &query, &self.schema));
+            ret.push(OracleSourcePartition::new(conn, query, &self.schema));
         }
         ret
     }

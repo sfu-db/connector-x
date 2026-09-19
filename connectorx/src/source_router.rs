@@ -1,7 +1,10 @@
 use crate::constants::CONNECTORX_PROTOCOL;
 use crate::errors::{ConnectorXError, Result};
+use crate::utils::remove_query_params;
 use anyhow::anyhow;
 use fehler::throws;
+#[cfg(feature = "src_postgres")]
+use redshift_iam::redshift_to_postgres;
 use std::convert::TryFrom;
 use url::Url;
 
@@ -34,26 +37,23 @@ impl TryFrom<&str> for SourceConn {
 
         // parse connectorx protocol
         let proto = match old_url.query_pairs().find(|p| p.0 == CONNECTORX_PROTOCOL) {
-            Some((_, proto)) => proto.to_owned().to_string(),
+            Some((_, proto)) => proto.to_string(),
             None => "binary".to_string(),
         };
 
         // create url by removing connectorx protocol
-        let stripped_query: Vec<(_, _)> = old_url
-            .query_pairs()
-            .filter(|p| &*p.0 != CONNECTORX_PROTOCOL)
-            .collect();
-        let mut url = old_url.clone();
-        url.set_query(None);
-        for pair in stripped_query {
-            url.query_pairs_mut()
-                .append_pair(&pair.0.to_string()[..], &pair.1.to_string()[..]);
-        }
+        let url = remove_query_params(&old_url, &[CONNECTORX_PROTOCOL]);
 
         // users from sqlalchemy may set engine in connection url (e.g. mssql+pymssql://...)
         // only for compatablility, we don't use the same engine
         match url.scheme().split('+').collect::<Vec<&str>>()[0] {
             "postgres" | "postgresql" => Ok(SourceConn::new(SourceType::Postgres, url, proto)),
+            #[cfg(feature = "src_postgres")]
+            "redshift-iam" => Ok(SourceConn::new(
+                SourceType::Postgres,
+                redshift_to_postgres(url),
+                "cursor".to_string(),
+            )),
             "sqlite" => Ok(SourceConn::new(SourceType::SQLite, url, proto)),
             "mysql" => Ok(SourceConn::new(SourceType::MySQL, url, proto)),
             "mssql" => Ok(SourceConn::new(SourceType::MsSQL, url, proto)),
@@ -79,9 +79,40 @@ impl SourceConn {
 #[throws(ConnectorXError)]
 pub fn parse_source(conn: &str, protocol: Option<&str>) -> SourceConn {
     let mut source_conn = SourceConn::try_from(conn)?;
-    match protocol {
-        Some(p) => source_conn.set_protocol(p),
-        None => {}
+    if let Some(p) = protocol {
+        source_conn.set_protocol(p)
     }
     source_conn
+}
+
+#[cfg(test)]
+mod tests {
+    use super::SourceConn;
+    use std::convert::TryFrom;
+
+    /// Removing the connectorx protocol must not re-encode the remaining parameters:
+    /// sources that percent-decode the query would otherwise receive a literal `+`
+    /// wherever the caller wrote a space.
+    #[test]
+    fn keeps_remaining_query_params_verbatim() {
+        let source_conn = SourceConn::try_from(
+            "postgresql://u:p@host:5432/db?options=-c%20statement_timeout%3D1s&cxprotocol=cursor",
+        )
+        .unwrap();
+
+        assert_eq!(
+            source_conn.conn.query(),
+            Some("options=-c%20statement_timeout%3D1s")
+        );
+        assert_eq!(source_conn.proto, "cursor");
+    }
+
+    /// The query is left alone even when there is no protocol parameter to remove.
+    #[test]
+    fn leaves_the_query_alone_when_there_is_nothing_to_remove() {
+        let source_conn = SourceConn::try_from("mysql://host:3306/db?a=x%20y&b=%2Fz").unwrap();
+
+        assert_eq!(source_conn.conn.query(), Some("a=x%20y&b=%2Fz"));
+        assert_eq!(source_conn.proto, "binary");
+    }
 }

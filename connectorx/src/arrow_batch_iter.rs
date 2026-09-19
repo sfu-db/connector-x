@@ -32,12 +32,13 @@ where
     dorder: DataOrder,
     src_schema: Vec<S::TypeSystem>,
     dst_schema: Vec<ArrowStreamTypeSystem>,
+    handle: Option<std::thread::JoinHandle<Result<(), TP::Error>>>,
     _phantom: PhantomData<TP>,
 }
 
-impl<'a, S, TP> ArrowBatchIter<S, TP>
+impl<S, TP> ArrowBatchIter<S, TP>
 where
-    S: Source + 'a,
+    S: Source,
     TP: Transport<
         TSS = S::TypeSystem,
         TSD = ArrowStreamTypeSystem,
@@ -61,6 +62,7 @@ where
             dorder,
             src_schema,
             dst_schema,
+            handle: None,
             _phantom: PhantomData,
         })
     }
@@ -72,7 +74,7 @@ where
         let dst_partitions = self.dst_parts.take().unwrap();
         let dorder = self.dorder;
 
-        std::thread::spawn(move || -> Result<(), TP::Error> {
+        self.handle = Some(std::thread::spawn(move || -> Result<(), TP::Error> {
             let schemas: Vec<_> = src_schema
                 .iter()
                 .zip_eq(&dst_schema)
@@ -132,13 +134,13 @@ where
             debug!("Writing finished");
 
             Ok(())
-        });
+        }));
     }
 }
 
-impl<'a, S, TP> Iterator for ArrowBatchIter<S, TP>
+impl<S, TP> Iterator for ArrowBatchIter<S, TP>
 where
-    S: Source + 'a,
+    S: Source,
     TP: Transport<
         TSS = S::TypeSystem,
         TSD = ArrowStreamTypeSystem,
@@ -149,7 +151,21 @@ where
     type Item = RecordBatch;
     /// NOTE: not thread safe
     fn next(&mut self) -> Option<Self::Item> {
-        self.dst.record_batch().ok().flatten()
+        match self.dst.record_batch() {
+            Ok(Some(rb)) => Some(rb),
+            Ok(None) | Err(_) => {
+                // On stream end we must join the producer;
+                // a detached handle would swallow producer panics
+                if let Some(handle) = self.handle.take() {
+                    match handle.join() {
+                        Ok(Ok(())) => {}
+                        Ok(Err(e)) => panic!("cx writer failed: {:?}", e),
+                        Err(payload) => std::panic::resume_unwind(payload),
+                    }
+                }
+                None
+            }
+        }
     }
 }
 
@@ -159,9 +175,9 @@ pub trait RecordBatchIterator: Send {
     fn next_batch(&mut self) -> Option<RecordBatch>;
 }
 
-impl<'a, S, TP> RecordBatchIterator for ArrowBatchIter<S, TP>
+impl<S, TP> RecordBatchIterator for ArrowBatchIter<S, TP>
 where
-    S: Source + 'a,
+    S: Source,
     TP: Transport<
             TSS = S::TypeSystem,
             TSD = ArrowStreamTypeSystem,

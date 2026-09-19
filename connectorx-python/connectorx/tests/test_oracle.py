@@ -17,13 +17,13 @@ def test_oracle_on_non_select(oracle_url: str) -> None:
 def test_oracle_complex_join(oracle_url: str) -> None:
     query = "SELECT a.test_int, b.test_date, c.test_num_int FROM test_table a left join test_types b on a.test_int = b.test_num_int cross join (select test_num_int from test_types) c where c.test_num_int < 3"
     df = read_sql(oracle_url, query)
-    df = df.sort_values("TEST_INT").reset_index(drop=True)
+    df = df.sort_values(["TEST_INT", "TEST_DATE"]).reset_index(drop=True)
     expected = pd.DataFrame(
         data={
             "TEST_INT": pd.Series([1, 2, 4, 5, 5, 2333], dtype="Int64"),
             "TEST_DATE": pd.Series(
-                ["2019-05-21", None, None, "2020-05-21", "2020-05-21", None],
-                dtype="datetime64[ns]",
+                ["2019-05-21", None, None, "2020-05-21", "9999-12-31", None],
+                dtype="datetime64[us]",
             ),
             "TEST_NUM_INT": pd.Series([1, 1, 1, 1, 1, 1], dtype="Int64"),
         }
@@ -246,13 +246,22 @@ def test_oracle_types(oracle_url: str) -> None:
                 ["aK>?KJ@#$%", ")>KDS)(F*&%J", ")>KDS)(F*&%J", None], dtype="object"
             ),
             "TEST_DATE": pd.Series(
-                ["2019-05-21", "2020-05-21", "2020-05-21", None], dtype="datetime64[ns]"
+                    ["2019-05-21", "2020-05-21", "9999-12-31", None], dtype="datetime64[us]"
             ),
             "TEST_TIMESTAMP": pd.Series(
                 [
                     "2019-05-21 01:02:33",
                     "2020-05-21 01:02:33",
-                    "2020-05-21 01:02:33",
+                        "9999-12-31 01:02:33",
+                    None,
+                ],
+                dtype="datetime64[us]",
+            ),
+            "TEST_TIMESTAMP9": pd.Series(
+                [
+                    "2019-05-21 01:02:33.123456789",
+                    "2020-05-21 01:02:33.223344556",
+                    "2021-01-01 03:04:05.999999999",
                     None,
                 ],
                 dtype="datetime64[ns]",
@@ -261,7 +270,16 @@ def test_oracle_types(oracle_url: str) -> None:
                 [
                     "1999-12-01 11:00:00",
                     "1899-12-01 11:00:00",
-                    "1899-12-01 11:00:00",
+                        "9999-12-31 11:00:00",
+                    None,
+                ],
+                dtype="datetime64[us]",
+            ),
+            "TEST_TIMESTAMPTZ9": pd.Series(
+                [
+                    "1999-12-01 11:00:00.987654321",
+                    "1899-12-01 11:00:00.123456789",
+                    "2021-01-01 03:04:05.999999999",
                     None,
                 ],
                 dtype="datetime64[ns]",

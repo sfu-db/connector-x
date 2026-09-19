@@ -1,6 +1,6 @@
 use crate::errors::ConnectorXPythonError;
 use crate::pandas::destination::PandasDestination;
-use crate::pandas::typesystem::PandasTypeSystem;
+use crate::pandas::typesystem::{DateTimeWrapperMicro, PandasTypeSystem};
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
 use connectorx::{
     impl_transport,
@@ -23,26 +23,26 @@ impl_transport!(
         { Int2[i16]                  => I64[i64]                | conversion auto }
         { Real[f64]                  => F64[f64]                | conversion auto }
         { Text[Box<str>]             => BoxStr[Box<str>]        | conversion auto }
-        { Date[NaiveDate]            => DateTime[DateTime<Utc>] | conversion option }
+        { Date[NaiveDate]            => DateTimeMicro[DateTimeWrapperMicro] | conversion option }
         { Time[NaiveTime]            => String[String]          | conversion option }
-        { Timestamp[NaiveDateTime]   => DateTime[DateTime<Utc>] | conversion option }
+        { Timestamp[NaiveDateTime]   => DateTimeMicro[DateTimeWrapperMicro] | conversion option }
         { Blob[Vec<u8>]              => Bytes[Vec<u8>]          | conversion auto }
     }
 );
 
-impl<'py> TypeConversion<NaiveDateTime, DateTime<Utc>> for SqlitePandasTransport<'py> {
-    fn convert(val: NaiveDateTime) -> DateTime<Utc> {
-        DateTime::from_naive_utc_and_offset(val, Utc)
+impl<'py> TypeConversion<NaiveDateTime, DateTimeWrapperMicro> for SqlitePandasTransport<'py> {
+    fn convert(val: NaiveDateTime) -> DateTimeWrapperMicro {
+        DateTimeWrapperMicro(DateTime::from_naive_utc_and_offset(val, Utc))
     }
 }
 
-impl<'py> TypeConversion<NaiveDate, DateTime<Utc>> for SqlitePandasTransport<'py> {
-    fn convert(val: NaiveDate) -> DateTime<Utc> {
-        DateTime::from_naive_utc_and_offset(
+impl<'py> TypeConversion<NaiveDate, DateTimeWrapperMicro> for SqlitePandasTransport<'py> {
+    fn convert(val: NaiveDate) -> DateTimeWrapperMicro {
+        DateTimeWrapperMicro(DateTime::from_naive_utc_and_offset(
             val.and_hms_opt(0, 0, 0)
                 .unwrap_or_else(|| panic!("and_hms_opt got None from {:?}", val)),
             Utc,
-        )
+        ))
     }
 }
 

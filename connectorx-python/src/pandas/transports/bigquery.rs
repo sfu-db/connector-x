@@ -1,6 +1,6 @@
 use crate::errors::ConnectorXPythonError;
 use crate::pandas::destination::PandasDestination;
-use crate::pandas::typesystem::PandasTypeSystem;
+use crate::pandas::typesystem::{DateTimeWrapperMicro, PandasTypeSystem};
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
 use connectorx::{
     impl_transport,
@@ -27,26 +27,32 @@ impl_transport!(
         { Bignumeric[f64]            => F64[f64]                | conversion none }
         { String[String]             => String[String]          | conversion auto }
         { Bytes[String]              => String[String]          | conversion none }
-        { Date[NaiveDate]            => DateTime[DateTime<Utc>] | conversion option }
-        { Datetime[NaiveDateTime]    => DateTime[DateTime<Utc>] | conversion option }
+        { Date[NaiveDate]            => DateTimeMicro[DateTimeWrapperMicro] | conversion option }
+        { Datetime[NaiveDateTime]    => DateTimeMicro[DateTimeWrapperMicro] | conversion option }
         { Time[NaiveTime]            => String[String]          | conversion option }
-        { Timestamp[DateTime<Utc>]   => DateTime[DateTime<Utc>] | conversion auto }
+        { Timestamp[DateTime<Utc>]   => DateTimeMicro[DateTimeWrapperMicro] | conversion option }
     }
 );
 
-impl<'py> TypeConversion<NaiveDate, DateTime<Utc>> for BigQueryPandasTransport<'py> {
-    fn convert(val: NaiveDate) -> DateTime<Utc> {
-        DateTime::from_naive_utc_and_offset(
+impl<'py> TypeConversion<NaiveDate, DateTimeWrapperMicro> for BigQueryPandasTransport<'py> {
+    fn convert(val: NaiveDate) -> DateTimeWrapperMicro {
+        DateTimeWrapperMicro(DateTime::from_naive_utc_and_offset(
             val.and_hms_opt(0, 0, 0)
                 .unwrap_or_else(|| panic!("and_hms_opt got None from {:?}", val)),
             Utc,
-        )
+        ))
     }
 }
 
-impl<'py> TypeConversion<NaiveDateTime, DateTime<Utc>> for BigQueryPandasTransport<'py> {
-    fn convert(val: NaiveDateTime) -> DateTime<Utc> {
-        DateTime::from_naive_utc_and_offset(val, Utc)
+impl<'py> TypeConversion<NaiveDateTime, DateTimeWrapperMicro> for BigQueryPandasTransport<'py> {
+    fn convert(val: NaiveDateTime) -> DateTimeWrapperMicro {
+        DateTimeWrapperMicro(DateTime::from_naive_utc_and_offset(val, Utc))
+    }
+}
+
+impl<'py> TypeConversion<DateTime<Utc>, DateTimeWrapperMicro> for BigQueryPandasTransport<'py> {
+    fn convert(val: DateTime<Utc>) -> DateTimeWrapperMicro {
+        DateTimeWrapperMicro(val)
     }
 }
 
