@@ -27,8 +27,10 @@ ConnectorX uses `mssql-tds` for SQL Server connections.
     * Example: `mssql://host:port/db?encrypt=true&trusted_connection=true`
 * By adding `trust_server_certificate=true` to connection uri parameter, the SQLServer certificate will not be validated and it is accepted as-is. 
     * Example: `mssql://host:port/db?trust_server_certificate=true&encrypt=true`
-* By adding `trust_server_certificate_ca=/path/to/ca-cert.crt` to connection uri parameter, the SQLServer certificate will be validated against the given CA certificate in addition to the system-truststore.
-    * Example: `mssql://host:port/db?encrypt=true&trust_server_certificate_ca=/path/to/ca-cert.crt`
+* `trust_server_certificate_ca` is not supported by the `mssql-tds` backend.
+  ConnectorX rejects the connection instead of silently weakening certificate
+  validation. Install the CA in the system trust store, or use
+  `trust_server_certificate=true` only when skipping validation is acceptable.
 
 ### SQLServer-Pandas Type Mapping
 | SQLServer Type  |      Pandas Type            |  Comment                           |
