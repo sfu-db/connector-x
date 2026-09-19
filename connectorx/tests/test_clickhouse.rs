@@ -13,6 +13,10 @@ use tokio::runtime::Runtime;
 
 mod test_db;
 
+const F32_THREE_POINT_ONE_FOUR: f32 = 314.0_f32 / 100.0;
+const F32_ONE_POINT_FIVE_SEVEN: f32 = 157.0_f32 / 100.0;
+const F32_TWO_POINT_SEVEN_ONE_EIGHT: f32 = 2718.0_f32 / 1000.0;
+
 macro_rules! col {
     ($batch:expr, $idx:expr, $ty:ty) => {
         $batch.column($idx).as_any().downcast_ref::<$ty>().unwrap()
@@ -186,7 +190,13 @@ fn test_clickhouse_basic_types() {
         batch,
         9,
         Float32Array,
-        &[-3.14, 3.14, 0.0, 2.718, -0.5],
+        &[
+            -F32_THREE_POINT_ONE_FOUR,
+            F32_THREE_POINT_ONE_FOUR,
+            0.0,
+            F32_TWO_POINT_SEVEN_ONE_EIGHT,
+            -0.5,
+        ],
         0.001
     );
     assert_floats!(
@@ -194,10 +204,10 @@ fn test_clickhouse_basic_types() {
         10,
         Float64Array,
         &[
-            -3.141592653589793,
-            3.141592653589793,
+            -std::f64::consts::PI,
+            std::f64::consts::PI,
             0.0,
-            2.718281828459045,
+            std::f64::consts::E,
             -0.123456789012345
         ],
         1e-12
@@ -527,7 +537,13 @@ fn test_clickhouse_array_types() {
             vec![1.1, 2.2, 3.3],
             vec![],
             vec![42.0],
-            vec![-3.14, -1.57, 0.0, 1.57, 3.14],
+            vec![
+                -F32_THREE_POINT_ONE_FOUR,
+                -F32_ONE_POINT_FIVE_SEVEN,
+                0.0,
+                F32_ONE_POINT_FIVE_SEVEN,
+                F32_THREE_POINT_ONE_FOUR,
+            ],
             vec![1.5, 2.5],
         ],
         1e-3
@@ -542,11 +558,11 @@ fn test_clickhouse_array_types() {
             vec![],
             vec![42.0],
             Vec::<f64>::from([
-                -3.141592653589793,
-                -1.5707963267948966,
+                -std::f64::consts::PI,
+                -std::f64::consts::FRAC_PI_2,
                 0.0,
-                1.5707963267948966,
-                3.141592653589793
+                std::f64::consts::FRAC_PI_2,
+                std::f64::consts::PI
             ]),
             vec![1.55, 2.55],
         ],
