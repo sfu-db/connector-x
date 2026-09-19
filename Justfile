@@ -25,6 +25,21 @@ test-ci-integration:
     cargo test --features src_postgres --features dst_arrow --test test_postgres
     cargo test --features src_postgres --features src_dummy --features dst_polars --test test_polars
 
+# Coverage is split into a unit and an integration report so each shows up
+# separately in Codecov. Both stay under cargo-llvm-cov's instrumented build
+# the whole time (only --profraw-only is cleaned between runs, never the
+# compiled artifacts), so this is still a single compile overall.
+coverage-unit:
+    cargo llvm-cov clean --workspace --profraw-only
+    cargo llvm-cov --no-report --lib --features all
+    cargo llvm-cov report --lcov --output-path lcov-unit.info
+
+coverage-integration:
+    cargo llvm-cov clean --workspace --profraw-only
+    cargo llvm-cov --no-report --features src_postgres --features dst_arrow --test test_postgres
+    cargo llvm-cov --no-report --features src_postgres --features src_dummy --features dst_polars --test test_polars
+    cargo llvm-cov report --lcov --output-path lcov-integration.info
+
 test-feature-gate:
     cargo c --features src_postgres
     cargo c --features src_mysql
