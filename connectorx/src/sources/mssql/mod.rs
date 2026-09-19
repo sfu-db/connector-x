@@ -1,5 +1,6 @@
 //! Source implementation for SQL Server.
 
+mod driver;
 mod errors;
 mod typesystem;
 
@@ -109,6 +110,7 @@ pub fn mssql_config(url: &Url) -> Config {
 impl MsSQLSource {
     #[throws(MsSQLSourceError)]
     pub fn new(rt: Arc<Runtime>, conn: &str, nconn: usize) -> Self {
+        debug!("mssql source using driver: {:?}", driver::active_driver());
         let url = Url::parse(conn)?;
         let config = mssql_config(&url)?;
         let manager = bb8_tiberius::ConnectionManager::new(config);
