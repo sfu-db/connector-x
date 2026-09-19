@@ -1,5 +1,9 @@
 name: PR Code Coverage
 
+# Keep reporting separate from CI as a security boundary. The pull_request
+# workflow executes untrusted PR code and fork PRs receive a read-only token;
+# workflow_run executes the trusted default-branch workflow and can safely get
+# pull-requests: write. Never execute files from the PR checkout in this job.
 on:
   workflow_run:
     workflows:
@@ -22,6 +26,7 @@ jobs:
       pull-requests: write
 
     steps:
+      # The composite action must come from the default branch, not the PR.
       - name: Checkout trusted reporting action
         uses: actions/checkout@v7
         with:
