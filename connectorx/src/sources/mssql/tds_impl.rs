@@ -1,12 +1,8 @@
 //! `mssql-tds`-backed implementation of the MsSQL source.
 //!
-//! Added in Phase 2 of the tiberius -> mssql-tds migration (see
-//! sfu-db/connector-x#942). Compiled only when the `src_mssql_tds` feature
-//! is active. This implementation targets the same
-//! [`super::typesystem::MsSQLTypeSystem`] and the same set of native Rust
-//! produce types as [`super::tiberius_impl`], so
-//! [`crate::transports::mssql_arrow::MsSQLArrowTransport`] works unchanged
-//! against either backend.
+//! This implementation targets [`super::typesystem::MsSQLTypeSystem`] and
+//! the native Rust produce types expected by
+//! [`crate::transports::mssql_arrow::MsSQLArrowTransport`].
 //!
 //! Known, intentional differences from the Tiberius path (tracked as
 //! documented gaps, not bugs):
@@ -22,11 +18,6 @@
 //!   `encrypt` is unset, while `mssql-tds` has no equivalent "off" setting.
 //!   We map the unset default to `EncryptionSetting::PreferOff` (negotiate
 //!   TLS if offered, don't require it) as the closest available match.
-//! - `partition_on`-driven range partitioning
-//!   (`crate::partition::get_col_range` for `SourceType::MsSQL`) is not yet
-//!   implemented for this backend; see `partition.rs`.
-
-use super::driver;
 use super::errors::MsSQLSourceError;
 use super::typesystem::{FloatN, IntN, MsSQLTypeSystem};
 use crate::constants::DB_BUFFER_SIZE;
@@ -34,7 +25,7 @@ use crate::{
     data_order::DataOrder,
     errors::ConnectorXError,
     sources::{PartitionParser, Produce, Source, SourcePartition},
-    sql::{count_query, CXQuery},
+    sql::{count_query, get_partition_range_query, CXQuery},
 };
 use anyhow::anyhow;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
@@ -98,7 +89,7 @@ fn build_client_context(url: &Url) -> (String, ClientContext) {
         // equivalent yet, only exact-match certificate pinning. Reject
         // rather than silently downgrade TLS trust.
         throw!(anyhow!(
-            "trust_server_certificate_ca={} is not supported with the src_mssql_tds backend: \
+            "trust_server_certificate_ca={} is not supported with the src_mssql backend: \
              mssql-tds only supports exact-match certificate pinning, not CA validation",
             v
         ));
@@ -140,6 +131,60 @@ fn first_row(rt: &Runtime, client: &mut TdsClient, sql: String) -> Option<Vec<Co
     rt.block_on(client.next_row())?
 }
 
+#[throws(MsSQLSourceError)]
+pub(crate) fn mssql_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
+    let rt = Runtime::new().expect("Failed to create runtime");
+    let range_query = get_partition_range_query(query, col, &MsSqlDialect {})?;
+    let mut client = open_connection(&rt, conn)?;
+    let row = first_row(&rt, &mut client, range_query.as_str().to_string())?
+        .ok_or_else(|| anyhow!("MsSQL returned no partition range row"))?;
+
+    if row.len() < 2 {
+        throw!(anyhow!("MsSQL partition range query returned fewer than two columns"));
+    }
+
+    (partition_bound(&row[0])?, partition_bound(&row[1])?)
+}
+
+#[throws(MsSQLSourceError)]
+fn partition_bound(value: &ColumnValues) -> i64 {
+    match value {
+        ColumnValues::Null => 0,
+        ColumnValues::TinyInt(value) => *value as i64,
+        ColumnValues::SmallInt(value) => *value as i64,
+        ColumnValues::Int(value) => *value as i64,
+        ColumnValues::BigInt(value) => *value,
+        ColumnValues::Real(value) => *value as i64,
+        ColumnValues::Float(value) => *value as i64,
+        value => throw!(anyhow!(
+            "Partition can only be done on int or float columns, got {:?}",
+            value
+        )),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::partition_bound;
+    use mssql_tds::datatypes::column_values::ColumnValues;
+
+    #[test]
+    fn partition_bound_accepts_numeric_values_and_null() {
+        assert_eq!(partition_bound(&ColumnValues::Null).unwrap(), 0);
+        assert_eq!(partition_bound(&ColumnValues::TinyInt(1)).unwrap(), 1);
+        assert_eq!(partition_bound(&ColumnValues::SmallInt(-2)).unwrap(), -2);
+        assert_eq!(partition_bound(&ColumnValues::Int(3)).unwrap(), 3);
+        assert_eq!(partition_bound(&ColumnValues::BigInt(-4)).unwrap(), -4);
+        assert_eq!(partition_bound(&ColumnValues::Real(5.9)).unwrap(), 5);
+        assert_eq!(partition_bound(&ColumnValues::Float(-6.9)).unwrap(), -6);
+    }
+
+    #[test]
+    fn partition_bound_rejects_non_numeric_values() {
+        assert!(partition_bound(&ColumnValues::Bit(true)).is_err());
+    }
+}
+
 pub struct MsSQLSource {
     rt: Arc<Runtime>,
     conn_url: Url,
@@ -152,7 +197,6 @@ pub struct MsSQLSource {
 impl MsSQLSource {
     #[throws(MsSQLSourceError)]
     pub fn new(rt: Arc<Runtime>, conn: &str, _nconn: usize) -> Self {
-        debug!("mssql source using driver: {:?}", driver::active_driver());
         // mssql-tds has no bb8-style connection pool yet, so `_nconn` isn't
         // used to size a pool: every partition opens its own connection
         // instead (see the module-level doc comment).
@@ -475,7 +519,7 @@ fn column_value_to_cell(value: ColumnValues) -> TdsCell {
         // non-nullable smallmoney column ever needs it.
         ColumnValues::SmallMoney(sm) => TdsCell::F64((sm.int_val as f64) / 10_000.0),
         other => throw!(anyhow!(
-            "MsSQL: unsupported value for src_mssql_tds backend: {:?}",
+            "MsSQL: unsupported value for src_mssql backend: {:?}",
             other
         )),
     }
