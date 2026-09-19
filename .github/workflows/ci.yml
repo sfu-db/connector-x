@@ -66,7 +66,7 @@ jobs:
 
       - name: Generate unit test coverage
         run: |
-          cargo llvm-cov --lib --features all --lcov --output-path lcov.info
+          cargo llvm-cov --lib --features all --cobertura --output-path cobertura.xml
           {
             echo "### Rust unit test coverage"
             echo '```text'
@@ -78,7 +78,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: rust-unit-test-coverage
-          path: lcov.info
+          path: cobertura.xml
 
       - name: Test build docs
         uses: actions-rs/cargo@v1
