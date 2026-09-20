@@ -410,3 +410,52 @@ impl ClickHouseTypeSystem {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::ClickHouseTypeSystem;
+
+    #[test]
+    fn parses_nullable_and_low_cardinality_types() {
+        assert!(ClickHouseTypeSystem::from_type_str("Nullable(Int64)").is_nullable());
+        assert!(!ClickHouseTypeSystem::from_type_str("LowCardinality(String)").is_nullable());
+    }
+
+    #[test]
+    fn parses_type_metadata() {
+        let (decimal, metadata) =
+            ClickHouseTypeSystem::from_type_str_with_metadata("Decimal(18, 4)");
+        assert!(matches!(decimal, ClickHouseTypeSystem::Decimal(false)));
+        assert_eq!(metadata.precision, 18);
+        assert_eq!(metadata.scale, 4);
+
+        let (fixed, metadata) =
+            ClickHouseTypeSystem::from_type_str_with_metadata("FixedString(32)");
+        assert!(matches!(fixed, ClickHouseTypeSystem::FixedString(false)));
+        assert_eq!(metadata.length, 32);
+
+        let (datetime, metadata) =
+            ClickHouseTypeSystem::from_type_str_with_metadata("DateTime64(6, 'UTC')");
+        assert!(matches!(datetime, ClickHouseTypeSystem::DateTime64(false)));
+        assert_eq!(metadata.precision, 6);
+        assert_eq!(metadata.timezone.unwrap().name(), "UTC");
+    }
+
+    #[test]
+    fn parses_arrays_enums_and_unknown_types() {
+        assert!(matches!(
+            ClickHouseTypeSystem::from_type_str("Array(Nullable(Int32))"),
+            ClickHouseTypeSystem::ArrayInt32(false)
+        ));
+        let (enum_type, metadata) =
+            ClickHouseTypeSystem::from_type_str_with_metadata("Enum8('ok' = 1, 'error' = -1)");
+        assert!(matches!(enum_type, ClickHouseTypeSystem::Enum8(false)));
+        let values = metadata.named_values.unwrap();
+        assert_eq!(values.get(&1).map(String::as_str), Some("ok"));
+        assert_eq!(values.get(&-1).map(String::as_str), Some("error"));
+        assert!(matches!(
+            ClickHouseTypeSystem::from_type_str("UnsupportedType"),
+            ClickHouseTypeSystem::String(false)
+        ));
+    }
+}

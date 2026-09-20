@@ -236,3 +236,27 @@ impl fmt::Display for ProduceContext {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{ConnectorXError, ProduceContext};
+
+    #[test]
+    fn formats_produce_contexts() {
+        assert_eq!(
+            ProduceContext::from(None).to_string(),
+            ProduceContext::NoContext.to_string()
+        );
+        assert_eq!(
+            ProduceContext::from(Some("column 1".to_string())).to_string(),
+            "column 1"
+        );
+        assert_eq!(ProduceContext::NoContext.to_string(), "No Context");
+    }
+
+    #[test]
+    fn creates_type_specific_production_errors() {
+        let error = ConnectorXError::cannot_produce::<u32>(Some("value".to_string()));
+        assert_eq!(error.to_string(), "Cannot produce a u32, context: value.");
+    }
+}
