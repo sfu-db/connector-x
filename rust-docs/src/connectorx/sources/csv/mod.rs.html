@@ -401,4 +401,55 @@
 <a href=#401 id=401 data-nosnippet>401</a>        <span class="prelude-val">Some</span>(v)
 <a href=#402 id=402 data-nosnippet>402</a>    }
 <a href=#403 id=403 data-nosnippet>403</a>}
+<a href=#404 id=404 data-nosnippet>404</a>
+<a href=#405 id=405 data-nosnippet>405</a><span class="attr">#[cfg(test)]
+<a href=#406 id=406 data-nosnippet>406</a></span><span class="kw">mod </span>tests {
+<a href=#407 id=407 data-nosnippet>407</a>    <span class="kw">use super</span>::{CSVSource, CSVTypeSystem};
+<a href=#408 id=408 data-nosnippet>408</a>    <span class="kw">use crate</span>::{sources::Source, sql::CXQuery};
+<a href=#409 id=409 data-nosnippet>409</a>    <span class="kw">use </span>std::{fs, path::PathBuf};
+<a href=#410 id=410 data-nosnippet>410</a>
+<a href=#411 id=411 data-nosnippet>411</a>    <span class="attr">#[test]
+<a href=#412 id=412 data-nosnippet>412</a>    </span><span class="kw">fn </span>infers_schema_from_numeric_boolean_datetime_and_string_values() {
+<a href=#413 id=413 data-nosnippet>413</a>        <span class="kw">let </span>path: PathBuf =
+<a href=#414 id=414 data-nosnippet>414</a>            std::env::temp_dir().join(<span class="macro">format!</span>(<span class="string">"connectorx-csv-infer-{}.csv"</span>, std::process::id()));
+<a href=#415 id=415 data-nosnippet>415</a>        fs::write(
+<a href=#416 id=416 data-nosnippet>416</a>            <span class="kw-2">&amp;</span>path,
+<a href=#417 id=417 data-nosnippet>417</a>            <span class="string">"integer,float,mixed,boolean,datetime,string,empty\n\
+<a href=#418 id=418 data-nosnippet>418</a>             1,1.5,1,true,2020-01-02T03:04:05,hello,\n\
+<a href=#419 id=419 data-nosnippet>419</a>             ,2.5,2.5,,2020-01-02T03:04:05,world,\n"</span>,
+<a href=#420 id=420 data-nosnippet>420</a>        )
+<a href=#421 id=421 data-nosnippet>421</a>        .unwrap();
+<a href=#422 id=422 data-nosnippet>422</a>
+<a href=#423 id=423 data-nosnippet>423</a>        <span class="kw">let </span><span class="kw-2">mut </span>source = CSVSource::new(<span class="kw-2">&amp;</span>[]);
+<a href=#424 id=424 data-nosnippet>424</a>        source.set_queries(<span class="kw-2">&amp;</span>[CXQuery::naked(path.to_string_lossy().into_owned())]);
+<a href=#425 id=425 data-nosnippet>425</a>        source.fetch_metadata().unwrap();
+<a href=#426 id=426 data-nosnippet>426</a>
+<a href=#427 id=427 data-nosnippet>427</a>        <span class="macro">assert_eq!</span>(
+<a href=#428 id=428 data-nosnippet>428</a>            source.schema(),
+<a href=#429 id=429 data-nosnippet>429</a>            <span class="macro">vec!</span>[
+<a href=#430 id=430 data-nosnippet>430</a>                CSVTypeSystem::I64(<span class="bool-val">true</span>),
+<a href=#431 id=431 data-nosnippet>431</a>                CSVTypeSystem::F64(<span class="bool-val">false</span>),
+<a href=#432 id=432 data-nosnippet>432</a>                CSVTypeSystem::F64(<span class="bool-val">false</span>),
+<a href=#433 id=433 data-nosnippet>433</a>                CSVTypeSystem::Bool(<span class="bool-val">true</span>),
+<a href=#434 id=434 data-nosnippet>434</a>                CSVTypeSystem::DateTime(<span class="bool-val">false</span>),
+<a href=#435 id=435 data-nosnippet>435</a>                CSVTypeSystem::String(<span class="bool-val">false</span>),
+<a href=#436 id=436 data-nosnippet>436</a>                CSVTypeSystem::String(<span class="bool-val">true</span>),
+<a href=#437 id=437 data-nosnippet>437</a>            ]
+<a href=#438 id=438 data-nosnippet>438</a>        );
+<a href=#439 id=439 data-nosnippet>439</a>        <span class="macro">assert_eq!</span>(
+<a href=#440 id=440 data-nosnippet>440</a>            source.names(),
+<a href=#441 id=441 data-nosnippet>441</a>            <span class="macro">vec!</span>[
+<a href=#442 id=442 data-nosnippet>442</a>                <span class="string">"integer"</span>.to_owned(),
+<a href=#443 id=443 data-nosnippet>443</a>                <span class="string">"float"</span>.to_owned(),
+<a href=#444 id=444 data-nosnippet>444</a>                <span class="string">"mixed"</span>.to_owned(),
+<a href=#445 id=445 data-nosnippet>445</a>                <span class="string">"boolean"</span>.to_owned(),
+<a href=#446 id=446 data-nosnippet>446</a>                <span class="string">"datetime"</span>.to_owned(),
+<a href=#447 id=447 data-nosnippet>447</a>                <span class="string">"string"</span>.to_owned(),
+<a href=#448 id=448 data-nosnippet>448</a>                <span class="string">"empty"</span>.to_owned(),
+<a href=#449 id=449 data-nosnippet>449</a>            ]
+<a href=#450 id=450 data-nosnippet>450</a>        );
+<a href=#451 id=451 data-nosnippet>451</a>
+<a href=#452 id=452 data-nosnippet>452</a>        fs::remove_file(path).unwrap();
+<a href=#453 id=453 data-nosnippet>453</a>    }
+<a href=#454 id=454 data-nosnippet>454</a>}
 </code></pre></div></section></main></body></html>
