@@ -65,3 +65,85 @@ impl<'a> From<&'a OracleType> for OracleTypeSystem {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::OracleTypeSystem;
+    use oracle::sql_type::OracleType;
+
+    #[test]
+    fn maps_oracle_types() {
+        assert!(matches!(
+            OracleTypeSystem::from(&OracleType::Number(0, 0)),
+            OracleTypeSystem::NumDecimal(true)
+        ));
+        assert!(matches!(
+            OracleTypeSystem::from(&OracleType::Number(10, 0)),
+            OracleTypeSystem::NumInt(true)
+        ));
+        assert!(matches!(
+            OracleTypeSystem::from(&OracleType::Number(10, 2)),
+            OracleTypeSystem::NumDecimal(true)
+        ));
+        assert!(matches!(
+            OracleTypeSystem::from(&OracleType::Float(10)),
+            OracleTypeSystem::Float(true)
+        ));
+        assert!(matches!(
+            OracleTypeSystem::from(&OracleType::BinaryFloat),
+            OracleTypeSystem::BinaryFloat(true)
+        ));
+        assert!(matches!(
+            OracleTypeSystem::from(&OracleType::BinaryDouble),
+            OracleTypeSystem::BinaryDouble(true)
+        ));
+        assert!(matches!(
+            OracleTypeSystem::from(&OracleType::BLOB),
+            OracleTypeSystem::Blob(true)
+        ));
+        assert!(matches!(
+            OracleTypeSystem::from(&OracleType::CLOB),
+            OracleTypeSystem::Clob(true)
+        ));
+        assert!(matches!(
+            OracleTypeSystem::from(&OracleType::Char(10)),
+            OracleTypeSystem::Char(true)
+        ));
+        assert!(matches!(
+            OracleTypeSystem::from(&OracleType::Long),
+            OracleTypeSystem::Char(true)
+        ));
+        assert!(matches!(
+            OracleTypeSystem::from(&OracleType::NChar(10)),
+            OracleTypeSystem::NChar(true)
+        ));
+        assert!(matches!(
+            OracleTypeSystem::from(&OracleType::Varchar2(10)),
+            OracleTypeSystem::VarChar(true)
+        ));
+        assert!(matches!(
+            OracleTypeSystem::from(&OracleType::NVarchar2(10)),
+            OracleTypeSystem::NVarChar(true)
+        ));
+        assert!(matches!(
+            OracleTypeSystem::from(&OracleType::Date),
+            OracleTypeSystem::Date(true)
+        ));
+        assert!(matches!(
+            OracleTypeSystem::from(&OracleType::Timestamp(6)),
+            OracleTypeSystem::Timestamp(true)
+        ));
+        assert!(matches!(
+            OracleTypeSystem::from(&OracleType::Timestamp(7)),
+            OracleTypeSystem::TimestampNano(true)
+        ));
+        assert!(matches!(
+            OracleTypeSystem::from(&OracleType::TimestampTZ(6)),
+            OracleTypeSystem::TimestampTz(true)
+        ));
+        assert!(matches!(
+            OracleTypeSystem::from(&OracleType::TimestampTZ(9)),
+            OracleTypeSystem::TimestampTzNano(true)
+        ));
+    }
+}

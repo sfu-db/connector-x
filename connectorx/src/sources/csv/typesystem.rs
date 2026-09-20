@@ -29,3 +29,38 @@ impl_typesystem! {
         { DateTime => DateTime<Utc> }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::CSVTypeSystem;
+    use crate::typesystem::TypeAssoc;
+
+    #[test]
+    fn associates_csv_values_and_nullable_values() {
+        assert!(<i64 as TypeAssoc<CSVTypeSystem>>::check(CSVTypeSystem::I64(false)).is_ok());
+        assert!(<Option<i64> as TypeAssoc<CSVTypeSystem>>::check(CSVTypeSystem::I64(true)).is_ok());
+        assert!(<f64 as TypeAssoc<CSVTypeSystem>>::check(CSVTypeSystem::F64(false)).is_ok());
+        assert!(<Option<f64> as TypeAssoc<CSVTypeSystem>>::check(CSVTypeSystem::F64(true)).is_ok());
+        assert!(<bool as TypeAssoc<CSVTypeSystem>>::check(CSVTypeSystem::Bool(false)).is_ok());
+        assert!(
+            <Option<bool> as TypeAssoc<CSVTypeSystem>>::check(CSVTypeSystem::Bool(true)).is_ok()
+        );
+        assert!(<String as TypeAssoc<CSVTypeSystem>>::check(CSVTypeSystem::String(false)).is_ok());
+        assert!(
+            <Option<String> as TypeAssoc<CSVTypeSystem>>::check(CSVTypeSystem::String(true))
+                .is_ok()
+        );
+        assert!(
+            <chrono::DateTime<chrono::Utc> as TypeAssoc<CSVTypeSystem>>::check(
+                CSVTypeSystem::DateTime(false)
+            )
+            .is_ok()
+        );
+        assert!(
+            <Option<chrono::DateTime<chrono::Utc>> as TypeAssoc<CSVTypeSystem>>::check(
+                CSVTypeSystem::DateTime(true)
+            )
+            .is_ok()
+        );
+    }
+}

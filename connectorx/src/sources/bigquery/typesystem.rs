@@ -77,3 +77,40 @@ impl From<BigQueryTypeSystem> for FieldType {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::BigQueryTypeSystem;
+    use gcp_bigquery_client::model::field_type::FieldType;
+
+    #[test]
+    fn maps_bigquery_field_types_in_both_directions() {
+        let fields = [
+            (FieldType::Bool, "Bool"),
+            (FieldType::Boolean, "Boolean"),
+            (FieldType::Int64, "Int64"),
+            (FieldType::Integer, "Integer"),
+            (FieldType::Float, "Float"),
+            (FieldType::Float64, "Float64"),
+            (FieldType::Numeric, "Numeric"),
+            (FieldType::Bignumeric, "Bignumeric"),
+            (FieldType::String, "String"),
+            (FieldType::Bytes, "Bytes"),
+            (FieldType::Date, "Date"),
+            (FieldType::Datetime, "Datetime"),
+            (FieldType::Time, "Time"),
+            (FieldType::Timestamp, "Timestamp"),
+        ];
+        for (field, expected) in fields {
+            assert_eq!(
+                format!("{:?}", BigQueryTypeSystem::from(&field)),
+                format!("{expected}(true)")
+            );
+            let system = BigQueryTypeSystem::from(&field);
+            assert_eq!(
+                format!("{:?}", FieldType::from(system)),
+                format!("{field:?}")
+            );
+        }
+    }
+}

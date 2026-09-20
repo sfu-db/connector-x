@@ -625,3 +625,123 @@ pub fn get_partition_range_query_sep<T: Dialect>(
     );
     (sql_min, sql_max)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{
+        count_query, get_partition_range_query, get_partition_range_query_sep, limit0_query,
+        limit1_query, single_col_partition_query, CXQuery,
+    };
+    use crate::errors::ConnectorXError;
+    use sqlparser::dialect::{GenericDialect, MsSqlDialect};
+
+    #[test]
+    fn preserves_query_variant_and_maps_values() {
+        let naked = CXQuery::naked("select 1");
+        assert_eq!(naked.as_str(), "select 1");
+        assert!(matches!(naked.map(|query| query.len()), CXQuery::Naked(8)));
+        assert_eq!(
+            CXQuery::Wrapped("select 1".to_string()).to_string(),
+            "select 1"
+        );
+    }
+
+    #[test]
+    fn unwraps_successful_and_failed_query_results() {
+        let naked: CXQuery<Result<&str, &str>> = CXQuery::Naked(Ok("select 1"));
+        assert_eq!(naked.result().unwrap().as_str(), "select 1");
+
+        let wrapped: CXQuery<Result<&str, &str>> = CXQuery::Wrapped(Err("bad"));
+        assert!(matches!(wrapped.result(), Err("bad")));
+    }
+
+    #[test]
+    fn transforms_count_and_limit_queries() {
+        let query = CXQuery::naked("SELECT id FROM items ORDER BY id");
+        let dialect = GenericDialect {};
+        assert!(count_query(&query, &dialect)
+            .unwrap()
+            .as_str()
+            .to_ascii_lowercase()
+            .contains("count"));
+        assert!(limit0_query(&query, &dialect)
+            .unwrap()
+            .as_str()
+            .contains("LIMIT 0"));
+        assert!(limit1_query(&query, &dialect)
+            .unwrap()
+            .as_str()
+            .contains("LIMIT 1"));
+    }
+
+    #[test]
+    fn uses_fallback_for_unparseable_limit_query() {
+        let query = CXQuery::naked("SELECT FROM");
+        assert_eq!(
+            limit0_query(&query, &GenericDialect {}).unwrap().as_str(),
+            "SELECT FROM LIMIT 0"
+        );
+        assert_eq!(
+            limit1_query(&query, &GenericDialect {}).unwrap().as_str(),
+            "SELECT FROM LIMIT 1"
+        );
+    }
+
+    #[test]
+    fn rejects_multiple_and_non_select_queries() {
+        let dialect = GenericDialect {};
+        assert!(matches!(
+            count_query(&CXQuery::naked("SELECT 1; SELECT 2"), &dialect),
+            Err(ConnectorXError::SqlQueryNotSupported(_))
+        ));
+        assert!(matches!(
+            limit0_query(&CXQuery::naked("INSERT INTO items VALUES (1)"), &dialect),
+            Err(ConnectorXError::SqlQueryNotSupported(_))
+        ));
+    }
+
+    #[test]
+    fn creates_partition_and_range_queries() {
+        let dialect = GenericDialect {};
+        let partition = single_col_partition_query(
+            "SELECT id, value FROM items ORDER BY id",
+            "id",
+            10,
+            20,
+            &dialect,
+        )
+        .unwrap();
+        assert!(partition.contains("CXTMPTAB_PART"));
+        assert!(partition.contains("10"));
+        assert!(partition.contains("20"));
+        assert!(!partition.contains("ORDER BY id"));
+
+        let range =
+            get_partition_range_query("SELECT id FROM items ORDER BY id", "id", &dialect).unwrap();
+        let range_lower = range.to_ascii_lowercase();
+        assert!(range_lower.contains("min"));
+        assert!(range_lower.contains("max"));
+        assert!(range.contains("CXTMPTAB_RANGE"));
+
+        let (min, max) =
+            get_partition_range_query_sep("SELECT id FROM items ORDER BY id", "id", &dialect)
+                .unwrap();
+        assert!(min.to_ascii_lowercase().contains("min"));
+        assert!(min.contains("CXTMPTAB_RANGE"));
+        assert!(max.to_ascii_lowercase().contains("max"));
+        assert!(max.contains("CXTMPTAB_RANGE"));
+    }
+
+    #[test]
+    fn clears_mssql_ordering_only_when_safe() {
+        let query = single_col_partition_query(
+            "SELECT id FROM items ORDER BY id",
+            "id",
+            0,
+            1,
+            &MsSqlDialect {},
+        )
+        .unwrap();
+        assert!(!query.contains("ORDER BY id"));
+    }
+}
