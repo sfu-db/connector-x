@@ -401,3 +401,54 @@ impl<'r, 'a> Produce<'r, Option<DateTime<Utc>>> for CSVSourcePartitionParser<'a>
         Some(v)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{CSVSource, CSVTypeSystem};
+    use crate::{sources::Source, sql::CXQuery};
+    use std::{fs, path::PathBuf};
+
+    #[test]
+    fn infers_schema_from_numeric_boolean_datetime_and_string_values() {
+        let path: PathBuf =
+            std::env::temp_dir().join(format!("connectorx-csv-infer-{}.csv", std::process::id()));
+        fs::write(
+            &path,
+            "integer,float,mixed,boolean,datetime,string,empty\n\
+             1,1.5,1,true,2020-01-02T03:04:05,hello,\n\
+             ,2.5,2.5,,2020-01-02T03:04:05,world,\n",
+        )
+        .unwrap();
+
+        let mut source = CSVSource::new(&[]);
+        source.set_queries(&[CXQuery::naked(path.to_string_lossy().into_owned())]);
+        source.fetch_metadata().unwrap();
+
+        assert_eq!(
+            source.schema(),
+            vec![
+                CSVTypeSystem::I64(true),
+                CSVTypeSystem::F64(false),
+                CSVTypeSystem::F64(false),
+                CSVTypeSystem::Bool(true),
+                CSVTypeSystem::DateTime(false),
+                CSVTypeSystem::String(false),
+                CSVTypeSystem::String(true),
+            ]
+        );
+        assert_eq!(
+            source.names(),
+            vec![
+                "integer".to_owned(),
+                "float".to_owned(),
+                "mixed".to_owned(),
+                "boolean".to_owned(),
+                "datetime".to_owned(),
+                "string".to_owned(),
+                "empty".to_owned(),
+            ]
+        );
+
+        fs::remove_file(path).unwrap();
+    }
+}
