@@ -492,7 +492,11 @@ fn decimal_parts_to_decimal(parts: &DecimalParts) -> Decimal {
     let magnitude = parts.magnitude();
     let mantissa = i128::try_from(magnitude)
         .map_err(|_| anyhow!("MsSQL decimal/numeric value overflows 128 bits"))?;
-    let mantissa = if parts.is_positive { mantissa } else { -mantissa };
+    let mantissa = if parts.is_positive {
+        mantissa
+    } else {
+        -mantissa
+    };
     Decimal::try_from_i128_with_scale(mantissa, parts.scale as u32)
         .map_err(|e| anyhow!("MsSQL decimal/numeric value out of range: {}", e))?
 }
@@ -504,7 +508,12 @@ fn sql_date_to_naive_date(d: &SqlDate) -> NaiveDate {
     NaiveDate::from_ymd_opt(1, 1, 1)
         .unwrap()
         .checked_add_signed(chrono::Duration::days(d.get_days() as i64))
-        .ok_or_else(|| anyhow!("MsSQL date out of range: {} days since 0001-01-01", d.get_days()))?
+        .ok_or_else(|| {
+            anyhow!(
+                "MsSQL date out of range: {} days since 0001-01-01",
+                d.get_days()
+            )
+        })?
 }
 
 /// Despite its name, `SqlTime::time_nanoseconds` is actually the value in
@@ -525,7 +534,12 @@ fn sql_datetime2_to_naive_datetime(dt2: &SqlDateTime2) -> NaiveDateTime {
     let date = NaiveDate::from_ymd_opt(1, 1, 1)
         .unwrap()
         .checked_add_signed(chrono::Duration::days(dt2.days as i64))
-        .ok_or_else(|| anyhow!("MsSQL datetime2 out of range: {} days since 0001-01-01", dt2.days))?;
+        .ok_or_else(|| {
+            anyhow!(
+                "MsSQL datetime2 out of range: {} days since 0001-01-01",
+                dt2.days
+            )
+        })?;
     date.and_time(sql_time_to_naive_time(&dt2.time))
 }
 
@@ -563,7 +577,12 @@ fn sql_datetime_to_naive_datetime(dt: &SqlDateTime) -> NaiveDateTime {
     let date = NaiveDate::from_ymd_opt(1900, 1, 1)
         .unwrap()
         .checked_add_signed(chrono::Duration::days(dt.days as i64 + extra_days))
-        .ok_or_else(|| anyhow!("MsSQL datetime out of range: {} days since 1900-01-01", dt.days))?;
+        .ok_or_else(|| {
+            anyhow!(
+                "MsSQL datetime out of range: {} days since 1900-01-01",
+                dt.days
+            )
+        })?;
 
     date.and_time(time)
 }
@@ -651,7 +670,12 @@ impl<'r> Produce<'r, f32> for MsSQLSourceParser {
             TdsCell::F32(v) => v,
             TdsCell::F64(v) => v as f32,
             TdsCell::Null => throw!(anyhow!("MsSQL get None at position: ({}, {})", ridx, cidx)),
-            other => throw!(anyhow!("MsSQL type mismatch at ({}, {}): {:?}", ridx, cidx, other)),
+            other => throw!(anyhow!(
+                "MsSQL type mismatch at ({}, {}): {:?}",
+                ridx,
+                cidx,
+                other
+            )),
         }
     }
 }
@@ -666,7 +690,12 @@ impl<'r> Produce<'r, Option<f32>> for MsSQLSourceParser {
             TdsCell::F32(v) => Some(v),
             TdsCell::F64(v) => Some(v as f32),
             TdsCell::Null => None,
-            other => throw!(anyhow!("MsSQL type mismatch at ({}, {}): {:?}", ridx, cidx, other)),
+            other => throw!(anyhow!(
+                "MsSQL type mismatch at ({}, {}): {:?}",
+                ridx,
+                cidx,
+                other
+            )),
         }
     }
 }
@@ -688,7 +717,12 @@ impl<'r> Produce<'r, f64> for MsSQLSourceParser {
             TdsCell::F64(v) => v,
             TdsCell::F32(v) => v as f64,
             TdsCell::Null => throw!(anyhow!("MsSQL get None at position: ({}, {})", ridx, cidx)),
-            other => throw!(anyhow!("MsSQL type mismatch at ({}, {}): {:?}", ridx, cidx, other)),
+            other => throw!(anyhow!(
+                "MsSQL type mismatch at ({}, {}): {:?}",
+                ridx,
+                cidx,
+                other
+            )),
         }
     }
 }
@@ -703,7 +737,12 @@ impl<'r> Produce<'r, Option<f64>> for MsSQLSourceParser {
             TdsCell::F64(v) => Some(v),
             TdsCell::F32(v) => Some(v as f64),
             TdsCell::Null => None,
-            other => throw!(anyhow!("MsSQL type mismatch at ({}, {}): {:?}", ridx, cidx, other)),
+            other => throw!(anyhow!(
+                "MsSQL type mismatch at ({}, {}): {:?}",
+                ridx,
+                cidx,
+                other
+            )),
         }
     }
 }
@@ -720,7 +759,12 @@ impl<'r> Produce<'r, IntN> for MsSQLSourceParser {
             TdsCell::I32(v) => IntN(v as i64),
             TdsCell::I64(v) => IntN(v),
             TdsCell::Null => throw!(anyhow!("MsSQL get None at position: ({}, {})", ridx, cidx)),
-            other => throw!(anyhow!("MsSQL type mismatch at ({}, {}): {:?}", ridx, cidx, other)),
+            other => throw!(anyhow!(
+                "MsSQL type mismatch at ({}, {}): {:?}",
+                ridx,
+                cidx,
+                other
+            )),
         }
     }
 }
@@ -737,7 +781,12 @@ impl<'r> Produce<'r, Option<IntN>> for MsSQLSourceParser {
             TdsCell::I32(v) => Some(IntN(v as i64)),
             TdsCell::I64(v) => Some(IntN(v)),
             TdsCell::Null => None,
-            other => throw!(anyhow!("MsSQL type mismatch at ({}, {}): {:?}", ridx, cidx, other)),
+            other => throw!(anyhow!(
+                "MsSQL type mismatch at ({}, {}): {:?}",
+                ridx,
+                cidx,
+                other
+            )),
         }
     }
 }
@@ -752,7 +801,12 @@ impl<'r> Produce<'r, FloatN> for MsSQLSourceParser {
             TdsCell::F32(v) => FloatN(v as f64),
             TdsCell::F64(v) => FloatN(v),
             TdsCell::Null => throw!(anyhow!("MsSQL get None at position: ({}, {})", ridx, cidx)),
-            other => throw!(anyhow!("MsSQL type mismatch at ({}, {}): {:?}", ridx, cidx, other)),
+            other => throw!(anyhow!(
+                "MsSQL type mismatch at ({}, {}): {:?}",
+                ridx,
+                cidx,
+                other
+            )),
         }
     }
 }
@@ -767,7 +821,12 @@ impl<'r> Produce<'r, Option<FloatN>> for MsSQLSourceParser {
             TdsCell::F32(v) => Some(FloatN(v as f64)),
             TdsCell::F64(v) => Some(FloatN(v)),
             TdsCell::Null => None,
-            other => throw!(anyhow!("MsSQL type mismatch at ({}, {}): {:?}", ridx, cidx, other)),
+            other => throw!(anyhow!(
+                "MsSQL type mismatch at ({}, {}): {:?}",
+                ridx,
+                cidx,
+                other
+            )),
         }
     }
 }
@@ -781,7 +840,12 @@ impl<'r> Produce<'r, &'r str> for MsSQLSourceParser {
         match &self.rowbuf[ridx][cidx] {
             TdsCell::Str(s) => s.as_str(),
             TdsCell::Null => throw!(anyhow!("MsSQL get None at position: ({}, {})", ridx, cidx)),
-            other => throw!(anyhow!("MsSQL type mismatch at ({}, {}): {:?}", ridx, cidx, other)),
+            other => throw!(anyhow!(
+                "MsSQL type mismatch at ({}, {}): {:?}",
+                ridx,
+                cidx,
+                other
+            )),
         }
     }
 }
@@ -795,7 +859,12 @@ impl<'r> Produce<'r, Option<&'r str>> for MsSQLSourceParser {
         match &self.rowbuf[ridx][cidx] {
             TdsCell::Str(s) => Some(s.as_str()),
             TdsCell::Null => None,
-            other => throw!(anyhow!("MsSQL type mismatch at ({}, {}): {:?}", ridx, cidx, other)),
+            other => throw!(anyhow!(
+                "MsSQL type mismatch at ({}, {}): {:?}",
+                ridx,
+                cidx,
+                other
+            )),
         }
     }
 }
@@ -809,7 +878,12 @@ impl<'r> Produce<'r, &'r [u8]> for MsSQLSourceParser {
         match &self.rowbuf[ridx][cidx] {
             TdsCell::Bytes(b) => b.as_slice(),
             TdsCell::Null => throw!(anyhow!("MsSQL get None at position: ({}, {})", ridx, cidx)),
-            other => throw!(anyhow!("MsSQL type mismatch at ({}, {}): {:?}", ridx, cidx, other)),
+            other => throw!(anyhow!(
+                "MsSQL type mismatch at ({}, {}): {:?}",
+                ridx,
+                cidx,
+                other
+            )),
         }
     }
 }
@@ -823,7 +897,12 @@ impl<'r> Produce<'r, Option<&'r [u8]>> for MsSQLSourceParser {
         match &self.rowbuf[ridx][cidx] {
             TdsCell::Bytes(b) => Some(b.as_slice()),
             TdsCell::Null => None,
-            other => throw!(anyhow!("MsSQL type mismatch at ({}, {}): {:?}", ridx, cidx, other)),
+            other => throw!(anyhow!(
+                "MsSQL type mismatch at ({}, {}): {:?}",
+                ridx,
+                cidx,
+                other
+            )),
         }
     }
 }
