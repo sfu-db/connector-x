@@ -55,8 +55,8 @@ jobs:
           command: clippy
           args: --features all
 
-      # - name: Check each feature gate
-      #   run: just test-feature-gate
+      - name: Check each feature gate
+        run: just test-feature-gate
 
       - name: Install cargo-llvm-cov
         uses: taiki-e/install-action@cargo-llvm-cov
