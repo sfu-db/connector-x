@@ -35,7 +35,7 @@ impl TypeConversion<i64, i64> for PanicArrowStreamTransport {
 
 impl TypeConversion<Option<i64>, Option<i64>> for PanicArrowStreamTransport {
     fn convert(val: Option<i64>) -> Option<i64> {
-        val.map(|v| <Self as TypeConversion<i64, i64>>::convert(v))
+        val.map(<Self as TypeConversion<i64, i64>>::convert)
     }
 }
 

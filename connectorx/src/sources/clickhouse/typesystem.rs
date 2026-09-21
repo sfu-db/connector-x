@@ -275,7 +275,7 @@ impl ClickHouseTypeSystem {
     fn parse_length(params: Option<&str>) -> usize {
         let params = params.and_then(|p| p.split(',').map(|i| i.trim()).collect::<Vec<_>>().into());
         params
-            .and_then(|p| p.get(0).and_then(|s| s.parse::<usize>().ok()))
+            .and_then(|p| p.first().and_then(|s| s.parse::<usize>().ok()))
             .unwrap_or(1)
     }
 
@@ -285,11 +285,11 @@ impl ClickHouseTypeSystem {
         match params {
             None => (None, None),
             Some(p) => {
-                if let Some(precision) = p.get(0).and_then(|s| s.parse::<u8>().ok()) {
+                if let Some(precision) = p.first().and_then(|s| s.parse::<u8>().ok()) {
                     let timezone = p.get(1).and_then(|s| Self::parse_timezone(s));
                     (Some(precision), timezone)
                 } else {
-                    (None, p.get(0).and_then(|s| Self::parse_timezone(s)))
+                    (None, p.first().and_then(|s| Self::parse_timezone(s)))
                 }
             }
         }
@@ -299,7 +299,7 @@ impl ClickHouseTypeSystem {
     fn parse_time64_precision(params: Option<&str>) -> u8 {
         let params = params.and_then(|p| p.split(',').map(|i| i.trim()).collect::<Vec<_>>().into());
         params
-            .and_then(|p| p.get(0).and_then(|s| s.parse::<u8>().ok()))
+            .and_then(|p| p.first().and_then(|s| s.parse::<u8>().ok()))
             .unwrap_or(3)
     }
 
@@ -307,10 +307,10 @@ impl ClickHouseTypeSystem {
     fn parse_decimal_precision_scale(params: Option<&str>) -> (u8, u8) {
         let params = params.and_then(|p| p.split(',').map(|i| i.trim()).collect::<Vec<_>>().into());
         params
-            .and_then(|p| {
-                let precision = p.get(0).and_then(|s| s.parse::<u8>().ok());
+            .map(|p| {
+                let precision = p.first().and_then(|s| s.parse::<u8>().ok());
                 let scale = p.get(1).and_then(|s| s.parse::<u8>().ok());
-                Some((precision.unwrap_or(0), scale.unwrap_or(0)))
+                (precision.unwrap_or(0), scale.unwrap_or(0))
             })
             .unwrap_or((0, 0))
     }
@@ -408,5 +408,54 @@ impl ClickHouseTypeSystem {
             | ClickHouseTypeSystem::ArrayFloat64(nullable)
             | ClickHouseTypeSystem::ArrayDecimal(nullable) => *nullable,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::ClickHouseTypeSystem;
+
+    #[test]
+    fn parses_nullable_and_low_cardinality_types() {
+        assert!(ClickHouseTypeSystem::from_type_str("Nullable(Int64)").is_nullable());
+        assert!(!ClickHouseTypeSystem::from_type_str("LowCardinality(String)").is_nullable());
+    }
+
+    #[test]
+    fn parses_type_metadata() {
+        let (decimal, metadata) =
+            ClickHouseTypeSystem::from_type_str_with_metadata("Decimal(18, 4)");
+        assert!(matches!(decimal, ClickHouseTypeSystem::Decimal(false)));
+        assert_eq!(metadata.precision, 18);
+        assert_eq!(metadata.scale, 4);
+
+        let (fixed, metadata) =
+            ClickHouseTypeSystem::from_type_str_with_metadata("FixedString(32)");
+        assert!(matches!(fixed, ClickHouseTypeSystem::FixedString(false)));
+        assert_eq!(metadata.length, 32);
+
+        let (datetime, metadata) =
+            ClickHouseTypeSystem::from_type_str_with_metadata("DateTime64(6, 'UTC')");
+        assert!(matches!(datetime, ClickHouseTypeSystem::DateTime64(false)));
+        assert_eq!(metadata.precision, 6);
+        assert_eq!(metadata.timezone.unwrap().name(), "UTC");
+    }
+
+    #[test]
+    fn parses_arrays_enums_and_unknown_types() {
+        assert!(matches!(
+            ClickHouseTypeSystem::from_type_str("Array(Nullable(Int32))"),
+            ClickHouseTypeSystem::ArrayInt32(false)
+        ));
+        let (enum_type, metadata) =
+            ClickHouseTypeSystem::from_type_str_with_metadata("Enum8('ok' = 1, 'error' = -1)");
+        assert!(matches!(enum_type, ClickHouseTypeSystem::Enum8(false)));
+        let values = metadata.named_values.unwrap();
+        assert_eq!(values.get(&1).map(String::as_str), Some("ok"));
+        assert_eq!(values.get(&-1).map(String::as_str), Some("error"));
+        assert!(matches!(
+            ClickHouseTypeSystem::from_type_str("UnsupportedType"),
+            ClickHouseTypeSystem::String(false)
+        ));
     }
 }

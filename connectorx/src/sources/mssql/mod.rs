@@ -20,16 +20,16 @@
 //! sfu-db/connector-x#942 for the migration plan.
 
 #[cfg(all(not(feature = "src_mssql_tiberius"), not(feature = "src_mssql_tds")))]
-compile_error!("feature `src_mssql` requires either `src_mssql_tiberius` or `src_mssql_tds`");
+compile_error!("MSSQL source requires either `src_mssql_tiberius` or `src_mssql_tds`");
 
 mod driver;
 mod errors;
 mod typesystem;
 
-#[cfg(feature = "src_mssql_tiberius")]
-mod tiberius_impl;
 #[cfg(feature = "src_mssql_tds")]
 mod tds_impl;
+#[cfg(feature = "src_mssql_tiberius")]
+mod tiberius_impl;
 #[cfg(all(feature = "src_mssql_tiberius", feature = "src_mssql_tds"))]
 mod dual_impl;
 
@@ -58,4 +58,3 @@ pub use self::tds_impl::{MsSQLSource, MsSQLSourceParser, MsSQLSourcePartition};
 
 #[cfg(all(feature = "src_mssql_tiberius", feature = "src_mssql_tds"))]
 pub use self::dual_impl::{MsSQLSource, MsSQLSourceParser, MsSQLSourcePartition};
-

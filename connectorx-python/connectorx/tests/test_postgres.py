@@ -452,6 +452,72 @@ def test_postgres_types_binary(postgres_url: str) -> None:
     df = read_sql(postgres_url, query)
     verify_data_types(df, "binary")
 
+@pytest.mark.parametrize(
+    "protocol,return_type",
+    [
+        (protocol, return_type)
+        for return_type in ["pandas", "arrow", "polars", "arrow_stream"]
+        for protocol in ["binary", "csv", "cursor", "simple"]
+        if (return_type, protocol) != ("arrow_stream", "simple")
+    ],
+)
+@pytest.mark.parametrize("query_mode", ["plain", "partitioned", "empty", "limit"])
+def test_postgres_tsvector(
+    postgres_url: str, protocol: str, return_type: str, query_mode: str
+) -> None:
+    query = """
+        SELECT *, int4range(1, 3) AS period FROM (VALUES
+            (1, $$'fat':2A,4 'rat':3B$$::tsvector),
+            (2, $$'fat' 'rat'$$::tsvector),
+            (3, ''::tsvector),
+            (4, NULL::tsvector),
+            (5, array_to_tsvector(ARRAY['a,b', 'a"b']))
+        ) AS documents(id, "search""vector")
+    """
+    id_dtype = {"pandas": "Int64", "arrow_stream": "int64"}.get(return_type, "int32")
+    string_dtype = "object" if return_type == "pandas" else None
+    expected = pd.DataFrame(
+        {
+            "id": pd.Series([1, 2, 3, 4, 5], dtype=id_dtype),
+            'search"vector': pd.Series(
+                [
+                    "'fat':2A,4 'rat':3B",
+                    "'fat' 'rat'",
+                    None if protocol == "csv" else "",
+                    None,
+                    "'a\"b' 'a,b'",
+                ],
+                dtype=string_dtype,
+            ),
+            "period": pd.Series(["[1,3)"] * 5, dtype=string_dtype),
+        }
+    )
+    kwargs = {}
+    if query_mode == "partitioned":
+        kwargs = {"partition_on": "id", "partition_num": 2}
+    elif query_mode == "empty":
+        query = f'SELECT id, "search""vector" FROM ({query}) AS empty_documents WHERE id < 0'
+        expected = expected.drop(columns="period").iloc[:0]
+    elif query_mode == "limit":
+        query += " ORDER BY id LIMIT 2"
+        expected = expected.iloc[:2]
+
+    result = read_sql(
+        postgres_url,
+        query,
+        protocol=protocol,
+        return_type=return_type,
+        batch_size=2,
+        **kwargs,
+    )
+    if return_type == "arrow_stream":
+        result = result.read_all()
+    if return_type != "pandas":
+        result = result.to_pandas()
+    result = result.sort_values("id").reset_index(drop=True)
+    assert_frame_equal(result, expected)
+
+
 def test_postgres_range_types(postgres_url: str) -> None:
     query = (
         "SELECT test_int4range, test_int8range, test_numrange, test_tsrange, "

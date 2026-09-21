@@ -50,7 +50,7 @@ pub enum ConnectorXOutError {
     #[error(transparent)]
     MysqlError(#[from] r2d2_mysql::mysql::Error),
 
-    #[cfg(feature = "src_mssql")]
+    #[cfg(feature = "src_mssql_common")]
     #[error(transparent)]
     MsSQLSourceError(#[from] crate::sources::mssql::MsSQLSourceError),
 
@@ -118,11 +118,11 @@ pub enum ConnectorXOutError {
     #[error(transparent)]
     SQLiteArrowStreamTransportError(#[from] crate::transports::SQLiteArrowStreamTransportError),
 
-    #[cfg(all(feature = "src_mssql", feature = "dst_arrow"))]
+    #[cfg(all(feature = "src_mssql_common", feature = "dst_arrow"))]
     #[error(transparent)]
     MsSQLArrowTransportError(#[from] crate::transports::MsSQLArrowTransportError),
 
-    #[cfg(all(feature = "src_mssql", feature = "dst_arrow"))]
+    #[cfg(all(feature = "src_mssql_common", feature = "dst_arrow"))]
     #[error(transparent)]
     MsSQLArrowStreamTransportError(#[from] crate::transports::MsSQLArrowStreamTransportError),
 
@@ -234,5 +234,29 @@ impl fmt::Display for ProduceContext {
             ProduceContext::NoContext => write!(f, "No Context"),
             ProduceContext::Context(s) => write!(f, "{}", s),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{ConnectorXError, ProduceContext};
+
+    #[test]
+    fn formats_produce_contexts() {
+        assert_eq!(
+            ProduceContext::from(None).to_string(),
+            ProduceContext::NoContext.to_string()
+        );
+        assert_eq!(
+            ProduceContext::from(Some("column 1".to_string())).to_string(),
+            "column 1"
+        );
+        assert_eq!(ProduceContext::NoContext.to_string(), "No Context");
+    }
+
+    #[test]
+    fn creates_type_specific_production_errors() {
+        let error = ConnectorXError::cannot_produce::<u32>(Some("value".to_string()));
+        assert_eq!(error.to_string(), "Cannot produce a u32, context: value.");
     }
 }

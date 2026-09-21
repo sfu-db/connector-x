@@ -16,7 +16,7 @@ itertools = "0.14"
 log = "0.4"
 rayon = "1"
 sqlparser = "0.37"
-thiserror = "1"
+thiserror = "2"
 url = "2"
 owning_ref = "0.4"
 serde_json = "1"
@@ -97,7 +97,7 @@ crate-type = ["cdylib", "rlib"]
 name = "connectorx"
 
 [dev-dependencies]
-criterion = "0.3"
+criterion = "0.8"
 env_logger = "0.11"
 iai = "0.1"
 pprof = { version = "0.14", features = ["flamegraph"] }
@@ -109,6 +109,7 @@ all = [
   "src_sqlite",
   "src_postgres",
   "src_mysql",
+  "src_mssql",
   "src_mssql_tds",
   "src_oracle",
   "src_bigquery",
@@ -129,31 +130,26 @@ fptr = []
 src_bigquery = ["gcp-bigquery-client", "tokio"]
 src_csv = ["csv", "regex"]
 src_dummy = ["num-traits"]
-src_mssql = []
-src_mssql_tiberius = [
-  "src_mssql",
+src_mssql = ["src_mssql_tiberius"]
+src_mssql_common = [
   "rust_decimal",
   "num-traits",
-  "tiberius",
-  "bb8-tiberius",
-  "bb8",
   "tokio",
   "tokio-util",
   "uuid_old",
   "futures",
   "urlencoding",
 ]
+src_mssql_tiberius = [
+  "src_mssql_common",
+  "tiberius",
+  "bb8-tiberius",
+  "bb8",
+]
 src_mssql_tds = [
-  "src_mssql",
-  "rust_decimal",
-  "num-traits",
+  "src_mssql_common",
   "mssql-tds",
-  "tokio",
-  "tokio-util",
-  "uuid_old",
   "uuid",
-  "futures",
-  "urlencoding",
 ]
 src_mysql = ["r2d2_mysql", "mysql_common", "rust_decimal", "num-traits", "r2d2"]
 src_oracle = ["oracle", "r2d2-oracle", "r2d2", "urlencoding", "rust_decimal"]

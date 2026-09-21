@@ -79,6 +79,7 @@ impl<'a> From<(&'a ColumnType, &'a ColumnFlags, u16)> for MySQLTypeSystem {
                     Tiny(null_ok)
                 }
             }
+
             ColumnType::MYSQL_TYPE_SHORT => {
                 if unsigned {
                     UShort(null_ok)
@@ -169,5 +170,168 @@ impl<'a> From<(&'a ColumnType, &'a ColumnFlags, u16)> for MySQLTypeSystem {
             ColumnType::MYSQL_TYPE_BIT => Bit(null_ok),
             _ => unimplemented!("{}", format!("{:?}", ty)),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::MySQLTypeSystem;
+    use mysql_common::constants::{ColumnFlags, ColumnType};
+
+    fn map(ty: ColumnType, flags: ColumnFlags, charset: u16) -> MySQLTypeSystem {
+        MySQLTypeSystem::from((&ty, &flags, charset))
+    }
+
+    #[test]
+    fn maps_numeric_and_temporal_columns() {
+        let nullable = ColumnFlags::empty();
+        let not_null = ColumnFlags::NOT_NULL_FLAG;
+        let unsigned = ColumnFlags::UNSIGNED_FLAG | ColumnFlags::NOT_NULL_FLAG;
+
+        assert!(matches!(
+            map(ColumnType::MYSQL_TYPE_TINY, nullable, 0),
+            MySQLTypeSystem::Tiny(true)
+        ));
+        assert!(matches!(
+            map(ColumnType::MYSQL_TYPE_TINY, unsigned, 0),
+            MySQLTypeSystem::UTiny(false)
+        ));
+        assert!(matches!(
+            map(ColumnType::MYSQL_TYPE_SHORT, unsigned, 0),
+            MySQLTypeSystem::UShort(false)
+        ));
+        assert!(matches!(
+            map(ColumnType::MYSQL_TYPE_SHORT, nullable, 0),
+            MySQLTypeSystem::Short(true)
+        ));
+        assert!(matches!(
+            map(ColumnType::MYSQL_TYPE_INT24, unsigned, 0),
+            MySQLTypeSystem::UInt24(false)
+        ));
+        assert!(matches!(
+            map(ColumnType::MYSQL_TYPE_INT24, nullable, 0),
+            MySQLTypeSystem::Int24(true)
+        ));
+        assert!(matches!(
+            map(ColumnType::MYSQL_TYPE_LONG, unsigned, 0),
+            MySQLTypeSystem::ULong(false)
+        ));
+        assert!(matches!(
+            map(ColumnType::MYSQL_TYPE_LONG, nullable, 0),
+            MySQLTypeSystem::Long(true)
+        ));
+        assert!(matches!(
+            map(ColumnType::MYSQL_TYPE_LONGLONG, unsigned, 0),
+            MySQLTypeSystem::ULongLong(false)
+        ));
+        assert!(matches!(
+            map(ColumnType::MYSQL_TYPE_LONGLONG, nullable, 0),
+            MySQLTypeSystem::LongLong(true)
+        ));
+        assert!(matches!(
+            map(ColumnType::MYSQL_TYPE_FLOAT, nullable, 0),
+            MySQLTypeSystem::Float(true)
+        ));
+        assert!(matches!(
+            map(ColumnType::MYSQL_TYPE_DOUBLE, nullable, 0),
+            MySQLTypeSystem::Double(true)
+        ));
+        assert!(matches!(
+            map(ColumnType::MYSQL_TYPE_DATETIME, nullable, 0),
+            MySQLTypeSystem::Datetime(true)
+        ));
+        assert!(matches!(
+            map(ColumnType::MYSQL_TYPE_DATE, nullable, 0),
+            MySQLTypeSystem::Date(true)
+        ));
+        assert!(matches!(
+            map(ColumnType::MYSQL_TYPE_TIME, nullable, 0),
+            MySQLTypeSystem::Time(true)
+        ));
+        for ty in [
+            ColumnType::MYSQL_TYPE_DECIMAL,
+            ColumnType::MYSQL_TYPE_NEWDECIMAL,
+        ] {
+            assert!(matches!(
+                map(ty, nullable, 0),
+                MySQLTypeSystem::Decimal(true)
+            ));
+        }
+        assert!(matches!(
+            map(ColumnType::MYSQL_TYPE_TIMESTAMP, not_null, 0),
+            MySQLTypeSystem::Timestamp(false)
+        ));
+        assert!(matches!(
+            map(ColumnType::MYSQL_TYPE_YEAR, nullable, 0),
+            MySQLTypeSystem::Year(true)
+        ));
+    }
+
+    #[test]
+    fn maps_text_binary_and_special_columns() {
+        let nullable = ColumnFlags::empty();
+        for (ty, expected) in [
+            (ColumnType::MYSQL_TYPE_STRING, MySQLTypeSystem::Char(true)),
+            (
+                ColumnType::MYSQL_TYPE_VAR_STRING,
+                MySQLTypeSystem::VarChar(true),
+            ),
+            (
+                ColumnType::MYSQL_TYPE_TINY_BLOB,
+                MySQLTypeSystem::VarChar(true),
+            ),
+            (ColumnType::MYSQL_TYPE_BLOB, MySQLTypeSystem::VarChar(true)),
+            (
+                ColumnType::MYSQL_TYPE_MEDIUM_BLOB,
+                MySQLTypeSystem::VarChar(true),
+            ),
+            (
+                ColumnType::MYSQL_TYPE_LONG_BLOB,
+                MySQLTypeSystem::VarChar(true),
+            ),
+        ] {
+            let actual = map(ty, nullable, 0);
+            assert_eq!(format!("{actual:?}"), format!("{expected:?}"));
+        }
+        assert!(matches!(
+            map(ColumnType::MYSQL_TYPE_STRING, nullable, 63),
+            MySQLTypeSystem::TinyBlob(true)
+        ));
+        assert!(matches!(
+            map(ColumnType::MYSQL_TYPE_VAR_STRING, nullable, 63),
+            MySQLTypeSystem::Blob(true)
+        ));
+        assert!(matches!(
+            map(ColumnType::MYSQL_TYPE_TINY_BLOB, nullable, 63),
+            MySQLTypeSystem::TinyBlob(true)
+        ));
+        assert!(matches!(
+            map(ColumnType::MYSQL_TYPE_BLOB, nullable, 63),
+            MySQLTypeSystem::Blob(true)
+        ));
+        assert!(matches!(
+            map(ColumnType::MYSQL_TYPE_MEDIUM_BLOB, nullable, 63),
+            MySQLTypeSystem::MediumBlob(true)
+        ));
+        assert!(matches!(
+            map(ColumnType::MYSQL_TYPE_LONG_BLOB, nullable, 63),
+            MySQLTypeSystem::LongBlob(true)
+        ));
+        assert!(matches!(
+            map(ColumnType::MYSQL_TYPE_JSON, nullable, 0),
+            MySQLTypeSystem::Json(true)
+        ));
+        assert!(matches!(
+            map(ColumnType::MYSQL_TYPE_VARCHAR, nullable, 0),
+            MySQLTypeSystem::VarChar(true)
+        ));
+        assert!(matches!(
+            map(ColumnType::MYSQL_TYPE_ENUM, nullable, 0),
+            MySQLTypeSystem::Enum(true)
+        ));
+        assert!(matches!(
+            map(ColumnType::MYSQL_TYPE_BIT, nullable, 0),
+            MySQLTypeSystem::Bit(true)
+        ));
     }
 }

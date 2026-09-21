@@ -37,7 +37,7 @@ use serde::Deserialize;
 use serde_json::Value as JsonValue;
 #[cfg(feature = "src_clickhouse")]
 use sqlparser::dialect::ClickHouseDialect;
-#[cfg(feature = "src_mssql")]
+#[cfg(feature = "src_mssql_common")]
 use sqlparser::dialect::MsSqlDialect;
 #[cfg(feature = "src_mysql")]
 use sqlparser::dialect::MySqlDialect;
@@ -47,7 +47,11 @@ use sqlparser::dialect::PostgreSqlDialect;
 use sqlparser::dialect::SQLiteDialect;
 #[cfg(feature = "src_mssql_tiberius")]
 use tiberius::Client;
-#[cfg(any(feature = "src_bigquery", feature = "src_mssql_tiberius", feature = "src_trino"))]
+#[cfg(any(
+    feature = "src_bigquery",
+    feature = "src_mssql_tiberius",
+    feature = "src_trino"
+))]
 use tokio::{net::TcpStream, runtime::Runtime};
 #[cfg(feature = "src_mssql_tiberius")]
 use tokio_util::compat::TokioAsyncWriteCompatExt;
@@ -145,7 +149,7 @@ pub fn get_part_query(
         SourceType::MySQL => {
             single_col_partition_query(query, col, lower, upper, &MySqlDialect {})?
         }
-        #[cfg(feature = "src_mssql")]
+        #[cfg(feature = "src_mssql_common")]
         SourceType::MsSQL => {
             single_col_partition_query(query, col, lower, upper, &MsSqlDialect {})?
         }
@@ -579,7 +583,7 @@ fn clickhouse_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i
         .map_err(|e| anyhow!("Failed to parse min max response: {}", e))?;
 
     let (min_v, max_v) = if let Some(row) = parsed.data.first() {
-        let min_v = row.get(0).and_then(|v| v.as_i64()).unwrap_or(0);
+        let min_v = row.first().and_then(|v| v.as_i64()).unwrap_or(0);
         let max_v = row.get(1).and_then(|v| v.as_i64()).unwrap_or(0);
 
         (min_v, max_v)
@@ -588,4 +592,157 @@ fn clickhouse_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i
     };
 
     (min_v, max_v)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Builds a `SourceConn` backed by SQLite, which does not require a live
+    /// database connection to generate partition queries (the SQL is
+    /// generated purely from the parsed dialect).
+    fn sqlite_source_conn() -> SourceConn {
+        SourceConn::new(
+            SourceType::SQLite,
+            Url::parse("sqlite://test.db").unwrap(),
+            "binary".to_string(),
+        )
+    }
+
+    fn queries_as_strings(queries: &[CXQuery]) -> Vec<String> {
+        queries.iter().map(|q| q.to_string()).collect()
+    }
+
+    #[test]
+    fn partitions_evenly_divisible_range() {
+        let part = PartitionQuery::new("SELECT * FROM test", "id", Some(0), Some(9), 2);
+        let source_conn = sqlite_source_conn();
+        let queries = partition(&part, &source_conn).unwrap();
+
+        assert_eq!(queries.len(), 2);
+        let strings = queries_as_strings(&queries);
+        assert!(strings[0].contains("0 <=") && strings[0].contains("< 5"));
+        assert!(strings[1].contains("5 <=") && strings[1].contains("< 10"));
+    }
+
+    #[test]
+    fn partitions_range_not_evenly_divisible() {
+        // Range [0, 10] has 11 values split across 3 partitions: sizes 3, 3, 3 with
+        // remainder handled by the last partition absorbing everything up to max + 1.
+        let part = PartitionQuery::new("SELECT * FROM test", "id", Some(0), Some(10), 3);
+        let source_conn = sqlite_source_conn();
+        let queries = partition(&part, &source_conn).unwrap();
+
+        assert_eq!(queries.len(), 3);
+        let strings = queries_as_strings(&queries);
+        assert!(strings[0].contains("0 <=") && strings[0].contains("< 3"));
+        assert!(strings[1].contains("3 <=") && strings[1].contains("< 6"));
+        // Last partition always goes up to max + 1, regardless of even division.
+        assert!(strings[2].contains("6 <=") && strings[2].contains("< 11"));
+    }
+
+    #[test]
+    fn single_partition_covers_whole_range() {
+        let part = PartitionQuery::new("SELECT * FROM test", "id", Some(5), Some(15), 1);
+        let source_conn = sqlite_source_conn();
+        let queries = partition(&part, &source_conn).unwrap();
+
+        assert_eq!(queries.len(), 1);
+        let strings = queries_as_strings(&queries);
+        assert!(strings[0].contains("5 <=") && strings[0].contains("< 16"));
+    }
+
+    #[test]
+    fn min_equals_max_single_row_range() {
+        let part = PartitionQuery::new("SELECT * FROM test", "id", Some(7), Some(7), 1);
+        let source_conn = sqlite_source_conn();
+        let queries = partition(&part, &source_conn).unwrap();
+
+        assert_eq!(queries.len(), 1);
+        let strings = queries_as_strings(&queries);
+        assert!(strings[0].contains("7 <=") && strings[0].contains("< 8"));
+    }
+
+    #[test]
+    fn negative_range_partitions_correctly() {
+        let part = PartitionQuery::new("SELECT * FROM test", "id", Some(-10), Some(-1), 2);
+        let source_conn = sqlite_source_conn();
+        let queries = partition(&part, &source_conn).unwrap();
+
+        assert_eq!(queries.len(), 2);
+        let strings = queries_as_strings(&queries);
+        assert!(strings[0].contains("-10 <=") && strings[0].contains("< -5"));
+        assert!(strings[1].contains("-5 <=") && strings[1].contains("< 0"));
+    }
+
+    #[test]
+    fn partially_specified_range_returns_error() {
+        let part = PartitionQuery::new("SELECT * FROM test", "id", Some(0), None, 2);
+        let source_conn = sqlite_source_conn();
+        let result = partition(&part, &source_conn);
+
+        assert!(result.is_err());
+    }
+
+    #[test]
+    #[should_panic(expected = "attempt to divide by zero")]
+    fn zero_partitions_panics_on_division_by_zero() {
+        // Documents current (pre-fix) behavior: num == 0 causes an integer
+        // division-by-zero panic. This baseline test locks in the behavior on
+        // `main` so a follow-up fix (guarding against num == 0) can be
+        // validated for backward compatibility of the non-panicking paths.
+        let part = PartitionQuery::new("SELECT * FROM test", "id", Some(0), Some(9), 0);
+        let source_conn = sqlite_source_conn();
+        let _ = partition(&part, &source_conn);
+    }
+
+    #[test]
+    fn inverted_range_produces_nonsensical_but_non_panicking_bounds() {
+        // Documents current (pre-fix) behavior: when max < min, `partition_size`
+        // becomes negative and the produced partition bounds are nonsensical
+        // (e.g. empty/inverted ranges), but no panic occurs. This baseline
+        // locks in the exact (buggy) bounds so a follow-up fix that changes
+        // this behavior is an intentional, reviewed change rather than a
+        // silent regression.
+        let part = PartitionQuery::new("SELECT * FROM test", "id", Some(10), Some(0), 2);
+        let source_conn = sqlite_source_conn();
+        let queries = partition(&part, &source_conn).unwrap();
+
+        assert_eq!(queries.len(), 2);
+        let strings = queries_as_strings(&queries);
+        assert!(strings[0].contains("10 <=") && strings[0].contains("< 6"));
+        assert!(strings[1].contains("6 <=") && strings[1].contains("< 1"));
+    }
+
+    #[test]
+    fn large_range_does_not_overflow_with_small_num() {
+        // Sanity check that reasonably large but safe ranges partition correctly
+        // without overflow for a small number of partitions.
+        let part = PartitionQuery::new(
+            "SELECT * FROM test",
+            "id",
+            Some(0),
+            Some(1_000_000_000_000),
+            4,
+        );
+        let source_conn = sqlite_source_conn();
+        let queries = partition(&part, &source_conn).unwrap();
+
+        assert_eq!(queries.len(), 4);
+        let strings = queries_as_strings(&queries);
+        assert!(strings[0].contains("0 <="));
+        assert!(strings[3].contains("< 1000000000001"));
+    }
+
+    #[test]
+    fn many_small_partitions_produce_correct_count_and_bounds() {
+        let part = PartitionQuery::new("SELECT * FROM test", "id", Some(1), Some(100), 10);
+        let source_conn = sqlite_source_conn();
+        let queries = partition(&part, &source_conn).unwrap();
+
+        assert_eq!(queries.len(), 10);
+        let strings = queries_as_strings(&queries);
+        assert!(strings[0].contains("1 <=") && strings[0].contains("< 11"));
+        assert!(strings[9].contains("91 <=") && strings[9].contains("< 101"));
+    }
 }
