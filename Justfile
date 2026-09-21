@@ -21,6 +21,8 @@ test-ci:
     cargo test --features src_postgres --features src_dummy --features dst_polars --test test_polars
     cargo test --features src_mssql --features dst_arrow --test test_mssql
     cargo test --features src_mssql --features dst_arrow --test test_mssql_types
+    cargo test --features src_mssql_tds --features dst_arrow --test test_mssql
+    cargo test --features src_mssql_tds --features dst_arrow --test test_mssql_types
 
 # Coverage is split into a unit and an integration report so each shows up
 # separately in Codecov. Both stay under cargo-llvm-cov's instrumented build
@@ -47,6 +49,10 @@ coverage-integration:
     cargo llvm-cov --no-report --features src_mssql --features dst_arrow --test test_mssql
     just _reap-test-containers
     cargo llvm-cov --no-report --features src_mssql --features dst_arrow --test test_mssql_types
+    just _reap-test-containers
+    cargo llvm-cov --no-report --features src_mssql_tds --features dst_arrow --test test_mssql
+    just _reap-test-containers
+    cargo llvm-cov --no-report --features src_mssql_tds --features dst_arrow --test test_mssql_types
     just _reap-test-containers
     cargo llvm-cov report --lcov --output-path lcov-integration.info
 
