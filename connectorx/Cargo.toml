@@ -109,7 +109,7 @@ all = [
   "src_sqlite",
   "src_postgres",
   "src_mysql",
-  "src_mssql_tiberius",
+  "src_mssql",
   "src_oracle",
   "src_bigquery",
   "src_csv",
