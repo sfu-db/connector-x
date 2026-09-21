@@ -39,8 +39,8 @@
 <a href=#39 id=39 data-nosnippet>39</a>        { Time[NaiveTime]            =&gt; Time64Micro[NaiveTimeWrapperMicro]       | conversion option }
 <a href=#40 id=40 data-nosnippet>40</a>        { Timestamp[NaiveDateTime]   =&gt; Date64Micro[NaiveDateTimeWrapperMicro]   | conversion option }
 <a href=#41 id=41 data-nosnippet>41</a>        { Boolean[bool]              =&gt; Boolean[bool]           | conversion auto }
-<a href=#42 id=42 data-nosnippet>42</a>        { Bigint[i32]                =&gt; Int64[i64]              | conversion auto }
-<a href=#43 id=43 data-nosnippet>43</a>        { Integer[i32]               =&gt; Int64[i64]              | conversion none }
+<a href=#42 id=42 data-nosnippet>42</a>        { Bigint[i64]                =&gt; Int64[i64]              | conversion auto }
+<a href=#43 id=43 data-nosnippet>43</a>        { Integer[i32]               =&gt; Int64[i64]              | conversion auto }
 <a href=#44 id=44 data-nosnippet>44</a>        { Smallint[i16]              =&gt; Int64[i64]              | conversion auto }
 <a href=#45 id=45 data-nosnippet>45</a>        { Tinyint[i8]                =&gt; Int64[i64]              | conversion auto }
 <a href=#46 id=46 data-nosnippet>46</a>        { Double[f64]                =&gt; Float64[f64]            | conversion auto }
@@ -74,4 +74,25 @@
 <a href=#74 id=74 data-nosnippet>74</a>        NaiveDateTimeWrapperMicro(val)
 <a href=#75 id=75 data-nosnippet>75</a>    }
 <a href=#76 id=76 data-nosnippet>76</a>}
+<a href=#77 id=77 data-nosnippet>77</a>
+<a href=#78 id=78 data-nosnippet>78</a><span class="attr">#[cfg(test)]
+<a href=#79 id=79 data-nosnippet>79</a></span><span class="kw">mod </span>tests {
+<a href=#80 id=80 data-nosnippet>80</a>    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+<a href=#81 id=81 data-nosnippet>81</a>
+<a href=#82 id=82 data-nosnippet>82</a>    <span class="attr">#[test]
+<a href=#83 id=83 data-nosnippet>83</a>    </span><span class="kw">fn </span>bigint_conversion_preserves_full_i64_range() {
+<a href=#84 id=84 data-nosnippet>84</a>        <span class="kw">for </span>value <span class="kw">in </span>[
+<a href=#85 id=85 data-nosnippet>85</a>            i64::MIN,
+<a href=#86 id=86 data-nosnippet>86</a>            -(<span class="number">1_i64 </span>&lt;&lt; <span class="number">53</span>) - <span class="number">1</span>,
+<a href=#87 id=87 data-nosnippet>87</a>            (<span class="number">1_i64 </span>&lt;&lt; <span class="number">53</span>) + <span class="number">1</span>,
+<a href=#88 id=88 data-nosnippet>88</a>            <span class="number">2_518_422_941_645_303_032</span>,
+<a href=#89 id=89 data-nosnippet>89</a>            i64::MAX,
+<a href=#90 id=90 data-nosnippet>90</a>        ] {
+<a href=#91 id=91 data-nosnippet>91</a>            <span class="macro">assert_eq!</span>(
+<a href=#92 id=92 data-nosnippet>92</a>                &lt;TrinoArrowTransport <span class="kw">as </span>TypeConversion&lt;i64, i64&gt;&gt;::convert(value),
+<a href=#93 id=93 data-nosnippet>93</a>                value
+<a href=#94 id=94 data-nosnippet>94</a>            );
+<a href=#95 id=95 data-nosnippet>95</a>        }
+<a href=#96 id=96 data-nosnippet>96</a>    }
+<a href=#97 id=97 data-nosnippet>97</a>}
 </code></pre></div></section></main></body></html>
