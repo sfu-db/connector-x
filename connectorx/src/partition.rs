@@ -1,3 +1,4 @@
+use std::convert::TryFrom;
 use std::sync::Arc;
 
 use crate::errors::{ConnectorXOutError, OutResult};
@@ -75,7 +76,18 @@ impl PartitionQuery {
 
 pub fn partition(part: &PartitionQuery, source_conn: &SourceConn) -> OutResult<Vec<CXQuery>> {
     let mut queries = vec![];
-    let num = part.num as i64;
+
+    if part.num == 0 {
+        throw!(anyhow!("partition count (num) must be greater than zero"));
+    }
+
+    let num = i64::try_from(part.num).map_err(|_| {
+        anyhow!(
+            "partition count (num) is too large to represent safely: {}",
+            part.num
+        )
+    })?;
+
     let (min, max) = match (part.min, part.max) {
         (None, None) => get_col_range(source_conn, &part.query, &part.column)?,
         (Some(min), Some(max)) => (min, max),
@@ -84,43 +96,43 @@ pub fn partition(part: &PartitionQuery, source_conn: &SourceConn) -> OutResult<V
         )),
     };
 
-    // Guard against division by zero (num must be > 0)
-    if num <= 0 {
-        throw!(anyhow!("partition count (num) must be greater than zero"));
-    }
-
-    // Guard against empty or inverted range (max < min).
-    // When max < min, the range is empty or invalid; return a single empty query.
     if max < min {
-        // Return one partition spanning the invalid range so callers receive a result
-        // rather than panicking or looping indefinitely.
-        let lower = min;
-        let upper = max
-            .checked_add(1)
-            .ok_or_else(|| anyhow!("partition upper bound overflow: max={} is too large", max))?;
-        let partition_query = get_part_query(source_conn, &part.query, &part.column, lower, upper)?;
-        queries.push(partition_query);
-        return Ok(queries);
+        throw!(anyhow!(
+            "partition range is invalid: max ({}) must be greater than or equal to min ({})",
+            max,
+            min
+        ));
     }
 
-    // Use checked arithmetic to avoid overflow when computing partition boundaries.
-    let range_len = max.checked_sub(min).and_then(|r| r.checked_add(1));
-    let partition_size = match range_len {
-        Some(len) => len / num,
-        None => {
-            throw!(anyhow!(
+    let range_len = max
+        .checked_sub(min)
+        .and_then(|value| value.checked_add(1))
+        .ok_or_else(|| {
+            anyhow!(
                 "partition range overflow: min={}, max={} is too large",
                 min,
                 max
-            ));
-        }
-    };
+            )
+        })?;
 
-    // partition_size == 0 means the range is smaller than the number of partitions.
-    // In this case we still create num partitions, but some will be empty.
-    let partition_size = partition_size.max(1);
+    if num > range_len {
+        throw!(anyhow!(
+            "partition count (num={}) exceeds inclusive range size ({})",
+            num,
+            range_len
+        ));
+    }
 
-    for i in 0..num {
+    let partition_size = range_len / num;
+
+    let final_upper = max.checked_add(1).ok_or_else(|| {
+        anyhow!(
+            "partition upper bound overflow: max={} cannot be incremented safely",
+            max
+        )
+    })?;
+
+    for i in 0i64..num {
         let lower = i
             .checked_mul(partition_size)
             .and_then(|offset| min.checked_add(offset))
@@ -133,13 +145,7 @@ pub fn partition(part: &PartitionQuery, source_conn: &SourceConn) -> OutResult<V
                 )
             })?;
         let upper = if i == num - 1 {
-            // Last partition goes up to and including max.
-            max.checked_add(1).ok_or_else(|| {
-                anyhow!(
-                    "partition upper bound overflow: max={} cannot be incremented by 1 without overflowing i64",
-                    max
-                )
-            })?
+            final_upper
         } else {
             (i + 1)
                 .checked_mul(partition_size)
@@ -748,14 +754,32 @@ mod tests {
     }
 
     #[test]
-    fn inverted_range_returns_single_empty_partition() {
+    fn inverted_range_returns_error() {
         let part = PartitionQuery::new("SELECT * FROM test", "id", Some(10), Some(0), 2);
         let source_conn = sqlite_source_conn();
-        let queries = partition(&part, &source_conn).unwrap();
+        let result = partition(&part, &source_conn);
+        assert!(result.is_err());
+        let err = result.unwrap_err().to_string();
+        assert!(
+            err.contains("partition range is invalid"),
+            "unexpected error message: {}",
+            err
+        );
+    }
 
-        assert_eq!(queries.len(), 1);
-        let strings = queries_as_strings(&queries);
-        assert!(strings[0].contains("10 <=") && strings[0].contains("< 1"));
+    #[test]
+    fn partition_count_exceeds_range_size_returns_error() {
+        // Range [0, 1] has inclusive length 2, but 4 partitions are requested.
+        let part = PartitionQuery::new("SELECT * FROM test", "id", Some(0), Some(1), 4);
+        let source_conn = sqlite_source_conn();
+        let result = partition(&part, &source_conn);
+        assert!(result.is_err());
+        let err = result.unwrap_err().to_string();
+        assert!(
+            err.contains("partition count") && err.contains("exceeds inclusive range size"),
+            "unexpected error message: {}",
+            err
+        );
     }
 
     #[test]
