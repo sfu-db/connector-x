@@ -96,6 +96,18 @@ fn credentials_from_url(url: &url::Url) -> (String, Option<String>) {
     (username, password)
 }
 
+#[throws(TrinoSourceError)]
+fn catalog_from_url(url: &url::Url) -> String {
+    match url.path_segments().and_then(|mut s| s.next_back()) {
+        Some(segment) => decode(segment)?.into_owned(),
+        None => "hive".to_owned(),
+    }
+}
+
+fn host_from_url(url: &url::Url) -> &str {
+    url.host_str().unwrap_or("localhost")
+}
+
 /// Build a prusto Client from a Trino connection URL, parsing all supported query parameters.
 ///
 /// Supported URL params:
@@ -109,12 +121,14 @@ pub fn build_client_from_url(url: &url::Url) -> Client {
         .query_pairs()
         .any(|(k, v)| k == "verify" && v == "false");
 
-    let mut builder = ClientBuilder::new(&username, url.host().unwrap().to_owned())
+    let catalog = catalog_from_url(url)?;
+
+    let mut builder = ClientBuilder::new(&username, host_from_url(url).to_owned())
         .port(url.port().unwrap_or(8080))
         .ssl(prusto::ssl::Ssl { root_cert: None })
         .no_verify(no_verify)
         .secure(url.scheme() == "trino+https")
-        .catalog(url.path_segments().unwrap().next_back().unwrap_or("hive"));
+        .catalog(&catalog);
 
     let mut session_props: HashMap<String, String> = HashMap::new();
     let mut extra_creds: HashMap<String, String> = HashMap::new();
@@ -768,6 +782,29 @@ mod tests {
     fn test_new_minimal_url() {
         let rt = Arc::new(Runtime::new().unwrap());
         assert!(TrinoSource::new(rt, "trino://test@localhost:8080/memory").is_ok());
+    }
+
+    #[test]
+    fn catalog_is_percent_decoded() {
+        let url = "trino://test@localhost:8080/my%5Fcatalog"
+            .parse::<url::Url>()
+            .unwrap();
+
+        assert_eq!(catalog_from_url(&url).unwrap(), "my_catalog");
+    }
+
+    #[test]
+    fn catalog_defaults_to_hive_without_path_segments() {
+        let url = "trino:memory".parse::<url::Url>().unwrap();
+
+        assert_eq!(catalog_from_url(&url).unwrap(), "hive");
+    }
+
+    #[test]
+    fn hostless_url_defaults_to_localhost() {
+        let url = "trino:///memory".parse::<url::Url>().unwrap();
+
+        assert_eq!(host_from_url(&url), "localhost");
     }
 
     #[test]
