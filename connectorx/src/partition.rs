@@ -115,14 +115,6 @@ pub fn partition(part: &PartitionQuery, source_conn: &SourceConn) -> OutResult<V
             )
         })?;
 
-    if num > range_len {
-        throw!(anyhow!(
-            "partition count (num={}) exceeds inclusive range size ({})",
-            num,
-            range_len
-        ));
-    }
-
     let partition_size = range_len / num;
 
     let final_upper = max.checked_add(1).ok_or_else(|| {
@@ -768,18 +760,17 @@ mod tests {
     }
 
     #[test]
-    fn partition_count_exceeds_range_size_returns_error() {
-        // Range [0, 1] has inclusive length 2, but 4 partitions are requested.
+    fn more_partitions_than_range_values_preserves_partition_count() {
         let part = PartitionQuery::new("SELECT * FROM test", "id", Some(0), Some(1), 4);
         let source_conn = sqlite_source_conn();
-        let result = partition(&part, &source_conn);
-        assert!(result.is_err());
-        let err = result.unwrap_err().to_string();
-        assert!(
-            err.contains("partition count") && err.contains("exceeds inclusive range size"),
-            "unexpected error message: {}",
-            err
-        );
+        let queries = partition(&part, &source_conn).unwrap();
+
+        assert_eq!(queries.len(), 4);
+        let strings = queries_as_strings(&queries);
+        assert!(strings[0].contains("0 <=") && strings[0].contains("< 0"));
+        assert!(strings[1].contains("0 <=") && strings[1].contains("< 0"));
+        assert!(strings[2].contains("0 <=") && strings[2].contains("< 0"));
+        assert!(strings[3].contains("0 <=") && strings[3].contains("< 2"));
     }
 
     #[test]
