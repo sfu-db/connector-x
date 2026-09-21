@@ -50,7 +50,7 @@ pub enum ConnectorXOutError {
     #[error(transparent)]
     MysqlError(#[from] r2d2_mysql::mysql::Error),
 
-    #[cfg(feature = "src_mssql")]
+    #[cfg(feature = "src_mssql_common")]
     #[error(transparent)]
     MsSQLSourceError(#[from] crate::sources::mssql::MsSQLSourceError),
 
@@ -118,11 +118,11 @@ pub enum ConnectorXOutError {
     #[error(transparent)]
     SQLiteArrowStreamTransportError(#[from] crate::transports::SQLiteArrowStreamTransportError),
 
-    #[cfg(all(feature = "src_mssql", feature = "dst_arrow"))]
+    #[cfg(all(feature = "src_mssql_common", feature = "dst_arrow"))]
     #[error(transparent)]
     MsSQLArrowTransportError(#[from] crate::transports::MsSQLArrowTransportError),
 
-    #[cfg(all(feature = "src_mssql", feature = "dst_arrow"))]
+    #[cfg(all(feature = "src_mssql_common", feature = "dst_arrow"))]
     #[error(transparent)]
     MsSQLArrowStreamTransportError(#[from] crate::transports::MsSQLArrowStreamTransportError),
 

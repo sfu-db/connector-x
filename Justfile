@@ -54,6 +54,7 @@ test-feature-gate:
     cargo c --features src_postgres
     cargo c --features src_mysql
     cargo c --features src_mssql_tiberius
+    cargo c --features src_mssql_tds
     cargo c --features src_sqlite
     cargo c --features src_oracle
     cargo c --features src_trino

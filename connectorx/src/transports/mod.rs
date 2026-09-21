@@ -14,9 +14,9 @@ mod csv_arrow;
 mod dummy_arrow;
 #[cfg(all(feature = "src_dummy", feature = "dst_arrow"))]
 mod dummy_arrowstream;
-#[cfg(all(feature = "src_mssql", feature = "dst_arrow"))]
+#[cfg(all(feature = "src_mssql_common", feature = "dst_arrow"))]
 mod mssql_arrow;
-#[cfg(all(feature = "src_mssql", feature = "dst_arrow"))]
+#[cfg(all(feature = "src_mssql_common", feature = "dst_arrow"))]
 mod mssql_arrowstream;
 #[cfg(all(feature = "src_mysql", feature = "dst_arrow"))]
 mod mysql_arrow;
@@ -61,9 +61,9 @@ pub use dummy_arrowstream::{
     DummyArrowTransport as DummyArrowStreamTransport,
     DummyArrowTransportError as DummyArrowStreamTransportError,
 };
-#[cfg(all(feature = "src_mssql", feature = "dst_arrow"))]
+#[cfg(all(feature = "src_mssql_common", feature = "dst_arrow"))]
 pub use mssql_arrow::{MsSQLArrowTransport, MsSQLArrowTransportError};
-#[cfg(all(feature = "src_mssql", feature = "dst_arrow"))]
+#[cfg(all(feature = "src_mssql_common", feature = "dst_arrow"))]
 pub use mssql_arrowstream::{
     MsSQLArrowTransport as MsSQLArrowStreamTransport,
     MsSQLArrowTransportError as MsSQLArrowStreamTransportError,

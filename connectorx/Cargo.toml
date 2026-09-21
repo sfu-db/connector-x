@@ -129,31 +129,26 @@ fptr = []
 src_bigquery = ["gcp-bigquery-client", "tokio"]
 src_csv = ["csv", "regex"]
 src_dummy = ["num-traits"]
-src_mssql = []
-src_mssql_tiberius = [
-  "src_mssql",
+src_mssql = ["src_mssql_tiberius"]
+src_mssql_common = [
   "rust_decimal",
   "num-traits",
-  "tiberius",
-  "bb8-tiberius",
-  "bb8",
   "tokio",
   "tokio-util",
   "uuid_old",
   "futures",
   "urlencoding",
 ]
+src_mssql_tiberius = [
+  "src_mssql_common",
+  "tiberius",
+  "bb8-tiberius",
+  "bb8",
+]
 src_mssql_tds = [
-  "src_mssql",
-  "rust_decimal",
-  "num-traits",
+  "src_mssql_common",
   "mssql-tds",
-  "tokio",
-  "tokio-util",
-  "uuid_old",
   "uuid",
-  "futures",
-  "urlencoding",
 ]
 src_mysql = ["r2d2_mysql", "mysql_common", "rust_decimal", "num-traits", "r2d2"]
 src_oracle = ["oracle", "r2d2-oracle", "r2d2", "urlencoding", "rust_decimal"]

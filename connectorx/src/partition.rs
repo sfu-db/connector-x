@@ -37,7 +37,7 @@ use serde::Deserialize;
 use serde_json::Value as JsonValue;
 #[cfg(feature = "src_clickhouse")]
 use sqlparser::dialect::ClickHouseDialect;
-#[cfg(feature = "src_mssql")]
+#[cfg(feature = "src_mssql_common")]
 use sqlparser::dialect::MsSqlDialect;
 #[cfg(feature = "src_mysql")]
 use sqlparser::dialect::MySqlDialect;
@@ -149,7 +149,7 @@ pub fn get_part_query(
         SourceType::MySQL => {
             single_col_partition_query(query, col, lower, upper, &MySqlDialect {})?
         }
-        #[cfg(feature = "src_mssql")]
+        #[cfg(feature = "src_mssql_common")]
         SourceType::MsSQL => {
             single_col_partition_query(query, col, lower, upper, &MsSqlDialect {})?
         }
