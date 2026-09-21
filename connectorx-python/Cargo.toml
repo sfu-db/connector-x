@@ -75,7 +75,7 @@ srcs = [
   "connectorx/src_postgres",
   "connectorx/src_mysql",
   "connectorx/src_sqlite",
-  "connectorx/src_mssql",
+  "connectorx/src_mssql_tiberius",
   "connectorx/src_oracle",
   "connectorx/src_bigquery",
   "connectorx/src_trino",
