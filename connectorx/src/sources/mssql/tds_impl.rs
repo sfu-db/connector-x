@@ -10,21 +10,25 @@
 //!
 //! Automatic partition-range discovery supports integer and floating-point
 //! columns, matching Tiberius's NULL and float-to-integer conversions.
+//! Metadata, counts and partition readers share a per-source bounded bb8 pool.
+//! Partitions acquire connections only when executing, so their number may
+//! exceed the pool size.
 //!
 //! Known, intentional differences from the Tiberius path (tracked as
 //! documented gaps, not bugs):
-//! - No connection pooling: each partition (and each metadata/count-query
-//!   probe) opens its own `mssql-tds` connection. `mssql-tds` has no
-//!   `bb8`-style pool today.
 //! - `trust_server_certificate_ca` (validate the server cert against a
 //!   specific CA bundle without disabling hostname/chain checks) is
 //!   rejected outright: `mssql-tds`'s `EncryptionOptions::server_certificate`
 //!   only supports exact-match certificate pinning, not CA validation.
 //! - The default TLS posture differs: Tiberius defaults to
-//!   `EncryptionLevel::NotSupported` (no TLS negotiation at all) when
-//!   `encrypt` is unset, while `mssql-tds` has no equivalent "off" setting.
-//!   We map the unset default to `EncryptionSetting::PreferOff` (negotiate
-//!   TLS if offered, don't require it) as the closest available match.
+//!   `EncryptionLevel::NotSupported` (advertise TLS as unsupported) when
+//!   `encrypt` is unset (prelogin 0x02). `mssql-tds` has no equivalent public
+//!   setting: unset and `encrypt=false` both map to `PreferOff` (0x00).
+//!   This permits login-only TLS, or full-session TLS if the server requires it.
+//!   The driver's login-only TLS unconditionally skips certificate-chain validation,
+//!   even when `trust_server_certificate=false`. Use `encrypt=true` for required
+//!   full-session TLS (0x03), with certificate-chain validation enabled unless
+//!   `trust_server_certificate=true` is explicitly requested.
 
 use super::driver;
 use super::errors::MsSQLSourceError;
@@ -37,9 +41,10 @@ use crate::{
     sql::{count_query, get_partition_range_query, CXQuery},
 };
 use anyhow::anyhow;
+use bb8::{ManageConnection, Pool, PooledConnection};
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
 use fehler::{throw, throws};
-use log::debug;
+use log::{debug, warn};
 use mssql_tds::connection::client_context::{ClientContext, TdsAuthenticationMethod};
 use mssql_tds::connection::tds_client::{ResultSet, TdsClient};
 use mssql_tds::connection_provider::tds_connection_provider::TdsConnectionProvider;
@@ -53,7 +58,9 @@ use rust_decimal::Decimal;
 use sqlparser::dialect::MsSqlDialect;
 use std::collections::HashMap;
 use std::convert::TryFrom;
+use std::ops::{Deref, DerefMut};
 use std::sync::Arc;
+use std::time::Duration;
 use tokio::runtime::Runtime;
 use url::Url;
 use urlencoding::decode;
@@ -82,7 +89,7 @@ fn build_client_context(url: &Url) -> (String, ClientContext) {
     let params: HashMap<String, String> = url.query_pairs().into_owned().collect();
 
     match params.get("trusted_connection") {
-        Some(v) if v == "true" => {
+        Some(v) if v == "true" && cfg!(any(windows, feature = "integrated-auth-gssapi")) => {
             debug!("mssql-tds auth through integrated (SSPI) authentication");
             context.tds_authentication_method = TdsAuthenticationMethod::SSPI;
         }
@@ -126,6 +133,98 @@ fn build_client_context(url: &Url) -> (String, ClientContext) {
     (datasource, context)
 }
 
+#[cfg(test)]
+mod configuration_tests {
+    use super::*;
+
+    #[test]
+    fn integrated_auth_respects_tiberius_platform_and_feature_gates() {
+        for trusted in ["true", "false", "TrUe"] {
+            let url = Url::parse(&format!(
+                "mssql://test_user:test_password@localhost/db?trusted_connection={trusted}"
+            ))
+            .unwrap();
+            let (_, context) = build_client_context(&url).unwrap();
+            if trusted == "true" && cfg!(any(windows, feature = "integrated-auth-gssapi")) {
+                assert!(matches!(
+                    context.tds_authentication_method,
+                    TdsAuthenticationMethod::SSPI
+                ));
+            } else {
+                assert!(matches!(
+                    context.tds_authentication_method,
+                    TdsAuthenticationMethod::Password
+                ));
+                assert_eq!(context.user_name, "test_user");
+                assert_eq!(context.password, "test_password");
+            }
+        }
+    }
+
+    #[test]
+    fn tls_mapping_preserves_explicit_encryption_and_trust() {
+        for (encrypt, mode) in [
+            ("", EncryptionSetting::PreferOff),
+            ("true", EncryptionSetting::Required),
+            ("TrUe", EncryptionSetting::Required),
+            ("false", EncryptionSetting::PreferOff),
+            ("FaLsE", EncryptionSetting::PreferOff),
+            ("invalid", EncryptionSetting::PreferOff),
+        ] {
+            for (trust, expected_trust) in [
+                ("", false),
+                ("true", true),
+                ("TrUe", true),
+                ("false", false),
+                ("FaLsE", false),
+                ("invalid", false),
+            ] {
+                let mut url = Url::parse("mssql://user:password@localhost/db").unwrap();
+                if !encrypt.is_empty() {
+                    url.query_pairs_mut().append_pair("encrypt", encrypt);
+                }
+                if !trust.is_empty() {
+                    url.query_pairs_mut()
+                        .append_pair("trust_server_certificate", trust);
+                }
+                let (_, context) = build_client_context(&url).unwrap();
+                assert_eq!(
+                    context.encryption_options,
+                    EncryptionOptions {
+                        mode,
+                        trust_server_certificate: expected_trust,
+                        host_name_in_cert: None,
+                        server_certificate: None,
+                    },
+                    "encrypt={encrypt:?}, trust_server_certificate={trust:?}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn custom_ca_is_rejected_even_when_trust_is_enabled() {
+        for trust in ["true", "false"] {
+            let url = Url::parse(&format!(
+                "mssql://localhost/db?encrypt=true&trust_server_certificate={trust}\
+                 &trust_server_certificate_ca=ca.pem"
+            ))
+            .unwrap();
+            let err = build_client_context(&url).err().unwrap();
+            assert!(err.to_string().contains("not CA validation"));
+        }
+    }
+
+    #[test]
+    fn pool_size_must_be_positive_and_fit_u32() {
+        let rt = Arc::new(Runtime::new().unwrap());
+        assert!(MsSQLSource::new(rt.clone(), "mssql://localhost/db", 0).is_err());
+        if usize::BITS > 32 {
+            assert!(MsSQLSource::new(rt, "mssql://localhost/db", usize::MAX).is_err());
+        }
+    }
+}
+
 #[throws(MsSQLSourceError)]
 fn open_connection(rt: &Runtime, url: &Url) -> TdsClient {
     let (datasource, context) = build_client_context(url)?;
@@ -133,8 +232,122 @@ fn open_connection(rt: &Runtime, url: &Url) -> TdsClient {
     rt.block_on(provider.create_client(context, &datasource, None))?
 }
 
-/// Runs `sql`, returning its first row as `Vec<ColumnValues>`. Used for both
-/// metadata discovery (first row of the real query) and `COUNT(*)` probes.
+struct ConnectionManager {
+    url: Url,
+}
+
+#[async_trait::async_trait]
+impl ManageConnection for ConnectionManager {
+    type Connection = TdsClient;
+    type Error = MsSQLSourceError;
+
+    async fn connect(&self) -> Result<TdsClient, Self::Error> {
+        let (datasource, context) = build_client_context(&self.url)?;
+        Ok(TdsConnectionProvider::new()
+            .create_client(context, &datasource, None)
+            .await?)
+    }
+
+    async fn is_valid(&self, client: &mut PooledConnection<'_, Self>) -> Result<(), Self::Error> {
+        if client.is_connection_dead() {
+            return Err(anyhow!("MsSQL pooled connection is closed").into());
+        }
+        // Reset session settings and transactions before the next borrower's query.
+        client.prepare_reset_connection(false);
+        Ok(())
+    }
+
+    fn has_broken(&self, client: &mut TdsClient) -> bool {
+        client.is_connection_dead() || client.has_open_batch()
+    }
+}
+
+#[throws(MsSQLSourceError)]
+fn connection_pool(rt: &Runtime, url: &Url, nconn: usize) -> Pool<ConnectionManager> {
+    let max_size = u32::try_from(nconn)
+        .ok()
+        .filter(|&size| size > 0)
+        .ok_or_else(|| anyhow!("MsSQL pool size must be between 1 and {}", u32::MAX))?;
+    // Fail on unsupported URL options even before the first checkout.
+    build_client_context(url)?;
+    rt.block_on(
+        Pool::builder()
+            .max_size(max_size)
+            .test_on_check_out(true)
+            .build(ConnectionManager { url: url.clone() }),
+    )?
+}
+
+/// Owns the lease and keeps its runtime alive through cleanup and pool return.
+struct Connection {
+    rt: Arc<Runtime>,
+    lease: Option<PooledConnection<'static, ConnectionManager>>,
+}
+
+impl Connection {
+    #[throws(MsSQLSourceError)]
+    fn get(rt: Arc<Runtime>, pool: &Pool<ConnectionManager>) -> Self {
+        let lease = rt.block_on(pool.get_owned()).map_err(|err| match err {
+            bb8::RunError::User(err) => err,
+            bb8::RunError::TimedOut => anyhow!("Timed out waiting for an MsSQL connection").into(),
+        })?;
+        Self {
+            rt,
+            lease: Some(lease),
+        }
+    }
+
+    #[throws(MsSQLSourceError)]
+    fn finish(&mut self) {
+        let client = self.lease.as_mut().unwrap();
+        if let Err(err) = self.rt.block_on(client.close_query()) {
+            client.mark_connection_dead();
+            throw!(err);
+        }
+    }
+}
+
+impl Deref for Connection {
+    type Target = TdsClient;
+
+    fn deref(&self) -> &TdsClient {
+        self.lease.as_ref().unwrap()
+    }
+}
+
+impl DerefMut for Connection {
+    fn deref_mut(&mut self) -> &mut TdsClient {
+        self.lease.as_mut().unwrap()
+    }
+}
+
+impl Drop for Connection {
+    fn drop(&mut self) {
+        let mut client = self.lease.take().unwrap();
+        if !client.is_connection_dead() && client.has_open_batch() {
+            // Early parser drops must not return unread protocol data to the pool.
+            // Bound destructor work; a timed-out drain is discarded, never reused.
+            match self.rt.block_on(async {
+                tokio::time::timeout(Duration::from_secs(5), client.close_query()).await
+            }) {
+                Ok(Ok(())) => {}
+                Ok(Err(err)) => {
+                    warn!("Discarding MsSQL connection after cleanup failure: {}", err);
+                    client.mark_connection_dead();
+                }
+                Err(_) => {
+                    warn!("Discarding MsSQL connection after cleanup timeout");
+                    client.mark_connection_dead();
+                }
+            }
+        }
+        // bb8 may spawn replacement connections when returning a broken lease.
+        let _guard = self.rt.enter();
+        drop(client);
+    }
+}
+
+/// Runs `sql`, returning its first row for `COUNT(*)` probes.
 #[throws(MsSQLSourceError)]
 fn first_row(rt: &Runtime, client: &mut TdsClient, sql: String) -> Option<Vec<ColumnValues>> {
     rt.block_on(client.execute(sql, ()))?;
@@ -244,6 +457,7 @@ mod partition_range_tests {
 pub struct MsSQLSource {
     rt: Arc<Runtime>,
     conn_url: Url,
+    pool: Pool<ConnectionManager>,
     origin_query: Option<String>,
     queries: Vec<CXQuery<String>>,
     names: Vec<String>,
@@ -252,16 +466,15 @@ pub struct MsSQLSource {
 
 impl MsSQLSource {
     #[throws(MsSQLSourceError)]
-    pub fn new(rt: Arc<Runtime>, conn: &str, _nconn: usize) -> Self {
+    pub fn new(rt: Arc<Runtime>, conn: &str, nconn: usize) -> Self {
         debug!("mssql source using driver: {:?}", driver::active_driver());
-        // mssql-tds has no bb8-style connection pool yet, so `_nconn` isn't
-        // used to size a pool: every partition opens its own connection
-        // instead (see the module-level doc comment).
         let conn_url = Url::parse(conn)?;
+        let pool = connection_pool(&rt, &conn_url, nconn)?;
 
         Self {
             rt,
             conn_url,
+            pool,
             origin_query: None,
             queries: vec![],
             names: vec![],
@@ -299,7 +512,7 @@ where
         assert!(!self.queries.is_empty());
 
         let first_query = self.queries[0].clone();
-        let mut client = open_connection(&self.rt, &self.conn_url)?;
+        let mut client = Connection::get(self.rt.clone(), &self.pool)?;
         self.rt
             .block_on(client.execute(first_query.as_str().to_string(), ()))?;
 
@@ -315,6 +528,7 @@ where
             .iter()
             .map(|col| (col.column_name.clone(), MsSQLTypeSystem::from(col)))
             .unzip();
+        client.finish()?;
 
         self.names = names;
         self.schema = types;
@@ -326,9 +540,10 @@ where
             Some(q) => {
                 let cxq = CXQuery::Naked(q.clone());
                 let cquery = count_query(&cxq, &MsSqlDialect {})?;
-                let mut client = open_connection(&self.rt, &self.conn_url)?;
+                let mut client = Connection::get(self.rt.clone(), &self.pool)?;
                 let row = first_row(&self.rt, &mut client, cquery.as_str().to_string())?
                     .ok_or_else(|| anyhow!("MsSQL failed to get the count of query: {}", q))?;
+                client.finish()?;
                 Some(row_count_value(&row, q)?)
             }
             None => None,
@@ -347,12 +562,14 @@ where
     fn partition(self) -> Vec<Self::Partition> {
         let mut ret = vec![];
         for query in self.queries {
-            ret.push(MsSQLSourcePartition::new(
+            let mut partition = MsSQLSourcePartition::new(
                 self.rt.clone(),
                 self.conn_url.clone(),
                 &query,
                 &self.schema,
-            ));
+            );
+            partition.pool = Some(self.pool.clone());
+            ret.push(partition);
         }
         ret
     }
@@ -376,6 +593,7 @@ fn row_count_value(row: &[ColumnValues], query: &str) -> usize {
 pub struct MsSQLSourcePartition {
     rt: Arc<Runtime>,
     conn_url: Url,
+    pool: Option<Pool<ConnectionManager>>,
     query: CXQuery<String>,
     schema: Vec<MsSQLTypeSystem>,
     nrows: usize,
@@ -392,34 +610,43 @@ impl MsSQLSourcePartition {
         Self {
             rt,
             conn_url,
+            pool: None,
             query: query.clone(),
             schema: schema.to_vec(),
             nrows: 0,
             ncols: schema.len(),
         }
     }
+
+    #[throws(MsSQLSourceError)]
+    fn connection(&mut self) -> Connection {
+        // Preserve the public, infallible standalone partition constructor.
+        if self.pool.is_none() {
+            self.pool = Some(connection_pool(&self.rt, &self.conn_url, 1)?);
+        }
+        Connection::get(self.rt.clone(), self.pool.as_ref().unwrap())?
+    }
 }
 
 impl SourcePartition for MsSQLSourcePartition {
     type TypeSystem = MsSQLTypeSystem;
-    // Unlike the Tiberius path, `TdsClient` owns its connection outright (no
-    // borrow-from-pool lifetime), so the parser needs no lifetime tied to
-    // the partition and no `OwningHandle`/unsafe self-reference trick.
+    // Owned leases need no borrow from the partition or unsafe self-reference.
     type Parser<'a> = MsSQLSourceParser;
     type Error = MsSQLSourceError;
 
     #[throws(MsSQLSourceError)]
     fn result_rows(&mut self) {
         let cquery = count_query(&self.query, &MsSqlDialect {})?;
-        let mut client = open_connection(&self.rt, &self.conn_url)?;
+        let mut client = self.connection()?;
         let row = first_row(&self.rt, &mut client, cquery.as_str().to_string())?
             .ok_or_else(|| anyhow!("MsSQL failed to get the count of query: {}", self.query))?;
+        client.finish()?;
         self.nrows = row_count_value(&row, self.query.as_str())?;
     }
 
     #[throws(MsSQLSourceError)]
     fn parser<'a>(&'a mut self) -> Self::Parser<'a> {
-        let mut client = open_connection(&self.rt, &self.conn_url)?;
+        let mut client = self.connection()?;
         self.rt
             .block_on(client.execute(self.query.as_str().to_string(), ()))?;
         MsSQLSourceParser::new(self.rt.clone(), client, self.schema.len())
@@ -461,7 +688,7 @@ enum TdsCell {
 
 pub struct MsSQLSourceParser {
     rt: Arc<Runtime>,
-    client: TdsClient,
+    client: Connection,
     rowbuf: Vec<Vec<TdsCell>>,
     ncols: usize,
     current_col: usize,
@@ -470,7 +697,7 @@ pub struct MsSQLSourceParser {
 }
 
 impl MsSQLSourceParser {
-    fn new(rt: Arc<Runtime>, client: TdsClient, ncols: usize) -> Self {
+    fn new(rt: Arc<Runtime>, client: Connection, ncols: usize) -> Self {
         Self {
             rt,
             client,
@@ -524,6 +751,7 @@ impl<'a> PartitionParser<'a> for MsSQLSourceParser {
                     self.rowbuf.push(cells);
                 }
                 None => {
+                    self.client.finish()?;
                     self.is_finished = true;
                     break;
                 }
