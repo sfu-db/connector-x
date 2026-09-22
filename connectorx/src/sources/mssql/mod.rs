@@ -35,4 +35,6 @@ pub use self::typesystem::{FloatN, IntN, MsSQLTypeSystem};
 pub use self::tiberius_impl::{mssql_config, MsSQLSource, MsSQLSourceParser, MsSQLSourcePartition};
 
 #[cfg(feature = "src_mssql_tds")]
+pub(crate) use self::tds_impl::tds_get_partition_range;
+#[cfg(feature = "src_mssql_tds")]
 pub use self::tds_impl::{MsSQLSource, MsSQLSourceParser, MsSQLSourcePartition};

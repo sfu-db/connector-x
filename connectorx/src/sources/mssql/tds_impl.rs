@@ -8,6 +8,9 @@
 //! [`crate::transports::mssql_arrow::MsSQLArrowTransport`] works unchanged
 //! against either backend.
 //!
+//! Automatic partition-range discovery supports integer and floating-point
+//! columns, matching Tiberius's NULL and float-to-integer conversions.
+//!
 //! Known, intentional differences from the Tiberius path (tracked as
 //! documented gaps, not bugs):
 //! - No connection pooling: each partition (and each metadata/count-query
@@ -22,9 +25,6 @@
 //!   `encrypt` is unset, while `mssql-tds` has no equivalent "off" setting.
 //!   We map the unset default to `EncryptionSetting::PreferOff` (negotiate
 //!   TLS if offered, don't require it) as the closest available match.
-//! - `partition_on`-driven range partitioning
-//!   (`crate::partition::get_col_range` for `SourceType::MsSQL`) is not yet
-//!   implemented for this backend; see `partition.rs`.
 
 use super::driver;
 use super::errors::MsSQLSourceError;
@@ -34,7 +34,7 @@ use crate::{
     data_order::DataOrder,
     errors::ConnectorXError,
     sources::{PartitionParser, Produce, Source, SourcePartition},
-    sql::{count_query, CXQuery},
+    sql::{count_query, get_partition_range_query, CXQuery},
 };
 use anyhow::anyhow;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
@@ -48,6 +48,7 @@ use mssql_tds::datatypes::column_values::{
     ColumnValues, SqlDate, SqlDateTime, SqlDateTime2, SqlDateTimeOffset, SqlSmallDateTime, SqlTime,
 };
 use mssql_tds::datatypes::decoder::DecimalParts;
+use mssql_tds::datatypes::sqldatatypes::TdsDataType;
 use rust_decimal::Decimal;
 use sqlparser::dialect::MsSqlDialect;
 use std::collections::HashMap;
@@ -138,6 +139,106 @@ fn open_connection(rt: &Runtime, url: &Url) -> TdsClient {
 fn first_row(rt: &Runtime, client: &mut TdsClient, sql: String) -> Option<Vec<ColumnValues>> {
     rt.block_on(client.execute(sql, ()))?;
     rt.block_on(client.next_row())?
+}
+
+#[throws(MsSQLSourceError)]
+pub(crate) fn tds_get_partition_range(url: &Url, query: &str, col: &str) -> (i64, i64) {
+    let range_query = get_partition_range_query(query, col, &MsSqlDialect {})?;
+    let rt = Runtime::new().map_err(anyhow::Error::from)?;
+    let mut client = open_connection(&rt, url)?;
+    rt.block_on(client.execute(range_query, ()))?;
+    let types: Vec<_> = client
+        .get_metadata()
+        .iter()
+        .map(|column| column.data_type)
+        .collect();
+    let row = rt
+        .block_on(client.next_row())?
+        .ok_or_else(|| anyhow!("MsSQL partition range query returned no row"))?;
+    if row.len() != 2 || types.len() != 2 {
+        throw!(anyhow!(
+            "MsSQL partition range query must return two columns"
+        ));
+    }
+    (
+        partition_range_value(&row[0], types[0])?,
+        partition_range_value(&row[1], types[1])?,
+    )
+}
+
+#[throws(MsSQLSourceError)]
+fn partition_range_value(value: &ColumnValues, ty: TdsDataType) -> i64 {
+    if !matches!(
+        ty,
+        TdsDataType::Int1
+            | TdsDataType::Int2
+            | TdsDataType::Int4
+            | TdsDataType::Int8
+            | TdsDataType::IntN
+            | TdsDataType::Flt4
+            | TdsDataType::Flt8
+            | TdsDataType::FltN
+    ) {
+        throw!(anyhow!(
+            "Partition can only be done on int or float columns"
+        ));
+    }
+    // Match Tiberius: NULL aggregates become zero and floats truncate to i64.
+    match value {
+        ColumnValues::Null => 0,
+        ColumnValues::TinyInt(n) => i64::from(*n),
+        ColumnValues::SmallInt(n) => i64::from(*n),
+        ColumnValues::Int(n) => i64::from(*n),
+        ColumnValues::BigInt(n) => *n,
+        ColumnValues::Real(n) => *n as i64,
+        ColumnValues::Float(n) => *n as i64,
+        other => throw!(anyhow!(
+            "Unexpected MsSQL partition range value: {:?}",
+            other
+        )),
+    }
+}
+
+#[cfg(test)]
+mod partition_range_tests {
+    use super::*;
+
+    #[test]
+    fn numeric_bounds_preserve_tiberius_conversions() {
+        for (value, ty, expected) in [
+            (ColumnValues::TinyInt(255), TdsDataType::Int1, 255),
+            (ColumnValues::SmallInt(-32768), TdsDataType::Int2, -32768),
+            (
+                ColumnValues::Int(i32::MIN),
+                TdsDataType::Int4,
+                i64::from(i32::MIN),
+            ),
+            (ColumnValues::BigInt(i64::MIN), TdsDataType::Int8, i64::MIN),
+            (ColumnValues::BigInt(i64::MAX), TdsDataType::IntN, i64::MAX),
+            (ColumnValues::Real(-12.75), TdsDataType::Flt4, -12),
+            (ColumnValues::Float(23.5), TdsDataType::Flt8, 23),
+            (ColumnValues::Float(-12.75), TdsDataType::FltN, -12),
+            (ColumnValues::Null, TdsDataType::IntN, 0),
+            (ColumnValues::Null, TdsDataType::FltN, 0),
+        ] {
+            assert_eq!(partition_range_value(&value, ty).unwrap(), expected);
+        }
+    }
+
+    #[test]
+    fn unsupported_bounds_are_errors_even_when_null() {
+        for ty in [
+            TdsDataType::BigVarChar,
+            TdsDataType::DecimalN,
+            TdsDataType::MoneyN,
+        ] {
+            let err = partition_range_value(&ColumnValues::Null, ty).unwrap_err();
+            assert!(err
+                .to_string()
+                .contains("Partition can only be done on int or float columns"));
+        }
+        assert!(partition_range_value(&ColumnValues::Bit(true), TdsDataType::IntN).is_err());
+    }
 }
 
 pub struct MsSQLSource {

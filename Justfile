@@ -31,6 +31,7 @@ test-ci:
 coverage-unit:
     cargo llvm-cov clean --workspace --profraw-only
     cargo llvm-cov --no-report --lib --features all
+    cargo llvm-cov --no-report --lib --features src_mssql_tds -- sources::mssql
     cargo llvm-cov report --lcov --output-path lcov-unit.info
 
 # Removes any testcontainers-managed container/image left behind by the
