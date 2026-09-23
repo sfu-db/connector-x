@@ -32,9 +32,9 @@ pub enum MsSQLSource {
 impl MsSQLSource {
     pub fn new(rt: Arc<Runtime>, conn: &str, nconn: usize) -> Result<Self, MsSQLSourceError> {
         match driver::active_driver() {
-            MsSQLDriverKind::Tiberius => Ok(MsSQLSource::Tiberius(tiberius_impl::MsSQLSource::new(
-                rt, conn, nconn,
-            )?)),
+            MsSQLDriverKind::Tiberius => Ok(MsSQLSource::Tiberius(
+                tiberius_impl::MsSQLSource::new(rt, conn, nconn)?,
+            )),
             MsSQLDriverKind::MssqlTds => Ok(MsSQLSource::MssqlTds(tds_impl::MsSQLSource::new(
                 rt, conn, nconn,
             )?)),

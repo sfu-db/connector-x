@@ -26,12 +26,12 @@ mod driver;
 mod errors;
 mod typesystem;
 
+#[cfg(all(feature = "src_mssql_tiberius", feature = "src_mssql_tds"))]
+mod dual_impl;
 #[cfg(feature = "src_mssql_tds")]
 mod tds_impl;
 #[cfg(feature = "src_mssql_tiberius")]
 mod tiberius_impl;
-#[cfg(all(feature = "src_mssql_tiberius", feature = "src_mssql_tds"))]
-mod dual_impl;
 
 pub use self::driver::MsSQLDriverKind;
 pub use self::errors::MsSQLSourceError;
@@ -48,10 +48,10 @@ pub fn active_driver() -> MsSQLDriverKind {
     self::driver::active_driver()
 }
 
-#[cfg(all(feature = "src_mssql_tiberius", not(feature = "src_mssql_tds")))]
-pub use self::tiberius_impl::{MsSQLSource, MsSQLSourceParser, MsSQLSourcePartition};
 #[cfg(feature = "src_mssql_tiberius")]
 pub use self::tiberius_impl::mssql_config;
+#[cfg(all(feature = "src_mssql_tiberius", not(feature = "src_mssql_tds")))]
+pub use self::tiberius_impl::{MsSQLSource, MsSQLSourceParser, MsSQLSourcePartition};
 
 #[cfg(all(feature = "src_mssql_tds", not(feature = "src_mssql_tiberius")))]
 pub use self::tds_impl::{MsSQLSource, MsSQLSourceParser, MsSQLSourcePartition};
