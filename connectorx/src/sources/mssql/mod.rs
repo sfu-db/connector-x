@@ -7,15 +7,14 @@
 //!
 //! Enabling exactly one of these two Cargo features picks that backend at
 //! compile time, with no runtime switch (and no cost of linking the other
-//! backend in) — this is what plain `cargo build`/`cargo test` on this crate
-//! do. Enabling *both* (as the Python bindings do, so `cx.mssql_driver` can
+//! backend in). Enabling *both* (as the Python bindings do, so `cx.mssql_driver` can
 //! flip backends at runtime) links both in and dispatches through the
-//! [`dual_impl`] enum wrapper instead, selecting the active one via
-//! [`driver::active_driver`] / [`driver::set_active_driver`].
+//! [`MsSQLSource`] enum wrapper instead, selecting the active one via
+//! `active_driver` / `set_active_driver` (available only with both features).
 //!
 //! All three configurations compile against the same
-//! [`typesystem::MsSQLTypeSystem`] and [`errors::MsSQLSourceError`], so
-//! [`crate::transports::mssql_arrow`] and everything above the source layer
+//! [`MsSQLTypeSystem`] and [`MsSQLSourceError`], so
+//! `MsSQLArrowTransport` (with `dst_arrow`) and everything above the source layer
 //! is unaffected by which backend(s) are active. See
 //! sfu-db/connector-x#942 for the migration plan.
 
