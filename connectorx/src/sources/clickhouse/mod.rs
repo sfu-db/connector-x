@@ -57,7 +57,10 @@ impl ClickHouseSource {
             url.port().unwrap_or(8123)
         );
 
-        let mut client = Client::default().with_url(&base_url);
+        // clickhouse 0.13 decodes LZ4 only; newer servers default to ZSTD.
+        let mut client = Client::default()
+            .with_url(&base_url)
+            .with_option("network_compression_method", "lz4");
 
         let database = url.path().trim_start_matches('/');
         if !database.is_empty() {
