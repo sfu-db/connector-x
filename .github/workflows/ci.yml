@@ -118,6 +118,35 @@ jobs:
           command: doc
           args: --no-deps --features all
 
+  # release.yml ships wheels for Windows and macOS too, but the jobs above only
+  # run on Linux. Run the unit tests (no databases needed) on those platforms
+  # so a platform-specific break is caught before a release.
+  rust-cross-platform:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-15-intel, macos-latest]
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - uses: actions/cache@v6
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-${{ runner.arch }}-cargo-${{ secrets.CACHE_VERSION }}-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Run unit tests
+        run: cargo test --lib --features all
+
   python:
     runs-on: ubuntu-latest
     # Note: No 'container' - we run directly on the VM to access Docker for Testcontainers
