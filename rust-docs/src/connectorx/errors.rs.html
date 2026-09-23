@@ -50,11 +50,11 @@
 <a href=#50 id=50 data-nosnippet>50</a>    #[error(transparent)]
 <a href=#51 id=51 data-nosnippet>51</a>    </span>MysqlError(<span class="attr">#[from] </span>r2d2_mysql::mysql::Error),
 <a href=#52 id=52 data-nosnippet>52</a>
-<a href=#53 id=53 data-nosnippet>53</a>    <span class="attr">#[cfg(feature = <span class="string">"src_mssql"</span>)]
+<a href=#53 id=53 data-nosnippet>53</a>    <span class="attr">#[cfg(feature = <span class="string">"src_mssql_common"</span>)]
 <a href=#54 id=54 data-nosnippet>54</a>    #[error(transparent)]
 <a href=#55 id=55 data-nosnippet>55</a>    </span>MsSQLSourceError(<span class="attr">#[from] </span><span class="kw">crate</span>::sources::mssql::MsSQLSourceError),
 <a href=#56 id=56 data-nosnippet>56</a>
-<a href=#57 id=57 data-nosnippet>57</a>    <span class="attr">#[cfg(feature = <span class="string">"src_mssql"</span>)]
+<a href=#57 id=57 data-nosnippet>57</a>    <span class="attr">#[cfg(feature = <span class="string">"src_mssql_tiberius"</span>)]
 <a href=#58 id=58 data-nosnippet>58</a>    #[error(transparent)]
 <a href=#59 id=59 data-nosnippet>59</a>    </span>MsSQL(<span class="attr">#[from] </span>tiberius::error::Error),
 <a href=#60 id=60 data-nosnippet>60</a>
@@ -118,11 +118,11 @@
 <a href=#118 id=118 data-nosnippet>118</a>    #[error(transparent)]
 <a href=#119 id=119 data-nosnippet>119</a>    </span>SQLiteArrowStreamTransportError(<span class="attr">#[from] </span><span class="kw">crate</span>::transports::SQLiteArrowStreamTransportError),
 <a href=#120 id=120 data-nosnippet>120</a>
-<a href=#121 id=121 data-nosnippet>121</a>    <span class="attr">#[cfg(all(feature = <span class="string">"src_mssql"</span>, feature = <span class="string">"dst_arrow"</span>))]
+<a href=#121 id=121 data-nosnippet>121</a>    <span class="attr">#[cfg(all(feature = <span class="string">"src_mssql_common"</span>, feature = <span class="string">"dst_arrow"</span>))]
 <a href=#122 id=122 data-nosnippet>122</a>    #[error(transparent)]
 <a href=#123 id=123 data-nosnippet>123</a>    </span>MsSQLArrowTransportError(<span class="attr">#[from] </span><span class="kw">crate</span>::transports::MsSQLArrowTransportError),
 <a href=#124 id=124 data-nosnippet>124</a>
-<a href=#125 id=125 data-nosnippet>125</a>    <span class="attr">#[cfg(all(feature = <span class="string">"src_mssql"</span>, feature = <span class="string">"dst_arrow"</span>))]
+<a href=#125 id=125 data-nosnippet>125</a>    <span class="attr">#[cfg(all(feature = <span class="string">"src_mssql_common"</span>, feature = <span class="string">"dst_arrow"</span>))]
 <a href=#126 id=126 data-nosnippet>126</a>    #[error(transparent)]
 <a href=#127 id=127 data-nosnippet>127</a>    </span>MsSQLArrowStreamTransportError(<span class="attr">#[from] </span><span class="kw">crate</span>::transports::MsSQLArrowStreamTransportError),
 <a href=#128 id=128 data-nosnippet>128</a>

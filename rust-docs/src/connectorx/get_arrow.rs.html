@@ -202,7 +202,7 @@
 <a href=#202 id=202 data-nosnippet>202</a>            );
 <a href=#203 id=203 data-nosnippet>203</a>            dispatcher.run()<span class="question-mark">?</span>;
 <a href=#204 id=204 data-nosnippet>204</a>        }
-<a href=#205 id=205 data-nosnippet>205</a>        <span class="attr">#[cfg(feature = <span class="string">"src_mssql"</span>)]
+<a href=#205 id=205 data-nosnippet>205</a>        <span class="attr">#[cfg(feature = <span class="string">"src_mssql_common"</span>)]
 <a href=#206 id=206 data-nosnippet>206</a>        </span>SourceType::MsSQL =&gt; {
 <a href=#207 id=207 data-nosnippet>207</a>            <span class="kw">let </span>rt = Arc::new(tokio::runtime::Runtime::new().expect(<span class="string">"Failed to create runtime"</span>));
 <a href=#208 id=208 data-nosnippet>208</a>            <span class="kw">let </span>source = MsSQLSource::new(rt, <span class="kw-2">&amp;</span>source_conn.conn[..], queries.len())<span class="question-mark">?</span>;
@@ -439,7 +439,7 @@
 <a href=#439 id=439 data-nosnippet>439</a>            <span class="kw">let </span>iter: Box&lt;<span class="kw">dyn </span>RecordBatchIterator&gt; = Box::new(batch_iter);
 <a href=#440 id=440 data-nosnippet>440</a>            <span class="kw">return </span>iter;
 <a href=#441 id=441 data-nosnippet>441</a>        }
-<a href=#442 id=442 data-nosnippet>442</a>        <span class="attr">#[cfg(feature = <span class="string">"src_mssql"</span>)]
+<a href=#442 id=442 data-nosnippet>442</a>        <span class="attr">#[cfg(feature = <span class="string">"src_mssql_common"</span>)]
 <a href=#443 id=443 data-nosnippet>443</a>        </span>SourceType::MsSQL =&gt; {
 <a href=#444 id=444 data-nosnippet>444</a>            <span class="kw">let </span>rt = Arc::new(tokio::runtime::Runtime::new().expect(<span class="string">"Failed to create runtime"</span>));
 <a href=#445 id=445 data-nosnippet>445</a>            <span class="kw">let </span>source = MsSQLSource::new(rt, <span class="kw-2">&amp;</span>source_conn.conn[..], queries.len())<span class="question-mark">?</span>;

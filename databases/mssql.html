@@ -427,6 +427,7 @@
                 <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mssql-connection">MsSQL Connection</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#connection-parameters">Connection Parameters</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#opt-in-mssql-tds-backend">Opt-in <code class="docutils literal notranslate"><span class="pre">mssql-tds</span></code> backend</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sqlserver-pandas-type-mapping">SQLServer-Pandas Type Mapping</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#performance-r5-4xlarge-docker-in-another-ec2-instance">Performance (r5.4xlarge docker in another EC2 instance)</a></li>
 </ul>
@@ -483,6 +484,49 @@
 </ul>
 </li>
 </ul>
+</section>
+<section id="opt-in-mssql-tds-backend">
+<h2>Opt-in <code class="docutils literal notranslate"><span class="pre">mssql-tds</span></code> backend<a class="headerlink" href="#opt-in-mssql-tds-backend" title="Link to this heading">#</a></h2>
+<p>Rust builds can select <code class="docutils literal notranslate"><span class="pre">src_mssql_tds</span></code> instead of the default <code class="docutils literal notranslate"><span class="pre">src_mssql</span></code>
+(<code class="docutils literal notranslate"><span class="pre">src_mssql_tiberius</span></code>). These backends are mutually exclusive at compile time;
+there is no runtime selector.</p>
+<p>The TDS backend shares a bounded connection pool across metadata, row counts,
+and partition readers, sized by <code class="docutils literal notranslate"><span class="pre">MsSQLSource::new</span></code>’s <code class="docutils literal notranslate"><span class="pre">nconn</span></code>. Partitions acquire
+leases only while executing, so there may be more partitions than connections.
+Like Tiberius, <code class="docutils literal notranslate"><span class="pre">trusted_connection=true</span></code> selects integrated authentication on
+Windows, or on Unix when the <code class="docutils literal notranslate"><span class="pre">integrated-auth-gssapi</span></code> feature is enabled.</p>
+<p>TLS settings are not fully equivalent between the drivers:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head text-left"><p>URL setting</p></th>
+<th class="head text-left"><p>Tiberius</p></th>
+<th class="head text-left"><p><code class="docutils literal notranslate"><span class="pre">mssql-tds</span></code></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td class="text-left"><p><code class="docutils literal notranslate"><span class="pre">encrypt</span></code> unset</p></td>
+<td class="text-left"><p><code class="docutils literal notranslate"><span class="pre">NotSupported</span></code> (prelogin <code class="docutils literal notranslate"><span class="pre">0x02</span></code>), advertises TLS as unsupported</p></td>
+<td class="text-left"><p><code class="docutils literal notranslate"><span class="pre">PreferOff</span></code> (<code class="docutils literal notranslate"><span class="pre">0x00</span></code>); login-only TLS, or full-session TLS when required by the server</p></td>
+</tr>
+<tr class="row-odd"><td class="text-left"><p><code class="docutils literal notranslate"><span class="pre">encrypt=false</span></code></p></td>
+<td class="text-left"><p><code class="docutils literal notranslate"><span class="pre">Off</span></code> (<code class="docutils literal notranslate"><span class="pre">0x00</span></code>)</p></td>
+<td class="text-left"><p><code class="docutils literal notranslate"><span class="pre">PreferOff</span></code> (<code class="docutils literal notranslate"><span class="pre">0x00</span></code>)</p></td>
+</tr>
+<tr class="row-even"><td class="text-left"><p><code class="docutils literal notranslate"><span class="pre">encrypt=true</span></code></p></td>
+<td class="text-left"><p><code class="docutils literal notranslate"><span class="pre">Required</span></code> (<code class="docutils literal notranslate"><span class="pre">0x03</span></code>)</p></td>
+<td class="text-left"><p><code class="docutils literal notranslate"><span class="pre">Required</span></code> (<code class="docutils literal notranslate"><span class="pre">0x03</span></code>)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">mssql-tds</span></code> has no public setting matching Tiberius’s unset default. Its
+login-only TLS also skips certificate-chain validation unconditionally, even with
+<code class="docutils literal notranslate"><span class="pre">trust_server_certificate=false</span></code>. Use <code class="docutils literal notranslate"><span class="pre">encrypt=true</span></code> to require full-session
+TLS with certificate validation; chain validation is disabled only if
+<code class="docutils literal notranslate"><span class="pre">trust_server_certificate=true</span></code> is explicitly requested in this mode.
+Boolean values for <code class="docutils literal notranslate"><span class="pre">encrypt</span></code> and <code class="docutils literal notranslate"><span class="pre">trust_server_certificate</span></code> are case-insensitive.</p>
+<p><code class="docutils literal notranslate"><span class="pre">trust_server_certificate_ca</span></code> is rejected by the TDS backend: the driver’s
+certificate-pinning option is not a substitute for CA validation.</p>
 </section>
 <section id="sqlserver-pandas-type-mapping">
 <h2>SQLServer-Pandas Type Mapping<a class="headerlink" href="#sqlserver-pandas-type-mapping" title="Link to this heading">#</a></h2>
@@ -677,6 +721,7 @@
     <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mssql-connection">MsSQL Connection</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#connection-parameters">Connection Parameters</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#opt-in-mssql-tds-backend">Opt-in <code class="docutils literal notranslate"><span class="pre">mssql-tds</span></code> backend</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sqlserver-pandas-type-mapping">SQLServer-Pandas Type Mapping</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#performance-r5-4xlarge-docker-in-another-ec2-instance">Performance (r5.4xlarge docker in another EC2 instance)</a></li>
 </ul>

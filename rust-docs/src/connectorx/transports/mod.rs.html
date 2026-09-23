@@ -14,9 +14,9 @@
 <a href=#14 id=14 data-nosnippet>14</a></span><span class="kw">mod </span>dummy_arrow;
 <a href=#15 id=15 data-nosnippet>15</a><span class="attr">#[cfg(all(feature = <span class="string">"src_dummy"</span>, feature = <span class="string">"dst_arrow"</span>))]
 <a href=#16 id=16 data-nosnippet>16</a></span><span class="kw">mod </span>dummy_arrowstream;
-<a href=#17 id=17 data-nosnippet>17</a><span class="attr">#[cfg(all(feature = <span class="string">"src_mssql"</span>, feature = <span class="string">"dst_arrow"</span>))]
+<a href=#17 id=17 data-nosnippet>17</a><span class="attr">#[cfg(all(feature = <span class="string">"src_mssql_common"</span>, feature = <span class="string">"dst_arrow"</span>))]
 <a href=#18 id=18 data-nosnippet>18</a></span><span class="kw">mod </span>mssql_arrow;
-<a href=#19 id=19 data-nosnippet>19</a><span class="attr">#[cfg(all(feature = <span class="string">"src_mssql"</span>, feature = <span class="string">"dst_arrow"</span>))]
+<a href=#19 id=19 data-nosnippet>19</a><span class="attr">#[cfg(all(feature = <span class="string">"src_mssql_common"</span>, feature = <span class="string">"dst_arrow"</span>))]
 <a href=#20 id=20 data-nosnippet>20</a></span><span class="kw">mod </span>mssql_arrowstream;
 <a href=#21 id=21 data-nosnippet>21</a><span class="attr">#[cfg(all(feature = <span class="string">"src_mysql"</span>, feature = <span class="string">"dst_arrow"</span>))]
 <a href=#22 id=22 data-nosnippet>22</a></span><span class="kw">mod </span>mysql_arrow;
@@ -61,9 +61,9 @@
 <a href=#61 id=61 data-nosnippet>61</a>    DummyArrowTransport <span class="kw">as </span>DummyArrowStreamTransport,
 <a href=#62 id=62 data-nosnippet>62</a>    DummyArrowTransportError <span class="kw">as </span>DummyArrowStreamTransportError,
 <a href=#63 id=63 data-nosnippet>63</a>};
-<a href=#64 id=64 data-nosnippet>64</a><span class="attr">#[cfg(all(feature = <span class="string">"src_mssql"</span>, feature = <span class="string">"dst_arrow"</span>))]
+<a href=#64 id=64 data-nosnippet>64</a><span class="attr">#[cfg(all(feature = <span class="string">"src_mssql_common"</span>, feature = <span class="string">"dst_arrow"</span>))]
 <a href=#65 id=65 data-nosnippet>65</a></span><span class="kw">pub use </span>mssql_arrow::{MsSQLArrowTransport, MsSQLArrowTransportError};
-<a href=#66 id=66 data-nosnippet>66</a><span class="attr">#[cfg(all(feature = <span class="string">"src_mssql"</span>, feature = <span class="string">"dst_arrow"</span>))]
+<a href=#66 id=66 data-nosnippet>66</a><span class="attr">#[cfg(all(feature = <span class="string">"src_mssql_common"</span>, feature = <span class="string">"dst_arrow"</span>))]
 <a href=#67 id=67 data-nosnippet>67</a></span><span class="kw">pub use </span>mssql_arrowstream::{
 <a href=#68 id=68 data-nosnippet>68</a>    MsSQLArrowTransport <span class="kw">as </span>MsSQLArrowStreamTransport,
 <a href=#69 id=69 data-nosnippet>69</a>    MsSQLArrowTransportError <span class="kw">as </span>MsSQLArrowStreamTransportError,
