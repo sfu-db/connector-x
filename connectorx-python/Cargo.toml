@@ -71,6 +71,7 @@ fptr = ["connectorx/fptr"]
 federation = ["connectorx/federation"]
 fed_exec = ["connectorx/fed_exec"]
 nbstr = []
+# Database source bundle, paired with the `dsts` destination bundle.
 srcs = [
   "connectorx/src_postgres",
   "connectorx/src_mysql",
