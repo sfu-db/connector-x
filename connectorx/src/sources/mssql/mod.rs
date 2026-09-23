@@ -58,3 +58,6 @@ pub use self::tds_impl::{MsSQLSource, MsSQLSourceParser, MsSQLSourcePartition};
 
 #[cfg(all(feature = "src_mssql_tiberius", feature = "src_mssql_tds"))]
 pub use self::dual_impl::{MsSQLSource, MsSQLSourceParser, MsSQLSourcePartition};
+
+#[cfg(feature = "src_mssql_tds")]
+pub(crate) use self::tds_impl::tds_get_partition_range;

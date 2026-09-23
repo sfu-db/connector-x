@@ -195,7 +195,7 @@ impl<'a> FromSql<'a> for FloatN {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "src_mssql_tiberius"))]
 mod tests {
     use super::{FloatN, IntN, MsSQLTypeSystem};
     use tiberius::{ColumnData, ColumnType, FromSql};

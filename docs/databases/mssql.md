@@ -42,6 +42,36 @@ Rust builds can select one backend with the `src_mssql_tds` or
 * By adding `trust_server_certificate_ca=/path/to/ca-cert.crt` to connection uri parameter, the SQLServer certificate will be validated against the given CA certificate in addition to the system-truststore.
     * Example: `mssql://host:port/db?encrypt=true&trust_server_certificate_ca=/path/to/ca-cert.crt`
 
+### Opt-in `mssql-tds` backend
+
+Rust builds can select `src_mssql_tds` instead of the default `src_mssql`
+(`src_mssql_tiberius`). These backends are mutually exclusive at compile time;
+there is no runtime selector.
+
+The TDS backend shares a bounded connection pool across metadata, row counts,
+and partition readers, sized by `MsSQLSource::new`'s `nconn`. Partitions acquire
+leases only while executing, so there may be more partitions than connections.
+Like Tiberius, `trusted_connection=true` selects integrated authentication on
+Windows, or on Unix when the `integrated-auth-gssapi` feature is enabled.
+
+TLS settings are not fully equivalent between the drivers:
+
+| URL setting | Tiberius | `mssql-tds` |
+|:------------|:---------|:------------|
+| `encrypt` unset | `NotSupported` (prelogin `0x02`), advertises TLS as unsupported | `PreferOff` (`0x00`); login-only TLS, or full-session TLS when required by the server |
+| `encrypt=false` | `Off` (`0x00`) | `PreferOff` (`0x00`) |
+| `encrypt=true` | `Required` (`0x03`) | `Required` (`0x03`) |
+
+`mssql-tds` has no public setting matching Tiberius's unset default. Its
+login-only TLS also skips certificate-chain validation unconditionally, even with
+`trust_server_certificate=false`. Use `encrypt=true` to require full-session
+TLS with certificate validation; chain validation is disabled only if
+`trust_server_certificate=true` is explicitly requested in this mode.
+Boolean values for `encrypt` and `trust_server_certificate` are case-insensitive.
+
+`trust_server_certificate_ca` is rejected by the TDS backend: the driver's
+certificate-pinning option is not a substitute for CA validation.
+
 ### SQLServer-Pandas Type Mapping
 | SQLServer Type  |      Pandas Type            |  Comment                           |
 |:---------------:|:---------------------------:|:----------------------------------:|

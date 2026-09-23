@@ -113,9 +113,11 @@ pub fn get_col_range(source_conn: &SourceConn, query: &str, col: &str) -> OutRes
         #[cfg(feature = "src_mssql_tiberius")]
         SourceType::MsSQL => mssql_get_partition_range(&source_conn.conn, query, col),
         #[cfg(all(feature = "src_mssql_tds", not(feature = "src_mssql_tiberius")))]
-        SourceType::MsSQL => unimplemented!(
-            "partition_on is not yet supported with the src_mssql_tds backend (sfu-db/connector-x#942)"
-        ),
+        SourceType::MsSQL => Ok(crate::sources::mssql::tds_get_partition_range(
+            &source_conn.conn,
+            query,
+            col,
+        )?),
         #[cfg(feature = "src_oracle")]
         SourceType::Oracle => oracle_get_partition_range(&source_conn.conn, query, col),
         #[cfg(feature = "src_bigquery")]
