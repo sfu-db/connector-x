@@ -30,6 +30,7 @@ polars = { workspace = true, optional = true, features = [
 ] }
 polars-arrow = { workspace = true, optional = true }
 bb8 = { version = "0.7", optional = true }
+async-trait = { version = "0.1", optional = true }
 bb8-tiberius = { version = "0.8", optional = true }
 csv = { version = "1", optional = true }
 fallible-streaming-iterator = { version = "0.1", optional = true }
@@ -69,6 +70,7 @@ tiberius = { version = "0.7", features = [
   "chrono",
   "integrated-auth-gssapi",
 ], optional = true }
+mssql-tds = { version = "0.1", optional = true }
 tokio = { version = "1", features = [
   "rt",
   "rt-multi-thread",
@@ -128,17 +130,28 @@ fptr = []
 src_bigquery = ["gcp-bigquery-client", "tokio"]
 src_csv = ["csv", "regex"]
 src_dummy = ["num-traits"]
-src_mssql = [
+src_mssql = ["src_mssql_tiberius"]
+src_mssql_common = [
   "rust_decimal",
   "num-traits",
-  "tiberius",
-  "bb8-tiberius",
-  "bb8",
   "tokio",
   "tokio-util",
   "uuid_old",
   "futures",
   "urlencoding",
+]
+src_mssql_tiberius = [
+  "src_mssql_common",
+  "tiberius",
+  "bb8-tiberius",
+  "bb8",
+]
+src_mssql_tds = [
+  "src_mssql_common",
+  "mssql-tds",
+  "uuid",
+  "bb8",
+  "async-trait",
 ]
 src_mysql = ["r2d2_mysql", "mysql_common", "rust_decimal", "num-traits", "r2d2"]
 src_oracle = ["oracle", "r2d2-oracle", "r2d2", "urlencoding", "rust_decimal"]
