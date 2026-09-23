@@ -1,3 +1,4 @@
+use std::convert::TryFrom;
 use std::sync::Arc;
 
 use crate::errors::{ConnectorXOutError, OutResult};
@@ -79,7 +80,18 @@ impl PartitionQuery {
 
 pub fn partition(part: &PartitionQuery, source_conn: &SourceConn) -> OutResult<Vec<CXQuery>> {
     let mut queries = vec![];
-    let num = part.num as i64;
+
+    if part.num == 0 {
+        throw!(anyhow!("partition count (num) must be greater than zero"));
+    }
+
+    let num = i64::try_from(part.num).map_err(|_| {
+        anyhow!(
+            "partition count (num) is too large to represent safely: {}",
+            part.num
+        )
+    })?;
+
     let (min, max) = match (part.min, part.max) {
         (None, None) => get_col_range(source_conn, &part.query, &part.column)?,
         (Some(min), Some(max)) => (min, max),
@@ -88,13 +100,60 @@ pub fn partition(part: &PartitionQuery, source_conn: &SourceConn) -> OutResult<V
         )),
     };
 
-    let partition_size = (max - min + 1) / num;
+    if max < min {
+        throw!(anyhow!(
+            "partition range is invalid: max ({}) must be greater than or equal to min ({})",
+            max,
+            min
+        ));
+    }
 
-    for i in 0..num {
-        let lower = min + i * partition_size;
-        let upper = match i == num - 1 {
-            true => max + 1,
-            false => min + (i + 1) * partition_size,
+    let range_len = max
+        .checked_sub(min)
+        .and_then(|value| value.checked_add(1))
+        .ok_or_else(|| {
+            anyhow!(
+                "partition range overflow: min={}, max={} is too large",
+                min,
+                max
+            )
+        })?;
+
+    let partition_size = range_len / num;
+
+    let final_upper = max.checked_add(1).ok_or_else(|| {
+        anyhow!(
+            "partition upper bound overflow: max={} cannot be incremented safely",
+            max
+        )
+    })?;
+
+    for i in 0i64..num {
+        let lower = i
+            .checked_mul(partition_size)
+            .and_then(|offset| min.checked_add(offset))
+            .ok_or_else(|| {
+                anyhow!(
+                    "partition lower bound overflow: min={}, step={}, partition_size={}",
+                    min,
+                    i,
+                    partition_size
+                )
+            })?;
+        let upper = if i == num - 1 {
+            final_upper
+        } else {
+            (i + 1)
+                .checked_mul(partition_size)
+                .and_then(|offset| min.checked_add(offset))
+                .ok_or_else(|| {
+                    anyhow!(
+                        "partition upper bound overflow: min={}, step={}, partition_size={}",
+                        min,
+                        i + 1,
+                        partition_size
+                    )
+                })?
         };
         let partition_query = get_part_query(source_conn, &part.query, &part.column, lower, upper)?;
         queries.push(partition_query);
@@ -687,33 +746,41 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "attempt to divide by zero")]
-    fn zero_partitions_panics_on_division_by_zero() {
-        // Documents current (pre-fix) behavior: num == 0 causes an integer
-        // division-by-zero panic. This baseline test locks in the behavior on
-        // `main` so a follow-up fix (guarding against num == 0) can be
-        // validated for backward compatibility of the non-panicking paths.
+    fn zero_partitions_returns_error_on_division_by_zero() {
         let part = PartitionQuery::new("SELECT * FROM test", "id", Some(0), Some(9), 0);
         let source_conn = sqlite_source_conn();
-        let _ = partition(&part, &source_conn);
+        let result = partition(&part, &source_conn);
+        assert!(result.is_err());
+        let err = result.unwrap_err().to_string();
+        assert!(err.contains("partition count (num) must be greater than zero"));
     }
 
     #[test]
-    fn inverted_range_produces_nonsensical_but_non_panicking_bounds() {
-        // Documents current (pre-fix) behavior: when max < min, `partition_size`
-        // becomes negative and the produced partition bounds are nonsensical
-        // (e.g. empty/inverted ranges), but no panic occurs. This baseline
-        // locks in the exact (buggy) bounds so a follow-up fix that changes
-        // this behavior is an intentional, reviewed change rather than a
-        // silent regression.
+    fn inverted_range_returns_error() {
         let part = PartitionQuery::new("SELECT * FROM test", "id", Some(10), Some(0), 2);
+        let source_conn = sqlite_source_conn();
+        let result = partition(&part, &source_conn);
+        assert!(result.is_err());
+        let err = result.unwrap_err().to_string();
+        assert!(
+            err.contains("partition range is invalid"),
+            "unexpected error message: {}",
+            err
+        );
+    }
+
+    #[test]
+    fn more_partitions_than_range_values_preserves_partition_count() {
+        let part = PartitionQuery::new("SELECT * FROM test", "id", Some(0), Some(1), 4);
         let source_conn = sqlite_source_conn();
         let queries = partition(&part, &source_conn).unwrap();
 
-        assert_eq!(queries.len(), 2);
+        assert_eq!(queries.len(), 4);
         let strings = queries_as_strings(&queries);
-        assert!(strings[0].contains("10 <=") && strings[0].contains("< 6"));
-        assert!(strings[1].contains("6 <=") && strings[1].contains("< 1"));
+        assert!(strings[0].contains("0 <=") && strings[0].contains("< 0"));
+        assert!(strings[1].contains("0 <=") && strings[1].contains("< 0"));
+        assert!(strings[2].contains("0 <=") && strings[2].contains("< 0"));
+        assert!(strings[3].contains("0 <=") && strings[3].contains("< 2"));
     }
 
     #[test]
@@ -746,5 +813,69 @@ mod tests {
         let strings = queries_as_strings(&queries);
         assert!(strings[0].contains("1 <=") && strings[0].contains("< 11"));
         assert!(strings[9].contains("91 <=") && strings[9].contains("< 101"));
+    }
+
+    #[test]
+    fn partition_range_overflow() {
+        // (max - min + 1) overflows i64 when min is i64::MIN and max is i64::MAX
+        let part = PartitionQuery::new(
+            "SELECT * FROM test",
+            "id",
+            Some(i64::MIN),
+            Some(i64::MAX),
+            2,
+        );
+        let source_conn = sqlite_source_conn();
+        let res = partition(&part, &source_conn);
+        assert!(res.is_err());
+        let err = res.unwrap_err().to_string();
+        assert!(
+            err.contains("partition range overflow"),
+            "unexpected error message: {}",
+            err
+        );
+    }
+
+    #[test]
+    fn partition_upper_overflow_at_i64_max() {
+        // max is i64::MAX; range_len is 6 (does not overflow),
+        // but max + 1 for the partition upper bound overflows i64.
+        let part = PartitionQuery::new(
+            "SELECT * FROM test",
+            "id",
+            Some(i64::MAX - 5),
+            Some(i64::MAX),
+            1,
+        );
+        let source_conn = sqlite_source_conn();
+        let res = partition(&part, &source_conn);
+        assert!(res.is_err());
+        let err = res.unwrap_err().to_string();
+        assert!(
+            err.contains("partition upper bound overflow"),
+            "unexpected error message: {}",
+            err
+        );
+    }
+
+    #[test]
+    fn partition_upper_overflow_multi_partition() {
+        // Multi-partition where first partition succeeds but last partition overflows max + 1
+        let part = PartitionQuery::new(
+            "SELECT * FROM test",
+            "id",
+            Some(i64::MAX - 5),
+            Some(i64::MAX),
+            2,
+        );
+        let source_conn = sqlite_source_conn();
+        let res = partition(&part, &source_conn);
+        assert!(res.is_err());
+        let err = res.unwrap_err().to_string();
+        assert!(
+            err.contains("partition upper bound overflow"),
+            "unexpected error message: {}",
+            err
+        );
     }
 }

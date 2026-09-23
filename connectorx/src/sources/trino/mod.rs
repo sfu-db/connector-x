@@ -75,6 +75,39 @@ pub struct TrinoSource {
     schema: Vec<TrinoTypeSystem>,
 }
 
+/// Extract the credentials from a Trino connection URL.
+///
+/// `Url::username` and `Url::password` hand back the components still
+/// percent-encoded, so they have to be decoded before they go into an
+/// `Authorization` header: a password of `p@ss` reaches the server as
+/// `p%40ss` otherwise, and Trino answers `401 Invalid credentials`.
+#[throws(TrinoSourceError)]
+fn credentials_from_url(url: &url::Url) -> (String, Option<String>) {
+    let username = match url.username() {
+        "" => "connectorx".to_owned(),
+        username => decode(username)?.into_owned(),
+    };
+
+    let password = match url.password() {
+        None => None,
+        Some(password) => Some(decode(password)?.into_owned()),
+    };
+
+    (username, password)
+}
+
+#[throws(TrinoSourceError)]
+fn catalog_from_url(url: &url::Url) -> String {
+    match url.path_segments().and_then(|mut s| s.next_back()) {
+        Some(segment) => decode(segment)?.into_owned(),
+        None => "hive".to_owned(),
+    }
+}
+
+fn host_from_url(url: &url::Url) -> &str {
+    url.host_str().unwrap_or("localhost")
+}
+
 /// Build a prusto Client from a Trino connection URL, parsing all supported query parameters.
 ///
 /// Supported URL params:
@@ -82,21 +115,20 @@ pub struct TrinoSource {
 ///   session.<key>=<value>, extra_credential.<key>=<value>, verify=false
 #[throws(TrinoSourceError)]
 pub fn build_client_from_url(url: &url::Url) -> Client {
-    let username = match url.username() {
-        "" => "connectorx",
-        username => username,
-    };
+    let (username, password) = credentials_from_url(url)?;
 
     let no_verify = url
         .query_pairs()
         .any(|(k, v)| k == "verify" && v == "false");
 
-    let mut builder = ClientBuilder::new(username, url.host().unwrap().to_owned())
+    let catalog = catalog_from_url(url)?;
+
+    let mut builder = ClientBuilder::new(&username, host_from_url(url).to_owned())
         .port(url.port().unwrap_or(8080))
         .ssl(prusto::ssl::Ssl { root_cert: None })
         .no_verify(no_verify)
         .secure(url.scheme() == "trino+https")
-        .catalog(url.path_segments().unwrap().next_back().unwrap_or("hive"));
+        .catalog(&catalog);
 
     let mut session_props: HashMap<String, String> = HashMap::new();
     let mut extra_creds: HashMap<String, String> = HashMap::new();
@@ -139,9 +171,9 @@ pub fn build_client_from_url(url: &url::Url) -> Client {
         builder = builder.extra_credentials(extra_creds);
     }
 
-    let builder = match url.password() {
+    let builder = match password {
         None => builder,
-        Some(password) => builder.auth(Auth::Basic(username.to_owned(), Some(password.to_owned()))),
+        Some(password) => builder.auth(Auth::Basic(username, Some(password))),
     };
 
     builder.build().map_err(TrinoSourceError::PrustoError)?
@@ -150,36 +182,15 @@ pub fn build_client_from_url(url: &url::Url) -> Client {
 impl TrinoSource {
     #[throws(TrinoSourceError)]
     pub fn new(rt: Arc<Runtime>, conn: &str) -> Self {
-        let decoded_conn = decode(conn)?.into_owned();
-
-        let url = decoded_conn
+        // The connection string must be parsed as-is: percent-decoding it first
+        // would feed reserved characters from the password back into the URL
+        // grammar, so `p@ss` would either re-encode to `p%40ss` or, for `/`,
+        // `#` and `?`, silently truncate the authority.
+        let url = conn
             .parse::<url::Url>()
             .map_err(TrinoSourceError::UrlParseError)?;
 
-        let username = match url.username() {
-            "" => "connectorx",
-            username => username,
-        };
-
-        let no_verify = url
-            .query_pairs()
-            .any(|(k, v)| k == "verify" && v == "false");
-
-        let builder = ClientBuilder::new(username, url.host().unwrap().to_owned())
-            .port(url.port().unwrap_or(8080))
-            .ssl(prusto::ssl::Ssl { root_cert: None })
-            .no_verify(no_verify)
-            .secure(url.scheme() == "trino+https")
-            .catalog(url.path_segments().unwrap().next_back().unwrap_or("hive"));
-
-        let builder = match url.password() {
-            None => builder,
-            Some(password) => {
-                builder.auth(Auth::Basic(username.to_owned(), Some(password.to_owned())))
-            }
-        };
-
-        let client = builder.build().map_err(TrinoSourceError::PrustoError)?;
+        let client = build_client_from_url(&url)?;
 
         Self {
             client: Arc::new(client),
@@ -774,9 +785,78 @@ mod tests {
     }
 
     #[test]
+    fn catalog_is_percent_decoded() {
+        let url = "trino://test@localhost:8080/my%5Fcatalog"
+            .parse::<url::Url>()
+            .unwrap();
+
+        assert_eq!(catalog_from_url(&url).unwrap(), "my_catalog");
+    }
+
+    #[test]
+    fn catalog_defaults_to_hive_without_path_segments() {
+        let url = "trino:memory".parse::<url::Url>().unwrap();
+
+        assert_eq!(catalog_from_url(&url).unwrap(), "hive");
+    }
+
+    #[test]
+    fn hostless_url_defaults_to_localhost() {
+        let url = "trino:///memory".parse::<url::Url>().unwrap();
+
+        assert_eq!(host_from_url(&url), "localhost");
+    }
+
+    #[test]
     fn test_new_ignores_empty_keys() {
         let rt = Arc::new(Runtime::new().unwrap());
         let conn = "trino://test@localhost:8080/memory?session.=val&extra_credential.=x";
         assert!(TrinoSource::new(rt, conn).is_ok());
+    }
+
+    /// Reserved characters in the password must survive the round trip through
+    /// the URL: percent-encoded on the way in, decoded again for the
+    /// `Authorization` header.
+    #[test]
+    fn credentials_are_percent_decoded() {
+        for (encoded, expected) in [
+            ("p%40ss", "p@ss"),
+            ("pa%3Ass", "pa:ss"),
+            ("pa%2Fss", "pa/ss"),
+            ("pa%23ss", "pa#ss"),
+            ("pa%3Fss", "pa?ss"),
+            ("pa%20ss", "pa ss"),
+            ("plain", "plain"),
+        ] {
+            let url = format!("trino+https://me:{encoded}@localhost:8443/hive")
+                .parse::<url::Url>()
+                .unwrap();
+            let (username, password) = credentials_from_url(&url).unwrap();
+
+            assert_eq!(username, "me");
+            assert_eq!(password.as_deref(), Some(expected), "for {encoded}");
+        }
+    }
+
+    /// A percent-encoded username is decoded too, since it also travels in the
+    /// `Authorization` header and in `X-Trino-User`.
+    #[test]
+    fn username_is_percent_decoded() {
+        let url = "trino+https://svc%2Dname:pw@localhost:8443/hive"
+            .parse::<url::Url>()
+            .unwrap();
+        let (username, _) = credentials_from_url(&url).unwrap();
+
+        assert_eq!(username, "svc-name");
+    }
+
+    /// No userinfo at all still yields the default Trino user and no auth.
+    #[test]
+    fn credentials_default_without_userinfo() {
+        let url = "trino://localhost:8080/memory".parse::<url::Url>().unwrap();
+        let (username, password) = credentials_from_url(&url).unwrap();
+
+        assert_eq!(username, "connectorx");
+        assert_eq!(password, None);
     }
 }
