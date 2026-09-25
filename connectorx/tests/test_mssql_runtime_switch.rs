@@ -26,6 +26,25 @@ use tokio::runtime::Runtime;
 
 mod test_db;
 
+fn check_source_and_partition_counts(mut source: MsSQLSource) {
+    let query = "SELECT test_int AS id FROM test_table WHERE test_int IN (0, 1)";
+    source.set_queries(&[CXQuery::naked(query)]);
+    source.fetch_metadata().unwrap();
+    assert_eq!(source.names(), ["id"]);
+    assert_eq!(source.schema().len(), 1);
+    assert_eq!(source.result_rows().unwrap(), None);
+    source.set_origin_query(Some(query.to_string()));
+    assert_eq!(source.result_rows().unwrap(), Some(2));
+    let mut partitions = source.partition().unwrap();
+    assert_eq!(partitions.len(), 1);
+    let partition = &mut partitions[0];
+    partition.result_rows().unwrap();
+    assert_eq!(partition.nrows(), 2);
+    assert_eq!(partition.ncols(), 1);
+    let mut parser = partition.parser().unwrap();
+    assert_eq!(parser.fetch_next().unwrap(), (2, true));
+}
+
 fn run_full_type_matrix(builder: MsSQLSource) -> Vec<arrow::record_batch::RecordBatch> {
     let queries = [CXQuery::naked(
         "select * from test_types order by test_int1",
@@ -50,6 +69,7 @@ fn test_mssql_runtime_driver_switch_changes_backend() {
     assert_eq!(active_driver(), MsSQLDriverKind::MssqlTds);
     let tds_source = MsSQLSource::new(rt.clone(), &dburl, 1).unwrap();
     assert!(matches!(&tds_source, MsSQLSource::MssqlTds(_)));
+    check_source_and_partition_counts(MsSQLSource::new(rt.clone(), &dburl, 1).unwrap());
 
     // TDS rejects custom CA validation before connecting. This distinguishes
     // its partition probe from Tiberius even when both drivers are compiled.
@@ -67,6 +87,7 @@ fn test_mssql_runtime_driver_switch_changes_backend() {
 
     set_active_driver(MsSQLDriverKind::Tiberius);
     assert_eq!(active_driver(), MsSQLDriverKind::Tiberius);
+    check_source_and_partition_counts(MsSQLSource::new(rt.clone(), &dburl, 1).unwrap());
     let tiberius_source = MsSQLSource::new(rt, &dburl, 1).unwrap();
     assert!(matches!(&tiberius_source, MsSQLSource::Tiberius(_)));
     assert_eq!(get_col_range(&conn, range_query, "id").unwrap(), (1, 3));

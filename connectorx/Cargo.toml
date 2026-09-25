@@ -111,7 +111,6 @@ all = [
   "src_postgres",
   "src_mysql",
   "src_mssql",
-  "src_mssql_tds",
   "src_oracle",
   "src_bigquery",
   "src_csv",

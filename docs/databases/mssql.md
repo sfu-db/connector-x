@@ -32,6 +32,18 @@ Changing `mssql_driver` only affects queries started after the assignment.
 Rust builds can select one backend with the `src_mssql_tds` or
 `src_mssql_tiberius` Cargo feature; enabling both exposes the runtime switch.
 
+Existing Python applications keep using `cx.read_sql(conn, query)` unchanged;
+the driver choice does not add a required argument or require compiling wheels.
+New wheels use `mssql-tds` by default. Set `cx.mssql_driver = "tiberius"` before
+starting reads to retain the previous driver, including its TLS behavior.
+The setting is process-wide: do not switch it while other threads start reads.
+
+Existing Rust builds using `src_mssql` (an alias for `src_mssql_tiberius`) or
+the `all` feature bundle continue to expose the original Tiberius source,
+partition, and parser types. They do not silently opt into the enum wrapper.
+Enabling both drivers explicitly selects the runtime-switchable wrapper;
+its low-level types are not interchangeable with backend-specific types.
+
 ### Connection Parameters
 * By adding `trusted_connection=true` to connection uri parameter, windows authentication will be enabled. 
     * Example: `mssql://host:port/db?trusted_connection=true`
@@ -42,11 +54,10 @@ Rust builds can select one backend with the `src_mssql_tds` or
 * By adding `trust_server_certificate_ca=/path/to/ca-cert.crt` to connection uri parameter, the SQLServer certificate will be validated against the given CA certificate in addition to the system-truststore.
     * Example: `mssql://host:port/db?encrypt=true&trust_server_certificate_ca=/path/to/ca-cert.crt`
 
-### Opt-in `mssql-tds` backend
+### `mssql-tds` backend details
 
-Rust builds can select `src_mssql_tds` instead of the default `src_mssql`
-(`src_mssql_tiberius`). These backends are mutually exclusive at compile time;
-there is no runtime selector.
+Rust builds can select `src_mssql_tds` instead of `src_mssql`
+(`src_mssql_tiberius`) to link only TDS, or enable both for runtime selection.
 
 The TDS backend shares a bounded connection pool across metadata, row counts,
 and partition readers, sized by `MsSQLSource::new`'s `nconn`. Partitions acquire
