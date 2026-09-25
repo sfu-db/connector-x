@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib
+import sys
 import urllib.parse
 from collections.abc import Iterator
 from importlib.metadata import version
@@ -13,6 +14,16 @@ from .connectorx import (
     read_sql2 as _read_sql2,
     get_meta as _get_meta,
 )
+
+try:
+    from .connectorx import (
+        get_mssql_driver as _get_mssql_driver,
+        set_mssql_driver as _set_mssql_driver,
+    )
+except ImportError:
+    # Built without the mssql source: no driver to switch.
+    _get_mssql_driver = None
+    _set_mssql_driver = None
 
 if TYPE_CHECKING:
     import pandas as pd
@@ -685,3 +696,45 @@ class ConnectionUrl(Generic[_BackendT], str):
             if database_options:
                 connection += "?" + urllib.parse.urlencode(database_options)
         return super().__new__(cls, connection)
+
+
+class _ConnectorXModule(sys.modules[__name__].__class__):
+    """
+    Module subclass that backs the ``connectorx.mssql_driver`` property (see
+    sfu-db/connector-x#942 Phase 3). Prebuilt wheels bundle both the
+    ``tiberius`` and ``mssql-tds`` MSSQL backends; this property is the
+    supported way for a Python user to switch between them at runtime,
+    without rebuilding from source or picking a Cargo feature.
+    """
+
+    @property
+    def mssql_driver(self) -> str:
+        """
+        The MSSQL wire-protocol driver ConnectorX currently uses:
+        ``"mssql-tds"`` (the default) or ``"tiberius"``.
+
+        Only affects `MsSQLSource`s created *after* the assignment; reads
+        already in progress keep using whichever driver they started with.
+
+        >>> import connectorx as cx
+        >>> cx.mssql_driver
+        'mssql-tds'
+        >>> cx.mssql_driver = "tiberius"
+        """
+        if _get_mssql_driver is None:
+            raise RuntimeError(
+                "this connectorx build does not include the mssql source"
+            )
+        return _get_mssql_driver()
+
+    @mssql_driver.setter
+    def mssql_driver(self, value: str) -> None:
+        if _set_mssql_driver is None:
+            raise RuntimeError(
+                "this connectorx build does not include the mssql source"
+            )
+        _set_mssql_driver(value)
+
+
+sys.modules[__name__].__class__ = _ConnectorXModule
+del _ConnectorXModule

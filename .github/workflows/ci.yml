@@ -120,6 +120,9 @@ jobs:
 
   python:
     runs-on: ubuntu-latest
+    env:
+      # Force disable the GIL on free-threading because of https://github.com/sqlalchemy/sqlalchemy/discussions/13256
+      PYTHON_GIL: ${{ matrix.python-version == '3.14t' && '0' || '1' }}
     # Note: No 'container' - we run directly on the VM to access Docker for Testcontainers
     strategy:
       matrix:
@@ -204,9 +207,14 @@ jobs:
       - name: Install python dependencies
         run: just bootstrap-python
 
-      - name: Test python
-        run: just test-python
+      - name: Test python (mssql-tds)
+        run: just test-python --mssql-driver=mssql-tds --deselect=connectorx/tests/test_mssql.py::test_mssql_driver_switch
         # Integration tests provision required services at test time via Testcontainers
-        env:
-          # Force disable the GIL on free-threading because of https://github.com/sqlalchemy/sqlalchemy/discussions/13256
-          PYTHON_GIL: ${{ matrix.python-version == '3.14t' && '0' || '1' }}
+
+      - name: Test python MSSQL (Tiberius)
+        working-directory: connectorx-python
+        run: poetry run pytest connectorx/tests/test_mssql.py --mssql-driver=tiberius --deselect=connectorx/tests/test_mssql.py::test_mssql_driver_switch -v -s
+
+      - name: Test python MSSQL runtime switch
+        working-directory: connectorx-python
+        run: poetry run pytest connectorx/tests/test_mssql.py::test_mssql_driver_switch -v -s

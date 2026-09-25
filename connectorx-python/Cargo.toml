@@ -71,11 +71,15 @@ fptr = ["connectorx/fptr"]
 federation = ["connectorx/federation"]
 fed_exec = ["connectorx/fed_exec"]
 nbstr = []
+# Database source bundle, paired with the `dsts` destination bundle.
 srcs = [
   "connectorx/src_postgres",
   "connectorx/src_mysql",
   "connectorx/src_sqlite",
+  # Both MSSQL backends: lets `cx.mssql_driver` switch drivers at runtime
+  # (sfu-db/connector-x#942 Phase 3) instead of picking one at compile time.
   "connectorx/src_mssql_tiberius",
+  "connectorx/src_mssql_tds",
   "connectorx/src_oracle",
   "connectorx/src_bigquery",
   "connectorx/src_trino",
