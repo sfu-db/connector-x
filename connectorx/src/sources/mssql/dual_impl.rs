@@ -24,12 +24,16 @@ use std::sync::Arc;
 use tokio::runtime::Runtime;
 use uuid_old::Uuid;
 
+/// Gives the dispatcher one source type while retaining the selected backend
+/// and its connection pool for the lifetime of this source.
 pub enum MsSQLSource {
     Tiberius(tiberius_impl::MsSQLSource),
     MssqlTds(tds_impl::MsSQLSource),
 }
 
 impl MsSQLSource {
+    /// Captures the current driver choice and lets that backend create its pool.
+    /// Later changes to the process-wide setting do not affect this source.
     pub fn new(rt: Arc<Runtime>, conn: &str, nconn: usize) -> Result<Self, MsSQLSourceError> {
         match driver::active_driver() {
             MsSQLDriverKind::Tiberius => Ok(MsSQLSource::Tiberius(
@@ -113,6 +117,8 @@ impl Source for MsSQLSource {
     }
 }
 
+/// Preserves the source's backend for each query partition, so row counting
+/// and parser creation use the same driver rather than consulting the selector.
 pub enum MsSQLSourcePartition {
     Tiberius(tiberius_impl::MsSQLSourcePartition),
     MssqlTds(tds_impl::MsSQLSourcePartition),
@@ -152,10 +158,12 @@ impl SourcePartition for MsSQLSourcePartition {
     }
 }
 
+/// Lets transports consume either backend through one parser type. The variant
+/// comes from the partition, keeping row fetching and value decoding together.
 pub enum MsSQLSourceParser<'a> {
     Tiberius(tiberius_impl::MsSQLSourceParser<'a>),
-    // mssql-tds's `TdsClient` owns its connection outright, so this variant
-    // carries no lifetime of its own (see tds_impl.rs).
+    // The TDS parser owns its pooled connection lease, so unlike Tiberius it
+    // needs no lifetime tied to the partition.
     MssqlTds(tds_impl::MsSQLSourceParser),
 }
 
@@ -171,9 +179,15 @@ impl<'a> PartitionParser<'a> for MsSQLSourceParser<'a> {
     }
 }
 
+// Transports require a concrete Produce<T> implementation for each Rust value
+// type. Generate the required and nullable forms together to keep the enum
+// wrapper's decoding interface identical to both underlying parsers.
+// Dispatch follows the stored variant, never the process-wide driver setting.
 macro_rules! impl_produce_enum {
     ($($t: ty,)+) => {
         $(
+            // 'r is the value's borrow from this parser (for strings/bytes);
+            // 'a is the Tiberius parser's separate partition lifetime.
             impl<'r, 'a> Produce<'r, $t> for MsSQLSourceParser<'a> {
                 type Error = MsSQLSourceError;
 
@@ -185,6 +199,8 @@ macro_rules! impl_produce_enum {
                 }
             }
 
+            // Preserve each backend's SQL NULL handling instead of decoding a
+            // required value and wrapping it in Some, which would lose NULLs.
             impl<'r, 'a> Produce<'r, Option<$t>> for MsSQLSourceParser<'a> {
                 type Error = MsSQLSourceError;
 
@@ -199,22 +215,25 @@ macro_rules! impl_produce_enum {
     };
 }
 
+// Cover the Rust representations used by MsSQLTypeSystem so existing
+// transports work unchanged with the dual-backend parser. Each entry also
+// generates Produce<Option<T>> for nullable columns.
 impl_produce_enum!(
-    u8,
-    i16,
-    i32,
-    i64,
-    IntN,
-    f32,
-    f64,
-    FloatN,
-    bool,
-    &'r str,
-    &'r [u8],
-    Uuid,
-    Decimal,
-    NaiveDateTime,
-    NaiveDate,
-    NaiveTime,
-    DateTime<Utc>,
+    u8,            // SQL tinyint.
+    i16,           // SQL smallint.
+    i32,           // SQL int.
+    i64,           // SQL bigint.
+    IntN,          // Variable-width TDS integers normalized to i64.
+    f32,           // SQL real/float(24) and smallmoney.
+    f64,           // SQL float(53) and money.
+    FloatN,        // Variable-width TDS floats normalized to f64.
+    bool,          // SQL bit.
+    &'r str,       // Character/text values borrowed from the parser.
+    &'r [u8],      // Binary/image values borrowed from the parser.
+    Uuid,          // SQL uniqueidentifier in the shared UUID representation.
+    Decimal,       // SQL numeric/decimal with precision retained.
+    NaiveDateTime, // SQL datetime, datetime2, and smalldatetime.
+    NaiveDate,     // SQL date.
+    NaiveTime,     // SQL time.
+    DateTime<Utc>, // SQL datetimeoffset normalized to UTC.
 );
