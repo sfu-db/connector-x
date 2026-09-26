@@ -64,8 +64,8 @@ pub trait Source {
         unimplemented!("pre_execution_queries is not implemented in this source type");
     }
 
-    /// Fetch the result schema (column names and types) of the queries, typically by
-    /// running a `LIMIT 0` query. Called before [`names`](Source::names) and
+    /// Fetch the result schema (column names and types) of the queries, e.g. by preparing the
+    /// statement or running a `LIMIT 0` query. Called before [`names`](Source::names) and
     /// [`schema`](Source::schema).
     fn fetch_metadata(&mut self) -> Result<(), Self::Error>;
     /// Get total number of rows if available.

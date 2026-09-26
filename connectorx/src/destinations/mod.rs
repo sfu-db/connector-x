@@ -77,9 +77,10 @@ pub trait DestinationPartition<'a>: Send {
 
     /// Aquire n rows in final destination.
     ///
-    /// Called before each batch of `n` rows is written, so a destination that does not know the
-    /// row count in advance can reserve space for them. Returns the row index at which the
-    /// acquired rows start.
+    /// Called before each batch of `n` rows is written. Destinations that write into a shared,
+    /// pre-allocated buffer (see [`needs_count`](Destination::needs_count)) use this to claim the
+    /// next `n` rows for this partition. Returns the starting row index of the claimed range; the
+    /// dispatcher currently ignores it.
     fn aquire_row(&mut self, n: usize) -> Result<usize, Self::Error>;
 }
 
