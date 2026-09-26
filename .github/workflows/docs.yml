@@ -12,11 +12,9 @@ jobs:
       - uses: actions/checkout@v7
 
       - name: Install Rust
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: stable
           components: rustfmt
-          default: true
 
       - name: Intall Python
         uses: actions/setup-python@v5
@@ -34,10 +32,7 @@ jobs:
           jupyter-book build docs
 
       - name: Build Rust Docs
-        uses: actions-rs/cargo@v1
-        with:
-          command: doc
-          args: --no-deps --features all
+        run: cargo doc --no-deps --features all
 
       - name: Move the rust doc into jupyter book
         run: mv target/doc ./docs/_build/html/rust-docs
