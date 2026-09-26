@@ -25,11 +25,9 @@ jobs:
           DEBIAN_FRONTEND: noninteractive
 
       - name: Install Rust
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: stable
-          components: rustfmt
-          default: true
+          components: rustfmt, clippy
 
       - uses: actions/cache@v6
         with:
@@ -44,16 +42,10 @@ jobs:
       - uses: extractions/setup-just@v4
 
       - name: Is the code formatted?
-        uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: --all -- --check -q
+        run: cargo fmt --all -- --check -q
 
       - name: Clippy linting
-        uses: actions-rs/cargo@v1
-        with:
-          command: clippy
-          args: --features all
+        run: cargo clippy --features all
 
       - name: Check each feature gate
         run: just test-feature-gate
@@ -113,10 +105,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Test build docs
-        uses: actions-rs/cargo@v1
-        with:
-          command: doc
-          args: --no-deps --features all
+        run: cargo doc --no-deps --features all
 
   python:
     runs-on: ubuntu-latest
@@ -168,11 +157,9 @@ jobs:
       - uses: extractions/setup-just@v4
 
       - name: Install Rust
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: stable
-          components: rustfmt
-          default: true
+          components: rustfmt, clippy
 
       - uses: actions/setup-java@v6
         with:
@@ -190,10 +177,7 @@ jobs:
           key: ${{ runner.os }}-cargo-python-${{ matrix.python-version }}-${{ secrets.CACHE_VERSION }}-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Clippy linting
-        uses: actions-rs/cargo@v1
-        with:
-          command: clippy
-          args: --features all --all
+        run: cargo clippy --features all --all
 
       - name: Cache venv
         uses: actions/cache@v6
