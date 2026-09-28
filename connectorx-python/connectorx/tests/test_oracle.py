@@ -295,6 +295,36 @@ def test_oracle_types(oracle_url: str) -> None:
     assert_frame_equal(df, expected, check_names=True)
 
 
+@pytest.mark.parametrize("return_type", ["pandas", "arrow", "arrow_stream"])
+def test_oracle_boolean(oracle_url: str, return_type: str) -> None:
+    import pyarrow as pa
+
+    query = """
+        SELECT flag FROM (
+            SELECT 1 AS sort_order, TRUE AS flag FROM dual
+            UNION ALL SELECT 2, FALSE FROM dual
+            UNION ALL SELECT 3, CAST(NULL AS BOOLEAN) FROM dual
+        )
+        ORDER BY sort_order
+    """
+    result = read_sql(oracle_url, query, return_type=return_type)
+
+    if return_type == "pandas":
+        assert result["FLAG"].dtype == pd.BooleanDtype()
+        values = result["FLAG"].tolist()
+    else:
+        if return_type == "arrow_stream":
+            result = pa.Table.from_batches(list(result))
+        assert result.schema.field("FLAG").type == pa.bool_()
+        values = result.column("FLAG").to_pylist()
+
+    assert sorted(values, key=lambda value: (value is None, value)) == [
+        False,
+        True,
+        None,
+    ]
+
+
 def test_oracle_empty_result(oracle_url: str) -> None:
     query = "SELECT * FROM test_table where test_int < -100"
     df = read_sql(oracle_url, query)

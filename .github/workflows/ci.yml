@@ -192,8 +192,13 @@ jobs:
         run: just bootstrap-python
 
       - name: Test python (mssql-tds)
-        run: just test-python --mssql-driver=mssql-tds --deselect=connectorx/tests/test_mssql.py::test_mssql_driver_switch
+        run: just test-python --mssql-driver=mssql-tds --deselect=connectorx/tests/test_mssql.py::test_mssql_driver_switch --ignore=connectorx/tests/test_oracle.py
         # Integration tests provision required services at test time via Testcontainers
+
+      - name: Test Python Oracle
+        if: matrix.python-version == '3.14'
+        working-directory: connectorx-python
+        run: poetry run pytest connectorx/tests/test_oracle.py -v -s
 
       - name: Test python MSSQL (Tiberius)
         working-directory: connectorx-python
