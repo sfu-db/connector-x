@@ -35,6 +35,7 @@ impl_transport!(
         { TimestampTz[DateTime<Utc>]        => DateTimeMicro[DateTimeWrapperMicro] | conversion option }
         { TimestampTzNano[DateTime<Utc>]    => DateTime[DateTime<Utc>]      | conversion option }
         { NumDecimal[Decimal]               => F64[f64]                     | conversion option }
+        { Boolean[bool]                     => Bool[bool]                   | conversion auto }
     }
 );
 

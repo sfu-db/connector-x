@@ -21,6 +21,7 @@ pub enum OracleTypeSystem {
     TimestampTz(bool),
     TimestampNano(bool),
     TimestampTzNano(bool),
+    Boolean(bool),
 }
 
 impl_typesystem! {
@@ -33,6 +34,7 @@ impl_typesystem! {
         { Clob | VarChar | Char | NVarChar | NChar => String }
         { Date | Timestamp | TimestampNano => NaiveDateTime }
         { TimestampTz | TimestampTzNano => DateTime<Utc> }
+        { Boolean => bool }
     }
 }
 
@@ -61,6 +63,7 @@ impl<'a> From<&'a OracleType> for OracleTypeSystem {
             | OracleType::TimestampTZ(8)
             | OracleType::TimestampTZ(9) => TimestampTzNano(true),
             OracleType::TimestampTZ(_) => TimestampTz(true),
+            OracleType::Boolean => Boolean(true),
             _ => unimplemented!("{}", format!("Type {:?} not implemented for oracle!", ty)),
         }
     }
@@ -144,6 +147,10 @@ mod tests {
         assert!(matches!(
             OracleTypeSystem::from(&OracleType::TimestampTZ(9)),
             OracleTypeSystem::TimestampTzNano(true)
+        ));
+        assert!(matches!(
+            OracleTypeSystem::from(&OracleType::Boolean),
+            OracleTypeSystem::Boolean(true)
         ));
     }
 }
