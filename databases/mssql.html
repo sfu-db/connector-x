@@ -426,8 +426,9 @@
             <nav aria-label="Page">
                 <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mssql-connection">MsSQL Connection</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mssql-driver">MSSQL Driver</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#connection-parameters">Connection Parameters</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#opt-in-mssql-tds-backend">Opt-in <code class="docutils literal notranslate"><span class="pre">mssql-tds</span></code> backend</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mssql-tds-backend-details"><code class="docutils literal notranslate"><span class="pre">mssql-tds</span></code> backend details</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sqlserver-pandas-type-mapping">SQLServer-Pandas Type Mapping</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#performance-r5-4xlarge-docker-in-another-ec2-instance">Performance (r5.4xlarge docker in another EC2 instance)</a></li>
 </ul>
@@ -460,6 +461,30 @@
 </pre></div>
 </div>
 </section>
+<section id="mssql-driver">
+<h2>MSSQL Driver<a class="headerlink" href="#mssql-driver" title="Link to this heading">#</a></h2>
+<p>ConnectorX uses <code class="docutils literal notranslate"><span class="pre">mssql-tds</span></code> by default. Pre-built Python wheels also include
+the previous Tiberius backend for compatibility:</p>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">connectorx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cx</span>
+
+<span class="n">cx</span><span class="o">.</span><span class="n">mssql_driver</span> <span class="o">=</span> <span class="s2">"tiberius"</span>  <span class="c1"># opt in before starting a query</span>
+<span class="n">cx</span><span class="o">.</span><span class="n">mssql_driver</span> <span class="o">=</span> <span class="s2">"mssql-tds"</span> <span class="c1"># restore the default</span>
+</pre></div>
+</div>
+<p>Changing <code class="docutils literal notranslate"><span class="pre">mssql_driver</span></code> only affects queries started after the assignment.
+Rust builds can select one backend with the <code class="docutils literal notranslate"><span class="pre">src_mssql_tds</span></code> or
+<code class="docutils literal notranslate"><span class="pre">src_mssql_tiberius</span></code> Cargo feature; enabling both exposes the runtime switch.</p>
+<p>Existing Python applications keep using <code class="docutils literal notranslate"><span class="pre">cx.read_sql(conn,</span> <span class="pre">query)</span></code> unchanged;
+the driver choice does not add a required argument or require compiling wheels.
+New wheels use <code class="docutils literal notranslate"><span class="pre">mssql-tds</span></code> by default. Set <code class="docutils literal notranslate"><span class="pre">cx.mssql_driver</span> <span class="pre">=</span> <span class="pre">&quot;tiberius&quot;</span></code> before
+starting reads to retain the previous driver, including its TLS behavior.
+The setting is process-wide: do not switch it while other threads start reads.</p>
+<p>Existing Rust builds using <code class="docutils literal notranslate"><span class="pre">src_mssql</span></code> (an alias for <code class="docutils literal notranslate"><span class="pre">src_mssql_tiberius</span></code>) or
+the <code class="docutils literal notranslate"><span class="pre">all</span></code> feature bundle continue to expose the original Tiberius source,
+partition, and parser types. They do not silently opt into the enum wrapper.
+Enabling both drivers explicitly selects the runtime-switchable wrapper;
+its low-level types are not interchangeable with backend-specific types.</p>
+</section>
 <section id="connection-parameters">
 <h2>Connection Parameters<a class="headerlink" href="#connection-parameters" title="Link to this heading">#</a></h2>
 <ul class="simple">
@@ -485,11 +510,10 @@
 </li>
 </ul>
 </section>
-<section id="opt-in-mssql-tds-backend">
-<h2>Opt-in <code class="docutils literal notranslate"><span class="pre">mssql-tds</span></code> backend<a class="headerlink" href="#opt-in-mssql-tds-backend" title="Link to this heading">#</a></h2>
-<p>Rust builds can select <code class="docutils literal notranslate"><span class="pre">src_mssql_tds</span></code> instead of the default <code class="docutils literal notranslate"><span class="pre">src_mssql</span></code>
-(<code class="docutils literal notranslate"><span class="pre">src_mssql_tiberius</span></code>). These backends are mutually exclusive at compile time;
-there is no runtime selector.</p>
+<section id="mssql-tds-backend-details">
+<h2><code class="docutils literal notranslate"><span class="pre">mssql-tds</span></code> backend details<a class="headerlink" href="#mssql-tds-backend-details" title="Link to this heading">#</a></h2>
+<p>Rust builds can select <code class="docutils literal notranslate"><span class="pre">src_mssql_tds</span></code> instead of <code class="docutils literal notranslate"><span class="pre">src_mssql</span></code>
+(<code class="docutils literal notranslate"><span class="pre">src_mssql_tiberius</span></code>) to link only TDS, or enable both for runtime selection.</p>
 <p>The TDS backend shares a bounded connection pool across metadata, row counts,
 and partition readers, sized by <code class="docutils literal notranslate"><span class="pre">MsSQLSource::new</span></code>’s <code class="docutils literal notranslate"><span class="pre">nconn</span></code>. Partitions acquire
 leases only while executing, so there may be more partitions than connections.
@@ -720,8 +744,9 @@ certificate-pinning option is not a substitute for CA validation.</p>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mssql-connection">MsSQL Connection</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mssql-driver">MSSQL Driver</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#connection-parameters">Connection Parameters</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#opt-in-mssql-tds-backend">Opt-in <code class="docutils literal notranslate"><span class="pre">mssql-tds</span></code> backend</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mssql-tds-backend-details"><code class="docutils literal notranslate"><span class="pre">mssql-tds</span></code> backend details</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sqlserver-pandas-type-mapping">SQLServer-Pandas Type Mapping</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#performance-r5-4xlarge-docker-in-another-ec2-instance">Performance (r5.4xlarge docker in another EC2 instance)</a></li>
 </ul>
