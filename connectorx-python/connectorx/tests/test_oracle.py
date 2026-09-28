@@ -318,11 +318,8 @@ def test_oracle_boolean(oracle_url: str, return_type: str) -> None:
         assert result.schema.field("FLAG").type == pa.bool_()
         values = result.column("FLAG").to_pylist()
 
-    assert sorted(values, key=lambda value: (value is None, value)) == [
-        False,
-        True,
-        None,
-    ]
+    assert [bool(values[0]), bool(values[1])] == [False, True]
+    assert pd.isna(values[2])
 
 
 def test_oracle_empty_result(oracle_url: str) -> None:
