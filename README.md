@@ -1,7 +1,7 @@
 # ConnectorX [![status][ci_badge]][ci_page] [![discussions][discussion_badge]][discussion_page] [![Downloads][download_badge]][download_page]
 
-[ci_badge]: https://github.com/sfu-db/connector-x/workflows/ci/badge.svg
-[ci_page]: https://github.com/sfu-db/connector-x/actions
+[ci_badge]: https://github.com/sfu-db/connector-x/actions/workflows/ci.yml/badge.svg?branch=main&event=push
+[ci_page]: https://github.com/sfu-db/connector-x/actions/workflows/ci.yml
 [discussion_badge]: https://img.shields.io/badge/Forum-Github%20Discussions-blue
 [discussion_page]: https://github.com/sfu-db/connector-x/discussions
 [download_badge]: https://pepy.tech/badge/connectorx
