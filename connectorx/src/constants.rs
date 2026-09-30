@@ -24,7 +24,7 @@ pub const RECORD_BATCH_SIZE: usize = 64 * KILO;
     feature = "src_postgres",
     feature = "src_mysql",
     feature = "src_oracle",
-    feature = "src_mssql"
+    feature = "src_mssql_common"
 ))]
 pub const DB_BUFFER_SIZE: usize = 32;
 

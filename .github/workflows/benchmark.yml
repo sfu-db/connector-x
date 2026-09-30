@@ -24,11 +24,9 @@ jobs:
           DEBIAN_FRONTEND: noninteractive
 
       - name: Install Rust
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: stable
           components: rustfmt
-          default: true
 
       - name: Install other dependent tools
         run: |

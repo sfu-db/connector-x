@@ -9,6 +9,28 @@ from .. import read_sql, ConnectionUrl
 # clickhouse_url fixture is now defined in conftest.py
 # It uses testcontainers if available, otherwise the CLICKHOUSE_URL environment variable
 
+@pytest.mark.parametrize("return_type", ["pandas", "arrow", "arrow_stream"])
+@pytest.mark.parametrize("partition_num", [None, 3])
+def test_clickhouse_lz4_compression(
+    clickhouse_url: str, return_type: str, partition_num: int | None
+) -> None:
+    result = read_sql(
+        clickhouse_url,
+        "SELECT id, upper(getSetting('network_compression_method')) AS compression "
+        "FROM test_basic_types",
+        return_type=return_type,
+        partition_on="id" if partition_num else None,
+        partition_num=partition_num,
+        batch_size=2,
+    )
+    if return_type == "arrow_stream":
+        result = result.read_all()
+    if return_type != "pandas":
+        result = result.to_pandas()
+    assert sorted(result["id"].tolist()) == [1, 2, 3, 4, 5]
+    assert result["compression"].tolist() == ["LZ4"] * 5
+
+
 def test_clickhouse_without_partition(clickhouse_url: str) -> None:
     query = "select * from test_table limit 3"
     # clickhouse does not support binary protocol

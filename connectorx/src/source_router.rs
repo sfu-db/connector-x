@@ -37,7 +37,7 @@ impl TryFrom<&str> for SourceConn {
 
         // parse connectorx protocol
         let proto = match old_url.query_pairs().find(|p| p.0 == CONNECTORX_PROTOCOL) {
-            Some((_, proto)) => proto.to_owned().to_string(),
+            Some((_, proto)) => proto.to_string(),
             None => "binary".to_string(),
         };
 
@@ -79,9 +79,8 @@ impl SourceConn {
 #[throws(ConnectorXError)]
 pub fn parse_source(conn: &str, protocol: Option<&str>) -> SourceConn {
     let mut source_conn = SourceConn::try_from(conn)?;
-    match protocol {
-        Some(p) => source_conn.set_protocol(p),
-        None => {}
+    if let Some(p) = protocol {
+        source_conn.set_protocol(p)
     }
     source_conn
 }

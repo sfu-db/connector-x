@@ -94,35 +94,39 @@ impl_produce_unimplemented!(
 
 );
 
-/// If any columns are range types, wrap the query in a subquery that casts
-/// range columns to `::text`. For example:
+/// Wrap queries containing range or tsvector columns to cast those columns
+/// to `::text`. For example:
 ///   SELECT * FROM orders WHERE id < 2
 /// becomes:
 ///   SELECT "id", "period"::text, "name" FROM (SELECT * FROM orders WHERE id < 2) AS _cx_sub
 ///
-/// This forces PG to serialize ranges as text, which makes binary and cursor
-/// protocols work without needing range-specific FromSql impls.
-/// For CSV and simple protocols the rewrite is harmless (text cast on text is a no-op).
-fn maybe_rewrite_range_query(
+/// This makes binary and cursor protocols work without type-specific FromSql
+/// implementations, and preserves the text representation for CSV and simple.
+fn maybe_rewrite_text_query(
     query: &CXQuery<String>,
     names: &[String],
     schema: &[PostgresTypeSystem],
 ) -> CXQuery<String> {
-    let range_mask: Vec<bool> = schema
+    let text_mask: Vec<bool> = schema
         .iter()
-        .map(|ts| matches!(ts, PostgresTypeSystem::Range(_)))
+        .map(|ts| {
+            matches!(
+                ts,
+                PostgresTypeSystem::Range(_) | PostgresTypeSystem::TsVector(_)
+            )
+        })
         .collect();
 
-    if !range_mask.iter().any(|&r| r) {
+    if !text_mask.iter().any(|&cast| cast) {
         return query.clone();
     }
 
     let cols: String = names
         .iter()
-        .zip(range_mask.iter())
-        .map(|(name, is_range)| {
+        .zip(text_mask.iter())
+        .map(|(name, cast_to_text)| {
             let quoted = quote_ident(name);
-            if *is_range {
+            if *cast_to_text {
                 format!("{}::text", quoted)
             } else {
                 quoted
@@ -140,8 +144,8 @@ fn quote_ident(ident: &str) -> String {
 }
 
 #[cfg(test)]
-mod range_rewrite_tests {
-    use super::{maybe_rewrite_range_query, quote_ident, PostgresTypeSystem};
+mod text_rewrite_tests {
+    use super::{maybe_rewrite_text_query, quote_ident, PostgresTypeSystem};
     use crate::sql::CXQuery;
 
     #[test]
@@ -157,11 +161,47 @@ mod range_rewrite_tests {
             PostgresTypeSystem::Int4(true),
             PostgresTypeSystem::Range(true),
         ];
-        let rewritten = maybe_rewrite_range_query(&q, &names, &schema);
+        let rewritten = maybe_rewrite_text_query(&q, &names, &schema);
         assert_eq!(
             rewritten.as_str(),
             "SELECT \"plain\", \"a\"\"b\"::text FROM (SELECT 1) AS _cx_sub"
         );
+    }
+
+    #[test]
+    fn rewrite_casts_tsvector_and_ranges() {
+        let q = CXQuery::Wrapped("SELECT * FROM documents WHERE id < 2".to_string());
+        let names = vec!["id".to_string(), "a\"b".to_string(), "period".to_string()];
+        for nullable in [false, true] {
+            let schema = vec![
+                PostgresTypeSystem::Int4(false),
+                PostgresTypeSystem::TsVector(nullable),
+                PostgresTypeSystem::Range(nullable),
+            ];
+            assert_eq!(
+                maybe_rewrite_text_query(&q, &names, &schema).as_str(),
+                "SELECT \"id\", \"a\"\"b\"::text, \"period\"::text FROM (SELECT * FROM documents WHERE id < 2) AS _cx_sub"
+            );
+        }
+    }
+
+    #[test]
+    fn rewrite_leaves_other_types_unchanged() {
+        for q in [
+            CXQuery::Naked("SELECT 'hello' AS text".to_string()),
+            CXQuery::Wrapped("SELECT 'hello' AS text".to_string()),
+        ] {
+            let rewritten = maybe_rewrite_text_query(
+                &q,
+                &["text".to_string()],
+                &[PostgresTypeSystem::Text(true)],
+            );
+            assert_eq!(rewritten.as_str(), q.as_str());
+            assert_eq!(
+                std::mem::discriminant(&rewritten),
+                std::mem::discriminant(&q)
+            );
+        }
     }
 }
 
@@ -320,7 +360,7 @@ where
         let mut ret = vec![];
         for query in self.queries {
             let mut conn = self.pool.get()?;
-            let rewritten = maybe_rewrite_range_query(&query, &self.names, &self.schema);
+            let rewritten = maybe_rewrite_text_query(&query, &self.names, &self.schema);
 
             if let Some(pre_queries) = &self.pre_execution_queries {
                 for pre_query in pre_queries {

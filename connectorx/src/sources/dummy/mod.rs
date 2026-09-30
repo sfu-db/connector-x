@@ -201,7 +201,7 @@ impl<'r, 'a> Produce<'r, bool> for DummySourcePartitionParser<'a> {
     type Error = ConnectorXError;
 
     fn produce(&mut self) -> Result<bool> {
-        let ret = self.next_val() % 2 == 0;
+        let ret = self.next_val().is_multiple_of(2);
         Ok(ret)
     }
 }

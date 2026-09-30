@@ -36,9 +36,9 @@ where
     _phantom: PhantomData<TP>,
 }
 
-impl<'a, S, TP> ArrowBatchIter<S, TP>
+impl<S, TP> ArrowBatchIter<S, TP>
 where
-    S: Source + 'a,
+    S: Source,
     TP: Transport<
         TSS = S::TypeSystem,
         TSD = ArrowStreamTypeSystem,
@@ -138,9 +138,9 @@ where
     }
 }
 
-impl<'a, S, TP> Iterator for ArrowBatchIter<S, TP>
+impl<S, TP> Iterator for ArrowBatchIter<S, TP>
 where
-    S: Source + 'a,
+    S: Source,
     TP: Transport<
         TSS = S::TypeSystem,
         TSD = ArrowStreamTypeSystem,
@@ -175,9 +175,9 @@ pub trait RecordBatchIterator: Send {
     fn next_batch(&mut self) -> Option<RecordBatch>;
 }
 
-impl<'a, S, TP> RecordBatchIterator for ArrowBatchIter<S, TP>
+impl<S, TP> RecordBatchIterator for ArrowBatchIter<S, TP>
 where
-    S: Source + 'a,
+    S: Source,
     TP: Transport<
             TSS = S::TypeSystem,
             TSD = ArrowStreamTypeSystem,

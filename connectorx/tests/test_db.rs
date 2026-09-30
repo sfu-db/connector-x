@@ -159,7 +159,7 @@ pub fn mysql_url() -> String {
     env::var("MYSQL_URL").expect("MYSQL_URL must be set")
 }
 
-#[cfg(feature = "src_mssql")]
+#[cfg(feature = "src_mssql_common")]
 pub fn mssql_url() -> String {
     MSSQL_INIT.call_once(|| {
         if env::var("MSSQL_URL").is_ok() {
@@ -178,7 +178,7 @@ pub fn mssql_url() -> String {
         )
         .expect("write patched mssql sql");
 
-        let image = GenericImage::new("mcr.microsoft.com/mssql/server", "2022-CU12-ubuntu-22.04")
+        let image = GenericImage::new("mcr.microsoft.com/mssql/server", "2025-latest")
             .with_exposed_port(1433.tcp())
             .with_wait_for(WaitFor::seconds(60))
             .with_startup_timeout(Duration::from_secs(180))

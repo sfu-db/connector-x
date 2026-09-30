@@ -62,7 +62,7 @@ pub fn connect_oracle(conn: &Url) -> Connector {
 
     let params: HashMap<String, String> = conn.query_pairs().into_owned().collect();
 
-    let conn_str = if params.get("alias").map_or(false, |v| v == "true") {
+    let conn_str = if params.get("alias").is_some_and(|v| v == "true") {
         host.clone()
     } else {
         let port = conn.port().unwrap_or(1521);
@@ -207,7 +207,7 @@ where
         let mut ret = vec![];
         for query in &self.queries {
             let conn = self.get_conn()?;
-            ret.push(OracleSourcePartition::new(conn, &query, &self.schema));
+            ret.push(OracleSourcePartition::new(conn, query, &self.schema));
         }
         ret
     }

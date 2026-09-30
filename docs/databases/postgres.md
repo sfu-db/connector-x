@@ -34,6 +34,7 @@ cx.read_sql(conn, query)                                        # read data from
 | FLOAT8          | float64                   |                                    |
 | NUMERIC         | float64                   | cannot support precision larger than 28                                    |
 | TEXT            | object                    |                                    |
+| TSVECTOR        | object                    | PostgreSQL text representation, retaining lexemes, positions, and weights |
 | BPCHAR          | object                    |                                    |
 | VARCHAR         | object                    |                                    |
 | CHAR            | object                    |                                    |
@@ -61,6 +62,12 @@ cx.read_sql(conn, query)                                        # read data from
 | FLOAT4[]        | object                    | list of f64                        |
 | FLOAT8[]        | object                    | list of f64                        |
 | NUMERIC[]       | object                    | list of f64                        |
+
+`TSVECTOR` is returned as strings in Pandas, Arrow, and Polars without requiring
+an explicit cast in the query. Binary, CSV, cursor, and simple protocols are
+supported. As with other string columns, the CSV protocol cannot distinguish an
+empty vector (`''::tsvector`) from `NULL`; use binary, cursor, or simple to preserve
+that distinction. `TSQUERY` and `TSVECTOR[]` are not supported.
 
 ## Performance (db.m6g.4xlarge RDS)
 

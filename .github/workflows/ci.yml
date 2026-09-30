@@ -25,11 +25,9 @@ jobs:
           DEBIAN_FRONTEND: noninteractive
 
       - name: Install Rust
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: stable
-          components: rustfmt
-          default: true
+          components: rustfmt, clippy
 
       - uses: actions/cache@v6
         with:
@@ -44,31 +42,76 @@ jobs:
       - uses: extractions/setup-just@v4
 
       - name: Is the code formatted?
-        uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: --all -- --check -q
+        run: cargo fmt --all -- --check -q
 
       - name: Clippy linting
-        uses: actions-rs/cargo@v1
+        run: cargo clippy --features all
+
+      - name: Check each feature gate
+        run: just test-feature-gate
+
+      - name: Install cargo-llvm-cov
+        uses: taiki-e/install-action@cargo-llvm-cov
+
+      - name: Run unit tests and generate coverage
+        # Both this and the integration step below run under cargo-llvm-cov's
+        # instrumented build the whole time (RUSTFLAGS never changes between
+        # them), so despite two `just` invocations this is still one compile.
+        run: |
+          just coverage-unit
+          {
+            echo "### Rust unit test coverage"
+            echo '```text'
+            cargo llvm-cov report --summary-only
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Run integration tests and generate coverage
+        run: |
+          just coverage-integration
+          {
+            echo "### Rust integration test coverage"
+            echo '```text'
+            cargo llvm-cov report --summary-only
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # test_db.rs leaks each testcontainers::Container (std::mem::forget), and
+      # every pulled image (postgres, mysql, mssql, ...) stays on the runner's
+      # disk too, so the images accumulate across coverage-unit +
+      # coverage-integration within this same job. Stop/remove the leaked
+      # containers (label filter matches only containers testcontainers
+      # started), then prune now-unreferenced images to reclaim that space.
+      - name: Clean up test containers and images
+        if: always()
+        run: |
+          docker rm -f $(docker ps -aq --filter "label=org.testcontainers.managed-by=testcontainers") 2>/dev/null || true
+          docker image prune -af
+
+      - name: Upload unit coverage to Codecov
+        uses: codecov/codecov-action@v7
         with:
-          command: clippy
-          args: --features all
+          files: lcov-unit.info
+          flags: unit-tests
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
 
-      # - name: Check each feature gate
-      #   run: just test-feature-gate
-
-      - name: Run tests
-        run: cargo clean && just test-ci
+      - name: Upload integration coverage to Codecov
+        uses: codecov/codecov-action@v7
+        with:
+          files: lcov-integration.info
+          flags: integration-tests
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Test build docs
-        uses: actions-rs/cargo@v1
-        with:
-          command: doc
-          args: --no-deps --features all
+        run: cargo doc --no-deps --features all
 
   python:
     runs-on: ubuntu-latest
+    env:
+      # Force disable the GIL on free-threading because of https://github.com/sqlalchemy/sqlalchemy/discussions/13256
+      PYTHON_GIL: ${{ matrix.python-version == '3.14t' && '0' || '1' }}
     # Note: No 'container' - we run directly on the VM to access Docker for Testcontainers
     strategy:
       matrix:
@@ -117,11 +160,9 @@ jobs:
       - uses: extractions/setup-just@v4
 
       - name: Install Rust
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: stable
-          components: rustfmt
-          default: true
+          components: rustfmt, clippy
 
       - uses: actions/setup-java@v6
         with:
@@ -139,10 +180,7 @@ jobs:
           key: ${{ runner.os }}-cargo-python-${{ matrix.python-version }}-${{ secrets.CACHE_VERSION }}-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Clippy linting
-        uses: actions-rs/cargo@v1
-        with:
-          command: clippy
-          args: --features all --all
+        run: cargo clippy --features all --all
 
       - name: Cache venv
         uses: actions/cache@v6
@@ -153,9 +191,14 @@ jobs:
       - name: Install python dependencies
         run: just bootstrap-python
 
-      - name: Test python
-        run: just test-python
+      - name: Test python (mssql-tds)
+        run: just test-python --mssql-driver=mssql-tds --deselect=connectorx/tests/test_mssql.py::test_mssql_driver_switch
         # Integration tests provision required services at test time via Testcontainers
-        env:
-          # Force disable the GIL on free-threading because of https://github.com/sqlalchemy/sqlalchemy/discussions/13256
-          PYTHON_GIL: ${{ matrix.python-version == '3.14t' && '0' || '1' }}
+
+      - name: Test python MSSQL (Tiberius)
+        working-directory: connectorx-python
+        run: poetry run pytest connectorx/tests/test_mssql.py --mssql-driver=tiberius --deselect=connectorx/tests/test_mssql.py::test_mssql_driver_switch -v -s
+
+      - name: Test python MSSQL runtime switch
+        working-directory: connectorx-python
+        run: poetry run pytest connectorx/tests/test_mssql.py::test_mssql_driver_switch -v -s

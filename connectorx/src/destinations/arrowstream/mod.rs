@@ -136,21 +136,15 @@ impl ArrowDestination {
             std::mem::drop(self.sender);
         }
         let mut data = vec![];
-        loop {
-            match self.receiver.recv() {
-                Ok(rb) => data.push(rb),
-                Err(_) => break,
-            }
+        while let Ok(rb) = self.receiver.recv() {
+            data.push(rb);
         }
         data
     }
 
     #[throws(ArrowDestinationError)]
     pub fn record_batch(&mut self) -> Option<RecordBatch> {
-        match self.receiver.recv() {
-            Ok(rb) => Some(rb),
-            Err(_) => None,
-        }
+        self.receiver.recv().ok()
     }
 
     pub fn empty_batch(&self) -> RecordBatch {

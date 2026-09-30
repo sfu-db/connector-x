@@ -23,12 +23,10 @@ jobs:
         run: |
           echo "/opt/python/${{ matrix.python-version[0] }}/bin" >> $GITHUB_PATH
 
-      - uses: actions-rs/toolchain@v1
+      - uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: stable
           components: rustfmt
-          target: aarch64-unknown-linux-gnu
-          default: true
+          targets: aarch64-unknown-linux-gnu
 
       - uses: extractions/setup-just@v4
         env:
@@ -113,11 +111,9 @@ jobs:
           python-version: ${{ matrix.python-version }}
           architecture: x64
 
-      - uses: actions-rs/toolchain@v1
+      - uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: stable
           components: rustfmt
-          default: true
 
       - uses: extractions/setup-just@v4
         env:
@@ -162,12 +158,10 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - uses: actions-rs/toolchain@v1
+      - uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: stable
           components: rustfmt
-          target: aarch64-apple-darwin
-          default: true
+          targets: aarch64-apple-darwin
 
       - uses: extractions/setup-just@v4
         env:

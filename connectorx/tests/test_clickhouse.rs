@@ -3,8 +3,13 @@
 use arrow::array::*;
 use chrono::{NaiveDate, NaiveDateTime, NaiveTime, TimeZone, Utc};
 use connectorx::{
-    destinations::arrow::ArrowDestination, prelude::*, sources::clickhouse::ClickHouseSource,
-    sql::CXQuery, transports::ClickHouseArrowTransport,
+    destinations::arrow::ArrowDestination,
+    partition::{partition, PartitionQuery},
+    prelude::*,
+    source_router::parse_source,
+    sources::clickhouse::ClickHouseSource,
+    sql::CXQuery,
+    transports::ClickHouseArrowTransport,
 };
 use rust_decimal::Decimal;
 use std::str::FromStr;
@@ -158,6 +163,60 @@ fn run_clickhouse_query(query: &str) -> Vec<RecordBatch> {
     );
     dispatcher.run().unwrap();
     destination.arrow().unwrap()
+}
+
+#[test]
+fn test_clickhouse_lz4_compression() {
+    let batches = run_clickhouse_query(
+        "SELECT upper(getSetting('network_compression_method')) AS compression",
+    );
+    assert_strings!(&batches[0], 0, StringArray, &["LZ4"]);
+}
+
+#[test]
+fn test_clickhouse_partitioned_reads_and_counts() {
+    let dburl = test_db::clickhouse_url();
+    let conn = parse_source(&dburl, None).unwrap();
+    let query = "SELECT id FROM test_basic_types";
+    let queries = partition(&PartitionQuery::new(query, "id", None, None, 3), &conn).unwrap();
+    assert_eq!(queries.len(), 3);
+
+    let rt = Arc::new(Runtime::new().unwrap());
+    let mut source = ClickHouseSource::new(rt.clone(), &dburl).unwrap();
+    source.set_queries(&queries);
+    source.set_origin_query(Some(query.to_string()));
+    source.fetch_metadata().unwrap();
+    assert_eq!(source.names(), vec!["id"]);
+    assert_eq!(source.result_rows().unwrap(), Some(5));
+
+    let mut partitions = source.partition().unwrap();
+    let counts: Vec<_> = partitions
+        .iter_mut()
+        .map(|part| {
+            part.result_rows().unwrap();
+            part.nrows()
+        })
+        .collect();
+    assert_eq!(counts, vec![1, 1, 3]);
+
+    let source = ClickHouseSource::new(rt, &dburl).unwrap();
+    let mut destination = ArrowDestination::new();
+    Dispatcher::<_, _, ClickHouseArrowTransport>::new(
+        source,
+        &mut destination,
+        &queries,
+        Some(query.to_string()),
+    )
+    .run()
+    .unwrap();
+    let mut ids: Vec<_> = destination
+        .arrow()
+        .unwrap()
+        .iter()
+        .flat_map(|batch| col!(batch, 0, UInt32Array).values().to_vec())
+        .collect();
+    ids.sort_unstable();
+    assert_eq!(ids, vec![1, 2, 3, 4, 5]);
 }
 
 #[test]

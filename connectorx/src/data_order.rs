@@ -25,3 +25,39 @@ pub fn coordinate(src: &[DataOrder], dst: &[DataOrder]) -> DataOrder {
         )),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{coordinate, DataOrder};
+
+    #[test]
+    fn selects_matching_first_supported_order() {
+        assert!(matches!(
+            coordinate(&[DataOrder::RowMajor], &[DataOrder::RowMajor]),
+            Ok(DataOrder::RowMajor)
+        ));
+    }
+
+    #[test]
+    fn selects_matching_secondary_supported_order() {
+        assert!(matches!(
+            coordinate(
+                &[DataOrder::RowMajor, DataOrder::ColumnMajor],
+                &[DataOrder::ColumnMajor],
+            ),
+            Ok(DataOrder::ColumnMajor)
+        ));
+        assert!(matches!(
+            coordinate(
+                &[DataOrder::ColumnMajor],
+                &[DataOrder::RowMajor, DataOrder::ColumnMajor],
+            ),
+            Ok(DataOrder::ColumnMajor)
+        ));
+    }
+
+    #[test]
+    fn reports_when_orders_cannot_be_resolved() {
+        assert!(coordinate(&[DataOrder::RowMajor], &[DataOrder::ColumnMajor]).is_err());
+    }
+}

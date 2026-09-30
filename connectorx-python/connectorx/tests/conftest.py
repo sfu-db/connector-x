@@ -14,6 +14,24 @@ import urllib.request
 
 import pytest
 
+
+def pytest_addoption(parser: pytest.Parser) -> None:
+    parser.addoption(
+        "--mssql-driver",
+        choices=["tiberius", "mssql-tds"],
+        default=None,
+        help="Select the process-wide MSSQL driver before tests start.",
+    )
+
+
+def pytest_configure(config: pytest.Config) -> None:
+    driver = config.getoption("--mssql-driver")
+    if driver is not None:
+        import connectorx as cx
+
+        cx.mssql_driver = driver
+
+
 # Check if Docker is available
 try:
     from testcontainers.core.container import DockerContainer
@@ -359,7 +377,7 @@ def mssql_container() -> Generator[Optional[Any], None, None]:
     )
 
     mssql_container = SqlServerContainer(
-        image="mcr.microsoft.com/mssql/server:2022-CU12-ubuntu-22.04",
+        image="mcr.microsoft.com/mssql/server:2025-latest",
         username="SA",
         password="1Secure*Password1",
         dbname="tempdb",

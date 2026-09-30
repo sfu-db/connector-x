@@ -6,6 +6,17 @@ from connectorx import ConnectionUrl
 from .. import read_sql
 
 
+def test_mssql_driver_switch() -> None:
+    import connectorx as cx
+
+    assert cx.mssql_driver == "mssql-tds"
+    cx.mssql_driver = "tiberius"
+    assert cx.mssql_driver == "tiberius"
+    with pytest.raises(ValueError, match="invalid mssql driver"):
+        cx.mssql_driver = "invalid"
+    cx.mssql_driver = "mssql-tds"
+
+
 @pytest.mark.xfail
 def test_mssql_on_non_select(mssql_url: str) -> None:
     query = "CREATE TABLE non_select(id INTEGER NOT NULL)"
