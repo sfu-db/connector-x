@@ -59,18 +59,6 @@ its low-level types are not interchangeable with backend-specific types.
 Rust builds can select `src_mssql_tds` instead of `src_mssql`
 (`src_mssql_tiberius`) to link only TDS, or enable both for runtime selection.
 
-The TDS backend identifies its driver as `mssql-tds` in both the login library
-name (`sys.dm_exec_sessions.client_interface_name`) and the User-Agent payload.
-Its default application name (`program_name`) is `ConnectorX`; the connection
-URL's `appname` parameter overrides the application name without changing the
-driver name.
-
-Python builds send the installed `connectorx` package version (the same value
-as `connectorx.__version__`, including prerelease suffixes) as the User-Agent
-driver version. The numeric LOGIN7 driver version is unchanged. Rust-only builds
-retain the `mssql-tds` User-Agent version unless the embedding application calls
-`sources::mssql::set_user_agent_version` before opening connections.
-
 The TDS backend shares a bounded connection pool across metadata, row counts,
 and partition readers, sized by `MsSQLSource::new`'s `nconn`. Partitions acquire
 leases only while executing, so there may be more partitions than connections.
