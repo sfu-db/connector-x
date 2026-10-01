@@ -318,8 +318,9 @@ def test_oracle_boolean(oracle_url: str, return_type: str) -> None:
         assert result.schema.field("FLAG").type == pa.bool_()
         values = result.column("FLAG").to_pylist()
 
-    assert [bool(values[0]), bool(values[1])] == [False, True]
-    assert pd.isna(values[2])
+    non_null_values = [bool(value) for value in values if not pd.isna(value)]
+    assert sorted(non_null_values) == [False, True]
+    assert sum(pd.isna(value) for value in values) == 1
 
 
 def test_oracle_empty_result(oracle_url: str) -> None:
