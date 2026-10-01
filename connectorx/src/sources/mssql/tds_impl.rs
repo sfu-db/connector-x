@@ -103,7 +103,7 @@ fn build_client_context(url: &Url) -> (String, ClientContext) {
     // The User-Agent feature carries a separate driver name from LOGIN7.
     context
         .user_agent
-        .set_library_name("ConnectorX".to_string());
+        .set_library_name("connectorx".to_string());
     if let Some(version) = USER_AGENT_VERSION.get() {
         context.user_agent.set_driver_version(version.clone());
     }
@@ -188,7 +188,7 @@ mod configuration_tests {
             let url = Url::parse(&format!("mssql://localhost/db{query}")).unwrap();
             let (_, context) = build_client_context(&url).unwrap();
             assert_eq!(context.library_name, "mssql-tds");
-            assert_eq!(context.user_agent.library_name, "ConnectorX");
+            assert_eq!(context.user_agent.library_name, "connectorx");
             assert_eq!(context.application_name, expected_appname);
         }
     }
