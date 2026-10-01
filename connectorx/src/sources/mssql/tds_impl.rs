@@ -66,17 +66,27 @@ use url::Url;
 use urlencoding::decode;
 use uuid_old::Uuid;
 
-static USER_AGENT_VERSION: OnceLock<String> = OnceLock::new();
+#[derive(Clone, PartialEq)]
+struct UserAgentInfo {
+    version: String,
+    runtime: String,
+}
 
-/// Sets the wrapper's package version for the TDS User-Agent, leaving LOGIN7 unchanged.
+static USER_AGENT_INFO: OnceLock<UserAgentInfo> = OnceLock::new();
+
+/// Sets the wrapper's package version and runtime for the TDS User-Agent, leaving LOGIN7 unchanged.
 /// Language bindings should call this before creating connections. Reinitializing
-/// with the same version is allowed; a different version is rejected.
-pub fn set_user_agent_version(version: String) -> Result<(), &'static str> {
+/// with the same values is allowed; different values are rejected.
+pub fn set_user_agent_info(version: String, runtime: String) -> Result<(), &'static str> {
     if version.is_empty() {
         return Err("MSSQL User-Agent version must not be empty");
     }
-    if USER_AGENT_VERSION.get_or_init(|| version.clone()) != &version {
-        return Err("MSSQL User-Agent version is already initialized to a different version");
+    if runtime.is_empty() {
+        return Err("MSSQL User-Agent runtime must not be empty");
+    }
+    let info = UserAgentInfo { version, runtime };
+    if USER_AGENT_INFO.get_or_init(|| info.clone()) != &info {
+        return Err("MSSQL User-Agent is already initialized with different values");
     }
     Ok(())
 }
@@ -104,8 +114,9 @@ fn build_client_context(url: &Url) -> (String, ClientContext) {
     context
         .user_agent
         .set_library_name("connectorx".to_string());
-    if let Some(version) = USER_AGENT_VERSION.get() {
-        context.user_agent.set_driver_version(version.clone());
+    if let Some(info) = USER_AGENT_INFO.get() {
+        context.user_agent.set_driver_version(info.version.clone());
+        context.user_agent.set_runtime(info.runtime.clone());
     }
     context.application_name = "ConnectorX".to_string();
     context.database = decode(&url.path()[1..])?.into_owned();
@@ -162,16 +173,20 @@ mod configuration_tests {
     use super::*;
 
     #[test]
-    fn package_version_overrides_only_user_agent() {
-        assert!(set_user_agent_version(String::new()).is_err());
+    fn python_user_agent_info_preserves_login_version() {
         let version = "0.4.7a1";
-        set_user_agent_version(version.to_string()).unwrap();
-        set_user_agent_version(version.to_string()).unwrap();
-        assert!(set_user_agent_version("0.4.8".to_string()).is_err());
+        let runtime = "Python 3.12.3";
+        assert!(set_user_agent_info(String::new(), runtime.to_string()).is_err());
+        assert!(set_user_agent_info(version.to_string(), String::new()).is_err());
+        set_user_agent_info(version.to_string(), runtime.to_string()).unwrap();
+        set_user_agent_info(version.to_string(), runtime.to_string()).unwrap();
+        assert!(set_user_agent_info("0.4.8".to_string(), runtime.to_string()).is_err());
+        assert!(set_user_agent_info(version.to_string(), "Python 3.13.0".to_string()).is_err());
 
         let url = Url::parse("mssql://localhost/db").unwrap();
         let (_, context) = build_client_context(&url).unwrap();
         assert_eq!(context.user_agent.driver_version, version);
+        assert_eq!(context.user_agent.runtime, runtime);
         assert_eq!(
             context.driver_version,
             ClientContext::with_data_source("tcp:localhost,1433").driver_version
