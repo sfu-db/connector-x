@@ -37,6 +37,13 @@ fn connectorx(_: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(get_meta))?;
     #[cfg(feature = "srcs")]
     {
+        let version = m
+            .py()
+            .import("importlib.metadata")?
+            .call_method1("version", ("connectorx",))?
+            .extract::<String>()?;
+        ::connectorx::sources::mssql::set_user_agent_version(version)
+            .map_err(PyRuntimeError::new_err)?;
         m.add_wrapped(wrap_pyfunction!(get_mssql_driver))?;
         m.add_wrapped(wrap_pyfunction!(set_mssql_driver))?;
     }

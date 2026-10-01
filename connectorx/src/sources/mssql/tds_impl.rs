@@ -59,12 +59,27 @@ use sqlparser::dialect::MsSqlDialect;
 use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::ops::{Deref, DerefMut};
-use std::sync::Arc;
+use std::sync::{Arc, OnceLock};
 use std::time::Duration;
 use tokio::runtime::Runtime;
 use url::Url;
 use urlencoding::decode;
 use uuid_old::Uuid;
+
+static USER_AGENT_VERSION: OnceLock<String> = OnceLock::new();
+
+/// Sets the wrapper's package version for the TDS User-Agent, leaving LOGIN7 unchanged.
+/// Language bindings should call this before creating connections. Reinitializing
+/// with the same version is allowed; a different version is rejected.
+pub fn set_user_agent_version(version: String) -> Result<(), &'static str> {
+    if version.is_empty() {
+        return Err("MSSQL User-Agent version must not be empty");
+    }
+    if USER_AGENT_VERSION.get_or_init(|| version.clone()) != &version {
+        return Err("MSSQL User-Agent version is already initialized to a different version");
+    }
+    Ok(())
+}
 
 /// Builds the `mssql-tds` datasource string and [`ClientContext`] from a
 /// ConnectorX MSSQL connection URL. Mirrors
@@ -84,6 +99,15 @@ fn build_client_context(url: &Url) -> (String, ClientContext) {
     };
 
     let mut context = ClientContext::with_data_source(&datasource);
+    context.library_name = "mssql-tds".to_string();
+    // The User-Agent feature carries a separate driver name from LOGIN7.
+    context
+        .user_agent
+        .set_library_name(context.library_name.clone());
+    if let Some(version) = USER_AGENT_VERSION.get() {
+        context.user_agent.set_driver_version(version.clone());
+    }
+    context.application_name = "ConnectorX".to_string();
     context.database = decode(&url.path()[1..])?.into_owned();
 
     let params: HashMap<String, String> = url.query_pairs().into_owned().collect();
@@ -136,6 +160,38 @@ fn build_client_context(url: &Url) -> (String, ClientContext) {
 #[cfg(test)]
 mod configuration_tests {
     use super::*;
+
+    #[test]
+    fn package_version_overrides_only_user_agent() {
+        assert!(set_user_agent_version(String::new()).is_err());
+        let version = "0.4.7a1";
+        set_user_agent_version(version.to_string()).unwrap();
+        set_user_agent_version(version.to_string()).unwrap();
+        assert!(set_user_agent_version("0.4.8".to_string()).is_err());
+
+        let url = Url::parse("mssql://localhost/db").unwrap();
+        let (_, context) = build_client_context(&url).unwrap();
+        assert_eq!(context.user_agent.driver_version, version);
+        assert_eq!(
+            context.driver_version,
+            ClientContext::with_data_source("tcp:localhost,1433").driver_version
+        );
+    }
+
+    #[test]
+    fn driver_identity_and_application_name() {
+        for (query, expected_appname) in [
+            ("", "ConnectorX"),
+            ("?appname=Custom%20Application", "Custom Application"),
+            ("?appname=", ""),
+        ] {
+            let url = Url::parse(&format!("mssql://localhost/db{query}")).unwrap();
+            let (_, context) = build_client_context(&url).unwrap();
+            assert_eq!(context.library_name, "mssql-tds");
+            assert_eq!(context.user_agent.library_name, "mssql-tds");
+            assert_eq!(context.application_name, expected_appname);
+        }
+    }
 
     #[test]
     fn integrated_auth_respects_tiberius_platform_and_feature_gates() {

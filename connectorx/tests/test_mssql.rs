@@ -18,6 +18,42 @@ use tokio::runtime::Runtime;
 mod test_db;
 
 #[cfg(feature = "src_mssql_tds")]
+#[test]
+fn test_mssql_tds_session_identity() {
+    let rt = Arc::new(Runtime::new().unwrap());
+    let mut url = url::Url::parse(&test_db::mssql_url()).unwrap();
+    let params: Vec<_> = url
+        .query_pairs()
+        .into_owned()
+        .filter(|(key, _)| key != "appname")
+        .collect();
+    url.set_query(None);
+    url.query_pairs_mut().extend_pairs(params);
+
+    for appname in [None, Some("ConnectorX identity override")] {
+        let mut conn = url.clone();
+        if let Some(appname) = appname {
+            conn.query_pairs_mut().append_pair("appname", appname);
+        }
+        let mut source = MsSQLSource::new(rt.clone(), conn.as_str(), 1).unwrap();
+        source.set_queries(&[CXQuery::naked(
+            "SELECT CAST(client_interface_name AS varchar(128)) AS driver_name, \
+             CAST(program_name AS varchar(128)) AS application_name \
+             FROM sys.dm_exec_sessions WHERE session_id = @@SPID",
+        )]);
+        source.fetch_metadata().unwrap();
+        let mut partitions = source.partition().unwrap();
+        let mut parser = partitions[0].parser().unwrap();
+        assert_eq!(parser.fetch_next().unwrap(), (1, true));
+        assert_eq!(parser.parse::<Option<&str>>().unwrap(), Some("mssql-tds"));
+        assert_eq!(
+            parser.parse::<Option<&str>>().unwrap(),
+            Some(appname.unwrap_or("ConnectorX"))
+        );
+    }
+}
+
+#[cfg(feature = "src_mssql_tds")]
 mod tds_pool_tests {
     use super::*;
     use connectorx::constants::DB_BUFFER_SIZE;
