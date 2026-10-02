@@ -110,9 +110,55 @@ pub fn mssql_config(url: &Url) -> Config {
     config
 }
 
+/// Tiberius is being phased out (sfu-db/connector-x#942), so token
+/// authentication is only implemented for mssql-tds. Fail loudly rather than
+/// silently falling back to the URL's credentials.
+#[throws(MsSQLSourceError)]
+pub(crate) fn reject_access_token(access_token: Option<&str>) {
+    if access_token.is_some() {
+        throw!(anyhow!(
+            "access_token requires the mssql-tds driver; \
+             the Tiberius driver does not support Entra ID access tokens"
+        ));
+    }
+}
+
+#[cfg(test)]
+mod access_token_tests {
+    use super::*;
+
+    #[test]
+    fn tiberius_rejects_access_token_before_connecting() {
+        assert!(reject_access_token(None).is_ok());
+        let rt = Arc::new(Runtime::new().unwrap());
+        let err = MsSQLSource::new_with_access_token(
+            rt,
+            "mssql://localhost/db",
+            1,
+            Some("eyJ.token.sig"),
+        )
+        .err()
+        .unwrap();
+        assert!(err.to_string().contains("requires the mssql-tds driver"));
+    }
+}
+
 impl MsSQLSource {
     #[throws(MsSQLSourceError)]
     pub fn new(rt: Arc<Runtime>, conn: &str, nconn: usize) -> Self {
+        Self::new_with_access_token(rt, conn, nconn, None)?
+    }
+
+    /// Same signature as the mssql-tds backend so callers stay backend-agnostic;
+    /// Tiberius does not support access tokens, so any token is rejected.
+    #[throws(MsSQLSourceError)]
+    pub fn new_with_access_token(
+        rt: Arc<Runtime>,
+        conn: &str,
+        nconn: usize,
+        access_token: Option<&str>,
+    ) -> Self {
+        reject_access_token(access_token)?;
         debug!("mssql source using driver: {:?}", driver::active_driver());
         let url = Url::parse(conn)?;
         let config = mssql_config(&url)?;

@@ -170,19 +170,29 @@ pub fn get_col_range(source_conn: &SourceConn, query: &str, col: &str) -> OutRes
         #[cfg(feature = "src_mysql")]
         SourceType::MySQL => mysql_get_partition_range(&source_conn.conn, query, col),
         #[cfg(all(feature = "src_mssql_tiberius", not(feature = "src_mssql_tds")))]
-        SourceType::MsSQL => mssql_get_partition_range(&source_conn.conn, query, col),
+        SourceType::MsSQL => {
+            crate::sources::mssql::tiberius_reject_access_token(source_conn.access_token())?;
+            mssql_get_partition_range(&source_conn.conn, query, col)
+        }
         #[cfg(all(feature = "src_mssql_tiberius", feature = "src_mssql_tds"))]
         SourceType::MsSQL => match crate::sources::mssql::active_driver() {
             crate::sources::mssql::MsSQLDriverKind::Tiberius => {
+                crate::sources::mssql::tiberius_reject_access_token(source_conn.access_token())?;
                 mssql_get_partition_range(&source_conn.conn, query, col)
             }
-            crate::sources::mssql::MsSQLDriverKind::MssqlTds => Ok(
-                crate::sources::mssql::tds_get_partition_range(&source_conn.conn, query, col)?,
-            ),
+            crate::sources::mssql::MsSQLDriverKind::MssqlTds => {
+                Ok(crate::sources::mssql::tds_get_partition_range(
+                    &source_conn.conn,
+                    source_conn.access_token(),
+                    query,
+                    col,
+                )?)
+            }
         },
         #[cfg(all(feature = "src_mssql_tds", not(feature = "src_mssql_tiberius")))]
         SourceType::MsSQL => Ok(crate::sources::mssql::tds_get_partition_range(
             &source_conn.conn,
+            source_conn.access_token(),
             query,
             col,
         )?),

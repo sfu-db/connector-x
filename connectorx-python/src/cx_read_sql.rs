@@ -40,9 +40,16 @@ pub fn read_sql<'py>(
     queries: Option<Vec<String>>,
     partition_query: Option<PyPartitionQuery>,
     pre_execution_queries: Option<Vec<String>>,
+    access_token: Option<&str>,
     kwargs: Option<&Bound<PyDict>>,
 ) -> PyResult<Bound<'py, PyAny>> {
-    let source_conn = parse_source(conn, protocol).map_err(|e| ConnectorXPythonError::from(e))?;
+    let mut source_conn =
+        parse_source(conn, protocol).map_err(|e| ConnectorXPythonError::from(e))?;
+    if let Some(token) = access_token {
+        source_conn
+            .set_access_token(token)
+            .map_err(|e| ConnectorXPythonError::from(e))?;
+    }
     let (queries, origin_query) = match (queries, partition_query) {
         (Some(queries), None) => (queries.into_iter().map(CXQuery::Naked).collect(), None),
         (None, Some(part)) => {

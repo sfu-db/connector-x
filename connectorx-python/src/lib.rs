@@ -86,7 +86,7 @@ pub fn set_mssql_driver(driver: &str) -> PyResult<()> {
 }
 
 #[pyfunction]
-#[pyo3(signature = (conn, return_type, protocol=None, queries=None, partition_query=None, pre_execution_queries=None, *, **kwargs))]
+#[pyo3(signature = (conn, return_type, protocol=None, queries=None, partition_query=None, pre_execution_queries=None, *, access_token=None, **kwargs))]
 pub fn read_sql<'py>(
     py: Python<'py>,
     conn: &str,
@@ -95,6 +95,7 @@ pub fn read_sql<'py>(
     queries: Option<Vec<String>>,
     partition_query: Option<cx_read_sql::PyPartitionQuery>,
     pre_execution_queries: Option<Vec<String>>,
+    access_token: Option<&str>,
     kwargs: Option<&Bound<PyDict>>,
 ) -> PyResult<Bound<'py, PyAny>> {
     cx_read_sql::read_sql(
@@ -105,17 +106,25 @@ pub fn read_sql<'py>(
         queries,
         partition_query,
         pre_execution_queries,
+        access_token,
         kwargs,
     )
 }
 
 #[pyfunction]
+#[pyo3(signature = (conn, partition_query, *, access_token=None))]
 pub fn partition_sql(
     conn: &str,
     partition_query: cx_read_sql::PyPartitionQuery,
+    access_token: Option<&str>,
 ) -> PyResult<Vec<String>> {
-    let source_conn =
+    let mut source_conn =
         parse_source(conn, None).map_err(|e| crate::errors::ConnectorXPythonError::from(e))?;
+    if let Some(token) = access_token {
+        source_conn
+            .set_access_token(token)
+            .map_err(|e| crate::errors::ConnectorXPythonError::from(e))?;
+    }
     let queries = partition(&partition_query.into(), &source_conn)
         .map_err(|e| crate::errors::ConnectorXPythonError::from(e))?;
     Ok(queries.into_iter().map(|q| q.to_string()).collect())
@@ -146,13 +155,14 @@ pub fn read_sql2<'py>(
 }
 
 #[pyfunction]
-#[pyo3(signature = (conn, query, protocol=None))]
+#[pyo3(signature = (conn, query, protocol=None, *, access_token=None))]
 pub fn get_meta<'py>(
     py: Python<'py>,
     conn: &str,
     query: String,
     protocol: Option<&str>,
+    access_token: Option<&str>,
 ) -> PyResult<Bound<'py, PyAny>> {
-    pandas::get_meta::get_meta(py, conn, protocol.unwrap_or("binary"), query)
+    pandas::get_meta::get_meta(py, conn, protocol.unwrap_or("binary"), query, access_token)
         .map_err(|e| From::from(e))
 }
