@@ -290,37 +290,12 @@ def test_oracle_types(oracle_url: str) -> None:
             "TEST_BLOB": pd.Series(
                 [ b'9\xaf', b'9\xaf', b'9\xaf', None], dtype="object"
             ),
+            "TEST_BOOLEAN": pd.Series(
+                [True, False, False, None], dtype="boolean"
+            ),
         }
     )
     assert_frame_equal(df, expected, check_names=True)
-
-
-@pytest.mark.parametrize("return_type", ["pandas", "arrow", "arrow_stream"])
-def test_oracle_boolean(oracle_url: str, return_type: str) -> None:
-    import pyarrow as pa
-
-    query = """
-        SELECT flag FROM (
-            SELECT 1 AS sort_order, TRUE AS flag FROM dual
-            UNION ALL SELECT 2, FALSE FROM dual
-            UNION ALL SELECT 3, CAST(NULL AS BOOLEAN) FROM dual
-        )
-        ORDER BY sort_order
-    """
-    result = read_sql(oracle_url, query, return_type=return_type)
-
-    if return_type == "pandas":
-        assert result["FLAG"].dtype == pd.BooleanDtype()
-        values = result["FLAG"].tolist()
-    else:
-        if return_type == "arrow_stream":
-            result = pa.Table.from_batches(list(result))
-        assert result.schema.field("FLAG").type == pa.bool_()
-        values = result.column("FLAG").to_pylist()
-
-    non_null_values = [bool(value) for value in values if not pd.isna(value)]
-    assert sorted(non_null_values) == [False, True]
-    assert sum(pd.isna(value) for value in values) == 1
 
 
 def test_oracle_empty_result(oracle_url: str) -> None:
