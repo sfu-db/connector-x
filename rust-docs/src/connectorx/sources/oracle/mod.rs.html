@@ -366,38 +366,39 @@
 <a href=#366 id=366 data-nosnippet>366</a>
 <a href=#367 id=367 data-nosnippet>367</a><span class="macro">impl_produce_text!</span>(
 <a href=#368 id=368 data-nosnippet>368</a>    i64,
-<a href=#369 id=369 data-nosnippet>369</a>    f64,
-<a href=#370 id=370 data-nosnippet>370</a>    String,
-<a href=#371 id=371 data-nosnippet>371</a>    NaiveDate,
-<a href=#372 id=372 data-nosnippet>372</a>    NaiveDateTime,
-<a href=#373 id=373 data-nosnippet>373</a>    DateTime&lt;Utc&gt;,
-<a href=#374 id=374 data-nosnippet>374</a>    Vec&lt;u8&gt;,
-<a href=#375 id=375 data-nosnippet>375</a>);
-<a href=#376 id=376 data-nosnippet>376</a>
-<a href=#377 id=377 data-nosnippet>377</a><span class="comment">// Manual implementation for Decimal since Oracle doesn't support it directly via FromSql
-<a href=#378 id=378 data-nosnippet>378</a></span><span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, Decimal&gt; <span class="kw">for </span>OracleTextSourceParser&lt;<span class="lifetime">'a</span>&gt; {
-<a href=#379 id=379 data-nosnippet>379</a>    <span class="kw">type </span>Error = OracleSourceError;
-<a href=#380 id=380 data-nosnippet>380</a>
-<a href=#381 id=381 data-nosnippet>381</a>    <span class="attr">#[throws(OracleSourceError)]
-<a href=#382 id=382 data-nosnippet>382</a>    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; Decimal {
-<a href=#383 id=383 data-nosnippet>383</a>        <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
-<a href=#384 id=384 data-nosnippet>384</a>        <span class="kw">let </span>s: String = <span class="self">self</span>.rowbuf[ridx].get(cidx)<span class="question-mark">?</span>;
-<a href=#385 id=385 data-nosnippet>385</a>        <span class="kw">let </span>res = s.parse::&lt;Decimal&gt;()<span class="question-mark">?</span>;
-<a href=#386 id=386 data-nosnippet>386</a>        res
-<a href=#387 id=387 data-nosnippet>387</a>    }
-<a href=#388 id=388 data-nosnippet>388</a>}
-<a href=#389 id=389 data-nosnippet>389</a>
-<a href=#390 id=390 data-nosnippet>390</a><span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, <span class="prelude-ty">Option</span>&lt;Decimal&gt;&gt; <span class="kw">for </span>OracleTextSourceParser&lt;<span class="lifetime">'a</span>&gt; {
-<a href=#391 id=391 data-nosnippet>391</a>    <span class="kw">type </span>Error = OracleSourceError;
-<a href=#392 id=392 data-nosnippet>392</a>
-<a href=#393 id=393 data-nosnippet>393</a>    <span class="attr">#[throws(OracleSourceError)]
-<a href=#394 id=394 data-nosnippet>394</a>    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;Decimal&gt; {
-<a href=#395 id=395 data-nosnippet>395</a>        <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
-<a href=#396 id=396 data-nosnippet>396</a>        <span class="kw">let </span>s: <span class="prelude-ty">Option</span>&lt;String&gt; = <span class="self">self</span>.rowbuf[ridx].get(cidx)<span class="question-mark">?</span>;
-<a href=#397 id=397 data-nosnippet>397</a>        <span class="kw">match </span>s {
-<a href=#398 id=398 data-nosnippet>398</a>            <span class="prelude-val">Some</span>(val) =&gt; <span class="prelude-val">Some</span>(val.parse::&lt;Decimal&gt;()<span class="question-mark">?</span>),
-<a href=#399 id=399 data-nosnippet>399</a>            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None</span>,
-<a href=#400 id=400 data-nosnippet>400</a>        }
-<a href=#401 id=401 data-nosnippet>401</a>    }
-<a href=#402 id=402 data-nosnippet>402</a>}
+<a href=#369 id=369 data-nosnippet>369</a>    bool,
+<a href=#370 id=370 data-nosnippet>370</a>    f64,
+<a href=#371 id=371 data-nosnippet>371</a>    String,
+<a href=#372 id=372 data-nosnippet>372</a>    NaiveDate,
+<a href=#373 id=373 data-nosnippet>373</a>    NaiveDateTime,
+<a href=#374 id=374 data-nosnippet>374</a>    DateTime&lt;Utc&gt;,
+<a href=#375 id=375 data-nosnippet>375</a>    Vec&lt;u8&gt;,
+<a href=#376 id=376 data-nosnippet>376</a>);
+<a href=#377 id=377 data-nosnippet>377</a>
+<a href=#378 id=378 data-nosnippet>378</a><span class="comment">// Manual implementation for Decimal since Oracle doesn't support it directly via FromSql
+<a href=#379 id=379 data-nosnippet>379</a></span><span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, Decimal&gt; <span class="kw">for </span>OracleTextSourceParser&lt;<span class="lifetime">'a</span>&gt; {
+<a href=#380 id=380 data-nosnippet>380</a>    <span class="kw">type </span>Error = OracleSourceError;
+<a href=#381 id=381 data-nosnippet>381</a>
+<a href=#382 id=382 data-nosnippet>382</a>    <span class="attr">#[throws(OracleSourceError)]
+<a href=#383 id=383 data-nosnippet>383</a>    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; Decimal {
+<a href=#384 id=384 data-nosnippet>384</a>        <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
+<a href=#385 id=385 data-nosnippet>385</a>        <span class="kw">let </span>s: String = <span class="self">self</span>.rowbuf[ridx].get(cidx)<span class="question-mark">?</span>;
+<a href=#386 id=386 data-nosnippet>386</a>        <span class="kw">let </span>res = s.parse::&lt;Decimal&gt;()<span class="question-mark">?</span>;
+<a href=#387 id=387 data-nosnippet>387</a>        res
+<a href=#388 id=388 data-nosnippet>388</a>    }
+<a href=#389 id=389 data-nosnippet>389</a>}
+<a href=#390 id=390 data-nosnippet>390</a>
+<a href=#391 id=391 data-nosnippet>391</a><span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, <span class="prelude-ty">Option</span>&lt;Decimal&gt;&gt; <span class="kw">for </span>OracleTextSourceParser&lt;<span class="lifetime">'a</span>&gt; {
+<a href=#392 id=392 data-nosnippet>392</a>    <span class="kw">type </span>Error = OracleSourceError;
+<a href=#393 id=393 data-nosnippet>393</a>
+<a href=#394 id=394 data-nosnippet>394</a>    <span class="attr">#[throws(OracleSourceError)]
+<a href=#395 id=395 data-nosnippet>395</a>    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;Decimal&gt; {
+<a href=#396 id=396 data-nosnippet>396</a>        <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
+<a href=#397 id=397 data-nosnippet>397</a>        <span class="kw">let </span>s: <span class="prelude-ty">Option</span>&lt;String&gt; = <span class="self">self</span>.rowbuf[ridx].get(cidx)<span class="question-mark">?</span>;
+<a href=#398 id=398 data-nosnippet>398</a>        <span class="kw">match </span>s {
+<a href=#399 id=399 data-nosnippet>399</a>            <span class="prelude-val">Some</span>(val) =&gt; <span class="prelude-val">Some</span>(val.parse::&lt;Decimal&gt;()<span class="question-mark">?</span>),
+<a href=#400 id=400 data-nosnippet>400</a>            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None</span>,
+<a href=#401 id=401 data-nosnippet>401</a>        }
+<a href=#402 id=402 data-nosnippet>402</a>    }
+<a href=#403 id=403 data-nosnippet>403</a>}
 </code></pre></div></section></main></body></html>

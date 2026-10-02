@@ -49,6 +49,7 @@ cx.read_sql(conn, query)
 | DATE                      | datetime64[ns]              |                                    |
 | TIMESTAMP                 | datetime64[ns]              |                                    |
 | TIMESTAMP WITH TIME ZONE  | datetime64[ns]              |                                    |
+| BOOLEAN                   | bool, boolean(nullable)     | Native `BOOLEAN` column type, available since Oracle 23ai |
 
 ### Performance (db.r5.4xlarge RDS)
 
