@@ -49,6 +49,8 @@ pub fn active_driver() -> MsSQLDriverKind {
 
 #[cfg(feature = "src_mssql_tiberius")]
 pub use self::tiberius_impl::mssql_config;
+#[cfg(feature = "src_mssql_tiberius")]
+pub(crate) use self::tiberius_impl::reject_access_token as tiberius_reject_access_token;
 #[cfg(all(feature = "src_mssql_tiberius", not(feature = "src_mssql_tds")))]
 pub use self::tiberius_impl::{MsSQLSource, MsSQLSourceParser, MsSQLSourcePartition};
 

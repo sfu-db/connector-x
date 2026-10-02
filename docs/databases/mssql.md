@@ -54,6 +54,34 @@ its low-level types are not interchangeable with backend-specific types.
 * By adding `trust_server_certificate_ca=/path/to/ca-cert.crt` to connection uri parameter, the SQLServer certificate will be validated against the given CA certificate in addition to the system-truststore.
     * Example: `mssql://host:port/db?encrypt=true&trust_server_certificate_ca=/path/to/ca-cert.crt`
 
+### Microsoft Entra ID access token
+
+With the default `mssql-tds` driver, Azure SQL Database, Azure SQL Managed
+Instance and other Entra ID-enabled servers can be queried with a Microsoft
+Entra ID (formerly Azure AD) access token. The token is passed through the
+`access_token` argument, never in the connection string:
+
+```py
+import connectorx as cx
+from azure.identity import DefaultAzureCredential
+
+token = DefaultAzureCredential().get_token("https://database.windows.net/.default").token
+conn = "mssql://myserver.database.windows.net:1433/mydb?encrypt=true"  # no username/password
+df = cx.read_sql(conn, "SELECT * FROM table", access_token=token)
+```
+
+* Pass the raw token string; ConnectorX handles the wire encoding.
+* `access_token` is also accepted by `get_meta`, `partition_sql` and `read_sql_pandas`.
+* The connection string must not contain a username or password, nor
+  `trusted_connection=true`; combining them with a token is an error.
+* Tokens expire (typically after 60–90 minutes). ConnectorX only uses the token
+  to open connections for the current call, so acquire a fresh token (or reuse
+  a cached, unexpired one from `azure-identity`) for each call.
+* The Tiberius driver (`cx.mssql_driver = "tiberius"`) does not support access
+  tokens and raises an error when one is given.
+* Rust users can call `MsSQLSource::new_with_access_token`, or
+  `SourceConn::set_access_token` before `get_arrow` / `new_record_batch_iter`.
+
 ### `mssql-tds` backend details
 
 Rust builds can select `src_mssql_tds` instead of `src_mssql`

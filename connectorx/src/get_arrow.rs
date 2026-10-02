@@ -205,7 +205,12 @@ pub fn get_arrow(
         #[cfg(feature = "src_mssql_common")]
         SourceType::MsSQL => {
             let rt = Arc::new(tokio::runtime::Runtime::new().expect("Failed to create runtime"));
-            let source = MsSQLSource::new(rt, &source_conn.conn[..], queries.len())?;
+            let source = MsSQLSource::new_with_access_token(
+                rt,
+                &source_conn.conn[..],
+                queries.len(),
+                source_conn.access_token(),
+            )?;
             let dispatcher = Dispatcher::<_, _, MsSQLArrowTransport>::new(
                 source,
                 &mut destination,
@@ -442,7 +447,12 @@ pub fn new_record_batch_iter(
         #[cfg(feature = "src_mssql_common")]
         SourceType::MsSQL => {
             let rt = Arc::new(tokio::runtime::Runtime::new().expect("Failed to create runtime"));
-            let source = MsSQLSource::new(rt, &source_conn.conn[..], queries.len())?;
+            let source = MsSQLSource::new_with_access_token(
+                rt,
+                &source_conn.conn[..],
+                queries.len(),
+                source_conn.access_token(),
+            )?;
             let batch_iter = ArrowBatchIter::<_, MsSQLArrowStreamTransport>::new(
                 source,
                 destination,

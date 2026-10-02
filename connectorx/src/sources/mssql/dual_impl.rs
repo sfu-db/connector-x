@@ -35,13 +35,25 @@ impl MsSQLSource {
     /// Captures the current driver choice and lets that backend create its pool.
     /// Later changes to the process-wide setting do not affect this source.
     pub fn new(rt: Arc<Runtime>, conn: &str, nconn: usize) -> Result<Self, MsSQLSourceError> {
+        Self::new_with_access_token(rt, conn, nconn, None)
+    }
+
+    /// Like [`MsSQLSource::new`], authenticating with a Microsoft Entra ID
+    /// access token when given. Only the mssql-tds backend supports tokens;
+    /// the Tiberius backend rejects them.
+    pub fn new_with_access_token(
+        rt: Arc<Runtime>,
+        conn: &str,
+        nconn: usize,
+        access_token: Option<&str>,
+    ) -> Result<Self, MsSQLSourceError> {
         match driver::active_driver() {
             MsSQLDriverKind::Tiberius => Ok(MsSQLSource::Tiberius(
-                tiberius_impl::MsSQLSource::new(rt, conn, nconn)?,
+                tiberius_impl::MsSQLSource::new_with_access_token(rt, conn, nconn, access_token)?,
             )),
-            MsSQLDriverKind::MssqlTds => Ok(MsSQLSource::MssqlTds(tds_impl::MsSQLSource::new(
-                rt, conn, nconn,
-            )?)),
+            MsSQLDriverKind::MssqlTds => Ok(MsSQLSource::MssqlTds(
+                tds_impl::MsSQLSource::new_with_access_token(rt, conn, nconn, access_token)?,
+            )),
         }
     }
 }

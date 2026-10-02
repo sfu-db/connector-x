@@ -546,3 +546,90 @@ def test_mssql_decimal_pandas_unchanged(mssql_url: str) -> None:
     assert df['test_decimal'][0] == 1.0
     assert df['test_decimal'][1] == 2.0
     assert pd.isna(df['test_decimal'][2])
+
+# Entra ID access-token authentication (mssql-tds only). These checks fail
+# before any network I/O, so they don't need a database.
+FAKE_TOKEN = "eyJ0eXAiOiJKV1QifQ.e30.c2ln"
+TOKENLESS_URL = "mssql://localhost:1/db"
+URL_WITH_CREDENTIALS = "mssql://user:pass@localhost:1/db"
+
+
+@pytest.fixture
+def mssql_driver_selector():
+    import connectorx as cx
+
+    previous = cx.mssql_driver
+    yield cx
+    cx.mssql_driver = previous
+
+
+@pytest.mark.parametrize("return_type", ["pandas", "arrow", "arrow_stream", "polars"])
+def test_mssql_access_token_reaches_driver(mssql_driver_selector, return_type: str) -> None:
+    mssql_driver_selector.mssql_driver = "mssql-tds"
+    with pytest.raises(RuntimeError, match="cannot be combined with a username or password"):
+        read_sql(URL_WITH_CREDENTIALS, "SELECT 1", return_type=return_type, access_token=FAKE_TOKEN)
+
+
+def test_mssql_access_token_reaches_partition_range_query(mssql_driver_selector) -> None:
+    mssql_driver_selector.mssql_driver = "mssql-tds"
+    with pytest.raises(RuntimeError, match="cannot be combined with a username or password"):
+        read_sql(
+            URL_WITH_CREDENTIALS,
+            "SELECT * FROM test_table",
+            partition_on="test_int",
+            partition_num=2,
+            access_token=FAKE_TOKEN,
+        )
+
+
+def test_mssql_access_token_reaches_get_meta_and_partition_sql(mssql_driver_selector) -> None:
+    import connectorx as cx
+
+    mssql_driver_selector.mssql_driver = "mssql-tds"
+    with pytest.raises(RuntimeError, match="cannot be combined with a username or password"):
+        cx.get_meta(URL_WITH_CREDENTIALS, "SELECT 1", access_token=FAKE_TOKEN)
+    with pytest.raises(RuntimeError, match="cannot be combined with a username or password"):
+        cx.partition_sql(
+            URL_WITH_CREDENTIALS, "SELECT * FROM t", "id", 2, access_token=FAKE_TOKEN
+        )
+
+
+def test_mssql_access_token_rejects_trusted_connection(mssql_driver_selector) -> None:
+    mssql_driver_selector.mssql_driver = "mssql-tds"
+    with pytest.raises(RuntimeError, match="trusted_connection"):
+        read_sql(
+            TOKENLESS_URL + "?trusted_connection=true",
+            "SELECT 1",
+            access_token=FAKE_TOKEN,
+        )
+
+
+@pytest.mark.parametrize("partition_on", [None, "id"])
+def test_mssql_access_token_rejected_by_tiberius(
+    mssql_driver_selector, partition_on: str | None
+) -> None:
+    mssql_driver_selector.mssql_driver = "tiberius"
+    with pytest.raises(RuntimeError, match="requires the mssql-tds driver"):
+        read_sql(
+            TOKENLESS_URL,
+            "SELECT 1 AS id",
+            partition_on=partition_on,
+            partition_num=2 if partition_on else None,
+            access_token=FAKE_TOKEN,
+        )
+
+
+@pytest.mark.parametrize("token", ["", "   "])
+def test_mssql_access_token_must_not_be_empty(token: str) -> None:
+    with pytest.raises(RuntimeError, match="must not be empty"):
+        read_sql(TOKENLESS_URL, "SELECT 1", access_token=token)
+
+
+def test_access_token_rejected_for_other_sources() -> None:
+    with pytest.raises(RuntimeError, match="only supported for SQL Server"):
+        read_sql("postgresql://user:pass@localhost:1/db", "SELECT 1", access_token=FAKE_TOKEN)
+
+
+def test_access_token_rejected_for_federated_query() -> None:
+    with pytest.raises(ValueError, match="Federated query does not support access_token"):
+        read_sql({"db1": TOKENLESS_URL}, "SELECT 1", access_token=FAKE_TOKEN)

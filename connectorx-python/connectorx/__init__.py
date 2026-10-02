@@ -77,6 +77,8 @@ def get_meta(
     conn: str | ConnectionUrl,
     query: str,
     protocol: Protocol | None = None,
+    *,
+    access_token: str | None = None,
 ) -> pd.DataFrame:
     """
     Get metadata (header) of the given query (only for pandas)
@@ -90,10 +92,12 @@ def get_meta(
     protocol
       backend-specific transfer protocol directive; defaults to 'binary' (except for redshift
       connection strings, where 'cursor' will be used instead).
+    access_token
+      a Microsoft Entra ID access token for SQL Server; see `read_sql`.
 
     """
     conn, protocol = rewrite_conn(conn, protocol)
-    result = _get_meta(conn, query, protocol)
+    result = _get_meta(conn, query, protocol, access_token=access_token)
     df = reconstruct_pandas(result)
     return df
 
@@ -104,6 +108,8 @@ def partition_sql(
     partition_on: str,
     partition_num: int,
     partition_range: tuple[int, int] | None = None,
+    *,
+    access_token: str | None = None,
 ) -> list[str]:
     """
     Partition the sql query
@@ -120,6 +126,8 @@ def partition_sql(
       how many partitions to generate.
     partition_range
       the value range of the partition column.
+    access_token
+      a Microsoft Entra ID access token for SQL Server; see `read_sql`.
     """
     partition_query = {
         "query": query,
@@ -128,7 +136,7 @@ def partition_sql(
         "max": partition_range and partition_range[1],
         "num": partition_num,
     }
-    return _partition_sql(conn, partition_query)
+    return _partition_sql(conn, partition_query, access_token=access_token)
 
 
 def read_sql_pandas(
@@ -140,6 +148,7 @@ def read_sql_pandas(
     partition_range: tuple[int, int] | None = None,
     partition_num: int | None = None,
     pre_execution_queries: list[str] | str | None = None,
+    access_token: str | None = None,
 ) -> pd.DataFrame:
     """
     Run the SQL query, download the data from database into a dataframe.
@@ -170,6 +179,7 @@ def read_sql_pandas(
         partition_num=partition_num,
         index_col=index_col,
         pre_execution_queries=pre_execution_queries,
+        access_token=access_token,
     )
 
 
@@ -185,6 +195,7 @@ def read_sql(
     partition_num: int | None = None,
     index_col: str | None = None,
     pre_execution_query: list[str] | str | None = None,
+    access_token: str | None = None,
     **kwargs
 ) -> pd.DataFrame: ...
 
@@ -201,6 +212,7 @@ def read_sql(
     partition_num: int | None = None,
     index_col: str | None = None,
     pre_execution_query: list[str] | str | None = None,
+    access_token: str | None = None,
     **kwargs
 ) -> pd.DataFrame: ...
 
@@ -217,6 +229,7 @@ def read_sql(
     partition_num: int | None = None,
     index_col: str | None = None,
     pre_execution_query: list[str] | str | None = None,
+    access_token: str | None = None,
     **kwargs
 ) -> pa.Table: ...
 
@@ -233,6 +246,7 @@ def read_sql(
     partition_num: int | None = None,
     index_col: str | None = None,
     pre_execution_query: list[str] | str | None = None,
+    access_token: str | None = None,
     **kwargs
 ) -> mpd.DataFrame: ...
 
@@ -249,6 +263,7 @@ def read_sql(
     partition_num: int | None = None,
     index_col: str | None = None,
     pre_execution_query: list[str] | str | None = None,
+    access_token: str | None = None,
     **kwargs
 ) -> dd.DataFrame: ...
 
@@ -265,6 +280,7 @@ def read_sql(
     partition_num: int | None = None,
     index_col: str | None = None,
     pre_execution_query: list[str] | str | None = None,
+    access_token: str | None = None,
     **kwargs
 ) -> pl.DataFrame: ...
 
@@ -283,6 +299,7 @@ def read_sql(
     index_col: str | None = None,
     strategy: str | None = None,
     pre_execution_query: list[str] | str | None = None,
+    access_token: str | None = None,
     **kwargs
 
 ) -> pd.DataFrame | mpd.DataFrame | dd.DataFrame | pl.DataFrame | pa.Table | pa.RecordBatchReader:
@@ -313,6 +330,11 @@ def read_sql(
     pre_execution_query
       SQL query or list of SQL queries executed before main query; can be used to set runtime
       configurations using SET statements; only applicable for source "Postgres" and "MySQL".
+    access_token
+      a Microsoft Entra ID (Azure AD) access token used to authenticate instead of credentials in
+      the connection string; only applicable for SQL Server with the default "mssql-tds" driver.
+      Pass the raw token string, e.g. ``credential.get_token("https://database.windows.net/.default").token``,
+      and acquire a fresh one before it expires.
     batch_size
       the maximum size of each batch when return type is `arrow_stream`.
 
@@ -348,6 +370,8 @@ def read_sql(
         assert (
             protocol is None
         ), "Federated query does not support specifying protocol for now"
+        if access_token is not None:
+            raise ValueError("Federated query does not support access_token")
 
         query = remove_ending_semicolon(query)
 
@@ -408,6 +432,7 @@ def read_sql(
             protocol=protocol,
             partition_query=partition_query,
             pre_execution_queries=pre_execution_queries,
+            access_token=access_token,
         )
         df = reconstruct_pandas(result)
 
@@ -431,6 +456,7 @@ def read_sql(
             protocol=protocol,
             partition_query=partition_query,
             pre_execution_queries=pre_execution_queries,
+            access_token=access_token,
         )
 
         df = reconstruct_arrow(result)
@@ -450,6 +476,7 @@ def read_sql(
             protocol=protocol,
             partition_query=partition_query,
             pre_execution_queries=pre_execution_queries,
+            access_token=access_token,
             batch_size=batch_size
         )
 

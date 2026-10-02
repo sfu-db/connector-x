@@ -204,7 +204,12 @@ pub fn write_pandas<'a, 'py: 'a>(
         },
         SourceType::MsSQL => {
             let rt = Arc::new(tokio::runtime::Runtime::new().expect("Failed to create runtime"));
-            let source = MsSQLSource::new(rt, &source_conn.conn[..], queries.len())?;
+            let source = MsSQLSource::new_with_access_token(
+                rt,
+                &source_conn.conn[..],
+                queries.len(),
+                source_conn.access_token(),
+            )?;
             let dispatcher = PandasDispatcher::<_, MsSQLPandasTransport>::new(
                 source,
                 destination,

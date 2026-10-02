@@ -39,8 +39,12 @@ pub fn get_meta<'py>(
     conn: &str,
     protocol: &str,
     query: String,
+    access_token: Option<&str>,
 ) -> Bound<'py, PyAny> {
-    let source_conn = SourceConn::try_from(conn)?;
+    let mut source_conn = SourceConn::try_from(conn)?;
+    if let Some(token) = access_token {
+        source_conn.set_access_token(token)?;
+    }
     let destination = PandasDestination::new();
     let queries = &[CXQuery::Naked(query)];
 
@@ -175,7 +179,12 @@ pub fn get_meta<'py>(
         }
         SourceType::MsSQL => {
             let rt = Arc::new(tokio::runtime::Runtime::new().expect("Failed to create runtime"));
-            let source = MsSQLSource::new(rt, &source_conn.conn[..], 1)?;
+            let source = MsSQLSource::new_with_access_token(
+                rt,
+                &source_conn.conn[..],
+                1,
+                source_conn.access_token(),
+            )?;
             let dispatcher = PandasDispatcher::<_, MsSQLPandasTransport>::new(
                 source,
                 destination,
