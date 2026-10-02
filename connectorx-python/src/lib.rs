@@ -42,7 +42,11 @@ fn connectorx(_: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
             .import("importlib.metadata")?
             .call_method1("version", ("connectorx",))?
             .extract::<String>()?;
-        let runtime = format!("Python {}", Python::version_str());
+        let python_version = m.py().import("sys")?.getattr("version_info")?;
+        let major = python_version.getattr("major")?.extract::<u8>()?;
+        let minor = python_version.getattr("minor")?.extract::<u8>()?;
+        let micro = python_version.getattr("micro")?.extract::<u8>()?;
+        let runtime = format!("Python {major}.{minor}.{micro}");
         ::connectorx::sources::mssql::set_user_agent_info(version, runtime)
             .map_err(PyRuntimeError::new_err)?;
         m.add_wrapped(wrap_pyfunction!(get_mssql_driver))?;
