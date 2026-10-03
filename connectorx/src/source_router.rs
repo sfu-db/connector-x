@@ -2,7 +2,7 @@ use crate::constants::CONNECTORX_PROTOCOL;
 use crate::errors::{ConnectorXError, Result};
 use crate::utils::remove_query_params;
 use anyhow::anyhow;
-use fehler::{throw, throws};
+use fehler::throws;
 #[cfg(feature = "src_postgres")]
 use redshift_iam::redshift_to_postgres;
 use std::convert::TryFrom;
@@ -22,29 +22,11 @@ pub enum SourceType {
     Unknown,
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct SourceConn {
     pub ty: SourceType,
     pub conn: Url,
     pub proto: String,
-    // Kept out of `conn` so the secret never appears in connection URLs, and
-    // private so it can only be set through the validating setter.
-    access_token: Option<String>,
-}
-
-// Hand-written so the access token is redacted from logs and error messages.
-impl std::fmt::Debug for SourceConn {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("SourceConn")
-            .field("ty", &self.ty)
-            .field("conn", &self.conn)
-            .field("proto", &self.proto)
-            .field(
-                "access_token",
-                &self.access_token.as_ref().map(|_| "<redacted>"),
-            )
-            .finish()
-    }
 }
 
 impl TryFrom<&str> for SourceConn {
@@ -87,35 +69,10 @@ impl TryFrom<&str> for SourceConn {
 
 impl SourceConn {
     pub fn new(ty: SourceType, conn: Url, proto: String) -> Self {
-        Self {
-            ty,
-            conn,
-            proto,
-            access_token: None,
-        }
+        Self { ty, conn, proto }
     }
     pub fn set_protocol(&mut self, protocol: &str) {
         self.proto = protocol.to_string();
-    }
-
-    /// Sets a Microsoft Entra ID access token (the raw JWT) used to
-    /// authenticate instead of credentials in the connection URL.
-    /// Only SQL Server sources accept a token.
-    #[throws(ConnectorXError)]
-    pub fn set_access_token(&mut self, token: &str) {
-        if !matches!(self.ty, SourceType::MsSQL) {
-            throw!(anyhow!(
-                "access_token is only supported for SQL Server (mssql://) connections"
-            ));
-        }
-        if token.trim().is_empty() {
-            throw!(anyhow!("access_token must not be empty"));
-        }
-        self.access_token = Some(token.to_string());
-    }
-
-    pub fn access_token(&self) -> Option<&str> {
-        self.access_token.as_deref()
     }
 }
 
@@ -157,37 +114,5 @@ mod tests {
 
         assert_eq!(source_conn.conn.query(), Some("a=x%20y&b=%2Fz"));
         assert_eq!(source_conn.proto, "binary");
-    }
-
-    #[test]
-    fn access_token_is_only_accepted_for_mssql() {
-        let mut mssql = SourceConn::try_from("mssql://host:1433/db").unwrap();
-        assert_eq!(mssql.access_token(), None);
-        mssql.set_access_token("eyJ.token.sig").unwrap();
-        assert_eq!(mssql.access_token(), Some("eyJ.token.sig"));
-
-        let mut postgres = SourceConn::try_from("postgresql://host:5432/db").unwrap();
-        let err = postgres.set_access_token("eyJ.token.sig").unwrap_err();
-        assert!(err.to_string().contains("only supported for SQL Server"));
-        assert_eq!(postgres.access_token(), None);
-    }
-
-    #[test]
-    fn empty_access_token_is_rejected() {
-        let mut mssql = SourceConn::try_from("mssql://host:1433/db").unwrap();
-        for token in ["", "  "] {
-            let err = mssql.set_access_token(token).unwrap_err();
-            assert!(err.to_string().contains("must not be empty"));
-        }
-        assert_eq!(mssql.access_token(), None);
-    }
-
-    #[test]
-    fn debug_output_redacts_access_token() {
-        let mut mssql = SourceConn::try_from("mssql://host:1433/db").unwrap();
-        mssql.set_access_token("eyJ.secret-token.sig").unwrap();
-        let debug = format!("{:?}", mssql);
-        assert!(!debug.contains("secret-token"));
-        assert!(debug.contains("<redacted>"));
     }
 }

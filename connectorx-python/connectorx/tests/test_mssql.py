@@ -1,3 +1,5 @@
+import secrets
+
 import pandas as pd
 import pytest
 from pandas.testing import assert_frame_equal
@@ -547,11 +549,21 @@ def test_mssql_decimal_pandas_unchanged(mssql_url: str) -> None:
     assert df['test_decimal'][1] == 2.0
     assert pd.isna(df['test_decimal'][2])
 
-# Entra ID access-token authentication (mssql-tds only). These checks fail
-# before any network I/O, so they don't need a database.
-FAKE_TOKEN = "eyJ0eXAiOiJKV1QifQ.e30.c2ln"
+# Entra ID access-token authentication via MsSqlOptions (mssql-tds only). These
+# checks fail before any network I/O, so they don't need a database.
 TOKENLESS_URL = "mssql://localhost:1/db"
 URL_WITH_CREDENTIALS = "mssql://user:pass@localhost:1/db"
+
+
+def _random_token() -> str:
+    # Random and not JWT-shaped, so credential scanners have nothing to flag.
+    return "test-token-" + secrets.token_hex(16)
+
+
+def _token_options():
+    import connectorx as cx
+
+    return cx.MsSqlOptions(access_token=_random_token())
 
 
 @pytest.fixture
@@ -563,11 +575,41 @@ def mssql_driver_selector():
     cx.mssql_driver = previous
 
 
+def test_mssql_options_repr_redacts_access_token() -> None:
+    import connectorx as cx
+
+    token = _random_token()
+    options = cx.MsSqlOptions(access_token=token)
+    assert token not in repr(options)
+    assert repr(options) == "MsSqlOptions(access_token=<redacted>)"
+    assert repr(cx.MsSqlOptions()) == "MsSqlOptions(access_token=None)"
+
+
+@pytest.mark.parametrize("token", ["", "   "])
+def test_mssql_options_reject_empty_access_token(token: str) -> None:
+    import connectorx as cx
+
+    with pytest.raises(ValueError, match="must not be empty"):
+        cx.MsSqlOptions(access_token=token)
+
+
+def test_mssql_options_access_token_is_keyword_only() -> None:
+    import connectorx as cx
+
+    with pytest.raises(TypeError):
+        cx.MsSqlOptions(_random_token())
+
+
 @pytest.mark.parametrize("return_type", ["pandas", "arrow", "arrow_stream", "polars"])
 def test_mssql_access_token_reaches_driver(mssql_driver_selector, return_type: str) -> None:
     mssql_driver_selector.mssql_driver = "mssql-tds"
     with pytest.raises(RuntimeError, match="cannot be combined with a username or password"):
-        read_sql(URL_WITH_CREDENTIALS, "SELECT 1", return_type=return_type, access_token=FAKE_TOKEN)
+        read_sql(
+            URL_WITH_CREDENTIALS,
+            "SELECT 1",
+            return_type=return_type,
+            source_options=_token_options(),
+        )
 
 
 def test_mssql_access_token_reaches_partition_range_query(mssql_driver_selector) -> None:
@@ -578,7 +620,7 @@ def test_mssql_access_token_reaches_partition_range_query(mssql_driver_selector)
             "SELECT * FROM test_table",
             partition_on="test_int",
             partition_num=2,
-            access_token=FAKE_TOKEN,
+            source_options=_token_options(),
         )
 
 
@@ -587,10 +629,10 @@ def test_mssql_access_token_reaches_get_meta_and_partition_sql(mssql_driver_sele
 
     mssql_driver_selector.mssql_driver = "mssql-tds"
     with pytest.raises(RuntimeError, match="cannot be combined with a username or password"):
-        cx.get_meta(URL_WITH_CREDENTIALS, "SELECT 1", access_token=FAKE_TOKEN)
+        cx.get_meta(URL_WITH_CREDENTIALS, "SELECT 1", source_options=_token_options())
     with pytest.raises(RuntimeError, match="cannot be combined with a username or password"):
         cx.partition_sql(
-            URL_WITH_CREDENTIALS, "SELECT * FROM t", "id", 2, access_token=FAKE_TOKEN
+            URL_WITH_CREDENTIALS, "SELECT * FROM t", "id", 2, source_options=_token_options()
         )
 
 
@@ -600,7 +642,7 @@ def test_mssql_access_token_rejects_trusted_connection(mssql_driver_selector) ->
         read_sql(
             TOKENLESS_URL + "?trusted_connection=true",
             "SELECT 1",
-            access_token=FAKE_TOKEN,
+            source_options=_token_options(),
         )
 
 
@@ -609,27 +651,33 @@ def test_mssql_access_token_rejected_by_tiberius(
     mssql_driver_selector, partition_on: str | None
 ) -> None:
     mssql_driver_selector.mssql_driver = "tiberius"
-    with pytest.raises(RuntimeError, match="requires the mssql-tds driver"):
+    with pytest.raises(
+        RuntimeError, match="Entra ID access token support is not implemented for Tiberius"
+    ):
         read_sql(
             TOKENLESS_URL,
             "SELECT 1 AS id",
             partition_on=partition_on,
             partition_num=2 if partition_on else None,
-            access_token=FAKE_TOKEN,
+            source_options=_token_options(),
         )
 
 
-@pytest.mark.parametrize("token", ["", "   "])
-def test_mssql_access_token_must_not_be_empty(token: str) -> None:
-    with pytest.raises(RuntimeError, match="must not be empty"):
-        read_sql(TOKENLESS_URL, "SELECT 1", access_token=token)
+def test_mssql_options_rejected_for_other_sources() -> None:
+    import connectorx as cx
+
+    with pytest.raises(RuntimeError, match="only be used with SQL Server"):
+        read_sql("postgresql://user:pass@localhost:1/db", "SELECT 1", source_options=_token_options())
+    with pytest.raises(RuntimeError, match="only be used with SQL Server"):
+        cx.get_meta("postgresql://user:pass@localhost:1/db", "SELECT 1", source_options=_token_options())
 
 
-def test_access_token_rejected_for_other_sources() -> None:
-    with pytest.raises(RuntimeError, match="only supported for SQL Server"):
-        read_sql("postgresql://user:pass@localhost:1/db", "SELECT 1", access_token=FAKE_TOKEN)
+@pytest.mark.parametrize("bad", [{"access_token": "x"}, "token", 1])
+def test_source_options_must_be_a_typed_options_object(bad) -> None:
+    with pytest.raises(TypeError, match="source_options must be a connectorx.MsSqlOptions"):
+        read_sql(TOKENLESS_URL, "SELECT 1", source_options=bad)
 
 
-def test_access_token_rejected_for_federated_query() -> None:
-    with pytest.raises(ValueError, match="Federated query does not support access_token"):
-        read_sql({"db1": TOKENLESS_URL}, "SELECT 1", access_token=FAKE_TOKEN)
+def test_source_options_rejected_for_federated_query() -> None:
+    with pytest.raises(ValueError, match="Federated query does not support source_options"):
+        read_sql({"db1": TOKENLESS_URL}, "SELECT 1", source_options=_token_options())

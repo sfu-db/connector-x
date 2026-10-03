@@ -23,6 +23,7 @@ compile_error!("MSSQL source requires either `src_mssql_tiberius` or `src_mssql_
 
 mod driver;
 mod errors;
+mod options;
 mod typesystem;
 
 #[cfg(all(feature = "src_mssql_tiberius", feature = "src_mssql_tds"))]
@@ -34,7 +35,11 @@ mod tiberius_impl;
 
 pub use self::driver::MsSQLDriverKind;
 pub use self::errors::MsSQLSourceError;
+pub use self::options::MsSqlOptions;
 pub use self::typesystem::{FloatN, IntN, MsSQLTypeSystem};
+
+#[cfg(test)]
+pub(crate) use self::options::tests::random_test_token;
 
 #[cfg(all(feature = "src_mssql_tiberius", feature = "src_mssql_tds"))]
 pub use self::driver::set_active_driver;
@@ -50,7 +55,7 @@ pub fn active_driver() -> MsSQLDriverKind {
 #[cfg(feature = "src_mssql_tiberius")]
 pub use self::tiberius_impl::mssql_config;
 #[cfg(feature = "src_mssql_tiberius")]
-pub(crate) use self::tiberius_impl::reject_access_token as tiberius_reject_access_token;
+pub(crate) use self::tiberius_impl::reject_unsupported_options as tiberius_reject_unsupported_options;
 #[cfg(all(feature = "src_mssql_tiberius", not(feature = "src_mssql_tds")))]
 pub use self::tiberius_impl::{MsSQLSource, MsSQLSourceParser, MsSQLSourcePartition};
 
