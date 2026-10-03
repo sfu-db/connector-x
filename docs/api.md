@@ -17,7 +17,7 @@ connectorx.read_sql(conn: Union[str, Dict[str, str]], query: Union[List[str], st
 - `partition_num: Optional[int]`: The number of partitions to generate.
 - `index_col: Optional[str]`: The index column to set for the result dataframe. Only applicable when `return_type` is `pandas`, `modin` or `dask`. 
 - `pre_execution_query: Optional[Union[str, List[str]]]`: SQL query or list of SQL queries executed before main query. Can be used to set runtime configurations using SET statements. Only applicable for source "Postgres" and "MySQL"
-- `access_token: Optional[str]`: Microsoft Entra ID (Azure AD) access token used instead of credentials in the connection string. Only applicable for source "MsSQL" with the default `mssql-tds` driver. See [MsSQL](./databases/mssql.md#microsoft-entra-id-access-token).
+- `source_options: Optional[MsSqlOptions]`: Database-specific options that are not part of the connection string. Currently `connectorx.MsSqlOptions` for source "MsSQL", e.g. `MsSqlOptions(access_token=token)` to authenticate with a Microsoft Entra ID (Azure AD) access token with the default `mssql-tds` driver. See [MsSQL](./databases/mssql.md#microsoft-entra-id-access-token).
 - `batch_size: Optional[int]`: The maximum number of rows of each batch when `return_type=arrow_stream`.
 
 ## Examples

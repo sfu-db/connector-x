@@ -1,5 +1,6 @@
 use connectorx::{
-    partition::{partition, PartitionQuery},
+    partition::{partition_with_options, PartitionQuery},
+    source_options::SourceOptions,
     source_router::parse_source,
     sql::CXQuery,
 };
@@ -40,21 +41,15 @@ pub fn read_sql<'py>(
     queries: Option<Vec<String>>,
     partition_query: Option<PyPartitionQuery>,
     pre_execution_queries: Option<Vec<String>>,
-    access_token: Option<&str>,
+    options: &SourceOptions,
     kwargs: Option<&Bound<PyDict>>,
 ) -> PyResult<Bound<'py, PyAny>> {
-    let mut source_conn =
-        parse_source(conn, protocol).map_err(|e| ConnectorXPythonError::from(e))?;
-    if let Some(token) = access_token {
-        source_conn
-            .set_access_token(token)
-            .map_err(|e| ConnectorXPythonError::from(e))?;
-    }
+    let source_conn = parse_source(conn, protocol).map_err(|e| ConnectorXPythonError::from(e))?;
     let (queries, origin_query) = match (queries, partition_query) {
         (Some(queries), None) => (queries.into_iter().map(CXQuery::Naked).collect(), None),
         (None, Some(part)) => {
             let origin_query = Some(part.query.clone());
-            let queries = partition(&part.into(), &source_conn)
+            let queries = partition_with_options(&part.into(), &source_conn, options)
                 .map_err(|e| ConnectorXPythonError::from(e))?;
             (queries, origin_query)
         }
@@ -73,6 +68,7 @@ pub fn read_sql<'py>(
             origin_query,
             &queries,
             pre_execution_queries.as_deref(),
+            options,
         )?),
         "arrow" => Ok(crate::arrow::write_arrow(
             py,
@@ -80,6 +76,7 @@ pub fn read_sql<'py>(
             origin_query,
             &queries,
             pre_execution_queries.as_deref(),
+            options,
         )?),
         "arrow_stream" => {
             let batch_size = kwargs
@@ -94,6 +91,7 @@ pub fn read_sql<'py>(
                 &queries,
                 pre_execution_queries.as_deref(),
                 batch_size,
+                options,
             )?)
         }
 

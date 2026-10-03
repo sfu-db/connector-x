@@ -158,6 +158,7 @@ pub mod fed_rewriter;
 #[cfg(feature = "dst_arrow")]
 pub mod get_arrow;
 pub mod partition;
+pub mod source_options;
 pub mod source_router;
 pub mod sources;
 #[doc(hidden)]
@@ -184,7 +185,11 @@ pub mod prelude {
     #[cfg(feature = "federation")]
     pub use crate::fed_rewriter::{rewrite_sql, FederatedDataSourceInfo, Plan};
     #[cfg(feature = "dst_arrow")]
-    pub use crate::get_arrow::{get_arrow, new_record_batch_iter};
+    pub use crate::get_arrow::{
+        get_arrow, get_arrow_with_options, new_record_batch_iter,
+        new_record_batch_iter_with_options,
+    };
+    pub use crate::source_options::SourceOptions;
     pub use crate::source_router::*;
     #[cfg(feature = "src_bigquery")]
     pub use crate::sources::bigquery::BigQuerySource;

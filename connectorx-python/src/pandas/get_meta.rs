@@ -8,6 +8,7 @@ use super::{
     },
 };
 use crate::errors::ConnectorXPythonError;
+use connectorx::source_options::SourceOptions;
 use connectorx::source_router::{SourceConn, SourceType};
 use connectorx::{
     prelude::*,
@@ -39,12 +40,10 @@ pub fn get_meta<'py>(
     conn: &str,
     protocol: &str,
     query: String,
-    access_token: Option<&str>,
+    options: &SourceOptions,
 ) -> Bound<'py, PyAny> {
-    let mut source_conn = SourceConn::try_from(conn)?;
-    if let Some(token) = access_token {
-        source_conn.set_access_token(token)?;
-    }
+    let source_conn = SourceConn::try_from(conn)?;
+    options.check_source_type(&source_conn.ty)?;
     let destination = PandasDestination::new();
     let queries = &[CXQuery::Naked(query)];
 
@@ -179,11 +178,11 @@ pub fn get_meta<'py>(
         }
         SourceType::MsSQL => {
             let rt = Arc::new(tokio::runtime::Runtime::new().expect("Failed to create runtime"));
-            let source = MsSQLSource::new_with_access_token(
+            let source = MsSQLSource::new_with_options(
                 rt,
                 &source_conn.conn[..],
                 1,
-                source_conn.access_token(),
+                &options.mssql_or_default(),
             )?;
             let dispatcher = PandasDispatcher::<_, MsSQLPandasTransport>::new(
                 source,

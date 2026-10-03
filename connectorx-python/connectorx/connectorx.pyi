@@ -18,6 +18,9 @@ class _DataframeInfos(TypedDict):
 
 _ArrowInfos = tuple[list[_Header], list[list[tuple[_ArrowArrayPtr, _ArrowSchemaPtr]]]]
 
+class MsSqlOptions:
+    def __init__(self, *, access_token: str | None = None) -> None: ...
+
 @overload
 def read_sql(
     conn: str,
@@ -27,7 +30,7 @@ def read_sql(
     partition_query: dict[str, Any] | None,
     pre_execution_queries: list[str] | None,
     *,
-    access_token: str | None = None,
+    source_options: MsSqlOptions | None = None,
     **kwargs
 ) -> _DataframeInfos: ...
 @overload
@@ -39,11 +42,11 @@ def read_sql(
     partition_query: dict[str, Any] | None,
     pre_execution_queries: list[str] | None,
     *,
-    access_token: str | None = None,
+    source_options: MsSqlOptions | None = None,
     **kwargs
 ) -> _ArrowInfos: ...
 def partition_sql(
-    conn: str, partition_query: dict[str, Any], *, access_token: str | None = None
+    conn: str, partition_query: dict[str, Any], *, source_options: MsSqlOptions | None = None
 ) -> list[str]: ...
 def read_sql2(sql: str, db_map: dict[str, str]) -> _ArrowInfos: ...
 def get_meta(
@@ -51,7 +54,7 @@ def get_meta(
     protocol: Literal["csv", "binary", "cursor", "simple", "text"] | None,
     query: str,
     *,
-    access_token: str | None = None,
+    source_options: MsSqlOptions | None = None,
 ) -> _DataframeInfos: ...
 def get_mssql_driver() -> str: ...
 def set_mssql_driver(driver: str) -> None: ...

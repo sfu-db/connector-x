@@ -2,6 +2,7 @@ use std::convert::TryFrom;
 use std::sync::Arc;
 
 use crate::errors::{ConnectorXOutError, OutResult};
+use crate::source_options::SourceOptions;
 use crate::source_router::{SourceConn, SourceType};
 #[cfg(feature = "src_bigquery")]
 use crate::sources::bigquery::BigQueryDialect;
@@ -79,6 +80,19 @@ impl PartitionQuery {
 }
 
 pub fn partition(part: &PartitionQuery, source_conn: &SourceConn) -> OutResult<Vec<CXQuery>> {
+    partition_with_options(part, source_conn, &SourceOptions::default())
+}
+
+/// Like [`partition`], applying backend-specific `options` to the connection
+/// used to discover the partition range.
+// Same error type as `partition`; shrinking `ConnectorXOutError` is out of scope.
+#[allow(clippy::result_large_err)]
+pub fn partition_with_options(
+    part: &PartitionQuery,
+    source_conn: &SourceConn,
+    options: &SourceOptions,
+) -> OutResult<Vec<CXQuery>> {
+    options.check_source_type(&source_conn.ty)?;
     let mut queries = vec![];
 
     if part.num == 0 {
@@ -93,7 +107,9 @@ pub fn partition(part: &PartitionQuery, source_conn: &SourceConn) -> OutResult<V
     })?;
 
     let (min, max) = match (part.min, part.max) {
-        (None, None) => get_col_range(source_conn, &part.query, &part.column)?,
+        (None, None) => {
+            get_col_range_with_options(source_conn, &part.query, &part.column, options)?
+        }
         (Some(min), Some(max)) => (min, max),
         _ => throw!(anyhow!(
             "partition_query range can not be partially specified",
@@ -162,6 +178,21 @@ pub fn partition(part: &PartitionQuery, source_conn: &SourceConn) -> OutResult<V
 }
 
 pub fn get_col_range(source_conn: &SourceConn, query: &str, col: &str) -> OutResult<(i64, i64)> {
+    get_col_range_with_options(source_conn, query, col, &SourceOptions::default())
+}
+
+/// Like [`get_col_range`], applying backend-specific `options` to the
+/// connection that runs the range query.
+// Same error type as `get_col_range`; shrinking `ConnectorXOutError` is out of scope.
+#[allow(clippy::result_large_err)]
+#[allow(unused_variables)]
+pub fn get_col_range_with_options(
+    source_conn: &SourceConn,
+    query: &str,
+    col: &str,
+    options: &SourceOptions,
+) -> OutResult<(i64, i64)> {
+    options.check_source_type(&source_conn.ty)?;
     match source_conn.ty {
         #[cfg(feature = "src_postgres")]
         SourceType::Postgres => pg_get_partition_range(&source_conn.conn, query, col),
@@ -171,19 +202,23 @@ pub fn get_col_range(source_conn: &SourceConn, query: &str, col: &str) -> OutRes
         SourceType::MySQL => mysql_get_partition_range(&source_conn.conn, query, col),
         #[cfg(all(feature = "src_mssql_tiberius", not(feature = "src_mssql_tds")))]
         SourceType::MsSQL => {
-            crate::sources::mssql::tiberius_reject_access_token(source_conn.access_token())?;
+            let mssql_options = options.mssql_or_default();
+            mssql_options.validate()?;
+            crate::sources::mssql::tiberius_reject_unsupported_options(&mssql_options)?;
             mssql_get_partition_range(&source_conn.conn, query, col)
         }
         #[cfg(all(feature = "src_mssql_tiberius", feature = "src_mssql_tds"))]
         SourceType::MsSQL => match crate::sources::mssql::active_driver() {
             crate::sources::mssql::MsSQLDriverKind::Tiberius => {
-                crate::sources::mssql::tiberius_reject_access_token(source_conn.access_token())?;
+                let mssql_options = options.mssql_or_default();
+                mssql_options.validate()?;
+                crate::sources::mssql::tiberius_reject_unsupported_options(&mssql_options)?;
                 mssql_get_partition_range(&source_conn.conn, query, col)
             }
             crate::sources::mssql::MsSQLDriverKind::MssqlTds => {
                 Ok(crate::sources::mssql::tds_get_partition_range(
                     &source_conn.conn,
-                    source_conn.access_token(),
+                    &options.mssql_or_default(),
                     query,
                     col,
                 )?)
@@ -192,7 +227,7 @@ pub fn get_col_range(source_conn: &SourceConn, query: &str, col: &str) -> OutRes
         #[cfg(all(feature = "src_mssql_tds", not(feature = "src_mssql_tiberius")))]
         SourceType::MsSQL => Ok(crate::sources::mssql::tds_get_partition_range(
             &source_conn.conn,
-            source_conn.access_token(),
+            &options.mssql_or_default(),
             query,
             col,
         )?),
