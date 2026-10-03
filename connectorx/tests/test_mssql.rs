@@ -20,6 +20,9 @@ mod test_db;
 #[cfg(feature = "src_mssql_tds")]
 #[test]
 fn test_mssql_tds_session_identity() {
+    let default_library_name =
+        mssql_tds::connection::client_context::ClientContext::with_data_source("tcp:localhost,1433")
+            .library_name;
     let rt = Arc::new(Runtime::new().unwrap());
     let mut url = url::Url::parse(&test_db::mssql_url()).unwrap();
     let params: Vec<_> = url
@@ -45,7 +48,10 @@ fn test_mssql_tds_session_identity() {
         let mut partitions = source.partition().unwrap();
         let mut parser = partitions[0].parser().unwrap();
         assert_eq!(parser.fetch_next().unwrap(), (1, true));
-        assert_eq!(parser.parse::<Option<&str>>().unwrap(), Some("mssql-tds"));
+        assert_eq!(
+            parser.parse::<Option<&str>>().unwrap(),
+            Some(default_library_name.as_str())
+        );
         assert_eq!(
             parser.parse::<Option<&str>>().unwrap(),
             Some(appname.unwrap_or("ConnectorX"))

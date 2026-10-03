@@ -109,7 +109,6 @@ fn build_client_context(url: &Url) -> (String, ClientContext) {
     };
 
     let mut context = ClientContext::with_data_source(&datasource);
-    context.library_name = "mssql-tds".to_string();
     // The User-Agent feature carries a separate driver name from LOGIN7.
     context
         .user_agent
@@ -202,7 +201,10 @@ mod configuration_tests {
         ] {
             let url = Url::parse(&format!("mssql://localhost/db{query}")).unwrap();
             let (_, context) = build_client_context(&url).unwrap();
-            assert_eq!(context.library_name, "mssql-tds");
+            assert_eq!(
+                context.library_name,
+                ClientContext::with_data_source("tcp:localhost,1433").library_name
+            );
             assert_eq!(context.user_agent.library_name, "connectorx");
             assert_eq!(context.application_name, expected_appname);
         }
