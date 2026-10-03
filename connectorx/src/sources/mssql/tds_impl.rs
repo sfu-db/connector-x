@@ -32,6 +32,7 @@
 
 use super::driver;
 use super::errors::MsSQLSourceError;
+use super::options::MsSqlOptions;
 use super::typesystem::{FloatN, IntN, MsSQLTypeSystem};
 use crate::constants::DB_BUFFER_SIZE;
 use crate::{
@@ -66,12 +67,33 @@ use url::Url;
 use urlencoding::decode;
 use uuid_old::Uuid;
 
+/// Rejects an access token combined with other credentials instead of silently
+/// ignoring them, so callers always know which identity is used.
+#[throws(MsSQLSourceError)]
+fn validate_access_token_auth(url: &Url, params: &HashMap<String, String>) {
+    if !url.username().is_empty() || url.password().is_some() {
+        throw!(anyhow!(
+            "access_token cannot be combined with a username or password in the connection URL"
+        ));
+    }
+    if params
+        .get("trusted_connection")
+        .is_some_and(|v| v.eq_ignore_ascii_case("true"))
+    {
+        throw!(anyhow!(
+            "access_token cannot be combined with trusted_connection=true"
+        ));
+    }
+}
+
 /// Builds the `mssql-tds` datasource string and [`ClientContext`] from a
 /// ConnectorX MSSQL connection URL. Mirrors
 /// [`super::tiberius_impl::mssql_config`]'s parsing, but expressed against
-/// `mssql-tds`'s config surface.
+/// `mssql-tds`'s config surface. An access token in `options` (never read
+/// from the URL) replaces the URL's credentials.
 #[throws(MsSQLSourceError)]
-fn build_client_context(url: &Url) -> (String, ClientContext) {
+fn build_client_context(url: &Url, options: &MsSqlOptions) -> (String, ClientContext) {
+    options.validate()?;
     let host = decode(url.host_str().unwrap_or("localhost"))?.into_owned();
     let port = url.port().unwrap_or(1433);
     let hosts: Vec<&str> = host.split('\\').collect();
@@ -88,16 +110,23 @@ fn build_client_context(url: &Url) -> (String, ClientContext) {
 
     let params: HashMap<String, String> = url.query_pairs().into_owned().collect();
 
-    match params.get("trusted_connection") {
-        Some(v) if v == "true" && cfg!(any(windows, feature = "integrated-auth-gssapi")) => {
-            debug!("mssql-tds auth through integrated (SSPI) authentication");
-            context.tds_authentication_method = TdsAuthenticationMethod::SSPI;
-        }
-        _ => {
-            debug!("mssql-tds auth through sqlserver authentication");
-            context.tds_authentication_method = TdsAuthenticationMethod::Password;
-            context.user_name = decode(url.username())?.into_owned();
-            context.password = decode(url.password().unwrap_or(""))?.into_owned();
+    if let Some(token) = options.access_token() {
+        validate_access_token_auth(url, &params)?;
+        debug!("mssql-tds auth through Entra ID access token");
+        context.tds_authentication_method = TdsAuthenticationMethod::AccessToken;
+        context.access_token = Some(token.to_owned());
+    } else {
+        match params.get("trusted_connection") {
+            Some(v) if v == "true" && cfg!(any(windows, feature = "integrated-auth-gssapi")) => {
+                debug!("mssql-tds auth through integrated (SSPI) authentication");
+                context.tds_authentication_method = TdsAuthenticationMethod::SSPI;
+            }
+            _ => {
+                debug!("mssql-tds auth through sqlserver authentication");
+                context.tds_authentication_method = TdsAuthenticationMethod::Password;
+                context.user_name = decode(url.username())?.into_owned();
+                context.password = decode(url.password().unwrap_or(""))?.into_owned();
+            }
         }
     }
 
@@ -136,6 +165,11 @@ fn build_client_context(url: &Url) -> (String, ClientContext) {
 #[cfg(test)]
 mod configuration_tests {
     use super::*;
+    use crate::sources::mssql::random_test_token;
+
+    fn token_options() -> MsSqlOptions {
+        MsSqlOptions::new().with_access_token(random_test_token())
+    }
 
     #[test]
     fn integrated_auth_respects_tiberius_platform_and_feature_gates() {
@@ -144,7 +178,7 @@ mod configuration_tests {
                 "mssql://test_user:test_password@localhost/db?trusted_connection={trusted}"
             ))
             .unwrap();
-            let (_, context) = build_client_context(&url).unwrap();
+            let (_, context) = build_client_context(&url, &MsSqlOptions::default()).unwrap();
             if trusted == "true" && cfg!(any(windows, feature = "integrated-auth-gssapi")) {
                 assert!(matches!(
                     context.tds_authentication_method,
@@ -187,7 +221,7 @@ mod configuration_tests {
                     url.query_pairs_mut()
                         .append_pair("trust_server_certificate", trust);
                 }
-                let (_, context) = build_client_context(&url).unwrap();
+                let (_, context) = build_client_context(&url, &MsSqlOptions::default()).unwrap();
                 assert_eq!(
                     context.encryption_options,
                     EncryptionOptions {
@@ -210,9 +244,92 @@ mod configuration_tests {
                  &trust_server_certificate_ca=ca.pem"
             ))
             .unwrap();
-            let err = build_client_context(&url).err().unwrap();
+            let err = build_client_context(&url, &MsSqlOptions::default())
+                .err()
+                .unwrap();
             assert!(err.to_string().contains("not CA validation"));
         }
+    }
+
+    #[test]
+    fn access_token_selects_token_auth_without_url_credentials() {
+        let url = Url::parse("mssql://server.database.windows.net/db?encrypt=true").unwrap();
+        let token = random_test_token();
+        let options = MsSqlOptions::new().with_access_token(token.clone());
+        let (_, context) = build_client_context(&url, &options).unwrap();
+        assert!(matches!(
+            context.tds_authentication_method,
+            TdsAuthenticationMethod::AccessToken
+        ));
+        assert_eq!(context.access_token.as_deref(), Some(token.as_str()));
+        assert!(context.user_name.is_empty());
+        assert!(context.password.is_empty());
+        assert_eq!(context.encryption_options.mode, EncryptionSetting::Required);
+    }
+
+    #[test]
+    fn no_access_token_keeps_existing_auth() {
+        let url = Url::parse("mssql://localhost/db").unwrap();
+        let (_, context) = build_client_context(&url, &MsSqlOptions::default()).unwrap();
+        assert!(matches!(
+            context.tds_authentication_method,
+            TdsAuthenticationMethod::Password
+        ));
+        assert_eq!(context.access_token, None);
+    }
+
+    #[test]
+    fn empty_access_token_is_rejected() {
+        let url = Url::parse("mssql://localhost/db").unwrap();
+        let options = MsSqlOptions::new().with_access_token(" ");
+        let err = build_client_context(&url, &options).err().unwrap();
+        assert!(err.to_string().contains("must not be empty"));
+    }
+
+    #[test]
+    fn access_token_rejects_url_credentials() {
+        for url in [
+            "mssql://user@localhost/db",
+            "mssql://user:pass@localhost/db",
+            "mssql://:pass@localhost/db",
+        ] {
+            let url = Url::parse(url).unwrap();
+            let err = build_client_context(&url, &token_options()).err().unwrap();
+            assert!(
+                err.to_string().contains("username or password"),
+                "{}: {}",
+                url,
+                err
+            );
+        }
+    }
+
+    #[test]
+    fn access_token_rejects_trusted_connection() {
+        for trusted in ["true", "TRUE"] {
+            let url = Url::parse(&format!(
+                "mssql://localhost/db?trusted_connection={trusted}"
+            ))
+            .unwrap();
+            let err = build_client_context(&url, &token_options()).err().unwrap();
+            assert!(err.to_string().contains("trusted_connection"));
+        }
+        let url = Url::parse("mssql://localhost/db?trusted_connection=false").unwrap();
+        assert!(build_client_context(&url, &token_options()).is_ok());
+    }
+
+    #[test]
+    fn access_token_conflicts_fail_when_building_the_source() {
+        let rt = Arc::new(Runtime::new().unwrap());
+        let err = MsSQLSource::new_with_options(
+            rt,
+            "mssql://user:pass@localhost/db",
+            1,
+            &token_options(),
+        )
+        .err()
+        .unwrap();
+        assert!(err.to_string().contains("username or password"));
     }
 
     #[test]
@@ -226,14 +343,15 @@ mod configuration_tests {
 }
 
 #[throws(MsSQLSourceError)]
-fn open_connection(rt: &Runtime, url: &Url) -> TdsClient {
-    let (datasource, context) = build_client_context(url)?;
+fn open_connection(rt: &Runtime, url: &Url, options: &MsSqlOptions) -> TdsClient {
+    let (datasource, context) = build_client_context(url, options)?;
     let provider = TdsConnectionProvider::new();
     rt.block_on(provider.create_client(context, &datasource, None))?
 }
 
 struct ConnectionManager {
     url: Url,
+    options: MsSqlOptions,
 }
 
 #[async_trait::async_trait]
@@ -242,7 +360,7 @@ impl ManageConnection for ConnectionManager {
     type Error = MsSQLSourceError;
 
     async fn connect(&self) -> Result<TdsClient, Self::Error> {
-        let (datasource, context) = build_client_context(&self.url)?;
+        let (datasource, context) = build_client_context(&self.url, &self.options)?;
         Ok(TdsConnectionProvider::new()
             .create_client(context, &datasource, None)
             .await?)
@@ -263,18 +381,26 @@ impl ManageConnection for ConnectionManager {
 }
 
 #[throws(MsSQLSourceError)]
-fn connection_pool(rt: &Runtime, url: &Url, nconn: usize) -> Pool<ConnectionManager> {
+fn connection_pool(
+    rt: &Runtime,
+    url: &Url,
+    options: &MsSqlOptions,
+    nconn: usize,
+) -> Pool<ConnectionManager> {
     let max_size = u32::try_from(nconn)
         .ok()
         .filter(|&size| size > 0)
         .ok_or_else(|| anyhow!("MsSQL pool size must be between 1 and {}", u32::MAX))?;
     // Fail on unsupported URL options even before the first checkout.
-    build_client_context(url)?;
+    build_client_context(url, options)?;
     rt.block_on(
         Pool::builder()
             .max_size(max_size)
             .test_on_check_out(true)
-            .build(ConnectionManager { url: url.clone() }),
+            .build(ConnectionManager {
+                url: url.clone(),
+                options: options.clone(),
+            }),
     )?
 }
 
@@ -355,10 +481,15 @@ fn first_row(rt: &Runtime, client: &mut TdsClient, sql: String) -> Option<Vec<Co
 }
 
 #[throws(MsSQLSourceError)]
-pub(crate) fn tds_get_partition_range(url: &Url, query: &str, col: &str) -> (i64, i64) {
+pub(crate) fn tds_get_partition_range(
+    url: &Url,
+    options: &MsSqlOptions,
+    query: &str,
+    col: &str,
+) -> (i64, i64) {
     let range_query = get_partition_range_query(query, col, &MsSqlDialect {})?;
     let rt = Runtime::new().map_err(anyhow::Error::from)?;
-    let mut client = open_connection(&rt, url)?;
+    let mut client = open_connection(&rt, url, options)?;
     rt.block_on(client.execute(range_query, ()))?;
     let types: Vec<_> = client
         .get_metadata()
@@ -467,9 +598,21 @@ pub struct MsSQLSource {
 impl MsSQLSource {
     #[throws(MsSQLSourceError)]
     pub fn new(rt: Arc<Runtime>, conn: &str, nconn: usize) -> Self {
+        Self::new_with_options(rt, conn, nconn, &MsSqlOptions::default())?
+    }
+
+    /// Like [`MsSQLSource::new`], applying SQL Server [`MsSqlOptions`] (such as
+    /// an Entra ID access token) to every connection the source opens.
+    #[throws(MsSQLSourceError)]
+    pub fn new_with_options(
+        rt: Arc<Runtime>,
+        conn: &str,
+        nconn: usize,
+        options: &MsSqlOptions,
+    ) -> Self {
         debug!("mssql source using driver: {:?}", driver::active_driver());
         let conn_url = Url::parse(conn)?;
-        let pool = connection_pool(&rt, &conn_url, nconn)?;
+        let pool = connection_pool(&rt, &conn_url, options, nconn)?;
 
         Self {
             rt,
@@ -622,7 +765,12 @@ impl MsSQLSourcePartition {
     fn connection(&mut self) -> Connection {
         // Preserve the public, infallible standalone partition constructor.
         if self.pool.is_none() {
-            self.pool = Some(connection_pool(&self.rt, &self.conn_url, 1)?);
+            self.pool = Some(connection_pool(
+                &self.rt,
+                &self.conn_url,
+                &MsSqlOptions::default(),
+                1,
+            )?);
         }
         Connection::get(self.rt.clone(), self.pool.as_ref().unwrap())?
     }

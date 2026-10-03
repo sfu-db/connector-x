@@ -3,9 +3,12 @@ pub mod constants;
 pub mod cx_read_sql;
 mod errors;
 pub mod pandas;
+pub mod source_options;
 
 use crate::constants::J4RS_BASE_PATH;
-use ::connectorx::{fed_dispatcher::run, partition::partition, source_router::parse_source};
+use ::connectorx::{
+    fed_dispatcher::run, partition::partition_with_options, source_router::parse_source,
+};
 use pyo3::exceptions::PyRuntimeError;
 use pyo3::types::PyDict;
 use pyo3::{prelude::*, IntoPyObjectExt};
@@ -43,6 +46,7 @@ fn connectorx(_: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<pandas::PandasBlockInfo>()?;
     m.add_class::<arrow::PyRecordBatch>()?;
     m.add_class::<arrow::PyRecordBatchIterator>()?;
+    m.add_class::<source_options::PyMsSqlOptions>()?;
     Ok(())
 }
 
@@ -74,7 +78,7 @@ pub fn set_mssql_driver(driver: &str) -> PyResult<()> {
 }
 
 #[pyfunction]
-#[pyo3(signature = (conn, return_type, protocol=None, queries=None, partition_query=None, pre_execution_queries=None, *, **kwargs))]
+#[pyo3(signature = (conn, return_type, protocol=None, queries=None, partition_query=None, pre_execution_queries=None, *, source_options=None, **kwargs))]
 pub fn read_sql<'py>(
     py: Python<'py>,
     conn: &str,
@@ -83,8 +87,10 @@ pub fn read_sql<'py>(
     queries: Option<Vec<String>>,
     partition_query: Option<cx_read_sql::PyPartitionQuery>,
     pre_execution_queries: Option<Vec<String>>,
+    source_options: Option<&Bound<'py, PyAny>>,
     kwargs: Option<&Bound<PyDict>>,
 ) -> PyResult<Bound<'py, PyAny>> {
+    let options = source_options::extract_source_options(source_options)?;
     cx_read_sql::read_sql(
         py,
         conn,
@@ -93,18 +99,22 @@ pub fn read_sql<'py>(
         queries,
         partition_query,
         pre_execution_queries,
+        &options,
         kwargs,
     )
 }
 
 #[pyfunction]
+#[pyo3(signature = (conn, partition_query, *, source_options=None))]
 pub fn partition_sql(
     conn: &str,
     partition_query: cx_read_sql::PyPartitionQuery,
+    source_options: Option<&Bound<'_, PyAny>>,
 ) -> PyResult<Vec<String>> {
+    let options = source_options::extract_source_options(source_options)?;
     let source_conn =
         parse_source(conn, None).map_err(|e| crate::errors::ConnectorXPythonError::from(e))?;
-    let queries = partition(&partition_query.into(), &source_conn)
+    let queries = partition_with_options(&partition_query.into(), &source_conn, &options)
         .map_err(|e| crate::errors::ConnectorXPythonError::from(e))?;
     Ok(queries.into_iter().map(|q| q.to_string()).collect())
 }
@@ -134,13 +144,15 @@ pub fn read_sql2<'py>(
 }
 
 #[pyfunction]
-#[pyo3(signature = (conn, query, protocol=None))]
+#[pyo3(signature = (conn, query, protocol=None, *, source_options=None))]
 pub fn get_meta<'py>(
     py: Python<'py>,
     conn: &str,
     query: String,
     protocol: Option<&str>,
+    source_options: Option<&Bound<'py, PyAny>>,
 ) -> PyResult<Bound<'py, PyAny>> {
-    pandas::get_meta::get_meta(py, conn, protocol.unwrap_or("binary"), query)
+    let options = source_options::extract_source_options(source_options)?;
+    pandas::get_meta::get_meta(py, conn, protocol.unwrap_or("binary"), query, &options)
         .map_err(|e| From::from(e))
 }

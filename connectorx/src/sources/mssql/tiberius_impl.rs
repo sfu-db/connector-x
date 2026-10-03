@@ -6,6 +6,7 @@
 
 use super::driver;
 use super::errors::MsSQLSourceError;
+use super::options::MsSqlOptions;
 use super::typesystem::{FloatN, IntN, MsSQLTypeSystem};
 use crate::constants::DB_BUFFER_SIZE;
 use crate::{
@@ -110,9 +111,54 @@ pub fn mssql_config(url: &Url) -> Config {
     config
 }
 
+/// Tiberius is being phased out (sfu-db/connector-x#942), so token
+/// authentication is only implemented for mssql-tds. Fail loudly rather than
+/// silently falling back to the URL's credentials.
+#[throws(MsSQLSourceError)]
+pub(crate) fn reject_unsupported_options(options: &MsSqlOptions) {
+    if options.access_token().is_some() {
+        throw!(anyhow!(
+            "Entra ID access token support is not implemented for Tiberius"
+        ));
+    }
+}
+
+#[cfg(test)]
+mod options_tests {
+    use super::*;
+    use crate::sources::mssql::random_test_token;
+
+    #[test]
+    fn tiberius_rejects_access_token_before_connecting() {
+        assert!(reject_unsupported_options(&MsSqlOptions::new()).is_ok());
+        let rt = Arc::new(Runtime::new().unwrap());
+        let options = MsSqlOptions::new().with_access_token(random_test_token());
+        let err = MsSQLSource::new_with_options(rt, "mssql://localhost/db", 1, &options)
+            .err()
+            .unwrap();
+        assert!(err
+            .to_string()
+            .contains("Entra ID access token support is not implemented for Tiberius"));
+    }
+}
+
 impl MsSQLSource {
     #[throws(MsSQLSourceError)]
     pub fn new(rt: Arc<Runtime>, conn: &str, nconn: usize) -> Self {
+        Self::new_with_options(rt, conn, nconn, &MsSqlOptions::default())?
+    }
+
+    /// Same signature as the mssql-tds backend so callers stay backend-agnostic.
+    /// Options Tiberius cannot honour (such as access tokens) are rejected.
+    #[throws(MsSQLSourceError)]
+    pub fn new_with_options(
+        rt: Arc<Runtime>,
+        conn: &str,
+        nconn: usize,
+        options: &MsSqlOptions,
+    ) -> Self {
+        options.validate()?;
+        reject_unsupported_options(options)?;
         debug!("mssql source using driver: {:?}", driver::active_driver());
         let url = Url::parse(conn)?;
         let config = mssql_config(&url)?;

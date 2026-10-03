@@ -85,10 +85,17 @@ pub fn write_arrow<'py>(
     origin_query: Option<String>,
     queries: &[CXQuery<String>],
     pre_execution_queries: Option<&[String]>,
+    options: &SourceOptions,
 ) -> Bound<'py, PyAny> {
     let ptrs = py.detach(
         || -> Result<(Vec<String>, Vec<Vec<(uintptr_t, uintptr_t)>>), ConnectorXPythonError> {
-            let destination = get_arrow(source_conn, origin_query, queries, pre_execution_queries)?;
+            let destination = get_arrow_with_options(
+                source_conn,
+                origin_query,
+                queries,
+                pre_execution_queries,
+                options,
+            )?;
             let rbs = destination.arrow()?;
             Ok(to_ptrs(rbs))
         },
@@ -105,13 +112,15 @@ pub fn get_arrow_rb_iter<'py>(
     queries: &[CXQuery<String>],
     pre_execution_queries: Option<&[String]>,
     batch_size: usize,
+    options: &SourceOptions,
 ) -> Bound<'py, PyAny> {
-    let mut arrow_iter: Box<dyn RecordBatchIterator> = new_record_batch_iter(
+    let mut arrow_iter: Box<dyn RecordBatchIterator> = new_record_batch_iter_with_options(
         source_conn,
         origin_query,
         queries,
         batch_size,
         pre_execution_queries,
+        options,
     )?;
 
     arrow_iter.prepare();
