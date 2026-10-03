@@ -1,6 +1,6 @@
 [package]
 authors = ["Weiyuan Wu <youngw@sfu.ca>"]
-edition = "2018"
+edition = "2021"
 name = "connectorx-python"
 version = "0.4.7-alpha.1"
 license = "MIT"
