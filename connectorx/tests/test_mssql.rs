@@ -21,8 +21,10 @@ mod test_db;
 #[test]
 fn test_mssql_tds_session_identity() {
     let default_library_name =
-        mssql_tds::connection::client_context::ClientContext::with_data_source("tcp:localhost,1433")
-            .library_name;
+        mssql_tds::connection::client_context::ClientContext::with_data_source(
+            "tcp:localhost,1433",
+        )
+        .library_name;
     let rt = Arc::new(Runtime::new().unwrap());
     let mut url = url::Url::parse(&test_db::mssql_url()).unwrap();
     let params: Vec<_> = url
