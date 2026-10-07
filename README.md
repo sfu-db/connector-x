@@ -349,6 +349,13 @@ BibTeX entry:
 		</tr>
 		<tr>
             <td align="center">
+                <a href="https://github.com/tschm">
+                    <img src="https://avatars.githubusercontent.com/u/2046079?v=4" width="66;" alt="tschm"/>
+                    <br />
+                    <sub><b>Thomas Schmelzer</b></sub>
+                </a>
+            </td>
+            <td align="center">
                 <a href="https://github.com/gruuya">
                     <img src="https://avatars.githubusercontent.com/u/45558892?v=4" width="66;" alt="gruuya"/>
                     <br />
@@ -383,6 +390,8 @@ BibTeX entry:
                     <sub><b>Ritchie Vink</b></sub>
                 </a>
             </td>
+		</tr>
+		<tr>
             <td align="center">
                 <a href="https://github.com/davidhewitt">
                     <img src="https://avatars.githubusercontent.com/u/1939362?v=4" width="66;" alt="davidhewitt"/>
@@ -390,8 +399,6 @@ BibTeX entry:
                     <sub><b>David Hewitt</b></sub>
                 </a>
             </td>
-		</tr>
-		<tr>
             <td align="center">
                 <a href="https://github.com/npennequin">
                     <img src="https://avatars.githubusercontent.com/u/27361630?v=4" width="66;" alt="npennequin"/>
@@ -427,6 +434,8 @@ BibTeX entry:
                     <sub><b>CbQu</b></sub>
                 </a>
             </td>
+		</tr>
+		<tr>
             <td align="center">
                 <a href="https://github.com/quambene">
                     <img src="https://avatars.githubusercontent.com/u/33333672?v=4" width="66;" alt="quambene"/>
@@ -434,20 +443,11 @@ BibTeX entry:
                     <sub><b>Null</b></sub>
                 </a>
             </td>
-		</tr>
-		<tr>
             <td align="center">
                 <a href="https://github.com/chitralverma">
                     <img src="https://avatars.githubusercontent.com/u/11135032?v=4" width="66;" alt="chitralverma"/>
                     <br />
                     <sub><b>Chitral Verma</b></sub>
-                </a>
-            </td>
-            <td align="center">
-                <a href="https://github.com/tschm">
-                    <img src="https://avatars.githubusercontent.com/u/2046079?v=4" width="66;" alt="tschm"/>
-                    <br />
-                    <sub><b>Thomas Schmelzer</b></sub>
                 </a>
             </td>
             <td align="center">
