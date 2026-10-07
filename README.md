@@ -349,6 +349,13 @@ BibTeX entry:
 		</tr>
 		<tr>
             <td align="center">
+                <a href="https://github.com/tschm">
+                    <img src="https://avatars.githubusercontent.com/u/2046079?v=4" width="66;" alt="tschm"/>
+                    <br />
+                    <sub><b>Thomas Schmelzer</b></sub>
+                </a>
+            </td>
+            <td align="center">
                 <a href="https://github.com/gruuya">
                     <img src="https://avatars.githubusercontent.com/u/45558892?v=4" width="66;" alt="gruuya"/>
                     <br />
@@ -381,13 +388,6 @@ BibTeX entry:
                     <img src="https://avatars.githubusercontent.com/u/3023000?v=4" width="66;" alt="ritchie46"/>
                     <br />
                     <sub><b>Ritchie Vink</b></sub>
-                </a>
-            </td>
-            <td align="center">
-                <a href="https://github.com/tschm">
-                    <img src="https://avatars.githubusercontent.com/u/2046079?v=4" width="66;" alt="tschm"/>
-                    <br />
-                    <sub><b>Thomas Schmelzer</b></sub>
                 </a>
             </td>
 		</tr>
