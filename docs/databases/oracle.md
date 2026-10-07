@@ -49,6 +49,11 @@ cx.read_sql(conn, query)
 | DATE                      | datetime64[ns]              |                                    |
 | TIMESTAMP                 | datetime64[ns]              |                                    |
 | TIMESTAMP WITH TIME ZONE  | datetime64[ns]              |                                    |
+| BOOLEAN                   | bool, boolean(nullable)     | Native `BOOLEAN` column type, available since Oracle 23ai |
+
+```{warning}
+Reading native `BOOLEAN` columns needs a recent Oracle Instant Client. With Instant Client 23.4 some `FALSE` values come back as `True`, depending on the fetch array size, and no error is raised. Instant Client 23.26.3 reads them correctly and is the version CI tests against.
+```
 
 ### Performance (db.r5.4xlarge RDS)
 
