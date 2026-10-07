@@ -550,6 +550,10 @@
 </tbody>
 </table>
 </div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Reading native <code class="docutils literal notranslate"><span class="pre">BOOLEAN</span></code> columns needs a recent Oracle Instant Client. With Instant Client 23.4 some <code class="docutils literal notranslate"><span class="pre">FALSE</span></code> values come back as <code class="docutils literal notranslate"><span class="pre">True</span></code>, depending on the fetch array size, and no error is raised. Instant Client 23.26.3 reads them correctly and is the version CI tests against.</p>
+</div>
 </section>
 <section id="performance-db-r5-4xlarge-rds">
 <h2>Performance (db.r5.4xlarge RDS)<a class="headerlink" href="#performance-db-r5-4xlarge-rds" title="Link to this heading">#</a></h2>
