@@ -137,16 +137,16 @@ jobs:
           # Download Oracle Instant Client
           mkdir -p /opt/oracle
           cd /opt/oracle
-          wget https://download.oracle.com/otn_software/linux/instantclient/2340000/instantclient-basic-linux.x64-23.4.0.24.05.zip
-          wget https://download.oracle.com/otn_software/linux/instantclient/2340000/instantclient-sdk-linux.x64-23.4.0.24.05.zip
+          wget https://download.oracle.com/otn_software/linux/instantclient/2326300/instantclient-basic-linux.x64-23.26.3.0.0.zip
+          wget https://download.oracle.com/otn_software/linux/instantclient/2326300/instantclient-sdk-linux.x64-23.26.3.0.0.zip
 
           # Unzip
-          sudo unzip -o instantclient-basic-linux.x64-23.4.0.24.05.zip -d /opt/oracle
-          sudo unzip -o instantclient-sdk-linux.x64-23.4.0.24.05.zip -d /opt/oracle
+          sudo unzip -o instantclient-basic-linux.x64-23.26.3.0.0.zip -d /opt/oracle
+          sudo unzip -o instantclient-sdk-linux.x64-23.26.3.0.0.zip -d /opt/oracle
 
           # Set environment variables
-          echo "LD_LIBRARY_PATH=/opt/oracle/instantclient_23_4:$LD_LIBRARY_PATH" >> $GITHUB_ENV
-          echo "/opt/oracle/instantclient_23_4" >> $GITHUB_PATH
+          echo "LD_LIBRARY_PATH=/opt/oracle/instantclient_23_26:$LD_LIBRARY_PATH" >> $GITHUB_ENV
+          echo "/opt/oracle/instantclient_23_26" >> $GITHUB_PATH
 
       - name: Verify Docker access for Testcontainers
         run: |
