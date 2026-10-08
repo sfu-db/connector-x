@@ -44,8 +44,11 @@ jobs:
       - name: Is the code formatted?
         run: cargo fmt --all -- --check -q
 
+      # -D warnings fails the build on any new warning. missing_docs is kept as a
+      # warning (lib.rs enables it to track the documentation backlog) until that
+      # backlog is cleared; --force-warn stops -D warnings from promoting it.
       - name: Clippy linting
-        run: cargo clippy --features all
+        run: cargo clippy --features all -- -D warnings --force-warn missing_docs
 
       - name: Check each feature gate
         run: just test-feature-gate
@@ -180,7 +183,7 @@ jobs:
           key: ${{ runner.os }}-cargo-python-${{ matrix.python-version }}-${{ secrets.CACHE_VERSION }}-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Clippy linting
-        run: cargo clippy --features all --all
+        run: cargo clippy --features all --all -- -D warnings --force-warn missing_docs
 
       - name: Cache venv
         uses: actions/cache@v6
