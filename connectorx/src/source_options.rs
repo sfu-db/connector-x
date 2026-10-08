@@ -22,8 +22,10 @@ use std::borrow::Cow;
 #[derive(Clone, Debug, Default)]
 #[non_exhaustive]
 pub enum SourceOptions {
+    /// No backend-specific options: the connection URL is used as-is.
     #[default]
     Default,
+    /// SQL Server options; only valid for `mssql://` connections.
     #[cfg(feature = "src_mssql_common")]
     MsSql(MsSqlOptions),
 }

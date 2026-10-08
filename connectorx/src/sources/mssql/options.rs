@@ -21,6 +21,7 @@ pub struct MsSqlOptions {
 }
 
 impl MsSqlOptions {
+    /// Creates options with nothing set, equivalent to [`Default::default`].
     pub fn new() -> Self {
         Self::default()
     }
