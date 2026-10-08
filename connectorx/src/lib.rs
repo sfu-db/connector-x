@@ -1,5 +1,10 @@
 #![allow(clippy::upper_case_acronyms)]
 #![warn(missing_docs)]
+// The Trino and BigQuery client errors (232 and 176 bytes) are held by value in
+// the source error enums and propagate into `ConnectorXOutError`. Boxing them
+// would change public error types; the error path is cold, so the larger
+// `Result` is not worth an API break.
+#![allow(clippy::result_large_err)]
 
 //! # ConnectorX
 //!

@@ -1,5 +1,5 @@
-///! This module provides [`dispatcher::Dispatcher`], the core struct in ConnectorX
-///! that drives the data loading from a source to a destination.
+//! This module provides [`dispatcher::Dispatcher`], the core struct in ConnectorX
+//! that drives the data loading from a source to a destination.
 use crate::{
     data_order::{coordinate, DataOrder},
     destinations::{Destination, DestinationPartition},
@@ -12,6 +12,16 @@ use itertools::Itertools;
 use log::debug;
 use rayon::prelude::*;
 use std::marker::PhantomData;
+
+/// What [`Dispatcher::prepare`] returns: the negotiated data order, the source and
+/// destination partitions, and the source and destination schemas.
+pub type Prepared<'w, S, D> = (
+    DataOrder,
+    Vec<<S as Source>::Partition>,
+    Vec<<D as Destination>::Partition<'w>>,
+    Vec<<S as Source>::TypeSystem>,
+    Vec<<D as Destination>::TypeSystem>,
+);
 
 /// A dispatcher takes a `S: Source`, a `D: Destination`, a `TP: Transport` and a vector of `queries` as input to
 /// load data from `S` to `D` using the queries.
@@ -47,18 +57,7 @@ where
         self.src.set_pre_execution_queries(pre_execution_queries);
     }
 
-    pub fn prepare(
-        mut self,
-    ) -> Result<
-        (
-            DataOrder,
-            Vec<S::Partition>,
-            Vec<D::Partition<'w>>,
-            Vec<S::TypeSystem>,
-            Vec<D::TypeSystem>,
-        ),
-        TP::Error,
-    > {
+    pub fn prepare(mut self) -> Result<Prepared<'w, S, D>, TP::Error> {
         debug!("Prepare");
         let dorder = coordinate(S::DATA_ORDERS, D::DATA_ORDERS)?;
         self.src.set_data_order(dorder)?;
