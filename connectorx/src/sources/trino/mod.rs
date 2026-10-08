@@ -562,7 +562,6 @@ macro_rules! impl_produce_text {
                                 .parse()
                                 .map_err(|_| anyhow!("Trino cannot convert complex value at ({}, {}): {:?}", ridx, cidx, value))?)
                         }
-                        _ => throw!(anyhow!("Trino unknown value at position: ({}, {}): {:?}", ridx, cidx, value))
                     }
                 }
             }
