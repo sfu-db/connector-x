@@ -217,7 +217,7 @@ mod configuration_tests {
         assert!(set_user_agent_info(version.to_string(), "Python 3.13.0".to_string()).is_err());
 
         let url = Url::parse("mssql://localhost/db").unwrap();
-        let (_, context) = build_client_context(&url).unwrap();
+        let (_, context) = build_client_context(&url, &MsSqlOptions::default()).unwrap();
         assert_eq!(context.user_agent.driver_version, version);
         assert_eq!(context.user_agent.runtime, runtime);
         assert_eq!(
@@ -234,7 +234,7 @@ mod configuration_tests {
             ("?appname=", ""),
         ] {
             let url = Url::parse(&format!("mssql://localhost/db{query}")).unwrap();
-            let (_, context) = build_client_context(&url).unwrap();
+            let (_, context) = build_client_context(&url, &MsSqlOptions::default()).unwrap();
             assert_eq!(
                 context.library_name,
                 ClientContext::with_data_source("tcp:localhost,1433").library_name
