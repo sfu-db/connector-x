@@ -88,8 +88,7 @@ fn create_sources(
     let db_manual = jvm.create_instance("java.util.HashMap", InvocationArg::empty())?;
 
     for (db_name, db_info) in db_map.iter() {
-        if db_info.manual_info.is_some() {
-            let manual_info = db_info.manual_info.as_ref().unwrap();
+        if let Some(manual_info) = &db_info.manual_info {
             let schema_info = jvm.create_instance("java.util.HashMap", InvocationArg::empty())?;
             for (name, columns) in manual_info {
                 let arr_instance = jvm.java_list("java.lang.String", columns.to_vec())?;

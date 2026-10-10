@@ -251,12 +251,10 @@ pub unsafe extern "C" fn connectorx_scan(conn: *const c_char, query: *const c_ch
         result.push(cx_rb);
     }
 
-    let res = CXResult {
+    CXResult {
         data: CXSlice::<_>::new_from_vec(result),
         header: CXSlice::<_>::new_from_vec(names),
-    };
-
-    res
+    }
 }
 
 #[repr(C)]
