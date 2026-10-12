@@ -5030,9 +5030,9 @@ dependencies = [
 
 [[package]]
 name = "mssql-tds"
-version = "0.1.0"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "24af8cb7710c93995782f5f04fc2a10c79b5e073034f104fea9b98872b67e71b"
+checksum = "b03612dd2098a7b98613b423414afaf3031ff080a24652941abfc1d2e13f6222"
 dependencies = [
  "async-trait",
  "bigdecimal 0.4.10",
