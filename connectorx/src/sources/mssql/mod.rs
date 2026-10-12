@@ -60,3 +60,6 @@ pub use self::dual_impl::{MsSQLSource, MsSQLSourceParser, MsSQLSourcePartition};
 
 #[cfg(feature = "src_mssql_tds")]
 pub(crate) use self::tds_impl::tds_get_partition_range;
+
+#[cfg(feature = "src_mssql_tds")]
+pub use self::tds_impl::set_user_agent_info;

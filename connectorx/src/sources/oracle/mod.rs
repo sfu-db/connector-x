@@ -366,6 +366,7 @@ macro_rules! impl_produce_text {
 
 impl_produce_text!(
     i64,
+    bool,
     f64,
     String,
     NaiveDate,

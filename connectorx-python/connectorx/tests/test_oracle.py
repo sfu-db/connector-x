@@ -290,6 +290,9 @@ def test_oracle_types(oracle_url: str) -> None:
             "TEST_BLOB": pd.Series(
                 [ b'9\xaf', b'9\xaf', b'9\xaf', None], dtype="object"
             ),
+            "TEST_BOOLEAN": pd.Series(
+                [True, False, False, None], dtype="boolean"
+            ),
         }
     )
     assert_frame_equal(df, expected, check_names=True)

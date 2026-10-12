@@ -47,6 +47,7 @@ impl_transport!(
         { TimestampNano[NaiveDateTime]      => Date64[NaiveDateTime]                    | conversion auto }
         { TimestampTz[DateTime<Utc>]        => DateTimeTz[DateTimeWrapperMicro]         | conversion option }
         { TimestampTzNano[DateTime<Utc>]    => DateTimeTz[DateTime<Utc>]                | conversion auto }
+        { Boolean[bool]                     => Boolean[bool]                            | conversion auto }
     }
 );
 

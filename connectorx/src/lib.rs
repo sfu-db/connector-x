@@ -1,4 +1,5 @@
 #![allow(clippy::upper_case_acronyms)]
+#![warn(missing_docs)]
 
 //! # ConnectorX
 //!

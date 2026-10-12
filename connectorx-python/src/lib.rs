@@ -37,6 +37,18 @@ fn connectorx(_: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(get_meta))?;
     #[cfg(feature = "srcs")]
     {
+        let version = m
+            .py()
+            .import("importlib.metadata")?
+            .call_method1("version", ("connectorx",))?
+            .extract::<String>()?;
+        let python_version = m.py().import("sys")?.getattr("version_info")?;
+        let major = python_version.getattr("major")?.extract::<u8>()?;
+        let minor = python_version.getattr("minor")?.extract::<u8>()?;
+        let micro = python_version.getattr("micro")?.extract::<u8>()?;
+        let runtime = format!("Python {major}.{minor}.{micro}");
+        ::connectorx::sources::mssql::set_user_agent_info(version, runtime)
+            .map_err(PyRuntimeError::new_err)?;
         m.add_wrapped(wrap_pyfunction!(get_mssql_driver))?;
         m.add_wrapped(wrap_pyfunction!(set_mssql_driver))?;
     }
