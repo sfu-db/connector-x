@@ -59,12 +59,37 @@ use sqlparser::dialect::MsSqlDialect;
 use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::ops::{Deref, DerefMut};
-use std::sync::Arc;
+use std::sync::{Arc, OnceLock};
 use std::time::Duration;
 use tokio::runtime::Runtime;
 use url::Url;
 use urlencoding::decode;
 use uuid_old::Uuid;
+
+#[derive(Clone, PartialEq)]
+struct UserAgentInfo {
+    version: String,
+    runtime: String,
+}
+
+static USER_AGENT_INFO: OnceLock<UserAgentInfo> = OnceLock::new();
+
+/// Sets the wrapper's package version and runtime for the TDS User-Agent, leaving LOGIN7 unchanged.
+/// Language bindings should call this before creating connections. Reinitializing
+/// with the same values is allowed; different values are rejected.
+pub fn set_user_agent_info(version: String, runtime: String) -> Result<(), &'static str> {
+    if version.is_empty() {
+        return Err("MSSQL User-Agent version must not be empty");
+    }
+    if runtime.is_empty() {
+        return Err("MSSQL User-Agent runtime must not be empty");
+    }
+    let info = UserAgentInfo { version, runtime };
+    if USER_AGENT_INFO.get_or_init(|| info.clone()) != &info {
+        return Err("MSSQL User-Agent is already initialized with different values");
+    }
+    Ok(())
+}
 
 /// Builds the `mssql-tds` datasource string and [`ClientContext`] from a
 /// ConnectorX MSSQL connection URL. Mirrors
@@ -84,6 +109,15 @@ fn build_client_context(url: &Url) -> (String, ClientContext) {
     };
 
     let mut context = ClientContext::with_data_source(&datasource);
+    // The User-Agent feature carries a separate driver name from LOGIN7.
+    context
+        .user_agent
+        .set_library_name("connectorx".to_string());
+    if let Some(info) = USER_AGENT_INFO.get() {
+        context.user_agent.set_driver_version(info.version.clone());
+        context.user_agent.set_runtime(info.runtime.clone());
+    }
+    context.application_name = "ConnectorX".to_string();
     context.database = decode(&url.path()[1..])?.into_owned();
 
     let params: HashMap<String, String> = url.query_pairs().into_owned().collect();
@@ -136,6 +170,45 @@ fn build_client_context(url: &Url) -> (String, ClientContext) {
 #[cfg(test)]
 mod configuration_tests {
     use super::*;
+
+    #[test]
+    fn python_user_agent_info_preserves_login_version() {
+        let version = "0.4.7a1";
+        let runtime = "Python 3.12.3";
+        assert!(set_user_agent_info(String::new(), runtime.to_string()).is_err());
+        assert!(set_user_agent_info(version.to_string(), String::new()).is_err());
+        set_user_agent_info(version.to_string(), runtime.to_string()).unwrap();
+        set_user_agent_info(version.to_string(), runtime.to_string()).unwrap();
+        assert!(set_user_agent_info("0.4.8".to_string(), runtime.to_string()).is_err());
+        assert!(set_user_agent_info(version.to_string(), "Python 3.13.0".to_string()).is_err());
+
+        let url = Url::parse("mssql://localhost/db").unwrap();
+        let (_, context) = build_client_context(&url).unwrap();
+        assert_eq!(context.user_agent.driver_version, version);
+        assert_eq!(context.user_agent.runtime, runtime);
+        assert_eq!(
+            context.driver_version,
+            ClientContext::with_data_source("tcp:localhost,1433").driver_version
+        );
+    }
+
+    #[test]
+    fn driver_identity_and_application_name() {
+        for (query, expected_appname) in [
+            ("", "ConnectorX"),
+            ("?appname=Custom%20Application", "Custom Application"),
+            ("?appname=", ""),
+        ] {
+            let url = Url::parse(&format!("mssql://localhost/db{query}")).unwrap();
+            let (_, context) = build_client_context(&url).unwrap();
+            assert_eq!(
+                context.library_name,
+                ClientContext::with_data_source("tcp:localhost,1433").library_name
+            );
+            assert_eq!(context.user_agent.library_name, "connectorx");
+            assert_eq!(context.application_name, expected_appname);
+        }
+    }
 
     #[test]
     fn integrated_auth_respects_tiberius_platform_and_feature_gates() {
