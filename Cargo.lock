@@ -4570,9 +4570,9 @@ checksum = "8f42a60cbdf9a97f5d2305f08a87dc4e09308d1276d28c869c684d7777685682"
 
 [[package]]
 name = "j4rs"
-version = "0.22.0"
+version = "0.25.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dacf87fdd07b36f3124894a5bf20c8d418aaa28d4974d717672507f6d05cd31c"
+checksum = "c26fb1429997a5d8f98777df359f0132f62905ecce1d3bc2836372045c67de89"
 dependencies = [
  "cesu8",
  "dunce",
@@ -4580,7 +4580,6 @@ dependencies = [
  "futures",
  "java-locator",
  "jni-sys",
- "lazy_static",
  "libc",
  "libloading",
  "log",
