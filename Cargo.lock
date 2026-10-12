@@ -1778,7 +1778,7 @@ version = "0.4.6"
 dependencies = [
  "anyhow",
  "arrow",
- "async-trait",
+ "bb8 0.7.1",
  "bb8 0.9.1",
  "bb8-tiberius",
  "chrono",

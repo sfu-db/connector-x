@@ -30,7 +30,9 @@ polars = { workspace = true, optional = true, features = [
 ] }
 polars-arrow = { workspace = true, optional = true }
 bb8 = { version = "0.9", optional = true }
-async-trait = { version = "0.1", optional = true }
+# bb8-tiberius 0.8 is built on bb8 0.7; keep it for the legacy Tiberius driver
+# until that driver is removed (#962).
+bb8_07 = { package = "bb8", version = "0.7", optional = true }
 bb8-tiberius = { version = "0.8", optional = true }
 csv = { version = "1", optional = true }
 fallible-streaming-iterator = { version = "0.1", optional = true }
@@ -144,14 +146,13 @@ src_mssql_tiberius = [
   "src_mssql_common",
   "tiberius",
   "bb8-tiberius",
-  "bb8",
+  "bb8_07",
 ]
 src_mssql_tds = [
   "src_mssql_common",
   "mssql-tds",
   "uuid",
   "bb8",
-  "async-trait",
 ]
 src_mysql = ["r2d2_mysql", "mysql_common", "rust_decimal", "num-traits", "r2d2"]
 src_oracle = ["oracle", "r2d2-oracle", "r2d2", "urlencoding", "rust_decimal"]
