@@ -41,6 +41,8 @@ jobs:
         run: touch ./docs/_build/html/.nojekyll
 
       - name: Deploy Docs 🚀
+        # Forks have no gh-pages permissions; skip the upload there
+        if: ${{ !github.event.repository.fork }}
         uses: JamesIves/github-pages-deploy-action@v4.9.0
         with:
           branch: gh-pages # The branch the action should deploy to.
@@ -48,6 +50,8 @@ jobs:
           clean-exclude: dev
   
   contrib-readme:
+    # Pushes to the README; skip on forks
+    if: ${{ !github.event.repository.fork }}
     runs-on: ubuntu-latest
     name: A job to automate contrib in readme
     steps:
