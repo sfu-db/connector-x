@@ -28,7 +28,7 @@ pub const RECORD_BATCH_SIZE: usize = 64 * KILO;
 ))]
 pub const DB_BUFFER_SIZE: usize = 32;
 
-#[cfg(any(feature = "src_oracle"))]
+#[cfg(feature = "src_oracle")]
 pub const ORACLE_ARRAY_SIZE: u32 = KILO as u32;
 
 #[cfg(all(not(debug_assertions), feature = "federation"))]
