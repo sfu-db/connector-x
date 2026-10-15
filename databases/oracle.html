@@ -552,7 +552,7 @@
 </div>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
-<p>Reading native <code class="docutils literal notranslate"><span class="pre">BOOLEAN</span></code> columns needs a recent Oracle Instant Client. With Instant Client 23.4 some <code class="docutils literal notranslate"><span class="pre">FALSE</span></code> values come back as <code class="docutils literal notranslate"><span class="pre">True</span></code>, depending on the fetch array size, and no error is raised. Instant Client 23.26.3 reads them correctly and is the version CI tests against.</p>
+<p>Oracle Instant Client 23.4 can return wrong values for native <code class="docutils literal notranslate"><span class="pre">BOOLEAN</span></code> columns without raising an error, so ConnectorX refuses to read a <code class="docutils literal notranslate"><span class="pre">BOOLEAN</span></code> column through it. Use Instant Client 23.5 or later, or convert the column in SQL, e.g. <code class="docutils literal notranslate"><span class="pre">CAST(col</span> <span class="pre">AS</span> <span class="pre">NUMBER)</span></code>. Instant Clients older than 23 read <code class="docutils literal notranslate"><span class="pre">BOOLEAN</span></code> columns as numbers (<code class="docutils literal notranslate"><span class="pre">1</span></code>/<code class="docutils literal notranslate"><span class="pre">0</span></code>).</p>
 </div>
 </section>
 <section id="performance-db-r5-4xlarge-rds">
