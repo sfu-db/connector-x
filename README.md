@@ -187,6 +187,13 @@ BibTeX entry:
                 </a>
             </td>
             <td align="center">
+                <a href="https://github.com/tschm">
+                    <img src="https://avatars.githubusercontent.com/u/2046079?v=4" width="66;" alt="tschm"/>
+                    <br />
+                    <sub><b>Thomas Schmelzer</b></sub>
+                </a>
+            </td>
+            <td align="center">
                 <a href="https://github.com/vc1492a">
                     <img src="https://avatars.githubusercontent.com/u/2057896?v=4" width="66;" alt="vc1492a"/>
                     <br />
@@ -207,6 +214,8 @@ BibTeX entry:
                     <sub><b>Vincent HAYS</b></sub>
                 </a>
             </td>
+		</tr>
+		<tr>
             <td align="center">
                 <a href="https://github.com/wseaton">
                     <img src="https://avatars.githubusercontent.com/u/16678729?v=4" width="66;" alt="wseaton"/>
@@ -214,8 +223,6 @@ BibTeX entry:
                     <sub><b>Will Eaton</b></sub>
                 </a>
             </td>
-		</tr>
-		<tr>
             <td align="center">
                 <a href="https://github.com/holicc">
                     <img src="https://avatars.githubusercontent.com/u/19146591?v=4" width="66;" alt="holicc"/>
@@ -251,6 +258,8 @@ BibTeX entry:
                     <sub><b>oystersuki</b></sub>
                 </a>
             </td>
+		</tr>
+		<tr>
             <td align="center">
                 <a href="https://github.com/EricFecteau">
                     <img src="https://avatars.githubusercontent.com/u/96687807?v=4" width="66;" alt="EricFecteau"/>
@@ -258,8 +267,6 @@ BibTeX entry:
                     <sub><b>EricFecteau</b></sub>
                 </a>
             </td>
-		</tr>
-		<tr>
             <td align="center">
                 <a href="https://github.com/yuansuentw">
                     <img src="https://avatars.githubusercontent.com/u/136064271?v=4" width="66;" alt="yuansuentw"/>
@@ -295,6 +302,8 @@ BibTeX entry:
                     <sub><b>Null</b></sub>
                 </a>
             </td>
+		</tr>
+		<tr>
             <td align="center">
                 <a href="https://github.com/Yizhou150">
                     <img src="https://avatars.githubusercontent.com/u/62522644?v=4" width="66;" alt="Yizhou150"/>
@@ -302,8 +311,6 @@ BibTeX entry:
                     <sub><b>Yizhou</b></sub>
                 </a>
             </td>
-		</tr>
-		<tr>
             <td align="center">
                 <a href="https://github.com/zen-xu">
                     <img src="https://avatars.githubusercontent.com/u/38552291?v=4" width="66;" alt="zen-xu"/>
@@ -339,20 +346,13 @@ BibTeX entry:
                     <sub><b>Rafael Passos</b></sub>
                 </a>
             </td>
-            <td align="center">
-                <a href="https://github.com/jinzew">
-                    <img src="https://avatars.githubusercontent.com/u/55274369?v=4" width="66;" alt="jinzew"/>
-                    <br />
-                    <sub><b>Null</b></sub>
-                </a>
-            </td>
 		</tr>
 		<tr>
             <td align="center">
-                <a href="https://github.com/tschm">
-                    <img src="https://avatars.githubusercontent.com/u/2046079?v=4" width="66;" alt="tschm"/>
+                <a href="https://github.com/kumaraditya303">
+                    <img src="https://avatars.githubusercontent.com/u/59607654?v=4" width="66;" alt="kumaraditya303"/>
                     <br />
-                    <sub><b>Thomas Schmelzer</b></sub>
+                    <sub><b>Kumar Aditya</b></sub>
                 </a>
             </td>
             <td align="center">
@@ -363,10 +363,10 @@ BibTeX entry:
                 </a>
             </td>
             <td align="center">
-                <a href="https://github.com/kumaraditya303">
-                    <img src="https://avatars.githubusercontent.com/u/59607654?v=4" width="66;" alt="kumaraditya303"/>
+                <a href="https://github.com/jinzew">
+                    <img src="https://avatars.githubusercontent.com/u/55274369?v=4" width="66;" alt="jinzew"/>
                     <br />
-                    <sub><b>Kumar Aditya</b></sub>
+                    <sub><b>Null</b></sub>
                 </a>
             </td>
             <td align="center">
