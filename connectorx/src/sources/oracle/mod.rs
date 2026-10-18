@@ -20,7 +20,7 @@ use owning_ref::OwningHandle;
 use r2d2::{Pool, PooledConnection};
 use r2d2_oracle::oracle::ResultSet;
 use r2d2_oracle::{
-    oracle::{Connector, Row, Statement},
+    oracle::{Connector, Row, Statement, Version},
     OracleConnectionManager,
 };
 use rust_decimal::Decimal;
@@ -109,6 +109,34 @@ impl OracleSource {
     }
 }
 
+/// Oldest Instant Client known to read native `BOOLEAN` columns correctly. On the first execution
+/// of a statement on a connection, Instant Client 23.4 can return `TRUE` for a `FALSE` value that
+/// directly follows another `FALSE`, without raising an error. Clients older than 23 report
+/// `BOOLEAN` columns as `NUMBER`, so they never reach this check.
+const MIN_BOOLEAN_CLIENT_VERSION: Version = Version::new(23, 5, 0, 0, 0);
+
+fn client_reads_boolean_correctly(client: &Version) -> bool {
+    *client >= MIN_BOOLEAN_CLIENT_VERSION
+}
+
+/// Refuses to read a native `BOOLEAN` column through an Instant Client that may return wrong
+/// values for it.
+#[throws(OracleSourceError)]
+fn check_boolean_client(names: &[String], schema: &[OracleTypeSystem]) {
+    if let Some(i) = schema
+        .iter()
+        .position(|ty| matches!(ty, OracleTypeSystem::Boolean(_)))
+    {
+        let client = Version::client()?;
+        if !client_reads_boolean_correctly(&client) {
+            throw!(OracleSourceError::UnreliableBooleanClient {
+                column: names[i].clone(),
+                client: client.to_string(),
+            });
+        }
+    }
+}
+
 impl Source for OracleSource
 where
     OracleSourcePartition:
@@ -146,7 +174,7 @@ where
             // -> (NumInt, Char) instead of (NumtFloat, Char)
             match conn.query(limit0_query_oracle(query)?.as_str(), &[]) {
                 Ok(rows) => {
-                    let (names, types) = rows
+                    let (names, types): (Vec<String>, Vec<OracleTypeSystem>) = rows
                         .column_info()
                         .iter()
                         .map(|col| {
@@ -156,6 +184,7 @@ where
                             )
                         })
                         .unzip();
+                    check_boolean_client(&names, &types)?;
                     self.names = names;
                     self.schema = types;
                     return;
@@ -399,5 +428,32 @@ impl<'r, 'a> Produce<'r, Option<Decimal>> for OracleTextSourceParser<'a> {
             Some(val) => Some(val.parse::<Decimal>()?),
             None => None,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn boolean_client_threshold() {
+        // versions as reported by `Version::client()` for the Instant Client zips
+        assert!(!client_reads_boolean_correctly(&Version::new(
+            23, 4, 0, 24, 5
+        )));
+        assert!(client_reads_boolean_correctly(&Version::new(
+            23, 5, 0, 24, 7
+        )));
+        assert!(client_reads_boolean_correctly(&Version::new(
+            23, 26, 3, 0, 0
+        )));
+    }
+
+    #[test]
+    fn check_boolean_client_skips_queries_without_boolean() {
+        // no Boolean column -> the client version is never looked up
+        let names = vec!["A".to_string()];
+        let schema = vec![OracleTypeSystem::NumInt(true)];
+        assert!(check_boolean_client(&names, &schema).is_ok());
     }
 }
