@@ -56,7 +56,7 @@ Do not assume an older published wheel contains this build change.
 * Step 0: Install tools.
     * Install Rust: `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`
     * Install [just](https://github.com/casey/just): `cargo install just`
-    * Install [Poetry](https://python-poetry.org/docs/): `pip3 install poetry`
+    * Install [uv](https://docs.astral.sh/uv/getting-started/installation/): `pip3 install uv`
 
 * Step 1: Fresh clone of source.
 ```bash

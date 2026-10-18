@@ -32,10 +32,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: Gr1N/setup-poetry@v9
-        with:
-          poetry-version: "2.4.1"
-
       - name: Install tools
         run: |
           yum install -y epel-release
@@ -47,10 +43,6 @@ jobs:
           bash scripts/build-krb5.sh
           mkdir -p connectorx-python/connectorx/dependencies/licenses
           cp /opt/connectorx-krb5/share/licenses/* connectorx-python/connectorx/dependencies/licenses/
-
-      - name: Setup project
-        run: |
-          just bootstrap-python-release
 
       - uses: PyO3/maturin-action@v1
         with:
@@ -119,14 +111,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: Gr1N/setup-poetry@v9
-        with:
-          poetry-version: "2.4.1"
-
-      - name: Setup project
-        run: |
-          just bootstrap-python-release
-
       - uses: PyO3/maturin-action@v1
         with:
           rust-toolchain: stable
@@ -166,14 +150,6 @@ jobs:
       - uses: extractions/setup-just@v4
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - uses: Gr1N/setup-poetry@v9
-        with:
-          poetry-version: "2.4.1"
-
-      - name: Setup project
-        run: |
-          just bootstrap-python-release
 
       - uses: PyO3/maturin-action@v1
         with:

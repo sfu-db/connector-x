@@ -1,25 +1,3 @@
-[tool.poetry]
-authors = ["SFU Database System Lab <dsl.cs.sfu@gmail.com>"] 
-classifiers = [
-  "Development Status :: 4 - Beta",
-  "Topic :: Software Development :: Build Tools",
-  "Environment :: Console",
-  "Operating System :: OS Independent",
-  "Intended Audience :: Science/Research",
-  "Intended Audience :: Developers",
-  "Intended Audience :: Financial and Insurance Industry",
-  "Intended Audience :: Healthcare Industry",
-  "Topic :: Scientific/Engineering",
-  "Framework :: IPython",
-] 
-description = "Load data from databases to dataframes, the fastest way." 
-keywords = ["read_sql"] 
-license = "MIT" 
-maintainers = ["Weiyuan Wu <youngw@sfu.ca>"] 
-name = "connectorx" 
-readme = "README.md" # Markdown files are supported
-version = "0.4.7-alpha.1" 
-
 [project]
 name = "connectorx" # Target file name of maturin build
 readme = "README.md"
@@ -33,39 +11,34 @@ Repository = "https://github.com/sfu-db/connector-x"
 Issues = "https://github.com/sfu-db/connector-x/issues"
 Documentation = "https://sfu-db.github.io/connector-x/intro.html"
 
-[tool.poetry.dependencies]
-dask = {version = "^2021", optional = true, extras = ["dataframe"]}
-modin = {version = ">=0.10", optional = true}
-numpy = ">=2.3"
-pandas = {version = ">=2.3", optional = true}
-polars = {version = ">=1", optional = true}
-pyarrow = {version = ">=22", optional = true}
-python = ">=3.11,<3.15"
+# Dev/CI environment only. maturin reads [project] when building wheels, so
+# none of this ends up in the published metadata.
+[dependency-groups]
+dev = [
+  "black>=21.4b0,<22",
+  "clickhouse-sqlalchemy>=0.3.2,<0.4",
+  "contexttimer>=0.3.3,<0.4",
+  "dask[dataframe]>=2021.7.0,<2022",
+  "docopt>=0.6.2,<0.7",
+  "ipython>=7.31.1,<8",
+  "maturin>=1.0,<2.0",
+  "modin[dask]>=0.10.1",
+  "numpy>=2.3",
+  "pandas>=2.3",
+  "polars>=1",
+  "psycopg2-binary>=2.9,<3",
+  "pyarrow>=22",
+  "pytest>=9,<10",
+  "pytest-benchmark>=5.2,<6",
+  "testcontainers[oracle-free,clickhouse]>=4.0,<5",
+  "twine>=3.4.1,<4",
+]
 
-[tool.poetry.extras]
-all = ["dask", "pandas", "modin", "polars", "pyarrow"]
-dask = ["dask", "pandas"]
-modin = ["modin", "pandas"]
-pandas = ["pandas"]
-polars = ["pyarrow", "polars"]
-pyarrow = ["pyarrow"]
-
-[tool.poetry.group.dev.dependencies]
-black = "^21.4b0"
-contexttimer = "^0.3.3"
-dask = {extras = ["dataframe"], version = "^2021.7.0"}
-docopt = "^0.6.2"
-ipython = "^7.31.1"
-maturin = ">=1.0,<2.0"
-modin = {extras = ["dask"], version = ">=0.10.1"}
-polars = ">=0.20"
-pyarrow = ">=22"
-pytest = "^9"
-pytest-benchmark = "^5.2"
-testcontainers = {version = "^4.0", extras = ["oracle-free", "clickhouse"]}
-psycopg2-binary = "^2.9"
-twine = "^3.4.1"
-clickhouse-sqlalchemy = "^0.3.2"
+[tool.uv]
+# Don't build the Rust extension on `uv sync`; `maturin develop --uv` installs it.
+package = false
+# Same Python range the previous lockfile was resolved for.
+environments = ["python_version >= '3.11' and python_version < '3.15'"]
 
 [tool.pytest.ini_options]
 minversion = "9.0"

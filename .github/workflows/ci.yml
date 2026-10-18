@@ -114,6 +114,8 @@ jobs:
     env:
       # Force disable the GIL on free-threading because of https://github.com/sqlalchemy/sqlalchemy/discussions/13256
       PYTHON_GIL: ${{ matrix.python-version == '3.14t' && '0' || '1' }}
+      # Points uv at the interpreter from setup-python (works for 3.14t too).
+      UV_PYTHON: ${{ matrix.python-version }}
     # Note: No 'container' - we run directly on the VM to access Docker for Testcontainers
     strategy:
       matrix:
@@ -155,9 +157,11 @@ jobs:
           docker --version
           docker ps
 
-      - uses: Gr1N/setup-poetry@v9
+      - uses: astral-sh/setup-uv@v10.2.0
         with:
-          poetry-version: "2.4.1"
+          enable-cache: true
+          cache-dependency-glob: connectorx-python/uv.lock
+          cache-suffix: ${{ matrix.python-version }}
 
       - uses: extractions/setup-just@v4
 
@@ -181,17 +185,10 @@ jobs:
           key: python-${{ matrix.python-version }}
           workspaces: connectorx-python -> target
 
-      - name: Cache venv
-        uses: actions/cache@v6
-        with:
-          path: ~/.cache/pypoetry/virtualenvs
-          key: ${{ runner.os }}-${{ matrix.python-version }}-venv-${{ secrets.CACHE_VERSION }}-${{ hashFiles('connectorx-python/poetry.lock') }}
-
-      # --no-root: `just test-python` builds the extension via maturin develop;
-      # letting poetry install the project as well compiled it a second time.
+      # [tool.uv] package = false keeps uv sync from building the extension;
+      # `just test-python` builds it once via maturin develop.
       - name: Install python dependencies
-        working-directory: connectorx-python
-        run: poetry install --no-root
+        run: just bootstrap-python
 
       - name: Test python (mssql-tds)
         run: just test-python --mssql-driver=mssql-tds --deselect=connectorx/tests/test_mssql.py::test_mssql_driver_switch
@@ -199,8 +196,8 @@ jobs:
 
       - name: Test python MSSQL (Tiberius)
         working-directory: connectorx-python
-        run: poetry run pytest connectorx/tests/test_mssql.py --mssql-driver=tiberius --deselect=connectorx/tests/test_mssql.py::test_mssql_driver_switch -v -s
+        run: uv run pytest connectorx/tests/test_mssql.py --mssql-driver=tiberius --deselect=connectorx/tests/test_mssql.py::test_mssql_driver_switch -v -s
 
       - name: Test python MSSQL runtime switch
         working-directory: connectorx-python
-        run: poetry run pytest connectorx/tests/test_mssql.py::test_mssql_driver_switch -v -s
+        run: uv run pytest connectorx/tests/test_mssql.py::test_mssql_driver_switch -v -s

@@ -80,23 +80,20 @@ cleanup:
     rm connectorx-python/connectorx/connectorx*.so
 
 bootstrap-python:
-    cd connectorx-python && poetry install
-
-bootstrap-python-release:
-    cd connectorx-python && poetry install --only main --no-root
+    cd connectorx-python && uv sync
 
 setup-java:
     cd $ACCIO_PATH/rewriter && mvn package -Dmaven.test.skip=true
     cp -f $ACCIO_PATH/rewriter/target/accio-rewriter-1.0-SNAPSHOT-jar-with-dependencies.jar connectorx-python/connectorx/dependencies/federated-rewriter.jar
 
 setup-python:
-    cd connectorx-python && poetry run maturin develop --release
+    cd connectorx-python && uv run maturin develop --uv --release
     
 test-python +opts="": setup-python
-    cd connectorx-python && poetry run pytest connectorx/tests -v -s {{opts}}
+    cd connectorx-python && uv run pytest connectorx/tests -v -s {{opts}}
 
 test-python-s +opts="":
-    cd connectorx-python && poetry run pytest connectorx/tests -v -s {{opts}}
+    cd connectorx-python && uv run pytest connectorx/tests -v -s {{opts}}
 
 seed-db:
     #!/bin/bash
@@ -128,28 +125,28 @@ python-tpch name +ARGS="": setup-python
     #!/bin/bash
     export PYTHONPATH=$PWD/connectorx-python
     cd connectorx-python && \
-    poetry run python ../benchmarks/tpch-{{name}}.py {{ARGS}}
+    uv run python ../benchmarks/tpch-{{name}}.py {{ARGS}}
 
 python-tpch-ext name +ARGS="":
-    cd connectorx-python && poetry run python ../benchmarks/tpch-{{name}}.py {{ARGS}}
+    cd connectorx-python && uv run python ../benchmarks/tpch-{{name}}.py {{ARGS}}
 
 python-ddos name +ARGS="": setup-python
     #!/bin/bash
     export PYTHONPATH=$PWD/connectorx-python
     cd connectorx-python && \
-    poetry run python ../benchmarks/ddos-{{name}}.py {{ARGS}}
+    uv run python ../benchmarks/ddos-{{name}}.py {{ARGS}}
 
 python-ddos-ext name +ARGS="":
-    cd connectorx-python && poetry run python ../benchmarks/ddos-{{name}}.py {{ARGS}}
+    cd connectorx-python && uv run python ../benchmarks/ddos-{{name}}.py {{ARGS}}
 
 
 python-shell:
     cd connectorx-python && \
-    poetry run ipython
+    uv run ipython
 
 benchmark-report: setup-python
     cd connectorx-python && \
-    poetry run pytest connectorx/tests/benchmarks.py --benchmark-json ../benchmark.json
+    uv run pytest connectorx/tests/benchmarks.py --benchmark-json ../benchmark.json
     
 # releases
 build-python-wheel:
