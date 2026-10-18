@@ -9,6 +9,12 @@ on:
     branches:
       - main
 
+# A newer push to the same PR makes the running checks obsolete; main pushes
+# always run to completion.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   rust:
     runs-on: ubuntu-latest
@@ -29,23 +35,19 @@ jobs:
         with:
           components: rustfmt, clippy
 
-      - uses: actions/cache@v6
+      - uses: Swatinem/rust-cache@v2
         with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
-          key: ${{ runner.os }}-cargo-${{ secrets.CACHE_VERSION }}-${{ hashFiles('**/Cargo.lock') }}
+          prefix-key: v0-rust-${{ secrets.CACHE_VERSION }}
 
       - uses: extractions/setup-just@v4
 
       - name: Is the code formatted?
         run: cargo fmt --all -- --check -q
 
+      # --all also covers connectorx-cpp (not a default member); this used to
+      # run in both python matrix jobs instead.
       - name: Clippy linting
-        run: cargo clippy --features all
+        run: cargo clippy --features all --all
 
       - name: Check each feature gate
         run: just test-feature-gate
@@ -169,18 +171,15 @@ jobs:
           distribution: "temurin"
           java-version: "17"
 
-      - uses: actions/cache@v6
+      # connectorx-python is its own cargo workspace with its own target/, which
+      # the old cache never covered, so every run rebuilt the extension's whole
+      # dependency tree from scratch. pyo3 builds differ per ABI (3.14 vs 3.14t),
+      # hence the per-matrix key.
+      - uses: Swatinem/rust-cache@v2
         with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
-          key: ${{ runner.os }}-cargo-python-${{ matrix.python-version }}-${{ secrets.CACHE_VERSION }}-${{ hashFiles('**/Cargo.lock') }}
-
-      - name: Clippy linting
-        run: cargo clippy --features all --all
+          prefix-key: v0-rust-${{ secrets.CACHE_VERSION }}
+          key: python-${{ matrix.python-version }}
+          workspaces: connectorx-python -> target
 
       - name: Cache venv
         uses: actions/cache@v6
@@ -188,8 +187,11 @@ jobs:
           path: ~/.cache/pypoetry/virtualenvs
           key: ${{ runner.os }}-${{ matrix.python-version }}-venv-${{ secrets.CACHE_VERSION }}-${{ hashFiles('connectorx-python/poetry.lock') }}
 
+      # --no-root: `just test-python` builds the extension via maturin develop;
+      # letting poetry install the project as well compiled it a second time.
       - name: Install python dependencies
-        run: just bootstrap-python
+        working-directory: connectorx-python
+        run: poetry install --no-root
 
       - name: Test python (mssql-tds)
         run: just test-python --mssql-driver=mssql-tds --deselect=connectorx/tests/test_mssql.py::test_mssql_driver_switch
