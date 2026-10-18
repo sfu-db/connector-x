@@ -16,7 +16,7 @@ use crate::{
     utils::DummyBox,
 };
 use anyhow::anyhow;
-use bb8::{Pool, PooledConnection};
+use bb8_07::{Pool, PooledConnection};
 use bb8_tiberius::ConnectionManager;
 use chrono::{DateTime, Utc};
 use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
