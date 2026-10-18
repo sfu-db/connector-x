@@ -15,7 +15,7 @@ use connectorx::{
     prelude::*,
     sources::mysql::{BinaryProtocol, MySQLSource, TextProtocol},
     sql::CXQuery,
-    transports::MySQLArrowTransport,
+    transports::{MySQLArrowTransport, MySQLArrowTransportError},
 };
 
 #[test]
@@ -428,7 +428,10 @@ fn assert_str_collation_schema(result: &[RecordBatch]) {
 
 /// Run a single naked query through the Arrow transport using either the
 /// binary or text protocol.
-fn run_mysql_query(query: &str, binary: bool) -> Vec<RecordBatch> {
+fn try_run_mysql_query(
+    query: &str,
+    binary: bool,
+) -> Result<Vec<RecordBatch>, MySQLArrowTransportError> {
     let _ = env_logger::builder().is_test(true).try_init();
     let dburl = test_db::mysql_url();
     let queries = [CXQuery::naked(query)];
@@ -442,8 +445,7 @@ fn run_mysql_query(query: &str, binary: bool) -> Vec<RecordBatch> {
             &queries,
             None,
         )
-        .run()
-        .unwrap();
+        .run()?;
     } else {
         let builder = MySQLSource::<TextProtocol>::new(&dburl, 1).unwrap();
         Dispatcher::<_, _, MySQLArrowTransport<TextProtocol>>::new(
@@ -452,11 +454,14 @@ fn run_mysql_query(query: &str, binary: bool) -> Vec<RecordBatch> {
             &queries,
             None,
         )
-        .run()
-        .unwrap();
+        .run()?;
     }
 
-    destination.arrow().unwrap()
+    Ok(destination.arrow()?)
+}
+
+fn run_mysql_query(query: &str, binary: bool) -> Vec<RecordBatch> {
+    try_run_mysql_query(query, binary).unwrap()
 }
 
 #[test]
@@ -696,5 +701,36 @@ fn test_mysql_long_unsigned() {
             .downcast_ref::<UInt32Array>()
             .unwrap()
             .eq(&UInt32Array::from(vec![0u32, 4294967295])));
+    }
+}
+
+/// Values in `test_unconvertible` are valid in MySQL but cannot be represented
+/// by the Rust type the column maps to (see `scripts/mysql.sql`). The
+/// conversion must surface as an error, not as a panic inside the driver
+/// (#476, #268).
+const UNCONVERTIBLE_COLUMNS: [&str; 5] = [
+    "test_date",
+    "test_datetime",
+    "test_time_negative",
+    "test_time_over_24h",
+    "test_decimal_wide",
+];
+
+#[test]
+fn test_mysql_unconvertible_value_is_error() {
+    for binary in [true, false] {
+        for col in UNCONVERTIBLE_COLUMNS {
+            let query = format!("select {} from test_unconvertible", col);
+            let msg = try_run_mysql_query(&query, binary).unwrap_err().to_string();
+            assert!(
+                msg.contains("Cannot produce a")
+                    && msg.contains(&format!("column `{}`", col))
+                    && !msg.contains("Option<"),
+                "{} (binary={}): unexpected error message: {}",
+                query,
+                binary,
+                msg
+            );
+        }
     }
 }
