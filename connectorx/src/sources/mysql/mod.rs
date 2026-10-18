@@ -19,7 +19,10 @@ use fehler::{throw, throws};
 use log::{debug, warn};
 use r2d2::{Pool, PooledConnection};
 use r2d2_mysql::{
-    mysql::{prelude::Queryable, Binary, Column, QueryResult, Row, Text},
+    mysql::{
+        prelude::{FromValue, Queryable},
+        Binary, Column, QueryResult, Row, Text,
+    },
     MySqlConnectionManager,
 };
 use rust_decimal::Decimal;
@@ -274,6 +277,33 @@ impl SourcePartition for MySQLSourcePartition<TextProtocol> {
     }
 }
 
+/// Takes the cell at `cidx` out of `row` and converts it to `T`.
+///
+/// `Row::take` panics inside mysql_common when the value has no representation
+/// in `T` (zero dates, TIME values outside a chrono `NaiveTime`, DECIMALs wider
+/// than rust_decimal, ...). Use `take_opt` instead and report the failure as an
+/// error naming the column (#476, #268).
+///
+/// `Produced` is the type named in that error: the column's Rust type, without
+/// the `Option` of nullable columns, as in the other sources.
+fn take_cell<T: FromValue, Produced>(
+    row: &mut Row,
+    ridx: usize,
+    cidx: usize,
+) -> Result<T, MySQLSourceError> {
+    match row.take_opt::<T, _>(cidx) {
+        Some(Ok(value)) => Ok(value),
+        Some(Err(e)) => Err(ConnectorXError::cannot_produce::<Produced>(Some(format!(
+            "column `{}` (index {}): {}",
+            row.columns_ref()[cidx].name_str(),
+            cidx,
+            e
+        )))
+        .into()),
+        None => Err(anyhow!("mysql cannot parse at position: ({}, {})", ridx, cidx).into()),
+    }
+}
+
 pub struct MySQLBinarySourceParser<'a> {
     iter: QueryResult<'a, 'a, 'a, Binary>,
     rowbuf: Vec<Row>,
@@ -346,8 +376,7 @@ macro_rules! impl_produce_binary {
                 #[throws(MySQLSourceError)]
                 fn produce(&'r mut self) -> $t {
                     let (ridx, cidx) = self.next_loc()?;
-                    let res = self.rowbuf[ridx].take(cidx).ok_or_else(|| anyhow!("mysql cannot parse at position: ({}, {})", ridx, cidx))?;
-                    res
+                    take_cell::<$t, $t>(&mut self.rowbuf[ridx], ridx, cidx)?
                 }
             }
 
@@ -357,8 +386,7 @@ macro_rules! impl_produce_binary {
                 #[throws(MySQLSourceError)]
                 fn produce(&'r mut self) -> Option<$t> {
                     let (ridx, cidx) = self.next_loc()?;
-                    let res = self.rowbuf[ridx].take(cidx).ok_or_else(|| anyhow!("mysql cannot parse at position: ({}, {})", ridx, cidx))?;
-                    res
+                    take_cell::<Option<$t>, $t>(&mut self.rowbuf[ridx], ridx, cidx)?
                 }
             }
         )+
@@ -455,8 +483,7 @@ macro_rules! impl_produce_text {
                 #[throws(MySQLSourceError)]
                 fn produce(&'r mut self) -> $t {
                     let (ridx, cidx) = self.next_loc()?;
-                    let res = self.rowbuf[ridx].take(cidx).ok_or_else(|| anyhow!("mysql cannot parse at position: ({}, {})", ridx, cidx))?;
-                    res
+                    take_cell::<$t, $t>(&mut self.rowbuf[ridx], ridx, cidx)?
                 }
             }
 
@@ -466,8 +493,7 @@ macro_rules! impl_produce_text {
                 #[throws(MySQLSourceError)]
                 fn produce(&'r mut self) -> Option<$t> {
                     let (ridx, cidx) = self.next_loc()?;
-                    let res = self.rowbuf[ridx].take(cidx).ok_or_else(|| anyhow!("mysql cannot parse at position: ({}, {})", ridx, cidx))?;
-                    res
+                    take_cell::<Option<$t>, $t>(&mut self.rowbuf[ridx], ridx, cidx)?
                 }
             }
         )+
