@@ -25,9 +25,8 @@ use std::{
 #[cfg(feature = "dst_polars")]
 use {
     arrow::ffi::to_ffi,
-    polars::prelude::{concat, DataFrame, IntoLazy, PlSmallStr, Series, UnionArgs},
+    polars::prelude::{concat, Column, DataFrame, IntoLazy, PlSmallStr, Series, UnionArgs},
     polars_arrow::ffi::{import_array_from_c, import_field_from_c},
-    std::iter::FromIterator,
     std::mem::transmute,
 };
 
@@ -174,14 +173,14 @@ impl ArrowDestination {
                 }?;
 
                 // Create Polars series from arrow column
-                columns.push(Series::from_arrow(
+                columns.push(Column::from(Series::from_arrow(
                     PlSmallStr::from(chunk.schema().field(i).name()),
                     data,
-                )?);
+                )?));
             }
 
             // Create DataFrame from the columns
-            lf_vec.push(DataFrame::from_iter(columns).lazy());
+            lf_vec.push(DataFrame::new(chunk.num_rows(), columns)?.lazy());
         }
 
         // Concat the chunks
