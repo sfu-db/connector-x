@@ -88,114 +88,113 @@
 <a href=#88 id=88 data-nosnippet>88</a>    <span class="kw">let </span>db_manual = jvm.create_instance(<span class="string">"java.util.HashMap"</span>, InvocationArg::empty())<span class="question-mark">?</span>;
 <a href=#89 id=89 data-nosnippet>89</a>
 <a href=#90 id=90 data-nosnippet>90</a>    <span class="kw">for </span>(db_name, db_info) <span class="kw">in </span>db_map.iter() {
-<a href=#91 id=91 data-nosnippet>91</a>        <span class="kw">if </span>db_info.manual_info.is_some() {
-<a href=#92 id=92 data-nosnippet>92</a>            <span class="kw">let </span>manual_info = db_info.manual_info.as_ref().unwrap();
-<a href=#93 id=93 data-nosnippet>93</a>            <span class="kw">let </span>schema_info = jvm.create_instance(<span class="string">"java.util.HashMap"</span>, InvocationArg::empty())<span class="question-mark">?</span>;
-<a href=#94 id=94 data-nosnippet>94</a>            <span class="kw">for </span>(name, columns) <span class="kw">in </span>manual_info {
-<a href=#95 id=95 data-nosnippet>95</a>                <span class="kw">let </span>arr_instance = jvm.java_list(<span class="string">"java.lang.String"</span>, columns.to_vec())<span class="question-mark">?</span>;
-<a href=#96 id=96 data-nosnippet>96</a>                jvm.invoke(
-<a href=#97 id=97 data-nosnippet>97</a>                    <span class="kw-2">&amp;</span>schema_info,
-<a href=#98 id=98 data-nosnippet>98</a>                    <span class="string">"put"</span>,
-<a href=#99 id=99 data-nosnippet>99</a>                    <span class="kw-2">&amp;</span>[
-<a href=#100 id=100 data-nosnippet>100</a>                        InvocationArg::try_from(name).unwrap(),
-<a href=#101 id=101 data-nosnippet>101</a>                        InvocationArg::from(arr_instance),
-<a href=#102 id=102 data-nosnippet>102</a>                    ],
-<a href=#103 id=103 data-nosnippet>103</a>                )<span class="question-mark">?</span>;
-<a href=#104 id=104 data-nosnippet>104</a>            }
-<a href=#105 id=105 data-nosnippet>105</a>            <span class="kw">let </span>fed_ds = jvm.create_instance(
-<a href=#106 id=106 data-nosnippet>106</a>                <span class="string">"ai.dataprep.federated.FederatedDataSource"</span>,
-<a href=#107 id=107 data-nosnippet>107</a>                <span class="kw-2">&amp;</span>[
-<a href=#108 id=108 data-nosnippet>108</a>                    InvocationArg::try_from(db_info.is_local).unwrap(),
-<a href=#109 id=109 data-nosnippet>109</a>                    InvocationArg::from(schema_info),
-<a href=#110 id=110 data-nosnippet>110</a>                ],
-<a href=#111 id=111 data-nosnippet>111</a>            )<span class="question-mark">?</span>;
-<a href=#112 id=112 data-nosnippet>112</a>            jvm.invoke(
-<a href=#113 id=113 data-nosnippet>113</a>                <span class="kw-2">&amp;</span>db_manual,
-<a href=#114 id=114 data-nosnippet>114</a>                <span class="string">"put"</span>,
-<a href=#115 id=115 data-nosnippet>115</a>                <span class="kw-2">&amp;</span>[
-<a href=#116 id=116 data-nosnippet>116</a>                    InvocationArg::try_from(db_name).unwrap(),
-<a href=#117 id=117 data-nosnippet>117</a>                    InvocationArg::from(fed_ds),
-<a href=#118 id=118 data-nosnippet>118</a>                ],
-<a href=#119 id=119 data-nosnippet>119</a>            )<span class="question-mark">?</span>;
-<a href=#120 id=120 data-nosnippet>120</a>        } <span class="kw">else </span>{
-<a href=#121 id=121 data-nosnippet>121</a>            db_config.push(String::from(db_name));
-<a href=#122 id=122 data-nosnippet>122</a>        }
-<a href=#123 id=123 data-nosnippet>123</a>    }
-<a href=#124 id=124 data-nosnippet>124</a>    <span class="kw">let </span>db_config = jvm.java_list(<span class="string">"java.lang.String"</span>, db_config)<span class="question-mark">?</span>;
-<a href=#125 id=125 data-nosnippet>125</a>    (db_config, db_manual)
-<a href=#126 id=126 data-nosnippet>126</a>}
-<a href=#127 id=127 data-nosnippet>127</a>
-<a href=#128 id=128 data-nosnippet>128</a><span class="attr">#[allow(dead_code)]
-<a href=#129 id=129 data-nosnippet>129</a>#[throws(ConnectorXOutError)]
-<a href=#130 id=130 data-nosnippet>130</a></span><span class="kw">fn </span>create_sources2(
-<a href=#131 id=131 data-nosnippet>131</a>    jvm: <span class="kw-2">&amp;</span>Jvm,
-<a href=#132 id=132 data-nosnippet>132</a>    db_map: <span class="kw-2">&amp;</span>HashMap&lt;String, FederatedDataSourceInfo&gt;,
-<a href=#133 id=133 data-nosnippet>133</a>) -&gt; (Instance, Instance) {
-<a href=#134 id=134 data-nosnippet>134</a>    <span class="macro">debug!</span>(<span class="string">"Found environment variable `FED_CONFIG_PATH`, use configurations!"</span>);
-<a href=#135 id=135 data-nosnippet>135</a>    <span class="kw">let </span><span class="kw-2">mut </span>dbs = <span class="macro">vec!</span>[];
-<a href=#136 id=136 data-nosnippet>136</a>    <span class="kw">let </span>db_manual = jvm.create_instance(<span class="string">"java.util.HashMap"</span>, InvocationArg::empty())<span class="question-mark">?</span>;
-<a href=#137 id=137 data-nosnippet>137</a>    <span class="kw">for </span>db <span class="kw">in </span>db_map.keys() {
-<a href=#138 id=138 data-nosnippet>138</a>        dbs.push(String::from(db));
-<a href=#139 id=139 data-nosnippet>139</a>    }
-<a href=#140 id=140 data-nosnippet>140</a>    (jvm.java_list(<span class="string">"java.lang.String"</span>, dbs)<span class="question-mark">?</span>, db_manual)
-<a href=#141 id=141 data-nosnippet>141</a>}
-<a href=#142 id=142 data-nosnippet>142</a>
-<a href=#143 id=143 data-nosnippet>143</a><span class="attr">#[throws(ConnectorXOutError)]
-<a href=#144 id=144 data-nosnippet>144</a></span><span class="kw">pub fn </span>rewrite_sql(
-<a href=#145 id=145 data-nosnippet>145</a>    sql: <span class="kw-2">&amp;</span>str,
-<a href=#146 id=146 data-nosnippet>146</a>    db_map: <span class="kw-2">&amp;</span>HashMap&lt;String, FederatedDataSourceInfo&gt;,
-<a href=#147 id=147 data-nosnippet>147</a>    j4rs_base: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
-<a href=#148 id=148 data-nosnippet>148</a>    strategy: <span class="kw-2">&amp;</span>str,
-<a href=#149 id=149 data-nosnippet>149</a>) -&gt; Vec&lt;Plan&gt; {
-<a href=#150 id=150 data-nosnippet>150</a>    <span class="kw">let </span>jvm = init_jvm(j4rs_base)<span class="question-mark">?</span>;
-<a href=#151 id=151 data-nosnippet>151</a>    <span class="macro">debug!</span>(<span class="string">"init jvm successfully!"</span>);
-<a href=#152 id=152 data-nosnippet>152</a>
-<a href=#153 id=153 data-nosnippet>153</a>    <span class="kw">let </span>sql = InvocationArg::try_from(sql).unwrap();
-<a href=#154 id=154 data-nosnippet>154</a>    <span class="kw">let </span>strategy = InvocationArg::try_from(strategy).unwrap();
-<a href=#155 id=155 data-nosnippet>155</a>
-<a href=#156 id=156 data-nosnippet>156</a>    <span class="kw">let </span>(db_config, db_manual) = <span class="kw">match </span>env::var(<span class="string">"FED_CONFIG_PATH"</span>) {
-<a href=#157 id=157 data-nosnippet>157</a>        <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; create_sources2(<span class="kw-2">&amp;</span>jvm, db_map)<span class="question-mark">?</span>,
-<a href=#158 id=158 data-nosnippet>158</a>        <span class="kw">_ </span>=&gt; create_sources(<span class="kw-2">&amp;</span>jvm, db_map)<span class="question-mark">?</span>,
-<a href=#159 id=159 data-nosnippet>159</a>    };
-<a href=#160 id=160 data-nosnippet>160</a>    <span class="kw">let </span>rewriter = jvm.create_instance(
-<a href=#161 id=161 data-nosnippet>161</a>        <span class="string">"ai.dataprep.accio.FederatedQueryRewriter"</span>,
-<a href=#162 id=162 data-nosnippet>162</a>        InvocationArg::empty(),
-<a href=#163 id=163 data-nosnippet>163</a>    )<span class="question-mark">?</span>;
-<a href=#164 id=164 data-nosnippet>164</a>    <span class="kw">let </span>db_config = InvocationArg::from(db_config);
-<a href=#165 id=165 data-nosnippet>165</a>    <span class="kw">let </span>db_manual = InvocationArg::from(db_manual);
-<a href=#166 id=166 data-nosnippet>166</a>    <span class="kw">let </span>plan = jvm.invoke(<span class="kw-2">&amp;</span>rewriter, <span class="string">"rewrite"</span>, <span class="kw-2">&amp;</span>[sql, db_config, db_manual, strategy])<span class="question-mark">?</span>;
-<a href=#167 id=167 data-nosnippet>167</a>
-<a href=#168 id=168 data-nosnippet>168</a>    <span class="kw">let </span>count = jvm.invoke(<span class="kw-2">&amp;</span>plan, <span class="string">"getCount"</span>, InvocationArg::empty())<span class="question-mark">?</span>;
-<a href=#169 id=169 data-nosnippet>169</a>    <span class="kw">let </span>count: i32 = jvm.to_rust(count)<span class="question-mark">?</span>;
-<a href=#170 id=170 data-nosnippet>170</a>    <span class="macro">debug!</span>(<span class="string">"rewrite finished, got {} queries"</span>, count);
-<a href=#171 id=171 data-nosnippet>171</a>
-<a href=#172 id=172 data-nosnippet>172</a>    <span class="kw">let </span><span class="kw-2">mut </span>fed_plan = <span class="macro">vec!</span>[];
-<a href=#173 id=173 data-nosnippet>173</a>    <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..count {
-<a href=#174 id=174 data-nosnippet>174</a>        <span class="kw">let </span>idx = [InvocationArg::try_from(i).unwrap().into_primitive()<span class="question-mark">?</span>];
-<a href=#175 id=175 data-nosnippet>175</a>
-<a href=#176 id=176 data-nosnippet>176</a>        <span class="kw">let </span>db = jvm.invoke(<span class="kw-2">&amp;</span>plan, <span class="string">"getDBName"</span>, <span class="kw-2">&amp;</span>idx)<span class="question-mark">?</span>;
-<a href=#177 id=177 data-nosnippet>177</a>        <span class="kw">let </span>db: String = jvm.to_rust(db)<span class="question-mark">?</span>;
-<a href=#178 id=178 data-nosnippet>178</a>
-<a href=#179 id=179 data-nosnippet>179</a>        <span class="kw">let </span>alias_db = jvm.invoke(<span class="kw-2">&amp;</span>plan, <span class="string">"getAliasDBName"</span>, <span class="kw-2">&amp;</span>idx)<span class="question-mark">?</span>;
-<a href=#180 id=180 data-nosnippet>180</a>        <span class="kw">let </span>alias_db: String = jvm.to_rust(alias_db)<span class="question-mark">?</span>;
-<a href=#181 id=181 data-nosnippet>181</a>
-<a href=#182 id=182 data-nosnippet>182</a>        <span class="kw">let </span>rewrite_sql = jvm.invoke(<span class="kw-2">&amp;</span>plan, <span class="string">"getSql"</span>, <span class="kw-2">&amp;</span>idx)<span class="question-mark">?</span>;
-<a href=#183 id=183 data-nosnippet>183</a>        <span class="kw">let </span>rewrite_sql: String = jvm.to_rust(rewrite_sql)<span class="question-mark">?</span>;
-<a href=#184 id=184 data-nosnippet>184</a>
-<a href=#185 id=185 data-nosnippet>185</a>        <span class="kw">let </span>cardinality = jvm.invoke(<span class="kw-2">&amp;</span>plan, <span class="string">"getCardinality"</span>, <span class="kw-2">&amp;</span>idx)<span class="question-mark">?</span>;
-<a href=#186 id=186 data-nosnippet>186</a>        <span class="kw">let </span>cardinality: usize = jvm.to_rust(cardinality)<span class="question-mark">?</span>;
-<a href=#187 id=187 data-nosnippet>187</a>
-<a href=#188 id=188 data-nosnippet>188</a>        <span class="macro">debug!</span>(
-<a href=#189 id=189 data-nosnippet>189</a>            <span class="string">"{} - db: {}, alias: {}, cardinality: {}, rewrite sql: {}"</span>,
-<a href=#190 id=190 data-nosnippet>190</a>            i, db, alias_db, cardinality, rewrite_sql
-<a href=#191 id=191 data-nosnippet>191</a>        );
-<a href=#192 id=192 data-nosnippet>192</a>        fed_plan.push(Plan {
-<a href=#193 id=193 data-nosnippet>193</a>            db_name: db,
-<a href=#194 id=194 data-nosnippet>194</a>            db_alias: alias_db,
-<a href=#195 id=195 data-nosnippet>195</a>            sql: rewrite_sql,
-<a href=#196 id=196 data-nosnippet>196</a>            cardinality,
-<a href=#197 id=197 data-nosnippet>197</a>        });
-<a href=#198 id=198 data-nosnippet>198</a>    }
-<a href=#199 id=199 data-nosnippet>199</a>    fed_plan
-<a href=#200 id=200 data-nosnippet>200</a>}
+<a href=#91 id=91 data-nosnippet>91</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(manual_info) = <span class="kw-2">&amp;</span>db_info.manual_info {
+<a href=#92 id=92 data-nosnippet>92</a>            <span class="kw">let </span>schema_info = jvm.create_instance(<span class="string">"java.util.HashMap"</span>, InvocationArg::empty())<span class="question-mark">?</span>;
+<a href=#93 id=93 data-nosnippet>93</a>            <span class="kw">for </span>(name, columns) <span class="kw">in </span>manual_info {
+<a href=#94 id=94 data-nosnippet>94</a>                <span class="kw">let </span>arr_instance = jvm.java_list(<span class="string">"java.lang.String"</span>, columns.to_vec())<span class="question-mark">?</span>;
+<a href=#95 id=95 data-nosnippet>95</a>                jvm.invoke(
+<a href=#96 id=96 data-nosnippet>96</a>                    <span class="kw-2">&amp;</span>schema_info,
+<a href=#97 id=97 data-nosnippet>97</a>                    <span class="string">"put"</span>,
+<a href=#98 id=98 data-nosnippet>98</a>                    <span class="kw-2">&amp;</span>[
+<a href=#99 id=99 data-nosnippet>99</a>                        InvocationArg::try_from(name).unwrap(),
+<a href=#100 id=100 data-nosnippet>100</a>                        InvocationArg::from(arr_instance),
+<a href=#101 id=101 data-nosnippet>101</a>                    ],
+<a href=#102 id=102 data-nosnippet>102</a>                )<span class="question-mark">?</span>;
+<a href=#103 id=103 data-nosnippet>103</a>            }
+<a href=#104 id=104 data-nosnippet>104</a>            <span class="kw">let </span>fed_ds = jvm.create_instance(
+<a href=#105 id=105 data-nosnippet>105</a>                <span class="string">"ai.dataprep.federated.FederatedDataSource"</span>,
+<a href=#106 id=106 data-nosnippet>106</a>                <span class="kw-2">&amp;</span>[
+<a href=#107 id=107 data-nosnippet>107</a>                    InvocationArg::try_from(db_info.is_local).unwrap(),
+<a href=#108 id=108 data-nosnippet>108</a>                    InvocationArg::from(schema_info),
+<a href=#109 id=109 data-nosnippet>109</a>                ],
+<a href=#110 id=110 data-nosnippet>110</a>            )<span class="question-mark">?</span>;
+<a href=#111 id=111 data-nosnippet>111</a>            jvm.invoke(
+<a href=#112 id=112 data-nosnippet>112</a>                <span class="kw-2">&amp;</span>db_manual,
+<a href=#113 id=113 data-nosnippet>113</a>                <span class="string">"put"</span>,
+<a href=#114 id=114 data-nosnippet>114</a>                <span class="kw-2">&amp;</span>[
+<a href=#115 id=115 data-nosnippet>115</a>                    InvocationArg::try_from(db_name).unwrap(),
+<a href=#116 id=116 data-nosnippet>116</a>                    InvocationArg::from(fed_ds),
+<a href=#117 id=117 data-nosnippet>117</a>                ],
+<a href=#118 id=118 data-nosnippet>118</a>            )<span class="question-mark">?</span>;
+<a href=#119 id=119 data-nosnippet>119</a>        } <span class="kw">else </span>{
+<a href=#120 id=120 data-nosnippet>120</a>            db_config.push(String::from(db_name));
+<a href=#121 id=121 data-nosnippet>121</a>        }
+<a href=#122 id=122 data-nosnippet>122</a>    }
+<a href=#123 id=123 data-nosnippet>123</a>    <span class="kw">let </span>db_config = jvm.java_list(<span class="string">"java.lang.String"</span>, db_config)<span class="question-mark">?</span>;
+<a href=#124 id=124 data-nosnippet>124</a>    (db_config, db_manual)
+<a href=#125 id=125 data-nosnippet>125</a>}
+<a href=#126 id=126 data-nosnippet>126</a>
+<a href=#127 id=127 data-nosnippet>127</a><span class="attr">#[allow(dead_code)]
+<a href=#128 id=128 data-nosnippet>128</a>#[throws(ConnectorXOutError)]
+<a href=#129 id=129 data-nosnippet>129</a></span><span class="kw">fn </span>create_sources2(
+<a href=#130 id=130 data-nosnippet>130</a>    jvm: <span class="kw-2">&amp;</span>Jvm,
+<a href=#131 id=131 data-nosnippet>131</a>    db_map: <span class="kw-2">&amp;</span>HashMap&lt;String, FederatedDataSourceInfo&gt;,
+<a href=#132 id=132 data-nosnippet>132</a>) -&gt; (Instance, Instance) {
+<a href=#133 id=133 data-nosnippet>133</a>    <span class="macro">debug!</span>(<span class="string">"Found environment variable `FED_CONFIG_PATH`, use configurations!"</span>);
+<a href=#134 id=134 data-nosnippet>134</a>    <span class="kw">let </span><span class="kw-2">mut </span>dbs = <span class="macro">vec!</span>[];
+<a href=#135 id=135 data-nosnippet>135</a>    <span class="kw">let </span>db_manual = jvm.create_instance(<span class="string">"java.util.HashMap"</span>, InvocationArg::empty())<span class="question-mark">?</span>;
+<a href=#136 id=136 data-nosnippet>136</a>    <span class="kw">for </span>db <span class="kw">in </span>db_map.keys() {
+<a href=#137 id=137 data-nosnippet>137</a>        dbs.push(String::from(db));
+<a href=#138 id=138 data-nosnippet>138</a>    }
+<a href=#139 id=139 data-nosnippet>139</a>    (jvm.java_list(<span class="string">"java.lang.String"</span>, dbs)<span class="question-mark">?</span>, db_manual)
+<a href=#140 id=140 data-nosnippet>140</a>}
+<a href=#141 id=141 data-nosnippet>141</a>
+<a href=#142 id=142 data-nosnippet>142</a><span class="attr">#[throws(ConnectorXOutError)]
+<a href=#143 id=143 data-nosnippet>143</a></span><span class="kw">pub fn </span>rewrite_sql(
+<a href=#144 id=144 data-nosnippet>144</a>    sql: <span class="kw-2">&amp;</span>str,
+<a href=#145 id=145 data-nosnippet>145</a>    db_map: <span class="kw-2">&amp;</span>HashMap&lt;String, FederatedDataSourceInfo&gt;,
+<a href=#146 id=146 data-nosnippet>146</a>    j4rs_base: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
+<a href=#147 id=147 data-nosnippet>147</a>    strategy: <span class="kw-2">&amp;</span>str,
+<a href=#148 id=148 data-nosnippet>148</a>) -&gt; Vec&lt;Plan&gt; {
+<a href=#149 id=149 data-nosnippet>149</a>    <span class="kw">let </span>jvm = init_jvm(j4rs_base)<span class="question-mark">?</span>;
+<a href=#150 id=150 data-nosnippet>150</a>    <span class="macro">debug!</span>(<span class="string">"init jvm successfully!"</span>);
+<a href=#151 id=151 data-nosnippet>151</a>
+<a href=#152 id=152 data-nosnippet>152</a>    <span class="kw">let </span>sql = InvocationArg::try_from(sql).unwrap();
+<a href=#153 id=153 data-nosnippet>153</a>    <span class="kw">let </span>strategy = InvocationArg::try_from(strategy).unwrap();
+<a href=#154 id=154 data-nosnippet>154</a>
+<a href=#155 id=155 data-nosnippet>155</a>    <span class="kw">let </span>(db_config, db_manual) = <span class="kw">match </span>env::var(<span class="string">"FED_CONFIG_PATH"</span>) {
+<a href=#156 id=156 data-nosnippet>156</a>        <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; create_sources2(<span class="kw-2">&amp;</span>jvm, db_map)<span class="question-mark">?</span>,
+<a href=#157 id=157 data-nosnippet>157</a>        <span class="kw">_ </span>=&gt; create_sources(<span class="kw-2">&amp;</span>jvm, db_map)<span class="question-mark">?</span>,
+<a href=#158 id=158 data-nosnippet>158</a>    };
+<a href=#159 id=159 data-nosnippet>159</a>    <span class="kw">let </span>rewriter = jvm.create_instance(
+<a href=#160 id=160 data-nosnippet>160</a>        <span class="string">"ai.dataprep.accio.FederatedQueryRewriter"</span>,
+<a href=#161 id=161 data-nosnippet>161</a>        InvocationArg::empty(),
+<a href=#162 id=162 data-nosnippet>162</a>    )<span class="question-mark">?</span>;
+<a href=#163 id=163 data-nosnippet>163</a>    <span class="kw">let </span>db_config = InvocationArg::from(db_config);
+<a href=#164 id=164 data-nosnippet>164</a>    <span class="kw">let </span>db_manual = InvocationArg::from(db_manual);
+<a href=#165 id=165 data-nosnippet>165</a>    <span class="kw">let </span>plan = jvm.invoke(<span class="kw-2">&amp;</span>rewriter, <span class="string">"rewrite"</span>, <span class="kw-2">&amp;</span>[sql, db_config, db_manual, strategy])<span class="question-mark">?</span>;
+<a href=#166 id=166 data-nosnippet>166</a>
+<a href=#167 id=167 data-nosnippet>167</a>    <span class="kw">let </span>count = jvm.invoke(<span class="kw-2">&amp;</span>plan, <span class="string">"getCount"</span>, InvocationArg::empty())<span class="question-mark">?</span>;
+<a href=#168 id=168 data-nosnippet>168</a>    <span class="kw">let </span>count: i32 = jvm.to_rust(count)<span class="question-mark">?</span>;
+<a href=#169 id=169 data-nosnippet>169</a>    <span class="macro">debug!</span>(<span class="string">"rewrite finished, got {} queries"</span>, count);
+<a href=#170 id=170 data-nosnippet>170</a>
+<a href=#171 id=171 data-nosnippet>171</a>    <span class="kw">let </span><span class="kw-2">mut </span>fed_plan = <span class="macro">vec!</span>[];
+<a href=#172 id=172 data-nosnippet>172</a>    <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..count {
+<a href=#173 id=173 data-nosnippet>173</a>        <span class="kw">let </span>idx = [InvocationArg::try_from(i).unwrap().into_primitive()<span class="question-mark">?</span>];
+<a href=#174 id=174 data-nosnippet>174</a>
+<a href=#175 id=175 data-nosnippet>175</a>        <span class="kw">let </span>db = jvm.invoke(<span class="kw-2">&amp;</span>plan, <span class="string">"getDBName"</span>, <span class="kw-2">&amp;</span>idx)<span class="question-mark">?</span>;
+<a href=#176 id=176 data-nosnippet>176</a>        <span class="kw">let </span>db: String = jvm.to_rust(db)<span class="question-mark">?</span>;
+<a href=#177 id=177 data-nosnippet>177</a>
+<a href=#178 id=178 data-nosnippet>178</a>        <span class="kw">let </span>alias_db = jvm.invoke(<span class="kw-2">&amp;</span>plan, <span class="string">"getAliasDBName"</span>, <span class="kw-2">&amp;</span>idx)<span class="question-mark">?</span>;
+<a href=#179 id=179 data-nosnippet>179</a>        <span class="kw">let </span>alias_db: String = jvm.to_rust(alias_db)<span class="question-mark">?</span>;
+<a href=#180 id=180 data-nosnippet>180</a>
+<a href=#181 id=181 data-nosnippet>181</a>        <span class="kw">let </span>rewrite_sql = jvm.invoke(<span class="kw-2">&amp;</span>plan, <span class="string">"getSql"</span>, <span class="kw-2">&amp;</span>idx)<span class="question-mark">?</span>;
+<a href=#182 id=182 data-nosnippet>182</a>        <span class="kw">let </span>rewrite_sql: String = jvm.to_rust(rewrite_sql)<span class="question-mark">?</span>;
+<a href=#183 id=183 data-nosnippet>183</a>
+<a href=#184 id=184 data-nosnippet>184</a>        <span class="kw">let </span>cardinality = jvm.invoke(<span class="kw-2">&amp;</span>plan, <span class="string">"getCardinality"</span>, <span class="kw-2">&amp;</span>idx)<span class="question-mark">?</span>;
+<a href=#185 id=185 data-nosnippet>185</a>        <span class="kw">let </span>cardinality: usize = jvm.to_rust(cardinality)<span class="question-mark">?</span>;
+<a href=#186 id=186 data-nosnippet>186</a>
+<a href=#187 id=187 data-nosnippet>187</a>        <span class="macro">debug!</span>(
+<a href=#188 id=188 data-nosnippet>188</a>            <span class="string">"{} - db: {}, alias: {}, cardinality: {}, rewrite sql: {}"</span>,
+<a href=#189 id=189 data-nosnippet>189</a>            i, db, alias_db, cardinality, rewrite_sql
+<a href=#190 id=190 data-nosnippet>190</a>        );
+<a href=#191 id=191 data-nosnippet>191</a>        fed_plan.push(Plan {
+<a href=#192 id=192 data-nosnippet>192</a>            db_name: db,
+<a href=#193 id=193 data-nosnippet>193</a>            db_alias: alias_db,
+<a href=#194 id=194 data-nosnippet>194</a>            sql: rewrite_sql,
+<a href=#195 id=195 data-nosnippet>195</a>            cardinality,
+<a href=#196 id=196 data-nosnippet>196</a>        });
+<a href=#197 id=197 data-nosnippet>197</a>    }
+<a href=#198 id=198 data-nosnippet>198</a>    fed_plan
+<a href=#199 id=199 data-nosnippet>199</a>}
 </code></pre></div></section></main></body></html>
