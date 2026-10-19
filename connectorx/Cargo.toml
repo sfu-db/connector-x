@@ -2,7 +2,7 @@
 authors = ["SFU Database System Lab <dsl.cs.sfu@gmail.com>"]
 description = "Load data from databases to dataframes, the fastest way."
 documentation = "https://docs.rs/connectorx"
-edition = "2018"
+edition = "2021"
 license = "MIT"
 name = "connectorx"
 readme = "../README.md"
