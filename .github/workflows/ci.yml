@@ -44,10 +44,12 @@ jobs:
       - name: Is the code formatted?
         run: cargo fmt --all -- --check -q
 
-      # --all also covers connectorx-cpp (not a default member); this used to
-      # run in both python matrix jobs instead.
+      # --all also covers connectorx-cpp (not a default member). -D warnings
+      # fails the build on any new warning. missing_docs is kept as a warning
+      # (lib.rs enables it to track the documentation backlog) until that
+      # backlog is cleared; --force-warn stops -D warnings from promoting it.
       - name: Clippy linting
-        run: cargo clippy --features all --all
+        run: cargo clippy --features all --all -- -D warnings --force-warn missing_docs
 
       - name: Check each feature gate
         run: just test-feature-gate
