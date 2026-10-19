@@ -1495,7 +1495,7 @@ dependencies = [
  "futures",
  "gcp-bigquery-client",
  "hex",
- "itertools 0.14.0",
+ "itertools 0.15.0",
  "j4rs",
  "log",
  "mssql-tds",
