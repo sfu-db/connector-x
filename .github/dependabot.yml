@@ -24,3 +24,9 @@ updates:
       prefix: build(rust)
       prefix-development: chore(rust)
     #labels: ['skip changelog']
+    groups:
+      # polars depends on polars-arrow at its own exact version, so bumping
+      # either crate alone leaves two incompatible polars-arrow copies in the
+      # build. Always update them in one PR.
+      polars:
+        patterns: ['polars', 'polars-*']

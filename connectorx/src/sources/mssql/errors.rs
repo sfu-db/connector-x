@@ -15,7 +15,7 @@ pub enum MsSQLSourceError {
 
     #[cfg(feature = "src_mssql_tiberius")]
     #[error(transparent)]
-    MsSQLRuntimeError(#[from] bb8::RunError<bb8_tiberius::Error>),
+    MsSQLRuntimeError(#[from] bb8_07::RunError<bb8_tiberius::Error>),
 
     #[cfg(feature = "src_mssql_tiberius")]
     #[error(transparent)]

@@ -427,7 +427,6 @@ struct ConnectionManager {
     options: MsSqlOptions,
 }
 
-#[async_trait::async_trait]
 impl ManageConnection for ConnectionManager {
     type Connection = TdsClient;
     type Error = MsSQLSourceError;
@@ -439,7 +438,7 @@ impl ManageConnection for ConnectionManager {
             .await?)
     }
 
-    async fn is_valid(&self, client: &mut PooledConnection<'_, Self>) -> Result<(), Self::Error> {
+    async fn is_valid(&self, client: &mut TdsClient) -> Result<(), Self::Error> {
         if client.is_connection_dead() {
             return Err(anyhow!("MsSQL pooled connection is closed").into());
         }
