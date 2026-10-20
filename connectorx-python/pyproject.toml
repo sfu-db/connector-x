@@ -2,7 +2,7 @@
 name = "connectorx" # Target file name of maturin build
 readme = "README.md"
 license = { text = "MIT" }
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dynamic = ["version"]
 
 [project.urls]
@@ -37,8 +37,9 @@ dev = [
 [tool.uv]
 # Don't build the Rust extension on `uv sync`; `maturin develop --uv` installs it.
 package = false
-# Python range covered by the CI and release matrices.
-environments = ["python_version >= '3.11' and python_version < '3.16'"]
+# Same Python range the previous lockfile was resolved for. 3.15 needs
+# pandas 3, pyarrow 26, numpy 2.5, oracledb 26 (no cp315 wheels before those).
+environments = ["python_version >= '3.11' and python_version < '3.15'"]
 
 [tool.pytest.ini_options]
 minversion = "9.0"

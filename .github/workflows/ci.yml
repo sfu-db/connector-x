@@ -145,7 +145,10 @@ jobs:
     # Note: No 'container' - we run directly on the VM to access Docker for Testcontainers
     strategy:
       matrix:
-        python-version: ["3.14", "3.14t", "3.15", "3.15t"]
+        # 3.15/3.15t are left out until the locked deps have cp315 wheels
+        # (see [tool.uv] environments in connectorx-python/pyproject.toml).
+        # Under Poetry those jobs silently fell back to a 3.12 venv.
+        python-version: ["3.14", "3.14t"]
 
     steps:
       - uses: actions/checkout@v7
