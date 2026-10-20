@@ -25,6 +25,12 @@ test-ci:
     cargo test --features src_mssql_tds --features dst_arrow --test test_mssql
     cargo test --features src_mssql_tds --features dst_arrow --test test_mssql_types
     cargo test --features src_mssql_tiberius,src_mssql_tds,dst_arrow --test test_mssql_runtime_switch
+    cargo test --features src_postgres --features src_dummy --features dst_arrow --test test_arrow
+    cargo test --features src_dummy --features dst_arrow --test test_arrow_stream
+    cargo test --features src_csv --features dst_arrow --test test_csv
+    cargo test --features src_mysql --features dst_arrow --test test_mysql
+    cargo test --features src_clickhouse --features dst_arrow --test test_clickhouse
+    cargo test --features src_trino --features dst_arrow --test test_trino
 
 # Coverage is split into a unit and an integration report so each shows up
 # separately in Codecov. Both stay under cargo-llvm-cov's instrumented build
@@ -59,6 +65,16 @@ coverage-integration:
     cargo llvm-cov --no-report --features src_mssql_tds --features dst_arrow --test test_mssql_types
     just _reap-test-containers
     cargo llvm-cov --no-report --features src_mssql_tiberius,src_mssql_tds,dst_arrow --test test_mssql_runtime_switch
+    just _reap-test-containers
+    cargo llvm-cov --no-report --features src_postgres --features src_dummy --features dst_arrow --test test_arrow
+    just _reap-test-containers
+    cargo llvm-cov --no-report --features src_dummy --features dst_arrow --test test_arrow_stream
+    cargo llvm-cov --no-report --features src_csv --features dst_arrow --test test_csv
+    cargo llvm-cov --no-report --features src_mysql --features dst_arrow --test test_mysql
+    just _reap-test-containers
+    cargo llvm-cov --no-report --features src_clickhouse --features dst_arrow --test test_clickhouse
+    just _reap-test-containers
+    cargo llvm-cov --no-report --features src_trino --features dst_arrow --test test_trino
     just _reap-test-containers
     cargo llvm-cov report --lcov --output-path lcov-integration.info
 
