@@ -24,7 +24,7 @@ version = "0.4.7-alpha.1"
 name = "connectorx" # Target file name of maturin build
 readme = "README.md"
 license = { text = "MIT" }
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dynamic = ["version"]
 
 [project.urls]
