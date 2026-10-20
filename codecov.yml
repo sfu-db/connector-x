@@ -1,8 +1,9 @@
 codecov:
   notify:
-    # ci.yml uploads two reports per commit (unit-tests and integration-tests).
-    # Wait for both, so the project status is not computed from one of them.
-    after_n_builds: 2
+    # ci.yml uploads three reports per commit (unit-tests, integration-tests
+    # and python-tests). Wait for all, so the project status is not computed
+    # from a subset of them.
+    after_n_builds: 3
 
 coverage:
   status:
@@ -18,4 +19,4 @@ coverage:
 
 comment:
   layout: "diff, files"
-  after_n_builds: 2
+  after_n_builds: 3

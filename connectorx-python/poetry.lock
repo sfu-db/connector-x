@@ -3205,4 +3205,4 @@ pyarrow = ["pyarrow"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<3.15"
-content-hash = "367521e10ef36021189626a8e56a86880e36fd2c9493d6aebbf936411546a7cf"
+content-hash = "8b40a23f875431e9efea0b14bc512a61d293b911a0d5d4a70e171ba3dbfc7d84"
