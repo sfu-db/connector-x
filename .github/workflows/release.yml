@@ -15,7 +15,7 @@ jobs:
       matrix:
         platform: ${{ fromJSON(github.event_name == 'workflow_dispatch' && '[{"arch":"x86_64","runs-on":"ubuntu-latest"}]' || '[{"arch":"x86_64","runs-on":"ubuntu-latest"},{"arch":"aarch64","runs-on":"ubuntu-22.04-arm"}]') }}
         python-version:
-          ${{ fromJSON(github.event_name == 'workflow_dispatch' && '[["cp312-cp312","3.12"]]' || '[["cp310-cp310","3.10"],["cp311-cp311","3.11"],["cp312-cp312","3.12"],["cp313-cp313","3.13"],["cp314-cp314","3.14"],["cp314-cp314t","3.14t"]]') }}
+          ${{ fromJSON(github.event_name == 'workflow_dispatch' && '[["cp312-cp312","3.12"]]' || '[["cp311-cp311","3.11"],["cp312-cp312","3.12"],["cp313-cp313","3.13"],["cp314-cp314","3.14"],["cp314-cp314t","3.14t"],["cp315-cp315","3.15"],["cp315-cp315t","3.15t"]]') }}
     steps:
       - uses: actions/checkout@v7
 
@@ -95,7 +95,7 @@ jobs:
     strategy:
       matrix:
         os: ["windows-latest", "macos-15-intel"]
-        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14", "3.14t"]
+        python-version: ["3.11", "3.12", "3.13", "3.14", "3.14t", "3.15", "3.15t"]
         include:
           - os: "macos-15-intel"
             features: "--features integrated-auth-gssapi"
@@ -146,7 +146,7 @@ jobs:
     runs-on: macos-latest
     strategy:
       matrix:
-        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14", "3.14t"]
+        python-version: ["3.11", "3.12", "3.13", "3.14", "3.14t", "3.15", "3.15t"]
     steps:
       - uses: actions/checkout@v7
 
@@ -195,7 +195,7 @@ jobs:
     needs: [win-and-mac, linux]
     strategy:
       matrix:
-        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14", "3.14t"]
+        python-version: ["3.11", "3.12", "3.13", "3.14", "3.14t", "3.15", "3.15t"]
         os:
           [
             macos-15-intel,

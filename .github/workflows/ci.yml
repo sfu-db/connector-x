@@ -139,11 +139,11 @@ jobs:
     runs-on: ubuntu-latest
     env:
       # Force disable the GIL on free-threading because of https://github.com/sqlalchemy/sqlalchemy/discussions/13256
-      PYTHON_GIL: ${{ matrix.python-version == '3.14t' && '0' || '1' }}
+      PYTHON_GIL: ${{ (matrix.python-version == '3.14t' || matrix.python-version == '3.15t') && '0' || '1' }}
     # Note: No 'container' - we run directly on the VM to access Docker for Testcontainers
     strategy:
       matrix:
-        python-version: ["3.14", "3.14t"]
+        python-version: ["3.14", "3.14t", "3.15", "3.15t"]
 
     steps:
       - uses: actions/checkout@v7
