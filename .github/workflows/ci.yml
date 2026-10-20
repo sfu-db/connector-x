@@ -219,6 +219,21 @@ jobs:
         working-directory: connectorx-python
         run: poetry install --no-root
 
+      # Measure the Rust code the Python tests exercise (connectorx and the
+      # connectorx-python bindings). Only on 3.14: one instrumented build is
+      # enough, and 3.14t would just report the same lines again.
+      - name: Install cargo-llvm-cov
+        if: matrix.python-version == '3.14'
+        uses: taiki-e/install-action@cargo-llvm-cov
+
+      - name: Instrument the extension build for coverage
+        if: matrix.python-version == '3.14'
+        working-directory: connectorx-python
+        run: |
+          # show-env single-quotes its values; $GITHUB_ENV wants them bare.
+          cargo llvm-cov show-env | tr -d "'" >> "$GITHUB_ENV"
+          cargo llvm-cov clean --workspace --profraw-only
+
       - name: Test python (mssql-tds)
         run: just test-python --mssql-driver=mssql-tds --deselect=connectorx/tests/test_mssql.py::test_mssql_driver_switch
         # Integration tests provision required services at test time via Testcontainers
@@ -230,3 +245,25 @@ jobs:
       - name: Test python MSSQL runtime switch
         working-directory: connectorx-python
         run: poetry run pytest connectorx/tests/test_mssql.py::test_mssql_driver_switch -v -s
+
+      - name: Generate python coverage
+        if: matrix.python-version == '3.14'
+        working-directory: connectorx-python
+        run: |
+          # `just setup-python` builds with maturin develop --release.
+          cargo llvm-cov report --release --lcov --output-path lcov-python.info
+          {
+            echo "### Rust coverage from the Python tests"
+            echo '```text'
+            cargo llvm-cov report --release --summary-only
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload python coverage to Codecov
+        if: matrix.python-version == '3.14'
+        uses: codecov/codecov-action@v7
+        with:
+          files: connectorx-python/lcov-python.info
+          flags: python-tests
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
