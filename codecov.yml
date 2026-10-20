@@ -1,11 +1,21 @@
+codecov:
+  notify:
+    # ci.yml uploads two reports per commit (unit-tests and integration-tests).
+    # Wait for both, so the project status is not computed from one of them.
+    after_n_builds: 2
+
 coverage:
   status:
     project:
       default:
-        informational: true
+        # Ratchet: fail if total coverage drops more than 1% below the base
+        # commit, rather than a fixed target that would need manual bumps.
+        target: auto
+        threshold: 1%
     patch:
       default:
         target: 60%
 
 comment:
   layout: "diff, files"
+  after_n_builds: 2

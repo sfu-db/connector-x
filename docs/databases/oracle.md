@@ -52,7 +52,7 @@ cx.read_sql(conn, query)
 | BOOLEAN                   | bool, boolean(nullable)     | Native `BOOLEAN` column type, available since Oracle 23ai |
 
 ```{warning}
-Reading native `BOOLEAN` columns needs a recent Oracle Instant Client. With Instant Client 23.4 some `FALSE` values come back as `True`, depending on the fetch array size, and no error is raised. Instant Client 23.26.3 reads them correctly and is the version CI tests against.
+Oracle Instant Client 23.4 can return wrong values for native `BOOLEAN` columns without raising an error, so ConnectorX refuses to read a `BOOLEAN` column through it. Use Instant Client 23.5 or later, or convert the column in SQL, e.g. `CAST(col AS NUMBER)`. Instant Clients older than 23 read `BOOLEAN` columns as numbers (`1`/`0`).
 ```
 
 ### Performance (db.r5.4xlarge RDS)

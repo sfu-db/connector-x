@@ -90,3 +90,29 @@ CREATE TABLE IF NOT EXISTS test_str_collation (
 );
 
 INSERT INTO test_str_collation VALUES (1, 'general', 'bin', 'ascii', 'text', 'textbin', 0x4442, 0x00010203, 'blob'), (2, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+
+DROP TABLE IF EXISTS test_unconvertible;
+
+-- Values that are valid in MySQL but cannot be represented by the Rust types
+-- connector-x maps the columns to (#476, #268): zero dates, negative or
+-- over-24h TIME values (chrono NaiveTime), and DECIMALs beyond the 28-digit
+-- precision of rust_decimal. Row 1 holds ordinary values, row 2 the bad ones.
+-- MySQL 8 refuses '0000-00-00' under its default sql_mode (NO_ZERO_DATE,
+-- NO_ZERO_IN_DATE), so relax it around the insert and restore it afterwards.
+SET @cx_saved_sql_mode = @@SESSION.sql_mode;
+SET SESSION sql_mode = '';
+
+CREATE TABLE IF NOT EXISTS test_unconvertible (
+    test_int INT,
+    test_date DATE,
+    test_datetime DATETIME,
+    test_time_negative TIME,
+    test_time_over_24h TIME,
+    test_decimal_wide DECIMAL(65, 0)
+);
+
+INSERT INTO test_unconvertible VALUES
+    (1, '2020-01-01', '2020-01-01 00:00:00', '01:00:00', '01:00:00', 1),
+    (2, '0000-00-00', '0000-00-00 00:00:00', '-01:00:00', '838:59:59', 12345678901234567890123456789012345678901234567890);
+
+SET SESSION sql_mode = @cx_saved_sql_mode;

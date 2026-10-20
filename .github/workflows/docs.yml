@@ -17,7 +17,7 @@ jobs:
           components: rustfmt
 
       - name: Intall Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: 3.12
 
@@ -41,19 +41,10 @@ jobs:
         run: touch ./docs/_build/html/.nojekyll
 
       - name: Deploy Docs 🚀
+        # Forks have no gh-pages permissions; skip the upload there
+        if: ${{ !github.event.repository.fork }}
         uses: JamesIves/github-pages-deploy-action@v4.9.0
         with:
           branch: gh-pages # The branch the action should deploy to.
           folder: ./docs/_build/html # The folder the action should deploy.
           clean-exclude: dev
-  
-  contrib-readme:
-    runs-on: ubuntu-latest
-    name: A job to automate contrib in readme
-    steps:
-        - name: Contribute List
-          uses: akhilmhdh/contributors-readme-action@v2.3.11
-          with:
-              image_size: 66
-          env:
-              GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
