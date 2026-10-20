@@ -40,6 +40,8 @@ package = false
 # Same Python range the previous lockfile was resolved for. 3.15 needs
 # pandas 3, pyarrow 26, numpy 2.5, oracledb 26 (no cp315 wheels before those).
 environments = ["python_version >= '3.11' and python_version < '3.15'"]
+# zstd 1.5.7.3 (via clickhouse-sqlalchemy -> asynch) was yanked as "not thread safe".
+constraint-dependencies = ["zstd!=1.5.7.3"]
 
 [tool.pytest.ini_options]
 minversion = "9.0"
