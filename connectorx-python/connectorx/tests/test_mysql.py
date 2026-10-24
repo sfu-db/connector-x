@@ -806,3 +806,24 @@ def test_mysql_unconvertible_value_raises(mysql_url: str, protocol: str, column:
         )
     # The error names the column's type, not the Option wrapping nullable columns.
     assert "Option<" not in str(excinfo.value)
+
+
+@pytest.mark.parametrize("protocol", ["binary", "text"])
+def test_mysql_arrow_stream_unconvertible_value_raises(mysql_url: str, protocol: str) -> None:
+    # Same values as above, streamed: the batches before the bad row are
+    # delivered, then iterating raises the same RuntimeError right away instead
+    # of a PanicException after the whole result set has been fetched.
+    reader = read_sql(
+        mysql_url,
+        "SELECT test_int, test_date FROM test_unconvertible ORDER BY test_int",
+        protocol=protocol,
+        return_type="arrow_stream",
+        batch_size=1,
+    )
+
+    first = reader.read_next_batch()
+    assert first.num_rows == 1
+    assert first.column("test_int").to_pylist() == [1]
+
+    with pytest.raises(RuntimeError, match=r"Cannot produce a .*column `test_date`"):
+        reader.read_next_batch()

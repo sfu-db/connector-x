@@ -67,12 +67,12 @@ impl PyRecordBatchIterator {
         py: Python<'py>,
     ) -> PyResult<Option<Py<PyRecordBatch>>> {
         match slf.0.next_batch() {
-            Some(rb) => {
+            Some(Ok(rb)) => {
                 let wrapped = PyRecordBatch(Some(rb));
                 let py_obj = Py::new(py, wrapped)?;
                 Ok(Some(py_obj))
             }
-
+            Some(Err(e)) => Err(ConnectorXPythonError::from(e).into()),
             None => Ok(None),
         }
     }
