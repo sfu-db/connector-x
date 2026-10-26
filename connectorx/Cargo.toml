@@ -67,7 +67,7 @@ rusqlite = { version = "0.37", features = [
 ], optional = true }
 rust_decimal = { version = "1", features = ["db-postgres"], optional = true }
 rust_decimal_macros = { version = "1", optional = true }
-tiberius = { version = "0.7", features = [
+tiberius = { version = "0.13", features = [
   "rust_decimal",
   "chrono",
   "integrated-auth-gssapi",
