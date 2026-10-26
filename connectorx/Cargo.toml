@@ -103,7 +103,7 @@ name = "connectorx"
 criterion = "0.8"
 env_logger = "0.11"
 iai = "0.1"
-testcontainers = { version = "0.23", features = ["blocking"] }
+testcontainers = { version = "0.28", features = ["blocking"] }
 ureq = { version = "2", features = ["json"] }
 
 # pprof depends on nix/pthread and does not build on Windows.
