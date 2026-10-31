@@ -10,6 +10,7 @@ pub use self::typesystem::ArrowTypeSystem;
 use super::{Consume, Destination, DestinationPartition};
 use crate::constants::RECORD_BATCH_SIZE;
 use crate::data_order::DataOrder;
+use crate::errors::{ConnectorXOutError, OutResult};
 use crate::typesystem::{Realize, TypeAssoc, TypeSystem};
 use anyhow::anyhow;
 use arrow::{datatypes::Schema, record_batch::RecordBatch};
@@ -28,13 +29,18 @@ use std::{
 type Builder = Box<dyn Any + Send>;
 type Builders = Vec<Builder>;
 
+/// A finished batch, or the error that stopped a partition.
+type Message = OutResult<RecordBatch>;
+
 pub struct ArrowDestination {
     schema: Vec<ArrowTypeSystem>,
     names: Vec<String>,
     arrow_schema: Arc<Schema>,
     batch_size: usize,
-    sender: Option<Sender<RecordBatch>>,
-    receiver: Receiver<RecordBatch>,
+    sender: Option<Sender<Message>>,
+    /// `None` once an error has been received: the partition writers then fail
+    /// on their next send instead of buffering batches nobody will read.
+    receiver: Option<Receiver<Message>>,
 }
 
 impl Default for ArrowDestination {
@@ -46,7 +52,7 @@ impl Default for ArrowDestination {
             arrow_schema: Arc::new(Schema::empty()),
             batch_size: RECORD_BATCH_SIZE,
             sender: Some(tx),
-            receiver: rx,
+            receiver: Some(rx),
         }
     }
 }
@@ -64,7 +70,7 @@ impl ArrowDestination {
             arrow_schema: Arc::new(Schema::empty()),
             batch_size,
             sender: Some(tx),
-            receiver: rx,
+            receiver: Some(rx),
         }
     }
 }
@@ -128,7 +134,7 @@ impl Destination for ArrowDestination {
 }
 
 impl ArrowDestination {
-    #[throws(ArrowDestinationError)]
+    #[throws(ConnectorXOutError)]
     pub fn arrow(self) -> Vec<RecordBatch> {
         if self.sender.is_some() {
             // should not happen since it is dropped after partition
@@ -136,15 +142,26 @@ impl ArrowDestination {
             std::mem::drop(self.sender);
         }
         let mut data = vec![];
-        while let Ok(rb) = self.receiver.recv() {
-            data.push(rb);
+        if let Some(receiver) = self.receiver {
+            while let Ok(rb) = receiver.recv() {
+                data.push(rb?);
+            }
         }
         data
     }
 
-    #[throws(ArrowDestinationError)]
-    pub fn record_batch(&mut self) -> Option<RecordBatch> {
-        self.receiver.recv().ok()
+    /// Blocks until the next record batch is available.
+    ///
+    /// Returns `None` once every partition writer is done, or `Some(Err(_))`
+    /// as soon as a partition fails. After an error the channel is closed, so
+    /// later calls return `None` and the other partitions stop at their next
+    /// batch boundary.
+    pub fn record_batch(&mut self) -> Option<Message> {
+        let msg = self.receiver.as_ref()?.recv().ok()?;
+        if msg.is_err() {
+            self.receiver = None;
+        }
+        Some(msg)
     }
 
     pub fn empty_batch(&self) -> RecordBatch {
@@ -167,7 +184,7 @@ pub struct ArrowPartitionWriter {
     current_col: usize,
     arrow_schema: Arc<Schema>,
     batch_size: usize,
-    sender: Option<Sender<RecordBatch>>,
+    sender: Option<Sender<Message>>,
 }
 
 // unsafe impl Sync for ArrowPartitionWriter {}
@@ -178,7 +195,7 @@ impl ArrowPartitionWriter {
         schema: Vec<ArrowTypeSystem>,
         arrow_schema: Arc<Schema>,
         batch_size: usize,
-        sender: Sender<RecordBatch>,
+        sender: Sender<Message>,
     ) -> Self {
         let mut pw = ArrowPartitionWriter {
             schema,
@@ -215,10 +232,30 @@ impl ArrowPartitionWriter {
             .map(|(builder, &dt)| Realize::<FFinishBuilder>::realize(dt)?(builder))
             .collect::<std::result::Result<Vec<_>, crate::errors::ConnectorXError>>()?;
         let rb = RecordBatch::try_new(Arc::clone(&self.arrow_schema), columns)?;
-        self.sender.as_ref().and_then(|s| s.send(rb).ok());
+        if let Some(sender) = &self.sender {
+            // The consumer is gone (dropped, or already got an error from
+            // another partition): stop instead of parsing the rest for nothing.
+            sender
+                .send(Ok(rb))
+                .map_err(|_| anyhow!("record batch receiver dropped"))?;
+        }
 
         self.current_row = 0;
         self.current_col = 0;
+    }
+
+    /// Reports `err` to the consumer and closes this partition's side of the
+    /// stream. Rows buffered since the last flush are discarded.
+    ///
+    /// Call this while the source's query is still alive: some drivers drain
+    /// the remaining result set when the query is dropped (MySQL does), and
+    /// the consumer should not have to wait for that.
+    pub fn send_error(&mut self, err: ConnectorXOutError) {
+        self.builders = None;
+        if let Some(sender) = self.sender.take() {
+            // The consumer may already be gone; nothing else to do then.
+            let _ = sender.send(Err(err));
+        }
     }
 }
 
