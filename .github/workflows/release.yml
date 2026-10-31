@@ -32,7 +32,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: Gr1N/setup-poetry@v9
+      - uses: Gr1N/setup-poetry@v10
         with:
           poetry-version: "2.4.1"
 
@@ -119,7 +119,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: Gr1N/setup-poetry@v9
+      - uses: Gr1N/setup-poetry@v10
         with:
           poetry-version: "2.4.1"
 
@@ -167,7 +167,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: Gr1N/setup-poetry@v9
+      - uses: Gr1N/setup-poetry@v10
         with:
           poetry-version: "2.4.1"
 
