@@ -11,11 +11,13 @@ use arrow::{
     record_batch::RecordBatch,
 };
 use connectorx::{
+    arrow_batch_iter::ArrowBatchIter,
     destinations::arrow::ArrowDestination,
+    errors::OutResult,
     prelude::*,
     sources::mysql::{BinaryProtocol, MySQLSource, TextProtocol},
     sql::CXQuery,
-    transports::{MySQLArrowTransport, MySQLArrowTransportError},
+    transports::{MySQLArrowStreamTransport, MySQLArrowTransport, MySQLArrowTransportError},
 };
 
 #[test]
@@ -732,5 +734,60 @@ fn test_mysql_unconvertible_value_is_error() {
                 msg
             );
         }
+    }
+}
+
+/// With the streaming destination the conversion failure must show up as an
+/// `Err` item of the iterator, after the batches that preceded it.
+fn assert_unconvertible_value_fails_stream(binary: bool) {
+    let _ = env_logger::builder().is_test(true).try_init();
+    let dburl = test_db::mysql_url();
+    // Row 1 is fine, row 2 holds the zero date.
+    let queries = [CXQuery::naked(
+        "select test_int, test_date from test_unconvertible order by test_int",
+    )];
+    let destination = ArrowStreamDestination::new_with_batch_size(1);
+
+    let mut iter: Box<dyn Iterator<Item = OutResult<RecordBatch>>> = if binary {
+        let source = MySQLSource::<BinaryProtocol>::new(&dburl, 1).unwrap();
+        let mut iter = ArrowBatchIter::<_, MySQLArrowStreamTransport<BinaryProtocol>>::new(
+            source,
+            destination,
+            None,
+            &queries,
+        )
+        .unwrap();
+        iter.prepare();
+        Box::new(iter)
+    } else {
+        let source = MySQLSource::<TextProtocol>::new(&dburl, 1).unwrap();
+        let mut iter = ArrowBatchIter::<_, MySQLArrowStreamTransport<TextProtocol>>::new(
+            source,
+            destination,
+            None,
+            &queries,
+        )
+        .unwrap();
+        iter.prepare();
+        Box::new(iter)
+    };
+
+    let first = iter.next().unwrap().unwrap();
+    assert_eq!(first.num_rows(), 1);
+
+    let msg = iter.next().unwrap().unwrap_err().to_string();
+    assert!(
+        msg.contains("Cannot produce a") && msg.contains("column `test_date`"),
+        "unexpected error message: {}",
+        msg
+    );
+
+    assert!(iter.next().is_none());
+}
+
+#[test]
+fn test_mysql_unconvertible_value_fails_stream() {
+    for binary in [true, false] {
+        assert_unconvertible_value_fails_stream(binary);
     }
 }
