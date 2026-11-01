@@ -1943,7 +1943,7 @@ dependencies = [
  "rustc-hash 2.1.3",
  "serde",
  "serde_json",
- "sqlparser 0.62.0",
+ "sqlparser 0.63.0",
  "testcontainers",
  "thiserror 2.0.21",
  "tiberius",
@@ -8448,6 +8448,16 @@ dependencies = [
  "log",
  "recursive",
  "sqlparser_derive 0.5.0",
+]
+
+[[package]]
+name = "sqlparser"
+version = "0.63.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3679862809bd1f92e563cf6fd820e28f39135303668001c10331d5027183e8b4"
+dependencies = [
+ "log",
+ "recursive",
 ]
 
 [[package]]
