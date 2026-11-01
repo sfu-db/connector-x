@@ -277,22 +277,24 @@ fn run_trino_statement(base_url: &str, statement: &str) {
     }
 
     let mut payload: serde_json::Value = ureq::post(&format!("{base_url}/v1/statement"))
-        .set("X-Trino-User", "test")
-        .set("X-Trino-Catalog", "test")
-        .set("X-Trino-Schema", "test")
-        .send_string(stmt)
+        .header("X-Trino-User", "test")
+        .header("X-Trino-Catalog", "test")
+        .header("X-Trino-Schema", "test")
+        .send(stmt)
         .expect("execute trino statement")
-        .into_json()
+        .body_mut()
+        .read_json()
         .expect("parse trino response");
 
     while let Some(next) = payload.get("nextUri").and_then(|v| v.as_str()) {
         payload = ureq::get(next)
-            .set("X-Trino-User", "test")
-            .set("X-Trino-Catalog", "test")
-            .set("X-Trino-Schema", "test")
+            .header("X-Trino-User", "test")
+            .header("X-Trino-Catalog", "test")
+            .header("X-Trino-Schema", "test")
             .call()
             .expect("poll trino query")
-            .into_json()
+            .body_mut()
+            .read_json()
             .expect("parse trino poll response");
         if payload.get("error").is_some() {
             panic!("trino query failed: {}", payload);
