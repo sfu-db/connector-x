@@ -181,7 +181,7 @@ jobs:
           docker --version
           docker ps
 
-      - uses: Gr1N/setup-poetry@v9
+      - uses: Gr1N/setup-poetry@v10
         with:
           poetry-version: "2.4.1"
 
