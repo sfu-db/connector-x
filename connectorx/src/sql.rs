@@ -3,8 +3,10 @@ use crate::errors::ConnectorXError;
 use crate::sources::oracle::OracleDialect;
 use fehler::{throw, throws};
 use log::{debug, trace, warn};
+use sqlparser::ast::helpers::attached_token::AttachedToken;
 use sqlparser::ast::{
-    BinaryOperator, Expr, Function, FunctionArg, FunctionArgExpr, Ident, ObjectName, Query, Select,
+    BinaryOperator, Expr, Function, FunctionArg, FunctionArgExpr, FunctionArgumentList,
+    FunctionArguments, GroupByExpr, Ident, LimitClause, ObjectName, Query, Select, SelectFlavor,
     SelectItem, SetExpr, Statement, TableAlias, TableFactor, TableWithJoins, Value,
     WildcardAdditionalOptions,
 };
@@ -97,6 +99,58 @@ impl<Q, E> CXQuery<Result<Q, E>> {
     }
 }
 
+fn number(n: impl ToString) -> Expr {
+    Expr::value(Value::Number(n.to_string(), false))
+}
+
+fn function(name: &str, args: Vec<FunctionArg>) -> Expr {
+    Expr::Function(Function {
+        name: ObjectName::from(vec![Ident::new(name)]),
+        uses_odbc_syntax: false,
+        parameters: FunctionArguments::None,
+        args: FunctionArguments::List(FunctionArgumentList {
+            duplicate_treatment: None,
+            args,
+            clauses: vec![],
+        }),
+        filter: None,
+        null_treatment: None,
+        over: None,
+        within_group: vec![],
+    })
+}
+
+fn has_limit(query: &Query) -> bool {
+    match &query.limit_clause {
+        Some(LimitClause::LimitOffset { limit, .. }) => limit.is_some(),
+        Some(LimitClause::OffsetCommaLimit { .. }) => true,
+        None => false,
+    }
+}
+
+fn has_offset(query: &Query) -> bool {
+    match &query.limit_clause {
+        Some(LimitClause::LimitOffset { offset, .. }) => offset.is_some(),
+        Some(LimitClause::OffsetCommaLimit { .. }) => true,
+        None => false,
+    }
+}
+
+// set the LIMIT of a query, keeping any existing OFFSET
+fn set_limit(query: &mut Query, n: u64) {
+    match &mut query.limit_clause {
+        Some(LimitClause::LimitOffset { limit, .. }) => *limit = Some(number(n)),
+        Some(LimitClause::OffsetCommaLimit { limit, .. }) => *limit = number(n),
+        None => {
+            query.limit_clause = Some(LimitClause::LimitOffset {
+                limit: Some(number(n)),
+                offset: None,
+                limit_by: vec![],
+            })
+        }
+    }
+}
+
 // wrap a query into a derived table
 fn wrap_query(
     query: &mut Query,
@@ -110,43 +164,56 @@ fn wrap_query(
         None
     } else {
         Some(TableAlias {
-            name: Ident {
-                value: tmp_tab_name.into(),
-                quote_style: None,
-            },
+            explicit: true,
+            name: Ident::new(tmp_tab_name),
             columns: vec![],
+            at: None,
         })
     };
     Statement::Query(Box::new(Query {
         with,
         locks: vec![],
         body: Box::new(SetExpr::Select(Box::new(Select {
+            select_token: AttachedToken::empty(),
+            optimizer_hints: vec![],
             distinct: None,
+            select_modifiers: None,
             top: None,
+            top_before_distinct: false,
             projection,
+            exclude: None,
+            into: None,
             from: vec![TableWithJoins {
                 relation: TableFactor::Derived {
                     lateral: false,
                     subquery: Box::new(query.clone()),
                     alias,
+                    sample: None,
                 },
                 joins: vec![],
             }],
             lateral_views: vec![],
+            prewhere: None,
             selection,
-            group_by: vec![],
+            connect_by: vec![],
+            group_by: GroupByExpr::Expressions(vec![], vec![]),
             cluster_by: vec![],
             distribute_by: vec![],
             sort_by: vec![],
             having: None,
-            into: None,
             named_window: vec![],
             qualify: None,
+            window_before_qualify: false,
+            value_table_mode: None,
+            flavor: SelectFlavor::Standard,
         }))),
-        order_by: vec![],
-        limit: None,
-        offset: None,
+        order_by: None,
+        limit_clause: None,
         fetch: None,
+        for_clause: None,
+        settings: None,
+        format_clause: None,
+        pipe_operators: vec![],
     }))
 }
 
@@ -198,17 +265,10 @@ pub fn count_query<T: Dialect>(sql: &CXQuery<String>, dialect: &T) -> CXQuery<St
 
     let tsql = match sql.map(|sql| Parser::parse_sql(dialect, sql)).result() {
         Ok(ast) => {
-            let projection = vec![SelectItem::UnnamedExpr(Expr::Function(Function {
-                name: ObjectName(vec![Ident {
-                    value: "count".to_string(),
-                    quote_style: None,
-                }]),
-                args: vec![FunctionArg::Unnamed(FunctionArgExpr::Wildcard)],
-                over: None,
-                distinct: false,
-                order_by: vec![],
-                special: false,
-            }))];
+            let projection = vec![SelectItem::UnnamedExpr(function(
+                "count",
+                vec![FunctionArg::Unnamed(FunctionArgExpr::Wildcard)],
+            ))];
             let ast_count: Statement = match ast {
                 CXQuery::Naked(ast) => {
                     if ast.len() != 1 {
@@ -218,8 +278,8 @@ pub fn count_query<T: Dialect>(sql: &CXQuery<String>, dialect: &T) -> CXQuery<St
                         .as_query()
                         .ok_or_else(|| ConnectorXError::SqlQueryNotSupported(sql.to_string()))?
                         .clone();
-                    if query.offset.is_none() {
-                        query.order_by = vec![]; // mssql offset must appear with order by
+                    if !has_offset(&query) {
+                        query.order_by = None; // mssql offset must appear with order by
                     }
                     let select = query
                         .as_select_mut()
@@ -270,7 +330,7 @@ pub fn limit0_query<T: Dialect>(sql: &CXQuery<String>, dialect: &T) -> CXQuery<S
 
             match &mut ast[0] {
                 Statement::Query(q) => {
-                    q.limit = Some(Expr::Value(Value::Number("0".to_string(), false)));
+                    set_limit(q, 0);
                 }
                 _ => throw!(ConnectorXError::SqlQueryNotSupported(sql.to_string())),
             };
@@ -301,7 +361,7 @@ pub fn limit1_query<T: Dialect>(sql: &CXQuery<String>, dialect: &T) -> CXQuery<S
 
             match &mut ast[0] {
                 Statement::Query(q) => {
-                    q.limit = Some(Expr::Value(Value::Number("1".to_string(), false)));
+                    set_limit(q, 1);
                 }
                 _ => throw!(ConnectorXError::SqlQueryNotSupported(sql.to_string())),
             };
@@ -365,14 +425,8 @@ pub fn single_col_partition_query<T: Dialect>(
     let mut table_alias = PART_TMP_TAB_NAME;
     #[allow(unused_mut)]
     let mut cid = Box::new(Expr::CompoundIdentifier(vec![
-        Ident {
-            value: PART_TMP_TAB_NAME.to_string(),
-            quote_style: None,
-        },
-        Ident {
-            value: col.to_string(),
-            quote_style: None,
-        },
+        Ident::new(PART_TMP_TAB_NAME),
+        Ident::new(col),
     ]));
 
     // HACK: Some dialect (e.g. Oracle) does not support "AS" for alias
@@ -403,7 +457,7 @@ pub fn single_col_partition_query<T: Dialect>(
                 .clone();
 
             let lb = Expr::BinaryOp {
-                left: Box::new(Expr::Value(Value::Number(lower.to_string(), false))),
+                left: Box::new(number(lower)),
                 op: BinaryOperator::LtEq,
                 right: cid.clone(),
             };
@@ -411,7 +465,7 @@ pub fn single_col_partition_query<T: Dialect>(
             let ub = Expr::BinaryOp {
                 left: cid,
                 op: BinaryOperator::Lt,
-                right: Box::new(Expr::Value(Value::Number(upper.to_string(), false))),
+                right: Box::new(number(upper)),
             };
 
             let selection = Expr::BinaryOp {
@@ -420,11 +474,11 @@ pub fn single_col_partition_query<T: Dialect>(
                 right: Box::new(ub),
             };
 
-            if query.limit.is_none() && select.top.is_none() && !query.order_by.is_empty() {
+            if !has_limit(&query) && select.top.is_none() && query.order_by.is_some() {
                 // order by in a partition query does not make sense because partition is unordered.
                 // clear the order by beceause mssql does not support order by in a derived table.
                 // also order by in the derived table does not make any difference.
-                query.order_by.clear();
+                query.order_by = None;
             }
 
             let ast_part: Statement = wrap_query(
@@ -454,16 +508,7 @@ pub fn get_partition_range_query<T: Dialect>(sql: &str, col: &str, dialect: &T) 
     let mut table_alias = RANGE_TMP_TAB_NAME;
     #[allow(unused_mut)]
     let mut args = vec![FunctionArg::Unnamed(FunctionArgExpr::Expr(
-        Expr::CompoundIdentifier(vec![
-            Ident {
-                value: RANGE_TMP_TAB_NAME.to_string(),
-                quote_style: None,
-            },
-            Ident {
-                value: col.to_string(),
-                quote_style: None,
-            },
-        ]),
+        Expr::CompoundIdentifier(vec![Ident::new(RANGE_TMP_TAB_NAME), Ident::new(col)]),
     ))];
 
     // HACK: Some dialect (e.g. Oracle) does not support "AS" for alias
@@ -491,32 +536,12 @@ pub fn get_partition_range_query<T: Dialect>(sql: &str, col: &str, dialect: &T) 
                 .ok_or_else(|| ConnectorXError::SqlQueryNotSupported(sql.to_string()))?
                 .clone();
 
-            if query.limit.is_none() && query.offset.is_none() {
-                query.order_by = vec![]; // only omit orderby when there is no limit and offset in the query
+            if !has_limit(&query) && !has_offset(&query) {
+                query.order_by = None; // only omit orderby when there is no limit and offset in the query
             }
             let projection = vec![
-                SelectItem::UnnamedExpr(Expr::Function(Function {
-                    name: ObjectName(vec![Ident {
-                        value: "min".to_string(),
-                        quote_style: None,
-                    }]),
-                    args: args.clone(),
-                    over: None,
-                    distinct: false,
-                    order_by: vec![],
-                    special: false,
-                })),
-                SelectItem::UnnamedExpr(Expr::Function(Function {
-                    name: ObjectName(vec![Ident {
-                        value: "max".to_string(),
-                        quote_style: None,
-                    }]),
-                    args,
-                    over: None,
-                    distinct: false,
-                    order_by: vec![],
-                    special: false,
-                })),
+                SelectItem::UnnamedExpr(function("min", args.clone())),
+                SelectItem::UnnamedExpr(function("max", args)),
             ];
             let ast_range: Statement = wrap_query(&mut query, projection, None, table_alias);
             format!("{}", ast_range)
@@ -554,51 +579,12 @@ pub fn get_partition_range_query_sep<T: Dialect>(
                 .ok_or_else(|| ConnectorXError::SqlQueryNotSupported(sql.to_string()))?
                 .clone();
 
-            query.order_by = vec![];
-            let min_proj = vec![SelectItem::UnnamedExpr(Expr::Function(Function {
-                name: ObjectName(vec![Ident {
-                    value: "min".to_string(),
-                    quote_style: None,
-                }]),
-                args: vec![FunctionArg::Unnamed(FunctionArgExpr::Expr(
-                    Expr::CompoundIdentifier(vec![
-                        Ident {
-                            value: RANGE_TMP_TAB_NAME.to_string(),
-                            quote_style: None,
-                        },
-                        Ident {
-                            value: col.to_string(),
-                            quote_style: None,
-                        },
-                    ]),
-                ))],
-                over: None,
-                distinct: false,
-                order_by: vec![],
-                special: false,
-            }))];
-            let max_proj = vec![SelectItem::UnnamedExpr(Expr::Function(Function {
-                name: ObjectName(vec![Ident {
-                    value: "max".to_string(),
-                    quote_style: None,
-                }]),
-                args: vec![FunctionArg::Unnamed(FunctionArgExpr::Expr(
-                    Expr::CompoundIdentifier(vec![
-                        Ident {
-                            value: RANGE_TMP_TAB_NAME.into(),
-                            quote_style: None,
-                        },
-                        Ident {
-                            value: col.into(),
-                            quote_style: None,
-                        },
-                    ]),
-                ))],
-                over: None,
-                distinct: false,
-                order_by: vec![],
-                special: false,
-            }))];
+            query.order_by = None;
+            let args = vec![FunctionArg::Unnamed(FunctionArgExpr::Expr(
+                Expr::CompoundIdentifier(vec![Ident::new(RANGE_TMP_TAB_NAME), Ident::new(col)]),
+            ))];
+            let min_proj = vec![SelectItem::UnnamedExpr(function("min", args.clone()))];
+            let max_proj = vec![SelectItem::UnnamedExpr(function("max", args))];
             let ast_range_min: Statement =
                 wrap_query(&mut query.clone(), min_proj, None, RANGE_TMP_TAB_NAME);
             let ast_range_max: Statement =
@@ -633,7 +619,7 @@ mod tests {
         limit1_query, single_col_partition_query, CXQuery,
     };
     use crate::errors::ConnectorXError;
-    use sqlparser::dialect::{GenericDialect, MsSqlDialect};
+    use sqlparser::dialect::{GenericDialect, MsSqlDialect, MySqlDialect};
 
     #[test]
     fn preserves_query_variant_and_maps_values() {
@@ -743,5 +729,35 @@ mod tests {
         )
         .unwrap();
         assert!(!query.contains("ORDER BY id"));
+    }
+
+    #[test]
+    fn limit_queries_keep_existing_offset() {
+        let query = CXQuery::naked("SELECT id FROM items ORDER BY id LIMIT 5 OFFSET 2");
+        assert_eq!(
+            limit0_query(&query, &GenericDialect {}).unwrap().as_str(),
+            "SELECT id FROM items ORDER BY id LIMIT 0 OFFSET 2"
+        );
+        let query = CXQuery::naked("SELECT id FROM items LIMIT 2, 10");
+        assert_eq!(
+            limit1_query(&query, &MySqlDialect {}).unwrap().as_str(),
+            "SELECT id FROM items LIMIT 2, 1"
+        );
+    }
+
+    #[test]
+    fn keeps_ordering_when_query_has_limit_or_offset() {
+        let sql = "SELECT id FROM items ORDER BY id LIMIT 5 OFFSET 2";
+        let dialect = GenericDialect {};
+        assert!(count_query(&CXQuery::naked(sql), &dialect)
+            .unwrap()
+            .as_str()
+            .contains("ORDER BY id"));
+        assert!(single_col_partition_query(sql, "id", 0, 1, &dialect)
+            .unwrap()
+            .contains("ORDER BY id"));
+        assert!(get_partition_range_query(sql, "id", &dialect)
+            .unwrap()
+            .contains("ORDER BY id"));
     }
 }
