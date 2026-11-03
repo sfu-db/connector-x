@@ -927,7 +927,7 @@ fn sql_time_to_naive_time(t: &SqlTime) -> NaiveTime {
     let ns = t.time_nanoseconds * 100;
     let secs = (ns / 1_000_000_000) as u32;
     let nanos = (ns % 1_000_000_000) as u32;
-    NaiveTime::from_num_seconds_from_midnight_opt(secs, nanos).unwrap_or(NaiveTime::default())
+    NaiveTime::from_num_seconds_from_midnight_opt(secs, nanos).unwrap_or_default()
 }
 
 #[throws(MsSQLSourceError)]
@@ -951,7 +951,7 @@ fn sql_smalldatetime_to_naive_datetime(sdt: &SqlSmallDateTime) -> NaiveDateTime 
         .checked_add_signed(chrono::Duration::days(sdt.days as i64))
         .expect("smalldatetime day count is always in range (u16 days since 1900-01-01)");
     let time = NaiveTime::from_hms_opt((sdt.time / 60) as u32, (sdt.time % 60) as u32, 0)
-        .unwrap_or(NaiveTime::default());
+        .unwrap_or_default();
     date.and_time(time)
 }
 
