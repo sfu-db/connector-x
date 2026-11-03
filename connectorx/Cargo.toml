@@ -135,7 +135,7 @@ fptr = []
 src_bigquery = ["gcp-bigquery-client", "tokio"]
 src_csv = ["csv", "regex"]
 src_dummy = ["num-traits"]
-src_mssql = ["src_mssql_tiberius"]
+src_mssql = ["src_mssql_tds"]
 src_mssql_common = [
   "rust_decimal",
   "num-traits",

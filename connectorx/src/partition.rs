@@ -48,12 +48,14 @@ use sqlparser::dialect::PostgreSqlDialect;
 use sqlparser::dialect::SQLiteDialect;
 #[cfg(feature = "src_mssql_tiberius")]
 use tiberius::Client;
+#[cfg(feature = "src_mssql_tiberius")]
+use tokio::net::TcpStream;
 #[cfg(any(
     feature = "src_bigquery",
     feature = "src_mssql_tiberius",
     feature = "src_trino"
 ))]
-use tokio::{net::TcpStream, runtime::Runtime};
+use tokio::runtime::Runtime;
 #[cfg(feature = "src_mssql_tiberius")]
 use tokio_util::compat::TokioAsyncWriteCompatExt;
 use url::Url;
