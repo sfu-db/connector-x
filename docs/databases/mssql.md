@@ -38,9 +38,10 @@ New wheels use `mssql-tds` by default. Set `cx.mssql_driver = "tiberius"` before
 starting reads to retain the previous driver, including its TLS behavior.
 The setting is process-wide: do not switch it while other threads start reads.
 
-Existing Rust builds using `src_mssql` (an alias for `src_mssql_tiberius`) or
-the `all` feature bundle continue to expose the original Tiberius source,
-partition, and parser types. They do not silently opt into the enum wrapper.
+Rust builds using `src_mssql` (now an alias for `src_mssql_tds`) or the `all`
+feature bundle link only `mssql-tds`. To keep the previous Tiberius source,
+partition, and parser types, enable `src_mssql_tiberius` instead of
+`src_mssql`. Tiberius is deprecated and will be removed in a future release.
 Enabling both drivers explicitly selects the runtime-switchable wrapper;
 its low-level types are not interchangeable with backend-specific types.
 
@@ -90,8 +91,8 @@ df = cx.read_sql(conn, "SELECT * FROM table", source_options=options)
 
 ### `mssql-tds` backend details
 
-Rust builds can select `src_mssql_tds` instead of `src_mssql`
-(`src_mssql_tiberius`) to link only TDS, or enable both for runtime selection.
+`src_mssql` and `src_mssql_tds` both link only TDS. Enable
+`src_mssql_tiberius` as well for runtime selection.
 
 The TDS backend shares a bounded connection pool across metadata, row counts,
 and partition readers, sized by `MsSQLSource::new`'s `nconn`. Partitions acquire
