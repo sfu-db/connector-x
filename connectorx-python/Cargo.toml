@@ -51,7 +51,6 @@ pyo3-build-config = {version = "0.29", features = ["resolve-config"]}
 criterion = "0.3"
 criterion-macro = "0.3"
 iai = "0.1"
-pprof = {version = "0.5", features = ["flamegraph", "criterion", "protobuf"]}
 rayon = "1"
 
 [lints.rust]
@@ -65,7 +64,6 @@ name = "connectorx"
 branch = ["connectorx/branch"]
 default = ["extension", "fptr", "nbstr", "dsts", "srcs", "federation", "fed_exec"]
 dsts = ["connectorx/dst_arrow"]
-executable = ["pyo3/auto-initialize"]
 extension = ["pyo3/extension-module"]
 fptr = ["connectorx/fptr"]
 federation = ["connectorx/federation"]
