@@ -1583,7 +1583,6 @@ dependencies = [
  "rayon",
  "rust_decimal",
  "serde_json",
- "sqlparser 0.62.0",
  "thiserror 1.0.69",
  "tokio",
  "url",
@@ -6732,16 +6731,6 @@ dependencies = [
  "log",
  "recursive",
  "sqlparser_derive",
-]
-
-[[package]]
-name = "sqlparser"
-version = "0.62.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "13c6d1b651dc4edf07eead2a0c6c78016ce971bc2c10da5266861b13f25e7cec"
-dependencies = [
- "log",
- "recursive",
 ]
 
 [[package]]
