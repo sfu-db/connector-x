@@ -20,8 +20,8 @@ test-ci:
     cargo test --lib --features src_mssql_tiberius,src_mssql_tds -- sources::mssql
     cargo test --features src_postgres --features dst_arrow --test test_postgres
     cargo test --features src_postgres --features src_dummy --features dst_polars --test test_polars
-    cargo test --features src_mssql --features dst_arrow --test test_mssql
-    cargo test --features src_mssql --features dst_arrow --test test_mssql_types
+    cargo test --features src_mssql_tiberius --features dst_arrow --test test_mssql
+    cargo test --features src_mssql_tiberius --features dst_arrow --test test_mssql_types
     cargo test --features src_mssql_tds --features dst_arrow --test test_mssql
     cargo test --features src_mssql_tds --features dst_arrow --test test_mssql_types
     cargo test --features src_mssql_tiberius,src_mssql_tds,dst_arrow --test test_mssql_runtime_switch
@@ -40,7 +40,7 @@ coverage-unit:
     cargo llvm-cov clean --workspace --profraw-only
     cargo llvm-cov --no-report --lib --features all
     cargo llvm-cov --no-report --lib --features src_mssql_tiberius,src_mssql_tds -- sources::mssql
-    cargo llvm-cov --no-report --lib --features src_mssql_tds -- sources::mssql
+    cargo llvm-cov --no-report --lib --features src_mssql_tiberius -- sources::mssql
     cargo llvm-cov report --lcov --output-path lcov-unit.info
 
 # Removes any testcontainers-managed container/image left behind by the
@@ -56,9 +56,9 @@ coverage-integration:
     just _reap-test-containers
     cargo llvm-cov --no-report --features src_postgres --features src_dummy --features dst_polars --test test_polars
     just _reap-test-containers
-    cargo llvm-cov --no-report --features src_mssql --features dst_arrow --test test_mssql
+    cargo llvm-cov --no-report --features src_mssql_tiberius --features dst_arrow --test test_mssql
     just _reap-test-containers
-    cargo llvm-cov --no-report --features src_mssql --features dst_arrow --test test_mssql_types
+    cargo llvm-cov --no-report --features src_mssql_tiberius --features dst_arrow --test test_mssql_types
     just _reap-test-containers
     cargo llvm-cov --no-report --features src_mssql_tds --features dst_arrow --test test_mssql
     just _reap-test-containers
