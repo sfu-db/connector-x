@@ -427,6 +427,7 @@
                 <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#api">API</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#parameters">Parameters</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#errors">Errors</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#examples">Examples</a></li>
 </ul>
             </nav>
@@ -465,6 +466,26 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">index_col:</span> <span class="pre">Optional[str]</span></code>: The index column to set for the result dataframe. Only applicable when <code class="docutils literal notranslate"><span class="pre">return_type</span></code> is <code class="docutils literal notranslate"><span class="pre">pandas</span></code>, <code class="docutils literal notranslate"><span class="pre">modin</span></code> or <code class="docutils literal notranslate"><span class="pre">dask</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">pre_execution_query:</span> <span class="pre">Optional[Union[str,</span> <span class="pre">List[str]]]</span></code>: SQL query or list of SQL queries executed before main query. Can be used to set runtime configurations using SET statements. Only applicable for source “Postgres” and “MySQL”</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">batch_size:</span> <span class="pre">Optional[int]</span></code>: The maximum number of rows of each batch when <code class="docutils literal notranslate"><span class="pre">return_type=arrow_stream</span></code>.</p></li>
+</ul>
+</section>
+<section id="errors">
+<h2>Errors<a class="headerlink" href="#errors" title="Link to this heading">#</a></h2>
+<ul>
+<li><p>Errors raised while reading the data, such as a failed connection, an invalid query or a value that cannot be converted, are raised as <code class="docutils literal notranslate"><span class="pre">RuntimeError</span></code> for every <code class="docutils literal notranslate"><span class="pre">return_type</span></code>. Invalid arguments are raised as <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> before any query is sent.</p></li>
+<li><p>With <code class="docutils literal notranslate"><span class="pre">return_type=&quot;arrow_stream&quot;</span></code>, an error that happens after the stream has started is raised when the next batch is taken from the reader, not by <code class="docutils literal notranslate"><span class="pre">read_sql</span></code>. Batches received before the error stay valid, and the reader ends after the error.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">connectorx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cx</span>
+
+<span class="n">reader</span> <span class="o">=</span> <span class="n">cx</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">mysql_url</span><span class="p">,</span> <span class="s2">"SELECT * FROM events"</span><span class="p">,</span> <span class="n">return_type</span><span class="o">=</span><span class="s2">"arrow_stream"</span><span class="p">)</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">:</span>
+        <span class="n">process</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span>
+<span class="k">except</span> <span class="ne">RuntimeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="o">...</span>  <span class="c1"># the batches processed so far are complete</span>
+</pre></div>
+</div>
+</li>
+<li><p>A value that the database accepts but the result type cannot represent raises an error instead of being converted silently. For example, MySQL accepts the zero date <code class="docutils literal notranslate"><span class="pre">'0000-00-00'</span></code>, which has no Arrow or pandas equivalent. Convert such values in SQL, e.g. <code class="docutils literal notranslate"><span class="pre">NULLIF(col,</span> <span class="pre">'0000-00-00')</span></code> or <code class="docutils literal notranslate"><span class="pre">CAST(col</span> <span class="pre">AS</span> <span class="pre">CHAR)</span></code>.</p></li>
+<li><p>A <code class="docutils literal notranslate"><span class="pre">pyo3_runtime.PanicException</span></code> is a bug in ConnectorX. Please report it on <a class="reference external" href="https://github.com/sfu-db/connector-x/issues">GitHub</a> with the query and the column types.</p></li>
 </ul>
 </section>
 <section id="examples">
@@ -612,6 +633,7 @@
     <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#api">API</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#parameters">Parameters</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#errors">Errors</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#examples">Examples</a></li>
 </ul>
   </nav></div>
