@@ -14,6 +14,7 @@ pub use self::transports::{
 };
 pub use self::typesystem::{PandasDType, PandasTypeSystem};
 use crate::errors::ConnectorXPythonError;
+use connectorx::source_options::SourceOptions;
 use connectorx::source_router::{SourceConn, SourceType};
 use connectorx::sources::clickhouse::ClickHouseSource;
 use connectorx::sources::oracle::OracleSource;
@@ -42,7 +43,9 @@ pub fn write_pandas<'a, 'py: 'a>(
     origin_query: Option<String>,
     queries: &[CXQuery<String>],
     pre_execution_queries: Option<&[String]>,
+    options: &SourceOptions,
 ) -> Bound<'py, PyAny> {
+    options.check_source_type(&source_conn.ty)?;
     let destination = PandasDestination::new();
     let protocol = source_conn.proto.as_str();
     debug!("Protocol: {}", protocol);
@@ -204,7 +207,12 @@ pub fn write_pandas<'a, 'py: 'a>(
         },
         SourceType::MsSQL => {
             let rt = Arc::new(tokio::runtime::Runtime::new().expect("Failed to create runtime"));
-            let source = MsSQLSource::new(rt, &source_conn.conn[..], queries.len())?;
+            let source = MsSQLSource::new_with_options(
+                rt,
+                &source_conn.conn[..],
+                queries.len(),
+                &options.mssql_or_default(),
+            )?;
             let dispatcher = PandasDispatcher::<_, MsSQLPandasTransport>::new(
                 source,
                 destination,
