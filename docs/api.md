@@ -19,6 +19,24 @@ connectorx.read_sql(conn: Union[str, Dict[str, str]], query: Union[List[str], st
 - `pre_execution_query: Optional[Union[str, List[str]]]`: SQL query or list of SQL queries executed before main query. Can be used to set runtime configurations using SET statements. Only applicable for source "Postgres" and "MySQL"
 - `batch_size: Optional[int]`: The maximum number of rows of each batch when `return_type=arrow_stream`.
 
+## Errors
+- Errors raised while reading the data, such as a failed connection, an invalid query or a value that cannot be converted, are raised as `RuntimeError` for every `return_type`. Invalid arguments are raised as `ValueError` before any query is sent.
+- With `return_type="arrow_stream"`, an error that happens after the stream has started is raised when the next batch is taken from the reader, not by `read_sql`. Batches received before the error stay valid, and the reader ends after the error.
+
+  ```python
+  import connectorx as cx
+
+  reader = cx.read_sql(mysql_url, "SELECT * FROM events", return_type="arrow_stream")
+  try:
+      for batch in reader:
+          process(batch)
+  except RuntimeError as e:
+      ...  # the batches processed so far are complete
+  ```
+
+- A value that the database accepts but the result type cannot represent raises an error instead of being converted silently. For example, MySQL accepts the zero date `'0000-00-00'`, which has no Arrow or pandas equivalent. Convert such values in SQL, e.g. `NULLIF(col, '0000-00-00')` or `CAST(col AS CHAR)`.
+- A `pyo3_runtime.PanicException` is a bug in ConnectorX. Please report it on [GitHub](https://github.com/sfu-db/connector-x/issues) with the query and the column types.
+
 ## Examples
 - Read a DataFrame from a SQL using a single thread
 
