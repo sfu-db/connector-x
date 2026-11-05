@@ -206,7 +206,13 @@ src_clickhouse = [
 ]
 federation = ["j4rs"]
 fed_exec = ["datafusion", "tokio"]
-integrated-auth-gssapi = ["tiberius/integrated-auth-gssapi"]
+# Unix Kerberos for `trusted_connection=true`. Weak (`?`) so it only forwards to
+# whichever MSSQL backend is enabled, never pulls one in by itself. mssql-tds
+# dlopens libgssapi_krb5 at runtime; Tiberius links it at build time.
+integrated-auth-gssapi = [
+  "tiberius?/integrated-auth-gssapi",
+  "mssql-tds?/gssapi",
+]
 
 [package.metadata.docs.rs]
 features = ["all"]
