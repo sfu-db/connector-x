@@ -151,7 +151,7 @@ where
         let first_query = &self.queries[0];
 
         let (names, types) = match conn.prep(first_query) {
-            Ok(stmt) => column_metadata(stmt.columns()),
+            Ok(stmt) => column_metadata(&stmt.columns()),
             Err(e) => {
                 warn!(
                     "mysql prepared statement error: {:?}, switch to limit 0 method",
