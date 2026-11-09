@@ -13,6 +13,7 @@ from .connectorx import (
     partition_sql as _partition_sql,
     read_sql2 as _read_sql2,
     get_meta as _get_meta,
+    MsSqlOptions,
 )
 
 try:
@@ -77,6 +78,8 @@ def get_meta(
     conn: str | ConnectionUrl,
     query: str,
     protocol: Protocol | None = None,
+    *,
+    source_options: MsSqlOptions | None = None,
 ) -> pd.DataFrame:
     """
     Get metadata (header) of the given query (only for pandas)
@@ -90,10 +93,12 @@ def get_meta(
     protocol
       backend-specific transfer protocol directive; defaults to 'binary' (except for redshift
       connection strings, where 'cursor' will be used instead).
+    source_options
+      database-specific options, e.g. ``MsSqlOptions``; see `read_sql`.
 
     """
     conn, protocol = rewrite_conn(conn, protocol)
-    result = _get_meta(conn, query, protocol)
+    result = _get_meta(conn, query, protocol, source_options=source_options)
     df = reconstruct_pandas(result)
     return df
 
@@ -104,6 +109,8 @@ def partition_sql(
     partition_on: str,
     partition_num: int,
     partition_range: tuple[int, int] | None = None,
+    *,
+    source_options: MsSqlOptions | None = None,
 ) -> list[str]:
     """
     Partition the sql query
@@ -120,6 +127,8 @@ def partition_sql(
       how many partitions to generate.
     partition_range
       the value range of the partition column.
+    source_options
+      database-specific options, e.g. ``MsSqlOptions``; see `read_sql`.
     """
     partition_query = {
         "query": query,
@@ -128,7 +137,7 @@ def partition_sql(
         "max": partition_range and partition_range[1],
         "num": partition_num,
     }
-    return _partition_sql(conn, partition_query)
+    return _partition_sql(conn, partition_query, source_options=source_options)
 
 
 def read_sql_pandas(
@@ -140,6 +149,7 @@ def read_sql_pandas(
     partition_range: tuple[int, int] | None = None,
     partition_num: int | None = None,
     pre_execution_queries: list[str] | str | None = None,
+    source_options: MsSqlOptions | None = None,
 ) -> pd.DataFrame:
     """
     Run the SQL query, download the data from database into a dataframe.
@@ -170,6 +180,7 @@ def read_sql_pandas(
         partition_num=partition_num,
         index_col=index_col,
         pre_execution_queries=pre_execution_queries,
+        source_options=source_options,
     )
 
 
@@ -185,6 +196,7 @@ def read_sql(
     partition_num: int | None = None,
     index_col: str | None = None,
     pre_execution_query: list[str] | str | None = None,
+    source_options: MsSqlOptions | None = None,
     **kwargs
 ) -> pd.DataFrame: ...
 
@@ -201,6 +213,7 @@ def read_sql(
     partition_num: int | None = None,
     index_col: str | None = None,
     pre_execution_query: list[str] | str | None = None,
+    source_options: MsSqlOptions | None = None,
     **kwargs
 ) -> pd.DataFrame: ...
 
@@ -217,6 +230,7 @@ def read_sql(
     partition_num: int | None = None,
     index_col: str | None = None,
     pre_execution_query: list[str] | str | None = None,
+    source_options: MsSqlOptions | None = None,
     **kwargs
 ) -> pa.Table: ...
 
@@ -233,6 +247,7 @@ def read_sql(
     partition_num: int | None = None,
     index_col: str | None = None,
     pre_execution_query: list[str] | str | None = None,
+    source_options: MsSqlOptions | None = None,
     **kwargs
 ) -> mpd.DataFrame: ...
 
@@ -249,6 +264,7 @@ def read_sql(
     partition_num: int | None = None,
     index_col: str | None = None,
     pre_execution_query: list[str] | str | None = None,
+    source_options: MsSqlOptions | None = None,
     **kwargs
 ) -> dd.DataFrame: ...
 
@@ -265,6 +281,7 @@ def read_sql(
     partition_num: int | None = None,
     index_col: str | None = None,
     pre_execution_query: list[str] | str | None = None,
+    source_options: MsSqlOptions | None = None,
     **kwargs
 ) -> pl.DataFrame: ...
 
@@ -283,6 +300,7 @@ def read_sql(
     index_col: str | None = None,
     strategy: str | None = None,
     pre_execution_query: list[str] | str | None = None,
+    source_options: MsSqlOptions | None = None,
     **kwargs
 
 ) -> pd.DataFrame | mpd.DataFrame | dd.DataFrame | pl.DataFrame | pa.Table | pa.RecordBatchReader:
@@ -313,6 +331,13 @@ def read_sql(
     pre_execution_query
       SQL query or list of SQL queries executed before main query; can be used to set runtime
       configurations using SET statements; only applicable for source "Postgres" and "MySQL".
+    source_options
+      database-specific options that are not part of the connection string. Currently only
+      ``MsSqlOptions`` for SQL Server, e.g. ``MsSqlOptions(access_token=token)`` to authenticate
+      with a Microsoft Entra ID (Azure AD) access token instead of credentials in the connection
+      string (default "mssql-tds" driver only). Pass the raw token string, e.g.
+      ``credential.get_token("https://database.windows.net/.default").token``, and acquire a fresh
+      one before it expires.
     batch_size
       the maximum size of each batch when return type is `arrow_stream`.
 
@@ -348,6 +373,8 @@ def read_sql(
         assert (
             protocol is None
         ), "Federated query does not support specifying protocol for now"
+        if source_options is not None:
+            raise ValueError("Federated query does not support source_options")
 
         query = remove_ending_semicolon(query)
 
@@ -408,6 +435,7 @@ def read_sql(
             protocol=protocol,
             partition_query=partition_query,
             pre_execution_queries=pre_execution_queries,
+            source_options=source_options,
         )
         df = reconstruct_pandas(result)
 
@@ -431,6 +459,7 @@ def read_sql(
             protocol=protocol,
             partition_query=partition_query,
             pre_execution_queries=pre_execution_queries,
+            source_options=source_options,
         )
 
         df = reconstruct_arrow(result)
@@ -450,6 +479,7 @@ def read_sql(
             protocol=protocol,
             partition_query=partition_query,
             pre_execution_queries=pre_execution_queries,
+            source_options=source_options,
             batch_size=batch_size
         )
 
