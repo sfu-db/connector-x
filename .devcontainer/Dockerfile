@@ -11,12 +11,8 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     && apt-get clean -y \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python and Poetry
-ENV POETRY_HOME=/opt/poetry
-ENV POETRY_VERSION=2.4.1
-ENV PATH="/opt/poetry/bin:$PATH"
-RUN curl -sSL https://install.python-poetry.org | python3 - \
-    && poetry config virtualenvs.create false
+# Install uv
+COPY --from=ghcr.io/astral-sh/uv:0.11.28 /uv /uvx /usr/local/bin/
 
 # Install Rust components
 RUN rustup component add rustfmt clippy \
