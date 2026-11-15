@@ -543,6 +543,24 @@ def test_mysql_partitioned_pre_execution_queries(mysql_url: str) -> None:
     assert_frame_equal(df, expected, check_like=False)
 
 
+def test_mysql_partition_on_pre_execution_query(mysql_url: str) -> None:
+    # The user variable only exists on connections that ran the pre-execution query,
+    # including the one that looks up the range of the partition column.
+    query = "SELECT test_int FROM test_table WHERE test_int >= @cx_min_int"
+    df = read_sql(
+        mysql_url,
+        query,
+        partition_on="test_int",
+        partition_num=2,
+        pre_execution_query="SET @cx_min_int = 3",
+    ).sort_values(by="test_int").reset_index(drop=True)
+    expected = pd.DataFrame(
+        index=range(4),
+        data={"test_int": pd.Series([3, 4, 5, 6], dtype="Int64")},
+    )
+    assert_frame_equal(df, expected, check_names=True)
+
+
 def test_mysql_decimal_arrow_binary(mysql_url: str) -> None:
     """Test that DECIMAL types return as Decimal128 in Arrow (binary protocol)."""
     import pyarrow as pa

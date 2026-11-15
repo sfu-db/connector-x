@@ -42,6 +42,22 @@ fn get_total_rows(conn: &mut MysqlConn, query: &CXQuery<String>) -> usize {
         .ok_or_else(|| anyhow!("mysql failed to get the count of query: {}", query))?
 }
 
+/// Takes a connection from the pool and runs the pre-execution queries on it,
+/// so that every connection ConnectorX uses has the same session settings.
+#[throws(MySQLSourceError)]
+fn pooled_conn(
+    pool: &Pool<MySqlConnectionManager>,
+    pre_execution_queries: &Option<Vec<String>>,
+) -> MysqlConn {
+    let mut conn = pool.get()?;
+    if let Some(pre_queries) = pre_execution_queries {
+        for pre_query in pre_queries {
+            conn.query_drop(pre_query)?;
+        }
+    }
+    conn
+}
+
 pub struct MySQLSource<P> {
     pool: Pool<MySqlConnectionManager>,
     origin_query: Option<String>,
@@ -147,7 +163,7 @@ where
     fn fetch_metadata(&mut self) {
         assert!(!self.queries.is_empty());
 
-        let mut conn = self.pool.get()?;
+        let mut conn = pooled_conn(&self.pool, &self.pre_execution_queries)?;
         let first_query = &self.queries[0];
 
         let (names, types) = match conn.prep(first_query) {
@@ -169,7 +185,7 @@ where
         match &self.origin_query {
             Some(q) => {
                 let cxq = CXQuery::Naked(q.clone());
-                let mut conn = self.pool.get()?;
+                let mut conn = pooled_conn(&self.pool, &self.pre_execution_queries)?;
                 let nrows = get_total_rows(&mut conn, &cxq)?;
                 Some(nrows)
             }
@@ -189,13 +205,7 @@ where
     fn partition(self) -> Vec<Self::Partition> {
         let mut ret = vec![];
         for query in self.queries {
-            let mut conn = self.pool.get()?;
-
-            if let Some(pre_queries) = &self.pre_execution_queries {
-                for pre_query in pre_queries {
-                    conn.query_drop(pre_query)?;
-                }
-            }
+            let conn = pooled_conn(&self.pool, &self.pre_execution_queries)?;
 
             ret.push(MySQLSourcePartition::new(conn, &query, &self.schema));
         }

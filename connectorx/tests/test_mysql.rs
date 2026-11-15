@@ -14,11 +14,14 @@ use connectorx::{
     arrow_batch_iter::ArrowBatchIter,
     destinations::arrow::ArrowDestination,
     errors::OutResult,
+    partition::{get_col_range, partition, PartitionQuery},
     prelude::*,
+    source_router::parse_source,
     sources::mysql::{BinaryProtocol, MySQLSource, TextProtocol},
     sql::CXQuery,
     transports::{MySQLArrowStreamTransport, MySQLArrowTransport, MySQLArrowTransportError},
 };
+use r2d2_mysql::mysql::{prelude::Queryable, Conn, Opts};
 
 #[test]
 fn test_mysql() {
@@ -168,6 +171,160 @@ fn test_mysql_partitioned_pre_execution_queries() {
 
     assert_eq!(result_map.get("max_execution_time"), Some(&2151u64));
     assert_eq!(result_map.get("wait_timeout"), Some(&2252u64));
+}
+
+const MYSQL_READ_UNCOMMITTED: &str = "SET SESSION TRANSACTION ISOLATION LEVEL READ UNCOMMITTED";
+
+/// Connects directly, retrying while the freshly started test container restarts after its
+/// initialization.
+fn mysql_conn(dburl: &str) -> Conn {
+    let opts = Opts::from_url(dburl).unwrap();
+    let mut attempts = 0;
+    loop {
+        match Conn::new(opts.clone()) {
+            Ok(conn) => return conn,
+            Err(e) if attempts < 60 => {
+                attempts += 1;
+                eprintln!("mysql not ready yet: {e}");
+                std::thread::sleep(std::time::Duration::from_secs(1));
+            }
+            Err(e) => panic!("cannot connect to mysql: {e}"),
+        }
+    }
+}
+
+/// Creates `table` with the committed ids 1..=10 and returns a connection that keeps the row
+/// with id 100 inserted but not committed.
+fn mysql_table_with_uncommitted_row(dburl: &str, table: &str) -> Conn {
+    let mut conn = mysql_conn(dburl);
+    conn.query_drop(format!("DROP TABLE IF EXISTS {table}"))
+        .unwrap();
+    conn.query_drop(format!("CREATE TABLE {table} (id INT PRIMARY KEY)"))
+        .unwrap();
+    conn.query_drop(format!(
+        "INSERT INTO {table} VALUES (1), (2), (3), (4), (5), (6), (7), (8), (9), (10)"
+    ))
+    .unwrap();
+    conn.query_drop("START TRANSACTION").unwrap();
+    conn.query_drop(format!("INSERT INTO {table} VALUES (100)"))
+        .unwrap();
+    conn
+}
+
+#[test]
+fn test_mysql_pre_execution_queries_partition_range() {
+    let _ = env_logger::builder().is_test(true).try_init();
+
+    let dburl = test_db::mysql_url();
+    let table = "cx_pre_exec_range";
+    let mut writer = mysql_table_with_uncommitted_row(&dburl, table);
+
+    let source_conn = parse_source(&dburl, None).unwrap();
+    let query = format!("select * from {table}");
+    let pre_execution_queries = [String::from(MYSQL_READ_UNCOMMITTED)];
+
+    // Without pre-execution queries the range query does not see the uncommitted row.
+    assert_eq!(get_col_range(&source_conn, &query, "id").unwrap(), (1, 10));
+
+    // With them it runs under READ UNCOMMITTED and does, so the last partition covers it.
+    let part = PartitionQuery::new(&query, "id", None, None, 2)
+        .with_pre_execution_queries(Some(&pre_execution_queries));
+    let queries = partition(&part, &source_conn).unwrap();
+    assert_eq!(queries.len(), 2);
+    assert!(
+        queries[1].as_str().contains("101"),
+        "last partition should extend to the uncommitted id 100: {}",
+        queries[1]
+    );
+
+    writer.query_drop("ROLLBACK").unwrap();
+}
+
+#[test]
+fn test_mysql_pre_execution_queries_all_connections() {
+    let _ = env_logger::builder().is_test(true).try_init();
+
+    let dburl = test_db::mysql_url();
+    let table = "cx_pre_exec_all";
+    let mut writer = mysql_table_with_uncommitted_row(&dburl, table);
+
+    // Partition on id with the pre-execution queries, the way read_sql does it.
+    let source_conn = parse_source(&dburl, None).unwrap();
+    let origin_query = format!("select * from {table}");
+    let pre_execution_queries = [String::from(MYSQL_READ_UNCOMMITTED)];
+    let part = PartitionQuery::new(&origin_query, "id", None, None, 2)
+        .with_pre_execution_queries(Some(&pre_execution_queries));
+    let queries = partition(&part, &source_conn).unwrap();
+
+    let builder = MySQLSource::<BinaryProtocol>::new(&dburl, 2).unwrap();
+    let mut destination = ArrowDestination::new();
+    let mut dispatcher = Dispatcher::<_, _, MySQLArrowTransport<BinaryProtocol>>::new(
+        builder,
+        &mut destination,
+        &queries,
+        Some(origin_query),
+    );
+    dispatcher.set_pre_execution_queries(Some(&pre_execution_queries));
+    dispatcher.run().unwrap();
+
+    // The 10 committed rows and the uncommitted one, none lost to the partition bounds.
+    let nrows: usize = destination
+        .arrow()
+        .unwrap()
+        .iter()
+        .map(|batch| batch.num_rows())
+        .sum();
+    assert_eq!(nrows, 11);
+
+    writer.query_drop("ROLLBACK").unwrap();
+}
+
+#[test]
+fn test_mysql_pre_execution_queries_metadata() {
+    let _ = env_logger::builder().is_test(true).try_init();
+
+    let dburl = test_db::mysql_url();
+    let mut conn = mysql_conn(&dburl);
+    conn.query_drop("CREATE DATABASE IF NOT EXISTS cx_pre_exec_db")
+        .unwrap();
+    conn.query_drop("DROP TABLE IF EXISTS cx_pre_exec_db.only_here")
+        .unwrap();
+    conn.query_drop("CREATE TABLE cx_pre_exec_db.only_here (id INT)")
+        .unwrap();
+    conn.query_drop("INSERT INTO cx_pre_exec_db.only_here VALUES (1), (2), (3)")
+        .unwrap();
+
+    // `only_here` can only be resolved on a connection that ran the pre-execution query, and
+    // that includes the connection that reads the column names and types.
+    let pre_execution_queries = [String::from("USE cx_pre_exec_db")];
+    let mut source = MySQLSource::<BinaryProtocol>::new(&dburl, 2).unwrap();
+    source.set_queries(&[CXQuery::naked("select * from only_here")]);
+    source.set_pre_execution_queries(Some(&pre_execution_queries));
+    source.fetch_metadata().unwrap();
+    assert_eq!(source.names(), vec![String::from("id")]);
+}
+
+#[test]
+fn test_mysql_pre_execution_queries_result_rows() {
+    let _ = env_logger::builder().is_test(true).try_init();
+
+    let dburl = test_db::mysql_url();
+    let mut conn = mysql_conn(&dburl);
+    conn.query_drop("CREATE DATABASE IF NOT EXISTS cx_pre_exec_rows_db")
+        .unwrap();
+    conn.query_drop("DROP TABLE IF EXISTS cx_pre_exec_rows_db.only_here")
+        .unwrap();
+    conn.query_drop("CREATE TABLE cx_pre_exec_rows_db.only_here (id INT)")
+        .unwrap();
+    conn.query_drop("INSERT INTO cx_pre_exec_rows_db.only_here VALUES (1), (2), (3)")
+        .unwrap();
+
+    // The connection that counts the rows of the origin query needs the pre-execution queries.
+    let pre_execution_queries = [String::from("USE cx_pre_exec_rows_db")];
+    let mut source = MySQLSource::<BinaryProtocol>::new(&dburl, 2).unwrap();
+    source.set_origin_query(Some(String::from("select * from only_here")));
+    source.set_pre_execution_queries(Some(&pre_execution_queries));
+    assert_eq!(source.result_rows().unwrap(), Some(3));
 }
 
 pub fn verify_arrow_results(result: Vec<RecordBatch>) {
