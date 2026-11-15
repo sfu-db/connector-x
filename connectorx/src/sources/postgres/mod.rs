@@ -250,8 +250,7 @@ where
     _protocol: PhantomData<P>,
 }
 
-/// Takes a connection from the pool and runs the pre-execution queries on it,
-/// so that every connection ConnectorX uses has the same session settings.
+/// Takes a connection from the pool and runs the pre-execution queries on it.
 #[throws(PostgresSourceError)]
 fn pooled_conn<C>(
     pool: &Pool<PgManager<C>>,

@@ -42,8 +42,7 @@ fn get_total_rows(conn: &mut MysqlConn, query: &CXQuery<String>) -> usize {
         .ok_or_else(|| anyhow!("mysql failed to get the count of query: {}", query))?
 }
 
-/// Takes a connection from the pool and runs the pre-execution queries on it,
-/// so that every connection ConnectorX uses has the same session settings.
+/// Takes a connection from the pool and runs the pre-execution queries on it.
 #[throws(MySQLSourceError)]
 fn pooled_conn(
     pool: &Pool<MySqlConnectionManager>,

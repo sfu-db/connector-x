@@ -1572,8 +1572,7 @@ fn unknown_url_param_is_reported_as_an_error() {
     assert!(rewrite_tls_args(&url).is_err());
 }
 
-/// Connects directly, retrying while the freshly started test container restarts after its
-/// initialization.
+/// Connects directly, retrying while the test container restarts.
 fn connect_with_retry(dburl: &str) -> postgres::Client {
     let mut attempts = 0;
     loop {
@@ -1607,9 +1606,8 @@ fn test_postgres_pre_execution_queries_all_connections() {
         )
         .unwrap();
 
-    // `only_here` can only be resolved on a connection that ran the pre-execution query: the
-    // partition range lookup, the metadata and the partitions all need it. The row count is not
-    // exercised here (ArrowDestination does not ask for it); see the result_rows test below.
+    // Range lookup, metadata and partitions all need the pre-execution query to resolve
+    // `only_here`.
     let pre_execution_queries = [String::from("SET search_path TO cx_pre_exec")];
     let origin_query = String::from("select * from only_here");
 
@@ -1659,7 +1657,7 @@ fn test_postgres_pre_execution_queries_result_rows() {
         )
         .unwrap();
 
-    // The connection that counts the rows of the origin query needs the pre-execution queries.
+    // The row count connection must run the pre-execution queries too.
     let pre_execution_queries = [String::from("SET search_path TO cx_pre_exec_rows")];
     let url = Url::parse(dburl.as_str()).unwrap();
     let (config, _tls) = rewrite_tls_args(&url).unwrap();

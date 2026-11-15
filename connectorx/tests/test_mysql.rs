@@ -175,8 +175,7 @@ fn test_mysql_partitioned_pre_execution_queries() {
 
 const MYSQL_READ_UNCOMMITTED: &str = "SET SESSION TRANSACTION ISOLATION LEVEL READ UNCOMMITTED";
 
-/// Connects directly, retrying while the freshly started test container restarts after its
-/// initialization.
+/// Connects directly, retrying while the test container restarts.
 fn mysql_conn(dburl: &str) -> Conn {
     let opts = Opts::from_url(dburl).unwrap();
     let mut attempts = 0;
@@ -193,8 +192,7 @@ fn mysql_conn(dburl: &str) -> Conn {
     }
 }
 
-/// Creates `table` with the committed ids 1..=10 and returns a connection that keeps the row
-/// with id 100 inserted but not committed.
+/// Creates `table` with ids 1..=10 and returns a connection holding an uncommitted row 100.
 fn mysql_table_with_uncommitted_row(dburl: &str, table: &str) -> Conn {
     let mut conn = mysql_conn(dburl);
     conn.query_drop(format!("DROP TABLE IF EXISTS {table}"))
@@ -223,10 +221,8 @@ fn test_mysql_pre_execution_queries_partition_range() {
     let query = format!("select * from {table}");
     let pre_execution_queries = [String::from(MYSQL_READ_UNCOMMITTED)];
 
-    // Without pre-execution queries the range query does not see the uncommitted row.
     assert_eq!(get_col_range(&source_conn, &query, "id").unwrap(), (1, 10));
 
-    // With them it runs under READ UNCOMMITTED and does, so the last partition covers it.
     let part = PartitionQuery::new(&query, "id", None, None, 2)
         .with_pre_execution_queries(Some(&pre_execution_queries));
     let queries = partition(&part, &source_conn).unwrap();
@@ -248,7 +244,6 @@ fn test_mysql_pre_execution_queries_all_connections() {
     let table = "cx_pre_exec_all";
     let mut writer = mysql_table_with_uncommitted_row(&dburl, table);
 
-    // Partition on id with the pre-execution queries, the way read_sql does it.
     let source_conn = parse_source(&dburl, None).unwrap();
     let origin_query = format!("select * from {table}");
     let pre_execution_queries = [String::from(MYSQL_READ_UNCOMMITTED)];
@@ -267,7 +262,6 @@ fn test_mysql_pre_execution_queries_all_connections() {
     dispatcher.set_pre_execution_queries(Some(&pre_execution_queries));
     dispatcher.run().unwrap();
 
-    // The 10 committed rows and the uncommitted one, none lost to the partition bounds.
     let nrows: usize = destination
         .arrow()
         .unwrap()
@@ -294,8 +288,7 @@ fn test_mysql_pre_execution_queries_metadata() {
     conn.query_drop("INSERT INTO cx_pre_exec_db.only_here VALUES (1), (2), (3)")
         .unwrap();
 
-    // `only_here` can only be resolved on a connection that ran the pre-execution query, and
-    // that includes the connection that reads the column names and types.
+    // The metadata connection must run the pre-execution query too.
     let pre_execution_queries = [String::from("USE cx_pre_exec_db")];
     let mut source = MySQLSource::<BinaryProtocol>::new(&dburl, 2).unwrap();
     source.set_queries(&[CXQuery::naked("select * from only_here")]);
@@ -319,7 +312,7 @@ fn test_mysql_pre_execution_queries_result_rows() {
     conn.query_drop("INSERT INTO cx_pre_exec_rows_db.only_here VALUES (1), (2), (3)")
         .unwrap();
 
-    // The connection that counts the rows of the origin query needs the pre-execution queries.
+    // The row count connection must run the pre-execution queries too.
     let pre_execution_queries = [String::from("USE cx_pre_exec_rows_db")];
     let mut source = MySQLSource::<BinaryProtocol>::new(&dburl, 2).unwrap();
     source.set_origin_query(Some(String::from("select * from only_here")));

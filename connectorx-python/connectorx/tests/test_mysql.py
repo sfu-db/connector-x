@@ -544,8 +544,7 @@ def test_mysql_partitioned_pre_execution_queries(mysql_url: str) -> None:
 
 
 def test_mysql_partition_on_pre_execution_query(mysql_url: str) -> None:
-    # The user variable only exists on connections that ran the pre-execution query,
-    # including the one that looks up the range of the partition column.
+    # The range lookup connection must run the pre-execution query too.
     query = "SELECT test_int FROM test_table WHERE test_int >= @cx_min_int"
     df = read_sql(
         mysql_url,

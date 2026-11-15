@@ -1182,8 +1182,7 @@ def test_postgres_multiple_pre_execution_queries(postgres_url: str) -> None:
 
 
 def test_postgres_partition_on_pre_execution_query(postgres_url: str) -> None:
-    # The setting only exists on connections that ran the pre-execution query, including the
-    # one that looks up the range of the partition column.
+    # The range lookup connection must run the pre-execution query too.
     query = "SELECT test_int FROM test_table WHERE test_int >= current_setting('cx.min_int')::int"
     df = read_sql(
         postgres_url,

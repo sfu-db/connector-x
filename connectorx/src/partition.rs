@@ -81,9 +81,7 @@ impl PartitionQuery {
         }
     }
 
-    /// Queries to run on the connection that looks up the range of the partition column,
-    /// before the range query itself (the same queries given as `pre_execution_queries`
-    /// to the source). Only used by sources that support pre-execution queries.
+    /// Queries to run before the partition range lookup. Only MySQL and Postgres use them.
     pub fn with_pre_execution_queries(mut self, pre_execution_queries: Option<&[String]>) -> Self {
         self.pre_execution_queries = pre_execution_queries.map(|s| s.to_vec());
         self
@@ -182,8 +180,7 @@ pub fn get_col_range(source_conn: &SourceConn, query: &str, col: &str) -> OutRes
     get_col_range_with_pre_queries(source_conn, query, col, None)
 }
 
-/// Like `get_col_range`, but runs `pre_execution_queries` on the connection that looks up the
-/// range first (MySQL and Postgres only, the sources that support pre-execution queries).
+/// Like `get_col_range`, but runs `pre_execution_queries` first (MySQL and Postgres only).
 pub fn get_col_range_with_pre_queries(
     source_conn: &SourceConn,
     query: &str,
