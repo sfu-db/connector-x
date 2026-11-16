@@ -148,6 +148,9 @@ jobs:
         # 3.15/3.15t are left out until the locked deps have cp315 wheels
         # (see [tool.uv] environments in connectorx-python/pyproject.toml).
         # Under Poetry those jobs silently fell back to a 3.12 venv.
+        # 3.15/3.15t are left out until pyproject.toml allows them: poetry
+        # rejects 3.15 (python <3.15) and silently falls back to the runner's
+        # system interpreter, so those jobs never actually tested 3.15.
         python-version: ["3.14", "3.14t"]
 
     steps:
