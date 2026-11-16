@@ -143,7 +143,10 @@ jobs:
     # Note: No 'container' - we run directly on the VM to access Docker for Testcontainers
     strategy:
       matrix:
-        python-version: ["3.14", "3.14t", "3.15", "3.15t"]
+        # 3.15/3.15t are left out until pyproject.toml allows them: poetry
+        # rejects 3.15 (python <3.15) and silently falls back to the runner's
+        # system interpreter, so those jobs never actually tested 3.15.
+        python-version: ["3.14", "3.14t"]
 
     steps:
       - uses: actions/checkout@v7
