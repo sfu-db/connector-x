@@ -60,7 +60,7 @@ psql -h localhost -U postgres -d tpch -c "CREATE INDEX lineitem_l_orderkey_idx O
 1. Make the following changes in the COPY commands of `script/benchmarks/tpch-reshift.sql`:
 
    1. Change `credentials` accordingly from Redshift.
-   2. (Optional) Change TPC-H data size in `from` s3 string. Currently it is 10GB (equivilant to TPC-H scale factor 10). It can be change to 3TB.
+   2. (Optional) Change TPC-H data size in `from` s3 string. Currently it is 10GB (equivalent to TPC-H scale factor 10). It can be change to 3TB.
  
 2. Run modified `tpch-reshift.sql` for Redshift:
 ```
@@ -78,7 +78,7 @@ import connectorx as cx
 cx.read_sql("connection string", "SELECT * FROM lineitem", partition_on="l_orderkey", partition_num=4)
 ```
 
-Here are the baselines we compare againt:
+Here are the baselines we compare against:
 * Pandas
 * Modin
 * Dask
