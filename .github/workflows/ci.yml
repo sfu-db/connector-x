@@ -39,7 +39,7 @@ jobs:
         with:
           prefix-key: v0-rust-${{ secrets.CACHE_VERSION }}
 
-      - uses: extractions/setup-just@v4
+      - uses: taiki-e/install-action@just
 
       - name: Is the code formatted?
         run: cargo fmt --all -- --check -q
@@ -195,7 +195,7 @@ jobs:
           cache-dependency-glob: connectorx-python/uv.lock
           cache-suffix: ${{ matrix.python-version }}
 
-      - uses: extractions/setup-just@v4
+      - uses: taiki-e/install-action@just
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
