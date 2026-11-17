@@ -688,7 +688,7 @@ dependencies = [
  "percent-encoding",
  "pin-project-lite",
  "tracing",
- "uuid 1.26.1",
+ "uuid 1.29.0",
 ]
 
 [[package]]
@@ -1735,7 +1735,7 @@ checksum = "157a8ba7b480713b56f4c09fd13fc3e0a22a5dfab8097ba61cbc5feef950788a"
 dependencies = [
  "glob",
  "libc",
- "libloading",
+ "libloading 0.8.9",
 ]
 
 [[package]]
@@ -1952,7 +1952,7 @@ dependencies = [
  "rustc-hash 2.1.3",
  "serde",
  "serde_json",
- "sqlparser 0.63.0",
+ "sqlparser 0.64.0",
  "testcontainers",
  "thiserror 2.0.21",
  "tiberius",
@@ -1962,7 +1962,7 @@ dependencies = [
  "url",
  "urlencoding",
  "uuid 0.8.2",
- "uuid 1.26.1",
+ "uuid 1.29.0",
 ]
 
 [[package]]
@@ -2492,7 +2492,7 @@ dependencies = [
  "tempfile",
  "tokio",
  "url",
- "uuid 1.26.1",
+ "uuid 1.29.0",
  "xz2",
  "zstd",
 ]
@@ -2789,7 +2789,7 @@ dependencies = [
  "regex",
  "sha2 0.10.9",
  "unicode-segmentation",
- "uuid 1.26.1",
+ "uuid 1.29.0",
 ]
 
 [[package]]
@@ -3115,7 +3115,7 @@ version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bef552e6f588e446098f6ba40d89ac146c8c7b64aade83c051ee00bb5d2bc18d"
 dependencies = [
- "uuid 1.26.1",
+ "uuid 1.29.0",
 ]
 
 [[package]]
@@ -4748,9 +4748,9 @@ checksum = "8f42a60cbdf9a97f5d2305f08a87dc4e09308d1276d28c869c684d7777685682"
 
 [[package]]
 name = "j4rs"
-version = "0.25.2"
+version = "0.25.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c26fb1429997a5d8f98777df359f0132f62905ecce1d3bc2836372045c67de89"
+checksum = "ce53f4f4c6b6c070982e586633f824214994296c4ed52751bc55b589f09d3d60"
 dependencies = [
  "cesu8",
  "dunce",
@@ -4759,7 +4759,7 @@ dependencies = [
  "java-locator",
  "jni-sys",
  "libc",
- "libloading",
+ "libloading 0.9.1",
  "log",
  "serde",
  "serde_json",
@@ -4982,6 +4982,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "libloading"
+version = "0.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a1832accd5a4ca2795ace4d05d15c4039be15b62d3b950eff99746a990e3cc10"
+dependencies = [
+ "cfg-if",
+ "windows-link",
+]
+
+[[package]]
 name = "libm"
 version = "0.2.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5053,9 +5063,9 @@ dependencies = [
 
 [[package]]
 name = "log"
-version = "0.4.34"
+version = "0.4.35"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f9f8bd3e56ce4dfc153cf470fffbfa98c7620958b312ca5c3a4b8d5181fd13c6"
+checksum = "5d15f86d12da44cd8d4ec3c73984537eb7f4cadcb9776a575a0a8a05ca11005c"
 
 [[package]]
 name = "lru"
@@ -5243,7 +5253,7 @@ dependencies = [
  "tokio-native-tls",
  "tokio-util 0.7.20",
  "tracing",
- "uuid 1.26.1",
+ "uuid 1.29.0",
  "winapi",
  "windows 0.58.0",
  "windows-sys 0.59.0",
@@ -5362,7 +5372,7 @@ dependencies = [
  "subprocess",
  "thiserror 1.0.69",
  "time",
- "uuid 1.26.1",
+ "uuid 1.29.0",
  "zstd",
 ]
 
@@ -5727,9 +5737,9 @@ checksum = "d6790f58c7ff633d8771f42965289203411a5e5c68388703c06e14f24770b41e"
 
 [[package]]
 name = "openssl"
-version = "0.10.81"
+version = "0.10.82"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "77823a27f0babb03091cb9ed9ef80af3b39dbc82f97e8fa530374b7dafd87a45"
+checksum = "4de8111e94a56adca7ebfe6c365b6d42f99deb69b74b6becacd4204e2f193aa2"
 dependencies = [
  "bitflags 2.13.2",
  "cfg-if",
@@ -5773,9 +5783,9 @@ dependencies = [
 
 [[package]]
 name = "openssl-sys"
-version = "0.9.117"
+version = "0.9.118"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b47e7e6bb2c38cd930d25a23b40fa52e068c10e85f3e03a7f5ba5aaca5713695"
+checksum = "19c413d6ec9ebaf5e1c829d355cb3e9f783778d700f135be0921d52fce3c60ae"
 dependencies = [
  "cc",
  "libc",
@@ -6424,7 +6434,7 @@ dependencies = [
  "serde_json",
  "strum_macros 0.28.0",
  "tokio",
- "uuid 1.26.1",
+ "uuid 1.29.0",
  "version_check",
  "xxhash-rust",
 ]
@@ -6441,7 +6451,7 @@ dependencies = [
  "polars-error",
  "polars-utils",
  "serde",
- "uuid 1.26.1",
+ "uuid 1.29.0",
 ]
 
 [[package]]
@@ -6597,7 +6607,7 @@ dependencies = [
  "rand_distr",
  "thread_local",
  "tokio",
- "uuid 1.26.1",
+ "uuid 1.29.0",
 ]
 
 [[package]]
@@ -6799,7 +6809,7 @@ dependencies = [
  "recursive",
  "slotmap",
  "tokio",
- "uuid 1.26.1",
+ "uuid 1.29.0",
  "version_check",
 ]
 
@@ -6862,7 +6872,7 @@ dependencies = [
  "stacker",
  "sysinfo",
  "tokio",
- "uuid 1.26.1",
+ "uuid 1.29.0",
  "version_check",
 ]
 
@@ -6950,7 +6960,7 @@ dependencies = [
  "postgres-protocol",
  "serde_core",
  "serde_json",
- "uuid 1.26.1",
+ "uuid 1.29.0",
 ]
 
 [[package]]
@@ -7153,7 +7163,7 @@ dependencies = [
  "thiserror 1.0.69",
  "tokio",
  "urlencoding",
- "uuid 1.26.1",
+ "uuid 1.29.0",
 ]
 
 [[package]]
@@ -7358,7 +7368,7 @@ checksum = "63417e83dc891797eea3ad379f52a5986da4bca0d6ef28baf4d14034dd111b0c"
 dependencies = [
  "r2d2",
  "rusqlite",
- "uuid 1.26.1",
+ "uuid 1.29.0",
 ]
 
 [[package]]
@@ -8471,9 +8481,9 @@ dependencies = [
 
 [[package]]
 name = "sqlparser"
-version = "0.63.0"
+version = "0.64.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3679862809bd1f92e563cf6fd820e28f39135303668001c10331d5027183e8b4"
+checksum = "92e0d273b4f8ddd14a35ed36862acbc9cc96cec578e36ee1881a9d42e0e0f2c8"
 dependencies = [
  "log",
  "recursive",
@@ -8685,7 +8695,7 @@ dependencies = [
  "debugid",
  "memmap2",
  "stable_deref_trait",
- "uuid 1.26.1",
+ "uuid 1.29.0",
 ]
 
 [[package]]
@@ -9064,9 +9074,9 @@ checksum = "fd3ca314f692efd6c868f8408f53fe444634a845f96c028b97d35f6a1f79f0ee"
 
 [[package]]
 name = "tokio"
-version = "1.53.3"
+version = "1.54.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ce3335fa71841cda333a58d7615b03901380ecf09d59b3296d21f8bbac0dde4e"
+checksum = "b52fd3255258d26fac7264ab5a76b53c13367136dc011d3d6ad4f8ed070396a3"
 dependencies = [
  "bytes",
  "libc",
@@ -9554,9 +9564,9 @@ checksum = "bc5cf98d8186244414c848017f0e2676b3fcb46807f6668a97dfe67359a3c4b7"
 
 [[package]]
 name = "uuid"
-version = "1.26.1"
+version = "1.29.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2ef6dac1e96601b4fb3acccccff2139741fcb757cb9a36089bf5be91cfb285ce"
+checksum = "4a0e2d11620c50695fe12bbbfde96b3477fe606e7284c22d505c12ce51214514"
 dependencies = [
  "getrandom 0.4.3",
  "js-sys",
