@@ -97,7 +97,7 @@ MODIN_ENGINE=dask
   * Examples can be found [here](https://github.com/sfu-db/connector-x/blob/main/connectorx/src/sources)
 * Define the conversion between the new source and existing destinations
   * Examples can be found [here](https://github.com/sfu-db/connector-x/tree/main/connectorx/src/transports) and [here](https://github.com/sfu-db/connector-x/tree/main/connectorx-python/src/pandas/transports)
-* Make the new source visable to destinations, including:
+* Make the new source visible to destinations, including:
   * Add the source to the [source_router](https://github.com/sfu-db/connector-x/blob/main/connectorx/src/source_router.rs)
   * Add the source to writing functions of each destination. Here are examples for [pandas](https://github.com/sfu-db/connector-x/blob/main/connectorx-python/src/pandas/mod.rs) and [arrow](https://github.com/sfu-db/connector-x/blob/main/connectorx-python/src/arrow.rs)
 * Add corresponding unit tests under `connectorx/tests` for Rust and `connectorx-python/connectorx/tests` for Python
