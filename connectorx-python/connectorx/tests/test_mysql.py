@@ -535,7 +535,7 @@ def test_mysql_partitioned_pre_execution_queries(mysql_url: str) -> None:
     expected = pd.DataFrame(
         index=range(2),
         data={
-            "name": pd.Series(["max_execution_time", "wait_timeout"], dtype="str"),
+            "name": pd.Series(["max_execution_time", "wait_timeout"], dtype="object"),
             "setting": pd.Series([2151, 2252], dtype="float64"),
         },
     ).sort_values(by=['name']).reset_index(drop=True)
