@@ -647,22 +647,22 @@ def verify_data_types(df, protocol) -> None:
                 dtype="object",
             ),
             "test_enum": pd.Series(
-                ["happy", "very happy", "ecstatic", "ecstatic", None]
+                ["happy", "very happy", "ecstatic", "ecstatic", None], dtype="object"
             ),
             "test_citext": pd.Series(
-                ["str_citext", "", "abcdef", "1234", None]
+                ["str_citext", "", "abcdef", "1234", None], dtype="object"
             ),
             "test_ltree": pd.Series(
                 ["A.B.C.D", "A.B.E", "A", "", None], dtype="object"
             ),
             "test_lquery": pd.Series(
-                ["*.B.*", "A.*", "*", "*.A", None]
+                ["*.B.*", "A.*", "*", "*.A", None], dtype="object"
             ),
             "test_ltxtquery": pd.Series(
-                ["A & B*", "A | B", "A@", "A & B*", None]
+                ["A & B*", "A | B", "A@", "A & B*", None], dtype="object"
             ),
             "test_name": pd.Series(
-                ["0", "21", "someName", "101203203-1212323-22131235", None]
+                ["0", "21", "someName", "101203203-1212323-22131235", None], dtype="object"
             ),
         },
     )
@@ -1047,7 +1047,7 @@ def test_postgres_name_type(postgres_url: str) -> None:
     df = read_sql(postgres_url, query)
     expected = pd.DataFrame(
         data={
-            "test_name": pd.Series(["0", "21", "someName", "101203203-1212323-22131235", None]),
+            "test_name": pd.Series(["0", "21", "someName", "101203203-1212323-22131235", None], dtype="object"),
         },
     )
     assert_frame_equal(df, expected, check_names=True)
@@ -1057,7 +1057,7 @@ def test_postgres_semicolon_support_str_query(postgres_url: str) -> None:
     df = read_sql(postgres_url, query)
     expected = pd.DataFrame(
         data={
-            "test_name": pd.Series(["0", "21", "someName", "101203203-1212323-22131235", None]),
+            "test_name": pd.Series(["0", "21", "someName", "101203203-1212323-22131235", None], dtype="object"),
         },
     )
     assert_frame_equal(df, expected, check_names=True)
@@ -1158,7 +1158,7 @@ def test_postgres_single_pre_execution_queries(postgres_url: str) -> None:
     expected = pd.DataFrame(
         index=range(1),
         data={
-            "name": pd.Series(["statement_timeout"], dtype="str"),
+            "name": pd.Series(["statement_timeout"], dtype="object"),
             "setting": pd.Series([2151], dtype="Int64"),
         },
     )
@@ -1174,7 +1174,7 @@ def test_postgres_multiple_pre_execution_queries(postgres_url: str) -> None:
     expected = pd.DataFrame(
         index=range(2),
         data={
-            "name": pd.Series(["idle_in_transaction_session_timeout", "statement_timeout"], dtype="str"),
+            "name": pd.Series(["idle_in_transaction_session_timeout", "statement_timeout"], dtype="object"),
             "setting": pd.Series([2252, 2151], dtype="Int64"),
         },
     )
@@ -1194,7 +1194,7 @@ def test_postgres_partitioned_pre_execution_queries(postgres_url: str) -> None:
     expected = pd.DataFrame(
         index=range(2),
         data={
-            "name": pd.Series(["statement_timeout", "idle_in_transaction_session_timeout"], dtype="str"),
+            "name": pd.Series(["statement_timeout", "idle_in_transaction_session_timeout"], dtype="object"),
             "setting": pd.Series([2151, 2252], dtype="Int64"),
         },
     ).sort_values(by=['name']).reset_index(drop=True)
@@ -1255,7 +1255,7 @@ def test_postgres_vector_types(postgres_url: str) -> None:
         # Convert binary to string of 1s and 0s
         return ''.join(format(b, '08b') for b in binary)[:10]  # Take first 10 bits
     
-    df['binary_vector'] = df['binary_vector'].apply(binary_to_string)
+    df['binary_vector'] = pd.Series([binary_to_string(v) for v in df['binary_vector']], index=df.index, dtype="object")
     
     # Convert sparse vector array to string format
     def sparse_to_string(sparse_vec):
@@ -1265,7 +1265,7 @@ def test_postgres_vector_types(postgres_url: str) -> None:
         non_zero = {i+1: int(val) for i, val in enumerate(sparse_vec) if val != 0}
         return f"{non_zero}/{len(sparse_vec)}"
     
-    df['sparse_vector'] = df['sparse_vector'].apply(sparse_to_string)
+    df['sparse_vector'] = pd.Series([sparse_to_string(v) for v in df['sparse_vector']], index=df.index, dtype="object")
     
     expected = pd.DataFrame(
         data={
