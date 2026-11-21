@@ -15,6 +15,7 @@ use regex::{Regex, RegexBuilder};
 use std::collections::HashSet;
 use std::fs::File;
 
+/// Source that reads CSV files. Each "query" is a file path.
 pub struct CSVSource {
     schema: Vec<CSVTypeSystem>,
     files: Vec<CXQuery<String>>,
@@ -22,6 +23,7 @@ pub struct CSVSource {
 }
 
 impl CSVSource {
+    /// Create a source with the given column types.
     pub fn new(schema: &[CSVTypeSystem]) -> Self {
         CSVSource {
             schema: schema.to_vec(),
@@ -30,6 +32,7 @@ impl CSVSource {
         }
     }
 
+    /// Guess the column types from the values in the files.
     #[throws(CSVSourceError)]
     pub fn infer_schema(&mut self) -> Vec<CSVTypeSystem> {
         // regular expressions for infer CSVTypeSystem from string
@@ -185,6 +188,7 @@ impl Source for CSVSource {
     }
 }
 
+/// One CSV file of a [`CSVSource`].
 pub struct CSVSourcePartition {
     records: Vec<csv::StringRecord>,
     counter: usize,
@@ -193,6 +197,7 @@ pub struct CSVSourcePartition {
 }
 
 impl CSVSourcePartition {
+    /// Open the file `fname`.
     #[throws(CSVSourceError)]
     pub fn new(fname: CXQuery<String>) -> Self {
         let reader = csv::ReaderBuilder::new()
@@ -245,6 +250,7 @@ impl SourcePartition for CSVSourcePartition {
     }
 }
 
+/// Value parser for a CSV file.
 pub struct CSVSourcePartitionParser<'a> {
     records: &'a mut [csv::StringRecord],
     counter: &'a mut usize,

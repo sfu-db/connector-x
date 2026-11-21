@@ -101,6 +101,8 @@ pub trait Transport {
     where
         Self: 'd;
 
+    /// Return a function pointer that moves one value of source type `ts1` into the
+    /// destination as type `ts2`, or an error if no conversion rule exists.
     #[allow(clippy::type_complexity)]
     fn processor<'s, 'd>(
         ts1: Self::TSS,

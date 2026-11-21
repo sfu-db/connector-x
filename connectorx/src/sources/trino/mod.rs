@@ -22,6 +22,7 @@ use super::{PartitionParser, Source, SourcePartition};
 
 use anyhow::anyhow;
 
+/// Errors raised by the Trino source.
 pub mod errors;
 pub mod typesystem;
 
@@ -46,12 +47,16 @@ fn get_total_rows(rt: Arc<Runtime>, client: Arc<Client>, query: &CXQuery<String>
         .ok_or_else(|| anyhow!("Trino cannot parse i64"))? as usize
 }
 
+/// Result row of the `MIN`/`MAX` query used for partitioning.
 #[derive(Presto, Debug)]
 pub struct TrinoPartitionQueryResult {
+    /// Minimum of the partition column.
     pub _col0: i64,
+    /// Maximum of the partition column.
     pub _col1: i64,
 }
 
+/// SQL dialect for Trino.
 #[derive(Debug)]
 pub struct TrinoDialect {}
 
@@ -66,6 +71,7 @@ impl Dialect for TrinoDialect {
     }
 }
 
+/// Source that reads from Trino.
 pub struct TrinoSource {
     client: Arc<Client>,
     rt: Arc<Runtime>,
@@ -180,6 +186,7 @@ pub fn build_client_from_url(url: &url::Url) -> Client {
 }
 
 impl TrinoSource {
+    /// Connect to the server given by a `trino://` URL.
     #[throws(TrinoSourceError)]
     pub fn new(rt: Arc<Runtime>, conn: &str) -> Self {
         // The connection string must be parsed as-is: percent-decoding it first
@@ -283,6 +290,7 @@ where
     }
 }
 
+/// One partition of a [`TrinoSource`].
 pub struct TrinoSourcePartition {
     client: Arc<Client>,
     query: CXQuery<String>,
@@ -292,6 +300,7 @@ pub struct TrinoSourcePartition {
 }
 
 impl TrinoSourcePartition {
+    /// Create a partition that runs `query`.
     #[throws(TrinoSourceError)]
     pub fn new(
         client: Arc<Client>,
@@ -338,6 +347,7 @@ impl SourcePartition for TrinoSourcePartition {
     }
 }
 
+/// Row parser for a Trino partition.
 pub struct TrinoSourcePartitionParser<'a> {
     rt: Arc<Runtime>,
     client: Arc<Client>,
@@ -350,6 +360,7 @@ pub struct TrinoSourcePartitionParser<'a> {
 }
 
 impl<'a> TrinoSourcePartitionParser<'a> {
+    /// Run `query` and prepare to parse its rows.
     #[throws(TrinoSourceError)]
     pub fn new(
         rt: Arc<Runtime>,
