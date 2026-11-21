@@ -103,7 +103,7 @@ setup-java:
     cp -f $ACCIO_PATH/rewriter/target/accio-rewriter-1.0-SNAPSHOT-jar-with-dependencies.jar connectorx-python/connectorx/dependencies/federated-rewriter.jar
 
 setup-python:
-    cd connectorx-python && uv run maturin develop --uv --release
+    cd connectorx-python && uv run maturin develop --uv --release --locked
     
 test-python +opts="": setup-python
     cd connectorx-python && uv run pytest connectorx/tests -v -s {{opts}}

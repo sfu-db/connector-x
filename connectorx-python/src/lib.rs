@@ -1,3 +1,8 @@
+// Same crate-level allows as connectorx/src/lib.rs: errors wrap the large
+// connectorx error enums, and `PyString::ASCII` mirrors CPython's naming.
+#![allow(clippy::result_large_err)]
+#![allow(clippy::upper_case_acronyms)]
+
 pub mod arrow;
 pub mod constants;
 pub mod cx_read_sql;
@@ -67,7 +72,6 @@ pub fn get_mssql_driver() -> &'static str {
     ::connectorx::sources::mssql::active_driver().as_str()
 }
 
-
 /// Switches the MSSQL driver ConnectorX uses for `MsSQLSource`s created from
 /// now on (existing in-flight reads are unaffected). `driver` must be
 /// `"tiberius"` or `"mssql-tds"`. Backs the `connectorx.mssql_driver` module
@@ -75,17 +79,20 @@ pub fn get_mssql_driver() -> &'static str {
 #[cfg(feature = "srcs")]
 #[pyfunction]
 pub fn set_mssql_driver(driver: &str) -> PyResult<()> {
-    let kind = ::connectorx::sources::mssql::MsSQLDriverKind::from_name(driver).ok_or_else(|| {
-        pyo3::exceptions::PyValueError::new_err(format!(
-            "invalid mssql driver {:?}: expected \"tiberius\" or \"mssql-tds\"",
-            driver
-        ))
-    })?;
+    let kind =
+        ::connectorx::sources::mssql::MsSQLDriverKind::from_name(driver).ok_or_else(|| {
+            pyo3::exceptions::PyValueError::new_err(format!(
+                "invalid mssql driver {:?}: expected \"tiberius\" or \"mssql-tds\"",
+                driver
+            ))
+        })?;
     ::connectorx::sources::mssql::set_active_driver(kind);
     Ok(())
 }
 
 #[pyfunction]
+// One argument per keyword of the Python-facing read_sql signature.
+#[allow(clippy::too_many_arguments)]
 #[pyo3(signature = (conn, return_type, protocol=None, queries=None, partition_query=None, pre_execution_queries=None, *, **kwargs))]
 pub fn read_sql<'py>(
     py: Python<'py>,
@@ -115,9 +122,9 @@ pub fn partition_sql(
     partition_query: cx_read_sql::PyPartitionQuery,
 ) -> PyResult<Vec<String>> {
     let source_conn =
-        parse_source(conn, None).map_err(|e| crate::errors::ConnectorXPythonError::from(e))?;
+        parse_source(conn, None).map_err(crate::errors::ConnectorXPythonError::from)?;
     let queries = partition(&partition_query.into(), &source_conn)
-        .map_err(|e| crate::errors::ConnectorXPythonError::from(e))?;
+        .map_err(crate::errors::ConnectorXPythonError::from)?;
     Ok(queries.into_iter().map(|q| q.to_string()).collect())
 }
 
@@ -153,6 +160,5 @@ pub fn get_meta<'py>(
     query: String,
     protocol: Option<&str>,
 ) -> PyResult<Bound<'py, PyAny>> {
-    pandas::get_meta::get_meta(py, conn, protocol.unwrap_or("binary"), query)
-        .map_err(|e| From::from(e))
+    pandas::get_meta::get_meta(py, conn, protocol.unwrap_or("binary"), query).map_err(From::from)
 }
