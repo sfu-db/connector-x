@@ -33,7 +33,9 @@ pub use typesystem::MySQLTypeSystem;
 
 type MysqlConn = PooledConnection<MySqlConnectionManager>;
 
+/// Marker type: fetch with the MySQL binary (prepared statement) protocol.
 pub enum BinaryProtocol {}
+/// Marker type: fetch with the MySQL text protocol.
 pub enum TextProtocol {}
 
 #[throws(MySQLSourceError)]
@@ -42,6 +44,7 @@ fn get_total_rows(conn: &mut MysqlConn, query: &CXQuery<String>) -> usize {
         .ok_or_else(|| anyhow!("mysql failed to get the count of query: {}", query))?
 }
 
+/// Source that reads from MySQL. `P` selects the protocol.
 pub struct MySQLSource<P> {
     pool: Pool<MySqlConnectionManager>,
     origin_query: Option<String>,
@@ -94,6 +97,7 @@ fn limit0_metadata(
 }
 
 impl<P> MySQLSource<P> {
+    /// Create a source with a pool of up to `nconn` connections.
     #[throws(MySQLSourceError)]
     pub fn new(conn: &str, nconn: usize) -> Self {
         let manager = MySqlConnectionManager::new(build_opts(conn)?);
@@ -203,6 +207,7 @@ where
     }
 }
 
+/// One partition of a [`MySQLSource`].
 pub struct MySQLSourcePartition<P> {
     conn: MysqlConn,
     query: CXQuery<String>,
@@ -213,6 +218,7 @@ pub struct MySQLSourcePartition<P> {
 }
 
 impl<P> MySQLSourcePartition<P> {
+    /// Create a partition that runs `query` on `conn`.
     pub fn new(conn: MysqlConn, query: &CXQuery<String>, schema: &[MySQLTypeSystem]) -> Self {
         Self {
             conn,
@@ -304,6 +310,7 @@ fn take_cell<T: FromValue, Produced>(
     }
 }
 
+/// Row parser for the binary protocol.
 pub struct MySQLBinarySourceParser<'a> {
     iter: QueryResult<'a, 'a, 'a, Binary>,
     rowbuf: Vec<Row>,
@@ -314,6 +321,7 @@ pub struct MySQLBinarySourceParser<'a> {
 }
 
 impl<'a> MySQLBinarySourceParser<'a> {
+    /// Wrap a binary protocol result set.
     pub fn new(iter: QueryResult<'a, 'a, 'a, Binary>, schema: &[MySQLTypeSystem]) -> Self {
         Self {
             iter,
@@ -413,6 +421,7 @@ impl_produce_binary!(
     Value,
 );
 
+/// Row parser for the text protocol.
 pub struct MySQLTextSourceParser<'a> {
     iter: QueryResult<'a, 'a, 'a, Text>,
     rowbuf: Vec<Row>,
@@ -423,6 +432,7 @@ pub struct MySQLTextSourceParser<'a> {
 }
 
 impl<'a> MySQLTextSourceParser<'a> {
+    /// Wrap a text protocol result set.
     pub fn new(iter: QueryResult<'a, 'a, 'a, Text>, schema: &[MySQLTypeSystem]) -> Self {
         Self {
             iter,

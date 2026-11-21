@@ -3,9 +3,12 @@
 
 use crate::errors::ConnectorXError;
 use fehler::{throw, throws};
+/// Layout in which a source produces, or a destination consumes, values.
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
 pub enum DataOrder {
+    /// Values are passed row by row.
     RowMajor,
+    /// Values are passed column by column.
     ColumnMajor,
 }
 

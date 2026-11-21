@@ -2,6 +2,7 @@ use chrono::{DateTime, NaiveDateTime, Utc};
 use r2d2_oracle::oracle::sql_type::OracleType;
 use rust_decimal::Decimal;
 
+/// Column types of the Oracle source. The `bool` is `true` when the column is nullable.
 #[derive(Copy, Clone, Debug)]
 pub enum OracleTypeSystem {
     NumInt(bool),
