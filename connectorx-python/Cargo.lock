@@ -551,7 +551,7 @@ dependencies = [
  "percent-encoding",
  "pin-project-lite",
  "tracing",
- "uuid 1.26.1",
+ "uuid 1.29.3",
 ]
 
 [[package]]
@@ -1526,7 +1526,7 @@ dependencies = [
  "url",
  "urlencoding",
  "uuid 0.8.2",
- "uuid 1.26.1",
+ "uuid 1.29.3",
 ]
 
 [[package]]
@@ -1566,7 +1566,7 @@ dependencies = [
  "url",
  "urlencoding",
  "uuid 0.8.2",
- "uuid 1.26.1",
+ "uuid 1.29.3",
 ]
 
 [[package]]
@@ -1999,7 +1999,7 @@ dependencies = [
  "tempfile",
  "tokio",
  "url",
- "uuid 1.26.1",
+ "uuid 1.29.3",
  "zstd",
 ]
 
@@ -2075,7 +2075,7 @@ dependencies = [
  "recursive",
  "sqlparser 0.62.0",
  "tokio",
- "uuid 1.26.1",
+ "uuid 1.29.3",
  "web-time",
 ]
 
@@ -2325,7 +2325,7 @@ dependencies = [
  "rand 0.9.1",
  "regex",
  "sha2 0.11.1",
- "uuid 1.26.1",
+ "uuid 1.29.3",
 ]
 
 [[package]]
@@ -2920,7 +2920,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "778e2ac28f6c47af28e4907f13ffd1e1ddbd400980a9abd7c8df189bf578a5ad"
 dependencies = [
  "libc",
- "windows-sys 0.52.0",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -4106,7 +4106,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "07033963ba89ebaf1584d767badaa2e8fcec21aedea6b8c0346d487d49c28667"
 dependencies = [
  "cfg-if",
- "windows-targets 0.48.5",
+ "windows-targets 0.53.2",
 ]
 
 [[package]]
@@ -4336,7 +4336,7 @@ dependencies = [
  "tokio-native-tls",
  "tokio-util 0.7.19",
  "tracing",
- "uuid 1.26.1",
+ "uuid 1.29.3",
  "winapi",
  "windows",
  "windows-sys 0.59.0",
@@ -4429,7 +4429,7 @@ dependencies = [
  "subprocess",
  "thiserror 1.0.69",
  "time",
- "uuid 1.26.1",
+ "uuid 1.29.3",
  "zstd",
 ]
 
@@ -5151,7 +5151,7 @@ dependencies = [
  "postgres-protocol",
  "serde",
  "serde_json",
- "uuid 1.26.1",
+ "uuid 1.29.3",
 ]
 
 [[package]]
@@ -5323,7 +5323,7 @@ dependencies = [
  "thiserror 1.0.69",
  "tokio",
  "urlencoding",
- "uuid 1.26.1",
+ "uuid 1.29.3",
 ]
 
 [[package]]
@@ -5590,7 +5590,7 @@ checksum = "63417e83dc891797eea3ad379f52a5986da4bca0d6ef28baf4d14034dd111b0c"
 dependencies = [
  "r2d2",
  "rusqlite",
- "uuid 1.26.1",
+ "uuid 1.29.3",
 ]
 
 [[package]]
@@ -5961,7 +5961,7 @@ dependencies = [
  "rkyv_derive",
  "seahash",
  "tinyvec",
- "uuid 1.26.1",
+ "uuid 1.29.3",
 ]
 
 [[package]]
@@ -6070,7 +6070,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys 0.9.4",
- "windows-sys 0.52.0",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -7407,9 +7407,9 @@ checksum = "bc5cf98d8186244414c848017f0e2676b3fcb46807f6668a97dfe67359a3c4b7"
 
 [[package]]
 name = "uuid"
-version = "1.26.1"
+version = "1.29.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2ef6dac1e96601b4fb3acccccff2139741fcb757cb9a36089bf5be91cfb285ce"
+checksum = "3c14b15dffa2f4bd712103e857140aa04a4f2ff6e955c77d7eb8e53ee02a3b64"
 dependencies = [
  "getrandom 0.4.3",
  "js-sys",
