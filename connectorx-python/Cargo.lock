@@ -1561,7 +1561,7 @@ dependencies = [
  "rayon",
  "rust_decimal",
  "serde_json",
- "thiserror 1.0.69",
+ "thiserror 2.0.20",
  "tokio",
  "url",
  "urlencoding",
