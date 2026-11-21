@@ -260,9 +260,9 @@ where
                 Ok(())
             })?;
 
-            self.buffer.truncate(0);
-            self.lengths.truncate(0);
-            self.row_idx.truncate(0);
+            self.buffer.clear();
+            self.lengths.clear();
+            self.row_idx.clear();
         }
     }
 

@@ -49,12 +49,10 @@ impl PyRecordBatchIterator {
     #[throws(ConnectorXPythonError)]
     fn schema_ptr<'py>(&self, py: Python<'py>) -> Bound<'py, PyAny> {
         let (rb, _) = self.0.get_schema();
-        let ptrs = py.detach(
-            || -> Result<(Vec<String>, Vec<Vec<(uintptr_t, uintptr_t)>>), ConnectorXPythonError> {
-                let rbs = vec![rb];
-                Ok(to_ptrs(rbs))
-            },
-        )?;
+        let ptrs = py.detach(|| -> Result<HeadersAndPtrs, ConnectorXPythonError> {
+            let rbs = vec![rb];
+            Ok(to_ptrs(rbs))
+        })?;
         let obj: Py<PyAny> = ptrs.into_py_any(py)?;
         obj.into_bound(py)
     }
@@ -86,13 +84,11 @@ pub fn write_arrow<'py>(
     queries: &[CXQuery<String>],
     pre_execution_queries: Option<&[String]>,
 ) -> Bound<'py, PyAny> {
-    let ptrs = py.detach(
-        || -> Result<(Vec<String>, Vec<Vec<(uintptr_t, uintptr_t)>>), ConnectorXPythonError> {
-            let destination = get_arrow(source_conn, origin_query, queries, pre_execution_queries)?;
-            let rbs = destination.arrow()?;
-            Ok(to_ptrs(rbs))
-        },
-    )?;
+    let ptrs = py.detach(|| -> Result<HeadersAndPtrs, ConnectorXPythonError> {
+        let destination = get_arrow(source_conn, origin_query, queries, pre_execution_queries)?;
+        let rbs = destination.arrow()?;
+        Ok(to_ptrs(rbs))
+    })?;
     let obj: Py<PyAny> = ptrs.into_py_any(py)?;
     obj.into_bound(py)
 }
@@ -129,9 +125,12 @@ pub fn get_arrow_rb_iter<'py>(
 pub fn to_ptrs_rb(rb: RecordBatch) -> Vec<(uintptr_t, uintptr_t)> {
     let mut cols = vec![];
 
-    for array in rb.columns().into_iter() {
+    for array in rb.columns().iter() {
         let data = array.to_data();
         let array_ptr = Arc::new(arrow::ffi::FFI_ArrowArray::new(&data));
+        // The Arc is only a heap allocation whose raw pointer is handed to
+        // pyarrow (`_import_from_c`); it is never shared across threads.
+        #[allow(clippy::arc_with_non_send_sync)]
         let schema_ptr = Arc::new(
             arrow::ffi::FFI_ArrowSchema::try_from(data.data_type()).expect("export schema c"),
         );
@@ -144,7 +143,10 @@ pub fn to_ptrs_rb(rb: RecordBatch) -> Vec<(uintptr_t, uintptr_t)> {
     cols
 }
 
-pub fn to_ptrs(rbs: Vec<RecordBatch>) -> (Vec<String>, Vec<Vec<(uintptr_t, uintptr_t)>>) {
+/// Column names, and per record batch the (array, schema) FFI pointers of each column.
+pub type HeadersAndPtrs = (Vec<String>, Vec<Vec<(uintptr_t, uintptr_t)>>);
+
+pub fn to_ptrs(rbs: Vec<RecordBatch>) -> HeadersAndPtrs {
     if rbs.is_empty() {
         return (vec![], vec![]);
     }
