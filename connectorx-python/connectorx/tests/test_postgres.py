@@ -1180,6 +1180,24 @@ def test_postgres_multiple_pre_execution_queries(postgres_url: str) -> None:
     )
     assert_frame_equal(df, expected, check_names=True)
 
+
+def test_postgres_partition_on_pre_execution_query(postgres_url: str) -> None:
+    # The range lookup connection must run the pre-execution query too.
+    query = "SELECT test_int FROM test_table WHERE test_int >= current_setting('cx.min_int')::int"
+    df = read_sql(
+        postgres_url,
+        query,
+        partition_on="test_int",
+        partition_num=2,
+        pre_execution_query="SET cx.min_int = '3'",
+    ).sort_values(by="test_int").reset_index(drop=True)
+    expected = pd.DataFrame(
+        index=range(3),
+        data={"test_int": pd.Series([3, 4, 1314], dtype="Int64")},
+    )
+    assert_frame_equal(df, expected, check_names=True)
+
+
 def test_postgres_partitioned_pre_execution_queries(postgres_url: str) -> None:
     pre_execution_query = [
         "SET SESSION statement_timeout = 2151",

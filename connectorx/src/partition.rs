@@ -66,6 +66,7 @@ pub struct PartitionQuery {
     min: Option<i64>,
     max: Option<i64>,
     num: usize,
+    pre_execution_queries: Option<Vec<String>>,
 }
 
 impl PartitionQuery {
@@ -76,7 +77,14 @@ impl PartitionQuery {
             min,
             max,
             num,
+            pre_execution_queries: None,
         }
+    }
+
+    /// Queries to run before the partition range lookup. Only MySQL and Postgres use them.
+    pub fn with_pre_execution_queries(mut self, pre_execution_queries: Option<&[String]>) -> Self {
+        self.pre_execution_queries = pre_execution_queries.map(|s| s.to_vec());
+        self
     }
 }
 
@@ -95,7 +103,12 @@ pub fn partition(part: &PartitionQuery, source_conn: &SourceConn) -> OutResult<V
     })?;
 
     let (min, max) = match (part.min, part.max) {
-        (None, None) => get_col_range(source_conn, &part.query, &part.column)?,
+        (None, None) => get_col_range_with_pre_queries(
+            source_conn,
+            &part.query,
+            &part.column,
+            part.pre_execution_queries.as_deref(),
+        )?,
         (Some(min), Some(max)) => (min, max),
         _ => throw!(anyhow!(
             "partition_query range can not be partially specified",
@@ -164,13 +177,27 @@ pub fn partition(part: &PartitionQuery, source_conn: &SourceConn) -> OutResult<V
 }
 
 pub fn get_col_range(source_conn: &SourceConn, query: &str, col: &str) -> OutResult<(i64, i64)> {
+    get_col_range_with_pre_queries(source_conn, query, col, None)
+}
+
+/// Like `get_col_range`, but runs `pre_execution_queries` first (MySQL and Postgres only).
+pub fn get_col_range_with_pre_queries(
+    source_conn: &SourceConn,
+    query: &str,
+    col: &str,
+    #[allow(unused_variables)] pre_execution_queries: Option<&[String]>,
+) -> OutResult<(i64, i64)> {
     match source_conn.ty {
         #[cfg(feature = "src_postgres")]
-        SourceType::Postgres => pg_get_partition_range(&source_conn.conn, query, col),
+        SourceType::Postgres => {
+            pg_get_partition_range(&source_conn.conn, query, col, pre_execution_queries)
+        }
         #[cfg(feature = "src_sqlite")]
         SourceType::SQLite => sqlite_get_partition_range(&source_conn.conn, query, col),
         #[cfg(feature = "src_mysql")]
-        SourceType::MySQL => mysql_get_partition_range(&source_conn.conn, query, col),
+        SourceType::MySQL => {
+            mysql_get_partition_range(&source_conn.conn, query, col, pre_execution_queries)
+        }
         #[cfg(all(feature = "src_mssql_tiberius", not(feature = "src_mssql_tds")))]
         SourceType::MsSQL => mssql_get_partition_range(&source_conn.conn, query, col),
         #[cfg(all(feature = "src_mssql_tiberius", feature = "src_mssql_tds"))]
@@ -248,12 +275,20 @@ pub fn get_part_query(
 
 #[cfg(feature = "src_postgres")]
 #[throws(ConnectorXOutError)]
-fn pg_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
+fn pg_get_partition_range(
+    conn: &Url,
+    query: &str,
+    col: &str,
+    pre_execution_queries: Option<&[String]>,
+) -> (i64, i64) {
     let (config, tls) = rewrite_tls_args(conn)?;
     let mut client = match tls {
         None => config.connect(postgres::NoTls)?,
         Some(tls_conn) => config.connect(tls_conn)?,
     };
+    for pre_query in pre_execution_queries.unwrap_or_default() {
+        client.query(pre_query.as_str(), &[])?;
+    }
     let range_query = get_partition_range_query(query, col, &PostgreSqlDialect {})?;
     let row = client.query_one(range_query.as_str(), &[])?;
 
@@ -354,9 +389,17 @@ fn sqlite_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) 
 
 #[cfg(feature = "src_mysql")]
 #[throws(ConnectorXOutError)]
-fn mysql_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
+fn mysql_get_partition_range(
+    conn: &Url,
+    query: &str,
+    col: &str,
+    pre_execution_queries: Option<&[String]>,
+) -> (i64, i64) {
     let pool = Pool::new(build_opts(conn.as_str())?)?;
     let mut conn = pool.get_conn()?;
+    for pre_query in pre_execution_queries.unwrap_or_default() {
+        conn.query_drop(pre_query)?;
+    }
     let range_query = get_partition_range_query(query, col, &MySqlDialect {})?;
     let row: Row = conn
         .query_first(range_query)?
