@@ -8,46 +8,86 @@ use uuid::Uuid;
 
 use pgvector::{Bit, HalfVector, SparseVector, Vector};
 
+/// Column types of the Postgres source. The `bool` is `true` when the column is nullable.
 #[derive(Copy, Clone, Debug)]
 pub enum PostgresTypeSystem {
+    /// Postgres `bool`.
     Bool(bool),
+    /// Postgres `float4` (32-bit float).
     Float4(bool),
+    /// Postgres `float8` (64-bit float).
     Float8(bool),
+    /// Postgres `numeric`, read as a `Decimal`.
     Numeric(bool),
+    /// Postgres `int2` (16-bit integer).
     Int2(bool),
+    /// Postgres `int4` (32-bit integer).
     Int4(bool),
+    /// Postgres `int8` (64-bit integer).
     Int8(bool),
+    /// Postgres `oid` (unsigned 32-bit integer).
     UInt4(bool),
+    /// Postgres `float4[]`.
     Float4Array(bool),
+    /// Postgres `float8[]`.
     Float8Array(bool),
+    /// Postgres `numeric[]`.
     NumericArray(bool),
+    /// Postgres `bool[]`.
     BoolArray(bool),
+    /// Postgres `int2[]`.
     Int2Array(bool),
+    /// Postgres `int4[]`.
     Int4Array(bool),
+    /// Postgres `int8[]`.
     Int8Array(bool),
+    /// Postgres `varchar[]`.
     VarcharArray(bool),
+    /// Postgres `text[]`.
     TextArray(bool),
+    /// Postgres `date`.
     Date(bool),
+    /// Postgres `"char"` (single byte), read as `i8`.
     Char(bool),
+    /// Postgres `bpchar` (`char(n)`).
     BpChar(bool),
+    /// Postgres `varchar`.
     VarChar(bool),
+    /// Postgres `text`, also used for `citext`, `ltree`, `lquery`, `ltxtquery` and `name`.
     Text(bool),
+    /// Postgres `bytea`.
     ByteA(bool),
+    /// Postgres `time`.
     Time(bool),
+    /// Postgres `timestamp` (without time zone).
     Timestamp(bool),
+    /// Postgres `timestamptz`, read as UTC.
     TimestampTz(bool),
+    /// Postgres `uuid`.
     UUID(bool),
+    /// Postgres `json`.
     JSON(bool),
+    /// Postgres `jsonb`.
     JSONB(bool),
+    /// Postgres enum type, read as text.
     Enum(bool),
+    /// Postgres `hstore`, read as a string map.
     HSTORE(bool),
+    /// Postgres `name`, read as text. Not produced by type detection, which maps `name` to `Text`.
     Name(bool),
+    /// Postgres `inet`.
     Inet(bool),
+    /// Postgres range types (`int4range`, `numrange`, `tsrange`, ...), read as text.
     Range(bool),
+    /// Postgres `tsvector`, read as text.
     TsVector(bool),
+    /// pgvector `vector`.
     Vector(bool),
+    /// pgvector `halfvec`.
     HalfVec(bool),
+    /// Postgres `bit`, read as a pgvector `Bit`.
     Bit(bool),
+    /// pgvector `sparsevec`.
     SparseVec(bool),
 }
 
@@ -139,6 +179,7 @@ impl<'a> From<&'a Type> for PostgresTypeSystem {
     }
 }
 
+/// A Postgres column type paired with the ConnectorX type chosen for it; converts back to the `Type` to request on the wire.
 pub struct PostgresTypePairs<'a>(pub &'a Type, pub &'a PostgresTypeSystem);
 
 // Link (postgres::Type, connectorx::PostgresTypes) back to the one defined by the postgres crate.

@@ -24,6 +24,7 @@ use anyhow::anyhow;
 
 /// Errors raised by the Trino source.
 pub mod errors;
+/// Column types of the Trino source.
 pub mod typesystem;
 
 #[throws(TrinoSourceError)]

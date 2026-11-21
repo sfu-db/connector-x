@@ -59,6 +59,7 @@ pub trait ParameterizedOn<T>: ParameterizedFunc {
 
 /// Defines a rule to convert a type `T` to a type `U`.
 pub trait TypeConversion<T, U> {
+    /// Convert `val` from `T` to `U`.
     fn convert(val: T) -> U;
 }
 
@@ -66,10 +67,15 @@ pub trait TypeConversion<T, U> {
 /// the value to a destination. Do not manually implement this trait for types.
 /// Use [`impl_transport!`](crate::impl_transport) to create a struct that implements this trait instead.
 pub trait Transport {
+    /// Type system of the source.
     type TSS: TypeSystem;
+    /// Type system of the destination.
     type TSD: TypeSystem;
+    /// Source this transport reads from.
     type S: Source;
+    /// Destination this transport writes to.
     type D: Destination;
+    /// Error type, convertible from the source, destination and ConnectorX errors.
     type Error: From<ConnectorXError>
         + From<<Self::S as Source>::Error>
         + From<<Self::D as Destination>::Error>
