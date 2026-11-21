@@ -112,7 +112,7 @@ fn host_from_url(url: &url::Url) -> &str {
 ///
 /// Supported URL params:
 ///   source, schema, client_tags (comma-separated), client_info, trace_token,
-///   session.<key>=<value>, extra_credential.<key>=<value>, verify=false
+///   `session.<key>=<value>`, `extra_credential.<key>=<value>`, `verify=false`
 #[throws(TrinoSourceError)]
 pub fn build_client_from_url(url: &url::Url) -> Client {
     let (username, password) = credentials_from_url(url)?;

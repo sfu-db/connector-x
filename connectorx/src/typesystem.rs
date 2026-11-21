@@ -64,7 +64,7 @@ pub trait TypeConversion<T, U> {
 
 /// Transport asks the source to produce a value, do type conversion and then write
 /// the value to a destination. Do not manually implement this trait for types.
-/// Use [`impl_transport!`] to create a struct that implements this trait instead.
+/// Use [`impl_transport!`](crate::impl_transport) to create a struct that implements this trait instead.
 pub trait Transport {
     type TSS: TypeSystem;
     type TSD: TypeSystem;
