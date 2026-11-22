@@ -54,6 +54,11 @@ jobs:
       - name: Check each feature gate
         run: just test-feature-gate
 
+      # Coverage runs --lib and --test only, so doctests were never built.
+      # --locked also fails the job if Cargo.lock is out of date.
+      - name: Run doctests
+        run: cargo test --locked --doc --features all
+
       - name: Install cargo-llvm-cov
         uses: taiki-e/install-action@cargo-llvm-cov
 
@@ -223,6 +228,14 @@ jobs:
       # `just test-python` builds it once via maturin develop.
       - name: Install python dependencies
         run: just bootstrap-python
+
+      # connectorx-python is its own Cargo workspace, so the rust job's clippy
+      # never sees it. --all-targets builds its benches/examples too, and
+      # --locked fails on a stale connectorx-python/Cargo.lock. Runs before the
+      # coverage step below changes RUSTFLAGS.
+      - name: Clippy linting (connectorx-python)
+        working-directory: connectorx-python
+        run: cargo clippy --locked --all-targets -- -D warnings
 
       # Measure the Rust code the Python tests exercise (connectorx and the
       # connectorx-python bindings). Only on 3.14: one instrumented build is
