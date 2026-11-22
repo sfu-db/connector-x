@@ -463,4 +463,115 @@ mod tests {
             ClickHouseTypeSystem::String(false)
         ));
     }
+
+    /// Every scalar and array type name, bare and wrapped in `Nullable`.
+    #[test]
+    fn maps_every_type_name_and_its_nullability() {
+        use ClickHouseTypeSystem::*;
+        let dbg = |t: ClickHouseTypeSystem| format!("{t:?}");
+        type Variant = fn(bool) -> ClickHouseTypeSystem;
+        let cases: [(&str, Variant); 38] = [
+            ("Int8", Int8),
+            ("Int16", Int16),
+            ("Int32", Int32),
+            ("Int64", Int64),
+            ("UInt8", UInt8),
+            ("UInt16", UInt16),
+            ("UInt32", UInt32),
+            ("UInt64", UInt64),
+            ("Float32", Float32),
+            ("Float64", Float64),
+            ("Decimal(9, 2)", Decimal),
+            ("String", String),
+            ("FixedString(4)", FixedString),
+            ("Date", Date),
+            ("Date32", Date32),
+            ("Time", Time),
+            ("Time64(6)", Time64),
+            ("DateTime", DateTime),
+            ("DateTime64(3)", DateTime64),
+            ("UUID", UUID),
+            ("Bool", Bool),
+            ("IPv4", IPv4),
+            ("IPv6", IPv6),
+            ("Enum8('a' = 1)", Enum8),
+            ("Enum16('a' = 1000)", Enum16),
+            ("Array(Bool)", ArrayBool),
+            ("Array(String)", ArrayString),
+            ("Array(Int8)", ArrayInt8),
+            ("Array(Int16)", ArrayInt16),
+            ("Array(Int32)", ArrayInt32),
+            ("Array(Int64)", ArrayInt64),
+            ("Array(UInt8)", ArrayUInt8),
+            ("Array(UInt16)", ArrayUInt16),
+            ("Array(UInt32)", ArrayUInt32),
+            ("Array(UInt64)", ArrayUInt64),
+            ("Array(Float32)", ArrayFloat32),
+            ("Array(Float64)", ArrayFloat64),
+            ("Array(Decimal(10, 2))", ArrayDecimal),
+        ];
+        for (name, variant) in cases {
+            let ty = ClickHouseTypeSystem::from_type_str(name);
+            assert_eq!(dbg(ty), dbg(variant(false)), "{name}");
+            assert!(!ty.is_nullable(), "{name}");
+            let nullable = format!("Nullable({name})");
+            let ty = ClickHouseTypeSystem::from_type_str(&nullable);
+            assert_eq!(dbg(ty), dbg(variant(true)), "{nullable}");
+            assert!(ty.is_nullable(), "{nullable}");
+        }
+        // Surrounding whitespace is ignored; LowCardinality keeps the
+        // nullability of what it wraps.
+        for (name, expected) in [
+            ("  UInt8 ", UInt8(false)),
+            ("LowCardinality(Nullable(String))", String(true)),
+            // Arrays of types without an array variant fall back to strings.
+            ("Array(Date)", String(false)),
+            ("Array(Array(Int8))", String(false)),
+        ] {
+            let ty = ClickHouseTypeSystem::from_type_str(name);
+            assert_eq!(dbg(ty), dbg(expected), "{name}");
+        }
+    }
+
+    #[test]
+    fn parses_parameters_and_their_defaults() {
+        let meta = |s| ClickHouseTypeSystem::from_type_str_with_metadata(s).1;
+
+        // DateTime takes an optional timezone, DateTime64 a precision
+        // (default 3) and an optional timezone; unknown zones are dropped.
+        assert_eq!(
+            meta("DateTime('Europe/Berlin')").timezone.unwrap().name(),
+            "Europe/Berlin"
+        );
+        assert!(meta("DateTime").timezone.is_none());
+        assert!(meta("DateTime('Not/AZone')").timezone.is_none());
+        let m = meta("DateTime64(9)");
+        assert_eq!((m.precision, m.timezone), (9, None));
+        let m = meta("DateTime64");
+        assert_eq!(m.precision, 3);
+        let m = meta("DateTime64('Asia/Tokyo')");
+        assert_eq!((m.precision, m.timezone.unwrap().name()), (3, "Asia/Tokyo"));
+
+        // Time64 precision defaults to 3, FixedString length to 1, Decimal
+        // precision and scale to 0.
+        assert_eq!(meta("Time64(9)").precision, 9);
+        assert_eq!(meta("Time64").precision, 3);
+        assert_eq!(meta("FixedString").length, 1);
+        assert_eq!(meta("FixedString(x)").length, 1);
+        let m = meta("Decimal");
+        assert_eq!((m.precision, m.scale), (0, 0));
+        let m = meta("Decimal(38)");
+        assert_eq!((m.precision, m.scale), (38, 0));
+
+        // Enum labels may contain escaped quotes and negative values.
+        let values = meta("Enum16('it\\'s' = -300, 'b' = 2)")
+            .named_values
+            .unwrap();
+        assert_eq!(
+            values.get(&-300).map(std::string::String::as_str),
+            Some("it's")
+        );
+        assert_eq!(values.get(&2).map(std::string::String::as_str), Some("b"));
+        assert!(meta("Nullable(Enum8('x' = 1))").named_values.is_some());
+    }
 }

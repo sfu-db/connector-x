@@ -760,4 +760,72 @@ mod tests {
             .unwrap()
             .contains("ORDER BY id"));
     }
+
+    #[test]
+    fn converts_strings_and_queries_into_naked_queries() {
+        let s = String::from("SELECT 1");
+        let r: &str = "SELECT 1";
+        for q in [CXQuery::from(r), CXQuery::from(&r), CXQuery::from(&s)] {
+            assert!(matches!(&q, CXQuery::Naked(sql) if sql == "SELECT 1"));
+        }
+        let wrapped = CXQuery::Wrapped("SELECT 2".to_string());
+        assert!(matches!(CXQuery::from(&wrapped), CXQuery::Wrapped(sql) if sql == "SELECT 2"));
+        assert_eq!(AsRef::<str>::as_ref(&wrapped), "SELECT 2");
+    }
+
+    /// A wrapped query keeps its FROM clause and only gets a count projection.
+    #[test]
+    fn counts_wrapped_queries_by_replacing_the_projection() {
+        let dialect = sqlparser::dialect::GenericDialect {};
+        let wrapped = CXQuery::Wrapped("SELECT a, b FROM t WHERE a > 1".to_string());
+        let count = count_query(&wrapped, &dialect).unwrap().to_string();
+        assert_eq!(count, "SELECT count(*) FROM t WHERE a > 1");
+
+        for bad in ["SELECT 1; SELECT 2", "INSERT INTO t VALUES (1)"] {
+            let q = CXQuery::Wrapped(bad.to_string());
+            assert!(count_query(&q, &dialect).is_err(), "{bad}");
+        }
+    }
+
+    /// When the parser gives up, the count and range queries are composed as
+    /// strings around the original SQL instead.
+    #[test]
+    fn falls_back_to_string_composition_for_unparseable_sql() {
+        let dialect = sqlparser::dialect::GenericDialect {};
+        let sql = "SELECT FROM";
+        let count = count_query(&CXQuery::naked(sql), &dialect)
+            .unwrap()
+            .to_string();
+        assert_eq!(
+            count,
+            format!("SELECT COUNT(*) FROM ({sql}) as CXTMPTAB_COUNT")
+        );
+
+        let (min, max) = get_partition_range_query_sep(sql, "id", &dialect).unwrap();
+        assert_eq!(
+            min,
+            format!("SELECT MIN(CXTMPTAB_RANGE.id) as min FROM ({sql}) AS CXTMPTAB_RANGE")
+        );
+        assert_eq!(
+            max,
+            format!("SELECT MAX(CXTMPTAB_RANGE.id) as max FROM ({sql}) AS CXTMPTAB_RANGE")
+        );
+        assert!(get_partition_range_query_sep("SELECT 1; SELECT 2", "id", &dialect).is_err());
+    }
+
+    /// Oracle does not accept `AS` before a table alias.
+    #[cfg(feature = "src_oracle")]
+    #[test]
+    fn oracle_count_query_has_no_as_before_the_alias() {
+        let count = count_query(
+            &CXQuery::naked("SELECT * FROM t"),
+            &crate::sources::oracle::OracleDialect {},
+        )
+        .unwrap()
+        .to_string();
+        assert_eq!(
+            count,
+            "SELECT COUNT(*) FROM (SELECT * FROM t) CXTMPTAB_COUNT"
+        );
+    }
 }
