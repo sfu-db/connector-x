@@ -14,6 +14,12 @@ const SSL_PARAMS: &[&str] = &["ssl-mode", "sslmode", "ssl-ca"];
 /// The `mysql` crate configures TLS programmatically via [`OptsBuilder::ssl_opts`] and
 /// errors on unknown URL parameters, so the SSL parameters are parsed and removed here
 /// rather than passed through to [`Opts::from_url`].
+///
+/// The crate also defaults `prefer_socket` to `true`. After a TCP handshake to a
+/// loopback address it reads the server's `socket` variable and reconnects through
+/// that Unix socket, so a forwarded port such as `127.0.0.1:9999` lands on the local
+/// server. An explicit TCP port disables that automatic preference. A URL that sets
+/// `socket` or `prefer_socket`, and a URL with no port, keeps the parsed driver value.
 pub fn build_opts(conn: &str) -> Result<OptsBuilder, MySQLSourceError> {
     let url = Url::parse(conn)?;
 
@@ -23,8 +29,27 @@ pub fn build_opts(conn: &str) -> Result<OptsBuilder, MySQLSourceError> {
         .collect();
     let ssl_opts = ssl_opts_from_params(&params)?;
 
-    let opts = Opts::from_url(strip_ssl_params(&url).as_str())?;
-    Ok(OptsBuilder::from_opts(opts).ssl_opts(ssl_opts))
+    let mut builder = OptsBuilder::from_opts(Opts::from_url(strip_ssl_params(&url).as_str())?);
+    if explicit_tcp_port_without_socket_choice(&url) {
+        builder = builder.prefer_socket(false);
+    }
+    Ok(builder.ssl_opts(ssl_opts))
+}
+
+/// An explicit TCP port (in the authority or the `port` query) with no `socket` or
+/// `prefer_socket` parameter. Those parameters are the driver's own names, matched
+/// case-sensitively the same way [`Opts::from_url`] matches them.
+fn explicit_tcp_port_without_socket_choice(url: &Url) -> bool {
+    let mut explicit_port = url.port().is_some();
+    let mut socket_choice = false;
+    for (key, _) in url.query_pairs() {
+        match key.as_ref() {
+            "port" => explicit_port = true,
+            "socket" | "prefer_socket" => socket_choice = true,
+            _ => {}
+        }
+    }
+    explicit_port && !socket_choice
 }
 
 /// Translate a MySQL `ssl-mode` value into [`SslOpts`], returning `None` when TLS is not
@@ -147,5 +172,49 @@ mod tests {
         .into();
         assert!(opts.get_ssl_opts().is_some());
         assert!(!opts.get_prefer_socket());
+    }
+
+    #[test]
+    fn explicit_loopback_port_stays_on_that_port() {
+        // Automatic socket preference would drop 127.0.0.1:9999 onto the local socket.
+        let opts: Opts = build_opts("mysql://user:pass@127.0.0.1:9999/db")
+            .unwrap()
+            .into();
+        assert_eq!(opts.get_tcp_port(), 9999);
+        assert!(!opts.get_prefer_socket());
+    }
+
+    #[test]
+    fn portless_url_keeps_driver_socket_preference() {
+        let conn = "mysql://user:pass@127.0.0.1/db";
+        let ours: Opts = build_opts(conn).unwrap().into();
+        let driver: Opts = Opts::from_url(conn).unwrap();
+        assert_eq!(ours.get_tcp_port(), driver.get_tcp_port());
+        assert_eq!(ours.get_prefer_socket(), driver.get_prefer_socket());
+    }
+
+    #[test]
+    fn explicit_socket_choice_survives_on_a_url_with_a_port() {
+        let prefer_on: Opts = build_opts("mysql://user:pass@127.0.0.1:9999/db?prefer_socket=true")
+            .unwrap()
+            .into();
+        assert_eq!(prefer_on.get_tcp_port(), 9999);
+        assert!(prefer_on.get_prefer_socket());
+
+        let prefer_off: Opts =
+            build_opts("mysql://user:pass@127.0.0.1:9999/db?prefer_socket=false")
+                .unwrap()
+                .into();
+        assert_eq!(prefer_off.get_tcp_port(), 9999);
+        assert!(!prefer_off.get_prefer_socket());
+
+        let socket: Opts = build_opts("mysql://user:pass@127.0.0.1:9999/db?socket=/tmp/mysql.sock")
+            .unwrap()
+            .into();
+        let driver: Opts =
+            Opts::from_url("mysql://user:pass@127.0.0.1:9999/db?socket=/tmp/mysql.sock").unwrap();
+        assert_eq!(socket.get_tcp_port(), 9999);
+        assert_eq!(socket.get_socket(), Some("/tmp/mysql.sock"));
+        assert_eq!(socket.get_prefer_socket(), driver.get_prefer_socket());
     }
 }
