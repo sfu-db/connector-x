@@ -4,6 +4,7 @@ mod errors;
 mod typesystem;
 
 pub use self::errors::SQLiteSourceError;
+use crate::utils::OwningHandle;
 use crate::{
     data_order::DataOrder,
     errors::ConnectorXError,
@@ -16,7 +17,6 @@ use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
 use fallible_streaming_iterator::FallibleStreamingIterator;
 use fehler::{throw, throws};
 use log::debug;
-use owning_ref::OwningHandle;
 use r2d2::{Pool, PooledConnection};
 use r2d2_sqlite::SqliteConnectionManager;
 use rusqlite::{Row, Rows, Statement};
@@ -260,7 +260,7 @@ unsafe impl<'a> Send for SQLiteSourcePartitionParser<'a> {}
 
 /// Row parser for a SQLite partition.
 pub struct SQLiteSourcePartitionParser<'a> {
-    rows: OwningHandle<Box<Statement<'a>>, DummyBox<Rows<'a>>>,
+    rows: OwningHandle<Statement<'a>, DummyBox<Rows<'a>>>,
     ncols: usize,
     current_col: usize,
     current_consumed: bool,
@@ -280,7 +280,7 @@ impl<'a> SQLiteSourcePartitionParser<'a> {
         // Safety: DummyBox borrows the on-heap stmt, which is owned by the OwningHandle.
         // No matter how we move the owning handle (thus the Box<Statment>), the Statement
         // keeps its address static on the heap, thus the borrow of MyRows keeps valid.
-        let rows: OwningHandle<Box<Statement<'a>>, DummyBox<Rows<'a>>> =
+        let rows: OwningHandle<Statement<'a>, DummyBox<Rows<'a>>> =
             OwningHandle::new_with_fn(Box::new(stmt), |stmt: *const Statement<'a>| unsafe {
                 DummyBox((*(stmt as *mut Statement<'_>)).query([]).unwrap())
             });

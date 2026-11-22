@@ -6,6 +6,7 @@ use std::collections::HashMap;
 pub use self::errors::OracleSourceError;
 pub use self::typesystem::OracleTypeSystem;
 use crate::constants::{DB_BUFFER_SIZE, ORACLE_ARRAY_SIZE};
+use crate::utils::OwningHandle;
 use crate::{
     data_order::DataOrder,
     errors::ConnectorXError,
@@ -16,7 +17,6 @@ use crate::{
 use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
 use fehler::{throw, throws};
 use log::debug;
-use owning_ref::OwningHandle;
 use r2d2::{Pool, PooledConnection};
 use r2d2_oracle::oracle::ResultSet;
 use r2d2_oracle::{
@@ -302,7 +302,7 @@ unsafe impl<'a> Send for OracleTextSourceParser<'a> {}
 
 /// Row parser for an Oracle partition.
 pub struct OracleTextSourceParser<'a> {
-    rows: OwningHandle<Box<Statement>, DummyBox<ResultSet<'a, Row>>>,
+    rows: OwningHandle<Statement, DummyBox<ResultSet<'a, Row>>>,
     rowbuf: Vec<Row>,
     ncols: usize,
     current_col: usize,
@@ -319,7 +319,7 @@ impl<'a> OracleTextSourceParser<'a> {
             .prefetch_rows(ORACLE_ARRAY_SIZE)
             .fetch_array_size(ORACLE_ARRAY_SIZE)
             .build()?;
-        let rows: OwningHandle<Box<Statement>, DummyBox<ResultSet<'a, Row>>> =
+        let rows: OwningHandle<Statement, DummyBox<ResultSet<'a, Row>>> =
             OwningHandle::new_with_fn(Box::new(stmt), |stmt: *const Statement| unsafe {
                 DummyBox((*(stmt as *mut Statement)).query(&[]).unwrap())
             });
