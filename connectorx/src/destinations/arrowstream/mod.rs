@@ -328,3 +328,10 @@ where
         }
     }
 }
+
+// The arrow and arrowstream versions of this module share one API, so they
+// share their tests: both include the same file.
+#[cfg(test)]
+#[allow(clippy::duplicate_mod)]
+#[path = "../destination_tests.rs"]
+mod tests;

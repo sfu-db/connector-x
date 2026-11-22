@@ -48,13 +48,22 @@ fn get_total_rows(rt: Arc<Runtime>, client: Arc<Client>, query: &CXQuery<String>
         .ok_or_else(|| anyhow!("Trino cannot parse i64"))? as usize
 }
 
-/// Result row of the `MIN`/`MAX` query used for partitioning.
-#[derive(Presto, Debug)]
-pub struct TrinoPartitionQueryResult {
-    /// Minimum of the partition column.
-    pub _col0: i64,
-    /// Maximum of the partition column.
-    pub _col1: i64,
+pub use self::partition_query::TrinoPartitionQueryResult;
+
+// The `Presto` derive emits an undocumented public helper struct next to the
+// type, so the lint is silenced for this module only.
+#[allow(missing_docs)]
+mod partition_query {
+    use prusto::Presto;
+
+    /// Result row of the `MIN`/`MAX` query used for partitioning.
+    #[derive(Presto, Debug)]
+    pub struct TrinoPartitionQueryResult {
+        /// Minimum of the partition column.
+        pub _col0: i64,
+        /// Maximum of the partition column.
+        pub _col1: i64,
+    }
 }
 
 /// SQL dialect for Trino.
@@ -772,6 +781,12 @@ impl<'r, 'a> Produce<'r, Option<NaiveDate>> for TrinoSourcePartitionParser<'a> {
         }
     }
 }
+
+#[cfg(test)]
+pub(crate) mod fake_server;
+
+#[cfg(all(test, feature = "dst_arrow"))]
+mod fake_server_tests;
 
 #[cfg(test)]
 mod tests {

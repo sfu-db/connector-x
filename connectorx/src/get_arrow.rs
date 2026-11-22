@@ -1,3 +1,13 @@
+#[cfg(any(
+    feature = "src_postgres",
+    feature = "src_mysql",
+    feature = "src_sqlite",
+    feature = "src_mssql_common",
+    feature = "src_oracle",
+    feature = "src_bigquery",
+    feature = "src_clickhouse",
+))]
+use crate::arrow_batch_iter::ArrowBatchIter;
 #[cfg(feature = "src_mysql")]
 use crate::sources::mysql::{BinaryProtocol as MySQLBinaryProtocol, TextProtocol};
 #[cfg(feature = "src_postgres")]
@@ -5,11 +15,7 @@ use crate::sources::postgres::{
     rewrite_tls_args, BinaryProtocol as PgBinaryProtocol, CSVProtocol, CursorProtocol,
     SimpleProtocol,
 };
-use crate::{
-    arrow_batch_iter::{ArrowBatchIter, RecordBatchIterator},
-    prelude::*,
-    sql::CXQuery,
-};
+use crate::{arrow_batch_iter::RecordBatchIterator, prelude::*, sql::CXQuery};
 use fehler::{throw, throws};
 use log::debug;
 #[cfg(feature = "src_postgres")]

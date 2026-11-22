@@ -8,6 +8,7 @@ use super::driver;
 use super::errors::MsSQLSourceError;
 use super::typesystem::{FloatN, IntN, MsSQLTypeSystem};
 use crate::constants::DB_BUFFER_SIZE;
+use crate::utils::OwningHandle;
 use crate::{
     data_order::DataOrder,
     errors::ConnectorXError,
@@ -23,7 +24,6 @@ use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
 use fehler::{throw, throws};
 use futures::StreamExt;
 use log::debug;
-use owning_ref::OwningHandle;
 use rust_decimal::Decimal;
 use sqlparser::dialect::MsSqlDialect;
 use std::collections::HashMap;
@@ -35,6 +35,7 @@ use urlencoding::decode;
 use uuid_old::Uuid;
 
 type Conn<'a> = PooledConnection<'a, ConnectionManager>;
+/// Source that reads from Microsoft SQL Server through Tiberius.
 pub struct MsSQLSource {
     rt: Arc<Runtime>,
     pool: Pool<ConnectionManager>,
@@ -44,6 +45,12 @@ pub struct MsSQLSource {
     schema: Vec<MsSQLTypeSystem>,
 }
 
+/// Builds a `tiberius` [`Config`] from an `mssql://` connection URL.
+///
+/// The host may name an instance as `server\instance`. Query parameters such
+/// as `encrypt`, `trusted_connection` and `trust_server_certificate` set the
+/// matching options. Fails if the host contains more than one `\` or cannot
+/// be percent-decoded.
 #[throws(MsSQLSourceError)]
 pub fn mssql_config(url: &Url) -> Config {
     let mut config = Config::new();
@@ -109,6 +116,7 @@ pub fn mssql_config(url: &Url) -> Config {
 }
 
 impl MsSQLSource {
+    /// Create a source with a pool of up to `nconn` connections.
     #[throws(MsSQLSourceError)]
     pub fn new(rt: Arc<Runtime>, conn: &str, nconn: usize) -> Self {
         debug!("mssql source using driver: {:?}", driver::active_driver());
@@ -236,6 +244,7 @@ where
     }
 }
 
+/// One partition of an [`MsSQLSource`].
 pub struct MsSQLSourcePartition {
     pool: Pool<ConnectionManager>,
     rt: Arc<Runtime>,
@@ -246,6 +255,7 @@ pub struct MsSQLSourcePartition {
 }
 
 impl MsSQLSourcePartition {
+    /// Create a partition that runs `query`.
     pub fn new(
         pool: Pool<ConnectionManager>,
         handle: Arc<Runtime>,
@@ -286,7 +296,7 @@ impl SourcePartition for MsSQLSourcePartition {
     #[throws(MsSQLSourceError)]
     fn parser<'a>(&'a mut self) -> Self::Parser<'a> {
         let conn = self.rt.block_on(self.pool.get())?;
-        let rows: OwningHandle<Box<Conn<'a>>, DummyBox<QueryStream<'a>>> =
+        let rows: OwningHandle<Conn<'a>, DummyBox<QueryStream<'a>>> =
             OwningHandle::new_with_fn(Box::new(conn), |conn: *const Conn<'a>| unsafe {
                 let conn = &mut *(conn as *mut Conn<'a>);
 
@@ -309,9 +319,10 @@ impl SourcePartition for MsSQLSourcePartition {
     }
 }
 
+/// Row parser for an [`MsSQLSourcePartition`].
 pub struct MsSQLSourceParser<'a> {
     rt: &'a Handle,
-    iter: OwningHandle<Box<Conn<'a>>, DummyBox<QueryStream<'a>>>,
+    iter: OwningHandle<Conn<'a>, DummyBox<QueryStream<'a>>>,
     rowbuf: Vec<Row>,
     ncols: usize,
     current_col: usize,
@@ -322,7 +333,7 @@ pub struct MsSQLSourceParser<'a> {
 impl<'a> MsSQLSourceParser<'a> {
     fn new(
         rt: &'a Handle,
-        iter: OwningHandle<Box<Conn<'a>>, DummyBox<QueryStream<'a>>>,
+        iter: OwningHandle<Conn<'a>, DummyBox<QueryStream<'a>>>,
         schema: &[MsSQLTypeSystem],
     ) -> Self {
         Self {

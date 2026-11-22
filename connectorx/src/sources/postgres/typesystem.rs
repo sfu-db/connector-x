@@ -214,4 +214,156 @@ mod tests {
             );
         }
     }
+
+    /// Every variant realizes to the Rust type named in `impl_typesystem!`.
+    #[test]
+    fn every_variant_realizes_to_its_rust_type() {
+        use crate::typesystem::testing::assert_maps;
+        use PostgresTypeSystem as P;
+        type Variant = fn(bool) -> PostgresTypeSystem;
+        let cases: &[(Variant, &str)] = &[
+            (P::Int2, "i16"),
+            (P::Int4, "i32"),
+            (P::Int8, "i64"),
+            (P::UInt4, "u32"),
+            (P::Float4, "f32"),
+            (P::Float8, "f64"),
+            (P::Numeric, "::Decimal"),
+            (P::BoolArray, "Vec<core::option::Option<bool>>"),
+            (P::Int2Array, "Vec<core::option::Option<i16>>"),
+            (P::Int4Array, "Vec<core::option::Option<i32>>"),
+            (P::Int8Array, "Vec<core::option::Option<i64>>"),
+            (P::Float4Array, "Vec<core::option::Option<f32>>"),
+            (P::Float8Array, "Vec<core::option::Option<f64>>"),
+            (P::NumericArray, "::Decimal>>"),
+            (
+                P::VarcharArray,
+                "Vec<core::option::Option<alloc::string::String>>",
+            ),
+            (
+                P::TextArray,
+                "Vec<core::option::Option<alloc::string::String>>",
+            ),
+            (P::Bool, "bool"),
+            (P::Char, "i8"),
+            (P::Text, "&str"),
+            (P::BpChar, "&str"),
+            (P::VarChar, "&str"),
+            (P::Enum, "&str"),
+            (P::Name, "&str"),
+            (P::Range, "&str"),
+            (P::TsVector, "&str"),
+            (P::ByteA, "Vec<u8>"),
+            (P::Time, "::NaiveTime"),
+            (P::Timestamp, "::NaiveDateTime"),
+            (P::TimestampTz, "DateTime<chrono::offset::utc::Utc>"),
+            (P::Date, "::NaiveDate"),
+            (P::UUID, "::Uuid"),
+            (P::JSON, "::Value"),
+            (P::JSONB, "::Value"),
+            (
+                P::HSTORE,
+                "HashMap<alloc::string::String, core::option::Option<alloc::string::String>>",
+            ),
+            (P::Inet, "::IpInet"),
+            (P::Vector, "::Vector"),
+            (P::HalfVec, "::HalfVector"),
+            (P::Bit, "::Bit"),
+            (P::SparseVec, "::SparseVector"),
+        ];
+        for (ts, rust_type) in cases {
+            assert_maps(*ts, rust_type);
+        }
+    }
+
+    /// Built-in and extension types map by name; every column is nullable.
+    #[test]
+    fn maps_postgres_types_by_name() {
+        use postgres::types::Kind;
+        use PostgresTypeSystem as P;
+        let ext = |name: &str| Type::new(name.into(), 900_000, Kind::Simple, "public".into());
+        let cases: Vec<(Type, PostgresTypeSystem)> = vec![
+            (Type::INT2, P::Int2(true)),
+            (Type::INT4, P::Int4(true)),
+            (Type::INT8, P::Int8(true)),
+            (Type::OID, P::UInt4(true)),
+            (Type::FLOAT4, P::Float4(true)),
+            (Type::FLOAT8, P::Float8(true)),
+            (Type::NUMERIC, P::Numeric(true)),
+            (Type::BOOL_ARRAY, P::BoolArray(true)),
+            (Type::INT2_ARRAY, P::Int2Array(true)),
+            (Type::INT4_ARRAY, P::Int4Array(true)),
+            (Type::INT8_ARRAY, P::Int8Array(true)),
+            (Type::FLOAT4_ARRAY, P::Float4Array(true)),
+            (Type::FLOAT8_ARRAY, P::Float8Array(true)),
+            (Type::NUMERIC_ARRAY, P::NumericArray(true)),
+            (Type::VARCHAR_ARRAY, P::VarcharArray(true)),
+            (Type::TEXT_ARRAY, P::TextArray(true)),
+            (Type::BOOL, P::Bool(true)),
+            (Type::CHAR, P::Char(true)),
+            (Type::TEXT, P::Text(true)),
+            (Type::NAME, P::Text(true)),
+            (ext("citext"), P::Text(true)),
+            (ext("ltree"), P::Text(true)),
+            (ext("lquery"), P::Text(true)),
+            (ext("ltxtquery"), P::Text(true)),
+            (Type::BPCHAR, P::BpChar(true)),
+            (Type::VARCHAR, P::VarChar(true)),
+            (Type::BYTEA, P::ByteA(true)),
+            (Type::TIME, P::Time(true)),
+            (Type::TIMESTAMP, P::Timestamp(true)),
+            (Type::TIMESTAMPTZ, P::TimestampTz(true)),
+            (Type::DATE, P::Date(true)),
+            (Type::UUID, P::UUID(true)),
+            (Type::JSON, P::JSON(true)),
+            (Type::JSONB, P::JSONB(true)),
+            (ext("hstore"), P::HSTORE(true)),
+            (Type::INET, P::Inet(true)),
+            (Type::INT4_RANGE, P::Range(true)),
+            (Type::INT8_RANGE, P::Range(true)),
+            (Type::NUM_RANGE, P::Range(true)),
+            (Type::TS_RANGE, P::Range(true)),
+            (Type::TSTZ_RANGE, P::Range(true)),
+            (Type::DATE_RANGE, P::Range(true)),
+            (ext("vector"), P::Vector(true)),
+            (ext("halfvec"), P::HalfVec(true)),
+            (Type::BIT, P::Bit(true)),
+            (ext("sparsevec"), P::SparseVec(true)),
+            (
+                Type::new(
+                    "mood".into(),
+                    900_001,
+                    Kind::Enum(vec!["ok".into()]),
+                    "public".into(),
+                ),
+                P::Enum(true),
+            ),
+        ];
+        for (ty, expected) in cases {
+            let got = PostgresTypeSystem::from(&ty);
+            assert_eq!(format!("{got:?}"), format!("{expected:?}"), "{}", ty.name());
+        }
+    }
+
+    /// Enum, hstore, range and tsvector columns are requested as text on the
+    /// wire; every other type keeps its own.
+    #[test]
+    fn requests_text_for_types_without_a_binary_decoder() {
+        use PostgresTypeSystem as P;
+        for ts in [
+            P::Enum(true),
+            P::HSTORE(false),
+            P::Range(true),
+            P::TsVector(false),
+        ] {
+            assert_eq!(
+                Type::from(PostgresTypePairs(&Type::INT4, &ts)),
+                Type::TEXT,
+                "{ts:?}"
+            );
+        }
+        for (ty, ts) in [(Type::INT4, P::Int4(true)), (Type::JSONB, P::JSONB(false))] {
+            assert_eq!(Type::from(PostgresTypePairs(&ty, &ts)), ty, "{ts:?}");
+        }
+    }
 }
