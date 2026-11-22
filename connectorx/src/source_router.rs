@@ -133,4 +133,44 @@ mod tests {
         assert_eq!(source_conn.conn.query(), Some("a=x%20y&b=%2Fz"));
         assert_eq!(source_conn.proto, "binary");
     }
+
+    /// The scheme picks the source type; a `+driver` suffix (as SQLAlchemy
+    /// writes it) is ignored, and an unknown scheme is kept as `Unknown`.
+    #[test]
+    fn maps_schemes_to_source_types() {
+        use super::SourceType::*;
+        for (url, ty) in [
+            ("postgres://h/db", Postgres),
+            ("postgresql+psycopg2://h/db", Postgres),
+            ("sqlite:///tmp/x.db", SQLite),
+            ("mysql+pymysql://h/db", MySQL),
+            ("mssql+pymssql://h/db", MsSQL),
+            ("oracle://h/db", Oracle),
+            ("bigquery:///tmp/key.json", BigQuery),
+            ("duckdb:///tmp/x.duckdb", DuckDB),
+            ("trino://h/catalog", Trino),
+            ("clickhouse://h/db", ClickHouse),
+            ("nosuchdb://h/db", Unknown),
+        ] {
+            let conn = SourceConn::try_from(url).unwrap();
+            assert_eq!(format!("{:?}", conn.ty), format!("{ty:?}"), "{url}");
+            assert_eq!(conn.proto, "binary", "{url}");
+        }
+    }
+
+    #[test]
+    fn parse_source_overrides_the_protocol_only_when_given() {
+        let conn = super::parse_source("mysql://h/db?cxprotocol=text", None).unwrap();
+        assert_eq!(conn.proto, "text");
+        let conn = super::parse_source("mysql://h/db?cxprotocol=text", Some("binary")).unwrap();
+        assert_eq!(conn.proto, "binary");
+        assert_eq!(conn.conn.as_str(), "mysql://h/db");
+    }
+
+    #[test]
+    fn rejects_strings_that_are_not_urls() {
+        let err = SourceConn::try_from("not a url").unwrap_err();
+        assert!(err.to_string().contains("parse error"), "{err}");
+        assert!(super::parse_source("", None).is_err());
+    }
 }

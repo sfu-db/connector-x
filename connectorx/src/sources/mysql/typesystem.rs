@@ -362,4 +362,44 @@ mod tests {
             MySQLTypeSystem::Bit(true)
         ));
     }
+
+    /// Every variant realizes to the Rust type named in `impl_typesystem!`.
+    #[test]
+    fn every_variant_realizes_to_its_rust_type() {
+        use crate::typesystem::testing::assert_maps;
+        use MySQLTypeSystem as M;
+        type Variant = fn(bool) -> MySQLTypeSystem;
+        let cases: &[(Variant, &str)] = &[
+            (M::Tiny, "i8"),
+            (M::Short, "i16"),
+            (M::Year, "i16"),
+            (M::Long, "i32"),
+            (M::Int24, "i32"),
+            (M::LongLong, "i64"),
+            (M::Float, "f32"),
+            (M::Double, "f64"),
+            (M::UTiny, "u8"),
+            (M::UShort, "u16"),
+            (M::ULong, "u32"),
+            (M::UInt24, "u32"),
+            (M::ULongLong, "u64"),
+            (M::Datetime, "::NaiveDateTime"),
+            (M::Timestamp, "::NaiveDateTime"),
+            (M::Date, "::NaiveDate"),
+            (M::Time, "::NaiveTime"),
+            (M::Decimal, "::Decimal"),
+            (M::Char, "alloc::string::String"),
+            (M::VarChar, "alloc::string::String"),
+            (M::Enum, "alloc::string::String"),
+            (M::TinyBlob, "Vec<u8>"),
+            (M::Blob, "Vec<u8>"),
+            (M::MediumBlob, "Vec<u8>"),
+            (M::LongBlob, "Vec<u8>"),
+            (M::Bit, "Vec<u8>"),
+            (M::Json, "::Value"),
+        ];
+        for (ts, rust_type) in cases {
+            assert_maps(*ts, rust_type);
+        }
+    }
 }

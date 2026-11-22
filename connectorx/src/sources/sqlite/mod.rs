@@ -372,3 +372,6 @@ impl_produce!(
     NaiveDateTime,
     Vec<u8>,
 );
+
+#[cfg(all(test, feature = "dst_arrow"))]
+mod tests;
