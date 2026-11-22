@@ -66,18 +66,16 @@ jobs:
         run: cargo fmt --all -- --check -q
 
       # --all also covers connectorx-cpp (not a default member). -D warnings
-      # fails the build on any new warning. missing_docs is kept as a warning
-      # (lib.rs enables it to track the documentation backlog) until that
-      # backlog is cleared; --force-warn stops -D warnings from promoting it.
+      # fails the build on any new warning, including missing_docs, which both
+      # crates enable in lib.rs.
       - name: Clippy linting
-        run: cargo clippy --features all --all -- -D warnings --force-warn missing_docs
+        run: cargo clippy --features all --all -- -D warnings
 
       - name: Test build docs
         run: cargo doc --no-deps --features all
         env:
           # Fail on broken doc links and malformed HTML in doc comments.
-          # missing_docs is not denied yet: the crate still has undocumented
-          # public items (see #1051); it is reported as a warning by clippy.
+          # Missing docs are caught by the clippy step above.
           RUSTDOCFLAGS: "-D rustdoc::broken_intra_doc_links -D rustdoc::invalid_html_tags"
 
       - name: Check each feature gate
