@@ -774,6 +774,12 @@ impl<'r, 'a> Produce<'r, Option<NaiveDate>> for TrinoSourcePartitionParser<'a> {
 }
 
 #[cfg(test)]
+pub(crate) mod fake_server;
+
+#[cfg(all(test, feature = "dst_arrow"))]
+mod fake_server_tests;
+
+#[cfg(test)]
 mod tests {
     use super::*;
 
