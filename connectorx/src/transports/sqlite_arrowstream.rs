@@ -11,14 +11,18 @@ use crate::{
 use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
 use thiserror::Error;
 
+/// Errors raised while moving data from the SQLite source to the streaming Arrow destination.
 #[derive(Error, Debug)]
 pub enum SQLiteArrowTransportError {
+    /// Error from the SQLite source.
     #[error(transparent)]
     Source(#[from] SQLiteSourceError),
 
+    /// Error from the streaming Arrow destination.
     #[error(transparent)]
     Destination(#[from] ArrowDestinationError),
 
+    /// Generic ConnectorX error.
     #[error(transparent)]
     ConnectorX(#[from] crate::errors::ConnectorXError),
 }

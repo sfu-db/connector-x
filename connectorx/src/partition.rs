@@ -60,6 +60,7 @@ use tokio::runtime::Runtime;
 use tokio_util::compat::TokioAsyncWriteCompatExt;
 use url::Url;
 
+/// Request to split a query into `num` range partitions on an integer `column`.
 pub struct PartitionQuery {
     query: String,
     column: String,
@@ -69,6 +70,7 @@ pub struct PartitionQuery {
 }
 
 impl PartitionQuery {
+    /// Create a partition request. When `min` or `max` is `None`, the range is queried from the database.
     pub fn new(query: &str, column: &str, min: Option<i64>, max: Option<i64>, num: usize) -> Self {
         Self {
             query: query.into(),
@@ -80,6 +82,7 @@ impl PartitionQuery {
     }
 }
 
+/// Split the query described by `part` into partition queries.
 pub fn partition(part: &PartitionQuery, source_conn: &SourceConn) -> OutResult<Vec<CXQuery>> {
     let mut queries = vec![];
 
@@ -163,6 +166,7 @@ pub fn partition(part: &PartitionQuery, source_conn: &SourceConn) -> OutResult<V
     Ok(queries)
 }
 
+/// Return the minimum and maximum of column `col` in the result of `query`.
 pub fn get_col_range(source_conn: &SourceConn, query: &str, col: &str) -> OutResult<(i64, i64)> {
     match source_conn.ty {
         #[cfg(feature = "src_postgres")]
@@ -200,6 +204,7 @@ pub fn get_col_range(source_conn: &SourceConn, query: &str, col: &str) -> OutRes
     }
 }
 
+/// Return `query` restricted to rows where `col` is in `[lower, upper)`.
 #[throws(ConnectorXOutError)]
 pub fn get_part_query(
     source_conn: &SourceConn,

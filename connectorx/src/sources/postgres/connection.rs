@@ -76,6 +76,7 @@ fn strip_bad_opts(url: &Url) -> Url {
     remove_query_params(url, &["sslkey", "sslcert", "sslrootcert"])
 }
 
+/// Split the TLS options (`sslmode`, `sslcert`, `sslkey`, `sslrootcert`) off the URL and build the matching TLS connector, if any.
 pub fn rewrite_tls_args(
     conn: &Url,
 ) -> Result<(Config, Option<MakeTlsConnector>), PostgresSourceError> {
