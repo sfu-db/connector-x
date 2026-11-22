@@ -15,7 +15,7 @@ Documentation = "https://sfu-db.github.io/connector-x/intro.html"
 # none of this ends up in the published metadata.
 [dependency-groups]
 dev = [
-  "black>=21.4b0,<22",
+  "black>=21.4b0,<27",
   "clickhouse-sqlalchemy>=0.3.2,<0.4",
   "contexttimer>=0.3.3,<0.4",
   "dask[dataframe]>=2021.7.0,<2022; python_version < '3.15'",
