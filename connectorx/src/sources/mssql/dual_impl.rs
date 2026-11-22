@@ -27,7 +27,9 @@ use uuid_old::Uuid;
 /// Gives the dispatcher one source type while retaining the selected backend
 /// and its connection pool for the lifetime of this source.
 pub enum MsSQLSource {
+    /// Source backed by `tiberius`.
     Tiberius(tiberius_impl::MsSQLSource),
+    /// Source backed by `mssql-tds`.
     MssqlTds(tds_impl::MsSQLSource),
 }
 
@@ -120,7 +122,9 @@ impl Source for MsSQLSource {
 /// Preserves the source's backend for each query partition, so row counting
 /// and parser creation use the same driver rather than consulting the selector.
 pub enum MsSQLSourcePartition {
+    /// Partition of a `tiberius` source.
     Tiberius(tiberius_impl::MsSQLSourcePartition),
+    /// Partition of a `mssql-tds` source.
     MssqlTds(tds_impl::MsSQLSourcePartition),
 }
 
@@ -161,9 +165,11 @@ impl SourcePartition for MsSQLSourcePartition {
 /// Lets transports consume either backend through one parser type. The variant
 /// comes from the partition, keeping row fetching and value decoding together.
 pub enum MsSQLSourceParser<'a> {
+    /// Parser of a `tiberius` partition.
     Tiberius(tiberius_impl::MsSQLSourceParser<'a>),
     // The TDS parser owns its pooled connection lease, so unlike Tiberius it
     // needs no lifetime tied to the partition.
+    /// Parser of a `mssql-tds` partition.
     MssqlTds(tds_impl::MsSQLSourceParser),
 }
 
