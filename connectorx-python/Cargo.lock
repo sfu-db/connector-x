@@ -58,6 +58,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "alloca"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e5a7d05ea6aea7e9e64d25b9156ba2fee3fdd659e34e41063cd2fc7cd020d7f4"
+dependencies = [
+ "cc",
+]
+
+[[package]]
 name = "allocator-api2"
 version = "0.2.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -73,6 +82,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "anes"
+version = "0.1.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4b46cbb362ab8752921c97e041f5e366ee6297bd428a31275b9fcf1e380f7299"
+
+[[package]]
 name = "ansi_term"
 version = "0.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -80,6 +95,12 @@ checksum = "d52a9bb7ec0cf484c551830a7ce27bd20d67eac647e1befb56b0be4ee39a55d2"
 dependencies = [
  "winapi",
 ]
+
+[[package]]
+name = "anstyle"
+version = "1.0.14"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "940b3a0ca603d1eade50a4846a2afffd5ef57a9feac2c0e2ec2e14f9ead76000"
 
 [[package]]
 name = "anyhow"
@@ -146,7 +167,7 @@ dependencies = [
  "arrow-schema",
  "chrono",
  "chrono-tz 0.10.4",
- "half 2.7.1",
+ "half",
  "hashbrown 0.17.1",
  "libc",
  "num-complex",
@@ -161,7 +182,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b5d687afc6c927965a8a759f3b68de91933d9dfa2e1bb6e156bac84b85665e92"
 dependencies = [
  "bytes",
- "half 2.7.1",
+ "half",
  "num-bigint 0.5.1",
  "num-traits",
 ]
@@ -182,7 +203,7 @@ dependencies = [
  "base64 0.23.1",
  "chrono",
  "comfy-table",
- "half 2.7.1",
+ "half",
  "lexical-core",
  "num-traits",
  "ryu",
@@ -211,7 +232,7 @@ checksum = "bb0a031c7ff5e2bdb443117054fb466af1d4df5b7f0ecbe197713dc8b113b1ba"
 dependencies = [
  "arrow-buffer",
  "arrow-schema",
- "half 2.7.1",
+ "half",
  "num-integer",
  "num-traits",
 ]
@@ -245,7 +266,7 @@ dependencies = [
  "arrow-schema",
  "arrow-select",
  "chrono",
- "half 2.7.1",
+ "half",
  "indexmap",
  "itoa",
  "lexical-core",
@@ -280,7 +301,7 @@ dependencies = [
  "arrow-buffer",
  "arrow-data",
  "arrow-schema",
- "half 2.7.1",
+ "half",
 ]
 
 [[package]]
@@ -967,7 +988,7 @@ dependencies = [
  "bitflags 1.2.1",
  "cexpr",
  "clang-sys",
- "clap",
+ "clap 2.34.0",
  "env_logger",
  "lazy_static",
  "lazycell",
@@ -1330,6 +1351,33 @@ dependencies = [
 ]
 
 [[package]]
+name = "ciborium"
+version = "0.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "42e69ffd6f0917f5c029256a24d0161db17cea3997d185db0d35926308770f0e"
+dependencies = [
+ "ciborium-io",
+ "ciborium-ll",
+ "serde",
+]
+
+[[package]]
+name = "ciborium-io"
+version = "0.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "05afea1e0a06c9be33d539b876f1ce3692f4afea2cb41f740e7743225ed1c757"
+
+[[package]]
+name = "ciborium-ll"
+version = "0.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "57663b653d948a338bfb3eeba9bb2fd5fcfaecb9e199e87e1eda4d9e8b240fd9"
+dependencies = [
+ "ciborium-io",
+ "half",
+]
+
+[[package]]
 name = "cidr"
 version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1368,6 +1416,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "clap"
+version = "4.6.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "844c5c0b65be192cb68d570cca1b21a6444431d24e39c084dc0336177015337c"
+dependencies = [
+ "clap_builder",
+]
+
+[[package]]
+name = "clap_builder"
+version = "4.6.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ec0797fb7aeb1406c84efac526901f7ec3ead2124f946b494e72879d4b54704d"
+dependencies = [
+ "anstyle",
+ "clap_lex",
+]
+
+[[package]]
+name = "clap_lex"
+version = "1.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e0921b3876b3a1df8a1c9f912e7f94342458022c2e84288015893d83c4d62a79"
+
+[[package]]
 name = "clickhouse"
 version = "0.15.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1381,7 +1454,7 @@ dependencies = [
  "clickhouse-types",
  "futures-channel",
  "futures-util",
- "half 2.7.1",
+ "half",
  "hashbrown 0.17.1",
  "http-body-util",
  "hyper 1.11.1",
@@ -1691,25 +1764,24 @@ dependencies = [
 
 [[package]]
 name = "criterion"
-version = "0.3.6"
+version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b01d6de93b2b6c65e17c634a26653a29d107b3c98c607c765bf38d041531cd8f"
+checksum = "950046b2aa2492f9a536f5f4f9a3de7b9e2476e575e05bd6c333371add4d98f3"
 dependencies = [
- "atty",
+ "alloca",
+ "anes",
  "cast",
- "clap",
+ "ciborium",
+ "clap 4.6.9",
  "criterion-plot",
- "csv",
- "itertools 0.10.5",
- "lazy_static",
+ "itertools 0.13.0",
  "num-traits",
  "oorandom",
+ "page_size",
  "plotters",
  "rayon",
  "regex",
  "serde",
- "serde_cbor",
- "serde_derive",
  "serde_json",
  "tinytemplate",
  "walkdir",
@@ -1727,12 +1799,12 @@ dependencies = [
 
 [[package]]
 name = "criterion-plot"
-version = "0.4.5"
+version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2673cc8207403546f45f5fd319a974b1e6983ad1a3ee7e6041650013be041876"
+checksum = "d8d80a2f4f5b554395e47b5d8305bc3d27813bacb73493eb1001e8f76dae29ea"
 dependencies = [
  "cast",
- "itertools 0.10.5",
+ "itertools 0.13.0",
 ]
 
 [[package]]
@@ -2063,7 +2135,7 @@ dependencies = [
  "arrow-schema",
  "chrono",
  "foldhash 0.2.0",
- "half 2.7.1",
+ "half",
  "hashbrown 0.17.1",
  "indexmap",
  "itertools 0.15.0",
@@ -2343,7 +2415,7 @@ dependencies = [
  "datafusion-macros",
  "datafusion-physical-expr",
  "datafusion-physical-expr-common",
- "half 2.7.1",
+ "half",
  "hashbrown 0.17.1",
  "log",
  "num-traits",
@@ -2473,7 +2545,7 @@ dependencies = [
  "datafusion-expr-common",
  "datafusion-functions-aggregate-common",
  "datafusion-physical-expr-common",
- "half 2.7.1",
+ "half",
  "hashbrown 0.17.1",
  "indexmap",
  "itertools 0.15.0",
@@ -2558,7 +2630,7 @@ dependencies = [
  "datafusion-physical-expr",
  "datafusion-physical-expr-common",
  "futures",
- "half 2.7.1",
+ "half",
  "hashbrown 0.17.1",
  "indexmap",
  "itertools 0.15.0",
@@ -3345,12 +3417,6 @@ dependencies = [
  "tokio-util 0.7.19",
  "tracing",
 ]
-
-[[package]]
-name = "half"
-version = "1.8.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1b43ede17f21864e81be2fa654110bf1e793774238d86ef8555c37e6519c0403"
 
 [[package]]
 name = "half"
@@ -4322,7 +4388,7 @@ dependencies = [
  "dns-lookup",
  "encoding_rs",
  "futures",
- "half 2.7.1",
+ "half",
  "hostname",
  "libc",
  "native-tls",
@@ -4751,6 +4817,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "page_size"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "30d5b2194ed13191c1999ae0704b7839fb18384fa22e49b57eeaa97d79ce40da"
+dependencies = [
+ "libc",
+ "winapi",
+]
+
+[[package]]
 name = "parking_lot"
 version = "0.11.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4817,7 +4893,7 @@ dependencies = [
  "chrono",
  "flate2",
  "futures",
- "half 2.7.1",
+ "half",
  "hashbrown 0.17.1",
  "lz4_flex",
  "num-bigint 0.5.1",
@@ -4888,7 +4964,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fc58e2d255979a31caa7cabfa7aac654af0354220719ab7a68520ae7a91e8c0b"
 dependencies = [
  "bytes",
- "half 2.7.1",
+ "half",
  "postgres-types",
 ]
 
@@ -6335,16 +6411,6 @@ checksum = "4148590afebada386688f18773da617792bf2ef03ffc1e4cbd2b1d45b023e0ba"
 dependencies = [
  "serde_core",
  "serde_derive",
-]
-
-[[package]]
-name = "serde_cbor"
-version = "0.11.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2bef2ebfde456fb76bbcf9f59315333decc4fda0b2b44b420243c11e0f5ec1f5"
-dependencies = [
- "half 1.8.3",
- "serde",
 ]
 
 [[package]]
