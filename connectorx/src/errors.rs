@@ -19,6 +19,17 @@ pub enum ConnectorXOutError {
     #[error("Source {0} not supported.")]
     SourceNotSupport(String),
 
+    /// The source does not support the requested `protocol`.
+    #[error("Protocol {protocol:?} is not supported for {db}; supported protocols: {supported}.")]
+    ProtocolNotSupported {
+        /// The protocol that was asked for.
+        protocol: String,
+        /// The source, e.g. `Postgres`.
+        db: String,
+        /// The protocols the source accepts, comma-separated.
+        supported: String,
+    },
+
     /// I/O error.
     #[error(transparent)]
     IOError(#[from] std::io::Error),
@@ -258,6 +269,18 @@ pub enum ConnectorXError {
     /// Any other error.
     #[error(transparent)]
     Other(#[from] anyhow::Error),
+}
+
+impl ConnectorXOutError {
+    /// The error for a `protocol` that source `db` (e.g. `SourceType::Postgres`)
+    /// does not accept; `supported` lists the protocols it does.
+    pub fn protocol_not_supported(protocol: &str, db: impl fmt::Debug, supported: &[&str]) -> Self {
+        ConnectorXOutError::ProtocolNotSupported {
+            protocol: protocol.to_string(),
+            db: format!("{db:?}"),
+            supported: supported.join(", "),
+        }
+    }
 }
 
 impl ConnectorXError {
