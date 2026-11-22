@@ -29,7 +29,10 @@ impl TempDb {
     }
 
     fn conn(&self) -> SourceConn {
-        SourceConn::try_from(format!("sqlite://{}", self.0.display()).as_str()).unwrap()
+        // Percent-encode the path, as the Python ConnectionUrl helper does: a raw
+        // Windows path (`C:\Users\...`) does not survive URL parsing.
+        let path = urlencoding::encode(&self.path()).into_owned();
+        SourceConn::try_from(format!("sqlite://{}", path).as_str()).unwrap()
     }
 
     fn path(&self) -> String {
@@ -244,4 +247,16 @@ fn only_row_major_is_supported() {
     let mut src = SQLiteSource::new(&db.path(), 1).unwrap();
     assert!(src.set_data_order(DataOrder::RowMajor).is_ok());
     assert!(src.set_data_order(DataOrder::ColumnMajor).is_err());
+}
+
+// A Windows path must survive the trip through `SourceConn` (a `url::Url`)
+// when it is percent-encoded, and the `[9..]` slice that get_arrow/partition
+// take must decode back to it. A raw `C:\...` path does not survive parsing.
+#[test]
+fn percent_encoded_windows_path_round_trips_through_the_url() {
+    let path = r"C:\Users\RUNNER~1\AppData\Local\Temp\cx test.db";
+    let encoded = urlencoding::encode(path);
+    let conn = SourceConn::try_from(format!("sqlite://{}", encoded).as_str()).unwrap();
+    let decoded = urlencoding::decode(&conn.conn.as_str()[9..]).unwrap();
+    assert_eq!(decoded, path);
 }
