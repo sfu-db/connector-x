@@ -460,6 +460,10 @@
 <span class="n">cx</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">query</span><span class="p">)</span>                                        <span class="c1"># read data from MySQL</span>
 </pre></div>
 </div>
+<p>When the URL names an explicit port (e.g. <code class="docutils literal notranslate"><span class="pre">mysql://username:password&#64;localhost:3306/database</span></code>), the
+connection stays on TCP to that port, even for a loopback host like <code class="docutils literal notranslate"><span class="pre">localhost</span></code> or <code class="docutils literal notranslate"><span class="pre">127.0.0.1</span></code>. Without
+a port, the MySQL driver may switch to the server’s local Unix socket after connecting. Add
+<code class="docutils literal notranslate"><span class="pre">?prefer_socket=true</span></code> to restore that behaviour with an explicit port.</p>
 </section>
 <section id="mysql-ssl-tls">
 <h2>MySQL SSL/TLS<a class="headerlink" href="#mysql-ssl-tls" title="Link to this heading">#</a></h2>

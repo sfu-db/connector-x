@@ -12,6 +12,11 @@ query = 'SELECT * FROM table'                                   # query string
 cx.read_sql(conn, query)                                        # read data from MySQL
 ```
 
+When the URL names an explicit port (e.g. `mysql://username:password@localhost:3306/database`), the
+connection stays on TCP to that port, even for a loopback host like `localhost` or `127.0.0.1`. Without
+a port, the MySQL driver may switch to the server's local Unix socket after connecting. Add
+`?prefer_socket=true` to restore that behaviour with an explicit port.
+
 ## MySQL SSL/TLS
 
 Add an `ssl-mode` parameter to the connection URI to negotiate a TLS connection, e.g.
