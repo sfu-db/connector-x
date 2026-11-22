@@ -2,31 +2,39 @@
 <a href=#2 id=2 data-nosnippet>2</a><span class="kw">use </span>thiserror::Error;
 <a href=#3 id=3 data-nosnippet>3</a><span class="kw">use </span>url;
 <a href=#4 id=4 data-nosnippet>4</a>
-<a href=#5 id=5 data-nosnippet>5</a><span class="attr">#[derive(Error, Debug)]
-<a href=#6 id=6 data-nosnippet>6</a></span><span class="kw">pub enum </span>BigQuerySourceError {
-<a href=#7 id=7 data-nosnippet>7</a>    <span class="attr">#[error(transparent)]
-<a href=#8 id=8 data-nosnippet>8</a>    </span>ConnectorXError(<span class="attr">#[from] </span><span class="kw">crate</span>::errors::ConnectorXError),
-<a href=#9 id=9 data-nosnippet>9</a>
-<a href=#10 id=10 data-nosnippet>10</a>    <span class="attr">#[error(transparent)]
-<a href=#11 id=11 data-nosnippet>11</a>    </span>BQError(<span class="attr">#[from] </span>BQError),
-<a href=#12 id=12 data-nosnippet>12</a>
-<a href=#13 id=13 data-nosnippet>13</a>    <span class="attr">#[error(transparent)]
-<a href=#14 id=14 data-nosnippet>14</a>    </span>BigQueryUrlError(<span class="attr">#[from] </span>url::ParseError),
+<a href=#5 id=5 data-nosnippet>5</a><span class="doccomment">/// Errors raised by the BigQuery source.
+<a href=#6 id=6 data-nosnippet>6</a></span><span class="attr">#[derive(Error, Debug)]
+<a href=#7 id=7 data-nosnippet>7</a></span><span class="kw">pub enum </span>BigQuerySourceError {
+<a href=#8 id=8 data-nosnippet>8</a>    <span class="doccomment">/// Generic ConnectorX error.
+<a href=#9 id=9 data-nosnippet>9</a>    </span><span class="attr">#[error(transparent)]
+<a href=#10 id=10 data-nosnippet>10</a>    </span>ConnectorXError(<span class="attr">#[from] </span><span class="kw">crate</span>::errors::ConnectorXError),
+<a href=#11 id=11 data-nosnippet>11</a>
+<a href=#12 id=12 data-nosnippet>12</a>    <span class="doccomment">/// Error from the BigQuery client.
+<a href=#13 id=13 data-nosnippet>13</a>    </span><span class="attr">#[error(transparent)]
+<a href=#14 id=14 data-nosnippet>14</a>    </span>BQError(<span class="attr">#[from] </span>BQError),
 <a href=#15 id=15 data-nosnippet>15</a>
-<a href=#16 id=16 data-nosnippet>16</a>    <span class="attr">#[error(transparent)]
-<a href=#17 id=17 data-nosnippet>17</a>    </span>BigQueryStdError(<span class="attr">#[from] </span>std::io::Error),
-<a href=#18 id=18 data-nosnippet>18</a>
-<a href=#19 id=19 data-nosnippet>19</a>    <span class="attr">#[error(transparent)]
-<a href=#20 id=20 data-nosnippet>20</a>    </span>BigQueryJsonError(<span class="attr">#[from] </span>serde_json::Error),
-<a href=#21 id=21 data-nosnippet>21</a>
-<a href=#22 id=22 data-nosnippet>22</a>    <span class="attr">#[error(transparent)]
-<a href=#23 id=23 data-nosnippet>23</a>    </span>BigQueryParseFloatError(<span class="attr">#[from] </span>std::num::ParseFloatError),
-<a href=#24 id=24 data-nosnippet>24</a>
-<a href=#25 id=25 data-nosnippet>25</a>    <span class="attr">#[error(transparent)]
-<a href=#26 id=26 data-nosnippet>26</a>    </span>BigQueryParseIntError(<span class="attr">#[from] </span>std::num::ParseIntError),
+<a href=#16 id=16 data-nosnippet>16</a>    <span class="doccomment">/// The connection string is not a valid URL.
+<a href=#17 id=17 data-nosnippet>17</a>    </span><span class="attr">#[error(transparent)]
+<a href=#18 id=18 data-nosnippet>18</a>    </span>BigQueryUrlError(<span class="attr">#[from] </span>url::ParseError),
+<a href=#19 id=19 data-nosnippet>19</a>
+<a href=#20 id=20 data-nosnippet>20</a>    <span class="doccomment">/// I/O error, e.g. while reading the service account key.
+<a href=#21 id=21 data-nosnippet>21</a>    </span><span class="attr">#[error(transparent)]
+<a href=#22 id=22 data-nosnippet>22</a>    </span>BigQueryStdError(<span class="attr">#[from] </span>std::io::Error),
+<a href=#23 id=23 data-nosnippet>23</a>
+<a href=#24 id=24 data-nosnippet>24</a>    <span class="doccomment">/// JSON error, e.g. in the service account key.
+<a href=#25 id=25 data-nosnippet>25</a>    </span><span class="attr">#[error(transparent)]
+<a href=#26 id=26 data-nosnippet>26</a>    </span>BigQueryJsonError(<span class="attr">#[from] </span>serde_json::Error),
 <a href=#27 id=27 data-nosnippet>27</a>
-<a href=#28 id=28 data-nosnippet>28</a>    <span class="doccomment">/// Any other errors that are too trivial to be put here explicitly.
+<a href=#28 id=28 data-nosnippet>28</a>    <span class="doccomment">/// A returned value could not be parsed as a float.
 <a href=#29 id=29 data-nosnippet>29</a>    </span><span class="attr">#[error(transparent)]
-<a href=#30 id=30 data-nosnippet>30</a>    </span>Other(<span class="attr">#[from] </span>anyhow::Error),
-<a href=#31 id=31 data-nosnippet>31</a>}
+<a href=#30 id=30 data-nosnippet>30</a>    </span>BigQueryParseFloatError(<span class="attr">#[from] </span>std::num::ParseFloatError),
+<a href=#31 id=31 data-nosnippet>31</a>
+<a href=#32 id=32 data-nosnippet>32</a>    <span class="doccomment">/// A returned value could not be parsed as an integer.
+<a href=#33 id=33 data-nosnippet>33</a>    </span><span class="attr">#[error(transparent)]
+<a href=#34 id=34 data-nosnippet>34</a>    </span>BigQueryParseIntError(<span class="attr">#[from] </span>std::num::ParseIntError),
+<a href=#35 id=35 data-nosnippet>35</a>
+<a href=#36 id=36 data-nosnippet>36</a>    <span class="doccomment">/// Any other errors that are too trivial to be put here explicitly.
+<a href=#37 id=37 data-nosnippet>37</a>    </span><span class="attr">#[error(transparent)]
+<a href=#38 id=38 data-nosnippet>38</a>    </span>Other(<span class="attr">#[from] </span>anyhow::Error),
+<a href=#39 id=39 data-nosnippet>39</a>}
 </code></pre></div></section></main></body></html>

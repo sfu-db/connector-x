@@ -59,86 +59,94 @@
 <a href=#59 id=59 data-nosnippet>59</a>
 <a href=#60 id=60 data-nosnippet>60</a><span class="doccomment">/// Defines a rule to convert a type `T` to a type `U`.
 <a href=#61 id=61 data-nosnippet>61</a></span><span class="kw">pub trait </span>TypeConversion&lt;T, U&gt; {
-<a href=#62 id=62 data-nosnippet>62</a>    <span class="kw">fn </span>convert(val: T) -&gt; U;
-<a href=#63 id=63 data-nosnippet>63</a>}
-<a href=#64 id=64 data-nosnippet>64</a>
-<a href=#65 id=65 data-nosnippet>65</a><span class="doccomment">/// Transport asks the source to produce a value, do type conversion and then write
-<a href=#66 id=66 data-nosnippet>66</a>/// the value to a destination. Do not manually implement this trait for types.
-<a href=#67 id=67 data-nosnippet>67</a>/// Use [`impl_transport!`] to create a struct that implements this trait instead.
-<a href=#68 id=68 data-nosnippet>68</a></span><span class="kw">pub trait </span>Transport {
-<a href=#69 id=69 data-nosnippet>69</a>    <span class="kw">type </span>TSS: TypeSystem;
-<a href=#70 id=70 data-nosnippet>70</a>    <span class="kw">type </span>TSD: TypeSystem;
-<a href=#71 id=71 data-nosnippet>71</a>    <span class="kw">type </span>S: Source;
-<a href=#72 id=72 data-nosnippet>72</a>    <span class="kw">type </span>D: Destination;
-<a href=#73 id=73 data-nosnippet>73</a>    <span class="kw">type </span>Error: From&lt;ConnectorXError&gt;
-<a href=#74 id=74 data-nosnippet>74</a>        + From&lt;&lt;<span class="self">Self</span>::S <span class="kw">as </span>Source&gt;::Error&gt;
-<a href=#75 id=75 data-nosnippet>75</a>        + From&lt;&lt;<span class="self">Self</span>::D <span class="kw">as </span>Destination&gt;::Error&gt;
-<a href=#76 id=76 data-nosnippet>76</a>        + Send
-<a href=#77 id=77 data-nosnippet>77</a>        + std::fmt::Debug;
-<a href=#78 id=78 data-nosnippet>78</a>
-<a href=#79 id=79 data-nosnippet>79</a>    <span class="doccomment">/// convert_typesystem convert the source type system TSS to the destination
-<a href=#80 id=80 data-nosnippet>80</a>    /// type system TSD.
-<a href=#81 id=81 data-nosnippet>81</a>    </span><span class="kw">fn </span>convert_typesystem(ts: <span class="self">Self</span>::TSS) -&gt; CXResult&lt;<span class="self">Self</span>::TSD&gt;;
-<a href=#82 id=82 data-nosnippet>82</a>
-<a href=#83 id=83 data-nosnippet>83</a>    <span class="doccomment">/// convert_type convert the type T1 associated with the source type system
-<a href=#84 id=84 data-nosnippet>84</a>    /// TSS to a type T2 which is associated with the destination type system TSD.
-<a href=#85 id=85 data-nosnippet>85</a>    </span><span class="kw">fn </span>convert_type&lt;T1, T2&gt;(val: T1) -&gt; T2
-<a href=#86 id=86 data-nosnippet>86</a>    <span class="kw">where
-<a href=#87 id=87 data-nosnippet>87</a>        </span><span class="self">Self</span>: TypeConversion&lt;T1, T2&gt;,
-<a href=#88 id=88 data-nosnippet>88</a>    {
-<a href=#89 id=89 data-nosnippet>89</a>        &lt;<span class="self">Self </span><span class="kw">as </span>TypeConversion&lt;T1, T2&gt;&gt;::convert(val)
-<a href=#90 id=90 data-nosnippet>90</a>    }
-<a href=#91 id=91 data-nosnippet>91</a>
-<a href=#92 id=92 data-nosnippet>92</a>    <span class="doccomment">/// `process` will ask source to produce a value with type T1, based on TSS, and then do
-<a href=#93 id=93 data-nosnippet>93</a>    /// type conversion using `convert_type` to get value with type T2, which is associated to
-<a href=#94 id=94 data-nosnippet>94</a>    /// TSD. Finally, it will write the value with type T2 to the destination.
-<a href=#95 id=95 data-nosnippet>95</a>    </span><span class="kw">fn </span>process&lt;<span class="lifetime">'s</span>, <span class="lifetime">'d</span>, <span class="lifetime">'r</span>&gt;(
-<a href=#96 id=96 data-nosnippet>96</a>        ts1: <span class="self">Self</span>::TSS,
-<a href=#97 id=97 data-nosnippet>97</a>        ts2: <span class="self">Self</span>::TSD,
-<a href=#98 id=98 data-nosnippet>98</a>        src: <span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span>&lt;&lt;<span class="self">Self</span>::S <span class="kw">as </span>Source&gt;::Partition <span class="kw">as </span>SourcePartition&gt;::Parser&lt;<span class="lifetime">'s</span>&gt;,
-<a href=#99 id=99 data-nosnippet>99</a>        dst: <span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span>&lt;<span class="self">Self</span>::D <span class="kw">as </span>Destination&gt;::Partition&lt;<span class="lifetime">'d</span>&gt;,
-<a href=#100 id=100 data-nosnippet>100</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt;
-<a href=#101 id=101 data-nosnippet>101</a>    <span class="kw">where
-<a href=#102 id=102 data-nosnippet>102</a>        </span><span class="self">Self</span>: <span class="lifetime">'d</span>;
-<a href=#103 id=103 data-nosnippet>103</a>
-<a href=#104 id=104 data-nosnippet>104</a>    <span class="attr">#[allow(clippy::type_complexity)]
-<a href=#105 id=105 data-nosnippet>105</a>    </span><span class="kw">fn </span>processor&lt;<span class="lifetime">'s</span>, <span class="lifetime">'d</span>&gt;(
-<a href=#106 id=106 data-nosnippet>106</a>        ts1: <span class="self">Self</span>::TSS,
-<a href=#107 id=107 data-nosnippet>107</a>        ts2: <span class="self">Self</span>::TSD,
-<a href=#108 id=108 data-nosnippet>108</a>    ) -&gt; CXResult&lt;
-<a href=#109 id=109 data-nosnippet>109</a>        <span class="kw">fn</span>(
-<a href=#110 id=110 data-nosnippet>110</a>            src: <span class="kw-2">&amp;mut </span>&lt;&lt;<span class="self">Self</span>::S <span class="kw">as </span>Source&gt;::Partition <span class="kw">as </span>SourcePartition&gt;::Parser&lt;<span class="lifetime">'s</span>&gt;,
-<a href=#111 id=111 data-nosnippet>111</a>            dst: <span class="kw-2">&amp;mut </span>&lt;<span class="self">Self</span>::D <span class="kw">as </span>Destination&gt;::Partition&lt;<span class="lifetime">'d</span>&gt;,
-<a href=#112 id=112 data-nosnippet>112</a>        ) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt;,
-<a href=#113 id=113 data-nosnippet>113</a>    &gt;
-<a href=#114 id=114 data-nosnippet>114</a>    <span class="kw">where
-<a href=#115 id=115 data-nosnippet>115</a>        </span><span class="self">Self</span>: <span class="lifetime">'d</span>;
-<a href=#116 id=116 data-nosnippet>116</a>}
-<a href=#117 id=117 data-nosnippet>117</a>
-<a href=#118 id=118 data-nosnippet>118</a><span class="attr">#[doc(hidden)]
-<a href=#119 id=119 data-nosnippet>119</a></span><span class="kw">pub fn </span>process&lt;<span class="lifetime">'s</span>, <span class="lifetime">'d</span>, <span class="lifetime">'r</span>, T1, T2, TP, S, D, ES, ED, ET&gt;(
-<a href=#120 id=120 data-nosnippet>120</a>    src: <span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span>&lt;&lt;S <span class="kw">as </span>Source&gt;::Partition <span class="kw">as </span>SourcePartition&gt;::Parser&lt;<span class="lifetime">'s</span>&gt;,
-<a href=#121 id=121 data-nosnippet>121</a>    dst: <span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span>&lt;D <span class="kw">as </span>Destination&gt;::Partition&lt;<span class="lifetime">'d</span>&gt;,
-<a href=#122 id=122 data-nosnippet>122</a>) -&gt; <span class="prelude-ty">Result</span>&lt;(), ET&gt;
-<a href=#123 id=123 data-nosnippet>123</a><span class="kw">where
-<a href=#124 id=124 data-nosnippet>124</a>    </span>T1: TypeAssoc&lt;&lt;S <span class="kw">as </span>Source&gt;::TypeSystem&gt;,
-<a href=#125 id=125 data-nosnippet>125</a>    S: Source&lt;Error = ES&gt;,
-<a href=#126 id=126 data-nosnippet>126</a>    &lt;S <span class="kw">as </span>Source&gt;::Partition: SourcePartition&lt;Error = ES&gt;,
-<a href=#127 id=127 data-nosnippet>127</a>
-<a href=#128 id=128 data-nosnippet>128</a>    &lt;&lt;S <span class="kw">as </span>Source&gt;::Partition <span class="kw">as </span>SourcePartition&gt;::Parser&lt;<span class="lifetime">'s</span>&gt;: Produce&lt;<span class="lifetime">'r</span>, T1, Error = ES&gt;,
-<a href=#129 id=129 data-nosnippet>129</a>    ES: From&lt;ConnectorXError&gt; + Send,
-<a href=#130 id=130 data-nosnippet>130</a>
-<a href=#131 id=131 data-nosnippet>131</a>    T2: TypeAssoc&lt;&lt;D <span class="kw">as </span>Destination&gt;::TypeSystem&gt;,
-<a href=#132 id=132 data-nosnippet>132</a>    D: Destination&lt;Error = ED&gt;,
-<a href=#133 id=133 data-nosnippet>133</a>    &lt;D <span class="kw">as </span>Destination&gt;::Partition&lt;<span class="lifetime">'d</span>&gt;: Consume&lt;T2, Error = ED&gt;,
-<a href=#134 id=134 data-nosnippet>134</a>    ED: From&lt;ConnectorXError&gt; + Send,
+<a href=#62 id=62 data-nosnippet>62</a>    <span class="doccomment">/// Convert `val` from `T` to `U`.
+<a href=#63 id=63 data-nosnippet>63</a>    </span><span class="kw">fn </span>convert(val: T) -&gt; U;
+<a href=#64 id=64 data-nosnippet>64</a>}
+<a href=#65 id=65 data-nosnippet>65</a>
+<a href=#66 id=66 data-nosnippet>66</a><span class="doccomment">/// Transport asks the source to produce a value, do type conversion and then write
+<a href=#67 id=67 data-nosnippet>67</a>/// the value to a destination. Do not manually implement this trait for types.
+<a href=#68 id=68 data-nosnippet>68</a>/// Use [`impl_transport!`](crate::impl_transport) to create a struct that implements this trait instead.
+<a href=#69 id=69 data-nosnippet>69</a></span><span class="kw">pub trait </span>Transport {
+<a href=#70 id=70 data-nosnippet>70</a>    <span class="doccomment">/// Type system of the source.
+<a href=#71 id=71 data-nosnippet>71</a>    </span><span class="kw">type </span>TSS: TypeSystem;
+<a href=#72 id=72 data-nosnippet>72</a>    <span class="doccomment">/// Type system of the destination.
+<a href=#73 id=73 data-nosnippet>73</a>    </span><span class="kw">type </span>TSD: TypeSystem;
+<a href=#74 id=74 data-nosnippet>74</a>    <span class="doccomment">/// Source this transport reads from.
+<a href=#75 id=75 data-nosnippet>75</a>    </span><span class="kw">type </span>S: Source;
+<a href=#76 id=76 data-nosnippet>76</a>    <span class="doccomment">/// Destination this transport writes to.
+<a href=#77 id=77 data-nosnippet>77</a>    </span><span class="kw">type </span>D: Destination;
+<a href=#78 id=78 data-nosnippet>78</a>    <span class="doccomment">/// Error type, convertible from the source, destination and ConnectorX errors.
+<a href=#79 id=79 data-nosnippet>79</a>    </span><span class="kw">type </span>Error: From&lt;ConnectorXError&gt;
+<a href=#80 id=80 data-nosnippet>80</a>        + From&lt;&lt;<span class="self">Self</span>::S <span class="kw">as </span>Source&gt;::Error&gt;
+<a href=#81 id=81 data-nosnippet>81</a>        + From&lt;&lt;<span class="self">Self</span>::D <span class="kw">as </span>Destination&gt;::Error&gt;
+<a href=#82 id=82 data-nosnippet>82</a>        + Send
+<a href=#83 id=83 data-nosnippet>83</a>        + std::fmt::Debug;
+<a href=#84 id=84 data-nosnippet>84</a>
+<a href=#85 id=85 data-nosnippet>85</a>    <span class="doccomment">/// convert_typesystem convert the source type system TSS to the destination
+<a href=#86 id=86 data-nosnippet>86</a>    /// type system TSD.
+<a href=#87 id=87 data-nosnippet>87</a>    </span><span class="kw">fn </span>convert_typesystem(ts: <span class="self">Self</span>::TSS) -&gt; CXResult&lt;<span class="self">Self</span>::TSD&gt;;
+<a href=#88 id=88 data-nosnippet>88</a>
+<a href=#89 id=89 data-nosnippet>89</a>    <span class="doccomment">/// convert_type convert the type T1 associated with the source type system
+<a href=#90 id=90 data-nosnippet>90</a>    /// TSS to a type T2 which is associated with the destination type system TSD.
+<a href=#91 id=91 data-nosnippet>91</a>    </span><span class="kw">fn </span>convert_type&lt;T1, T2&gt;(val: T1) -&gt; T2
+<a href=#92 id=92 data-nosnippet>92</a>    <span class="kw">where
+<a href=#93 id=93 data-nosnippet>93</a>        </span><span class="self">Self</span>: TypeConversion&lt;T1, T2&gt;,
+<a href=#94 id=94 data-nosnippet>94</a>    {
+<a href=#95 id=95 data-nosnippet>95</a>        &lt;<span class="self">Self </span><span class="kw">as </span>TypeConversion&lt;T1, T2&gt;&gt;::convert(val)
+<a href=#96 id=96 data-nosnippet>96</a>    }
+<a href=#97 id=97 data-nosnippet>97</a>
+<a href=#98 id=98 data-nosnippet>98</a>    <span class="doccomment">/// `process` will ask source to produce a value with type T1, based on TSS, and then do
+<a href=#99 id=99 data-nosnippet>99</a>    /// type conversion using `convert_type` to get value with type T2, which is associated to
+<a href=#100 id=100 data-nosnippet>100</a>    /// TSD. Finally, it will write the value with type T2 to the destination.
+<a href=#101 id=101 data-nosnippet>101</a>    </span><span class="kw">fn </span>process&lt;<span class="lifetime">'s</span>, <span class="lifetime">'d</span>, <span class="lifetime">'r</span>&gt;(
+<a href=#102 id=102 data-nosnippet>102</a>        ts1: <span class="self">Self</span>::TSS,
+<a href=#103 id=103 data-nosnippet>103</a>        ts2: <span class="self">Self</span>::TSD,
+<a href=#104 id=104 data-nosnippet>104</a>        src: <span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span>&lt;&lt;<span class="self">Self</span>::S <span class="kw">as </span>Source&gt;::Partition <span class="kw">as </span>SourcePartition&gt;::Parser&lt;<span class="lifetime">'s</span>&gt;,
+<a href=#105 id=105 data-nosnippet>105</a>        dst: <span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span>&lt;<span class="self">Self</span>::D <span class="kw">as </span>Destination&gt;::Partition&lt;<span class="lifetime">'d</span>&gt;,
+<a href=#106 id=106 data-nosnippet>106</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt;
+<a href=#107 id=107 data-nosnippet>107</a>    <span class="kw">where
+<a href=#108 id=108 data-nosnippet>108</a>        </span><span class="self">Self</span>: <span class="lifetime">'d</span>;
+<a href=#109 id=109 data-nosnippet>109</a>
+<a href=#110 id=110 data-nosnippet>110</a>    <span class="doccomment">/// Return a function pointer that moves one value of source type `ts1` into the
+<a href=#111 id=111 data-nosnippet>111</a>    /// destination as type `ts2`, or an error if no conversion rule exists.
+<a href=#112 id=112 data-nosnippet>112</a>    </span><span class="attr">#[allow(clippy::type_complexity)]
+<a href=#113 id=113 data-nosnippet>113</a>    </span><span class="kw">fn </span>processor&lt;<span class="lifetime">'s</span>, <span class="lifetime">'d</span>&gt;(
+<a href=#114 id=114 data-nosnippet>114</a>        ts1: <span class="self">Self</span>::TSS,
+<a href=#115 id=115 data-nosnippet>115</a>        ts2: <span class="self">Self</span>::TSD,
+<a href=#116 id=116 data-nosnippet>116</a>    ) -&gt; CXResult&lt;
+<a href=#117 id=117 data-nosnippet>117</a>        <span class="kw">fn</span>(
+<a href=#118 id=118 data-nosnippet>118</a>            src: <span class="kw-2">&amp;mut </span>&lt;&lt;<span class="self">Self</span>::S <span class="kw">as </span>Source&gt;::Partition <span class="kw">as </span>SourcePartition&gt;::Parser&lt;<span class="lifetime">'s</span>&gt;,
+<a href=#119 id=119 data-nosnippet>119</a>            dst: <span class="kw-2">&amp;mut </span>&lt;<span class="self">Self</span>::D <span class="kw">as </span>Destination&gt;::Partition&lt;<span class="lifetime">'d</span>&gt;,
+<a href=#120 id=120 data-nosnippet>120</a>        ) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt;,
+<a href=#121 id=121 data-nosnippet>121</a>    &gt;
+<a href=#122 id=122 data-nosnippet>122</a>    <span class="kw">where
+<a href=#123 id=123 data-nosnippet>123</a>        </span><span class="self">Self</span>: <span class="lifetime">'d</span>;
+<a href=#124 id=124 data-nosnippet>124</a>}
+<a href=#125 id=125 data-nosnippet>125</a>
+<a href=#126 id=126 data-nosnippet>126</a><span class="attr">#[doc(hidden)]
+<a href=#127 id=127 data-nosnippet>127</a></span><span class="kw">pub fn </span>process&lt;<span class="lifetime">'s</span>, <span class="lifetime">'d</span>, <span class="lifetime">'r</span>, T1, T2, TP, S, D, ES, ED, ET&gt;(
+<a href=#128 id=128 data-nosnippet>128</a>    src: <span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span>&lt;&lt;S <span class="kw">as </span>Source&gt;::Partition <span class="kw">as </span>SourcePartition&gt;::Parser&lt;<span class="lifetime">'s</span>&gt;,
+<a href=#129 id=129 data-nosnippet>129</a>    dst: <span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span>&lt;D <span class="kw">as </span>Destination&gt;::Partition&lt;<span class="lifetime">'d</span>&gt;,
+<a href=#130 id=130 data-nosnippet>130</a>) -&gt; <span class="prelude-ty">Result</span>&lt;(), ET&gt;
+<a href=#131 id=131 data-nosnippet>131</a><span class="kw">where
+<a href=#132 id=132 data-nosnippet>132</a>    </span>T1: TypeAssoc&lt;&lt;S <span class="kw">as </span>Source&gt;::TypeSystem&gt;,
+<a href=#133 id=133 data-nosnippet>133</a>    S: Source&lt;Error = ES&gt;,
+<a href=#134 id=134 data-nosnippet>134</a>    &lt;S <span class="kw">as </span>Source&gt;::Partition: SourcePartition&lt;Error = ES&gt;,
 <a href=#135 id=135 data-nosnippet>135</a>
-<a href=#136 id=136 data-nosnippet>136</a>    TP: TypeConversion&lt;T1, T2&gt;,
-<a href=#137 id=137 data-nosnippet>137</a>    ET: From&lt;ES&gt; + From&lt;ED&gt;,
-<a href=#138 id=138 data-nosnippet>138</a>{
-<a href=#139 id=139 data-nosnippet>139</a>    <span class="kw">let </span>val: T1 = PartitionParser::parse(src)<span class="question-mark">?</span>;
-<a href=#140 id=140 data-nosnippet>140</a>    <span class="kw">let </span>val: T2 = &lt;TP <span class="kw">as </span>TypeConversion&lt;T1, <span class="kw">_</span>&gt;&gt;::convert(val);
-<a href=#141 id=141 data-nosnippet>141</a>    DestinationPartition::write(dst, val)<span class="question-mark">?</span>;
-<a href=#142 id=142 data-nosnippet>142</a>    <span class="prelude-val">Ok</span>(())
-<a href=#143 id=143 data-nosnippet>143</a>}
+<a href=#136 id=136 data-nosnippet>136</a>    &lt;&lt;S <span class="kw">as </span>Source&gt;::Partition <span class="kw">as </span>SourcePartition&gt;::Parser&lt;<span class="lifetime">'s</span>&gt;: Produce&lt;<span class="lifetime">'r</span>, T1, Error = ES&gt;,
+<a href=#137 id=137 data-nosnippet>137</a>    ES: From&lt;ConnectorXError&gt; + Send,
+<a href=#138 id=138 data-nosnippet>138</a>
+<a href=#139 id=139 data-nosnippet>139</a>    T2: TypeAssoc&lt;&lt;D <span class="kw">as </span>Destination&gt;::TypeSystem&gt;,
+<a href=#140 id=140 data-nosnippet>140</a>    D: Destination&lt;Error = ED&gt;,
+<a href=#141 id=141 data-nosnippet>141</a>    &lt;D <span class="kw">as </span>Destination&gt;::Partition&lt;<span class="lifetime">'d</span>&gt;: Consume&lt;T2, Error = ED&gt;,
+<a href=#142 id=142 data-nosnippet>142</a>    ED: From&lt;ConnectorXError&gt; + Send,
+<a href=#143 id=143 data-nosnippet>143</a>
+<a href=#144 id=144 data-nosnippet>144</a>    TP: TypeConversion&lt;T1, T2&gt;,
+<a href=#145 id=145 data-nosnippet>145</a>    ET: From&lt;ES&gt; + From&lt;ED&gt;,
+<a href=#146 id=146 data-nosnippet>146</a>{
+<a href=#147 id=147 data-nosnippet>147</a>    <span class="kw">let </span>val: T1 = PartitionParser::parse(src)<span class="question-mark">?</span>;
+<a href=#148 id=148 data-nosnippet>148</a>    <span class="kw">let </span>val: T2 = &lt;TP <span class="kw">as </span>TypeConversion&lt;T1, <span class="kw">_</span>&gt;&gt;::convert(val);
+<a href=#149 id=149 data-nosnippet>149</a>    DestinationPartition::write(dst, val)<span class="question-mark">?</span>;
+<a href=#150 id=150 data-nosnippet>150</a>    <span class="prelude-val">Ok</span>(())
+<a href=#151 id=151 data-nosnippet>151</a>}
 </code></pre></div></section></main></body></html>
