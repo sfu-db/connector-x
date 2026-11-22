@@ -61,7 +61,7 @@ impl<T> DerefMut for DummyBox<T> {
 /// Replaces `owning_ref::OwningHandle` (RUSTSEC-2022-0040). That type keeps the
 /// owner in a `Box` while the handle borrows from it, which violates Rust's
 /// aliasing rules whenever the `Box` is moved. Here the owner is turned into a
-/// raw pointer with `Box::into_raw` for as long as the handle exists, so no
+/// raw pointer with `Box::leak` for as long as the handle exists, so no
 /// `Box` claims unique access to it, and `Drop` frees the handle before the owner.
 ///
 /// Like the original, it dereferences through the handle (`H::Target`).
@@ -80,8 +80,9 @@ impl<O, H> OwningHandle<O, H> {
     where
         F: FnOnce(*const O) -> H,
     {
-        // SAFETY: `Box::into_raw` never returns null.
-        let owner = unsafe { NonNull::new_unchecked(Box::into_raw(owner)) };
+        // Give up the `Box` so nothing claims unique access while `H` borrows the
+        // owner; `Drop` turns the pointer back into a `Box` to free it.
+        let owner = NonNull::from(Box::leak(owner));
         let handle = f(owner.as_ptr());
         Self {
             handle: ManuallyDrop::new(handle),
@@ -107,7 +108,7 @@ impl<O, H: DerefMut> DerefMut for OwningHandle<O, H> {
 impl<O, H> Drop for OwningHandle<O, H> {
     fn drop(&mut self) {
         // SAFETY: the handle may borrow from the owner, so drop it first. `owner`
-        // came from `Box::into_raw` in `new_with_fn` and is freed exactly once, here.
+        // came from `Box::leak` in `new_with_fn` and is freed exactly once, here.
         unsafe {
             ManuallyDrop::drop(&mut self.handle);
             drop(Box::from_raw(self.owner.as_ptr()));
