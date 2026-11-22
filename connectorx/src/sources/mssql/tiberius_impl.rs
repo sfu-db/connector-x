@@ -35,6 +35,7 @@ use urlencoding::decode;
 use uuid_old::Uuid;
 
 type Conn<'a> = PooledConnection<'a, ConnectionManager>;
+/// Source that reads from Microsoft SQL Server through Tiberius.
 pub struct MsSQLSource {
     rt: Arc<Runtime>,
     pool: Pool<ConnectionManager>,
@@ -115,6 +116,7 @@ pub fn mssql_config(url: &Url) -> Config {
 }
 
 impl MsSQLSource {
+    /// Create a source with a pool of up to `nconn` connections.
     #[throws(MsSQLSourceError)]
     pub fn new(rt: Arc<Runtime>, conn: &str, nconn: usize) -> Self {
         debug!("mssql source using driver: {:?}", driver::active_driver());
@@ -242,6 +244,7 @@ where
     }
 }
 
+/// One partition of an [`MsSQLSource`].
 pub struct MsSQLSourcePartition {
     pool: Pool<ConnectionManager>,
     rt: Arc<Runtime>,
@@ -252,6 +255,7 @@ pub struct MsSQLSourcePartition {
 }
 
 impl MsSQLSourcePartition {
+    /// Create a partition that runs `query`.
     pub fn new(
         pool: Pool<ConnectionManager>,
         handle: Arc<Runtime>,
@@ -315,6 +319,7 @@ impl SourcePartition for MsSQLSourcePartition {
     }
 }
 
+/// Row parser for an [`MsSQLSourcePartition`].
 pub struct MsSQLSourceParser<'a> {
     rt: &'a Handle,
     iter: OwningHandle<Box<Conn<'a>>, DummyBox<QueryStream<'a>>>,

@@ -1,3 +1,20 @@
+// Every helper below belongs to a source that supports partitioning. In a build
+// with none of them (e.g. `src_csv` or `src_dummy` alone), the shared imports and
+// the `query`/`col` parameters go unused and each `match` keeps only its error arm.
+#![cfg_attr(
+    not(any(
+        feature = "src_postgres",
+        feature = "src_sqlite",
+        feature = "src_mysql",
+        feature = "src_mssql_common",
+        feature = "src_oracle",
+        feature = "src_bigquery",
+        feature = "src_trino",
+        feature = "src_clickhouse",
+    )),
+    allow(unused_imports, unused_variables, unreachable_code)
+)]
+
 use std::convert::TryFrom;
 #[cfg(feature = "src_clickhouse")]
 use std::sync::Arc;
@@ -18,9 +35,19 @@ use crate::sources::oracle::{OracleDialect, OracleSource};
 use crate::sources::postgres::{rewrite_tls_args, PostgresTypeSystem};
 #[cfg(feature = "src_trino")]
 use crate::sources::trino::TrinoDialect;
+#[cfg(any(
+    feature = "src_postgres",
+    feature = "src_mysql",
+    feature = "src_mssql_tiberius",
+    feature = "src_oracle",
+    feature = "src_bigquery",
+    feature = "src_trino",
+    feature = "src_clickhouse",
+))]
+use crate::sql::get_partition_range_query;
 #[cfg(feature = "src_sqlite")]
 use crate::sql::get_partition_range_query_sep;
-use crate::sql::{get_partition_range_query, single_col_partition_query, CXQuery};
+use crate::sql::{single_col_partition_query, CXQuery};
 use anyhow::anyhow;
 use fehler::{throw, throws};
 #[cfg(feature = "src_bigquery")]
@@ -59,6 +86,16 @@ use tokio::net::TcpStream;
 use tokio::runtime::Runtime;
 #[cfg(feature = "src_mssql_tiberius")]
 use tokio_util::compat::TokioAsyncWriteCompatExt;
+#[cfg(any(
+    feature = "src_postgres",
+    feature = "src_mysql",
+    feature = "src_mssql_tiberius",
+    feature = "src_oracle",
+    feature = "src_bigquery",
+    feature = "src_trino",
+    feature = "src_clickhouse",
+    feature = "src_sqlite",
+))]
 use url::Url;
 
 /// Request to split a query into `num` range partitions on an integer `column`.
