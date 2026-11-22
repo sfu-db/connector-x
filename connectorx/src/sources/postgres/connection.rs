@@ -76,6 +76,7 @@ fn strip_bad_opts(url: &Url) -> Url {
     remove_query_params(url, &["sslkey", "sslcert", "sslrootcert"])
 }
 
+/// Split the TLS options (`sslmode`, `sslcert`, `sslkey`, `sslrootcert`) off the URL and build the matching TLS connector, if any.
 pub fn rewrite_tls_args(
     conn: &Url,
 ) -> Result<(Config, Option<MakeTlsConnector>), PostgresSourceError> {
@@ -143,5 +144,33 @@ mod tests {
         let (config, connector) = rewrite_tls_args(&url).unwrap();
         assert_eq!(config.get_application_name(), Some("connectorx"));
         assert!(connector.is_none());
+    }
+
+    /// `prefer` (the default) and `require` build a connector that does not
+    /// verify the server; nothing is contacted.
+    #[test]
+    fn builds_a_connector_for_tls_modes() {
+        for query in ["", "?sslmode=prefer", "?sslmode=require"] {
+            let url = Url::parse(&format!("postgresql://localhost/db{query}")).unwrap();
+            let (config, connector) = rewrite_tls_args(&url).unwrap();
+            assert_ne!(config.get_ssl_mode(), SslMode::Disable, "{query}");
+            assert!(connector.is_some(), "{query}");
+        }
+    }
+
+    /// Certificate files that cannot be read are reported as errors.
+    #[test]
+    fn missing_certificate_files_are_errors() {
+        for query in [
+            "sslmode=require&sslrootcert=/no/such/root.crt",
+            "sslmode=require&sslcert=/no/such/client.crt&sslkey=/no/such/client.key",
+        ] {
+            let url = Url::parse(&format!("postgresql://localhost/db?{query}")).unwrap();
+            assert!(rewrite_tls_args(&url).is_err(), "{query}");
+        }
+        // Only a certificate, without its key, is ignored rather than half-applied.
+        let url =
+            Url::parse("postgresql://localhost/db?sslmode=require&sslcert=/no/such/c.crt").unwrap();
+        assert!(rewrite_tls_args(&url).unwrap().1.is_some());
     }
 }

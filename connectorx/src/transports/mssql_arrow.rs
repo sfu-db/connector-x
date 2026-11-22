@@ -15,14 +15,18 @@ use uuid_old::Uuid;
 /// Convert MsSQL data types to Arrow data types.
 pub struct MsSQLArrowTransport;
 
+/// Errors raised while moving data from the SQL Server source to the Arrow destination.
 #[derive(Error, Debug)]
 pub enum MsSQLArrowTransportError {
+    /// Error from the SQL Server source.
     #[error(transparent)]
     Source(#[from] MsSQLSourceError),
 
+    /// Error from the Arrow destination.
     #[error(transparent)]
     Destination(#[from] ArrowDestinationError),
 
+    /// Generic ConnectorX error.
     #[error(transparent)]
     ConnectorX(#[from] crate::errors::ConnectorXError),
 }

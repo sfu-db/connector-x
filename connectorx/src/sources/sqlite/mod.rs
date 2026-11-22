@@ -25,6 +25,7 @@ use std::convert::TryFrom;
 pub use typesystem::SQLiteTypeSystem;
 use urlencoding::decode;
 
+/// Source that reads from a SQLite database file.
 pub struct SQLiteSource {
     pool: Pool<SqliteConnectionManager>,
     origin_query: Option<String>,
@@ -34,6 +35,7 @@ pub struct SQLiteSource {
 }
 
 impl SQLiteSource {
+    /// Create a source with a pool of up to `nconn` connections.
     #[throws(SQLiteSourceError)]
     pub fn new(conn: &str, nconn: usize) -> Self {
         let decoded_conn = decode(conn)?.into_owned();
@@ -200,6 +202,7 @@ where
     }
 }
 
+/// One partition of a [`SQLiteSource`].
 pub struct SQLiteSourcePartition {
     conn: PooledConnection<SqliteConnectionManager>,
     query: CXQuery<String>,
@@ -209,6 +212,7 @@ pub struct SQLiteSourcePartition {
 }
 
 impl SQLiteSourcePartition {
+    /// Create a partition that runs `query` on `conn`.
     pub fn new(
         conn: PooledConnection<SqliteConnectionManager>,
         query: &CXQuery<String>,
@@ -254,6 +258,7 @@ impl SourcePartition for SQLiteSourcePartition {
 
 unsafe impl<'a> Send for SQLiteSourcePartitionParser<'a> {}
 
+/// Row parser for a SQLite partition.
 pub struct SQLiteSourcePartitionParser<'a> {
     rows: OwningHandle<Box<Statement<'a>>, DummyBox<Rows<'a>>>,
     ncols: usize,
@@ -263,6 +268,7 @@ pub struct SQLiteSourcePartitionParser<'a> {
 }
 
 impl<'a> SQLiteSourcePartitionParser<'a> {
+    /// Prepare and run `query` on `conn`.
     #[throws(SQLiteSourceError)]
     pub fn new(
         conn: &'a PooledConnection<SqliteConnectionManager>,
@@ -366,3 +372,6 @@ impl_produce!(
     NaiveDateTime,
     Vec<u8>,
 );
+
+#[cfg(all(test, feature = "dst_arrow"))]
+mod tests;

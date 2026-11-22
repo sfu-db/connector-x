@@ -50,50 +50,90 @@ pub enum DataType {
     ArrayDecimal(Vec<Option<Decimal>>),
 }
 
+/// Column types of the ClickHouse source. The `bool` is `true` when the column is nullable.
 #[derive(Clone, Copy, Debug)]
 pub enum ClickHouseTypeSystem {
+    /// ClickHouse `Int8`, read as `i8`.
     Int8(bool),
+    /// ClickHouse `Int16`, read as `i16`.
     Int16(bool),
+    /// ClickHouse `Int32`, read as `i32`.
     Int32(bool),
+    /// ClickHouse `Int64`, read as `i64`.
     Int64(bool),
+    /// ClickHouse `UInt8`, read as `u8`.
     UInt8(bool),
+    /// ClickHouse `UInt16`, read as `u16`.
     UInt16(bool),
+    /// ClickHouse `UInt32`, read as `u32`.
     UInt32(bool),
+    /// ClickHouse `UInt64`, read as `u64`.
     UInt64(bool),
+    /// ClickHouse `Float32`, read as `f32`.
     Float32(bool),
+    /// ClickHouse `Float64`, read as `f64`.
     Float64(bool),
+    /// ClickHouse `Decimal(P, S)`, read as `Decimal`.
     Decimal(bool),
+    /// ClickHouse `String`, read as `String`. Also the fallback for types not listed here.
     String(bool),
+    /// ClickHouse `FixedString(N)`, read as `Vec<u8>`.
     FixedString(bool),
+    /// ClickHouse `Date`, read as `NaiveDate`.
     Date(bool),
+    /// ClickHouse `Date32`, read as `NaiveDate`.
     Date32(bool),
+    /// ClickHouse `Time`, read as `NaiveTime`.
     Time(bool),
+    /// ClickHouse `Time64(P)`, read as `NaiveTime`.
     Time64(bool),
+    /// ClickHouse `DateTime`, read as `DateTime<Utc>`.
     DateTime(bool),
+    /// ClickHouse `DateTime64(P)`, read as `DateTime<Utc>`.
     DateTime64(bool),
+    /// ClickHouse `Enum8`, read as the variant name (`String`).
     Enum8(bool),
+    /// ClickHouse `Enum16`, read as the variant name (`String`).
     Enum16(bool),
+    /// ClickHouse `UUID`, read as `Uuid`.
     UUID(bool),
+    /// ClickHouse `IPv4`, read as `IpAddr`.
     IPv4(bool),
+    /// ClickHouse `IPv6`, read as `IpAddr`.
     IPv6(bool),
+    /// ClickHouse `Bool`, read as `bool`.
     Bool(bool),
     // ClickHouse supports arrays of any type,
     // but for simplicity we only define arrays of primitive types here.
+    /// ClickHouse `Array(Bool)`, read as `Vec<Option<bool>>`.
     ArrayBool(bool),
+    /// ClickHouse `Array(String)`, read as `Vec<Option<String>>`.
     ArrayString(bool),
+    /// ClickHouse `Array(Int8)`, read as `Vec<Option<i8>>`.
     ArrayInt8(bool),
+    /// ClickHouse `Array(Int16)`, read as `Vec<Option<i16>>`.
     ArrayInt16(bool),
+    /// ClickHouse `Array(Int32)`, read as `Vec<Option<i32>>`.
     ArrayInt32(bool),
+    /// ClickHouse `Array(Int64)`, read as `Vec<Option<i64>>`.
     ArrayInt64(bool),
+    /// ClickHouse `Array(UInt8)`, read as `Vec<Option<u8>>`.
     ArrayUInt8(bool),
+    /// ClickHouse `Array(UInt16)`, read as `Vec<Option<u16>>`.
     ArrayUInt16(bool),
+    /// ClickHouse `Array(UInt32)`, read as `Vec<Option<u32>>`.
     ArrayUInt32(bool),
+    /// ClickHouse `Array(UInt64)`, read as `Vec<Option<u64>>`.
     ArrayUInt64(bool),
+    /// ClickHouse `Array(Float32)`, read as `Vec<Option<f32>>`.
     ArrayFloat32(bool),
+    /// ClickHouse `Array(Float64)`, read as `Vec<Option<f64>>`.
     ArrayFloat64(bool),
+    /// ClickHouse `Array(Decimal)`, read as `Vec<Option<Decimal>>`.
     ArrayDecimal(bool),
 }
 
+/// Extra information parsed from a ClickHouse type string that the type itself does not carry.
 #[derive(Clone, Debug, Default)]
 pub struct TypeMetadata {
     /// Decimal
@@ -147,6 +187,7 @@ impl_typesystem! {
 }
 
 impl ClickHouseTypeSystem {
+    /// Parse a ClickHouse type string such as `Nullable(Decimal(18, 4))` into a type and its metadata.
     pub fn from_type_str_with_metadata(type_str: &str) -> (Self, TypeMetadata) {
         use ClickHouseTypeSystem::*;
 
@@ -238,6 +279,7 @@ impl ClickHouseTypeSystem {
         (ts, metadata)
     }
 
+    /// Parse a ClickHouse type string, discarding the metadata.
     pub fn from_type_str(type_str: &str) -> Self {
         Self::from_type_str_with_metadata(type_str).0
     }
@@ -365,6 +407,7 @@ impl ClickHouseTypeSystem {
             .into()
     }
 
+    /// Whether the column is nullable.
     pub fn is_nullable(&self) -> bool {
         match self {
             ClickHouseTypeSystem::Int8(nullable)
@@ -457,5 +500,116 @@ mod tests {
             ClickHouseTypeSystem::from_type_str("UnsupportedType"),
             ClickHouseTypeSystem::String(false)
         ));
+    }
+
+    /// Every scalar and array type name, bare and wrapped in `Nullable`.
+    #[test]
+    fn maps_every_type_name_and_its_nullability() {
+        use ClickHouseTypeSystem::*;
+        let dbg = |t: ClickHouseTypeSystem| format!("{t:?}");
+        type Variant = fn(bool) -> ClickHouseTypeSystem;
+        let cases: [(&str, Variant); 38] = [
+            ("Int8", Int8),
+            ("Int16", Int16),
+            ("Int32", Int32),
+            ("Int64", Int64),
+            ("UInt8", UInt8),
+            ("UInt16", UInt16),
+            ("UInt32", UInt32),
+            ("UInt64", UInt64),
+            ("Float32", Float32),
+            ("Float64", Float64),
+            ("Decimal(9, 2)", Decimal),
+            ("String", String),
+            ("FixedString(4)", FixedString),
+            ("Date", Date),
+            ("Date32", Date32),
+            ("Time", Time),
+            ("Time64(6)", Time64),
+            ("DateTime", DateTime),
+            ("DateTime64(3)", DateTime64),
+            ("UUID", UUID),
+            ("Bool", Bool),
+            ("IPv4", IPv4),
+            ("IPv6", IPv6),
+            ("Enum8('a' = 1)", Enum8),
+            ("Enum16('a' = 1000)", Enum16),
+            ("Array(Bool)", ArrayBool),
+            ("Array(String)", ArrayString),
+            ("Array(Int8)", ArrayInt8),
+            ("Array(Int16)", ArrayInt16),
+            ("Array(Int32)", ArrayInt32),
+            ("Array(Int64)", ArrayInt64),
+            ("Array(UInt8)", ArrayUInt8),
+            ("Array(UInt16)", ArrayUInt16),
+            ("Array(UInt32)", ArrayUInt32),
+            ("Array(UInt64)", ArrayUInt64),
+            ("Array(Float32)", ArrayFloat32),
+            ("Array(Float64)", ArrayFloat64),
+            ("Array(Decimal(10, 2))", ArrayDecimal),
+        ];
+        for (name, variant) in cases {
+            let ty = ClickHouseTypeSystem::from_type_str(name);
+            assert_eq!(dbg(ty), dbg(variant(false)), "{name}");
+            assert!(!ty.is_nullable(), "{name}");
+            let nullable = format!("Nullable({name})");
+            let ty = ClickHouseTypeSystem::from_type_str(&nullable);
+            assert_eq!(dbg(ty), dbg(variant(true)), "{nullable}");
+            assert!(ty.is_nullable(), "{nullable}");
+        }
+        // Surrounding whitespace is ignored; LowCardinality keeps the
+        // nullability of what it wraps.
+        for (name, expected) in [
+            ("  UInt8 ", UInt8(false)),
+            ("LowCardinality(Nullable(String))", String(true)),
+            // Arrays of types without an array variant fall back to strings.
+            ("Array(Date)", String(false)),
+            ("Array(Array(Int8))", String(false)),
+        ] {
+            let ty = ClickHouseTypeSystem::from_type_str(name);
+            assert_eq!(dbg(ty), dbg(expected), "{name}");
+        }
+    }
+
+    #[test]
+    fn parses_parameters_and_their_defaults() {
+        let meta = |s| ClickHouseTypeSystem::from_type_str_with_metadata(s).1;
+
+        // DateTime takes an optional timezone, DateTime64 a precision
+        // (default 3) and an optional timezone; unknown zones are dropped.
+        assert_eq!(
+            meta("DateTime('Europe/Berlin')").timezone.unwrap().name(),
+            "Europe/Berlin"
+        );
+        assert!(meta("DateTime").timezone.is_none());
+        assert!(meta("DateTime('Not/AZone')").timezone.is_none());
+        let m = meta("DateTime64(9)");
+        assert_eq!((m.precision, m.timezone), (9, None));
+        let m = meta("DateTime64");
+        assert_eq!(m.precision, 3);
+        let m = meta("DateTime64('Asia/Tokyo')");
+        assert_eq!((m.precision, m.timezone.unwrap().name()), (3, "Asia/Tokyo"));
+
+        // Time64 precision defaults to 3, FixedString length to 1, Decimal
+        // precision and scale to 0.
+        assert_eq!(meta("Time64(9)").precision, 9);
+        assert_eq!(meta("Time64").precision, 3);
+        assert_eq!(meta("FixedString").length, 1);
+        assert_eq!(meta("FixedString(x)").length, 1);
+        let m = meta("Decimal");
+        assert_eq!((m.precision, m.scale), (0, 0));
+        let m = meta("Decimal(38)");
+        assert_eq!((m.precision, m.scale), (38, 0));
+
+        // Enum labels may contain escaped quotes and negative values.
+        let values = meta("Enum16('it\\'s' = -300, 'b' = 2)")
+            .named_values
+            .unwrap();
+        assert_eq!(
+            values.get(&-300).map(std::string::String::as_str),
+            Some("it's")
+        );
+        assert_eq!(values.get(&2).map(std::string::String::as_str), Some("b"));
+        assert!(meta("Nullable(Enum8('x' = 1))").named_values.is_some());
     }
 }

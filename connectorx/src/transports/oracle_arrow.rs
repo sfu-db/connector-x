@@ -10,18 +10,23 @@ use chrono::{DateTime, NaiveDateTime, Utc};
 use rust_decimal::Decimal;
 use thiserror::Error;
 
+/// Errors raised while moving data from the Oracle source to the Arrow destination.
 #[derive(Error, Debug)]
 pub enum OracleArrowTransportError {
+    /// Error from the Oracle source.
     #[error(transparent)]
     Source(#[from] OracleSourceError),
 
+    /// Error from the Arrow destination.
     #[error(transparent)]
     Destination(#[from] ArrowDestinationError),
 
+    /// Generic ConnectorX error.
     #[error(transparent)]
     ConnectorX(#[from] crate::errors::ConnectorXError),
 }
 
+/// Transport from the Oracle source to the Arrow destination.
 pub struct OracleArrowTransport;
 
 impl_transport!(

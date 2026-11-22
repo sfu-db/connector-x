@@ -5,19 +5,32 @@ use prusto::{PrestoFloat, PrestoInt, PrestoTy};
 use std::convert::TryFrom;
 
 // TODO: implement Tuple, Row, Array and Map
+/// Column types of the Trino source. The `bool` is `true` when the column is nullable.
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum TrinoTypeSystem {
+    /// Trino `DATE`, read as `NaiveDate`.
     Date(bool),
+    /// Trino `TIME`, read as `NaiveTime`.
     Time(bool),
+    /// Trino `TIMESTAMP`, read as `NaiveDateTime`.
     Timestamp(bool),
+    /// Trino `BOOLEAN`, read as `bool`.
     Boolean(bool),
+    /// Trino `BIGINT`, read as `i64`.
     Bigint(bool),
+    /// Trino `INTEGER`, read as `i32`.
     Integer(bool),
+    /// Trino `SMALLINT`, read as `i16`.
     Smallint(bool),
+    /// Trino `TINYINT`, read as `i8`.
     Tinyint(bool),
+    /// Trino `DOUBLE`, read as `f64`. `DECIMAL` is read this way too.
     Double(bool),
+    /// Trino `REAL`, read as `f32`.
     Real(bool),
+    /// Trino `VARCHAR`, read as `String`. `VARBINARY`, `JSON`, `UUID`, `IPADDRESS`, and the `ROW`, `ARRAY` and `MAP` types are read this way too.
     Varchar(bool),
+    /// Trino `CHAR`, read as `char`.
     Char(bool),
 }
 
