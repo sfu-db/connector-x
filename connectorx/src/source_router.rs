@@ -8,24 +8,39 @@ use redshift_iam::redshift_to_postgres;
 use std::convert::TryFrom;
 use url::Url;
 
+/// Database kind, derived from the connection string scheme.
 #[derive(Debug, Clone)]
 pub enum SourceType {
+    /// `postgres://`, `postgresql://` or `redshift-iam://`.
     Postgres,
+    /// `sqlite://`.
     SQLite,
+    /// `mysql://`.
     MySQL,
+    /// `mssql://` (SQL Server).
     MsSQL,
+    /// `oracle://`.
     Oracle,
+    /// `bigquery://`.
     BigQuery,
+    /// `duckdb://`.
     DuckDB,
+    /// `trino://`.
     Trino,
+    /// `clickhouse://`.
     ClickHouse,
+    /// Any other scheme.
     Unknown,
 }
 
+/// Parsed connection string.
 #[derive(Debug, Clone)]
 pub struct SourceConn {
+    /// Database kind.
     pub ty: SourceType,
+    /// Connection URL without the `cxprotocol` parameter.
     pub conn: Url,
+    /// ConnectorX protocol to use, `binary` by default.
     pub proto: String,
 }
 
@@ -68,14 +83,17 @@ impl TryFrom<&str> for SourceConn {
 }
 
 impl SourceConn {
+    /// Create a connection from its parts.
     pub fn new(ty: SourceType, conn: Url, proto: String) -> Self {
         Self { ty, conn, proto }
     }
+    /// Override the protocol.
     pub fn set_protocol(&mut self, protocol: &str) {
         self.proto = protocol.to_string();
     }
 }
 
+/// Parse a connection string, overriding the protocol when `protocol` is given.
 #[throws(ConnectorXError)]
 pub fn parse_source(conn: &str, protocol: Option<&str>) -> SourceConn {
     let mut source_conn = SourceConn::try_from(conn)?;
