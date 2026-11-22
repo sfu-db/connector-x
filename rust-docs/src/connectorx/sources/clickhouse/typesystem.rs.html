@@ -463,5 +463,116 @@
 <a href=#463 id=463 data-nosnippet>463</a>            ClickHouseTypeSystem::String(<span class="bool-val">false</span>)
 <a href=#464 id=464 data-nosnippet>464</a>        ));
 <a href=#465 id=465 data-nosnippet>465</a>    }
-<a href=#466 id=466 data-nosnippet>466</a>}
+<a href=#466 id=466 data-nosnippet>466</a>
+<a href=#467 id=467 data-nosnippet>467</a>    <span class="doccomment">/// Every scalar and array type name, bare and wrapped in `Nullable`.
+<a href=#468 id=468 data-nosnippet>468</a>    </span><span class="attr">#[test]
+<a href=#469 id=469 data-nosnippet>469</a>    </span><span class="kw">fn </span>maps_every_type_name_and_its_nullability() {
+<a href=#470 id=470 data-nosnippet>470</a>        <span class="kw">use </span>ClickHouseTypeSystem::<span class="kw-2">*</span>;
+<a href=#471 id=471 data-nosnippet>471</a>        <span class="kw">let </span>dbg = |t: ClickHouseTypeSystem| <span class="macro">format!</span>(<span class="string">"{t:?}"</span>);
+<a href=#472 id=472 data-nosnippet>472</a>        <span class="kw">type </span>Variant = <span class="kw">fn</span>(bool) -&gt; ClickHouseTypeSystem;
+<a href=#473 id=473 data-nosnippet>473</a>        <span class="kw">let </span>cases: [(<span class="kw-2">&amp;</span>str, Variant); <span class="number">38</span>] = [
+<a href=#474 id=474 data-nosnippet>474</a>            (<span class="string">"Int8"</span>, Int8),
+<a href=#475 id=475 data-nosnippet>475</a>            (<span class="string">"Int16"</span>, Int16),
+<a href=#476 id=476 data-nosnippet>476</a>            (<span class="string">"Int32"</span>, Int32),
+<a href=#477 id=477 data-nosnippet>477</a>            (<span class="string">"Int64"</span>, Int64),
+<a href=#478 id=478 data-nosnippet>478</a>            (<span class="string">"UInt8"</span>, UInt8),
+<a href=#479 id=479 data-nosnippet>479</a>            (<span class="string">"UInt16"</span>, UInt16),
+<a href=#480 id=480 data-nosnippet>480</a>            (<span class="string">"UInt32"</span>, UInt32),
+<a href=#481 id=481 data-nosnippet>481</a>            (<span class="string">"UInt64"</span>, UInt64),
+<a href=#482 id=482 data-nosnippet>482</a>            (<span class="string">"Float32"</span>, Float32),
+<a href=#483 id=483 data-nosnippet>483</a>            (<span class="string">"Float64"</span>, Float64),
+<a href=#484 id=484 data-nosnippet>484</a>            (<span class="string">"Decimal(9, 2)"</span>, Decimal),
+<a href=#485 id=485 data-nosnippet>485</a>            (<span class="string">"String"</span>, String),
+<a href=#486 id=486 data-nosnippet>486</a>            (<span class="string">"FixedString(4)"</span>, FixedString),
+<a href=#487 id=487 data-nosnippet>487</a>            (<span class="string">"Date"</span>, Date),
+<a href=#488 id=488 data-nosnippet>488</a>            (<span class="string">"Date32"</span>, Date32),
+<a href=#489 id=489 data-nosnippet>489</a>            (<span class="string">"Time"</span>, Time),
+<a href=#490 id=490 data-nosnippet>490</a>            (<span class="string">"Time64(6)"</span>, Time64),
+<a href=#491 id=491 data-nosnippet>491</a>            (<span class="string">"DateTime"</span>, DateTime),
+<a href=#492 id=492 data-nosnippet>492</a>            (<span class="string">"DateTime64(3)"</span>, DateTime64),
+<a href=#493 id=493 data-nosnippet>493</a>            (<span class="string">"UUID"</span>, UUID),
+<a href=#494 id=494 data-nosnippet>494</a>            (<span class="string">"Bool"</span>, Bool),
+<a href=#495 id=495 data-nosnippet>495</a>            (<span class="string">"IPv4"</span>, IPv4),
+<a href=#496 id=496 data-nosnippet>496</a>            (<span class="string">"IPv6"</span>, IPv6),
+<a href=#497 id=497 data-nosnippet>497</a>            (<span class="string">"Enum8('a' = 1)"</span>, Enum8),
+<a href=#498 id=498 data-nosnippet>498</a>            (<span class="string">"Enum16('a' = 1000)"</span>, Enum16),
+<a href=#499 id=499 data-nosnippet>499</a>            (<span class="string">"Array(Bool)"</span>, ArrayBool),
+<a href=#500 id=500 data-nosnippet>500</a>            (<span class="string">"Array(String)"</span>, ArrayString),
+<a href=#501 id=501 data-nosnippet>501</a>            (<span class="string">"Array(Int8)"</span>, ArrayInt8),
+<a href=#502 id=502 data-nosnippet>502</a>            (<span class="string">"Array(Int16)"</span>, ArrayInt16),
+<a href=#503 id=503 data-nosnippet>503</a>            (<span class="string">"Array(Int32)"</span>, ArrayInt32),
+<a href=#504 id=504 data-nosnippet>504</a>            (<span class="string">"Array(Int64)"</span>, ArrayInt64),
+<a href=#505 id=505 data-nosnippet>505</a>            (<span class="string">"Array(UInt8)"</span>, ArrayUInt8),
+<a href=#506 id=506 data-nosnippet>506</a>            (<span class="string">"Array(UInt16)"</span>, ArrayUInt16),
+<a href=#507 id=507 data-nosnippet>507</a>            (<span class="string">"Array(UInt32)"</span>, ArrayUInt32),
+<a href=#508 id=508 data-nosnippet>508</a>            (<span class="string">"Array(UInt64)"</span>, ArrayUInt64),
+<a href=#509 id=509 data-nosnippet>509</a>            (<span class="string">"Array(Float32)"</span>, ArrayFloat32),
+<a href=#510 id=510 data-nosnippet>510</a>            (<span class="string">"Array(Float64)"</span>, ArrayFloat64),
+<a href=#511 id=511 data-nosnippet>511</a>            (<span class="string">"Array(Decimal(10, 2))"</span>, ArrayDecimal),
+<a href=#512 id=512 data-nosnippet>512</a>        ];
+<a href=#513 id=513 data-nosnippet>513</a>        <span class="kw">for </span>(name, variant) <span class="kw">in </span>cases {
+<a href=#514 id=514 data-nosnippet>514</a>            <span class="kw">let </span>ty = ClickHouseTypeSystem::from_type_str(name);
+<a href=#515 id=515 data-nosnippet>515</a>            <span class="macro">assert_eq!</span>(dbg(ty), dbg(variant(<span class="bool-val">false</span>)), <span class="string">"{name}"</span>);
+<a href=#516 id=516 data-nosnippet>516</a>            <span class="macro">assert!</span>(!ty.is_nullable(), <span class="string">"{name}"</span>);
+<a href=#517 id=517 data-nosnippet>517</a>            <span class="kw">let </span>nullable = <span class="macro">format!</span>(<span class="string">"Nullable({name})"</span>);
+<a href=#518 id=518 data-nosnippet>518</a>            <span class="kw">let </span>ty = ClickHouseTypeSystem::from_type_str(<span class="kw-2">&amp;</span>nullable);
+<a href=#519 id=519 data-nosnippet>519</a>            <span class="macro">assert_eq!</span>(dbg(ty), dbg(variant(<span class="bool-val">true</span>)), <span class="string">"{nullable}"</span>);
+<a href=#520 id=520 data-nosnippet>520</a>            <span class="macro">assert!</span>(ty.is_nullable(), <span class="string">"{nullable}"</span>);
+<a href=#521 id=521 data-nosnippet>521</a>        }
+<a href=#522 id=522 data-nosnippet>522</a>        <span class="comment">// Surrounding whitespace is ignored; LowCardinality keeps the
+<a href=#523 id=523 data-nosnippet>523</a>        // nullability of what it wraps.
+<a href=#524 id=524 data-nosnippet>524</a>        </span><span class="kw">for </span>(name, expected) <span class="kw">in </span>[
+<a href=#525 id=525 data-nosnippet>525</a>            (<span class="string">"  UInt8 "</span>, UInt8(<span class="bool-val">false</span>)),
+<a href=#526 id=526 data-nosnippet>526</a>            (<span class="string">"LowCardinality(Nullable(String))"</span>, String(<span class="bool-val">true</span>)),
+<a href=#527 id=527 data-nosnippet>527</a>            <span class="comment">// Arrays of types without an array variant fall back to strings.
+<a href=#528 id=528 data-nosnippet>528</a>            </span>(<span class="string">"Array(Date)"</span>, String(<span class="bool-val">false</span>)),
+<a href=#529 id=529 data-nosnippet>529</a>            (<span class="string">"Array(Array(Int8))"</span>, String(<span class="bool-val">false</span>)),
+<a href=#530 id=530 data-nosnippet>530</a>        ] {
+<a href=#531 id=531 data-nosnippet>531</a>            <span class="kw">let </span>ty = ClickHouseTypeSystem::from_type_str(name);
+<a href=#532 id=532 data-nosnippet>532</a>            <span class="macro">assert_eq!</span>(dbg(ty), dbg(expected), <span class="string">"{name}"</span>);
+<a href=#533 id=533 data-nosnippet>533</a>        }
+<a href=#534 id=534 data-nosnippet>534</a>    }
+<a href=#535 id=535 data-nosnippet>535</a>
+<a href=#536 id=536 data-nosnippet>536</a>    <span class="attr">#[test]
+<a href=#537 id=537 data-nosnippet>537</a>    </span><span class="kw">fn </span>parses_parameters_and_their_defaults() {
+<a href=#538 id=538 data-nosnippet>538</a>        <span class="kw">let </span>meta = |s| ClickHouseTypeSystem::from_type_str_with_metadata(s).<span class="number">1</span>;
+<a href=#539 id=539 data-nosnippet>539</a>
+<a href=#540 id=540 data-nosnippet>540</a>        <span class="comment">// DateTime takes an optional timezone, DateTime64 a precision
+<a href=#541 id=541 data-nosnippet>541</a>        // (default 3) and an optional timezone; unknown zones are dropped.
+<a href=#542 id=542 data-nosnippet>542</a>        </span><span class="macro">assert_eq!</span>(
+<a href=#543 id=543 data-nosnippet>543</a>            meta(<span class="string">"DateTime('Europe/Berlin')"</span>).timezone.unwrap().name(),
+<a href=#544 id=544 data-nosnippet>544</a>            <span class="string">"Europe/Berlin"
+<a href=#545 id=545 data-nosnippet>545</a>        </span>);
+<a href=#546 id=546 data-nosnippet>546</a>        <span class="macro">assert!</span>(meta(<span class="string">"DateTime"</span>).timezone.is_none());
+<a href=#547 id=547 data-nosnippet>547</a>        <span class="macro">assert!</span>(meta(<span class="string">"DateTime('Not/AZone')"</span>).timezone.is_none());
+<a href=#548 id=548 data-nosnippet>548</a>        <span class="kw">let </span>m = meta(<span class="string">"DateTime64(9)"</span>);
+<a href=#549 id=549 data-nosnippet>549</a>        <span class="macro">assert_eq!</span>((m.precision, m.timezone), (<span class="number">9</span>, <span class="prelude-val">None</span>));
+<a href=#550 id=550 data-nosnippet>550</a>        <span class="kw">let </span>m = meta(<span class="string">"DateTime64"</span>);
+<a href=#551 id=551 data-nosnippet>551</a>        <span class="macro">assert_eq!</span>(m.precision, <span class="number">3</span>);
+<a href=#552 id=552 data-nosnippet>552</a>        <span class="kw">let </span>m = meta(<span class="string">"DateTime64('Asia/Tokyo')"</span>);
+<a href=#553 id=553 data-nosnippet>553</a>        <span class="macro">assert_eq!</span>((m.precision, m.timezone.unwrap().name()), (<span class="number">3</span>, <span class="string">"Asia/Tokyo"</span>));
+<a href=#554 id=554 data-nosnippet>554</a>
+<a href=#555 id=555 data-nosnippet>555</a>        <span class="comment">// Time64 precision defaults to 3, FixedString length to 1, Decimal
+<a href=#556 id=556 data-nosnippet>556</a>        // precision and scale to 0.
+<a href=#557 id=557 data-nosnippet>557</a>        </span><span class="macro">assert_eq!</span>(meta(<span class="string">"Time64(9)"</span>).precision, <span class="number">9</span>);
+<a href=#558 id=558 data-nosnippet>558</a>        <span class="macro">assert_eq!</span>(meta(<span class="string">"Time64"</span>).precision, <span class="number">3</span>);
+<a href=#559 id=559 data-nosnippet>559</a>        <span class="macro">assert_eq!</span>(meta(<span class="string">"FixedString"</span>).length, <span class="number">1</span>);
+<a href=#560 id=560 data-nosnippet>560</a>        <span class="macro">assert_eq!</span>(meta(<span class="string">"FixedString(x)"</span>).length, <span class="number">1</span>);
+<a href=#561 id=561 data-nosnippet>561</a>        <span class="kw">let </span>m = meta(<span class="string">"Decimal"</span>);
+<a href=#562 id=562 data-nosnippet>562</a>        <span class="macro">assert_eq!</span>((m.precision, m.scale), (<span class="number">0</span>, <span class="number">0</span>));
+<a href=#563 id=563 data-nosnippet>563</a>        <span class="kw">let </span>m = meta(<span class="string">"Decimal(38)"</span>);
+<a href=#564 id=564 data-nosnippet>564</a>        <span class="macro">assert_eq!</span>((m.precision, m.scale), (<span class="number">38</span>, <span class="number">0</span>));
+<a href=#565 id=565 data-nosnippet>565</a>
+<a href=#566 id=566 data-nosnippet>566</a>        <span class="comment">// Enum labels may contain escaped quotes and negative values.
+<a href=#567 id=567 data-nosnippet>567</a>        </span><span class="kw">let </span>values = meta(<span class="string">"Enum16('it\\'s' = -300, 'b' = 2)"</span>)
+<a href=#568 id=568 data-nosnippet>568</a>            .named_values
+<a href=#569 id=569 data-nosnippet>569</a>            .unwrap();
+<a href=#570 id=570 data-nosnippet>570</a>        <span class="macro">assert_eq!</span>(
+<a href=#571 id=571 data-nosnippet>571</a>            values.get(<span class="kw-2">&amp;</span>-<span class="number">300</span>).map(std::string::String::as_str),
+<a href=#572 id=572 data-nosnippet>572</a>            <span class="prelude-val">Some</span>(<span class="string">"it's"</span>)
+<a href=#573 id=573 data-nosnippet>573</a>        );
+<a href=#574 id=574 data-nosnippet>574</a>        <span class="macro">assert_eq!</span>(values.get(<span class="kw-2">&amp;</span><span class="number">2</span>).map(std::string::String::as_str), <span class="prelude-val">Some</span>(<span class="string">"b"</span>));
+<a href=#575 id=575 data-nosnippet>575</a>        <span class="macro">assert!</span>(meta(<span class="string">"Nullable(Enum8('x' = 1))"</span>).named_values.is_some());
+<a href=#576 id=576 data-nosnippet>576</a>    }
+<a href=#577 id=577 data-nosnippet>577</a>}
 </code></pre></div></section></main></body></html>

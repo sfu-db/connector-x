@@ -98,5 +98,36 @@
 <a href=#98 id=98 data-nosnippet>98</a>            );
 <a href=#99 id=99 data-nosnippet>99</a>        }
 <a href=#100 id=100 data-nosnippet>100</a>    }
-<a href=#101 id=101 data-nosnippet>101</a>}
+<a href=#101 id=101 data-nosnippet>101</a>
+<a href=#102 id=102 data-nosnippet>102</a>    <span class="doccomment">/// The streaming destination gets the same rows as the batch one: every
+<a href=#103 id=103 data-nosnippet>103</a>    /// column of the fake server's table, read through the dispatcher.
+<a href=#104 id=104 data-nosnippet>104</a>    </span><span class="attr">#[test]
+<a href=#105 id=105 data-nosnippet>105</a>    </span><span class="kw">fn </span>dispatcher_streams_every_trino_type() {
+<a href=#106 id=106 data-nosnippet>106</a>        <span class="kw">use </span><span class="kw">crate</span>::dispatcher::Dispatcher;
+<a href=#107 id=107 data-nosnippet>107</a>        <span class="kw">use </span><span class="kw">crate</span>::sources::trino::fake_server::{every_type_table, FakeTrino};
+<a href=#108 id=108 data-nosnippet>108</a>        <span class="kw">use </span><span class="kw">crate</span>::sql::CXQuery;
+<a href=#109 id=109 data-nosnippet>109</a>        <span class="kw">use </span>std::sync::Arc;
+<a href=#110 id=110 data-nosnippet>110</a>
+<a href=#111 id=111 data-nosnippet>111</a>        <span class="kw">let </span>server = FakeTrino::start(every_type_table(), <span class="number">2</span>);
+<a href=#112 id=112 data-nosnippet>112</a>        <span class="kw">let </span>rt = Arc::new(tokio::runtime::Runtime::new().unwrap());
+<a href=#113 id=113 data-nosnippet>113</a>        <span class="kw">let </span>source = TrinoSource::new(rt, <span class="kw-2">&amp;</span>server.url()).unwrap();
+<a href=#114 id=114 data-nosnippet>114</a>        <span class="kw">let </span><span class="kw-2">mut </span>dst = ArrowDestination::new();
+<a href=#115 id=115 data-nosnippet>115</a>        <span class="kw">let </span>queries = [
+<a href=#116 id=116 data-nosnippet>116</a>            CXQuery::naked(<span class="string">"SELECT * FROM t WHERE id &gt;= 0 AND id &lt; 2"</span>),
+<a href=#117 id=117 data-nosnippet>117</a>            CXQuery::naked(<span class="string">"SELECT * FROM t WHERE id &gt;= 2 AND id &lt; 5"</span>),
+<a href=#118 id=118 data-nosnippet>118</a>        ];
+<a href=#119 id=119 data-nosnippet>119</a>        Dispatcher::&lt;<span class="kw">_</span>, <span class="kw">_</span>, TrinoArrowTransport&gt;::new(source, <span class="kw-2">&amp;mut </span>dst, <span class="kw-2">&amp;</span>queries, <span class="prelude-val">None</span>)
+<a href=#120 id=120 data-nosnippet>120</a>            .run()
+<a href=#121 id=121 data-nosnippet>121</a>            .unwrap();
+<a href=#122 id=122 data-nosnippet>122</a>
+<a href=#123 id=123 data-nosnippet>123</a>        <span class="kw">let </span>batches = dst.arrow().unwrap();
+<a href=#124 id=124 data-nosnippet>124</a>        <span class="macro">assert_eq!</span>(batches.iter().map(|b| b.num_rows()).sum::&lt;usize&gt;(), <span class="number">5</span>);
+<a href=#125 id=125 data-nosnippet>125</a>        <span class="kw">let </span>schema = batches[<span class="number">0</span>].schema();
+<a href=#126 id=126 data-nosnippet>126</a>        <span class="kw">let </span>names: Vec&lt;<span class="kw">_</span>&gt; = schema.fields().iter().map(|f| f.name().as_str()).collect();
+<a href=#127 id=127 data-nosnippet>127</a>        <span class="macro">assert_eq!</span>(
+<a href=#128 id=128 data-nosnippet>128</a>            names,
+<a href=#129 id=129 data-nosnippet>129</a>            [<span class="string">"id"</span>, <span class="string">"i"</span>, <span class="string">"s"</span>, <span class="string">"t"</span>, <span class="string">"d"</span>, <span class="string">"r"</span>, <span class="string">"dec"</span>, <span class="string">"b"</span>, <span class="string">"v"</span>, <span class="string">"c"</span>, <span class="string">"arr"</span>, <span class="string">"dt"</span>, <span class="string">"tm"</span>, <span class="string">"ts"</span>]
+<a href=#130 id=130 data-nosnippet>130</a>        );
+<a href=#131 id=131 data-nosnippet>131</a>    }
+<a href=#132 id=132 data-nosnippet>132</a>}
 </code></pre></div></section></main></body></html>
