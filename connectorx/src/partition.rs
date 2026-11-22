@@ -200,7 +200,10 @@ pub fn get_col_range(source_conn: &SourceConn, query: &str, col: &str) -> OutRes
         SourceType::Trino => trino_get_partition_range(&source_conn.conn, query, col),
         #[cfg(feature = "src_clickhouse")]
         SourceType::ClickHouse => clickhouse_get_partition_range(&source_conn.conn, query, col),
-        _ => unimplemented!("{:?} not implemented!", source_conn.ty),
+        _ => Err(ConnectorXOutError::SourceNotSupport(format!(
+            "{:?}",
+            source_conn.ty
+        ))),
     }
 }
 
@@ -246,7 +249,10 @@ pub fn get_part_query(
         SourceType::ClickHouse => {
             single_col_partition_query(query, col, lower, upper, &ClickHouseDialect {})?
         }
-        _ => unimplemented!("{:?} not implemented!", source_conn.ty),
+        _ => throw!(ConnectorXOutError::SourceNotSupport(format!(
+            "{:?}",
+            source_conn.ty
+        ))),
     };
     CXQuery::Wrapped(query)
 }
@@ -893,5 +899,19 @@ mod tests {
             "unexpected error message: {}",
             err
         );
+    }
+
+    /// A source without partition support is an error, not a panic, both when
+    /// the range has to be queried and when it is given.
+    #[test]
+    fn unsupported_source_is_an_error() {
+        let conn = SourceConn::try_from("nosuchdb://127.0.0.1:1/db").unwrap();
+
+        let err = get_col_range(&conn, "SELECT * FROM t", "id").unwrap_err();
+        assert_eq!(err.to_string(), "Source Unknown not supported.");
+
+        let part = PartitionQuery::new("SELECT * FROM t", "id", Some(0), Some(9), 2);
+        let err = partition(&part, &conn).unwrap_err();
+        assert_eq!(err.to_string(), "Source Unknown not supported.");
     }
 }
