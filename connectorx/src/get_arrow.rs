@@ -19,6 +19,7 @@ use postgres_openssl::MakeTlsConnector;
 #[allow(unused_imports)]
 use std::sync::Arc;
 
+/// Run `queries` against `source_conn` and collect the result in an [`ArrowDestination`].
 #[allow(unreachable_code, unreachable_patterns, unused_variables, unused_mut)]
 #[throws(ConnectorXOutError)]
 pub fn get_arrow(
@@ -270,6 +271,7 @@ pub fn get_arrow(
     destination
 }
 
+/// Run `queries` against `source_conn` and return an iterator yielding record batches of at most `batch_size` rows.
 #[allow(unreachable_code, unreachable_patterns, unused_variables, unused_mut)]
 #[throws(ConnectorXOutError)]
 pub fn new_record_batch_iter(

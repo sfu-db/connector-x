@@ -4,6 +4,7 @@ use fehler::{throw, throws};
 use rusqlite::types::Type;
 use std::convert::TryFrom;
 
+/// Column types of the SQLite source. The `bool` is `true` when the column is nullable.
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum SQLiteTypeSystem {
     Bool(bool),

@@ -1,6 +1,7 @@
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
 use gcp_bigquery_client::model::field_type::FieldType;
 
+/// Column types of the BigQuery source. The `bool` is `true` when the column is nullable.
 #[derive(Copy, Clone, Debug)]
 pub enum BigQueryTypeSystem {
     Bool(bool),

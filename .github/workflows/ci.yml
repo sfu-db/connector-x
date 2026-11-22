@@ -115,6 +115,11 @@ jobs:
 
       - name: Test build docs
         run: cargo doc --no-deps --features all
+        env:
+          # Fail on broken doc links and malformed HTML in doc comments.
+          # missing_docs is not denied yet: the crate still has undocumented
+          # public items (see #1051); it is reported as a warning by clippy.
+          RUSTDOCFLAGS: "-D rustdoc::broken_intra_doc_links -D rustdoc::invalid_html_tags"
 
   # release.yml ships wheels for Windows and macOS too, but the jobs above only
   # run on Linux. Run the unit tests (no databases needed) on those platforms
