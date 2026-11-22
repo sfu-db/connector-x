@@ -1,4 +1,5 @@
 use std::convert::TryFrom;
+#[cfg(feature = "src_clickhouse")]
 use std::sync::Arc;
 
 use crate::errors::{ConnectorXOutError, OutResult};
