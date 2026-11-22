@@ -59,17 +59,23 @@ pub trait ParameterizedOn<T>: ParameterizedFunc {
 
 /// Defines a rule to convert a type `T` to a type `U`.
 pub trait TypeConversion<T, U> {
+    /// Convert `val` from `T` to `U`.
     fn convert(val: T) -> U;
 }
 
 /// Transport asks the source to produce a value, do type conversion and then write
 /// the value to a destination. Do not manually implement this trait for types.
-/// Use [`impl_transport!`] to create a struct that implements this trait instead.
+/// Use [`impl_transport!`](crate::impl_transport) to create a struct that implements this trait instead.
 pub trait Transport {
+    /// Type system of the source.
     type TSS: TypeSystem;
+    /// Type system of the destination.
     type TSD: TypeSystem;
+    /// Source this transport reads from.
     type S: Source;
+    /// Destination this transport writes to.
     type D: Destination;
+    /// Error type, convertible from the source, destination and ConnectorX errors.
     type Error: From<ConnectorXError>
         + From<<Self::S as Source>::Error>
         + From<<Self::D as Destination>::Error>
@@ -101,6 +107,8 @@ pub trait Transport {
     where
         Self: 'd;
 
+    /// Return a function pointer that moves one value of source type `ts1` into the
+    /// destination as type `ts2`, or an error if no conversion rule exists.
     #[allow(clippy::type_complexity)]
     fn processor<'s, 'd>(
         ts1: Self::TSS,

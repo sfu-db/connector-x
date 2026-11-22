@@ -13,12 +13,14 @@ pub mod dummy;
 pub mod mssql;
 #[cfg(feature = "src_mysql")]
 pub mod mysql;
+/// Oracle source.
 #[cfg(feature = "src_oracle")]
 pub mod oracle;
 #[cfg(feature = "src_postgres")]
 pub mod postgres;
 #[cfg(feature = "src_sqlite")]
 pub mod sqlite;
+/// Trino source.
 #[cfg(feature = "src_trino")]
 pub mod trino;
 

@@ -3,6 +3,7 @@
 mod arrow_assoc;
 mod errors;
 mod funcs;
+/// Mapping between ConnectorX types and Arrow column types.
 pub mod typesystem;
 
 pub use self::errors::{ArrowDestinationError, Result};
@@ -32,6 +33,7 @@ type Builders = Vec<Builder>;
 /// A finished batch, or the error that stopped a partition.
 type Message = OutResult<RecordBatch>;
 
+/// Destination that sends Arrow record batches over a channel as partitions produce them.
 pub struct ArrowDestination {
     schema: Vec<ArrowTypeSystem>,
     names: Vec<String>,
@@ -58,10 +60,12 @@ impl Default for ArrowDestination {
 }
 
 impl ArrowDestination {
+    /// Create an empty destination with the default batch size ([`RECORD_BATCH_SIZE`]).
     pub fn new() -> Self {
         Self::default()
     }
 
+    /// Create an empty destination that sends batches of at most `batch_size` rows.
     pub fn new_with_batch_size(batch_size: usize) -> Self {
         let (tx, rx) = channel();
         ArrowDestination {
@@ -134,6 +138,7 @@ impl Destination for ArrowDestination {
 }
 
 impl ArrowDestination {
+    /// Consume the destination and collect every remaining record batch, returning the first error.
     #[throws(ConnectorXOutError)]
     pub fn arrow(self) -> Vec<RecordBatch> {
         if self.sender.is_some() {
@@ -164,19 +169,23 @@ impl ArrowDestination {
         Some(msg)
     }
 
+    /// Return an empty record batch with the result schema.
     pub fn empty_batch(&self) -> RecordBatch {
         RecordBatch::new_empty(self.arrow_schema.clone())
     }
 
+    /// Arrow schema of the result.
     pub fn arrow_schema(&self) -> Arc<Schema> {
         self.arrow_schema.clone()
     }
 
+    /// Column names of the result.
     pub fn names(&self) -> &[String] {
         self.names.as_slice()
     }
 }
 
+/// Writer for one partition of an [`ArrowDestination`].
 pub struct ArrowPartitionWriter {
     schema: Vec<ArrowTypeSystem>,
     builders: Option<Builders>,

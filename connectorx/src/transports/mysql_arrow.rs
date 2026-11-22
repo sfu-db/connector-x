@@ -17,14 +17,18 @@ use serde_json::{to_string, Value};
 use std::marker::PhantomData;
 use thiserror::Error;
 
+/// Errors raised while moving data from the MySQL source to the Arrow destination.
 #[derive(Error, Debug)]
 pub enum MySQLArrowTransportError {
+    /// Error from the MySQL source.
     #[error(transparent)]
     Source(#[from] MySQLSourceError),
 
+    /// Error from the Arrow destination.
     #[error(transparent)]
     Destination(#[from] ArrowDestinationError),
 
+    /// Generic ConnectorX error.
     #[error(transparent)]
     ConnectorX(#[from] crate::errors::ConnectorXError),
 }
