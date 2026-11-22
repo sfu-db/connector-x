@@ -12,10 +12,15 @@ use chrono::{DateTime, Utc};
 /// For all the destinations, they must support writing any value whose type is defined by DummyTypeSystem.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum CSVTypeSystem {
+    /// A floating-point value, read as `f64`.
     F64(bool),
+    /// An integer value, read as `i64`.
     I64(bool),
+    /// A boolean value, read as `bool`.
     Bool(bool),
+    /// A string value, read as `String`.
     String(bool),
+    /// A timestamp, read as `DateTime<Utc>`.
     DateTime(bool),
 }
 
