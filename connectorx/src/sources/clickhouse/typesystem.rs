@@ -50,6 +50,7 @@ pub enum DataType {
     ArrayDecimal(Vec<Option<Decimal>>),
 }
 
+/// Column types of the ClickHouse source. The `bool` is `true` when the column is nullable.
 #[derive(Clone, Copy, Debug)]
 pub enum ClickHouseTypeSystem {
     Int8(bool),
@@ -94,6 +95,7 @@ pub enum ClickHouseTypeSystem {
     ArrayDecimal(bool),
 }
 
+/// Extra information parsed from a ClickHouse type string that the type itself does not carry.
 #[derive(Clone, Debug, Default)]
 pub struct TypeMetadata {
     /// Decimal
@@ -147,6 +149,7 @@ impl_typesystem! {
 }
 
 impl ClickHouseTypeSystem {
+    /// Parse a ClickHouse type string such as `Nullable(Decimal(18, 4))` into a type and its metadata.
     pub fn from_type_str_with_metadata(type_str: &str) -> (Self, TypeMetadata) {
         use ClickHouseTypeSystem::*;
 
@@ -238,6 +241,7 @@ impl ClickHouseTypeSystem {
         (ts, metadata)
     }
 
+    /// Parse a ClickHouse type string, discarding the metadata.
     pub fn from_type_str(type_str: &str) -> Self {
         Self::from_type_str_with_metadata(type_str).0
     }
@@ -365,6 +369,7 @@ impl ClickHouseTypeSystem {
             .into()
     }
 
+    /// Whether the column is nullable.
     pub fn is_nullable(&self) -> bool {
         match self {
             ClickHouseTypeSystem::Int8(nullable)

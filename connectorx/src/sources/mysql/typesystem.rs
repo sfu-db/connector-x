@@ -3,34 +3,62 @@ use r2d2_mysql::mysql::consts::{ColumnFlags, ColumnType};
 use rust_decimal::Decimal;
 use serde_json::Value;
 
+/// Column types of the MySQL source. The `bool` is `true` when the column is nullable.
 #[derive(Copy, Clone, Debug)]
 pub enum MySQLTypeSystem {
+    /// MySQL `FLOAT`.
     Float(bool),
+    /// MySQL `DOUBLE`.
     Double(bool),
+    /// MySQL `TINYINT`.
     Tiny(bool),
+    /// MySQL `SMALLINT`.
     Short(bool),
+    /// MySQL `INT`.
     Long(bool),
+    /// MySQL `MEDIUMINT`.
     Int24(bool),
+    /// MySQL `BIGINT`.
     LongLong(bool),
+    /// MySQL `TINYINT UNSIGNED`.
     UTiny(bool),
+    /// MySQL `SMALLINT UNSIGNED`.
     UShort(bool),
+    /// MySQL `INT UNSIGNED`.
     ULong(bool),
+    /// MySQL `MEDIUMINT UNSIGNED`.
     UInt24(bool),
+    /// MySQL `BIGINT UNSIGNED`.
     ULongLong(bool),
+    /// MySQL `DATETIME`.
     Datetime(bool),
+    /// MySQL `DATE`.
     Date(bool),
+    /// MySQL `TIME`.
     Time(bool),
+    /// MySQL `DECIMAL`.
     Decimal(bool),
+    /// MySQL `CHAR`.
     Char(bool),
+    /// MySQL `VARCHAR` and the `TEXT` types.
     VarChar(bool),
+    /// MySQL `TIMESTAMP`.
     Timestamp(bool),
+    /// MySQL `YEAR`, read as `i16`.
     Year(bool),
+    /// MySQL `ENUM`, read as a string.
     Enum(bool),
+    /// MySQL `TINYBLOB` and `BINARY`.
     TinyBlob(bool),
+    /// MySQL `BLOB` and `VARBINARY`.
     Blob(bool),
+    /// MySQL `MEDIUMBLOB`.
     MediumBlob(bool),
+    /// MySQL `LONGBLOB`.
     LongBlob(bool),
+    /// MySQL `JSON`.
     Json(bool),
+    /// MySQL `BIT`, read as bytes.
     Bit(bool),
 }
 

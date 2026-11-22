@@ -12,11 +12,14 @@ use thiserror::Error;
 /// Convert Dummy data types to Arrow data types.
 pub struct DummyArrowTransport;
 
+/// Errors raised while moving data from the dummy source to the streaming Arrow destination.
 #[derive(Error, Debug)]
 pub enum DummyArrowTransportError {
+    /// Error from the streaming Arrow destination.
     #[error(transparent)]
     Destination(#[from] ArrowDestinationError),
 
+    /// Generic ConnectorX error.
     #[error(transparent)]
     ConnectorX(#[from] crate::errors::ConnectorXError),
 }

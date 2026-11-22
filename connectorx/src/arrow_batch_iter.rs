@@ -6,6 +6,7 @@ use log::debug;
 use rayon::prelude::*;
 use std::marker::PhantomData;
 
+/// Set the number of threads in rayon's global thread pool. Panics if the global pool was already built.
 pub fn set_global_num_thread(num: usize) {
     rayon::ThreadPoolBuilder::new()
         .num_threads(num)
@@ -47,6 +48,7 @@ where
         D = ArrowStreamDestination,
     >,
 {
+    /// Prepare the dispatcher for `queries` and return an iterator that has not started fetching yet.
     pub fn new(
         src: S,
         mut dst: ArrowStreamDestination,
@@ -204,8 +206,11 @@ where
     }
 }
 
+/// Object-safe interface over [`ArrowBatchIter`] for streaming Arrow record batches.
 pub trait RecordBatchIterator: Send {
+    /// Return an empty record batch carrying the result schema, together with the column names.
     fn get_schema(&self) -> (RecordBatch, &[String]);
+    /// Start fetching and writing the partitions in the background.
     fn prepare(&mut self);
     /// See [`ArrowBatchIter::next`] for the error semantics.
     fn next_batch(&mut self) -> Option<OutResult<RecordBatch>>;

@@ -1,23 +1,30 @@
 use std::string::FromUtf8Error;
 use thiserror::Error;
 
+/// Errors raised by the Oracle source.
 #[derive(Error, Debug)]
 pub enum OracleSourceError {
+    /// Generic ConnectorX error.
     #[error(transparent)]
     ConnectorXError(#[from] crate::errors::ConnectorXError),
 
+    /// Error from the `oracle` client.
     #[error(transparent)]
     OracleError(#[from] r2d2_oracle::oracle::Error),
 
+    /// Error from the connection pool.
     #[error(transparent)]
     OraclePoolError(#[from] r2d2::Error),
 
+    /// The connection string is not a valid URL.
     #[error(transparent)]
     OracleUrlError(#[from] url::ParseError),
 
+    /// A percent-encoded part of the connection string is not valid UTF-8.
     #[error(transparent)]
     OracleUrlDecodeError(#[from] FromUtf8Error),
 
+    /// A `NUMBER` value could not be converted to a decimal.
     #[error(transparent)]
     DecimalError(#[from] rust_decimal::Error),
 
