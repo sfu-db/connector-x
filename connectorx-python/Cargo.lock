@@ -1130,6 +1130,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "block2"
+version = "0.6.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cdeb9d870516001442e364c5220d3574d2da8dc765554b4a617230d33fa58ef5"
+dependencies = [
+ "objc2",
+]
+
+[[package]]
 name = "bnum"
 version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4515,13 +4524,14 @@ dependencies = [
 
 [[package]]
 name = "mssql-tds"
-version = "0.3.0"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c7a53513324677e601ca5b91e477840329ec6c244875fd55b155e5a8e8af7805"
+checksum = "812c3993a5f6d98e14da9d8ab0bf9f9f536e49c18240f34af9bae301e4d35ae8"
 dependencies = [
  "async-trait",
  "bigdecimal 0.4.11",
  "bitflags 2.13.2",
+ "block2",
  "byteorder",
  "bytes",
  "core-foundation 0.10.1",
@@ -4792,6 +4802,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "objc2"
+version = "0.6.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "08849bbd4767dfae9457696856ae1c84fe4e0281bbe4a7abff2d0e06fb7981f8"
+dependencies = [
+ "objc2-encode",
+]
+
+[[package]]
 name = "objc2-core-foundation"
 version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4799,6 +4818,12 @@ checksum = "2a180dd8642fa45cdb7dd721cd4c11b1cadd4929ce112ebd8b9f5803cc79d536"
 dependencies = [
  "bitflags 2.13.2",
 ]
+
+[[package]]
+name = "objc2-encode"
+version = "4.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ef25abbcd74fb2609453eb695bd2f860d389e457f67dc17cafc8b8cbc89d0c33"
 
 [[package]]
 name = "objc2-system-configuration"
@@ -7104,7 +7129,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32497e9a4c7b38532efcdebeef879707aa9f794296a4f0244f6f69e9bc8574bd"
 dependencies = [
  "fastrand",
- "getrandom 0.4.3",
+ "getrandom 0.3.4",
  "once_cell",
  "rustix 1.1.6",
  "windows-sys 0.61.2",
@@ -7631,7 +7656,7 @@ version = "2.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "86a801b3cea342a06d468c8710662aa29e5e05e4f5c0d62f00bbb7f2ad7941c2"
 dependencies = [
- "rand 0.10.4",
+ "rand 0.9.5",
 ]
 
 [[package]]
@@ -7981,7 +8006,7 @@ version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
- "windows-sys 0.61.2",
+ "windows-sys 0.48.0",
 ]
 
 [[package]]
