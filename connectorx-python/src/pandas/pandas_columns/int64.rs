@@ -21,6 +21,8 @@ impl<'a> ExtractBlockFromBound<'a> for Int64Block<'a> {
     fn extract_block<'b: 'a>(ob: &'b pyo3::Bound<'a, PyAny>) -> PyResult<Self> {
         if let Ok(array) = ob.cast::<PyArray<i64, Ix2>>() {
             check_dtype(ob, "int64")?;
+            // SAFETY: (A)/(B) in `pandas_columns`: the array was freshly allocated by
+            // `allocate_py` and this is the only view of it.
             let data = unsafe { array.as_array_mut() };
             Ok(Int64Block::NumPy(data))
         } else {
@@ -31,7 +33,10 @@ impl<'a> ExtractBlockFromBound<'a> for Int64Block<'a> {
             check_dtype(data, "int64")?;
             check_dtype(mask, "bool")?;
             Ok(Int64Block::Extention(
+                // SAFETY: (A)/(B): `data` and `mask` are the two distinct 1-d arrays
+                // `allocate_masked_array` put in this tuple; these are their only views.
                 unsafe { data.cast::<PyArray1<i64>>()?.as_array_mut() },
+                // SAFETY: see `data` above.
                 unsafe { mask.cast::<PyArray1<bool>>()?.as_array_mut() },
             ))
         }
@@ -80,7 +85,10 @@ pub struct Int64Column {
     mask: Option<*mut bool>,
 }
 
+// SAFETY: the pointers target numpy-owned memory that is not tied to a thread;
+// partitions write disjoint rows (B) and the arrays outlive them (A).
 unsafe impl Send for Int64Column {}
+// SAFETY: no `&self` method dereferences the pointers; writes need `&mut self`.
 unsafe impl Sync for Int64Column {}
 
 impl PandasColumnObject for Int64Column {
@@ -96,8 +104,12 @@ impl PandasColumnObject for Int64Column {
 impl PandasColumn<i64> for Int64Column {
     #[throws(ConnectorXPythonError)]
     fn write(&mut self, val: i64, row: usize) {
+        // SAFETY: `data` spans `nrow` elements (A); `row` lies in a range this
+        // partition reserved via `aquire_row` (B). `row < nrow` relies on (C),
+        // which is not checked.
         unsafe { *self.data.add(row) = val };
         if let Some(mask) = self.mask.as_mut() {
+            // SAFETY: `mask` has the same length as `data` (A); same `row` as above.
             unsafe { *mask.add(row) = false };
         }
     }
@@ -108,13 +120,16 @@ impl PandasColumn<Option<i64>> for Int64Column {
     fn write(&mut self, val: Option<i64>, row: usize) {
         match val {
             Some(val) => {
+                // SAFETY: as in the non-nullable `write` above: (A), (B), unchecked (C).
                 unsafe { *self.data.add(row) = val };
                 if let Some(mask) = self.mask.as_mut() {
+                    // SAFETY: `mask` has the same length as `data` (A); same `row` as above.
                     unsafe { *mask.add(row) = false };
                 }
             }
             None => {
                 if let Some(mask) = self.mask.as_mut() {
+                    // SAFETY: `mask` has the same length as `data` (A); `row` as in (B)/(C).
                     unsafe { *mask.add(row) = true };
                 } else {
                     panic!("Writing null i64 to not null pandas array")

@@ -2,6 +2,8 @@
 // connectorx error enums, and `PyString::ASCII` mirrors CPython's naming.
 #![allow(clippy::result_large_err)]
 #![allow(clippy::upper_case_acronyms)]
+// Every `unsafe` block in this crate must say which invariant it relies on.
+#![warn(clippy::undocumented_unsafe_blocks)]
 
 pub mod arrow;
 pub mod constants;

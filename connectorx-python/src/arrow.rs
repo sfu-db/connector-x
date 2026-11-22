@@ -111,6 +111,10 @@ pub fn get_arrow_rb_iter<'py>(
     )?;
 
     arrow_iter.prepare();
+    // SAFETY: only adds the `Sync` auto trait (`RecordBatchIterator: Send` already),
+    // so layout and vtable are unchanged. The `Sync` claim is false in general (e.g.
+    // `ArrowDestination` holds an mpsc `Receiver`); it relies on the only `&self`
+    // method, `get_schema`, reading just the immutable schema and names.
     let py_rb_iter = PyRecordBatchIterator(unsafe {
         std::mem::transmute::<
             Box<dyn RecordBatchIterator>,

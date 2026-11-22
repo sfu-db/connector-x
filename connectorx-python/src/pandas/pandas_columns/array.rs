@@ -17,6 +17,10 @@ use std::marker::PhantomData;
 pub struct PyList(Py<pyo3::types::PyList>);
 
 // In order to put it into a numpy array
+// SAFETY: `PyList` is `repr(transparent)` over `Py<_>`, i.e. one non-null
+// `PyObject*`, which is what an `object` dtype array stores; `IS_COPY` is false
+// and `clone_ref` only increfs. numpy does not check the Python type, so a slot
+// may hold the `0` from `zeros` or `None` rather than a `list`.
 unsafe impl Element for PyList {
     const IS_COPY: bool = false;
     fn get_dtype(py: Python<'_>) -> Bound<'_, PyArrayDescr> {
@@ -38,6 +42,8 @@ impl<'a, V> ExtractBlockFromBound<'a> for ArrayBlock<'a, V> {
     fn extract_block<'b: 'a>(ob: &'b pyo3::Bound<'a, PyAny>) -> PyResult<Self> {
         check_dtype(ob, "object")?;
         let array = ob.cast::<PyArray<PyList, Ix2>>()?;
+        // SAFETY: (A)/(B) in `pandas_columns`: the array was freshly allocated by
+        // `allocate_py` and this is the only view of it.
         let data = unsafe { array.as_array_mut() };
         Ok(ArrayBlock::<V> {
             data,
@@ -81,7 +87,14 @@ pub struct ArrayColumn<V> {
     buf_size: usize,
 }
 
+// SAFETY: `data` targets numpy-owned memory that is not tied to a thread;
+// partitions write disjoint rows (B), the array outlives them (A), and new
+// Python objects are only stored while attached and holding `GIL_MUTEX` (D).
+// `buffer: Vec<V>` is also sent, yet `V: Send` is not required here; it holds
+// only because `V` is always `bool`, `i64` or `f64` (unchecked).
 unsafe impl<V> Send for ArrayColumn<V> {}
+// SAFETY: no `&self` method dereferences `data` or reads `buffer`; writes need
+// `&mut self`. Like `Send`, this does not require `V: Sync` (unchecked).
 unsafe impl<V> Sync for ArrayColumn<V> {}
 
 impl<V> PandasColumnObject for ArrayColumn<V>
@@ -241,6 +254,9 @@ where
                 for (i, &len) in self.lengths.iter().enumerate() {
                     if len != usize::MAX {
                         let end = start + len;
+                        // SAFETY: slot store per (A)-(D) in `pandas_columns`: `row_idx[i]`
+                        // was reserved by this partition, bounds rely on unchecked (C), and
+                        // the old value dropped is the `0` from `zeros`, while attached.
                         unsafe {
                             // allocate and write in the same time
                             let n = pyo3::types::PyList::new(py, self.buffer[start..end].to_vec())?
@@ -249,6 +265,9 @@ where
                         };
                         start = end;
                     } else {
+                        // SAFETY: same slot store as above. `Py_None` is valid and
+                        // `from_borrowed_ptr` increfs it; the cast to `list` is a lie that
+                        // holds only because the slot is never used as a `list` in Rust.
                         unsafe {
                             let n = Bound::from_borrowed_ptr(py, pyo3::ffi::Py_None())
                                 .cast_into_unchecked::<pyo3::types::PyList>()

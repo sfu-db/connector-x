@@ -21,6 +21,8 @@ impl<'a> ExtractBlockFromBound<'a> for DateTimeBlock<'a> {
     fn extract_block<'b: 'a>(ob: &'b pyo3::Bound<'a, PyAny>) -> PyResult<Self> {
         check_dtype(ob, "int64")?;
         let array = ob.cast::<PyArray<i64, Ix2>>()?;
+        // SAFETY: (A)/(B) in `pandas_columns`: the array was freshly allocated by
+        // `allocate_py` and this is the only view of it.
         let data = unsafe { array.as_array_mut() };
         Ok(DateTimeBlock { data })
     }
@@ -52,7 +54,10 @@ pub struct DateTimeColumn {
     data: *mut i64,
 }
 
+// SAFETY: the pointer targets numpy-owned memory that is not tied to a thread;
+// partitions write disjoint rows (B) and the array outlives them (A).
 unsafe impl Send for DateTimeColumn {}
+// SAFETY: no `&self` method dereferences the pointer; writes need `&mut self`.
 unsafe impl Sync for DateTimeColumn {}
 
 impl PandasColumnObject for DateTimeColumn {
@@ -71,6 +76,9 @@ impl PandasColumnObject for DateTimeColumn {
 impl PandasColumn<DateTime<Utc>> for DateTimeColumn {
     #[throws(ConnectorXPythonError)]
     fn write(&mut self, val: DateTime<Utc>, row: usize) {
+        // SAFETY: `data` spans `nrow` elements (A); `row` lies in a range this
+        // partition reserved via `aquire_row` (B). `row < nrow` relies on (C),
+        // which is not checked.
         unsafe {
             *self.data.add(row) = val
                 .timestamp_nanos_opt()
@@ -83,6 +91,7 @@ impl PandasColumn<Option<DateTime<Utc>>> for DateTimeColumn {
     #[throws(ConnectorXPythonError)]
     fn write(&mut self, val: Option<DateTime<Utc>>, row: usize) {
         // numpy use i64::MIN as NaT
+        // SAFETY: as in the `DateTime<Utc>` `write` above: (A), (B), unchecked (C).
         unsafe {
             *self.data.add(row) = val
                 .map(|t| {
@@ -105,6 +114,7 @@ impl HasPandasColumn for Option<DateTime<Utc>> {
 impl PandasColumn<DateTimeWrapperMicro> for DateTimeColumn {
     #[throws(ConnectorXPythonError)]
     fn write(&mut self, val: DateTimeWrapperMicro, row: usize) {
+        // SAFETY: as in the `DateTime<Utc>` `write` above: (A), (B), unchecked (C).
         unsafe {
             *self.data.add(row) = val.0.timestamp_micros();
         };
@@ -114,6 +124,7 @@ impl PandasColumn<DateTimeWrapperMicro> for DateTimeColumn {
 impl PandasColumn<Option<DateTimeWrapperMicro>> for DateTimeColumn {
     #[throws(ConnectorXPythonError)]
     fn write(&mut self, val: Option<DateTimeWrapperMicro>, row: usize) {
+        // SAFETY: as in the `DateTime<Utc>` `write` above: (A), (B), unchecked (C).
         unsafe {
             *self.data.add(row) = val.map(|t| t.0.timestamp_micros()).unwrap_or(i64::MIN);
         };

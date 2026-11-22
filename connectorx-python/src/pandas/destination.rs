@@ -434,6 +434,15 @@ where
         // How do we check type id for borrowed types?
         // assert!(self.columns[col].typecheck(TypeId::of::<T>()));
 
+        // SAFETY: keeps the data half of the `&dyn PandasColumnObject` fat pointer as
+        // the concrete column type. All of the following hold only by convention:
+        // - fat pointer and tuple layout are (data, vtable); Rust guarantees neither.
+        // - the column is a `T::PandasColumn`: `partition` built it from
+        //   `PandasBlockType::from(schema[col])` and `check::<T>()` ties `T` to
+        //   `schema[col]`, but nothing checks `HasPandasColumn` agrees with that
+        //   mapping (the `typecheck` call above is commented out).
+        // - the `&mut` is derived from a shared borrow; it is unique only because
+        //   `consume` holds `&mut self`.
         let (column, _): (&mut T::PandasColumn<'py>, *const ()) =
             unsafe { transmute(&*self.columns[col]) };
         column.write(value, row)

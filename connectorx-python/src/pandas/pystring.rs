@@ -8,6 +8,10 @@ use std::str::from_utf8_unchecked;
 pub struct PyString(Py<pyo3::types::PyString>);
 
 // In order to put it into a numpy array
+// SAFETY: `PyString` is `repr(transparent)` over `Py<_>`, i.e. one non-null
+// `PyObject*`, which is what an `object` dtype array stores; `IS_COPY` is false
+// and `clone_ref` only increfs. numpy does not check the Python type, so a slot
+// may hold the `0` from `zeros` or `None` rather than a `str`.
 unsafe impl Element for PyString {
     const IS_COPY: bool = false;
     fn get_dtype(py: Python<'_>) -> Bound<'_, PyArrayDescr> {
@@ -28,6 +32,11 @@ pub enum StringInfo {
 }
 
 impl StringInfo {
+    /// Counts the code points of `s` and finds the narrowest CPython kind for it.
+    ///
+    /// # Safety
+    ///
+    /// `s` must be valid UTF-8; it is read with `from_utf8_unchecked`.
     pub unsafe fn detect(s: &[u8]) -> StringInfo {
         let s = from_utf8_unchecked(s);
         let mut maxchar = 0;
@@ -52,6 +61,8 @@ impl StringInfo {
     }
 
     pub fn pystring(&self, py: Python) -> PyString {
+        // SAFETY: `py` proves the thread is attached. `len` came from a Rust slice
+        // length, so it fits in `Py_ssize_t`, and each `maxchar` is a valid bound.
         let objptr = unsafe {
             match self {
                 StringInfo::ASCII(len) => ffi::PyUnicode_New(*len as ffi::Py_ssize_t, 0x7F),
@@ -61,6 +72,9 @@ impl StringInfo {
             }
         };
 
+        // SAFETY: `PyUnicode_New` returns a new (owned) reference to a `str`, so the
+        // unchecked cast is correct; on failure it returns NULL, on which
+        // `from_owned_ptr` panics rather than producing a dangling object.
         let s: Py<pyo3::types::PyString> = unsafe {
             Bound::from_owned_ptr(py, objptr)
                 .cast_into_unchecked()
@@ -74,8 +88,10 @@ impl StringInfo {
 impl PyString {
     // get none string converted from none object, otherwise default strings are zeros
     pub fn none(py: Python) -> PyString {
-        // this is very unsafe because Py_None is not a PyString from Rust's perspective. But it is fine because
-        // later these stuff will all be converted to a python object
+        // SAFETY: `Py_None` is a valid object and `from_borrowed_ptr` takes a new
+        // reference. The cast to `PyString` is a lie that is only sound because the
+        // result is just stored in an `object` array and dropped; callers must never
+        // use it as a `str` (`StringColumn::flush` skips `None` slots in `write`).
         let s = unsafe {
             Bound::from_borrowed_ptr(py, ffi::Py_None())
                 .cast_into_unchecked::<pyo3::types::PyString>()
@@ -84,7 +100,17 @@ impl PyString {
         PyString(s)
     }
 
-    // the val should be same as the val used for new
+    /// Fills the character buffer of a string created by [`StringInfo::pystring`].
+    ///
+    /// # Safety
+    ///
+    /// - `self` must have been created by `info.pystring(..)` with
+    ///   `info == StringInfo::detect(data)`, and `data` must be valid UTF-8, so the
+    ///   object's kind and length match what is written here.
+    /// - No other code (Python or Rust) may access the object concurrently; the
+    ///   buffer is written without the GIL.
+    /// - Relies on `PyASCIIObject` / `PyCompactUnicodeObject` below matching the
+    ///   CPython layout of the interpreter built against; nothing checks this.
     pub unsafe fn write(&mut self, data: &[u8], info: StringInfo) {
         match info {
             StringInfo::ASCII(len) => {
@@ -158,6 +184,14 @@ pub struct PyASCIIObject {
 }
 
 impl PyASCIIObject {
+    /// Reinterprets a `str` handle as the CPython struct it points to.
+    ///
+    /// # Safety
+    ///
+    /// `obj` must point to a compact ASCII `str` (as made by `PyUnicode_New` with
+    /// `maxchar <= 0x7F`) and nothing else may access it while the result lives.
+    /// The transmute relies on `Py<T>` being `repr(transparent)` over a non-null
+    /// `PyObject*`.
     pub unsafe fn from_mut_ref(obj: &mut Py<pyo3::types::PyString>) -> &mut Self {
         let ascii: &mut &mut PyASCIIObject = std::mem::transmute(obj);
         ascii
@@ -175,6 +209,13 @@ pub struct PyCompactUnicodeObject {
 }
 
 impl PyCompactUnicodeObject {
+    /// Reinterprets a `str` handle as the CPython struct it points to.
+    ///
+    /// # Safety
+    ///
+    /// `obj` must point to a compact non-ASCII `str` (as made by `PyUnicode_New`
+    /// with `maxchar > 0x7F`) and nothing else may access it while the result
+    /// lives. Same transmute assumption as [`PyASCIIObject::from_mut_ref`].
     pub unsafe fn from_mut_ref(obj: &mut Py<pyo3::types::PyString>) -> &mut Self {
         let unicode: &mut &mut PyCompactUnicodeObject = std::mem::transmute(obj);
         unicode

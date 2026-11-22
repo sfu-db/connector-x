@@ -22,6 +22,8 @@ impl<'a> ExtractBlockFromBound<'a> for StringBlock<'a> {
     fn extract_block<'b: 'a>(ob: &'b pyo3::Bound<'a, PyAny>) -> PyResult<Self> {
         check_dtype(ob, "object")?;
         let array = ob.cast::<PyArray<PyString, Ix2>>()?;
+        // SAFETY: (A)/(B) in `pandas_columns`: the array was freshly allocated by
+        // `allocate_py` and this is the only view of it.
         let data = unsafe { array.as_array_mut() };
         Ok(StringBlock {
             data,
@@ -64,7 +66,11 @@ pub struct StringColumn {
     buf_size: usize,
 }
 
+// SAFETY: `data` targets numpy-owned memory that is not tied to a thread;
+// partitions write disjoint rows (B), the array outlives them (A), and new
+// Python objects are only stored while attached and holding `GIL_MUTEX` (D).
 unsafe impl Send for StringColumn {}
+// SAFETY: no `&self` method dereferences `data`; writes need `&mut self`.
 unsafe impl Sync for StringColumn {}
 
 impl PandasColumnObject for StringColumn {
@@ -278,6 +284,11 @@ impl StringColumn {
                 if len != usize::MAX {
                     let end = start + len;
 
+                    // SAFETY: `string_buf[start..end]` is exactly one value pushed by a
+                    // `write` impl, all of which take `str`/`char` input, so it is valid
+                    // UTF-8 for `detect`. The slot store follows (A)-(D): `row_idx[i]` was
+                    // reserved by this partition, bounds rely on unchecked (C), and the
+                    // old value dropped is the `0` from `zeros` while attached.
                     unsafe {
                         let string_info = StringInfo::detect(&self.string_buf[start..end]);
                         *self.data.add(self.row_idx[i]) = string_info.pystring(py);
@@ -288,6 +299,7 @@ impl StringColumn {
                 } else {
                     string_infos.push(None);
 
+                    // SAFETY: same slot store as above, (A)-(D).
                     unsafe { *self.data.add(self.row_idx[i]) = PyString::none(py) };
                 }
             }
@@ -306,6 +318,11 @@ impl StringColumn {
             {
                 if len != usize::MAX {
                     let end = start + len;
+                    // SAFETY: the slot holds the string created in the loop above from
+                    // `info`, which was detected on these same bytes. Python has no
+                    // reference to it yet, so filling it without the GIL is unobserved
+                    // (for `len == 0` it is CPython's shared empty string, but zero
+                    // bytes are copied). `None` slots are skipped, so never `Py_None`.
                     unsafe {
                         (*self.data.add(self.row_idx[i]))
                             .write(&self.string_buf[start..end], info.unwrap())

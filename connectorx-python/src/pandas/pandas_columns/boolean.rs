@@ -23,6 +23,8 @@ impl<'a> ExtractBlockFromBound<'a> for BooleanBlock<'a> {
         if let Ok(array) = ob.cast::<PyArray<bool, Ix2>>() {
             // if numpy array
             check_dtype(ob, "bool")?;
+            // SAFETY: (A)/(B) in `pandas_columns`: the array was freshly allocated by
+            // `allocate_py` and this is the only view of it.
             let data = unsafe { array.as_array_mut() };
             Ok(BooleanBlock::NumPy(data))
         } else {
@@ -34,7 +36,10 @@ impl<'a> ExtractBlockFromBound<'a> for BooleanBlock<'a> {
             check_dtype(mask, "bool")?;
 
             Ok(BooleanBlock::Extention(
+                // SAFETY: (A)/(B): `data` and `mask` are the two distinct 1-d arrays
+                // `allocate_masked_array` put in this tuple; these are their only views.
                 unsafe { data.cast::<PyArray1<bool>>()?.as_array_mut() },
+                // SAFETY: see `data` above.
                 unsafe { mask.cast::<PyArray1<bool>>()?.as_array_mut() },
             ))
         }
@@ -82,7 +87,10 @@ pub struct BooleanColumn {
     mask: Option<*mut bool>,
 }
 
+// SAFETY: the pointers target numpy-owned memory that is not tied to a thread;
+// partitions write disjoint rows (B) and the arrays outlive them (A).
 unsafe impl Send for BooleanColumn {}
+// SAFETY: no `&self` method dereferences the pointers; writes need `&mut self`.
 unsafe impl Sync for BooleanColumn {}
 
 impl PandasColumnObject for BooleanColumn {
@@ -97,8 +105,12 @@ impl PandasColumnObject for BooleanColumn {
 impl PandasColumn<bool> for BooleanColumn {
     #[throws(ConnectorXPythonError)]
     fn write(&mut self, val: bool, row: usize) {
+        // SAFETY: `data` spans `nrow` elements (A); `row` lies in a range this
+        // partition reserved via `aquire_row` (B). `row < nrow` relies on (C),
+        // which is not checked.
         unsafe { *self.data.add(row) = val };
         if let Some(mask) = self.mask.as_mut() {
+            // SAFETY: `mask` has the same length as `data` (A); same `row` as above.
             unsafe { *mask.add(row) = false };
         }
     }
@@ -109,13 +121,16 @@ impl PandasColumn<Option<bool>> for BooleanColumn {
     fn write(&mut self, val: Option<bool>, row: usize) {
         match val {
             Some(val) => {
+                // SAFETY: as in the non-nullable `write` above: (A), (B), unchecked (C).
                 unsafe { *self.data.add(row) = val };
                 if let Some(mask) = self.mask.as_mut() {
+                    // SAFETY: `mask` has the same length as `data` (A); same `row` as above.
                     unsafe { *mask.add(row) = false };
                 }
             }
             None => {
                 if let Some(mask) = self.mask.as_mut() {
+                    // SAFETY: `mask` has the same length as `data` (A); `row` as in (B)/(C).
                     unsafe { *mask.add(row) = true };
                 } else {
                     panic!("Writing null u64 to not null pandas array")

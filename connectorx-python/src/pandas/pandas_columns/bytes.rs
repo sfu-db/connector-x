@@ -15,6 +15,10 @@ use std::any::TypeId;
 pub struct PyBytes(Py<pyo3::types::PyBytes>);
 
 // In order to put it into a numpy array
+// SAFETY: `PyBytes` is `repr(transparent)` over `Py<_>`, i.e. one non-null
+// `PyObject*`, which is what an `object` dtype array stores; `IS_COPY` is false
+// and `clone_ref` only increfs. numpy does not check the Python type, so a slot
+// may hold the `0` from `zeros` or `None` rather than a `bytes`.
 unsafe impl Element for PyBytes {
     const IS_COPY: bool = false;
     fn get_dtype(py: Python<'_>) -> Bound<'_, PyArrayDescr> {
@@ -35,6 +39,8 @@ impl<'a> ExtractBlockFromBound<'a> for BytesBlock<'a> {
     fn extract_block<'b: 'a>(ob: &'b pyo3::Bound<'a, PyAny>) -> PyResult<Self> {
         check_dtype(ob, "object")?;
         let array = ob.cast::<PyArray<PyBytes, Ix2>>()?;
+        // SAFETY: (A)/(B) in `pandas_columns`: the array was freshly allocated by
+        // `allocate_py` and this is the only view of it.
         let data = unsafe { array.as_array_mut() };
         Ok(BytesBlock {
             data,
@@ -77,7 +83,11 @@ pub struct BytesColumn {
     buf_size: usize,
 }
 
+// SAFETY: `data` targets numpy-owned memory that is not tied to a thread;
+// partitions write disjoint rows (B), the array outlives them (A), and new
+// Python objects are only stored while attached and holding `GIL_MUTEX` (D).
 unsafe impl Send for BytesColumn {}
+// SAFETY: no `&self` method dereferences `data`; writes need `&mut self`.
 unsafe impl Sync for BytesColumn {}
 
 impl PandasColumnObject for BytesColumn {
@@ -196,6 +206,9 @@ impl BytesColumn {
                 for (i, &len) in self.bytes_lengths.iter().enumerate() {
                     if len != usize::MAX {
                         let end = start + len;
+                        // SAFETY: slot store per (A)-(D) in `pandas_columns`: `row_idx[i]`
+                        // was reserved by this partition, bounds rely on unchecked (C), and
+                        // the old value dropped is the `0` from `zeros`, while attached.
                         unsafe {
                             // allocate and write in the same time
                             let b =
@@ -204,6 +217,9 @@ impl BytesColumn {
                         };
                         start = end;
                     } else {
+                        // SAFETY: same slot store as above. `Py_None` is valid and
+                        // `from_borrowed_ptr` increfs it; the cast to `bytes` is a lie that
+                        // holds only because the slot is never used as a `bytes` in Rust.
                         unsafe {
                             let b = Bound::from_borrowed_ptr(py, pyo3::ffi::Py_None())
                                 .cast_into_unchecked::<pyo3::types::PyBytes>()
