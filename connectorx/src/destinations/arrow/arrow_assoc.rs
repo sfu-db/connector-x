@@ -607,9 +607,12 @@ impl ArrowAssoc for Vec<Option<Decimal>> {
     fn field(header: &str) -> Field {
         Field::new(
             header,
+            // The items are Option<Decimal>, and the builder always makes
+            // nullable items, so the item field must be nullable too or
+            // RecordBatch::try_new rejects the column.
             ArrowDataType::LargeList(std::sync::Arc::new(Field::new_list_field(
                 DEFAULT_ARROW_DECIMAL,
-                false,
+                true,
             ))),
             false,
         )
@@ -672,3 +675,10 @@ impl_arrow_array_assoc!(Vec<Option<u32>>, ArrowDataType::UInt32, UInt32Builder);
 impl_arrow_array_assoc!(Vec<Option<u64>>, ArrowDataType::UInt64, UInt64Builder);
 impl_arrow_array_assoc!(Vec<Option<f32>>, ArrowDataType::Float32, Float32Builder);
 impl_arrow_array_assoc!(Vec<Option<f64>>, ArrowDataType::Float64, Float64Builder);
+
+// The arrow and arrowstream versions of this module share one API, so they
+// share their tests: both include the same file.
+#[cfg(test)]
+#[allow(clippy::duplicate_mod)]
+#[path = "../arrow_assoc_tests.rs"]
+mod tests;

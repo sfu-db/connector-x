@@ -59,3 +59,10 @@ impl TypeConversion<NaiveDate, DateTime<Utc>> for DummyArrowTransport {
         )
     }
 }
+
+// The arrow and arrowstream versions of this module share one API, so they
+// share their tests: both include the same file.
+#[cfg(test)]
+#[allow(clippy::duplicate_mod)]
+#[path = "dummy_tests.rs"]
+mod tests;
