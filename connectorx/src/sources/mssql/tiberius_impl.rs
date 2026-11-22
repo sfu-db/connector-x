@@ -44,6 +44,12 @@ pub struct MsSQLSource {
     schema: Vec<MsSQLTypeSystem>,
 }
 
+/// Builds a `tiberius` [`Config`] from an `mssql://` connection URL.
+///
+/// The host may name an instance as `server\instance`. Query parameters such
+/// as `encrypt`, `trusted_connection` and `trust_server_certificate` set the
+/// matching options. Fails if the host contains more than one `\` or cannot
+/// be percent-decoded.
 #[throws(MsSQLSourceError)]
 pub fn mssql_config(url: &Url) -> Config {
     let mut config = Config::new();

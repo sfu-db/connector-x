@@ -4,19 +4,33 @@ use gcp_bigquery_client::model::field_type::FieldType;
 /// Column types of the BigQuery source. The `bool` is `true` when the column is nullable.
 #[derive(Copy, Clone, Debug)]
 pub enum BigQueryTypeSystem {
+    /// BigQuery `BOOL`, read as `bool`.
     Bool(bool),
+    /// BigQuery `BOOLEAN` (legacy name for `BOOL`), read as `bool`.
     Boolean(bool),
+    /// BigQuery `INT64`, read as `i64`.
     Int64(bool),
+    /// BigQuery `INTEGER` (legacy name for `INT64`), read as `i64`.
     Integer(bool),
+    /// BigQuery `FLOAT` (legacy name for `FLOAT64`), read as `f64`.
     Float(bool),
+    /// BigQuery `FLOAT64`, read as `f64`.
     Float64(bool),
+    /// BigQuery `NUMERIC`, read as `f64`, so precision beyond `f64` is lost.
     Numeric(bool),
+    /// BigQuery `BIGNUMERIC`, read as `f64`, so precision beyond `f64` is lost.
     Bignumeric(bool),
+    /// BigQuery `STRING`, read as `String`.
     String(bool),
+    /// BigQuery `BYTES`, read as `String` (the base64 text BigQuery returns).
     Bytes(bool),
+    /// BigQuery `DATE`, read as `NaiveDate`.
     Date(bool),
+    /// BigQuery `DATETIME`, read as `NaiveDateTime`.
     Datetime(bool),
+    /// BigQuery `TIME`, read as `NaiveTime`.
     Time(bool),
+    /// BigQuery `TIMESTAMP`, read as `DateTime<Utc>`.
     Timestamp(bool),
 }
 

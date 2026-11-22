@@ -1,3 +1,11 @@
+//! C ABI for ConnectorX, used by the C++ bindings.
+//!
+//! Results cross the boundary as Arrow C Data Interface arrays wrapped in the
+//! `#[repr(C)]` structs below. Every buffer this crate hands out must be
+//! returned to the matching `free_*` function.
+
+#![warn(missing_docs)]
+
 mod plan;
 
 use arrow::ffi::{FFI_ArrowArray, FFI_ArrowSchema};
@@ -9,6 +17,10 @@ use std::env;
 use std::ffi::{CStr, CString};
 use std::sync::Arc;
 
+/// A `Vec<T>` handed to C: pointer, length and capacity.
+///
+/// The memory still belongs to Rust and is released by the `free_*` function
+/// for the value that contains it.
 #[repr(C)]
 pub struct CXSlice<T> {
     ptr: *const T,
@@ -17,6 +29,8 @@ pub struct CXSlice<T> {
 }
 
 impl<T> CXSlice<T> {
+    /// Leaks `v` and records its raw parts, so the allocation stays alive
+    /// until it is rebuilt with [`get_vec`].
     pub fn new_from_vec(v: Vec<T>) -> Self {
         // If `Vec::into_raw_parts` becomes stable, can directly change to:
         // let (ptr, len, capacity) = v.into_raw_parts();
@@ -32,12 +46,16 @@ impl<T> CXSlice<T> {
     }
 }
 
+/// A table name and its column names, used to describe a source's schema by
+/// hand when no connection string is given.
 #[repr(C)]
 pub struct CXTable {
     name: *const c_char,
     columns: CXSlice<*const c_char>,
 }
 
+/// One data source passed to [`connectorx_rewrite`]: either a connection
+/// string (`conn`) or, when `conn` is null, a manual `schema`.
 #[repr(C)]
 pub struct CXConnectionInfo {
     name: *const c_char,
@@ -48,6 +66,9 @@ pub struct CXConnectionInfo {
     jdbc_driver: *const c_char,
 }
 
+/// One step of a federated query plan returned by [`connectorx_rewrite`]:
+/// the SQL to run on database `db_name`, with its alias and estimated
+/// cardinality.
 #[repr(C)]
 pub struct CXFederatedPlan {
     db_name: *const c_char,
@@ -144,12 +165,15 @@ pub unsafe extern "C" fn connectorx_rewrite(
     CXSlice::<_>::new_from_vec(fed_plan)
 }
 
+/// One Arrow column, exported through the Arrow C Data Interface.
 #[repr(C)]
 pub struct CXArray {
     array: *const FFI_ArrowArray,
     schema: *const FFI_ArrowSchema,
 }
 
+/// Result of [`connectorx_scan`]: the record batches (each a slice of
+/// columns) and the column names.
 #[repr(C)]
 pub struct CXResult {
     data: CXSlice<CXSlice<CXArray>>,
@@ -257,6 +281,8 @@ pub unsafe extern "C" fn connectorx_scan(conn: *const c_char, query: *const c_ch
     }
 }
 
+/// Schema returned by [`connectorx_get_schema`]: one empty Arrow array per
+/// column carrying its type, and the column names.
 #[repr(C)]
 pub struct CXSchema {
     types: CXSlice<CXArray>,

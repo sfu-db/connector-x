@@ -53,45 +53,83 @@ pub enum DataType {
 /// Column types of the ClickHouse source. The `bool` is `true` when the column is nullable.
 #[derive(Clone, Copy, Debug)]
 pub enum ClickHouseTypeSystem {
+    /// ClickHouse `Int8`, read as `i8`.
     Int8(bool),
+    /// ClickHouse `Int16`, read as `i16`.
     Int16(bool),
+    /// ClickHouse `Int32`, read as `i32`.
     Int32(bool),
+    /// ClickHouse `Int64`, read as `i64`.
     Int64(bool),
+    /// ClickHouse `UInt8`, read as `u8`.
     UInt8(bool),
+    /// ClickHouse `UInt16`, read as `u16`.
     UInt16(bool),
+    /// ClickHouse `UInt32`, read as `u32`.
     UInt32(bool),
+    /// ClickHouse `UInt64`, read as `u64`.
     UInt64(bool),
+    /// ClickHouse `Float32`, read as `f32`.
     Float32(bool),
+    /// ClickHouse `Float64`, read as `f64`.
     Float64(bool),
+    /// ClickHouse `Decimal(P, S)`, read as `Decimal`.
     Decimal(bool),
+    /// ClickHouse `String`, read as `String`. Also the fallback for types not listed here.
     String(bool),
+    /// ClickHouse `FixedString(N)`, read as `Vec<u8>`.
     FixedString(bool),
+    /// ClickHouse `Date`, read as `NaiveDate`.
     Date(bool),
+    /// ClickHouse `Date32`, read as `NaiveDate`.
     Date32(bool),
+    /// ClickHouse `Time`, read as `NaiveTime`.
     Time(bool),
+    /// ClickHouse `Time64(P)`, read as `NaiveTime`.
     Time64(bool),
+    /// ClickHouse `DateTime`, read as `DateTime<Utc>`.
     DateTime(bool),
+    /// ClickHouse `DateTime64(P)`, read as `DateTime<Utc>`.
     DateTime64(bool),
+    /// ClickHouse `Enum8`, read as the variant name (`String`).
     Enum8(bool),
+    /// ClickHouse `Enum16`, read as the variant name (`String`).
     Enum16(bool),
+    /// ClickHouse `UUID`, read as `Uuid`.
     UUID(bool),
+    /// ClickHouse `IPv4`, read as `IpAddr`.
     IPv4(bool),
+    /// ClickHouse `IPv6`, read as `IpAddr`.
     IPv6(bool),
+    /// ClickHouse `Bool`, read as `bool`.
     Bool(bool),
     // ClickHouse supports arrays of any type,
     // but for simplicity we only define arrays of primitive types here.
+    /// ClickHouse `Array(Bool)`, read as `Vec<Option<bool>>`.
     ArrayBool(bool),
+    /// ClickHouse `Array(String)`, read as `Vec<Option<String>>`.
     ArrayString(bool),
+    /// ClickHouse `Array(Int8)`, read as `Vec<Option<i8>>`.
     ArrayInt8(bool),
+    /// ClickHouse `Array(Int16)`, read as `Vec<Option<i16>>`.
     ArrayInt16(bool),
+    /// ClickHouse `Array(Int32)`, read as `Vec<Option<i32>>`.
     ArrayInt32(bool),
+    /// ClickHouse `Array(Int64)`, read as `Vec<Option<i64>>`.
     ArrayInt64(bool),
+    /// ClickHouse `Array(UInt8)`, read as `Vec<Option<u8>>`.
     ArrayUInt8(bool),
+    /// ClickHouse `Array(UInt16)`, read as `Vec<Option<u16>>`.
     ArrayUInt16(bool),
+    /// ClickHouse `Array(UInt32)`, read as `Vec<Option<u32>>`.
     ArrayUInt32(bool),
+    /// ClickHouse `Array(UInt64)`, read as `Vec<Option<u64>>`.
     ArrayUInt64(bool),
+    /// ClickHouse `Array(Float32)`, read as `Vec<Option<f32>>`.
     ArrayFloat32(bool),
+    /// ClickHouse `Array(Float64)`, read as `Vec<Option<f64>>`.
     ArrayFloat64(bool),
+    /// ClickHouse `Array(Decimal)`, read as `Vec<Option<Decimal>>`.
     ArrayDecimal(bool),
 }
 
