@@ -1,4 +1,5 @@
 use std::convert::TryFrom;
+#[cfg(feature = "src_clickhouse")]
 use std::sync::Arc;
 
 use crate::errors::{ConnectorXOutError, OutResult};
@@ -314,8 +315,11 @@ fn pg_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
 #[cfg(feature = "src_sqlite")]
 #[throws(ConnectorXOutError)]
 fn sqlite_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
-    // remove the first "sqlite://" manually since url.path is not correct for windows and for relative path
-    let conn = Connection::open(&conn.as_str()[9..])?;
+    // remove the first "sqlite://" manually since url.path is not correct for windows and for relative path.
+    // The path is percent-encoded (as the Python ConnectionUrl helper does), so decode it the same way
+    // SQLiteSource::new does; otherwise e.g. `C%3A%5C...` on Windows opens the wrong file.
+    let path = urlencoding::decode(&conn.as_str()[9..]).map_err(|e| anyhow!(e))?;
+    let conn = Connection::open(path.as_ref())?;
     // SQLite only optimize min max queries when there is only one aggregation
     // https://www.sqlite.org/optoverview.html#minmax
     let (min_query, max_query) = get_partition_range_query_sep(query, col, &SQLiteDialect {})?;

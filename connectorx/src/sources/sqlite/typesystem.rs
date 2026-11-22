@@ -7,15 +7,25 @@ use std::convert::TryFrom;
 /// Column types of the SQLite source. The `bool` is `true` when the column is nullable.
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum SQLiteTypeSystem {
+    /// Declared `BOOLEAN` or `BOOL`, read as `bool`.
     Bool(bool),
+    /// Integer column (declared type contains `INT`, or `INTEGER` storage class), read as `i64`.
     Int8(bool),
+    /// Declared `INT4`, read as `i32`.
     Int4(bool),
+    /// Declared `INT2`, read as `i16`.
     Int2(bool),
+    /// Floating-point column (`REAL` affinity), read as `f64`.
     Real(bool),
+    /// Text column (`TEXT` affinity), read as `Box<str>`.
     Text(bool),
+    /// Declared `DATE`, read as `NaiveDate`.
     Date(bool),
+    /// Declared `TIME`, read as `NaiveTime`.
     Time(bool),
+    /// Declared `DATETIME` or `TIMESTAMP`, read as `NaiveDateTime`.
     Timestamp(bool),
+    /// Blob column (`BLOB` affinity), read as `Vec<u8>`.
     Blob(bool),
 }
 
