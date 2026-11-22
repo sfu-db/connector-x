@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["build_client_from_url"],"mod":["errors","typesystem"],"struct":["TrinoDialect","TrinoPartitionQueryResult","TrinoSource","TrinoSourcePartition","TrinoSourcePartitionParser"]};
+window.SIDEBAR_ITEMS = {"fn":["build_client_from_url"],"mod":["errors","typesystem"],"struct":["TrinoDialect","TrinoPartitionQueryResult","TrinoSource","TrinoSourcePartition","TrinoSourcePartitionParser","__TrinoPartitionQueryResultSeed"]};
