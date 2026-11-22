@@ -54,6 +54,11 @@ jobs:
       - name: Check each feature gate
         run: just test-feature-gate
 
+      # Coverage runs --lib and --test only, so doctests were never built.
+      # --locked also fails the job if Cargo.lock is out of date.
+      - name: Run doctests
+        run: cargo test --locked --doc --features all
+
       - name: Install cargo-llvm-cov
         uses: taiki-e/install-action@cargo-llvm-cov
 
@@ -110,6 +115,11 @@ jobs:
 
       - name: Test build docs
         run: cargo doc --no-deps --features all
+        env:
+          # Fail on broken doc links and malformed HTML in doc comments.
+          # missing_docs is not denied yet: the crate still has undocumented
+          # public items (see #1051); it is reported as a warning by clippy.
+          RUSTDOCFLAGS: "-D rustdoc::broken_intra_doc_links -D rustdoc::invalid_html_tags"
 
   # release.yml ships wheels for Windows and macOS too, but the jobs above only
   # run on Linux. Run the unit tests (no databases needed) on those platforms
@@ -186,7 +196,7 @@ jobs:
           docker --version
           docker ps
 
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: astral-sh/setup-uv@v10.4.0
         with:
           enable-cache: true
           cache-dependency-glob: connectorx-python/uv.lock
@@ -218,6 +228,14 @@ jobs:
       # `just test-python` builds it once via maturin develop.
       - name: Install python dependencies
         run: just bootstrap-python
+
+      # connectorx-python is its own Cargo workspace, so the rust job's clippy
+      # never sees it. --all-targets builds its benches/examples too, and
+      # --locked fails on a stale connectorx-python/Cargo.lock. Runs before the
+      # coverage step below changes RUSTFLAGS.
+      - name: Clippy linting (connectorx-python)
+        working-directory: connectorx-python
+        run: cargo clippy --locked --all-targets -- -D warnings
 
       # Measure the Rust code the Python tests exercise (connectorx and the
       # connectorx-python bindings). Only on 3.14: one instrumented build is

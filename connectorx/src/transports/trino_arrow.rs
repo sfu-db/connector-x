@@ -14,14 +14,18 @@ use rust_decimal::Decimal;
 use serde_json::{to_string, Value};
 use thiserror::Error;
 
+/// Errors raised while moving data from the Trino source to the Arrow destination.
 #[derive(Error, Debug)]
 pub enum TrinoArrowTransportError {
+    /// Error from the Trino source.
     #[error(transparent)]
     Source(#[from] TrinoSourceError),
 
+    /// Error from the Arrow destination.
     #[error(transparent)]
     Destination(#[from] ArrowDestinationError),
 
+    /// Generic ConnectorX error.
     #[error(transparent)]
     ConnectorX(#[from] crate::errors::ConnectorXError),
 }

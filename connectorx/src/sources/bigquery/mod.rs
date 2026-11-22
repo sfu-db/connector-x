@@ -27,6 +27,7 @@ use tokio::runtime::Runtime;
 pub use typesystem::BigQueryTypeSystem;
 use url::Url;
 
+/// SQL dialect for BigQuery (backtick-quoted identifiers, `-` allowed in names).
 #[derive(Debug)]
 pub struct BigQueryDialect {}
 
@@ -45,6 +46,7 @@ impl Dialect for BigQueryDialect {
     }
 }
 
+/// Source that reads from Google BigQuery.
 pub struct BigQuerySource {
     rt: Arc<Runtime>,
     client: Arc<Client>,
@@ -56,6 +58,7 @@ pub struct BigQuerySource {
 }
 
 impl BigQuerySource {
+    /// Connect using the service account key file named by the path of the `bigquery://` URL.
     #[throws(BigQuerySourceError)]
     pub fn new(rt: Arc<Runtime>, conn: &str) -> Self {
         let url = Url::parse(conn)?;
@@ -182,6 +185,7 @@ where
     }
 }
 
+/// One partition of a [`BigQuerySource`].
 pub struct BigQuerySourcePartition {
     rt: Arc<Runtime>,
     client: Arc<Client>,
@@ -193,6 +197,7 @@ pub struct BigQuerySourcePartition {
 }
 
 impl BigQuerySourcePartition {
+    /// Create a partition that runs `query`.
     pub fn new(
         handle: Arc<Runtime>,
         client: Arc<Client>,
@@ -274,6 +279,7 @@ impl SourcePartition for BigQuerySourcePartition {
     }
 }
 
+/// Row parser for a BigQuery partition.
 pub struct BigQuerySourceParser {
     rt: Arc<Runtime>,
     client: Arc<Client>,

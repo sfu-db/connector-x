@@ -526,6 +526,7 @@ mod partition_range_tests {
     }
 }
 
+/// Source that reads from Microsoft SQL Server.
 pub struct MsSQLSource {
     rt: Arc<Runtime>,
     conn_url: Url,
@@ -537,6 +538,7 @@ pub struct MsSQLSource {
 }
 
 impl MsSQLSource {
+    /// Create a source with a pool of up to `nconn` connections.
     #[throws(MsSQLSourceError)]
     pub fn new(rt: Arc<Runtime>, conn: &str, nconn: usize) -> Self {
         debug!("mssql source using driver: {:?}", driver::active_driver());
@@ -662,6 +664,7 @@ fn row_count_value(row: &[ColumnValues], query: &str) -> usize {
     }
 }
 
+/// One partition of an [`MsSQLSource`].
 pub struct MsSQLSourcePartition {
     rt: Arc<Runtime>,
     conn_url: Url,
@@ -673,6 +676,7 @@ pub struct MsSQLSourcePartition {
 }
 
 impl MsSQLSourcePartition {
+    /// Create a partition that runs `query`.
     pub fn new(
         rt: Arc<Runtime>,
         conn_url: Url,
@@ -758,6 +762,7 @@ enum TdsCell {
     DateTimeUtc(DateTime<Utc>),
 }
 
+/// Row parser for a SQL Server partition.
 pub struct MsSQLSourceParser {
     rt: Arc<Runtime>,
     client: Connection,
