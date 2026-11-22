@@ -88,6 +88,24 @@ MODIN_ENGINE=dask
 ### Other commands
 
 * Format the code: `cargo fmt`
+* List every `just` recipe with a one-line description: `just --list`
+
+### Before you push
+
+CI (`.github/workflows/ci.yml`) runs these checks on every pull request. Run them locally first, from the repository root:
+
+| Check | Command | Needs Docker? |
+|---|---|---|
+| Formatting | `cargo fmt --all -- --check` | No |
+| Clippy | `cargo clippy --features all --all -- -D warnings --force-warn missing_docs` | No |
+| Each feature compiles on its own | `just test-feature-gate` | No |
+| Doctests | `cargo test --locked --doc --features all` | No |
+| Rust unit tests | `cargo test --lib --features all` | No |
+| Clippy for the Python bindings | `cd connectorx-python && cargo clippy --locked --all-targets -- -D warnings` | No |
+| Rust integration tests | `just test-ci` | Yes, unless the `*_URL` variables in `.env` point at running servers |
+| Python tests | `just test-python` | Yes, unless the `*_URL` variables in `.env` point at running servers |
+
+The integration suites start each database with testcontainers when its URL is unset. CI also uploads coverage from `just coverage-unit` (no databases) and `just coverage-integration` (Docker) to Codecov.
 
 ## How to Add a New Source
 
