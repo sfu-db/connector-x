@@ -5,6 +5,7 @@ use prusto::{PrestoFloat, PrestoInt, PrestoTy};
 use std::convert::TryFrom;
 
 // TODO: implement Tuple, Row, Array and Map
+/// Column types of the Trino source. The `bool` is `true` when the column is nullable.
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum TrinoTypeSystem {
     Date(bool),

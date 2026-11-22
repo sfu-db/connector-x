@@ -22,14 +22,18 @@ use std::marker::PhantomData;
 use thiserror::Error;
 use uuid::Uuid;
 
+/// Errors raised while moving data from the Postgres source to the streaming Arrow destination.
 #[derive(Error, Debug)]
 pub enum PostgresArrowTransportError {
+    /// Error from the Postgres source.
     #[error(transparent)]
     Source(#[from] PostgresSourceError),
 
+    /// Error from the streaming Arrow destination.
     #[error(transparent)]
     Destination(#[from] ArrowDestinationError),
 
+    /// Generic ConnectorX error.
     #[error(transparent)]
     ConnectorX(#[from] crate::errors::ConnectorXError),
 }
