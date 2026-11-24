@@ -12,11 +12,14 @@ use thiserror::Error;
 /// Convert Dummy data types to Arrow data types.
 pub struct DummyArrowTransport;
 
+/// Errors raised while moving data from the dummy source to the streaming Arrow destination.
 #[derive(Error, Debug)]
 pub enum DummyArrowTransportError {
+    /// Error from the streaming Arrow destination.
     #[error(transparent)]
     Destination(#[from] ArrowDestinationError),
 
+    /// Generic ConnectorX error.
     #[error(transparent)]
     ConnectorX(#[from] crate::errors::ConnectorXError),
 }
@@ -56,3 +59,10 @@ impl TypeConversion<NaiveDate, DateTime<Utc>> for DummyArrowTransport {
         )
     }
 }
+
+// The arrow and arrowstream versions of this module share one API, so they
+// share their tests: both include the same file.
+#[cfg(test)]
+#[allow(clippy::duplicate_mod)]
+#[path = "dummy_tests.rs"]
+mod tests;

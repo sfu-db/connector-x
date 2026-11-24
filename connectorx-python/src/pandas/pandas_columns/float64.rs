@@ -52,7 +52,7 @@ pub struct Float64Column {
 unsafe impl Send for Float64Column {}
 unsafe impl Sync for Float64Column {}
 
-impl<'a> PandasColumnObject for Float64Column {
+impl PandasColumnObject for Float64Column {
     fn typecheck(&self, id: TypeId) -> bool {
         id == TypeId::of::<f64>() || id == TypeId::of::<Option<f64>>()
     }
@@ -62,14 +62,14 @@ impl<'a> PandasColumnObject for Float64Column {
     }
 }
 
-impl<'a> PandasColumn<f64> for Float64Column {
+impl PandasColumn<f64> for Float64Column {
     #[throws(ConnectorXPythonError)]
     fn write(&mut self, val: f64, row: usize) {
         unsafe { *self.data.add(row) = val };
     }
 }
 
-impl<'a> PandasColumn<Option<f64>> for Float64Column {
+impl PandasColumn<Option<f64>> for Float64Column {
     #[throws(ConnectorXPythonError)]
     fn write(&mut self, val: Option<f64>, row: usize) {
         match val {

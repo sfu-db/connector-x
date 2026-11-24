@@ -15,8 +15,28 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
+env:
+  # Debug info is most of target/'s size and nothing in CI reads it (coverage
+  # uses -C instrument-coverage, not debuginfo). Smaller targets mean smaller
+  # caches, which keeps the repo under the 10 GB Actions cache limit.
+  CARGO_PROFILE_DEV_DEBUG: "0"
+  CARGO_PROFILE_TEST_DEBUG: "0"
+  CARGO_PROFILE_RELEASE_DEBUG: "0"
+  # connectorx-python's release profile uses fat LTO; the Python tests only
+  # need a working extension, not a fully optimised one.
+  CARGO_PROFILE_RELEASE_LTO: "off"
+  # Caches are saved only from pushes to main. PRs restore main's caches but
+  # never write their own, so they can't evict main's entries.
+  SAVE_CACHE: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+
+# Cache keys deliberately use no secrets: fork and Dependabot PRs get no
+# secrets, so a secret in the key gave them a different key from main and
+# they never got a cache hit. Bump the "v1" prefix to invalidate the caches.
+
 jobs:
-  rust:
+  # Formatting, lints, docs, feature gates and doctests: everything that needs
+  # no instrumented build. Runs in parallel with the coverage jobs.
+  rust-lint:
     runs-on: ubuntu-latest
 
     steps:
@@ -26,7 +46,6 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y curl postgresql-client build-essential pkg-config libssl-dev git sqlite3 libsqlite3-dev mysql-client python3 python3-pip libkrb5-dev libclang-dev
-          echo "Cache Version ${{ secrets.CACHE_VERSION }}"
         env:
           DEBIAN_FRONTEND: noninteractive
 
@@ -37,7 +56,9 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
         with:
-          prefix-key: v0-rust-${{ secrets.CACHE_VERSION }}
+          prefix-key: v1-rust
+          shared-key: linux-lint
+          save-if: ${{ env.SAVE_CACHE }}
 
       - uses: taiki-e/install-action@just
 
@@ -45,36 +66,65 @@ jobs:
         run: cargo fmt --all -- --check -q
 
       # --all also covers connectorx-cpp (not a default member). -D warnings
-      # fails the build on any new warning. missing_docs is kept as a warning
-      # (lib.rs enables it to track the documentation backlog) until that
-      # backlog is cleared; --force-warn stops -D warnings from promoting it.
+      # fails the build on any new warning, including missing_docs, which both
+      # crates enable in lib.rs.
       - name: Clippy linting
-        run: cargo clippy --features all --all -- -D warnings --force-warn missing_docs
+        run: cargo clippy --features all --all -- -D warnings
+
+      - name: Test build docs
+        run: cargo doc --no-deps --features all
+        env:
+          # Fail on broken doc links and malformed HTML in doc comments.
+          # Missing docs are caught by the clippy step above.
+          RUSTDOCFLAGS: "-D rustdoc::broken_intra_doc_links -D rustdoc::invalid_html_tags"
 
       - name: Check each feature gate
         run: just test-feature-gate
 
+      # Coverage runs --lib and --test only, so doctests were never built.
+      # --locked also fails the job if Cargo.lock is out of date.
+      - name: Run doctests
+        run: cargo test --locked --doc --features all
+
+  # Unit and integration coverage run as two parallel jobs. They share one
+  # cache (both are llvm-cov instrumented builds of the same dependency tree);
+  # only the unit job saves it.
+  rust-coverage:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        suite: [unit, integration]
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y curl postgresql-client build-essential pkg-config libssl-dev git sqlite3 libsqlite3-dev mysql-client python3 python3-pip libkrb5-dev libclang-dev
+        env:
+          DEBIAN_FRONTEND: noninteractive
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          prefix-key: v1-rust
+          shared-key: linux-coverage
+          save-if: ${{ env.SAVE_CACHE == 'true' && matrix.suite == 'unit' }}
+
+      - uses: taiki-e/install-action@just
+
       - name: Install cargo-llvm-cov
         uses: taiki-e/install-action@cargo-llvm-cov
 
-      - name: Run unit tests and generate coverage
-        # Both this and the integration step below run under cargo-llvm-cov's
-        # instrumented build the whole time (RUSTFLAGS never changes between
-        # them), so despite two `just` invocations this is still one compile.
+      - name: Run ${{ matrix.suite }} tests and generate coverage
         run: |
-          just coverage-unit
+          just coverage-${{ matrix.suite }}
           {
-            echo "### Rust unit test coverage"
-            echo '```text'
-            cargo llvm-cov report --summary-only
-            echo '```'
-          } >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Run integration tests and generate coverage
-        run: |
-          just coverage-integration
-          {
-            echo "### Rust integration test coverage"
+            echo "### Rust ${{ matrix.suite }} test coverage"
             echo '```text'
             cargo llvm-cov report --summary-only
             echo '```'
@@ -82,44 +132,33 @@ jobs:
 
       # test_db.rs leaks each testcontainers::Container (std::mem::forget), and
       # every pulled image (postgres, mysql, mssql, ...) stays on the runner's
-      # disk too, so the images accumulate across coverage-unit +
-      # coverage-integration within this same job. Stop/remove the leaked
-      # containers (label filter matches only containers testcontainers
-      # started), then prune now-unreferenced images to reclaim that space.
+      # disk too. Stop/remove the leaked containers (label filter matches only
+      # containers testcontainers started), then prune now-unreferenced images
+      # to reclaim that space before the cache is saved.
       - name: Clean up test containers and images
         if: always()
         run: |
           docker rm -f $(docker ps -aq --filter "label=org.testcontainers.managed-by=testcontainers") 2>/dev/null || true
           docker image prune -af
 
-      - name: Upload unit coverage to Codecov
+      - name: Upload ${{ matrix.suite }} coverage to Codecov
         uses: codecov/codecov-action@v7
         with:
-          files: lcov-unit.info
-          flags: unit-tests
+          files: lcov-${{ matrix.suite }}.info
+          flags: ${{ matrix.suite }}-tests
           fail_ci_if_error: false
           token: ${{ secrets.CODECOV_TOKEN }}
-
-      - name: Upload integration coverage to Codecov
-        uses: codecov/codecov-action@v7
-        with:
-          files: lcov-integration.info
-          flags: integration-tests
-          fail_ci_if_error: false
-          token: ${{ secrets.CODECOV_TOKEN }}
-
-      - name: Test build docs
-        run: cargo doc --no-deps --features all
 
   # release.yml ships wheels for Windows and macOS too, but the jobs above only
   # run on Linux. Run the unit tests (no databases needed) on those platforms
-  # so a platform-specific break is caught before a release.
+  # so a platform-specific break is caught before a release. The Intel macOS
+  # runner is by far the slowest, so it only runs on pushes to main.
   rust-cross-platform:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, macos-15-intel, macos-latest]
+        os: ${{ fromJSON(github.event_name == 'push' && '["windows-latest", "macos-latest", "macos-15-intel"]' || '["windows-latest", "macos-latest"]') }}
 
     steps:
       - uses: actions/checkout@v7
@@ -129,8 +168,9 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
         with:
-          prefix-key: v0-rust-${{ secrets.CACHE_VERSION }}
-          key: ${{ matrix.os }}
+          prefix-key: v1-rust
+          shared-key: ${{ matrix.os }}
+          save-if: ${{ env.SAVE_CACHE }}
 
       - name: Run unit tests
         run: cargo test --lib --features all
@@ -140,13 +180,16 @@ jobs:
     env:
       # Force disable the GIL on free-threading because of https://github.com/sqlalchemy/sqlalchemy/discussions/13256
       PYTHON_GIL: ${{ (matrix.python-version == '3.14t' || matrix.python-version == '3.15t') && '0' || '1' }}
+      # Points uv at the interpreter from setup-python (works for 3.14t too).
+      UV_PYTHON: ${{ matrix.python-version }}
     # Note: No 'container' - we run directly on the VM to access Docker for Testcontainers
     strategy:
+      fail-fast: false
       matrix:
-        # 3.15/3.15t are left out until pyproject.toml allows them: poetry
-        # rejects 3.15 (python <3.15) and silently falls back to the runner's
-        # system interpreter, so those jobs never actually tested 3.15.
-        python-version: ["3.14", "3.14t"]
+        # 3.15t is left out: polars only ships abi3 wheels, which free-threaded
+        # builds can't load, and psycopg2-binary/oracledb/cryptography have no
+        # cp315t wheels either.
+        python-version: ["3.14", "3.14t", "3.15"]
 
     steps:
       - uses: actions/checkout@v7
@@ -184,43 +227,52 @@ jobs:
           docker --version
           docker ps
 
-      - uses: Gr1N/setup-poetry@v10
+      # On 3.14t, packages without free-threaded wheels (polars-runtime-32
+      # above all) are built from source, which takes ~20 minutes. The uv
+      # cache keeps those built wheels, so it must survive: saved only on main.
+      - uses: astral-sh/setup-uv@v10.4.0
         with:
-          poetry-version: "2.4.1"
+          enable-cache: true
+          cache-dependency-glob: connectorx-python/uv.lock
+          cache-suffix: ${{ matrix.python-version }}
+          save-cache: ${{ env.SAVE_CACHE }}
 
       - uses: taiki-e/install-action@just
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          components: rustfmt, clippy
+          components: clippy
 
       - uses: actions/setup-java@v6
         with:
           distribution: "temurin"
           java-version: "17"
 
-      # connectorx-python is its own cargo workspace with its own target/, which
-      # the old cache never covered, so every run rebuilt the extension's whole
-      # dependency tree from scratch. pyo3 builds differ per ABI (3.14 vs 3.14t),
-      # hence the per-matrix key.
+      # connectorx-python is its own cargo workspace with its own target/.
+      # 3.14 builds with coverage instrumentation, so it needs its own cache.
+      # 3.15 and 3.14t build the same dependency tree uninstrumented (only
+      # pyo3 differs per ABI), so they share one cache, saved by 3.15.
       - uses: Swatinem/rust-cache@v2
         with:
-          prefix-key: v0-rust-${{ secrets.CACHE_VERSION }}
-          key: python-${{ matrix.python-version }}
+          prefix-key: v1-rust
+          shared-key: ${{ matrix.python-version == '3.14' && 'python-coverage' || 'python' }}
           workspaces: connectorx-python -> target
+          save-if: ${{ env.SAVE_CACHE == 'true' && matrix.python-version != '3.14t' }}
 
-      - name: Cache venv
-        uses: actions/cache@v6
-        with:
-          path: ~/.cache/pypoetry/virtualenvs
-          key: ${{ runner.os }}-${{ matrix.python-version }}-venv-${{ secrets.CACHE_VERSION }}-${{ hashFiles('connectorx-python/poetry.lock') }}
-
-      # --no-root: `just test-python` builds the extension via maturin develop;
-      # letting poetry install the project as well compiled it a second time.
+      # [tool.uv] package = false keeps uv sync from building the extension;
+      # `just test-python` builds it once via maturin develop.
       - name: Install python dependencies
+        run: just bootstrap-python
+
+      # connectorx-python is its own Cargo workspace, so rust-lint's clippy
+      # never sees it. --all-targets builds its benches/examples too, and
+      # --locked fails on a stale connectorx-python/Cargo.lock. The lints don't
+      # depend on the Python version, so one matrix entry is enough.
+      - name: Clippy linting (connectorx-python)
+        if: matrix.python-version == '3.15'
         working-directory: connectorx-python
-        run: poetry install --no-root
+        run: cargo clippy --locked --all-targets -- -D warnings
 
       # Measure the Rust code the Python tests exercise (connectorx and the
       # connectorx-python bindings). Only on 3.14: one instrumented build is
@@ -243,11 +295,11 @@ jobs:
 
       - name: Test python MSSQL (Tiberius)
         working-directory: connectorx-python
-        run: poetry run pytest connectorx/tests/test_mssql.py --mssql-driver=tiberius --deselect=connectorx/tests/test_mssql.py::test_mssql_driver_switch -v -s
+        run: uv run pytest connectorx/tests/test_mssql.py --mssql-driver=tiberius --deselect=connectorx/tests/test_mssql.py::test_mssql_driver_switch -v -s
 
       - name: Test python MSSQL runtime switch
         working-directory: connectorx-python
-        run: poetry run pytest connectorx/tests/test_mssql.py::test_mssql_driver_switch -v -s
+        run: uv run pytest connectorx/tests/test_mssql.py::test_mssql_driver_switch -v -s
 
       - name: Generate python coverage
         if: matrix.python-version == '3.14'

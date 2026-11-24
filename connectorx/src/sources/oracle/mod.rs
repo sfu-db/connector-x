@@ -6,6 +6,7 @@ use std::collections::HashMap;
 pub use self::errors::OracleSourceError;
 pub use self::typesystem::OracleTypeSystem;
 use crate::constants::{DB_BUFFER_SIZE, ORACLE_ARRAY_SIZE};
+use crate::utils::OwningHandle;
 use crate::{
     data_order::DataOrder,
     errors::ConnectorXError,
@@ -16,7 +17,6 @@ use crate::{
 use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
 use fehler::{throw, throws};
 use log::debug;
-use owning_ref::OwningHandle;
 use r2d2::{Pool, PooledConnection};
 use r2d2_oracle::oracle::ResultSet;
 use r2d2_oracle::{
@@ -31,6 +31,7 @@ use urlencoding::decode;
 type OracleManager = OracleConnectionManager;
 type OracleConn = PooledConnection<OracleManager>;
 
+/// SQL dialect for Oracle.
 #[derive(Debug)]
 pub struct OracleDialect {}
 
@@ -45,6 +46,7 @@ impl Dialect for OracleDialect {
     }
 }
 
+/// Source that reads from Oracle.
 pub struct OracleSource {
     pool: Pool<OracleManager>,
     origin_query: Option<String>,
@@ -54,6 +56,7 @@ pub struct OracleSource {
     current_schema: Option<String>,
 }
 
+/// Build an Oracle connector from an `oracle://` URL. Uses external authentication when no user and password are given.
 #[throws(OracleSourceError)]
 pub fn connect_oracle(conn: &Url) -> Connector {
     let user = decode(conn.username())?.into_owned();
@@ -79,6 +82,7 @@ pub fn connect_oracle(conn: &Url) -> Connector {
 }
 
 impl OracleSource {
+    /// Create a source with a pool of up to `nconn` connections.
     #[throws(OracleSourceError)]
     pub fn new(conn: &str, nconn: usize) -> Self {
         let conn = Url::parse(conn)?;
@@ -100,6 +104,7 @@ impl OracleSource {
             current_schema,
         }
     }
+    /// Get a pooled connection, switched to the `schema` from the connection string if one was given.
     pub fn get_conn(&self) -> Result<OracleConn, OracleSourceError> {
         let conn = self.pool.get()?;
         if let Some(schema) = &self.current_schema {
@@ -242,6 +247,7 @@ where
     }
 }
 
+/// One partition of an [`OracleSource`].
 pub struct OracleSourcePartition {
     conn: OracleConn,
     query: CXQuery<String>,
@@ -251,6 +257,7 @@ pub struct OracleSourcePartition {
 }
 
 impl OracleSourcePartition {
+    /// Create a partition that runs `query` on `conn`.
     pub fn new(conn: OracleConn, query: &CXQuery<String>, schema: &[OracleTypeSystem]) -> Self {
         Self {
             conn,
@@ -293,8 +300,9 @@ impl SourcePartition for OracleSourcePartition {
 
 unsafe impl<'a> Send for OracleTextSourceParser<'a> {}
 
+/// Row parser for an Oracle partition.
 pub struct OracleTextSourceParser<'a> {
-    rows: OwningHandle<Box<Statement>, DummyBox<ResultSet<'a, Row>>>,
+    rows: OwningHandle<Statement, DummyBox<ResultSet<'a, Row>>>,
     rowbuf: Vec<Row>,
     ncols: usize,
     current_col: usize,
@@ -303,6 +311,7 @@ pub struct OracleTextSourceParser<'a> {
 }
 
 impl<'a> OracleTextSourceParser<'a> {
+    /// Run `query` on `conn` and prepare to parse its rows.
     #[throws(OracleSourceError)]
     pub fn new(conn: &'a OracleConn, query: &str, schema: &[OracleTypeSystem]) -> Self {
         let stmt = conn
@@ -310,7 +319,7 @@ impl<'a> OracleTextSourceParser<'a> {
             .prefetch_rows(ORACLE_ARRAY_SIZE)
             .fetch_array_size(ORACLE_ARRAY_SIZE)
             .build()?;
-        let rows: OwningHandle<Box<Statement>, DummyBox<ResultSet<'a, Row>>> =
+        let rows: OwningHandle<Statement, DummyBox<ResultSet<'a, Row>>> =
             OwningHandle::new_with_fn(Box::new(stmt), |stmt: *const Statement| unsafe {
                 DummyBox((*(stmt as *mut Statement)).query(&[]).unwrap())
             });

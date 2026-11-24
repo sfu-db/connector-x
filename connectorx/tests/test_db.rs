@@ -1,3 +1,7 @@
+// Shared by every integration test binary via `mod test_db;`. Each binary only
+// uses the helpers for its own database, so the rest look unused per binary.
+#![allow(dead_code, unused_imports)]
+
 use std::{
     env, fs,
     net::{SocketAddr, TcpStream, ToSocketAddrs},

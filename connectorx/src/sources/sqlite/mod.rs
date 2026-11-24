@@ -4,6 +4,7 @@ mod errors;
 mod typesystem;
 
 pub use self::errors::SQLiteSourceError;
+use crate::utils::OwningHandle;
 use crate::{
     data_order::DataOrder,
     errors::ConnectorXError,
@@ -16,7 +17,6 @@ use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
 use fallible_streaming_iterator::FallibleStreamingIterator;
 use fehler::{throw, throws};
 use log::debug;
-use owning_ref::OwningHandle;
 use r2d2::{Pool, PooledConnection};
 use r2d2_sqlite::SqliteConnectionManager;
 use rusqlite::{Row, Rows, Statement};
@@ -25,6 +25,7 @@ use std::convert::TryFrom;
 pub use typesystem::SQLiteTypeSystem;
 use urlencoding::decode;
 
+/// Source that reads from a SQLite database file.
 pub struct SQLiteSource {
     pool: Pool<SqliteConnectionManager>,
     origin_query: Option<String>,
@@ -34,6 +35,7 @@ pub struct SQLiteSource {
 }
 
 impl SQLiteSource {
+    /// Create a source with a pool of up to `nconn` connections.
     #[throws(SQLiteSourceError)]
     pub fn new(conn: &str, nconn: usize) -> Self {
         let decoded_conn = decode(conn)?.into_owned();
@@ -200,6 +202,7 @@ where
     }
 }
 
+/// One partition of a [`SQLiteSource`].
 pub struct SQLiteSourcePartition {
     conn: PooledConnection<SqliteConnectionManager>,
     query: CXQuery<String>,
@@ -209,6 +212,7 @@ pub struct SQLiteSourcePartition {
 }
 
 impl SQLiteSourcePartition {
+    /// Create a partition that runs `query` on `conn`.
     pub fn new(
         conn: PooledConnection<SqliteConnectionManager>,
         query: &CXQuery<String>,
@@ -254,8 +258,9 @@ impl SourcePartition for SQLiteSourcePartition {
 
 unsafe impl<'a> Send for SQLiteSourcePartitionParser<'a> {}
 
+/// Row parser for a SQLite partition.
 pub struct SQLiteSourcePartitionParser<'a> {
-    rows: OwningHandle<Box<Statement<'a>>, DummyBox<Rows<'a>>>,
+    rows: OwningHandle<Statement<'a>, DummyBox<Rows<'a>>>,
     ncols: usize,
     current_col: usize,
     current_consumed: bool,
@@ -263,6 +268,7 @@ pub struct SQLiteSourcePartitionParser<'a> {
 }
 
 impl<'a> SQLiteSourcePartitionParser<'a> {
+    /// Prepare and run `query` on `conn`.
     #[throws(SQLiteSourceError)]
     pub fn new(
         conn: &'a PooledConnection<SqliteConnectionManager>,
@@ -274,7 +280,7 @@ impl<'a> SQLiteSourcePartitionParser<'a> {
         // Safety: DummyBox borrows the on-heap stmt, which is owned by the OwningHandle.
         // No matter how we move the owning handle (thus the Box<Statment>), the Statement
         // keeps its address static on the heap, thus the borrow of MyRows keeps valid.
-        let rows: OwningHandle<Box<Statement<'a>>, DummyBox<Rows<'a>>> =
+        let rows: OwningHandle<Statement<'a>, DummyBox<Rows<'a>>> =
             OwningHandle::new_with_fn(Box::new(stmt), |stmt: *const Statement<'a>| unsafe {
                 DummyBox((*(stmt as *mut Statement<'_>)).query([]).unwrap())
             });
@@ -366,3 +372,6 @@ impl_produce!(
     NaiveDateTime,
     Vec<u8>,
 );
+
+#[cfg(all(test, feature = "dst_arrow"))]
+mod tests;
