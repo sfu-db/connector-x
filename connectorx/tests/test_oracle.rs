@@ -53,21 +53,35 @@ fn test_types() {
     );
 }
 
-/// `TIMESTAMP WITH TIME ZONE` values of `admin.test_types` (scripts/oracle.sql), sorted, NULL last. The source
-/// returns the wall-clock time without applying the offset, as the pandas destination does (`test_oracle_types` in
-/// connectorx-python): `1999-12-01 11:00:00 -8:00` reads as `1999-12-01 11:00:00`.
+/// UTC instants of `admin.test_types` (scripts/oracle.sql), sorted, NULL last, in microseconds or nanoseconds. The
+/// offset is applied: `1999-12-01 11:00:00 -8:00` is `1999-12-01 19:00:00 UTC`.
+#[cfg(feature = "dst_arrow")]
+fn expected_instants(values: &[&str], nanos: bool) -> Vec<Option<i64>> {
+    use chrono::DateTime;
+    values
+        .iter()
+        .map(|s| {
+            let instant = DateTime::parse_from_rfc3339(s).unwrap();
+            Some(if nanos {
+                instant.timestamp_nanos_opt().unwrap()
+            } else {
+                instant.timestamp_micros()
+            })
+        })
+        .chain([None])
+        .collect()
+}
+
 #[cfg(feature = "dst_arrow")]
 fn expected_timestamptz() -> Vec<Option<i64>> {
-    use chrono::DateTime;
-    [
-        "1899-12-01T11:00:00Z",
-        "1999-12-01T11:00:00Z",
-        "9999-12-31T11:00:00Z",
-    ]
-    .iter()
-    .map(|s| Some(DateTime::parse_from_rfc3339(s).unwrap().timestamp_micros()))
-    .chain([None])
-    .collect()
+    expected_instants(
+        &[
+            "1899-12-01T10:00:00Z", // 1899-12-01 11:00:00 +1:00
+            "1999-12-01T19:00:00Z", // 1999-12-01 11:00:00 -8:00
+            "9999-12-31T10:00:00Z", // 9999-12-31 11:00:00 +1:00
+        ],
+        false,
+    )
 }
 
 #[cfg(feature = "dst_arrow")]
@@ -128,4 +142,43 @@ fn test_oracle_timestamptz_arrow() {
         .arrow()
         .unwrap();
     assert_eq!(timestamptz_values(&batches), expected_timestamptz());
+}
+
+/// `TIMESTAMP(9) WITH TIME ZONE` through the batch Arrow destination, at nanosecond precision.
+#[test]
+#[ignore]
+#[cfg(feature = "dst_arrow")]
+fn test_oracle_timestamptz9_arrow() {
+    use arrow::array::{Array, TimestampNanosecondArray};
+    use connectorx::get_arrow::get_arrow;
+
+    let source_conn = SourceConn::try_from(test_db::oracle_url().as_str()).unwrap();
+    let queries = [CXQuery::naked(
+        "select test_timestamptz9 from admin.test_types order by test_timestamptz9 nulls last"
+            .to_string(),
+    )];
+    let batches = get_arrow(&source_conn, None, &queries, None)
+        .unwrap()
+        .arrow()
+        .unwrap();
+    let mut values = Vec::new();
+    for batch in &batches {
+        let column = batch
+            .column(0)
+            .as_any()
+            .downcast_ref::<TimestampNanosecondArray>()
+            .unwrap();
+        values.extend((0..column.len()).map(|i| column.is_valid(i).then(|| column.value(i))));
+    }
+    assert_eq!(
+        values,
+        expected_instants(
+            &[
+                "1899-12-01T10:00:00.123456789Z", // 1899-12-01 11:00:00.123456789 +1:00
+                "1999-12-01T19:00:00.987654321Z", // 1999-12-01 11:00:00.987654321 -8:00
+                "2021-01-01T02:04:05.999999999Z", // 2021-01-01 03:04:05.999999999 +1:00
+            ],
+            true,
+        )
+    );
 }
