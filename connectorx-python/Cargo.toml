@@ -71,6 +71,7 @@ nbstr = []
 # Database source bundle, paired with the `dsts` destination bundle.
 srcs = [
   "connectorx/src_postgres",
+  "connectorx/src_redshift",
   "connectorx/src_mysql",
   "connectorx/src_sqlite",
   # Both MSSQL backends: lets `cx.mssql_driver` switch drivers at runtime
