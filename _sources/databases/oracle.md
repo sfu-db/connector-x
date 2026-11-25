@@ -48,7 +48,7 @@ cx.read_sql(conn, query)
 | NVarchar2                 | object                      |                                    |
 | DATE                      | datetime64[ns]              |                                    |
 | TIMESTAMP                 | datetime64[ns]              |                                    |
-| TIMESTAMP WITH TIME ZONE  | datetime64[ns]              |                                    |
+| TIMESTAMP WITH TIME ZONE  | datetime64[ns]              | Converted to UTC (offset applied), as for PostgreSQL `TIMESTAMPTZ` |
 | BOOLEAN                   | bool, boolean(nullable)     | Native `BOOLEAN` column type, available since Oracle 23ai |
 
 ```{warning}

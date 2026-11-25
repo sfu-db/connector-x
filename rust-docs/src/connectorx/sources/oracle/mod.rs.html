@@ -14,7 +14,7 @@
 <a href=#14 id=14 data-nosnippet>14</a>    sql::{count_query, limit0_query_oracle, CXQuery},
 <a href=#15 id=15 data-nosnippet>15</a>    utils::DummyBox,
 <a href=#16 id=16 data-nosnippet>16</a>};
-<a href=#17 id=17 data-nosnippet>17</a><span class="kw">use </span>chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
+<a href=#17 id=17 data-nosnippet>17</a><span class="kw">use </span>chrono::{DateTime, FixedOffset, NaiveDate, NaiveDateTime, Utc};
 <a href=#18 id=18 data-nosnippet>18</a><span class="kw">use </span>fehler::{throw, throws};
 <a href=#19 id=19 data-nosnippet>19</a><span class="kw">use </span>log::debug;
 <a href=#20 id=20 data-nosnippet>20</a><span class="kw">use </span>r2d2::{Pool, PooledConnection};
@@ -402,68 +402,97 @@
 <a href=#402 id=402 data-nosnippet>402</a>    };
 <a href=#403 id=403 data-nosnippet>403</a>}
 <a href=#404 id=404 data-nosnippet>404</a>
-<a href=#405 id=405 data-nosnippet>405</a><span class="macro">impl_produce_text!</span>(
-<a href=#406 id=406 data-nosnippet>406</a>    i64,
-<a href=#407 id=407 data-nosnippet>407</a>    bool,
-<a href=#408 id=408 data-nosnippet>408</a>    f64,
-<a href=#409 id=409 data-nosnippet>409</a>    String,
-<a href=#410 id=410 data-nosnippet>410</a>    NaiveDate,
-<a href=#411 id=411 data-nosnippet>411</a>    NaiveDateTime,
-<a href=#412 id=412 data-nosnippet>412</a>    DateTime&lt;Utc&gt;,
-<a href=#413 id=413 data-nosnippet>413</a>    Vec&lt;u8&gt;,
-<a href=#414 id=414 data-nosnippet>414</a>);
+<a href=#405 id=405 data-nosnippet>405</a><span class="macro">impl_produce_text!</span>(i64, bool, f64, String, NaiveDate, NaiveDateTime, Vec&lt;u8&gt;,);
+<a href=#406 id=406 data-nosnippet>406</a>
+<a href=#407 id=407 data-nosnippet>407</a><span class="comment">// `TIMESTAMP WITH TIME ZONE`: rust-oracle's `FromSql for DateTime&lt;Utc&gt;` reads the wall-clock time as if it were UTC
+<a href=#408 id=408 data-nosnippet>408</a>// and drops the offset (`11:00:00 -08:00` would become `11:00:00 UTC`). Read it with its offset, then convert.
+<a href=#409 id=409 data-nosnippet>409</a></span><span class="kw">fn </span>timestamp_tz_to_utc(value: DateTime&lt;FixedOffset&gt;) -&gt; DateTime&lt;Utc&gt; {
+<a href=#410 id=410 data-nosnippet>410</a>    value.with_timezone(<span class="kw-2">&amp;</span>Utc)
+<a href=#411 id=411 data-nosnippet>411</a>}
+<a href=#412 id=412 data-nosnippet>412</a>
+<a href=#413 id=413 data-nosnippet>413</a><span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, DateTime&lt;Utc&gt;&gt; <span class="kw">for </span>OracleTextSourceParser&lt;<span class="lifetime">'a</span>&gt; {
+<a href=#414 id=414 data-nosnippet>414</a>    <span class="kw">type </span>Error = OracleSourceError;
 <a href=#415 id=415 data-nosnippet>415</a>
-<a href=#416 id=416 data-nosnippet>416</a><span class="comment">// Manual implementation for Decimal since Oracle doesn't support it directly via FromSql
-<a href=#417 id=417 data-nosnippet>417</a></span><span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, Decimal&gt; <span class="kw">for </span>OracleTextSourceParser&lt;<span class="lifetime">'a</span>&gt; {
-<a href=#418 id=418 data-nosnippet>418</a>    <span class="kw">type </span>Error = OracleSourceError;
-<a href=#419 id=419 data-nosnippet>419</a>
-<a href=#420 id=420 data-nosnippet>420</a>    <span class="attr">#[throws(OracleSourceError)]
-<a href=#421 id=421 data-nosnippet>421</a>    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; Decimal {
-<a href=#422 id=422 data-nosnippet>422</a>        <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
-<a href=#423 id=423 data-nosnippet>423</a>        <span class="kw">let </span>s: String = <span class="self">self</span>.rowbuf[ridx].get(cidx)<span class="question-mark">?</span>;
-<a href=#424 id=424 data-nosnippet>424</a>        <span class="kw">let </span>res = s.parse::&lt;Decimal&gt;()<span class="question-mark">?</span>;
-<a href=#425 id=425 data-nosnippet>425</a>        res
-<a href=#426 id=426 data-nosnippet>426</a>    }
-<a href=#427 id=427 data-nosnippet>427</a>}
-<a href=#428 id=428 data-nosnippet>428</a>
-<a href=#429 id=429 data-nosnippet>429</a><span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, <span class="prelude-ty">Option</span>&lt;Decimal&gt;&gt; <span class="kw">for </span>OracleTextSourceParser&lt;<span class="lifetime">'a</span>&gt; {
-<a href=#430 id=430 data-nosnippet>430</a>    <span class="kw">type </span>Error = OracleSourceError;
-<a href=#431 id=431 data-nosnippet>431</a>
-<a href=#432 id=432 data-nosnippet>432</a>    <span class="attr">#[throws(OracleSourceError)]
-<a href=#433 id=433 data-nosnippet>433</a>    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;Decimal&gt; {
-<a href=#434 id=434 data-nosnippet>434</a>        <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
-<a href=#435 id=435 data-nosnippet>435</a>        <span class="kw">let </span>s: <span class="prelude-ty">Option</span>&lt;String&gt; = <span class="self">self</span>.rowbuf[ridx].get(cidx)<span class="question-mark">?</span>;
-<a href=#436 id=436 data-nosnippet>436</a>        <span class="kw">match </span>s {
-<a href=#437 id=437 data-nosnippet>437</a>            <span class="prelude-val">Some</span>(val) =&gt; <span class="prelude-val">Some</span>(val.parse::&lt;Decimal&gt;()<span class="question-mark">?</span>),
-<a href=#438 id=438 data-nosnippet>438</a>            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None</span>,
-<a href=#439 id=439 data-nosnippet>439</a>        }
-<a href=#440 id=440 data-nosnippet>440</a>    }
-<a href=#441 id=441 data-nosnippet>441</a>}
-<a href=#442 id=442 data-nosnippet>442</a>
-<a href=#443 id=443 data-nosnippet>443</a><span class="attr">#[cfg(test)]
-<a href=#444 id=444 data-nosnippet>444</a></span><span class="kw">mod </span>tests {
-<a href=#445 id=445 data-nosnippet>445</a>    <span class="kw">use super</span>::<span class="kw-2">*</span>;
-<a href=#446 id=446 data-nosnippet>446</a>
-<a href=#447 id=447 data-nosnippet>447</a>    <span class="attr">#[test]
-<a href=#448 id=448 data-nosnippet>448</a>    </span><span class="kw">fn </span>boolean_client_threshold() {
-<a href=#449 id=449 data-nosnippet>449</a>        <span class="comment">// versions as reported by `Version::client()` for the Instant Client zips
-<a href=#450 id=450 data-nosnippet>450</a>        </span><span class="macro">assert!</span>(!client_reads_boolean_correctly(<span class="kw-2">&amp;</span>Version::new(
-<a href=#451 id=451 data-nosnippet>451</a>            <span class="number">23</span>, <span class="number">4</span>, <span class="number">0</span>, <span class="number">24</span>, <span class="number">5
-<a href=#452 id=452 data-nosnippet>452</a>        </span>)));
-<a href=#453 id=453 data-nosnippet>453</a>        <span class="macro">assert!</span>(client_reads_boolean_correctly(<span class="kw-2">&amp;</span>Version::new(
-<a href=#454 id=454 data-nosnippet>454</a>            <span class="number">23</span>, <span class="number">5</span>, <span class="number">0</span>, <span class="number">24</span>, <span class="number">7
-<a href=#455 id=455 data-nosnippet>455</a>        </span>)));
-<a href=#456 id=456 data-nosnippet>456</a>        <span class="macro">assert!</span>(client_reads_boolean_correctly(<span class="kw-2">&amp;</span>Version::new(
-<a href=#457 id=457 data-nosnippet>457</a>            <span class="number">23</span>, <span class="number">26</span>, <span class="number">3</span>, <span class="number">0</span>, <span class="number">0
-<a href=#458 id=458 data-nosnippet>458</a>        </span>)));
+<a href=#416 id=416 data-nosnippet>416</a>    <span class="attr">#[throws(OracleSourceError)]
+<a href=#417 id=417 data-nosnippet>417</a>    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; DateTime&lt;Utc&gt; {
+<a href=#418 id=418 data-nosnippet>418</a>        <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
+<a href=#419 id=419 data-nosnippet>419</a>        <span class="kw">let </span>value: DateTime&lt;FixedOffset&gt; = <span class="self">self</span>.rowbuf[ridx].get(cidx)<span class="question-mark">?</span>;
+<a href=#420 id=420 data-nosnippet>420</a>        timestamp_tz_to_utc(value)
+<a href=#421 id=421 data-nosnippet>421</a>    }
+<a href=#422 id=422 data-nosnippet>422</a>}
+<a href=#423 id=423 data-nosnippet>423</a>
+<a href=#424 id=424 data-nosnippet>424</a><span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;&gt; <span class="kw">for </span>OracleTextSourceParser&lt;<span class="lifetime">'a</span>&gt; {
+<a href=#425 id=425 data-nosnippet>425</a>    <span class="kw">type </span>Error = OracleSourceError;
+<a href=#426 id=426 data-nosnippet>426</a>
+<a href=#427 id=427 data-nosnippet>427</a>    <span class="attr">#[throws(OracleSourceError)]
+<a href=#428 id=428 data-nosnippet>428</a>    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt; {
+<a href=#429 id=429 data-nosnippet>429</a>        <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
+<a href=#430 id=430 data-nosnippet>430</a>        <span class="kw">let </span>value: <span class="prelude-ty">Option</span>&lt;DateTime&lt;FixedOffset&gt;&gt; = <span class="self">self</span>.rowbuf[ridx].get(cidx)<span class="question-mark">?</span>;
+<a href=#431 id=431 data-nosnippet>431</a>        value.map(timestamp_tz_to_utc)
+<a href=#432 id=432 data-nosnippet>432</a>    }
+<a href=#433 id=433 data-nosnippet>433</a>}
+<a href=#434 id=434 data-nosnippet>434</a>
+<a href=#435 id=435 data-nosnippet>435</a><span class="comment">// Manual implementation for Decimal since Oracle doesn't support it directly via FromSql
+<a href=#436 id=436 data-nosnippet>436</a></span><span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, Decimal&gt; <span class="kw">for </span>OracleTextSourceParser&lt;<span class="lifetime">'a</span>&gt; {
+<a href=#437 id=437 data-nosnippet>437</a>    <span class="kw">type </span>Error = OracleSourceError;
+<a href=#438 id=438 data-nosnippet>438</a>
+<a href=#439 id=439 data-nosnippet>439</a>    <span class="attr">#[throws(OracleSourceError)]
+<a href=#440 id=440 data-nosnippet>440</a>    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; Decimal {
+<a href=#441 id=441 data-nosnippet>441</a>        <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
+<a href=#442 id=442 data-nosnippet>442</a>        <span class="kw">let </span>s: String = <span class="self">self</span>.rowbuf[ridx].get(cidx)<span class="question-mark">?</span>;
+<a href=#443 id=443 data-nosnippet>443</a>        <span class="kw">let </span>res = s.parse::&lt;Decimal&gt;()<span class="question-mark">?</span>;
+<a href=#444 id=444 data-nosnippet>444</a>        res
+<a href=#445 id=445 data-nosnippet>445</a>    }
+<a href=#446 id=446 data-nosnippet>446</a>}
+<a href=#447 id=447 data-nosnippet>447</a>
+<a href=#448 id=448 data-nosnippet>448</a><span class="kw">impl</span>&lt;<span class="lifetime">'r</span>, <span class="lifetime">'a</span>&gt; Produce&lt;<span class="lifetime">'r</span>, <span class="prelude-ty">Option</span>&lt;Decimal&gt;&gt; <span class="kw">for </span>OracleTextSourceParser&lt;<span class="lifetime">'a</span>&gt; {
+<a href=#449 id=449 data-nosnippet>449</a>    <span class="kw">type </span>Error = OracleSourceError;
+<a href=#450 id=450 data-nosnippet>450</a>
+<a href=#451 id=451 data-nosnippet>451</a>    <span class="attr">#[throws(OracleSourceError)]
+<a href=#452 id=452 data-nosnippet>452</a>    </span><span class="kw">fn </span>produce(<span class="kw-2">&amp;</span><span class="lifetime">'r </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;Decimal&gt; {
+<a href=#453 id=453 data-nosnippet>453</a>        <span class="kw">let </span>(ridx, cidx) = <span class="self">self</span>.next_loc()<span class="question-mark">?</span>;
+<a href=#454 id=454 data-nosnippet>454</a>        <span class="kw">let </span>s: <span class="prelude-ty">Option</span>&lt;String&gt; = <span class="self">self</span>.rowbuf[ridx].get(cidx)<span class="question-mark">?</span>;
+<a href=#455 id=455 data-nosnippet>455</a>        <span class="kw">match </span>s {
+<a href=#456 id=456 data-nosnippet>456</a>            <span class="prelude-val">Some</span>(val) =&gt; <span class="prelude-val">Some</span>(val.parse::&lt;Decimal&gt;()<span class="question-mark">?</span>),
+<a href=#457 id=457 data-nosnippet>457</a>            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None</span>,
+<a href=#458 id=458 data-nosnippet>458</a>        }
 <a href=#459 id=459 data-nosnippet>459</a>    }
-<a href=#460 id=460 data-nosnippet>460</a>
-<a href=#461 id=461 data-nosnippet>461</a>    <span class="attr">#[test]
-<a href=#462 id=462 data-nosnippet>462</a>    </span><span class="kw">fn </span>check_boolean_client_skips_queries_without_boolean() {
-<a href=#463 id=463 data-nosnippet>463</a>        <span class="comment">// no Boolean column -&gt; the client version is never looked up
-<a href=#464 id=464 data-nosnippet>464</a>        </span><span class="kw">let </span>names = <span class="macro">vec!</span>[<span class="string">"A"</span>.to_string()];
-<a href=#465 id=465 data-nosnippet>465</a>        <span class="kw">let </span>schema = <span class="macro">vec!</span>[OracleTypeSystem::NumInt(<span class="bool-val">true</span>)];
-<a href=#466 id=466 data-nosnippet>466</a>        <span class="macro">assert!</span>(check_boolean_client(<span class="kw-2">&amp;</span>names, <span class="kw-2">&amp;</span>schema).is_ok());
-<a href=#467 id=467 data-nosnippet>467</a>    }
-<a href=#468 id=468 data-nosnippet>468</a>}
+<a href=#460 id=460 data-nosnippet>460</a>}
+<a href=#461 id=461 data-nosnippet>461</a>
+<a href=#462 id=462 data-nosnippet>462</a><span class="attr">#[cfg(test)]
+<a href=#463 id=463 data-nosnippet>463</a></span><span class="kw">mod </span>tests {
+<a href=#464 id=464 data-nosnippet>464</a>    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+<a href=#465 id=465 data-nosnippet>465</a>
+<a href=#466 id=466 data-nosnippet>466</a>    <span class="attr">#[test]
+<a href=#467 id=467 data-nosnippet>467</a>    </span><span class="kw">fn </span>timestamp_with_time_zone_keeps_the_instant() {
+<a href=#468 id=468 data-nosnippet>468</a>        <span class="kw">let </span>west = FixedOffset::west_opt(<span class="number">8 </span>* <span class="number">3600</span>).unwrap();
+<a href=#469 id=469 data-nosnippet>469</a>        <span class="kw">let </span>value = chrono::TimeZone::with_ymd_and_hms(<span class="kw-2">&amp;</span>west, <span class="number">1999</span>, <span class="number">12</span>, <span class="number">1</span>, <span class="number">11</span>, <span class="number">0</span>, <span class="number">0</span>).unwrap();
+<a href=#470 id=470 data-nosnippet>470</a>        <span class="macro">assert_eq!</span>(
+<a href=#471 id=471 data-nosnippet>471</a>            timestamp_tz_to_utc(value).to_rfc3339(),
+<a href=#472 id=472 data-nosnippet>472</a>            <span class="string">"1999-12-01T19:00:00+00:00"
+<a href=#473 id=473 data-nosnippet>473</a>        </span>);
+<a href=#474 id=474 data-nosnippet>474</a>    }
+<a href=#475 id=475 data-nosnippet>475</a>
+<a href=#476 id=476 data-nosnippet>476</a>    <span class="attr">#[test]
+<a href=#477 id=477 data-nosnippet>477</a>    </span><span class="kw">fn </span>boolean_client_threshold() {
+<a href=#478 id=478 data-nosnippet>478</a>        <span class="comment">// versions as reported by `Version::client()` for the Instant Client zips
+<a href=#479 id=479 data-nosnippet>479</a>        </span><span class="macro">assert!</span>(!client_reads_boolean_correctly(<span class="kw-2">&amp;</span>Version::new(
+<a href=#480 id=480 data-nosnippet>480</a>            <span class="number">23</span>, <span class="number">4</span>, <span class="number">0</span>, <span class="number">24</span>, <span class="number">5
+<a href=#481 id=481 data-nosnippet>481</a>        </span>)));
+<a href=#482 id=482 data-nosnippet>482</a>        <span class="macro">assert!</span>(client_reads_boolean_correctly(<span class="kw-2">&amp;</span>Version::new(
+<a href=#483 id=483 data-nosnippet>483</a>            <span class="number">23</span>, <span class="number">5</span>, <span class="number">0</span>, <span class="number">24</span>, <span class="number">7
+<a href=#484 id=484 data-nosnippet>484</a>        </span>)));
+<a href=#485 id=485 data-nosnippet>485</a>        <span class="macro">assert!</span>(client_reads_boolean_correctly(<span class="kw-2">&amp;</span>Version::new(
+<a href=#486 id=486 data-nosnippet>486</a>            <span class="number">23</span>, <span class="number">26</span>, <span class="number">3</span>, <span class="number">0</span>, <span class="number">0
+<a href=#487 id=487 data-nosnippet>487</a>        </span>)));
+<a href=#488 id=488 data-nosnippet>488</a>    }
+<a href=#489 id=489 data-nosnippet>489</a>
+<a href=#490 id=490 data-nosnippet>490</a>    <span class="attr">#[test]
+<a href=#491 id=491 data-nosnippet>491</a>    </span><span class="kw">fn </span>check_boolean_client_skips_queries_without_boolean() {
+<a href=#492 id=492 data-nosnippet>492</a>        <span class="comment">// no Boolean column -&gt; the client version is never looked up
+<a href=#493 id=493 data-nosnippet>493</a>        </span><span class="kw">let </span>names = <span class="macro">vec!</span>[<span class="string">"A"</span>.to_string()];
+<a href=#494 id=494 data-nosnippet>494</a>        <span class="kw">let </span>schema = <span class="macro">vec!</span>[OracleTypeSystem::NumInt(<span class="bool-val">true</span>)];
+<a href=#495 id=495 data-nosnippet>495</a>        <span class="macro">assert!</span>(check_boolean_client(<span class="kw-2">&amp;</span>names, <span class="kw-2">&amp;</span>schema).is_ok());
+<a href=#496 id=496 data-nosnippet>496</a>    }
+<a href=#497 id=497 data-nosnippet>497</a>}
 </code></pre></div></section></main></body></html>
