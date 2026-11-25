@@ -9,3 +9,10 @@ rustflags = [
   "-C", "link-arg=-undefined",
   "-C", "link-arg=dynamic_lookup",
 ]
+
+[env]
+# mssql-tds 0.4 uses Network.framework for TLS on macOS, which needs macOS
+# 10.15. Rust targets 10.12 on Intel Macs by default, and mssql-tds's build
+# script refuses that. A MACOSX_DEPLOYMENT_TARGET already set in the
+# environment still wins (release.yml sets it for maturin).
+MACOSX_DEPLOYMENT_TARGET = "10.15"

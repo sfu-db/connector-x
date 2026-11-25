@@ -119,6 +119,10 @@ jobs:
           args: -m connectorx-python/Cargo.toml -i python --release ${{ matrix.features }}
         env:
           SQLITE3_STATIC: 1
+          # mssql-tds needs macOS 10.15 (see .cargo/config.toml). maturin sets its
+          # own default (10.12 on Intel) before calling cargo, so set it here too;
+          # it also gives the wheel the matching macosx_10_15 tag. Ignored on Windows.
+          MACOSX_DEPLOYMENT_TARGET: "10.15"
 
       - uses: actions/upload-artifact@v7
         with:
