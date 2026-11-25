@@ -14,7 +14,7 @@ use crate::{
     sql::{count_query, limit0_query_oracle, CXQuery},
     utils::DummyBox,
 };
-use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
+use chrono::{DateTime, FixedOffset, NaiveDate, NaiveDateTime, Utc};
 use fehler::{throw, throws};
 use log::debug;
 use r2d2::{Pool, PooledConnection};
@@ -402,16 +402,35 @@ macro_rules! impl_produce_text {
     };
 }
 
-impl_produce_text!(
-    i64,
-    bool,
-    f64,
-    String,
-    NaiveDate,
-    NaiveDateTime,
-    DateTime<Utc>,
-    Vec<u8>,
-);
+impl_produce_text!(i64, bool, f64, String, NaiveDate, NaiveDateTime, Vec<u8>,);
+
+// `TIMESTAMP WITH TIME ZONE`: rust-oracle's `FromSql for DateTime<Utc>` reads the wall-clock time as if it were UTC
+// and drops the offset (`11:00:00 -08:00` would become `11:00:00 UTC`). Read it with its offset, then convert.
+fn timestamp_tz_to_utc(value: DateTime<FixedOffset>) -> DateTime<Utc> {
+    value.with_timezone(&Utc)
+}
+
+impl<'r, 'a> Produce<'r, DateTime<Utc>> for OracleTextSourceParser<'a> {
+    type Error = OracleSourceError;
+
+    #[throws(OracleSourceError)]
+    fn produce(&'r mut self) -> DateTime<Utc> {
+        let (ridx, cidx) = self.next_loc()?;
+        let value: DateTime<FixedOffset> = self.rowbuf[ridx].get(cidx)?;
+        timestamp_tz_to_utc(value)
+    }
+}
+
+impl<'r, 'a> Produce<'r, Option<DateTime<Utc>>> for OracleTextSourceParser<'a> {
+    type Error = OracleSourceError;
+
+    #[throws(OracleSourceError)]
+    fn produce(&'r mut self) -> Option<DateTime<Utc>> {
+        let (ridx, cidx) = self.next_loc()?;
+        let value: Option<DateTime<FixedOffset>> = self.rowbuf[ridx].get(cidx)?;
+        value.map(timestamp_tz_to_utc)
+    }
+}
 
 // Manual implementation for Decimal since Oracle doesn't support it directly via FromSql
 impl<'r, 'a> Produce<'r, Decimal> for OracleTextSourceParser<'a> {
@@ -443,6 +462,16 @@ impl<'r, 'a> Produce<'r, Option<Decimal>> for OracleTextSourceParser<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn timestamp_with_time_zone_keeps_the_instant() {
+        let west = FixedOffset::west_opt(8 * 3600).unwrap();
+        let value = chrono::TimeZone::with_ymd_and_hms(&west, 1999, 12, 1, 11, 0, 0).unwrap();
+        assert_eq!(
+            timestamp_tz_to_utc(value).to_rfc3339(),
+            "1999-12-01T19:00:00+00:00"
+        );
+    }
 
     #[test]
     fn boolean_client_threshold() {
