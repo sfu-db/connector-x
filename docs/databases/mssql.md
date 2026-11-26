@@ -18,32 +18,7 @@ cx.read_sql(conn, query)                                        # read data from
 
 ### MSSQL Driver
 
-ConnectorX uses `mssql-tds` by default. Pre-built Python wheels also include
-the previous Tiberius backend for compatibility:
-
-```py
-import connectorx as cx
-
-cx.mssql_driver = "tiberius"  # opt in before starting a query
-cx.mssql_driver = "mssql-tds" # restore the default
-```
-
-Changing `mssql_driver` only affects queries started after the assignment.
-Rust builds can select one backend with the `src_mssql_tds` or
-`src_mssql_tiberius` Cargo feature; enabling both exposes the runtime switch.
-
-Existing Python applications keep using `cx.read_sql(conn, query)` unchanged;
-the driver choice does not add a required argument or require compiling wheels.
-New wheels use `mssql-tds` by default. Set `cx.mssql_driver = "tiberius"` before
-starting reads to retain the previous driver, including its TLS behavior.
-The setting is process-wide: do not switch it while other threads start reads.
-
-Rust builds using `src_mssql` (now an alias for `src_mssql_tds`) or the `all`
-feature bundle link only `mssql-tds`. To keep the previous Tiberius source,
-partition, and parser types, enable `src_mssql_tiberius` instead of
-`src_mssql`. Tiberius is deprecated and will be removed in a future release.
-Enabling both drivers explicitly selects the runtime-switchable wrapper;
-its low-level types are not interchangeable with backend-specific types.
+ConnectorX uses `mssql-tds` for SQL Server connections.
 
 ### Connection Parameters
 * By adding `trusted_connection=true` to connection uri parameter, windows authentication will be enabled. 
@@ -52,18 +27,17 @@ its low-level types are not interchangeable with backend-specific types.
     * Example: `mssql://host:port/db?encrypt=true&trusted_connection=true`
 * By adding `trust_server_certificate=true` to connection uri parameter, the SQLServer certificate will not be validated and it is accepted as-is. 
     * Example: `mssql://host:port/db?trust_server_certificate=true&encrypt=true`
-* By adding `trust_server_certificate_ca=/path/to/ca-cert.crt` to connection uri parameter, the SQLServer certificate will be validated against the given CA certificate in addition to the system-truststore.
-    * Example: `mssql://host:port/db?encrypt=true&trust_server_certificate_ca=/path/to/ca-cert.crt`
+* `trust_server_certificate_ca` is not supported by the `mssql-tds` backend.
+  ConnectorX rejects the connection instead of silently weakening certificate
+  validation. Install the CA in the system trust store, or use
+  `trust_server_certificate=true` only when skipping validation is acceptable.
 
 ### `mssql-tds` backend details
-
-`src_mssql` and `src_mssql_tds` both link only TDS. Enable
-`src_mssql_tiberius` as well for runtime selection.
 
 The TDS backend shares a bounded connection pool across metadata, row counts,
 and partition readers, sized by `MsSQLSource::new`'s `nconn`. Partitions acquire
 leases only while executing, so there may be more partitions than connections.
-Like Tiberius, `trusted_connection=true` selects integrated authentication on
+`trusted_connection=true` selects integrated authentication on
 Windows, or on Unix when the `integrated-auth-gssapi` feature is enabled.
 
 TLS settings are not fully equivalent between the drivers:

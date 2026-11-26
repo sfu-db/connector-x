@@ -289,17 +289,9 @@ jobs:
           cargo llvm-cov show-env | tr -d "'" >> "$GITHUB_ENV"
           cargo llvm-cov clean --workspace --profraw-only
 
-      - name: Test python (mssql-tds)
-        run: just test-python --mssql-driver=mssql-tds --deselect=connectorx/tests/test_mssql.py::test_mssql_driver_switch
+      - name: Test python
+        run: just test-python
         # Integration tests provision required services at test time via Testcontainers
-
-      - name: Test python MSSQL (Tiberius)
-        working-directory: connectorx-python
-        run: uv run pytest connectorx/tests/test_mssql.py --mssql-driver=tiberius --deselect=connectorx/tests/test_mssql.py::test_mssql_driver_switch -v -s
-
-      - name: Test python MSSQL runtime switch
-        working-directory: connectorx-python
-        run: uv run pytest connectorx/tests/test_mssql.py::test_mssql_driver_switch -v -s
 
       - name: Generate python coverage
         if: matrix.python-version == '3.14'

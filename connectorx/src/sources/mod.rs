@@ -9,7 +9,7 @@ pub mod clickhouse;
 pub mod csv;
 #[cfg(feature = "src_dummy")]
 pub mod dummy;
-#[cfg(feature = "src_mssql_common")]
+#[cfg(feature = "src_mssql")]
 pub mod mssql;
 #[cfg(feature = "src_mysql")]
 pub mod mysql;

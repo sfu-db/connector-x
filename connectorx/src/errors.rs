@@ -77,14 +77,9 @@ pub enum ConnectorXOutError {
     MysqlError(#[from] r2d2_mysql::mysql::Error),
 
     /// Error from the SQL Server source.
-    #[cfg(feature = "src_mssql_common")]
+    #[cfg(feature = "src_mssql")]
     #[error(transparent)]
     MsSQLSourceError(#[from] crate::sources::mssql::MsSQLSourceError),
-
-    /// Error from the `tiberius` SQL Server client.
-    #[cfg(feature = "src_mssql_tiberius")]
-    #[error(transparent)]
-    MsSQL(#[from] tiberius::error::Error),
 
     /// Error from the SQLite source.
     #[cfg(feature = "src_sqlite")]
@@ -162,12 +157,12 @@ pub enum ConnectorXOutError {
     SQLiteArrowStreamTransportError(#[from] crate::transports::SQLiteArrowStreamTransportError),
 
     /// Error from the SQL Server to Arrow transport.
-    #[cfg(all(feature = "src_mssql_common", feature = "dst_arrow"))]
+    #[cfg(all(feature = "src_mssql", feature = "dst_arrow"))]
     #[error(transparent)]
     MsSQLArrowTransportError(#[from] crate::transports::MsSQLArrowTransportError),
 
     /// Error from the SQL Server to streaming Arrow transport.
-    #[cfg(all(feature = "src_mssql_common", feature = "dst_arrow"))]
+    #[cfg(all(feature = "src_mssql", feature = "dst_arrow"))]
     #[error(transparent)]
     MsSQLArrowStreamTransportError(#[from] crate::transports::MsSQLArrowStreamTransportError),
 

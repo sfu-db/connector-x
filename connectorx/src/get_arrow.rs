@@ -2,7 +2,7 @@
     feature = "src_postgres",
     feature = "src_mysql",
     feature = "src_sqlite",
-    feature = "src_mssql_common",
+    feature = "src_mssql",
     feature = "src_oracle",
     feature = "src_bigquery",
     feature = "src_clickhouse",
@@ -217,7 +217,7 @@ pub fn get_arrow(
             );
             dispatcher.run()?;
         }
-        #[cfg(feature = "src_mssql_common")]
+        #[cfg(feature = "src_mssql")]
         SourceType::MsSQL => {
             let rt = Arc::new(tokio::runtime::Runtime::new().expect("Failed to create runtime"));
             let source = MsSQLSource::new(rt, &source_conn.conn[..], queries.len())?;
@@ -293,7 +293,7 @@ pub fn get_arrow(
         feature = "src_postgres",
         feature = "src_mysql",
         feature = "src_sqlite",
-        feature = "src_mssql_common",
+        feature = "src_mssql",
         feature = "src_oracle",
         feature = "src_bigquery",
         feature = "src_clickhouse",
@@ -336,7 +336,7 @@ pub fn new_record_batch_iter(
         SourceType::SQLite => {
             sqlite_record_batch_iter(source_conn, origin_query, queries, batch_size)?
         }
-        #[cfg(feature = "src_mssql_common")]
+        #[cfg(feature = "src_mssql")]
         SourceType::MsSQL => {
             mssql_record_batch_iter(source_conn, origin_query, queries, batch_size)?
         }
@@ -547,7 +547,7 @@ fn sqlite_record_batch_iter(
 }
 
 /// [`new_record_batch_iter`] for SQL Server.
-#[cfg(feature = "src_mssql_common")]
+#[cfg(feature = "src_mssql")]
 #[throws(ConnectorXOutError)]
 fn mssql_record_batch_iter(
     source_conn: &SourceConn,

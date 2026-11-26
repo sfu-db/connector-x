@@ -163,7 +163,7 @@ pub fn mysql_url() -> String {
     env::var("MYSQL_URL").expect("MYSQL_URL must be set")
 }
 
-#[cfg(feature = "src_mssql_common")]
+#[cfg(feature = "src_mssql")]
 pub fn mssql_url() -> String {
     MSSQL_INIT.call_once(|| {
         if env::var("MSSQL_URL").is_ok() {

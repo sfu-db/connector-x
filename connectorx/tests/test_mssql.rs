@@ -17,7 +17,7 @@ use tokio::runtime::Runtime;
 
 mod test_db;
 
-#[cfg(feature = "src_mssql_tds")]
+#[cfg(feature = "src_mssql")]
 #[test]
 fn test_mssql_tds_session_identity() {
     let default_library_name =
@@ -61,7 +61,7 @@ fn test_mssql_tds_session_identity() {
     }
 }
 
-#[cfg(feature = "src_mssql_tds")]
+#[cfg(feature = "src_mssql")]
 mod tds_pool_tests {
     use super::*;
     use connectorx::constants::DB_BUFFER_SIZE;

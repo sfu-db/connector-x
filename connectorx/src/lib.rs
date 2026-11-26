@@ -213,7 +213,7 @@ pub mod prelude {
     pub use crate::sources::csv::CSVSource;
     #[cfg(feature = "src_dummy")]
     pub use crate::sources::dummy::DummySource;
-    #[cfg(feature = "src_mssql_common")]
+    #[cfg(feature = "src_mssql")]
     pub use crate::sources::mssql::MsSQLSource;
     #[cfg(feature = "src_mysql")]
     pub use crate::sources::mysql::MySQLSource;

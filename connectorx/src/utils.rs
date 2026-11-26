@@ -53,19 +53,11 @@ impl<T> DerefMut for DummyBox<T> {
     }
 }
 
-// Only the SQLite, Oracle and Tiberius MSSQL sources need `OwningHandle`.
-#[cfg(any(
-    feature = "src_sqlite",
-    feature = "src_oracle",
-    feature = "src_mssql_tiberius"
-))]
+// Only the SQLite and Oracle sources need `OwningHandle`.
+#[cfg(any(feature = "src_sqlite", feature = "src_oracle"))]
 pub(crate) use owning_handle::OwningHandle;
 
-#[cfg(any(
-    feature = "src_sqlite",
-    feature = "src_oracle",
-    feature = "src_mssql_tiberius"
-))]
+#[cfg(any(feature = "src_sqlite", feature = "src_oracle"))]
 mod owning_handle {
     use std::mem::ManuallyDrop;
     use std::ops::{Deref, DerefMut};

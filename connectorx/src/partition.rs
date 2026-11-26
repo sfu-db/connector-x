@@ -6,7 +6,7 @@
         feature = "src_postgres",
         feature = "src_sqlite",
         feature = "src_mysql",
-        feature = "src_mssql_common",
+        feature = "src_mssql",
         feature = "src_oracle",
         feature = "src_bigquery",
         feature = "src_trino",
@@ -25,8 +25,8 @@ use crate::source_router::{SourceConn, SourceType};
 use crate::sources::bigquery::BigQueryDialect;
 #[cfg(feature = "src_clickhouse")]
 use crate::sources::clickhouse::{ClickHouseSource, ClickHouseSourceError};
-#[cfg(feature = "src_mssql_tiberius")]
-use crate::sources::mssql::{mssql_config, FloatN, IntN, MsSQLTypeSystem};
+#[cfg(feature = "src_mssql")]
+use crate::sources::mssql::tds_get_partition_range;
 #[cfg(feature = "src_mysql")]
 use crate::sources::mysql::{build_opts, MySQLTypeSystem};
 #[cfg(feature = "src_oracle")]
@@ -38,7 +38,6 @@ use crate::sources::trino::TrinoDialect;
 #[cfg(any(
     feature = "src_postgres",
     feature = "src_mysql",
-    feature = "src_mssql_tiberius",
     feature = "src_oracle",
     feature = "src_bigquery",
     feature = "src_trino",
@@ -66,7 +65,7 @@ use serde::Deserialize;
 use serde_json::Value as JsonValue;
 #[cfg(feature = "src_clickhouse")]
 use sqlparser::dialect::ClickHouseDialect;
-#[cfg(feature = "src_mssql_common")]
+#[cfg(feature = "src_mssql")]
 use sqlparser::dialect::MsSqlDialect;
 #[cfg(feature = "src_mysql")]
 use sqlparser::dialect::MySqlDialect;
@@ -74,22 +73,11 @@ use sqlparser::dialect::MySqlDialect;
 use sqlparser::dialect::PostgreSqlDialect;
 #[cfg(feature = "src_sqlite")]
 use sqlparser::dialect::SQLiteDialect;
-#[cfg(feature = "src_mssql_tiberius")]
-use tiberius::Client;
-#[cfg(feature = "src_mssql_tiberius")]
-use tokio::net::TcpStream;
-#[cfg(any(
-    feature = "src_bigquery",
-    feature = "src_mssql_tiberius",
-    feature = "src_trino"
-))]
+#[cfg(any(feature = "src_bigquery", feature = "src_trino"))]
 use tokio::runtime::Runtime;
-#[cfg(feature = "src_mssql_tiberius")]
-use tokio_util::compat::TokioAsyncWriteCompatExt;
 #[cfg(any(
     feature = "src_postgres",
     feature = "src_mysql",
-    feature = "src_mssql_tiberius",
     feature = "src_oracle",
     feature = "src_bigquery",
     feature = "src_trino",
@@ -213,23 +201,8 @@ pub fn get_col_range(source_conn: &SourceConn, query: &str, col: &str) -> OutRes
         SourceType::SQLite => sqlite_get_partition_range(&source_conn.conn, query, col),
         #[cfg(feature = "src_mysql")]
         SourceType::MySQL => mysql_get_partition_range(&source_conn.conn, query, col),
-        #[cfg(all(feature = "src_mssql_tiberius", not(feature = "src_mssql_tds")))]
-        SourceType::MsSQL => mssql_get_partition_range(&source_conn.conn, query, col),
-        #[cfg(all(feature = "src_mssql_tiberius", feature = "src_mssql_tds"))]
-        SourceType::MsSQL => match crate::sources::mssql::active_driver() {
-            crate::sources::mssql::MsSQLDriverKind::Tiberius => {
-                mssql_get_partition_range(&source_conn.conn, query, col)
-            }
-            crate::sources::mssql::MsSQLDriverKind::MssqlTds => Ok(
-                crate::sources::mssql::tds_get_partition_range(&source_conn.conn, query, col)?,
-            ),
-        },
-        #[cfg(all(feature = "src_mssql_tds", not(feature = "src_mssql_tiberius")))]
-        SourceType::MsSQL => Ok(crate::sources::mssql::tds_get_partition_range(
-            &source_conn.conn,
-            query,
-            col,
-        )?),
+        #[cfg(feature = "src_mssql")]
+        SourceType::MsSQL => Ok(tds_get_partition_range(&source_conn.conn, query, col)?),
         #[cfg(feature = "src_oracle")]
         SourceType::Oracle => oracle_get_partition_range(&source_conn.conn, query, col),
         #[cfg(feature = "src_bigquery")]
@@ -267,7 +240,7 @@ pub fn get_part_query(
         SourceType::MySQL => {
             single_col_partition_query(query, col, lower, upper, &MySqlDialect {})?
         }
-        #[cfg(feature = "src_mssql_common")]
+        #[cfg(feature = "src_mssql")]
         SourceType::MsSQL => {
             single_col_partition_query(query, col, lower, upper, &MsSqlDialect {})?
         }
@@ -530,70 +503,6 @@ fn mysql_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
             (min_v.unwrap_or(0.0) as i64, max_v.unwrap_or(0.0) as i64)
         }
         _ => throw!(anyhow!("Partition can only be done on int columns")),
-    };
-
-    (min_v, max_v)
-}
-
-#[cfg(feature = "src_mssql_tiberius")]
-#[throws(ConnectorXOutError)]
-fn mssql_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
-    let rt = Runtime::new().expect("Failed to create runtime");
-    let config = mssql_config(conn)?;
-    let tcp = rt.block_on(TcpStream::connect(config.get_addr()))?;
-    tcp.set_nodelay(true)?;
-
-    let mut client = rt.block_on(Client::connect(config, tcp.compat_write()))?;
-
-    let range_query = get_partition_range_query(query, col, &MsSqlDialect {})?;
-    let query_result = rt.block_on(client.query(range_query.as_str(), &[]))?;
-    let row = rt.block_on(query_result.into_row())?.unwrap();
-
-    let col_type = MsSQLTypeSystem::from(&row.columns()[0].column_type());
-    let (min_v, max_v) = match col_type {
-        MsSQLTypeSystem::Tinyint(_) => {
-            let min_v: u8 = row.get(0).unwrap_or(0);
-            let max_v: u8 = row.get(1).unwrap_or(0);
-            (min_v as i64, max_v as i64)
-        }
-        MsSQLTypeSystem::Smallint(_) => {
-            let min_v: i16 = row.get(0).unwrap_or(0);
-            let max_v: i16 = row.get(1).unwrap_or(0);
-            (min_v as i64, max_v as i64)
-        }
-        MsSQLTypeSystem::Int(_) => {
-            let min_v: i32 = row.get(0).unwrap_or(0);
-            let max_v: i32 = row.get(1).unwrap_or(0);
-            (min_v as i64, max_v as i64)
-        }
-        MsSQLTypeSystem::Bigint(_) => {
-            let min_v: i64 = row.get(0).unwrap_or(0);
-            let max_v: i64 = row.get(1).unwrap_or(0);
-            (min_v, max_v)
-        }
-        MsSQLTypeSystem::Intn(_) => {
-            let min_v: IntN = row.get(0).unwrap_or(IntN(0));
-            let max_v: IntN = row.get(1).unwrap_or(IntN(0));
-            (min_v.0, max_v.0)
-        }
-        MsSQLTypeSystem::Float24(_) => {
-            let min_v: f32 = row.get(0).unwrap_or(0.0);
-            let max_v: f32 = row.get(1).unwrap_or(0.0);
-            (min_v as i64, max_v as i64)
-        }
-        MsSQLTypeSystem::Float53(_) => {
-            let min_v: f64 = row.get(0).unwrap_or(0.0);
-            let max_v: f64 = row.get(1).unwrap_or(0.0);
-            (min_v as i64, max_v as i64)
-        }
-        MsSQLTypeSystem::Floatn(_) => {
-            let min_v: FloatN = row.get(0).unwrap_or(FloatN(0.0));
-            let max_v: FloatN = row.get(1).unwrap_or(FloatN(0.0));
-            (min_v.0 as i64, max_v.0 as i64)
-        }
-        _ => throw!(anyhow!(
-            "Partition can only be done on int or float columns"
-        )),
     };
 
     (min_v, max_v)

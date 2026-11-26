@@ -12,23 +12,7 @@ pub enum MsSQLSourceError {
     #[error(transparent)]
     ConnectorXError(#[from] crate::errors::ConnectorXError),
 
-    /// Error from the `tiberius` client.
-    #[cfg(feature = "src_mssql_tiberius")]
-    #[error(transparent)]
-    MsSQLError(#[from] tiberius::error::Error),
-
-    /// Error while getting a connection from the pool.
-    #[cfg(feature = "src_mssql_tiberius")]
-    #[error(transparent)]
-    MsSQLRuntimeError(#[from] bb8_07::RunError<bb8_tiberius::Error>),
-
-    /// Error from the connection pool manager.
-    #[cfg(feature = "src_mssql_tiberius")]
-    #[error(transparent)]
-    MsSQLPoolError(#[from] bb8_tiberius::Error),
-
     /// Error from the `mssql-tds` client.
-    #[cfg(feature = "src_mssql_tds")]
     #[error(transparent)]
     MsSQLTdsError(#[from] mssql_tds::error::Error),
 

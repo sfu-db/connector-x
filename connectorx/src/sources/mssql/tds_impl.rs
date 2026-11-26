@@ -1,12 +1,8 @@
 //! `mssql-tds`-backed implementation of the MsSQL source.
 //!
-//! Added in Phase 2 of the tiberius -> mssql-tds migration (see
-//! sfu-db/connector-x#942). Compiled only when the `src_mssql_tds` feature
-//! is active. This implementation targets the same
-//! [`super::typesystem::MsSQLTypeSystem`] and the same set of native Rust
-//! produce types as [`super::tiberius_impl`], so
-//! [`crate::transports::mssql_arrow::MsSQLArrowTransport`] works unchanged
-//! against either backend.
+//! This implementation targets [`super::typesystem::MsSQLTypeSystem`] and
+//! the native Rust produce types expected by
+//! [`crate::transports::mssql_arrow::MsSQLArrowTransport`].
 //!
 //! Automatic partition-range discovery supports integer and floating-point
 //! columns, matching Tiberius's NULL and float-to-integer conversions.
@@ -29,8 +25,6 @@
 //!   even when `trust_server_certificate=false`. Use `encrypt=true` for required
 //!   full-session TLS (0x03), with certificate-chain validation enabled unless
 //!   `trust_server_certificate=true` is explicitly requested.
-
-use super::driver;
 use super::errors::MsSQLSourceError;
 use super::typesystem::{FloatN, IntN, MsSQLTypeSystem};
 use crate::constants::DB_BUFFER_SIZE;
@@ -92,9 +86,8 @@ pub fn set_user_agent_info(version: String, runtime: String) -> Result<(), &'sta
 }
 
 /// Builds the `mssql-tds` datasource string and [`ClientContext`] from a
-/// ConnectorX MSSQL connection URL. Mirrors
-/// [`super::tiberius_impl::mssql_config`]'s parsing, but expressed against
-/// `mssql-tds`'s config surface.
+/// ConnectorX MSSQL connection URL, keeping the parameter semantics of the
+/// former Tiberius backend.
 #[throws(MsSQLSourceError)]
 fn build_client_context(url: &Url) -> (String, ClientContext) {
     let host = decode(url.host_str().unwrap_or("localhost"))?.into_owned();
@@ -140,7 +133,7 @@ fn build_client_context(url: &Url) -> (String, ClientContext) {
         // equivalent yet, only exact-match certificate pinning. Reject
         // rather than silently downgrade TLS trust.
         throw!(anyhow!(
-            "trust_server_certificate_ca={} is not supported with the src_mssql_tds backend: \
+            "trust_server_certificate_ca={} is not supported with the src_mssql backend: \
              mssql-tds only supports exact-match certificate pinning, not CA validation",
             v
         ));
@@ -541,7 +534,6 @@ impl MsSQLSource {
     /// Create a source with a pool of up to `nconn` connections.
     #[throws(MsSQLSourceError)]
     pub fn new(rt: Arc<Runtime>, conn: &str, nconn: usize) -> Self {
-        debug!("mssql source using driver: {:?}", driver::active_driver());
         let conn_url = Url::parse(conn)?;
         let pool = connection_pool(&rt, &conn_url, nconn)?;
 
@@ -881,7 +873,7 @@ fn column_value_to_cell(value: ColumnValues) -> TdsCell {
         // non-nullable smallmoney column ever needs it.
         ColumnValues::SmallMoney(sm) => TdsCell::F64((sm.int_val as f64) / 10_000.0),
         other => throw!(anyhow!(
-            "MsSQL: unsupported value for src_mssql_tds backend: {:?}",
+            "MsSQL: unsupported value for src_mssql backend: {:?}",
             other
         )),
     }
