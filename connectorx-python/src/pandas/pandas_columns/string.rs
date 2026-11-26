@@ -202,11 +202,11 @@ impl PandasColumn<Option<char>> for StringColumn {
     }
 }
 
-impl<'r> HasPandasColumn for &'r str {
+impl HasPandasColumn for &str {
     type PandasColumn<'a> = StringColumn;
 }
 
-impl<'r> HasPandasColumn for Option<&'r str> {
+impl HasPandasColumn for Option<&str> {
     type PandasColumn<'a> = StringColumn;
 }
 
@@ -315,8 +315,8 @@ impl StringColumn {
                 }
             }
 
-            self.string_buf.truncate(0);
-            self.row_idx.truncate(0);
+            self.string_buf.clear();
+            self.row_idx.clear();
         }
     }
 

@@ -1,3 +1,7 @@
+// Shared by every integration test binary via `mod test_db;`. Each binary only
+// uses the helpers for its own database, so the rest look unused per binary.
+#![allow(dead_code, unused_imports)]
+
 use std::{
     env, fs,
     net::{SocketAddr, TcpStream, ToSocketAddrs},
@@ -178,7 +182,7 @@ pub fn mssql_url() -> String {
         )
         .expect("write patched mssql sql");
 
-        let image = GenericImage::new("mcr.microsoft.com/mssql/server", "2022-CU12-ubuntu-22.04")
+        let image = GenericImage::new("mcr.microsoft.com/mssql/server", "2025-latest")
             .with_exposed_port(1433.tcp())
             .with_wait_for(WaitFor::seconds(60))
             .with_startup_timeout(Duration::from_secs(180))
@@ -277,22 +281,24 @@ fn run_trino_statement(base_url: &str, statement: &str) {
     }
 
     let mut payload: serde_json::Value = ureq::post(&format!("{base_url}/v1/statement"))
-        .set("X-Trino-User", "test")
-        .set("X-Trino-Catalog", "test")
-        .set("X-Trino-Schema", "test")
-        .send_string(stmt)
+        .header("X-Trino-User", "test")
+        .header("X-Trino-Catalog", "test")
+        .header("X-Trino-Schema", "test")
+        .send(stmt)
         .expect("execute trino statement")
-        .into_json()
+        .body_mut()
+        .read_json()
         .expect("parse trino response");
 
     while let Some(next) = payload.get("nextUri").and_then(|v| v.as_str()) {
         payload = ureq::get(next)
-            .set("X-Trino-User", "test")
-            .set("X-Trino-Catalog", "test")
-            .set("X-Trino-Schema", "test")
+            .header("X-Trino-User", "test")
+            .header("X-Trino-Catalog", "test")
+            .header("X-Trino-Schema", "test")
             .call()
             .expect("poll trino query")
-            .into_json()
+            .body_mut()
+            .read_json()
             .expect("parse trino poll response");
         if payload.get("error").is_some() {
             panic!("trino query failed: {}", payload);

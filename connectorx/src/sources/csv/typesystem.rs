@@ -12,10 +12,15 @@ use chrono::{DateTime, Utc};
 /// For all the destinations, they must support writing any value whose type is defined by DummyTypeSystem.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum CSVTypeSystem {
+    /// A floating-point value, read as `f64`.
     F64(bool),
+    /// An integer value, read as `i64`.
     I64(bool),
+    /// A boolean value, read as `bool`.
     Bool(bool),
+    /// A string value, read as `String`.
     String(bool),
+    /// A timestamp, read as `DateTime<Utc>`.
     DateTime(bool),
 }
 
@@ -27,5 +32,40 @@ impl_typesystem! {
         { Bool => bool }
         { String => String }
         { DateTime => DateTime<Utc> }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::CSVTypeSystem;
+    use crate::typesystem::TypeAssoc;
+
+    #[test]
+    fn associates_csv_values_and_nullable_values() {
+        assert!(<i64 as TypeAssoc<CSVTypeSystem>>::check(CSVTypeSystem::I64(false)).is_ok());
+        assert!(<Option<i64> as TypeAssoc<CSVTypeSystem>>::check(CSVTypeSystem::I64(true)).is_ok());
+        assert!(<f64 as TypeAssoc<CSVTypeSystem>>::check(CSVTypeSystem::F64(false)).is_ok());
+        assert!(<Option<f64> as TypeAssoc<CSVTypeSystem>>::check(CSVTypeSystem::F64(true)).is_ok());
+        assert!(<bool as TypeAssoc<CSVTypeSystem>>::check(CSVTypeSystem::Bool(false)).is_ok());
+        assert!(
+            <Option<bool> as TypeAssoc<CSVTypeSystem>>::check(CSVTypeSystem::Bool(true)).is_ok()
+        );
+        assert!(<String as TypeAssoc<CSVTypeSystem>>::check(CSVTypeSystem::String(false)).is_ok());
+        assert!(
+            <Option<String> as TypeAssoc<CSVTypeSystem>>::check(CSVTypeSystem::String(true))
+                .is_ok()
+        );
+        assert!(
+            <chrono::DateTime<chrono::Utc> as TypeAssoc<CSVTypeSystem>>::check(
+                CSVTypeSystem::DateTime(false)
+            )
+            .is_ok()
+        );
+        assert!(
+            <Option<chrono::DateTime<chrono::Utc>> as TypeAssoc<CSVTypeSystem>>::check(
+                CSVTypeSystem::DateTime(true)
+            )
+            .is_ok()
+        );
     }
 }

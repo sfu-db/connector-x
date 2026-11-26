@@ -4,17 +4,28 @@ use fehler::{throw, throws};
 use rusqlite::types::Type;
 use std::convert::TryFrom;
 
+/// Column types of the SQLite source. The `bool` is `true` when the column is nullable.
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum SQLiteTypeSystem {
+    /// Declared `BOOLEAN` or `BOOL`, read as `bool`.
     Bool(bool),
+    /// Integer column (declared type contains `INT`, or `INTEGER` storage class), read as `i64`.
     Int8(bool),
+    /// Declared `INT4`, read as `i32`.
     Int4(bool),
+    /// Declared `INT2`, read as `i16`.
     Int2(bool),
+    /// Floating-point column (`REAL` affinity), read as `f64`.
     Real(bool),
+    /// Text column (`TEXT` affinity), read as `Box<str>`.
     Text(bool),
+    /// Declared `DATE`, read as `NaiveDate`.
     Date(bool),
+    /// Declared `TIME`, read as `NaiveTime`.
     Time(bool),
+    /// Declared `DATETIME` or `TIMESTAMP`, read as `NaiveDateTime`.
     Timestamp(bool),
+    /// Blob column (`BLOB` affinity), read as `Vec<u8>`.
     Blob(bool),
 }
 
@@ -88,5 +99,71 @@ impl TryFrom<(Option<&str>, Type)> for SQLiteTypeSystem {
             // derive from value type directly if no declare type available
             (None, ty) => SQLiteTypeSystem::try_from(ty)?,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::SQLiteTypeSystem;
+    use rusqlite::types::Type;
+    use std::convert::TryFrom;
+
+    #[test]
+    fn maps_value_types() {
+        assert!(matches!(
+            SQLiteTypeSystem::try_from(Type::Integer).unwrap(),
+            SQLiteTypeSystem::Int8(true)
+        ));
+        assert!(matches!(
+            SQLiteTypeSystem::try_from(Type::Real).unwrap(),
+            SQLiteTypeSystem::Real(true)
+        ));
+        assert!(matches!(
+            SQLiteTypeSystem::try_from(Type::Text).unwrap(),
+            SQLiteTypeSystem::Text(true)
+        ));
+        assert!(matches!(
+            SQLiteTypeSystem::try_from(Type::Blob).unwrap(),
+            SQLiteTypeSystem::Blob(true)
+        ));
+        assert!(SQLiteTypeSystem::try_from(Type::Null).is_err());
+    }
+
+    #[test]
+    fn maps_declared_types_and_affinity_fallbacks() {
+        for (declared, expected) in [
+            ("int4", SQLiteTypeSystem::Int4(true)),
+            ("int2", SQLiteTypeSystem::Int2(true)),
+            ("boolean", SQLiteTypeSystem::Bool(true)),
+            ("bool", SQLiteTypeSystem::Bool(true)),
+            ("date", SQLiteTypeSystem::Date(true)),
+            ("time", SQLiteTypeSystem::Time(true)),
+            ("datetime", SQLiteTypeSystem::Timestamp(true)),
+            ("timestamp", SQLiteTypeSystem::Timestamp(true)),
+            ("integer", SQLiteTypeSystem::Int8(true)),
+            ("varchar", SQLiteTypeSystem::Text(true)),
+            ("clob", SQLiteTypeSystem::Text(true)),
+            ("text", SQLiteTypeSystem::Text(true)),
+            ("real", SQLiteTypeSystem::Real(true)),
+            ("float", SQLiteTypeSystem::Real(true)),
+            ("double", SQLiteTypeSystem::Real(true)),
+            ("blob", SQLiteTypeSystem::Blob(true)),
+        ] {
+            assert_eq!(
+                format!(
+                    "{:?}",
+                    SQLiteTypeSystem::try_from((Some(declared), Type::Text)).unwrap()
+                ),
+                format!("{expected:?}")
+            );
+        }
+        assert!(matches!(
+            SQLiteTypeSystem::try_from((Some("other"), Type::Real)).unwrap(),
+            SQLiteTypeSystem::Real(true)
+        ));
+        assert!(matches!(
+            SQLiteTypeSystem::try_from((None, Type::Text)).unwrap(),
+            SQLiteTypeSystem::Text(true)
+        ));
     }
 }

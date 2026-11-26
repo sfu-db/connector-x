@@ -32,6 +32,32 @@ ConnectorX uses `mssql-tds` for SQL Server connections.
   validation. Install the CA in the system trust store, or use
   `trust_server_certificate=true` only when skipping validation is acceptable.
 
+### `mssql-tds` backend details
+
+The TDS backend shares a bounded connection pool across metadata, row counts,
+and partition readers, sized by `MsSQLSource::new`'s `nconn`. Partitions acquire
+leases only while executing, so there may be more partitions than connections.
+`trusted_connection=true` selects integrated authentication on
+Windows, or on Unix when the `integrated-auth-gssapi` feature is enabled.
+
+TLS settings are not fully equivalent between the drivers:
+
+| URL setting | Tiberius | `mssql-tds` |
+|:------------|:---------|:------------|
+| `encrypt` unset | `NotSupported` (prelogin `0x02`), advertises TLS as unsupported | `PreferOff` (`0x00`); login-only TLS, or full-session TLS when required by the server |
+| `encrypt=false` | `Off` (`0x00`) | `PreferOff` (`0x00`) |
+| `encrypt=true` | `Required` (`0x03`) | `Required` (`0x03`) |
+
+`mssql-tds` has no public setting matching Tiberius's unset default. Its
+login-only TLS also skips certificate-chain validation unconditionally, even with
+`trust_server_certificate=false`. Use `encrypt=true` to require full-session
+TLS with certificate validation; chain validation is disabled only if
+`trust_server_certificate=true` is explicitly requested in this mode.
+Boolean values for `encrypt` and `trust_server_certificate` are case-insensitive.
+
+`trust_server_certificate_ca` is rejected by the TDS backend: the driver's
+certificate-pinning option is not a substitute for CA validation.
+
 ### SQLServer-Pandas Type Mapping
 | SQLServer Type  |      Pandas Type            |  Comment                           |
 |:---------------:|:---------------------------:|:----------------------------------:|

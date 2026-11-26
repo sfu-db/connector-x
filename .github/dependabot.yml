@@ -24,3 +24,36 @@ updates:
       prefix: build(rust)
       prefix-development: chore(rust)
     #labels: ['skip changelog']
+    groups:
+      # polars depends on polars-arrow at its own exact version, so bumping
+      # either crate alone leaves two incompatible polars-arrow copies in the
+      # build. Always update them in one PR.
+      polars:
+        patterns: ['polars', 'polars-*']
+
+  # connectorx-python is its own Cargo workspace with its own Cargo.lock, so
+  # the root entry above never touches it.
+  - package-ecosystem: cargo
+    directory: '/connectorx-python'
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: build(rust)
+      prefix-development: chore(rust)
+    groups:
+      # Same reason as above: keep polars and polars-arrow in one PR, and
+      # aligned with the root workspace.
+      polars:
+        patterns: ['polars', 'polars-*']
+
+  # Python dependencies of connectorx-python (pyproject.toml / uv.lock).
+  - package-ecosystem: uv
+    directory: '/connectorx-python'
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: build(python)
+      prefix-development: chore(python)
+    groups:
+      polars:
+        patterns: ['polars', 'polars-*']

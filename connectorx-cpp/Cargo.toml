@@ -1,6 +1,6 @@
 [package]
 name = "connectorx-cpp"
-version = "0.4.6"
+version = "0.4.7-alpha.1"
 edition = "2021"
 license = "MIT"
 
@@ -29,6 +29,7 @@ federation = ["connectorx/federation"]
 nbstr = []
 srcs = [
   "connectorx/src_postgres",
+  "connectorx/src_redshift",
   "connectorx/src_mysql",
   "connectorx/src_sqlite",
   "connectorx/src_mssql",

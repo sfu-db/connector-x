@@ -59,17 +59,23 @@ pub trait ParameterizedOn<T>: ParameterizedFunc {
 
 /// Defines a rule to convert a type `T` to a type `U`.
 pub trait TypeConversion<T, U> {
+    /// Convert `val` from `T` to `U`.
     fn convert(val: T) -> U;
 }
 
 /// Transport asks the source to produce a value, do type conversion and then write
 /// the value to a destination. Do not manually implement this trait for types.
-/// Use [`impl_transport!`] to create a struct that implements this trait instead.
+/// Use [`impl_transport!`](crate::impl_transport) to create a struct that implements this trait instead.
 pub trait Transport {
+    /// Type system of the source.
     type TSS: TypeSystem;
+    /// Type system of the destination.
     type TSD: TypeSystem;
+    /// Source this transport reads from.
     type S: Source;
+    /// Destination this transport writes to.
     type D: Destination;
+    /// Error type, convertible from the source, destination and ConnectorX errors.
     type Error: From<ConnectorXError>
         + From<<Self::S as Source>::Error>
         + From<<Self::D as Destination>::Error>
@@ -101,6 +107,8 @@ pub trait Transport {
     where
         Self: 'd;
 
+    /// Return a function pointer that moves one value of source type `ts1` into the
+    /// destination as type `ts2`, or an error if no conversion rule exists.
     #[allow(clippy::type_complexity)]
     fn processor<'s, 'd>(
         ts1: Self::TSS,
@@ -140,4 +148,68 @@ where
     let val: T2 = <TP as TypeConversion<T1, _>>::convert(val);
     DestinationPartition::write(dst, val)?;
     Ok(())
+}
+
+/// Test helpers for the mappings that `impl_typesystem!` generates.
+#[cfg(test)]
+pub(crate) mod testing {
+    use super::*;
+    use std::marker::PhantomData;
+
+    /// Realizes to the realized type's `TypeAssoc::check`.
+    pub(crate) struct Check<TS>(PhantomData<TS>);
+
+    impl<TS> ParameterizedFunc for Check<TS> {
+        type Function = fn(TS) -> CXResult<()>;
+    }
+
+    impl<TS: TypeSystem, T: TypeAssoc<TS>> ParameterizedOn<T> for Check<TS> {
+        fn parameterize() -> Self::Function {
+            T::check
+        }
+    }
+
+    /// Realizes to the realized type's name.
+    pub(crate) struct Name;
+
+    impl ParameterizedFunc for Name {
+        type Function = fn() -> &'static str;
+    }
+
+    impl<T> ParameterizedOn<T> for Name {
+        fn parameterize() -> Self::Function {
+            std::any::type_name::<T>
+        }
+    }
+
+    /// Asserts that the variant `ts(false)` realizes to the Rust type whose
+    /// name ends in `rust_type`, `ts(true)` to `Option` of it, and that each
+    /// realized type type-checks against its own variant and not the other.
+    pub(crate) fn assert_maps<TS>(ts: fn(bool) -> TS, rust_type: &str)
+    where
+        TS: TypeSystem + Realize<Check<TS>> + Realize<Name> + std::fmt::Debug,
+    {
+        let (non_null, nullable) = (ts(false), ts(true));
+
+        let name = Realize::<Name>::realize(non_null).unwrap()();
+        assert!(
+            name.ends_with(rust_type) && !name.starts_with("core::option::Option"),
+            "{non_null:?} realizes to {name}, expected {rust_type}"
+        );
+        let name = Realize::<Name>::realize(nullable).unwrap()();
+        assert!(
+            name.starts_with("core::option::Option<") && name.ends_with(&format!("{rust_type}>")),
+            "{nullable:?} realizes to {name}, expected Option<{rust_type}>"
+        );
+
+        for (ts, other) in [(non_null, nullable), (nullable, non_null)] {
+            let check = Realize::<Check<TS>>::realize(ts).unwrap();
+            assert!(check(ts).is_ok(), "{ts:?} does not check against itself");
+            let err = check(other).unwrap_err();
+            assert!(
+                matches!(err, crate::errors::ConnectorXError::TypeCheckFailed(..)),
+                "{err}"
+            );
+        }
+    }
 }

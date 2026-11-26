@@ -49,7 +49,7 @@ fn main() {
     let mut num_rows = 0;
     let mut num_batches = 0;
     for record_batch in batch_iter {
-        let record_batch = record_batch;
+        let record_batch = record_batch.expect("stream failed");
         println!("got 1 batch, with {} rows", record_batch.num_rows());
         num_rows += record_batch.num_rows();
         num_batches += 1;

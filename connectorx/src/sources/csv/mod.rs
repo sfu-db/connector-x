@@ -15,6 +15,7 @@ use regex::{Regex, RegexBuilder};
 use std::collections::HashSet;
 use std::fs::File;
 
+/// Source that reads CSV files. Each "query" is a file path.
 pub struct CSVSource {
     schema: Vec<CSVTypeSystem>,
     files: Vec<CXQuery<String>>,
@@ -22,6 +23,7 @@ pub struct CSVSource {
 }
 
 impl CSVSource {
+    /// Create a source with the given column types.
     pub fn new(schema: &[CSVTypeSystem]) -> Self {
         CSVSource {
             schema: schema.to_vec(),
@@ -30,6 +32,7 @@ impl CSVSource {
         }
     }
 
+    /// Guess the column types from the values in the files.
     #[throws(CSVSourceError)]
     pub fn infer_schema(&mut self) -> Vec<CSVTypeSystem> {
         // regular expressions for infer CSVTypeSystem from string
@@ -62,21 +65,19 @@ impl CSVSource {
                     if string.is_empty() {
                         nulls[field_counter] = true;
                     } else {
-                        let dt: CSVTypeSystem;
-
-                        if string.starts_with('"') {
-                            dt = CSVTypeSystem::String(false);
+                        let dt: CSVTypeSystem = if string.starts_with('"') {
+                            CSVTypeSystem::String(false)
                         } else if boolean_re.is_match(string) {
-                            dt = CSVTypeSystem::Bool(false);
+                            CSVTypeSystem::Bool(false)
                         } else if decimal_re.is_match(string) {
-                            dt = CSVTypeSystem::F64(false);
+                            CSVTypeSystem::F64(false)
                         } else if integer_re.is_match(string) {
-                            dt = CSVTypeSystem::I64(false);
+                            CSVTypeSystem::I64(false)
                         } else if datetime_re.is_match(string) {
-                            dt = CSVTypeSystem::DateTime(false);
+                            CSVTypeSystem::DateTime(false)
                         } else {
-                            dt = CSVTypeSystem::String(false);
-                        }
+                            CSVTypeSystem::String(false)
+                        };
                         column_types[field_counter].insert(dt);
                     }
                 }
@@ -113,16 +114,11 @@ impl CSVSource {
                         }
                     }
                 }
-                2 => {
-                    if possibilities.contains(&CSVTypeSystem::I64(false))
-                        && possibilities.contains(&CSVTypeSystem::F64(false))
-                    {
-                        // Integer && Float -> Float
-                        schema.push(CSVTypeSystem::F64(has_nulls));
-                    } else {
-                        // Conflicting CSVTypeSystems -> String
-                        schema.push(CSVTypeSystem::String(has_nulls));
-                    }
+                2 if possibilities.contains(&CSVTypeSystem::I64(false))
+                    && possibilities.contains(&CSVTypeSystem::F64(false)) =>
+                {
+                    // Integer && Float -> Float
+                    schema.push(CSVTypeSystem::F64(has_nulls));
                 }
                 _ => {
                     // Conflicting CSVTypeSystems -> String
@@ -192,6 +188,7 @@ impl Source for CSVSource {
     }
 }
 
+/// One CSV file of a [`CSVSource`].
 pub struct CSVSourcePartition {
     records: Vec<csv::StringRecord>,
     counter: usize,
@@ -200,6 +197,7 @@ pub struct CSVSourcePartition {
 }
 
 impl CSVSourcePartition {
+    /// Open the file `fname`.
     #[throws(CSVSourceError)]
     pub fn new(fname: CXQuery<String>) -> Self {
         let reader = csv::ReaderBuilder::new()
@@ -252,6 +250,7 @@ impl SourcePartition for CSVSourcePartition {
     }
 }
 
+/// Value parser for a CSV file.
 pub struct CSVSourcePartitionParser<'a> {
     records: &'a mut [csv::StringRecord],
     counter: &'a mut usize,
@@ -406,5 +405,56 @@ impl<'r, 'a> Produce<'r, Option<DateTime<Utc>>> for CSVSourcePartitionParser<'a>
             .parse()
             .map_err(|_| ConnectorXError::cannot_produce::<DateTime<Utc>>(Some(v.into())))?;
         Some(v)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{CSVSource, CSVTypeSystem};
+    use crate::{sources::Source, sql::CXQuery};
+    use std::{fs, path::PathBuf};
+
+    #[test]
+    fn infers_schema_from_numeric_boolean_datetime_and_string_values() {
+        let path: PathBuf =
+            std::env::temp_dir().join(format!("connectorx-csv-infer-{}.csv", std::process::id()));
+        fs::write(
+            &path,
+            "integer,float,mixed,boolean,datetime,string,empty\n\
+             1,1.5,1,true,2020-01-02T03:04:05,hello,\n\
+             ,2.5,2.5,,2020-01-02T03:04:05,world,\n",
+        )
+        .unwrap();
+
+        let mut source = CSVSource::new(&[]);
+        source.set_queries(&[CXQuery::naked(path.to_string_lossy().into_owned())]);
+        source.fetch_metadata().unwrap();
+
+        assert_eq!(
+            source.schema(),
+            vec![
+                CSVTypeSystem::I64(true),
+                CSVTypeSystem::F64(false),
+                CSVTypeSystem::F64(false),
+                CSVTypeSystem::Bool(true),
+                CSVTypeSystem::DateTime(false),
+                CSVTypeSystem::String(false),
+                CSVTypeSystem::String(true),
+            ]
+        );
+        assert_eq!(
+            source.names(),
+            vec![
+                "integer".to_owned(),
+                "float".to_owned(),
+                "mixed".to_owned(),
+                "boolean".to_owned(),
+                "datetime".to_owned(),
+                "string".to_owned(),
+                "empty".to_owned(),
+            ]
+        );
+
+        fs::remove_file(path).unwrap();
     }
 }

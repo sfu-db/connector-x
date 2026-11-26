@@ -88,6 +88,24 @@ MODIN_ENGINE=dask
 ### Other commands
 
 * Format the code: `cargo fmt`
+* List every `just` recipe with a one-line description: `just --list`
+
+### Before you push
+
+CI (`.github/workflows/ci.yml`) runs these checks on every pull request. Run them locally first, from the repository root:
+
+| Check | Command | Needs Docker? |
+|---|---|---|
+| Formatting | `cargo fmt --all -- --check` | No |
+| Clippy | `cargo clippy --features all --all -- -D warnings --force-warn missing_docs` | No |
+| Each feature compiles on its own | `just test-feature-gate` | No |
+| Doctests | `cargo test --locked --doc --features all` | No |
+| Rust unit tests | `cargo test --lib --features all` | No |
+| Clippy for the Python bindings | `cd connectorx-python && cargo clippy --locked --all-targets -- -D warnings` | No |
+| Rust integration tests | `just test-ci` | Yes, unless the `*_URL` variables in `.env` point at running servers |
+| Python tests | `just test-python` | Yes, unless the `*_URL` variables in `.env` point at running servers |
+
+The integration suites start each database with testcontainers when its URL is unset. CI also uploads coverage from `just coverage-unit` (no databases) and `just coverage-integration` (Docker) to Codecov.
 
 ## How to Add a New Source
 
@@ -97,7 +115,7 @@ MODIN_ENGINE=dask
   * Examples can be found [here](https://github.com/sfu-db/connector-x/blob/main/connectorx/src/sources)
 * Define the conversion between the new source and existing destinations
   * Examples can be found [here](https://github.com/sfu-db/connector-x/tree/main/connectorx/src/transports) and [here](https://github.com/sfu-db/connector-x/tree/main/connectorx-python/src/pandas/transports)
-* Make the new source visable to destinations, including:
+* Make the new source visible to destinations, including:
   * Add the source to the [source_router](https://github.com/sfu-db/connector-x/blob/main/connectorx/src/source_router.rs)
   * Add the source to writing functions of each destination. Here are examples for [pandas](https://github.com/sfu-db/connector-x/blob/main/connectorx-python/src/pandas/mod.rs) and [arrow](https://github.com/sfu-db/connector-x/blob/main/connectorx-python/src/arrow.rs)
 * Add corresponding unit tests under `connectorx/tests` for Rust and `connectorx-python/connectorx/tests` for Python

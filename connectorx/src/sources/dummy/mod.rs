@@ -12,6 +12,7 @@ use chrono::{offset, DateTime, Utc};
 use fehler::{throw, throws};
 use num_traits::cast::FromPrimitive;
 
+/// Source that generates values without a database, for tests and benchmarks.
 pub struct DummySource {
     names: Vec<String>,
     schema: Vec<DummyTypeSystem>,
@@ -19,6 +20,7 @@ pub struct DummySource {
 }
 
 impl DummySource {
+    /// Create a source with the given column names and types.
     pub fn new<S: AsRef<str>>(names: &[S], schema: &[DummyTypeSystem]) -> Self {
         assert_eq!(names.len(), schema.len());
         DummySource {
@@ -77,6 +79,7 @@ impl Source for DummySource {
     }
 }
 
+/// One partition of a [`DummySource`].
 pub struct DummySourcePartition {
     nrows: usize,
     ncols: usize,
@@ -84,6 +87,7 @@ pub struct DummySourcePartition {
 }
 
 impl DummySourcePartition {
+    /// Create a partition from a query of the form `"nrows,ncols"`.
     pub fn new(_schema: &[DummyTypeSystem], q: &CXQuery<String>) -> Self {
         let v: Vec<usize> = q.as_str().split(',').map(|s| s.parse().unwrap()).collect();
 
@@ -121,6 +125,7 @@ impl SourcePartition for DummySourcePartition {
     }
 }
 
+/// Value parser for a dummy partition.
 pub struct DummySourcePartitionParser<'a> {
     counter: &'a mut usize,
     #[allow(unused)]
@@ -201,7 +206,7 @@ impl<'r, 'a> Produce<'r, bool> for DummySourcePartitionParser<'a> {
     type Error = ConnectorXError;
 
     fn produce(&mut self) -> Result<bool> {
-        let ret = self.next_val() % 2 == 0;
+        let ret = self.next_val().is_multiple_of(2);
         Ok(ret)
     }
 }

@@ -535,7 +535,7 @@ def test_mysql_partitioned_pre_execution_queries(mysql_url: str) -> None:
     expected = pd.DataFrame(
         index=range(2),
         data={
-            "name": pd.Series(["max_execution_time", "wait_timeout"], dtype="str"),
+            "name": pd.Series(["max_execution_time", "wait_timeout"], dtype="object"),
             "setting": pd.Series([2151, 2252], dtype="float64"),
         },
     ).sort_values(by=['name']).reset_index(drop=True)
@@ -781,3 +781,49 @@ def test_mysql_schema_fallback_without_server_side_prepare(mysql_url: str) -> No
         empty = read_sql(mysql_url, empty_query, protocol="text", return_type="arrow")
         assert empty.schema == expected_empty.schema
         assert empty.num_rows == 0
+
+
+@pytest.mark.parametrize("protocol", ["binary", "text"])
+@pytest.mark.parametrize(
+    "column",
+    [
+        "test_date",  # 0000-00-00
+        "test_datetime",  # 0000-00-00 00:00:00
+        "test_time_negative",  # -01:00:00, outside chrono NaiveTime
+        "test_time_over_24h",  # 838:59:59, outside chrono NaiveTime
+        "test_decimal_wide",  # 50 digits, beyond rust_decimal precision
+    ],
+)
+def test_mysql_unconvertible_value_raises(mysql_url: str, protocol: str, column: str) -> None:
+    # See test_unconvertible in scripts/mysql.sql. A value the column's Rust
+    # type cannot hold must raise an ordinary RuntimeError naming the column,
+    # not a PanicException, which `except Exception` cannot catch (#476, #268).
+    with pytest.raises(RuntimeError, match=rf"Cannot produce a .*column `{column}`") as excinfo:
+        read_sql(
+            mysql_url,
+            f"SELECT {column} FROM test_unconvertible",
+            protocol=protocol,
+        )
+    # The error names the column's type, not the Option wrapping nullable columns.
+    assert "Option<" not in str(excinfo.value)
+
+
+@pytest.mark.parametrize("protocol", ["binary", "text"])
+def test_mysql_arrow_stream_unconvertible_value_raises(mysql_url: str, protocol: str) -> None:
+    # Same values as above, streamed: the batches before the bad row are
+    # delivered, then iterating raises the same RuntimeError right away instead
+    # of a PanicException after the whole result set has been fetched.
+    reader = read_sql(
+        mysql_url,
+        "SELECT test_int, test_date FROM test_unconvertible ORDER BY test_int",
+        protocol=protocol,
+        return_type="arrow_stream",
+        batch_size=1,
+    )
+
+    first = reader.read_next_batch()
+    assert first.num_rows == 1
+    assert first.column("test_int").to_pylist() == [1]
+
+    with pytest.raises(RuntimeError, match=r"Cannot produce a .*column `test_date`"):
+        reader.read_next_batch()

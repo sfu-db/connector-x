@@ -5,21 +5,24 @@ use crate::{
         typesystem::{ArrowTypeSystem, NaiveDateTimeWrapperMicro, NaiveTimeWrapperMicro},
         ArrowDestination, ArrowDestinationError,
     },
-    impl_transport,
     sources::sqlite::{SQLiteSource, SQLiteSourceError, SQLiteTypeSystem},
     typesystem::TypeConversion,
 };
 use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
 use thiserror::Error;
 
+/// Errors raised while moving data from the SQLite source to the Arrow destination.
 #[derive(Error, Debug)]
 pub enum SQLiteArrowTransportError {
+    /// Error from the SQLite source.
     #[error(transparent)]
     Source(#[from] SQLiteSourceError),
 
+    /// Error from the Arrow destination.
     #[error(transparent)]
     Destination(#[from] ArrowDestinationError),
 
+    /// Generic ConnectorX error.
     #[error(transparent)]
     ConnectorX(#[from] crate::errors::ConnectorXError),
 }

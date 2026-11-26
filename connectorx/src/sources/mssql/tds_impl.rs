@@ -4,20 +4,27 @@
 //! the native Rust produce types expected by
 //! [`crate::transports::mssql_arrow::MsSQLArrowTransport`].
 //!
+//! Automatic partition-range discovery supports integer and floating-point
+//! columns, matching Tiberius's NULL and float-to-integer conversions.
+//! Metadata, counts and partition readers share a per-source bounded bb8 pool.
+//! Partitions acquire connections only when executing, so their number may
+//! exceed the pool size.
+//!
 //! Known, intentional differences from the Tiberius path (tracked as
 //! documented gaps, not bugs):
-//! - No connection pooling: each partition (and each metadata/count-query
-//!   probe) opens its own `mssql-tds` connection. `mssql-tds` has no
-//!   `bb8`-style pool today.
 //! - `trust_server_certificate_ca` (validate the server cert against a
 //!   specific CA bundle without disabling hostname/chain checks) is
 //!   rejected outright: `mssql-tds`'s `EncryptionOptions::server_certificate`
 //!   only supports exact-match certificate pinning, not CA validation.
 //! - The default TLS posture differs: Tiberius defaults to
-//!   `EncryptionLevel::NotSupported` (no TLS negotiation at all) when
-//!   `encrypt` is unset, while `mssql-tds` has no equivalent "off" setting.
-//!   We map the unset default to `EncryptionSetting::PreferOff` (negotiate
-//!   TLS if offered, don't require it) as the closest available match.
+//!   `EncryptionLevel::NotSupported` (advertise TLS as unsupported) when
+//!   `encrypt` is unset (prelogin 0x02). `mssql-tds` has no equivalent public
+//!   setting: unset and `encrypt=false` both map to `PreferOff` (0x00).
+//!   This permits login-only TLS, or full-session TLS if the server requires it.
+//!   The driver's login-only TLS unconditionally skips certificate-chain validation,
+//!   even when `trust_server_certificate=false`. Use `encrypt=true` for required
+//!   full-session TLS (0x03), with certificate-chain validation enabled unless
+//!   `trust_server_certificate=true` is explicitly requested.
 use super::errors::MsSQLSourceError;
 use super::typesystem::{FloatN, IntN, MsSQLTypeSystem};
 use crate::constants::DB_BUFFER_SIZE;
@@ -28,9 +35,10 @@ use crate::{
     sql::{count_query, get_partition_range_query, CXQuery},
 };
 use anyhow::anyhow;
+use bb8::{ManageConnection, Pool, PooledConnection};
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
 use fehler::{throw, throws};
-use log::debug;
+use log::{debug, warn};
 use mssql_tds::connection::client_context::{ClientContext, TdsAuthenticationMethod};
 use mssql_tds::connection::tds_client::{ResultSet, TdsClient};
 use mssql_tds::connection_provider::tds_connection_provider::TdsConnectionProvider;
@@ -39,20 +47,47 @@ use mssql_tds::datatypes::column_values::{
     ColumnValues, SqlDate, SqlDateTime, SqlDateTime2, SqlDateTimeOffset, SqlSmallDateTime, SqlTime,
 };
 use mssql_tds::datatypes::decoder::DecimalParts;
+use mssql_tds::datatypes::sqldatatypes::TdsDataType;
 use rust_decimal::Decimal;
 use sqlparser::dialect::MsSqlDialect;
 use std::collections::HashMap;
 use std::convert::TryFrom;
-use std::sync::Arc;
+use std::ops::{Deref, DerefMut};
+use std::sync::{Arc, OnceLock};
+use std::time::Duration;
 use tokio::runtime::Runtime;
 use url::Url;
 use urlencoding::decode;
 use uuid_old::Uuid;
 
+#[derive(Clone, PartialEq)]
+struct UserAgentInfo {
+    version: String,
+    runtime: String,
+}
+
+static USER_AGENT_INFO: OnceLock<UserAgentInfo> = OnceLock::new();
+
+/// Sets the wrapper's package version and runtime for the TDS User-Agent, leaving LOGIN7 unchanged.
+/// Language bindings should call this before creating connections. Reinitializing
+/// with the same values is allowed; different values are rejected.
+pub fn set_user_agent_info(version: String, runtime: String) -> Result<(), &'static str> {
+    if version.is_empty() {
+        return Err("MSSQL User-Agent version must not be empty");
+    }
+    if runtime.is_empty() {
+        return Err("MSSQL User-Agent runtime must not be empty");
+    }
+    let info = UserAgentInfo { version, runtime };
+    if USER_AGENT_INFO.get_or_init(|| info.clone()) != &info {
+        return Err("MSSQL User-Agent is already initialized with different values");
+    }
+    Ok(())
+}
+
 /// Builds the `mssql-tds` datasource string and [`ClientContext`] from a
-/// ConnectorX MSSQL connection URL. Mirrors
-/// [`super::tiberius_impl::mssql_config`]'s parsing, but expressed against
-/// `mssql-tds`'s config surface.
+/// ConnectorX MSSQL connection URL, keeping the parameter semantics of the
+/// former Tiberius backend.
 #[throws(MsSQLSourceError)]
 fn build_client_context(url: &Url) -> (String, ClientContext) {
     let host = decode(url.host_str().unwrap_or("localhost"))?.into_owned();
@@ -67,12 +102,21 @@ fn build_client_context(url: &Url) -> (String, ClientContext) {
     };
 
     let mut context = ClientContext::with_data_source(&datasource);
+    // The User-Agent feature carries a separate driver name from LOGIN7.
+    context
+        .user_agent
+        .set_library_name("connectorx".to_string());
+    if let Some(info) = USER_AGENT_INFO.get() {
+        context.user_agent.set_driver_version(info.version.clone());
+        context.user_agent.set_runtime(info.runtime.clone());
+    }
+    context.application_name = "ConnectorX".to_string();
     context.database = decode(&url.path()[1..])?.into_owned();
 
     let params: HashMap<String, String> = url.query_pairs().into_owned().collect();
 
     match params.get("trusted_connection") {
-        Some(v) if v == "true" => {
+        Some(v) if v == "true" && cfg!(any(windows, feature = "integrated-auth-gssapi")) => {
             debug!("mssql-tds auth through integrated (SSPI) authentication");
             context.tds_authentication_method = TdsAuthenticationMethod::SSPI;
         }
@@ -116,6 +160,137 @@ fn build_client_context(url: &Url) -> (String, ClientContext) {
     (datasource, context)
 }
 
+#[cfg(test)]
+mod configuration_tests {
+    use super::*;
+
+    #[test]
+    fn python_user_agent_info_preserves_login_version() {
+        let version = "0.4.7a1";
+        let runtime = "Python 3.12.3";
+        assert!(set_user_agent_info(String::new(), runtime.to_string()).is_err());
+        assert!(set_user_agent_info(version.to_string(), String::new()).is_err());
+        set_user_agent_info(version.to_string(), runtime.to_string()).unwrap();
+        set_user_agent_info(version.to_string(), runtime.to_string()).unwrap();
+        assert!(set_user_agent_info("0.4.8".to_string(), runtime.to_string()).is_err());
+        assert!(set_user_agent_info(version.to_string(), "Python 3.13.0".to_string()).is_err());
+
+        let url = Url::parse("mssql://localhost/db").unwrap();
+        let (_, context) = build_client_context(&url).unwrap();
+        assert_eq!(context.user_agent.driver_version, version);
+        assert_eq!(context.user_agent.runtime, runtime);
+        assert_eq!(
+            context.driver_version,
+            ClientContext::with_data_source("tcp:localhost,1433").driver_version
+        );
+    }
+
+    #[test]
+    fn driver_identity_and_application_name() {
+        for (query, expected_appname) in [
+            ("", "ConnectorX"),
+            ("?appname=Custom%20Application", "Custom Application"),
+            ("?appname=", ""),
+        ] {
+            let url = Url::parse(&format!("mssql://localhost/db{query}")).unwrap();
+            let (_, context) = build_client_context(&url).unwrap();
+            assert_eq!(
+                context.library_name,
+                ClientContext::with_data_source("tcp:localhost,1433").library_name
+            );
+            assert_eq!(context.user_agent.library_name, "connectorx");
+            assert_eq!(context.application_name, expected_appname);
+        }
+    }
+
+    #[test]
+    fn integrated_auth_respects_tiberius_platform_and_feature_gates() {
+        for trusted in ["true", "false", "TrUe"] {
+            let url = Url::parse(&format!(
+                "mssql://test_user:test_password@localhost/db?trusted_connection={trusted}"
+            ))
+            .unwrap();
+            let (_, context) = build_client_context(&url).unwrap();
+            if trusted == "true" && cfg!(any(windows, feature = "integrated-auth-gssapi")) {
+                assert!(matches!(
+                    context.tds_authentication_method,
+                    TdsAuthenticationMethod::SSPI
+                ));
+            } else {
+                assert!(matches!(
+                    context.tds_authentication_method,
+                    TdsAuthenticationMethod::Password
+                ));
+                assert_eq!(context.user_name, "test_user");
+                assert_eq!(context.password, "test_password");
+            }
+        }
+    }
+
+    #[test]
+    fn tls_mapping_preserves_explicit_encryption_and_trust() {
+        for (encrypt, mode) in [
+            ("", EncryptionSetting::PreferOff),
+            ("true", EncryptionSetting::Required),
+            ("TrUe", EncryptionSetting::Required),
+            ("false", EncryptionSetting::PreferOff),
+            ("FaLsE", EncryptionSetting::PreferOff),
+            ("invalid", EncryptionSetting::PreferOff),
+        ] {
+            for (trust, expected_trust) in [
+                ("", false),
+                ("true", true),
+                ("TrUe", true),
+                ("false", false),
+                ("FaLsE", false),
+                ("invalid", false),
+            ] {
+                let mut url = Url::parse("mssql://user:password@localhost/db").unwrap();
+                if !encrypt.is_empty() {
+                    url.query_pairs_mut().append_pair("encrypt", encrypt);
+                }
+                if !trust.is_empty() {
+                    url.query_pairs_mut()
+                        .append_pair("trust_server_certificate", trust);
+                }
+                let (_, context) = build_client_context(&url).unwrap();
+                assert_eq!(
+                    context.encryption_options,
+                    EncryptionOptions {
+                        mode,
+                        trust_server_certificate: expected_trust,
+                        host_name_in_cert: None,
+                        server_certificate: None,
+                    },
+                    "encrypt={encrypt:?}, trust_server_certificate={trust:?}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn custom_ca_is_rejected_even_when_trust_is_enabled() {
+        for trust in ["true", "false"] {
+            let url = Url::parse(&format!(
+                "mssql://localhost/db?encrypt=true&trust_server_certificate={trust}\
+                 &trust_server_certificate_ca=ca.pem"
+            ))
+            .unwrap();
+            let err = build_client_context(&url).err().unwrap();
+            assert!(err.to_string().contains("not CA validation"));
+        }
+    }
+
+    #[test]
+    fn pool_size_must_be_positive_and_fit_u32() {
+        let rt = Arc::new(Runtime::new().unwrap());
+        assert!(MsSQLSource::new(rt.clone(), "mssql://localhost/db", 0).is_err());
+        if usize::BITS > 32 {
+            assert!(MsSQLSource::new(rt, "mssql://localhost/db", usize::MAX).is_err());
+        }
+    }
+}
+
 #[throws(MsSQLSourceError)]
 fn open_connection(rt: &Runtime, url: &Url) -> TdsClient {
     let (datasource, context) = build_client_context(url)?;
@@ -123,8 +298,121 @@ fn open_connection(rt: &Runtime, url: &Url) -> TdsClient {
     rt.block_on(provider.create_client(context, &datasource, None))?
 }
 
-/// Runs `sql`, returning its first row as `Vec<ColumnValues>`. Used for both
-/// metadata discovery (first row of the real query) and `COUNT(*)` probes.
+struct ConnectionManager {
+    url: Url,
+}
+
+impl ManageConnection for ConnectionManager {
+    type Connection = TdsClient;
+    type Error = MsSQLSourceError;
+
+    async fn connect(&self) -> Result<TdsClient, Self::Error> {
+        let (datasource, context) = build_client_context(&self.url)?;
+        Ok(TdsConnectionProvider::new()
+            .create_client(context, &datasource, None)
+            .await?)
+    }
+
+    async fn is_valid(&self, client: &mut TdsClient) -> Result<(), Self::Error> {
+        if client.is_connection_dead() {
+            return Err(anyhow!("MsSQL pooled connection is closed").into());
+        }
+        // Reset session settings and transactions before the next borrower's query.
+        client.prepare_reset_connection(false);
+        Ok(())
+    }
+
+    fn has_broken(&self, client: &mut TdsClient) -> bool {
+        client.is_connection_dead() || client.has_open_batch()
+    }
+}
+
+#[throws(MsSQLSourceError)]
+fn connection_pool(rt: &Runtime, url: &Url, nconn: usize) -> Pool<ConnectionManager> {
+    let max_size = u32::try_from(nconn)
+        .ok()
+        .filter(|&size| size > 0)
+        .ok_or_else(|| anyhow!("MsSQL pool size must be between 1 and {}", u32::MAX))?;
+    // Fail on unsupported URL options even before the first checkout.
+    build_client_context(url)?;
+    rt.block_on(
+        Pool::builder()
+            .max_size(max_size)
+            .test_on_check_out(true)
+            .build(ConnectionManager { url: url.clone() }),
+    )?
+}
+
+/// Owns the lease and keeps its runtime alive through cleanup and pool return.
+struct Connection {
+    rt: Arc<Runtime>,
+    lease: Option<PooledConnection<'static, ConnectionManager>>,
+}
+
+impl Connection {
+    #[throws(MsSQLSourceError)]
+    fn get(rt: Arc<Runtime>, pool: &Pool<ConnectionManager>) -> Self {
+        let lease = rt.block_on(pool.get_owned()).map_err(|err| match err {
+            bb8::RunError::User(err) => err,
+            bb8::RunError::TimedOut => anyhow!("Timed out waiting for an MsSQL connection").into(),
+        })?;
+        Self {
+            rt,
+            lease: Some(lease),
+        }
+    }
+
+    #[throws(MsSQLSourceError)]
+    fn finish(&mut self) {
+        let client = self.lease.as_mut().unwrap();
+        if let Err(err) = self.rt.block_on(client.close_query()) {
+            client.mark_connection_dead();
+            throw!(err);
+        }
+    }
+}
+
+impl Deref for Connection {
+    type Target = TdsClient;
+
+    fn deref(&self) -> &TdsClient {
+        self.lease.as_ref().unwrap()
+    }
+}
+
+impl DerefMut for Connection {
+    fn deref_mut(&mut self) -> &mut TdsClient {
+        self.lease.as_mut().unwrap()
+    }
+}
+
+impl Drop for Connection {
+    fn drop(&mut self) {
+        let mut client = self.lease.take().unwrap();
+        if !client.is_connection_dead() && client.has_open_batch() {
+            // Early parser drops must not return unread protocol data to the pool.
+            // Bound destructor work; a timed-out drain is discarded, never reused.
+            match self.rt.block_on(async {
+                tokio::time::timeout(Duration::from_secs(5), client.close_query()).await
+            }) {
+                Ok(Ok(())) => {}
+                Ok(Err(err)) => {
+                    warn!("Discarding MsSQL connection after cleanup failure: {}", err);
+                    client.mark_connection_dead();
+                }
+                Err(_) => {
+                    warn!("Discarding MsSQL connection after cleanup timeout");
+                    client.mark_connection_dead();
+                }
+            }
+        }
+        // bb8 may spawn replacement connections when returning a broken lease.
+        let _guard = self.rt.enter();
+        drop(client);
+    }
+}
+
+/// Runs `sql`, returning its first row for `COUNT(*)` probes.
 #[throws(MsSQLSourceError)]
 fn first_row(rt: &Runtime, client: &mut TdsClient, sql: String) -> Option<Vec<ColumnValues>> {
     rt.block_on(client.execute(sql, ()))?;
@@ -132,62 +420,110 @@ fn first_row(rt: &Runtime, client: &mut TdsClient, sql: String) -> Option<Vec<Co
 }
 
 #[throws(MsSQLSourceError)]
-pub(crate) fn mssql_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
-    let rt = Runtime::new().expect("Failed to create runtime");
+pub(crate) fn tds_get_partition_range(url: &Url, query: &str, col: &str) -> (i64, i64) {
     let range_query = get_partition_range_query(query, col, &MsSqlDialect {})?;
-    let mut client = open_connection(&rt, conn)?;
-    let row = first_row(&rt, &mut client, range_query.as_str().to_string())?
-        .ok_or_else(|| anyhow!("MsSQL returned no partition range row"))?;
-
-    if row.len() < 2 {
-        throw!(anyhow!("MsSQL partition range query returned fewer than two columns"));
+    let rt = Runtime::new().map_err(anyhow::Error::from)?;
+    let mut client = open_connection(&rt, url)?;
+    rt.block_on(client.execute(range_query, ()))?;
+    let types: Vec<_> = client
+        .get_metadata()
+        .iter()
+        .map(|column| column.data_type)
+        .collect();
+    let row = rt
+        .block_on(client.next_row())?
+        .ok_or_else(|| anyhow!("MsSQL partition range query returned no row"))?;
+    if row.len() != 2 || types.len() != 2 {
+        throw!(anyhow!(
+            "MsSQL partition range query must return two columns"
+        ));
     }
-
-    (partition_bound(&row[0])?, partition_bound(&row[1])?)
+    (
+        partition_range_value(&row[0], types[0])?,
+        partition_range_value(&row[1], types[1])?,
+    )
 }
 
 #[throws(MsSQLSourceError)]
-fn partition_bound(value: &ColumnValues) -> i64 {
+fn partition_range_value(value: &ColumnValues, ty: TdsDataType) -> i64 {
+    if !matches!(
+        ty,
+        TdsDataType::Int1
+            | TdsDataType::Int2
+            | TdsDataType::Int4
+            | TdsDataType::Int8
+            | TdsDataType::IntN
+            | TdsDataType::Flt4
+            | TdsDataType::Flt8
+            | TdsDataType::FltN
+    ) {
+        throw!(anyhow!(
+            "Partition can only be done on int or float columns"
+        ));
+    }
+    // Match Tiberius: NULL aggregates become zero and floats truncate to i64.
     match value {
         ColumnValues::Null => 0,
-        ColumnValues::TinyInt(value) => *value as i64,
-        ColumnValues::SmallInt(value) => *value as i64,
-        ColumnValues::Int(value) => *value as i64,
-        ColumnValues::BigInt(value) => *value,
-        ColumnValues::Real(value) => *value as i64,
-        ColumnValues::Float(value) => *value as i64,
-        value => throw!(anyhow!(
-            "Partition can only be done on int or float columns, got {:?}",
-            value
+        ColumnValues::TinyInt(n) => i64::from(*n),
+        ColumnValues::SmallInt(n) => i64::from(*n),
+        ColumnValues::Int(n) => i64::from(*n),
+        ColumnValues::BigInt(n) => *n,
+        ColumnValues::Real(n) => *n as i64,
+        ColumnValues::Float(n) => *n as i64,
+        other => throw!(anyhow!(
+            "Unexpected MsSQL partition range value: {:?}",
+            other
         )),
     }
 }
 
 #[cfg(test)]
-mod tests {
-    use super::partition_bound;
-    use mssql_tds::datatypes::column_values::ColumnValues;
+mod partition_range_tests {
+    use super::*;
 
     #[test]
-    fn partition_bound_accepts_numeric_values_and_null() {
-        assert_eq!(partition_bound(&ColumnValues::Null).unwrap(), 0);
-        assert_eq!(partition_bound(&ColumnValues::TinyInt(1)).unwrap(), 1);
-        assert_eq!(partition_bound(&ColumnValues::SmallInt(-2)).unwrap(), -2);
-        assert_eq!(partition_bound(&ColumnValues::Int(3)).unwrap(), 3);
-        assert_eq!(partition_bound(&ColumnValues::BigInt(-4)).unwrap(), -4);
-        assert_eq!(partition_bound(&ColumnValues::Real(5.9)).unwrap(), 5);
-        assert_eq!(partition_bound(&ColumnValues::Float(-6.9)).unwrap(), -6);
+    fn numeric_bounds_preserve_tiberius_conversions() {
+        for (value, ty, expected) in [
+            (ColumnValues::TinyInt(255), TdsDataType::Int1, 255),
+            (ColumnValues::SmallInt(-32768), TdsDataType::Int2, -32768),
+            (
+                ColumnValues::Int(i32::MIN),
+                TdsDataType::Int4,
+                i64::from(i32::MIN),
+            ),
+            (ColumnValues::BigInt(i64::MIN), TdsDataType::Int8, i64::MIN),
+            (ColumnValues::BigInt(i64::MAX), TdsDataType::IntN, i64::MAX),
+            (ColumnValues::Real(-12.75), TdsDataType::Flt4, -12),
+            (ColumnValues::Float(23.5), TdsDataType::Flt8, 23),
+            (ColumnValues::Float(-12.75), TdsDataType::FltN, -12),
+            (ColumnValues::Null, TdsDataType::IntN, 0),
+            (ColumnValues::Null, TdsDataType::FltN, 0),
+        ] {
+            assert_eq!(partition_range_value(&value, ty).unwrap(), expected);
+        }
     }
 
     #[test]
-    fn partition_bound_rejects_non_numeric_values() {
-        assert!(partition_bound(&ColumnValues::Bit(true)).is_err());
+    fn unsupported_bounds_are_errors_even_when_null() {
+        for ty in [
+            TdsDataType::BigVarChar,
+            TdsDataType::DecimalN,
+            TdsDataType::MoneyN,
+        ] {
+            let err = partition_range_value(&ColumnValues::Null, ty).unwrap_err();
+            assert!(err
+                .to_string()
+                .contains("Partition can only be done on int or float columns"));
+        }
+        assert!(partition_range_value(&ColumnValues::Bit(true), TdsDataType::IntN).is_err());
     }
 }
 
+/// Source that reads from Microsoft SQL Server.
 pub struct MsSQLSource {
     rt: Arc<Runtime>,
     conn_url: Url,
+    pool: Pool<ConnectionManager>,
     origin_query: Option<String>,
     queries: Vec<CXQuery<String>>,
     names: Vec<String>,
@@ -195,16 +531,16 @@ pub struct MsSQLSource {
 }
 
 impl MsSQLSource {
+    /// Create a source with a pool of up to `nconn` connections.
     #[throws(MsSQLSourceError)]
-    pub fn new(rt: Arc<Runtime>, conn: &str, _nconn: usize) -> Self {
-        // mssql-tds has no bb8-style connection pool yet, so `_nconn` isn't
-        // used to size a pool: every partition opens its own connection
-        // instead (see the module-level doc comment).
+    pub fn new(rt: Arc<Runtime>, conn: &str, nconn: usize) -> Self {
         let conn_url = Url::parse(conn)?;
+        let pool = connection_pool(&rt, &conn_url, nconn)?;
 
         Self {
             rt,
             conn_url,
+            pool,
             origin_query: None,
             queries: vec![],
             names: vec![],
@@ -242,7 +578,7 @@ where
         assert!(!self.queries.is_empty());
 
         let first_query = self.queries[0].clone();
-        let mut client = open_connection(&self.rt, &self.conn_url)?;
+        let mut client = Connection::get(self.rt.clone(), &self.pool)?;
         self.rt
             .block_on(client.execute(first_query.as_str().to_string(), ()))?;
 
@@ -258,6 +594,7 @@ where
             .iter()
             .map(|col| (col.column_name.clone(), MsSQLTypeSystem::from(col)))
             .unzip();
+        client.finish()?;
 
         self.names = names;
         self.schema = types;
@@ -269,9 +606,10 @@ where
             Some(q) => {
                 let cxq = CXQuery::Naked(q.clone());
                 let cquery = count_query(&cxq, &MsSqlDialect {})?;
-                let mut client = open_connection(&self.rt, &self.conn_url)?;
+                let mut client = Connection::get(self.rt.clone(), &self.pool)?;
                 let row = first_row(&self.rt, &mut client, cquery.as_str().to_string())?
                     .ok_or_else(|| anyhow!("MsSQL failed to get the count of query: {}", q))?;
+                client.finish()?;
                 Some(row_count_value(&row, q)?)
             }
             None => None,
@@ -290,12 +628,14 @@ where
     fn partition(self) -> Vec<Self::Partition> {
         let mut ret = vec![];
         for query in self.queries {
-            ret.push(MsSQLSourcePartition::new(
+            let mut partition = MsSQLSourcePartition::new(
                 self.rt.clone(),
                 self.conn_url.clone(),
                 &query,
                 &self.schema,
-            ));
+            );
+            partition.pool = Some(self.pool.clone());
+            ret.push(partition);
         }
         ret
     }
@@ -316,9 +656,11 @@ fn row_count_value(row: &[ColumnValues], query: &str) -> usize {
     }
 }
 
+/// One partition of an [`MsSQLSource`].
 pub struct MsSQLSourcePartition {
     rt: Arc<Runtime>,
     conn_url: Url,
+    pool: Option<Pool<ConnectionManager>>,
     query: CXQuery<String>,
     schema: Vec<MsSQLTypeSystem>,
     nrows: usize,
@@ -326,6 +668,7 @@ pub struct MsSQLSourcePartition {
 }
 
 impl MsSQLSourcePartition {
+    /// Create a partition that runs `query`.
     pub fn new(
         rt: Arc<Runtime>,
         conn_url: Url,
@@ -335,34 +678,43 @@ impl MsSQLSourcePartition {
         Self {
             rt,
             conn_url,
+            pool: None,
             query: query.clone(),
             schema: schema.to_vec(),
             nrows: 0,
             ncols: schema.len(),
         }
     }
+
+    #[throws(MsSQLSourceError)]
+    fn connection(&mut self) -> Connection {
+        // Preserve the public, infallible standalone partition constructor.
+        if self.pool.is_none() {
+            self.pool = Some(connection_pool(&self.rt, &self.conn_url, 1)?);
+        }
+        Connection::get(self.rt.clone(), self.pool.as_ref().unwrap())?
+    }
 }
 
 impl SourcePartition for MsSQLSourcePartition {
     type TypeSystem = MsSQLTypeSystem;
-    // Unlike the Tiberius path, `TdsClient` owns its connection outright (no
-    // borrow-from-pool lifetime), so the parser needs no lifetime tied to
-    // the partition and no `OwningHandle`/unsafe self-reference trick.
+    // Owned leases need no borrow from the partition or unsafe self-reference.
     type Parser<'a> = MsSQLSourceParser;
     type Error = MsSQLSourceError;
 
     #[throws(MsSQLSourceError)]
     fn result_rows(&mut self) {
         let cquery = count_query(&self.query, &MsSqlDialect {})?;
-        let mut client = open_connection(&self.rt, &self.conn_url)?;
+        let mut client = self.connection()?;
         let row = first_row(&self.rt, &mut client, cquery.as_str().to_string())?
             .ok_or_else(|| anyhow!("MsSQL failed to get the count of query: {}", self.query))?;
+        client.finish()?;
         self.nrows = row_count_value(&row, self.query.as_str())?;
     }
 
     #[throws(MsSQLSourceError)]
     fn parser<'a>(&'a mut self) -> Self::Parser<'a> {
-        let mut client = open_connection(&self.rt, &self.conn_url)?;
+        let mut client = self.connection()?;
         self.rt
             .block_on(client.execute(self.query.as_str().to_string(), ()))?;
         MsSQLSourceParser::new(self.rt.clone(), client, self.schema.len())
@@ -402,9 +754,10 @@ enum TdsCell {
     DateTimeUtc(DateTime<Utc>),
 }
 
+/// Row parser for a SQL Server partition.
 pub struct MsSQLSourceParser {
     rt: Arc<Runtime>,
-    client: TdsClient,
+    client: Connection,
     rowbuf: Vec<Vec<TdsCell>>,
     ncols: usize,
     current_col: usize,
@@ -413,7 +766,7 @@ pub struct MsSQLSourceParser {
 }
 
 impl MsSQLSourceParser {
-    fn new(rt: Arc<Runtime>, client: TdsClient, ncols: usize) -> Self {
+    fn new(rt: Arc<Runtime>, client: Connection, ncols: usize) -> Self {
         Self {
             rt,
             client,
@@ -467,6 +820,7 @@ impl<'a> PartitionParser<'a> for MsSQLSourceParser {
                     self.rowbuf.push(cells);
                 }
                 None => {
+                    self.client.finish()?;
                     self.is_finished = true;
                     break;
                 }
@@ -536,7 +890,11 @@ fn decimal_parts_to_decimal(parts: &DecimalParts) -> Decimal {
     let magnitude = parts.magnitude();
     let mantissa = i128::try_from(magnitude)
         .map_err(|_| anyhow!("MsSQL decimal/numeric value overflows 128 bits"))?;
-    let mantissa = if parts.is_positive { mantissa } else { -mantissa };
+    let mantissa = if parts.is_positive {
+        mantissa
+    } else {
+        -mantissa
+    };
     Decimal::try_from_i128_with_scale(mantissa, parts.scale as u32)
         .map_err(|e| anyhow!("MsSQL decimal/numeric value out of range: {}", e))?
 }
@@ -548,7 +906,12 @@ fn sql_date_to_naive_date(d: &SqlDate) -> NaiveDate {
     NaiveDate::from_ymd_opt(1, 1, 1)
         .unwrap()
         .checked_add_signed(chrono::Duration::days(d.get_days() as i64))
-        .ok_or_else(|| anyhow!("MsSQL date out of range: {} days since 0001-01-01", d.get_days()))?
+        .ok_or_else(|| {
+            anyhow!(
+                "MsSQL date out of range: {} days since 0001-01-01",
+                d.get_days()
+            )
+        })?
 }
 
 /// Despite its name, `SqlTime::time_nanoseconds` is actually the value in
@@ -561,7 +924,7 @@ fn sql_time_to_naive_time(t: &SqlTime) -> NaiveTime {
     let ns = t.time_nanoseconds * 100;
     let secs = (ns / 1_000_000_000) as u32;
     let nanos = (ns % 1_000_000_000) as u32;
-    NaiveTime::from_num_seconds_from_midnight_opt(secs, nanos).unwrap_or(NaiveTime::default())
+    NaiveTime::from_num_seconds_from_midnight_opt(secs, nanos).unwrap_or_default()
 }
 
 #[throws(MsSQLSourceError)]
@@ -569,7 +932,12 @@ fn sql_datetime2_to_naive_datetime(dt2: &SqlDateTime2) -> NaiveDateTime {
     let date = NaiveDate::from_ymd_opt(1, 1, 1)
         .unwrap()
         .checked_add_signed(chrono::Duration::days(dt2.days as i64))
-        .ok_or_else(|| anyhow!("MsSQL datetime2 out of range: {} days since 0001-01-01", dt2.days))?;
+        .ok_or_else(|| {
+            anyhow!(
+                "MsSQL datetime2 out of range: {} days since 0001-01-01",
+                dt2.days
+            )
+        })?;
     date.and_time(sql_time_to_naive_time(&dt2.time))
 }
 
@@ -580,7 +948,7 @@ fn sql_smalldatetime_to_naive_datetime(sdt: &SqlSmallDateTime) -> NaiveDateTime 
         .checked_add_signed(chrono::Duration::days(sdt.days as i64))
         .expect("smalldatetime day count is always in range (u16 days since 1900-01-01)");
     let time = NaiveTime::from_hms_opt((sdt.time / 60) as u32, (sdt.time % 60) as u32, 0)
-        .unwrap_or(NaiveTime::default());
+        .unwrap_or_default();
     date.and_time(time)
 }
 
@@ -607,7 +975,12 @@ fn sql_datetime_to_naive_datetime(dt: &SqlDateTime) -> NaiveDateTime {
     let date = NaiveDate::from_ymd_opt(1900, 1, 1)
         .unwrap()
         .checked_add_signed(chrono::Duration::days(dt.days as i64 + extra_days))
-        .ok_or_else(|| anyhow!("MsSQL datetime out of range: {} days since 1900-01-01", dt.days))?;
+        .ok_or_else(|| {
+            anyhow!(
+                "MsSQL datetime out of range: {} days since 1900-01-01",
+                dt.days
+            )
+        })?;
 
     date.and_time(time)
 }
@@ -695,7 +1068,12 @@ impl<'r> Produce<'r, f32> for MsSQLSourceParser {
             TdsCell::F32(v) => v,
             TdsCell::F64(v) => v as f32,
             TdsCell::Null => throw!(anyhow!("MsSQL get None at position: ({}, {})", ridx, cidx)),
-            other => throw!(anyhow!("MsSQL type mismatch at ({}, {}): {:?}", ridx, cidx, other)),
+            other => throw!(anyhow!(
+                "MsSQL type mismatch at ({}, {}): {:?}",
+                ridx,
+                cidx,
+                other
+            )),
         }
     }
 }
@@ -710,7 +1088,12 @@ impl<'r> Produce<'r, Option<f32>> for MsSQLSourceParser {
             TdsCell::F32(v) => Some(v),
             TdsCell::F64(v) => Some(v as f32),
             TdsCell::Null => None,
-            other => throw!(anyhow!("MsSQL type mismatch at ({}, {}): {:?}", ridx, cidx, other)),
+            other => throw!(anyhow!(
+                "MsSQL type mismatch at ({}, {}): {:?}",
+                ridx,
+                cidx,
+                other
+            )),
         }
     }
 }
@@ -732,7 +1115,12 @@ impl<'r> Produce<'r, f64> for MsSQLSourceParser {
             TdsCell::F64(v) => v,
             TdsCell::F32(v) => v as f64,
             TdsCell::Null => throw!(anyhow!("MsSQL get None at position: ({}, {})", ridx, cidx)),
-            other => throw!(anyhow!("MsSQL type mismatch at ({}, {}): {:?}", ridx, cidx, other)),
+            other => throw!(anyhow!(
+                "MsSQL type mismatch at ({}, {}): {:?}",
+                ridx,
+                cidx,
+                other
+            )),
         }
     }
 }
@@ -747,7 +1135,12 @@ impl<'r> Produce<'r, Option<f64>> for MsSQLSourceParser {
             TdsCell::F64(v) => Some(v),
             TdsCell::F32(v) => Some(v as f64),
             TdsCell::Null => None,
-            other => throw!(anyhow!("MsSQL type mismatch at ({}, {}): {:?}", ridx, cidx, other)),
+            other => throw!(anyhow!(
+                "MsSQL type mismatch at ({}, {}): {:?}",
+                ridx,
+                cidx,
+                other
+            )),
         }
     }
 }
@@ -764,7 +1157,12 @@ impl<'r> Produce<'r, IntN> for MsSQLSourceParser {
             TdsCell::I32(v) => IntN(v as i64),
             TdsCell::I64(v) => IntN(v),
             TdsCell::Null => throw!(anyhow!("MsSQL get None at position: ({}, {})", ridx, cidx)),
-            other => throw!(anyhow!("MsSQL type mismatch at ({}, {}): {:?}", ridx, cidx, other)),
+            other => throw!(anyhow!(
+                "MsSQL type mismatch at ({}, {}): {:?}",
+                ridx,
+                cidx,
+                other
+            )),
         }
     }
 }
@@ -781,7 +1179,12 @@ impl<'r> Produce<'r, Option<IntN>> for MsSQLSourceParser {
             TdsCell::I32(v) => Some(IntN(v as i64)),
             TdsCell::I64(v) => Some(IntN(v)),
             TdsCell::Null => None,
-            other => throw!(anyhow!("MsSQL type mismatch at ({}, {}): {:?}", ridx, cidx, other)),
+            other => throw!(anyhow!(
+                "MsSQL type mismatch at ({}, {}): {:?}",
+                ridx,
+                cidx,
+                other
+            )),
         }
     }
 }
@@ -796,7 +1199,12 @@ impl<'r> Produce<'r, FloatN> for MsSQLSourceParser {
             TdsCell::F32(v) => FloatN(v as f64),
             TdsCell::F64(v) => FloatN(v),
             TdsCell::Null => throw!(anyhow!("MsSQL get None at position: ({}, {})", ridx, cidx)),
-            other => throw!(anyhow!("MsSQL type mismatch at ({}, {}): {:?}", ridx, cidx, other)),
+            other => throw!(anyhow!(
+                "MsSQL type mismatch at ({}, {}): {:?}",
+                ridx,
+                cidx,
+                other
+            )),
         }
     }
 }
@@ -811,7 +1219,12 @@ impl<'r> Produce<'r, Option<FloatN>> for MsSQLSourceParser {
             TdsCell::F32(v) => Some(FloatN(v as f64)),
             TdsCell::F64(v) => Some(FloatN(v)),
             TdsCell::Null => None,
-            other => throw!(anyhow!("MsSQL type mismatch at ({}, {}): {:?}", ridx, cidx, other)),
+            other => throw!(anyhow!(
+                "MsSQL type mismatch at ({}, {}): {:?}",
+                ridx,
+                cidx,
+                other
+            )),
         }
     }
 }
@@ -825,7 +1238,12 @@ impl<'r> Produce<'r, &'r str> for MsSQLSourceParser {
         match &self.rowbuf[ridx][cidx] {
             TdsCell::Str(s) => s.as_str(),
             TdsCell::Null => throw!(anyhow!("MsSQL get None at position: ({}, {})", ridx, cidx)),
-            other => throw!(anyhow!("MsSQL type mismatch at ({}, {}): {:?}", ridx, cidx, other)),
+            other => throw!(anyhow!(
+                "MsSQL type mismatch at ({}, {}): {:?}",
+                ridx,
+                cidx,
+                other
+            )),
         }
     }
 }
@@ -839,7 +1257,12 @@ impl<'r> Produce<'r, Option<&'r str>> for MsSQLSourceParser {
         match &self.rowbuf[ridx][cidx] {
             TdsCell::Str(s) => Some(s.as_str()),
             TdsCell::Null => None,
-            other => throw!(anyhow!("MsSQL type mismatch at ({}, {}): {:?}", ridx, cidx, other)),
+            other => throw!(anyhow!(
+                "MsSQL type mismatch at ({}, {}): {:?}",
+                ridx,
+                cidx,
+                other
+            )),
         }
     }
 }
@@ -853,7 +1276,12 @@ impl<'r> Produce<'r, &'r [u8]> for MsSQLSourceParser {
         match &self.rowbuf[ridx][cidx] {
             TdsCell::Bytes(b) => b.as_slice(),
             TdsCell::Null => throw!(anyhow!("MsSQL get None at position: ({}, {})", ridx, cidx)),
-            other => throw!(anyhow!("MsSQL type mismatch at ({}, {}): {:?}", ridx, cidx, other)),
+            other => throw!(anyhow!(
+                "MsSQL type mismatch at ({}, {}): {:?}",
+                ridx,
+                cidx,
+                other
+            )),
         }
     }
 }
@@ -867,7 +1295,12 @@ impl<'r> Produce<'r, Option<&'r [u8]>> for MsSQLSourceParser {
         match &self.rowbuf[ridx][cidx] {
             TdsCell::Bytes(b) => Some(b.as_slice()),
             TdsCell::Null => None,
-            other => throw!(anyhow!("MsSQL type mismatch at ({}, {}): {:?}", ridx, cidx, other)),
+            other => throw!(anyhow!(
+                "MsSQL type mismatch at ({}, {}): {:?}",
+                ridx,
+                cidx,
+                other
+            )),
         }
     }
 }

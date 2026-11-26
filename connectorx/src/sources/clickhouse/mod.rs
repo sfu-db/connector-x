@@ -32,6 +32,7 @@ use uuid::Uuid;
 /// ClickHouse source that uses the HTTP protocol.
 pub struct ClickHouseSource {
     rt: Arc<Runtime>,
+    /// HTTP client connected to the server.
     pub client: Client,
     origin_query: Option<String>,
     queries: Vec<CXQuery<String>>,
@@ -41,6 +42,7 @@ pub struct ClickHouseSource {
 }
 
 impl ClickHouseSource {
+    /// Connect to the server given by a `clickhouse://` URL (`protocol=https` selects HTTPS).
     #[throws(ClickHouseSourceError)]
     pub fn new(rt: Arc<Runtime>, conn: &str) -> Self {
         let url = url::Url::parse(conn)?;
@@ -57,7 +59,11 @@ impl ClickHouseSource {
             url.port().unwrap_or(8123)
         );
 
-        let mut client = Client::default().with_url(&base_url);
+        // Only the client's `lz4` feature is enabled, so it decodes LZ4 only;
+        // newer servers default to ZSTD.
+        let mut client = Client::default()
+            .with_url(&base_url)
+            .with_setting("network_compression_method", "lz4");
 
         let database = url.path().trim_start_matches('/');
         if !database.is_empty() {
@@ -229,6 +235,7 @@ where
     }
 }
 
+/// One partition of a [`ClickHouseSource`].
 pub struct ClickHouseSourcePartition {
     rt: Arc<Runtime>,
     client: Client,
@@ -240,6 +247,7 @@ pub struct ClickHouseSourcePartition {
 }
 
 impl ClickHouseSourcePartition {
+    /// Create a partition that runs `query`.
     pub fn new(
         rt: Arc<Runtime>,
         client: Client,
@@ -554,6 +562,7 @@ impl<'a> BinaryReader<'a> {
     }
 }
 
+/// Row parser for a ClickHouse partition.
 pub struct ClickHouseSourceParser<'a> {
     rt: Arc<Runtime>,
     client: Client,
@@ -569,6 +578,7 @@ pub struct ClickHouseSourceParser<'a> {
 }
 
 impl<'a> ClickHouseSourceParser<'a> {
+    /// Run `query` and prepare to parse its rows.
     #[throws(ClickHouseSourceError)]
     pub fn new(
         rt: Arc<Runtime>,

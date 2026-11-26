@@ -5,19 +5,32 @@ use prusto::{PrestoFloat, PrestoInt, PrestoTy};
 use std::convert::TryFrom;
 
 // TODO: implement Tuple, Row, Array and Map
+/// Column types of the Trino source. The `bool` is `true` when the column is nullable.
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum TrinoTypeSystem {
+    /// Trino `DATE`, read as `NaiveDate`.
     Date(bool),
+    /// Trino `TIME`, read as `NaiveTime`.
     Time(bool),
+    /// Trino `TIMESTAMP`, read as `NaiveDateTime`.
     Timestamp(bool),
+    /// Trino `BOOLEAN`, read as `bool`.
     Boolean(bool),
+    /// Trino `BIGINT`, read as `i64`.
     Bigint(bool),
+    /// Trino `INTEGER`, read as `i32`.
     Integer(bool),
+    /// Trino `SMALLINT`, read as `i16`.
     Smallint(bool),
+    /// Trino `TINYINT`, read as `i8`.
     Tinyint(bool),
+    /// Trino `DOUBLE`, read as `f64`. `DECIMAL` is read this way too.
     Double(bool),
+    /// Trino `REAL`, read as `f32`.
     Real(bool),
+    /// Trino `VARCHAR`, read as `String`. `VARBINARY`, `JSON`, `UUID`, `IPADDRESS`, and the `ROW`, `ARRAY` and `MAP` types are read this way too.
     Varchar(bool),
+    /// Trino `CHAR`, read as `char`.
     Char(bool),
 }
 
@@ -102,8 +115,181 @@ impl TryFrom<(Option<&str>, PrestoTy)> for TrinoTypeSystem {
                     _ => TrinoTypeSystem::try_from(ty)?,
                 }
             }
+
             // derive from value type directly if no declare type available
             (None, ty) => TrinoTypeSystem::try_from(ty)?,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::TrinoTypeSystem;
+    use prusto::{PrestoFloat, PrestoInt, PrestoTy};
+    use std::convert::TryFrom;
+
+    #[test]
+    fn maps_presto_types() {
+        assert!(matches!(
+            TrinoTypeSystem::try_from(PrestoTy::Date).unwrap(),
+            TrinoTypeSystem::Date(true)
+        ));
+        assert!(matches!(
+            TrinoTypeSystem::try_from(PrestoTy::Time).unwrap(),
+            TrinoTypeSystem::Time(true)
+        ));
+        assert!(matches!(
+            TrinoTypeSystem::try_from(PrestoTy::Timestamp).unwrap(),
+            TrinoTypeSystem::Timestamp(true)
+        ));
+        assert!(matches!(
+            TrinoTypeSystem::try_from(PrestoTy::Boolean).unwrap(),
+            TrinoTypeSystem::Boolean(true)
+        ));
+        assert!(matches!(
+            TrinoTypeSystem::try_from(PrestoTy::PrestoInt(PrestoInt::I64)).unwrap(),
+            TrinoTypeSystem::Bigint(true)
+        ));
+        assert!(matches!(
+            TrinoTypeSystem::try_from(PrestoTy::PrestoInt(PrestoInt::I32)).unwrap(),
+            TrinoTypeSystem::Integer(true)
+        ));
+        assert!(matches!(
+            TrinoTypeSystem::try_from(PrestoTy::PrestoInt(PrestoInt::I16)).unwrap(),
+            TrinoTypeSystem::Smallint(true)
+        ));
+        assert!(matches!(
+            TrinoTypeSystem::try_from(PrestoTy::PrestoInt(PrestoInt::I8)).unwrap(),
+            TrinoTypeSystem::Tinyint(true)
+        ));
+        assert!(matches!(
+            TrinoTypeSystem::try_from(PrestoTy::PrestoFloat(PrestoFloat::F64)).unwrap(),
+            TrinoTypeSystem::Double(true)
+        ));
+        assert!(matches!(
+            TrinoTypeSystem::try_from(PrestoTy::PrestoFloat(PrestoFloat::F32)).unwrap(),
+            TrinoTypeSystem::Real(true)
+        ));
+        assert!(matches!(
+            TrinoTypeSystem::try_from(PrestoTy::Varchar).unwrap(),
+            TrinoTypeSystem::Varchar(true)
+        ));
+        assert!(matches!(
+            TrinoTypeSystem::try_from(PrestoTy::Char(10)).unwrap(),
+            TrinoTypeSystem::Char(true)
+        ));
+        assert!(matches!(
+            TrinoTypeSystem::try_from(PrestoTy::Tuple(vec![])).unwrap(),
+            TrinoTypeSystem::Varchar(true)
+        ));
+        assert!(matches!(
+            TrinoTypeSystem::try_from(PrestoTy::Row(vec![])).unwrap(),
+            TrinoTypeSystem::Varchar(true)
+        ));
+        assert!(matches!(
+            TrinoTypeSystem::try_from(PrestoTy::Array(Box::new(PrestoTy::Boolean))).unwrap(),
+            TrinoTypeSystem::Varchar(true)
+        ));
+        assert!(matches!(
+            TrinoTypeSystem::try_from(PrestoTy::Map(
+                Box::new(PrestoTy::Varchar),
+                Box::new(PrestoTy::Boolean),
+            ))
+            .unwrap(),
+            TrinoTypeSystem::Varchar(true)
+        ));
+        assert!(matches!(
+            TrinoTypeSystem::try_from(PrestoTy::Decimal(10, 2)).unwrap(),
+            TrinoTypeSystem::Double(true)
+        ));
+        assert!(matches!(
+            TrinoTypeSystem::try_from(PrestoTy::IpAddress).unwrap(),
+            TrinoTypeSystem::Varchar(true)
+        ));
+        assert!(matches!(
+            TrinoTypeSystem::try_from(PrestoTy::Uuid).unwrap(),
+            TrinoTypeSystem::Varchar(true)
+        ));
+        assert!(TrinoTypeSystem::try_from(PrestoTy::Unknown).is_err());
+    }
+
+    #[test]
+    fn maps_declared_type_names_and_falls_back_to_value_types() {
+        assert!(matches!(
+            TrinoTypeSystem::try_from((Some("DATE"), PrestoTy::Boolean)).unwrap(),
+            TrinoTypeSystem::Date(true)
+        ));
+        assert!(matches!(
+            TrinoTypeSystem::try_from((Some("time"), PrestoTy::Boolean)).unwrap(),
+            TrinoTypeSystem::Time(true)
+        ));
+        assert!(matches!(
+            TrinoTypeSystem::try_from((Some("timestamp"), PrestoTy::Boolean)).unwrap(),
+            TrinoTypeSystem::Timestamp(true)
+        ));
+        assert!(matches!(
+            TrinoTypeSystem::try_from((Some("boolean"), PrestoTy::Boolean)).unwrap(),
+            TrinoTypeSystem::Boolean(true)
+        ));
+        assert!(matches!(
+            TrinoTypeSystem::try_from((Some("bigint"), PrestoTy::Boolean)).unwrap(),
+            TrinoTypeSystem::Bigint(true)
+        ));
+        assert!(matches!(
+            TrinoTypeSystem::try_from((Some("int"), PrestoTy::Boolean)).unwrap(),
+            TrinoTypeSystem::Integer(true)
+        ));
+        assert!(matches!(
+            TrinoTypeSystem::try_from((Some("integer"), PrestoTy::Boolean)).unwrap(),
+            TrinoTypeSystem::Integer(true)
+        ));
+        assert!(matches!(
+            TrinoTypeSystem::try_from((Some("smallint"), PrestoTy::Boolean)).unwrap(),
+            TrinoTypeSystem::Smallint(true)
+        ));
+        assert!(matches!(
+            TrinoTypeSystem::try_from((Some("tinyint"), PrestoTy::Boolean)).unwrap(),
+            TrinoTypeSystem::Tinyint(true)
+        ));
+        assert!(matches!(
+            TrinoTypeSystem::try_from((Some("double"), PrestoTy::Boolean)).unwrap(),
+            TrinoTypeSystem::Double(true)
+        ));
+        assert!(matches!(
+            TrinoTypeSystem::try_from((Some("float"), PrestoTy::Boolean)).unwrap(),
+            TrinoTypeSystem::Real(true)
+        ));
+        for declared in [
+            "varchar",
+            "varbinary",
+            "json",
+            "tuple",
+            "row",
+            "array",
+            "map",
+            "ipaddress",
+            "uuid",
+        ] {
+            assert!(matches!(
+                TrinoTypeSystem::try_from((Some(declared), PrestoTy::Boolean)).unwrap(),
+                TrinoTypeSystem::Varchar(true)
+            ));
+        }
+        assert!(matches!(
+            TrinoTypeSystem::try_from((Some("char"), PrestoTy::Boolean)).unwrap(),
+            TrinoTypeSystem::Char(true)
+        ));
+        assert!(matches!(
+            TrinoTypeSystem::try_from((Some("decimal"), PrestoTy::Boolean)).unwrap(),
+            TrinoTypeSystem::Double(true)
+        ));
+        assert!(matches!(
+            TrinoTypeSystem::try_from((Some("unknown"), PrestoTy::Boolean)).unwrap(),
+            TrinoTypeSystem::Boolean(true)
+        ));
+        assert!(matches!(
+            TrinoTypeSystem::try_from((None, PrestoTy::PrestoInt(PrestoInt::I16))).unwrap(),
+            TrinoTypeSystem::Smallint(true)
+        ));
     }
 }

@@ -5,6 +5,9 @@ from decimal import localcontext, Decimal
 
 from .. import read_sql
 
+# pandas 3 maps Arrow strings to its default string dtype (PDEP-14); pandas 2 to object.
+ARROW_STR = "str" if int(pd.__version__.split(".")[0]) >= 3 else "object"
+
 
 def test_arrow(postgres_url: str) -> None:
     query = "SELECT * FROM test_table"
@@ -22,7 +25,7 @@ def test_arrow(postgres_url: str) -> None:
             "test_int": pd.Series([0, 1, 2, 3, 4, 1314], dtype="int32"),
             "test_nullint": pd.Series([5, 3, None, 7, 9, 2], dtype="float64"),
             "test_str": pd.Series(
-                ["a", "str1", "str2", "b", "c", None], dtype="object"
+                ["a", "str1", "str2", "b", "c", None], dtype=ARROW_STR
             ),
             "test_float": pd.Series([3.1, None, 2.2, 3, 7.8, -10], dtype="float64"),
             "test_bool": pd.Series(
@@ -57,7 +60,7 @@ def test_arrow_stream(postgres_url: str) -> None:
             "test_int": pd.Series([0, 1, 2, 3, 4, 1314], dtype="int64"),
             "test_nullint": pd.Series([5, 3, None, 7, 9, 2], dtype="float64"),
             "test_str": pd.Series(
-                ["a", "str1", "str2", "b", "c", None], dtype="object"
+                ["a", "str1", "str2", "b", "c", None], dtype=ARROW_STR
             ),
             "test_float": pd.Series([3.1, None, 2.2, 3, 7.8, -10], dtype="float64"),
             "test_bool": pd.Series(
@@ -92,7 +95,7 @@ def test_arrow_stream_with_partition(postgres_url: str) -> None:
             "test_int": pd.Series([0, 1, 2, 3, 4, 1314], dtype="int64"),
             "test_nullint": pd.Series([5, 3, None, 7, 9, 2], dtype="float64"),
             "test_str": pd.Series(
-                ["a", "str1", "str2", "b", "c", None], dtype="object"
+                ["a", "str1", "str2", "b", "c", None], dtype=ARROW_STR
             ),
             "test_float": pd.Series([3.1, None, 2.2, 3, 7.8, -10], dtype="float64"),
             "test_bool": pd.Series(
@@ -150,9 +153,9 @@ def test_arrow_type(postgres_url: str) -> None:
                     [-1.1, 0.00, 2.12345678901, -12345678901.1, None], dtype="float64"
                 ),
                 "test_numeric": pd.Series([decimal_s10(0.01), decimal_s10(521.34), decimal_s10(0), decimal_s10(-1.123e2), None], dtype="object"),
-                "test_bpchar": pd.Series(["👨‍🍳  ", "bb   ", "     ", "ddddd", None], dtype="object"),
-                "test_char": pd.Series(["a", "ಠ", "😃", "@", None], dtype="object"),
-                "test_varchar": pd.Series(["abcdefghij", "", "👨‍🍳👨‍🍳👨‍🍳👨", "@", None], dtype="object"),
+                "test_bpchar": pd.Series(["👨‍🍳  ", "bb   ", "     ", "ddddd", None], dtype=ARROW_STR),
+                "test_char": pd.Series(["a", "ಠ", "😃", "@", None], dtype=ARROW_STR),
+                "test_varchar": pd.Series(["abcdefghij", "", "👨‍🍳👨‍🍳👨‍🍳👨", "@", None], dtype=ARROW_STR),
                 "test_uuid": pd.Series(
                     [
                         "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
@@ -161,7 +164,7 @@ def test_arrow_type(postgres_url: str) -> None:
                         "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
                         None,
                     ],
-                    dtype="object",
+                    dtype=ARROW_STR,
                 ),
                 "test_time": pd.Series(
                     [
@@ -191,7 +194,7 @@ def test_arrow_type(postgres_url: str) -> None:
                         '{}',
                         None,
                     ],
-                    dtype="object",
+                    dtype=ARROW_STR,
                 ),
                 "test_jsonb": pd.Series(
                     [
@@ -201,13 +204,13 @@ def test_arrow_type(postgres_url: str) -> None:
                         '{}',
                         None,
                     ],
-                    dtype="object",
+                    dtype=ARROW_STR,
                 ),
                 "test_ltree": pd.Series(
-                    ["A.B.C.D", "A.B.E", "A", "", None], dtype="object"
+                    ["A.B.C.D", "A.B.E", "A", "", None], dtype=ARROW_STR
                 ),
                 "test_name": pd.Series(
-                    ["0", "21", "someName", "101203203-1212323-22131235", None]
+                    ["0", "21", "someName", "101203203-1212323-22131235", None], dtype=ARROW_STR
                 )
                 
             },

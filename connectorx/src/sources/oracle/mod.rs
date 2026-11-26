@@ -6,6 +6,7 @@ use std::collections::HashMap;
 pub use self::errors::OracleSourceError;
 pub use self::typesystem::OracleTypeSystem;
 use crate::constants::{DB_BUFFER_SIZE, ORACLE_ARRAY_SIZE};
+use crate::utils::OwningHandle;
 use crate::{
     data_order::DataOrder,
     errors::ConnectorXError,
@@ -13,14 +14,13 @@ use crate::{
     sql::{count_query, limit0_query_oracle, CXQuery},
     utils::DummyBox,
 };
-use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
+use chrono::{DateTime, FixedOffset, NaiveDate, NaiveDateTime, Utc};
 use fehler::{throw, throws};
 use log::debug;
-use owning_ref::OwningHandle;
 use r2d2::{Pool, PooledConnection};
 use r2d2_oracle::oracle::ResultSet;
 use r2d2_oracle::{
-    oracle::{Connector, Row, Statement},
+    oracle::{Connector, Row, Statement, Version},
     OracleConnectionManager,
 };
 use rust_decimal::Decimal;
@@ -31,6 +31,7 @@ use urlencoding::decode;
 type OracleManager = OracleConnectionManager;
 type OracleConn = PooledConnection<OracleManager>;
 
+/// SQL dialect for Oracle.
 #[derive(Debug)]
 pub struct OracleDialect {}
 
@@ -45,6 +46,7 @@ impl Dialect for OracleDialect {
     }
 }
 
+/// Source that reads from Oracle.
 pub struct OracleSource {
     pool: Pool<OracleManager>,
     origin_query: Option<String>,
@@ -54,6 +56,7 @@ pub struct OracleSource {
     current_schema: Option<String>,
 }
 
+/// Build an Oracle connector from an `oracle://` URL. Uses external authentication when no user and password are given.
 #[throws(OracleSourceError)]
 pub fn connect_oracle(conn: &Url) -> Connector {
     let user = decode(conn.username())?.into_owned();
@@ -62,7 +65,7 @@ pub fn connect_oracle(conn: &Url) -> Connector {
 
     let params: HashMap<String, String> = conn.query_pairs().into_owned().collect();
 
-    let conn_str = if params.get("alias").map_or(false, |v| v == "true") {
+    let conn_str = if params.get("alias").is_some_and(|v| v == "true") {
         host.clone()
     } else {
         let port = conn.port().unwrap_or(1521);
@@ -79,6 +82,7 @@ pub fn connect_oracle(conn: &Url) -> Connector {
 }
 
 impl OracleSource {
+    /// Create a source with a pool of up to `nconn` connections.
     #[throws(OracleSourceError)]
     pub fn new(conn: &str, nconn: usize) -> Self {
         let conn = Url::parse(conn)?;
@@ -100,12 +104,41 @@ impl OracleSource {
             current_schema,
         }
     }
+    /// Get a pooled connection, switched to the `schema` from the connection string if one was given.
     pub fn get_conn(&self) -> Result<OracleConn, OracleSourceError> {
         let conn = self.pool.get()?;
         if let Some(schema) = &self.current_schema {
             conn.set_current_schema(schema)?;
         }
         Ok(conn)
+    }
+}
+
+/// Oldest Instant Client known to read native `BOOLEAN` columns correctly. On the first execution
+/// of a statement on a connection, Instant Client 23.4 can return `TRUE` for a `FALSE` value that
+/// directly follows another `FALSE`, without raising an error. Clients older than 23 report
+/// `BOOLEAN` columns as `NUMBER`, so they never reach this check.
+const MIN_BOOLEAN_CLIENT_VERSION: Version = Version::new(23, 5, 0, 0, 0);
+
+fn client_reads_boolean_correctly(client: &Version) -> bool {
+    *client >= MIN_BOOLEAN_CLIENT_VERSION
+}
+
+/// Refuses to read a native `BOOLEAN` column through an Instant Client that may return wrong
+/// values for it.
+#[throws(OracleSourceError)]
+fn check_boolean_client(names: &[String], schema: &[OracleTypeSystem]) {
+    if let Some(i) = schema
+        .iter()
+        .position(|ty| matches!(ty, OracleTypeSystem::Boolean(_)))
+    {
+        let client = Version::client()?;
+        if !client_reads_boolean_correctly(&client) {
+            throw!(OracleSourceError::UnreliableBooleanClient {
+                column: names[i].clone(),
+                client: client.to_string(),
+            });
+        }
     }
 }
 
@@ -146,7 +179,7 @@ where
             // -> (NumInt, Char) instead of (NumtFloat, Char)
             match conn.query(limit0_query_oracle(query)?.as_str(), &[]) {
                 Ok(rows) => {
-                    let (names, types) = rows
+                    let (names, types): (Vec<String>, Vec<OracleTypeSystem>) = rows
                         .column_info()
                         .iter()
                         .map(|col| {
@@ -156,6 +189,7 @@ where
                             )
                         })
                         .unzip();
+                    check_boolean_client(&names, &types)?;
                     self.names = names;
                     self.schema = types;
                     return;
@@ -207,12 +241,13 @@ where
         let mut ret = vec![];
         for query in &self.queries {
             let conn = self.get_conn()?;
-            ret.push(OracleSourcePartition::new(conn, &query, &self.schema));
+            ret.push(OracleSourcePartition::new(conn, query, &self.schema));
         }
         ret
     }
 }
 
+/// One partition of an [`OracleSource`].
 pub struct OracleSourcePartition {
     conn: OracleConn,
     query: CXQuery<String>,
@@ -222,6 +257,7 @@ pub struct OracleSourcePartition {
 }
 
 impl OracleSourcePartition {
+    /// Create a partition that runs `query` on `conn`.
     pub fn new(conn: OracleConn, query: &CXQuery<String>, schema: &[OracleTypeSystem]) -> Self {
         Self {
             conn,
@@ -264,8 +300,9 @@ impl SourcePartition for OracleSourcePartition {
 
 unsafe impl<'a> Send for OracleTextSourceParser<'a> {}
 
+/// Row parser for an Oracle partition.
 pub struct OracleTextSourceParser<'a> {
-    rows: OwningHandle<Box<Statement>, DummyBox<ResultSet<'a, Row>>>,
+    rows: OwningHandle<Statement, DummyBox<ResultSet<'a, Row>>>,
     rowbuf: Vec<Row>,
     ncols: usize,
     current_col: usize,
@@ -274,6 +311,7 @@ pub struct OracleTextSourceParser<'a> {
 }
 
 impl<'a> OracleTextSourceParser<'a> {
+    /// Run `query` on `conn` and prepare to parse its rows.
     #[throws(OracleSourceError)]
     pub fn new(conn: &'a OracleConn, query: &str, schema: &[OracleTypeSystem]) -> Self {
         let stmt = conn
@@ -281,7 +319,7 @@ impl<'a> OracleTextSourceParser<'a> {
             .prefetch_rows(ORACLE_ARRAY_SIZE)
             .fetch_array_size(ORACLE_ARRAY_SIZE)
             .build()?;
-        let rows: OwningHandle<Box<Statement>, DummyBox<ResultSet<'a, Row>>> =
+        let rows: OwningHandle<Statement, DummyBox<ResultSet<'a, Row>>> =
             OwningHandle::new_with_fn(Box::new(stmt), |stmt: *const Statement| unsafe {
                 DummyBox((*(stmt as *mut Statement)).query(&[]).unwrap())
             });
@@ -364,15 +402,35 @@ macro_rules! impl_produce_text {
     };
 }
 
-impl_produce_text!(
-    i64,
-    f64,
-    String,
-    NaiveDate,
-    NaiveDateTime,
-    DateTime<Utc>,
-    Vec<u8>,
-);
+impl_produce_text!(i64, bool, f64, String, NaiveDate, NaiveDateTime, Vec<u8>,);
+
+// `TIMESTAMP WITH TIME ZONE`: rust-oracle's `FromSql for DateTime<Utc>` reads the wall-clock time as if it were UTC
+// and drops the offset (`11:00:00 -08:00` would become `11:00:00 UTC`). Read it with its offset, then convert.
+fn timestamp_tz_to_utc(value: DateTime<FixedOffset>) -> DateTime<Utc> {
+    value.with_timezone(&Utc)
+}
+
+impl<'r, 'a> Produce<'r, DateTime<Utc>> for OracleTextSourceParser<'a> {
+    type Error = OracleSourceError;
+
+    #[throws(OracleSourceError)]
+    fn produce(&'r mut self) -> DateTime<Utc> {
+        let (ridx, cidx) = self.next_loc()?;
+        let value: DateTime<FixedOffset> = self.rowbuf[ridx].get(cidx)?;
+        timestamp_tz_to_utc(value)
+    }
+}
+
+impl<'r, 'a> Produce<'r, Option<DateTime<Utc>>> for OracleTextSourceParser<'a> {
+    type Error = OracleSourceError;
+
+    #[throws(OracleSourceError)]
+    fn produce(&'r mut self) -> Option<DateTime<Utc>> {
+        let (ridx, cidx) = self.next_loc()?;
+        let value: Option<DateTime<FixedOffset>> = self.rowbuf[ridx].get(cidx)?;
+        value.map(timestamp_tz_to_utc)
+    }
+}
 
 // Manual implementation for Decimal since Oracle doesn't support it directly via FromSql
 impl<'r, 'a> Produce<'r, Decimal> for OracleTextSourceParser<'a> {
@@ -398,5 +456,42 @@ impl<'r, 'a> Produce<'r, Option<Decimal>> for OracleTextSourceParser<'a> {
             Some(val) => Some(val.parse::<Decimal>()?),
             None => None,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn timestamp_with_time_zone_keeps_the_instant() {
+        let west = FixedOffset::west_opt(8 * 3600).unwrap();
+        let value = chrono::TimeZone::with_ymd_and_hms(&west, 1999, 12, 1, 11, 0, 0).unwrap();
+        assert_eq!(
+            timestamp_tz_to_utc(value).to_rfc3339(),
+            "1999-12-01T19:00:00+00:00"
+        );
+    }
+
+    #[test]
+    fn boolean_client_threshold() {
+        // versions as reported by `Version::client()` for the Instant Client zips
+        assert!(!client_reads_boolean_correctly(&Version::new(
+            23, 4, 0, 24, 5
+        )));
+        assert!(client_reads_boolean_correctly(&Version::new(
+            23, 5, 0, 24, 7
+        )));
+        assert!(client_reads_boolean_correctly(&Version::new(
+            23, 26, 3, 0, 0
+        )));
+    }
+
+    #[test]
+    fn check_boolean_client_skips_queries_without_boolean() {
+        // no Boolean column -> the client version is never looked up
+        let names = vec!["A".to_string()];
+        let schema = vec![OracleTypeSystem::NumInt(true)];
+        assert!(check_boolean_client(&names, &schema).is_ok());
     }
 }

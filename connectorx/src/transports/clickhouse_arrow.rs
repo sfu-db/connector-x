@@ -5,7 +5,6 @@ use crate::{
         typesystem::{ArrowTypeSystem, DateTimeWrapperMicro, NaiveTimeWrapperMicro},
         ArrowDestination, ArrowDestinationError,
     },
-    impl_transport,
     sources::clickhouse::{ClickHouseSource, ClickHouseSourceError, ClickHouseTypeSystem},
     typesystem::TypeConversion,
 };
@@ -15,14 +14,18 @@ use std::net::IpAddr;
 use thiserror::Error;
 use uuid::Uuid;
 
+/// Errors raised while moving data from the ClickHouse source to the Arrow destination.
 #[derive(Error, Debug)]
 pub enum ClickHouseArrowTransportError {
+    /// Error from the ClickHouse source.
     #[error(transparent)]
     Source(#[from] ClickHouseSourceError),
 
+    /// Error from the Arrow destination.
     #[error(transparent)]
     Destination(#[from] ArrowDestinationError),
 
+    /// Generic ConnectorX error.
     #[error(transparent)]
     ConnectorX(#[from] crate::errors::ConnectorXError),
 }

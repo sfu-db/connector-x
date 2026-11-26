@@ -1,0 +1,29 @@
+codecov:
+  notify:
+    # ci.yml uploads three reports per commit (unit-tests, integration-tests
+    # and python-tests). Wait for all, so the project status is not computed
+    # from a subset of them.
+    after_n_builds: 3
+
+coverage:
+  status:
+    project:
+      default:
+        # Ratchet: fail if total coverage drops more than 1% below the base
+        # commit, rather than a fixed target that would need manual bumps.
+        target: auto
+        threshold: 1%
+      # Floor for the unit-test report on its own (#1053), so coverage from
+      # `cargo test --lib` (no databases) cannot slide back behind the ratchet
+      # above, which only looks at the combined number.
+      unit-tests:
+        target: 40%
+        flags:
+          - unit-tests
+    patch:
+      default:
+        target: 60%
+
+comment:
+  layout: "diff, files"
+  after_n_builds: 3

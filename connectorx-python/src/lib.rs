@@ -1,3 +1,8 @@
+// Same crate-level allows as connectorx/src/lib.rs: errors wrap the large
+// connectorx error enums, and `PyString::ASCII` mirrors CPython's naming.
+#![allow(clippy::result_large_err)]
+#![allow(clippy::upper_case_acronyms)]
+
 pub mod arrow;
 pub mod constants;
 pub mod cx_read_sql;
@@ -35,6 +40,21 @@ fn connectorx(_: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(read_sql2))?;
     m.add_wrapped(wrap_pyfunction!(partition_sql))?;
     m.add_wrapped(wrap_pyfunction!(get_meta))?;
+    #[cfg(feature = "srcs")]
+    {
+        let version = m
+            .py()
+            .import("importlib.metadata")?
+            .call_method1("version", ("connectorx",))?
+            .extract::<String>()?;
+        let python_version = m.py().import("sys")?.getattr("version_info")?;
+        let major = python_version.getattr("major")?.extract::<u8>()?;
+        let minor = python_version.getattr("minor")?.extract::<u8>()?;
+        let micro = python_version.getattr("micro")?.extract::<u8>()?;
+        let runtime = format!("Python {major}.{minor}.{micro}");
+        ::connectorx::sources::mssql::set_user_agent_info(version, runtime)
+            .map_err(PyRuntimeError::new_err)?;
+    }
     m.add_class::<pandas::PandasBlockInfo>()?;
     m.add_class::<arrow::PyRecordBatch>()?;
     m.add_class::<arrow::PyRecordBatchIterator>()?;
@@ -42,6 +62,8 @@ fn connectorx(_: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
 }
 
 #[pyfunction]
+// One argument per keyword of the Python-facing read_sql signature.
+#[allow(clippy::too_many_arguments)]
 #[pyo3(signature = (conn, return_type, protocol=None, queries=None, partition_query=None, pre_execution_queries=None, *, **kwargs))]
 pub fn read_sql<'py>(
     py: Python<'py>,
@@ -71,9 +93,9 @@ pub fn partition_sql(
     partition_query: cx_read_sql::PyPartitionQuery,
 ) -> PyResult<Vec<String>> {
     let source_conn =
-        parse_source(conn, None).map_err(|e| crate::errors::ConnectorXPythonError::from(e))?;
+        parse_source(conn, None).map_err(crate::errors::ConnectorXPythonError::from)?;
     let queries = partition(&partition_query.into(), &source_conn)
-        .map_err(|e| crate::errors::ConnectorXPythonError::from(e))?;
+        .map_err(crate::errors::ConnectorXPythonError::from)?;
     Ok(queries.into_iter().map(|q| q.to_string()).collect())
 }
 
@@ -109,6 +131,5 @@ pub fn get_meta<'py>(
     query: String,
     protocol: Option<&str>,
 ) -> PyResult<Bound<'py, PyAny>> {
-    pandas::get_meta::get_meta(py, conn, protocol.unwrap_or("binary"), query)
-        .map_err(|e| From::from(e))
+    pandas::get_meta::get_meta(py, conn, protocol.unwrap_or("binary"), query).map_err(From::from)
 }

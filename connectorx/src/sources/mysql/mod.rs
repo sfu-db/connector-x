@@ -19,7 +19,10 @@ use fehler::{throw, throws};
 use log::{debug, warn};
 use r2d2::{Pool, PooledConnection};
 use r2d2_mysql::{
-    mysql::{prelude::Queryable, Binary, Column, QueryResult, Row, Text},
+    mysql::{
+        prelude::{FromValue, Queryable},
+        Binary, Column, QueryResult, Row, Text,
+    },
     MySqlConnectionManager,
 };
 use rust_decimal::Decimal;
@@ -30,7 +33,9 @@ pub use typesystem::MySQLTypeSystem;
 
 type MysqlConn = PooledConnection<MySqlConnectionManager>;
 
+/// Marker type: fetch with the MySQL binary (prepared statement) protocol.
 pub enum BinaryProtocol {}
+/// Marker type: fetch with the MySQL text protocol.
 pub enum TextProtocol {}
 
 #[throws(MySQLSourceError)]
@@ -39,6 +44,7 @@ fn get_total_rows(conn: &mut MysqlConn, query: &CXQuery<String>) -> usize {
         .ok_or_else(|| anyhow!("mysql failed to get the count of query: {}", query))?
 }
 
+/// Source that reads from MySQL. `P` selects the protocol.
 pub struct MySQLSource<P> {
     pool: Pool<MySqlConnectionManager>,
     origin_query: Option<String>,
@@ -91,6 +97,7 @@ fn limit0_metadata(
 }
 
 impl<P> MySQLSource<P> {
+    /// Create a source with a pool of up to `nconn` connections.
     #[throws(MySQLSourceError)]
     pub fn new(conn: &str, nconn: usize) -> Self {
         let manager = MySqlConnectionManager::new(build_opts(conn)?);
@@ -200,6 +207,7 @@ where
     }
 }
 
+/// One partition of a [`MySQLSource`].
 pub struct MySQLSourcePartition<P> {
     conn: MysqlConn,
     query: CXQuery<String>,
@@ -210,6 +218,7 @@ pub struct MySQLSourcePartition<P> {
 }
 
 impl<P> MySQLSourcePartition<P> {
+    /// Create a partition that runs `query` on `conn`.
     pub fn new(conn: MysqlConn, query: &CXQuery<String>, schema: &[MySQLTypeSystem]) -> Self {
         Self {
             conn,
@@ -274,6 +283,34 @@ impl SourcePartition for MySQLSourcePartition<TextProtocol> {
     }
 }
 
+/// Takes the cell at `cidx` out of `row` and converts it to `T`.
+///
+/// `Row::take` panics inside mysql_common when the value has no representation
+/// in `T` (zero dates, TIME values outside a chrono `NaiveTime`, DECIMALs wider
+/// than rust_decimal, ...). Use `take_opt` instead and report the failure as an
+/// error naming the column (#476, #268).
+///
+/// `Produced` is the type named in that error: the column's Rust type, without
+/// the `Option` of nullable columns, as in the other sources.
+fn take_cell<T: FromValue, Produced>(
+    row: &mut Row,
+    ridx: usize,
+    cidx: usize,
+) -> Result<T, MySQLSourceError> {
+    match row.take_opt::<T, _>(cidx) {
+        Some(Ok(value)) => Ok(value),
+        Some(Err(e)) => Err(ConnectorXError::cannot_produce::<Produced>(Some(format!(
+            "column `{}` (index {}): {}",
+            row.columns_ref()[cidx].name_str(),
+            cidx,
+            e
+        )))
+        .into()),
+        None => Err(anyhow!("mysql cannot parse at position: ({}, {})", ridx, cidx).into()),
+    }
+}
+
+/// Row parser for the binary protocol.
 pub struct MySQLBinarySourceParser<'a> {
     iter: QueryResult<'a, 'a, 'a, Binary>,
     rowbuf: Vec<Row>,
@@ -284,6 +321,7 @@ pub struct MySQLBinarySourceParser<'a> {
 }
 
 impl<'a> MySQLBinarySourceParser<'a> {
+    /// Wrap a binary protocol result set.
     pub fn new(iter: QueryResult<'a, 'a, 'a, Binary>, schema: &[MySQLTypeSystem]) -> Self {
         Self {
             iter,
@@ -346,8 +384,7 @@ macro_rules! impl_produce_binary {
                 #[throws(MySQLSourceError)]
                 fn produce(&'r mut self) -> $t {
                     let (ridx, cidx) = self.next_loc()?;
-                    let res = self.rowbuf[ridx].take(cidx).ok_or_else(|| anyhow!("mysql cannot parse at position: ({}, {})", ridx, cidx))?;
-                    res
+                    take_cell::<$t, $t>(&mut self.rowbuf[ridx], ridx, cidx)?
                 }
             }
 
@@ -357,8 +394,7 @@ macro_rules! impl_produce_binary {
                 #[throws(MySQLSourceError)]
                 fn produce(&'r mut self) -> Option<$t> {
                     let (ridx, cidx) = self.next_loc()?;
-                    let res = self.rowbuf[ridx].take(cidx).ok_or_else(|| anyhow!("mysql cannot parse at position: ({}, {})", ridx, cidx))?;
-                    res
+                    take_cell::<Option<$t>, $t>(&mut self.rowbuf[ridx], ridx, cidx)?
                 }
             }
         )+
@@ -385,6 +421,7 @@ impl_produce_binary!(
     Value,
 );
 
+/// Row parser for the text protocol.
 pub struct MySQLTextSourceParser<'a> {
     iter: QueryResult<'a, 'a, 'a, Text>,
     rowbuf: Vec<Row>,
@@ -395,6 +432,7 @@ pub struct MySQLTextSourceParser<'a> {
 }
 
 impl<'a> MySQLTextSourceParser<'a> {
+    /// Wrap a text protocol result set.
     pub fn new(iter: QueryResult<'a, 'a, 'a, Text>, schema: &[MySQLTypeSystem]) -> Self {
         Self {
             iter,
@@ -455,8 +493,7 @@ macro_rules! impl_produce_text {
                 #[throws(MySQLSourceError)]
                 fn produce(&'r mut self) -> $t {
                     let (ridx, cidx) = self.next_loc()?;
-                    let res = self.rowbuf[ridx].take(cidx).ok_or_else(|| anyhow!("mysql cannot parse at position: ({}, {})", ridx, cidx))?;
-                    res
+                    take_cell::<$t, $t>(&mut self.rowbuf[ridx], ridx, cidx)?
                 }
             }
 
@@ -466,8 +503,7 @@ macro_rules! impl_produce_text {
                 #[throws(MySQLSourceError)]
                 fn produce(&'r mut self) -> Option<$t> {
                     let (ridx, cidx) = self.next_loc()?;
-                    let res = self.rowbuf[ridx].take(cidx).ok_or_else(|| anyhow!("mysql cannot parse at position: ({}, {})", ridx, cidx))?;
-                    res
+                    take_cell::<Option<$t>, $t>(&mut self.rowbuf[ridx], ridx, cidx)?
                 }
             }
         )+

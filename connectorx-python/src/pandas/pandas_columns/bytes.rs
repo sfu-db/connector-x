@@ -157,11 +157,11 @@ impl HasPandasColumn for Option<Vec<u8>> {
     type PandasColumn<'a> = BytesColumn;
 }
 
-impl<'r> HasPandasColumn for &'r [u8] {
+impl HasPandasColumn for &[u8] {
     type PandasColumn<'a> = BytesColumn;
 }
 
-impl<'r> HasPandasColumn for Option<&'r [u8]> {
+impl HasPandasColumn for Option<&[u8]> {
     type PandasColumn<'a> = BytesColumn;
 }
 
@@ -215,9 +215,9 @@ impl BytesColumn {
                 Ok(())
             })?;
 
-            self.bytes_buf.truncate(0);
-            self.bytes_lengths.truncate(0);
-            self.row_idx.truncate(0);
+            self.bytes_buf.clear();
+            self.bytes_lengths.clear();
+            self.row_idx.clear();
         }
     }
 

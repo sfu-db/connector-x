@@ -1,7 +1,10 @@
 /// Associate physical representations to a typesystem.
 ///
 /// # Example Usage
-/// ```ignore
+/// ```no_run
+/// # use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
+/// # use connectorx::impl_typesystem;
+/// #[derive(Debug, Clone, Copy)]
 /// pub enum ArrowTypeSystem {
 ///     Int32(bool),
 ///     Int64(bool),
@@ -108,7 +111,24 @@ macro_rules! impl_typesystem {
 /// A macro to help define a Transport.
 ///
 /// # Example Usage
-/// ```ignore
+/// ```no_run
+/// # use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
+/// # use connectorx::destinations::arrow::{ArrowDestination, ArrowDestinationError, ArrowTypeSystem};
+/// # use connectorx::sources::mssql::{FloatN, IntN, MsSQLSource, MsSQLSourceError, MsSQLTypeSystem};
+/// # use connectorx::typesystem::TypeConversion;
+/// # use connectorx::impl_transport;
+/// # use rust_decimal::Decimal;
+/// # use uuid_old::Uuid;
+/// # pub struct MsSQLArrowTransport;
+/// # #[derive(thiserror::Error, Debug)]
+/// # pub enum MsSQLArrowTransportError {
+/// #     #[error(transparent)]
+/// #     Source(#[from] MsSQLSourceError),
+/// #     #[error(transparent)]
+/// #     Destination(#[from] ArrowDestinationError),
+/// #     #[error(transparent)]
+/// #     ConnectorX(#[from] connectorx::errors::ConnectorXError),
+/// # }
 /// impl_transport!(
 ///     name = MsSQLArrowTransport,
 ///     error = MsSQLArrowTransportError,
@@ -143,6 +163,18 @@ macro_rules! impl_typesystem {
 ///         { Uniqueidentifier[Uuid]        => LargeUtf8[String]         | conversion option }
 ///     }
 /// );
+/// # impl TypeConversion<IntN, i64> for MsSQLArrowTransport {
+/// #     fn convert(val: IntN) -> i64 { val.0 }
+/// # }
+/// # impl TypeConversion<FloatN, f64> for MsSQLArrowTransport {
+/// #     fn convert(val: FloatN) -> f64 { val.0 }
+/// # }
+/// # impl TypeConversion<Decimal, f64> for MsSQLArrowTransport {
+/// #     fn convert(val: Decimal) -> f64 { num_traits::ToPrimitive::to_f64(&val).unwrap() }
+/// # }
+/// # impl TypeConversion<Uuid, String> for MsSQLArrowTransport {
+/// #     fn convert(val: Uuid) -> String { val.to_string() }
+/// # }
 /// ```
 /// This implements a `Transport` called `MsSQLArrowTransport` that can convert types from MsSQL to Arrow.
 #[macro_export]

@@ -3,34 +3,62 @@ use r2d2_mysql::mysql::consts::{ColumnFlags, ColumnType};
 use rust_decimal::Decimal;
 use serde_json::Value;
 
+/// Column types of the MySQL source. The `bool` is `true` when the column is nullable.
 #[derive(Copy, Clone, Debug)]
 pub enum MySQLTypeSystem {
+    /// MySQL `FLOAT`.
     Float(bool),
+    /// MySQL `DOUBLE`.
     Double(bool),
+    /// MySQL `TINYINT`.
     Tiny(bool),
+    /// MySQL `SMALLINT`.
     Short(bool),
+    /// MySQL `INT`.
     Long(bool),
+    /// MySQL `MEDIUMINT`.
     Int24(bool),
+    /// MySQL `BIGINT`.
     LongLong(bool),
+    /// MySQL `TINYINT UNSIGNED`.
     UTiny(bool),
+    /// MySQL `SMALLINT UNSIGNED`.
     UShort(bool),
+    /// MySQL `INT UNSIGNED`.
     ULong(bool),
+    /// MySQL `MEDIUMINT UNSIGNED`.
     UInt24(bool),
+    /// MySQL `BIGINT UNSIGNED`.
     ULongLong(bool),
+    /// MySQL `DATETIME`.
     Datetime(bool),
+    /// MySQL `DATE`.
     Date(bool),
+    /// MySQL `TIME`.
     Time(bool),
+    /// MySQL `DECIMAL`.
     Decimal(bool),
+    /// MySQL `CHAR`.
     Char(bool),
+    /// MySQL `VARCHAR` and the `TEXT` types.
     VarChar(bool),
+    /// MySQL `TIMESTAMP`.
     Timestamp(bool),
+    /// MySQL `YEAR`, read as `i16`.
     Year(bool),
+    /// MySQL `ENUM`, read as a string.
     Enum(bool),
+    /// MySQL `TINYBLOB` and `BINARY`.
     TinyBlob(bool),
+    /// MySQL `BLOB` and `VARBINARY`.
     Blob(bool),
+    /// MySQL `MEDIUMBLOB`.
     MediumBlob(bool),
+    /// MySQL `LONGBLOB`.
     LongBlob(bool),
+    /// MySQL `JSON`.
     Json(bool),
+    /// MySQL `BIT`, read as bytes.
     Bit(bool),
 }
 
@@ -79,6 +107,7 @@ impl<'a> From<(&'a ColumnType, &'a ColumnFlags, u16)> for MySQLTypeSystem {
                     Tiny(null_ok)
                 }
             }
+
             ColumnType::MYSQL_TYPE_SHORT => {
                 if unsigned {
                     UShort(null_ok)
@@ -168,6 +197,209 @@ impl<'a> From<(&'a ColumnType, &'a ColumnFlags, u16)> for MySQLTypeSystem {
             ColumnType::MYSQL_TYPE_VARCHAR => VarChar(null_ok),
             ColumnType::MYSQL_TYPE_BIT => Bit(null_ok),
             _ => unimplemented!("{}", format!("{:?}", ty)),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::MySQLTypeSystem;
+    use mysql_common::constants::{ColumnFlags, ColumnType};
+
+    fn map(ty: ColumnType, flags: ColumnFlags, charset: u16) -> MySQLTypeSystem {
+        MySQLTypeSystem::from((&ty, &flags, charset))
+    }
+
+    #[test]
+    fn maps_numeric_and_temporal_columns() {
+        let nullable = ColumnFlags::empty();
+        let not_null = ColumnFlags::NOT_NULL_FLAG;
+        let unsigned = ColumnFlags::UNSIGNED_FLAG | ColumnFlags::NOT_NULL_FLAG;
+
+        assert!(matches!(
+            map(ColumnType::MYSQL_TYPE_TINY, nullable, 0),
+            MySQLTypeSystem::Tiny(true)
+        ));
+        assert!(matches!(
+            map(ColumnType::MYSQL_TYPE_TINY, unsigned, 0),
+            MySQLTypeSystem::UTiny(false)
+        ));
+        assert!(matches!(
+            map(ColumnType::MYSQL_TYPE_SHORT, unsigned, 0),
+            MySQLTypeSystem::UShort(false)
+        ));
+        assert!(matches!(
+            map(ColumnType::MYSQL_TYPE_SHORT, nullable, 0),
+            MySQLTypeSystem::Short(true)
+        ));
+        assert!(matches!(
+            map(ColumnType::MYSQL_TYPE_INT24, unsigned, 0),
+            MySQLTypeSystem::UInt24(false)
+        ));
+        assert!(matches!(
+            map(ColumnType::MYSQL_TYPE_INT24, nullable, 0),
+            MySQLTypeSystem::Int24(true)
+        ));
+        assert!(matches!(
+            map(ColumnType::MYSQL_TYPE_LONG, unsigned, 0),
+            MySQLTypeSystem::ULong(false)
+        ));
+        assert!(matches!(
+            map(ColumnType::MYSQL_TYPE_LONG, nullable, 0),
+            MySQLTypeSystem::Long(true)
+        ));
+        assert!(matches!(
+            map(ColumnType::MYSQL_TYPE_LONGLONG, unsigned, 0),
+            MySQLTypeSystem::ULongLong(false)
+        ));
+        assert!(matches!(
+            map(ColumnType::MYSQL_TYPE_LONGLONG, nullable, 0),
+            MySQLTypeSystem::LongLong(true)
+        ));
+        assert!(matches!(
+            map(ColumnType::MYSQL_TYPE_FLOAT, nullable, 0),
+            MySQLTypeSystem::Float(true)
+        ));
+        assert!(matches!(
+            map(ColumnType::MYSQL_TYPE_DOUBLE, nullable, 0),
+            MySQLTypeSystem::Double(true)
+        ));
+        assert!(matches!(
+            map(ColumnType::MYSQL_TYPE_DATETIME, nullable, 0),
+            MySQLTypeSystem::Datetime(true)
+        ));
+        assert!(matches!(
+            map(ColumnType::MYSQL_TYPE_DATE, nullable, 0),
+            MySQLTypeSystem::Date(true)
+        ));
+        assert!(matches!(
+            map(ColumnType::MYSQL_TYPE_TIME, nullable, 0),
+            MySQLTypeSystem::Time(true)
+        ));
+        for ty in [
+            ColumnType::MYSQL_TYPE_DECIMAL,
+            ColumnType::MYSQL_TYPE_NEWDECIMAL,
+        ] {
+            assert!(matches!(
+                map(ty, nullable, 0),
+                MySQLTypeSystem::Decimal(true)
+            ));
+        }
+        assert!(matches!(
+            map(ColumnType::MYSQL_TYPE_TIMESTAMP, not_null, 0),
+            MySQLTypeSystem::Timestamp(false)
+        ));
+        assert!(matches!(
+            map(ColumnType::MYSQL_TYPE_YEAR, nullable, 0),
+            MySQLTypeSystem::Year(true)
+        ));
+    }
+
+    #[test]
+    fn maps_text_binary_and_special_columns() {
+        let nullable = ColumnFlags::empty();
+        for (ty, expected) in [
+            (ColumnType::MYSQL_TYPE_STRING, MySQLTypeSystem::Char(true)),
+            (
+                ColumnType::MYSQL_TYPE_VAR_STRING,
+                MySQLTypeSystem::VarChar(true),
+            ),
+            (
+                ColumnType::MYSQL_TYPE_TINY_BLOB,
+                MySQLTypeSystem::VarChar(true),
+            ),
+            (ColumnType::MYSQL_TYPE_BLOB, MySQLTypeSystem::VarChar(true)),
+            (
+                ColumnType::MYSQL_TYPE_MEDIUM_BLOB,
+                MySQLTypeSystem::VarChar(true),
+            ),
+            (
+                ColumnType::MYSQL_TYPE_LONG_BLOB,
+                MySQLTypeSystem::VarChar(true),
+            ),
+        ] {
+            let actual = map(ty, nullable, 0);
+            assert_eq!(format!("{actual:?}"), format!("{expected:?}"));
+        }
+        assert!(matches!(
+            map(ColumnType::MYSQL_TYPE_STRING, nullable, 63),
+            MySQLTypeSystem::TinyBlob(true)
+        ));
+        assert!(matches!(
+            map(ColumnType::MYSQL_TYPE_VAR_STRING, nullable, 63),
+            MySQLTypeSystem::Blob(true)
+        ));
+        assert!(matches!(
+            map(ColumnType::MYSQL_TYPE_TINY_BLOB, nullable, 63),
+            MySQLTypeSystem::TinyBlob(true)
+        ));
+        assert!(matches!(
+            map(ColumnType::MYSQL_TYPE_BLOB, nullable, 63),
+            MySQLTypeSystem::Blob(true)
+        ));
+        assert!(matches!(
+            map(ColumnType::MYSQL_TYPE_MEDIUM_BLOB, nullable, 63),
+            MySQLTypeSystem::MediumBlob(true)
+        ));
+        assert!(matches!(
+            map(ColumnType::MYSQL_TYPE_LONG_BLOB, nullable, 63),
+            MySQLTypeSystem::LongBlob(true)
+        ));
+        assert!(matches!(
+            map(ColumnType::MYSQL_TYPE_JSON, nullable, 0),
+            MySQLTypeSystem::Json(true)
+        ));
+        assert!(matches!(
+            map(ColumnType::MYSQL_TYPE_VARCHAR, nullable, 0),
+            MySQLTypeSystem::VarChar(true)
+        ));
+        assert!(matches!(
+            map(ColumnType::MYSQL_TYPE_ENUM, nullable, 0),
+            MySQLTypeSystem::Enum(true)
+        ));
+        assert!(matches!(
+            map(ColumnType::MYSQL_TYPE_BIT, nullable, 0),
+            MySQLTypeSystem::Bit(true)
+        ));
+    }
+
+    /// Every variant realizes to the Rust type named in `impl_typesystem!`.
+    #[test]
+    fn every_variant_realizes_to_its_rust_type() {
+        use crate::typesystem::testing::assert_maps;
+        use MySQLTypeSystem as M;
+        type Variant = fn(bool) -> MySQLTypeSystem;
+        let cases: &[(Variant, &str)] = &[
+            (M::Tiny, "i8"),
+            (M::Short, "i16"),
+            (M::Year, "i16"),
+            (M::Long, "i32"),
+            (M::Int24, "i32"),
+            (M::LongLong, "i64"),
+            (M::Float, "f32"),
+            (M::Double, "f64"),
+            (M::UTiny, "u8"),
+            (M::UShort, "u16"),
+            (M::ULong, "u32"),
+            (M::UInt24, "u32"),
+            (M::ULongLong, "u64"),
+            (M::Datetime, "::NaiveDateTime"),
+            (M::Timestamp, "::NaiveDateTime"),
+            (M::Date, "::NaiveDate"),
+            (M::Time, "::NaiveTime"),
+            (M::Decimal, "::Decimal"),
+            (M::Char, "alloc::string::String"),
+            (M::VarChar, "alloc::string::String"),
+            (M::Enum, "alloc::string::String"),
+            (M::TinyBlob, "Vec<u8>"),
+            (M::Blob, "Vec<u8>"),
+            (M::MediumBlob, "Vec<u8>"),
+            (M::LongBlob, "Vec<u8>"),
+            (M::Bit, "Vec<u8>"),
+            (M::Json, "::Value"),
+        ];
+        for (ts, rust_type) in cases {
+            assert_maps(*ts, rust_type);
         }
     }
 }

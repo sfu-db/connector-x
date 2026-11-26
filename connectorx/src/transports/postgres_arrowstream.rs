@@ -22,14 +22,18 @@ use std::marker::PhantomData;
 use thiserror::Error;
 use uuid::Uuid;
 
+/// Errors raised while moving data from the Postgres source to the streaming Arrow destination.
 #[derive(Error, Debug)]
 pub enum PostgresArrowTransportError {
+    /// Error from the Postgres source.
     #[error(transparent)]
     Source(#[from] PostgresSourceError),
 
+    /// Error from the streaming Arrow destination.
     #[error(transparent)]
     Destination(#[from] ArrowDestinationError),
 
+    /// Generic ConnectorX error.
     #[error(transparent)]
     ConnectorX(#[from] crate::errors::ConnectorXError),
 }
@@ -69,6 +73,7 @@ macro_rules! impl_postgres_transport {
                 { JSONB[Value]                       => LargeUtf8[String]                  | conversion none   }
                 { Inet[IpInet]                       => LargeUtf8[String]                  | conversion none   }
                 { Range[&'r str]                     => LargeUtf8[String]                  | conversion none   }
+                { TsVector[&'r str]                  => LargeUtf8[String]                  | conversion none   }
                 { BoolArray[Vec<Option<bool>>]       => BoolArray[Vec<Option<bool>>]       | conversion auto   }
                 { VarcharArray[Vec<Option<String>>]  => Utf8Array[Vec<Option<String>>]     | conversion auto   }
                 { TextArray[Vec<Option<String>>]     => Utf8Array[Vec<Option<String>>]     | conversion none   }

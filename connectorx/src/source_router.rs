@@ -3,29 +3,44 @@ use crate::errors::{ConnectorXError, Result};
 use crate::utils::remove_query_params;
 use anyhow::anyhow;
 use fehler::throws;
-#[cfg(feature = "src_postgres")]
+#[cfg(feature = "src_redshift")]
 use redshift_iam::redshift_to_postgres;
 use std::convert::TryFrom;
 use url::Url;
 
+/// Database kind, derived from the connection string scheme.
 #[derive(Debug, Clone)]
 pub enum SourceType {
+    /// `postgres://`, `postgresql://` or `redshift-iam://`.
     Postgres,
+    /// `sqlite://`.
     SQLite,
+    /// `mysql://`.
     MySQL,
+    /// `mssql://` (SQL Server).
     MsSQL,
+    /// `oracle://`.
     Oracle,
+    /// `bigquery://`.
     BigQuery,
+    /// `duckdb://`.
     DuckDB,
+    /// `trino://`.
     Trino,
+    /// `clickhouse://`.
     ClickHouse,
+    /// Any other scheme.
     Unknown,
 }
 
+/// Parsed connection string.
 #[derive(Debug, Clone)]
 pub struct SourceConn {
+    /// Database kind.
     pub ty: SourceType,
+    /// Connection URL without the `cxprotocol` parameter.
     pub conn: Url,
+    /// ConnectorX protocol to use, `binary` by default.
     pub proto: String,
 }
 
@@ -37,7 +52,7 @@ impl TryFrom<&str> for SourceConn {
 
         // parse connectorx protocol
         let proto = match old_url.query_pairs().find(|p| p.0 == CONNECTORX_PROTOCOL) {
-            Some((_, proto)) => proto.to_owned().to_string(),
+            Some((_, proto)) => proto.to_string(),
             None => "binary".to_string(),
         };
 
@@ -48,7 +63,7 @@ impl TryFrom<&str> for SourceConn {
         // only for compatablility, we don't use the same engine
         match url.scheme().split('+').collect::<Vec<&str>>()[0] {
             "postgres" | "postgresql" => Ok(SourceConn::new(SourceType::Postgres, url, proto)),
-            #[cfg(feature = "src_postgres")]
+            #[cfg(feature = "src_redshift")]
             "redshift-iam" => Ok(SourceConn::new(
                 SourceType::Postgres,
                 redshift_to_postgres(url),
@@ -68,20 +83,22 @@ impl TryFrom<&str> for SourceConn {
 }
 
 impl SourceConn {
+    /// Create a connection from its parts.
     pub fn new(ty: SourceType, conn: Url, proto: String) -> Self {
         Self { ty, conn, proto }
     }
+    /// Override the protocol.
     pub fn set_protocol(&mut self, protocol: &str) {
         self.proto = protocol.to_string();
     }
 }
 
+/// Parse a connection string, overriding the protocol when `protocol` is given.
 #[throws(ConnectorXError)]
 pub fn parse_source(conn: &str, protocol: Option<&str>) -> SourceConn {
     let mut source_conn = SourceConn::try_from(conn)?;
-    match protocol {
-        Some(p) => source_conn.set_protocol(p),
-        None => {}
+    if let Some(p) = protocol {
+        source_conn.set_protocol(p)
     }
     source_conn
 }
@@ -115,5 +132,53 @@ mod tests {
 
         assert_eq!(source_conn.conn.query(), Some("a=x%20y&b=%2Fz"));
         assert_eq!(source_conn.proto, "binary");
+    }
+
+    /// Without `src_redshift`, `redshift-iam://` is an unknown scheme: `src_postgres` alone does not build the AWS SDK.
+    #[test]
+    #[cfg(not(feature = "src_redshift"))]
+    fn redshift_iam_needs_its_feature() {
+        let conn = SourceConn::try_from("redshift-iam://u:p@h:5439/db").unwrap();
+        assert_eq!(format!("{:?}", conn.ty), "Unknown");
+    }
+
+    /// The scheme picks the source type; a `+driver` suffix (as SQLAlchemy
+    /// writes it) is ignored, and an unknown scheme is kept as `Unknown`.
+    #[test]
+    fn maps_schemes_to_source_types() {
+        use super::SourceType::*;
+        for (url, ty) in [
+            ("postgres://h/db", Postgres),
+            ("postgresql+psycopg2://h/db", Postgres),
+            ("sqlite:///tmp/x.db", SQLite),
+            ("mysql+pymysql://h/db", MySQL),
+            ("mssql+pymssql://h/db", MsSQL),
+            ("oracle://h/db", Oracle),
+            ("bigquery:///tmp/key.json", BigQuery),
+            ("duckdb:///tmp/x.duckdb", DuckDB),
+            ("trino://h/catalog", Trino),
+            ("clickhouse://h/db", ClickHouse),
+            ("nosuchdb://h/db", Unknown),
+        ] {
+            let conn = SourceConn::try_from(url).unwrap();
+            assert_eq!(format!("{:?}", conn.ty), format!("{ty:?}"), "{url}");
+            assert_eq!(conn.proto, "binary", "{url}");
+        }
+    }
+
+    #[test]
+    fn parse_source_overrides_the_protocol_only_when_given() {
+        let conn = super::parse_source("mysql://h/db?cxprotocol=text", None).unwrap();
+        assert_eq!(conn.proto, "text");
+        let conn = super::parse_source("mysql://h/db?cxprotocol=text", Some("binary")).unwrap();
+        assert_eq!(conn.proto, "binary");
+        assert_eq!(conn.conn.as_str(), "mysql://h/db");
+    }
+
+    #[test]
+    fn rejects_strings_that_are_not_urls() {
+        let err = SourceConn::try_from("not a url").unwrap_err();
+        assert!(err.to_string().contains("parse error"), "{err}");
+        assert!(super::parse_source("", None).is_err());
     }
 }

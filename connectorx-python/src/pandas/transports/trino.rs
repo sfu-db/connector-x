@@ -21,8 +21,8 @@ impl_transport!(
         { Time[NaiveTime]            => String[String]          | conversion option }
         { Timestamp[NaiveDateTime]   => DateTimeMicro[DateTimeWrapperMicro] | conversion option }
         { Boolean[bool]              => Bool[bool]              | conversion auto }
-        { Bigint[i32]                => I64[i64]                | conversion auto }
-        { Integer[i32]               => I64[i64]                | conversion none }
+        { Bigint[i64]                => I64[i64]                | conversion auto }
+        { Integer[i32]               => I64[i64]                | conversion auto }
         { Smallint[i16]              => I64[i64]                | conversion auto }
         { Tinyint[i8]                => I64[i64]                | conversion auto }
         { Double[f64]                => F64[f64]                | conversion auto }

@@ -3,36 +3,66 @@ use rust_decimal::Decimal;
 use uuid_old::Uuid;
 
 // https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-tds/ce3183a6-9d89-47e8-a02f-de5a1a1303de
+/// Column types of the SQL Server source. The `bool` is `true` when the column is nullable.
 #[derive(Copy, Clone, Debug)]
 pub enum MsSQLTypeSystem {
+    /// SQL Server `tinyint` (unsigned 8-bit).
     Tinyint(bool),
+    /// SQL Server `smallint`.
     Smallint(bool),
+    /// SQL Server `int`.
     Int(bool),
+    /// SQL Server `bigint`.
     Bigint(bool),
+    /// Nullable SQL Server integer of any width, read as `i64`.
     Intn(bool),
+    /// SQL Server `real` (`float(24)`).
     Float24(bool),
+    /// SQL Server `float` (`float(53)`).
     Float53(bool),
+    /// Nullable SQL Server float of either width, read as `f64`.
     Floatn(bool),
+    /// SQL Server `bit`.
     Bit(bool),
+    /// SQL Server `nvarchar`.
     Nvarchar(bool),
+    /// SQL Server `varchar`.
     Varchar(bool),
+    /// SQL Server `nchar`.
     Nchar(bool),
+    /// SQL Server `char`.
     Char(bool),
+    /// SQL Server `ntext`.
     Ntext(bool),
+    /// SQL Server `text`.
     Text(bool),
+    /// SQL Server `binary`.
     Binary(bool),
+    /// SQL Server `varbinary`.
     Varbinary(bool),
+    /// SQL Server `image`.
     Image(bool),
+    /// SQL Server `uniqueidentifier`.
     Uniqueidentifier(bool),
+    /// SQL Server `numeric`.
     Numeric(bool),
+    /// SQL Server `decimal`.
     Decimal(bool),
+    /// SQL Server `datetime`.
     Datetime(bool),
+    /// SQL Server `datetime2`.
     Datetime2(bool),
+    /// SQL Server `smalldatetime`.
     Smalldatetime(bool),
+    /// SQL Server `date`.
     Date(bool),
+    /// SQL Server `time`.
     Time(bool),
+    /// SQL Server `datetimeoffset`, read as UTC.
     Datetimeoffset(bool),
+    /// SQL Server `money`, read as `f64`.
     Money(bool),
+    /// SQL Server `smallmoney`, read as `f32`.
     SmallMoney(bool),
 }
 
@@ -111,6 +141,8 @@ impl<'a> From<&'a mssql_tds::query::metadata::ColumnMetadata> for MsSQLTypeSyste
     }
 }
 
+/// Value of a nullable integer column of any width, widened to `i64`.
 pub struct IntN(pub i64);
 
+/// Value of a nullable float column of either width, widened to `f64`.
 pub struct FloatN(pub f64);

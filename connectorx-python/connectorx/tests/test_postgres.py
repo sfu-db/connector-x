@@ -452,6 +452,72 @@ def test_postgres_types_binary(postgres_url: str) -> None:
     df = read_sql(postgres_url, query)
     verify_data_types(df, "binary")
 
+@pytest.mark.parametrize(
+    "protocol,return_type",
+    [
+        (protocol, return_type)
+        for return_type in ["pandas", "arrow", "polars", "arrow_stream"]
+        for protocol in ["binary", "csv", "cursor", "simple"]
+        if (return_type, protocol) != ("arrow_stream", "simple")
+    ],
+)
+@pytest.mark.parametrize("query_mode", ["plain", "partitioned", "empty", "limit"])
+def test_postgres_tsvector(
+    postgres_url: str, protocol: str, return_type: str, query_mode: str
+) -> None:
+    query = """
+        SELECT *, int4range(1, 3) AS period FROM (VALUES
+            (1, $$'fat':2A,4 'rat':3B$$::tsvector),
+            (2, $$'fat' 'rat'$$::tsvector),
+            (3, ''::tsvector),
+            (4, NULL::tsvector),
+            (5, array_to_tsvector(ARRAY['a,b', 'a"b']))
+        ) AS documents(id, "search""vector")
+    """
+    id_dtype = {"pandas": "Int64", "arrow_stream": "int64"}.get(return_type, "int32")
+    string_dtype = "object" if return_type == "pandas" else None
+    expected = pd.DataFrame(
+        {
+            "id": pd.Series([1, 2, 3, 4, 5], dtype=id_dtype),
+            'search"vector': pd.Series(
+                [
+                    "'fat':2A,4 'rat':3B",
+                    "'fat' 'rat'",
+                    None if protocol == "csv" else "",
+                    None,
+                    "'a\"b' 'a,b'",
+                ],
+                dtype=string_dtype,
+            ),
+            "period": pd.Series(["[1,3)"] * 5, dtype=string_dtype),
+        }
+    )
+    kwargs = {}
+    if query_mode == "partitioned":
+        kwargs = {"partition_on": "id", "partition_num": 2}
+    elif query_mode == "empty":
+        query = f'SELECT id, "search""vector" FROM ({query}) AS empty_documents WHERE id < 0'
+        expected = expected.drop(columns="period").iloc[:0]
+    elif query_mode == "limit":
+        query += " ORDER BY id LIMIT 2"
+        expected = expected.iloc[:2]
+
+    result = read_sql(
+        postgres_url,
+        query,
+        protocol=protocol,
+        return_type=return_type,
+        batch_size=2,
+        **kwargs,
+    )
+    if return_type == "arrow_stream":
+        result = result.read_all()
+    if return_type != "pandas":
+        result = result.to_pandas()
+    result = result.sort_values("id").reset_index(drop=True)
+    assert_frame_equal(result, expected)
+
+
 def test_postgres_range_types(postgres_url: str) -> None:
     query = (
         "SELECT test_int4range, test_int8range, test_numrange, test_tsrange, "
@@ -581,22 +647,22 @@ def verify_data_types(df, protocol) -> None:
                 dtype="object",
             ),
             "test_enum": pd.Series(
-                ["happy", "very happy", "ecstatic", "ecstatic", None]
+                ["happy", "very happy", "ecstatic", "ecstatic", None], dtype="object"
             ),
             "test_citext": pd.Series(
-                ["str_citext", "", "abcdef", "1234", None]
+                ["str_citext", "", "abcdef", "1234", None], dtype="object"
             ),
             "test_ltree": pd.Series(
                 ["A.B.C.D", "A.B.E", "A", "", None], dtype="object"
             ),
             "test_lquery": pd.Series(
-                ["*.B.*", "A.*", "*", "*.A", None]
+                ["*.B.*", "A.*", "*", "*.A", None], dtype="object"
             ),
             "test_ltxtquery": pd.Series(
-                ["A & B*", "A | B", "A@", "A & B*", None]
+                ["A & B*", "A | B", "A@", "A & B*", None], dtype="object"
             ),
             "test_name": pd.Series(
-                ["0", "21", "someName", "101203203-1212323-22131235", None]
+                ["0", "21", "someName", "101203203-1212323-22131235", None], dtype="object"
             ),
         },
     )
@@ -956,8 +1022,10 @@ def test_postgres_arrow_stream_invalid_url_raises() -> None:
     # An invalid sslmode fails while parsing the connection string, before any
     # network access, so this exercises the error path of new_record_batch_iter
     # without a database. Before the fix this surfaced as a PanicException.
+    # tokio-postgres >= 0.7.18 reports "invalid connection string" without
+    # naming the parameter, so accept either wording.
     bad_url = "postgresql://user:pass@127.0.0.1:1/db?sslmode=bogus"
-    with pytest.raises(RuntimeError, match="sslmode"):
+    with pytest.raises(RuntimeError, match="sslmode|invalid connection string"):
         read_sql(bad_url, "SELECT 1", return_type="arrow_stream")
 
 
@@ -981,7 +1049,7 @@ def test_postgres_name_type(postgres_url: str) -> None:
     df = read_sql(postgres_url, query)
     expected = pd.DataFrame(
         data={
-            "test_name": pd.Series(["0", "21", "someName", "101203203-1212323-22131235", None]),
+            "test_name": pd.Series(["0", "21", "someName", "101203203-1212323-22131235", None], dtype="object"),
         },
     )
     assert_frame_equal(df, expected, check_names=True)
@@ -991,7 +1059,7 @@ def test_postgres_semicolon_support_str_query(postgres_url: str) -> None:
     df = read_sql(postgres_url, query)
     expected = pd.DataFrame(
         data={
-            "test_name": pd.Series(["0", "21", "someName", "101203203-1212323-22131235", None]),
+            "test_name": pd.Series(["0", "21", "someName", "101203203-1212323-22131235", None], dtype="object"),
         },
     )
     assert_frame_equal(df, expected, check_names=True)
@@ -1092,7 +1160,7 @@ def test_postgres_single_pre_execution_queries(postgres_url: str) -> None:
     expected = pd.DataFrame(
         index=range(1),
         data={
-            "name": pd.Series(["statement_timeout"], dtype="str"),
+            "name": pd.Series(["statement_timeout"], dtype="object"),
             "setting": pd.Series([2151], dtype="Int64"),
         },
     )
@@ -1108,7 +1176,7 @@ def test_postgres_multiple_pre_execution_queries(postgres_url: str) -> None:
     expected = pd.DataFrame(
         index=range(2),
         data={
-            "name": pd.Series(["idle_in_transaction_session_timeout", "statement_timeout"], dtype="str"),
+            "name": pd.Series(["idle_in_transaction_session_timeout", "statement_timeout"], dtype="object"),
             "setting": pd.Series([2252, 2151], dtype="Int64"),
         },
     )
@@ -1128,7 +1196,7 @@ def test_postgres_partitioned_pre_execution_queries(postgres_url: str) -> None:
     expected = pd.DataFrame(
         index=range(2),
         data={
-            "name": pd.Series(["statement_timeout", "idle_in_transaction_session_timeout"], dtype="str"),
+            "name": pd.Series(["statement_timeout", "idle_in_transaction_session_timeout"], dtype="object"),
             "setting": pd.Series([2151, 2252], dtype="Int64"),
         },
     ).sort_values(by=['name']).reset_index(drop=True)
@@ -1189,7 +1257,7 @@ def test_postgres_vector_types(postgres_url: str) -> None:
         # Convert binary to string of 1s and 0s
         return ''.join(format(b, '08b') for b in binary)[:10]  # Take first 10 bits
     
-    df['binary_vector'] = df['binary_vector'].apply(binary_to_string)
+    df['binary_vector'] = pd.Series([binary_to_string(v) for v in df['binary_vector']], index=df.index, dtype="object")
     
     # Convert sparse vector array to string format
     def sparse_to_string(sparse_vec):
@@ -1199,7 +1267,7 @@ def test_postgres_vector_types(postgres_url: str) -> None:
         non_zero = {i+1: int(val) for i, val in enumerate(sparse_vec) if val != 0}
         return f"{non_zero}/{len(sparse_vec)}"
     
-    df['sparse_vector'] = df['sparse_vector'].apply(sparse_to_string)
+    df['sparse_vector'] = pd.Series([sparse_to_string(v) for v in df['sparse_vector']], index=df.index, dtype="object")
     
     expected = pd.DataFrame(
         data={

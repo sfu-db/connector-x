@@ -9,6 +9,7 @@ use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::sync::{mpsc::channel, Arc};
 
+/// Run a federated query: rewrite `sql` into one query per database in `db_map` (name to connection string), fetch each with ConnectorX and join the results with DataFusion.
 #[throws(ConnectorXOutError)]
 pub fn run(
     sql: String,
@@ -56,7 +57,7 @@ pub fn run(
 
                     let provider = MemTable::try_new(rbs[0].schema(), vec![rbs])?;
                     s.send((p.db_alias, Some(Arc::new(provider))))
-                        .expect(&format!("send error {}", i));
+                        .unwrap_or_else(|_| panic!("send error {}", i));
                     debug!("query {} finished", i);
                 }
             }

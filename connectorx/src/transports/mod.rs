@@ -56,6 +56,11 @@ pub use clickhouse_arrowstream::{
 pub use csv_arrow::CSVArrowTransport;
 #[cfg(all(feature = "src_dummy", feature = "dst_arrow"))]
 pub use dummy_arrow::DummyArrowTransport;
+#[cfg(all(feature = "src_dummy", feature = "dst_arrow"))]
+pub use dummy_arrowstream::{
+    DummyArrowTransport as DummyArrowStreamTransport,
+    DummyArrowTransportError as DummyArrowStreamTransportError,
+};
 #[cfg(all(feature = "src_mssql", feature = "dst_arrow"))]
 pub use mssql_arrow::{MsSQLArrowTransport, MsSQLArrowTransportError};
 #[cfg(all(feature = "src_mssql", feature = "dst_arrow"))]
