@@ -3,7 +3,7 @@ use crate::errors::{ConnectorXError, Result};
 use crate::utils::remove_query_params;
 use anyhow::anyhow;
 use fehler::throws;
-#[cfg(feature = "src_postgres")]
+#[cfg(feature = "src_redshift")]
 use redshift_iam::redshift_to_postgres;
 use std::convert::TryFrom;
 use url::Url;
@@ -63,7 +63,7 @@ impl TryFrom<&str> for SourceConn {
         // only for compatablility, we don't use the same engine
         match url.scheme().split('+').collect::<Vec<&str>>()[0] {
             "postgres" | "postgresql" => Ok(SourceConn::new(SourceType::Postgres, url, proto)),
-            #[cfg(feature = "src_postgres")]
+            #[cfg(feature = "src_redshift")]
             "redshift-iam" => Ok(SourceConn::new(
                 SourceType::Postgres,
                 redshift_to_postgres(url),
@@ -132,6 +132,14 @@ mod tests {
 
         assert_eq!(source_conn.conn.query(), Some("a=x%20y&b=%2Fz"));
         assert_eq!(source_conn.proto, "binary");
+    }
+
+    /// Without `src_redshift`, `redshift-iam://` is an unknown scheme: `src_postgres` alone does not build the AWS SDK.
+    #[test]
+    #[cfg(not(feature = "src_redshift"))]
+    fn redshift_iam_needs_its_feature() {
+        let conn = SourceConn::try_from("redshift-iam://u:p@h:5439/db").unwrap();
+        assert_eq!(format!("{:?}", conn.ty), "Unknown");
     }
 
     /// The scheme picks the source type; a `+driver` suffix (as SQLAlchemy
