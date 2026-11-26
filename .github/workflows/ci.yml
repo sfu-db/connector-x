@@ -67,9 +67,9 @@ jobs:
 
       # --all also covers connectorx-cpp (not a default member). -D warnings
       # fails the build on any new warning, including missing_docs, which both
-      # crates enable in lib.rs.
+      # crates enable in lib.rs. --all-targets lints unit and integration tests too.
       - name: Clippy linting
-        run: cargo clippy --features all --all -- -D warnings
+        run: cargo clippy --features all --all --all-targets -- -D warnings
 
       - name: Test build docs
         run: cargo doc --no-deps --features all

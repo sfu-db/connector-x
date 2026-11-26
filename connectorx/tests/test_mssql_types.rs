@@ -7,6 +7,11 @@
 //! avoid encoding assumptions that don't match actual driver behavior (e.g. `FLOAT(18)` is
 //! stored by SQL Server as a 4-byte `real` because 18 <= 24, so it round-trips with float32
 //! precision even though the destination column is `Float64`).
+
+// The timestamp constants write `<seconds>_<microseconds>`, so the underscore
+// marks the unit boundary rather than grouping thousands.
+#![allow(clippy::inconsistent_digit_grouping)]
+
 use arrow::array::{
     Array, Date32Array, Decimal128Array, Float64Array, Int64Array, LargeBinaryArray, StringArray,
     Time64MicrosecondArray, TimestampMicrosecondArray,
@@ -78,7 +83,10 @@ fn test_mssql_types_matrix() {
     // float(18) (test_floatn) -> Float64, but SQL Server implements FLOAT(n<=24) as `real`,
     // so the value comes back with float32 precision loss (123.1234567 -> 123.12345886230469).
     let floatn = col!(6, Float64Array);
-    assert_eq!(floatn.value(0), 123.1234567_f32 as f64);
+    // The literal scripts/mssql.sql inserts, rounded to f32 by the cast.
+    #[allow(clippy::excessive_precision)]
+    let expected = 123.1234567_f32 as f64;
+    assert_eq!(floatn.value(0), expected);
     assert!(floatn.is_null(1));
     assert_eq!(floatn.value(2), 0.0_f64);
 

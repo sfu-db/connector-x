@@ -1,4 +1,7 @@
 #![cfg(all(feature = "src_clickhouse", feature = "dst_arrow"))]
+// Expected floats repeat the literals in scripts/clickhouse.sql (`3.14`,
+// `2.718`, `-1.57`, ...), which are deliberately approximate.
+#![allow(clippy::approx_constant)]
 
 use arrow::array::*;
 use chrono::{NaiveDate, NaiveDateTime, NaiveTime, TimeZone, Utc};
@@ -158,7 +161,7 @@ fn run_clickhouse_query(query: &str) -> Vec<RecordBatch> {
     let dispatcher = Dispatcher::<_, _, ClickHouseArrowTransport>::new(
         builder,
         &mut destination,
-        &vec![CXQuery::naked(query)],
+        &[CXQuery::naked(query)],
         Some(String::from(query)),
     );
     dispatcher.run().unwrap();
