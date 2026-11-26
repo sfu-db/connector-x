@@ -1,5 +1,9 @@
 #![allow(clippy::upper_case_acronyms)]
 #![warn(missing_docs)]
+// The crate docs link to items behind source and destination features. They
+// resolve with `--features all`, which is what CI and docs.rs build, so only
+// check them there.
+#![cfg_attr(not(feature = "all"), allow(rustdoc::broken_intra_doc_links))]
 // The Trino and BigQuery client errors (232 and 176 bytes) are held by value in
 // the source error enums and propagate into `ConnectorXOutError`. Boxing them
 // would change public error types; the error path is cold, so the larger
@@ -223,6 +227,9 @@ pub mod prelude {
     pub use crate::sources::trino::TrinoSource;
     pub use crate::sources::{PartitionParser, Produce, Source, SourcePartition};
     pub use crate::sql::CXQuery;
+    // Every transport needs a source feature and `dst_arrow`, so with only one
+    // of the two enabled there is nothing to re-export.
+    #[allow(unused_imports)]
     pub use crate::transports::*;
     pub use crate::typesystem::{
         ParameterizedFunc, ParameterizedOn, Realize, Transport, TypeAssoc, TypeConversion,

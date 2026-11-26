@@ -151,7 +151,8 @@ where
 }
 
 /// Test helpers for the mappings that `impl_typesystem!` generates.
-#[cfg(test)]
+// Only the MySQL and Postgres type-system tests use these.
+#[cfg(all(test, any(feature = "src_mysql", feature = "src_postgres")))]
 pub(crate) mod testing {
     use super::*;
     use std::marker::PhantomData;
