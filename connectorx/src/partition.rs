@@ -768,6 +768,7 @@ mod tests {
     /// Builds a `SourceConn` backed by SQLite, which does not require a live
     /// database connection to generate partition queries (the SQL is
     /// generated purely from the parsed dialect).
+    #[cfg(feature = "src_sqlite")]
     fn sqlite_source_conn() -> SourceConn {
         SourceConn::new(
             SourceType::SQLite,
@@ -776,10 +777,12 @@ mod tests {
         )
     }
 
+    #[cfg(feature = "src_sqlite")]
     fn queries_as_strings(queries: &[CXQuery]) -> Vec<String> {
         queries.iter().map(|q| q.to_string()).collect()
     }
 
+    #[cfg(feature = "src_sqlite")]
     #[test]
     fn partitions_evenly_divisible_range() {
         let part = PartitionQuery::new("SELECT * FROM test", "id", Some(0), Some(9), 2);
@@ -792,6 +795,7 @@ mod tests {
         assert!(strings[1].contains("5 <=") && strings[1].contains("< 10"));
     }
 
+    #[cfg(feature = "src_sqlite")]
     #[test]
     fn partitions_range_not_evenly_divisible() {
         // Range [0, 10] has 11 values split across 3 partitions: sizes 3, 3, 3 with
@@ -808,6 +812,7 @@ mod tests {
         assert!(strings[2].contains("6 <=") && strings[2].contains("< 11"));
     }
 
+    #[cfg(feature = "src_sqlite")]
     #[test]
     fn single_partition_covers_whole_range() {
         let part = PartitionQuery::new("SELECT * FROM test", "id", Some(5), Some(15), 1);
@@ -819,6 +824,7 @@ mod tests {
         assert!(strings[0].contains("5 <=") && strings[0].contains("< 16"));
     }
 
+    #[cfg(feature = "src_sqlite")]
     #[test]
     fn min_equals_max_single_row_range() {
         let part = PartitionQuery::new("SELECT * FROM test", "id", Some(7), Some(7), 1);
@@ -830,6 +836,7 @@ mod tests {
         assert!(strings[0].contains("7 <=") && strings[0].contains("< 8"));
     }
 
+    #[cfg(feature = "src_sqlite")]
     #[test]
     fn negative_range_partitions_correctly() {
         let part = PartitionQuery::new("SELECT * FROM test", "id", Some(-10), Some(-1), 2);
@@ -842,6 +849,7 @@ mod tests {
         assert!(strings[1].contains("-5 <=") && strings[1].contains("< 0"));
     }
 
+    #[cfg(feature = "src_sqlite")]
     #[test]
     fn partially_specified_range_returns_error() {
         let part = PartitionQuery::new("SELECT * FROM test", "id", Some(0), None, 2);
@@ -851,6 +859,7 @@ mod tests {
         assert!(result.is_err());
     }
 
+    #[cfg(feature = "src_sqlite")]
     #[test]
     fn zero_partitions_returns_error_on_division_by_zero() {
         let part = PartitionQuery::new("SELECT * FROM test", "id", Some(0), Some(9), 0);
@@ -861,6 +870,7 @@ mod tests {
         assert!(err.contains("partition count (num) must be greater than zero"));
     }
 
+    #[cfg(feature = "src_sqlite")]
     #[test]
     fn inverted_range_returns_error() {
         let part = PartitionQuery::new("SELECT * FROM test", "id", Some(10), Some(0), 2);
@@ -875,6 +885,7 @@ mod tests {
         );
     }
 
+    #[cfg(feature = "src_sqlite")]
     #[test]
     fn more_partitions_than_range_values_preserves_partition_count() {
         let part = PartitionQuery::new("SELECT * FROM test", "id", Some(0), Some(1), 4);
@@ -889,6 +900,7 @@ mod tests {
         assert!(strings[3].contains("0 <=") && strings[3].contains("< 2"));
     }
 
+    #[cfg(feature = "src_sqlite")]
     #[test]
     fn large_range_does_not_overflow_with_small_num() {
         // Sanity check that reasonably large but safe ranges partition correctly
@@ -909,6 +921,7 @@ mod tests {
         assert!(strings[3].contains("< 1000000000001"));
     }
 
+    #[cfg(feature = "src_sqlite")]
     #[test]
     fn many_small_partitions_produce_correct_count_and_bounds() {
         let part = PartitionQuery::new("SELECT * FROM test", "id", Some(1), Some(100), 10);
@@ -921,6 +934,7 @@ mod tests {
         assert!(strings[9].contains("91 <=") && strings[9].contains("< 101"));
     }
 
+    #[cfg(feature = "src_sqlite")]
     #[test]
     fn partition_range_overflow() {
         // (max - min + 1) overflows i64 when min is i64::MIN and max is i64::MAX
@@ -942,6 +956,7 @@ mod tests {
         );
     }
 
+    #[cfg(feature = "src_sqlite")]
     #[test]
     fn partition_upper_overflow_at_i64_max() {
         // max is i64::MAX; range_len is 6 (does not overflow),
@@ -964,6 +979,7 @@ mod tests {
         );
     }
 
+    #[cfg(feature = "src_sqlite")]
     #[test]
     fn partition_upper_overflow_multi_partition() {
         // Multi-partition where first partition succeeds but last partition overflows max + 1
