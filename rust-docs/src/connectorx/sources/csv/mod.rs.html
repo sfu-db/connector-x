@@ -427,7 +427,7 @@
 <a href=#427 id=427 data-nosnippet>427</a>        .unwrap();
 <a href=#428 id=428 data-nosnippet>428</a>
 <a href=#429 id=429 data-nosnippet>429</a>        <span class="kw">let </span><span class="kw-2">mut </span>source = CSVSource::new(<span class="kw-2">&amp;</span>[]);
-<a href=#430 id=430 data-nosnippet>430</a>        source.set_queries(<span class="kw-2">&amp;</span>[CXQuery::naked(path.to_string_lossy().into_owned())]);
+<a href=#430 id=430 data-nosnippet>430</a>        source.set_queries(<span class="kw-2">&amp;</span>[CXQuery::naked(path.to_string_lossy())]);
 <a href=#431 id=431 data-nosnippet>431</a>        source.fetch_metadata().unwrap();
 <a href=#432 id=432 data-nosnippet>432</a>
 <a href=#433 id=433 data-nosnippet>433</a>        <span class="macro">assert_eq!</span>(
