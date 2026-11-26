@@ -1,3 +1,5 @@
+import warnings
+
 import numpy as np
 import pandas as pd
 from pandas.testing import assert_frame_equal
@@ -384,3 +386,12 @@ def test_sqlite_cte(sqlite_db: str) -> None:
 
 def test_connection_url(sqlite_db: str) -> None:
     test_sqlite_cte(ConnectionUrl(sqlite_db))
+
+
+def test_sqlite_no_deprecation_warning(sqlite_db: str) -> None:
+    # pandas 3.1 deprecates make_block with a Pandas4Warning (a DeprecationWarning)
+    query = "SELECT test_int, test_nullint, test_str, test_float, test_bool, test_date FROM test_table"
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", DeprecationWarning)
+        df = read_sql(sqlite_db, query)
+    assert df.shape == (6, 6)

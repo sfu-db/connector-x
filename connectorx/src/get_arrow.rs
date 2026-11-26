@@ -286,9 +286,83 @@ pub fn get_arrow(
 }
 
 /// Run `queries` against `source_conn` and return an iterator yielding record batches of at most `batch_size` rows.
-#[allow(unreachable_code, unreachable_patterns, unused_variables, unused_mut)]
+// With no source feature enabled, only the `_` arm is compiled: the arguments go unused and the
+// match always throws.
+#[cfg_attr(
+    not(any(
+        feature = "src_postgres",
+        feature = "src_mysql",
+        feature = "src_sqlite",
+        feature = "src_mssql_common",
+        feature = "src_oracle",
+        feature = "src_bigquery",
+        feature = "src_clickhouse",
+    )),
+    allow(unused_variables, unreachable_code)
+)]
 #[throws(ConnectorXOutError)]
 pub fn new_record_batch_iter(
+    source_conn: &SourceConn,
+    origin_query: Option<String>,
+    queries: &[CXQuery<String>],
+    batch_size: usize,
+    // Only the Postgres and MySQL record batch iterators run pre-execution queries.
+    #[cfg_attr(
+        not(any(feature = "src_postgres", feature = "src_mysql")),
+        allow(unused_variables)
+    )]
+    pre_execution_queries: Option<&[String]>,
+) -> Box<dyn RecordBatchIterator> {
+    debug!("Protocol: {}", source_conn.proto);
+
+    match source_conn.ty {
+        #[cfg(feature = "src_postgres")]
+        SourceType::Postgres => postgres_record_batch_iter(
+            source_conn,
+            origin_query,
+            queries,
+            batch_size,
+            pre_execution_queries,
+        )?,
+        #[cfg(feature = "src_mysql")]
+        SourceType::MySQL => mysql_record_batch_iter(
+            source_conn,
+            origin_query,
+            queries,
+            batch_size,
+            pre_execution_queries,
+        )?,
+        #[cfg(feature = "src_sqlite")]
+        SourceType::SQLite => {
+            sqlite_record_batch_iter(source_conn, origin_query, queries, batch_size)?
+        }
+        #[cfg(feature = "src_mssql_common")]
+        SourceType::MsSQL => {
+            mssql_record_batch_iter(source_conn, origin_query, queries, batch_size)?
+        }
+        #[cfg(feature = "src_oracle")]
+        SourceType::Oracle => {
+            oracle_record_batch_iter(source_conn, origin_query, queries, batch_size)?
+        }
+        #[cfg(feature = "src_bigquery")]
+        SourceType::BigQuery => {
+            bigquery_record_batch_iter(source_conn, origin_query, queries, batch_size)?
+        }
+        #[cfg(feature = "src_clickhouse")]
+        SourceType::ClickHouse => {
+            clickhouse_record_batch_iter(source_conn, origin_query, queries, batch_size)?
+        }
+        _ => throw!(ConnectorXOutError::SourceNotSupport(format!(
+            "{:?}",
+            source_conn.ty
+        ))),
+    }
+}
+
+/// [`new_record_batch_iter`] for Postgres, dispatched on protocol and TLS.
+#[cfg(feature = "src_postgres")]
+#[throws(ConnectorXOutError)]
+fn postgres_record_batch_iter(
     source_conn: &SourceConn,
     origin_query: Option<String>,
     queries: &[CXQuery<String>],
@@ -297,228 +371,266 @@ pub fn new_record_batch_iter(
 ) -> Box<dyn RecordBatchIterator> {
     let destination = ArrowStreamDestination::new_with_batch_size(batch_size);
     let protocol = source_conn.proto.as_str();
-    debug!("Protocol: {}", protocol);
+    let (config, tls) = rewrite_tls_args(&source_conn.conn)?;
+    match (protocol, tls) {
+        ("csv", Some(tls_conn)) => {
+            let mut source = PostgresSource::<CSVProtocol, MakeTlsConnector>::new(
+                config,
+                tls_conn,
+                queries.len(),
+            )?;
 
-    match source_conn.ty {
-        #[cfg(feature = "src_postgres")]
-        SourceType::Postgres => {
-            let (config, tls) = rewrite_tls_args(&source_conn.conn)?;
-            match (protocol, tls) {
-                ("csv", Some(tls_conn)) => {
-                    let mut source = PostgresSource::<CSVProtocol, MakeTlsConnector>::new(
-                        config,
-                        tls_conn,
-                        queries.len(),
-                    )?;
+            source.set_pre_execution_queries(pre_execution_queries);
 
-                    source.set_pre_execution_queries(pre_execution_queries);
-
-                    let batch_iter =
-                        ArrowBatchIter::<
-                            _,
-                            PostgresArrowStreamTransport<CSVProtocol, MakeTlsConnector>,
-                        >::new(source, destination, origin_query, queries)?;
-                    let iter: Box<dyn RecordBatchIterator> = Box::new(batch_iter);
-                    return iter;
-                }
-                ("csv", None) => {
-                    let mut source =
-                        PostgresSource::<CSVProtocol, NoTls>::new(config, NoTls, queries.len())?;
-
-                    source.set_pre_execution_queries(pre_execution_queries);
-
-                    let batch_iter = ArrowBatchIter::<
-                        _,
-                        PostgresArrowStreamTransport<CSVProtocol, NoTls>,
-                    >::new(
-                        source, destination, origin_query, queries
-                    )?;
-                    let iter: Box<dyn RecordBatchIterator> = Box::new(batch_iter);
-                    return iter;
-                }
-                ("binary", Some(tls_conn)) => {
-                    let mut source = PostgresSource::<PgBinaryProtocol, MakeTlsConnector>::new(
-                        config,
-                        tls_conn,
-                        queries.len(),
-                    )?;
-
-                    source.set_pre_execution_queries(pre_execution_queries);
-
-                    let batch_iter =
-                        ArrowBatchIter::<
-                            _,
-                            PostgresArrowStreamTransport<PgBinaryProtocol, MakeTlsConnector>,
-                        >::new(source, destination, origin_query, queries)?;
-                    let iter: Box<dyn RecordBatchIterator> = Box::new(batch_iter);
-                    return iter;
-                }
-                ("binary", None) => {
-                    let mut source = PostgresSource::<PgBinaryProtocol, NoTls>::new(
-                        config,
-                        NoTls,
-                        queries.len(),
-                    )?;
-
-                    source.set_pre_execution_queries(pre_execution_queries);
-
-                    let batch_iter = ArrowBatchIter::<
-                        _,
-                        PostgresArrowStreamTransport<PgBinaryProtocol, NoTls>,
-                    >::new(
-                        source, destination, origin_query, queries
-                    )?;
-                    let iter: Box<dyn RecordBatchIterator> = Box::new(batch_iter);
-                    return iter;
-                }
-                ("cursor", Some(tls_conn)) => {
-                    let mut source = PostgresSource::<CursorProtocol, MakeTlsConnector>::new(
-                        config,
-                        tls_conn,
-                        queries.len(),
-                    )?;
-
-                    source.set_pre_execution_queries(pre_execution_queries);
-
-                    let batch_iter =
-                        ArrowBatchIter::<
-                            _,
-                            PostgresArrowStreamTransport<CursorProtocol, MakeTlsConnector>,
-                        >::new(source, destination, origin_query, queries)?;
-                    let iter: Box<dyn RecordBatchIterator> = Box::new(batch_iter);
-                    return iter;
-                }
-                ("cursor", None) => {
-                    let mut source =
-                        PostgresSource::<CursorProtocol, NoTls>::new(config, NoTls, queries.len())?;
-
-                    source.set_pre_execution_queries(pre_execution_queries);
-
-                    let batch_iter = ArrowBatchIter::<
-                        _,
-                        PostgresArrowStreamTransport<CursorProtocol, NoTls>,
-                    >::new(
-                        source, destination, origin_query, queries
-                    )?;
-                    let iter: Box<dyn RecordBatchIterator> = Box::new(batch_iter);
-                    return iter;
-                }
-                _ => throw!(ConnectorXOutError::protocol_not_supported(
-                    protocol,
-                    SourceType::Postgres,
-                    &["binary", "csv", "cursor"]
-                )),
-            }
+            let batch_iter = ArrowBatchIter::<
+                _,
+                PostgresArrowStreamTransport<CSVProtocol, MakeTlsConnector>,
+            >::new(source, destination, origin_query, queries)?;
+            let iter: Box<dyn RecordBatchIterator> = Box::new(batch_iter);
+            iter
         }
-        #[cfg(feature = "src_mysql")]
-        SourceType::MySQL => match protocol {
-            "binary" => {
-                let mut source =
-                    MySQLSource::<MySQLBinaryProtocol>::new(&source_conn.conn[..], queries.len())?;
+        ("csv", None) => {
+            let mut source =
+                PostgresSource::<CSVProtocol, NoTls>::new(config, NoTls, queries.len())?;
 
-                source.set_pre_execution_queries(pre_execution_queries);
+            source.set_pre_execution_queries(pre_execution_queries);
 
-                let batch_iter =
-                    ArrowBatchIter::<_, MySQLArrowStreamTransport<MySQLBinaryProtocol>>::new(
-                        source,
-                        destination,
-                        origin_query,
-                        queries,
-                    )?;
-                let iter: Box<dyn RecordBatchIterator> = Box::new(batch_iter);
-                return iter;
-            }
-            "text" => {
-                let mut source =
-                    MySQLSource::<TextProtocol>::new(&source_conn.conn[..], queries.len())?;
-
-                source.set_pre_execution_queries(pre_execution_queries);
-
-                let batch_iter = ArrowBatchIter::<_, MySQLArrowStreamTransport<TextProtocol>>::new(
+            let batch_iter =
+                ArrowBatchIter::<_, PostgresArrowStreamTransport<CSVProtocol, NoTls>>::new(
                     source,
                     destination,
                     origin_query,
                     queries,
                 )?;
-                let iter: Box<dyn RecordBatchIterator> = Box::new(batch_iter);
-                return iter;
-            }
-            _ => throw!(ConnectorXOutError::protocol_not_supported(
-                protocol,
-                SourceType::MySQL,
-                &["binary", "text"]
-            )),
-        },
-        #[cfg(feature = "src_sqlite")]
-        SourceType::SQLite => {
-            // remove the first "sqlite://" manually since url.path is not correct for windows
-            let path = &source_conn.conn.as_str()[9..];
-            let source = SQLiteSource::new(path, queries.len())?;
-            let batch_iter = ArrowBatchIter::<_, SQLiteArrowStreamTransport>::new(
-                source,
-                destination,
-                origin_query,
-                queries,
-            )?;
             let iter: Box<dyn RecordBatchIterator> = Box::new(batch_iter);
-            return iter;
+            iter
         }
-        #[cfg(feature = "src_mssql_common")]
-        SourceType::MsSQL => {
-            let rt = Arc::new(tokio::runtime::Runtime::new().expect("Failed to create runtime"));
-            let source = MsSQLSource::new(rt, &source_conn.conn[..], queries.len())?;
-            let batch_iter = ArrowBatchIter::<_, MsSQLArrowStreamTransport>::new(
-                source,
-                destination,
-                origin_query,
-                queries,
+        ("binary", Some(tls_conn)) => {
+            let mut source = PostgresSource::<PgBinaryProtocol, MakeTlsConnector>::new(
+                config,
+                tls_conn,
+                queries.len(),
             )?;
+
+            source.set_pre_execution_queries(pre_execution_queries);
+
+            let batch_iter = ArrowBatchIter::<
+                _,
+                PostgresArrowStreamTransport<PgBinaryProtocol, MakeTlsConnector>,
+            >::new(source, destination, origin_query, queries)?;
             let iter: Box<dyn RecordBatchIterator> = Box::new(batch_iter);
-            return iter;
+            iter
         }
-        #[cfg(feature = "src_oracle")]
-        SourceType::Oracle => {
-            let source = OracleSource::new(&source_conn.conn[..], queries.len())?;
-            let batch_iter = ArrowBatchIter::<_, OracleArrowStreamTransport>::new(
-                source,
-                destination,
-                origin_query,
-                queries,
+        ("binary", None) => {
+            let mut source =
+                PostgresSource::<PgBinaryProtocol, NoTls>::new(config, NoTls, queries.len())?;
+
+            source.set_pre_execution_queries(pre_execution_queries);
+
+            let batch_iter = ArrowBatchIter::<
+                _,
+                PostgresArrowStreamTransport<PgBinaryProtocol, NoTls>,
+            >::new(source, destination, origin_query, queries)?;
+            let iter: Box<dyn RecordBatchIterator> = Box::new(batch_iter);
+            iter
+        }
+        ("cursor", Some(tls_conn)) => {
+            let mut source = PostgresSource::<CursorProtocol, MakeTlsConnector>::new(
+                config,
+                tls_conn,
+                queries.len(),
             )?;
+
+            source.set_pre_execution_queries(pre_execution_queries);
+
+            let batch_iter = ArrowBatchIter::<
+                _,
+                PostgresArrowStreamTransport<CursorProtocol, MakeTlsConnector>,
+            >::new(source, destination, origin_query, queries)?;
             let iter: Box<dyn RecordBatchIterator> = Box::new(batch_iter);
-            return iter;
+            iter
         }
-        #[cfg(feature = "src_bigquery")]
-        SourceType::BigQuery => {
-            let rt = Arc::new(tokio::runtime::Runtime::new().expect("Failed to create runtime"));
-            let source = BigQuerySource::new(rt, &source_conn.conn[..])?;
-            let batch_iter = ArrowBatchIter::<_, BigQueryArrowStreamTransport>::new(
-                source,
-                destination,
-                origin_query,
-                queries,
-            )?;
+        ("cursor", None) => {
+            let mut source =
+                PostgresSource::<CursorProtocol, NoTls>::new(config, NoTls, queries.len())?;
+
+            source.set_pre_execution_queries(pre_execution_queries);
+
+            let batch_iter = ArrowBatchIter::<
+                _,
+                PostgresArrowStreamTransport<CursorProtocol, NoTls>,
+            >::new(source, destination, origin_query, queries)?;
             let iter: Box<dyn RecordBatchIterator> = Box::new(batch_iter);
-            return iter;
+            iter
         }
-        #[cfg(feature = "src_clickhouse")]
-        SourceType::ClickHouse => {
-            let rt = Arc::new(tokio::runtime::Runtime::new().expect("Failed to create runtime"));
-            let source = ClickHouseSource::new(rt, &source_conn.conn[..])?;
-            let batch_iter = ArrowBatchIter::<_, ClickHouseArrowStreamTransport>::new(
-                source,
-                destination,
-                origin_query,
-                queries,
-            )?;
-            let iter: Box<dyn RecordBatchIterator> = Box::new(batch_iter);
-            return iter;
-        }
-        _ => throw!(ConnectorXOutError::SourceNotSupport(format!(
-            "{:?}",
-            source_conn.ty
-        ))),
+        _ => throw!(ConnectorXOutError::protocol_not_supported(
+            protocol,
+            SourceType::Postgres,
+            &["binary", "csv", "cursor"]
+        )),
     }
+}
+
+/// [`new_record_batch_iter`] for MySQL, dispatched on protocol.
+#[cfg(feature = "src_mysql")]
+#[throws(ConnectorXOutError)]
+fn mysql_record_batch_iter(
+    source_conn: &SourceConn,
+    origin_query: Option<String>,
+    queries: &[CXQuery<String>],
+    batch_size: usize,
+    pre_execution_queries: Option<&[String]>,
+) -> Box<dyn RecordBatchIterator> {
+    let destination = ArrowStreamDestination::new_with_batch_size(batch_size);
+    let protocol = source_conn.proto.as_str();
+    match protocol {
+        "binary" => {
+            let mut source =
+                MySQLSource::<MySQLBinaryProtocol>::new(&source_conn.conn[..], queries.len())?;
+
+            source.set_pre_execution_queries(pre_execution_queries);
+
+            let batch_iter =
+                ArrowBatchIter::<_, MySQLArrowStreamTransport<MySQLBinaryProtocol>>::new(
+                    source,
+                    destination,
+                    origin_query,
+                    queries,
+                )?;
+            let iter: Box<dyn RecordBatchIterator> = Box::new(batch_iter);
+            iter
+        }
+        "text" => {
+            let mut source =
+                MySQLSource::<TextProtocol>::new(&source_conn.conn[..], queries.len())?;
+
+            source.set_pre_execution_queries(pre_execution_queries);
+
+            let batch_iter = ArrowBatchIter::<_, MySQLArrowStreamTransport<TextProtocol>>::new(
+                source,
+                destination,
+                origin_query,
+                queries,
+            )?;
+            let iter: Box<dyn RecordBatchIterator> = Box::new(batch_iter);
+            iter
+        }
+        _ => throw!(ConnectorXOutError::protocol_not_supported(
+            protocol,
+            SourceType::MySQL,
+            &["binary", "text"]
+        )),
+    }
+}
+
+/// [`new_record_batch_iter`] for SQLite.
+#[cfg(feature = "src_sqlite")]
+#[throws(ConnectorXOutError)]
+fn sqlite_record_batch_iter(
+    source_conn: &SourceConn,
+    origin_query: Option<String>,
+    queries: &[CXQuery<String>],
+    batch_size: usize,
+) -> Box<dyn RecordBatchIterator> {
+    let destination = ArrowStreamDestination::new_with_batch_size(batch_size);
+    // remove the first "sqlite://" manually since url.path is not correct for windows
+    let path = &source_conn.conn.as_str()[9..];
+    let source = SQLiteSource::new(path, queries.len())?;
+    let batch_iter = ArrowBatchIter::<_, SQLiteArrowStreamTransport>::new(
+        source,
+        destination,
+        origin_query,
+        queries,
+    )?;
+    let iter: Box<dyn RecordBatchIterator> = Box::new(batch_iter);
+    iter
+}
+
+/// [`new_record_batch_iter`] for SQL Server.
+#[cfg(feature = "src_mssql_common")]
+#[throws(ConnectorXOutError)]
+fn mssql_record_batch_iter(
+    source_conn: &SourceConn,
+    origin_query: Option<String>,
+    queries: &[CXQuery<String>],
+    batch_size: usize,
+) -> Box<dyn RecordBatchIterator> {
+    let destination = ArrowStreamDestination::new_with_batch_size(batch_size);
+    let rt = Arc::new(tokio::runtime::Runtime::new().expect("Failed to create runtime"));
+    let source = MsSQLSource::new(rt, &source_conn.conn[..], queries.len())?;
+    let batch_iter = ArrowBatchIter::<_, MsSQLArrowStreamTransport>::new(
+        source,
+        destination,
+        origin_query,
+        queries,
+    )?;
+    let iter: Box<dyn RecordBatchIterator> = Box::new(batch_iter);
+    iter
+}
+
+/// [`new_record_batch_iter`] for Oracle.
+#[cfg(feature = "src_oracle")]
+#[throws(ConnectorXOutError)]
+fn oracle_record_batch_iter(
+    source_conn: &SourceConn,
+    origin_query: Option<String>,
+    queries: &[CXQuery<String>],
+    batch_size: usize,
+) -> Box<dyn RecordBatchIterator> {
+    let destination = ArrowStreamDestination::new_with_batch_size(batch_size);
+    let source = OracleSource::new(&source_conn.conn[..], queries.len())?;
+    let batch_iter = ArrowBatchIter::<_, OracleArrowStreamTransport>::new(
+        source,
+        destination,
+        origin_query,
+        queries,
+    )?;
+    let iter: Box<dyn RecordBatchIterator> = Box::new(batch_iter);
+    iter
+}
+
+/// [`new_record_batch_iter`] for BigQuery.
+#[cfg(feature = "src_bigquery")]
+#[throws(ConnectorXOutError)]
+fn bigquery_record_batch_iter(
+    source_conn: &SourceConn,
+    origin_query: Option<String>,
+    queries: &[CXQuery<String>],
+    batch_size: usize,
+) -> Box<dyn RecordBatchIterator> {
+    let destination = ArrowStreamDestination::new_with_batch_size(batch_size);
+    let rt = Arc::new(tokio::runtime::Runtime::new().expect("Failed to create runtime"));
+    let source = BigQuerySource::new(rt, &source_conn.conn[..])?;
+    let batch_iter = ArrowBatchIter::<_, BigQueryArrowStreamTransport>::new(
+        source,
+        destination,
+        origin_query,
+        queries,
+    )?;
+    let iter: Box<dyn RecordBatchIterator> = Box::new(batch_iter);
+    iter
+}
+
+/// [`new_record_batch_iter`] for ClickHouse.
+#[cfg(feature = "src_clickhouse")]
+#[throws(ConnectorXOutError)]
+fn clickhouse_record_batch_iter(
+    source_conn: &SourceConn,
+    origin_query: Option<String>,
+    queries: &[CXQuery<String>],
+    batch_size: usize,
+) -> Box<dyn RecordBatchIterator> {
+    let destination = ArrowStreamDestination::new_with_batch_size(batch_size);
+    let rt = Arc::new(tokio::runtime::Runtime::new().expect("Failed to create runtime"));
+    let source = ClickHouseSource::new(rt, &source_conn.conn[..])?;
+    let batch_iter = ArrowBatchIter::<_, ClickHouseArrowStreamTransport>::new(
+        source,
+        destination,
+        origin_query,
+        queries,
+    )?;
+    let iter: Box<dyn RecordBatchIterator> = Box::new(batch_iter);
+    iter
 }
 
 #[cfg(test)]
