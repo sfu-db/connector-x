@@ -13,6 +13,13 @@ coverage:
         # commit, rather than a fixed target that would need manual bumps.
         target: auto
         threshold: 1%
+      # Floor for the unit-test report on its own (#1053), so coverage from
+      # `cargo test --lib` (no databases) cannot slide back behind the ratchet
+      # above, which only looks at the combined number.
+      unit-tests:
+        target: 40%
+        flags:
+          - unit-tests
     patch:
       default:
         target: 60%

@@ -61,8 +61,11 @@ impl StringInfo {
             }
         };
 
-        let s: Py<pyo3::types::PyString> =
-            unsafe { Bound::from_owned_ptr(py, objptr).cast_into_unchecked().unbind() };
+        let s: Py<pyo3::types::PyString> = unsafe {
+            Bound::from_owned_ptr(py, objptr)
+                .cast_into_unchecked()
+                .unbind()
+        };
 
         PyString(s)
     }
@@ -88,7 +91,7 @@ impl PyString {
                 let pyobj = PyASCIIObject::from_mut_ref(&mut self.0);
                 let buf = std::slice::from_raw_parts_mut(
                     (pyobj as *mut PyASCIIObject).offset(1) as *mut u8,
-                    len as usize,
+                    len,
                 );
 
                 buf.copy_from_slice(data);
@@ -97,7 +100,7 @@ impl PyString {
                 let pyobj = PyCompactUnicodeObject::from_mut_ref(&mut self.0);
                 let buf = std::slice::from_raw_parts_mut(
                     (pyobj as *mut PyCompactUnicodeObject).offset(1) as *mut u8,
-                    len as usize,
+                    len,
                 );
                 let data: Vec<u8> = from_utf8_unchecked(data).chars().map(|c| c as u8).collect();
                 buf.copy_from_slice(&data);
@@ -106,7 +109,7 @@ impl PyString {
                 let pyobj = PyCompactUnicodeObject::from_mut_ref(&mut self.0);
                 let buf = std::slice::from_raw_parts_mut(
                     (pyobj as *mut PyCompactUnicodeObject).offset(1) as *mut u16,
-                    len as usize,
+                    len,
                 );
                 let data: Vec<u16> = from_utf8_unchecked(data)
                     .chars()
@@ -118,7 +121,7 @@ impl PyString {
                 let pyobj = PyCompactUnicodeObject::from_mut_ref(&mut self.0);
                 let buf = std::slice::from_raw_parts_mut(
                     (pyobj as *mut PyCompactUnicodeObject).offset(1) as *mut u32,
-                    len as usize,
+                    len,
                 );
                 let data: Vec<u32> = from_utf8_unchecked(data)
                     .chars()
@@ -155,9 +158,9 @@ pub struct PyASCIIObject {
 }
 
 impl PyASCIIObject {
-    pub unsafe fn from_mut_ref<'a>(obj: &'a mut Py<pyo3::types::PyString>) -> &'a mut Self {
+    pub unsafe fn from_mut_ref(obj: &mut Py<pyo3::types::PyString>) -> &mut Self {
         let ascii: &mut &mut PyASCIIObject = std::mem::transmute(obj);
-        *ascii
+        ascii
     }
 }
 
@@ -172,8 +175,8 @@ pub struct PyCompactUnicodeObject {
 }
 
 impl PyCompactUnicodeObject {
-    pub unsafe fn from_mut_ref<'a>(obj: &'a mut Py<pyo3::types::PyString>) -> &'a mut Self {
+    pub unsafe fn from_mut_ref(obj: &mut Py<pyo3::types::PyString>) -> &mut Self {
         let unicode: &mut &mut PyCompactUnicodeObject = std::mem::transmute(obj);
-        *unicode
+        unicode
     }
 }

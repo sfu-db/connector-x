@@ -8,6 +8,7 @@ use super::{
     },
 };
 use crate::errors::ConnectorXPythonError;
+use connectorx::errors::ConnectorXOutError;
 use connectorx::source_options::SourceOptions;
 use connectorx::source_router::{SourceConn, SourceType};
 use connectorx::{
@@ -26,7 +27,7 @@ use connectorx::{
     },
     sql::CXQuery,
 };
-use fehler::throws;
+use fehler::{throw, throws};
 use log::debug;
 use postgres::NoTls;
 use postgres_openssl::MakeTlsConnector;
@@ -131,7 +132,11 @@ pub fn get_meta<'py>(
                     debug!("Running dispatcher");
                     dispatcher.get_meta(py)?
                 }
-                _ => unimplemented!("{} protocol not supported", protocol),
+                _ => throw!(ConnectorXOutError::protocol_not_supported(
+                    protocol,
+                    SourceType::Postgres,
+                    &["binary", "csv", "cursor", "simple"]
+                )),
             }
         }
         SourceType::SQLite => {
@@ -173,7 +178,11 @@ pub fn get_meta<'py>(
                     debug!("Running dispatcher");
                     dispatcher.get_meta(py)?
                 }
-                _ => unimplemented!("{} protocol not supported", protocol),
+                _ => throw!(ConnectorXOutError::protocol_not_supported(
+                    protocol,
+                    SourceType::MySQL,
+                    &["binary", "text"]
+                )),
             }
         }
         SourceType::MsSQL => {
@@ -238,6 +247,9 @@ pub fn get_meta<'py>(
             );
             dispatcher.get_meta(py)?
         }
-        _ => unimplemented!("{:?} not implemented!", source_conn.ty),
+        _ => throw!(ConnectorXOutError::SourceNotSupport(format!(
+            "{:?}",
+            source_conn.ty
+        ))),
     }
 }

@@ -9,6 +9,7 @@ use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::sync::{mpsc::channel, Arc};
 
+/// Run a federated query: rewrite `sql` into one query per database in `db_map` (name to connection string), fetch each with ConnectorX and join the results with DataFusion.
 #[throws(ConnectorXOutError)]
 pub fn run(
     sql: String,

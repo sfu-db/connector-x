@@ -14,6 +14,7 @@ pub use self::transports::{
 };
 pub use self::typesystem::{PandasDType, PandasTypeSystem};
 use crate::errors::ConnectorXPythonError;
+use connectorx::errors::ConnectorXOutError;
 use connectorx::source_options::SourceOptions;
 use connectorx::source_router::{SourceConn, SourceType};
 use connectorx::sources::clickhouse::ClickHouseSource;
@@ -29,7 +30,7 @@ use connectorx::{
     },
     sql::CXQuery,
 };
-use fehler::throws;
+use fehler::{throw, throws};
 use log::debug;
 use postgres::NoTls;
 use postgres_openssl::MakeTlsConnector;
@@ -162,7 +163,11 @@ pub fn write_pandas<'a, 'py: 'a>(
                     dispatcher.set_pre_execution_queries(pre_execution_queries);
                     dispatcher.run(py)?
                 }
-                _ => unimplemented!("{} protocol not supported", protocol),
+                _ => throw!(ConnectorXOutError::protocol_not_supported(
+                    protocol,
+                    SourceType::Postgres,
+                    &["binary", "csv", "cursor", "simple"]
+                )),
             }
         }
         SourceType::SQLite => {
@@ -203,7 +208,11 @@ pub fn write_pandas<'a, 'py: 'a>(
                 dispatcher.set_pre_execution_queries(pre_execution_queries);
                 dispatcher.run(py)?
             }
-            _ => unimplemented!("{} protocol not supported", protocol),
+            _ => throw!(ConnectorXOutError::protocol_not_supported(
+                protocol,
+                SourceType::MySQL,
+                &["binary", "text"]
+            )),
         },
         SourceType::MsSQL => {
             let rt = Arc::new(tokio::runtime::Runtime::new().expect("Failed to create runtime"));
@@ -264,6 +273,9 @@ pub fn write_pandas<'a, 'py: 'a>(
             );
             dispatcher.run(py)?
         }
-        _ => unimplemented!("{:?} not implemented!", source_conn.ty),
+        _ => throw!(ConnectorXOutError::SourceNotSupport(format!(
+            "{:?}",
+            source_conn.ty
+        ))),
     }
 }

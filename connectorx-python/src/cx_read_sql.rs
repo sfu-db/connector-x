@@ -21,18 +21,19 @@ pub struct PyPartitionQuery {
     pub num: usize,
 }
 
-impl Into<PartitionQuery> for PyPartitionQuery {
-    fn into(self) -> PartitionQuery {
+impl From<PyPartitionQuery> for PartitionQuery {
+    fn from(val: PyPartitionQuery) -> Self {
         PartitionQuery::new(
-            self.query.as_str(),
-            self.column.as_str(),
-            self.min,
-            self.max,
-            self.num,
+            val.query.as_str(),
+            val.column.as_str(),
+            val.min,
+            val.max,
+            val.num,
         )
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn read_sql<'py>(
     py: Python<'py>,
     conn: &str,
@@ -44,13 +45,13 @@ pub fn read_sql<'py>(
     options: &SourceOptions,
     kwargs: Option<&Bound<PyDict>>,
 ) -> PyResult<Bound<'py, PyAny>> {
-    let source_conn = parse_source(conn, protocol).map_err(|e| ConnectorXPythonError::from(e))?;
+    let source_conn = parse_source(conn, protocol).map_err(ConnectorXPythonError::from)?;
     let (queries, origin_query) = match (queries, partition_query) {
         (Some(queries), None) => (queries.into_iter().map(CXQuery::Naked).collect(), None),
         (None, Some(part)) => {
             let origin_query = Some(part.query.clone());
             let queries = partition_with_options(&part.into(), &source_conn, options)
-                .map_err(|e| ConnectorXPythonError::from(e))?;
+                .map_err(ConnectorXPythonError::from)?;
             (queries, origin_query)
         }
         (Some(_), Some(_)) => throw!(PyValueError::new_err(

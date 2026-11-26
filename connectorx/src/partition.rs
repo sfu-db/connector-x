@@ -1,4 +1,22 @@
+// Every helper below belongs to a source that supports partitioning. In a build
+// with none of them (e.g. `src_csv` or `src_dummy` alone), the shared imports and
+// the `query`/`col` parameters go unused and each `match` keeps only its error arm.
+#![cfg_attr(
+    not(any(
+        feature = "src_postgres",
+        feature = "src_sqlite",
+        feature = "src_mysql",
+        feature = "src_mssql_common",
+        feature = "src_oracle",
+        feature = "src_bigquery",
+        feature = "src_trino",
+        feature = "src_clickhouse",
+    )),
+    allow(unused_imports, unused_variables, unreachable_code)
+)]
+
 use std::convert::TryFrom;
+#[cfg(feature = "src_clickhouse")]
 use std::sync::Arc;
 
 use crate::errors::{ConnectorXOutError, OutResult};
@@ -18,9 +36,19 @@ use crate::sources::oracle::{OracleDialect, OracleSource};
 use crate::sources::postgres::{rewrite_tls_args, PostgresTypeSystem};
 #[cfg(feature = "src_trino")]
 use crate::sources::trino::TrinoDialect;
+#[cfg(any(
+    feature = "src_postgres",
+    feature = "src_mysql",
+    feature = "src_mssql_tiberius",
+    feature = "src_oracle",
+    feature = "src_bigquery",
+    feature = "src_trino",
+    feature = "src_clickhouse",
+))]
+use crate::sql::get_partition_range_query;
 #[cfg(feature = "src_sqlite")]
 use crate::sql::get_partition_range_query_sep;
-use crate::sql::{get_partition_range_query, single_col_partition_query, CXQuery};
+use crate::sql::{single_col_partition_query, CXQuery};
 use anyhow::anyhow;
 use fehler::{throw, throws};
 #[cfg(feature = "src_bigquery")]
@@ -59,8 +87,19 @@ use tokio::net::TcpStream;
 use tokio::runtime::Runtime;
 #[cfg(feature = "src_mssql_tiberius")]
 use tokio_util::compat::TokioAsyncWriteCompatExt;
+#[cfg(any(
+    feature = "src_postgres",
+    feature = "src_mysql",
+    feature = "src_mssql_tiberius",
+    feature = "src_oracle",
+    feature = "src_bigquery",
+    feature = "src_trino",
+    feature = "src_clickhouse",
+    feature = "src_sqlite",
+))]
 use url::Url;
 
+/// Request to split a query into `num` range partitions on an integer `column`.
 pub struct PartitionQuery {
     query: String,
     column: String,
@@ -70,6 +109,7 @@ pub struct PartitionQuery {
 }
 
 impl PartitionQuery {
+    /// Create a partition request. When `min` or `max` is `None`, the range is queried from the database.
     pub fn new(query: &str, column: &str, min: Option<i64>, max: Option<i64>, num: usize) -> Self {
         Self {
             query: query.into(),
@@ -81,6 +121,7 @@ impl PartitionQuery {
     }
 }
 
+/// Split the query described by `part` into partition queries.
 pub fn partition(part: &PartitionQuery, source_conn: &SourceConn) -> OutResult<Vec<CXQuery>> {
     partition_with_options(part, source_conn, &SourceOptions::default())
 }
@@ -179,6 +220,7 @@ pub fn partition_with_options(
     Ok(queries)
 }
 
+/// Return the minimum and maximum of column `col` in the result of `query`.
 pub fn get_col_range(source_conn: &SourceConn, query: &str, col: &str) -> OutResult<(i64, i64)> {
     get_col_range_with_options(source_conn, query, col, &SourceOptions::default())
 }
@@ -241,10 +283,14 @@ pub fn get_col_range_with_options(
         SourceType::Trino => trino_get_partition_range(&source_conn.conn, query, col),
         #[cfg(feature = "src_clickhouse")]
         SourceType::ClickHouse => clickhouse_get_partition_range(&source_conn.conn, query, col),
-        _ => unimplemented!("{:?} not implemented!", source_conn.ty),
+        _ => Err(ConnectorXOutError::SourceNotSupport(format!(
+            "{:?}",
+            source_conn.ty
+        ))),
     }
 }
 
+/// Return `query` restricted to rows where `col` is in `[lower, upper)`.
 #[throws(ConnectorXOutError)]
 pub fn get_part_query(
     source_conn: &SourceConn,
@@ -286,7 +332,10 @@ pub fn get_part_query(
         SourceType::ClickHouse => {
             single_col_partition_query(query, col, lower, upper, &ClickHouseDialect {})?
         }
-        _ => unimplemented!("{:?} not implemented!", source_conn.ty),
+        _ => throw!(ConnectorXOutError::SourceNotSupport(format!(
+            "{:?}",
+            source_conn.ty
+        ))),
     };
     CXQuery::Wrapped(query)
 }
@@ -348,8 +397,11 @@ fn pg_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
 #[cfg(feature = "src_sqlite")]
 #[throws(ConnectorXOutError)]
 fn sqlite_get_partition_range(conn: &Url, query: &str, col: &str) -> (i64, i64) {
-    // remove the first "sqlite://" manually since url.path is not correct for windows and for relative path
-    let conn = Connection::open(&conn.as_str()[9..])?;
+    // remove the first "sqlite://" manually since url.path is not correct for windows and for relative path.
+    // The path is percent-encoded (as the Python ConnectionUrl helper does), so decode it the same way
+    // SQLiteSource::new does; otherwise e.g. `C%3A%5C...` on Windows opens the wrong file.
+    let path = urlencoding::decode(&conn.as_str()[9..]).map_err(|e| anyhow!(e))?;
+    let conn = Connection::open(path.as_ref())?;
     // SQLite only optimize min max queries when there is only one aggregation
     // https://www.sqlite.org/optoverview.html#minmax
     let (min_query, max_query) = get_partition_range_query_sep(query, col, &SQLiteDialect {})?;
@@ -933,5 +985,19 @@ mod tests {
             "unexpected error message: {}",
             err
         );
+    }
+
+    /// A source without partition support is an error, not a panic, both when
+    /// the range has to be queried and when it is given.
+    #[test]
+    fn unsupported_source_is_an_error() {
+        let conn = SourceConn::try_from("nosuchdb://127.0.0.1:1/db").unwrap();
+
+        let err = get_col_range(&conn, "SELECT * FROM t", "id").unwrap_err();
+        assert_eq!(err.to_string(), "Source Unknown not supported.");
+
+        let part = PartitionQuery::new("SELECT * FROM t", "id", Some(0), Some(9), 2);
+        let err = partition(&part, &conn).unwrap_err();
+        assert_eq!(err.to_string(), "Source Unknown not supported.");
     }
 }

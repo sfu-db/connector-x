@@ -48,6 +48,12 @@ pub struct PandasDestination<'py> {
     block_infos: Vec<PandasBlockInfo>,
 }
 
+impl<'py> Default for PandasDestination<'py> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<'py> PandasDestination<'py> {
     pub fn new() -> Self {
         PandasDestination {

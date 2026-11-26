@@ -150,21 +150,30 @@
 pub mod typesystem;
 #[macro_use]
 mod macros;
+/// Streaming iterator over Arrow record batches.
 #[cfg(feature = "dst_arrow")]
 pub mod arrow_batch_iter;
+/// Crate-wide constants and defaults.
 pub mod constants;
 pub mod data_order;
 pub mod destinations;
 mod dispatcher;
+/// Error types.
 pub mod errors;
+/// Execution of federated queries across several databases.
 #[cfg(feature = "fed_exec")]
 pub mod fed_dispatcher;
+/// Rewriting of federated queries into per-database plans.
 #[cfg(feature = "federation")]
 pub mod fed_rewriter;
+/// Load query results into Arrow in one call.
 #[cfg(feature = "dst_arrow")]
 pub mod get_arrow;
+/// Splitting a query into range partitions on a numeric column.
 pub mod partition;
+/// Backend-specific connection options (for example MS SQL authentication).
 pub mod source_options;
+/// Parsing of connection strings into a source type and URL.
 pub mod source_router;
 pub mod sources;
 #[doc(hidden)]
@@ -173,6 +182,7 @@ pub mod transports;
 #[doc(hidden)]
 pub mod utils;
 
+/// Common imports for using ConnectorX.
 pub mod prelude {
     #[cfg(feature = "dst_arrow")]
     pub use crate::arrow_batch_iter::{set_global_num_thread, RecordBatchIterator};

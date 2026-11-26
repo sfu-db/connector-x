@@ -2,25 +2,44 @@ use chrono::{DateTime, NaiveDateTime, Utc};
 use r2d2_oracle::oracle::sql_type::OracleType;
 use rust_decimal::Decimal;
 
+/// Column types of the Oracle source. The `bool` is `true` when the column is nullable.
 #[derive(Copy, Clone, Debug)]
 pub enum OracleTypeSystem {
+    /// Oracle `NUMBER(p, 0)` with a declared precision, read as `i64`.
     NumInt(bool),
+    /// Oracle `NUMBER` with a nonzero scale or no declared precision, read as `Decimal`.
     NumDecimal(bool),
+    /// Oracle `FLOAT`, read as `f64`.
     Float(bool),
+    /// Floating-point Oracle `NUMBER`, read as `f64`. Type detection does not currently produce it.
     NumFloat(bool),
+    /// Oracle `BINARY_FLOAT`, read as `f64`.
     BinaryFloat(bool),
+    /// Oracle `BINARY_DOUBLE`, read as `f64`.
     BinaryDouble(bool),
+    /// Oracle `BLOB`, read as `Vec<u8>`.
     Blob(bool),
+    /// Oracle `CLOB`, read as `String`.
     Clob(bool),
+    /// Oracle `VARCHAR2`, read as `String`.
     VarChar(bool),
+    /// Oracle `CHAR` or `LONG`, read as `String`.
     Char(bool),
+    /// Oracle `NVARCHAR2`, read as `String`.
     NVarChar(bool),
+    /// Oracle `NCHAR`, read as `String`.
     NChar(bool),
+    /// Oracle `DATE`, read as `NaiveDateTime`.
     Date(bool),
+    /// Oracle `TIMESTAMP` with up to 6 fractional digits, read as `NaiveDateTime`.
     Timestamp(bool),
+    /// Oracle `TIMESTAMP WITH TIME ZONE` with up to 6 fractional digits, read as `DateTime<Utc>`.
     TimestampTz(bool),
+    /// Oracle `TIMESTAMP(7)` to `TIMESTAMP(9)`, read as `NaiveDateTime` with nanosecond precision.
     TimestampNano(bool),
+    /// Oracle `TIMESTAMP(7..9) WITH TIME ZONE`, read as `DateTime<Utc>` with nanosecond precision.
     TimestampTzNano(bool),
+    /// Oracle `BOOLEAN`, read as `bool`.
     Boolean(bool),
 }
 

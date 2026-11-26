@@ -1,3 +1,13 @@
+#[cfg(any(
+    feature = "src_postgres",
+    feature = "src_mysql",
+    feature = "src_sqlite",
+    feature = "src_mssql_common",
+    feature = "src_oracle",
+    feature = "src_bigquery",
+    feature = "src_clickhouse",
+))]
+use crate::arrow_batch_iter::ArrowBatchIter;
 #[cfg(feature = "src_mysql")]
 use crate::sources::mysql::{BinaryProtocol as MySQLBinaryProtocol, TextProtocol};
 #[cfg(feature = "src_postgres")]
@@ -5,11 +15,7 @@ use crate::sources::postgres::{
     rewrite_tls_args, BinaryProtocol as PgBinaryProtocol, CSVProtocol, CursorProtocol,
     SimpleProtocol,
 };
-use crate::{
-    arrow_batch_iter::{ArrowBatchIter, RecordBatchIterator},
-    prelude::*,
-    sql::CXQuery,
-};
+use crate::{arrow_batch_iter::RecordBatchIterator, prelude::*, sql::CXQuery};
 use fehler::{throw, throws};
 use log::debug;
 #[cfg(feature = "src_postgres")]
@@ -19,6 +25,7 @@ use postgres_openssl::MakeTlsConnector;
 #[allow(unused_imports)]
 use std::sync::Arc;
 
+/// Run `queries` against `source_conn` and collect the result in an [`ArrowDestination`].
 #[throws(ConnectorXOutError)]
 pub fn get_arrow(
     source_conn: &SourceConn,
@@ -179,7 +186,11 @@ pub fn get_arrow_with_options(
                     dispatcher.set_pre_execution_queries(pre_execution_queries);
                     dispatcher.run()?;
                 }
-                _ => unimplemented!("{} protocol not supported", protocol),
+                _ => throw!(ConnectorXOutError::protocol_not_supported(
+                    protocol,
+                    SourceType::Postgres,
+                    &["binary", "csv", "cursor", "simple"]
+                )),
             }
         }
         #[cfg(feature = "src_mysql")]
@@ -209,7 +220,11 @@ pub fn get_arrow_with_options(
                 dispatcher.set_pre_execution_queries(pre_execution_queries);
                 dispatcher.run()?;
             }
-            _ => unimplemented!("{} protocol not supported", protocol),
+            _ => throw!(ConnectorXOutError::protocol_not_supported(
+                protocol,
+                SourceType::MySQL,
+                &["binary", "text"]
+            )),
         },
         #[cfg(feature = "src_sqlite")]
         SourceType::SQLite => {
@@ -297,6 +312,7 @@ pub fn get_arrow_with_options(
     destination
 }
 
+/// Run `queries` against `source_conn` and return an iterator yielding record batches of at most `batch_size` rows.
 #[throws(ConnectorXOutError)]
 pub fn new_record_batch_iter(
     source_conn: &SourceConn,
@@ -438,7 +454,11 @@ pub fn new_record_batch_iter_with_options(
                     let iter: Box<dyn RecordBatchIterator> = Box::new(batch_iter);
                     return iter;
                 }
-                _ => unimplemented!("{} protocol not supported", protocol),
+                _ => throw!(ConnectorXOutError::protocol_not_supported(
+                    protocol,
+                    SourceType::Postgres,
+                    &["binary", "csv", "cursor"]
+                )),
             }
         }
         #[cfg(feature = "src_mysql")]
@@ -474,7 +494,11 @@ pub fn new_record_batch_iter_with_options(
                 let iter: Box<dyn RecordBatchIterator> = Box::new(batch_iter);
                 return iter;
             }
-            _ => unimplemented!("{} protocol not supported", protocol),
+            _ => throw!(ConnectorXOutError::protocol_not_supported(
+                protocol,
+                SourceType::MySQL,
+                &["binary", "text"]
+            )),
         },
         #[cfg(feature = "src_sqlite")]
         SourceType::SQLite => {
@@ -550,5 +574,75 @@ pub fn new_record_batch_iter_with_options(
             "{:?}",
             source_conn.ty
         ))),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::source_router::SourceConn;
+
+    /// Fails with the error for an unsupported `protocol`, before any
+    /// connection is attempted (nothing listens on port 1).
+    fn assert_protocol_rejected(url: &str, protocol: &str, db: &str, supported: &str) {
+        let mut conn = SourceConn::try_from(url).unwrap();
+        conn.set_protocol(protocol);
+        let queries = [CXQuery::naked("SELECT 1")];
+        let expected = format!(
+            "Protocol \"{protocol}\" is not supported for {db}; supported protocols: {supported}."
+        );
+
+        let err = get_arrow(&conn, None, &queries, None).err().unwrap();
+        assert!(matches!(
+            err,
+            ConnectorXOutError::ProtocolNotSupported { .. }
+        ));
+        assert_eq!(err.to_string(), expected);
+
+        let err = new_record_batch_iter(&conn, None, &queries, 1024, None)
+            .err()
+            .unwrap();
+        assert!(matches!(
+            err,
+            ConnectorXOutError::ProtocolNotSupported { .. }
+        ));
+        // The record batch iterator has no `simple` protocol for Postgres.
+        assert!(err
+            .to_string()
+            .starts_with(&format!("Protocol \"{protocol}\"")));
+    }
+
+    #[cfg(feature = "src_postgres")]
+    #[test]
+    fn unsupported_postgres_protocol_is_an_error() {
+        assert_protocol_rejected(
+            "postgresql://u:p@127.0.0.1:1/db",
+            "text",
+            "Postgres",
+            "binary, csv, cursor, simple",
+        );
+    }
+
+    #[cfg(feature = "src_mysql")]
+    #[test]
+    fn unsupported_mysql_protocol_is_an_error() {
+        assert_protocol_rejected(
+            "mysql://u:p@127.0.0.1:1/db",
+            "cursor",
+            "MySQL",
+            "binary, text",
+        );
+    }
+
+    #[test]
+    fn unsupported_source_is_an_error() {
+        let conn = SourceConn::try_from("nosuchdb://127.0.0.1:1/db").unwrap();
+        let queries = [CXQuery::naked("SELECT 1")];
+        let err = get_arrow(&conn, None, &queries, None).err().unwrap();
+        assert_eq!(err.to_string(), "Source Unknown not supported.");
+        let err = new_record_batch_iter(&conn, None, &queries, 1024, None)
+            .err()
+            .unwrap();
+        assert_eq!(err.to_string(), "Source Unknown not supported.");
     }
 }

@@ -9,22 +9,34 @@ use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::{env, fs};
 
+/// One sub-query of a federated query plan.
 pub struct Plan {
+    /// Name of the database the query runs on.
     pub db_name: String,
+    /// Alias of the database in the rewritten query.
     pub db_alias: String,
+    /// SQL to run on that database.
     pub sql: String,
+    /// Estimated number of result rows.
     pub cardinality: usize,
 }
 
+/// Description of one database taking part in a federated query.
 pub struct FederatedDataSourceInfo<'a> {
+    /// Connection used to read the schema, if the database is reachable.
     pub conn_str_info: Option<SourceConn>,
+    /// Schema given by hand, as table name to column names.
     pub manual_info: Option<HashMap<String, Vec<String>>>,
+    /// Whether the database is local, i.e. run inside the federated engine.
     pub is_local: bool,
+    /// JDBC URL of the database.
     pub jdbc_url: &'a str,
+    /// JDBC driver class of the database.
     pub jdbc_driver: &'a str,
 }
 
 impl<'a> FederatedDataSourceInfo<'a> {
+    /// Describe a database through its connection string and JDBC settings.
     pub fn new_from_conn_str(
         source_conn: SourceConn,
         is_local: bool,
@@ -39,6 +51,7 @@ impl<'a> FederatedDataSourceInfo<'a> {
             jdbc_driver,
         }
     }
+    /// Describe a database through a hand-written schema (table name to column names).
     pub fn new_from_manual_schema(
         manual_schema: HashMap<String, Vec<String>>,
         is_local: bool,
@@ -139,6 +152,7 @@ fn create_sources2(
     (jvm.java_list("java.lang.String", dbs)?, db_manual)
 }
 
+/// Rewrite a federated `sql` query into one [`Plan`] per database, using the Java rewriter selected by `strategy`.
 #[throws(ConnectorXOutError)]
 pub fn rewrite_sql(
     sql: &str,

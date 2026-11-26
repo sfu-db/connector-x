@@ -3,6 +3,7 @@
 mod arrow_assoc;
 mod errors;
 mod funcs;
+/// Mapping between ConnectorX types and Arrow column types.
 pub mod typesystem;
 
 pub use self::errors::{ArrowDestinationError, Result};
@@ -33,6 +34,7 @@ use {
 type Builder = Box<dyn Any + Send>;
 type Builders = Vec<Builder>;
 
+/// Destination that collects the result into Arrow record batches held in memory.
 pub struct ArrowDestination {
     schema: Vec<ArrowTypeSystem>,
     names: Vec<String>,
@@ -54,10 +56,12 @@ impl Default for ArrowDestination {
 }
 
 impl ArrowDestination {
+    /// Create an empty destination with the default batch size ([`RECORD_BATCH_SIZE`]).
     pub fn new() -> Self {
         Self::default()
     }
 
+    /// Create an empty destination that writes batches of at most `batch_size` rows.
     pub fn new_with_batch_size(batch_size: usize) -> Self {
         ArrowDestination {
             schema: vec![],
@@ -126,6 +130,7 @@ impl Destination for ArrowDestination {
 }
 
 impl ArrowDestination {
+    /// Consume the destination and return all record batches. Fails if a partition writer is still alive.
     #[throws(ArrowDestinationError)]
     pub fn arrow(self) -> Vec<RecordBatch> {
         let lock = Arc::try_unwrap(self.data).map_err(|_| anyhow!("Partitions are not freed"))?;
@@ -133,6 +138,7 @@ impl ArrowDestination {
             .map_err(|e| anyhow!("mutex poisoned {}", e))?
     }
 
+    /// Consume the destination and convert all record batches into a Polars `DataFrame`.
     #[cfg(feature = "dst_polars")]
     #[throws(ArrowDestinationError)]
     pub fn polars(self) -> DataFrame {
@@ -188,6 +194,7 @@ impl ArrowDestination {
         concat(lf_vec, union_args)?.collect()?
     }
 
+    /// Pop one record batch, or `None` when no batch is left.
     #[throws(ArrowDestinationError)]
     pub fn record_batch(&mut self) -> Option<RecordBatch> {
         let mut guard = self
@@ -197,19 +204,23 @@ impl ArrowDestination {
         (*guard).pop()
     }
 
+    /// Return an empty record batch with the result schema.
     pub fn empty_batch(&self) -> RecordBatch {
         RecordBatch::new_empty(self.arrow_schema.clone())
     }
 
+    /// Arrow schema of the result.
     pub fn arrow_schema(&self) -> Arc<Schema> {
         self.arrow_schema.clone()
     }
 
+    /// Column names of the result.
     pub fn names(&self) -> &[String] {
         self.names.as_slice()
     }
 }
 
+/// Writer for one partition of an [`ArrowDestination`].
 pub struct ArrowPartitionWriter {
     schema: Vec<ArrowTypeSystem>,
     builders: Option<Builders>,
@@ -337,3 +348,10 @@ where
         }
     }
 }
+
+// The arrow and arrowstream versions of this module share one API, so they
+// share their tests: both include the same file.
+#[cfg(test)]
+#[allow(clippy::duplicate_mod)]
+#[path = "../destination_tests.rs"]
+mod tests;
