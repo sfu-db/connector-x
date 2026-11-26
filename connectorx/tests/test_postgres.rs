@@ -11,7 +11,9 @@ use arrow::{
 use chrono::naive::NaiveDate;
 use connectorx::{
     destinations::arrow::ArrowDestination,
+    partition::{partition, PartitionQuery},
     prelude::*,
+    source_router::parse_source,
     sources::{
         postgres::{
             rewrite_tls_args, BinaryProtocol, CSVProtocol, CursorProtocol, PostgresSource,
@@ -1568,4 +1570,99 @@ fn unknown_url_param_is_reported_as_an_error() {
     let url = Url::parse("postgresql://user:pass@localhost:5432/db?not_a_pg_option=1").unwrap();
 
     assert!(rewrite_tls_args(&url).is_err());
+}
+
+/// Connects directly, retrying while the test container restarts.
+fn connect_with_retry(dburl: &str) -> postgres::Client {
+    let mut attempts = 0;
+    loop {
+        match postgres::Client::connect(dburl, NoTls) {
+            Ok(client) => return client,
+            Err(e) if attempts < 60 => {
+                attempts += 1;
+                eprintln!("postgres not ready yet: {e}");
+                std::thread::sleep(std::time::Duration::from_secs(1));
+            }
+            Err(e) => panic!("cannot connect to postgres: {e}"),
+        }
+    }
+}
+
+#[test]
+fn test_postgres_pre_execution_queries_all_connections() {
+    let _ = env_logger::builder().is_test(true).try_init();
+
+    let Some(dburl) = postgres_url_or_skip() else {
+        return;
+    };
+
+    let mut client = connect_with_retry(&dburl);
+    client
+        .batch_execute(
+            "DROP SCHEMA IF EXISTS cx_pre_exec CASCADE;
+             CREATE SCHEMA cx_pre_exec;
+             CREATE TABLE cx_pre_exec.only_here (id INT);
+             INSERT INTO cx_pre_exec.only_here VALUES (1), (2), (3), (4), (5), (6);",
+        )
+        .unwrap();
+
+    // Range lookup, metadata and partitions all need the pre-execution query to resolve
+    // `only_here`.
+    let pre_execution_queries = [String::from("SET search_path TO cx_pre_exec")];
+    let origin_query = String::from("select * from only_here");
+
+    let source_conn = parse_source(&dburl, None).unwrap();
+    let part = PartitionQuery::new(&origin_query, "id", None, None, 2)
+        .with_pre_execution_queries(Some(&pre_execution_queries));
+    let queries = partition(&part, &source_conn).unwrap();
+    assert_eq!(queries.len(), 2);
+
+    let url = Url::parse(dburl.as_str()).unwrap();
+    let (config, _tls) = rewrite_tls_args(&url).unwrap();
+    let builder = PostgresSource::<BinaryProtocol, NoTls>::new(config, NoTls, 2).unwrap();
+    let mut destination = ArrowDestination::new();
+    let mut dispatcher = Dispatcher::<_, _, PostgresArrowTransport<BinaryProtocol, NoTls>>::new(
+        builder,
+        &mut destination,
+        &queries,
+        Some(origin_query),
+    );
+    dispatcher.set_pre_execution_queries(Some(&pre_execution_queries));
+    dispatcher.run().expect("run dispatcher");
+
+    let nrows: usize = destination
+        .arrow()
+        .unwrap()
+        .iter()
+        .map(|batch| batch.num_rows())
+        .sum();
+    assert_eq!(nrows, 6);
+}
+
+#[test]
+fn test_postgres_pre_execution_queries_result_rows() {
+    let _ = env_logger::builder().is_test(true).try_init();
+
+    let Some(dburl) = postgres_url_or_skip() else {
+        return;
+    };
+
+    let mut client = connect_with_retry(&dburl);
+    client
+        .batch_execute(
+            "DROP SCHEMA IF EXISTS cx_pre_exec_rows CASCADE;
+             CREATE SCHEMA cx_pre_exec_rows;
+             CREATE TABLE cx_pre_exec_rows.only_here (id INT);
+             INSERT INTO cx_pre_exec_rows.only_here VALUES (1), (2), (3);",
+        )
+        .unwrap();
+
+    // The row count connection must run the pre-execution queries too.
+    let pre_execution_queries = [String::from("SET search_path TO cx_pre_exec_rows")];
+    let url = Url::parse(dburl.as_str()).unwrap();
+    let (config, _tls) = rewrite_tls_args(&url).unwrap();
+    let mut source = PostgresSource::<BinaryProtocol, NoTls>::new(config, NoTls, 2).unwrap();
+    source.set_origin_query(Some(String::from("select * from only_here")));
+    source.set_pre_execution_queries(Some(&pre_execution_queries));
+    assert_eq!(source.result_rows().unwrap(), Some(3));
 }

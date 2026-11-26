@@ -48,8 +48,10 @@ pub fn read_sql<'py>(
         (Some(queries), None) => (queries.into_iter().map(CXQuery::Naked).collect(), None),
         (None, Some(part)) => {
             let origin_query = Some(part.query.clone());
+            let part: PartitionQuery = part.into();
+            let part = part.with_pre_execution_queries(pre_execution_queries.as_deref());
             let queries =
-                partition(&part.into(), &source_conn).map_err(ConnectorXPythonError::from)?;
+                partition(&part, &source_conn).map_err(ConnectorXPythonError::from)?;
             (queries, origin_query)
         }
         (Some(_), Some(_)) => throw!(PyValueError::new_err(

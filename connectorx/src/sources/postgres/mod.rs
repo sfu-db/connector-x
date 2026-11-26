@@ -251,6 +251,27 @@ where
     _protocol: PhantomData<P>,
 }
 
+/// Takes a connection from the pool and runs the pre-execution queries on it.
+#[throws(PostgresSourceError)]
+fn pooled_conn<C>(
+    pool: &Pool<PgManager<C>>,
+    pre_execution_queries: &Option<Vec<String>>,
+) -> PgConn<C>
+where
+    C: MakeTlsConnect<Socket> + Clone + 'static + Sync + Send,
+    C::TlsConnect: Send,
+    C::Stream: Send,
+    <C::TlsConnect as TlsConnect<Socket>>::Future: Send,
+{
+    let mut conn = pool.get()?;
+    if let Some(pre_queries) = pre_execution_queries {
+        for pre_query in pre_queries {
+            conn.query(pre_query, &[])?;
+        }
+    }
+    conn
+}
+
 impl<P, C> PostgresSource<P, C>
 where
     C: MakeTlsConnect<Socket> + Clone + 'static + Sync + Send,
@@ -315,7 +336,7 @@ where
     fn fetch_metadata(&mut self) {
         assert!(!self.queries.is_empty());
 
-        let mut conn = self.pool.get()?;
+        let mut conn = pooled_conn(&self.pool, &self.pre_execution_queries)?;
         let first_query = &self.queries[0];
 
         let stmt = conn.prepare(first_query.as_str())?;
@@ -341,7 +362,7 @@ where
         match &self.origin_query {
             Some(q) => {
                 let cxq = CXQuery::Naked(q.clone());
-                let mut conn = self.pool.get()?;
+                let mut conn = pooled_conn(&self.pool, &self.pre_execution_queries)?;
                 let nrows = get_total_rows(&mut conn, &cxq)?;
                 Some(nrows)
             }
@@ -361,14 +382,8 @@ where
     fn partition(self) -> Vec<Self::Partition> {
         let mut ret = vec![];
         for query in self.queries {
-            let mut conn = self.pool.get()?;
+            let conn = pooled_conn(&self.pool, &self.pre_execution_queries)?;
             let rewritten = maybe_rewrite_text_query(&query, &self.names, &self.schema);
-
-            if let Some(pre_queries) = &self.pre_execution_queries {
-                for pre_query in pre_queries {
-                    conn.query(pre_query, &[])?;
-                }
-            }
 
             ret.push(PostgresSourcePartition::<P, C>::new(
                 conn,
