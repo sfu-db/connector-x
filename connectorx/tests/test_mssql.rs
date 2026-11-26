@@ -189,7 +189,7 @@ mod tds_pool_tests {
         let error_query = CXQuery::naked(
             "SELECT CAST(@@SPID AS int) AS spid; RAISERROR ('pool_cleanup_error', 16, 1)",
         );
-        source.set_queries(&[error_query.clone()]);
+        source.set_queries(std::slice::from_ref(&error_query));
         assert!(source
             .fetch_metadata()
             .unwrap_err()

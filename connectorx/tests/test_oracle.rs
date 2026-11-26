@@ -118,7 +118,7 @@ fn test_oracle_timestamptz_arrow_stream() {
     use connectorx::get_arrow::new_record_batch_iter;
 
     let source_conn = SourceConn::try_from(test_db::oracle_url().as_str()).unwrap();
-    let queries = [CXQuery::naked(TIMESTAMPTZ_QUERY.to_string())];
+    let queries = [CXQuery::naked(TIMESTAMPTZ_QUERY)];
     let mut iter = new_record_batch_iter(&source_conn, None, &queries, 2, None).unwrap();
     iter.prepare();
     let mut batches = Vec::new();
@@ -136,7 +136,7 @@ fn test_oracle_timestamptz_arrow() {
     use connectorx::get_arrow::get_arrow;
 
     let source_conn = SourceConn::try_from(test_db::oracle_url().as_str()).unwrap();
-    let queries = [CXQuery::naked(TIMESTAMPTZ_QUERY.to_string())];
+    let queries = [CXQuery::naked(TIMESTAMPTZ_QUERY)];
     let batches = get_arrow(&source_conn, None, &queries, None)
         .unwrap()
         .arrow()
@@ -154,8 +154,7 @@ fn test_oracle_timestamptz9_arrow() {
 
     let source_conn = SourceConn::try_from(test_db::oracle_url().as_str()).unwrap();
     let queries = [CXQuery::naked(
-        "select test_timestamptz9 from admin.test_types order by test_timestamptz9 nulls last"
-            .to_string(),
+        "select test_timestamptz9 from admin.test_types order by test_timestamptz9 nulls last",
     )];
     let batches = get_arrow(&source_conn, None, &queries, None)
         .unwrap()
