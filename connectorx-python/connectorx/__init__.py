@@ -535,41 +535,51 @@ def reconstruct_pandas(df_infos: _DataframeInfos) -> pd.DataFrame:
     block_infos = df_infos["block_infos"]
 
     nrows = data[0][0].shape[-1] if isinstance(data[0], tuple) else data[0].shape[-1]
-    blocks = []
+    arrays = []
     for binfo, block_data in zip(block_infos, data):
         if binfo.dt == 0:  # NumpyArray
-            blocks.append(
-                pd.core.internals.make_block(block_data, placement=binfo.cids)
-            )
+            arrays.append((block_data, binfo.cids))
         elif binfo.dt == 1:  # IntegerArray
-            blocks.append(
-                pd.core.internals.make_block(
+            arrays.append(
+                (
                     pd.core.arrays.IntegerArray(block_data[0], block_data[1]),
-                    placement=binfo.cids[0],
+                    binfo.cids[0],
                 )
             )
         elif binfo.dt == 2:  # BooleanArray
-            blocks.append(
-                pd.core.internals.make_block(
+            arrays.append(
+                (
                     pd.core.arrays.BooleanArray(block_data[0], block_data[1]),
-                    placement=binfo.cids[0],
+                    binfo.cids[0],
                 )
             )
         elif binfo.dt == 3:  # DatetimeArray (ns)
-            blocks.append(
-                pd.core.internals.make_block(
-                    pd.core.arrays.DatetimeArray._from_sequence(block_data), placement=binfo.cids
-                )
+            arrays.append(
+                (pd.core.arrays.DatetimeArray._from_sequence(block_data), binfo.cids)
             )
         elif binfo.dt == 4:  # DatetimeArray (us)
-            blocks.append(
-                pd.core.internals.make_block(
-                    pd.array(block_data, dtype="datetime64[us]"), placement=binfo.cids
-                )
-            )
+            arrays.append((pd.array(block_data, dtype="datetime64[us]"), binfo.cids))
         else:
             raise ValueError(f"unknown dt: {binfo.dt}")
 
+    try:
+        # pandas >= 3.1 deprecates make_block in favour of this public API
+        from pandas.api.internals import create_dataframe_from_blocks
+    except ImportError:
+        pass
+    else:
+        import numpy as np
+
+        return create_dataframe_from_blocks(
+            [
+                (arr, np.atleast_1d(np.asarray(cids, dtype=np.intp)))
+                for arr, cids in arrays
+            ],
+            index=pd.RangeIndex(start=0, stop=nrows, step=1),
+            columns=pd.Index(headers),
+        )
+
+    blocks = [pd.core.internals.make_block(arr, placement=cids) for arr, cids in arrays]
     block_manager = pd.core.internals.BlockManager(
         blocks, [pd.Index(headers), pd.RangeIndex(start=0, stop=nrows, step=1)]
     )
