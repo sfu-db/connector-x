@@ -13,14 +13,18 @@ use crate::{
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
 use thiserror::Error;
 
+/// Errors raised while moving data from the BigQuery source to the streaming Arrow destination.
 #[derive(Error, Debug)]
 pub enum BigQueryArrowTransportError {
+    /// Error from the BigQuery source.
     #[error(transparent)]
     Source(#[from] BigQuerySourceError),
 
+    /// Error from the streaming Arrow destination.
     #[error(transparent)]
     Destination(#[from] ArrowDestinationError),
 
+    /// Generic ConnectorX error.
     #[error(transparent)]
     ConnectorX(#[from] crate::errors::ConnectorXError),
 }

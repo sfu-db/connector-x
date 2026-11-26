@@ -53,10 +53,12 @@ where
         }
     }
 
+    /// Set queries the source runs on each connection before the actual queries.
     pub fn set_pre_execution_queries(&mut self, pre_execution_queries: Option<&[String]>) {
         self.src.set_pre_execution_queries(pre_execution_queries);
     }
 
+    /// Fetch the metadata, allocate the destination and return the source and destination partitions without running them.
     pub fn prepare(mut self) -> Result<Prepared<'w, S, D>, TP::Error> {
         debug!("Prepare");
         let dorder = coordinate(S::DATA_ORDERS, D::DATA_ORDERS)?;

@@ -233,6 +233,7 @@ where
     }
 }
 
+/// Source that reads from Postgres. `P` selects the protocol, `C` the TLS connector.
 pub struct PostgresSource<P, C>
 where
     C: MakeTlsConnect<Socket> + Clone + 'static + Sync + Send,
@@ -278,6 +279,7 @@ where
     C::Stream: Send,
     <C::TlsConnect as TlsConnect<Socket>>::Future: Send,
 {
+    /// Create a source with a pool of up to `nconn` connections.
     #[throws(PostgresSourceError)]
     pub fn new(config: Config, tls: C, nconn: usize) -> Self {
         let manager = PostgresConnectionManager::new(config, tls);
@@ -394,6 +396,7 @@ where
     }
 }
 
+/// One partition of a [`PostgresSource`].
 pub struct PostgresSourcePartition<P, C>
 where
     C: MakeTlsConnect<Socket> + Clone + 'static + Sync + Send,
@@ -417,6 +420,7 @@ where
     C::Stream: Send,
     <C::TlsConnect as TlsConnect<Socket>>::Future: Send,
 {
+    /// Create a partition that runs `query` on `conn`.
     pub fn new(
         conn: PgConn<C>,
         query: &CXQuery<String>,
@@ -538,6 +542,7 @@ where
         self.ncols
     }
 }
+/// Parser for `COPY ... TO STDOUT (FORMAT binary)` output.
 pub struct PostgresBinarySourcePartitionParser<'a> {
     iter: BinaryCopyOutIter<'a>,
     rowbuf: Vec<BinaryCopyOutRow>,
@@ -548,6 +553,7 @@ pub struct PostgresBinarySourcePartitionParser<'a> {
 }
 
 impl<'a> PostgresBinarySourcePartitionParser<'a> {
+    /// Wrap a binary copy stream.
     pub fn new(iter: BinaryCopyOutIter<'a>, schema: &[PostgresTypeSystem]) -> Self {
         Self {
             iter,
@@ -783,6 +789,7 @@ impl Produce<'_, Option<HashMap<String, Option<String>>>>
     }
 }
 
+/// Parser for `COPY ... TO STDOUT (FORMAT csv)` output.
 pub struct PostgresCSVSourceParser<'a> {
     iter: StringRecordsIntoIter<CopyOutReader<'a>>,
     rowbuf: Vec<StringRecord>,
@@ -793,6 +800,7 @@ pub struct PostgresCSVSourceParser<'a> {
 }
 
 impl<'a> PostgresCSVSourceParser<'a> {
+    /// Wrap a CSV copy stream.
     pub fn new(
         iter: StringRecordsIntoIter<CopyOutReader<'a>>,
         schema: &[PostgresTypeSystem],
@@ -1271,6 +1279,7 @@ impl<'r> Produce<'r, Option<Value>> for PostgresCSVSourceParser<'_> {
     }
 }
 
+/// Parser for rows fetched through a cursor.
 pub struct PostgresRawSourceParser<'a> {
     iter: RowIter<'a>,
     rowbuf: Vec<Row>,
@@ -1281,6 +1290,7 @@ pub struct PostgresRawSourceParser<'a> {
 }
 
 impl<'a> PostgresRawSourceParser<'a> {
+    /// Wrap a row iterator.
     pub fn new(iter: RowIter<'a>, schema: &[PostgresTypeSystem]) -> Self {
         Self {
             iter,
@@ -1523,6 +1533,7 @@ where
     }
 }
 
+/// Parser for rows returned by the simple query protocol.
 pub struct PostgresSimpleSourceParser {
     rows: Vec<SimpleQueryMessage>,
     ncols: usize,
@@ -1530,6 +1541,7 @@ pub struct PostgresSimpleSourceParser {
     current_row: usize,
 }
 impl PostgresSimpleSourceParser {
+    /// Wrap the messages returned by a simple query.
     pub fn new(rows: Vec<SimpleQueryMessage>, schema: &[PostgresTypeSystem]) -> Self {
         Self {
             rows,

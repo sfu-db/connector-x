@@ -6,6 +6,7 @@ use log::debug;
 use rayon::prelude::*;
 use std::marker::PhantomData;
 
+/// Set the number of threads in rayon's global thread pool. Panics if the global pool was already built.
 pub fn set_global_num_thread(num: usize) {
     rayon::ThreadPoolBuilder::new()
         .num_threads(num)
@@ -47,6 +48,7 @@ where
         D = ArrowStreamDestination,
     >,
 {
+    /// Prepare the dispatcher for `queries` and return an iterator that has not started fetching yet.
     pub fn new(
         src: S,
         mut dst: ArrowStreamDestination,
@@ -204,8 +206,11 @@ where
     }
 }
 
+/// Object-safe interface over [`ArrowBatchIter`] for streaming Arrow record batches.
 pub trait RecordBatchIterator: Send {
+    /// Return an empty record batch carrying the result schema, together with the column names.
     fn get_schema(&self) -> (RecordBatch, &[String]);
+    /// Start fetching and writing the partitions in the background.
     fn prepare(&mut self);
     /// See [`ArrowBatchIter::next`] for the error semantics.
     fn next_batch(&mut self) -> Option<OutResult<RecordBatch>>;
@@ -232,5 +237,83 @@ where
 
     fn next_batch(&mut self) -> Option<OutResult<RecordBatch>> {
         self.next()
+    }
+}
+
+#[cfg(all(test, feature = "src_dummy"))]
+mod tests {
+    use super::*;
+    use crate::sources::dummy::{DummySource, DummyTypeSystem};
+    use arrow::array::AsArray;
+    use arrow::datatypes::Int64Type;
+
+    // ArrowBatchIter needs `ConnectorXOutError: From<TP::Error>`; the library's
+    // dummy stream transport has its own error type, so define one here.
+    struct DummyStreamTransport;
+
+    impl_transport!(
+        name = DummyStreamTransport,
+        error = ConnectorXOutError,
+        systems = DummyTypeSystem => ArrowStreamTypeSystem,
+        route = DummySource => ArrowStreamDestination,
+        mappings = {
+            { I64[i64]       => Int64[i64]        | conversion auto }
+            { String[String] => LargeUtf8[String] | conversion auto }
+        }
+    );
+
+    fn iter(
+        nrows: &[usize],
+        batch_size: usize,
+    ) -> ArrowBatchIter<DummySource, DummyStreamTransport> {
+        let schema = [DummyTypeSystem::I64(false), DummyTypeSystem::String(true)];
+        let queries: Vec<CXQuery<String>> = nrows
+            .iter()
+            .map(|n| CXQuery::naked(format!("{n},2")))
+            .collect();
+        ArrowBatchIter::new(
+            DummySource::new(&["id", "name"], &schema),
+            ArrowStreamDestination::new_with_batch_size(batch_size),
+            None,
+            &queries,
+        )
+        .unwrap()
+    }
+
+    #[test]
+    fn schema_is_known_before_any_batch() {
+        let it = iter(&[3], 2);
+        let (empty, names) = it.get_schema();
+        assert_eq!(names, &["id".to_string(), "name".to_string()]);
+        assert_eq!(empty.num_rows(), 0);
+        assert_eq!(empty.num_columns(), 2);
+    }
+
+    #[test]
+    fn streams_all_rows_in_batches_through_the_trait() {
+        let mut it: Box<dyn RecordBatchIterator> = Box::new(iter(&[5, 3], 2));
+        it.prepare();
+        let mut sizes = vec![];
+        let mut ids = vec![];
+        while let Some(batch) = it.next_batch() {
+            let batch = batch.unwrap();
+            sizes.push(batch.num_rows());
+            ids.extend_from_slice(batch.column(0).as_primitive::<Int64Type>().values());
+        }
+        // Returns None again once exhausted (the producer is already joined).
+        assert!(it.next_batch().is_none());
+
+        sizes.sort();
+        assert_eq!(sizes, vec![1, 1, 2, 2, 2]);
+        ids.sort();
+        assert_eq!(ids, vec![0, 0, 1, 1, 2, 2, 3, 4]);
+    }
+
+    #[test]
+    fn iterator_impl_yields_the_same_rows() {
+        let mut it = iter(&[4], 10);
+        it.prepare();
+        let total: usize = it.by_ref().map(|b| b.unwrap().num_rows()).sum();
+        assert_eq!(total, 4);
     }
 }

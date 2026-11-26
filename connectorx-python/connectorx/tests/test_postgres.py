@@ -1022,8 +1022,10 @@ def test_postgres_arrow_stream_invalid_url_raises() -> None:
     # An invalid sslmode fails while parsing the connection string, before any
     # network access, so this exercises the error path of new_record_batch_iter
     # without a database. Before the fix this surfaced as a PanicException.
+    # tokio-postgres >= 0.7.18 reports "invalid connection string" without
+    # naming the parameter, so accept either wording.
     bad_url = "postgresql://user:pass@127.0.0.1:1/db?sslmode=bogus"
-    with pytest.raises(RuntimeError, match="sslmode"):
+    with pytest.raises(RuntimeError, match="sslmode|invalid connection string"):
         read_sql(bad_url, "SELECT 1", return_type="arrow_stream")
 
 
