@@ -1,3 +1,7 @@
+// `impl_transport!` returns `ConnectorXOutError`, which is large by design; see
+// the matching allow in connectorx/src/lib.rs.
+#![allow(clippy::result_large_err)]
+
 use anyhow::anyhow;
 use connectorx::arrow_batch_iter::ArrowBatchIter;
 use connectorx::impl_transport;
