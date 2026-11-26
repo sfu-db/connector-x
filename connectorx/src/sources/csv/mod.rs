@@ -427,7 +427,7 @@ mod tests {
         .unwrap();
 
         let mut source = CSVSource::new(&[]);
-        source.set_queries(&[CXQuery::naked(path.to_string_lossy().into_owned())]);
+        source.set_queries(&[CXQuery::naked(path.to_string_lossy())]);
         source.fetch_metadata().unwrap();
 
         assert_eq!(
