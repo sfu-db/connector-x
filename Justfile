@@ -75,16 +75,16 @@ coverage-integration:
     just _reap-test-containers
     cargo llvm-cov report --lcov --output-path lcov-integration.info
 
-# Check that each source/destination feature compiles on its own (CI)
+# Check that each source/destination feature compiles on its own without warnings (CI)
 test-feature-gate:
-    cargo c --features src_postgres
-    cargo c --features src_mysql
-    cargo c --features src_mssql
-    cargo c --features src_sqlite
-    cargo c --features src_oracle
-    cargo c --features src_trino
-    cargo c --features src_clickhouse
-    cargo c --features dst_arrow
+    cargo clippy --features src_postgres -- -D warnings
+    cargo clippy --features src_mysql -- -D warnings
+    cargo clippy --features src_mssql -- -D warnings
+    cargo clippy --features src_sqlite -- -D warnings
+    cargo clippy --features src_oracle -- -D warnings
+    cargo clippy --features src_trino -- -D warnings
+    cargo clippy --features src_clickhouse -- -D warnings
+    cargo clippy --features dst_arrow -- -D warnings
     cargo c --features all --test test_mssql
 
 # Remove Rust build artifacts and the built Python extension
