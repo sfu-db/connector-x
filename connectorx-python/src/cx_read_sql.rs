@@ -1,5 +1,6 @@
 use connectorx::{
-    partition::{partition, PartitionQuery},
+    partition::{partition_with_options, PartitionQuery},
+    source_options::SourceOptions,
     source_router::parse_source,
     sql::CXQuery,
 };
@@ -41,6 +42,7 @@ pub fn read_sql<'py>(
     queries: Option<Vec<String>>,
     partition_query: Option<PyPartitionQuery>,
     pre_execution_queries: Option<Vec<String>>,
+    options: &SourceOptions,
     kwargs: Option<&Bound<PyDict>>,
 ) -> PyResult<Bound<'py, PyAny>> {
     let source_conn = parse_source(conn, protocol).map_err(ConnectorXPythonError::from)?;
@@ -50,8 +52,8 @@ pub fn read_sql<'py>(
             let origin_query = Some(part.query.clone());
             let part: PartitionQuery = part.into();
             let part = part.with_pre_execution_queries(pre_execution_queries.as_deref());
-            let queries =
-                partition(&part, &source_conn).map_err(ConnectorXPythonError::from)?;
+            let queries = partition_with_options(&part, &source_conn, options)
+                .map_err(ConnectorXPythonError::from)?;
             (queries, origin_query)
         }
         (Some(_), Some(_)) => throw!(PyValueError::new_err(
@@ -69,6 +71,7 @@ pub fn read_sql<'py>(
             origin_query,
             &queries,
             pre_execution_queries.as_deref(),
+            options,
         )?),
         "arrow" => Ok(crate::arrow::write_arrow(
             py,
@@ -76,6 +79,7 @@ pub fn read_sql<'py>(
             origin_query,
             &queries,
             pre_execution_queries.as_deref(),
+            options,
         )?),
         "arrow_stream" => {
             let batch_size = kwargs
@@ -90,6 +94,7 @@ pub fn read_sql<'py>(
                 &queries,
                 pre_execution_queries.as_deref(),
                 batch_size,
+                options,
             )?)
         }
 

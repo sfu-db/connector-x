@@ -175,6 +175,8 @@ pub mod fed_rewriter;
 pub mod get_arrow;
 /// Splitting a query into range partitions on a numeric column.
 pub mod partition;
+/// Backend-specific connection options (for example MS SQL authentication).
+pub mod source_options;
 /// Parsing of connection strings into a source type and URL.
 pub mod source_router;
 pub mod sources;
@@ -203,7 +205,11 @@ pub mod prelude {
     #[cfg(feature = "federation")]
     pub use crate::fed_rewriter::{rewrite_sql, FederatedDataSourceInfo, Plan};
     #[cfg(feature = "dst_arrow")]
-    pub use crate::get_arrow::{get_arrow, new_record_batch_iter};
+    pub use crate::get_arrow::{
+        get_arrow, get_arrow_with_options, new_record_batch_iter,
+        new_record_batch_iter_with_options,
+    };
+    pub use crate::source_options::SourceOptions;
     pub use crate::source_router::*;
     #[cfg(feature = "src_bigquery")]
     pub use crate::sources::bigquery::BigQuerySource;

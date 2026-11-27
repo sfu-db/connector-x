@@ -26,7 +26,6 @@ use postgres_openssl::MakeTlsConnector;
 use std::sync::Arc;
 
 /// Run `queries` against `source_conn` and collect the result in an [`ArrowDestination`].
-#[allow(unreachable_code, unreachable_patterns, unused_variables, unused_mut)]
 #[throws(ConnectorXOutError)]
 pub fn get_arrow(
     source_conn: &SourceConn,
@@ -34,6 +33,29 @@ pub fn get_arrow(
     queries: &[CXQuery<String>],
     pre_execution_queries: Option<&[String]>,
 ) -> ArrowDestination {
+    get_arrow_with_options(
+        source_conn,
+        origin_query,
+        queries,
+        pre_execution_queries,
+        &SourceOptions::default(),
+    )?
+}
+
+/// Like [`get_arrow`], applying backend-specific `options` (for example
+/// [`SourceOptions::MsSql`]) to every connection the read opens.
+// Same error type as `get_arrow`; shrinking `ConnectorXOutError` is out of scope.
+#[allow(clippy::result_large_err)]
+#[allow(unreachable_code, unreachable_patterns, unused_variables, unused_mut)]
+#[throws(ConnectorXOutError)]
+pub fn get_arrow_with_options(
+    source_conn: &SourceConn,
+    origin_query: Option<String>,
+    queries: &[CXQuery<String>],
+    pre_execution_queries: Option<&[String]>,
+    options: &SourceOptions,
+) -> ArrowDestination {
+    options.check_source_type(&source_conn.ty)?;
     let mut destination = ArrowDestination::new();
     let protocol = source_conn.proto.as_str();
     debug!("Protocol: {}", protocol);
@@ -220,7 +242,12 @@ pub fn get_arrow(
         #[cfg(feature = "src_mssql_common")]
         SourceType::MsSQL => {
             let rt = Arc::new(tokio::runtime::Runtime::new().expect("Failed to create runtime"));
-            let source = MsSQLSource::new(rt, &source_conn.conn[..], queries.len())?;
+            let source = MsSQLSource::new_with_options(
+                rt,
+                &source_conn.conn[..],
+                queries.len(),
+                &options.mssql_or_default(),
+            )?;
             let dispatcher = Dispatcher::<_, _, MsSQLArrowTransport>::new(
                 source,
                 &mut destination,
@@ -286,6 +313,26 @@ pub fn get_arrow(
 }
 
 /// Run `queries` against `source_conn` and return an iterator yielding record batches of at most `batch_size` rows.
+#[throws(ConnectorXOutError)]
+pub fn new_record_batch_iter(
+    source_conn: &SourceConn,
+    origin_query: Option<String>,
+    queries: &[CXQuery<String>],
+    batch_size: usize,
+    pre_execution_queries: Option<&[String]>,
+) -> Box<dyn RecordBatchIterator> {
+    new_record_batch_iter_with_options(
+        source_conn,
+        origin_query,
+        queries,
+        batch_size,
+        pre_execution_queries,
+        &SourceOptions::default(),
+    )?
+}
+
+/// Like [`new_record_batch_iter`], applying backend-specific `options` to
+/// every connection the stream opens.
 // With no source feature enabled, only the `_` arm is compiled: the arguments go unused and the
 // match always throws.
 #[cfg_attr(
@@ -301,7 +348,7 @@ pub fn get_arrow(
     allow(unused_variables, unreachable_code)
 )]
 #[throws(ConnectorXOutError)]
-pub fn new_record_batch_iter(
+pub fn new_record_batch_iter_with_options(
     source_conn: &SourceConn,
     origin_query: Option<String>,
     queries: &[CXQuery<String>],
@@ -312,7 +359,9 @@ pub fn new_record_batch_iter(
         allow(unused_variables)
     )]
     pre_execution_queries: Option<&[String]>,
+    options: &SourceOptions,
 ) -> Box<dyn RecordBatchIterator> {
+    options.check_source_type(&source_conn.ty)?;
     debug!("Protocol: {}", source_conn.proto);
 
     match source_conn.ty {
@@ -338,7 +387,7 @@ pub fn new_record_batch_iter(
         }
         #[cfg(feature = "src_mssql_common")]
         SourceType::MsSQL => {
-            mssql_record_batch_iter(source_conn, origin_query, queries, batch_size)?
+            mssql_record_batch_iter(source_conn, origin_query, queries, batch_size, options)?
         }
         #[cfg(feature = "src_oracle")]
         SourceType::Oracle => {
@@ -554,10 +603,16 @@ fn mssql_record_batch_iter(
     origin_query: Option<String>,
     queries: &[CXQuery<String>],
     batch_size: usize,
+    options: &SourceOptions,
 ) -> Box<dyn RecordBatchIterator> {
     let destination = ArrowStreamDestination::new_with_batch_size(batch_size);
     let rt = Arc::new(tokio::runtime::Runtime::new().expect("Failed to create runtime"));
-    let source = MsSQLSource::new(rt, &source_conn.conn[..], queries.len())?;
+    let source = MsSQLSource::new_with_options(
+        rt,
+        &source_conn.conn[..],
+        queries.len(),
+        &options.mssql_or_default(),
+    )?;
     let batch_iter = ArrowBatchIter::<_, MsSQLArrowStreamTransport>::new(
         source,
         destination,

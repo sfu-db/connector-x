@@ -20,6 +20,7 @@ use std::convert::TryFrom;
 use std::sync::Arc;
 
 use crate::errors::{ConnectorXOutError, OutResult};
+use crate::source_options::SourceOptions;
 use crate::source_router::{SourceConn, SourceType};
 #[cfg(feature = "src_bigquery")]
 use crate::sources::bigquery::BigQueryDialect;
@@ -130,6 +131,19 @@ impl PartitionQuery {
 
 /// Split the query described by `part` into partition queries.
 pub fn partition(part: &PartitionQuery, source_conn: &SourceConn) -> OutResult<Vec<CXQuery>> {
+    partition_with_options(part, source_conn, &SourceOptions::default())
+}
+
+/// Like [`partition`], applying backend-specific `options` to the connection
+/// used to discover the partition range.
+// Same error type as `partition`; shrinking `ConnectorXOutError` is out of scope.
+#[allow(clippy::result_large_err)]
+pub fn partition_with_options(
+    part: &PartitionQuery,
+    source_conn: &SourceConn,
+    options: &SourceOptions,
+) -> OutResult<Vec<CXQuery>> {
+    options.check_source_type(&source_conn.ty)?;
     let mut queries = vec![];
 
     if part.num == 0 {
@@ -144,11 +158,12 @@ pub fn partition(part: &PartitionQuery, source_conn: &SourceConn) -> OutResult<V
     })?;
 
     let (min, max) = match (part.min, part.max) {
-        (None, None) => get_col_range_with_pre_queries(
+        (None, None) => col_range(
             source_conn,
             &part.query,
             &part.column,
             part.pre_execution_queries.as_deref(),
+            options,
         )?,
         (Some(min), Some(max)) => (min, max),
         _ => throw!(anyhow!(
@@ -219,7 +234,7 @@ pub fn partition(part: &PartitionQuery, source_conn: &SourceConn) -> OutResult<V
 
 /// Return the minimum and maximum of column `col` in the result of `query`.
 pub fn get_col_range(source_conn: &SourceConn, query: &str, col: &str) -> OutResult<(i64, i64)> {
-    get_col_range_with_pre_queries(source_conn, query, col, None)
+    col_range(source_conn, query, col, None, &SourceOptions::default())
 }
 
 /// Like `get_col_range`, but runs `pre_execution_queries` first (MySQL and Postgres only).
@@ -227,8 +242,43 @@ pub fn get_col_range_with_pre_queries(
     source_conn: &SourceConn,
     query: &str,
     col: &str,
-    #[allow(unused_variables)] pre_execution_queries: Option<&[String]>,
+    pre_execution_queries: Option<&[String]>,
 ) -> OutResult<(i64, i64)> {
+    col_range(
+        source_conn,
+        query,
+        col,
+        pre_execution_queries,
+        &SourceOptions::default(),
+    )
+}
+
+/// Like [`get_col_range`], applying backend-specific `options` to the
+/// connection that runs the range query.
+// Same error type as `get_col_range`; shrinking `ConnectorXOutError` is out of scope.
+#[allow(clippy::result_large_err)]
+pub fn get_col_range_with_options(
+    source_conn: &SourceConn,
+    query: &str,
+    col: &str,
+    options: &SourceOptions,
+) -> OutResult<(i64, i64)> {
+    col_range(source_conn, query, col, None, options)
+}
+
+/// Range lookup shared by the public `get_col_range*` functions and
+/// [`partition_with_options`]: `pre_execution_queries` apply to MySQL and
+/// Postgres, `options` to the backend they target.
+#[allow(clippy::result_large_err)]
+#[allow(unused_variables)]
+fn col_range(
+    source_conn: &SourceConn,
+    query: &str,
+    col: &str,
+    pre_execution_queries: Option<&[String]>,
+    options: &SourceOptions,
+) -> OutResult<(i64, i64)> {
+    options.check_source_type(&source_conn.ty)?;
     match source_conn.ty {
         #[cfg(feature = "src_postgres")]
         SourceType::Postgres => {
@@ -241,19 +291,33 @@ pub fn get_col_range_with_pre_queries(
             mysql_get_partition_range(&source_conn.conn, query, col, pre_execution_queries)
         }
         #[cfg(all(feature = "src_mssql_tiberius", not(feature = "src_mssql_tds")))]
-        SourceType::MsSQL => mssql_get_partition_range(&source_conn.conn, query, col),
+        SourceType::MsSQL => {
+            let mssql_options = options.mssql_or_default();
+            mssql_options.validate()?;
+            crate::sources::mssql::tiberius_reject_unsupported_options(&mssql_options)?;
+            mssql_get_partition_range(&source_conn.conn, query, col)
+        }
         #[cfg(all(feature = "src_mssql_tiberius", feature = "src_mssql_tds"))]
         SourceType::MsSQL => match crate::sources::mssql::active_driver() {
             crate::sources::mssql::MsSQLDriverKind::Tiberius => {
+                let mssql_options = options.mssql_or_default();
+                mssql_options.validate()?;
+                crate::sources::mssql::tiberius_reject_unsupported_options(&mssql_options)?;
                 mssql_get_partition_range(&source_conn.conn, query, col)
             }
-            crate::sources::mssql::MsSQLDriverKind::MssqlTds => Ok(
-                crate::sources::mssql::tds_get_partition_range(&source_conn.conn, query, col)?,
-            ),
+            crate::sources::mssql::MsSQLDriverKind::MssqlTds => {
+                Ok(crate::sources::mssql::tds_get_partition_range(
+                    &source_conn.conn,
+                    &options.mssql_or_default(),
+                    query,
+                    col,
+                )?)
+            }
         },
         #[cfg(all(feature = "src_mssql_tds", not(feature = "src_mssql_tiberius")))]
         SourceType::MsSQL => Ok(crate::sources::mssql::tds_get_partition_range(
             &source_conn.conn,
+            &options.mssql_or_default(),
             query,
             col,
         )?),
