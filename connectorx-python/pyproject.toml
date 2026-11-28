@@ -34,7 +34,7 @@ dev = [
   "pytest>=9,<10",
   "pytest-benchmark>=5.2,<6",
   "testcontainers[oracle-free,clickhouse]>=4.0,<5",
-  "twine>=3.4.1,<4",
+  "twine>=3.4.1,<8",
 ]
 
 [tool.uv]
