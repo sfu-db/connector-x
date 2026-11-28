@@ -4524,9 +4524,9 @@ dependencies = [
 
 [[package]]
 name = "mssql-tds"
-version = "0.4.0"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "812c3993a5f6d98e14da9d8ab0bf9f9f536e49c18240f34af9bae301e4d35ae8"
+checksum = "da2868effee59c48ec437410b27617333a1f8500bcfbf97b5500c179475fb883"
 dependencies = [
  "async-trait",
  "bigdecimal 0.4.11",
@@ -7129,7 +7129,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32497e9a4c7b38532efcdebeef879707aa9f794296a4f0244f6f69e9bc8574bd"
 dependencies = [
  "fastrand",
- "getrandom 0.3.4",
+ "getrandom 0.4.3",
  "once_cell",
  "rustix 1.1.6",
  "windows-sys 0.61.2",
