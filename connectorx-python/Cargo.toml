@@ -14,7 +14,7 @@ readme = "README.md"
 [dependencies]
 anyhow = "1"
 arrow = { version = "59" }
-bitfield = "0.13"
+bitfield = "0.21"
 bytes = "1.4"
 chrono = "0.4"
 connectorx = {path = "../connectorx", default-features = false}
