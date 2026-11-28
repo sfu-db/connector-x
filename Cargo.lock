@@ -563,6 +563,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "asynchronous-codec"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a860072022177f903e59730004fb5dc13db9275b79bb2aef7ba8ce831956c233"
+dependencies = [
+ "bytes",
+ "futures-sink",
+ "futures-util",
+ "memchr",
+ "pin-project-lite",
+]
+
+[[package]]
 name = "atoi"
 version = "2.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1011,7 +1024,7 @@ dependencies = [
  "serde",
  "time",
  "tokio",
- "tokio-util 0.7.20",
+ "tokio-util",
 ]
 
 [[package]]
@@ -1107,6 +1120,15 @@ checksum = "4c7f02d4ea65f2c1853089ffd8d2787bdbc63de2f0d29dedbcf8ccdfa0ccd4cf"
 
 [[package]]
 name = "base64"
+version = "0.10.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0b25d992356d2eb0ed82172f5248873db5560c4721f564b13cb5193bda5e668e"
+dependencies = [
+ "byteorder",
+]
+
+[[package]]
+name = "base64"
 version = "0.21.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9d297deb1925b89f2ccc13d7635fa0714f12c87adce1c75356b39ca9b7178567"
@@ -1166,17 +1188,15 @@ dependencies = [
 
 [[package]]
 name = "bb8-tiberius"
-version = "0.8.0"
+version = "0.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d8a33c87124c1938413e45ab6a6655e49d9e4cd015e05db61d6ab5a4f96b2c83"
+checksum = "cee910e00151c1402ce526f350459c5dac8e387213806344f86fee76c92a45ed"
 dependencies = [
- "async-trait",
- "bb8 0.7.1",
- "futures",
- "thiserror 1.0.69",
- "tiberius",
+ "bb8 0.9.1",
+ "thiserror 2.0.21",
+ "tiberius 0.13.0",
  "tokio",
- "tokio-util 0.6.10",
+ "tokio-util",
 ]
 
 [[package]]
@@ -1383,7 +1403,7 @@ dependencies = [
  "time",
  "tokio",
  "tokio-stream",
- "tokio-util 0.7.20",
+ "tokio-util",
  "tonic",
  "tower-service",
  "url",
@@ -1904,6 +1924,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "connection-string"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "510ca239cf13b7f8d16a2b48f263de7b4f8c566f0af58d901031473c76afb1e3"
+
+[[package]]
 name = "connectorx"
 version = "0.4.6"
 dependencies = [
@@ -1960,9 +1986,9 @@ dependencies = [
  "sqlparser 0.64.0",
  "testcontainers",
  "thiserror 2.0.21",
- "tiberius",
+ "tiberius 0.7.3",
  "tokio",
- "tokio-util 0.7.20",
+ "tokio-util",
  "ureq",
  "url",
  "urlencoding",
@@ -2631,7 +2657,7 @@ dependencies = [
  "parking_lot 0.12.5",
  "rand 0.9.5",
  "tokio",
- "tokio-util 0.7.20",
+ "tokio-util",
  "url",
  "zstd 0.13.3",
 ]
@@ -2766,7 +2792,7 @@ dependencies = [
  "rand 0.9.5",
  "tempfile",
  "tokio",
- "tokio-util 0.7.20",
+ "tokio-util",
  "url",
 ]
 
@@ -3946,6 +3972,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cd417de3d1d015fc3bfd2b1ea46dfc7bab72ef86f1cc7cc9c78e728b34a6d1fd"
 
 [[package]]
+name = "futures-timer"
+version = "3.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "af43fadb8a98512d547e37b4e92e0ced13e205c061b87b4623eff01d918d6968"
+
+[[package]]
 name = "futures-util"
 version = "0.3.34"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4103,7 +4135,7 @@ dependencies = [
  "indexmap 2.14.2",
  "slab",
  "tokio",
- "tokio-util 0.7.20",
+ "tokio-util",
  "tracing",
 ]
 
@@ -4122,7 +4154,7 @@ dependencies = [
  "indexmap 2.14.2",
  "slab",
  "tokio",
- "tokio-util 0.7.20",
+ "tokio-util",
  "tracing",
 ]
 
@@ -5279,7 +5311,7 @@ dependencies = [
  "thiserror 2.0.21",
  "tokio",
  "tokio-native-tls",
- "tokio-util 0.7.20",
+ "tokio-util",
  "tracing",
  "uuid 1.29.3",
  "winapi",
@@ -7718,7 +7750,7 @@ dependencies = [
  "tokio",
  "tokio-native-tls",
  "tokio-rustls 0.26.5",
- "tokio-util 0.7.20",
+ "tokio-util",
  "tower",
  "tower-http",
  "tower-service",
@@ -8860,7 +8892,7 @@ dependencies = [
  "thiserror 2.0.21",
  "tokio",
  "tokio-stream",
- "tokio-util 0.7.20",
+ "tokio-util",
  "url",
 ]
 
@@ -8930,11 +8962,11 @@ checksum = "833311bc8e26e96c73ad1b5c1f488c588808c747a318905ec67e43d422ea2c08"
 dependencies = [
  "async-native-tls",
  "async-trait",
- "asynchronous-codec",
+ "asynchronous-codec 0.5.0",
  "byteorder",
  "bytes",
  "chrono",
- "connection-string",
+ "connection-string 0.1.13",
  "encoding",
  "enumflags2",
  "futures",
@@ -8948,11 +8980,52 @@ dependencies = [
  "pretty-hex 0.1.1",
  "rust_decimal",
  "thiserror 1.0.69",
- "tokio",
- "tokio-util 0.6.10",
  "tracing",
  "uuid 0.8.2",
- "winauth",
+ "winauth 0.0.4",
+]
+
+[[package]]
+name = "tiberius"
+version = "0.13.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e07324791de2bdaed058af4aa433a0b5ec5c0beac407a9797419c19805df2415"
+dependencies = [
+ "async-trait",
+ "asynchronous-codec 0.7.0",
+ "byteorder",
+ "bytes",
+ "chrono",
+ "connection-string 0.2.0",
+ "encoding_rs",
+ "enumflags2",
+ "futures-timer",
+ "futures-util",
+ "libc",
+ "num-traits",
+ "once_cell",
+ "pin-project-lite",
+ "pretty-hex 0.4.2",
+ "secrecy",
+ "thiserror 2.0.21",
+ "tiberius-macros",
+ "tokio",
+ "tokio-util",
+ "tracing",
+ "uuid 1.29.3",
+ "winauth 0.0.5",
+ "zeroize",
+]
+
+[[package]]
+name = "tiberius-macros"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "907fed5ea55695d902cc3359fffa4a35021dfa9b95ab4eb9c8376d42ffb9eec8"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.119",
 ]
 
 [[package]]
@@ -9093,7 +9166,7 @@ dependencies = [
  "rand 0.10.2",
  "socket2 0.6.5",
  "tokio",
- "tokio-util 0.7.20",
+ "tokio-util",
  "whoami",
 ]
 
@@ -9126,22 +9199,7 @@ dependencies = [
  "futures-core",
  "pin-project-lite",
  "tokio",
- "tokio-util 0.7.20",
-]
-
-[[package]]
-name = "tokio-util"
-version = "0.6.10"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "36943ee01a6d67977dd3f84a5a1d2efeb4ada3a1ae771cadfaa535d9d9fc6507"
-dependencies = [
- "bytes",
- "futures-core",
- "futures-io",
- "futures-sink",
- "log",
- "pin-project-lite",
- "tokio",
+ "tokio-util",
 ]
 
 [[package]]
@@ -9277,7 +9335,7 @@ dependencies = [
  "slab",
  "sync_wrapper 1.0.2",
  "tokio",
- "tokio-util 0.7.20",
+ "tokio-util",
  "tower-layer",
  "tower-service",
  "tracing",
@@ -9803,6 +9861,20 @@ version = "0.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8f820cd208ce9c6b050812dc2d724ba98c6c1e9db5ce9b3f58d925ae5723a5e6"
 dependencies = [
+ "bitflags 1.3.2",
+ "byteorder",
+ "md5",
+ "rand 0.7.3",
+ "winapi",
+]
+
+[[package]]
+name = "winauth"
+version = "0.0.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0e03c9d0fde636447315ff38695b14c85c6ccc738ade05a400a3ce568a557021"
+dependencies = [
+ "base64 0.10.1",
  "bitflags 1.3.2",
  "byteorder",
  "md5",
